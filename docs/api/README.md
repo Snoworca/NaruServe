@@ -100,7 +100,7 @@ Java에서는 `express.json()` 같은 본문 파서를 따로 등록하지 않�
 | `NaruServe-servlet` | `com.snoworca.naruserve:NaruServe-servlet` | Servlet 3.1+ 컨테이너 위에서 NaruServe 앱을 실행하는 어댑터 | 미지원(JVM 전용) |
 
 "지원(API 21+)" 모듈은 빌드 때 animal-sniffer `android-api-level-21` 검사를 받습니다.
-HTTP 엔진은 TinyHttpd 커밋 `46b973e`을 기준으로 빌드합니다.
+HTTP 엔진은 TinyHttpd 체크아웃을 그대로 빌드하며, 커밋 `46b973e`에서 검증했습니다. 체크아웃 HEAD가 다르면 빌드는 실패하지 않고 경고만 냅니다.
 
 `RestApp.create()`는 `NaruServe` 모듈이 기본 HTTP 엔진(TinyHttpd)과 Gson을 자동으로 조립합니다.
 엔진과 JSON 구현을 직접 고르려면 `RestApp.builder()`(이름 **(미확정)**)를 씁니다([RestApp](app.md#앱-만들기) 참고).

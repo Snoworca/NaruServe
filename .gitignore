@@ -1,6 +1,10 @@
 .gradle
-build
-out
+.kotlin
+# Anchored so source packages named "build" (src/test/java/.../build/) are not ignored.
+/build/
+/*/build/
+/out/
+/*/out/
 *.iml
 .idea
 .claude/

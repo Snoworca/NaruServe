@@ -21,3 +21,17 @@ if (!tinyHttpdDir.isDirectory()) {
 }
 gradle.ext.tinyHttpdDir = tinyHttpdDir
 includeBuild(tinyHttpdDir)
+
+// Docs cite the TinyHttpd commit this build was verified against; warn (never fail) when the checkout differs.
+def verifiedTinyHttpd = '46b973e'
+try {
+    def head = providers.exec {
+        commandLine 'git', '-C', tinyHttpdDir.path, 'rev-parse', '--short=7', 'HEAD'
+        ignoreExitValue = true
+    }.standardOutput.asText.get().trim()
+    if (head != verifiedTinyHttpd) {
+        logger.warn("tinyHttpdDir: TinyHttpd HEAD is '${head}', but NaruServe was verified against ${verifiedTinyHttpd}")
+    }
+} catch (Exception e) {
+    logger.warn("tinyHttpdDir: could not read the TinyHttpd commit (${e.message}); NaruServe was verified against ${verifiedTinyHttpd}")
+}

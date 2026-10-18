@@ -114,6 +114,13 @@ public class BuildChecksTest {
     private static GradleRunner runner(String... args) {
         List<String> arguments = new ArrayList<>(Arrays.asList(args));
         arguments.add("--console=plain");
+        // Command-line flags beat ~/.gradle/gradle.properties, so a global configuration cache or build cache
+        // cannot change nested results (checkDependencyRules reads Project objects at execution time).
+        // shortcut: ~/.gradle/init.d scripts still run, since the TestKit dir is the outer user home (offline cache);
+        // seed a dedicated TestKit dir from that cache if an init script ever breaks these builds.
+        arguments.add("--no-configuration-cache");
+        arguments.add("--no-build-cache");
+        arguments.add("--no-configure-on-demand");
         // The copied settings.gradle must resolve the same TinyHttpd checkout as the outer build (OPS-BUILD-001).
         boolean overridden = false;
         for (String a : args) {
