@@ -1,0 +1,64 @@
+{
+ "schema_version": "1.0.0",
+ "points": [
+  {
+   "id": "CP-01",
+   "paths": [
+    "docs/spec/00.index.md"
+   ],
+   "class": "generated",
+   "recipe": {
+    "kind": "regenerate",
+    "command": "mcp:sync_index"
+   }
+  },
+  {
+   "id": "CP-02",
+   "paths": [
+    "docs/spec/**"
+   ],
+   "class": "single-writer",
+   "recipe": {
+    "kind": "orchestrator-only"
+   }
+  },
+  {
+   "id": "CP-07",
+   "paths": [
+    "kiwi/pipeline.jsonl",
+    ".kiwi/**",
+    "docs/sds/**",
+    "docs/analysis/**",
+    "docs/research/naruserve-v1/**",
+    "docs/spec/91.completed-work-log.md"
+   ],
+   "class": "append-journal",
+   "recipe": {
+    "kind": "orchestrator-only"
+   }
+  },
+  {
+   "id": "CP-10",
+   "paths": [
+    "build.gradle",
+    "settings.gradle",
+    "gradle.properties"
+   ],
+   "class": "shared-build",
+   "recipe": {
+    "kind": "exclusive-lane"
+   }
+  },
+  {
+   "id": "CP-11",
+   "paths": [
+    "docs/api/**",
+    "CLAUDE.md"
+   ],
+   "class": "shared-docs",
+   "recipe": {
+    "kind": "exclusive-lane"
+   }
+  }
+ ]
+}
