@@ -85,20 +85,31 @@ Java에서는 `express.json()` 같은 본문 파서를 따로 등록하지 않�
 
 ## 모듈
 
-| 모듈 | 내용 | Android |
-|---|---|---|
-| `NaruServe-api` | 공개 API(`RestApp`, `Request`, `Response` …)와 SPI(`HttpAdapter`, `JsonCodec`, `Logger`) | 지원(API 21+) |
-| `NaruServe-servlet` | Servlet 3.1+ 컨테이너 위에서 NaruServe 앱을 실행하는 어댑터 | 미지원(JVM 전용) |
+모든 모듈의 Maven group은 `com.snoworca.naruserve`, 버전은 `0.1.0-SNAPSHOT`입니다.
 
-`RestApp.create()`는 기본 HTTP 엔진(TinyHttpd)과 Gson을 자동으로 조립합니다. 이 조립을 담당하는 배포 모듈의 이름은 **(미확정)** 입니다.
+| 모듈 | 좌표 | 내용 | Android |
+|---|---|---|---|
+| `NaruServe-api` | `com.snoworca.naruserve:NaruServe-api` | 공개 API(`RestApp`, `Request`, `Response` …)와 SPI(`HttpAdapter`, `JsonCodec`, `Logger`). 외부 의존성 없음 | 지원(API 21+) |
+| `NaruServe` | `com.snoworca.naruserve:NaruServe` | `RestApp.create()` 기본 조립(TinyHttpd + Gson + Logcat 로거) | 지원(API 21+) |
+| `NaruServe-tinyhttpd` | `com.snoworca.naruserve:NaruServe-tinyhttpd` | TinyHttpd `HttpAdapter` | 지원(API 21+) |
+| `NaruServe-gson` | `com.snoworca.naruserve:NaruServe-gson` | `GsonJsonCodec`(`com.google.code.gson:gson:2.14.0`) | 지원(API 21+) |
+| `NaruServe-kotlin` | `com.snoworca.naruserve:NaruServe-kotlin` | `reified` 등 Kotlin 전용 확장. `kotlin-stdlib`는 이 모듈만 씁니다 | 지원(API 21+) |
+| `NaruServe-logcat` | `com.snoworca.naruserve:NaruServe-logcat` | Logcat `Logger`(Android SDK 없이 빌드, 리플렉션으로 `android.util.Log` 호출) | 지원(API 21+) |
+| `NaruServe-filelog` | `com.snoworca.naruserve:NaruServe-filelog` | 파일 로테이션 `Logger` | 지원(API 21+) |
+| `NaruServe-slf4j` | `com.snoworca.naruserve:NaruServe-slf4j` | SLF4J `Logger` 어댑터(`org.slf4j:slf4j-api:1.7.36`) | 미지원(JVM 전용) |
+| `NaruServe-servlet` | `com.snoworca.naruserve:NaruServe-servlet` | Servlet 3.1+ 컨테이너 위에서 NaruServe 앱을 실행하는 어댑터 | 미지원(JVM 전용) |
+
+"지원(API 21+)" 모듈은 빌드 때 animal-sniffer `android-api-level-21` 검사를 받습니다.
+HTTP 엔진은 TinyHttpd 커밋 `46b973e`을 기준으로 빌드합니다.
+
+`RestApp.create()`는 `NaruServe` 모듈이 기본 HTTP 엔진(TinyHttpd)과 Gson을 자동으로 조립합니다.
 엔진과 JSON 구현을 직접 고르려면 `RestApp.builder()`(이름 **(미확정)**)를 씁니다([RestApp](app.md#앱-만들기) 참고).
 
 ```groovy
-// group과 버전은 임시값입니다.
-// 이 두 줄만으로는 서버를 실행할 수 없습니다.
-// RestApp.create()에 필요한 배포 모듈, TinyHttpd HttpAdapter와 GsonJsonCodec이 들어 있는 모듈의 이름은 (미확정)입니다.
-implementation 'com.snoworca.naruserve:NaruServe-api:0.1.0-SNAPSHOT'
-implementation 'com.google.code.gson:gson:2.14.0'
+// RestApp.create()로 바로 시작합니다. 컴파일 시점에는 NaruServe-api가,
+// 실행 시점에는 TinyHttpd 엔진·Gson 2.14.0·Logcat 로거가 함께 들어옵니다.
+// GsonJsonCodec이나 로거 클래스를 코드에서 직접 쓰려면 그 모듈(NaruServe-gson 등)을 따로 넣으세요.
+implementation 'com.snoworca.naruserve:NaruServe:0.1.0-SNAPSHOT'
 ```
 
 ## 지원 환경

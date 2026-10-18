@@ -94,9 +94,13 @@ ctx.register(UserService::class.java, UserService(db))
 val users: List<User> = req.body(object : TypeRef<List<User>>() {})
 ```
 
-### rest-kotlin 선택 확장
+### NaruServe-kotlin 선택 확장
 
-`reified`를 쓰는 Kotlin 확장 함수를 선택 모듈로 제공합니다(모듈 이름 **(미확정)**).
+`reified`를 쓰는 Kotlin 확장 함수를 선택 모듈 `NaruServe-kotlin`으로 제공합니다. `kotlin-stdlib`에 의존하는 모듈은 이것 하나뿐입니다.
+
+```groovy
+implementation 'com.snoworca.naruserve:NaruServe-kotlin:0.1.0-SNAPSHOT'
+```
 
 ```kotlin
 inline fun <reified T : Any> Request.body(): T = body(T::class.java)

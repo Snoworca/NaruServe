@@ -9,6 +9,11 @@ RestApp app = RestApp.create();
 ```
 
 `create()`는 기본 HTTP 엔진(TinyHttpd)과 기본 JSON 엔진(Gson 2.14.0)을 조립합니다.
+이 조립은 기본 bootstrap 모듈 `NaruServe`가 맡습니다. `create()`를 쓰려면 이 모듈을 의존성에 넣습니다.
+
+```groovy
+implementation 'com.snoworca.naruserve:NaruServe:0.1.0-SNAPSHOT'
+```
 
 엔진을 직접 고를 때는 builder를 씁니다. `NaruServe-api`만 의존하는 경우에도 이 방법을 씁니다.
 

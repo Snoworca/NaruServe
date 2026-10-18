@@ -18,7 +18,7 @@
 
 - **Gradle 8.14.3 wrapper**만 사용한다(`./gradlew build`). Maven 등 다른 빌드 도구는 쓰지 않는다.
 - 이 버전을 고른 이유: TinyHttpd와 같은 버전이라 `includeBuild`/버전 정렬이 쉽고, 로컬 JDK 17에서 돌고, Kotlin Gradle Plugin 2.x와 AGP 8.x(Android 샘플 앱)를 지원한다.
-- 모듈: `NaruServe-api`(Core, API 21 검사 대상), `NaruServe-servlet`(JVM 전용, `javax.servlet-api:3.1.0` compileOnly). 루트 `build.gradle`이 모든 모듈을 설정하고 모듈별 build 파일은 두지 않는다.
+- 모듈: `NaruServe-api`(Core), `NaruServe`(`RestApp.create()` bootstrap), `NaruServe-tinyhttpd`, `NaruServe-gson`, `NaruServe-kotlin`, `NaruServe-logcat`, `NaruServe-filelog` — 이 일곱은 API 21 검사 대상(animal-sniffer). `NaruServe-servlet`(JVM 전용, `javax.servlet-api:3.1.0` compileOnly), `NaruServe-slf4j`(JVM 전용). 루트 프로젝트 이름은 `NaruServe-build`이고 TinyHttpd 커밋 `46b973e`을 `includeBuild`한다. 루트 `build.gradle`이 모든 모듈을 설정하고 모듈별 build 파일은 두지 않는다.
 - 컴파일은 `options.release = 8`, Kotlin은 `jvmTarget = 1.8`. API 21 검사는 TinyHttpd처럼 animal-sniffer(`android-api-level-21` signature)로 한다.
 
 ## API 문서
@@ -35,7 +35,7 @@
 - 공개 API의 반환·인자에 `@Nullable`/`@NonNull`을 붙여 Kotlin에서 platform type(`T!`)이 남지 않게 한다. 어노테이션은 런타임 의존성이 없는 것(compileOnly)을 쓴다.
 - `req`/`res`/`app`은 Express식 짧은 메서드 이름(`req.param("id")`, `req.path()`, `res.status(201)`)을 쓴다. `Cookie` 같은 값 객체는 Servlet처럼 `getX()`/`setX()`/`isX()` 규칙을 지켜 Kotlin 프로퍼티 문법(`cookie.maxAge = 60`)이 되게 한다.
 - 메서드 이름에 Kotlin 키워드(`in`, `is`, `object`, `fun`, `when`, `val`, `var`)를 쓰지 않는다. 백틱이 필요해진다.
-- Core는 Kotlin stdlib에 의존하지 않는다. `reified` 확장 등 Kotlin 전용 편의 기능은 `rest-kotlin` 선택 모듈에만 둔다.
+- Core는 Kotlin stdlib에 의존하지 않는다. `reified` 확장 등 Kotlin 전용 편의 기능은 `NaruServe-kotlin` 선택 모듈에만 둔다.
 - 공개 API 변경 시 Kotlin 소스로 된 컴파일·실행 테스트를 함께 유지한다(T11).
 
 # SpecKiwi SRS workflow v1.9

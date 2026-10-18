@@ -80,5 +80,13 @@ public interface Logger {
 | Android | Logcat | |
 | JVM | 콘솔 | SLF4J 어댑터, 파일 로테이션 로거 |
 
-`NaruServe-api`는 SLF4J와 `android.*`에 의존하지 않습니다. Logcat 로거, SLF4J 어댑터, 파일 로거를 담는 모듈 이름은 **(미확정)** 입니다.
+`NaruServe-api`는 SLF4J와 `android.*`에 의존하지 않습니다. 로거 구현은 각자 모듈에 있습니다.
+
+| 로거 | 모듈 | 좌표 | Android |
+|---|---|---|---|
+| Logcat | `NaruServe-logcat` | `com.snoworca.naruserve:NaruServe-logcat:0.1.0-SNAPSHOT` | 지원(API 21+). Android SDK 없이 빌드하고 `android.util.Log`는 리플렉션으로 부릅니다 |
+| 파일 로테이션 | `NaruServe-filelog` | `com.snoworca.naruserve:NaruServe-filelog:0.1.0-SNAPSHOT` | 지원(API 21+) |
+| SLF4J 어댑터 | `NaruServe-slf4j` | `com.snoworca.naruserve:NaruServe-slf4j:0.1.0-SNAPSHOT` (`org.slf4j:slf4j-api:1.7.36`) | 미지원(JVM 전용) |
+
+`RestApp.create()`용 `NaruServe` 모듈은 `NaruServe-logcat`을 실행 시점에만 함께 가져옵니다. 로거 클래스를 코드에서 직접 쓰려면 해당 모듈을 의존성에 넣으세요.
 파일 로거 예시 설정은 폴더 `./logs`, 파일당 5 MiB, 최대 5개입니다. 로그 쓰기가 실패해도 HTTP 서비스는 멈추지 않습니다.

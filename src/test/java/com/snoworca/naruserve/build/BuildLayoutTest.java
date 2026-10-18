@@ -1,0 +1,397 @@
+package com.snoworca.naruserve.build;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.junit.Test;
+
+/**
+ * Inspects the root build's files and the outputs of the module builds that run before this test.
+ */
+public class BuildLayoutTest {
+
+    static final List<String> MODULES = Arrays.asList("NaruServe-api", "NaruServe-servlet", "NaruServe-tinyhttpd",
+            "NaruServe-gson", "NaruServe", "NaruServe-kotlin", "NaruServe-slf4j", "NaruServe-filelog",
+            "NaruServe-logcat");
+
+    private static final File ROOT = new File(property("naruserve.rootDir"));
+
+    static String property(String name) {
+        String value = System.getProperty(name);
+        assertNotNull("system property " + name + " is set by the root build", value);
+        return value;
+    }
+
+    static String read(File file) throws IOException {
+        try (InputStream in = new FileInputStream(file)) {
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            byte[] buf = new byte[8192];
+            int n;
+            while ((n = in.read(buf)) > 0) {
+                out.write(buf, 0, n);
+            }
+            return new String(out.toByteArray(), StandardCharsets.UTF_8);
+        }
+    }
+
+    private static List<File> walk(File dir, String suffix) {
+        List<File> found = new ArrayList<>();
+        File[] children = dir.listFiles();
+        if (children == null) {
+            return found;
+        }
+        Arrays.sort(children);
+        for (File child : children) {
+            if (child.isDirectory()) {
+                found.addAll(walk(child, suffix));
+            } else if (child.getName().endsWith(suffix)) {
+                found.add(child);
+            }
+        }
+        return found;
+    }
+
+    // SDS-AC-1; CON-BUILD-002 AC-1, CON-BUILD-002 AC-2, CON-BUILD-002 AC-3
+    @Test
+    public void sdsAc1_CON_BUILD_002_AC1_AC2_AC3_settingsIncludesNineModulesAndRootName() throws IOException {
+        String settings = read(new File(ROOT, "settings.gradle"));
+        Set<String> included = new TreeSet<>();
+        Matcher m = Pattern.compile("include\\s*\\(?\\s*['\"]:([^'\"]+)['\"]").matcher(settings);
+        while (m.find()) {
+            included.add(m.group(1));
+        }
+        assertEquals(new TreeSet<>(MODULES), included);
+        assertTrue("rootProject.name is NaruServe-build",
+                Pattern.compile("rootProject\\.name\\s*=\\s*['\"]NaruServe-build['\"]").matcher(settings).find());
+        for (String module : MODULES) {
+            if (module.startsWith("NaruServe-")) {
+                continue;
+            }
+            assertEquals("the only module without a suffix is the bootstrap NaruServe", "NaruServe", module);
+        }
+    }
+
+    // SDS-AC-2; CON-BUILD-005 AC-1
+    @Test
+    public void sdsAc2_CON_BUILD_005_AC1_mainSourcesUseModulePackages() throws IOException {
+        Map<String, String> packages = new LinkedHashMap<>();
+        packages.put("NaruServe-api", "com.snoworca.naruserve");
+        packages.put("NaruServe-servlet", "com.snoworca.naruserve.servlet");
+        packages.put("NaruServe-tinyhttpd", "com.snoworca.naruserve.tinyhttpd");
+        packages.put("NaruServe-gson", "com.snoworca.naruserve.gson");
+        packages.put("NaruServe", "com.snoworca.naruserve.bootstrap");
+        packages.put("NaruServe-kotlin", "com.snoworca.naruserve.kotlin");
+        packages.put("NaruServe-slf4j", "com.snoworca.naruserve.slf4j");
+        packages.put("NaruServe-filelog", "com.snoworca.naruserve.filelog");
+        packages.put("NaruServe-logcat", "com.snoworca.naruserve.logcat");
+        assertEquals(new HashSet<>(MODULES), packages.keySet());
+
+        Pattern packageLine = Pattern.compile("(?m)^\\s*package\\s+([\\w.]+)");
+        int checked = 0;
+        for (Map.Entry<String, String> e : packages.entrySet()) {
+            File main = new File(ROOT, e.getKey() + "/src/main");
+            List<File> sources = walk(main, ".java");
+            sources.addAll(walk(main, ".kt"));
+            for (File source : sources) {
+                Matcher m = packageLine.matcher(read(source));
+                assertTrue(source + " declares a package", m.find());
+                String pkg = m.group(1);
+                assertTrue(source + " package " + pkg + " is under " + e.getValue(),
+                        pkg.equals(e.getValue()) || pkg.startsWith(e.getValue() + "."));
+                checked++;
+            }
+        }
+        assertTrue("main sources were found", checked >= 7);
+        assertTrue("Maven group is com.snoworca.naruserve",
+                read(new File(ROOT, "build.gradle")).contains("group = 'com.snoworca.naruserve'"));
+    }
+
+    private static int majorVersion(File classFile) throws IOException {
+        try (DataInputStream in = new DataInputStream(new FileInputStream(classFile))) {
+            assertEquals(classFile + " is a class file", 0xCAFEBABE, in.readInt());
+            in.readUnsignedShort();
+            return in.readUnsignedShort();
+        }
+    }
+
+    // SDS-AC-6; CON-BUILD-004 AC-1, CON-BUILD-004 AC-2
+    @Test
+    public void sdsAc6_CON_BUILD_004_AC1_AC2_allMainAndTestClassesAreMajor52() throws IOException {
+        int checked = 0;
+        Set<String> seenOutputs = new TreeSet<>();
+        for (String module : MODULES) {
+            File[] languages = new File(ROOT, module + "/build/classes").listFiles();
+            if (languages == null) {
+                continue;
+            }
+            for (File language : languages) {
+                for (String sourceSet : new String[] {"main", "test"}) {
+                    for (File classFile : walk(new File(language, sourceSet), ".class")) {
+                        assertEquals(classFile.getPath(), 52, majorVersion(classFile));
+                        seenOutputs.add(module + "/" + language.getName() + "/" + sourceSet);
+                        checked++;
+                    }
+                }
+            }
+        }
+        assertTrue("found classes: " + seenOutputs, checked > 0);
+        assertTrue(seenOutputs.toString(), seenOutputs.containsAll(Arrays.asList(
+                "NaruServe-api/java/test", "NaruServe-api/kotlin/test",
+                "NaruServe-kotlin/kotlin/main", "NaruServe-kotlin/kotlin/test")));
+    }
+
+    /** Lines of the checkDependencyRules report: {@code :module|configuration|group:name:version}. */
+    private static List<String[]> dependencyReport() throws IOException {
+        List<String[]> rows = new ArrayList<>();
+        for (String line : read(new File(property("naruserve.depReport"))).split("\n")) {
+            if (!line.trim().isEmpty()) {
+                rows.add(line.trim().split("\\|"));
+            }
+        }
+        return rows;
+    }
+
+    // SDS-AC-7; CON-BUILD-011 AC-1, CON-BUILD-006 AC-2
+    @Test
+    public void sdsAc7_CON_BUILD_011_AC1_jspecifyCompileOnlyEverywhereAndNeverAtRuntime() throws IOException {
+        Set<String> runtimeListed = new TreeSet<>();
+        Set<String> jspecifyCompile = new TreeSet<>();
+        for (String[] row : dependencyReport()) {
+            String module = row[0].substring(1);
+            if (row[1].equals("runtimeClasspath")) {
+                runtimeListed.add(module);
+                assertFalse("jspecify on " + row[1] + " of " + module, row[2].startsWith("org.jspecify:"));
+            }
+            if (row[1].equals("compileClasspath") && row[2].equals("org.jspecify:jspecify:1.0.0")) {
+                jspecifyCompile.add(module);
+            }
+        }
+        assertEquals(new TreeSet<>(MODULES), runtimeListed);
+        assertEquals(new TreeSet<>(MODULES), jspecifyCompile);
+    }
+
+    // CON-BUILD-006 AC-3
+    @Test
+    public void con_BUILD_006_AC3_apiRuntimeClasspathHoldsNoArtifact() throws IOException {
+        for (String[] row : dependencyReport()) {
+            if (row[0].equals(":NaruServe-api") && row[1].equals("runtimeClasspath")) {
+                assertTrue("only the api project itself: " + row[2],
+                        row[2].startsWith("com.snoworca.naruserve:NaruServe-api:"));
+            }
+        }
+    }
+
+    /** Resolved {@code group:name} of one module's configuration, without the module itself. */
+    private static Set<String> components(String module, String configuration) throws IOException {
+        Set<String> found = new TreeSet<>();
+        for (String[] row : dependencyReport()) {
+            if (row[0].equals(":" + module) && row[1].equals(configuration)) {
+                String[] gav = row[2].split(":");
+                String ga = gav[0] + ":" + gav[1];
+                if (!ga.equals("com.snoworca.naruserve:" + module)) {
+                    found.add(row[2].startsWith("com.snoworca.naruserve:") ? ga : row[2]);
+                }
+            }
+        }
+        return found;
+    }
+
+    private static Set<String> set(String... items) {
+        return new TreeSet<>(Arrays.asList(items));
+    }
+
+    // CON-BUILD-006 AC-1, CON-BUILD-006 AC-4, CON-BUILD-006 AC-6, CON-BUILD-006 AC-7, CON-BUILD-009 AC-1
+    @Test
+    public void con_BUILD_006_AC1_AC4_AC6_AC7_runtimeClasspathsHoldExactlyTheDeclaredMainDependencies()
+            throws IOException {
+        String api = "com.snoworca.naruserve:NaruServe-api";
+        String core = "com.snoworca.tinyhttpd:tinyhttpd-core:0.1.0-SNAPSHOT";
+        String websocket = "com.snoworca.tinyhttpd:tinyhttpd-websocket:0.1.0-SNAPSHOT";
+        String gson = "com.google.code.gson:gson:2.14.0";
+        // Gson 2.14.0 itself brings error_prone_annotations; AC-4 limits declarations, not transitive edges.
+        String gsonTransitive = "com.google.errorprone:error_prone_annotations:2.48.0";
+        assertEquals(set(), components("NaruServe-api", "runtimeClasspath"));
+        assertEquals(set(api), components("NaruServe-servlet", "runtimeClasspath"));
+        assertEquals(set(api, core, websocket), components("NaruServe-tinyhttpd", "runtimeClasspath"));
+        assertEquals(set(api, gson, gsonTransitive), components("NaruServe-gson", "runtimeClasspath"));
+        assertEquals(set(api, "com.snoworca.naruserve:NaruServe-tinyhttpd", "com.snoworca.naruserve:NaruServe-gson",
+                "com.snoworca.naruserve:NaruServe-logcat", core, websocket, gson, gsonTransitive),
+                components("NaruServe", "runtimeClasspath"));
+        assertEquals(set(api, "org.jetbrains.kotlin:kotlin-stdlib:2.2.0", "org.jetbrains:annotations:13.0"),
+                components("NaruServe-kotlin", "runtimeClasspath"));
+        assertEquals(set(api, "org.slf4j:slf4j-api:1.7.36"), components("NaruServe-slf4j", "runtimeClasspath"));
+        assertEquals(set(api), components("NaruServe-filelog", "runtimeClasspath"));
+        assertEquals(set(api), components("NaruServe-logcat", "runtimeClasspath"));
+    }
+
+    // CON-BUILD-006 AC-5, CON-BUILD-006 AC-9, CON-BUILD-009 AC-4
+    @Test
+    public void con_BUILD_006_AC5_AC9_compileOnlyServletApisAndGsonExposedToBootstrap() throws IOException {
+        Set<String> servletCompile = components("NaruServe-servlet", "compileClasspath");
+        assertTrue(servletCompile.toString(), servletCompile.containsAll(set(
+                "javax.servlet:javax.servlet-api:3.1.0", "javax.websocket:javax.websocket-api:1.1")));
+        Set<String> bootstrapCompile = components("NaruServe", "compileClasspath");
+        assertTrue(bootstrapCompile.toString(), bootstrapCompile.contains("com.google.code.gson:gson:2.14.0"));
+        for (String c : bootstrapCompile) {
+            assertFalse("TinyHttpd is implementation-scope: " + c, c.startsWith("com.snoworca.tinyhttpd:"));
+        }
+    }
+
+    // CON-BUILD-006 AC-8
+    @Test
+    public void con_BUILD_006_AC8_apiHasTestFixtures() {
+        assertTrue(new File(ROOT, "NaruServe-api/build/libs/NaruServe-api-0.1.0-SNAPSHOT-test-fixtures.jar").isFile());
+    }
+
+    // CON-BUILD-007 AC-1, CON-BUILD-007 AC-2
+    @Test
+    public void con_BUILD_007_AC1_AC2_kotlinStdlibOnlyInKotlinModule() throws IOException {
+        assertTrue(read(new File(ROOT, "gradle.properties")).contains("kotlin.stdlib.default.dependency=false"));
+        for (String module : MODULES) {
+            for (String configuration : new String[] {"compileClasspath", "runtimeClasspath"}) {
+                boolean stdlib = components(module, configuration).contains("org.jetbrains.kotlin:kotlin-stdlib:2.2.0");
+                assertEquals(module + " " + configuration, module.equals("NaruServe-kotlin"), stdlib);
+            }
+        }
+    }
+
+    // OPS-BUILD-002 AC-1, OPS-BUILD-002 AC-5
+    @Test
+    public void ops_BUILD_002_AC1_AC5_junitAndKotlinTestStdlibInEveryModule() throws IOException {
+        for (String module : MODULES) {
+            Set<String> testCompile = components(module, "testCompileClasspath");
+            assertTrue(module + " " + testCompile, testCompile.contains("junit:junit:4.13.2"));
+            assertTrue(module + " " + testCompile, testCompile.contains("org.jetbrains.kotlin:kotlin-stdlib:2.2.0"));
+        }
+    }
+
+    // CON-BUILD-003 AC-1
+    @Test
+    public void con_BUILD_003_AC1_rootBuildFileHoldsPluginsCompileDependenciesAndChecks() throws IOException {
+        String build = read(new File(ROOT, "build.gradle"));
+        for (String part : new String[] {"'java-library'", "'org.jetbrains.kotlin.jvm'", "'ru.vyarus.animalsniffer'",
+                "options.release = 8", "checkClassReferences", "checkDependencyRules", "configureDependencies"}) {
+            assertTrue("root build.gradle holds " + part, build.contains(part));
+        }
+    }
+
+    // OPS-BUILD-003 AC-5
+    @Test
+    public void ops_BUILD_003_AC5_servletDocKeepsJakartaMarker() throws IOException {
+        assertTrue(read(new File(ROOT, "docs/api/servlet.md")).contains("jakarta"));
+    }
+
+    // SDS-AC-7; CON-BUILD-001 AC-1
+    @Test
+    public void con_BUILD_001_AC1_gradleWrapperIsTheOnlyBuildTool() throws IOException {
+        assertTrue(read(new File(ROOT, "gradle/wrapper/gradle-wrapper.properties"))
+                .contains("gradle-8.14.3-bin.zip"));
+        for (String name : new String[] {"pom.xml", "build.xml", "mvnw", "mvnw.cmd", ".mvn", "build.sbt",
+                "BUILD.bazel", "WORKSPACE"}) {
+            assertFalse(name + " must not exist", new File(ROOT, name).exists());
+        }
+    }
+
+    // SDS-AC-7; CON-BUILD-003 AC-2
+    @Test
+    public void con_BUILD_003_AC2_noModuleBuildFile() {
+        for (String module : MODULES) {
+            for (String name : new String[] {"build.gradle", "build.gradle.kts", "pom.xml"}) {
+                assertFalse(module + "/" + name, new File(ROOT, module + "/" + name).exists());
+            }
+        }
+    }
+
+    // SDS-AC-19; CON-BUILD-010 AC-1
+    @Test
+    public void sdsAc19_CON_BUILD_010_AC1_tinyHttpdCheckoutHasNoChanges() throws Exception {
+        assertTinyHttpdClean();
+    }
+
+    /** Also called after BuildChecksTest's nested builds, since test class order is not fixed. */
+    static void assertTinyHttpdClean() throws Exception {
+        // --no-optional-locks keeps git status from rewriting the checkout's index.
+        Process git = new ProcessBuilder("git", "--no-optional-locks", "-C", property("naruserve.tinyHttpdDir"),
+                "status", "--porcelain").redirectErrorStream(true).start();
+        String out;
+        try (InputStream in = git.getInputStream()) {
+            ByteArrayOutputStream buf = new ByteArrayOutputStream();
+            byte[] b = new byte[4096];
+            int n;
+            while ((n = in.read(b)) > 0) {
+                buf.write(b, 0, n);
+            }
+            out = new String(buf.toByteArray(), StandardCharsets.UTF_8);
+        }
+        assertEquals(out, 0, git.waitFor());
+        assertEquals("", out);
+    }
+
+    // SDS-AC-20; OPS-BUILD-003 AC-1
+    @Test
+    public void sdsAc20_OPS_BUILD_003_AC1_readmeNamesTinyHttpdCommit() throws IOException {
+        assertTrue(read(new File(ROOT, "docs/api/README.md")).contains("46b973e"));
+    }
+
+    // SDS-AC-20; OPS-BUILD-003 AC-2
+    @Test
+    public void ops_BUILD_003_AC2_apiDocsNameFinalModulesWithoutUndecidedMarker() throws IOException {
+        Map<String, List<String>> required = new LinkedHashMap<>();
+        required.put("README.md", MODULES);
+        required.put("app.md", Arrays.asList("com.snoworca.naruserve:NaruServe:"));
+        required.put("json.md", Arrays.asList("NaruServe-gson", "com.snoworca.naruserve:NaruServe-gson:",
+                "com.google.code.gson:gson:2.14.0"));
+        required.put("kotlin.md", Arrays.asList("NaruServe-kotlin", "com.snoworca.naruserve:NaruServe-kotlin:"));
+        required.put("logging.md", Arrays.asList("NaruServe-slf4j", "NaruServe-filelog", "NaruServe-logcat"));
+        for (Map.Entry<String, List<String>> e : required.entrySet()) {
+            String doc = read(new File(ROOT, "docs/api/" + e.getKey()));
+            for (String name : e.getValue()) {
+                assertTrue(e.getKey() + " names " + name, doc.contains(name));
+            }
+            for (String line : doc.split("\n")) {
+                assertFalse(e.getKey() + " has a module (미확정) marker: " + line,
+                        line.contains("(미확정)") && (line.contains("모듈") || line.contains("좌표")));
+            }
+        }
+    }
+
+    // SDS-AC-20; OPS-BUILD-003 AC-3, OPS-BUILD-003 AC-4
+    @Test
+    public void ops_BUILD_003_AC3_AC4_claudeMdModuleLineAndNoRestKotlin() throws IOException {
+        String claude = read(new File(ROOT, "CLAUDE.md"));
+        String moduleLine = null;
+        for (String line : claude.split("\n")) {
+            if (line.startsWith("- 모듈:")) {
+                moduleLine = line;
+            }
+        }
+        assertNotNull("CLAUDE.md has a '- 모듈:' line", moduleLine);
+        for (String module : MODULES) {
+            assertTrue("module line names " + module, moduleLine.contains("`" + module + "`"));
+        }
+        assertTrue(moduleLine.contains("API 21"));
+        assertTrue(moduleLine.contains("JVM 전용"));
+        assertFalse(claude.contains("rest-kotlin"));
+        assertFalse(read(new File(ROOT, "docs/api/kotlin.md")).contains("rest-kotlin"));
+    }
+}
