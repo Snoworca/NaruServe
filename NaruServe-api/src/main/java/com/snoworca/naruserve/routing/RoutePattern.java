@@ -80,26 +80,37 @@ public final class RoutePattern {
     // @req FR-ROUTE-005
     // @req FR-ROUTE-006
     public @Nullable Map<String, String> match(List<String> decodedSegments, RouterPolicy policy) {
-        int n = effectiveLength(policy);
-        if (decodedSegments.size() != n) {
+        if (!matches(decodedSegments, policy)) {
             return null;
         }
         Map<String, String> params = null;
-        for (int i = 0; i < n; i++) {
-            String seg = decodedSegments.get(i);
+        for (int i = 0, n = effectiveLength(policy); i < n; i++) {
             if (variable[i]) {
-                if (seg.isEmpty()) {
-                    return null;
-                }
                 if (params == null) {
                     params = new LinkedHashMap<>();
                 }
-                params.put(segments[i], seg);
-            } else if (policy.caseInsensitive() ? !segments[i].equalsIgnoreCase(seg) : !segments[i].equals(seg)) {
-                return null;
+                params.put(segments[i], decodedSegments.get(i));
             }
         }
         return params == null ? Collections.<String, String>emptyMap() : Collections.unmodifiableMap(params);
+    }
+
+    /** True exactly when {@link #match} would return non-null; allocates nothing (lookup's per-route probe). */
+    // @req FR-ROUTE-005
+    // @req FR-ROUTE-006
+    boolean matches(List<String> decodedSegments, RouterPolicy policy) {
+        int n = effectiveLength(policy);
+        if (decodedSegments.size() != n) {
+            return false;
+        }
+        for (int i = 0; i < n; i++) {
+            String seg = decodedSegments.get(i);
+            if (variable[i] ? seg.isEmpty()
+                    : policy.caseInsensitive() ? !segments[i].equalsIgnoreCase(seg) : !segments[i].equals(seg)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**

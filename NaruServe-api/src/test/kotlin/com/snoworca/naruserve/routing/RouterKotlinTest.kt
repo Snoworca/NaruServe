@@ -38,4 +38,49 @@ class RouterKotlinTest {
         val match = RoutePattern::class.java.getMethod("match", List::class.java, RouterPolicy::class.java)
         assertTrue(match.annotatedReturnType.isAnnotationPresent(Nullable::class.java))
     }
+
+    // CON-ROUTE-001 AC-3: RouteMatch as Kotlin callers consume it. With -Xjspecify-annotations=strict these are
+    // real Kotlin types, so `m.handler().length` (no `?.`) would not compile; `m.params()["id"]` needs no `!!`.
+    @Test
+    fun `CON-ROUTE-001 AC-3 lookup and RouteMatch from Kotlin`() {
+        val router: Router<String> = Router(RouterPolicy.strict())
+        router.add(Method.GET, "/users/:id", "user")
+        router.freeze()
+        val m: RouteMatch<String> = router.lookup("GET", "/users/7", false)
+        val kind: RouteMatch.Kind = m.kind()
+        assertEquals(RouteMatch.Kind.MATCHED, kind)
+        assertEquals(4, m.handler()?.length)
+        val params: Map<String, String> = m.params()
+        assertEquals("7", params["id"])
+        val method: Method? = m.method()
+        assertEquals(Method.GET, method)
+        val routeKind: RouteKind? = m.routeKind()
+        assertEquals(RouteKind.HTTP, routeKind)
+        assertNull(m.allow())
+        val mismatch = router.lookup("POST", "/users/7", false)
+        assertEquals(true, mismatch.allow()?.contains(Method.GET))
+        assertNull(mismatch.handler())
+        assertTrue(mismatch.params().isEmpty())
+    }
+
+    // CON-ROUTE-001 AC-3: every public method of the routing API is NullMarked, and exactly the documented
+    // nullable returns carry @Nullable, so no return reaches Kotlin as a platform type.
+    @Test
+    fun `CON-ROUTE-001 AC-3 nullable returns are exactly the documented ones`() {
+        val expectedNullable = mapOf(
+            RouteMatch::class.java to setOf("handler", "method", "routeKind", "allow"),
+            Router::class.java to emptySet(),
+            RoutePattern::class.java to setOf("match"),
+            PathValidator::class.java to emptySet(),
+            RouterPolicy::class.java to emptySet(),
+        )
+        for ((type, nullable) in expectedNullable) {
+            assertTrue(type.name, type.`package`.isAnnotationPresent(NullMarked::class.java))
+            for (m in type.methods) {
+                if (m.declaringClass != type || m.returnType.isPrimitive) continue
+                val annotated = m.annotatedReturnType.isAnnotationPresent(Nullable::class.java)
+                assertEquals("${type.simpleName}.${m.name}", m.name in nullable, annotated)
+            }
+        }
+    }
 }

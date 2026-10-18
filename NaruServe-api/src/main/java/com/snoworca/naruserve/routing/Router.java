@@ -6,11 +6,14 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 import org.jspecify.annotations.Nullable;
 
 /**
  * Engine-free route table. The handler type {@code H} is opaque to the router, so it holds any value the
  * caller registers. Configure with {@link #add} and {@link #addWebSocket}, then call {@link #freeze()} once.
+ * Registration and freeze are serialised by the router's lock; after freeze the table is read-only and published
+ * through a volatile write, so {@link #lookup} is safe from any number of threads.
  */
 // @req CON-ROUTE-001
 // @req FR-ROUTE-002
@@ -36,9 +39,14 @@ public final class Router<H> {
         }
     }
 
+    private static final Method[] METHODS = Method.values();
+    private static final Pattern REPEATED_SLASHES = Pattern.compile("/{2,}");
+
     private final RouterPolicy policy;
-    final List<Route<H>> routes = new ArrayList<>();
-    private boolean frozen;
+    /** Growable while configuring; replaced by an unmodifiable copy at freeze. */
+    volatile List<Route<H>> routes = new ArrayList<>();
+    /** Written last in freeze(); a reader that sees true also sees the frozen table. */
+    private volatile boolean frozen;
 
     // RouterPolicy is immutable, so holding the reference is the copy.
     // @req FR-ROUTE-006
@@ -52,7 +60,7 @@ public final class Router<H> {
     /** Registers {@code handler} for every method in {@code methods}; invalid patterns throw here. */
     // @req FR-ROUTE-002
     // @req FR-ROUTE-003
-    public void add(MethodSet methods, String pattern, H handler) {
+    public synchronized void add(MethodSet methods, String pattern, H handler) {
         RoutePattern parsed = RoutePattern.parse(pattern);
         checkRegistration(handler);
         for (Method m : methods) {
@@ -61,13 +69,13 @@ public final class Router<H> {
     }
 
     // @req FR-ROUTE-002
-    public void add(Method method, String pattern, H handler) {
+    public synchronized void add(Method method, String pattern, H handler) {
         add(MethodSet.of(method), pattern, handler);
     }
 
     /** Internal hook for WebSocket routes: kind {@link RouteKind#WEBSOCKET}, counted as {@code GET}. */
     // @req FR-ROUTE-002
-    public void addWebSocket(String pattern, H handler) {
+    public synchronized void addWebSocket(String pattern, H handler) {
         RoutePattern parsed = RoutePattern.parse(pattern);
         checkRegistration(handler);
         routes.add(new Route<>(RouteKind.WEBSOCKET, Method.GET, parsed, handler));
@@ -87,7 +95,7 @@ public final class Router<H> {
      * ("METHOD pattern conflicts with METHOD pattern") and per TRACE/CONNECT route while that method is disabled.
      */
     // @req FR-ROUTE-008
-    public void freeze() {
+    public synchronized void freeze() {
         if (frozen) {
             return;
         }
@@ -120,26 +128,26 @@ public final class Router<H> {
             }
             throw new RoutingConfigException(sb.toString());
         }
+        routes = Collections.unmodifiableList(new ArrayList<>(routes));
         frozen = true;
     }
 
     /** The most specific HTTP route of {@code method} matching {@code segments}, or null. */
     // @req FR-ROUTE-007
     @Nullable Route<H> find(Method method, List<String> segments) {
-        return find(RouteKind.HTTP, method, segments);
-    }
-
-    // @req FR-ROUTE-007
-    // @req FR-ROUTE-015
-    private @Nullable Route<H> find(RouteKind kind, Method method, List<String> segments) {
         Route<H> best = null;
         for (Route<H> r : routes) {
-            if (r.kind == kind && r.method == method && r.pattern.match(segments, policy) != null
-                    && (best == null || r.pattern.compareSpecificity(best.pattern) > 0)) {
-                best = r;
+            if (r.kind == RouteKind.HTTP && r.method == method && r.pattern.matches(segments, policy)) {
+                best = better(best, r);
             }
         }
         return best;
+    }
+
+    /** {@code candidate} when it is strictly more specific than {@code best}; ties keep the earlier registration. */
+    // @req FR-ROUTE-007
+    private static <H> Route<H> better(@Nullable Route<H> best, Route<H> candidate) {
+        return best == null || candidate.pattern.compareSpecificity(best.pattern) > 0 ? candidate : best;
     }
 
     /**
@@ -157,13 +165,15 @@ public final class Router<H> {
         if (!frozen) {
             throw new IllegalStateException("Router is not frozen; call freeze() before lookup");
         }
+        // shortcut: decodeSegments re-decodes what isValid decoded; cheap for '%'-free segments, fuse if profiling says so.
         if (!PathValidator.isValid(rawPath)) {
             throw new IllegalArgumentException("Rejected request path: " + rawPath);
         }
         Method method = null;
-        for (Method m : Method.values()) {
+        for (Method m : METHODS) {
             if (m.name().equals(methodToken)) {
                 method = m;
+                break;
             }
         }
         if (method == null || (method == Method.TRACE && !policy.enableTrace())
@@ -171,41 +181,50 @@ public final class Router<H> {
             return RouteMatch.of(RouteMatch.Kind.UNSUPPORTED_METHOD);
         }
         List<String> segments = decodeSegments(rawPath, policy);
-        if (upgrade && method == Method.GET) {
-            Route<H> ws = find(RouteKind.WEBSOCKET, Method.GET, segments);
-            if (ws != null) {
-                return matched(ws, segments, false);
+        // One allocation-free pass over the frozen table; params are built only for the winner.
+        Route<H> ws = null;
+        Route<H> direct = null;
+        Route<H> get = null;
+        boolean httpMatch = false;
+        int methodMask = 0;
+        for (Route<H> r : routes) {
+            if (!r.pattern.matches(segments, policy)) {
+                continue;
+            }
+            methodMask |= 1 << r.method.ordinal();
+            if (r.kind == RouteKind.WEBSOCKET) {
+                ws = better(ws, r);
+            } else {
+                httpMatch = true;
+                if (r.method == method) {
+                    direct = better(direct, r);
+                }
+                if (r.method == Method.GET) {
+                    get = better(get, r);
+                }
             }
         }
-        boolean httpMatch = false;
-        boolean wsMatch = false;
-        for (Route<H> r : routes) {
-            if (r.pattern.match(segments, policy) != null) {
-                httpMatch |= r.kind == RouteKind.HTTP;
-                wsMatch |= r.kind == RouteKind.WEBSOCKET;
-            }
+        boolean wsMatch = ws != null;
+        if (upgrade && method == Method.GET && ws != null) {
+            return matched(ws, segments, false);
         }
         if (!httpMatch && !wsMatch) {
             return RouteMatch.of(RouteMatch.Kind.NO_MATCH);
         }
-        Route<H> direct = find(method, segments);
         if (direct != null) {
             return matched(direct, segments, false);
         }
         if (method == Method.OPTIONS) {
-            return RouteMatch.withAllow(RouteMatch.Kind.AUTO_OPTIONS, allowFor(segments));
+            return RouteMatch.withAllow(RouteMatch.Kind.AUTO_OPTIONS, allowOf(methodMask));
         }
-        if (method == Method.HEAD) {
-            Route<H> get = find(Method.GET, segments);
-            if (get != null) {
-                return matched(get, segments, true);
-            }
+        if (method == Method.HEAD && get != null) {
+            return matched(get, segments, true);
         }
         // Reaching here, GET and HEAD have no HTTP GET route on this path.
         if (wsMatch && (method == Method.GET || method == Method.HEAD || !httpMatch)) {
             return RouteMatch.of(RouteMatch.Kind.WEBSOCKET_ONLY);
         }
-        return RouteMatch.withAllow(RouteMatch.Kind.METHOD_MISMATCH, allowFor(segments));
+        return RouteMatch.withAllow(RouteMatch.Kind.METHOD_MISMATCH, allowOf(methodMask));
     }
 
     private RouteMatch<H> matched(Route<H> r, List<String> segments, boolean autoHead) {
@@ -221,10 +240,21 @@ public final class Router<H> {
     // @req FR-ROUTE-010
     // @req FR-ROUTE-012
     public MethodSet allowFor(List<String> segments) {
-        MethodSet allow = MethodSet.of(Method.OPTIONS);
+        int methodMask = 0;
         for (Route<H> r : routes) {
-            if (r.pattern.match(segments, policy) != null) {
-                allow = allow.with(r.method);
+            if (r.pattern.matches(segments, policy)) {
+                methodMask |= 1 << r.method.ordinal();
+            }
+        }
+        return allowOf(methodMask);
+    }
+
+    /** Allow set from a bit per matching route method (bit = ordinal): those methods, HEAD with GET, OPTIONS. */
+    private static MethodSet allowOf(int methodMask) {
+        MethodSet allow = MethodSet.of(Method.OPTIONS);
+        for (Method m : METHODS) {
+            if ((methodMask & (1 << m.ordinal())) != 0) {
+                allow = allow.with(m);
             }
         }
         return allow.contains(Method.GET) ? allow.with(Method.HEAD) : allow;
@@ -262,7 +292,7 @@ public final class Router<H> {
     public static List<String> decodeSegments(String rawPath, RouterPolicy policy) {
         String path = PathValidator.stripQuery(rawPath);
         if (policy.mergeSlashes()) {
-            path = path.replaceAll("/{2,}", "/");
+            path = REPEATED_SLASHES.matcher(path).replaceAll("/");
         }
         if (path.startsWith("/")) {
             path = path.substring(1);

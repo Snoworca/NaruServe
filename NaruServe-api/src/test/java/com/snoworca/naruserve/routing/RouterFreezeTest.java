@@ -3,9 +3,12 @@ package com.snoworca.naruserve.routing;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.snoworca.naruserve.Method;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import org.junit.Test;
 
 public class RouterFreezeTest {
@@ -150,5 +153,44 @@ public class RouterFreezeTest {
         r.add(Method.TRACE, "/t", "1");
         r.add(Method.CONNECT, "/c", "2");
         r.freeze();
+    }
+
+
+    // FR-ROUTE-008 AC-1: the frozen table cannot change after the conflict scan ran.
+    @Test
+    public void FR_ROUTE_008_AC1_tableIsUnmodifiableAfterFreeze() {
+        Router<String> r = new Router<>(RouterPolicy.strict());
+        r.add(Method.GET, "/a", "a");
+        r.freeze();
+        try {
+            r.routes.add(r.routes.get(0));
+            fail("frozen route table accepted a new route");
+        } catch (UnsupportedOperationException expected) {
+            // frozen table is read-only
+        }
+        assertEquals("a", r.lookup("GET", "/a", false).handler());
+    }
+
+    // FR-ROUTE-008 AC-1: every mutable field is volatile, so lookup on another thread sees the frozen state.
+    @Test
+    public void FR_ROUTE_008_AC1_mutableFieldsAreVolatile() {
+        for (Field f : Router.class.getDeclaredFields()) {
+            int mod = f.getModifiers();
+            if (!Modifier.isStatic(mod) && !Modifier.isFinal(mod) && !f.isSynthetic()) {
+                assertTrue(f.getName() + " must be volatile", Modifier.isVolatile(mod));
+            }
+        }
+    }
+
+    // FR-ROUTE-008 AC-1: registration and freeze share one lock, so a racing add cannot slip past the scan.
+    @Test
+    public void FR_ROUTE_008_AC1_registrationAndFreezeAreSynchronized() {
+        for (java.lang.reflect.Method m : Router.class.getDeclaredMethods()) {
+            String n = m.getName();
+            boolean config = n.equals("add") || n.equals("addWebSocket") || n.equals("freeze");
+            if (config && Modifier.isPublic(m.getModifiers())) {
+                assertTrue(m.toString(), Modifier.isSynchronized(m.getModifiers()));
+            }
+        }
     }
 }
