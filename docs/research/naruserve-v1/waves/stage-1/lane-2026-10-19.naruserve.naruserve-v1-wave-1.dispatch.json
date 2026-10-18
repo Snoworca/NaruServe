@@ -1,0 +1,19 @@
+{
+ "run_id": "2026-10-19.NaruServe.naruserve-v1",
+ "wave": "wave-1",
+ "stage": 1,
+ "laneId": "lane-2026-10-19.naruserve.naruserve-v1-wave-1",
+ "target": "wave-1",
+ "allocation": ["CON-BUILD-001","CON-BUILD-002","CON-BUILD-003","CON-BUILD-004","CON-BUILD-005","CON-BUILD-006","CON-BUILD-007","CON-BUILD-008","CON-BUILD-009","CON-BUILD-010","CON-BUILD-011","CON-BUILD-012","CON-BUILD-013","OPS-BUILD-001","OPS-BUILD-002","OPS-BUILD-003"],
+ "sds_paths": ["docs/sds/2026-10-19.naruserve.naruserve-v1-wave-1.sds.md"],
+ "base_sha": "49051c0c234a7c464eb2faf62b2ee42208145fd9",
+ "branch": "kiwi/orch/2026-10-19.NaruServe.naruserve-v1/lane-2026-10-19.naruserve.naruserve-v1-wave-1",
+ "write_set": "see lanes.lock.json lanes[0].writeSet",
+ "lane_plan": "/Users/beom/work/git/NaruServe/docs/research/naruserve-v1/waves/stage-1/lanes.lock.json",
+ "verification_cmd": "./gradlew build",
+ "regression_baseline": {"command": "./gradlew build", "head_sha": "3a2717bbadfde9e626b3568bb2ee9455ad1030ac", "failing_tests": []},
+ "deferred_queue": "/Users/beom/work/git/NaruServe/kiwi/orchestrator/2026-10-19.NaruServe.naruserve-v1/lanes/lane-2026-10-19.naruserve.naruserve-v1-wave-1/deferred-srs-queue.jsonl",
+ "manifest": "/Users/beom/work/git/NaruServe/kiwi/orchestrator/2026-10-19.NaruServe.naruserve-v1/lanes/lane-2026-10-19.naruserve.naruserve-v1-wave-1/manifest.json",
+ "forbidden": ["SRS mutation tools", "writes to docs/spec/ docs/sds/ kiwi/pipeline.jsonl kiwi/waves.jsonl", "--root", "merge or push", "/kiwi-sds", "weakening existing tests", "writes outside the write set except the manifest/queue paths above", "git add -A / git commit -a"],
+ "flags": ["--auto", "--auto-integration", "--auto-cost-warning"]
+}
