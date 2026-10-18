@@ -1,0 +1,81 @@
+{
+  "iter": 1,
+  "fixes": [
+    {
+      "finding_id": "FND-001",
+      "files_changed": [
+        {
+          "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java",
+          "line_range": "11-140",
+          "loc_changed": 20
+        },
+        {
+          "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterFreezeTest.java",
+          "line_range": "157-196",
+          "loc_changed": 42
+        }
+      ],
+      "rationale_strip": "",
+      "rationale_full": "frozen is now volatile and written last in freeze(); routes is a volatile field replaced at freeze by an unmodifiable copy, so a lookup that sees frozen=true also sees the final table (happens-before through the volatile write/read). add/addWebSocket/freeze are synchronized so a racing add cannot land after the conflict scan. Class Javadoc states the threading contract.",
+      "red_evidence": "RouterPublicationTest (now in RouterFreezeTest): FR_ROUTE_008_AC1_tableIsUnmodifiableAfterFreeze failed ('frozen route table accepted a new route', line 23); FR_ROUTE_008_AC1_mutableFieldsAreVolatile failed ('frozen must be volatile', line 36); FR_ROUTE_008_AC1_registrationAndFreezeAreSynchronized failed (Router.add not synchronized, line 48)",
+      "mock_scan_passed": true,
+      "external_module_touch": false
+    },
+    {
+      "finding_id": "FND-002",
+      "files_changed": [
+        {
+          "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RoutePattern.java",
+          "line_range": "76-113",
+          "loc_changed": 31
+        },
+        {
+          "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java",
+          "line_range": "130-290",
+          "loc_changed": 86
+        },
+        {
+          "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterLookupTest.java",
+          "line_range": "265-285",
+          "loc_changed": 21
+        }
+      ],
+      "rationale_strip": "",
+      "rationale_full": "Added package-private allocation-free RoutePattern.matches(); match() now delegates to it and builds the param map only on success. lookup() does one pass over the frozen table computing ws/direct/GET winners, httpMatch/wsMatch and a method bitmask for Allow; params are built once for the winner via matched(). Method.values() cached in a static final array with break on hit; merge-slash regex precompiled. Outcome order and tie-breaking (strictly-more-specific replaces, earlier registration wins ties) unchanged; all existing tests green. The second decode in decodeSegments after isValid is left with a shortcut comment (no allocation for '%'-free segments). No timing test written.",
+      "red_evidence": "RouterLookupPolicyTest (now in RouterLookupTest).FR_ROUTE_005_AC1_matchesAgreesWithMatch: compile error 'cannot find symbol' RoutePattern.matches (lines 136,140,141)",
+      "mock_scan_passed": true,
+      "external_module_touch": false
+    },
+    {
+      "finding_id": "FND-003",
+      "files_changed": [
+        {
+          "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterLookupTest.java",
+          "line_range": "158-264",
+          "loc_changed": 129
+        }
+      ],
+      "rationale_strip": "",
+      "rationale_full": "New test class drives FR-ROUTE-002 AC-1/AC-2, FR-ROUTE-006 AC-1..AC-3 and FR-ROUTE-007 AC-1..AC-3 through public lookup(token, rawPath, false), asserting kind()==MATCHED, handler(), method() and params() (including {name=Bob} under caseInsensitive, /a//b under mergeSlashes, /users/ under ignoreTrailingSlash). Existing find()-based tests kept unchanged.",
+      "red_evidence": null,
+      "mock_scan_passed": true,
+      "external_module_touch": false
+    },
+    {
+      "finding_id": "FND-004",
+      "files_changed": [
+        {
+          "path": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/routing/RouterKotlinTest.kt",
+          "line_range": "41-85",
+          "loc_changed": 45
+        }
+      ],
+      "rationale_strip": "",
+      "rationale_full": "Added a Kotlin test calling router.lookup and consuming RouteMatch (m.handler()?.length, m.params()[\"id\"], m.kind(), m.method(), m.routeKind(), m.allow()?.contains(Method.GET)); the build compiles Kotlin with -Xjspecify-annotations=strict so these are real nullable/non-null Kotlin types. Added a reflection test over every public method of RouteMatch, Router, RoutePattern, PathValidator and RouterPolicy: package is @NullMarked and exactly the documented nullable returns carry @Nullable. A compile-time negative (proving handler() is nullable) cannot live in a passing test; the reflection check covers it.",
+      "red_evidence": null,
+      "mock_scan_passed": true,
+      "external_module_touch": false
+    }
+  ],
+  "build_exit_code": 0
+}

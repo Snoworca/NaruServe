@@ -1,0 +1,154 @@
+{
+  "resolved_findings": [
+    "FND-001",
+    "FND-002",
+    "FND-003",
+    "FND-004"
+  ],
+  "unresolved": [],
+  "findings": [
+    {
+      "id": "FND-101",
+      "axis": "P3",
+      "severity": "LOW",
+      "title": "Public allowFor() reads the route table without the freeze guard, so it is outside the new thread-safety contract",
+      "location": {
+        "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java",
+        "line_range": "242-250"
+      },
+      "description": "The new class Javadoc promises that registration is serialised and that the table is safe to read after freeze. lookup() checks `frozen` first, but the public allowFor(List) iterates `routes` with no frozen check and no lock. Called before freeze() while another thread runs the now-synchronized add(), it iterates a growing ArrayList unsynchronised and can throw ConcurrentModificationException or see a torn list. Called after freeze it is fine because of the volatile read of `routes`. This is not a regression, since it behaved the same before, but the fix's Javadoc now implies a guarantee that this method does not give.",
+      "suggested_fix": "Either throw IllegalStateException in allowFor when !frozen, as lookup does, or say in the Javadoc that allowFor is valid only after freeze.",
+      "is_behavioral": true,
+      "tags": [
+        "bug"
+      ],
+      "req": "FR-ROUTE-010; FR-ROUTE-012"
+    },
+    {
+      "id": "FND-102",
+      "axis": "P7",
+      "severity": "LOW",
+      "title": "Thread-safety tests are traced to FR-ROUTE-008 AC-1 (duplicate-route conflict), and they check modifiers by reflection only",
+      "location": {
+        "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterFreezeTest.java",
+        "line_range": "158-195"
+      },
+      "description": "FR-ROUTE-008 AC-1 is about `GET /a` registered twice raising an error at freeze. It says nothing about publishing or locking across threads, yet the three new tests cite it. No SRS requirement covers the new concurrency contract in the Javadoc ('lookup is safe from any number of threads'), so the trace is wrong (CLAUDE.md: no behaviour without an SRS requirement). Two of the tests only assert that fields are `volatile` and methods are `synchronized`. They prove the structure, not the behaviour. That is acceptable for a memory-model property, but it should be labelled as a structural check.",
+      "suggested_fix": "Re-cite the tests against a real requirement: add or ask for an SRS AC on concurrent lookup after freeze (CON-ROUTE-* or FR-ROUTE-008 AC-6 via kiwi-srs), or cite the review finding FND-001 rather than AC-1.",
+      "is_behavioral": false,
+      "tags": [
+        "traceability"
+      ],
+      "req": "FR-ROUTE-008 AC-1"
+    },
+    {
+      "id": "FND-103",
+      "axis": "P6",
+      "severity": "LOW",
+      "title": "Residual hot-path cost from FND-002: the path is still validated and decoded twice per lookup",
+      "location": {
+        "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java",
+        "line_range": "168-171"
+      },
+      "description": "The fix moved the multi-scan and per-probe allocation to a single pass, cached Method.values(), and precompiled the slash pattern. PathValidator.isValid followed by decodeSegments still splits and percent-decodes every segment twice. A shortcut comment records this, so it is a known, deferred cost and not a defect.",
+      "suggested_fix": "Leave as is until profiling shows a cost. Then let isValid return the decoded segments, or add a combined validateAndDecode.",
+      "is_behavioral": false,
+      "tags": [
+        "performance"
+      ],
+      "req": "FR-ROUTE-005"
+    }
+  ],
+  "coverage_rows": [
+    {
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RoutePattern.java",
+      "hunks_total": 5,
+      "anchors": [
+        "        int n = effectiveLength(policy);",
+        "        for (int i = 0; i < n; i++) {",
+        "                if (seg.isEmpty()) {",
+        "                params.put(segments[i], seg);",
+        "    /** True exactly when {@link #match} would return non-null; allocates nothing (lookup's per-route probe). */"
+      ],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java",
+      "hunks_total": 26,
+      "anchors": [
+        "import java.util.regex.Pattern;",
+        " * Registration and freeze are serialised by the router's lock; after freeze the table is read-only and published",
+        "    private static final Method[] METHODS = Method.values();",
+        "    final List<Route<H>> routes = new ArrayList<>();",
+        "    public void add(MethodSet methods, String pattern, H handler) {",
+        "    public void add(Method method, String pattern, H handler) {",
+        "    public void addWebSocket(String pattern, H handler) {",
+        "    public void freeze() {",
+        "        routes = Collections.unmodifiableList(new ArrayList<>(routes));",
+        "        return find(RouteKind.HTTP, method, segments);",
+        "            if (r.kind == kind && r.method == method && r.pattern.match(segments, policy) != null",
+        "    /** {@code candidate} when it is strictly more specific than {@code best}; ties keep the earlier registration. */",
+        "        // shortcut: decodeSegments re-decodes what isValid decoded; cheap for '%'-free segments, fuse if profiling says so.",
+        "        for (Method m : Method.values()) {",
+        "                break;",
+        "        if (upgrade && method == Method.GET) {",
+        "        boolean wsMatch = false;",
+        "            if (r.pattern.match(segments, policy) != null) {",
+        "            methodMask |= 1 << r.method.ordinal();",
+        "        Route<H> direct = find(method, segments);",
+        "            return RouteMatch.withAllow(RouteMatch.Kind.AUTO_OPTIONS, allowFor(segments));",
+        "        if (method == Method.HEAD) {",
+        "        return RouteMatch.withAllow(RouteMatch.Kind.METHOD_MISMATCH, allowFor(segments));",
+        "        MethodSet allow = MethodSet.of(Method.OPTIONS);",
+        "                allow = allow.with(r.method);",
+        "            path = path.replaceAll(\"/{2,}\", \"/\");"
+      ],
+      "findings": [
+        "FND-101",
+        "FND-103"
+      ]
+    },
+    {
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterFreezeTest.java",
+      "hunks_total": 3,
+      "anchors": [
+        "import static org.junit.Assert.assertTrue;",
+        "import java.lang.reflect.Field;",
+        "    // FR-ROUTE-008 AC-1: the frozen table cannot change after the conflict scan ran."
+      ],
+      "findings": [
+        "FND-102"
+      ]
+    },
+    {
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterLookupTest.java",
+      "hunks_total": 2,
+      "anchors": [
+        "import java.util.Arrays;",
+        "    private static Router<String> router(RouterPolicy policy, String... patterns) {"
+      ],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/routing/RouterKotlinTest.kt",
+      "hunks_total": 1,
+      "anchors": [
+        "    // CON-ROUTE-001 AC-3: RouteMatch as Kotlin callers consume it. With -Xjspecify-annotations=strict these are"
+      ],
+      "findings": []
+    }
+  ],
+  "summary": {
+    "total": 3,
+    "by_severity": {
+      "CRITICAL": 0,
+      "HIGH": 0,
+      "MEDIUM": 0,
+      "LOW": 3
+    }
+  },
+  "test_run": {
+    "command": "./gradlew :NaruServe-api:test --rerun-tasks",
+    "exit_code": 0
+  }
+}

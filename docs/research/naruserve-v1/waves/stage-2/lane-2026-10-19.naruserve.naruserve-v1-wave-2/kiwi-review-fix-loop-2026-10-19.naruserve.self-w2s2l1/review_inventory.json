@@ -1,0 +1,496 @@
+{
+  "findings": [
+    {
+      "id": "FND-001",
+      "axis": "P3",
+      "severity": "MEDIUM",
+      "title": "Router publishes its frozen state through a plain boolean and a mutable ArrayList",
+      "location": {
+        "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java",
+        "line_range": "39-41"
+      },
+      "description": "`frozen` is a non-volatile field and `routes` stays a growable ArrayList after freeze(). Nothing in the class establishes a happens-before edge between freeze() on the configuring thread and lookup() on request threads, and the class doc says nothing about thread safety. Today it works only because the caller is expected to start workers after freeze (Thread.start / executor handoff). A Router handed to an already-running pool through a plain field can see frozen=true with stale list internals, or a spurious IllegalStateException. add()/freeze() are also check-then-act without locking, so a concurrent add can land after the conflict scan has run.",
+      "suggested_fix": "At freeze(), copy routes into a final array or an unmodifiable list held in a volatile field (or make `frozen` volatile and write it last), have lookup read only that snapshot, and state in the Javadoc that the router is safe for concurrent lookup after freeze and not thread-safe before it.",
+      "is_behavioral": true,
+      "tags": [
+        "bug"
+      ],
+      "req": null
+    },
+    {
+      "id": "FND-002",
+      "axis": "P6",
+      "severity": "MEDIUM",
+      "title": "lookup() scans the whole route table 3 to 5 times and allocates a param map on every probe",
+      "location": {
+        "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java",
+        "line_range": "156-231"
+      },
+      "description": "One lookup does this: PathValidator.isValid splits and decodes every segment, then decodeSegments splits and decodes them all again. With mergeSlashes on, it also compiles a regex through String.replaceAll. After that comes an optional WS find(), a full scan just to set httpMatch/wsMatch, find(method), and a second match() inside matched(). A mismatch or OPTIONS adds a full allowFor() scan. Every probe calls RoutePattern.match, and on a variable route that allocates a LinkedHashMap plus an unmodifiable wrapper only to test for null. Method.values() clones the enum array on every lookup, and that loop does not break when it finds the token. This is the per-request hot path, and on Android the garbage it creates is not free.",
+      "suggested_fix": "Add a boolean `matches(segments, policy)` that allocates nothing. Collect the matching routes in one pass, compute httpMatch/wsMatch/direct/GET/allow from that pass, and build the param map once for the winner. Cache Method.values() in a static final array, or switch on the token. Precompile the merge pattern, or merge slashes by hand. Let decodeSegments reuse the validator's decode results, or skip the second validation.",
+      "is_behavioral": false,
+      "tags": [
+        "performance"
+      ],
+      "req": null
+    },
+    {
+      "id": "FND-003",
+      "axis": "P7",
+      "severity": "MEDIUM",
+      "title": "Registration, priority, policy and matching ACs are proven through package-private find(), not the public lookup()",
+      "location": {
+        "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterPolicyTest.java",
+        "line_range": "19-24"
+      },
+      "description": "RouterPolicyTest, RouterMatchingTest, RouterPriorityTest and RouterRegistrationTest all assert through `Router.find(Method, decodeSegments(...))` and `Route.handler`/`route.pattern.match(...)`. They never call `lookup()`. FR-ROUTE-002 AC-1/AC-2 and FR-ROUTE-007 AC-3 explicitly say 'lookups ... return the matched result'. FR-ROUTE-006 AC-1..AC-3 (merge, trailing slash, case-insensitive with param 'Bob' as received) are never exercised end to end through the validator, the token resolution and matched(). A regression in lookup's policy handling or param extraction (for example matched() re-matching with a different policy) would pass every one of these tests.",
+      "suggested_fix": "Rewrite these assertions against `router.lookup(token, rawPath, false)`, checking kind()==MATCHED, handler() and params(). Keep find() at most as a secondary check. Add at least one lookup per policy switch (`/a//b` with mergeSlashes, `/users/` with ignoreTrailingSlash, `/USERS/Bob` with caseInsensitive giving params {name=Bob}).",
+      "is_behavioral": false,
+      "tags": [
+        "regression"
+      ],
+      "req": "FR-ROUTE-002 AC-1; FR-ROUTE-006 AC-1..AC-3; FR-ROUTE-007 AC-3"
+    },
+    {
+      "id": "FND-004",
+      "axis": "P7",
+      "severity": "MEDIUM",
+      "title": "Kotlin nullability test cannot fail on platform types and never touches RouteMatch",
+      "location": {
+        "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/routing/RouterKotlinTest.kt",
+        "line_range": "14-40"
+      },
+      "description": "Assignments such as `val params: Map<String, String>? = pattern.match(...)` and `val segments: List<String> = Router.decodeSegments(...)` compile whether the return type is nullable, non-null or a platform type `T!`. So the first test proves nothing about CON-ROUTE-001 AC-3. The reflection test checks @Nullable on RoutePattern.match only. The type Kotlin callers actually consume, RouteMatch (handler()/method()/routeKind()/allow() nullable, params()/kind() non-null), and Router.lookup are never called from Kotlin.",
+      "suggested_fix": "Add a Kotlin test that calls `router.lookup(\"GET\", \"/users/7\", false)` and uses `m.handler()?.length`, `m.params()[\"id\"]`, `m.kind()` and `m.allow()?.contains(Method.GET)`. Extend the reflection check to every public method of RouteMatch, Router and RoutePattern: return types are either annotated @Nullable or covered by @NullMarked, and none of them comes out as a platform type.",
+      "is_behavioral": false,
+      "tags": [
+        "regression"
+      ],
+      "req": "CON-ROUTE-001 AC-3"
+    },
+    {
+      "id": "FND-005",
+      "axis": "P2",
+      "severity": "LOW",
+      "title": "An empty MethodSet registration is silently a no-op",
+      "location": {
+        "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java",
+        "line_range": "55-61"
+      },
+      "description": "`add(Method.of(), \"/x\", h)` or `add(Method.get().except(Method.GET), ...)` parses the pattern, then registers nothing. It throws no error and leaves no trace in the freeze conflict scan. The caller's route just never exists and requests get NO_MATCH, which is hard to diagnose.",
+      "suggested_fix": "Reject an empty set in add(MethodSet, ...) with IllegalArgumentException, or with RoutingConfigException naming the pattern.",
+      "is_behavioral": true,
+      "tags": [
+        "bug"
+      ],
+      "req": null
+    },
+    {
+      "id": "FND-006",
+      "axis": "P1",
+      "severity": "LOW",
+      "title": "add() after freeze() with an invalid pattern throws RoutingConfigException instead of IllegalStateException",
+      "location": {
+        "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java",
+        "line_range": "55-57"
+      },
+      "description": "add() and addWebSocket() call RoutePattern.parse before checkRegistration(). After freeze, a malformed pattern such as `/a/:` therefore reports a pattern error, not 'Router is frozen'. IR-ROUTE-004 AC-5 says registering a route after the freeze fails with IllegalStateException.",
+      "suggested_fix": "Check `frozen` (and the null handler) before parsing the pattern in both add() and addWebSocket().",
+      "is_behavioral": true,
+      "tags": [
+        "bug"
+      ],
+      "req": "IR-ROUTE-004 AC-5"
+    },
+    {
+      "id": "FND-007",
+      "axis": "P2",
+      "severity": "LOW",
+      "title": "Patterns that can never match are accepted at registration",
+      "location": {
+        "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RoutePattern.java",
+        "line_range": "32-63"
+      },
+      "description": "parse() accepts literal segments `.` and `..` (for example `/a/../b`, `/./x`), which PathValidator always rejects at request time. It also accepts percent-encoded literals such as `/caf%C3%A9`, which are compared with decoded request segments and so match only `/caf%25C3%25A9`. These are dead routes that register and freeze without a diagnostic. An Express user who copies an encoded path will hit this.",
+      "suggested_fix": "In parse(), reject `.` and `..` literal segments, and reject literals containing '%', with RoutingConfigException, or at least document that patterns are written in decoded form.",
+      "is_behavioral": true,
+      "tags": [
+        "bug"
+      ],
+      "req": null
+    },
+    {
+      "id": "FND-008",
+      "axis": "P2",
+      "severity": "LOW",
+      "title": "Variable names are unrestricted, so Express-style `/:file.:ext` silently becomes one param",
+      "location": {
+        "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RoutePattern.java",
+        "line_range": "49-60"
+      },
+      "description": "A segment starting with ':' takes the whole rest of the segment as the name, ':' and '.' included. `/files/:name.json` binds a param literally named `name.json`, and `/:file.:ext` binds `file.:ext`. Express users expect two params, or a name followed by a literal suffix. Instead the route silently captures the whole segment under a name nobody will look up.",
+      "suggested_fix": "Restrict names to an identifier charset (e.g. [A-Za-z_$][A-Za-z0-9_$]*) and fail with RoutingConfigException otherwise, consistent with the 'no Express wildcard/regex syntax' rule of FR-ROUTE-003.",
+      "is_behavioral": true,
+      "tags": [
+        "bug"
+      ],
+      "req": null
+    },
+    {
+      "id": "FND-009",
+      "axis": "P8",
+      "severity": "LOW",
+      "title": "Conflict message cannot tell a WebSocket route from an HTTP GET route",
+      "location": {
+        "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java",
+        "line_range": "33-36"
+      },
+      "description": "Route.toString() is `method + \" \" + pattern`, so two conflicting WebSocket registrations report `GET /chat conflicts with GET /chat`. The user then hunts for an HTTP GET route that does not exist.",
+      "suggested_fix": "Prefix WebSocket routes in toString (e.g. `WEBSOCKET /chat` or `GET /chat (websocket)`) and update the test in RouterRegistrationTest.",
+      "is_behavioral": true,
+      "tags": [
+        "style"
+      ],
+      "req": "FR-ROUTE-008 AC-3"
+    },
+    {
+      "id": "FND-010",
+      "axis": "P8",
+      "severity": "LOW",
+      "title": "Stale shortcut comment in MethodSetTest",
+      "location": {
+        "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/MethodSetTest.java",
+        "line_range": "111-122"
+      },
+      "description": "The `shortcut:` comment says the built-router case for FR-ROUTE-001 AC-3 waits for RouterPolicy to land on this branch. RouterPolicy is now on the branch, and RouterPolicyTest.FR_ROUTE_001_AC3_* covers the case. The comment now records debt that no longer exists.",
+      "suggested_fix": "Delete the shortcut comment (and optionally the duplicate test).",
+      "is_behavioral": false,
+      "tags": [
+        "doc"
+      ],
+      "req": "FR-ROUTE-001 AC-3"
+    },
+    {
+      "id": "FND-011",
+      "axis": "P8",
+      "severity": "LOW",
+      "title": "Tests reach into Router internals (package-private mutable `routes`, `find`, `Route` fields)",
+      "location": {
+        "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java",
+        "line_range": "40"
+      },
+      "description": "`final List<Route<H>> routes` is a package-visible mutable list. RouterRegistrationTest reads `r.routes.get(0)`, and other tests read `Route.handler`/`Route.pattern`. Any class in the routing package can mutate the table after freeze and bypass conflict detection. The tests are also tied to the internal representation, so the snapshot fix in FND-001 breaks them.",
+      "suggested_fix": "Make `routes` private and assert through lookup()/RouteMatch, which also fixes FND-003.",
+      "is_behavioral": false,
+      "tags": [
+        "style"
+      ],
+      "req": null
+    },
+    {
+      "id": "FND-012",
+      "axis": "P7",
+      "severity": "LOW",
+      "title": "RoutingDocsTest uses substring presence and an exact marker count",
+      "location": {
+        "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/RoutingDocsTest.java",
+        "line_range": "66-93"
+      },
+      "description": "OPS-ROUTE-001 AC-1 is checked by searching for tokens such as \"HEAD\", \"TRACE\", \"..\" and \"Allow\" anywhere in a long section, which passes even if the rule text is wrong. Pinning exactly 4 marker lines in positional order is brittle against unrelated edits.",
+      "suggested_fix": "Assert specific sentences or table rows for each decided rule (e.g. the Allow rule line, the %252e -> %2e example) and check the markers by content rather than by index.",
+      "is_behavioral": false,
+      "tags": [
+        "doc"
+      ],
+      "req": "OPS-ROUTE-001 AC-1"
+    },
+    {
+      "id": "FND-013",
+      "axis": "P8",
+      "severity": "LOW",
+      "title": "Method and MethodSet have mutually recursive static initialisers",
+      "location": {
+        "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/Method.java",
+        "line_range": "12"
+      },
+      "description": "Method.<clinit> builds ANY through MethodSet.of, and MethodSet.<clinit> calls Method.values(). Both initialisation orders work today, because MethodSet.of never touches METHODS and javac assigns $VALUES before ANY. But adding any static in MethodSet that uses Method statics (for example a cached ANY there) would produce a null during class init.",
+      "suggested_fix": "Build ANY lazily in Method.any() via a holder class, or drop MethodSet.METHODS and use Method.values() through a holder.",
+      "is_behavioral": false,
+      "tags": [
+        "style"
+      ],
+      "req": null
+    }
+  ],
+  "coverage_rows": [
+    {
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/Method.java",
+      "hunks_total": 1,
+      "anchors": [
+        "    private static final MethodSet ANY = MethodSet.of(GET, HEAD, POST, PUT, PATCH, DELETE, OPTIONS);"
+      ],
+      "findings": [
+        "FND-013"
+      ]
+    },
+    {
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/MethodSet.java",
+      "hunks_total": 1,
+      "anchors": [
+        "        return 1 << method.ordinal();"
+      ],
+      "findings": [
+        "FND-013"
+      ]
+    },
+    {
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/package-info.java",
+      "hunks_total": 1,
+      "anchors": [
+        "@org.jspecify.annotations.NullMarked"
+      ],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/package-info.java",
+      "hunks_total": 1,
+      "anchors": [
+        "/** Engine-free route table: patterns, path validation, policies and conflict detection. */"
+      ],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/PathValidator.java",
+      "hunks_total": 1,
+      "anchors": [
+        "            if (c <= 0x20 || c >= 0x7F || c == '#') {"
+      ],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouteKind.java",
+      "hunks_total": 1,
+      "anchors": [
+        "    HTTP, WEBSOCKET"
+      ],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouteMatch.java",
+      "hunks_total": 1,
+      "anchors": [
+        "        MATCHED, METHOD_MISMATCH, AUTO_OPTIONS, WEBSOCKET_ONLY, UNSUPPORTED_METHOD, NO_MATCH"
+      ],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RoutePattern.java",
+      "hunks_total": 1,
+      "anchors": [
+        "            cs[i] = Character.toLowerCase(Character.toUpperCase(cs[i]));"
+      ],
+      "findings": [
+        "FND-007",
+        "FND-008"
+      ]
+    },
+    {
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java",
+      "hunks_total": 1,
+      "anchors": [
+        "        if (wsMatch && (method == Method.GET || method == Method.HEAD || !httpMatch)) {"
+      ],
+      "findings": [
+        "FND-001",
+        "FND-002",
+        "FND-005",
+        "FND-006",
+        "FND-009",
+        "FND-011"
+      ]
+    },
+    {
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouterPolicy.java",
+      "hunks_total": 1,
+      "anchors": [
+        "    private static final RouterPolicy STRICT = new Builder().build();"
+      ],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RoutingConfigException.java",
+      "hunks_total": 1,
+      "anchors": [
+        "public final class RoutingConfigException extends RuntimeException {"
+      ],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/MethodSetTest.java",
+      "hunks_total": 1,
+      "anchors": [
+        "        assertEquals(\"GET, POST, DELETE\", Method.of(Method.DELETE, Method.POST, Method.GET).toString());"
+      ],
+      "findings": [
+        "FND-010"
+      ]
+    },
+    {
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/MethodTest.java",
+      "hunks_total": 1,
+      "anchors": [
+        "        assertEquals(new HashSet<>(Arrays.asList(\"values\", \"valueOf\", \"get\", \"any\", \"of\")), statics);"
+      ],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/RoutingDocsTest.java",
+      "hunks_total": 1,
+      "anchors": [
+        "        assertEquals(markerLines.toString(), 4, markerLines.size());"
+      ],
+      "findings": [
+        "FND-012"
+      ]
+    },
+    {
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/PathValidatorTest.java",
+      "hunks_total": 1,
+      "anchors": [
+        "        String[] reject = {\"/a b\", \"/a\\u0001\", \"/a\\u001f\", \"/a\\u007f\", \"/a#b\", \"/café\", \"/a\\t\"};"
+      ],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouteMatchTest.java",
+      "hunks_total": 1,
+      "anchors": [
+        "        assertEquals(EnumSet.allOf(RouteMatch.Kind.class), seen);"
+      ],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RoutePatternTest.java",
+      "hunks_total": 1,
+      "anchors": [
+        "        for (String p : new String[] {\"/a?\", \"/a/*\", \"/a+\", \"/a/(b)\", \"/a)\", \"/:id(\\\\d+)\"}) {"
+      ],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterAutoResponseTest.java",
+      "hunks_total": 1,
+      "anchors": [
+        "        assertEquals(\"GET, HEAD, POST, PUT, PATCH, OPTIONS\", allow.toString());"
+      ],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterFreezeTest.java",
+      "hunks_total": 1,
+      "anchors": [
+        "        assertEquals(\"GET /ſ conflicts with GET /s\", freezeError(r));"
+      ],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterLookupTest.java",
+      "hunks_total": 1,
+      "anchors": [
+        "        assertEquals(\"%2e\", m.params().get(\"name\"));"
+      ],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterMatchingTest.java",
+      "hunks_total": 1,
+      "anchors": [
+        "        assertEquals(Arrays.asList(\"http:\", \"\", \"h\", \"users\"), Router.decodeSegments(\"http://h/users\", STRICT));"
+      ],
+      "findings": [
+        "FND-003"
+      ]
+    },
+    {
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterPolicyTest.java",
+      "hunks_total": 1,
+      "anchors": [
+        "            Locale.setDefault(new Locale(\"tr\", \"TR\"));"
+      ],
+      "findings": [
+        "FND-003"
+      ]
+    },
+    {
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterPriorityTest.java",
+      "hunks_total": 1,
+      "anchors": [
+        "        assertEquals(\"GET /a/b/:y\", handler(router(\"GET /a/:x/c\", \"GET /a/b/:y\"), Method.GET, \"/a/b/c\"));"
+      ],
+      "findings": [
+        "FND-003"
+      ]
+    },
+    {
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterRegistrationTest.java",
+      "hunks_total": 1,
+      "anchors": [
+        "        Router.Route<String> route = r.routes.get(0);"
+      ],
+      "findings": [
+        "FND-003",
+        "FND-009",
+        "FND-011"
+      ]
+    },
+    {
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterTraceConnectTest.java",
+      "hunks_total": 1,
+      "anchors": [
+        "        assertEquals(RouteMatch.Kind.METHOD_MISMATCH, kind(anyOnly, enabled.name(), \"/x\"));"
+      ],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterWebSocketTest.java",
+      "hunks_total": 1,
+      "anchors": [
+        "        assertTrue(Router.isWebSocketUpgrade(\"GET\", \"keep-alive, Upgrade\", \"WebSocket\"));"
+      ],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/MethodKotlinTest.kt",
+      "hunks_total": 1,
+      "anchors": [
+        "        assertTrue(Method.GET in set)"
+      ],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/routing/RouterKotlinTest.kt",
+      "hunks_total": 1,
+      "anchors": [
+        "        val params: Map<String, String>? = pattern.match(segments, policy)"
+      ],
+      "findings": [
+        "FND-004"
+      ]
+    }
+  ],
+  "summary": {
+    "total": 13,
+    "by_severity": {
+      "MEDIUM": 4,
+      "LOW": 9
+    },
+    "by_axis": {
+      "P1": 1,
+      "P2": 3,
+      "P3": 1,
+      "P6": 1,
+      "P7": 3,
+      "P8": 4
+    }
+  }
+}

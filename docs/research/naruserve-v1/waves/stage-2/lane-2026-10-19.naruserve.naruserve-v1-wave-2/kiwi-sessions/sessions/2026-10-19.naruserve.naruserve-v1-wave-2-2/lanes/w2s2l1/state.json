@@ -1,0 +1,21 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "2026-10-19.naruserve.naruserve-v1-wave-2-2",
+  "sds_path": "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-2-2.sds.md",
+  "target": "wave-2",
+  "req_ids": ["CON-ROUTE-001", "FR-ROUTE-002", "FR-ROUTE-003", "FR-ROUTE-004", "FR-ROUTE-005", "FR-ROUTE-006", "FR-ROUTE-007", "FR-ROUTE-008"],
+  "mode": "normal",
+  "flags": ["--auto", "--auto-cost-warning", "--auto-integration", "--defer-srs-mutation"],
+  "spawn_context": "pm-child",
+  "phase": "done",
+  "next_resume_hint": null,
+  "failed": false,
+  "regression_baseline": {"command": "./gradlew build", "exit_code": 0, "head_sha": "f80370b"},
+  "red_evidence": {
+    "command": "./gradlew :NaruServe-api:test",
+    "exit_code": 1,
+    "captured_failure": "e: RouterKotlinTest.kt:15:21 Unresolved reference 'RouterPolicy'. (compileTestKotlin FAILED: routing package classes absent)",
+    "timestamp": "2026-10-19T00:00:00Z"
+  },
+  "green_evidence": {"command": "./gradlew build", "exit_code": 0, "timestamp": "2026-10-19T00:00:00Z"}
+}

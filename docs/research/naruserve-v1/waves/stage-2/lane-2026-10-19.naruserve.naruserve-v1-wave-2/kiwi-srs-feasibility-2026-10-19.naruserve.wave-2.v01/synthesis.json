@@ -1,0 +1,187 @@
+{
+  "target": "wave-2",
+  "total_reqs_evaluated": 23,
+  "feasibility_distribution": {
+    "high": 23,
+    "medium": 0,
+    "low": 0,
+    "blocked": 0
+  },
+  "score_range": [
+    86,
+    98
+  ],
+  "target_verdict": "GO: all 23 high, no blockers, no external module change (TinyHttpd used read-only as a parity reference for FR-ROUTE-004).",
+  "critical_blockers": [],
+  "non_blocking_findings": [
+    "Implicit dependencies not linked: CON-ROUTE-001/FR-ROUTE-002/IR-ROUTE-004 consume Method/MethodSet (IR-ROUTE-001/002) and the path validator (FR-ROUTE-004); OPS-ROUTE-001 depends on IR-ROUTE-003 accessor names. Order work accordingly or add depends_on links.",
+    "animal-sniffer API 21 (build.gradle:170-179) rejects java.util.Optional/function/stream; result and policy types must avoid them (BuildChecksTest.java:301-303).",
+    "OPS-ROUTE-001 AC-1 is a long doc checklist; verification is inspection-based, not a JUnit test.",
+    "D-070 wording ('removing those markers') vs the wave decision keeping config-API markers; OPS-ROUTE-001 AC-3 follows the wave decision."
+  ],
+  "dependency_chains": [
+    [
+      "CON-BUILD-004/011/012/013 (verified)",
+      "CON-ROUTE-001",
+      "FR-ROUTE-002..017, IR-ROUTE-004"
+    ],
+    [
+      "IR-ROUTE-001",
+      "IR-ROUTE-002",
+      "IR-ROUTE-003",
+      "FR-ROUTE-001"
+    ],
+    [
+      "FR-ROUTE-004 (validator)",
+      "IR-ROUTE-004 AC-4 (implicit)"
+    ],
+    [
+      "FR-ROUTE-006, FR-ROUTE-014 (policies)",
+      "FR-ROUTE-008 AC-4/5, FR-ROUTE-001 AC-3 (implicit)"
+    ],
+    [
+      "IR-ROUTE-003 + all FR-ROUTE",
+      "OPS-ROUTE-001 (implicit, last)"
+    ]
+  ],
+  "stability_drift_candidates": [
+    {
+      "req_id": "IR-ROUTE-001",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "feasibility high (98), no blockers"
+    },
+    {
+      "req_id": "IR-ROUTE-002",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "feasibility high (97), no blockers"
+    },
+    {
+      "req_id": "FR-ROUTE-001",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "feasibility high (98), no blockers"
+    },
+    {
+      "req_id": "IR-ROUTE-003",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "feasibility high (95), no blockers"
+    },
+    {
+      "req_id": "CON-ROUTE-001",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "feasibility high (94), no blockers"
+    },
+    {
+      "req_id": "FR-ROUTE-002",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "feasibility high (95), no blockers"
+    },
+    {
+      "req_id": "FR-ROUTE-003",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "feasibility high (95), no blockers"
+    },
+    {
+      "req_id": "FR-ROUTE-004",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "feasibility high (92), no blockers"
+    },
+    {
+      "req_id": "FR-ROUTE-005",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "feasibility high (94), no blockers"
+    },
+    {
+      "req_id": "FR-ROUTE-006",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "feasibility high (93), no blockers"
+    },
+    {
+      "req_id": "FR-ROUTE-007",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "feasibility high (94), no blockers"
+    },
+    {
+      "req_id": "FR-ROUTE-008",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "feasibility high (93), no blockers"
+    },
+    {
+      "req_id": "IR-ROUTE-004",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "feasibility high (91), no blockers"
+    },
+    {
+      "req_id": "FR-ROUTE-009",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "feasibility high (96), no blockers"
+    },
+    {
+      "req_id": "FR-ROUTE-010",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "feasibility high (94), no blockers"
+    },
+    {
+      "req_id": "FR-ROUTE-011",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "feasibility high (95), no blockers"
+    },
+    {
+      "req_id": "FR-ROUTE-012",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "feasibility high (95), no blockers"
+    },
+    {
+      "req_id": "FR-ROUTE-013",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "feasibility high (96), no blockers"
+    },
+    {
+      "req_id": "FR-ROUTE-014",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "feasibility high (94), no blockers"
+    },
+    {
+      "req_id": "FR-ROUTE-015",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "feasibility high (93), no blockers"
+    },
+    {
+      "req_id": "FR-ROUTE-016",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "feasibility high (93), no blockers"
+    },
+    {
+      "req_id": "FR-ROUTE-017",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "feasibility high (96), no blockers"
+    },
+    {
+      "req_id": "OPS-ROUTE-001",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "feasibility high (86), no blockers"
+    }
+  ]
+}

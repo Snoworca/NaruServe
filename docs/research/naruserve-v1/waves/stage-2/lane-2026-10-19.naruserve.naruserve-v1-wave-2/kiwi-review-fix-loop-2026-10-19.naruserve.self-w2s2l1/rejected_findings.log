@@ -1,0 +1,9 @@
+FND-005 LOW auto mode low-severity skip: An empty MethodSet registration is silently a no-op
+FND-006 LOW auto mode low-severity skip: add() after freeze() with an invalid pattern throws RoutingConfigException instead of IllegalStateException
+FND-007 LOW auto mode low-severity skip: Patterns that can never match are accepted at registration
+FND-008 LOW auto mode low-severity skip: Variable names are unrestricted, so Express-style `/:file.:ext` silently becomes one param
+FND-009 LOW auto mode low-severity skip: Conflict message cannot tell a WebSocket route from an HTTP GET route
+FND-010 LOW auto mode low-severity skip: Stale shortcut comment in MethodSetTest
+FND-011 LOW auto mode low-severity skip: Tests reach into Router internals (package-private mutable `routes`, `find`, `Route` fields)
+FND-012 LOW auto mode low-severity skip: RoutingDocsTest uses substring presence and an exact marker count
+FND-013 LOW auto mode low-severity skip: Method and MethodSet have mutually recursive static initialisers

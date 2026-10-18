@@ -1,0 +1,531 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "2026-10-19.naruserve.naruserve-v1-wave-2-1",
+  "sds_path": "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-2-1.sds.md",
+  "target": "wave-2",
+  "req_ids": [
+    "IR-ROUTE-001",
+    "IR-ROUTE-002",
+    "IR-ROUTE-003",
+    "FR-ROUTE-001",
+    "OPS-ROUTE-001"
+  ],
+  "spawn_context": "pm-child",
+  "phase": "done",
+  "failed": false,
+  "updated_at": "2026-10-18T21:59:54Z",
+  "next_resume_hint": null,
+  "red_evidence": {
+    "command": "./gradlew :NaruServe-api:test --rerun",
+    "exit_code": 1,
+    "captured_failure": "compileTestKotlin FAILED: MethodKotlinTest.kt:18:18 Unresolved reference 'MethodSet'; then (code present, docs not yet) RoutingDocsTest sdsAc9/sdsAc10 AC1 AssertionError missing heading",
+    "timestamp": "2026-10-18T21:59:54Z"
+  },
+  "green_evidence": {
+    "command": "./gradlew build",
+    "exit_code": 0,
+    "timestamp": "2026-10-18T21:59:54Z"
+  },
+  "regression_baseline": {
+    "command": "./gradlew build",
+    "head_sha": "9ce5855",
+    "note": "pinned by parent"
+  },
+  "mcp_call_log": [
+    {
+      "called_at": "2026-10-18T21:59:54Z",
+      "tool": "add_verification_evidence",
+      "args": {
+        "id": "IR-ROUTE-001",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/MethodTest.java#sdsAc1_IR_ROUTE_001_AC1_valuesInDeclarationOrder",
+        "covers": "AC-1"
+      },
+      "args_hash": "35bce2a6e336a22233dcd8f0140c1b158efd9d58",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-2-1"
+    },
+    {
+      "called_at": "2026-10-18T21:59:54Z",
+      "tool": "add_verification_evidence",
+      "args": {
+        "id": "IR-ROUTE-001",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/MethodTest.java#sdsAc2_IR_ROUTE_001_AC2_factoriesReturnExactMembers",
+        "covers": "AC-2"
+      },
+      "args_hash": "09bef0d877a5fa970cfe5a5ca405a22dbf1f52b0",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-2-1"
+    },
+    {
+      "called_at": "2026-10-18T21:59:54Z",
+      "tool": "add_verification_evidence",
+      "args": {
+        "id": "IR-ROUTE-001",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/MethodTest.java#sdsAc2_IR_ROUTE_001_AC2_ofRejectsNullArrayAndNullElement",
+        "covers": "AC-2"
+      },
+      "args_hash": "85d1120525d9cb009f75241c4bb5b0d75dfb13d1",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-2-1"
+    },
+    {
+      "called_at": "2026-10-18T21:59:54Z",
+      "tool": "add_verification_evidence",
+      "args": {
+        "id": "IR-ROUTE-001",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/MethodTest.java#sdsAc1_IR_ROUTE_001_AC3_onlyStaticGetAnyOfBesideEnumBuiltIns",
+        "covers": "AC-3"
+      },
+      "args_hash": "2b72aab99543b0287cfca43f38034161a3da3e90",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-2-1"
+    },
+    {
+      "called_at": "2026-10-18T21:59:54Z",
+      "tool": "add_verification_evidence",
+      "args": {
+        "id": "IR-ROUTE-002",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/MethodSetTest.java#sdsAc4_IR_ROUTE_002_AC1_combinatorsReturnNewSetAndLeaveReceiverUnchanged",
+        "covers": "AC-1"
+      },
+      "args_hash": "c9995117117a1761399d10a0893ce60cae501166",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-2-1"
+    },
+    {
+      "called_at": "2026-10-18T21:59:54Z",
+      "tool": "add_verification_evidence",
+      "args": {
+        "id": "IR-ROUTE-002",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/MethodSetTest.java#sdsAc4_IR_ROUTE_002_AC2_eachCombinatorAddsExactlyItsOwnConstant",
+        "covers": "AC-2"
+      },
+      "args_hash": "ad286df8bf3873e0386c4f185657c148809ba01b",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-2-1"
+    },
+    {
+      "called_at": "2026-10-18T21:59:54Z",
+      "tool": "add_verification_evidence",
+      "args": {
+        "id": "IR-ROUTE-002",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/MethodSetTest.java#sdsAc4_IR_ROUTE_002_AC3_exceptRemovesAndNonMemberGivesEqualSet",
+        "covers": "AC-3"
+      },
+      "args_hash": "041e4ff670132e585f816ed748505db8cd8d87d5",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-2-1"
+    },
+    {
+      "called_at": "2026-10-18T21:59:54Z",
+      "tool": "add_verification_evidence",
+      "args": {
+        "id": "IR-ROUTE-002",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/MethodSetTest.java#sdsAc3_IR_ROUTE_002_AC4_iteratorRemoveThrowsAndSetUnchanged",
+        "covers": "AC-4"
+      },
+      "args_hash": "39d795114273850f7dd3939a1fbcfc352e71bd5b",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-2-1"
+    },
+    {
+      "called_at": "2026-10-18T21:59:54Z",
+      "tool": "add_verification_evidence",
+      "args": {
+        "id": "IR-ROUTE-002",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/MethodSetTest.java#sdsAc3_IR_ROUTE_002_AC4_noPublicConstructorAndOnlyFinalFields",
+        "covers": "AC-4"
+      },
+      "args_hash": "a35eb6faf73b135bca56945d07158a9c20d773b0",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-2-1"
+    },
+    {
+      "called_at": "2026-10-18T21:59:54Z",
+      "tool": "add_verification_evidence",
+      "args": {
+        "id": "FR-ROUTE-001",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/MethodSetTest.java#sdsAc5_FR_ROUTE_001_AC1_anyHasSevenMembersWithoutTraceOrConnect",
+        "covers": "AC-1"
+      },
+      "args_hash": "1ac87c1eb1d6b5ada0366ca7431bcdaaa40e9ebf",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-2-1"
+    },
+    {
+      "called_at": "2026-10-18T21:59:54Z",
+      "tool": "add_verification_evidence",
+      "args": {
+        "id": "FR-ROUTE-001",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/MethodSetTest.java#sdsAc5_FR_ROUTE_001_AC2_anyExceptDeleteEquality",
+        "covers": "AC-2"
+      },
+      "args_hash": "7f0b6b9bd840262769079f89b9ccd2296ec2def4",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-2-1"
+    },
+    {
+      "called_at": "2026-10-18T21:59:54Z",
+      "tool": "add_verification_evidence",
+      "args": {
+        "id": "FR-ROUTE-001",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/MethodSetTest.java#sdsAc5_FR_ROUTE_001_AC3_anyIsConstantAndTraceConnectOnlyWhenNamed",
+        "covers": "AC-3",
+        "notes": "partial: built-router (RouterPolicy enableTrace/enableConnect) case pending wave-2-2 lane"
+      },
+      "args_hash": "532c5d343e700e17ae33f59424cd7d566bc047c7",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-2-1"
+    },
+    {
+      "called_at": "2026-10-18T21:59:54Z",
+      "tool": "add_verification_evidence",
+      "args": {
+        "id": "IR-ROUTE-003",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/MethodSetTest.java#sdsAc6_IR_ROUTE_003_AC1_ordinalIterationAndContains",
+        "covers": "AC-1"
+      },
+      "args_hash": "ff3742855b1d775ff2b8ad12785796d0450616cd",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-2-1"
+    },
+    {
+      "called_at": "2026-10-18T21:59:54Z",
+      "tool": "add_verification_evidence",
+      "args": {
+        "id": "IR-ROUTE-003",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/MethodSetTest.java#sdsAc7_IR_ROUTE_003_AC2_valueEqualityHashCodeAndToString",
+        "covers": "AC-2"
+      },
+      "args_hash": "082993cc258c63d15241f81d9481f11162181a86",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-2-1"
+    },
+    {
+      "called_at": "2026-10-18T21:59:54Z",
+      "tool": "add_verification_evidence",
+      "args": {
+        "id": "IR-ROUTE-003",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/MethodKotlinTest.kt#SDS-AC-8 IR-ROUTE-003 AC-3 combinators, in and for loop without backticks",
+        "covers": "AC-3"
+      },
+      "args_hash": "1cbc5b41270aa45c6e1b831bbb49334feac98f04",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-2-1"
+    },
+    {
+      "called_at": "2026-10-18T21:59:54Z",
+      "tool": "add_verification_evidence",
+      "args": {
+        "id": "IR-ROUTE-003",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/MethodKotlinTest.kt#SDS-AC-8 IR-ROUTE-003 AC-3 no public method name is a Kotlin hard keyword",
+        "covers": "AC-3"
+      },
+      "args_hash": "44f27edc701c4a3e8dcc7af40b92c5778f742a1d",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-2-1"
+    },
+    {
+      "called_at": "2026-10-18T21:59:54Z",
+      "tool": "add_verification_evidence",
+      "args": {
+        "id": "OPS-ROUTE-001",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/RoutingDocsTest.java#sdsAc10_OPS_ROUTE_001_AC1_routingRulesSectionPresent",
+        "covers": "AC-1"
+      },
+      "args_hash": "fcb7df445b390c76aa930a1ccbcb99a376fbe248",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-2-1"
+    },
+    {
+      "called_at": "2026-10-18T21:59:54Z",
+      "tool": "add_verification_evidence",
+      "args": {
+        "id": "OPS-ROUTE-001",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/RoutingDocsTest.java#sdsAc9_OPS_ROUTE_001_AC2_accessorsNamedWithJavaKotlinAndExpressNote",
+        "covers": "AC-2"
+      },
+      "args_hash": "004a261b63447e9fe02c8514894209f715394903",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-2-1"
+    },
+    {
+      "called_at": "2026-10-18T21:59:54Z",
+      "tool": "add_verification_evidence",
+      "args": {
+        "id": "OPS-ROUTE-001",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/RoutingDocsTest.java#sdsAc10_OPS_ROUTE_001_AC3_wave1MarkersKeptAndNoneAdded",
+        "covers": "AC-3"
+      },
+      "args_hash": "f07a4eac6a00516a2ab4ec894da4c569a3285762",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-2-1"
+    },
+    {
+      "called_at": "2026-10-18T21:59:54Z",
+      "tool": "add_trace_link",
+      "args": {
+        "id": "IR-ROUTE-001",
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/Method.java",
+        "relation": "implements"
+      },
+      "args_hash": "68940ee7d0b1df300621352148af7bf2bc8823da",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-2-1"
+    },
+    {
+      "called_at": "2026-10-18T21:59:54Z",
+      "tool": "add_trace_link",
+      "args": {
+        "id": "FR-ROUTE-001",
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/Method.java",
+        "relation": "implements"
+      },
+      "args_hash": "6d10bf22560499958a2d8cad87a4559fd71fc06e",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-2-1"
+    },
+    {
+      "called_at": "2026-10-18T21:59:54Z",
+      "tool": "add_trace_link",
+      "args": {
+        "id": "IR-ROUTE-002",
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/MethodSet.java",
+        "relation": "implements"
+      },
+      "args_hash": "2e100f0133ec758ec1eb0d532d00f1822ec29e11",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-2-1"
+    },
+    {
+      "called_at": "2026-10-18T21:59:54Z",
+      "tool": "add_trace_link",
+      "args": {
+        "id": "IR-ROUTE-003",
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/MethodSet.java",
+        "relation": "implements"
+      },
+      "args_hash": "6f397c3b5d3ac48ac27524402888206e01339f5d",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-2-1"
+    },
+    {
+      "called_at": "2026-10-18T21:59:54Z",
+      "tool": "add_trace_link",
+      "args": {
+        "id": "IR-ROUTE-003",
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/package-info.java",
+        "relation": "implements"
+      },
+      "args_hash": "207c1372303cf0fefa33315f218d7ee29f92f836",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-2-1"
+    },
+    {
+      "called_at": "2026-10-18T21:59:54Z",
+      "tool": "add_trace_link",
+      "args": {
+        "id": "OPS-ROUTE-001",
+        "type": "Code",
+        "reference": "docs/api/routing.md",
+        "relation": "implements"
+      },
+      "args_hash": "4a4abff934a3e5cbd885d75a5d09d6300982272e",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-2-1"
+    },
+    {
+      "called_at": "2026-10-18T21:59:54Z",
+      "tool": "update_status",
+      "args": {
+        "id": "IR-ROUTE-001",
+        "status": "implemented"
+      },
+      "args_hash": "116ce69170a8cd5b07fe8a4df973315266f9f5b8",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-2-1"
+    },
+    {
+      "called_at": "2026-10-18T21:59:54Z",
+      "tool": "update_status",
+      "args": {
+        "id": "IR-ROUTE-002",
+        "status": "implemented"
+      },
+      "args_hash": "31914d12ab5ed6d8dda73e74711ec598ab513fa8",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-2-1"
+    },
+    {
+      "called_at": "2026-10-18T21:59:54Z",
+      "tool": "update_status",
+      "args": {
+        "id": "IR-ROUTE-003",
+        "status": "implemented"
+      },
+      "args_hash": "00a977c1ee2ce0bf42c330904bf53c17cfc02a4f",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-2-1"
+    },
+    {
+      "called_at": "2026-10-18T21:59:54Z",
+      "tool": "update_status",
+      "args": {
+        "id": "FR-ROUTE-001",
+        "status": "implemented"
+      },
+      "args_hash": "b1b5e07cf019f012ffea954fcc862672fab70035",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-2-1"
+    },
+    {
+      "called_at": "2026-10-18T21:59:54Z",
+      "tool": "update_status",
+      "args": {
+        "id": "OPS-ROUTE-001",
+        "status": "implemented"
+      },
+      "args_hash": "27de50fa2d7c8edbeed9122a5d8e24640d07c4d4",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-2-1"
+    },
+    {
+      "called_at": "2026-10-18T21:59:54Z",
+      "tool": "add_completed_work",
+      "args": {
+        "date": "2026-10-19",
+        "summary": "[sds] 2026-10-19.naruserve.naruserve-v1-wave-2-1 - Method enum, immutable MethodSet (contains/iterator/size), routing docs. green=PASS (19/19 new tests, ./gradlew build PASS). files: Method.java, MethodSet.java, package-info.java, docs/api/routing.md + 4 tests. SDS-AC: 1..10 PASS (SDS-AC-5 router-built case pending wave-2-2 RouterPolicy).",
+        "requirementIds": [
+          "IR-ROUTE-001",
+          "IR-ROUTE-002",
+          "IR-ROUTE-003",
+          "FR-ROUTE-001",
+          "OPS-ROUTE-001"
+        ],
+        "target": "wave-2",
+        "allowIncomplete": false,
+        "dryRun": false
+      },
+      "args_hash": "bc4cf1f799b5f4dcdb91f5fa335f5a888fd8c961",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-2-1"
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "findings": [
+    {"id":"A2-01","severity":"MEDIUM","req_id":"IR-ROUTE-004","ac":"AC-4",
+     "description":"New AC-4 says a lookup with a path the validator rejects fails with IllegalArgumentException, while FR-ROUTE-013 (statement, AC-2), FR-ROUTE-014 AC-1 and IR-ROUTE-004 precedence say unsupported method is returned 'whatever the path'. lookup('FOO', '/a%zz') or lookup('TRACE', '/a/..') now has two contradictory required outcomes; the implementer cannot satisfy both literal readings and tests may diverge.",
+     "suggested_fix":"State the order explicitly: path validation (IllegalArgumentException) happens before any result is chosen, and 'whatever the path' in FR-ROUTE-013/014 means 'whatever valid path'. Add an example: lookup('FOO','/a%zz') throws IllegalArgumentException."},
+    {"id":"A2-02","severity":"LOW","req_id":"FR-ROUTE-002","ac":"AC-3",
+     "description":"New wording 'treated as a GET route of kind WebSocket' read together with FR-ROUTE-011 ('resolve HEAD ... to the most specific matching GET route') and the precedence (automatic HEAD before WebSocket-only) would make HEAD /w with only a WebSocket route resolve to the WebSocket route with the auto-HEAD flag, contradicting FR-ROUTE-016 AC-1. It is resolved only indirectly by FR-ROUTE-015 ('without the flag ... HTTP routes only').",
+     "suggested_fix":"Say the WebSocket route counts as GET for Allow sets and conflict detection only, and write 'HTTP GET route' in FR-ROUTE-011's statement and AC-1."},
+    {"id":"A2-03","severity":"LOW","req_id":"IR-ROUTE-004","ac":"AC-1",
+     "description":"'the Method of the registration that matched' is ill-defined for a MethodSet registration (a registration has a set, not one Method).",
+     "suggested_fix":"'the request method for a direct match (the member of the registration's set that matched), GET under automatic HEAD and for a WebSocket match'."},
+    {"id":"A2-04","severity":"LOW","req_id":"IR-ROUTE-004","ac":"AC-5",
+     "description":"'Configuration error' (FR-ROUTE-003, FR-ROUTE-008) has no named type, while AC-5 now uses IllegalStateException for registration after freeze. If the implementer makes the configuration error an IllegalStateException, the two failure kinds cannot be told apart in tests; behaviour after a freeze that raised a configuration error (frozen or not? lookup allowed?) and a second freeze() call are also unspecified.",
+     "suggested_fix":"Require a dedicated configuration-error exception type (name decided under C-07) distinct from IllegalStateException/IllegalArgumentException; state that a failed freeze leaves the router unusable (lookup throws IllegalStateException) and that a second freeze is a no-op or throws."},
+    {"id":"A2-05","severity":"LOW","req_id":"FR-ROUTE-002","ac":"AC-3",
+     "description":"D-391 asks for an internal hook; AC-3 now only requires 'a router method separate from the HTTP registration methods', which may be public. 'Internal' is still not checked (carry-over of A1-04 second half).",
+     "suggested_fix":"Accept as-is if Router is internal API, or state the hook's visibility (e.g. not documented in docs/api, or package-private / @internal-annotated)."},
+    {"id":"A2-06","severity":"LOW","req_id":"FR-ROUTE-006","ac":"AC-3",
+     "description":"Case-insensitive comparison does not say how case folding is done (Locale.ROOT or ASCII only); a default-locale toLowerCase breaks under Turkish locale (Android device locales) and non-ASCII literals such as /café are ambiguous.",
+     "suggested_fix":"Specify locale-independent folding (e.g. String.equalsIgnoreCase or toLowerCase(Locale.ROOT))."},
+    {"id":"A2-07","severity":"LOW","req_id":"FR-ROUTE-006","ac":"AC-2",
+     "description":"Carry-over A1-13: trailing-slash ignoring on the root '/' is still unspecified; also whether policies may change after freeze.",
+     "suggested_fix":"State '/' is never stripped to empty; policies are fixed at construction or rejected after freeze."},
+    {"id":"A2-08","severity":"LOW","req_id":"OPS-ROUTE-001","ac":"AC-1",
+     "description":"The extended list omits two decided semantics from the wave decisions: path validation runs before lookup (with the rejection list) and single percent-decoding of parameters (%252e -> %2e). Wave decision 'Markers' says all decided semantics are documented.",
+     "suggested_fix":"Add path validation rules and single decoding to the AC-1 list."}
+  ],
+  "summary": {"CRITICAL":0,"HIGH":0,"MEDIUM":1,"LOW":7,
+    "notes":"Round 1 MEDIUMs A1-01..A1-06 are resolved by the changed blocks (FR-ROUTE-004 AC-2, IR-ROUTE-004 AC-1/4/5, FR-ROUTE-002 AC-3, OPS-ROUTE-001 AC-1/2). Lookup-before-freeze ISE does not contradict other ACs (lookups implicitly follow a freeze). IR-ROUTE-001 AC-3, IR-ROUTE-002 AC-4, FR-ROUTE-010 AC-4 fixes are correct; FR-ROUTE-010 AC-4 Allow set checked against the precedence (not WebSocket-only because a POST route exists). Examples checked: no wrong examples found. No regressions beyond A2-01/A2-02."},
+  "coverage_missing": []
+}

@@ -1,0 +1,33 @@
+{
+  "summary": "Establish the Gradle 8.14.3 multi-module build foundation (module layout, dependency declarations, TinyHttpd composite build, JUnit/Kotlin smoke tests, API 21 and kotlin-stdlib build checks, docs/CLAUDE.md module names) for issue #1.",
+  "intent_type_hint": "new-scope",
+  "key_entities": [
+    "root settings.gradle / build.gradle (single root build file, no per-module build files)",
+    "NaruServe-build (root project name)",
+    "NaruServe-api, NaruServe-servlet",
+    "NaruServe-tinyhttpd, NaruServe-gson, NaruServe (bootstrap), NaruServe-kotlin",
+    "SLF4J / rotating file / Logcat Logger modules (NaruServe- prefix)",
+    "TinyHttpd includeBuild via Gradle property (default /Users/beom/work/git/TinyHttpd, commit 46b973e)",
+    "animal-sniffer android-api-level-21",
+    "kotlin.stdlib.default.dependency=false and runtimeClasspath check",
+    "nullability annotation library (compileOnly)",
+    "JUnit 4.13.2, Kotlin Gradle Plugin 2.x, Java and Kotlin smoke tests",
+    "Maven group / package root com.snoworca.naruserve",
+    "docs/api/{README,app,json,kotlin,logging}.md, CLAUDE.md module line"
+  ],
+  "ambiguities": [
+    "Final names of the SLF4J, rotating file and Logcat Logger modules are only said to take the NaruServe- prefix; the exact suffixes are not fixed by design items or wave decisions.",
+    "Which nullability annotation library is used (D-026 leaves it to #1; only the constraints compileOnly and Kotlin-recognised are set)."
+  ],
+  "implied_requirements": [
+    "Automated build check that NaruServe-api sources/classpath contain no android, servlet, Gson or TinyHttpd references (integration item I-002).",
+    "Automated build check that only Gson 2.14.0 appears on any classpath (integration item I-005).",
+    "Build check failing when a non-Kotlin module has kotlin-stdlib on runtimeClasspath (D-388).",
+    "TinyHttpd adapter declares TinyHttpd with implementation scope only, never api (wave decision W2-006).",
+    "Root project renamed NaruServe-build to avoid coordinate clash with the NaruServe bootstrap module in the composite build (W2-001).",
+    "Missing TinyHttpd directory fails at configuration time with a message naming the property and path (D-015).",
+    "docs/api/servlet.md jakarta marker is left for wave 8; rest-kotlin name replaced in CLAUDE.md and docs/api/kotlin.md (W2-003, W2-005).",
+    "Root ./gradlew build passes on JDK 17 without an Android SDK (D-025)."
+  ],
+  "semantic_equivalences": []
+}
