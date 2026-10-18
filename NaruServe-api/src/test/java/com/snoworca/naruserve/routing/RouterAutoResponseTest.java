@@ -191,4 +191,17 @@ public class RouterAutoResponseTest {
         }
         assertEquals(RouteMatch.Kind.MATCHED, r.lookup("GET", "/x", false).kind());
     }
+
+    // w2-P2-003; FR-ROUTE-010 AC-1; FR-ROUTE-012 AC-1
+    @Test
+    public void w2P2_003_FR_ROUTE_010_AC1_FR_ROUTE_012_AC1_allowForBeforeFreezeIsRejected() {
+        Router<String> r = router();
+        r.add(Method.GET, "/x", "get");
+        try {
+            r.allowFor(Router.decodeSegments("/x", STRICT));
+            org.junit.Assert.fail("allowFor ran on an unfrozen router");
+        } catch (IllegalStateException expected) {
+            // same guard as lookup
+        }
+    }
 }

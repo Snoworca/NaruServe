@@ -235,11 +235,15 @@ public final class Router<H> {
 
     /**
      * The {@code Allow} set for decoded {@code segments}: methods of every matching route (a WebSocket route counts
-     * as {@code GET}), plus {@code HEAD} when {@code GET} is present, plus {@code OPTIONS}.
+     * as {@code GET}), plus {@code HEAD} when {@code GET} is present, plus {@code OPTIONS}. Like {@link #lookup},
+     * only on a frozen router.
      */
     // @req FR-ROUTE-010
     // @req FR-ROUTE-012
     public MethodSet allowFor(List<String> segments) {
+        if (!frozen) {
+            throw new IllegalStateException("Router is not frozen; call freeze() before allowFor");
+        }
         int methodMask = 0;
         for (Route<H> r : routes) {
             if (r.pattern.matches(segments, policy)) {

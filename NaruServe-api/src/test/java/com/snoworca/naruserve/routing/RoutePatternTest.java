@@ -49,6 +49,29 @@ public class RoutePatternTest {
         r.freeze();
     }
 
+    // w2-P2-001; FR-ROUTE-003 AC-1; FR-ROUTE-003 AC-3
+    @Test
+    public void w2P2_001_FR_ROUTE_003_AC1_AC3_variableNameMustBeIdentifierFillingTheSegment() {
+        for (String p : new String[] {"/:id.json", "/:a-b", "/:from-:to", "/a/:1st", "/:na me", "/:caf\u00e9", "/:a:b"}) {
+            assertRejectedAtAdd(p);
+        }
+        Router<String> r = new Router<>(RouterPolicy.strict());
+        r.add(Method.GET, "/:_id/:userId2/:A_b", "ok");
+        r.freeze();
+    }
+
+    // w2-P2-002; FR-ROUTE-003 AC-1; FR-ROUTE-004 AC-1
+    @Test
+    public void w2P2_002_FR_ROUTE_003_AC1_FR_ROUTE_004_AC1_unmatchableLiteralRejectedAtAdd() {
+        for (String p : new String[] {"/a b", "/a#b", "/a\u0001", "/a\u007f", "/a%20b", "/a%2Fb", "/a\tb", "/a/.",
+            "/a/../b"}) {
+            assertRejectedAtAdd(p);
+        }
+        Router<String> r = new Router<>(RouterPolicy.strict());
+        r.add(Method.GET, "/caf\u00e9/.hidden/a~b", "ok");
+        r.freeze();
+    }
+
     // SDS-AC-5; FR-ROUTE-003 AC-3
     @Test
     public void sdsAc5_FR_ROUTE_003_AC3_parseNamesThePattern() {

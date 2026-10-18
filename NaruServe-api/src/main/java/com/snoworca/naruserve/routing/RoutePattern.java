@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -15,6 +16,8 @@ import org.jspecify.annotations.Nullable;
 // @req FR-ROUTE-005
 // @req FR-ROUTE-007
 public final class RoutePattern {
+
+    private static final Pattern VARIABLE_NAME = Pattern.compile("[A-Za-z_][A-Za-z0-9_]*");
 
     private final String source;
     /** Literal text, or the variable name for a variable segment. */
@@ -51,15 +54,35 @@ public final class RoutePattern {
                 if (name.isEmpty()) {
                     throw error(pattern, "has an empty variable name");
                 }
+                if (!VARIABLE_NAME.matcher(name).matches()) {
+                    throw error(pattern, "variable :" + name + " must be [A-Za-z_][A-Za-z0-9_]* and fill its segment");
+                }
                 if (names.contains(name)) {
                     throw error(pattern, "repeats variable :" + name);
                 }
                 names.add(name);
                 parts[i] = name;
                 variable[i] = true;
+            } else {
+                checkLiteral(pattern, part);
             }
         }
         return new RoutePattern(pattern, parts, variable);
+    }
+
+    /** Literals are written decoded and compared to decoded request segments, so these could never match. */
+    // @req FR-ROUTE-004
+    private static void checkLiteral(String pattern, String literal) {
+        if (literal.equals(".") || literal.equals("..")) {
+            throw error(pattern, "has a '" + literal + "' segment, which every request path is rejected for");
+        }
+        for (int i = 0; i < literal.length(); i++) {
+            char c = literal.charAt(i);
+            if (c <= 0x20 || c == 0x7F || c == '#' || c == '%') {
+                throw error(pattern, String.format("contains U+%04X; write literals decoded, without space,"
+                        + " control characters, '#' or '%%'", (int) c));
+            }
+        }
     }
 
     private static RoutingConfigException error(String pattern, String why) {
