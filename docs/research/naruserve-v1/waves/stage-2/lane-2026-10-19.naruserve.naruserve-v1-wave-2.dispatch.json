@@ -1,0 +1,64 @@
+{
+ "run_id": "2026-10-19.NaruServe.naruserve-v1",
+ "wave": "wave-2",
+ "stage": 2,
+ "laneId": "lane-2026-10-19.naruserve.naruserve-v1-wave-2",
+ "target": "wave-2",
+ "allocation": [
+  "CON-ROUTE-001",
+  "FR-ROUTE-001",
+  "FR-ROUTE-002",
+  "FR-ROUTE-003",
+  "FR-ROUTE-004",
+  "FR-ROUTE-005",
+  "FR-ROUTE-006",
+  "FR-ROUTE-007",
+  "FR-ROUTE-008",
+  "FR-ROUTE-009",
+  "FR-ROUTE-010",
+  "FR-ROUTE-011",
+  "FR-ROUTE-012",
+  "FR-ROUTE-013",
+  "FR-ROUTE-014",
+  "FR-ROUTE-015",
+  "FR-ROUTE-016",
+  "FR-ROUTE-017",
+  "IR-ROUTE-001",
+  "IR-ROUTE-002",
+  "IR-ROUTE-003",
+  "IR-ROUTE-004",
+  "OPS-ROUTE-001"
+ ],
+ "sds_paths": [
+  "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-2-1.sds.md",
+  "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-2-2.sds.md",
+  "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-2-3.sds.md"
+ ],
+ "base_sha": "9ce58555e99fcb8267aba1b7ff67988ba6fe5a39",
+ "branch": "kiwi/orch/2026-10-19.NaruServe.naruserve-v1/lane-2026-10-19.naruserve.naruserve-v1-wave-2",
+ "write_set": "see lanes.lock.json lanes[0].writeSet",
+ "lane_plan": "/Users/beom/work/git/NaruServe/docs/research/naruserve-v1/waves/stage-2/lanes.lock.json",
+ "verification_cmd": "./gradlew build",
+ "regression_baseline": {
+  "command": "./gradlew build",
+  "head_sha": "3a2717bbadfde9e626b3568bb2ee9455ad1030ac",
+  "failing_tests": []
+ },
+ "deferred_queue": "/Users/beom/work/git/NaruServe/kiwi/orchestrator/2026-10-19.NaruServe.naruserve-v1/lanes/lane-2026-10-19.naruserve.naruserve-v1-wave-2/deferred-srs-queue.jsonl",
+ "manifest": "/Users/beom/work/git/NaruServe/kiwi/orchestrator/2026-10-19.NaruServe.naruserve-v1/lanes/lane-2026-10-19.naruserve.naruserve-v1-wave-2/manifest.json",
+ "forbidden": [
+  "SRS mutation tools",
+  "writes to docs/spec/ docs/sds/ kiwi/pipeline.jsonl kiwi/waves.jsonl",
+  "--root",
+  "merge or push",
+  "/kiwi-sds",
+  "weakening existing tests",
+  "writes outside the write set except the manifest/queue paths",
+  "git add -A / git commit -a"
+ ],
+ "flags": [
+  "--auto",
+  "--auto-integration",
+  "--auto-cost-warning"
+ ]
+}
