@@ -1,0 +1,6 @@
+{"schema_version":"1.0.0","run_id":"2026-10-19.naruserve.naruserve-v1-wave-1","sds_path":"docs/sds/2026-10-19.naruserve.naruserve-v1-wave-1.sds.md","sds_sha256":"ae4b8632cc62077898d5884a35f7ec1aed2eee49669e3cf22cadbf5206688ecc","target":"wave-1","mode":"normal","flags":["--auto","--auto-cost-warning","--auto-integration","--defer-srs-mutation"],"spawn_context":"pm-child","phase":"done","next_resume_hint":null,"failed":false,
+"red_evidence":{"command":"./gradlew :test","exit_code":1,"captured_failure":"24 tests completed, 21 failed (BuildLayoutTest/BuildChecksTest: settings lacks nine modules, missing dependency report, no checks/tasks)","timestamp":"2026-10-19T05:20:00Z"},
+"green_evidence":{"command":"./gradlew build","exit_code":0,"timestamp":"2026-10-19T05:45:00Z"},
+"regression_baseline":{"command":"./gradlew build","exit_code":0,"failed_test_ids":[],"head_sha":"49051c0","captured_at":"2026-10-19T05:15:00Z"},
+"regression_summary":{"scope":"full","passed":35,"failed":0,"regressed_files":[]},
+"mcp_call_log":[],"deferred_queue":"/Users/beom/work/git/NaruServe/kiwi/orchestrator/2026-10-19.NaruServe.naruserve-v1/lanes/lane-2026-10-19.naruserve.naruserve-v1-wave-1/deferred-srs-queue.jsonl","deferred_count":78,"pending_mutations":[]}

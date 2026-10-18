@@ -1,0 +1,31 @@
+{
+  "mode": "self",
+  "pr_url": null,
+  "pr_number": null,
+  "self_scope": {
+    "source": "base-head",
+    "commit_range": "49051c0c234a7c464eb2faf62b2ee42208145fd9..HEAD(ab818aa)",
+    "files": [
+      {"path": "build.gradle", "hunks_total": 12},
+      {"path": "settings.gradle", "hunks_total": 2},
+      {"path": "gradle.properties", "hunks_total": 1},
+      {"path": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java", "hunks_total": 1},
+      {"path": "src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java", "hunks_total": 1},
+      {"path": "NaruServe-api/src/test/java/com/snoworca/naruserve/NullabilityFixture.java", "hunks_total": 1},
+      {"path": "NaruServe-api/src/test/java/com/snoworca/naruserve/SmokeTest.java", "hunks_total": 1},
+      {"path": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/NullabilityKotlinTest.kt", "hunks_total": 1},
+      {"path": "NaruServe-kotlin/src/main/kotlin/com/snoworca/naruserve/kotlin/KotlinModule.kt", "hunks_total": 1},
+      {"path": "NaruServe-kotlin/src/test/kotlin/com/snoworca/naruserve/kotlin/KotlinSmokeTest.kt", "hunks_total": 1},
+      {"path": "NaruServe-gson/src/main/java/com/snoworca/naruserve/gson/package-info.java", "hunks_total": 1},
+      {"path": "NaruServe-logcat/src/main/java/com/snoworca/naruserve/logcat/package-info.java", "hunks_total": 1},
+      {"path": "NaruServe-filelog/src/main/java/com/snoworca/naruserve/filelog/package-info.java", "hunks_total": 1},
+      {"path": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/package-info.java", "hunks_total": 1},
+      {"path": "NaruServe-slf4j/src/main/java/com/snoworca/naruserve/slf4j/package-info.java", "hunks_total": 1},
+      {"path": "NaruServe/src/main/java/com/snoworca/naruserve/bootstrap/package-info.java", "hunks_total": 1}
+    ],
+    "excluded_prose": ["CLAUDE.md", "docs/api/README.md", "docs/api/app.md", "docs/api/json.md", "docs/api/kotlin.md", "docs/api/logging.md"],
+    "refused_artifacts": [],
+    "unclassified_files": [],
+    "identity": "16 included + 6 prose + 0 refused + 0 unclassified = 22 candidates"
+  }
+}

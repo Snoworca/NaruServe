@@ -1,0 +1,280 @@
+{
+  "classification": "new-scope",
+  "mode": "live",
+  "mcp_calls": [
+    {
+      "tool": "add_requirement",
+      "args_id_or_title": "Gradle 8.14.3 wrapper as the only build tool (dryRun)",
+      "result_id": "CON-BUILD-001",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "args_id_or_title": "Gradle 8.14.3 wrapper as the only build tool",
+      "result_id": "CON-BUILD-001",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "args_id_or_title": "Module set and root project name",
+      "result_id": "CON-BUILD-002",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "args_id_or_title": "Single root build file configures every module",
+      "result_id": "CON-BUILD-003",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "args_id_or_title": "Java 8 bytecode target for Java and Kotlin compilation",
+      "result_id": "CON-BUILD-004",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "args_id_or_title": "Maven group and Java package root",
+      "result_id": "CON-BUILD-005",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "args_id_or_title": "Main dependencies of every module declared in wave 1",
+      "result_id": "CON-BUILD-006",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "args_id_or_title": "kotlin-stdlib confined to the Kotlin extension module",
+      "result_id": "CON-BUILD-007",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "args_id_or_title": "Logcat Logger module builds without an Android SDK",
+      "result_id": "CON-BUILD-008",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "args_id_or_title": "TinyHttpd composite build through a Gradle property",
+      "result_id": "OPS-BUILD-001",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "args_id_or_title": "TinyHttpd dependency boundaries",
+      "result_id": "CON-BUILD-009",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "args_id_or_title": "TinyHttpd checkout stays read-only",
+      "result_id": "CON-BUILD-010",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "args_id_or_title": "Test tooling and the root build gate",
+      "result_id": "OPS-BUILD-002",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "args_id_or_title": "compileOnly nullability annotations recognised by Kotlin",
+      "result_id": "CON-BUILD-011",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "args_id_or_title": "animal-sniffer API 21 check on Android-bound modules",
+      "result_id": "CON-BUILD-012",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "args_id_or_title": "Core isolation and single Gson version build checks",
+      "result_id": "CON-BUILD-013",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "args_id_or_title": "Module names and coordinates in docs/api and CLAUDE.md",
+      "result_id": "OPS-BUILD-003",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "args_id_or_title": "CON-BUILD-003 depends_on CON-BUILD-002",
+      "result_id": "CON-BUILD-003",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "args_id_or_title": "CON-BUILD-004 depends_on CON-BUILD-003",
+      "result_id": "CON-BUILD-004",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "args_id_or_title": "CON-BUILD-006 depends_on CON-BUILD-002",
+      "result_id": "CON-BUILD-006",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "args_id_or_title": "CON-BUILD-006 depends_on CON-BUILD-003",
+      "result_id": "CON-BUILD-006",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "args_id_or_title": "CON-BUILD-007 depends_on CON-BUILD-006",
+      "result_id": "CON-BUILD-007",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "args_id_or_title": "CON-BUILD-008 depends_on CON-BUILD-006",
+      "result_id": "CON-BUILD-008",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "args_id_or_title": "CON-BUILD-009 depends_on OPS-BUILD-001",
+      "result_id": "CON-BUILD-009",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "args_id_or_title": "CON-BUILD-009 depends_on CON-BUILD-006",
+      "result_id": "CON-BUILD-009",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "args_id_or_title": "CON-BUILD-010 depends_on OPS-BUILD-001",
+      "result_id": "CON-BUILD-010",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "args_id_or_title": "OPS-BUILD-002 depends_on CON-BUILD-003",
+      "result_id": "OPS-BUILD-002",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "args_id_or_title": "CON-BUILD-011 depends_on CON-BUILD-006",
+      "result_id": "CON-BUILD-011",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "args_id_or_title": "CON-BUILD-012 depends_on CON-BUILD-002",
+      "result_id": "CON-BUILD-012",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "args_id_or_title": "CON-BUILD-013 depends_on CON-BUILD-006",
+      "result_id": "CON-BUILD-013",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "args_id_or_title": "OPS-BUILD-003 depends_on CON-BUILD-002",
+      "result_id": "OPS-BUILD-003",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "args_id_or_title": "OPS-BUILD-003 depends_on CON-BUILD-012",
+      "result_id": "OPS-BUILD-003",
+      "ok": true
+    },
+    {
+      "tool": "validate_spec",
+      "args_id_or_title": "-",
+      "result_id": null,
+      "ok": true
+    }
+  ],
+  "added_ids": [
+    "CON-BUILD-001",
+    "CON-BUILD-002",
+    "CON-BUILD-003",
+    "CON-BUILD-004",
+    "CON-BUILD-005",
+    "CON-BUILD-006",
+    "CON-BUILD-007",
+    "CON-BUILD-008",
+    "OPS-BUILD-001",
+    "CON-BUILD-009",
+    "CON-BUILD-010",
+    "OPS-BUILD-002",
+    "CON-BUILD-011",
+    "CON-BUILD-012",
+    "CON-BUILD-013",
+    "OPS-BUILD-003"
+  ],
+  "coverage": {
+    "D-001": "CON-BUILD-001",
+    "D-002": "CON-BUILD-002",
+    "D-003": "CON-BUILD-003",
+    "D-004": "CON-BUILD-003",
+    "D-005": "CON-BUILD-006",
+    "D-006": "CON-BUILD-004",
+    "D-007": "CON-BUILD-004",
+    "D-008": "CON-BUILD-005",
+    "D-009": "CON-BUILD-006",
+    "D-010": "CON-BUILD-006",
+    "D-011": "CON-BUILD-007",
+    "D-012": "CON-BUILD-006",
+    "D-013": "OPS-BUILD-001",
+    "D-014": "OPS-BUILD-001",
+    "D-015": "OPS-BUILD-001",
+    "D-016": "CON-BUILD-009",
+    "D-017": "CON-BUILD-009",
+    "D-018": "CON-BUILD-009",
+    "D-019": "CON-BUILD-010",
+    "D-020": "CON-BUILD-010",
+    "D-021": "OPS-BUILD-003",
+    "D-022": "OPS-BUILD-002",
+    "D-023": "OPS-BUILD-002",
+    "D-024": "OPS-BUILD-002",
+    "D-025": "OPS-BUILD-002",
+    "D-026": "CON-BUILD-011",
+    "D-027": "CON-BUILD-012",
+    "D-028": "CON-BUILD-012",
+    "D-029": "OPS-BUILD-003",
+    "D-384": "CON-BUILD-006",
+    "D-385": "CON-BUILD-008",
+    "D-386": "CON-BUILD-006",
+    "D-387": "CON-BUILD-007",
+    "D-388": "CON-BUILD-007",
+    "D-448": "OPS-BUILD-003",
+    "I-002": "CON-BUILD-013",
+    "I-005": "CON-BUILD-013",
+    "I-006": "CON-BUILD-010",
+    "W-bootstrap-name": "CON-BUILD-002",
+    "W2-001": "CON-BUILD-002",
+    "W2-003": "OPS-BUILD-003",
+    "W2-004": "OPS-BUILD-001",
+    "W2-005": "OPS-BUILD-003",
+    "W2-006": "CON-BUILD-009"
+  },
+  "open_choices_c07": {
+    "logger_module_suffixes": "CON-BUILD-002 (NaruServe- prefix constraint)",
+    "nullability_annotation_library": "CON-BUILD-011 (Kotlin-recognised, compileOnly, no runtime dep)"
+  },
+  "validate_spec_result": {
+    "errors": 0,
+    "warnings": 16,
+    "byCode": {
+      "SRS-W023": 16
+    },
+    "note": "SRS-W023 = draft stability on every new requirement (default); no errors"
+  }
+}

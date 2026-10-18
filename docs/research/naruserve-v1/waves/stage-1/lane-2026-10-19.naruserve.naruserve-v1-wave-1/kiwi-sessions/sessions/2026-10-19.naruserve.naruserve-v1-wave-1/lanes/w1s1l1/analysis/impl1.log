@@ -1,0 +1,172 @@
+> Task :compileJava NO-SOURCE
+> Task :processResources NO-SOURCE
+> Task :classes UP-TO-DATE
+> Task :TinyHttpd:tinyhttpd-core:compileJava UP-TO-DATE
+> Task :jar
+> Task :assemble
+> Task :TinyHttpd:tinyhttpd-websocket:compileJava UP-TO-DATE
+> Task :TinyHttpd:tinyhttpd-core:processResources NO-SOURCE
+> Task :TinyHttpd:tinyhttpd-core:classes UP-TO-DATE
+> Task :TinyHttpd:tinyhttpd-core:jar UP-TO-DATE
+> Task :TinyHttpd:tinyhttpd-websocket:processResources NO-SOURCE
+> Task :TinyHttpd:tinyhttpd-websocket:classes UP-TO-DATE
+> Task :TinyHttpd:tinyhttpd-websocket:jar UP-TO-DATE
+
+> Task :checkDependencyRules
+Build file '/Users/beom/work/git/NaruServe/.claude/worktrees/agent-a93bada39c7b9b0b4/build.gradle': line 194
+Invocation of Task.project at execution time has been deprecated. This will fail with an error in Gradle 10.0. This API is incompatible with the configuration cache, which will become the only mode supported by Gradle in a future release. Consult the upgrading guide for further information: https://docs.gradle.org/8.14.3/userguide/upgrading_version_7.html#task_project
+	at build_ejm0wyl9rh0d7qxkzri32ozot$_run_closure11$_closure36$_closure37.doCall$original(/Users/beom/work/git/NaruServe/.claude/worktrees/agent-a93bada39c7b9b0b4/build.gradle:194)
+	(Run with --stacktrace to get the full stack trace of this deprecation warning.)
+
+> Task :check
+> Task :build
+> Task :NaruServe:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :NaruServe-api:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :NaruServe-api:compileKotlin NO-SOURCE
+> Task :NaruServe-api:compileJava NO-SOURCE
+> Task :NaruServe-gson:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :NaruServe-gson:compileKotlin NO-SOURCE
+> Task :NaruServe-gson:compileJava
+> Task :NaruServe-logcat:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :NaruServe-logcat:compileKotlin NO-SOURCE
+> Task :NaruServe-logcat:compileJava
+> Task :NaruServe-tinyhttpd:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :NaruServe-tinyhttpd:compileKotlin NO-SOURCE
+> Task :NaruServe-tinyhttpd:compileJava
+> Task :NaruServe:compileKotlin NO-SOURCE
+> Task :NaruServe:compileJava
+> Task :NaruServe:processResources NO-SOURCE
+> Task :NaruServe:classes
+> Task :NaruServe:jar
+> Task :NaruServe:assemble
+> Task :NaruServe:animalsnifferMain SKIPPED
+> Task :NaruServe:checkClassReferences
+> Task :NaruServe:compileTestKotlin NO-SOURCE
+> Task :NaruServe:compileTestJava NO-SOURCE
+> Task :NaruServe:processTestResources NO-SOURCE
+> Task :NaruServe:testClasses UP-TO-DATE
+> Task :NaruServe-api:processResources NO-SOURCE
+> Task :NaruServe-api:classes UP-TO-DATE
+> Task :NaruServe-api:jar UP-TO-DATE
+> Task :NaruServe-gson:processResources NO-SOURCE
+> Task :NaruServe-gson:classes
+> Task :NaruServe-gson:jar
+> Task :NaruServe-logcat:processResources NO-SOURCE
+> Task :NaruServe-logcat:classes
+> Task :NaruServe-logcat:jar
+> Task :NaruServe-tinyhttpd:processResources NO-SOURCE
+> Task :NaruServe-tinyhttpd:classes
+> Task :NaruServe-tinyhttpd:jar
+> Task :NaruServe:test NO-SOURCE
+> Task :NaruServe:check
+> Task :NaruServe:build
+> Task :NaruServe-api:assemble UP-TO-DATE
+> Task :NaruServe-api:animalsnifferMain SKIPPED
+> Task :NaruServe-api:checkClassReferences
+> Task :NaruServe-api:compileTestFixturesKotlin NO-SOURCE
+> Task :NaruServe-api:compileTestFixturesJava NO-SOURCE
+> Task :NaruServe-api:processTestFixturesResources NO-SOURCE
+> Task :NaruServe-api:testFixturesClasses UP-TO-DATE
+> Task :NaruServe-api:testFixturesJar
+> Task :NaruServe-api:processTestResources NO-SOURCE
+> Task :NaruServe-filelog:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :NaruServe-filelog:compileKotlin NO-SOURCE
+> Task :NaruServe-filelog:compileJava
+> Task :NaruServe-filelog:processResources NO-SOURCE
+> Task :NaruServe-filelog:classes
+> Task :NaruServe-filelog:jar
+> Task :NaruServe-filelog:assemble
+> Task :NaruServe-filelog:animalsnifferMain SKIPPED
+> Task :NaruServe-filelog:checkClassReferences
+> Task :NaruServe-filelog:compileTestKotlin NO-SOURCE
+> Task :NaruServe-filelog:compileTestJava NO-SOURCE
+> Task :NaruServe-filelog:processTestResources NO-SOURCE
+> Task :NaruServe-filelog:testClasses UP-TO-DATE
+> Task :NaruServe-filelog:test NO-SOURCE
+> Task :NaruServe-filelog:check
+> Task :NaruServe-filelog:build
+> Task :NaruServe-gson:assemble
+> Task :NaruServe-gson:animalsnifferMain SKIPPED
+> Task :NaruServe-gson:checkClassReferences
+> Task :NaruServe-gson:compileTestKotlin NO-SOURCE
+> Task :NaruServe-gson:compileTestJava NO-SOURCE
+> Task :NaruServe-gson:processTestResources NO-SOURCE
+> Task :NaruServe-gson:testClasses UP-TO-DATE
+> Task :NaruServe-gson:test NO-SOURCE
+> Task :NaruServe-gson:check
+> Task :NaruServe-gson:build
+> Task :NaruServe-kotlin:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :NaruServe-kotlin:processResources NO-SOURCE
+> Task :NaruServe-kotlin:processTestResources NO-SOURCE
+> Task :NaruServe-logcat:assemble
+> Task :NaruServe-logcat:animalsnifferMain SKIPPED
+> Task :NaruServe-logcat:checkClassReferences
+> Task :NaruServe-logcat:compileTestKotlin NO-SOURCE
+> Task :NaruServe-logcat:compileTestJava NO-SOURCE
+> Task :NaruServe-logcat:processTestResources NO-SOURCE
+> Task :NaruServe-logcat:testClasses UP-TO-DATE
+> Task :NaruServe-logcat:test NO-SOURCE
+> Task :NaruServe-logcat:check
+> Task :NaruServe-logcat:build
+> Task :NaruServe-servlet:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :NaruServe-servlet:compileKotlin NO-SOURCE
+> Task :NaruServe-servlet:compileJava NO-SOURCE
+> Task :NaruServe-servlet:processResources NO-SOURCE
+> Task :NaruServe-servlet:classes UP-TO-DATE
+> Task :NaruServe-servlet:jar UP-TO-DATE
+> Task :NaruServe-servlet:assemble UP-TO-DATE
+> Task :NaruServe-servlet:compileTestKotlin NO-SOURCE
+> Task :NaruServe-servlet:compileTestJava NO-SOURCE
+> Task :NaruServe-servlet:processTestResources NO-SOURCE
+> Task :NaruServe-servlet:testClasses UP-TO-DATE
+> Task :NaruServe-servlet:test NO-SOURCE
+> Task :NaruServe-servlet:check UP-TO-DATE
+> Task :NaruServe-servlet:build UP-TO-DATE
+> Task :NaruServe-slf4j:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :NaruServe-slf4j:compileKotlin NO-SOURCE
+> Task :NaruServe-slf4j:compileJava
+> Task :NaruServe-slf4j:processResources NO-SOURCE
+> Task :NaruServe-slf4j:classes
+> Task :NaruServe-slf4j:jar
+> Task :NaruServe-slf4j:assemble
+> Task :NaruServe-slf4j:compileTestKotlin NO-SOURCE
+> Task :NaruServe-slf4j:compileTestJava NO-SOURCE
+> Task :NaruServe-slf4j:processTestResources NO-SOURCE
+> Task :NaruServe-slf4j:testClasses UP-TO-DATE
+> Task :NaruServe-slf4j:test NO-SOURCE
+> Task :NaruServe-slf4j:check UP-TO-DATE
+> Task :NaruServe-slf4j:build
+> Task :NaruServe-tinyhttpd:assemble
+> Task :NaruServe-tinyhttpd:animalsnifferMain SKIPPED
+> Task :NaruServe-tinyhttpd:checkClassReferences
+> Task :NaruServe-tinyhttpd:compileTestKotlin NO-SOURCE
+> Task :NaruServe-tinyhttpd:compileTestJava NO-SOURCE
+> Task :NaruServe-tinyhttpd:processTestResources NO-SOURCE
+> Task :NaruServe-tinyhttpd:testClasses UP-TO-DATE
+> Task :NaruServe-tinyhttpd:test NO-SOURCE
+> Task :NaruServe-tinyhttpd:check
+> Task :NaruServe-tinyhttpd:build
+> Task :NaruServe-api:compileTestKotlin
+> Task :NaruServe-kotlin:compileKotlin
+> Task :NaruServe-api:compileTestJava
+> Task :NaruServe-api:testClasses
+> Task :NaruServe-api:test
+> Task :NaruServe-api:check
+> Task :NaruServe-api:build
+> Task :NaruServe-kotlin:compileJava NO-SOURCE
+> Task :NaruServe-kotlin:classes UP-TO-DATE
+> Task :NaruServe-kotlin:jar
+> Task :NaruServe-kotlin:assemble
+> Task :NaruServe-kotlin:animalsnifferMain
+> Task :NaruServe-kotlin:checkClassReferences
+> Task :NaruServe-kotlin:compileTestKotlin
+> Task :NaruServe-kotlin:compileTestJava NO-SOURCE
+> Task :NaruServe-kotlin:testClasses UP-TO-DATE
+> Task :NaruServe-kotlin:test
+> Task :NaruServe-kotlin:check
+> Task :NaruServe-kotlin:build
+
+[Incubating] Problems report is available at: file:///Users/beom/work/git/NaruServe/.claude/worktrees/agent-a93bada39c7b9b0b4/build/reports/problems/problems-report.html
+
+BUILD SUCCESSFUL in 11s
+36 actionable tasks: 30 executed, 6 up-to-date

@@ -1,0 +1,87 @@
+> Task :compileJava NO-SOURCE
+> Task :processResources NO-SOURCE
+> Task :classes UP-TO-DATE
+> Task :compileTestJava
+> Task :processTestResources NO-SOURCE
+> Task :testClasses
+
+> Task :test
+
+BuildChecksTest > sdsAc12_CON_BUILD_013_AC1_apiMainClassReferencingKotlinFails FAILED
+    java.lang.AssertionError at BuildChecksTest.java:197
+
+BuildChecksTest > sdsAc3_OPS_BUILD_001_AC1_AC2_propertyOverridesTheSettingsDefault FAILED
+    java.lang.AssertionError at BuildChecksTest.java:121
+
+BuildChecksTest > sdsAc17_CON_BUILD_009_AC2_AC3_tinyHttpdOutsideAdapterOrRouterFails FAILED
+    java.lang.AssertionError at BuildChecksTest.java:245
+
+BuildChecksTest > sdsAc14_CON_BUILD_008_AC1_logcatMainReferencingAndroidFails FAILED
+    java.lang.AssertionError at BuildChecksTest.java:220
+
+BuildChecksTest > sdsAc4_OPS_BUILD_001_AC3_missingCheckoutFailsWhileEvaluatingSettings FAILED
+    org.gradle.testkit.runner.UnexpectedBuildSuccess at BuildChecksTest.java:133
+
+BuildChecksTest > sdsAc8_CON_BUILD_011_AC2_nullableReturnDoesNotAssignToString FAILED
+    java.lang.AssertionError at BuildChecksTest.java:157
+
+BuildChecksTest > sdsAc13_CON_BUILD_013_AC3_androidModuleReferencingServletFails FAILED
+    java.lang.AssertionError at BuildChecksTest.java:208
+
+BuildChecksTest > sdsAc15_CON_BUILD_007_AC3_kotlinStdlibOutsideKotlinModuleFails FAILED
+    java.lang.AssertionError at BuildChecksTest.java:227
+
+BuildChecksTest > sdsAc16_CON_BUILD_013_AC2_gsonOtherThan2140Fails FAILED
+    java.lang.AssertionError at BuildChecksTest.java:237
+
+BuildChecksTest > sdsAc5_CON_BUILD_004_AC3_kotlinAndJavaTargetsAreConsistent FAILED
+    org.gradle.testkit.runner.UnexpectedBuildFailure at BuildChecksTest.java:143
+
+BuildChecksTest > con_BUILD_013_buildRunsTheChecks FAILED
+    java.lang.AssertionError at BuildChecksTest.java:175
+
+BuildChecksTest > sdsAc18_CON_BUILD_012_AC1_AC2_animalSnifferOnAndroidModulesOnly FAILED
+    java.lang.AssertionError at BuildChecksTest.java:255
+
+BuildLayoutTest > ops_BUILD_003_AC2_apiDocsNameFinalModulesWithoutUndecidedMarker FAILED
+    java.lang.AssertionError at BuildLayoutTest.java:257
+
+BuildLayoutTest > con_BUILD_003_AC2_noModuleBuildFile FAILED
+    java.lang.AssertionError at BuildLayoutTest.java:214
+
+BuildLayoutTest > sdsAc7_CON_BUILD_011_AC1_jspecifyCompileOnlyEverywhereAndNeverAtRuntime FAILED
+    java.io.FileNotFoundException at BuildLayoutTest.java:46
+
+BuildLayoutTest > ops_BUILD_003_AC3_AC4_claudeMdModuleLineAndNoRestKotlin FAILED
+    java.lang.AssertionError at BuildLayoutTest.java:277
+
+BuildLayoutTest > sdsAc20_OPS_BUILD_003_AC1_readmeNamesTinyHttpdCommit FAILED
+    java.lang.AssertionError at BuildLayoutTest.java:242
+
+BuildLayoutTest > sdsAc1_CON_BUILD_002_AC1_AC2_AC3_settingsIncludesNineModulesAndRootName FAILED
+    java.lang.AssertionError at BuildLayoutTest.java:82
+
+BuildLayoutTest > sdsAc2_CON_BUILD_005_AC1_mainSourcesUseModulePackages FAILED
+    java.lang.AssertionError at BuildLayoutTest.java:122
+
+BuildLayoutTest > con_BUILD_006_AC3_apiRuntimeClasspathHoldsNoArtifact FAILED
+    java.io.FileNotFoundException at BuildLayoutTest.java:46
+
+BuildLayoutTest > sdsAc6_CON_BUILD_004_AC1_AC2_allMainAndTestClassesAreMajor52 FAILED
+    java.lang.AssertionError at BuildLayoutTest.java:154
+
+24 tests completed, 21 failed
+
+> Task :test FAILED
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':test'.
+> There were failing tests. See the report at: file:///Users/beom/work/git/NaruServe/.claude/worktrees/agent-a93bada39c7b9b0b4/build/reports/tests/test/index.html
+
+* Try:
+> Run with --scan to get full insights.
+
+BUILD FAILED in 16s
+2 actionable tasks: 2 executed

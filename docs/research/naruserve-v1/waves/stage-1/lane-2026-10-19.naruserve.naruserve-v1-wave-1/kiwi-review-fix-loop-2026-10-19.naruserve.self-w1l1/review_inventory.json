@@ -1,0 +1,151 @@
+{
+  "findings": [
+    {
+      "id": "FND-001", "axis": "P7", "severity": "HIGH",
+      "title": "TestKit nested builds ignore the -PtinyHttpdDir override",
+      "location": {"file": "src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java", "line_range": "114-121"},
+      "description": "runner() never forwards -PtinyHttpdDir. Only sdsAc3 passes it explicitly. Every other nested build (sdsAc5, sdsAc8, sdsAc12-18, con_BUILD_013) evaluates the copied settings.gradle with the hard-coded default /Users/beom/work/git/TinyHttpd. OPS-BUILD-001 AC-1/AC-2 promise that the command line overrides the default (worktrees, CI, other machines). So `./gradlew build -PtinyHttpdDir=/elsewhere` on a machine without the default path fails the root test at settings evaluation. Where the default does exist, the nested builds build a different checkout than the one assertTinyHttpdClean (AfterClass) inspects, so SDS-AC-19 checks the wrong directory.",
+      "suggested_fix": "In runner(), always add \"-PtinyHttpdDir=\" + property(\"naruserve.tinyHttpdDir\") (except in sdsAc4, which supplies its own missing path).",
+      "is_behavioral": true, "tags": ["OPS-BUILD-001", "CON-BUILD-010", "SDS-AC-19", "testkit"]
+    },
+    {
+      "id": "FND-002", "axis": "P3", "severity": "MEDIUM",
+      "title": "Root test reads the test-fixtures jar without depending on the task that builds it",
+      "location": {"file": "build.gradle", "line_range": "243-256"},
+      "description": "con_BUILD_006_AC8_apiHasTestFixtures asserts NaruServe-api/build/libs/NaruServe-api-0.1.0-SNAPSHOT-test-fixtures.jar exists. The root test only dependsOn checkDependencyRules and every module's testClasses, plus mustRunAfter on the module check tasks. mustRunAfter only orders tasks and never pulls them in. On a clean checkout, `./gradlew :test` (or any invocation that does not schedule :NaruServe-api:test or assemble) fails this test. The jar name also hard-codes the version.",
+      "suggested_fix": "Add dependsOn ':NaruServe-api:testFixturesJar', or assert on the testFixtures source set or classes dir rather than a jar path, or derive the path from the task's archiveFile and pass it as a system property.",
+      "is_behavioral": true, "tags": ["CON-BUILD-006", "task-graph"]
+    },
+    {
+      "id": "FND-003", "axis": "P7", "severity": "MEDIUM",
+      "title": "NaruServe-servlet has no tracked file, so a clean clone has no project directory",
+      "location": {"file": "settings.gradle", "line_range": "4-6"},
+      "description": "git ls-files NaruServe-servlet is empty. settings.gradle includes it, so in a fresh clone or a new worktree the project directory is missing. Gradle 8.x deprecates this (a warning now, an error in Gradle 9). BuildChecksTest already works around it ('Every included project gets a directory, even a module with no sources yet'), which shows the gap is known but the repository was left without a fix. Every other module ships a package-info.java.",
+      "suggested_fix": "Add NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/package-info.java, matching the other modules. SDS-AC-2 then also checks the servlet package.",
+      "is_behavioral": true, "tags": ["CON-BUILD-002", "CON-BUILD-005", "fresh-clone"]
+    },
+    {
+      "id": "FND-004", "axis": "P5", "severity": "MEDIUM",
+      "title": "TestKit runs use a separate Gradle user home and do not inherit offline mode; about 13 nested composite builds",
+      "location": {"file": "src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java", "line_range": "114-121"},
+      "description": "GradleRunner uses the default TestKit dir, so nested builds re-download KGP 2.2.0, animal-sniffer, the API 21 signature, Gson, SLF4J and the JUnit artifacts into a separate cache. `./gradlew build --offline` (or a CI runner without network) fails inside the root test even when the outer cache is warm. Each of the roughly 13 nested invocations configures the full composite, TinyHttpd included. The `-m check` dry run in sdsAc18 duplicates what the `-m build` dry run in con_BUILD_013 already shows.",
+      "suggested_fix": "Forward --offline when the outer build is offline (gradle.startParameter.offline as a system property). Consider withTestKitDir under the build dir for determinism. Fold the -m check assertions into the single -m build run.",
+      "is_behavioral": false, "tags": ["build-time", "offline", "OPS-BUILD-002"]
+    },
+    {
+      "id": "FND-005", "axis": "P2", "severity": "LOW",
+      "title": "Java main bytecode (SDS-AC-6) and the real-build checkClassReferences are vacuous: no Java main class exists",
+      "location": {"file": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java", "line_range": "137-161"},
+      "description": "Every Java main source is an unannotated package-info.java, and javac emits no class for that. The only main class in the whole build is KotlinModule (Kotlin). The 'every main class is major 52' assertion for JavaCompile main therefore checks nothing, and checkClassReferences scans empty directories in the normal build. The required-output list does not include any java/main entry.",
+      "suggested_fix": "Accept for wave 1, but note it in the evidence. Alternatively, have the TestKit probe compile one Java main class and assert major 52.",
+      "is_behavioral": false, "tags": ["CON-BUILD-004", "SDS-AC-6", "vacuous"]
+    },
+    {
+      "id": "FND-006", "axis": "P2", "severity": "LOW",
+      "title": "SDS-AC-3 override test passes the same path as the default",
+      "location": {"file": "src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java", "line_range": "123-134"},
+      "description": "-PtinyHttpdDir=<naruserve.tinyHttpdDir> equals the default on this machine, so a settings.gradle that ignored the property would still pass. The override is only proven indirectly by sdsAc4 (missing path). The test also matches the literal source text of settings.gradle.",
+      "suggested_fix": "Pass a symlink or alternate path (or a relative path, to cover the settingsDir branch) and assert the build uses it.",
+      "is_behavioral": false, "tags": ["OPS-BUILD-001", "weak-test"]
+    },
+    {
+      "id": "FND-007", "axis": "P2", "severity": "LOW",
+      "title": "Several build-layout tests are text greps or iterate the test's own constant",
+      "location": {"file": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java", "line_range": "86-91,125-126,288-296"},
+      "description": "The SDS-AC-1 bootstrap loop iterates MODULES (the test constant), not settings, so it cannot fail. The Maven group and CON-BUILD-003 AC-1 checks are substring greps of build.gradle; a comment containing the strings would satisfy them. The dependency report already holds com.snoworca.naruserve:<module> coordinates that prove the group.",
+      "suggested_fix": "Drop the tautological loop. Assert the group from the dependency-report rows (each module's root component group).",
+      "is_behavioral": false, "tags": ["vacuous", "CON-BUILD-002", "CON-BUILD-005"]
+    },
+    {
+      "id": "FND-008", "axis": "P2", "severity": "LOW",
+      "title": "The Kotlin nullable test case and KotlinSmokeTest are tautological",
+      "location": {"file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/NullabilityKotlinTest.kt", "line_range": "14-18"},
+      "description": "`val s: String? = annotatedNullable()` compiles even when Kotlin sees a platform type, so the case proves nothing. The real proof is the TestKit negative case. KotlinSmokeTest asserts that a const equals its own literal. Acceptable as smoke tests, but they should not be cited as SDS-AC-8 or SDS-AC-9 evidence on their own.",
+      "suggested_fix": "Keep them, but cite only the BuildChecksTest negative case as CON-BUILD-011 AC-2 evidence for the nullable side.",
+      "is_behavioral": false, "tags": ["CON-BUILD-011", "smoke"]
+    },
+    {
+      "id": "FND-009", "axis": "P5", "severity": "LOW",
+      "title": "Custom check tasks declare no inputs or outputs and capture Project at execution time",
+      "location": {"file": "build.gradle", "line_range": "143-162,186-235"},
+      "description": "checkClassReferences and checkDependencyRules never go up to date (checkDependencyRules resolves 36 configurations on every build). checkDependencyRules iterates Project objects inside doLast, which is incompatible with the configuration cache, should it ever be enabled.",
+      "suggested_fix": "Declare classesDirs as inputs and a marker output for checkClassReferences. Accept checkDependencyRules for now.",
+      "is_behavioral": false, "tags": ["incremental", "configuration-cache"]
+    },
+    {
+      "id": "FND-010", "axis": "P6", "severity": "LOW",
+      "title": "Kotlin version duplicated; the map-driven dependency table adds indirection",
+      "location": {"file": "build.gradle", "line_range": "5,8,46-79"},
+      "description": "'2.2.0' appears in the plugins block and in kotlinVersion (and again in the tests), so it can drift. The mainDependencies/extraCompileOnly maps plus the string-prefix ':' project convention are harder to read than plain per-project dependencies blocks in the same single file.",
+      "suggested_fix": "Keep the KGP version in one place, or assert the two are equal. Optional: inline the dependency blocks.",
+      "is_behavioral": false, "tags": ["maintainability"]
+    },
+    {
+      "id": "FND-011", "axis": "P3", "severity": "LOW",
+      "title": "The testFixtures source set is outside the dependency rules and gets no JSpecify compileOnly",
+      "location": {"file": "build.gradle", "line_range": "164-167,186-235"},
+      "description": "java-test-fixtures adds a consumable testFixtures variant to NaruServe-api. checkDependencyRules only inspects compile/runtime/testCompile/testRuntime classpaths, so kotlin-stdlib or Gson on testFixturesApi would pass unnoticed. testFixturesCompileOnly lacks jspecify, so the later D-108 fixture cannot carry @Nullable/@NonNull without a build change.",
+      "suggested_fix": "Add testFixturesCompileClasspath/testFixturesRuntimeClasspath to the checked list and add jspecify to testFixturesCompileOnly.",
+      "is_behavioral": true, "tags": ["CON-BUILD-006", "CON-BUILD-011"]
+    },
+    {
+      "id": "FND-012", "axis": "P3", "severity": "LOW",
+      "title": "Transitive unresolved dependencies are dropped silently from the rule scan",
+      "location": {"file": "build.gradle", "line_range": "198-205"},
+      "description": "Only first-level UnresolvedDependencyResult entries are reported. allComponents excludes unresolved transitive nodes, so the rules run on a partial graph without saying so.",
+      "suggested_fix": "Use resolutionResult.allDependencies and report every UnresolvedDependencyResult.",
+      "is_behavioral": true, "tags": ["robustness"]
+    },
+    {
+      "id": "FND-013", "axis": "P6", "severity": "LOW",
+      "title": "Root project applies 'java' and produces an empty NaruServe-build jar",
+      "location": {"file": "build.gradle", "line_range": "3,238-256"},
+      "description": "The root only needs test compilation for BuildLayoutTest/BuildChecksTest, but 'java' also adds jar/assemble for a com.snoworca.naruserve:NaruServe-build artifact. A later publishing setup applied via allprojects would pick it up.",
+      "suggested_fix": "Disable the root jar task (jar.enabled = false), or keep it and document it.",
+      "is_behavioral": false, "tags": ["root-project"]
+    },
+    {
+      "id": "FND-014", "axis": "P8", "severity": "LOW",
+      "title": "(out of scope) .gitignore 'build' pattern hides the root test package directory",
+      "location": {"file": ".gitignore", "line_range": "2"},
+      "description": "The unanchored `build` ignores src/test/java/com/snoworca/naruserve/build/. The files were force-added, so new files there will silently go untracked. .gitignore is outside this lane's write set.",
+      "suggested_fix": "In a lane that owns .gitignore, anchor the pattern (e.g. /build and module-level build/ dirs), or rename the test package.",
+      "is_behavioral": false, "tags": ["out-of-scope"]
+    }
+  ],
+  "coverage_rows": [
+    {"file": "build.gradle", "hunks_total": 12, "anchors": [
+      "// The only build file: every module is configured here (CON-BUILD-003).",
+      "    id 'java'",
+      "    id 'org.jetbrains.kotlin.jvm' version '2.2.0' apply false",
+      "def kotlinVersion = '2.2.0'",
+      "subprojects {",
+      "    p.tasks.withType(JavaCompile).configureEach {",
+      "def scanClassRefs = { FileCollection classesDirs, List<String> prefixes ->",
+      "// Test fixtures source set for the in-memory HttpAdapter of a later wave (CON-BUILD-006 AC-8).",
+      "configure(androidModules.collect { project(it) }) {",
+      "    // Android 5.0 (API 21) is the minimum runtime: fail the build on any API that API 21 lacks.",
+      "def checkDependencyRules = tasks.register('checkDependencyRules') {",
+      "tasks.named('check') { dependsOn checkDependencyRules }"
+    ], "findings": ["FND-002", "FND-009", "FND-010", "FND-011", "FND-012", "FND-013"]},
+    {"file": "settings.gradle", "hunks_total": 2, "anchors": [
+      "rootProject.name = 'NaruServe-build'",
+      "includeBuild(tinyHttpdDir)"
+    ], "findings": ["FND-001", "FND-003"]},
+    {"file": "gradle.properties", "hunks_total": 1, "anchors": ["kotlin.stdlib.default.dependency=false"], "findings": []},
+    {"file": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java", "hunks_total": 1, "anchors": ["public class BuildLayoutTest {"], "findings": ["FND-002", "FND-005", "FND-007"]},
+    {"file": "src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java", "hunks_total": 1, "anchors": ["public class BuildChecksTest {"], "findings": ["FND-001", "FND-004", "FND-006"]},
+    {"file": "NaruServe-api/src/test/java/com/snoworca/naruserve/NullabilityFixture.java", "hunks_total": 1, "anchors": ["public final class NullabilityFixture {"], "findings": []},
+    {"file": "NaruServe-api/src/test/java/com/snoworca/naruserve/SmokeTest.java", "hunks_total": 1, "anchors": ["public class SmokeTest {"], "findings": []},
+    {"file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/NullabilityKotlinTest.kt", "hunks_total": 1, "anchors": ["class NullabilityKotlinTest {"], "findings": ["FND-008"]},
+    {"file": "NaruServe-kotlin/src/main/kotlin/com/snoworca/naruserve/kotlin/KotlinModule.kt", "hunks_total": 1, "anchors": ["internal object KotlinModule {"], "findings": []},
+    {"file": "NaruServe-kotlin/src/test/kotlin/com/snoworca/naruserve/kotlin/KotlinSmokeTest.kt", "hunks_total": 1, "anchors": ["class KotlinSmokeTest {"], "findings": ["FND-008"]},
+    {"file": "NaruServe-gson/src/main/java/com/snoworca/naruserve/gson/package-info.java", "hunks_total": 1, "anchors": ["package com.snoworca.naruserve.gson;"], "findings": ["FND-005"]},
+    {"file": "NaruServe-logcat/src/main/java/com/snoworca/naruserve/logcat/package-info.java", "hunks_total": 1, "anchors": ["package com.snoworca.naruserve.logcat;"], "findings": []},
+    {"file": "NaruServe-filelog/src/main/java/com/snoworca/naruserve/filelog/package-info.java", "hunks_total": 1, "anchors": ["package com.snoworca.naruserve.filelog;"], "findings": []},
+    {"file": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/package-info.java", "hunks_total": 1, "anchors": ["package com.snoworca.naruserve.tinyhttpd;"], "findings": []},
+    {"file": "NaruServe-slf4j/src/main/java/com/snoworca/naruserve/slf4j/package-info.java", "hunks_total": 1, "anchors": ["package com.snoworca.naruserve.slf4j;"], "findings": []},
+    {"file": "NaruServe/src/main/java/com/snoworca/naruserve/bootstrap/package-info.java", "hunks_total": 1, "anchors": ["package com.snoworca.naruserve.bootstrap;"], "findings": []}
+  ],
+  "summary": {"total": 14, "by_severity": {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 3, "LOW": 10}}
+}

@@ -1,0 +1,36 @@
+{
+  "branch": "kiwi/orch/2026-10-19.NaruServe.naruserve-v1/lane-2026-10-19.naruserve.naruserve-v1-wave-1",
+  "worktree_path": "/Users/beom/work/git/NaruServe/.claude/worktrees/agent-a93bada39c7b9b0b4",
+  "head_sha": "f57a705f79dc0c132d1894052d6b48c98c491c3b",
+  "commits": ["ab818aa5679c1517c6e41cee0233073d2f5652d2", "f57a705f79dc0c132d1894052d6b48c98c491c3b"],
+  "deferred_queue": "/Users/beom/work/git/NaruServe/kiwi/orchestrator/2026-10-19.NaruServe.naruserve-v1/lanes/lane-2026-10-19.naruserve.naruserve-v1-wave-1/deferred-srs-queue.jsonl",
+  "reports": [
+    ".kiwi/sessions/2026-10-19.naruserve.naruserve-v1-wave-1/lanes/w1s1l1/reports/pm-20261019.md",
+    ".kiwi/sessions/2026-10-19.naruserve.naruserve-v1-wave-1/lanes/w1s1l1/reports/coder-2026-10-19.naruserve.naruserve-v1-wave-1.md",
+    ".kiwi/sessions/2026-10-19.naruserve.naruserve-v1-wave-1/lanes/w1s1l1/state.json",
+    ".kiwi/sessions/2026-10-19.naruserve.naruserve-v1-wave-1/lanes/w1s1l1/analysis/red.log",
+    ".kiwi/sessions/2026-10-19.naruserve.naruserve-v1-wave-1/lanes/w1s1l1/analysis/green5.log",
+    "docs/analysis/kiwi-review-fix-loop-2026-10-19.naruserve.self-w1l1/mode_decision.json",
+    "docs/analysis/kiwi-review-fix-loop-2026-10-19.naruserve.self-w1l1/review_inventory.json",
+    "docs/analysis/kiwi-review-fix-loop-2026-10-19.naruserve.self-w1l1/classified_findings.json",
+    "docs/analysis/kiwi-review-fix-loop-2026-10-19.naruserve.self-w1l1/fix_iter1.json",
+    "docs/analysis/kiwi-review-fix-loop-2026-10-19.naruserve.self-w1l1/prickly_recheck_iter1.json",
+    "docs/analysis/kiwi-review-fix-loop-2026-10-19.naruserve.self-w1l1/test_sufficiency.json"
+  ],
+  "red_evidence": [
+    {"test_id": "root :test (BuildLayoutTest + BuildChecksTest)", "failure": "./gradlew :test exit 1: 24 tests completed, 21 failed before implementation (settings lacked nine modules, checks/tasks absent, docs had module (미확정) markers)"},
+    {"test_id": "BuildChecksTest.ops_BUILD_001_AC1_AC2_nestedBuildsUseTheOuterTinyHttpdDir", "failure": "failed before FND-001 fix when run with -PtinyHttpdDir=../../../../TinyHttpd (nested builds used the hard-coded default)"}
+  ],
+  "review_outcome": {"status": "TASK_DONE", "residual_critical": 0, "residual_high": 0},
+  "intentionally_empty": null,
+  "design_refuted": [],
+  "out_of_lease_paths": [],
+  "out_of_lease_notes": [
+    "NaruServe-servlet/ has no tracked file (review FND-003, MEDIUM): Gradle 8 warns the project dir is missing on a clean clone and Gradle 9 will fail; fix needs NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/package-info.java, outside the write set, not created",
+    ".gitignore pattern build matches src/test/java/com/snoworca/naruserve/build/; the two root tests were committed with git add -f; suggest /build/, /*/build/ and .kotlin in a later lane",
+    "Uncommitted, not in write set: .kiwi/ session state and docs/analysis/kiwi-review-fix-loop-2026-10-19.naruserve.self-w1l1/ review bundle"
+  ],
+  "residual_medium": ["FND-003 NaruServe-servlet dir untracked (out of lease)", "FND-101 nested TestKit builds now read the user's ~/.gradle gradle.properties and init.d scripts"],
+  "test_sufficiency": {"tool": "speckiwi coverage --tests --sds docs/sds/2026-10-19.naruserve.naruserve-v1-wave-1.sds.md", "passed": true, "requirement_acs_total": 49, "sds_acs_total": 20, "sds_acs_covered": 20, "first_run_gaps": ["CON-BUILD-010 AC-2"], "filled_by": "BuildLayoutTest.con_BUILD_010_AC2_repoHoldsNoTinyHttpdSourcesOrPatches (automatable half only; deferred-issue half is a process rule)", "final_gaps": []},
+  "verification": {"command": "./gradlew build", "exit_code": 0}
+}

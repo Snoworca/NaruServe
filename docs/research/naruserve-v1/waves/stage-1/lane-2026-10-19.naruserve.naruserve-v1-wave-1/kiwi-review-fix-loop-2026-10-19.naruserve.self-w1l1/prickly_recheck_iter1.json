@@ -1,0 +1,63 @@
+{
+  "resolved_findings": ["FND-001", "FND-002", "FND-004"],
+  "still_open": [
+    {"id": "FND-003", "severity": "MEDIUM", "note": "Still open. git ls-files NaruServe-servlet is empty; the directory exists only because of NaruServe-servlet/build. A fresh clone hits the Gradle 'project without an existing directory' deprecation, which becomes an error in Gradle 9. The fix is a tracked placeholder source, outside this lane's write set."}
+  ],
+  "findings": [
+    {
+      "id": "FND-101",
+      "axis": "robustness",
+      "severity": "MEDIUM",
+      "title": "TestKit now runs in the developer's real Gradle user home, so nested builds lose hermeticity",
+      "location": "src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java:131 (withTestKitDir), build.gradle:257",
+      "description": "withTestKitDir(gradle.gradleUserHomeDir) makes the outer ~/.gradle the Gradle user home of every nested build. That fixes the cache and offline problem (FND-004). But the nested builds now also pick up ~/.gradle/gradle.properties (for example org.gradle.configuration-cache, org.gradle.parallel, org.gradle.jvmargs, org.gradle.warning.mode) and ~/.gradle/init.d scripts. Several negative cases assert exact output: sdsAc4 asserts that no '> Task' line appears, others assert that specific messages are present. A user-level init script or property can change that output and break or mask those cases on one machine but not another. The fixer names this trade-off in fix_iter1.json, but nothing in the code guards against it, and no comment records it beyond the cache rationale.",
+      "suggested_fix": "Keep a dedicated TestKit dir (a build-dir path) and share only the dependency cache, read-only: pass GRADLE_RO_DEP_CACHE=<outer user home>/caches through GradleRunner.withEnvironment. Or keep the shared home and add a 'shortcut:' comment naming the init.d and gradle.properties exposure.",
+      "is_behavioral": true,
+      "tags": ["testkit", "hermeticity", "FND-004-followup"]
+    },
+    {
+      "id": "FND-102",
+      "axis": "test meaningfulness",
+      "severity": "LOW",
+      "title": "The new nested-dir test passes trivially unless the outer build overrides tinyHttpdDir",
+      "location": "src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java:149-155",
+      "description": "With the default path, the outer and nested builds resolve the same directory whether or not -PtinyHttpdDir is forwarded. The test then shows nothing about FND-001 in the default ./gradlew build. It catches a regression only when the run is invoked with a non-default override, and no CI or documented command does that.",
+      "suggested_fix": "Make the test independent of the outer invocation: give the temp copy a settings default that points to a non-existent path, or assert that runner()'s argument list contains -PtinyHttpdDir=<property>. Or document a CI step that runs with a relative override.",
+      "is_behavioral": false,
+      "tags": ["vacuous-pass"]
+    },
+    {
+      "id": "FND-103",
+      "axis": "maintainability",
+      "severity": "LOW",
+      "title": "The override check recognizes only the '-PtinyHttpdDir=' spelling",
+      "location": "src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java:118-124",
+      "description": "A caller that writes '-P', 'tinyHttpdDir=...' as separate arguments, or '--project-prop', gets a second -PtinyHttpdDir appended. Which value wins then depends on argument order. Today every caller uses the '-P...=' form, so nothing breaks yet.",
+      "suggested_fix": "Leave as is, or add a one-line comment saying callers must use the '-PtinyHttpdDir=' form.",
+      "is_behavioral": false,
+      "tags": ["edge-case"]
+    }
+  ],
+  "coverage_rows": [
+    {
+      "file": "build.gradle",
+      "hunks_total": 2,
+      "anchors": [
+        "    dependsOn ':NaruServe-api:testFixturesJar'",
+        "    systemProperty 'naruserve.gradleUserHome', gradle.gradleUserHomeDir.absolutePath"
+      ],
+      "findings": ["FND-101"]
+    },
+    {
+      "file": "src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java",
+      "hunks_total": 3,
+      "anchors": [
+        "            overridden |= a.startsWith(\"-PtinyHttpdDir=\");",
+        "                .withTestKitDir(new File(BuildLayoutTest.property(\"naruserve.gradleUserHome\")))",
+        "    public void ops_BUILD_001_AC1_AC2_nestedBuildsUseTheOuterTinyHttpdDir() throws IOException {"
+      ],
+      "findings": ["FND-101", "FND-102", "FND-103"]
+    }
+  ],
+  "summary": {"total": 3, "by_severity": {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 1, "LOW": 2}}
+}

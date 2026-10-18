@@ -1,0 +1,42 @@
+{
+  "iter": 1,
+  "fixes": [
+    {
+      "finding_id": "FND-001",
+      "status": "fixed",
+      "files_changed": [
+        {"path": "src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java", "line_range": "114-133"},
+        {"path": "src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java", "line_range": "149-155"}
+      ],
+      "red_evidence": "Added ops_BUILD_001_AC1_AC2_nestedBuildsUseTheOuterTinyHttpdDir (the nested build prints gradle.ext.tinyHttpdDir; the test asserts it equals naruserve.tinyHttpdDir). On the unfixed runner(), `./gradlew :test --tests '*BuildChecksTest.ops_BUILD_001*' -PtinyHttpdDir=../../../../TinyHttpd` failed: AssertionError at BuildChecksTest.java:141, 1 test completed, 1 failed. The nested build had fallen back to the hard-coded default. After the fix the same command passes, and so does the full BuildChecksTest with that override.",
+      "rationale_full": "runner() now always forwards -PtinyHttpdDir=<naruserve.tinyHttpdDir>, the checkout the outer build resolved, unless the caller already passes one (sdsAc3 passes the same value; sdsAc4 passes a deliberately missing path, so it keeps its own). The nested composite builds therefore build the checkout that assertTinyHttpdClean inspects (SDS-AC-19), and `./gradlew build -PtinyHttpdDir=/elsewhere` works on a machine without the default path (OPS-BUILD-001 AC-1/AC-2). The new test is red only when the outer build runs with a non-default override, because on this machine the default and the property are the same path. The relative override ../../../../TinyHttpd keeps the '..' segments in absolutePath, which makes the two strings differ."
+    },
+    {
+      "finding_id": "FND-002",
+      "status": "not_reproduced",
+      "files_changed": [
+        {"path": "build.gradle", "line_range": "248-249"}
+      ],
+      "red_evidence": "Ran `./gradlew :NaruServe-api:clean` and then `./gradlew :test --tests '*BuildLayoutTest.con_BUILD_006*'` on the unfixed build: BUILD SUCCESSFUL. :NaruServe-api:testFixturesJar ran anyway, because java-test-fixtures puts the fixtures jar on NaruServe-api's testCompileClasspath, and root :test already depends on :NaruServe-api:testClasses. No red test was possible.",
+      "rationale_full": "The failure described in the finding does not happen today. The root test reaches the jar only through an incidental edge (test compile classpath to fixtures jar). I added an explicit `dependsOn ':NaruServe-api:testFixturesJar'` on root :test so that con_BUILD_006_AC8 does not depend on that plugin detail. The hard-coded jar name stays in the test on purpose: it pins the expected artifact coordinates."
+    },
+    {
+      "finding_id": "FND-003",
+      "status": "out_of_lease",
+      "files_changed": [],
+      "red_evidence": "Reproduced. I copied settings.gradle, build.gradle, gradle.properties and the eight module src trees without NaruServe-servlet into build/fnd3 and ran `gradlew -p build/fnd3 help --warning-mode=all`. Output: \"Configuring project ':NaruServe-servlet' without an existing directory is deprecated. ... This will fail with an error in Gradle 9.0.\" In this worktree NaruServe-servlet/ exists only because an earlier build created NaruServe-servlet/build, and git tracks no file in it.",
+      "rationale_full": "The proper fix adds a tracked placeholder, NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/package-info.java, to match the other modules. That path is outside the lane write set: no NaruServe-servlet placeholder source exists yet. I did not create it, and I did not add a settings.gradle mkdir hack. The lane that owns NaruServe-servlet must add the file. Today the problem is a deprecation warning on a fresh clone; under Gradle 9 it becomes an error."
+    },
+    {
+      "finding_id": "FND-004",
+      "status": "fixed",
+      "files_changed": [
+        {"path": "build.gradle", "line_range": "257-258"},
+        {"path": "src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java", "line_range": "125-131"}
+      ],
+      "red_evidence": "I did not write a red automated test. Proving the problem needs an empty, network-less TestKit cache, which a unit test cannot set up deterministically, and timing is not assertable. Manual evidence after the fix: `./gradlew :test --tests '*BuildChecksTest*' -PtinyHttpdDir=../../../../TinyHttpd --offline` first failed in sdsAc13 with 'javax.servlet-api-3.1.0.jar: No cached version available for offline mode'. That shows --offline now reaches the nested builds and that they read the outer cache, which had never fetched that jar. After one online run, the same --offline command passes, all 14 tests included.",
+      "rationale_full": "Root :test now passes naruserve.offline (gradle.startParameter.offline) and naruserve.gradleUserHome as system properties. runner() adds --offline when the outer build is offline, and uses withTestKitDir(<outer Gradle user home>). The nested builds then reuse the outer dependency cache: no separate re-download of KGP, animal-sniffer, the signature, Gson, SLF4J or JUnit, and an offline outer build with a warm cache stays offline-capable. Trade-off: nested builds now also see the user's ~/.gradle/gradle.properties and init scripts, the same as the outer build. I did not fold the optional '-m check' dry run in sdsAc18 into con_BUILD_013, so the SDS-AC-18 assertions stay where they are cited."
+    }
+  ],
+  "build_exit_code": 0
+}

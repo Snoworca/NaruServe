@@ -1,0 +1,22 @@
+{
+  "policy": "--auto severity guardrail (SKILL §0.12): CRITICAL/HIGH/MEDIUM -> immediate_fix, LOW -> rejected",
+  "immediate_fix": [
+    {"id": "FND-001", "rationale": "HIGH: nested TestKit builds must receive -PtinyHttpdDir so the override works and SDS-AC-19 inspects the checkout actually used", "estimated_complexity": "small", "is_behavioral": true, "tags": ["bug"]},
+    {"id": "FND-002", "rationale": "MEDIUM: root :test must depend on the test-fixtures jar it reads", "estimated_complexity": "trivial", "is_behavioral": true, "tags": ["bug"]},
+    {"id": "FND-003", "rationale": "MEDIUM: NaruServe-servlet project dir missing on clean clone; fix only if possible inside the lane write set, else report out-of-lease", "estimated_complexity": "small", "is_behavioral": true, "tags": ["bug"]},
+    {"id": "FND-004", "rationale": "MEDIUM: TestKit runs should not need network when the outer build is offline; propagate --offline and avoid redundant nested runs where cheap", "estimated_complexity": "small", "is_behavioral": true, "tags": ["performance"]}
+  ],
+  "discussion_needed": [],
+  "rejected": [
+    {"id": "FND-005", "rationale": "auto mode low-severity skip", "rejection_category": "out_of_scope"},
+    {"id": "FND-006", "rationale": "auto mode low-severity skip", "rejection_category": "out_of_scope"},
+    {"id": "FND-007", "rationale": "auto mode low-severity skip", "rejection_category": "out_of_scope"},
+    {"id": "FND-008", "rationale": "auto mode low-severity skip", "rejection_category": "out_of_scope"},
+    {"id": "FND-009", "rationale": "auto mode low-severity skip", "rejection_category": "out_of_scope"},
+    {"id": "FND-010", "rationale": "auto mode low-severity skip", "rejection_category": "out_of_scope"},
+    {"id": "FND-011", "rationale": "auto mode low-severity skip", "rejection_category": "out_of_scope"},
+    {"id": "FND-012", "rationale": "auto mode low-severity skip", "rejection_category": "out_of_scope"},
+    {"id": "FND-013", "rationale": "auto mode low-severity skip", "rejection_category": "out_of_scope"},
+    {"id": "FND-014", "rationale": "outside lane write set (.gitignore); reported as out-of-lease note", "rejection_category": "out_of_scope"}
+  ]
+}
