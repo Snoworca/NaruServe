@@ -245,6 +245,8 @@ test {
     useJUnit()
     dependsOn checkDependencyRules
     dependsOn naruModules.collect { "${it}:testClasses" }
+    // con_BUILD_006_AC8 reads this jar.
+    dependsOn ':NaruServe-api:testFixturesJar'
     mustRunAfter naruModules.collect { "${it}:check" }
     // The checks read files outside this task's inputs, so never skip them as up to date.
     outputs.upToDateWhen { false }
@@ -252,5 +254,7 @@ test {
     systemProperty 'naruserve.tinyHttpdDir', gradle.ext.tinyHttpdDir.absolutePath
     systemProperty 'naruserve.depReport', dependencyReport.get().asFile.absolutePath
     systemProperty 'naruserve.gradleHome', gradle.gradleHomeDir.absolutePath
+    systemProperty 'naruserve.gradleUserHome', gradle.gradleUserHomeDir.absolutePath
+    systemProperty 'naruserve.offline', gradle.startParameter.offline
     systemProperty 'naruserve.testKitWorkDir', layout.buildDirectory.dir('testkit-work').get().asFile.absolutePath
 }

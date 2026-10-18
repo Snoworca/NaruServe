@@ -328,6 +328,38 @@ public class BuildLayoutTest {
         assertTinyHttpdClean();
     }
 
+    // CON-BUILD-010 AC-2 (automatable half: no TinyHttpd sources or patches live in this repository)
+    @Test
+    public void con_BUILD_010_AC2_repoHoldsNoTinyHttpdSourcesOrPatches() throws IOException {
+        List<String> offenders = new ArrayList<>();
+        scanForTinyHttpdCopies(ROOT, true, offenders);
+        assertTrue("TinyHttpd copies/patches in repo: " + offenders, offenders.isEmpty());
+    }
+
+    private static void scanForTinyHttpdCopies(File dir, boolean top, List<String> offenders) throws IOException {
+        File[] children = dir.listFiles();
+        if (children == null) {
+            return;
+        }
+        Pattern pkg = Pattern.compile("^\\s*package\\s+com\\.snoworca\\.tinyhttpd\\b", Pattern.MULTILINE);
+        for (File child : children) {
+            String name = child.getName();
+            if (child.isDirectory()) {
+                boolean skipped = name.equals("build") || name.equals(".gradle") || name.equals(".git")
+                        || (top && (name.equals(".kiwi") || name.equals("docs") || name.equals(".claude")));
+                if (!skipped) {
+                    scanForTinyHttpdCopies(child, false, offenders);
+                }
+            } else if (name.endsWith(".patch") || name.endsWith(".diff")) {
+                if (read(child).toLowerCase().contains("tinyhttpd")) {
+                    offenders.add(child.getPath());
+                }
+            } else if ((name.endsWith(".java") || name.endsWith(".kt")) && pkg.matcher(read(child)).find()) {
+                offenders.add(child.getPath());
+            }
+        }
+    }
+
     /** Also called after BuildChecksTest's nested builds, since test class order is not fixed. */
     static void assertTinyHttpdClean() throws Exception {
         // --no-optional-locks keeps git status from rewriting the checkout's index.

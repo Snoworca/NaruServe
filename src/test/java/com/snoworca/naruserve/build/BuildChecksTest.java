@@ -114,8 +114,21 @@ public class BuildChecksTest {
     private static GradleRunner runner(String... args) {
         List<String> arguments = new ArrayList<>(Arrays.asList(args));
         arguments.add("--console=plain");
+        // The copied settings.gradle must resolve the same TinyHttpd checkout as the outer build (OPS-BUILD-001).
+        boolean overridden = false;
+        for (String a : args) {
+            overridden |= a.startsWith("-PtinyHttpdDir=");
+        }
+        if (!overridden) {
+            arguments.add("-PtinyHttpdDir=" + BuildLayoutTest.property("naruserve.tinyHttpdDir"));
+        }
+        if (Boolean.parseBoolean(BuildLayoutTest.property("naruserve.offline"))) {
+            arguments.add("--offline");
+        }
         return GradleRunner.create()
                 .withGradleInstallation(new File(BuildLayoutTest.property("naruserve.gradleHome")))
+                // The outer user home holds the dependency cache, so nested builds neither re-download nor need network.
+                .withTestKitDir(new File(BuildLayoutTest.property("naruserve.gradleUserHome")))
                 .withProjectDir(work)
                 .withArguments(arguments);
     }
@@ -131,6 +144,14 @@ public class BuildChecksTest {
         BuildResult result = runner("-PtinyHttpdDir=" + BuildLayoutTest.property("naruserve.tinyHttpdDir"),
                 ":NaruServe-tinyhttpd:compileJava").build();
         assertTrue(result.getOutput(), result.getOutput().contains("BUILD SUCCESSFUL"));
+    }
+
+    // OPS-BUILD-001 AC-1, OPS-BUILD-001 AC-2, SDS-AC-19 — nested builds use the checkout the outer build resolved.
+    @Test
+    public void ops_BUILD_001_AC1_AC2_nestedBuildsUseTheOuterTinyHttpdDir() throws IOException {
+        appendBuild("println 'nested tinyHttpdDir=' + gradle.ext.tinyHttpdDir.absolutePath");
+        String out = runner("help").build().getOutput();
+        assertTrue(out, out.contains("nested tinyHttpdDir=" + BuildLayoutTest.property("naruserve.tinyHttpdDir")));
     }
 
     // SDS-AC-4; OPS-BUILD-001 AC-3
