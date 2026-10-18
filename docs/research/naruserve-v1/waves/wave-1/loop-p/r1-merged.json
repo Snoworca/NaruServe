@@ -1,0 +1,42 @@
+{
+ "findings": [
+  {
+   "finding_id": "P1-001",
+   "severity": "medium",
+   "claim": "NaruServe-servlet has no tracked file, so a clean clone has no :NaruServe-servlet project directory; Gradle 8.14.3 only warns (deprecated) but Gradle 9 fails, and the module CON-BUILD-002 AC-1 includes exists only as an untracked empty local dir. Recorded by the lane as residual FND-003, not fixed.",
+   "evidence": "git ls-files NaruServe-servlet -> empty; settings.gradle:5; manifest.json residual_medium FND-003",
+   "suggested_fix": "Add NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/package-info.java (as the other modules have) in the next wave touching the servlet module, or wave 2."
+  },
+  {
+   "finding_id": "P1-002",
+   "severity": "low",
+   "claim": "The .gitignore pattern 'build' matches the root test package directory src/test/java/com/snoworca/naruserve/build/, so any new file added there by a later wave is silently ignored (the two current tests were force-added).",
+   "evidence": ".gitignore:2 (git check-ignore --no-index src/test/java/com/snoworca/naruserve/build/X.java matches)",
+   "suggested_fix": "Anchor the pattern: /build/ and /*/build/ (plus .kotlin) in .gitignore."
+  },
+  {
+   "finding_id": "P2-001",
+   "severity": "low",
+   "severity_class": "doc-claim-not-enforced",
+   "claim": "CLAUDE.md and docs/api/README.md say the build uses TinyHttpd commit 46b973e, but settings.gradle runs includeBuild on whatever HEAD the checkout has. Nothing checks the commit, so if TinyHttpd moves on, a later wave builds against different engine code while the docs still say 46b973e. TinyHttpd HEAD is 46b973e and clean today, so this has no effect yet.",
+   "evidence": "settings.gradle:16-23; CLAUDE.md:21; docs/api/README.md:103",
+   "suggested_fix": "Have settings.gradle or BuildLayoutTest compare `git -C <tinyHttpdDir> rev-parse --short HEAD` with 46b973e and fail on a mismatch, or reword the docs to say 'checked against 46b973e at wave 1'."
+  },
+  {
+   "finding_id": "P2-002",
+   "severity": "low",
+   "severity_class": "cross-wave-test-friction",
+   "claim": "The dependency-set tests use exact assertEquals on every module's runtimeClasspath. Any dependency a later wave legitimately adds (for example a test-fixtures consumer or a new runtime library) makes the regression fail until these sets are changed. That matches the wave-1 scope of CON-BUILD-006 AC-1, but later waves must change these assertions on purpose. They must not read the failure as a regression or weaken the check. The same applies to the hardcoded 0.1.0-SNAPSHOT test-fixtures jar name.",
+   "evidence": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:233-244; BuildLayoutTest.java con_BUILD_006_AC8_apiHasTestFixtures",
+   "suggested_fix": "In later wave SDSs, list the CON-BUILD-006 AC-1 dependency table and these assertions as part of the work when a dependency is added, and supersede the requirement through the SRS rather than loosening the test."
+  },
+  {
+   "finding_id": "P2-S2-001",
+   "severity": "low",
+   "severity_class": "cross-wave-test-environment",
+   "claim": "The nested TestKit builds use the developer's real Gradle user home as the TestKit dir, so their results depend on that person's ~/.gradle/gradle.properties and init.d scripts. The lane recorded this as residual FND-101 and did not fix it. One concrete case: a global org.gradle.configuration-cache=true would break checkDependencyRules, which reads Project objects at execution time, so BuildChecksTest could fail on one machine and pass on another.",
+   "evidence": "src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java:131; build.gradle:190-197; manifest.json:33 (FND-101)",
+   "suggested_fix": "Pass --no-configuration-cache, plus -I with an empty init script or explicit -D overrides, in runner(). Or use a dedicated TestKit dir seeded offline from the outer dependency cache."
+  }
+ ]
+}

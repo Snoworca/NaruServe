@@ -1,0 +1,22 @@
+{
+  "confirmed": [
+    {
+      "finding_id": "P1-001",
+      "check": "git ls-files NaruServe-servlet returns nothing. The local NaruServe-servlet/ holds only build/ and an empty src/main. The lane's manifest.json:29,33 records it as residual FND-003. The local build passes only because the untracked directory exists, and BuildChecksTest creates the module directories in its temp copy."
+    },
+    {
+      "finding_id": "P1-002",
+      "check": "git check-ignore -v --no-index src/test/java/com/snoworca/naruserve/build/X.java reports .gitignore:2:build. The pattern has no slash, so it matches the build/ test package directory at any depth."
+    }
+  ],
+  "added": [
+    {
+      "finding_id": "P2-S2-001",
+      "severity": "low",
+      "severity_class": "cross-wave-test-environment",
+      "claim": "The nested TestKit builds use the developer's real Gradle user home as the TestKit dir, so their results depend on that person's ~/.gradle/gradle.properties and init.d scripts. The lane recorded this as residual FND-101 and did not fix it. One concrete case: a global org.gradle.configuration-cache=true would break checkDependencyRules, which reads Project objects at execution time, so BuildChecksTest could fail on one machine and pass on another.",
+      "evidence": "src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java:131; build.gradle:190-197; manifest.json:33 (FND-101)",
+      "suggested_fix": "Pass --no-configuration-cache, plus -I with an empty init script or explicit -D overrides, in runner(). Or use a dedicated TestKit dir seeded offline from the outer dependency cache."
+    }
+  ]
+}

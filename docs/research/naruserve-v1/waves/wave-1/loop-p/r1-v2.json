@@ -1,0 +1,26 @@
+{
+  "findings": [
+    {
+      "finding_id": "P2-001",
+      "severity": "low",
+      "severity_class": "doc-claim-not-enforced",
+      "claim": "CLAUDE.md and docs/api/README.md say the build uses TinyHttpd commit 46b973e, but settings.gradle runs includeBuild on whatever HEAD the checkout has. Nothing checks the commit, so if TinyHttpd moves on, a later wave builds against different engine code while the docs still say 46b973e. TinyHttpd HEAD is 46b973e and clean today, so this has no effect yet.",
+      "evidence": "settings.gradle:16-23; CLAUDE.md:21; docs/api/README.md:103",
+      "suggested_fix": "Have settings.gradle or BuildLayoutTest compare `git -C <tinyHttpdDir> rev-parse --short HEAD` with 46b973e and fail on a mismatch, or reword the docs to say 'checked against 46b973e at wave 1'."
+    },
+    {
+      "finding_id": "P2-002",
+      "severity": "low",
+      "severity_class": "cross-wave-test-friction",
+      "claim": "The dependency-set tests use exact assertEquals on every module's runtimeClasspath. Any dependency a later wave legitimately adds (for example a test-fixtures consumer or a new runtime library) makes the regression fail until these sets are changed. That matches the wave-1 scope of CON-BUILD-006 AC-1, but later waves must change these assertions on purpose. They must not read the failure as a regression or weaken the check. The same applies to the hardcoded 0.1.0-SNAPSHOT test-fixtures jar name.",
+      "evidence": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:233-244; BuildLayoutTest.java con_BUILD_006_AC8_apiHasTestFixtures",
+      "suggested_fix": "In later wave SDSs, list the CON-BUILD-006 AC-1 dependency table and these assertions as part of the work when a dependency is added, and supersede the requirement through the SRS rather than loosening the test."
+    }
+  ],
+  "regression": {
+    "command": "./gradlew build",
+    "exit_code": 0,
+    "failing_tests": []
+  },
+  "substantive_clean": true
+}

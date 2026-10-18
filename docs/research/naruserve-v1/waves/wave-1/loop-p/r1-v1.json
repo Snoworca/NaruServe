@@ -1,0 +1,539 @@
+{
+ "req_ac": [
+  {
+   "id": "CON-BUILD-001 AC-1",
+   "verdict": "match",
+   "pointer": "gradle/wrapper/gradle-wrapper.properties:3 (gradle-8.14.3-bin.zip); src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:306 con_BUILD_001_AC1_gradleWrapperIsTheOnlyBuildTool; no pom.xml/build.xml/mvnw in tree"
+  },
+  {
+   "id": "CON-BUILD-002 AC-1",
+   "verdict": "match",
+   "pointer": "settings.gradle:4-12; src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:76 sdsAc1_CON_BUILD_002_AC1_AC2_AC3_settingsIncludesNineModulesAndRootName"
+  },
+  {
+   "id": "CON-BUILD-002 AC-2",
+   "verdict": "match",
+   "pointer": "settings.gradle:2 rootProject.name = 'NaruServe-build'; src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:76"
+  },
+  {
+   "id": "CON-BUILD-002 AC-3",
+   "verdict": "match",
+   "pointer": "settings.gradle:8 include ':NaruServe'; build.gradle:56-57 (api+tinyhttpd+gson+logcat); NaruServe/src/main/java/com/snoworca/naruserve/bootstrap/package-info.java; src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:76"
+  },
+  {
+   "id": "CON-BUILD-003 AC-1",
+   "verdict": "match",
+   "pointer": "build.gradle:1-260 (plugins, configureCompile, configureDependencies, checks); src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:290 con_BUILD_003_AC1_rootBuildFileHoldsPluginsCompileDependenciesAndChecks"
+  },
+  {
+   "id": "CON-BUILD-003 AC-2",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:317 con_BUILD_003_AC2_noModuleBuildFile; only ./build.gradle exists"
+  },
+  {
+   "id": "CON-BUILD-004 AC-1",
+   "verdict": "match",
+   "pointer": "build.gradle:34-35 options.release = 8 on every JavaCompile; src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:139 sdsAc6_CON_BUILD_004_AC1_AC2_allMainAndTestClassesAreMajor52"
+  },
+  {
+   "id": "CON-BUILD-004 AC-2",
+   "verdict": "match",
+   "pointer": "build.gradle:39-40 jvmTarget JVM_1_8 for every Kotlin compile task; src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:139"
+  },
+  {
+   "id": "CON-BUILD-004 AC-3",
+   "verdict": "match",
+   "pointer": "build.gradle:31-32 source/targetCompatibility 1.8; src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java:170 sdsAc5_CON_BUILD_004_AC3_kotlinAndJavaTargetsAreConsistent"
+  },
+  {
+   "id": "CON-BUILD-005 AC-1",
+   "verdict": "match",
+   "pointer": "build.gradle:20 group = 'com.snoworca.naruserve'; src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:96 sdsAc2_CON_BUILD_005_AC1_mainSourcesUseModulePackages"
+  },
+  {
+   "id": "CON-BUILD-006 AC-1",
+   "verdict": "match",
+   "pointer": "build.gradle:47-62 mainDependencies; src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:225 con_BUILD_006_AC1_AC4_AC6_AC7_runtimeClasspathsHoldExactlyTheDeclaredMainDependencies"
+  },
+  {
+   "id": "CON-BUILD-006 AC-2",
+   "verdict": "match",
+   "pointer": "build.gradle:65-67,76-77 (jspecify everywhere + servlet/websocket for servlet, no other compileOnly); src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:176 sdsAc7_CON_BUILD_011_AC1_jspecifyCompileOnlyEverywhereAndNeverAtRuntime"
+  },
+  {
+   "id": "CON-BUILD-006 AC-3",
+   "verdict": "match",
+   "pointer": "build.gradle:48 (no main deps); src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:195 con_BUILD_006_AC3_apiRuntimeClasspathHoldsNoArtifact"
+  },
+  {
+   "id": "CON-BUILD-006 AC-4",
+   "verdict": "match",
+   "pointer": "build.gradle:55; src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:225 (gson runtime = api + gson 2.14.0 + its own transitive error_prone_annotations)"
+  },
+  {
+   "id": "CON-BUILD-006 AC-5",
+   "verdict": "match",
+   "pointer": "build.gradle:65-67 compileOnly only; src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:225 (servlet runtime = api only) and :249 con_BUILD_006_AC5_AC9_compileOnlyServletApisAndGsonExposedToBootstrap"
+  },
+  {
+   "id": "CON-BUILD-006 AC-6",
+   "verdict": "match",
+   "pointer": "build.gradle:59; src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:225"
+  },
+  {
+   "id": "CON-BUILD-006 AC-7",
+   "verdict": "match",
+   "pointer": "build.gradle:57 implementation ':NaruServe-logcat'; src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:225"
+  },
+  {
+   "id": "CON-BUILD-006 AC-8",
+   "verdict": "match",
+   "pointer": "build.gradle:165-167 java-test-fixtures on NaruServe-api; src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:262 con_BUILD_006_AC8_apiHasTestFixtures"
+  },
+  {
+   "id": "CON-BUILD-006 AC-9",
+   "verdict": "match",
+   "pointer": "build.gradle:55 gson in api; src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:249"
+  },
+  {
+   "id": "CON-BUILD-007 AC-1",
+   "verdict": "match",
+   "pointer": "build.gradle:58 (stdlib api only in NaruServe-kotlin), :82 (testImplementation elsewhere); src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:268 con_BUILD_007_AC1_AC2_kotlinStdlibOnlyInKotlinModule"
+  },
+  {
+   "id": "CON-BUILD-007 AC-2",
+   "verdict": "match",
+   "pointer": "gradle.properties:2 kotlin.stdlib.default.dependency=false; src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:268"
+  },
+  {
+   "id": "CON-BUILD-007 AC-3",
+   "verdict": "match",
+   "pointer": "build.gradle:212-215 checkDependencyRules (names module), :236 check dependsOn; src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java:264 sdsAc15_CON_BUILD_007_AC3_kotlinStdlibOutsideKotlinModuleFails; src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java:205 con_BUILD_013_buildRunsTheChecks"
+  },
+  {
+   "id": "CON-BUILD-008 AC-1",
+   "verdict": "match",
+   "pointer": "build.gradle:129-131 android/ scan on NaruServe-logcat main; logcat main holds only package-info.java; src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java:251 sdsAc14_CON_BUILD_008_AC1_logcatMainReferencingAndroidFails; build passed with ANDROID_HOME/ANDROID_SDK_ROOT unset"
+  },
+  {
+   "id": "OPS-BUILD-001 AC-1",
+   "verdict": "match",
+   "pointer": "settings.gradle:16,23 (providers.gradleProperty('tinyHttpdDir') default in settings.gradle); gradle.properties has no override; src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java:138 sdsAc3_OPS_BUILD_001_AC1_AC2_propertyOverridesTheSettingsDefault"
+  },
+  {
+   "id": "OPS-BUILD-001 AC-2",
+   "verdict": "match",
+   "pointer": "settings.gradle:16-18 absolute default, relative override resolved against settingsDir; src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java:151 ops_BUILD_001_AC1_AC2_nestedBuildsUseTheOuterTinyHttpdDir"
+  },
+  {
+   "id": "OPS-BUILD-001 AC-3",
+   "verdict": "match",
+   "pointer": "settings.gradle:19-21 GradleException names tinyHttpdDir and path; src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java:159 sdsAc4_OPS_BUILD_001_AC3_missingCheckoutFailsWhileEvaluatingSettings"
+  },
+  {
+   "id": "CON-BUILD-009 AC-1",
+   "verdict": "match",
+   "pointer": "build.gradle:52-53 versionless coordinates, no project()/file ref; src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:225 (resolved to tinyhttpd-core/websocket 0.1.0-SNAPSHOT of the included build)"
+  },
+  {
+   "id": "CON-BUILD-009 AC-2",
+   "verdict": "match",
+   "pointer": "build.gradle:203-205; src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java:283 sdsAc17_CON_BUILD_009_AC2_AC3_tinyHttpdOutsideAdapterOrRouterFails"
+  },
+  {
+   "id": "CON-BUILD-009 AC-3",
+   "verdict": "match",
+   "pointer": "build.gradle:219-221; src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java:283"
+  },
+  {
+   "id": "CON-BUILD-009 AC-4",
+   "verdict": "match",
+   "pointer": "build.gradle:52 implementation scope, :222-225 compileClasspath check; src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:249"
+  },
+  {
+   "id": "CON-BUILD-010 AC-1",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:327 sdsAc19_CON_BUILD_010_AC1_tinyHttpdCheckoutHasNoChanges and src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java:55 @AfterClass recheck; git -C /Users/beom/work/git/TinyHttpd status --porcelain empty after this verifier's build (HEAD 46b973e)"
+  },
+  {
+   "id": "CON-BUILD-010 AC-2",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:333 con_BUILD_010_AC2_repoHoldsNoTinyHttpdSourcesOrPatches; manifest.json design_refuted [] and no TinyHttpd gap recorded; window diff touches no TinyHttpd file"
+  },
+  {
+   "id": "OPS-BUILD-002 AC-1",
+   "verdict": "match",
+   "pointer": "build.gradle:80 junit:junit:4.13.2 testImplementation for all nine; src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:280 ops_BUILD_002_AC1_AC5_junitAndKotlinTestStdlibInEveryModule"
+  },
+  {
+   "id": "OPS-BUILD-002 AC-2",
+   "verdict": "match",
+   "pointer": "build.gradle:5 org.jetbrains.kotlin.jvm 2.2.0, :137; NaruServe-kotlin/src/test/kotlin/com/snoworca/naruserve/kotlin/KotlinSmokeTest.kt:9 passed"
+  },
+  {
+   "id": "OPS-BUILD-002 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/SmokeTest.java (1 test passed) and KotlinSmokeTest.kt:9 (1 test passed) in build/test-results of this verifier's ./gradlew build"
+  },
+  {
+   "id": "OPS-BUILD-002 AC-4",
+   "verdict": "match",
+   "pointer": "env -u ANDROID_HOME -u ANDROID_SDK_ROOT ./gradlew build --no-daemon on JDK 17.0.20.1, no local.properties: exit 0; src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java:193 sdsAc11"
+  },
+  {
+   "id": "OPS-BUILD-002 AC-5",
+   "verdict": "match",
+   "pointer": "build.gradle:135-139 Kotlin plugin + jvmTarget on all nine modules; src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java:205 con_BUILD_013_buildRunsTheChecks (compileTestKotlin for every module); src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:268"
+  },
+  {
+   "id": "CON-BUILD-011 AC-1",
+   "verdict": "match",
+   "pointer": "build.gradle:76 org.jspecify:jspecify:1.0.0 compileOnly everywhere; src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:176"
+  },
+  {
+   "id": "CON-BUILD-011 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/NullabilityFixture.java:13,18; src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java:178 sdsAc8_CON_BUILD_011_AC2_nullableReturnDoesNotAssignToString; NaruServe-api/src/test/kotlin/com/snoworca/naruserve/NullabilityKotlinTest.kt:10"
+  },
+  {
+   "id": "CON-BUILD-012 AC-1",
+   "verdict": "match",
+   "pointer": "build.gradle:17,170-180 (seven modules, main source set only); src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java:293 sdsAc18_CON_BUILD_012_AC1_AC2_animalSnifferOnAndroidModulesOnly; src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java:214"
+  },
+  {
+   "id": "CON-BUILD-012 AC-2",
+   "verdict": "match",
+   "pointer": "build.gradle:17 servlet excluded; src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java:293 (no :NaruServe-servlet:animalsniffer task)"
+  },
+  {
+   "id": "CON-BUILD-013 AC-1",
+   "verdict": "match",
+   "pointer": "build.gradle:126-128 api prefixes (+javax/servlet via :125); src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java:223 sdsAc12_CON_BUILD_013_AC1_apiMainClassReferencingKotlinFails"
+  },
+  {
+   "id": "CON-BUILD-013 AC-2",
+   "verdict": "match",
+   "pointer": "build.gradle:216-218; src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java:272 sdsAc16_CON_BUILD_013_AC2_gsonOtherThan2140Fails"
+  },
+  {
+   "id": "CON-BUILD-013 AC-3",
+   "verdict": "match",
+   "pointer": "build.gradle:125 javax/servlet/ for androidModules; src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java:240 sdsAc13_CON_BUILD_013_AC3_androidModuleReferencingServletFails"
+  },
+  {
+   "id": "OPS-BUILD-003 AC-1",
+   "verdict": "match",
+   "pointer": "docs/api/README.md:103 (46b973e); CLAUDE.md:21; src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:384"
+  },
+  {
+   "id": "OPS-BUILD-003 AC-2",
+   "verdict": "match",
+   "pointer": "docs/api/README.md:90-112, app.md:15, json.md:47-52, kotlin.md:97-103, logging.md:83-91; src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:390 ops_BUILD_003_AC2_apiDocsNameFinalModulesWithoutUndecidedMarker; remaining (미확정) only in servlet.md"
+  },
+  {
+   "id": "OPS-BUILD-003 AC-3",
+   "verdict": "match",
+   "pointer": "CLAUDE.md:21; src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:412 ops_BUILD_003_AC3_AC4_claudeMdModuleLineAndNoRestKotlin"
+  },
+  {
+   "id": "OPS-BUILD-003 AC-4",
+   "verdict": "match",
+   "pointer": "CLAUDE.md:38 NaruServe-kotlin; docs/api/kotlin.md:97; no rest-kotlin in either; src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:412"
+  },
+  {
+   "id": "OPS-BUILD-003 AC-5",
+   "verdict": "match",
+   "pointer": "docs/api/servlet.md:11 jakarta marker; git diff 49051c0..07f05a7 does not touch docs/api/servlet.md; src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:300"
+  }
+ ],
+ "design": [
+  {
+   "id": "D-001",
+   "verdict": "match",
+   "pointer": "gradle/wrapper/gradle-wrapper.properties:3; src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:306"
+  },
+  {
+   "id": "D-002",
+   "verdict": "match",
+   "pointer": "settings.gradle:4-12; src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:76"
+  },
+  {
+   "id": "D-003",
+   "verdict": "match",
+   "pointer": "build.gradle:135-180 configures all modules; src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:290"
+  },
+  {
+   "id": "D-004",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:317"
+  },
+  {
+   "id": "D-005",
+   "verdict": "match",
+   "pointer": "build.gradle:47-67 all nine modules' main deps; :165-167 testFixtures; src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:225"
+  },
+  {
+   "id": "D-006",
+   "verdict": "match",
+   "pointer": "build.gradle:34-35; src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:139"
+  },
+  {
+   "id": "D-007",
+   "verdict": "match",
+   "pointer": "build.gradle:39-40; src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:139"
+  },
+  {
+   "id": "D-008",
+   "verdict": "match",
+   "pointer": "build.gradle:20; src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:96"
+  },
+  {
+   "id": "D-009",
+   "verdict": "match",
+   "pointer": "build.gradle:48; src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:195"
+  },
+  {
+   "id": "D-010",
+   "verdict": "match",
+   "pointer": "build.gradle:55; src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:225"
+  },
+  {
+   "id": "D-011",
+   "verdict": "match",
+   "pointer": "build.gradle:58,82; src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:268"
+  },
+  {
+   "id": "D-012",
+   "verdict": "match",
+   "pointer": "build.gradle:66; src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:249"
+  },
+  {
+   "id": "D-384",
+   "verdict": "match",
+   "pointer": "build.gradle:59; src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:225"
+  },
+  {
+   "id": "D-385",
+   "verdict": "match",
+   "pointer": "NaruServe-logcat/src/main/java/com/snoworca/naruserve/logcat/package-info.java (no android ref); build.gradle:129-131; src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java:251"
+  },
+  {
+   "id": "D-386",
+   "verdict": "match",
+   "pointer": "build.gradle:57; src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:225"
+  },
+  {
+   "id": "D-013",
+   "verdict": "match",
+   "pointer": "settings.gradle:16,23; src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java:138"
+  },
+  {
+   "id": "D-014",
+   "verdict": "match",
+   "pointer": "settings.gradle:16-18; src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java:151"
+  },
+  {
+   "id": "D-015",
+   "verdict": "match",
+   "pointer": "settings.gradle:19-21; src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java:159"
+  },
+  {
+   "id": "D-016",
+   "verdict": "match",
+   "pointer": "build.gradle:52-53; src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:225"
+  },
+  {
+   "id": "D-017",
+   "verdict": "match",
+   "pointer": "build.gradle:203-205,222-225; src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java:283"
+  },
+  {
+   "id": "D-018",
+   "verdict": "match",
+   "pointer": "build.gradle:219-221; src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java:283"
+  },
+  {
+   "id": "D-019",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:327, src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java:55; TinyHttpd status --porcelain empty"
+  },
+  {
+   "id": "D-020",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:333; no TinyHttpd gap or patch in window"
+  },
+  {
+   "id": "D-021",
+   "verdict": "match",
+   "pointer": "docs/api/README.md:103; CLAUDE.md:21"
+  },
+  {
+   "id": "D-022",
+   "verdict": "match",
+   "pointer": "build.gradle:80; src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:280"
+  },
+  {
+   "id": "D-023",
+   "verdict": "match",
+   "pointer": "build.gradle:5,137; KotlinSmokeTest.kt:9"
+  },
+  {
+   "id": "D-024",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/SmokeTest.java; NaruServe-kotlin/src/test/kotlin/com/snoworca/naruserve/kotlin/KotlinSmokeTest.kt:9"
+  },
+  {
+   "id": "D-025",
+   "verdict": "match",
+   "pointer": "./gradlew build exit 0 on JDK 17 with ANDROID_HOME/ANDROID_SDK_ROOT unset"
+  },
+  {
+   "id": "D-387",
+   "verdict": "match",
+   "pointer": "gradle.properties:2; src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:268"
+  },
+  {
+   "id": "D-388",
+   "verdict": "match",
+   "pointer": "build.gradle:212-215; src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java:264"
+  },
+  {
+   "id": "D-026",
+   "verdict": "match",
+   "pointer": "build.gradle:42,76 jspecify 1.0.0 + -Xjspecify-annotations=strict; src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:176; src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java:178"
+  },
+  {
+   "id": "D-027",
+   "verdict": "match",
+   "pointer": "build.gradle:17,170-180; src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java:205,293"
+  },
+  {
+   "id": "D-028",
+   "verdict": "match",
+   "pointer": "build.gradle:17; src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java:293"
+  },
+  {
+   "id": "D-029",
+   "verdict": "match",
+   "pointer": "docs/api/README.md:90-112, app.md:15, json.md:47-52, kotlin.md:97-103, logging.md:83-91; src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:390"
+  },
+  {
+   "id": "D-448",
+   "verdict": "match",
+   "pointer": "CLAUDE.md:21; src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:412"
+  }
+ ],
+ "constraints": [
+  {
+   "id": "C-01",
+   "verdict": "match",
+   "pointer": "gradle-wrapper.properties:3 8.14.3; no other build tool files; src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:306"
+  },
+  {
+   "id": "C-02",
+   "verdict": "match",
+   "pointer": "build.gradle:31-40 release 8 / jvmTarget 1.8; animal-sniffer API 21 :170-180"
+  },
+  {
+   "id": "C-03",
+   "verdict": "match",
+   "pointer": "build.gradle:42 jspecify strict; NullabilityKotlinTest.kt; KotlinSmokeTest.kt"
+  },
+  {
+   "id": "C-04",
+   "verdict": "match",
+   "pointer": "NaruServe-servlet with javax.servlet-api 3.1.0 compileOnly, build.gradle:66"
+  },
+  {
+   "id": "C-05",
+   "verdict": "match",
+   "pointer": "docs/api/*.md updated with module coordinates and Groovy snippets (README.md:90-112)"
+  },
+  {
+   "id": "C-06",
+   "verdict": "match",
+   "pointer": "settings.gradle:4-5 NaruServe-api, NaruServe-servlet kept"
+  },
+  {
+   "id": "C-07",
+   "verdict": "match",
+   "pointer": "module-name (미확정) markers resolved in docs/api without user prompt (wave decisions in waves/wave-1/design.md)"
+  },
+  {
+   "id": "C-08",
+   "verdict": "match",
+   "pointer": "manifest.json review_outcome TASK_DONE, no NEEDS_USER stop"
+  },
+  {
+   "id": "C-09",
+   "verdict": "match",
+   "pointer": "wave 1 = object.md §19 build foundation; ./gradlew build exit 0"
+  }
+ ],
+ "preservation": [
+  {
+   "item": "CLAUDE.md",
+   "verdict": "intended-improvement",
+   "evidence": "OPS-BUILD-003 AC-3, OPS-BUILD-003 AC-4 (D-448, W2-005)"
+  },
+  {
+   "item": "build.gradle",
+   "verdict": "intended-improvement",
+   "evidence": "CON-BUILD-003 AC-1, CON-BUILD-006, CON-BUILD-012, CON-BUILD-013 (SDS-AC-5..18)"
+  },
+  {
+   "item": "docs/api/README.md",
+   "verdict": "intended-improvement",
+   "evidence": "OPS-BUILD-003 AC-1, OPS-BUILD-003 AC-2 (SDS-AC-20, D-029)"
+  },
+  {
+   "item": "docs/api/app.md",
+   "verdict": "intended-improvement",
+   "evidence": "OPS-BUILD-003 AC-2 (D-029)"
+  },
+  {
+   "item": "docs/api/json.md",
+   "verdict": "intended-improvement",
+   "evidence": "OPS-BUILD-003 AC-2 (D-029)"
+  },
+  {
+   "item": "docs/api/kotlin.md",
+   "verdict": "intended-improvement",
+   "evidence": "OPS-BUILD-003 AC-2, OPS-BUILD-003 AC-4 (W2-005)"
+  },
+  {
+   "item": "docs/api/logging.md",
+   "verdict": "intended-improvement",
+   "evidence": "OPS-BUILD-003 AC-2 (D-029)"
+  },
+  {
+   "item": "settings.gradle",
+   "verdict": "intended-improvement",
+   "evidence": "CON-BUILD-002 AC-1, CON-BUILD-002 AC-2, OPS-BUILD-001 AC-1..AC-3 (SDS-AC-1, SDS-AC-3, SDS-AC-4)"
+  }
+ ],
+ "unit": [
+  {
+   "id": "lane-2026-10-19.naruserve.naruserve-v1-wave-1",
+   "verdict": "match",
+   "pointer": "ab818aa, f57a705 reachable from integration head 8acdb77 via merge 07f05a7; ./gradlew build exit 0, 0 failing tests (37 tests: BuildChecksTest 14, BuildLayoutTest 19, NullabilityKotlinTest 2, SmokeTest 1, KotlinSmokeTest 1)"
+  }
+ ],
+ "findings": [
+  {
+   "finding_id": "P1-001",
+   "severity": "medium",
+   "claim": "NaruServe-servlet has no tracked file, so a clean clone has no :NaruServe-servlet project directory; Gradle 8.14.3 only warns (deprecated) but Gradle 9 fails, and the module CON-BUILD-002 AC-1 includes exists only as an untracked empty local dir. Recorded by the lane as residual FND-003, not fixed.",
+   "evidence": "git ls-files NaruServe-servlet -> empty; settings.gradle:5; manifest.json residual_medium FND-003",
+   "suggested_fix": "Add NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/package-info.java (as the other modules have) in the next wave touching the servlet module, or wave 2."
+  },
+  {
+   "finding_id": "P1-002",
+   "severity": "low",
+   "claim": "The .gitignore pattern 'build' matches the root test package directory src/test/java/com/snoworca/naruserve/build/, so any new file added there by a later wave is silently ignored (the two current tests were force-added).",
+   "evidence": ".gitignore:2 (git check-ignore --no-index src/test/java/com/snoworca/naruserve/build/X.java matches)",
+   "suggested_fix": "Anchor the pattern: /build/ and /*/build/ (plus .kotlin) in .gitignore."
+  }
+ ],
+ "roll_up": "ALL_MATCH"
+}

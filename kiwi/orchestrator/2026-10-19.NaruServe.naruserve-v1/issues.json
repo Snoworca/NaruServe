@@ -1,0 +1,57 @@
+[
+  {
+    "issueId": "w1-P1-001",
+    "wave": 1,
+    "class": "local-defect",
+    "source": "loop P r1 P1-001",
+    "resolutionKind": "commit-sha",
+    "resolutionRef": "149d6873d7f3bfd6c6f3dd870fc40bded8513dc7",
+    "userDecisionRef": null,
+    "designLockDigest": null,
+    "deferralReason": null
+  },
+  {
+    "issueId": "w1-P1-002",
+    "wave": 1,
+    "class": "local-defect",
+    "source": "loop P r1 P1-002",
+    "resolutionKind": "commit-sha",
+    "resolutionRef": "149d6873d7f3bfd6c6f3dd870fc40bded8513dc7",
+    "userDecisionRef": null,
+    "designLockDigest": null,
+    "deferralReason": null
+  },
+  {
+    "issueId": "w1-P2-001",
+    "wave": 1,
+    "class": "local-defect",
+    "source": "loop P r1 P2-001",
+    "resolutionKind": "commit-sha",
+    "resolutionRef": "149d6873d7f3bfd6c6f3dd870fc40bded8513dc7",
+    "userDecisionRef": null,
+    "designLockDigest": null,
+    "deferralReason": null
+  },
+  {
+    "issueId": "w1-P2-002",
+    "wave": 1,
+    "class": "local-defect",
+    "source": "loop P r1 P2-002",
+    "resolutionKind": "file-line",
+    "resolutionRef": "docs/spec/02.build.srs.md:337",
+    "userDecisionRef": null,
+    "designLockDigest": null,
+    "deferralReason": null
+  },
+  {
+    "issueId": "w1-P2-S2-001",
+    "wave": 1,
+    "class": "local-defect",
+    "source": "loop P r1 P2-S2-001",
+    "resolutionKind": "commit-sha",
+    "resolutionRef": "149d6873d7f3bfd6c6f3dd870fc40bded8513dc7",
+    "userDecisionRef": null,
+    "designLockDigest": null,
+    "deferralReason": null
+  }
+]

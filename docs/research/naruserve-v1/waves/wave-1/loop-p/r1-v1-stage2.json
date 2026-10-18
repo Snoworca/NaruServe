@@ -1,0 +1,4 @@
+{"confirmed":[
+ {"finding_id":"P2-001","note":"Checked: settings.gradle:16-23 calls includeBuild on the configured directory and never checks its commit; neither settings.gradle nor build.gradle mentions 46b973e, which appears only in CLAUDE.md:21 and docs/api/README.md:103. TinyHttpd HEAD is 46b973e and the checkout is clean today."},
+ {"finding_id":"P2-002","note":"Checked: BuildLayoutTest.java:233-244 compares each module's runtimeClasspath with assertEquals on an exact set; BuildLayoutTest.java:262-265 hardcodes NaruServe-api-0.1.0-SNAPSHOT-test-fixtures.jar."}
+],"added":[]}
