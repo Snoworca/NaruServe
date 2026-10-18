@@ -44,7 +44,12 @@ Gson gson = new GsonBuilder()
 app.jsonCodec(new GsonJsonCodec(gson));
 ```
 
-`GsonJsonCodec`은 `NaruServe-api`에 들어 있지 않습니다(공개 API는 Gson에 의존하지 않습니다). `GsonJsonCodec`이 들어 있는 모듈 이름은 **(미확정)** 입니다.
+`GsonJsonCodec`은 `NaruServe-api`에 들어 있지 않습니다(공개 API는 Gson에 의존하지 않습니다). `GsonJsonCodec`은 `NaruServe-gson` 모듈에 있습니다. 이 모듈은 Gson을 `api`로 노출하므로 `Gson`을 직접 만들 때 따로 의존성을 넣지 않아도 됩니다. `RestApp.create()`용 `NaruServe` 모듈은 이 모듈을 실행 시점에만 함께 가져옵니다. 위처럼 `Gson`과 `GsonJsonCodec`을 코드에서 직접 쓰려면 아래 의존성을 따로 넣으세요.
+
+```groovy
+implementation 'com.snoworca.naruserve:NaruServe-gson:0.1.0-SNAPSHOT'
+// 함께 들어오는 Gson: com.google.code.gson:gson:2.14.0
+```
 
 날짜 형식, 이름 규칙 등을 바꾸려면 Gson을 직접 만들어 `app.jsonCodec(...)`으로 넘깁니다. 위 두 보안 설정은 유지하세요.
 

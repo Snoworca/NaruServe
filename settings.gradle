@@ -1,4 +1,23 @@
-rootProject.name = 'NaruServe'
+// The root project is not a module: NaruServe is the bootstrap module's name (W2-001).
+rootProject.name = 'NaruServe-build'
 
 include ':NaruServe-api'
 include ':NaruServe-servlet'
+include ':NaruServe-tinyhttpd'
+include ':NaruServe-gson'
+include ':NaruServe'
+include ':NaruServe-kotlin'
+include ':NaruServe-slf4j'
+include ':NaruServe-filelog'
+include ':NaruServe-logcat'
+
+// @req OPS-BUILD-001
+// Absolute default, so a git worktree of this repository resolves the same read-only TinyHttpd checkout.
+def tinyHttpdPath = providers.gradleProperty('tinyHttpdDir').getOrElse('/Users/beom/work/git/TinyHttpd')
+// A relative override resolves against this directory, not the daemon's working directory.
+def tinyHttpdDir = new File(tinyHttpdPath).isAbsolute() ? new File(tinyHttpdPath) : new File(settingsDir, tinyHttpdPath)
+if (!tinyHttpdDir.isDirectory()) {
+    throw new GradleException("tinyHttpdDir: TinyHttpd checkout not found at ${tinyHttpdDir.path}")
+}
+gradle.ext.tinyHttpdDir = tinyHttpdDir
+includeBuild(tinyHttpdDir)
