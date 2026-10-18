@@ -1,0 +1,76 @@
+{
+  "goal": "Implement the public API contract in docs/api/ (SSOT object.md) as NaruServe v1: an Express.js-style, lightweight embedded HTTP server library written in Java 8 bytecode that runs with one identical API on Android 5.0 (API 21)+ and plain Java 8+ JVMs, usable naturally from Kotlin without a DSL. One port serves REST/JSON, multipart upload, WebSocket, SSE and static files on top of TinyHttpd via an HttpAdapter SPI, with Gson 2.14.0 behind a JsonCodec SPI, explicit service registry/lifecycle, safe defaults and bounded resources. Work follows epic #20's 19 sub-issues in object.md §19 phase order (base, P0-P4, optional P5 Servlet), resolving every (미확정) item during implementation and updating docs/api accordingly.",
+  "success_criteria": [
+    "./gradlew build (Gradle 8.14.3 wrapper) passes; all modules compile with options.release=8, Kotlin jvmTarget=1.8.",
+    "NaruServe-api and every Android-targeted module pass the animal-sniffer android-api-level-21 check; no java.nio.file/CompletableFuture/java.net.http/android.*/servlet/Gson/Kotlin-stdlib types in Core public API.",
+    "Each sub-issue's acceptance tests (object.md §17.2 T01-T50) exist as automated JUnit 4.13.2 (and Kotlin) tests and pass; items needing hardware (T10, T12, T47 on API 21) have automated build/R8 evidence plus a recorded verification note where a device run is not possible.",
+    "RestApp.create() works out of the box with TinyHttpd + Gson 2.14.0; RestApp.builder()-style explicit assembly works with Core only (object.md §2.1).",
+    "Every public API parameter/return carries compileOnly @Nullable/@NonNull; a Kotlin compile+run test covers the docs/api Kotlin examples (T11); all callbacks are @FunctionalInterface.",
+    "Every (미확정) marker in docs/api is replaced by the decided contract consistent with object.md, with the decision rationale in the commit/PR.",
+    "Release gate (object.md §19): SBOM generated, no unresolved High/Critical dependency CVEs, non-GPL licenses listed, no resource leaks (temp files, threads, sockets), README/API docs/license list present."
+  ],
+  "key_entities": [
+    "RestApp (create/builder, listen, shutdown, state, use, onError, onStart/onStop, staticFiles, ws, multipart, accessLog, jsonCodec, mimeTypes)",
+    "Router, Method, MethodSet, RouteBuilder",
+    "Request (BodyState, BodyAlreadyConsumedException), Response (NEW/COMMITTED/STREAMING/COMPLETED/ABORTED)",
+    "Middleware, Next, error handler, standard error JSON",
+    "ApplicationContext, ServiceRegistry, Lifecycle states, ServerHandle",
+    "HttpAdapter SPI (in-memory test adapter, TinyHttpd adapter, Servlet adapter)",
+    "JsonCodec SPI, TypeRef<T>, GsonJsonCodec (Gson 2.14.0 STRICT, disableJdkUnsafe)",
+    "Cookie, SameSite",
+    "UploadFile / Part, multipart config and spooling",
+    "StaticMount, MIME registry, CachePolicy, Range/ETag handling",
+    "WebSocketSession, SseClient, SseEvent",
+    "Logger SPI, AccessLog (console, Logcat, SLF4J, rotating file adapters)",
+    "Modules: NaruServe-api, TinyHttpd adapter, Gson codec, bootstrap (RestApp.create), NaruServe-kotlin, NaruServe-servlet, Android sample app",
+    "External: TinyHttpd at /Users/beom/work/git/TinyHttpd (group com.snoworca.tinyhttpd, modules core/webserver/websocket/router/session, no maven-publish configured)"
+  ],
+  "ambiguities": [
+    {
+      "id": "Q-1",
+      "question": "How is TinyHttpd consumed by the build? It is a sibling local repo with no maven-publish configuration, and the release gate implies NaruServe artifacts will be published.",
+      "options": [
+        "Composite build: includeBuild('../TinyHttpd') with dependency substitution on com.snoworca.tinyhttpd:tinyhttpd-core/-websocket coordinates",
+        "Add maven-publish to TinyHttpd and depend via mavenLocal()",
+        "Vendor/copy TinyHttpd sources into a NaruServe module",
+        "Depend on a remote build (e.g., JitPack of Snoworca/TinyHttpd)"
+      ],
+      "recommended": "Composite build via includeBuild('../TinyHttpd'), declaring normal Maven coordinates (com.snoworca.tinyhttpd:tinyhttpd-core:0.1.0-SNAPSHOT etc.) so it can later switch to a published artifact without touching module code.",
+      "reason": "CLAUDE.md explicitly picked Gradle 8.14.3 because it matches TinyHttpd and eases includeBuild; object.md §2.2 points at the local path; TinyHttpd has no publish setup today. Vendoring would fork the fork (object.md §20.3 wants a clear upstream commit basis). Publishing coordinates stay stable, so #18 only has to add publication later."
+    },
+    {
+      "id": "Q-2",
+      "question": "May this run modify the TinyHttpd repository when it lacks a hook NaruServe needs (e.g., 431/414 limits, accept-queue 503, CL/TE conflict rejection, WebSocket upgrade after middleware, SSE streaming), or must every gap be closed inside the NaruServe adapter?",
+      "options": [
+        "Treat TinyHttpd as read-only: adapt/wrap in NaruServe; unfixable gaps recorded as deferred issues",
+        "Allow small, tested changes in TinyHttpd as part of this run (separate commits in that repo)",
+        "Fork TinyHttpd code into NaruServe where needed"
+      ],
+      "recommended": "Treat TinyHttpd as read-only for this run; implement behavior in the NaruServe adapter layer, reusing TinyHttpd's Multipart/FileTransfer/MimeTypes/websocket/SseStream where they fit. Where a requirement (notably T48) truly cannot be met without an engine change, record it as a deferred TinyHttpd issue rather than editing that repo.",
+      "reason": "The run is scoped to the NaruServe repo/branch and its worktrees; cross-repo edits break worktree isolation and merge/replay. Sub-issue #8 says 'TinyHttpd 기능 확인 후 연결' (verify then connect), and TinyHttpd's recent history already hardened slowloris/body-rate limits, so most needs are likely covered."
+    },
+    {
+      "id": "Q-3",
+      "question": "How far must Android API 21 verification (#17: T10, T12, T47; also §17.1 'API 21 real device or official emulator, debug/release, minify on/off') go, given the machine has only the android-36 platform/system image installed and is Apple Silicon (API 21 images are x86/armv7 and impractical to emulate)?",
+      "options": [
+        "Build the minSdk 21 sample app (Java+Kotlin), assemble Debug and Release with R8 on/off automatically, run instrumented/regression tests on the available latest-API emulator, and record API 21 device execution as a pending manual verification",
+        "Install an API 21 system image and attempt emulator runs regardless of cost",
+        "Skip #17 entirely this run"
+      ],
+      "recommended": "Option 1: automate everything buildable (AGP 8.x sample app, minSdk 21, Debug/Release, R8 on/off, Gson @SerializedName round-trip under R8 rules, animal-sniffer), run runtime checks on the latest-API emulator, and leave the API 21 on-device run as an explicitly recorded manual-verification item; T10/T12/T47 requirements are not promoted to verified without that evidence.",
+      "reason": "The sub-issue itself says 'automation-impossible items leave a manual verification record'. animal-sniffer API 21 + R8 build gives strong static evidence; CLAUDE.md forbids marking verified without evidence, so the device step must stay explicitly open rather than faked."
+    },
+    {
+      "id": "Q-4",
+      "question": "Is the optional P5 Servlet adapter (#19) and the full release gate (#18: SBOM, CVE scan, license check) in scope for this run's completion, or is v1 done at P4?",
+      "options": [
+        "Include #18 and #19 (Servlet last, javax only)",
+        "Include #18, defer #19 (P5 optional)",
+        "Stop at P4 code; defer #18 and #19"
+      ],
+      "recommended": "Include both: #18 as the final wave (CycloneDX SBOM, dependency vulnerability check best-effort with recorded result, license list), and #19 as an independent late wave limited to javax Servlet 3.1 (HTTP, multipart, SSE via AsyncContext; container WebSocket only if cheap, otherwise documented unsupported). jakarta stays a documented future module.",
+      "reason": "The epic lists all 19 sub-issues as the work list and the NaruServe-servlet module and docs/api/servlet.md already exist; object.md §19 marks P5 optional, so it must not block the P0-P4 release gate, but leaving the existing skeleton module empty contradicts the API docs. Making #19 depend only on #8/#11/#14 keeps it parallelizable and droppable if time runs out."
+    }
+  ],
+  "notes": "Delegated (not ambiguities): all (미확정) items, including the module split proposed in #1 (recommended: NaruServe-api core, NaruServe-tinyhttpd, NaruServe-gson, NaruServe bootstrap holding RestApp.create(), NaruServe-kotlin, NaruServe-servlet, plus optional logging adapter modules for T40 Logcat/SLF4J/rotating-file and an Android sample app), package root com.snoworca.naruserve, builder naming, nullability annotation choice (e.g., org.jetbrains:annotations or JSR-305 compileOnly; Kotlin recognizes both). Note CLAUDE.md says the root build.gradle configures all modules with no per-module build files; the Android sample app (AGP) likely needs its own build/settings, so that exception should be decided when #17 is designed (e.g., a separate included build under samples/). object.md §1.3 places TLS/WSS, coroutines, V8 bridge, Moshi, HTTP/2 out of v1 scope. Lifecycle/T44 spans #6 and #15. Environment facts: ANDROID_HOME=/opt/homebrew/share/android-commandlinetools with platform android-36 only; local JDK 17; TinyHttpd version 0.1.0-SNAPSHOT, group com.snoworca.tinyhttpd."
+}

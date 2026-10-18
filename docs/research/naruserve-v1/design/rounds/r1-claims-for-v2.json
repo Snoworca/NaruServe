@@ -1,0 +1,109 @@
+[
+ {
+  "finding_id": "V1-001",
+  "items": [
+   "D-084"
+  ],
+  "claim": "D-084 makes every Request/Response call after the response completed throw IllegalStateException, which breaks the documented before/after middleware pattern and the onError isCommitted()/abort() pattern required for T37.",
+  "evidence": "docs/research/naruserve-v1/design/00.design.md:146; docs/api/middleware.md:90-95 (req.path() after next.run()); docs/api/middleware.md:127-131 and object.md:591-594 (onError reads res.isCommitted() after a possibly completed response); object.md:1069 (T37)"
+ },
+ {
+  "finding_id": "V1-002",
+  "items": [
+   "D-335",
+   "D-326",
+   "D-330",
+   "D-327",
+   "D-336"
+  ],
+  "claim": "The SSE design cannot be met on read-only TinyHttpd as written: its EventStream hard-codes Cache-Control: no-cache and cannot emit event/id/retry/data in one block, while the alternative (raw chunked OutputStream) keeps the TinyHttpd worker attached to the pool for the stream lifetime because only EventStream/upgrade detach the worker, starving maxWorkers=64 under T26.",
+  "evidence": "/Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/SseStream.java:53 (Cache-Control no-cache), :68 (pool.detach only here), :72 (commitStreaming), :240 (handler return ends response); /Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/http/EventStream.java:24-36; docs/api/sse.md:25,62-67; object.md:458"
+ },
+ {
+  "finding_id": "V1-003",
+  "items": [
+   "D-324",
+   "D-336",
+   "D-346"
+  ],
+  "claim": "T26 (100+ concurrent WS and SSE from a local test client) needs TinyHttpd maxConnectionsPerAddress (default 32) and maxEventStreams (default 64) raised; only maxUpgradedConnections is covered.",
+  "evidence": "/Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/TinyHttpd.java:264,268; /Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/HttpServer.java:245; /Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/SseStream.java:60-62 (503 beyond maxEventStreams); object.md:1058"
+ },
+ {
+  "finding_id": "V1-004",
+  "items": [
+   "D-216",
+   "D-218",
+   "D-225"
+  ],
+  "claim": "object.md requires header count and wait-queue length to be configurable; design only names header/URL/timeout configuration APIs and keeps header count and queue as TinyHttpd defaults.",
+  "evidence": "object.md:829; docs/api/defaults.md:26"
+ },
+ {
+  "finding_id": "V1-005",
+  "items": [
+   "D-169",
+   "D-371"
+  ],
+  "claim": "docs/api and object.md make Logcat the default logger on Android; the design only ships a Logcat Logger in a separate artifact and makes console the JVM default, with no item for Android default selection.",
+  "evidence": "docs/api/logging.md:78-81; object.md:646"
+ },
+ {
+  "finding_id": "V1-006",
+  "items": [
+   "D-002",
+   "D-005",
+   "D-025",
+   "D-179",
+   "D-371"
+  ],
+  "claim": "Internal inconsistency: D-005 says wave 1 declares every module's main dependencies so later waves add only test deps or release plugins, but the SLF4J adapter and rotating file logger modules (D-179, wave 4) and the Android-only Logcat artifact (D-371, wave 8) are not in D-002's wave-1 module list; the Logcat artifact also needs android.jar while D-025 requires the root build to pass without an Android SDK.",
+  "evidence": "docs/research/naruserve-v1/design/00.design.md:12,15,43,278,577"
+ },
+ {
+  "finding_id": "V1-007",
+  "items": [],
+  "claim": "object.md \u00a79.3 calls for a ResourceResolver SPI (open, length, etag, modified) separate from the built-in File resolver; no design item covers it or records it as post-v1.",
+  "evidence": "object.md:522; object.md:1168 (SAF Resolver P5)"
+ },
+ {
+  "finding_id": "V1-008",
+  "items": [],
+  "claim": "object.md \u00a79.4 says cache defaults are configurable as a server-wide security policy; no item covers a global default CachePolicy.",
+  "evidence": "object.md:541"
+ },
+ {
+  "finding_id": "V1-009",
+  "items": [
+   "D-067"
+  ],
+  "claim": "CONNECT can never be enabled on the TinyHttpd adapter because TinyHttpd rejects it with 501 in the parser.",
+  "evidence": "/Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/RequestParser.java:83-84"
+ },
+ {
+  "finding_id": "V1-010",
+  "items": [
+   "D-364"
+  ],
+  "claim": "object.md \u00a717.1 requires a Kotlin Android project to compile and run SAM, nullable, Multipart, WebSocket and service APIs; D-364 only requires Kotlin sources in the sample.",
+  "evidence": "object.md:1024"
+ },
+ {
+  "finding_id": "V1-011",
+  "items": [
+   "D-009",
+   "D-011",
+   "D-023"
+  ],
+  "claim": "Applying the Kotlin Gradle Plugin to every module for Kotlin tests adds kotlin-stdlib to each main api configuration by default, violating D-009/D-011 unless disabled.",
+  "evidence": "docs/research/naruserve-v1/design/00.design.md:19,21,41"
+ },
+ {
+  "finding_id": "V1-012",
+  "items": [
+   "I-009"
+  ],
+  "claim": "I-009 requires every Java example in docs/api to compile in the test suite, but the Android Service example uses android.* and cannot compile in the SDK-less root build (D-025).",
+  "evidence": "docs/api/lifecycle.md:162-186; docs/research/naruserve-v1/design/00.design.md:43"
+ }
+]

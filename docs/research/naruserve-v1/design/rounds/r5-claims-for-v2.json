@@ -1,0 +1,84 @@
+[
+ {
+  "finding_id": "V1-001",
+  "items": [
+   "D-166",
+   "D-162",
+   "D-107",
+   "D-223"
+  ],
+  "claim": "D-166 says every request that arrives on an open keep-alive connection after STOPPING began gets 503 with Connection: close. On TinyHttpd this holds only until the adapter stop of D-162 starts. From then on, HttpServer.stop calls onServerStopping, which closes idle keep-alive connections without an answer (a request racing the close is dropped with lingerClose), and in-flight responses are committed with Connection: close because isStopping() is true. Later requests on those connections get a closed socket, not a 503. A T44 test written to D-166 as stated would fail or flake.",
+  "evidence": "/Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/Connection.java:158; /Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/Connection.java:508; /Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/Connection.java:400; /Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/HttpServer.java:469"
+ },
+ {
+  "finding_id": "V1-002",
+  "items": [
+   "D-219",
+   "D-400",
+   "D-129",
+   "D-088"
+  ],
+  "claim": "No item says whether the TinyHttpd adapter sets TinyHttpd's maxRequestBodyBytes (default -1). D-219's mapping of TinyHttpd size-overrun body exceptions to 413 only matters if the limit is set. If it is set, a request whose declared Content-Length is above it gets a fixed plain-text 413 from RequestParser before dispatch. That 413 skips onError, the standard error JSON and the access log, which breaks D-129 (onError receives framework 413 errors), and it is missing from the D-400 list of transport-level rejections.",
+  "evidence": "/Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/RequestParser.java:234; /Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/Connection.java:177; /Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/TinyHttpd.java:247; docs/research/naruserve-v1/design/00.design.md:375"
+ },
+ {
+  "finding_id": "V1-003",
+  "items": [
+   "D-401",
+   "D-255",
+   "D-342"
+  ],
+  "claim": "D-401 reads 'wave 6 adds temporary-file cleanup and wave 7 adds WebSocket closing and SSE closing as before-wait participants', which can be parsed as making temp-file cleanup a before-wait participant. If it runs before the adapter stop, it deletes spool files of uploads still in flight, which D-342 lets complete.",
+  "evidence": "docs/research/naruserve-v1/design/00.design.md:283"
+ },
+ {
+  "finding_id": "V1-004",
+  "items": [
+   "D-419",
+   "D-306",
+   "D-307"
+  ],
+  "claim": "D-419 makes the WebSocket message limit configurable. TinyHttpd also enforces a separate per-frame limit, maxFramePayloadBytes (default 1 MiB), which closes with 1009. No item maps the configured limit onto it, so raising the message limit above 1 MiB still closes connections that send one large unfragmented frame.",
+  "evidence": "/Users/beom/work/git/TinyHttpd/websocket/src/main/java/com/snoworca/tinyhttpd/websocket/WebSocketHandler.java:45; /Users/beom/work/git/TinyHttpd/websocket/src/main/java/com/snoworca/tinyhttpd/websocket/WebSocket.java:322"
+ },
+ {
+  "finding_id": "V1-005",
+  "items": [
+   "D-440",
+   "D-431",
+   "D-349"
+  ],
+  "claim": "D-440 rewrites only the kotlin.md examples. docs/api/README.md and express-migration.md also have Kotlin examples that pass the now-nullable req.body(...) result straight to a service call. Under D-349 these compile only if the test stubs take nullable parameters, so the docs teach passing T? onward.",
+  "evidence": "docs/api/README.md:44; docs/api/express-migration.md:278"
+ },
+ {
+  "finding_id": "V1-006",
+  "items": [
+   "D-052",
+   "D-399",
+   "I-021"
+  ],
+  "claim": "TinyHttpd accepts an asterisk-form 'OPTIONS * HTTP/1.1' and passes the raw path '*' to the handler. No item says how the core treats a raw path that does not start with '/' (reject with 400, or answer server-wide OPTIONS). I-021 requires the same status on every adapter.",
+  "evidence": "/Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/RequestParser.java:65"
+ },
+ {
+  "finding_id": "V1-007",
+  "items": [
+   "D-002",
+   "D-027",
+   "D-365"
+  ],
+  "claim": "CLAUDE.md names only NaruServe-api and NaruServe-servlet as modules and names NaruServe-api as the API 21 check target. D-002 adds seven modules and D-027 extends animal-sniffer to them, but only D-365 (the sample exception) updates CLAUDE.md, so project instructions go stale after wave 1.",
+  "evidence": "CLAUDE.md:21"
+ },
+ {
+  "finding_id": "V1-008",
+  "items": [
+   "D-269",
+   "D-270",
+   "D-411"
+  ],
+  "claim": "object.md 9.3 requires testing symlink/TOCTOU, but no item covers a path component swapped for a symlink between the canonical check and the open.",
+  "evidence": "object.md:519"
+ }
+]

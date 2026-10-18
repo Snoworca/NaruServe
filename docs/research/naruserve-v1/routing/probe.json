@@ -1,0 +1,125 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "2026-10-19.NaruServe.naruserve-v1",
+  "fields": {
+    "S1": {
+      "producer": "mcp",
+      "call": "get_work_mode",
+      "value": {
+        "mode": "wait",
+        "active_task": null,
+        "source": "mcp"
+      },
+      "read_at": "2026-10-18T17:35:59Z"
+    },
+    "S3": {
+      "producer": "mcp",
+      "call": "list_requirements({traceReference}) over S5.relevant_files",
+      "value": {
+        "anchored_reqs": []
+      },
+      "read_at": "2026-10-18T17:35:59Z"
+    },
+    "S4": {
+      "producer": "architecture-fit investigator",
+      "call": "speckiwi scopes --json normalisation",
+      "value": {
+        "scopes": [],
+        "scope_req_ids": [],
+        "unresolved": [
+          "build",
+          "core-routing",
+          "core-http",
+          "middleware",
+          "lifecycle",
+          "logging",
+          "adapter-tinyhttpd",
+          "json",
+          "cookie",
+          "multipart",
+          "static",
+          "websocket",
+          "sse",
+          "kotlin",
+          "android",
+          "release",
+          "servlet"
+        ]
+      },
+      "read_at": "2026-10-18T17:35:59Z"
+    },
+    "S5": {
+      "producer": "code-context investigator",
+      "call": "investigate/code_context.json",
+      "value": {
+        "files": 0,
+        "modules": [
+          "NaruServe-api",
+          "NaruServe-servlet"
+        ],
+        "external_paths": []
+      },
+      "read_at": "2026-10-18T17:35:59Z"
+    },
+    "S6": {
+      "producer": "intent investigator",
+      "call": "investigate/intent.json after 1.c QnA",
+      "value": {
+        "ambiguities": 0,
+        "key_entities": [
+          "RestApp (create/builder, listen, shutdown, state, use, onError, onStart/onStop, staticFiles, ws, multipart, accessLog, jsonCodec, mimeTypes)",
+          "Router, Method, MethodSet, RouteBuilder",
+          "Request (BodyState, BodyAlreadyConsumedException), Response (NEW/COMMITTED/STREAMING/COMPLETED/ABORTED)",
+          "Middleware, Next, error handler, standard error JSON",
+          "ApplicationContext, ServiceRegistry, Lifecycle states, ServerHandle",
+          "HttpAdapter SPI (in-memory test adapter, TinyHttpd adapter, Servlet adapter)",
+          "JsonCodec SPI, TypeRef<T>, GsonJsonCodec (Gson 2.14.0 STRICT, disableJdkUnsafe)",
+          "Cookie, SameSite",
+          "UploadFile / Part, multipart config and spooling",
+          "StaticMount, MIME registry, CachePolicy, Range/ETag handling",
+          "WebSocketSession, SseClient, SseEvent",
+          "Logger SPI, AccessLog (console, Logcat, SLF4J, rotating file adapters)",
+          "Modules: NaruServe-api, TinyHttpd adapter, Gson codec, bootstrap (RestApp.create), NaruServe-kotlin, NaruServe-servlet, Android sample app",
+          "External: TinyHttpd at /Users/beom/work/git/TinyHttpd (group com.snoworca.tinyhttpd, modules core/webserver/websocket/router/session, no maven-publish configured)"
+        ]
+      },
+      "read_at": "2026-10-18T17:35:59Z"
+    },
+    "S7": {
+      "producer": "intake-issue",
+      "call": "countOrderedSections(epic #20 body)",
+      "value": {
+        "doc": "gh issue view 20",
+        "ordered_sections": 0
+      },
+      "read_at": "2026-10-18T17:35:59Z"
+    },
+    "S8": {
+      "producer": "gh issue view 20",
+      "call": "count of '- [ ] #N' in body",
+      "value": {
+        "epic": 20,
+        "linked_sub_issues": 19,
+        "task_list_groups": 1
+      },
+      "read_at": "2026-10-18T17:35:59Z"
+    },
+    "S9": {
+      "producer": "mcp",
+      "call": "get_active_target",
+      "value": {
+        "activeTarget": ""
+      },
+      "read_at": "2026-10-18T17:35:59Z"
+    },
+    "S12": {
+      "producer": "investigate/existing_srs_context.json",
+      "call": "candidate_matches potential-update|potential-conflict",
+      "value": {
+        "declared_existing_req_edit": false
+      },
+      "read_at": "2026-10-18T17:35:59Z"
+    }
+  },
+  "unreadable": []
+}

@@ -1,0 +1,81 @@
+{
+  "modules": [
+    {"name": "NaruServe-api", "package": "com.snoworca.naruserve (public API + com.snoworca.naruserve.spi for HttpAdapter/JsonCodec/Logger, com.snoworca.naruserve.internal.* for router/pipeline/multipart/static/sse/ws protocol-neutral logic)", "depends_on": [], "android": true},
+    {"name": "NaruServe-tinyhttpd", "package": "com.snoworca.naruserve.tinyhttpd", "depends_on": ["NaruServe-api", "com.snoworca.tinyhttpd:tinyhttpd-core", "com.snoworca.tinyhttpd:tinyhttpd-websocket"], "android": true},
+    {"name": "NaruServe-gson", "package": "com.snoworca.naruserve.gson", "depends_on": ["NaruServe-api", "com.google.code.gson:gson:2.14.0"], "android": true},
+    {"name": "NaruServe", "package": "com.snoworca.naruserve.bootstrap", "depends_on": ["NaruServe-api", "NaruServe-tinyhttpd", "NaruServe-gson"], "android": true},
+    {"name": "NaruServe-kotlin", "package": "com.snoworca.naruserve.kotlin", "depends_on": ["NaruServe-api", "kotlin-stdlib"], "android": true},
+    {"name": "NaruServe-servlet", "package": "com.snoworca.naruserve.servlet", "depends_on": ["NaruServe-api", "javax.servlet:javax.servlet-api:3.1.0 (compileOnly)"], "android": false},
+    {"name": "samples/android (separate Gradle build, not in root settings.gradle)", "package": "com.snoworca.naruserve.sample (+ optional com.snoworca.naruserve.android Logcat logger)", "depends_on": ["NaruServe (via includeBuild of the root build)"], "android": true}
+  ],
+  "scopes": [
+    {"scope": "build", "issues": [1]},
+    {"scope": "core-routing", "issues": [2, 3]},
+    {"scope": "core-http", "issues": [4]},
+    {"scope": "middleware", "issues": [5]},
+    {"scope": "lifecycle", "issues": [6, 15]},
+    {"scope": "logging", "issues": [7]},
+    {"scope": "adapter-tinyhttpd", "issues": [8]},
+    {"scope": "json", "issues": [9]},
+    {"scope": "cookie", "issues": [10]},
+    {"scope": "multipart", "issues": [11]},
+    {"scope": "static", "issues": [12]},
+    {"scope": "websocket", "issues": [13, 15]},
+    {"scope": "sse", "issues": [14, 15]},
+    {"scope": "kotlin", "issues": [16]},
+    {"scope": "android", "issues": [17]},
+    {"scope": "release", "issues": [18]},
+    {"scope": "servlet", "issues": [19]}
+  ],
+  "issue_dependencies": [
+    {"issue": 1, "depends_on": [], "note": "Must create ALL modules (tinyhttpd, gson, bootstrap, kotlin) in root build.gradle/settings.gradle up front, plus Kotlin plugin, JUnit 4.13.2, compileOnly nullability annotations (recommend org.jetbrains:annotations or JSR-305-free androidx.annotation-equivalent; Kotlin recognises org.jetbrains.annotations), and the TinyHttpd includeBuild. This keeps later waves out of build.gradle."},
+    {"issue": 2, "depends_on": [1], "note": "Intake correct."},
+    {"issue": 3, "depends_on": [2], "note": "Router matching is pure and needs only #2. Auto 404/405/HEAD/OPTIONS responses and app.get/... registration need Response (#4) and RestApp (#5): do pure matching + RouteBuilder in #3, wire auto-responses through #5's pipeline. So #3 can run in parallel with #4."},
+    {"issue": 4, "depends_on": [1], "note": "Intake correct. Should also declare (signatures only) every Request/Response method from docs/api so later feature issues only add internal implementation files."},
+    {"issue": 5, "depends_on": [3, 4], "note": "Intake correct. #5 also introduces the JsonCodec SPI interface (builder injects it), which unblocks #8's builder path without #9."},
+    {"issue": 6, "depends_on": [5], "note": "Intake correct; edits RestApp + DefaultRestApp same as #5 -> serialise with #5."},
+    {"issue": 7, "depends_on": [5], "note": "Logger SPI needs only #1, but AccessLog hooks into response completion (#4) and the pipeline (#5). Shares RestApp with #5/#6 -> same wave/worker."},
+    {"issue": 8, "depends_on": [4, 5, 6, 7, 9], "note": "Correction: RestApp.create() assembles TinyHttpd + Gson, so the bootstrap part needs GsonJsonCodec (#9). Also needs #5 (pipeline/builder) and #7 (LAN-binding warning via Logger, T49). Adapter must expose streaming body, raw output, and an upgrade hook so #11-#14 add files instead of editing the adapter core."},
+    {"issue": 9, "depends_on": [4, 5], "note": "Intake correct. Gson code goes only in NaruServe-gson; req.body/res.json in core go through JsonCodec SPI."},
+    {"issue": 10, "depends_on": [4], "note": "Intake correct (pure core). Can be done in any wave after #4; grouped with #9 to share Request/Response edits."},
+    {"issue": 11, "depends_on": [8], "note": "Intake correct (real chunked/no-Content-Length tests need the TinyHttpd adapter). Parser/spool can be pure core; reuse TinyHttpd MultipartReader only inside NaruServe-tinyhttpd."},
+    {"issue": 12, "depends_on": [5, 8], "note": "Add #5: static fallback ordering lives in the pipeline. TinyHttpd FileTransfer/MimeTypes reuse only inside the adapter module; StaticFileHandler is in tinyhttpd-webserver (extra dependency, prefer not to use)."},
+    {"issue": 13, "depends_on": [7, 8, 9], "note": "Add #7: T38 WS access-log part. sendJson/onJson need #9."},
+    {"issue": 14, "depends_on": [7, 8], "note": "Add #7: T38 SSE access-log part. TinyHttpd SseStream/EventStream reuse inside adapter."},
+    {"issue": 15, "depends_on": [6, 13, 14], "note": "Intake correct."},
+    {"issue": 16, "depends_on": [5, 6, 7, 9, 10, 11, 12, 13, 14], "note": "Correction: 'all Kotlin examples in docs/api compile and run' + nullability audit covers every public API, not just #5/#9/#11/#13."},
+    {"issue": 17, "depends_on": [7, 8, 9, 16], "note": "Add #7 if the Logcat logger lives with the Android sample. Effectively needs the full API to be meaningful."},
+    {"issue": 18, "depends_on": [15, 16, 17, 19], "note": "Add #19 if the optional Servlet adapter ships in v1 (its deps go into SBOM/licence list). Final (미확정) sweep across docs/api."},
+    {"issue": 19, "depends_on": [6, 8, 11, 12, 14], "note": "Add #6 (container start/stop ↔ lifecycle) and #12 (static over servlet). #8 needed only as reference adapter; Servlet adapter implements the same HttpAdapter SPI."}
+  ],
+  "proposed_waves": [
+    {"wave": 1, "issues": [1], "depends_on_waves": [], "rationale": "Foundation: every module, plugin, test source set and the TinyHttpd composite build created once so later waves never touch build.gradle/settings.gradle."},
+    {"wave": 2, "issues": [2, 3], "depends_on_waves": [1], "rationale": "Pure routing (Method/MethodSet/Router/RouteBuilder), package com.snoworca.naruserve + internal.router. File-disjoint from wave 3."},
+    {"wave": 3, "issues": [4], "depends_on_waves": [1], "rationale": "Request/Response/BodyState/HttpAdapter SPI + memory test adapter. Declares the full Request/Response/RestApp public surface as signatures (feature methods delegate to stub internal classes) so waves 5-7 add implementations without editing these interfaces. Parallel with wave 2."},
+    {"wave": 4, "issues": [5, 6, 7], "depends_on_waves": [2, 3], "rationale": "All three edit RestApp/DefaultRestApp and the dispatch pipeline; one worker, serial order 5 -> 6 -> 7. Introduces JsonCodec and Logger SPIs."},
+    {"wave": 5, "issues": [9, 10, 8], "depends_on_waves": [4], "rationale": "Serial order 9 -> 10 -> 8: Gson codec, cookies, then TinyHttpd adapter + bootstrap RestApp.create() (which needs the Gson module). Adapter defines streaming/upgrade hooks for later waves. Kept in one worker because create() joins gson+tinyhttpd."},
+    {"wave": 6, "issues": [11, 12], "depends_on_waves": [5], "rationale": "Multipart and static/cache/range: internal.multipart and internal.staticfiles packages + adapter-side file transfer. Parallel with wave 7 if wave-3/5 stubs are in place."},
+    {"wave": 7, "issues": [13, 14, 15], "depends_on_waves": [5], "rationale": "Long-lived connections: WS, SSE, then shutdown/backpressure/load which needs both. internal.ws/internal.sse packages + adapter upgrade/stream files. Parallel with wave 6."},
+    {"wave": 8, "issues": [16, 19, 17, 18], "depends_on_waves": [6, 7], "rationale": "Serial order 16 -> 19 -> 17 -> 18: Kotlin audit + NaruServe-kotlin, optional Servlet adapter, Android sample/QA (separate build), release gate. #19 could be split into its own parallel wave alongside 16 if the 8-wave cap is relaxed."}
+  ],
+  "shared_files": [
+    {"path": "build.gradle", "owners": [1, 16, 17, 18, 19], "strategy": "#1 declares every module block (api, tinyhttpd, gson, bootstrap, kotlin, servlet) with dependencies and test deps up front. Later waves may only append test-only deps; #18 adds SBOM/licence plugins at the end (serial wave 8). Android sample uses its own build files under samples/android (documented exception to 'no per-module build files' because AGP must not be forced on ./gradlew build)."},
+    {"path": "settings.gradle", "owners": [1], "strategy": "#1 only. includeBuild of TinyHttpd must NOT use a relative '../TinyHttpd' path: worktrees live under .claude/worktrees/<name>, so a relative path breaks. Use a gradle property (e.g. tinyhttpd.dir in gradle.properties / -P) defaulting to /Users/beom/work/git/TinyHttpd, with a clear error if missing. Note parallel worktree builds share TinyHttpd's build dir and Gradle locks; expect waits, not failures."},
+    {"path": "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java", "owners": [3, 5, 6, 7, 8, 11, 12, 13], "strategy": "Wave 3/4 freeze the full interface (all app.* methods from docs/api/app.md) with implementation in DefaultRestApp delegating to per-feature internal classes. Waves 6/7 only edit their own internal.<feature> packages. If a signature change is unavoidable, it goes in the serial wave of its owner and the parallel sibling wave rebases."},
+    {"path": "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java, Response.java (+ DefaultRequest/DefaultResponse)", "owners": [4, 9, 10, 11, 12, 13, 14], "strategy": "Same as RestApp: wave 3 declares all methods; feature methods delegate to internal.json / internal.cookie / internal.multipart / internal.staticfiles / internal.sse helpers. Waves 6 and 7 must stay inside their own packages."},
+    {"path": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdAdapter.java", "owners": [8, 11, 12, 13, 14, 15], "strategy": "#8 defines the SPI hooks (InputStream body, raw OutputStream/streaming, file transfer, upgrade callback) and splits adapter code into per-feature classes; waves 6/7 add new classes (e.g. TinyHttpdWebSocketBridge, TinyHttpdSseBridge, TinyHttpdFileSender) rather than editing the adapter core."},
+    {"path": "docs/api/README.md", "owners": [1, 8, 18], "strategy": "#1 fixes the module table and dependency snippet; #8 confirms RestApp.create() module; #18 final sweep. Serial by wave order."},
+    {"path": "docs/api/app.md", "owners": [3, 5, 6, 8, 11, 12, 13], "strategy": "Each issue edits only the section(s) for its API and resolves only its own (미확정) markers. Waves 6/7 touch different sections (multipart/static vs ws) — textual merge expected to be clean; orchestrator merges wave 6 before wave 7 if conflict."},
+    {"path": "docs/api/{routing,request,response,middleware,lifecycle,logging,json,cookie,multipart,static,websocket,sse,kotlin,servlet,defaults}.md", "owners": [3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14, 16, 19], "strategy": "One owner per file by scope (response.md shared by #4 base and #12 file section; request.md by #4/#9/#11; lifecycle.md by #6/#15/#17; defaults.md by #8/#15). Shared ones follow section ownership, as for app.md."},
+    {"path": "docs/api/kotlin.md + Kotlin test sources (src/test/kotlin)", "owners": [1, 16], "strategy": "#1 creates the Kotlin test source set with one empty test; each feature wave may add its own Kotlin test file (new file per feature, T11 incremental); #16 does the full audit."}
+  ],
+  "environment_limits": [
+    {"issue": 17, "limit": "No physical device attached (adb devices empty). ANDROID_HOME=/opt/homebrew/share/android-commandlinetools has platform android-36, build-tools 36.0.0, emulator, but only a WearOS API 36 image; no API 21 image installed. ~/Library/Android/sdk does not exist. sdkmanager lists system-images;android-21;default;arm64-v8a and google_apis;arm64-v8a (host is arm64), but old API 21 arm64 images often fail to boot on the Apple-silicon emulator.", "recommendation": "Automate what is possible: build the sample (minSdk 21, compileSdk 36, AGP 8.x on Gradle 8.14.3 / JDK 17) in Debug and Release with R8 on/off — this works offline-ish with the installed SDK and covers T12's R8 compile side plus consumer keep rules. Attempt installing the API 21 arm64 image and an instrumented smoke test for T10/T47; if it does not boot, record a manual verification checklist (docs/research/.../manual-qa) and leave T10/T47 runtime + latest-Android regression as 'manual pending', not verified. Do not block waves 1-7 on this."},
+    {"issue": 17, "limit": "Including AGP in the root build would make every ./gradlew build require an Android SDK.", "recommendation": "Keep the Android sample as a separate Gradle build (samples/android, includeBuild of root) run by its own command; root ./gradlew build stays JVM-only."},
+    {"issue": 8, "limit": "RestApp.create() lives in NaruServe-api but core may not reference TinyHttpd/Gson classes.", "recommendation": "RestApp.create() looks up a fixed bootstrap factory class reflectively (Class.forName of com.snoworca.naruserve.bootstrap.DefaultRestAppFactory) or via ServiceLoader, with a clear error when the bootstrap jar is missing. Ship META-INF/proguard/naruserve.pro keep rules in the bootstrap jar so R8 does not strip it (verify in #17)."},
+    {"issue": 18, "limit": "Only JDK 17 installed; the Java 8 runtime row of the §17.1 matrix cannot be executed locally. OWASP dependency-check needs NVD download (network, API key).", "recommendation": "Compile with --release 8 + animal-sniffer as static evidence; record Java 8 runtime as manual/CI-pending (or use Gradle toolchain auto-provisioning if network is allowed). Use CycloneDX Gradle plugin for SBOM; run vulnerability scan if network is available, else record as pending with the dependency list (gson 2.14.0, TinyHttpd, kotlin-stdlib only in NaruServe-kotlin)."},
+    {"issue": 15, "limit": "Load test (>=100 concurrent connections, thread/memory growth limits) on a local Mac is not representative of low-end Android.", "recommendation": "Automate a JVM load test with bounded assertions (thread count, queue sizes, temp files reclaimed); record Android-side limits tuning as manual follow-up per object.md §20.3."},
+    {"issue": 19, "limit": "No Servlet container in the repo; P5 optional.", "recommendation": "Test with an embedded container as testImplementation only (e.g. Jetty 9.4 for javax/Servlet 3.1) in NaruServe-servlet; WebSocket over container can be declared unsupported in v1 if time-boxed. Acceptable to defer whole issue without blocking #18 if marked optional."}
+  ],
+  "notes": "Architecture fit: object.md §2.1 logical modules (rest-json/multipart/static/stream) are kept as internal packages inside NaruServe-api rather than separate jars, which §2.1 explicitly allows ('소수 JAR로 패키징'); only things that pull external deps get their own module (tinyhttpd, gson, kotlin, servlet) plus the bootstrap module NaruServe that owns RestApp.create(). Dependency direction is strictly inward to NaruServe-api; nothing in api references TinyHttpd, Gson, android.* or javax.servlet. animal-sniffer API 21 must be applied to api, tinyhttpd, gson, bootstrap and kotlin (currently only api). TinyHttpd has no maven-publish, so composite build (includeBuild + substitution of com.snoworca.tinyhttpd:tinyhttpd-core/-websocket) is the only option without editing TinyHttpd; TinyHttpd already compiles with release 8 and its own API 21 check, and it enforces zero external runtime deps (SEC-16). Biggest parallelism risk is shared interfaces (RestApp/Request/Response/adapter): the plan relies on waves 3-5 freezing the full public surface with per-feature delegation so waves 6 and 7 are file-disjoint. Package root com.snoworca.naruserve matches the existing group in build.gradle; recommend confirming it in #1."
+}

@@ -1,0 +1,280 @@
+[
+ {
+  "finding_id": "V1-001",
+  "resolution": "D-084 now throws only for mutating Response calls after completion; read accessors, isCommitted() and abort() stay legal after next.run() and in onError.",
+  "items": [
+   "D-084"
+  ]
+ },
+ {
+  "finding_id": "V1-002",
+  "resolution": "SSE on TinyHttpd no longer uses startEventStream(): headers are set by NaruServe and the stream is a chunked body written on the pinned worker thread from a NaruServe-owned bounded queue; the SSE thread budget is separate and bounded.",
+  "items": [
+   "D-335",
+   "D-406",
+   "D-336",
+   "D-326",
+   "D-330",
+   "D-106",
+   "D-404"
+  ]
+ },
+ {
+  "finding_id": "V1-003",
+  "resolution": "Added a mapping of every TinyHttpd budget with defaults that admit T26 from one loopback address; T26 runs on the defaults.",
+  "items": [
+   "D-404",
+   "D-324",
+   "D-336",
+   "D-346"
+  ]
+ },
+ {
+  "finding_id": "V1-004",
+  "resolution": "D-225 now covers header-count and wait-queue-length configuration APIs.",
+  "items": [
+   "D-225"
+  ]
+ },
+ {
+  "finding_id": "V1-005",
+  "resolution": "RestApp.create() selects Logcat when android.util.Log is present at runtime and console otherwise; the bootstrap depends on the Logcat module from wave 1; the sample confirms it on device.",
+  "items": [
+   "D-402",
+   "D-386",
+   "D-169",
+   "D-371"
+  ]
+ },
+ {
+  "finding_id": "V1-006",
+  "resolution": "D-002 lists the SLF4J, rotating file and Logcat logger modules in wave 1. The Logcat logger uses reflection, so the root build stays SDK-free; it is tested against a fake android.util.Log. D-371 is now an item for the sample.",
+  "items": [
+   "D-002",
+   "D-384",
+   "D-385",
+   "D-386",
+   "D-179",
+   "D-403",
+   "D-371",
+   "D-027"
+  ]
+ },
+ {
+  "finding_id": "V1-007",
+  "resolution": "Added the engine-free ResourceResolver interface (open, length, etag, modified) with the File resolver as the v1 implementation; the SAF resolver is post-v1 (P5).",
+  "items": [
+   "D-409"
+  ]
+ },
+ {
+  "finding_id": "V1-008",
+  "resolution": "Added a server-wide default Cache-Control policy for static responses (name and default decided in wave 6).",
+  "items": [
+   "D-410"
+  ]
+ },
+ {
+  "finding_id": "V1-009",
+  "resolution": "D-067: the enable policy is in the core; on TinyHttpd, CONNECT is always 501 from the parser and is recorded as a deferred TinyHttpd gap.",
+  "items": [
+   "D-067"
+  ]
+ },
+ {
+  "finding_id": "V1-010",
+  "resolution": "Added an item that requires the Kotlin sample to use a SAM route, a nullable accessor, a multipart upload, a WebSocket endpoint and req.service.",
+  "items": [
+   "D-412"
+  ]
+ },
+ {
+  "finding_id": "V1-011",
+  "resolution": "gradle.properties sets kotlin.stdlib.default.dependency=false, and a build check allows kotlin-stdlib at runtime only in the Kotlin extension module.",
+  "items": [
+   "D-387",
+   "D-388"
+  ]
+ },
+ {
+  "finding_id": "V1-012",
+  "resolution": "I-009 now covers only the JVM Java examples; the Android-only examples compile in the samples/android build.",
+  "items": [
+   "I-009"
+  ]
+ },
+ {
+  "finding_id": "V2-001",
+  "resolution": "Section 3 now depends on section 2. Section 2 is the engine-free router: its handler type is opaque and it returns a typed match result. Route registration (moved from section 2), the dispatcher and the HTTP-level T01-T06 assertions through the in-memory adapter now belong to section 3.",
+  "items": [
+   "D-389",
+   "D-390",
+   "D-060",
+   "D-061",
+   "D-062",
+   "D-063",
+   "D-064",
+   "D-065",
+   "D-066",
+   "D-393",
+   "D-394",
+   "D-395",
+   "D-396",
+   "D-397",
+   "D-398",
+   "D-070",
+   "D-056",
+   "D-057",
+   "D-058",
+   "D-053"
+  ]
+ },
+ {
+  "finding_id": "V2-002",
+  "resolution": "Same resolution as V1-002. The SPI event-stream extension point now models the request thread that keeps writing after the handler returns.",
+  "items": [
+   "D-335",
+   "D-406",
+   "D-336",
+   "D-106"
+  ]
+ },
+ {
+  "finding_id": "V2-003",
+  "resolution": "D-404 maps maxConnections 512, maxConnectionsPerAddress 256, maxUpgradedConnections 128, SSE streams 128, and maxWorkers = 64 HTTP plus the SSE limit. maxEventStreams is unused. T26 runs on the defaults.",
+  "items": [
+   "D-404",
+   "D-324",
+   "D-336",
+   "D-346",
+   "D-218"
+  ]
+ },
+ {
+  "finding_id": "V2-004",
+  "resolution": "Each wave now adds its own public API. Wave 3 creates Request/Response/RestApp only with types that already exist, D-392 lists which wave owns each later method, JsonCodec is created in wave 4 (D-182 moved there), and D-089/D-100/D-114/D-136 refer to methods added later. I-014 now only forbids changing signatures added earlier.",
+  "items": [
+   "D-071",
+   "D-392",
+   "D-393",
+   "D-112",
+   "D-182",
+   "D-089",
+   "D-100",
+   "D-114",
+   "D-136",
+   "I-014"
+  ]
+ },
+ {
+  "finding_id": "V2-005",
+  "resolution": "Section 7 now depends on section 6, so all waves run in series and edits to docs/api/defaults.md and RestApp never overlap. Added a shutdown participant registry in wave 4 that waves 6 and 7 add to. All TinyHttpd builder limits are mapped in the wave 5 adapter core, and D-210 is consistent with that.",
+  "items": [
+   "D-401",
+   "D-255",
+   "D-210",
+   "D-404",
+   "D-323",
+   "D-324",
+   "D-339",
+   "I-014"
+  ]
+ },
+ {
+  "finding_id": "V2-006",
+  "resolution": "onError, the standard JSON and the access log now apply only to requests that reached the dispatcher. TinyHttpd's fixed pre-dispatch responses (400/414/417/431/501/socket 503) are documented as transport-level exceptions. The adapter installs a TinyHttpd ErrorHandler that renders post-parse engine errors as the standard JSON. The worker-queue 503 was removed from the JSON mapping.",
+  "items": [
+   "D-129",
+   "D-132",
+   "D-134",
+   "D-173",
+   "D-218",
+   "D-400",
+   "D-405"
+  ]
+ },
+ {
+  "finding_id": "V2-007",
+  "resolution": "TinyHttpd's strict path rules are now the rule on every adapter (any dot segment, encoded slash, NUL, raw non-ASCII: 400). Adapters pass the raw URI and query (getRequestURI/getQueryString, not getPath), and the rejection cases run on both adapters.",
+  "items": [
+   "D-052",
+   "D-399",
+   "I-021"
+  ]
+ },
+ {
+  "finding_id": "V2-008",
+  "resolution": "Same resolution as V1-006: all optional logger modules and their main dependencies (slf4j-api 1.7.36, bootstrap to Logcat) are declared in wave 1. The Logcat logger is reflective, so no android.jar is needed.",
+  "items": [
+   "D-002",
+   "D-384",
+   "D-385",
+   "D-386",
+   "D-179",
+   "D-181"
+  ]
+ },
+ {
+  "finding_id": "V2-009",
+  "resolution": "D-194 now states that an untyped Map round-trips only to JSON-value equality, because the default Gson decodes numbers as Double, matching docs/api/request.md.",
+  "items": [
+   "D-194"
+  ]
+ },
+ {
+  "finding_id": "V2-010",
+  "resolution": "The router keeps WebSocket and fallback behaviour behind internal hooks. The 426 and the middleware-on-static and middleware-on-upgrade checks are now end-to-end assertions in waves 6 and 7.",
+  "items": [
+   "D-068",
+   "D-069",
+   "D-391",
+   "D-117",
+   "D-121",
+   "D-407",
+   "D-408",
+   "D-296"
+  ]
+ },
+ {
+  "finding_id": "V2-011",
+  "resolution": "The UploadFile.bytes() in-memory limit is now one of D-239's decisions and is written to multipart.md and defaults.md; D-251 points to it.",
+  "items": [
+   "D-239",
+   "D-251"
+  ]
+ },
+ {
+  "finding_id": "V2-012",
+  "resolution": "Symlinks are detected with java.io only, per path component, against a root canonicalised once per mount. Added a test with a symlinked root.",
+  "items": [
+   "D-269",
+   "D-270",
+   "D-411"
+  ]
+ },
+ {
+  "finding_id": "V2-013",
+  "resolution": "Last-Modified and the If-Modified-Since comparison use the mtime truncated to whole seconds.",
+  "items": [
+   "D-283",
+   "D-285"
+  ]
+ },
+ {
+  "finding_id": "V2-014",
+  "resolution": "The core's multipart parser now serves every adapter, and TinyHttpd's MultipartReader is not used.",
+  "items": [
+   "D-247"
+  ]
+ },
+ {
+  "finding_id": "V2-015",
+  "resolution": "Wave 1 replaces every module-name marker in docs/api. D-230 and D-357 are now verification items.",
+  "items": [
+   "D-029",
+   "D-230",
+   "D-357",
+   "D-181"
+  ]
+ }
+]

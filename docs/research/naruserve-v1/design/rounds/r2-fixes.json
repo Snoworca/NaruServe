@@ -1,0 +1,139 @@
+[
+ {
+  "finding_id": "V1-001",
+  "resolution": "TinyHttpd's whole-body slow-body guard is enabled: minRequestBodyRate defaults to 240 B/s (new D-413), D-216 turns it on, D-219 maps its failure to 408, D-225 lists the setting, and T48 drip-feeds a body and asserts 408 plus close.",
+  "items": [
+   "D-413",
+   "D-216",
+   "D-219",
+   "D-225"
+  ]
+ },
+ {
+  "finding_id": "V1-002",
+  "resolution": "D-400 now lists 408 (header timeout) and 505 (unsupported HTTP version) among the fixed-byte transport rejections.",
+  "items": [
+   "D-400"
+  ]
+ },
+ {
+  "finding_id": "V1-003",
+  "resolution": "D-086 now throws BodyAlreadyConsumedException for every body read after the first, a repeated req.body(...) included, with the D-087 shared parse as the only exemption.",
+  "items": [
+   "D-086"
+  ]
+ },
+ {
+  "finding_id": "V1-004",
+  "resolution": "New D-419 makes the WS message size, WS queue size, SSE queue size and WS pong timeout configurable, with names and the pong default decided in wave 7 and recorded in websocket.md, sse.md and defaults.md.",
+  "items": [
+   "D-419"
+  ]
+ },
+ {
+  "finding_id": "V1-005",
+  "resolution": "D-012 now declares javax.websocket-api:1.1 compileOnly in wave 1 next to servlet-api, so the D-363 container WebSocket option needs no later main dependency and D-005 stays intact.",
+  "items": [
+   "D-012"
+  ]
+ },
+ {
+  "finding_id": "V1-006",
+  "resolution": "D-106's event-stream point is thread-neutral: the core owns the drain loop and the adapter picks the thread (TinyHttpd worker, Servlet AsyncContext). D-406 and D-361 refer to that loop.",
+  "items": [
+   "D-106",
+   "D-406",
+   "D-361"
+  ]
+ },
+ {
+  "finding_id": "V1-007",
+  "resolution": "New D-420 defines directoryListing(true): a 200 text/html listing sorted by name, names HTML-escaped and percent-encoded in links, dot-files and symbolic links hidden, same traversal and canonical-root rules as D-268 to D-271.",
+  "items": [
+   "D-420"
+  ]
+ },
+ {
+  "finding_id": "V2-001",
+  "resolution": "Same fix as V1-001: minRequestBodyRate 240 B/s (D-413) is enabled by D-216, mapped to 408 in D-219, listed in D-225, and tested with a drip-fed body in T48.",
+  "items": [
+   "D-413",
+   "D-216",
+   "D-219",
+   "D-225"
+  ]
+ },
+ {
+  "finding_id": "V2-002",
+  "resolution": "New D-421: NaruServe-api ships consumer R8/ProGuard rules in META-INF/proguard/ that keep Signature/InnerClasses/EnclosingMethod and keep TypeRef and its subclasses (allowobfuscation, allowshrinking). D-370 now also round-trips a TypeRef<List<Model>> in the minified Release build.",
+  "items": [
+   "D-421",
+   "D-370"
+  ]
+ },
+ {
+  "finding_id": "V2-003",
+  "resolution": "D-215 states exact values (maxHeaderBytes 16384, maxRequestLineBytes 8190 over the whole request line, inputBufferBytes 8192), all accepted by TinyHttpd's builder (inputBufferBytes >= maxRequestLineBytes + 2). New D-414 makes the configuration API raise inputBufferBytes to max(8192, limit + 2). D-225 renames URL length to request-line length.",
+  "items": [
+   "D-215",
+   "D-414",
+   "D-225"
+  ]
+ },
+ {
+  "finding_id": "V2-004",
+  "resolution": "D-404 now says what each option bounds: maxConnections excludes upgraded connections, the queue is maxConnections - maxWorkers (320), WebSocket connections are bounded separately (640 total). New D-415 rejects maxConnections < HTTP budget + SSE limit at freeze time and derives the queue length. D-336 enforces the SSE cap with a NaruServe counter, not maxEventStreams. D-225 lists the derived queue length.",
+  "items": [
+   "D-404",
+   "D-415",
+   "D-336",
+   "D-225"
+  ]
+ },
+ {
+  "finding_id": "V2-005",
+  "resolution": "D-107 splits the adapter stop into a blocking stop (stop accepting, wait until the core's deadline, force-close) and a final release bounded by a fixed margin. D-162 runs one shared deadline across them. D-401 places the phases around the adapter stop. D-223 maps the steps to TinyHttpd stop(grace) and awaitTermination. D-344 holds the bound across both waits.",
+  "items": [
+   "D-107",
+   "D-162",
+   "D-401",
+   "D-223",
+   "D-344"
+  ]
+ },
+ {
+  "finding_id": "V2-006",
+  "resolution": "Same fix as V1-006: D-106 lets the adapter choose the drain-loop thread, D-406 drains on that thread rather than on 'the request thread', and D-361 runs the loop under AsyncContext and releases the container thread. I-014 is untouched.",
+  "items": [
+   "D-106",
+   "D-406",
+   "D-361"
+  ]
+ },
+ {
+  "finding_id": "V2-007",
+  "resolution": "D-395, D-069 and D-408 now require Upgrade: websocket and Connection: Upgrade on the 426 response (RFC 9110 15.5.22), and D-408 asserts them end to end.",
+  "items": [
+   "D-395",
+   "D-069",
+   "D-408"
+  ]
+ },
+ {
+  "finding_id": "V2-008",
+  "resolution": "D-400 lists 408 and 505. New D-418 classifies the Host-allowlist 421: the D-405 ErrorHandler renders it as the standard error body, it bypasses onError and the access log, the allowed names come from the D-225 LAN binding API, and a test plus defaults.md record it.",
+  "items": [
+   "D-400",
+   "D-418",
+   "D-225"
+  ]
+ },
+ {
+  "finding_id": "V2-009",
+  "resolution": "New D-416 caps one app at 339 threads (192 workers + 128 WS read + 16 senders + 1 scheduler + acceptor + watchdog, 256 KiB stack each). The total goes in defaults.md for API 21 devices and is the T26 bound. New D-417 replaces per-session senders with one shared sender executor of at most 16 threads.",
+  "items": [
+   "D-416",
+   "D-417"
+  ]
+ }
+]

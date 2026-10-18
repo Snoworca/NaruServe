@@ -1,0 +1,228 @@
+{
+ "round": 3,
+ "findings": [
+  {
+   "finding_id": "V1-001",
+   "severity": "medium",
+   "kind": "internal-inconsistency",
+   "items": [
+    "D-417",
+    "D-320",
+    "D-319"
+   ],
+   "claim": "The shared WebSocket sender pool of at most 16 threads, each blocked up to TinyHttpd's 30 s write timeout on a stalled session, means 16 non-reading clients (one per sender thread) block outbound messages to every other session for up to 30 s. That breaks D-320 ('a slow client SHALL not block sends to other sessions') and is easy to trigger on purpose.",
+   "evidence": "/Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/TinyHttpd.java:258 (writeTimeout 30000, global); /Users/beom/work/git/TinyHttpd/websocket/src/main/java/com/snoworca/tinyhttpd/websocket/WebSocket.java:207 (sendFrame blocks under writeLock)",
+   "suggested_fix": "Decide and state the isolation bound: e.g. close a session whose single write exceeds a NaruServe per-write deadline shorter than the pool can absorb, lower TinyHttpd writeTimeout for the app, or restate D-320 as 'fewer than N stalled sessions' with T23 asserting that bound."
+  },
+  {
+   "finding_id": "V1-002",
+   "severity": "medium",
+   "kind": "tinyhttpd-claim-gap",
+   "items": [
+    "D-419",
+    "D-323",
+    "D-416"
+   ],
+   "claim": "D-419 requires a configurable WebSocket pong timeout and D-416 budgets a NaruServe scheduler for WebSocket pings, but TinyHttpd's read loop sends its own ping when a read times out after pingInterval and closes with 1001 after a second timeout. Any frame clears awaitingPong, and WebSocketListener has no pong callback. NaruServe cannot see Pong frames, so it cannot enforce a pong timeout separate from the ping interval. Also, a connection that answers pings never idles out inside TinyHttpd.",
+   "evidence": "/Users/beom/work/git/TinyHttpd/websocket/src/main/java/com/snoworca/tinyhttpd/websocket/WebSocket.java:271-295,366; /Users/beom/work/git/TinyHttpd/websocket/src/main/java/com/snoworca/tinyhttpd/websocket/WebSocketListener.java (onOpen/onText/onBinary/onClose only)",
+   "suggested_fix": "State that on TinyHttpd the pong timeout equals the ping interval (WebSocketHandler.pingInterval) and that the idle timeout is enforced by NaruServe from the last data frame, or record the separate pong timeout as a D-020 deferred gap. Drop 'ping' from the scheduler's duties in D-416."
+  },
+  {
+   "finding_id": "V1-003",
+   "severity": "low",
+   "kind": "contradicts-existing",
+   "items": [
+    "D-067"
+   ],
+   "claim": "TinyHttpd returns 501 only for CONNECT whose target is not origin-form. 'CONNECT /path HTTP/1.1' passes the parser and reaches the NaruServe handler, so 'CONNECT is always answered 501 by TinyHttpd's parser' is false, and an enable policy would route origin-form CONNECT on TinyHttpd.",
+   "evidence": "/Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/RequestParser.java:63,83-84",
+   "suggested_fix": "Limit the deferred gap to authority-form CONNECT and keep the core unsupported-method result (501) authoritative for origin-form CONNECT on every adapter, with a TinyHttpd test for 'CONNECT / HTTP/1.1'."
+  },
+  {
+   "finding_id": "V1-004",
+   "severity": "low",
+   "kind": "contradicts-existing",
+   "items": [
+    "D-416"
+   ],
+   "claim": "The 339-thread budget says the acceptor and watchdog threads each request a 256 KiB stack. TinyHttpd creates both with the platform default stack. Only pool workers use workerStackBytes. The memory figure recorded in defaults.md for API 21 would be wrong.",
+   "evidence": "/Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/HttpServer.java:156,165,573",
+   "suggested_fix": "Say that the acceptor and watchdog use the default stack size. NaruServe's own sender and scheduler threads request 256 KiB explicitly."
+  },
+  {
+   "finding_id": "V1-005",
+   "severity": "low",
+   "kind": "design-gap",
+   "items": [
+    "D-161",
+    "D-164",
+    "D-153"
+   ],
+   "claim": "shutdown() is defined for RUNNING (D-161) and NEW (D-164), but not for an app that is STARTING (a listen() in progress on another thread, for example Android onDestroy during startup) or FAILED. The concurrency tests for D-153/T46 hit this case.",
+   "evidence": "object.md:11.3 state diagram (no STARTING->shutdown edge); docs/api/lifecycle.md:136-141",
+   "suggested_fix": "Add an item: shutdown() during STARTING waits for listen() to finish and then stops normally, or makes listen() fail; during FAILED it waits for TERMINATED."
+  },
+  {
+   "finding_id": "V1-006",
+   "severity": "low",
+   "kind": "design-gap",
+   "items": [
+    "D-410"
+   ],
+   "claim": "object.md \u00a79.4 says the default cache policy can be set as a server-wide security policy, next to the example defaults for authenticated REST (no-store). D-410 limits the configurable default to static responses, so a REST no-store default has no item.",
+   "evidence": "object.md \u00a79.4 ('\uce90\uc2dc \uae30\ubcf8\uac12\uc740 \uc11c\ubc84 \uc804\uc5ed \ubcf4\uc548 \uc815\ucc45\uc73c\ub85c \uc124\uc815 \uac00\ub2a5\ud558\ub2e4')",
+   "suggested_fix": "Either widen D-410 to an app-wide default Cache-Control that applies when a response sets none, or record the narrowing as a decision in docs/api/static.md."
+  },
+  {
+   "finding_id": "V1-007",
+   "severity": "low",
+   "kind": "design-gap",
+   "items": [
+    "D-281",
+    "D-287",
+    "D-290"
+   ],
+   "claim": "object.md \u00a79.3 makes a combined Range + cache test mandatory, for example Range with If-None-Match or If-Range, or cache headers on 206. The Range items and cache items are tested separately, and no item requires the combination.",
+   "evidence": "object.md \u00a79.3 ('Range\uc640 Cache\uc758 \uc870\ud569 \ud14c\uc2a4\ud2b8\uac00 \ud544\uc218\ub2e4')",
+   "suggested_fix": "Add a T30/T31 item asserting 206 responses carry ETag/Last-Modified/Cache-Control, and that If-None-Match match + Range yields 304."
+  },
+  {
+   "finding_id": "V1-008",
+   "severity": "low",
+   "kind": "design-gap",
+   "items": [
+    "D-238",
+    "I-011",
+    "I-012"
+   ],
+   "claim": "D-238 requires a bounded urlencoded body limit, but no item gives its default, configuration API or the wave that decides it. I-011 and I-012 need a concrete default recorded in defaults.md.",
+   "evidence": "docs/api/defaults.md:9-22 (no form-body row)",
+   "suggested_fix": "Give the decision to wave 6 (D-239) with a default (for example 1 MiB, matching JSON) and a defaults.md row."
+  },
+  {
+   "finding_id": "V1-009",
+   "severity": "low",
+   "kind": "design-gap",
+   "items": [],
+   "claim": "object.md \u00a714.3 asks for a per-adapter TLS/WSS review and separate Android 5 TLS testing. TinyHttpd supports TLS (TlsConfig, Builder.tls), but no item decides whether v1 exposes TLS or records it as post-v1, and req.isSecure() can only ever be false on the embedded adapter.",
+   "evidence": "object.md \u00a714.3; /Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/TinyHttpd.java:371",
+   "suggested_fix": "Add an item: v1 either exposes a TLS option on the TinyHttpd adapter with an API 21 TLS check, or records TLS/WSS as an explicit post-v1 item in the release documentation."
+  },
+  {
+   "finding_id": "V2-001",
+   "severity": "medium",
+   "severity_class": "cross-wave",
+   "items": [
+    "D-419",
+    "D-323",
+    "D-416",
+    "D-302"
+   ],
+   "claim": "D-419 requires a configurable WebSocket pong timeout and D-323 requires an idle timeout and a ping interval, each configurable on its own, with D-416 adding a NaruServe scheduler for ping and idle timeouts. TinyHttpd's websocket module already pings from its read loop when reads go idle for pingIntervalMillis, and it closes with 1001 after a second silent period of the same length. Its WebSocketListener has no pong callback, so NaruServe cannot see when a Pong arrives. Under D-302 (no frame codec of NaruServe's own) and D-019 (TinyHttpd is read-only), the pong timeout always equals TinyHttpd's ping interval and cannot be set separately. No item says how the three NaruServe settings map onto TinyHttpd's one setting, or that this is a TinyHttpd gap to record under D-020.",
+   "evidence": "/Users/beom/work/git/TinyHttpd/websocket/src/main/java/com/snoworca/tinyhttpd/websocket/WebSocket.java:271-290 (ping on idle read, close on the second timeout); /Users/beom/work/git/TinyHttpd/websocket/src/main/java/com/snoworca/tinyhttpd/websocket/WebSocketHandler.java (only pingInterval(int); 'a second silent period closes with 1001'); /Users/beom/work/git/TinyHttpd/websocket/src/main/java/com/snoworca/tinyhttpd/websocket/WebSocketListener.java (no onPong); object.md:439",
+   "suggested_fix": "State the mapping: TinyHttpd's pingInterval is the pong timeout (dead peer detected after 1-2x that value), the NaruServe scheduler sends application pings at the configured ping interval and enforces the idle timeout on data messages. Alternatively record the separate pong timeout as a D-020 deferred TinyHttpd gap and have wave 7 document the approximation in websocket.md and defaults.md."
+  },
+  {
+   "finding_id": "V2-002",
+   "severity": "medium",
+   "severity_class": "correctness",
+   "items": [
+    "D-417",
+    "D-320"
+   ],
+   "claim": "D-417 caps the shared WebSocket sender executor at 16 threads and accepts that a stalled session holds one thread for up to 30 s. When 16 or more slow clients each have one queued message, all 16 threads are blocked for up to 30 s, and every healthy session's sends wait behind them. That breaks D-320 ('a slow client SHALL not block sends to other sessions'). A test with a single slow client still passes, so T23 would not catch it.",
+   "evidence": "docs/research/naruserve-v1/design/00.design.md D-417 and D-320 (section 7, 'WebSocket send queue'); /Users/beom/work/git/TinyHttpd/websocket/src/main/java/com/snoworca/tinyhttpd/websocket/WebSocket.java:206-245 (synchronous frame write under writeLock); /Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/TinyHttpd.java (writeTimeout default 30000)",
+   "suggested_fix": "Either narrow D-320 to 'fewer slow sessions than sender threads' and say so in websocket.md, or let D-417 stop dispatching to a session whose write has been in flight longer than a short threshold, closing it or applying the overflow policy. Then add a T23 case with more than 16 stalled clients next to one healthy client."
+  },
+  {
+   "finding_id": "V2-003",
+   "severity": "medium",
+   "severity_class": "testability",
+   "items": [
+    "D-161",
+    "D-164",
+    "D-153"
+   ],
+   "claim": "Shutdown is defined only for an app in NEW (D-164) and RUNNING (D-161). Nothing says what shutdown() does while listen() is still in STARTING (onStart running, or bind in progress), or in FAILED or TERMINATED. On Android, Service.onDestroy calling shutdown on a worker thread while listen() is still starting on another thread is a normal race (D-368). Two outcomes are left open: whether that listen() still reaches RUNNING, and whether onStop runs.",
+   "evidence": "docs/research/naruserve-v1/design/00.design.md D-161, D-164 (section 4, lifecycle); object.md:751 (first call switches atomically, repeated calls are safe)",
+   "suggested_fix": "Add an item: shutdown during STARTING marks a pending stop. listen() then finishes onStart, closes resources in reverse order without running onStop, leaves no socket and ends TERMINATED, and shutdown waits for that. shutdown in FAILED or TERMINATED returns with no side effects. Add a test that runs concurrent listen and shutdown."
+  },
+  {
+   "finding_id": "V2-004",
+   "severity": "medium",
+   "severity_class": "cross-wave",
+   "items": [
+    "D-124",
+    "D-173",
+    "D-295",
+    "D-296",
+    "D-325"
+   ],
+   "claim": "TinyHttpd's WebSocketHandler.handle sends 101 and then runs the connection's whole read loop on the calling handler thread. If the TinyHttpd adapter calls it from inside the wave 4 middleware chain, D-124 means a middleware's next.run() returns only when the WebSocket connection closes. The D-173 HTTP access-log line for the upgrade request would then be written at close, not at 101 as D-325 requires. No item requires the dispatcher to finish the middleware chain before the adapter starts the handshake and read loop. Wave 4 (middleware contract) and wave 7 (TinyHttpd upgrade adapter) could each choose differently.",
+   "evidence": "/Users/beom/work/git/TinyHttpd/websocket/src/main/java/com/snoworca/tinyhttpd/websocket/WebSocketHandler.java:113-139 (res.upgrade then new WebSocket(...).run() on the handler thread); docs/research/naruserve-v1/design/00.design.md D-124, D-296, D-325",
+   "suggested_fix": "Add an item in section 3 or 7: for an upgrade request, the middleware chain and next.run() return before the 101 is sent. The adapter's upgrade extension point (D-106) performs the handshake and runs the read loop after the chain has completed. The WebSocket handler (req, ws) runs on the read thread after 101."
+  },
+  {
+   "finding_id": "V2-005",
+   "severity": "low",
+   "severity_class": "correctness",
+   "items": [
+    "D-067",
+    "D-400"
+   ],
+   "claim": "D-067 says that on the TinyHttpd adapter 'CONNECT is always answered 501 by TinyHttpd's parser'. That is wrong. TinyHttpd answers 501 only for an authority-form target. 'CONNECT /x HTTP/1.1' (origin-form) and absolute-form targets are parsed normally and reach the NaruServe handler with method CONNECT. A test built on D-067/D-400 that expects every CONNECT to bypass the access log and onError would fail.",
+   "evidence": "/Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/RequestParser.java:62-85 (the origin-form and absolute-form branches come before the CONNECT 501 branch)",
+   "suggested_fix": "Reword D-067/D-400: TinyHttpd answers 501 for CONNECT with an authority-form target. A CONNECT with an origin-form or absolute-form target reaches the router, which returns the unsupported-method result. Only the authority-form case is a TinyHttpd gap."
+  },
+  {
+   "finding_id": "V2-006",
+   "severity": "low",
+   "severity_class": "testability",
+   "items": [
+    "D-107",
+    "D-223",
+    "D-344"
+   ],
+   "claim": "D-344 bounds shutdown at timeout plus a fixed margin, and D-107/D-223 assign that margin to the adapter release (awaitTermination). But TinyHttpd's stop(grace) itself can return up to about 1.5 s after the grace: acceptor.join(1000) plus pool.awaitWorkers(500). The force-close participants, onStop and resource closing also run after the adapter stop. A margin sized only for awaitTermination would make the T44 timing assertion flaky.",
+   "evidence": "/Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/HttpServer.java:456-501",
+   "suggested_fix": "Make D-344's margin explicitly cover TinyHttpd's stop overrun (at least 1.5 s) plus awaitTermination. Alternatively pass grace = (time left \u2212 1.5 s) to stop(), and record the chosen margin in lifecycle.md."
+  },
+  {
+   "finding_id": "V2-007",
+   "severity": "low",
+   "severity_class": "correctness",
+   "items": [
+    "D-219"
+   ],
+   "claim": "D-219 maps TinyHttpd's body exceptions to 413 (size), 408 (slow-body guard) and 400 (truncated or malformed). The per-read bodyReadTimeout (30 s), which D-216 keeps enabled, also throws SocketTimeoutException, and no item maps it. Under D-134 it would fall to 500. TinyHttpd itself answers 408 for any SocketTimeoutException on the body.",
+   "evidence": "/Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/Connection.java:363-371 (status 408 for any SocketTimeoutException body failure), 253-262 (bodyReadTimeout)",
+   "suggested_fix": "Extend D-219: any SocketTimeoutException while reading the request body (slow-body guard or bodyReadTimeout) maps to 408 with Connection: close."
+  },
+  {
+   "finding_id": "V2-008",
+   "severity": "low",
+   "severity_class": "consistency",
+   "items": [
+    "D-154",
+    "D-156",
+    "D-107"
+   ],
+   "claim": "D-154 orders the start as bind, then RUNNING, then accept. TinyHttpd.start() binds and starts the acceptor in one call, with no hook in between. So connections can be accepted, and requests parsed, before NaruServe sets RUNNING. D-156 forbids dispatching them but does not say whether the dispatcher waits for RUNNING or rejects them.",
+   "evidence": "/Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/HttpServer.java:128-140 ('Binds on the calling thread, then starts the acceptor and watchdog'); object.md:747",
+   "suggested_fix": "Add to D-156: a request that reaches the dispatcher before RUNNING waits on a start latch, and gets 503 if start fails. This keeps the order observable on adapters whose bind and accept are one call."
+  },
+  {
+   "finding_id": "V2-009",
+   "severity": "low",
+   "severity_class": "consistency",
+   "items": [
+    "D-192",
+    "D-194"
+   ],
+   "claim": "D-192 leaves the result of req.body for a JSON null body to wave 5 (kotlin.md:74 marks it (\ubbf8\ud655\uc815)). D-194 and object.md T08 already require null to round-trip unchanged through req.body. If wave 5 chooses to throw, T08 fails, and if req.body is annotated @NonNull under D-072, the null return breaks the Kotlin contract.",
+   "evidence": "docs/research/naruserve-v1/design/00.design.md D-192, D-194; object.md:1040 (T08 includes null); docs/api/kotlin.md:74",
+   "suggested_fix": "Narrow D-192: req.body returns null for a JSON null body (as T08 requires) and is annotated @Nullable. Only the Kotlin reified extension's handling stays open."
+  }
+ ],
+ "rows": 451
+}

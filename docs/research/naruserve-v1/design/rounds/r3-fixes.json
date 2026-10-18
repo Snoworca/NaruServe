@@ -1,0 +1,177 @@
+[
+ {
+  "finding_id": "V1-001",
+  "resolution": "Sender executor thread limit now equals the WebSocket connection limit of D-404 (128), with at most one in-flight write per session and no session's task queued behind another's, so a stalled session holds only its own thread; D-320 restated as MUST NOT with a T23 case of 20+ stalled sessions next to a healthy one; D-416 recomputed.",
+  "items": [
+   "D-417",
+   "D-320",
+   "D-416"
+  ]
+ },
+ {
+  "finding_id": "V1-002",
+  "resolution": "Keepalive mapped onto TinyHttpd: ping interval = WebSocketHandler.pingInterval (D-423, no NaruServe ping scheduler), pong timeout fixed equal to the ping interval with a separate pong timeout recorded as a D-020 deferred gap (D-424), idle timeout enforced by NaruServe on data messages (D-425); D-419 no longer configures a pong timeout; D-323 points at the mapping; D-416 scheduler is idle-timeout only.",
+  "items": [
+   "D-419",
+   "D-323",
+   "D-416",
+   "D-423",
+   "D-424",
+   "D-425"
+  ]
+ },
+ {
+  "finding_id": "V1-003",
+  "resolution": "D-067 limits TinyHttpd's parser 501 to authority-form CONNECT (the D-020 gap); origin-form and absolute-form CONNECT reach the router and follow the wave 2 TRACE/CONNECT policy; D-422 tests both forms on the TinyHttpd adapter.",
+  "items": [
+   "D-067",
+   "D-400",
+   "D-422"
+  ]
+ },
+ {
+  "finding_id": "V1-004",
+  "resolution": "D-416 now says workers and WS read threads take workerStackBytes 256 KiB, NaruServe sender and scheduler threads request 256 KiB explicitly, acceptor and watchdog use the default stack; 449 threads request 112.25 MiB.",
+  "items": [
+   "D-416"
+  ]
+ },
+ {
+  "finding_id": "V1-005",
+  "resolution": "D-426 defines shutdown during STARTING (pending stop, listen ends TERMINATED without RUNNING or onStop, resources closed, concurrent test); D-427 defines FAILED (wait for TERMINATED) and TERMINATED (no-op).",
+  "items": [
+   "D-426",
+   "D-427"
+  ]
+ },
+ {
+  "finding_id": "V1-006",
+  "resolution": "D-410 widened to an app-wide default Cache-Control for every response that sets none, per object.md 9.4, recorded in static.md, response.md and defaults.md and tested on a JSON route and a static file.",
+  "items": [
+   "D-410"
+  ]
+ },
+ {
+  "finding_id": "V1-007",
+  "resolution": "D-432 adds the mandatory combined Range+cache test: 206 carries the 200's validators and Cache-Control, If-None-Match match + Range yields 304, matching strong If-Range yields 206.",
+  "items": [
+   "D-432"
+  ]
+ },
+ {
+  "finding_id": "V1-008",
+  "resolution": "D-238 gives the urlencoded body limit a 1 MiB default, wave 6 as owner of the API name, and rows in request.md and defaults.md.",
+  "items": [
+   "D-238"
+  ]
+ },
+ {
+  "finding_id": "V1-009",
+  "resolution": "TLS/WSS on the embedded adapter is post-v1: D-433 forbids configuring a TinyHttpd TLS listener in v1 (isSecure true only via proxy trust), D-434 records it in release docs and defaults.md with the reason (no sub-issue covers it; object.md 14.3/20.3 need separate API 21 TLS testing, manual under Q-3).",
+  "items": [
+   "D-433",
+   "D-434"
+  ]
+ },
+ {
+  "finding_id": "V2-001",
+  "resolution": "Same resolution as V1-002: the three settings map onto TinyHttpd's single pingInterval (D-423, D-424) plus a NaruServe-side idle timeout (D-425); the separate pong timeout is a D-020 deferred gap documented in websocket.md and defaults.md.",
+  "items": [
+   "D-419",
+   "D-323",
+   "D-416",
+   "D-423",
+   "D-424",
+   "D-425"
+  ]
+ },
+ {
+  "finding_id": "V2-002",
+  "resolution": "Same resolution as V1-001 (pool sized to the WS connection cap, one in-flight write per session) plus the T23 case with more stalled clients than the old pool of 16; D-435 also aborts stalled writes at shutdown so TinyHttpd's 1001 stop callback, which takes the same write lock, cannot block the shutdown bound.",
+  "items": [
+   "D-417",
+   "D-320",
+   "D-435"
+  ]
+ },
+ {
+  "finding_id": "V2-003",
+  "resolution": "Same as V1-005: D-426 (STARTING, with the concurrent listen/shutdown test) and D-427 (FAILED, TERMINATED).",
+  "items": [
+   "D-426",
+   "D-427"
+  ]
+ },
+ {
+  "finding_id": "V2-004",
+  "resolution": "D-429 orders the upgrade: the middleware chain completes with every next.run() returned, then the D-106 upgrade point calls WebSocketHandler.handle on the same worker, which sends 101 and runs the read loop; D-430 writes the 101 access-log line in WebSocketListener.onOpen (after 101, before the first frame), and a rejected upgrade gets its ordinary line.",
+  "items": [
+   "D-429",
+   "D-430"
+  ]
+ },
+ {
+  "finding_id": "V2-005",
+  "resolution": "Same as V1-003: D-067 and D-400 now name only authority-form CONNECT as TinyHttpd's 501; D-422 asserts origin-form CONNECT reaches the dispatcher with an access-log line.",
+  "items": [
+   "D-067",
+   "D-400",
+   "D-422"
+  ]
+ },
+ {
+  "finding_id": "V2-006",
+  "resolution": "D-344's margin now explicitly covers TinyHttpd's stop(grace) overrun of up to 1.5 s (acceptor join 1000 ms + worker wait 500 ms) plus the D-107 release wait, is recorded in lifecycle.md and is the T44 tolerance, with T44 using onStop and resources that return at once.",
+  "items": [
+   "D-344"
+  ]
+ },
+ {
+  "finding_id": "V2-007",
+  "resolution": "D-219 maps every SocketTimeoutException while reading the body (slow-body guard and bodyReadTimeout) to 408 with Connection: close, matching TinyHttpd's own Connection.ioFailure.",
+  "items": [
+   "D-219"
+  ]
+ },
+ {
+  "finding_id": "V2-008",
+  "resolution": "D-428 adds a start gate: requests reaching the dispatcher before RUNNING wait and are released at RUNNING, or get 503 + Connection: close if start fails or a pending stop ends it; D-154 now states bind and accept start in one adapter call.",
+  "items": [
+   "D-428",
+   "D-154"
+  ]
+ },
+ {
+  "finding_id": "V2-009",
+  "resolution": "D-431 fixes req.body for a JSON null body: returns null, annotated @Nullable (T08); D-192 now leaves only the Kotlin reified extension's null handling open.",
+  "items": [
+   "D-431",
+   "D-192"
+  ]
+ },
+ {
+  "finding_id": "row:D-067",
+  "resolution": "contradicts-existing resolved as V1-003/V2-005.",
+  "items": [
+   "D-067",
+   "D-400",
+   "D-422"
+  ]
+ },
+ {
+  "finding_id": "row:D-416",
+  "resolution": "contradicts-existing resolved: stack sizes corrected per thread kind and total recomputed to 451 threads (449 x 256 KiB = 112.25 MiB plus two default-stack threads).",
+  "items": [
+   "D-416"
+  ]
+ },
+ {
+  "finding_id": "row:D-320",
+  "resolution": "needs-decision resolved: chose a sender executor sized to the WebSocket connection cap with one in-flight write per session (D-417), so D-320 holds unconditionally within the connection limit.",
+  "items": [
+   "D-320",
+   "D-417",
+   "D-416"
+  ]
+ }
+]

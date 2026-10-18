@@ -1,0 +1,10 @@
+{"confirmed":[
+{"finding_id":"V1-001","note":"Verified: Connection.java:158-161 lingerClose drops a request that races closeIdle; persistentAtCommit (Connection.java:398-399) returns false when server.isStopping(); HttpServer.stop calls onServerStopping on every connection. D-166 holds only before the adapter stop begins."},
+{"finding_id":"V1-002","note":"Verified: maxRequestBodyBytes defaults to -1 (TinyHttpd.java:247); when set, RequestParser.java:232-234 throws ParseError(413) before dispatch, which goes to sendRawAndLinger. That 413 is missing from D-400 and conflicts with D-129."},
+{"finding_id":"V1-003","note":"Verified: the wording of D-401 at 00.design.md:283 is ambiguous. D-255 says only 'before shutdown returns' and names no phase."},
+{"finding_id":"V1-004","note":"Same issue as V2-003 (maxFramePayloadBytes and maxMessageBytes are separate in TinyHttpd)."},
+{"finding_id":"V1-005","note":"Verified: docs/api/README.md:44-45 and express-migration.md:278-279 pass req.body(...) straight to create(...)."},
+{"finding_id":"V1-006","note":"Same issue as V2-004 (RequestParser.java:64-69 sets requestUri '*')."},
+{"finding_id":"V1-007","note":"Verified: CLAUDE.md:21 lists only NaruServe-api and NaruServe-servlet."},
+{"finding_id":"V1-008","note":"Verified: object.md:519 requires symlink/TOCTOU tests. D-270 and D-411 cover static symlinks only, not a component swapped between the canonical check and the open."}
+],"added":[]}

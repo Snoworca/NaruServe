@@ -1,0 +1,33 @@
+[
+ {
+  "finding_id": "V1-001",
+  "items": [
+   "D-341",
+   "D-401",
+   "D-162",
+   "D-343"
+  ],
+  "claim": "No item fixes the shutdown phase in which NaruServe closes open SSE streams. Because D-335 writes SSE as an ordinary chunked response on the worker, TinyHttpd's stop() does not close these streams: onServerStopping closes only TinyHttpd's own SseStream and upgraded connections, and stop() then waits until the grace deadline. If wave 7 registers SSE closing as a force-close participant (after the adapter stop), any shutdown with an open SSE stream lasts the full timeout and clients get no close notice first. That goes against object.md \u00a711.4 step 3, which says to notify SSE/WS while short requests drain.",
+  "evidence": "/Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/Connection.java:508; /Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/HttpServer.java:471; object.md:753"
+ },
+ {
+  "finding_id": "V1-002",
+  "items": [
+   "D-435",
+   "D-344",
+   "D-417"
+  ],
+  "claim": "D-435 aborts, once, only sessions whose sender-executor write has been in flight for more than 1 s. Two cases still block TinyHttpd's stop thread. First, TinyHttpd's read thread writes Ping (keepalive) and Pong frames under the same writeLock, outside the sender executor. Second, a write that is under 1 s old at check time can then stall. TinyHttpd's stop() calls fireStop, which does close(1001) under writeLock, for every upgraded connection before its grace loop and outside the deadline. So one such stalled session holds shutdown until the 30 s write timeout, which breaks the timeout-plus-margin bound of D-344/T44.",
+  "evidence": "/Users/beom/work/git/TinyHttpd/websocket/src/main/java/com/snoworca/tinyhttpd/websocket/WebSocket.java:190; /Users/beom/work/git/TinyHttpd/websocket/src/main/java/com/snoworca/tinyhttpd/websocket/WebSocket.java:288; /Users/beom/work/git/TinyHttpd/websocket/src/main/java/com/snoworca/tinyhttpd/websocket/WebSocket.java:360; /Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/HttpServer.java:469"
+ },
+ {
+  "finding_id": "V1-003",
+  "items": [
+   "D-431",
+   "D-349",
+   "D-351"
+  ],
+  "claim": "D-431 makes req.body(Class/TypeRef) @Nullable, so in Kotlin it returns T?. The kotlin.md example `val body = req.body(CreateUserRequest::class.java); val name = body.name` then no longer compiles, yet D-349 requires every docs/api Kotlin example to compile and run as a test. D-192 lists kotlin.md for update but names no example rewrite.",
+  "evidence": "docs/api/kotlin.md:140; docs/api/kotlin.md:141; docs/api/kotlin.md:74"
+ }
+]

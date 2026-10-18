@@ -1,0 +1,10 @@
+{"confirmed":[
+{"finding_id":"V1-001","note":"Verified: TinyHttpd.java minRequestBodyRate defaults to 0 (off) and bodyReadTimeout applies per read; same issue as V2-001."},
+{"finding_id":"V1-002","note":"Verified: RequestParser.java:102-103 throws ParseError(505) and Connection.java:181 sends 408 via ErrorResponses; same issue as V2-008."},
+{"finding_id":"V1-003","note":"Verified: docs/api/request.md:86 says a second body(...) after body(...) throws, and object.md:248 says repeated reads throw unless an explicit cache option exists. D-086 covers only reads through a different reader."},
+{"finding_id":"V1-004","note":"Verified: object.md:439 lists message size, queue size and Ping response time as limits, and object.md:847-849 marks them configurable. D-323 and D-339 do not own those configuration APIs."},
+{"finding_id":"V1-005","note":"Verified: D-005 (00.design.md:15) allows later waves only test-scope dependencies or release plugins. Container WebSocket support under D-363 / docs/api/servlet.md:29 needs a main compileOnly javax.websocket-api dependency."},
+{"finding_id":"V1-006","note":"Verified: D-106, D-361 and I-014 conflict as described; same issue as V2-006."},
+{"finding_id":"V1-007","note":"Verified: D-261 exposes directoryListing(true), but no item defines the enabled listing (format, escaping, hiding dotfiles and symbolic links). object.md:486 only says it is off by default."}
+],
+"added":[]}

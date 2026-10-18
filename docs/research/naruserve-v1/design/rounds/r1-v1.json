@@ -1,0 +1,2698 @@
+{
+ "implementability": [
+  {
+   "id": "D-001",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-002",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-003",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-004",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-005",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": "Conflicts internally with D-179/D-371 module creation in later waves (V1-006)."
+  },
+  {
+   "id": "D-006",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-007",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-008",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-009",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-010",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-011",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": "KGP adds kotlin-stdlib to main api by default; needs kotlin.stdlib.default.dependency=false (V1-011)."
+  },
+  {
+   "id": "D-012",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-013",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-014",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-015",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-016",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-017",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-018",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-019",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-020",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-021",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-022",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-023",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-024",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-025",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-026",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-027",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-028",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-029",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-030",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-031",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-032",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-033",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-034",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-035",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-036",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-037",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-038",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-039",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-040",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-041",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-042",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-043",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-044",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-045",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-046",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-047",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-048",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-049",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-050",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-051",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-052",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-053",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-054",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-055",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-056",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-057",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-058",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-059",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-060",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-061",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-062",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-063",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-064",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-065",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-066",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-067",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": "CONNECT is rejected with 501 inside TinyHttpd RequestParser.java:83-84, so the enable policy cannot apply to CONNECT on this adapter; record via D-020."
+  },
+  {
+   "id": "D-068",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-069",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-070",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-071",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-072",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-073",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-074",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-075",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-076",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-077",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-078",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-079",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-080",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-081",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-082",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-083",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-084",
+   "verdict": "contradicts-existing",
+   "pointer": "docs/api/middleware.md:94",
+   "note": "After-chain code in the documented before/after middleware calls req.path() once next.run() returned, i.e. after the handler completed the response; onError example (docs/api/middleware.md:128, object.md:592) calls res.isCommitted()/res.abort() on a response that may already be COMPLETED. D-084 makes both throw IllegalStateException."
+  },
+  {
+   "id": "D-085",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-086",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-087",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-088",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-089",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-090",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-091",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-092",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-093",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-094",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-095",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-096",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-097",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-098",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-099",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-100",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-101",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-102",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-103",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-104",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-105",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-106",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-107",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-108",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-109",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-110",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-111",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-112",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-113",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-114",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-115",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-116",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-117",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-118",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-119",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-120",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-121",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-122",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-123",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-124",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-125",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-126",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-127",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-128",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-129",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-130",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-131",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-132",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-133",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-134",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-135",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-136",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-137",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-138",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-139",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-140",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-141",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-142",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-143",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-144",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-145",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-146",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-147",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-148",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-149",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-150",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-151",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-152",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-153",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-154",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-155",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-156",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-157",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-158",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-159",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-160",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-161",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-162",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-163",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-164",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-165",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-166",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-167",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-168",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-169",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": "No item makes Logcat the Android default (V1-005)."
+  },
+  {
+   "id": "D-170",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-171",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-172",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-173",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-174",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-175",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-176",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-177",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-178",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-179",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": "Optional logger modules are not in D-002's wave-1 list while D-005 forbids later main deps (V1-006)."
+  },
+  {
+   "id": "D-180",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-181",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-182",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-183",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-184",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-185",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-186",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-187",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-188",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-189",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-190",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-191",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-192",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-193",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-194",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-195",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-196",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-197",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-198",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-199",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-200",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-201",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-202",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-203",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-204",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-205",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-206",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-207",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-208",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-209",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-210",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-211",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-212",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-213",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-214",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-215",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-216",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-217",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-218",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-219",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-220",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-221",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-222",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-223",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-224",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-225",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-226",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-227",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-228",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-229",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-230",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-231",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-232",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-233",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-234",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-235",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-236",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-237",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-238",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-239",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-240",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-241",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-242",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-243",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-244",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-245",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-246",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-247",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-248",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-249",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-250",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-251",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-252",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-253",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-254",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-255",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-256",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-257",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-258",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-259",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-260",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-261",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-262",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-263",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-264",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-265",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-266",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-267",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-268",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-269",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-270",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-271",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-272",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-273",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-274",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-275",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-276",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-277",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-278",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-279",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-280",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-281",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-282",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-283",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-284",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-285",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-286",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-287",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-288",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-289",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-290",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-291",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-292",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-293",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-294",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-295",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-296",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-297",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-298",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-299",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-300",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-301",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-302",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-303",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-304",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-305",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-306",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-307",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-308",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-309",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-310",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-311",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-312",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-313",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-314",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-315",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-316",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-317",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-318",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-319",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-320",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-321",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-322",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-323",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-324",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": "Raises only maxUpgradedConnections; per-address and event-stream limits not covered (V1-003)."
+  },
+  {
+   "id": "D-325",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-326",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": "Implementable only if the adapter does not use TinyHttpd EventStream (see D-335 / V1-002)."
+  },
+  {
+   "id": "D-327",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-328",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-329",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-330",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": "Implementable only on a raw streaming body, not via TinyHttpd EventStream (see V1-002)."
+  },
+  {
+   "id": "D-331",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-332",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-333",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-334",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-335",
+   "verdict": "contradicts-existing",
+   "pointer": "/Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/SseStream.java:53",
+   "note": "Binding SSE to TinyHttpd's EventStream forces Cache-Control: no-cache (SseStream.java:53, committed at :72) against D-326's 'no-cache, no-transform', and EventStream only offers send(event,data,id)/retry() as separate blocks (http/EventStream.java:24-36) so D-330's single event/id/retry/data block cannot be produced; TinyHttpd is read-only (D-019)."
+  },
+  {
+   "id": "D-336",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": "maxEventStreams default 64 (TinyHttpd.java:268) must be raised for T26; see V1-003."
+  },
+  {
+   "id": "D-337",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-338",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-339",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-340",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-341",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-342",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-343",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-344",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-345",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-346",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": "Loopback load test hits maxConnectionsPerAddress=32 (TinyHttpd.java:264) and maxEventStreams=64; no item raises them (V1-003)."
+  },
+  {
+   "id": "D-347",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-348",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-349",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-350",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-351",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-352",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-353",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-354",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-355",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-356",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-357",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-358",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-359",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-360",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-361",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-362",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-363",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-364",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-365",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-366",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-367",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-368",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-369",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-370",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-371",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": "Android-only artifact needs android.jar, but D-025 requires root build without Android SDK; location undecided (V1-006)."
+  },
+  {
+   "id": "D-372",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-373",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-374",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-375",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-376",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-377",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-378",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-379",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-380",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-381",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-382",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "D-383",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "I-001",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "I-002",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "I-003",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "I-004",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "I-005",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "I-006",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "I-007",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "I-008",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "I-009",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": "Android ServerService example (docs/api/lifecycle.md:162-186) cannot compile in the SDK-less root build (V1-012)."
+  },
+  {
+   "id": "I-010",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "I-011",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "I-012",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "I-013",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "I-014",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "I-015",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "I-016",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "I-017",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "I-018",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "I-019",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  },
+  {
+   "id": "I-020",
+   "verdict": "implementable",
+   "pointer": null,
+   "note": ""
+  }
+ ],
+ "constraints": [
+  {
+   "id": "C-01",
+   "verdict": "satisfied",
+   "items": [
+    "D-001",
+    "D-013",
+    "D-367"
+   ]
+  },
+  {
+   "id": "C-02",
+   "verdict": "satisfied",
+   "items": [
+    "D-006",
+    "D-007",
+    "D-027",
+    "D-028",
+    "I-001",
+    "I-003",
+    "D-382"
+   ]
+  },
+  {
+   "id": "C-03",
+   "verdict": "satisfied",
+   "items": [
+    "D-045",
+    "D-115",
+    "D-311",
+    "I-007",
+    "D-348",
+    "D-349",
+    "D-350",
+    "D-351",
+    "D-352",
+    "D-353",
+    "D-354",
+    "I-010"
+   ]
+  },
+  {
+   "id": "C-04",
+   "verdict": "satisfied",
+   "items": [
+    "D-138",
+    "D-146",
+    "D-200",
+    "D-201",
+    "D-358",
+    "D-359",
+    "D-360",
+    "D-361"
+   ]
+  },
+  {
+   "id": "C-05",
+   "verdict": "satisfied",
+   "items": [
+    "D-040",
+    "D-043",
+    "D-071",
+    "D-118",
+    "I-008",
+    "I-009",
+    "D-349"
+   ]
+  },
+  {
+   "id": "C-06",
+   "verdict": "satisfied",
+   "items": [
+    "D-002",
+    "D-012",
+    "D-028",
+    "D-358"
+   ]
+  },
+  {
+   "id": "C-07",
+   "verdict": "satisfied",
+   "items": [
+    "D-029",
+    "D-070",
+    "D-109",
+    "D-137",
+    "D-151",
+    "D-167",
+    "D-181",
+    "D-192",
+    "D-208",
+    "D-225",
+    "D-230",
+    "D-239",
+    "D-267",
+    "D-272",
+    "D-282",
+    "D-293",
+    "D-303",
+    "D-317",
+    "D-339",
+    "D-357",
+    "D-363",
+    "D-380",
+    "I-013"
+   ]
+  },
+  {
+   "id": "C-08",
+   "verdict": "satisfied",
+   "items": [
+    "D-020",
+    "D-372",
+    "D-376",
+    "D-347"
+   ]
+  },
+  {
+   "id": "C-09",
+   "verdict": "satisfied",
+   "items": [
+    "I-018",
+    "I-019",
+    "D-381",
+    "D-375",
+    "D-378",
+    "D-379"
+   ]
+  }
+ ],
+ "findings": [
+  {
+   "finding_id": "V1-001",
+   "severity": "high",
+   "kind": "contradiction",
+   "items": [
+    "D-084"
+   ],
+   "claim": "D-084 makes every Request/Response call after the response completed throw IllegalStateException, which breaks the documented before/after middleware pattern and the onError isCommitted()/abort() pattern required for T37.",
+   "evidence": "docs/research/naruserve-v1/design/00.design.md:146; docs/api/middleware.md:90-95 (req.path() after next.run()); docs/api/middleware.md:127-131 and object.md:591-594 (onError reads res.isCommitted() after a possibly completed response); object.md:1069 (T37)",
+   "suggested_fix": "Scope the IllegalStateException to use after the request ended (chain and onError returned / connection closed), keep isCommitted()/abort()/read-only accessors legal during the chain and error handling, and keep D-101/D-123 for body/next misuse."
+  },
+  {
+   "finding_id": "V1-002",
+   "severity": "high",
+   "kind": "contradiction",
+   "items": [
+    "D-335",
+    "D-326",
+    "D-330",
+    "D-327",
+    "D-336"
+   ],
+   "claim": "The SSE design cannot be met on read-only TinyHttpd as written: its EventStream hard-codes Cache-Control: no-cache and cannot emit event/id/retry/data in one block, while the alternative (raw chunked OutputStream) keeps the TinyHttpd worker attached to the pool for the stream lifetime because only EventStream/upgrade detach the worker, starving maxWorkers=64 under T26.",
+   "evidence": "/Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/SseStream.java:53 (Cache-Control no-cache), :68 (pool.detach only here), :72 (commitStreaming), :240 (handler return ends response); /Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/http/EventStream.java:24-36; docs/api/sse.md:25,62-67; object.md:458",
+   "suggested_fix": "Decide one SSE transport for the TinyHttpd adapter: either accept TinyHttpd EventStream and amend D-326/D-330 (record no-transform and the separate retry block as a deferred TinyHttpd gap under D-020), or use the raw streaming body with a NaruServe-owned bounded queue and a separate SSE thread budget, rewriting D-335/D-336 accordingly."
+  },
+  {
+   "finding_id": "V1-003",
+   "severity": "medium",
+   "kind": "design-gap",
+   "items": [
+    "D-324",
+    "D-336",
+    "D-346"
+   ],
+   "claim": "T26 (100+ concurrent WS and SSE from a local test client) needs TinyHttpd maxConnectionsPerAddress (default 32) and maxEventStreams (default 64) raised; only maxUpgradedConnections is covered.",
+   "evidence": "/Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/TinyHttpd.java:264,268; /Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/HttpServer.java:245; /Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/SseStream.java:60-62 (503 beyond maxEventStreams); object.md:1058",
+   "suggested_fix": "Add an item that the adapter configures per-address connection and event-stream limits (and the matching NaruServe settings from D-323/D-339) so the T26 test reaches 100+ connections from loopback."
+  },
+  {
+   "finding_id": "V1-004",
+   "severity": "low",
+   "kind": "design-gap",
+   "items": [
+    "D-216",
+    "D-218",
+    "D-225"
+   ],
+   "claim": "object.md requires header count and wait-queue length to be configurable; design only names header/URL/timeout configuration APIs and keeps header count and queue as TinyHttpd defaults.",
+   "evidence": "object.md:829; docs/api/defaults.md:26",
+   "suggested_fix": "Extend D-225 to cover header-count and wait-queue configuration APIs (names delegated)."
+  },
+  {
+   "finding_id": "V1-005",
+   "severity": "medium",
+   "kind": "design-gap",
+   "items": [
+    "D-169",
+    "D-371"
+   ],
+   "claim": "docs/api and object.md make Logcat the default logger on Android; the design only ships a Logcat Logger in a separate artifact and makes console the JVM default, with no item for Android default selection.",
+   "evidence": "docs/api/logging.md:78-81; object.md:646",
+   "suggested_fix": "Add an item for how Logcat becomes the default on Android (e.g. bootstrap detects the Android artifact via ServiceLoader) or amend docs/api/logging.md to require explicit app.logger(new LogcatLogger())."
+  },
+  {
+   "finding_id": "V1-006",
+   "severity": "medium",
+   "kind": "other",
+   "items": [
+    "D-002",
+    "D-005",
+    "D-025",
+    "D-179",
+    "D-371"
+   ],
+   "claim": "Internal inconsistency: D-005 says wave 1 declares every module's main dependencies so later waves add only test deps or release plugins, but the SLF4J adapter and rotating file logger modules (D-179, wave 4) and the Android-only Logcat artifact (D-371, wave 8) are not in D-002's wave-1 module list; the Logcat artifact also needs android.jar while D-025 requires the root build to pass without an Android SDK.",
+   "evidence": "docs/research/naruserve-v1/design/00.design.md:12,15,43,278,577",
+   "suggested_fix": "List the optional logger modules in D-002 (names delegated to #7) and state that the Logcat artifact lives in the samples/android build (or compiles against a Maven android stub), keeping the root build SDK-free."
+  },
+  {
+   "finding_id": "V1-007",
+   "severity": "low",
+   "kind": "design-gap",
+   "items": [],
+   "claim": "object.md §9.3 calls for a ResourceResolver SPI (open, length, etag, modified) separate from the built-in File resolver; no design item covers it or records it as post-v1.",
+   "evidence": "object.md:522; object.md:1168 (SAF Resolver P5)",
+   "suggested_fix": "Add an item that either defines the engine-free ResourceResolver SPI behind staticFiles/res.file or records it as P5 in the release (미확정) sweep (D-380)."
+  },
+  {
+   "finding_id": "V1-008",
+   "severity": "low",
+   "kind": "design-gap",
+   "items": [],
+   "claim": "object.md §9.4 says cache defaults are configurable as a server-wide security policy; no item covers a global default CachePolicy.",
+   "evidence": "object.md:541",
+   "suggested_fix": "Add an item for a global default Cache-Control policy (API name delegated) or record it as post-v1."
+  },
+  {
+   "finding_id": "V1-009",
+   "severity": "low",
+   "kind": "other",
+   "items": [
+    "D-067"
+   ],
+   "claim": "CONNECT can never be enabled on the TinyHttpd adapter because TinyHttpd rejects it with 501 in the parser.",
+   "evidence": "/Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/RequestParser.java:83-84",
+   "suggested_fix": "State in D-067 that the enable policy covers TRACE on TinyHttpd and record CONNECT as a deferred TinyHttpd gap per D-020."
+  },
+  {
+   "finding_id": "V1-010",
+   "severity": "low",
+   "kind": "design-gap",
+   "items": [
+    "D-364"
+   ],
+   "claim": "object.md §17.1 requires a Kotlin Android project to compile and run SAM, nullable, Multipart, WebSocket and service APIs; D-364 only requires Kotlin sources in the sample.",
+   "evidence": "object.md:1024",
+   "suggested_fix": "Require the sample's Kotlin sources to exercise a SAM route, a nullable accessor, multipart upload, a WebSocket endpoint and req.service."
+  },
+  {
+   "finding_id": "V1-011",
+   "severity": "low",
+   "kind": "other",
+   "items": [
+    "D-009",
+    "D-011",
+    "D-023"
+   ],
+   "claim": "Applying the Kotlin Gradle Plugin to every module for Kotlin tests adds kotlin-stdlib to each main api configuration by default, violating D-009/D-011 unless disabled.",
+   "evidence": "docs/research/naruserve-v1/design/00.design.md:19,21,41",
+   "suggested_fix": "Add kotlin.stdlib.default.dependency=false (or equivalent) and a dependency check that only the Kotlin extension module has kotlin-stdlib at runtime."
+  },
+  {
+   "finding_id": "V1-012",
+   "severity": "low",
+   "kind": "untestable",
+   "items": [
+    "I-009"
+   ],
+   "claim": "I-009 requires every Java example in docs/api to compile in the test suite, but the Android Service example uses android.* and cannot compile in the SDK-less root build (D-025).",
+   "evidence": "docs/api/lifecycle.md:162-186; docs/research/naruserve-v1/design/00.design.md:43",
+   "suggested_fix": "Scope I-009 to JVM examples and compile Android examples in the samples/android build."
+  }
+ ],
+ "roll_up": "GAPS"
+}

@@ -1,0 +1,11 @@
+[
+ {"id":"C-01","statement":"The build uses Gradle 8.14.3 via the wrapper only; no other build tool.","source":"conversation (user: gradle 을 사용해야 합니다)"},
+ {"id":"C-02","statement":"Java 8 bytecode; Android 5.0 (API 21) is the minimum runtime; JVM Java 8+.","source":"conversation (object.md goals recorded in CLAUDE.md)"},
+ {"id":"C-03","statement":"The library must work well from Kotlin.","source":"conversation (user: 코틀린에서 잘 동작해야 합니다)"},
+ {"id":"C-04","statement":"The library is a Servlet-like API library.","source":"conversation (user: 마치 서블릿 같은 api 라이브러리)"},
+ {"id":"C-05","statement":"Express.js users must be able to adapt to the Java API immediately; docs/api is that contract.","source":"conversation (user: express 엔진 사용자가 바로 자바에 잘 적응)"},
+ {"id":"C-06","statement":"Two sub-modules NaruServe-api and NaruServe-servlet exist.","source":"conversation (user: NaruServe-api, NaruServe-servlet 서브모듈)"},
+ {"id":"C-07","statement":"(미확정) items in docs/api are decided during implementation without asking the user, and docs/api is updated.","source":"conversation (user: 미확정은 구현하면서 자동으로 정하도록)"},
+ {"id":"C-08","statement":"Work continues without stopping; user-level decisions go to a 3-member decision committee.","source":"conversation (user: 멈추지 말고 계속 진행 ... 결정 위원회)"},
+ {"id":"C-09","statement":"Achieve the goals of object.md.","source":"conversation (user: object.md 의 목표를 달성)"}
+]

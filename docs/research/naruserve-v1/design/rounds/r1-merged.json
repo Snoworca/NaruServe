@@ -1,0 +1,382 @@
+{
+ "round": 1,
+ "findings": [
+  {
+   "finding_id": "V1-001",
+   "severity": "high",
+   "kind": "contradiction",
+   "items": [
+    "D-084"
+   ],
+   "claim": "D-084 makes every Request/Response call after the response completed throw IllegalStateException, which breaks the documented before/after middleware pattern and the onError isCommitted()/abort() pattern required for T37.",
+   "evidence": "docs/research/naruserve-v1/design/00.design.md:146; docs/api/middleware.md:90-95 (req.path() after next.run()); docs/api/middleware.md:127-131 and object.md:591-594 (onError reads res.isCommitted() after a possibly completed response); object.md:1069 (T37)",
+   "suggested_fix": "Scope the IllegalStateException to use after the request ended (chain and onError returned / connection closed), keep isCommitted()/abort()/read-only accessors legal during the chain and error handling, and keep D-101/D-123 for body/next misuse."
+  },
+  {
+   "finding_id": "V1-002",
+   "severity": "high",
+   "kind": "contradiction",
+   "items": [
+    "D-335",
+    "D-326",
+    "D-330",
+    "D-327",
+    "D-336"
+   ],
+   "claim": "The SSE design cannot be met on read-only TinyHttpd as written: its EventStream hard-codes Cache-Control: no-cache and cannot emit event/id/retry/data in one block, while the alternative (raw chunked OutputStream) keeps the TinyHttpd worker attached to the pool for the stream lifetime because only EventStream/upgrade detach the worker, starving maxWorkers=64 under T26.",
+   "evidence": "/Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/SseStream.java:53 (Cache-Control no-cache), :68 (pool.detach only here), :72 (commitStreaming), :240 (handler return ends response); /Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/http/EventStream.java:24-36; docs/api/sse.md:25,62-67; object.md:458",
+   "suggested_fix": "Decide one SSE transport for the TinyHttpd adapter: either accept TinyHttpd EventStream and amend D-326/D-330 (record no-transform and the separate retry block as a deferred TinyHttpd gap under D-020), or use the raw streaming body with a NaruServe-owned bounded queue and a separate SSE thread budget, rewriting D-335/D-336 accordingly."
+  },
+  {
+   "finding_id": "V1-003",
+   "severity": "medium",
+   "kind": "design-gap",
+   "items": [
+    "D-324",
+    "D-336",
+    "D-346"
+   ],
+   "claim": "T26 (100+ concurrent WS and SSE from a local test client) needs TinyHttpd maxConnectionsPerAddress (default 32) and maxEventStreams (default 64) raised; only maxUpgradedConnections is covered.",
+   "evidence": "/Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/TinyHttpd.java:264,268; /Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/HttpServer.java:245; /Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/SseStream.java:60-62 (503 beyond maxEventStreams); object.md:1058",
+   "suggested_fix": "Add an item that the adapter configures per-address connection and event-stream limits (and the matching NaruServe settings from D-323/D-339) so the T26 test reaches 100+ connections from loopback."
+  },
+  {
+   "finding_id": "V1-004",
+   "severity": "low",
+   "kind": "design-gap",
+   "items": [
+    "D-216",
+    "D-218",
+    "D-225"
+   ],
+   "claim": "object.md requires header count and wait-queue length to be configurable; design only names header/URL/timeout configuration APIs and keeps header count and queue as TinyHttpd defaults.",
+   "evidence": "object.md:829; docs/api/defaults.md:26",
+   "suggested_fix": "Extend D-225 to cover header-count and wait-queue configuration APIs (names delegated)."
+  },
+  {
+   "finding_id": "V1-005",
+   "severity": "medium",
+   "kind": "design-gap",
+   "items": [
+    "D-169",
+    "D-371"
+   ],
+   "claim": "docs/api and object.md make Logcat the default logger on Android; the design only ships a Logcat Logger in a separate artifact and makes console the JVM default, with no item for Android default selection.",
+   "evidence": "docs/api/logging.md:78-81; object.md:646",
+   "suggested_fix": "Add an item for how Logcat becomes the default on Android (e.g. bootstrap detects the Android artifact via ServiceLoader) or amend docs/api/logging.md to require explicit app.logger(new LogcatLogger())."
+  },
+  {
+   "finding_id": "V1-006",
+   "severity": "medium",
+   "kind": "other",
+   "items": [
+    "D-002",
+    "D-005",
+    "D-025",
+    "D-179",
+    "D-371"
+   ],
+   "claim": "Internal inconsistency: D-005 says wave 1 declares every module's main dependencies so later waves add only test deps or release plugins, but the SLF4J adapter and rotating file logger modules (D-179, wave 4) and the Android-only Logcat artifact (D-371, wave 8) are not in D-002's wave-1 module list; the Logcat artifact also needs android.jar while D-025 requires the root build to pass without an Android SDK.",
+   "evidence": "docs/research/naruserve-v1/design/00.design.md:12,15,43,278,577",
+   "suggested_fix": "List the optional logger modules in D-002 (names delegated to #7) and state that the Logcat artifact lives in the samples/android build (or compiles against a Maven android stub), keeping the root build SDK-free."
+  },
+  {
+   "finding_id": "V1-007",
+   "severity": "low",
+   "kind": "design-gap",
+   "items": [],
+   "claim": "object.md \u00a79.3 calls for a ResourceResolver SPI (open, length, etag, modified) separate from the built-in File resolver; no design item covers it or records it as post-v1.",
+   "evidence": "object.md:522; object.md:1168 (SAF Resolver P5)",
+   "suggested_fix": "Add an item that either defines the engine-free ResourceResolver SPI behind staticFiles/res.file or records it as P5 in the release (\ubbf8\ud655\uc815) sweep (D-380)."
+  },
+  {
+   "finding_id": "V1-008",
+   "severity": "low",
+   "kind": "design-gap",
+   "items": [],
+   "claim": "object.md \u00a79.4 says cache defaults are configurable as a server-wide security policy; no item covers a global default CachePolicy.",
+   "evidence": "object.md:541",
+   "suggested_fix": "Add an item for a global default Cache-Control policy (API name delegated) or record it as post-v1."
+  },
+  {
+   "finding_id": "V1-009",
+   "severity": "low",
+   "kind": "other",
+   "items": [
+    "D-067"
+   ],
+   "claim": "CONNECT can never be enabled on the TinyHttpd adapter because TinyHttpd rejects it with 501 in the parser.",
+   "evidence": "/Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/RequestParser.java:83-84",
+   "suggested_fix": "State in D-067 that the enable policy covers TRACE on TinyHttpd and record CONNECT as a deferred TinyHttpd gap per D-020."
+  },
+  {
+   "finding_id": "V1-010",
+   "severity": "low",
+   "kind": "design-gap",
+   "items": [
+    "D-364"
+   ],
+   "claim": "object.md \u00a717.1 requires a Kotlin Android project to compile and run SAM, nullable, Multipart, WebSocket and service APIs; D-364 only requires Kotlin sources in the sample.",
+   "evidence": "object.md:1024",
+   "suggested_fix": "Require the sample's Kotlin sources to exercise a SAM route, a nullable accessor, multipart upload, a WebSocket endpoint and req.service."
+  },
+  {
+   "finding_id": "V1-011",
+   "severity": "low",
+   "kind": "other",
+   "items": [
+    "D-009",
+    "D-011",
+    "D-023"
+   ],
+   "claim": "Applying the Kotlin Gradle Plugin to every module for Kotlin tests adds kotlin-stdlib to each main api configuration by default, violating D-009/D-011 unless disabled.",
+   "evidence": "docs/research/naruserve-v1/design/00.design.md:19,21,41",
+   "suggested_fix": "Add kotlin.stdlib.default.dependency=false (or equivalent) and a dependency check that only the Kotlin extension module has kotlin-stdlib at runtime."
+  },
+  {
+   "finding_id": "V1-012",
+   "severity": "low",
+   "kind": "untestable",
+   "items": [
+    "I-009"
+   ],
+   "claim": "I-009 requires every Java example in docs/api to compile in the test suite, but the Android Service example uses android.* and cannot compile in the SDK-less root build (D-025).",
+   "evidence": "docs/api/lifecycle.md:162-186; docs/research/naruserve-v1/design/00.design.md:43",
+   "suggested_fix": "Scope I-009 to JVM examples and compile Android examples in the samples/android build."
+  },
+  {
+   "finding_id": "V2-001",
+   "severity": "high",
+   "severity_class": "cross-wave",
+   "items": [
+    "D-030",
+    "D-042",
+    "D-060",
+    "D-061",
+    "D-062",
+    "D-064",
+    "D-066",
+    "D-069",
+    "D-071",
+    "D-075",
+    "D-102",
+    "D-108"
+   ],
+   "claim": "Waves 2 and 3 are planned in parallel but depend on each other at compile and test time. Wave 3's Request must return the Method enum owned by wave 2 (req.method(), D-042) and expose matched route params (D-075). Wave 2's automatic responses (404/405+Allow, HEAD without body, OPTIONS 204, 501, 426) can only be exercised through a Response and the in-memory adapter or pipeline that wave 3 owns (D-102, D-108). Neither section owns the dispatcher that connects the router to Request and Response.",
+   "evidence": "docs/research/naruserve-v1/design/00.design.md:61 (D-030 Method in wave 2), :79 (D-042), :106-118 (D-060..D-069 need a response), :130 (D-071 freezes Request/Response in wave 3), :182 (D-108 in-memory adapter in wave 3), :173 (D-102 HEAD/204/304 body suppression in wave 3, which overlaps D-062).",
+   "suggested_fix": "Run wave 2 and wave 3 in series, or move Method/MethodSet and the router-match result type into a shared contract that wave 3 consumes. Give the pipeline/dispatcher plus the in-memory adapter to one wave, and put the T05/T06 HTTP-level assertions in the wave that runs after both."
+  },
+  {
+   "finding_id": "V2-002",
+   "severity": "high",
+   "severity_class": "correctness",
+   "items": [
+    "D-326",
+    "D-330",
+    "D-335",
+    "D-019",
+    "D-106"
+   ],
+   "claim": "D-335 says SSE uses TinyHttpd's event stream, and D-019 forbids patching TinyHttpd. That EventStream cannot produce the wire format that D-326 and D-330 require. startEventStream() hard-codes 'Cache-Control: no-cache' and commits inside the call, so 'no-cache, no-transform' cannot be sent. retry() writes its own 'retry: n' block terminated by a blank line, and send(event,data,id) writes event, id, data, so the single 'event/id/retry/data' event shown in docs/api/sse.md cannot be emitted. The obvious workaround, a hand-rolled chunked stream, keeps the worker inside TinyHttpd's worker budget (no detach), which conflicts with D-336/D-346. TinyHttpd also needs one owner thread per stream blocked in awaitClosed(), which the D-106 SPI extension point has to model.",
+   "evidence": "TinyHttpd core/src/main/java/com/snoworca/tinyhttpd/server/SseStream.java:53 (setHeader Cache-Control no-cache), :72 (commitStreaming inside start), :129-130 (retry offered as separate 'retry: n\\n\\n'), :89-110 (event,id,data order); http/EventStream.java javadoc (owner thread must call awaitClosed); object.md:458 and docs/api/sse.md:25 (no-cache, no-transform); docs/api/sse.md:57-63 (combined event with retry); design 00.design.md:509, :513, :518.",
+   "suggested_fix": "Decide in the design how SSE is carried. Either (a) accept TinyHttpd's header and retry framing and amend D-326/D-330 plus docs/api/sse.md, or (b) record a deferred TinyHttpd gap per D-020. Write the owner-thread/awaitClosed model into the D-106 event-stream extension point."
+  },
+  {
+   "finding_id": "V2-003",
+   "severity": "high",
+   "severity_class": "correctness",
+   "items": [
+    "D-324",
+    "D-346",
+    "D-336",
+    "D-218"
+   ],
+   "claim": "D-324 raises only maxUpgradedConnections, but other TinyHttpd defaults also block the T26 load test of 100+ WebSocket and SSE connections. maxConnectionsPerAddress=32 applies to every socket, including long-lived ones, and every test client connects from 127.0.0.1. maxEventStreams=64 answers 503 to the 65th SSE stream. maxConnections=128 is below 100 WS + 100 SSE. The test as designed fails against the default adapter configuration.",
+   "evidence": "TinyHttpd core/src/main/java/com/snoworca/tinyhttpd/TinyHttpd.java:262-264 (maxWorkers 64, maxConnections 128, maxConnectionsPerAddress 32), :268 (maxEventStreams 64), :271 (maxUpgradedConnections 16); server/HttpServer.java:224, :245 (per-address check at accept, released only on close); server/SseStream.java:60-62 (503 too many event streams); design 00.design.md:524 (D-324), :546 (D-346).",
+   "suggested_fix": "Extend D-324 into an item listing every TinyHttpd budget the adapter maps from NaruServe limits (maxConnections, maxConnectionsPerAddress, maxEventStreams, maxUpgradedConnections, maxWorkers). Decide which NaruServe defaults set them, and have the T26 test configure them explicitly."
+  },
+  {
+   "finding_id": "V2-004",
+   "severity": "medium",
+   "severity_class": "cross-wave",
+   "items": [
+    "D-071",
+    "D-112",
+    "D-183",
+    "D-200",
+    "D-248",
+    "D-278",
+    "D-326",
+    "D-146"
+   ],
+   "claim": "D-071 has wave 3 declare every Request/Response method in docs/api, so the frozen interfaces reference types owned by later waves: TypeRef (wave 5), Cookie (wave 5), CachePolicy (wave 6), UploadFile (wave 6), SseClient (wave 7), ApplicationContext and the service registry (wave 4), and JsonCodec for res.json. D-112 makes JsonCodec exist only 'by the end of wave 4', after wave 3 needs it. No item says wave 3 creates these types, so later waves either edit wave-3 files or wave 3 cannot compile.",
+   "evidence": "design 00.design.md:130 (D-071), :196 (D-112), :289 (D-183), :318 (D-200), :388 (D-248), :436 (D-278), :509 (D-326); docs/api/request.md and response.md reference these types.",
+   "suggested_fix": "Add a wave-3 item that creates every type referenced by the frozen Request/Response signatures as a final public type, with the owning wave filling in only the implementation. Alternatively, freeze only the methods whose types exist and give later waves explicit ownership of the additions under I-014."
+  },
+  {
+   "finding_id": "V2-005",
+   "severity": "medium",
+   "severity_class": "cross-wave",
+   "items": [
+    "D-239",
+    "D-272",
+    "D-303",
+    "D-339",
+    "D-255",
+    "D-340",
+    "D-341",
+    "D-345",
+    "D-162",
+    "D-210",
+    "D-324",
+    "D-335",
+    "I-014"
+   ],
+   "claim": "Parallel waves 6 and 7 write the same files and contracts. Both update docs/api/defaults.md (D-239, D-272 vs D-303, D-339). Both extend the shutdown sequence owned by wave 4 (D-162): temp-file cleanup (D-255) against WS/SSE close and force-close (D-340..D-345). Both need new configuration APIs that touch RestApp or its config classes (static symlink/SPA settings, Origin allowlist, WS/SSE limits), which I-014 forbids outside a serial merge. D-324/D-335 change TinyHttpd builder settings in the adapter core, contradicting D-210's 'without editing the adapter core'.",
+   "evidence": "design 00.design.md:370, :424 (wave 6 defaults.md), :471, :522 (wave 7 defaults.md), :398-399 (D-255), :526-531 (D-340..D-345), :258 (D-162), :331 (D-210), :524 (D-324), :518 (D-335), :619 (I-014).",
+   "suggested_fix": "Give wave 4 (or 5) a shutdown hook registry and a limits/config registry that waves 6 and 7 add to without editing shared code. Give the adapter-core builder mapping of every limit to wave 5 (see V2-003). Serialise docs/api/defaults.md edits, or split them into per-feature sections owned by one wave each."
+  },
+  {
+   "finding_id": "V2-006",
+   "severity": "medium",
+   "severity_class": "consistency",
+   "items": [
+    "D-129",
+    "D-132",
+    "D-134",
+    "D-135",
+    "D-173",
+    "D-052",
+    "D-215",
+    "D-217",
+    "D-218"
+   ],
+   "claim": "Several errors that the design routes through NaruServe error handling are actually produced by the TinyHttpd parser or acceptor as prebuilt raw responses, before NaruServe sees the request. These are invalid path/encoded slash/NUL/dot segment (400), header too large (431), request line too long (414), CL+TE conflict (400) and worker queue overflow (503). They never reach onError (D-129), carry no standard JSON body or requestId (D-132, D-135), and produce no access log line (D-173 'exactly one line per HTTP request'). D-134 lists 'worker queue overflow 503' in the JSON mapping, which cannot hold on the TinyHttpd adapter.",
+   "evidence": "TinyHttpd server/RequestParser.java:17, :30-31, :155-161, :204; server/ErrorResponses.java:11-23 (prebuilt bodies with Connection: close); server/Connection.java:177 (sendRawAndLinger for ParseError); server/WorkerPool.java:266 and HttpServer.java:263-285 (socket-level 503); design 00.design.md:219, :222, :224, :225, :273, :92, :337-339.",
+   "suggested_fix": "Scope D-129/D-132/D-134/D-135/D-173 to requests that reach the NaruServe pipeline. Add an item stating that transport-level rejections use TinyHttpd's plain responses and are counted or logged through the TinyLog bridge (D-220), and drop 503 from the D-134 JSON mapping or limit it to NaruServe-side overload."
+  },
+  {
+   "finding_id": "V2-007",
+   "severity": "medium",
+   "severity_class": "consistency",
+   "items": [
+    "D-050",
+    "D-051",
+    "D-052",
+    "D-053",
+    "D-108",
+    "D-224"
+   ],
+   "claim": "TinyHttpd's request parser is stricter than the NaruServe routing items, and it applies before the core runs. It returns 400 for any '.' or '..' segment (not only those that escape the root), for any %2F in any path (so a :param can never hold an encoded '/'), and for raw non-ASCII bytes. Its getPath() also merges '//' segments. The in-memory adapter (D-108) applies only D-051/D-052, so the same request can behave differently on the two adapters, and D-224 runs T07 on both. D-053's switchable '//' policy also needs the adapter to pass getRequestURI() rather than getPath(), otherwise decoding happens twice and contradicts D-051.",
+   "evidence": "TinyHttpd server/PercentCodec.java:25-53 (decodePath rejects encoded slash, NUL, '.' and '..', merges empty segments), :73-75 (non-ASCII rejected); server/RequestParser.java:30-31 (null path -> 400), :89-93 (path decoded at parse time); http/Request.java:21, :41; design 00.design.md:90-93, :182, :344.",
+   "suggested_fix": "State that the core adopts TinyHttpd's path strictness as the cross-adapter rule (encoded slash and any dot segment are 400 everywhere), or record the divergence. Require the adapter to pass the raw request URI and raw query string through the SPI."
+  },
+  {
+   "finding_id": "V2-008",
+   "severity": "medium",
+   "severity_class": "cross-wave",
+   "items": [
+    "D-002",
+    "D-005",
+    "D-025",
+    "D-179",
+    "D-371"
+   ],
+   "claim": "Modules introduced by later waves are missing from the wave-1 module list, so those waves must edit settings.gradle and the root build.gradle that wave 1 owns. This contradicts D-005 (all main dependencies declared up front). The modules are the SLF4J adapter and rotating file logger (wave 4, D-179, with an SLF4J main dependency) and the Logcat Logger artifact (wave 8, D-371). The Logcat module also needs android.jar or an Android plugin, which is at odds with D-025 (root build passes without an Android SDK) unless a compile-only android stub artifact is named.",
+   "evidence": "design 00.design.md:12 (D-002 module list), :15 (D-005), :43 (D-025), :279 (D-179), :577 (D-371).",
+   "suggested_fix": "Add the optional logger modules and the Logcat module, with their compileOnly/main dependencies (for example a Maven android stub in compileOnly), to D-002/D-005 in wave 1, or explicitly allow waves 4 and 8 to add modules to the root build."
+  },
+  {
+   "finding_id": "V2-009",
+   "severity": "medium",
+   "severity_class": "testability",
+   "items": [
+    "D-194",
+    "D-197"
+   ],
+   "claim": "D-194 requires Map values to round-trip 'unchanged' through req.body and res.json. With the default Gson that D-197 defines (only STRICT and disableJdkUnsafe), decoding into Map or Object turns every JSON number into Double, so {\"a\":1} comes back as {\"a\":1.0}. Two implementations could both claim T08: one tests Map<String,String>, the other sets ToNumberPolicy.LONG_OR_DOUBLE.",
+   "evidence": "design 00.design.md:306 (D-194), :312 (D-197); object.md:1040 (T08 includes Map); object.md:303-304 (default builder); Gson default ObjectToNumberStrategy is ToNumberPolicy.DOUBLE.",
+   "suggested_fix": "Either add setObjectToNumberStrategy(ToNumberPolicy.LONG_OR_DOUBLE) to the default Gson in D-197, or define 'unchanged' for untyped Map as JSON-value equality and document the Double behaviour in docs/api/json.md."
+  },
+  {
+   "finding_id": "V2-010",
+   "severity": "low",
+   "severity_class": "cross-wave",
+   "items": [
+    "D-068",
+    "D-069",
+    "D-117",
+    "D-121",
+    "D-294"
+   ],
+   "claim": "Some items sit in sections earlier than the APIs they need. D-068/D-069 (WS route coexistence, 426) are in wave 2, but app.ws registration only exists from wave 4 (D-114) and is specified in wave 7 (D-294). D-117/D-121 (middleware on static and WS-upgrade requests, static fall-through) are in wave 4, before staticFiles (wave 6) and upgrades (wave 7) exist.",
+   "evidence": "design 00.design.md:117-118, :205, :208, :462.",
+   "suggested_fix": "Keep the router-side behaviour in wave 2 behind an internal registration hook, and move the end-to-end assertions (426, middleware on static and upgrade requests) into waves 6 and 7."
+  },
+  {
+   "finding_id": "V2-011",
+   "severity": "low",
+   "severity_class": "testability",
+   "items": [
+    "D-251",
+    "D-239"
+   ],
+   "claim": "D-251 refers to 'the small in-memory limit documented in docs/api/multipart.md', but multipart.md names no value ('\ud55c\ub3c4\ub97c \ub118\uc73c\uba74 \uc608\uc678') and no decision item (D-239) owns choosing it, so the test has no bound to assert.",
+   "evidence": "docs/api/multipart.md:78, :85; design 00.design.md:370, :391.",
+   "suggested_fix": "Add the UploadFile.bytes() limit to D-239's decision list and to defaults.md."
+  },
+  {
+   "finding_id": "V2-012",
+   "severity": "low",
+   "severity_class": "correctness",
+   "items": [
+    "D-269",
+    "D-270"
+   ],
+   "claim": "The design does not say how symlinks are refused on API 21. java.nio.file.Files.isSymbolicLink is API 26+, so detection must use java.io canonical-vs-absolute comparison, per path component. On Android the mount root itself is often reached through a symlink (/sdcard -> /storage/emulated/0), so the root must be canonicalised once, or every file is refused.",
+   "evidence": "design 00.design.md:421-422; CLAUDE.md core constraint (no java.nio.file).",
+   "suggested_fix": "Specify java.io-only detection against the canonicalised root, and add a test with a symlinked root directory."
+  },
+  {
+   "finding_id": "V2-013",
+   "severity": "low",
+   "severity_class": "correctness",
+   "items": [
+    "D-285",
+    "D-283"
+   ],
+   "claim": "If-Modified-Since has one-second resolution, but File.lastModified() has millisecond resolution. Comparing them without truncating mtime to seconds means a file whose mtime has a sub-second part never gets 304.",
+   "evidence": "design 00.design.md:446; RFC 9110 \u00a713.1.3.",
+   "suggested_fix": "State that Last-Modified and the IMS comparison use mtime truncated to whole seconds."
+  },
+  {
+   "finding_id": "V2-014",
+   "severity": "low",
+   "severity_class": "testability",
+   "items": [
+    "D-247",
+    "D-224",
+    "D-233",
+    "D-235",
+    "D-236"
+   ],
+   "claim": "D-247 allows two multipart parsers: the core parser and TinyHttpd's MultipartReader with its own MultipartLimits. Only T07 is required to run on both adapters (D-224), so limit, header-size and malformed-boundary behaviour (D-233..D-236) may diverge on the parser that is not tested.",
+   "evidence": "design 00.design.md:384, :344, :364-367; TinyHttpd http/MultipartLimits.java.",
+   "suggested_fix": "Require T13-T17 to run against every adapter that uses its own parser, or use the core parser on all adapters."
+  },
+  {
+   "finding_id": "V2-015",
+   "severity": "low",
+   "severity_class": "consistency",
+   "items": [
+    "D-029",
+    "D-230",
+    "D-357"
+   ],
+   "claim": "Three items own the same (\ubbf8\ud655\uc815) module-name markers. D-029 (wave 1) removes the #1 markers from README.md, D-230 (wave 5) again replaces the bootstrap and Gson names in README.md, and D-357 (wave 8) does the same for the Kotlin module. This conflicts with I-008 (update docs in the same wave as the change).",
+   "evidence": "design 00.design.md:53, :354, :557, :615.",
+   "suggested_fix": "Have wave 1 replace every module-name marker across docs/api, and drop D-230/D-357 or turn them into verification items."
+  }
+ ],
+ "rows": 412
+}

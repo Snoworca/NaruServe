@@ -1,0 +1,82 @@
+[
+ {
+  "finding_id": "V1-001",
+  "items": [
+   "D-417",
+   "D-320",
+   "D-319"
+  ],
+  "claim": "The shared WebSocket sender pool of at most 16 threads, each blocked up to TinyHttpd's 30 s write timeout on a stalled session, means 16 non-reading clients (one per sender thread) block outbound messages to every other session for up to 30 s. That breaks D-320 ('a slow client SHALL not block sends to other sessions') and is easy to trigger on purpose.",
+  "evidence": "/Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/TinyHttpd.java:258 (writeTimeout 30000, global); /Users/beom/work/git/TinyHttpd/websocket/src/main/java/com/snoworca/tinyhttpd/websocket/WebSocket.java:207 (sendFrame blocks under writeLock)"
+ },
+ {
+  "finding_id": "V1-002",
+  "items": [
+   "D-419",
+   "D-323",
+   "D-416"
+  ],
+  "claim": "D-419 requires a configurable WebSocket pong timeout and D-416 budgets a NaruServe scheduler for WebSocket pings, but TinyHttpd's read loop sends its own ping when a read times out after pingInterval and closes with 1001 after a second timeout. Any frame clears awaitingPong, and WebSocketListener has no pong callback. NaruServe cannot see Pong frames, so it cannot enforce a pong timeout separate from the ping interval. Also, a connection that answers pings never idles out inside TinyHttpd.",
+  "evidence": "/Users/beom/work/git/TinyHttpd/websocket/src/main/java/com/snoworca/tinyhttpd/websocket/WebSocket.java:271-295,366; /Users/beom/work/git/TinyHttpd/websocket/src/main/java/com/snoworca/tinyhttpd/websocket/WebSocketListener.java (onOpen/onText/onBinary/onClose only)"
+ },
+ {
+  "finding_id": "V1-003",
+  "items": [
+   "D-067"
+  ],
+  "claim": "TinyHttpd returns 501 only for CONNECT whose target is not origin-form. 'CONNECT /path HTTP/1.1' passes the parser and reaches the NaruServe handler, so 'CONNECT is always answered 501 by TinyHttpd's parser' is false, and an enable policy would route origin-form CONNECT on TinyHttpd.",
+  "evidence": "/Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/RequestParser.java:63,83-84"
+ },
+ {
+  "finding_id": "V1-004",
+  "items": [
+   "D-416"
+  ],
+  "claim": "The 339-thread budget says the acceptor and watchdog threads each request a 256 KiB stack. TinyHttpd creates both with the platform default stack. Only pool workers use workerStackBytes. The memory figure recorded in defaults.md for API 21 would be wrong.",
+  "evidence": "/Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/HttpServer.java:156,165,573"
+ },
+ {
+  "finding_id": "V1-005",
+  "items": [
+   "D-161",
+   "D-164",
+   "D-153"
+  ],
+  "claim": "shutdown() is defined for RUNNING (D-161) and NEW (D-164), but not for an app that is STARTING (a listen() in progress on another thread, for example Android onDestroy during startup) or FAILED. The concurrency tests for D-153/T46 hit this case.",
+  "evidence": "object.md:11.3 state diagram (no STARTING->shutdown edge); docs/api/lifecycle.md:136-141"
+ },
+ {
+  "finding_id": "V1-006",
+  "items": [
+   "D-410"
+  ],
+  "claim": "object.md \u00a79.4 says the default cache policy can be set as a server-wide security policy, next to the example defaults for authenticated REST (no-store). D-410 limits the configurable default to static responses, so a REST no-store default has no item.",
+  "evidence": "object.md \u00a79.4 ('\uce90\uc2dc \uae30\ubcf8\uac12\uc740 \uc11c\ubc84 \uc804\uc5ed \ubcf4\uc548 \uc815\ucc45\uc73c\ub85c \uc124\uc815 \uac00\ub2a5\ud558\ub2e4')"
+ },
+ {
+  "finding_id": "V1-007",
+  "items": [
+   "D-281",
+   "D-287",
+   "D-290"
+  ],
+  "claim": "object.md \u00a79.3 makes a combined Range + cache test mandatory, for example Range with If-None-Match or If-Range, or cache headers on 206. The Range items and cache items are tested separately, and no item requires the combination.",
+  "evidence": "object.md \u00a79.3 ('Range\uc640 Cache\uc758 \uc870\ud569 \ud14c\uc2a4\ud2b8\uac00 \ud544\uc218\ub2e4')"
+ },
+ {
+  "finding_id": "V1-008",
+  "items": [
+   "D-238",
+   "I-011",
+   "I-012"
+  ],
+  "claim": "D-238 requires a bounded urlencoded body limit, but no item gives its default, configuration API or the wave that decides it. I-011 and I-012 need a concrete default recorded in defaults.md.",
+  "evidence": "docs/api/defaults.md:9-22 (no form-body row)"
+ },
+ {
+  "finding_id": "V1-009",
+  "items": [],
+  "claim": "object.md \u00a714.3 asks for a per-adapter TLS/WSS review and separate Android 5 TLS testing. TinyHttpd supports TLS (TlsConfig, Builder.tls), but no item decides whether v1 exposes TLS or records it as post-v1, and req.isSecure() can only ever be false on the embedded adapter.",
+  "evidence": "object.md \u00a714.3; /Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/TinyHttpd.java:371"
+ }
+]

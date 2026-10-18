@@ -1,0 +1,6 @@
+{"confirmed":[
+ {"finding_id":"V2-001","note":"Checked: WebSocket.java:190 close under writeLock; :288/:360 read-loop ping/pong under writeLock; HttpServer.java:469 serial onServerStopping before grace loop. Overlaps V1-002. Case (c), a close frame into a full peer window with no write in flight, also holds."},
+ {"finding_id":"V2-002","note":"Checked: WebSocket.close takes writeLock and writes the close frame synchronously (WebSocket.java:190-196); one scheduler thread (D-425, D-416) serialises idle closes, so one stalled socket delays every other session's idle timeout by up to writeTimeout."},
+ {"finding_id":"V2-003","note":"Checked: RequestParser.java:153-155 sets lineMax = in.buf.length - 2 for every header line, so header lines are capped by inputBufferBytes. D-414 sizes the buffer from the request-line limit only."},
+ {"finding_id":"V2-004","note":"Checked: D-426 (design:286) bounds the wait but defines no result when the timeout passes with onStart still blocked, and no FAILED-vs-direct-TERMINATED path, while object.md:727-731 distinguishes them."}
+],"added":[]}

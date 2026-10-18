@@ -1,0 +1,62 @@
+{
+  "schema_version": "1.0.0",
+  "classifier_version": "route-classifier@2.0.0",
+  "run_id": "2026-10-19.NaruServe.naruserve-v1",
+  "rung": "R-ORCH",
+  "proposed_rung": "R-ORCH",
+  "overridden_by": null,
+  "decisive": {
+    "predicate": "D4",
+    "rung": "R-STEP",
+    "observed": {
+      "ordered_sections": 0,
+      "linked_sub_issues": 19,
+      "task_list_groups": 1,
+      "fired": [
+        "linked_sub_issues",
+        "task_list_groups"
+      ]
+    }
+  },
+  "removed": [
+    {
+      "rung": "R-STEP",
+      "by": "D4",
+      "observed": {
+        "ordered_sections": 0,
+        "linked_sub_issues": 19,
+        "task_list_groups": 1,
+        "fired": [
+          "linked_sub_issues",
+          "task_list_groups"
+        ]
+      }
+    }
+  ],
+  "alternative": null,
+  "work_mode": {
+    "value": "wait",
+    "source": "mcp",
+    "divergence": null
+  },
+  "gates": [
+    {
+      "gate_id": "route-proposal",
+      "severity": "business-decision",
+      "options": [
+        "R-ORCH",
+        "abort"
+      ],
+      "recommended": true,
+      "withheld_because": [],
+      "resolution": {
+        "rule": "recommended-fastpath",
+        "committee_size": 0,
+        "marked_by": "kiwi-orchestrator §4.6"
+      }
+    }
+  ],
+  "probe_path": "docs/research/naruserve-v1/routing/probe.json",
+  "probe_digest": "sha256:d6addd712bbbab50be2e2d682f3a6a8c458c8444cfe52ad04a056cb0bf187060",
+  "decided_at": "2026-10-18T17:36:30Z"
+}

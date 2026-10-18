@@ -1,0 +1,95 @@
+[
+ {
+  "finding_id": "V2-001",
+  "items": [
+   "D-216",
+   "D-404",
+   "D-225"
+  ],
+  "claim": "The design does not defend against a slow request body (body slowloris), which T48 requires. D-216 keeps only TinyHttpd's header-count limit, header timeout and bodyReadTimeout enabled. bodyReadTimeout is a per-read timeout (default 30 s), and TinyHttpd's whole-body guard minRequestBodyRate defaults to 0, which means off. A client that sends one body byte every 29 s keeps its worker for as long as the body limit allows, up to 64 MiB of multipart. No item turns minRequestBodyRate on or maps it to a NaruServe default.",
+  "evidence": "TinyHttpd core/.../TinyHttpd.java:538-556 (minRequestBodyRate 'default 0 (off)', bodyReadTimeout 'timeout of one request body read'), :267 minRequestBodyRate = 0; TinyHttpd HEAD 46b973e 'minRequestBodyRate defaults to 0 (off)'; object.md:1080 T48 '\ud5e4\ub354/URL/body slowloris'; docs/api/defaults.md 'HTTP \ud504\ub85c\ud1a0\ucf5c \ubc29\uc5b4' (\ud5e4\ub354\ub098 \ubcf8\ubb38\uc744 \uc544\uc8fc \ucc9c\ucc9c\ud788 \ubcf4\ub0b4\ub294 \uacf5\uaca9\uc744 timeout\uc73c\ub85c \ub04a\uc2b5\ub2c8\ub2e4); design 00.design.md:362 D-216."
+ },
+ {
+  "finding_id": "V2-002",
+  "items": [
+   "D-183",
+   "D-184",
+   "D-229",
+   "D-370"
+  ],
+  "claim": "TypeRef breaks in R8-minified Android Release builds, and no item prevents or tests it. D-183 reads the generic type of an anonymous TypeRef subclass at runtime. R8 (full mode is the AGP 8 default) strips the Signature attribute and may merge or remove the subclass unless keep rules say otherwise. Then `new TypeRef<List<User>>(){}` fails with the D-184 'no concrete type argument' exception, or decodes the wrong type. Gson ships equivalent rules for its own TypeToken, but they do not cover a NaruServe class. D-229 gives consumer keep rules only for the bootstrap factory, and the T12 check D-370 uses only an @SerializedName POJO, so the bug would pass the gate.",
+  "evidence": "00.design.md:313 D-183, :314 D-184, :380 D-229 ('keep rules that keep the factory found by RestApp.create()'), :610 D-370; object.md:315 and :1044 T12 (R8 on, serialization identical); docs/api/json.md:31 only discusses field renaming."
+ },
+ {
+  "finding_id": "V2-003",
+  "items": [
+   "D-215",
+   "D-225"
+  ],
+  "claim": "D-215 asks for an 8 KiB request-line limit. With TinyHttpd's default input buffer, 8 KiB taken as 8192 cannot be set alone: TinyHttpd.build() rejects maxRequestLineBytes > inputBufferBytes - 2. TinyHttpd defaults to 8190 for exactly this reason. The adapter must either also raise inputBufferBytes, which adds per-connection memory, or define '8 KiB' as 8190. The item does not say which, so the T48 boundary test is ambiguous. docs/api/defaults.md calls the limit 'URL length', but TinyHttpd counts the whole request line (method, target and version).",
+  "evidence": "TinyHttpd core/.../TinyHttpd.java:254-256 (inputBufferBytes 8192, maxRequestLineBytes 8190), :712-714 ('inputBufferBytes must be >= maxRequestLineBytes + 2'); RequestParser.java:17 (readLine(maxRequestLineBytes, 414)); 00.design.md:361 D-215; docs/api/defaults.md '\uc694\uccad URL \uae38\uc774 8 KiB'."
+ },
+ {
+  "finding_id": "V2-004",
+  "items": [
+   "D-404",
+   "D-225",
+   "D-336",
+   "D-218"
+  ],
+  "claim": "D-404 mislabels several TinyHttpd limits, and D-225 promises a setting TinyHttpd does not have. (1) TinyHttpd maxConnections counts open plus queued ordinary connections only. Upgraded WebSocket connections leave that count, so 512 is not a total-connection bound (the real total is up to maxConnections + maxUpgradedConnections). (2) There is no independent wait-queue length: the queue is maxConnections - maxWorkers, so D-225's separate wait-queue configuration cannot be independent of total connections. (3) maxWorkers = HTTP budget + SSE limit must stay <= maxConnections, or build() throws. Raising the SSE limit (for example to 1000) with the default 512 therefore breaks startup. (4) The SSE limit of 128 is not a TinyHttpd builder option in this design. TinyHttpd's maxEventStreams governs only startEventStream, which D-335 forbids, so D-336's 503 beyond the limit needs a NaruServe-side counter. D-404's wording ('map ... onto TinyHttpd's builder') invites the wrong mapping.",
+  "evidence": "TinyHttpd core/.../TinyHttpd.java:600-604 (maxConnections 'open plus queued ordinary connections'), :716-718 ('maxConnections must be >= maxWorkers'); server/WorkerPool.java:15-18, :113-117, :203-219 (detach releases the slot for upgrades); server/SseStream.java:60 (maxEventStreams only counted by SseStream); 00.design.md:368 D-404, :373 D-225, :553 D-336."
+ },
+ {
+  "finding_id": "V2-005",
+  "items": [
+   "D-107",
+   "D-162",
+   "D-223",
+   "D-344",
+   "D-401"
+  ],
+  "claim": "The shutdown sequence needs a 'stop accepting' step that the wave 3 SPI does not provide. D-162 orders: stop accepting connections, wait for in-flight requests, force-close, onStop, close resources, flush logs, then 'stop the adapter'. D-107 gives the SPI only bind and a single 'stop with a grace timeout'. TinyHttpd has no separate stop-accepting call: stop(grace) closes the listener, waits, aborts the remaining sockets and interrupts workers, all in one blocking call. Implemented as written, with TinyHttpd stopped last (D-223), the listener stays open during the in-flight wait and onStop, which contradicts object.md 11.4 step 2 and T44 ('new requests blocked'). Calling stop(grace) first instead makes the core's own wait redundant and moves the force-close inside the adapter, leaving the D-401 phase hooks unclear. Either reading risks breaking D-344's timeout-plus-margin bound if the two waits run back to back.",
+  "evidence": "00.design.md:207 D-107, :281 D-162, :371 D-223, :564 D-344; TinyHttpd server/HttpServer.java:450-485 (stop closes listeners, waits for the grace period, aborts sockets, interrupts workers); object.md:750-756 (step 2: \uc2e0\uaddc \uc5f0\uacb0 ... \uc218\ub77d \uc911\uc9c0)."
+ },
+ {
+  "finding_id": "V2-006",
+  "items": [
+   "D-106",
+   "D-406",
+   "D-361"
+  ],
+  "claim": "The wave 3 event-stream SPI point (D-106) and the SSE queue model (D-406) are both defined as 'the request thread keeps writing/draining after the handler returned', and D-406 is not limited to the TinyHttpd adapter. D-361 (wave 8) requires SSE on the Servlet adapter to use AsyncContext, whose purpose is to release the container thread and write from another thread. Wave 8 must then either hold the container thread after startAsync, which satisfies the letter of both items and defeats D-361's intent, or change the SPI contract, which I-014 forbids for the HttpAdapter SPI.",
+  "evidence": "00.design.md:200 D-106, :552 D-406, :596 D-361, :655 I-014."
+ },
+ {
+  "finding_id": "V2-007",
+  "items": [
+   "D-395",
+   "D-069",
+   "D-408"
+  ],
+  "claim": "RFC 9110 15.5.22 says a server that sends 426 MUST send an Upgrade header field naming the required protocol. D-395, D-069 and D-408 specify only the status, so a test following them would accept a non-compliant response.",
+  "evidence": "00.design.md:149 D-395, :118 D-069, :503 D-408; RFC 9110 \u00a715.5.22."
+ },
+ {
+  "finding_id": "V2-008",
+  "items": [
+   "D-400",
+   "D-405",
+   "D-214"
+  ],
+  "claim": "D-400's list of transport-level rejections that bypass onError, the standard error JSON and the access log is incomplete compared with TinyHttpd's fixed-byte responses. It omits 408 (headerTimeout) and 505 (HTTP version), both sent through ErrorResponses. It also does not classify TinyHttpd's 421 from the Host allowlist, which is on by default (D-214), so docs/api/defaults.md and its test would not match the engine.",
+  "evidence": "TinyHttpd server/ErrorResponses.java:11 (STATUSES 400,408,413,414,417,421,431,501,503,505), server/Connection.java:177-181; TinyHttpd.java:395-403 (hostCheck default on, 421); 00.design.md:366 D-400, :367 D-405."
+ },
+ {
+  "finding_id": "V2-009",
+  "items": [
+   "D-404",
+   "D-336",
+   "D-318"
+  ],
+  "claim": "The default long-connection budget is one thread per connection: 64 HTTP + 128 SSE workers (D-336) + 128 WebSocket read threads (TinyHttpd upgrade keeps its worker), plus whatever sender mechanism D-318/D-320 adds. That is 320+ threads at 256 KiB of requested stack on an API 21 device. object.md 14.1 calls worker-per-connection risky on old Android. D-347 defers tuning, but no item bounds the total thread count that the T26 assertion uses.",
+  "evidence": "00.design.md:368 D-404, :553 D-336, :528 D-318, :570 D-347; TinyHttpd TinyHttpd.java:265 (workerStackBytes 256*1024), server/Upgraded.java:13; object.md:827 (Worker per connection\uc740 \uad6c\ud615 Android\uc5d0\uc11c \uc704\ud5d8)."
+ }
+]

@@ -1,0 +1,69 @@
+[
+ {
+  "finding_id": "V1-001",
+  "items": [
+   "D-216",
+   "D-225",
+   "D-404"
+  ],
+  "claim": "T48 requires body slowloris rejection, but D-216 relies only on TinyHttpd's per-read bodyReadTimeout (30 s per read). A client dripping one byte every <30 s survives. TinyHttpd's slow-body guard minRequestBodyRate is off by default, and no item enables it, maps it or lists it among D-225's configuration APIs.",
+  "evidence": "/Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/TinyHttpd.java:257 (minRequestBodyRate = 0), /Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/TinyHttpd.java:538-548 (slow-body guard, 'default 0 (off)'), /Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/TinyHttpd.java:551-553 (bodyReadTimeout = timeout of one read); object.md:1080 (T48); object.md:859 (slowloris defence)"
+ },
+ {
+  "finding_id": "V1-002",
+  "items": [
+   "D-400"
+  ],
+  "claim": "D-400 lists TinyHttpd's fixed pre-dispatch responses for defaults.md but leaves out 408 (header timeout) and 505 (unsupported HTTP version). Both are sent as fixed bytes before dispatch and also bypass onError, the standard JSON and the access log.",
+  "evidence": "/Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/Connection.java:179-181 (408 via sendRawAndLinger), /Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/RequestParser.java:102-103 (505), /Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/ErrorResponses.java:11"
+ },
+ {
+  "finding_id": "V1-003",
+  "items": [
+   "D-086",
+   "D-087"
+  ],
+  "claim": "D-086 throws BodyAlreadyConsumedException only for a second read 'through a different reader'. docs/api/request.md also requires a second req.body(...) after req.body(...) to throw. No item covers a repeated read through the same JSON reader.",
+  "evidence": "docs/api/request.md:86; object.md:248 (repeated read is BodyAlreadyConsumedException unless an explicit cache option exists)"
+ },
+ {
+  "finding_id": "V1-004",
+  "items": [
+   "D-306",
+   "D-318",
+   "D-323",
+   "D-339",
+   "D-406"
+  ],
+  "claim": "object.md requires the WebSocket message size, the WS and SSE outbound queue sizes and the Ping response time to be configurable limits. D-323 assigns only idle timeout, ping interval and handshake timeout, and D-339 only the overflow policy. No item owns the configuration API for message size, queue sizes or the pong/response timeout, so only the D-380 catch-all would cover them.",
+  "evidence": "object.md:439 (limits incl. 'Ping \uc8fc\uae30/\uc751\ub2f5 \uc2dc\uac04', queue size), object.md:847-849 (WS message / WS queue / SSE queue '\ubcc0\uacbd \uac00\ub2a5: \uc608'), docs/api/defaults.md:21-23"
+ },
+ {
+  "finding_id": "V1-005",
+  "items": [
+   "D-005",
+   "D-363"
+  ],
+  "claim": "D-005 allows later waves to add only test-scope dependencies or release plugins. D-363 lets wave 8 decide container WebSocket support for NaruServe-servlet. Supporting it needs a compileOnly javax.websocket-api main dependency, which D-005 forbids, so one of D-363's options is blocked.",
+  "evidence": "docs/research/naruserve-v1/design/00.design.md:15 (D-005), :598 (D-363); docs/api/servlet.md:29"
+ },
+ {
+  "finding_id": "V1-006",
+  "items": [
+   "D-106",
+   "D-361",
+   "I-014"
+  ],
+  "claim": "D-106 defines the SPI event-stream extension point as the core writing 'from the request thread' after the handler returns. D-361 requires the Servlet adapter to use AsyncContext, which releases the container thread. I-014 freezes the SPI before wave 8. If wave 5 writes a contract that is bound to the request thread, the Servlet adapter cannot meet D-361 without changing the SPI.",
+  "evidence": "docs/research/naruserve-v1/design/00.design.md:200 (D-106), :596 (D-361), :655 (I-014); object.md:462"
+ },
+ {
+  "finding_id": "V1-007",
+  "items": [
+   "D-261",
+   "D-262"
+  ],
+  "claim": "directoryListing(true) is a public option (D-261), but no item defines what an enabled listing returns: format, escaping of file names, or exclusion of hidden files and symbolic links consistent with D-270/D-271.",
+  "evidence": "docs/api/static.md:40; object.md:486 (directory listing off by default; enabled behaviour unspecified)"
+ }
+]
