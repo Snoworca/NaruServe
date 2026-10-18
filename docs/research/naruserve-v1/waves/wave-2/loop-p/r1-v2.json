@@ -1,0 +1,34 @@
+{
+  "findings": [
+    {
+      "finding_id": "P2-001",
+      "severity": "low",
+      "severity_class": "api-shape / express-adaptation",
+      "claim": "Variable names are not restricted to identifier characters. RoutePattern.parse takes everything after ':' up to the next '/' as the name, so the Express-style patterns '/:id.json' or '/:from-:to' register without error and produce one parameter named 'id.json' / 'from-:to'. A wave-3 handler calling req.param(\"id\") then gets null without any warning. The SRS and object.md say nothing about the variable-name charset, so this is a spec gap that the implementation fills silently.",
+      "evidence": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RoutePattern.java:49-59",
+      "suggested_fix": "Record a decision (SRS clarification): either reject a variable name that is not [A-Za-z_][A-Za-z0-9_]* with RoutingConfigException at registration, or document in docs/api/routing.md that the whole segment after ':' is the name. Mark it (미확정) until decided."
+    },
+    {
+      "finding_id": "P2-002",
+      "severity": "low",
+      "severity_class": "api-shape / silent dead route",
+      "claim": "Pattern literals are compared against once-decoded request segments, but parse() accepts literals that no valid request can ever match (a '%' escape such as '/a%20b' or '/a%2Fb', raw space, '#', control chars). Express matches '/a%20b' against the encoded path, so an Express user porting such a route gets a route that never matches and no configuration error.",
+      "evidence": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RoutePattern.java:32-40 vs NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:301-306",
+      "suggested_fix": "Reject literals containing '%', '#' or chars <= 0x20 / 0x7F at registration (same RoutingConfigException path), or document that pattern literals are written decoded (as docs/api/routing.md already shows with '/café')."
+    },
+    {
+      "finding_id": "P2-003",
+      "severity": "low",
+      "severity_class": "thread-safety",
+      "claim": "Router.allowFor is public, takes no lock and has no frozen check. Before freeze() it iterates the mutable ArrayList that synchronized add() is growing, so a concurrent call can throw ConcurrentModificationException or see a half-built table. It can also include TRACE/CONNECT routes that freeze() would reject. lookup guards against this with its frozen check; allowFor does not.",
+      "evidence": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:242-250 (compare the guard at :165-167)",
+      "suggested_fix": "Add the same 'if (!frozen) throw IllegalStateException' guard to allowFor, or make it package-private (the only callers are tests and lookup's own Allow path already uses allowOf)."
+    }
+  ],
+  "regression": {
+    "command": "./gradlew build",
+    "exit_code": 0,
+    "failing_tests": []
+  },
+  "substantive_clean": true
+}

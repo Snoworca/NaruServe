@@ -1,0 +1,8 @@
+{
+ "confirmed": [
+  {"finding_id": "P2-001", "verdict": "confirm", "evidence": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RoutePattern.java:49-59 takes part.substring(1) as the name with no charset check; no SRS AC fixes the variable-name charset (FR-ROUTE-003 AC-3 only covers empty/repeated names)."},
+  {"finding_id": "P2-002", "verdict": "confirm", "evidence": "RoutePattern.java:32-40 only rejects ?*+(); literals compare against PathValidator.decode output (Router.java:301-306, RoutePattern.java:108-109), so a literal containing '%XX', '#' or a raw space cannot match any path PathValidator accepts."},
+  {"finding_id": "P2-003", "verdict": "confirm", "evidence": "Router.java:242-250 public allowFor is unsynchronized with no frozen check, unlike lookup at :165-167; the only callers are RouterAutoResponseTest.java:27,154."}
+ ],
+ "added": []
+}

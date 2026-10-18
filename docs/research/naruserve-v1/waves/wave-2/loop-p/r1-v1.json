@@ -1,0 +1,654 @@
+{
+ "req_ac": [
+  {
+   "id": "IR-ROUTE-001 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/MethodTest.java#sdsAc1_IR_ROUTE_001_AC1_valuesInDeclarationOrder (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "IR-ROUTE-001 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/MethodTest.java#sdsAc2_IR_ROUTE_001_AC2_factoriesReturnExactMembers; NaruServe-api/src/test/java/com/snoworca/naruserve/MethodTest.java#sdsAc2_IR_ROUTE_001_AC2_ofRejectsNullArrayAndNullElement (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "IR-ROUTE-001 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/MethodTest.java#sdsAc1_IR_ROUTE_001_AC3_onlyStaticGetAnyOfBesideEnumBuiltIns (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "IR-ROUTE-002 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/MethodSetTest.java#sdsAc4_IR_ROUTE_002_AC1_combinatorsReturnNewSetAndLeaveReceiverUnchanged (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "IR-ROUTE-002 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/MethodSetTest.java#sdsAc4_IR_ROUTE_002_AC2_eachCombinatorAddsExactlyItsOwnConstant (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "IR-ROUTE-002 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/MethodSetTest.java#sdsAc4_IR_ROUTE_002_AC3_exceptRemovesAndNonMemberGivesEqualSet (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "IR-ROUTE-002 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/MethodSetTest.java#sdsAc3_IR_ROUTE_002_AC4_iteratorRemoveThrowsAndSetUnchanged; NaruServe-api/src/test/java/com/snoworca/naruserve/MethodSetTest.java#sdsAc3_IR_ROUTE_002_AC4_noPublicConstructorAndOnlyFinalFields (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "FR-ROUTE-001 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/MethodSetTest.java#sdsAc5_FR_ROUTE_001_AC1_anyHasSevenMembersWithoutTraceOrConnect (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "FR-ROUTE-001 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/MethodSetTest.java#sdsAc5_FR_ROUTE_001_AC2_anyExceptDeleteEquality (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "FR-ROUTE-001 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/MethodSetTest.java#sdsAc5_FR_ROUTE_001_AC3_anyIsConstantAndTraceConnectOnlyWhenNamed; NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterPolicyTest.java#FR_ROUTE_001_AC3_anyUnchangedOnRouterWithTraceAndConnectEnabled (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "IR-ROUTE-003 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/MethodSetTest.java#sdsAc6_IR_ROUTE_003_AC1_ordinalIterationAndContains (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "IR-ROUTE-003 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/MethodSetTest.java#sdsAc7_IR_ROUTE_003_AC2_valueEqualityHashCodeAndToString (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "IR-ROUTE-003 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/MethodKotlinTest.kt#SDS-AC-8 IR-ROUTE-003 AC-3 combinators, in and for loop without backticks; NaruServe-api/src/test/kotlin/com/snoworca/naruserve/MethodKotlinTest.kt#SDS-AC-8 IR-ROUTE-003 AC-3 no public method name is a Kotlin hard keyword (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "CON-ROUTE-001 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterRegistrationTest.java#CON_ROUTE_001_AC1_routerClassesLiveInApiMainUnderNaruServePackage (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "CON-ROUTE-001 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterRegistrationTest.java#sdsAc1_CON_ROUTE_001_AC2_FR_ROUTE_002_AC1_methodSetRegistrationServesEveryMember; NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterRegistrationTest.java#sdsAc1_CON_ROUTE_001_AC2_noRequestResponseHandlerOrAppTypeInApiMain (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "CON-ROUTE-001 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/routing/RouterKotlinTest.kt#SDS-AC-2 CON-ROUTE-001 AC-3 match is nullable and Router API has no platform types; NaruServe-api/src/test/kotlin/com/snoworca/naruserve/routing/RouterKotlinTest.kt#SDS-AC-2 CON-ROUTE-001 AC-3 routing package is NullMarked and match carries Nullable (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "CON-ROUTE-001 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterMatchingTest.java#sdsAc3_CON_ROUTE_001_AC4_FR_ROUTE_005_AC1_queryIsDroppedBeforeDecoding; NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterMatchingTest.java#sdsAc3_CON_ROUTE_001_AC4_absoluteFormIsNotParsed (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "FR-ROUTE-002 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterRegistrationTest.java#sdsAc1_CON_ROUTE_001_AC2_FR_ROUTE_002_AC1_methodSetRegistrationServesEveryMember (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "FR-ROUTE-002 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterRegistrationTest.java#sdsAc1_FR_ROUTE_002_AC2_perMethodHandlersOnOnePattern (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "FR-ROUTE-002 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterRegistrationTest.java#sdsAc4_FR_ROUTE_002_AC3_addWebSocketStoresWebSocketKindAsGet; NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterRegistrationTest.java#sdsAc4_FR_ROUTE_002_AC3_twoWebSocketRoutesOnOnePatternConflictAsGet (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "FR-ROUTE-003 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RoutePatternTest.java#FR_ROUTE_003_AC1_variableMatchesExactlyOneNonEmptySegment (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "FR-ROUTE-003 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RoutePatternTest.java#sdsAc5_FR_ROUTE_003_AC2_wildcardAndRegexSyntaxRejectedAtAdd (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "FR-ROUTE-003 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RoutePatternTest.java#sdsAc5_FR_ROUTE_003_AC3_emptyOrRepeatedVariableNameRejectedAtAdd; NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RoutePatternTest.java#sdsAc5_FR_ROUTE_003_AC3_parseNamesThePattern (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "FR-ROUTE-003 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RoutePatternTest.java#sdsAc5_FR_ROUTE_003_AC4_emptyInteriorSegmentRejectedRootAndTrailingAccepted (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "FR-ROUTE-004 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/PathValidatorTest.java#sdsAc6_FR_ROUTE_004_AC1_rejectList (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "FR-ROUTE-004 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/PathValidatorTest.java#sdsAc7_FR_ROUTE_004_AC2_rawSpaceControlDelHashAndNonAsciiRejected (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "FR-ROUTE-004 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/PathValidatorTest.java#sdsAc6_FR_ROUTE_004_AC3_acceptListWithAndWithoutQuery (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "FR-ROUTE-004 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/PathValidatorTest.java#FR_ROUTE_004_AC4_validatorReturnsOnlyADecisionNeverADecodedPath (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "FR-ROUTE-005 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterMatchingTest.java#sdsAc3_CON_ROUTE_001_AC4_FR_ROUTE_005_AC1_queryIsDroppedBeforeDecoding (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "FR-ROUTE-005 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterMatchingTest.java#sdsAc8_FR_ROUTE_005_AC2_strictDefaultCaseAndTrailingSlashSignificant (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "FR-ROUTE-005 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RoutePatternTest.java#FR_ROUTE_005_AC3_paramsAreUnmodifiable; NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterMatchingTest.java#sdsAc8_FR_ROUTE_005_AC3_decodedOnceAsUtf8; NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterMatchingTest.java#sdsAc8_FR_ROUTE_005_AC3_plusStaysPlus (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "FR-ROUTE-005 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterMatchingTest.java#sdsAc8_FR_ROUTE_005_AC4_emptySegmentNeverMatchesUnderStrictDefault (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "FR-ROUTE-006 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterPolicyTest.java#sdsAc10_FR_ROUTE_006_AC1_mergeSlashesAlone (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "FR-ROUTE-006 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterPolicyTest.java#sdsAc10_FR_ROUTE_006_AC2_ignoreTrailingSlashAloneAndWithMerge (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "FR-ROUTE-006 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterPolicyTest.java#sdsAc9_FR_ROUTE_006_AC3_caseInsensitiveLiteralsKeepParamAsReceived; NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterPolicyTest.java#sdsAc9_FR_ROUTE_006_AC3_turkishDefaultLocaleDoesNotChangeComparison (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "FR-ROUTE-006 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterPolicyTest.java#sdsAc10_FR_ROUTE_006_AC4_strictEqualsUnsetBuilderAndBuiltPolicyIsFixed; NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterPolicyTest.java#sdsAc10_FR_ROUTE_006_AC4_policyAndRouterOfferNoSetter (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "FR-ROUTE-007 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterPriorityTest.java#sdsAc11_FR_ROUTE_007_AC1_literalBeatsVariableInBothOrders (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "FR-ROUTE-007 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterPriorityTest.java#sdsAc11_FR_ROUTE_007_AC2_leftmostDifferingSegmentDecides (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "FR-ROUTE-007 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterPriorityTest.java#sdsAc11_FR_ROUTE_007_AC3_priorityIsPerMethod (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "FR-ROUTE-008 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterFreezeTest.java#sdsAc12_FR_ROUTE_008_AC1_duplicateGetAndMethodSetOverlap; NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterFreezeTest.java#FR_ROUTE_008_AC1_registrationAfterFreezeCannotBypassConflictDetection (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "FR-ROUTE-008 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterFreezeTest.java#sdsAc12_FR_ROUTE_008_AC2_AC3_variableNamesOnlyDifferAndOneLinePerPair (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "FR-ROUTE-008 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterFreezeTest.java#sdsAc12_FR_ROUTE_008_AC2_AC3_variableNamesOnlyDifferAndOneLinePerPair; NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterFreezeTest.java#sdsAc12_FR_ROUTE_008_AC3_registrationDoesNotRaiseBeforeFreeze; NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterFreezeTest.java#sdsAc12_FR_ROUTE_008_AC3_isDistinctFromIllegalStateAndArgument (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "FR-ROUTE-008 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterFreezeTest.java#sdsAc13_FR_ROUTE_008_AC4_conflictsOnlyUnderTheirPolicies; NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterFreezeTest.java#sdsAc13_FR_ROUTE_008_AC4_conflictKeyFoldsCaseLikeMatching (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "FR-ROUTE-008 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterFreezeTest.java#sdsAc14_FR_ROUTE_008_AC5_traceAndConnectWhileDisabledFailFreeze; NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterFreezeTest.java#sdsAc14_FR_ROUTE_008_AC5_enabledTraceAndConnectFreeze; NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterRegistrationTest.java#sdsAc4_FR_ROUTE_008_AC5_webSocketAndGetOnOnePatternFreeze (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "IR-ROUTE-004 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouteMatchTest.java#sdsAc1_IR_ROUTE_004_AC1_exactlySixKindsAndNoPublicConstructor; NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouteMatchTest.java#sdsAc1_IR_ROUTE_004_AC1_matchedCarriesHandlerParamsMethodKind; NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouteMatchTest.java#sdsAc1_IR_ROUTE_004_AC1_paramsUnmodifiable; NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouteMatchTest.java#sdsAc1_IR_ROUTE_004_AC1_mismatchAndAutoOptionsCarryOnlyAllow; NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouteMatchTest.java#sdsAc1_IR_ROUTE_004_AC1_otherKindsCarryNoFields; NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouteMatchTest.java#sdsAc1_IR_ROUTE_004_AC1_everyKindReachable (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "IR-ROUTE-004 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterAutoResponseTest.java#sdsAc5_FR_ROUTE_009_AC1_AC2_unmatchedPathIsNoMatchIncludingOptions; NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterAutoResponseTest.java#sdsAc9_FR_ROUTE_013_AC1_AC2_unknownTokensUnsupported (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "IR-ROUTE-004 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterLookupTest.java#sdsAc4_IR_ROUTE_004_AC3_precedenceOnOnePath (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "IR-ROUTE-004 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterLookupTest.java#sdsAc2_IR_ROUTE_004_AC4_rejectedPathThrowsBeforeTokenIsRead; NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterLookupTest.java#sdsAc4_IR_ROUTE_004_AC4_rawPathDecodedOnceIntoParams (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "IR-ROUTE-004 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterLookupTest.java#sdsAc3_IR_ROUTE_004_AC5_lookupBeforeFreezeThrows; NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterLookupTest.java#sdsAc3_IR_ROUTE_004_AC5_lookupAfterFailedFreezeThrows; NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterLookupTest.java#sdsAc3_IR_ROUTE_004_AC5_addAfterFreezeThrows; NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterLookupTest.java#sdsAc3_IR_ROUTE_004_AC5_upgradeIgnoredUnlessGet (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "FR-ROUTE-009 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterAutoResponseTest.java#sdsAc5_FR_ROUTE_009_AC1_AC2_unmatchedPathIsNoMatchIncludingOptions (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "FR-ROUTE-009 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterAutoResponseTest.java#sdsAc5_FR_ROUTE_009_AC1_AC2_unmatchedPathIsNoMatchIncludingOptions (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "FR-ROUTE-009 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterAutoResponseTest.java#sdsAc5_FR_ROUTE_009_AC3_webSocketOnlyPathIsNeverNoMatch (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "FR-ROUTE-010 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterAutoResponseTest.java#sdsAc6_FR_ROUTE_010_AC1_anyExceptDelete (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "FR-ROUTE-010 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterAutoResponseTest.java#sdsAc6_FR_ROUTE_010_AC2_unionOverEveryMatchingPattern (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "FR-ROUTE-010 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterAutoResponseTest.java#sdsAc6_FR_ROUTE_010_AC3_noHeadWithoutGet (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "FR-ROUTE-010 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterAutoResponseTest.java#sdsAc6_FR_ROUTE_010_AC4_webSocketCountsAsGet (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "FR-ROUTE-011 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterAutoResponseTest.java#sdsAc7_FR_ROUTE_011_AC1_headResolvesToGet (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "FR-ROUTE-011 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterAutoResponseTest.java#sdsAc7_FR_ROUTE_011_AC2_explicitHeadWins (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "FR-ROUTE-011 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterAutoResponseTest.java#sdsAc7_FR_ROUTE_011_AC3_headVariableBeatsGetLiteral (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "FR-ROUTE-012 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterAutoResponseTest.java#sdsAc8_FR_ROUTE_012_AC1_autoOptionsAllow (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "FR-ROUTE-012 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterAutoResponseTest.java#sdsAc8_FR_ROUTE_012_AC2_explicitOptionsWins (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "FR-ROUTE-012 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterAutoResponseTest.java#sdsAc8_FR_ROUTE_012_AC3_webSocketOnlyOptionsAllow (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "FR-ROUTE-013 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterAutoResponseTest.java#sdsAc9_FR_ROUTE_013_AC1_AC2_unknownTokensUnsupported (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "FR-ROUTE-013 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterAutoResponseTest.java#sdsAc9_FR_ROUTE_013_AC1_AC2_unknownTokensUnsupported (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "FR-ROUTE-014 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterTraceConnectTest.java#sdsAc10_FR_ROUTE_014_AC1_defaultPolicyUnsupported (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "FR-ROUTE-014 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterTraceConnectTest.java#sdsAc10_FR_ROUTE_014_AC2_traceEnabled (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "FR-ROUTE-014 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterTraceConnectTest.java#sdsAc10_FR_ROUTE_014_AC3_connectEnabled (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "FR-ROUTE-015 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterWebSocketTest.java#sdsAc12_FR_ROUTE_016_AC3_FR_ROUTE_015_AC1_AC3_webSocketAndGetCoexist (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "FR-ROUTE-015 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterWebSocketTest.java#sdsAc11_FR_ROUTE_015_AC2_upgradeFlagHelper (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "FR-ROUTE-015 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterWebSocketTest.java#sdsAc12_FR_ROUTE_016_AC3_FR_ROUTE_015_AC1_AC3_webSocketAndGetCoexist (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "FR-ROUTE-016 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterWebSocketTest.java#sdsAc12_FR_ROUTE_016_AC1_webSocketOnlyPath (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "FR-ROUTE-016 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterWebSocketTest.java#sdsAc12_FR_ROUTE_016_AC2_webSocketAndPost (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "FR-ROUTE-016 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterWebSocketTest.java#sdsAc12_FR_ROUTE_016_AC3_FR_ROUTE_015_AC1_AC3_webSocketAndGetCoexist (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "FR-ROUTE-017 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterWebSocketTest.java#sdsAc13_FR_ROUTE_017_AC1_upgradeFallsBackToGet (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "FR-ROUTE-017 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterWebSocketTest.java#sdsAc13_FR_ROUTE_017_AC2_AC3_upgradeFallbackMismatchAndNoMatch (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "FR-ROUTE-017 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterWebSocketTest.java#sdsAc13_FR_ROUTE_017_AC2_AC3_upgradeFallbackMismatchAndNoMatch (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "OPS-ROUTE-001 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/RoutingDocsTest.java#sdsAc10_OPS_ROUTE_001_AC1_routingRulesSectionPresent (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "OPS-ROUTE-001 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/RoutingDocsTest.java#sdsAc9_OPS_ROUTE_001_AC2_accessorsNamedWithJavaKotlinAndExpressNote (passed in ./gradlew build, exit 0)"
+  },
+  {
+   "id": "OPS-ROUTE-001 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/RoutingDocsTest.java#sdsAc10_OPS_ROUTE_001_AC3_wave1MarkersKeptAndNoneAdded (passed in ./gradlew build, exit 0)"
+  }
+ ],
+ "design": [
+  {
+   "id": "D-030",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/main/java/com/snoworca/naruserve/Method.java:10; MethodTest#sdsAc1_IR_ROUTE_001_AC1_valuesInDeclarationOrder"
+  },
+  {
+   "id": "D-031",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/main/java/com/snoworca/naruserve/Method.java:16,22,28; MethodTest#sdsAc2_IR_ROUTE_001_AC2_factoriesReturnExactMembers"
+  },
+  {
+   "id": "D-032",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/main/java/com/snoworca/naruserve/Method.java (only static get/any/of); MethodTest#sdsAc1_IR_ROUTE_001_AC3_onlyStaticGetAnyOfBesideEnumBuiltIns"
+  },
+  {
+   "id": "D-033",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/main/java/com/snoworca/naruserve/MethodSet.java:44-91; MethodSetTest#sdsAc4_IR_ROUTE_002_AC1_combinatorsReturnNewSetAndLeaveReceiverUnchanged, #sdsAc3_IR_ROUTE_002_AC4_noPublicConstructorAndOnlyFinalFields"
+  },
+  {
+   "id": "D-034",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/main/java/com/snoworca/naruserve/MethodSet.java:44-78; MethodSetTest#sdsAc4_IR_ROUTE_002_AC2_eachCombinatorAddsExactlyItsOwnConstant"
+  },
+  {
+   "id": "D-035",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/main/java/com/snoworca/naruserve/MethodSet.java:87; MethodSetTest#sdsAc4_IR_ROUTE_002_AC3_exceptRemovesAndNonMemberGivesEqualSet"
+  },
+  {
+   "id": "D-036",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/main/java/com/snoworca/naruserve/Method.java:20-22; MethodSetTest#sdsAc5_FR_ROUTE_001_AC1_anyHasSevenMembersWithoutTraceOrConnect"
+  },
+  {
+   "id": "D-037",
+   "verdict": "match",
+   "pointer": "MethodSetTest#sdsAc5_FR_ROUTE_001_AC2_anyExceptDeleteEquality"
+  },
+  {
+   "id": "D-038",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/main/java/com/snoworca/naruserve/MethodSet.java:93,98,105 (contains/size/iterator); docs/api/routing.md '### MethodSet 조회'; MethodSetTest#sdsAc6_IR_ROUTE_003_AC1_ordinalIterationAndContains"
+  },
+  {
+   "id": "D-039",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/main/java/com/snoworca/naruserve/MethodSet.java:133,138; MethodSetTest#sdsAc7_IR_ROUTE_003_AC2_valueEqualityHashCodeAndToString"
+  },
+  {
+   "id": "D-047",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RoutePattern.java:32-62,101-113; RoutePatternTest#FR_ROUTE_003_AC1_variableMatchesExactlyOneNonEmptySegment"
+  },
+  {
+   "id": "D-048",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RoutePattern.java:36-40; RoutePatternTest#sdsAc5_FR_ROUTE_003_AC2_wildcardAndRegexSyntaxRejectedAtAdd"
+  },
+  {
+   "id": "D-049",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/PathValidator.java:47-50, Router.java:293; RouterMatchingTest#sdsAc3_CON_ROUTE_001_AC4_FR_ROUTE_005_AC1_queryIsDroppedBeforeDecoding"
+  },
+  {
+   "id": "D-050",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RoutePattern.java:101-113; RouterMatchingTest#sdsAc8_FR_ROUTE_005_AC2_strictDefaultCaseAndTrailingSlashSignificant"
+  },
+  {
+   "id": "D-051",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/PathValidator.java:54-79, Router.java:292-312; RouterMatchingTest#sdsAc8_FR_ROUTE_005_AC3_decodedOnceAsUtf8, RouterLookupTest#sdsAc4_IR_ROUTE_004_AC4_rawPathDecodedOnceIntoParams"
+  },
+  {
+   "id": "D-052",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/PathValidator.java:26-45 (engine-free validator per wave decision; 400 wiring is wave 3), Router.java:169-171; PathValidatorTest#sdsAc6_FR_ROUTE_004_AC1_rejectList, #sdsAc7_FR_ROUTE_004_AC2_rawSpaceControlDelHashAndNonAsciiRejected"
+  },
+  {
+   "id": "D-053",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouterPolicy.java:35-96; RouterPolicyTest#sdsAc10_FR_ROUTE_006_AC1_mergeSlashesAlone, #sdsAc10_FR_ROUTE_006_AC2_ignoreTrailingSlashAloneAndWithMerge, #sdsAc9_FR_ROUTE_006_AC3_caseInsensitiveLiteralsKeepParamAsReceived"
+  },
+  {
+   "id": "D-054",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RoutePattern.java:121-129, Router.java:149-151; RouterPriorityTest#sdsAc11_FR_ROUTE_007_AC1_literalBeatsVariableInBothOrders"
+  },
+  {
+   "id": "D-055",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RoutePattern.java:121-129; RouterPriorityTest#sdsAc11_FR_ROUTE_007_AC2_leftmostDifferingSegmentDecides"
+  },
+  {
+   "id": "D-056",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:98-133; RouterFreezeTest#sdsAc12_FR_ROUTE_008_AC1_duplicateGetAndMethodSetOverlap"
+  },
+  {
+   "id": "D-057",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RoutePattern.java:133-144 (variables keyed ':'); RouterFreezeTest#sdsAc12_FR_ROUTE_008_AC2_AC3_variableNamesOnlyDifferAndOneLinePerPair"
+  },
+  {
+   "id": "D-058",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:113,129 (message names both METHOD pattern), RoutingConfigException.java; RouterFreezeTest#sdsAc12_FR_ROUTE_008_AC3_registrationDoesNotRaiseBeforeFreeze (listen() wiring is wave 4)"
+  },
+  {
+   "id": "D-059",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java (NaruServe-api main, no engine imports); RouterRegistrationTest#CON_ROUTE_001_AC1_routerClassesLiveInApiMainUnderNaruServePackage; animal-sniffer passed in ./gradlew build"
+  },
+  {
+   "id": "D-389",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:20 Router<H>; RouterRegistrationTest#sdsAc1_CON_ROUTE_001_AC2_noRequestResponseHandlerOrAppTypeInApiMain"
+  },
+  {
+   "id": "D-390",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouteMatch.java:18-19 (six kinds), 59-89; RouteMatchTest#sdsAc1_IR_ROUTE_004_AC1_exactlySixKindsAndNoPublicConstructor"
+  },
+  {
+   "id": "D-060",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:211-213; RouterAutoResponseTest#sdsAc5_FR_ROUTE_009_AC1_AC2_unmatchedPathIsNoMatchIncludingOptions"
+  },
+  {
+   "id": "D-061",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:227,253-261; RouterAutoResponseTest#sdsAc6_FR_ROUTE_010_AC1_anyExceptDelete, #sdsAc6_FR_ROUTE_010_AC2_unionOverEveryMatchingPattern"
+  },
+  {
+   "id": "D-062",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:220-222; RouterAutoResponseTest#sdsAc7_FR_ROUTE_011_AC1_headResolvesToGet"
+  },
+  {
+   "id": "D-063",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:214-216; RouterAutoResponseTest#sdsAc7_FR_ROUTE_011_AC2_explicitHeadWins"
+  },
+  {
+   "id": "D-064",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:217-219; RouterAutoResponseTest#sdsAc8_FR_ROUTE_012_AC1_autoOptionsAllow"
+  },
+  {
+   "id": "D-065",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:214-216; RouterAutoResponseTest#sdsAc8_FR_ROUTE_012_AC2_explicitOptionsWins"
+  },
+  {
+   "id": "D-066",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:172-182; RouterAutoResponseTest#sdsAc9_FR_ROUTE_013_AC1_AC2_unknownTokensUnsupported"
+  },
+  {
+   "id": "D-067",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:179-182, 117-123, RouterPolicy.java:50-58; RouterTraceConnectTest#sdsAc10_FR_ROUTE_014_AC1_defaultPolicyUnsupported, #sdsAc10_FR_ROUTE_014_AC2_traceEnabled, #sdsAc10_FR_ROUTE_014_AC3_connectEnabled"
+  },
+  {
+   "id": "D-068",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:195-210; RouterWebSocketTest#sdsAc12_FR_ROUTE_016_AC3_FR_ROUTE_015_AC1_AC3_webSocketAndGetCoexist"
+  },
+  {
+   "id": "D-069",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:224-226; RouterWebSocketTest#sdsAc12_FR_ROUTE_016_AC1_webSocketOnlyPath (426 mapping is wave 3/7)"
+  },
+  {
+   "id": "D-441",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:208-227; RouterWebSocketTest#sdsAc13_FR_ROUTE_017_AC1_upgradeFallsBackToGet, #sdsAc13_FR_ROUTE_017_AC2_AC3_upgradeFallbackMismatchAndNoMatch"
+  },
+  {
+   "id": "D-391",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:78-82 addWebSocket; RouterRegistrationTest#sdsAc4_FR_ROUTE_002_AC3_addWebSocketStoresWebSocketKindAsGet"
+  },
+  {
+   "id": "D-070",
+   "verdict": "match",
+   "pointer": "docs/api/routing.md '## 라우팅 규칙 (wave 2 결정)'; config-API markers kept at docs/api/routing.md:72,125,153 per wave decision (D-398); RoutingDocsTest#sdsAc10_OPS_ROUTE_001_AC1_routingRulesSectionPresent, #sdsAc10_OPS_ROUTE_001_AC3_wave1MarkersKeptAndNoneAdded"
+  }
+ ],
+ "constraints": [
+  {
+   "id": "C-01",
+   "verdict": "match",
+   "pointer": "gradle/wrapper/gradle-wrapper.properties:3 (8.14.3); ./gradlew build exit 0; no other build files in window"
+  },
+  {
+   "id": "C-02",
+   "verdict": "match",
+   "pointer": "build.gradle release=8 + animal-sniffer android-api-level-21 ran over new routing classes in ./gradlew build (exit 0); window uses only java.util/java.nio.charset (no java.nio.file)"
+  },
+  {
+   "id": "C-03",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/package-info.java @NullMarked + @Nullable on RouteMatch accessors; MethodKotlinTest.kt, RouterKotlinTest.kt pass; no Kotlin-keyword method names"
+  },
+  {
+   "id": "C-04",
+   "verdict": "match",
+   "pointer": "Router is an engine-free route table in NaruServe-api (Router.java:20), no Servlet/engine types; adapters stay separate"
+  },
+  {
+   "id": "C-05",
+   "verdict": "match",
+   "pointer": "docs/api/routing.md adds MethodSet 조회 with Java+Kotlin examples and Express note, plus routing rules section; RoutingDocsTest passes"
+  },
+  {
+   "id": "C-06",
+   "verdict": "match",
+   "pointer": "settings.gradle:4-5 NaruServe-api, NaruServe-servlet unchanged"
+  },
+  {
+   "id": "C-07",
+   "verdict": "match",
+   "pointer": "wave-2 (미확정) semantics decided and documented in docs/api/routing.md; only API-name markers deferred to wave 3 (D-398) remain at lines 72,125,153"
+  },
+  {
+   "id": "C-08",
+   "verdict": "match",
+   "pointer": "lane completed TASK_DONE without user stop (stage-2 manifest.json review_outcome)"
+  },
+  {
+   "id": "C-09",
+   "verdict": "match",
+   "pointer": "object.md routing goals (T01-T04 router-level) covered by RouterRegistrationTest/RouterAutoResponseTest/RouterFreezeTest/RouterPriorityTest; build green"
+  }
+ ],
+ "preservation": [
+  {
+   "item": "docs/api/routing.md",
+   "verdict": "intended-improvement",
+   "evidence": "git diff 9ce5855..524e7b3: 3 lines changed are rewrites to state decided semantics (Method.any() members per FR-ROUTE-001 AC-1/D-036; MethodSet line extended with with(Method) and null rules; ws-only 426 line extended with OPTIONS note per FR-ROUTE-016 AC-1); additions required by OPS-ROUTE-001 AC-1/AC-2 and D-038/D-070; required (미확정) markers retained per OPS-ROUTE-001 AC-3 (RoutingDocsTest#sdsAc10_OPS_ROUTE_001_AC3_wave1MarkersKeptAndNoneAdded passes)"
+  }
+ ],
+ "unit": [
+  {
+   "id": "lane-2026-10-19.naruserve.naruserve-v1-wave-2",
+   "verdict": "match",
+   "pointer": "f80370b, 8a4b565, 7b7b6b7, b5677c3 (Orch-Lane trailers) reachable from integration HEAD a9268fd via merge 524e7b3; ./gradlew build exit 0, 0 failing tests"
+  }
+ ],
+ "findings": [],
+ "roll_up": "ALL_MATCH"
+}
