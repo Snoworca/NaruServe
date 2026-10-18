@@ -1,0 +1,133 @@
+{
+ "waves": [
+  {
+   "wave": "wave-1",
+   "order": 1,
+   "title": "1. Build foundation",
+   "issues": [
+    1
+   ],
+   "depends_on": [],
+   "design_item_count": 35
+  },
+  {
+   "wave": "wave-2",
+   "order": 2,
+   "title": "2. Routing core",
+   "issues": [
+    2,
+    3
+   ],
+   "depends_on": [
+    "wave-1"
+   ],
+   "design_item_count": 38
+  },
+  {
+   "wave": "wave-3",
+   "order": 3,
+   "title": "3. Request and response core",
+   "issues": [
+    4,
+    2,
+    3
+   ],
+   "depends_on": [
+    "wave-1",
+    "wave-2"
+   ],
+   "design_item_count": 55
+  },
+  {
+   "wave": "wave-4",
+   "order": 4,
+   "title": "4. App assembly, middleware, lifecycle, logging",
+   "issues": [
+    5,
+    6,
+    7
+   ],
+   "depends_on": [
+    "wave-1",
+    "wave-2",
+    "wave-3"
+   ],
+   "design_item_count": 79
+  },
+  {
+   "wave": "wave-5",
+   "order": 5,
+   "title": "5. Engine adapter, JSON, cookies",
+   "issues": [
+    9,
+    10,
+    8
+   ],
+   "depends_on": [
+    "wave-1",
+    "wave-2",
+    "wave-3",
+    "wave-4"
+   ],
+   "design_item_count": 63
+  },
+  {
+   "wave": "wave-6",
+   "order": 6,
+   "title": "6. Multipart and static files",
+   "issues": [
+    11,
+    12
+   ],
+   "depends_on": [
+    "wave-1",
+    "wave-2",
+    "wave-3",
+    "wave-4",
+    "wave-5"
+   ],
+   "design_item_count": 70
+  },
+  {
+   "wave": "wave-7",
+   "order": 7,
+   "title": "7. WebSocket, SSE, long-connection shutdown",
+   "issues": [
+    13,
+    14,
+    15
+   ],
+   "depends_on": [
+    "wave-1",
+    "wave-2",
+    "wave-3",
+    "wave-4",
+    "wave-5",
+    "wave-6"
+   ],
+   "design_item_count": 70
+  },
+  {
+   "wave": "wave-8",
+   "order": 8,
+   "title": "8. Kotlin, Servlet, Android, release",
+   "issues": [
+    16,
+    19,
+    17,
+    18
+   ],
+   "depends_on": [
+    "wave-1",
+    "wave-2",
+    "wave-3",
+    "wave-4",
+    "wave-5",
+    "wave-6",
+    "wave-7"
+   ],
+   "design_item_count": 38
+  }
+ ],
+ "wave_count": 8
+}
