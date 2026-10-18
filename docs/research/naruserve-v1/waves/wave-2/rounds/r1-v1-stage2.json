@@ -1,0 +1,24 @@
+{
+  "confirmed": [
+    "W2-001",
+    "W2-002",
+    "W2-003",
+    "W2-004",
+    "W2-005",
+    "W2-006",
+    "W2-007"
+  ],
+  "added": [
+    {
+      "finding_id": "W1-001",
+      "severity": "low",
+      "items": [
+        "D-038",
+        "D-070"
+      ],
+      "claim": "D-038 delegates the MethodSet membership/iteration accessor names to #2 (this wave), but D-070, the wave open-items list, names only the routing policy semantics, and docs/api/routing.md documents no MethodSet accessor nor marks one (미확정). The worker may pick names without a recorded decision or the required docs/api update (CLAUDE.md: API changes update docs/api).",
+      "evidence": "docs/research/naruserve-v1/waves/wave-2/design.md:19,70; docs/api/routing.md:70",
+      "suggested_fix": "Extend D-070 (or the wave SDS) to record the chosen MethodSet accessor names (e.g. membership and iteration) and add them to docs/api/routing.md with Java/Kotlin examples."
+    }
+  ]
+}

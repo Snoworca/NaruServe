@@ -1,0 +1,5 @@
+{"confirmed":[
+{"finding_id":"W1-001","note":"Same as my W2-001: the 'only against WebSocket routes' wording contradicts D-441's fallback to an ordinary GET."},
+{"finding_id":"W1-002","note":"Same as my W2-003: D-398 assigns the automatic-HEAD req.method() marker to wave 3."},
+{"finding_id":"W1-003","note":"Same as my W2-002. I would raise it to medium, because HEAD then differs from GET on a WS-only path (405 vs 426), which goes against RFC 9110 section 9.3.2."}
+],"added":[]}

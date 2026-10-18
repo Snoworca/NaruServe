@@ -1,0 +1,5 @@
+{"confirmed":[
+{"finding_id":"W1-001","note":"Same as my W2-001 (mixed WS+POST path: 405 Allow lists GET/HEAD) and W2-002 (non-websocket Upgrade undefined); verified at design.md:85,87,88."},
+{"finding_id":"W1-002","note":"Overlaps my W2-004 (conflict checks under relaxed policies); the point about disabled TRACE/CONNECT routes in the Allow union is a valid extra gap: design.md:87 unions 'every route whose pattern matches'."},
+{"finding_id":"W1-003","note":"Verified: D-054 is literal-over-variable priority (design.md:38), D-057/D-058 are freeze-time checks (design.md:41-42), while the decisions at :89 and :91 apply D-047/D-048 and D-050/D-053."}
+],"added":[]}

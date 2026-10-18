@@ -1,0 +1,155 @@
+{
+ "mode": "live",
+ "applied": [
+  {
+   "req_id": "IR-ROUTE-001",
+   "from": "draft",
+   "to": "evolving",
+   "ok": true
+  },
+  {
+   "req_id": "IR-ROUTE-002",
+   "from": "draft",
+   "to": "evolving",
+   "ok": true
+  },
+  {
+   "req_id": "FR-ROUTE-001",
+   "from": "draft",
+   "to": "evolving",
+   "ok": true
+  },
+  {
+   "req_id": "IR-ROUTE-003",
+   "from": "draft",
+   "to": "evolving",
+   "ok": true
+  },
+  {
+   "req_id": "CON-ROUTE-001",
+   "from": "draft",
+   "to": "evolving",
+   "ok": true
+  },
+  {
+   "req_id": "FR-ROUTE-002",
+   "from": "draft",
+   "to": "evolving",
+   "ok": true
+  },
+  {
+   "req_id": "FR-ROUTE-003",
+   "from": "draft",
+   "to": "evolving",
+   "ok": true
+  },
+  {
+   "req_id": "FR-ROUTE-004",
+   "from": "draft",
+   "to": "evolving",
+   "ok": true
+  },
+  {
+   "req_id": "FR-ROUTE-005",
+   "from": "draft",
+   "to": "evolving",
+   "ok": true
+  },
+  {
+   "req_id": "FR-ROUTE-006",
+   "from": "draft",
+   "to": "evolving",
+   "ok": true
+  },
+  {
+   "req_id": "FR-ROUTE-007",
+   "from": "draft",
+   "to": "evolving",
+   "ok": true
+  },
+  {
+   "req_id": "FR-ROUTE-008",
+   "from": "draft",
+   "to": "evolving",
+   "ok": true
+  },
+  {
+   "req_id": "IR-ROUTE-004",
+   "from": "draft",
+   "to": "evolving",
+   "ok": true
+  },
+  {
+   "req_id": "FR-ROUTE-009",
+   "from": "draft",
+   "to": "evolving",
+   "ok": true
+  },
+  {
+   "req_id": "FR-ROUTE-010",
+   "from": "draft",
+   "to": "evolving",
+   "ok": true
+  },
+  {
+   "req_id": "FR-ROUTE-011",
+   "from": "draft",
+   "to": "evolving",
+   "ok": true
+  },
+  {
+   "req_id": "FR-ROUTE-012",
+   "from": "draft",
+   "to": "evolving",
+   "ok": true
+  },
+  {
+   "req_id": "FR-ROUTE-013",
+   "from": "draft",
+   "to": "evolving",
+   "ok": true
+  },
+  {
+   "req_id": "FR-ROUTE-014",
+   "from": "draft",
+   "to": "evolving",
+   "ok": true
+  },
+  {
+   "req_id": "FR-ROUTE-015",
+   "from": "draft",
+   "to": "evolving",
+   "ok": true
+  },
+  {
+   "req_id": "FR-ROUTE-016",
+   "from": "draft",
+   "to": "evolving",
+   "ok": true
+  },
+  {
+   "req_id": "FR-ROUTE-017",
+   "from": "draft",
+   "to": "evolving",
+   "ok": true
+  },
+  {
+   "req_id": "OPS-ROUTE-001",
+   "from": "draft",
+   "to": "evolving",
+   "ok": true
+  }
+ ],
+ "skipped": [],
+ "guard_blocked": [],
+ "user_rejected": [],
+ "system_failed": [],
+ "summary": {
+  "applied_count": 23,
+  "skipped_count": 0,
+  "guard_blocked_count": 0,
+  "user_rejected_count": 0,
+  "system_failed_count": 0
+ },
+ "sync_check": "23/23 Markdown Stability rows = evolving; summarize_target countsByStability evolving=23"
+}

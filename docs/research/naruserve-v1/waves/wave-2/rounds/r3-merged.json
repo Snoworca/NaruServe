@@ -1,0 +1,123 @@
+{
+ "round": 3,
+ "findings": [
+  {
+   "finding_id": "W1-001",
+   "severity": "low",
+   "items": [
+    "D-061",
+    "D-064",
+    "D-068",
+    "D-069"
+   ],
+   "claim": "The rewrite resolves r1 W2-001 and r2 W1-003/W2-002 for a WebSocket-only path. Every method except OPTIONS now gets 426, HEAD agrees with GET, and the Allow set counts a WebSocket route as GET. Mixed paths are still open. Take a path with a WebSocket route and a POST route. A GET without Upgrade gets 405, because the path is not WebSocket-only, and the Allow header lists GET and HEAD, so the methods the 405 just refused appear in Allow. The section also never says how a request whose Upgrade value is not websocket (for example Upgrade: h2c) counts for the 'without Upgrade' check.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-2/design.md:85,87,88",
+   "suggested_fix": "Pick one rule for a path that has a WebSocket route and no HTTP GET route. Either it answers 426 to a plain GET/HEAD whatever other routes the path has, or the Allow set leaves GET/HEAD out when they come only from a WebSocket route. Also say that 'without Upgrade' means the request does not carry Upgrade: websocket. Add a router test for the mixed path."
+  },
+  {
+   "finding_id": "W1-002",
+   "severity": "low",
+   "items": [
+    "D-053",
+    "D-056",
+    "D-057",
+    "D-067",
+    "D-070"
+   ],
+   "claim": "The rewrite leaves part of r2 W2-005 open. The three path-form switches have defined matching effects, but the section does not say how they change the freeze-time conflict checks. With case-insensitive matching on, are GET /Users and GET /users a duplicate (D-056)? With trailing-slash ignoring on, do /a and /a/ conflict? The section says a TRACE/CONNECT route registered while the policy is disabled gets 'unsupported method'. It does not say whether that route's method still appears in the Allow union of D-061/D-064.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-2/design.md:89,90,91",
+   "suggested_fix": "Say that the freeze compares patterns after the active normalisation. Under it, /Users and /users are duplicates when case-insensitive matching is on, and /a and /a/ are duplicates when trailing slashes are ignored. Also say that a disabled TRACE/CONNECT route counts toward neither the Allow sets nor matching."
+  },
+  {
+   "finding_id": "W1-003",
+   "severity": "low",
+   "items": [
+    "D-047",
+    "D-048",
+    "D-050",
+    "D-053",
+    "D-054",
+    "D-057",
+    "D-058"
+   ],
+   "claim": "Two decisions cite the wrong frozen items. 'Path-form policy (D-054, D-070)' applies D-050 (the strict default) and D-053 (the router option). D-054 is literal-over-variable priority. 'Pattern validation (D-057, D-058)' extends the pattern grammar of D-047/D-048 (empty or repeated variable names), not the freeze-time duplicate checks.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-2/design.md:89,91",
+   "suggested_fix": "Relabel the two decisions as 'Path-form policy (D-050, D-053, D-070)' and 'Pattern validation (D-047, D-048)'."
+  },
+  {
+   "finding_id": "W2-001",
+   "severity": "medium",
+   "items": [
+    "D-061",
+    "D-064",
+    "D-069",
+    "D-062"
+   ],
+   "claim": "The Allow-set decision counts a WebSocket route as GET and adds HEAD wherever GET is present, but the lookup order only gives WebSocket-only (426) when the path's only routes are WebSocket routes, and gives automatic HEAD only through an HTTP GET route. On a path with a WebSocket route plus any HTTP route of another method (e.g. app.ws(\"/chat\") and POST /chat), a plain GET or HEAD gets method mismatch (405) whose Allow lists GET and HEAD, the very methods just refused. RFC 9110 15.5.6 says the 405 Allow lists the methods the resource supports, so this response contradicts itself, and automatic OPTIONS would advertise HEAD that never succeeds.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-2/design.md:85,87; object.md:194",
+   "suggested_fix": "Pick one consistent rule and test it: e.g. a WebSocket route adds GET (and HEAD) to Allow and a plain GET/HEAD to a path with a WebSocket route and no HTTP GET route gets WebSocket-only (426), recorded as the resolution of the D-061/D-069 overlap; or a WebSocket route adds nothing to Allow. Add router tests for GET, HEAD and OPTIONS on a WS+POST path."
+  },
+  {
+   "finding_id": "W2-002",
+   "severity": "medium",
+   "items": [
+    "D-068",
+    "D-069",
+    "D-441"
+   ],
+   "claim": "The route-kind decision defines only 'a GET with Upgrade: websocket' and 'a request without Upgrade'. It leaves out a GET with another Upgrade value (Upgrade: h2c), a websocket Upgrade on a non-GET method, and how the 'websocket' token is compared (RFC 6455 4.2.1: case-insensitive, and Upgrade may list several protocols). On a WebSocket-only path such requests hit neither WebSocket-only nor matched and fall to 405 with Allow: GET. r1 W2-001 named the non-websocket Upgrade case and it is still open.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-2/design.md:85,88; docs/research/naruserve-v1/waves/wave-2/rounds/r1-merged.json (W2-001)",
+   "suggested_fix": "Define the upgrade flag: true only for GET whose Upgrade header contains the token websocket (case-insensitive). Every other request counts as a request without Upgrade for D-069 and the lookup order (RFC 9110 7.8 lets a server ignore Upgrade). Add a router test for GET + Upgrade: h2c on a WS-only path."
+  },
+  {
+   "finding_id": "W2-003",
+   "severity": "low",
+   "items": [
+    "D-052",
+    "D-051",
+    "D-399"
+   ],
+   "claim": "The path-validation decision has 'the dispatcher (wave 3) and every adapter' run the validator. D-399 says adapters pass the raw path for the core to decode exactly once. If the validator also returns the decoded path and both layers run it, the path is decoded twice, which breaks D-051 (%252e must reach the router as %2e).",
+   "evidence": "docs/research/naruserve-v1/waves/wave-2/design.md:84; docs/research/naruserve-v1/design/00.design.md:206",
+   "suggested_fix": "State that the dispatcher runs the validator/decoder once on the raw path every adapter passes (D-399); adapters do not decode."
+  },
+  {
+   "finding_id": "W2-004",
+   "severity": "low",
+   "items": [
+    "D-050",
+    "D-053",
+    "D-056",
+    "D-057",
+    "D-067",
+    "D-070"
+   ],
+   "claim": "The policy decisions still leave the r2 W2-005 questions open. (1) With repeated-slash merging, trailing-slash-insensitive or case-insensitive matching, the freeze check does not say whether GET /users and GET /users/ (or /Users and /users) conflict under D-056/D-057. (2) It does not say whether a pattern with an empty segment (/a//b) is accepted. (3) It does not say whether registering a TRACE/CONNECT route while that method is disabled is a configuration error or a dormant route. Also the path-form line cites D-054, the literal-over-variable priority item, where D-050/D-053 are meant.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-2/design.md:89-91; docs/research/naruserve-v1/waves/wave-2/rounds/r2-merged.json (W2-005)",
+   "suggested_fix": "Have the freeze compare patterns after applying the active policy, so patterns equal under it are a D-056/D-057 conflict. Make an empty pattern segment a registration error. Make a TRACE/CONNECT registration while disabled a freeze-time configuration error (or say it stays dormant). Change the citation to D-050, D-053."
+  },
+  {
+   "finding_id": "W2-005",
+   "severity": "low",
+   "items": [
+    "D-066",
+    "D-390"
+   ],
+   "claim": "The unsupported-method decision assumes the lookup can see an unrecognised token, but D-390's matched result carries a Method and the design never says the lookup takes the raw method string. RFC 9110 9.1 also makes method tokens case-sensitive, so 'get' must yield unsupported method. An implementer mapping through Method.valueOf(token.toUpperCase()) would route it as GET. TinyHttpd passes any token-valid method through (RequestParser.java:52-55).",
+   "evidence": "docs/research/naruserve-v1/waves/wave-2/design.md:85; /Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/RequestParser.java:52-55",
+   "suggested_fix": "State that the lookup takes the raw method token, matches it to Method case-sensitively, and returns unsupported method for anything else. Include a router test for a lower-case 'get'."
+  },
+  {
+   "finding_id": "W2-006",
+   "severity": "low",
+   "items": [
+    "D-442",
+    "D-422",
+    "D-108"
+   ],
+   "claim": "The note for wave 3 adds in-memory adapter behaviour that no frozen item states: mirroring the absolute-form rewrite and the transport-level 501 for authority-form CONNECT. Only a wave 2 decision records it, so wave 3's implementer may never see it, and I-021/D-442 parity relies on it.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-2/design.md:94; docs/research/naruserve-v1/design/00.design.md:153,205,382",
+   "suggested_fix": "Carry the note into wave 3's design as an explicit carried decision (or a loop-W carry list), so the wave 3 in-memory adapter and its I-021 tests implement it."
+  }
+ ]
+}

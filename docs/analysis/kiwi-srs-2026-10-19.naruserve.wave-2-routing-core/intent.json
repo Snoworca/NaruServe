@@ -1,0 +1,42 @@
+{
+ "summary": "Engine-free generic router in NaruServe-api: Method/MethodSet, pattern matching, priority, conflict detection at freeze, automatic HEAD/OPTIONS, WebSocket route kind, path validator, TRACE/CONNECT and path-form policies.",
+ "intent_type_hint": "new-scope",
+ "key_entities": ["Method","MethodSet","Router<H>","RouteKind(HTTP/WebSocket)","LookupResult(matched/methodMismatch/automaticOptions/webSocketOnly/unsupportedMethod/noMatch)","PathPattern","PathValidator","Route-table freeze / RoutingConfigException","PathFormPolicy","TRACE/CONNECT policy","upgrade flag","docs/api/routing.md"],
+ "ambiguities": [
+  {"id":"A1","text":"Explicit HEAD registration (D-063) vs automatic HEAD: if a HEAD route matches only via a less specific pattern than a GET route (HEAD /x/:id vs GET /x/me, request HEAD /x/me), does the explicit HEAD route still win or does per-method priority pick auto-HEAD from the more specific GET?","proposed_default":"Per-method priority: explicit HEAD routes are considered first; if any HEAD pattern matches, the most specific HEAD match wins; auto-HEAD only when no HEAD pattern matches."},
+  {"id":"A2","text":"Same question for explicit OPTIONS (D-065): any matching OPTIONS pattern suppresses the automatic OPTIONS result.","proposed_default":"Any matching explicit OPTIONS route yields matched; automatic OPTIONS only when none matches."},
+  {"id":"A3","text":"Path parameter decoding when merge-slashes/case-insensitive policies apply: confirm decoded-once values are returned unmodified and that an encoded '%2e' remnant (from %252e) in a static segment compares literally.","proposed_default":"Values returned as decoded once, never normalised; static comparison on decoded text, case-folded only under the case-insensitive policy."}
+ ],
+ "implied_requirements": [
+  "Method enum with exactly nine constants, no HTTP-named instance methods (D-030, D-032)",
+  "Method static factories get()/any()/of(...) return MethodSet; any() = 7 methods without TRACE/CONNECT (D-031, D-036)",
+  "MethodSet immutability and combinators get..options add method returning new instance (D-033, D-034)",
+  "MethodSet.except and any().except(DELETE) equality (D-035, D-037)",
+  "MethodSet membership/iteration accessors in enum order, Kotlin-keyword-free, documented (D-038, wave decision MethodSet accessors)",
+  "MethodSet equals/hashCode by members (D-039)",
+  "Pattern grammar: literal and :name segments, one non-empty segment, no crossing '/' (D-047)",
+  "Pattern validation errors: wildcard/regex chars, empty variable name, repeated variable name, empty segment (D-048, wave decision pattern validation, loop W)",
+  "Query string ignored in matching (D-049)",
+  "Strict default: case-sensitive, trailing-slash-sensitive, // never matches (D-050, path-form policy)",
+  "Percent-decode exactly once at parameter extraction; %252e becomes %2e (D-051, loop W, D-399)",
+  "Engine-free path validator rejecting malformed/unsafe raw paths with 400 verdict before lookup, no decoding (D-052, loop W)",
+  "Path-form policy switches: merge slashes, ignore one trailing slash, case-insensitive static; param values as received; wave 3 names APIs (D-053, D-070)",
+  "Literal beats variable regardless of registration order; left-to-right segment comparison (D-054, D-055, T04)",
+  "Per-method priority: most specific among request-method routes; mismatch only when no route of that method matches (per-method priority decision)",
+  "Duplicate method+pattern reported at freeze (D-056, T03)",
+  "Same-shape patterns differing only in variable names conflict at freeze, normalised under active path-form policies (D-057, loop W)",
+  "Configuration error names both registrations; raised by freeze before bind (D-058)",
+  "Router is engine-free code in NaruServe-api with opaque handler type parameter, compiles without Request/Response/RestApp (D-059, D-389)",
+  "Lookup result sum type of six results and documented precedence order (D-390, lookup result order)",
+  "No-match result incl. OPTIONS to unmatched path (D-060)",
+  "Method-mismatch result with Allow set = union of matching routes + HEAD where GET + OPTIONS; WS counts as GET (D-061, Allow sets)",
+  "Automatic HEAD via GET route with flag; explicit HEAD precedence (D-062, D-063, T05)",
+  "Automatic OPTIONS result with accepted methods; explicit OPTIONS precedence (D-064, D-065, T05)",
+  "Unsupported-method result for non-Method tokens, exact case-sensitive raw token (D-066, loop W, T06)",
+  "TRACE/CONNECT disabled by default, per-method enable policy, never in any(), registering while disabled is a freeze error (D-067, D-070, loop W)",
+  "WebSocket route kind: upgrade flag rule (Connection+Upgrade tokens, case-insensitive lists, GET only), WS-first resolution with D-441 HTTP fallback, matched result names kind (D-068, D-441, route kind, loop W)",
+  "WebSocket-only result for non-upgrade GET/HEAD to WS-only path; internal WS registration hook (D-069, D-391, loop W)",
+  "docs/api/routing.md updated: decided semantics and MethodSet accessors with Java/Kotlin examples, wave-3 markers retained, note for wave 3 recorded (D-070, markers, D-422/D-442 note)"
+ ],
+ "semantic_equivalences": []
+}

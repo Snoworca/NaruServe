@@ -1,0 +1,192 @@
+{
+ "rows": [
+  {
+   "id": "D-030",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-031",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-032",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-033",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-034",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-035",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-036",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-037",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-038",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-039",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-047",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-048",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-049",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-050",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-051",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-052",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-053",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-054",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-055",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-056",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-057",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-058",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-059",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-389",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-390",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-060",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-061",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-062",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-063",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-064",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-065",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-066",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-067",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-068",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-069",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-441",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-391",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-070",
+   "verdict": "covered"
+  }
+ ],
+ "findings": [
+  {
+   "finding_id": "W1-001",
+   "severity": "high",
+   "items": [
+    "D-441",
+    "D-068"
+   ],
+   "claim": "Wave decision W2-005 says 'a GET with Upgrade: websocket resolves only against WebSocket routes and a plain request only against HTTP routes'. Read literally, an Upgrade: websocket GET to a path that has only a GET route finds no WebSocket route and returns no-match, which contradicts frozen D-441 (the loop-D carried fix): such a request is resolved as an ordinary GET and reaches the path's GET registration, else method-mismatch or no-match. The section claims to 'contradict no frozen item'.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-2/design.md:86 (W2-005) vs :65 (D-441)",
+   "suggested_fix": "Reword W2-005: an Upgrade: websocket GET resolves against WebSocket routes first; if no WebSocket pattern matches the path it falls back to HTTP routes as an ordinary GET (D-441). A plain request resolves only against HTTP routes, apart from the WebSocket-only check of D-069."
+  },
+  {
+   "finding_id": "W1-002",
+   "severity": "medium",
+   "items": [
+    "D-070",
+    "D-398"
+   ],
+   "claim": "Wave decision W2-004 lists 'automatic HEAD method value' among the docs/api/routing.md markers that wave 2 removes under D-070. Frozen D-398 gives wave 3 the decision on the value of req.method() during automatic HEAD and the removal of that marker (routing.md:119). D-070 does not list it. So W2-004 moves a wave-3 decision into wave 2. Also, the //, trailing-slash, case and TRACE/CONNECT markers in routing.md are the only ones W2-004 names, and they are config-API name markers (routing.md:71,91) that it already leaves for D-398. Wave 2 then has no marker it can rightly remove, so 'removes only ... markers' is misleading.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-2/design.md:89 (W2-004); docs/research/naruserve-v1/design/00.design.md:211 (D-398); docs/api/routing.md:71,91,119",
+   "suggested_fix": "Drop 'automatic HEAD method value' from W2-004. State that wave 2 writes the decided //, trailing-slash, case and TRACE/CONNECT semantics into routing.md and leaves the 설정 API (미확정) markers and the req.method() marker for wave 3 (D-398)."
+  },
+  {
+   "finding_id": "W1-003",
+   "severity": "low",
+   "items": [
+    "D-069",
+    "D-061",
+    "D-064"
+   ],
+   "claim": "W2-001 limits WebSocket-only (426) to a GET without Upgrade. Every other method on a WebSocket-only path then gets automatic OPTIONS or 405. This resolves the r1 overlap, but it narrows D-069 ('a request without Upgrade', any method), and the section's 'contradict no frozen item' claim does not acknowledge that. Also left open: whether a WebSocket route adds GET, automatic HEAD or OPTIONS to the Allow union of W2-002, and so what Allow a POST or OPTIONS to a WebSocket-only path returns.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-2/design.md:84-85 (W2-001, W2-002) vs :64 (D-069); object.md:194",
+   "suggested_fix": "State explicitly that D-069 applies to GET (the method a handshake uses) and that other methods fall under D-061/D-064. Say whether WebSocket routes count toward the Allow set (e.g. Allow: GET, OPTIONS for a WebSocket-only path), and cover it in a router test."
+  }
+ ]
+}

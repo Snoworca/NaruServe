@@ -1,0 +1,201 @@
+{
+ "rows": [
+  {
+   "id": "D-030",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-031",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-032",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-033",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-034",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-035",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-036",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-037",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-038",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-039",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-047",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-048",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-049",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-050",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-051",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-052",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-053",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-054",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-055",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-056",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-057",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-058",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-059",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-389",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-390",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-060",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-061",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-062",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-063",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-064",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-065",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-066",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-067",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-068",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-069",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-441",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-391",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-070",
+   "verdict": "covered"
+  }
+ ],
+ "findings": [
+  {
+   "finding_id": "W1-001",
+   "severity": "low",
+   "items": [
+    "D-061",
+    "D-064",
+    "D-068",
+    "D-069"
+   ],
+   "claim": "The rewrite resolves r1 W2-001 and r2 W1-003/W2-002 for a WebSocket-only path. Every method except OPTIONS now gets 426, HEAD agrees with GET, and the Allow set counts a WebSocket route as GET. Mixed paths are still open. Take a path with a WebSocket route and a POST route. A GET without Upgrade gets 405, because the path is not WebSocket-only, and the Allow header lists GET and HEAD, so the methods the 405 just refused appear in Allow. The section also never says how a request whose Upgrade value is not websocket (for example Upgrade: h2c) counts for the 'without Upgrade' check.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-2/design.md:85,87,88",
+   "suggested_fix": "Pick one rule for a path that has a WebSocket route and no HTTP GET route. Either it answers 426 to a plain GET/HEAD whatever other routes the path has, or the Allow set leaves GET/HEAD out when they come only from a WebSocket route. Also say that 'without Upgrade' means the request does not carry Upgrade: websocket. Add a router test for the mixed path."
+  },
+  {
+   "finding_id": "W1-002",
+   "severity": "low",
+   "items": [
+    "D-053",
+    "D-056",
+    "D-057",
+    "D-067",
+    "D-070"
+   ],
+   "claim": "The rewrite leaves part of r2 W2-005 open. The three path-form switches have defined matching effects, but the section does not say how they change the freeze-time conflict checks. With case-insensitive matching on, are GET /Users and GET /users a duplicate (D-056)? With trailing-slash ignoring on, do /a and /a/ conflict? The section says a TRACE/CONNECT route registered while the policy is disabled gets 'unsupported method'. It does not say whether that route's method still appears in the Allow union of D-061/D-064.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-2/design.md:89,90,91",
+   "suggested_fix": "Say that the freeze compares patterns after the active normalisation. Under it, /Users and /users are duplicates when case-insensitive matching is on, and /a and /a/ are duplicates when trailing slashes are ignored. Also say that a disabled TRACE/CONNECT route counts toward neither the Allow sets nor matching."
+  },
+  {
+   "finding_id": "W1-003",
+   "severity": "low",
+   "items": [
+    "D-047",
+    "D-048",
+    "D-050",
+    "D-053",
+    "D-054",
+    "D-057",
+    "D-058"
+   ],
+   "claim": "Two decisions cite the wrong frozen items. 'Path-form policy (D-054, D-070)' applies D-050 (the strict default) and D-053 (the router option). D-054 is literal-over-variable priority. 'Pattern validation (D-057, D-058)' extends the pattern grammar of D-047/D-048 (empty or repeated variable names), not the freeze-time duplicate checks.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-2/design.md:89,91",
+   "suggested_fix": "Relabel the two decisions as 'Path-form policy (D-050, D-053, D-070)' and 'Pattern validation (D-047, D-048)'."
+  }
+ ]
+}

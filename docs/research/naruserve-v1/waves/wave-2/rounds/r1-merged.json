@@ -1,0 +1,99 @@
+{
+ "round": 1,
+ "findings": [
+  {
+   "finding_id": "W2-001",
+   "severity": "medium",
+   "items": [
+    "D-060",
+    "D-064",
+    "D-066",
+    "D-067",
+    "D-069",
+    "D-390"
+   ],
+   "claim": "D-390 requires exactly one result per lookup, but the unconditional wording of several items overlaps with no precedence: an unknown method token or TRACE/CONNECT to a path that matches no route is both no-match (D-060, 404) and unsupported-method (D-066/D-067, 501); OPTIONS to a path that matches no route is both no-match (D-060) and automatic OPTIONS (D-064, 'a path without an explicit OPTIONS registration'); a POST, HEAD or OPTIONS without Upgrade (or with a non-websocket Upgrade value) to a WebSocket-only path is both WebSocket-only (D-069, 'a request without Upgrade', any method) and method-mismatch (D-061) or automatic OPTIONS (D-064). Two workers would pick different orders and the T02/T05/T06 statuses would differ.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-2/design.md:48,52,56,58,59,64",
+   "suggested_fix": "Add one resolution order to the router contract, e.g. unsupported method (501) first, then path match (no-match 404 for every method including OPTIONS), then WebSocket-only only for GET/HEAD without an Upgrade: websocket header (other methods on a WS-only path get method-mismatch with Allow: GET), then explicit registration, automatic HEAD, automatic OPTIONS, method-mismatch; and assert each overlap in a router test."
+  },
+  {
+   "finding_id": "W2-002",
+   "severity": "medium",
+   "items": [
+    "D-054",
+    "D-055",
+    "D-061"
+   ],
+   "claim": "Priority (D-054/D-055) is not stated as per-method or per-path. With GET /users/me and DELETE /users/:id, a DELETE /users/me either falls through to /users/:id (priority chosen among patterns registered for the request method, Express behaviour) or yields method-mismatch because the winning pattern /users/me has no DELETE. The Allow set of D-061 likewise is undefined as the winning pattern's methods or the union over every matching pattern. This changes T04 and T02/T06 outcomes.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-2/design.md:38,39,53",
+   "suggested_fix": "State that priority is applied among patterns that have a registration for the request method (falling back to the next matching pattern), and that the method-mismatch Allow set is the union of methods over every pattern matching the path; add a router test for this case."
+  },
+  {
+   "finding_id": "W2-003",
+   "severity": "medium",
+   "items": [
+    "D-052"
+   ],
+   "claim": "D-052 requires rejection 'with 400 before routing on every adapter', but wave 2 has no adapter, no dispatcher and no response: the dispatcher and in-memory adapter are wave 3 (D-394, D-108), the TinyHttpd adapter is wave 5, and the two-adapter parity test is I-021. Unlike D-056/D-058/D-069, D-052 carries no delegation note, so the wave 2 worker cannot implement it as written or may build out-of-scope adapter code.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-2/design.md:33; docs/research/naruserve-v1/design/00.design.md:150,205,688",
+   "suggested_fix": "Scope D-052 in wave 2 to an engine-free path decoder/validator in NaruServe-api that returns a rejection for every listed case (unit-tested against the TinyHttpd PercentCodec.decodePath rules and the request-line byte checks), with the 400 mapping owned by the wave 3 dispatcher and the cross-adapter assertion by I-021."
+  },
+  {
+   "finding_id": "W2-004",
+   "severity": "medium",
+   "items": [
+    "D-070",
+    "D-053"
+   ],
+   "claim": "D-070 says wave 2 removes the (\ubbf8\ud655\uc815) markers for the //, trailing-slash, case and TRACE/CONNECT policies in docs/api/routing.md, but those two markers read '\uc124\uc815 API (\ubbf8\ud655\uc815)', i.e. the RestApp API names, which D-398 assigns to wave 3. Wave 2 cannot remove them without inventing the names (CLAUDE.md forbids naming what is undecided), so D-070 and D-398 contradict on who removes the markers.",
+   "evidence": "docs/api/routing.md:71,91; docs/research/naruserve-v1/waves/wave-2/design.md:70; docs/research/naruserve-v1/design/00.design.md:211",
+   "suggested_fix": "Have wave 2 document the decided semantics in routing.md and leave the '\uc124\uc815 API (\ubbf8\ud655\uc815)' name markers for wave 3 (D-398) to remove."
+  },
+  {
+   "finding_id": "W2-005",
+   "severity": "medium",
+   "items": [
+    "D-389",
+    "D-390",
+    "D-391",
+    "D-068"
+   ],
+   "claim": "A successful WebSocket match (D-068) must be returned as the 'matched' variant, since D-390 lists exactly six variants and none is a WebSocket match, yet the matched variant carries only handler, params, actual method and auto-HEAD flag. With one opaque handler type parameter (D-389) the dispatcher cannot tell an app.ws registration from a GET registration, so wave 7 would have to change the router result or its type parameters, contradicting D-391 ('without changing the router').",
+   "evidence": "docs/research/naruserve-v1/waves/wave-2/design.md:47,48,62,66",
+   "suggested_fix": "Fix the contract in wave 2: either the matched result carries a WebSocket flag (or a WebSocket-matched variant), or the router stores WebSocket registrations with their own opaque type parameter; test that a WS match is distinguishable from a GET match on the same path."
+  },
+  {
+   "finding_id": "W2-006",
+   "severity": "low",
+   "items": [
+    "D-067",
+    "D-442"
+   ],
+   "claim": "D-067 correctly records that TinyHttpd answers CONNECT with an authority-form target with 501 before dispatch and rewrites absolute-form targets to origin-form, but wave 3's D-442 requires any raw path not starting with '/' to get 400 identically on the in-memory and TinyHttpd adapters, which TinyHttpd cannot do for CONNECT host:port (501) and does differently for absolute-form (routed as origin-form).",
+   "evidence": "/Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/RequestParser.java:68-86; docs/research/naruserve-v1/design/00.design.md:153",
+   "suggested_fix": "Exempt CONNECT authority-form (501, the D-020 deferred gap) and absolute-form targets from the D-442 identical-400 rule, or have the in-memory adapter mirror TinyHttpd's request-target handling."
+  },
+  {
+   "finding_id": "W2-007",
+   "severity": "low",
+   "items": [
+    "D-047",
+    "D-048"
+   ],
+   "claim": "Pattern validation covers only Express wildcard/regex syntax; a pattern repeating a variable name (/a/:id/:id) or with an empty name (/a/:) is not addressed, so req.param would be ambiguous.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-2/design.md:28-29",
+   "suggested_fix": "Make duplicate or empty variable names a configuration error at registration, with a router test."
+  },
+  {
+   "finding_id": "W1-001",
+   "severity": "low",
+   "items": [
+    "D-038",
+    "D-070"
+   ],
+   "claim": "D-038 delegates the MethodSet membership/iteration accessor names to #2 (this wave), but D-070, the wave open-items list, names only the routing policy semantics, and docs/api/routing.md documents no MethodSet accessor nor marks one (\ubbf8\ud655\uc815). The worker may pick names without a recorded decision or the required docs/api update (CLAUDE.md: API changes update docs/api).",
+   "evidence": "docs/research/naruserve-v1/waves/wave-2/design.md:19,70; docs/api/routing.md:70",
+   "suggested_fix": "Extend D-070 (or the wave SDS) to record the chosen MethodSet accessor names (e.g. membership and iteration) and add them to docs/api/routing.md with Java/Kotlin examples."
+  }
+ ]
+}
