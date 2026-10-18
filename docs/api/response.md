@@ -1,0 +1,104 @@
+# Response
+
+`Response`는 Express의 `res`에 해당합니다. `status`, `header`, `addCookie`, `cache`는 `Response`를 돌려주므로 Express처럼 이어서 씁니다.
+
+```java
+res.status(201).header("X-Request-ID", id).json(created);
+```
+
+## 메서드 요약
+
+### 상태와 헤더
+
+| 메서드 | 반환 | Express | 설명 |
+|---|---|---|---|
+| `status(code)` | `Response` | `res.status(code)` | 상태 코드. 기본은 `200` |
+| `header(name, value)` | `Response` | `res.set(name, value)` | 응답 헤더 |
+| `addCookie(cookie)` | `Response` | `res.cookie(...)` | `Set-Cookie` 추가. [Cookie](cookie.md) |
+| `cache(policy)` | `Response` | `res.set('Cache-Control', ...)` | 캐시 정책. [캐시](static.md#캐시-정책) |
+| `isCommitted()` | `boolean` | `res.headersSent` | 상태·헤더를 이미 보냈는지 |
+
+### 본문 보내기
+
+| 메서드 | Content-Type | Express | 설명 |
+|---|---|---|---|
+| `json(object)` | `application/json; charset=UTF-8` | `res.json(o)` | 설정된 `JsonCodec`으로 직렬화 |
+| `send(String)` | `text/plain; charset=UTF-8` | `res.send('text')` | 텍스트. 직접 지정한 Content-Type이 있으면 그것을 씁니다. |
+| `html(String)` | `text/html; charset=UTF-8` | `res.send('<p>..</p>')` | HTML |
+| `send(byte[])` | 직접 지정. 없으면 `application/octet-stream` | `res.send(buffer)` | 바이트 |
+| `stream(InputStream, contentType)` | 인자 | `stream.pipe(res)` | 스트림을 끝까지 복사하고 닫습니다. |
+| `file(File)` | 확장자로 결정 | `res.sendFile(path)` | 파일. Range·조건부 요청 지원. `Content-Disposition` 정책(생략 또는 `inline`)은 **(미확정)** |
+| `download(File, filename)` | 확장자로 결정 | `res.download(path, name)` | `Content-Disposition: attachment` |
+| `end()` | — | `res.end()` | 본문 없이 끝냅니다. |
+| `sse()` | `text/event-stream` | — | SSE 스트림 시작. `SseClient` 반환. [SSE](sse.md) |
+| `abort(error)` | — | `res.destroy()` | 응답을 비정상 종료합니다(연결 끊기). |
+
+`send(byte[])`에 Content-Type이 없을 때 `application/octet-stream`을 쓰는 것과 `stream`이 스트림을 닫는 것은 **(미확정)** 입니다.
+
+### Express와 다른 점: `send`는 텍스트만
+
+Express의 `res.send`는 인자 타입에 따라 HTML·JSON·바이너리를 알아서 고릅니다. NaruServe는 메서드로 구분합니다.
+
+| 하고 싶은 것 | Express | NaruServe |
+|---|---|---|
+| 텍스트 | `res.send('ok')` (→ `text/html`) | `res.send("ok")` (→ `text/plain`) |
+| HTML | `res.send('<b>ok</b>')` | `res.html("<b>ok</b>")` |
+| JSON 객체 | `res.send({ok: true})` 또는 `res.json(...)` | `res.json(map)` |
+| JSON 문자열 | `res.json('hello')` | `res.json("hello")` → 본문 `"hello"` |
+
+## json
+
+```java
+res.json(user);                                        // POJO
+res.json(Arrays.asList(user1, user2));                 // 배열
+res.json(Collections.singletonMap("success", true));  // {"success":true}
+res.json("Unauthorized");                              // "Unauthorized"
+res.json(null);                                        // null
+```
+
+Kotlin:
+
+```kotlin
+res.json(mapOf("success" to true))
+```
+
+직렬화 중 예외가 나면, 아직 응답을 보내지 않은 경우에만 오류 응답으로 바뀝니다.
+
+## 한 번만 보냅니다
+
+응답은 한 번만 확정(commit)됩니다. 상태는 `NEW → COMMITTED → COMPLETED`(스트리밍 응답은 `COMMITTED → STREAMING → COMPLETED`)로 진행하고, 비정상 종료 시 `ABORTED`가 됩니다.
+
+- 본문을 보낸 뒤 `status`, `header`, `addCookie`를 부르거나 다시 `json`/`send`를 부르면 예외가 납니다.
+- `204`, `304` 응답과 `HEAD` 요청에는 본문을 보내지 않습니다. `res.status(204).json(x)`의 `x`는 버려집니다.
+- 핸들러가 반환하기 전에 응답을 끝내세요. `sse()`, `file()`, `download()`, `stream()`은 핸들러가 반환한 뒤에도 전송이 이어질 수 있습니다.
+
+## 파일
+
+```java
+app.get("/report", (req, res) -> res.file(new File("/data/report.pdf")));
+
+app.get("/export", (req, res) -> {
+    res.cache(CachePolicy.noStore())
+       .download(new File("/data/export.bin"), "export.bin");
+});
+```
+
+- 큰 파일도 메모리에 올리지 않고 스트리밍합니다.
+- `Range` 요청에 `206`으로 답합니다. 범위를 충족할 수 없으면(시작 위치 ≥ 파일 크기) `416`, 잘못된 형식이거나 여러 범위면 `Range`를 무시하고 `200`입니다. `ETag`/`Last-Modified` 조건부 요청에 `304`로 답합니다. [정적 파일](static.md#range와-조건부-요청)
+- `file()`에 사용자 입력으로 만든 경로를 넘기지 마세요. 경로 이탈 검사는 `staticFiles`만 합니다.
+- `download()`의 `filename`은 헤더 인젝션 문자를 걸러서 씁니다.
+
+## 상태 코드만 보내기
+
+```java
+res.status(204).end();   // Express: res.sendStatus(204)
+res.status(404).end();
+```
+
+## 리다이렉트
+
+`res.redirect`는 **(미확정)** 입니다. 지금은 직접 씁니다.
+
+```java
+res.status(302).header("Location", "/login").end();
+```

@@ -1,0 +1,154 @@
+# RestApp
+
+`RestApp`은 Express의 `app`에 해당합니다. 라우트·미들웨어·설정을 등록하고 서버를 시작하고 끕니다.
+
+## 앱 만들기
+
+```java
+RestApp app = RestApp.create();
+```
+
+`create()`는 기본 HTTP 엔진(TinyHttpd)과 기본 JSON 엔진(Gson 2.14.0)을 조립합니다.
+
+엔진을 직접 고를 때는 builder를 씁니다. `NaruServe-api`만 의존하는 경우에도 이 방법을 씁니다.
+
+```java
+RestApp app = RestApp.builder()
+    .httpAdapter(myAdapter)   // HttpAdapter 구현
+    .jsonCodec(myCodec)       // JsonCodec 구현
+    .build();
+```
+
+> 진입점 이름(`builder()`)과 메서드 목록은 **(미확정)** 입니다. 사양서는 `httpAdapter(...)`, `jsonCodec(...)`, `build()`에 "상응하는" 진입점을 요구합니다.
+
+`RestApp` 하나가 서버 하나입니다. 한 프로세스에 여러 개를 만들 수 있고, 서로 상태를 공유하지 않습니다.
+
+## 메서드 요약
+
+### 라우트
+
+| 메서드 | 설명 |
+|---|---|
+| `get(path, handler)` | GET 라우트. `HEAD`도 자동으로 받습니다. |
+| `post(path, handler)` | POST 라우트 |
+| `put(path, handler)` | PUT 라우트 |
+| `patch(path, handler)` | PATCH 라우트 |
+| `delete(path, handler)` | DELETE 라우트 |
+| `head(path, handler)` | HEAD 라우트(자동 HEAD보다 우선) |
+| `options(path, handler)` | OPTIONS 라우트(자동 OPTIONS보다 우선) |
+| `get(path, middleware, handler)` 등 | 이 라우트에만 적용할 미들웨어를 붙입니다. |
+| `route(Method, path, handler)` | 메서드 하나 |
+| `route(MethodSet, path, handler)` | 여러 메서드를 한 핸들러로 |
+| `route(path)` | `RouteBuilder`를 돌려줍니다. `.get(h).delete(h2)`로 메서드별 핸들러를 붙입니다. |
+| `ws(path, handler)` | WebSocket 엔드포인트. [WebSocket](websocket.md) |
+
+모두 `RestApp`을 돌려주므로 이어서 호출할 수 있습니다(`route(path)` 제외. `ws`와 라우트 미들웨어 오버로드의 반환 타입은 **(미확정)**). 자세한 규칙은 [라우팅](routing.md).
+
+`RouteHandler`는 `(req, res) -> { ... }` 람다입니다.
+
+```java
+@FunctionalInterface
+public interface RouteHandler {
+    void handle(Request req, Response res) throws Exception;
+}
+```
+
+핸들러는 checked exception을 그대로 던질 수 있습니다. 던진 예외는 [오류 처리](middleware.md#오류-처리)로 갑니다.
+
+### 미들웨어·오류
+
+| 메서드 | 설명 |
+|---|---|
+| `use(middleware)` | 모든 요청에 실행 |
+| `use(prefix, middleware)` | `prefix` 경로와 그 하위 경로에만 실행 (`/api`, `/api/users`; `/apix`는 제외) |
+| `onError(handler)` | 처리되지 않은 예외를 받습니다. `(error, req, res) -> ...` |
+
+[미들웨어와 오류 처리](middleware.md)
+
+### 설정
+
+| 메서드 | 설명 | 문서 |
+|---|---|---|
+| `jsonCodec(codec)` | JSON 엔진 교체 | [JSON](json.md) |
+| `multipart(config -> ...)` | 업로드 한도·임시 폴더 | [파일 업로드](multipart.md) |
+| `staticFiles(prefix, dir)` | 정적 파일 폴더 마운트 | [정적 파일](static.md) |
+| `staticFiles(prefix, dir, options -> ...)` | 옵션과 함께 마운트 | [정적 파일](static.md) |
+| `mimeTypes()` | 전역 MIME 등록부 | [정적 파일](static.md#mime) |
+| `accessLog(options -> ...)` | 접근 로그 설정 | [로깅](logging.md) |
+| `logger(logger)` | 앱 로거 교체 | [로깅](logging.md) |
+| `logger()` | 현재 앱 로거 | [로깅](logging.md) |
+
+### 수명주기
+
+| 메서드 | 설명 |
+|---|---|
+| `onStart(ctx -> ...)` | 서버가 요청을 받기 전에 한 번 실행. 서비스 생성·등록 |
+| `onStop(ctx -> ...)` | 정상 종료 때 한 번 실행. 서비스가 아직 살아 있습니다. |
+| `listen(port)` | 서버 시작. `ServerHandle` 반환 |
+| `shutdown(timeout, unit)` | 정상 종료 |
+| `state()` | 현재 상태: `NEW`, `STARTING`, `RUNNING`, `STOPPING`, `FAILED`, `TERMINATED` |
+
+`onStart`/`onStop`/`onError`/`ws`에 넘기는 콜백 인터페이스의 이름과 `throws Exception` 허용 여부는 **(미확정)** 입니다. `RouteHandler`와 `Middleware`만 `throws Exception`이 확정되어 있습니다.
+
+[수명주기와 서비스](lifecycle.md)
+
+## listen
+
+```java
+ServerHandle server = app.listen(8080);
+```
+
+- **동기**로 동작합니다. `onStart` 실행 → 라우트 검사 → 포트 바인딩이 모두 끝난 뒤 반환합니다. Express와 달리 콜백을 받지 않습니다.
+- 반환 전에는 요청을 받지 않습니다.
+- `listen()`이 반환한 뒤 `main`이 끝나도 프로세스가 계속 도는지(서버 스레드가 daemon인지)는 **(미확정)** 입니다.
+- 바인딩 실패, `onStart` 예외, 라우트 충돌 같은 설정 오류는 **예외로 던집니다**. 이때 포트는 열려 있지 않고, 이미 만든 리소스는 정리됩니다.
+- 기본으로 **localhost에만** 바인딩합니다. LAN 바인딩 설정 API는 **(미확정)** 입니다.
+- `ServerHandle`은 실제 포트·주소·상태를 담습니다(접근자 이름 **(미확정)**).
+- Android에서는 메인 스레드에서 호출하지 마세요. 작업 스레드에서 호출합니다.
+
+## shutdown
+
+```java
+app.shutdown(10, TimeUnit.SECONDS);
+```
+
+1. 새 연결·요청·WebSocket Upgrade를 받지 않습니다.
+2. 진행 중인 요청이 끝나기를 기다립니다. SSE·WebSocket에는 종료를 알립니다(WebSocket close 코드 `1001`).
+3. 시간 안에 안 끝나면 연결을 강제로 끊습니다.
+4. `onStop` 콜백을 실행합니다.
+5. `own`/`register`한 `AutoCloseable`을 생성·등록 역순으로 닫습니다.
+
+여러 번 불러도 안전합니다. 종료된 앱은 다시 `listen`할 수 없습니다.
+Android에서는 메인 스레드에서 호출하지 마세요(최대 timeout만큼 막힙니다).
+
+## 설정은 listen 전에
+
+라우트, 미들웨어, 정적 마운트, `multipart`, `jsonCodec` 같은 설정은 상태가 `NEW`일 때만 바꿀 수 있습니다. `listen()` 뒤에 호출하면 예외가 납니다.
+`listen()`할 때 같은 메서드+경로 중복, 우선순위가 같은 충돌 패턴 같은 문제를 검사해 설정 오류로 알려 줍니다.
+
+## 예제
+
+```java
+RestApp app = RestApp.create();
+
+app.onStart(ctx -> {
+    Database db = new Database();
+    ctx.own(db);            // 초기화가 실패해도 닫히도록 먼저 소유 등록
+    db.connect();
+    ctx.register(UserService.class, new UserService(db));
+});
+
+app.use((req, res, next) -> {
+    req.attribute("requestId", UUID.randomUUID().toString());
+    next.run();
+});
+
+app.get("/api/users/:id", (req, res) -> {
+    res.json(req.service(UserService.class).findById(req.param("id")));
+});
+
+app.staticFiles("/", new File("./www"));
+
+ServerHandle server = app.listen(8080);
+Runtime.getRuntime().addShutdownHook(new Thread(() -> app.shutdown(10, TimeUnit.SECONDS)));
+```
