@@ -1,0 +1,23 @@
+{
+ "round": 2,
+ "verifier": 2,
+ "stance": "internal consistency",
+ "prior_findings_check": [
+  {"finding_id": "W2-001", "resolved": true, "note": "Wave decision renames rootProject to NaruServe-build; this matches the TinyHttpd pattern (rootProject 'tinyhttpd-project', settings.gradle:1). No frozen item names the root project, and included-build names come from the directory, so D-364 composite consumption no longer has a duplicate com.snoworca.naruserve:NaruServe."},
+  {"finding_id": "W2-002", "resolved": true, "note": "design.md:5 limits the wave-1 merge check to integration items whose subject exists after wave 1, and moves I-018/I-019 to final verification. See W2-001 below for one leftover ambiguity (I-002)."},
+  {"finding_id": "W2-003", "resolved": true, "note": "D-029 is limited to the module-name and coordinate markers fixed in #1 (README.md:93,99, json.md:47, kotlin.md:99, logging.md:83). The servlet.md:11 jakarta marker is left to D-358 (wave 8), consistent with D-380."},
+  {"finding_id": "W2-004", "resolved": true, "note": "waves.lock.json chains every wave on all earlier waves, so 'every wave runs serially' is true. TinyHttpd .gitignore covers build and .gradle (lines 2, 13; git check-ignore confirms), so D-019/I-006 hold."},
+  {"finding_id": "W2-005", "resolved": true, "note": "rest-kotlin is replaced in CLAUDE.md:38 and docs/api/kotlin.md:97. object.md:793 is the spec and is correctly left alone."},
+  {"finding_id": "W2-006", "resolved": true, "note": "The adapter declares TinyHttpd with `implementation`, which supports D-017/D-209. D-228 needs only adapter (NaruServe) types in the bootstrap."}
+ ],
+ "findings": [
+  {
+   "finding_id": "W2-001",
+   "severity": "low",
+   "items": ["I-002", "I-005"],
+   "claim": "Under the new merge rule ('checked where their subject already exists'), it is unclear whether wave 1 must build the I-002 forbidden-reference check and the I-005 Gson-version check. Their subjects (NaruServe-api, the Gson module) both exist after wave 1. No D-item in any section owns building either check, so a wave-1 worker may treat them as out of scope and no later wave picks them up.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-1/design.md:5; docs/research/naruserve-v1/design/00.design.md:675,678",
+   "suggested_fix": "In the wave decisions, say whether wave 1 adds the I-002 and I-005 build checks next to the D-388 check, or name the wave that does."
+  }
+ ]
+}

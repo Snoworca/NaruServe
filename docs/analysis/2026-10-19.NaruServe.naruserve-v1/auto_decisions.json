@@ -159,6 +159,52 @@
     "cap exhaustion recorded as deviation",
     "if fixes fail marking check or add a high/contradiction, one targeted loop D round on changed items"
    ]
+  },
+  {
+   "gate_id": "new-scope",
+   "note": "kiwi-srs Phase 2.5 scope gate, run-wide vocabulary",
+   "options": [
+    "per-area",
+    "per-wave",
+    "single-scope"
+   ],
+   "votes": [
+    "per-area",
+    "per-area",
+    "per-area"
+   ],
+   "confidences": [
+    0.82,
+    0.82,
+    0.85
+   ],
+   "merge_method": {
+    "rule": "majority",
+    "outcome": "unanimous"
+   },
+   "decision": "per-area",
+   "confidence": 0.83,
+   "scopes": {
+    "Build": "BUILD",
+    "Routing": "ROUTE",
+    "HTTP Core": "HTTP",
+    "Application": "APP",
+    "Engine Adapter": "ENGINE",
+    "JSON": "JSON",
+    "Cookie": "COOKIE",
+    "Multipart": "UPLOAD",
+    "Static Files": "STATIC",
+    "WebSocket": "WS",
+    "SSE": "SSE",
+    "Kotlin": "KOTLIN",
+    "Servlet": "SERVLET",
+    "Android": "ANDROID",
+    "Release": "RELEASE"
+   },
+   "conditions": [
+    "create a scope when its first wave needs it, serially on the host",
+    "greatest-responsibility rule for cross-area requirements"
+   ]
   }
  ]
 }

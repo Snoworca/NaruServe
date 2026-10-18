@@ -1,0 +1,8 @@
+{"confirmed":[
+{"finding_id":"W2-001","note":"Checked: settings.gradle:1 rootProject.name='NaruServe' and build.gradle:5-7 allprojects group 'com.snoworca.naruserve'; the proposed bootstrap module ':NaruServe' (design.md:13) would collide with the root project's coordinates when consumed through includeBuild (D-364, 00.design.md:639)."},
+{"finding_id":"W2-002","note":"Checked: design.md:5 says I-001..I-021 'also hold at this wave's merge'; I-009, I-011, I-018, I-019 and I-021 (00.design.md:675-702) need artifacts from later waves or the end of the run."},
+{"finding_id":"W2-003","note":"Checked: docs/api/servlet.md:11 has a (미확정) marker for a separate jakarta.servlet module, outside the five files D-029 lists; D-358 settles it in wave 8."},
+{"finding_id":"W2-004","note":"Checked: TinyHttpd .gitignore ignores build/.gradle; includeBuild from several worktrees shares one checkout's build outputs."},
+{"finding_id":"W2-005","note":"Checked: CLAUDE.md:38 and docs/api/kotlin.md:97 both say 'rest-kotlin'; neither D-448 (module line only) nor D-029 ((미확정) markers only) covers them."},
+{"finding_id":"W2-006","note":"Checked: D-005 fixes main dependency declarations in wave 1, D-017 restricts TinyHttpd to the adapter, and D-209 (00.design.md:364) confines its types; nothing requires 'implementation' rather than 'api' scope."}
+],"added":[]}

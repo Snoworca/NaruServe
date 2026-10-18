@@ -1,0 +1,78 @@
+# Wave 1 design — 1. Build foundation
+
+Source: frozen run design `docs/research/naruserve-v1/design/00.design.md` lines 5–60 (design lock `docs/research/naruserve-v1/design/00.design.lock.json`). GitHub issues: #1. Depends on waves: none.
+
+The items below are the frozen design items of this wave, verbatim and with their run ids; this wave implements every one of them. Integration items I-001..I-021 of the run design are checked at this wave's merge only where their subject already exists after this wave (for example I-006 and the build-related checks); items about later APIs and the end-of-run gates I-018 and I-019 are checked from the wave that introduces their subject and at the final run verification.
+
+
+Covers issue #1; its gate is the root `./gradlew build` with one Java and one Kotlin smoke test, and it has no acceptance test ID of its own. Depends on sections: none.
+
+#### Gradle wrapper and module layout
+
+- [D-001] The build SHALL use only the Gradle 8.14.3 wrapper, with no Maven or other build tool files added to the repository.
+- [D-002] The root `settings.gradle` SHALL include, next to `NaruServe-api` and `NaruServe-servlet`, one module each for the TinyHttpd `HttpAdapter`, the Gson `JsonCodec`, the default bootstrap that backs `RestApp.create()`, the Kotlin extensions, the SLF4J `Logger` adapter, the rotating file `Logger` and the Logcat `Logger`, with final names decided in #1 (the issue proposes `NaruServe-tinyhttpd`, `NaruServe-gson`, `NaruServe`, `NaruServe-kotlin`, and the logger modules take the same `NaruServe-` prefix).
+- [D-003] Every module of the root build SHALL be configured from the root `build.gradle`.
+- [D-004] Modules of the root build MUST NOT carry their own per-module build files.
+- [D-005] Wave 1 SHALL declare every module's main dependencies up front, so later waves add only test-scope dependencies or the release plugins owned by #18.
+- [D-006] Java compilation in every module SHALL use `options.release = 8`.
+- [D-007] Kotlin compilation in every module and test source set SHALL use `jvmTarget = 1.8`.
+- [D-008] The Maven group and the Java package root SHALL be fixed once in #1 (temporary value `com.snoworca.naruserve`) and used by every module.
+- [D-009] `NaruServe-api` MUST NOT declare any runtime dependency outside the JDK.
+- [D-010] The Gson module SHALL depend on exactly `com.google.code.gson:gson:2.14.0`.
+- [D-011] `kotlin-stdlib` SHALL be a runtime dependency only of the Kotlin extension module, with other modules using it at most in test scope.
+- [D-012] `NaruServe-servlet` SHALL depend on `javax.servlet:javax.servlet-api:3.1.0` and `javax.websocket:javax.websocket-api:1.1`, both in `compileOnly` scope only and declared in wave 1, so a later decision for container WebSocket support needs no new main dependency.
+- [D-384] The SLF4J adapter module SHALL have `org.slf4j:slf4j-api:1.7.36` as its only main dependency besides `NaruServe-api`, declared in wave 1.
+- [D-385] The Logcat `Logger` module SHALL reach `android.util.Log` only through reflection at runtime, with no compile-time Android dependency, so the root build compiles and tests it without an Android SDK.
+- [D-386] The bootstrap module SHALL declare in wave 1 a main dependency on the Logcat `Logger` module, so wave 5 selects Logcat as the Android default without a later build change.
+
+#### TinyHttpd composite build
+
+Answers Q-1 (composite build through a Gradle property) and Q-2 (TinyHttpd is read-only).
+
+- [D-013] `settings.gradle` SHALL include TinyHttpd with `includeBuild`, reading its directory from a Gradle property whose default is `/Users/beom/work/git/TinyHttpd`.
+- [D-014] The TinyHttpd `includeBuild` path MUST NOT be a hard-coded relative path, so builds inside git worktrees resolve it.
+- [D-015] When the configured TinyHttpd directory is missing, the build SHALL fail during configuration with a message naming the property and the path it tried.
+- [D-016] NaruServe modules SHALL reference TinyHttpd only through its Maven coordinates (`com.snoworca.tinyhttpd:tinyhttpd-core`, `com.snoworca.tinyhttpd:tinyhttpd-websocket`) so Gradle substitutes the included projects.
+- [D-017] Only the TinyHttpd adapter module SHALL depend on TinyHttpd artifacts.
+- [D-018] NaruServe modules MUST NOT depend on `tinyhttpd-router` or `tinyhttpd-session`.
+- [D-019] No wave of this run SHALL modify any file inside the TinyHttpd checkout.
+- [D-020] A TinyHttpd gap that the NaruServe adapter cannot fill SHALL be recorded as a deferred issue instead of being patched in TinyHttpd.
+- [D-021] Project documentation SHALL record the TinyHttpd commit the run builds against (46b973e at investigation time).
+
+#### Test infrastructure
+
+- [D-022] Every Java module SHALL use JUnit 4.13.2 for tests.
+- [D-023] The build SHALL apply Kotlin Gradle Plugin 2.x so Kotlin test sources compile and run inside `./gradlew build`.
+- [D-024] Wave 1 SHALL add one Java smoke test and one Kotlin smoke test, and both execute during `./gradlew build`.
+- [D-025] The root `./gradlew build` SHALL pass on the local JDK 17 without an Android SDK.
+- [D-387] `gradle.properties` SHALL set `kotlin.stdlib.default.dependency=false`, so applying the Kotlin Gradle Plugin adds `kotlin-stdlib` to no main configuration.
+- [D-388] A build check SHALL fail when any module other than the Kotlin extension module has `kotlin-stdlib` on its `runtimeClasspath`.
+
+#### Nullability and API 21 checks
+
+- [D-026] Wave 1 SHALL add a nullability annotation library that the Kotlin compiler recognises, in `compileOnly` scope with no runtime dependency, chosen in #1.
+- [D-027] animal-sniffer with the `android-api-level-21` signature SHALL run on the main source set of `NaruServe-api`, the TinyHttpd adapter module, the Gson module, the bootstrap module, the Kotlin extension module, the Logcat `Logger` module and the rotating file `Logger` module as part of `check`.
+- [D-028] The animal-sniffer API 21 check MUST NOT be applied to `NaruServe-servlet`, which is JVM-only.
+
+#### Wave 1 documentation
+
+- [D-029] `docs/api/README.md`, `docs/api/app.md`, `docs/api/json.md`, `docs/api/kotlin.md` and `docs/api/logging.md` SHALL name the final module names and dependency coordinates fixed in #1, so wave 1 removes every (미확정) module-name marker in `docs/api/`.
+- [D-448] Wave 1 SHALL update the module line of `CLAUDE.md` to list every module fixed in #1, mark the modules under the animal-sniffer API 21 check of D-027 as API 21 check targets and keep `NaruServe-servlet` marked JVM-only.
+
+
+
+## Carried from loop D
+
+Loop D ended at its round cap; the committee chose fix-and-freeze. The fixes below landed in the frozen design and this wave re-checks them in loop W:
+
+- V1-007: New D-448: wave 1 updates the CLAUDE.md module line with the module set and the API 21 check targets of D-027. (items D-448)
+
+## Wave decisions
+
+These choices settle names and scopes that the frozen items leave to issue #1. They add no new requirement.
+
+- Root project name: `rootProject.name` becomes `NaruServe-build`, so the bootstrap module can be named `NaruServe` without two projects sharing the coordinate `com.snoworca.naruserve:NaruServe` inside a composite build (loop W finding W2-001; supports D-002, D-008, D-364).
+- Module-name markers: D-029 covers the module-name and dependency-coordinate (미확정) markers fixed in #1. The `jakarta` module marker in `docs/api/servlet.md` belongs to wave 8 under D-358 and stays until then (W2-003).
+- Kotlin module name: the final Kotlin module name replaces the provisional `rest-kotlin` wherever it appears in `CLAUDE.md` and `docs/api/kotlin.md`, as part of D-029 and D-448 (W2-005).
+- TinyHttpd scope: the TinyHttpd adapter module declares TinyHttpd with `implementation` scope, never `api`, so TinyHttpd types stay out of every other module's compile classpath (W2-006; supports D-017, D-209).
+- Shared TinyHttpd build output: every wave runs serially, so at most one worker builds the shared TinyHttpd checkout at a time; the TinyHttpd build output is git-ignored there and the checkout is never modified (W2-004; D-013, D-014, Q-2).

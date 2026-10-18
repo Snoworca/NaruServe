@@ -1,0 +1,16 @@
+{
+ "round": 2,
+ "findings": [
+  {
+   "finding_id": "W2-001",
+   "severity": "low",
+   "items": [
+    "I-002",
+    "I-005"
+   ],
+   "claim": "Under the new merge rule ('checked where their subject already exists'), it is unclear whether wave 1 must build the I-002 forbidden-reference check and the I-005 Gson-version check. Their subjects (NaruServe-api, the Gson module) both exist after wave 1. No D-item in any section owns building either check, so a wave-1 worker may treat them as out of scope and no later wave picks them up.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-1/design.md:5; docs/research/naruserve-v1/design/00.design.md:675,678",
+   "suggested_fix": "In the wave decisions, say whether wave 1 adds the I-002 and I-005 build checks next to the D-388 check, or name the wave that does."
+  }
+ ]
+}
