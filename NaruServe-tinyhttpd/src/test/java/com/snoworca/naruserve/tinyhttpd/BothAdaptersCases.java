@@ -116,4 +116,30 @@ abstract class BothAdaptersCases {
         transcript.add("strict /a//b -> " + r.status());
         assertEquals(404, r.status());
     }
+
+    /** app.trustProxy on and off: remoteAddress() and isSecure() for the same forwarded headers. */
+    // @req FR-ENGINE-008
+    void proxyTrustCases() throws Exception {
+        String[][] headerSets = {
+            {},
+            {"X-Forwarded-For", "203.0.113.7, 10.0.0.1", "X-Forwarded-Proto", "https"},
+            {"X-Forwarded-Proto", "http"},
+            {"Forwarded", "for=198.51.100.1;proto=https"},
+        };
+        String[][] expected = {
+            {"127.0.0.1 false", "127.0.0.1 false", "127.0.0.1 false", "127.0.0.1 false"},
+            {"127.0.0.1 false", "203.0.113.7 true", "127.0.0.1 false", "127.0.0.1 false"},
+        };
+        for (int trust = 0; trust < 2; trust++) {
+            RestApp app = newApp();
+            app.trustProxy(trust == 1);
+            app.get("/who", (req, res) -> res.send(req.remoteAddress() + " " + req.isSecure()));
+            for (int i = 0; i < headerSets.length; i++) {
+                Reply r = send(app, "GET", "/who", headerSets[i]);
+                record("trustProxy=" + (trust == 1) + " " + String.join(",", headerSets[i]), r);
+                assertEquals(200, r.status());
+                assertEquals(expected[trust][i], r.body());
+            }
+        }
+    }
 }

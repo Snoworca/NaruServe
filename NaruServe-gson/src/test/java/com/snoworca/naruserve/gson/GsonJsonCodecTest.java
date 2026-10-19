@@ -142,6 +142,7 @@ public class GsonJsonCodecTest {
 
     // ---- SDS-AC-1 ----
 
+    // SDS-AC-1; FR-JSON-003 AC-1
     @Test
     public void sdsAc1_FR_JSON_003_AC1_classShapeAndConstructors() throws Exception {
         assertTrue(Modifier.isPublic(GsonJsonCodec.class.getModifiers()));
@@ -156,6 +157,7 @@ public class GsonJsonCodecTest {
         assertNotNull(GsonJsonCodec.defaultGson());
     }
 
+    // SDS-AC-1; FR-JSON-003 AC-1
     @Test
     public void sdsAc1_FR_JSON_003_AC1_nullGsonThrowsNullPointerException() {
         try {
@@ -177,6 +179,7 @@ public class GsonJsonCodecTest {
         return null;
     }
 
+    // SDS-AC-1; FR-JSON-003 AC-1
     @Test
     public void sdsAc1_FR_JSON_003_AC1_depthOutOfRangeThrowsIllegalArgumentNamingMaxDepth() {
         for (int bad : new int[] {0, 256, -1}) {
@@ -189,6 +192,7 @@ public class GsonJsonCodecTest {
         }
     }
 
+    // SDS-AC-1; FR-JSON-003 AC-1
     @Test
     public void sdsAc1_FR_JSON_003_AC1_depthBoundsOneAnd255Accepted() throws IOException {
         GsonJsonCodec one = new GsonJsonCodec(GsonJsonCodec.defaultGson(), 1);
@@ -199,6 +203,7 @@ public class GsonJsonCodecTest {
 
     // ---- SDS-AC-2 ----
 
+    // SDS-AC-2; FR-JSON-003 AC-2
     @Test
     public void sdsAc2_FR_JSON_003_AC2_defaultRefusesUnquotedNamesSingleQuotesAndComments() {
         GsonJsonCodec codec = new GsonJsonCodec();
@@ -209,6 +214,7 @@ public class GsonJsonCodecTest {
         }
     }
 
+    // SDS-AC-2; FR-JSON-003 AC-2
     @Test
     public void sdsAc2_FR_JSON_003_AC2_defaultGsonIsStrictPerCallAndUnsafeFree() {
         assertTrue(GsonJsonCodec.defaultGson() != GsonJsonCodec.defaultGson());
@@ -228,6 +234,7 @@ public class GsonJsonCodecTest {
         }
     }
 
+    // SDS-AC-2; FR-JSON-003 AC-2
     @Test
     public void sdsAc2_FR_JSON_003_AC2_lenientConstructsThroughReqBodyAre400() {
         InMemoryHttpAdapter adapter = echoApp(new GsonJsonCodec());
@@ -240,6 +247,7 @@ public class GsonJsonCodecTest {
 
     // ---- SDS-AC-3 ----
 
+    // SDS-AC-3; FR-JSON-003 AC-3
     @Test
     public void sdsAc3_FR_JSON_003_AC3_argsOnlyClassFailsUncheckedAndCreatesNoInstance() throws IOException {
         ArgsOnly.CREATED.set(0);
@@ -252,6 +260,7 @@ public class GsonJsonCodecTest {
         assertEquals(0, ArgsOnly.CREATED.get());
     }
 
+    // SDS-AC-3; FR-JSON-003 AC-3
     @Test
     public void sdsAc3_FR_JSON_003_AC3_argsOnlyClassThroughReqBodyIs500() {
         ArgsOnly.CREATED.set(0);
@@ -262,6 +271,7 @@ public class GsonJsonCodecTest {
 
     // ---- SDS-AC-4 ----
 
+    // SDS-AC-4; FR-JSON-003 AC-4
     @Test
     public void sdsAc4_FR_JSON_003_AC4_default64DecodesAnd65Fails() throws IOException {
         GsonJsonCodec codec = new GsonJsonCodec();
@@ -269,6 +279,7 @@ public class GsonJsonCodecTest {
         decodeFails(codec, nested(65), Object.class);
     }
 
+    // SDS-AC-4; FR-JSON-003 AC-4
     @Test
     public void sdsAc4_FR_JSON_003_AC4_customGsonKeeps64() throws IOException {
         Gson custom = new GsonBuilder().create();
@@ -277,6 +288,7 @@ public class GsonJsonCodecTest {
         decodeFails(codec, nested(65), Object.class);
     }
 
+    // SDS-AC-4; FR-JSON-003 AC-4
     @Test
     public void sdsAc4_FR_JSON_003_AC4_depth10Decodes10AndRejects11() throws IOException {
         GsonJsonCodec codec = new GsonJsonCodec(new Gson(), 10);
@@ -286,6 +298,7 @@ public class GsonJsonCodecTest {
         decodeFails(codec, nested(11), Object.class);
     }
 
+    // FR-JSON-001 AC-5
     @Test
     public void FR_JSON_001_AC5_defaultCodecThroughReqBodyRejects65AndDecodes64() {
         InMemoryHttpAdapter adapter = echoApp(new GsonJsonCodec());
@@ -299,6 +312,7 @@ public class GsonJsonCodecTest {
 
     // ---- SDS-AC-5 ----
 
+    // SDS-AC-5; FR-JSON-003 AC-5
     @Test
     public void sdsAc5_FR_JSON_003_AC5_trailingDataThrowsIOException() {
         GsonJsonCodec codec = new GsonJsonCodec();
@@ -306,6 +320,7 @@ public class GsonJsonCodecTest {
         decodeFails(codec, "{} {}", Map.class);
     }
 
+    // SDS-AC-5; FR-JSON-003 AC-5
     @Test
     public void sdsAc5_FR_JSON_003_AC5_trailingDataWithLenientCallerGsonThrowsIOException() {
         Gson lenient = new GsonBuilder().setStrictness(com.google.gson.Strictness.LENIENT).create();
@@ -317,6 +332,7 @@ public class GsonJsonCodecTest {
         }
     }
 
+    // SDS-AC-5; FR-JSON-003 AC-5
     @Test
     public void sdsAc5_FR_JSON_003_AC5_nullDocumentReturnsNull() throws IOException {
         GsonJsonCodec codec = new GsonJsonCodec();
@@ -325,6 +341,7 @@ public class GsonJsonCodecTest {
         assertNull(decode(codec, " null ", new TypeRef<List<User>>() { }.getType()));
     }
 
+    // FR-JSON-001 AC-3
     @Test
     public void FR_JSON_001_AC3_defaultCodecThroughReqBodyRejectsTrailingData() {
         InMemoryHttpAdapter adapter = echoApp(new GsonJsonCodec());
@@ -337,6 +354,7 @@ public class GsonJsonCodecTest {
 
     // ---- SDS-AC-6 ----
 
+    // SDS-AC-6; FR-JSON-003 AC-6
     @Test
     public void sdsAc6_FR_JSON_003_AC6_wrongJsonTypeGivesIOExceptionWithGsonCause() {
         GsonJsonCodec codec = new GsonJsonCodec();
@@ -358,6 +376,7 @@ public class GsonJsonCodecTest {
         double x;
     }
 
+    // SDS-AC-6; FR-JSON-003 AC-6
     @Test
     public void sdsAc6_FR_JSON_003_AC6_wrongNumberTypeThroughReqBodyIs400() {
         InMemoryHttpAdapter adapter = echoApp(new GsonJsonCodec());
@@ -368,6 +387,7 @@ public class GsonJsonCodecTest {
         }
     }
 
+    // SDS-AC-6; FR-JSON-003 AC-6
     @Test
     public void sdsAc6_FR_JSON_003_AC6_syntaxNestingAndTrailingFailuresCarryGsonCause() {
         GsonJsonCodec codec = new GsonJsonCodec();
@@ -378,6 +398,7 @@ public class GsonJsonCodecTest {
         }
     }
 
+    // SDS-AC-6; FR-JSON-003 AC-6
     @Test
     public void sdsAc6_FR_JSON_003_AC6_noGsonTypeInMethodSignatures() {
         for (Method m : GsonJsonCodec.class.getDeclaredMethods()) {
@@ -400,6 +421,7 @@ public class GsonJsonCodecTest {
 
     // ---- SDS-AC-7 ----
 
+    // SDS-AC-7; FR-JSON-003 AC-7
     @Test
     public void sdsAc7_FR_JSON_003_AC7_encodeNullStringAndList() throws IOException {
         GsonJsonCodec codec = new GsonJsonCodec();
@@ -428,6 +450,7 @@ public class GsonJsonCodecTest {
                 encode(codec, Arrays.asList(new User("a", 1), new User("b", 2))));
     }
 
+    // SDS-AC-7; FR-JSON-003 AC-7
     @Test
     public void sdsAc7_FR_JSON_003_AC7_encodeUsesConfiguredGson() throws IOException {
         Gson nulls = new GsonBuilder().serializeNulls().create();

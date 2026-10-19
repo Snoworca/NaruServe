@@ -8,8 +8,13 @@ import com.snoworca.naruserve.RestApp;
 import com.snoworca.naruserve.testing.RecordingLogger;
 import com.snoworca.naruserve.tinyhttpd.RawTargetSocketTest.Http;
 import com.snoworca.tinyhttpd.ServerConfig;
+import java.io.OutputStream;
+import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -177,5 +182,158 @@ public class LimitsSocketTest {
         assertEquals(100, c.getMinRequestBodyRate());
 
         assertEquals(200, Http.status(Http.send(port, Http.get("/h", padHeaders(4, 5000)))));
+    }
+
+    private static String header(String response, String name) {
+        for (String line : response.substring(0, Math.max(0, response.indexOf("\r\n\r\n"))).split("\r\n")) {
+            int c = line.indexOf(':');
+            if (c > 0 && line.substring(0, c).equalsIgnoreCase(name)) {
+                return line.substring(c + 1).trim();
+            }
+        }
+        return null;
+    }
+
+    /** An app whose POST /b reads the JSON body (whitespace, so the fixture codec is never reached). */
+    private RestApp bodyApp(TinyHttpdAdapter adapter) {
+        RestApp a = app(adapter);
+        a.post("/b", (req, res) -> {
+            req.body(Object.class);
+            res.send("read");
+        });
+        return a;
+    }
+
+    /** Sends the headers of a POST /b declaring {@code length} body bytes, then {@code first} body bytes. */
+    private static Socket openBody(int port, int length, String first) throws Exception {
+        Socket s = new Socket();
+        s.connect(new InetSocketAddress("127.0.0.1", port), 5000);
+        s.setSoTimeout(15000);
+        OutputStream out = s.getOutputStream();
+        out.write(("POST /b HTTP/1.1\r\nHost: 127.0.0.1\r\nContent-Type: application/json\r\nContent-Length: "
+                + length + "\r\n\r\n" + first).getBytes(StandardCharsets.ISO_8859_1));
+        out.flush();
+        return s;
+    }
+
+    // FR-ENGINE-003 AC-3, IR-ENGINE-001 AC-4
+    @Test(timeout = 30000)
+    public void FR_ENGINE_003_AC3_headerLineLimitFollowsTheRequestLineLimitNotTheHeaderTotal() throws Exception {
+        int port = app(new TinyHttpdAdapter()).listen(0).port();
+        assertEquals(431, Http.status(Http.send(port, Http.get("/h", padHeaders(1, 8191)))));
+
+        TinyHttpdAdapter bigTotal = new TinyHttpdAdapter();
+        RestApp total = app(bigTotal);
+        total.server(o -> o.maxHeaderSize(65536));
+        int totalPort = total.listen(0).port();
+        assertEquals(65536, bigTotal.config().maxHeaderBytes);
+        assertEquals(8192, bigTotal.config().inputBufferBytes);
+        assertEquals(431, Http.status(Http.send(totalPort, Http.get("/h", padHeaders(1, 8191)))));
+
+        TinyHttpdAdapter longLine = new TinyHttpdAdapter();
+        RestApp line = app(longLine);
+        line.server(o -> o.maxRequestLineLength(10000));
+        int linePort = line.listen(0).port();
+        assertEquals(16384, longLine.config().maxHeaderBytes);
+        assertEquals(10002, longLine.config().inputBufferBytes);
+        assertEquals(200, Http.status(Http.send(linePort, Http.get("/h", padHeaders(1, 10000)))));
+        assertEquals(431, Http.status(Http.send(linePort, Http.get("/h", padHeaders(1, 10001)))));
+    }
+
+    // FR-ENGINE-003 AC-4
+    @Test(timeout = 30000)
+    public void FR_ENGINE_003_AC4_headerCountHeaderTimeoutAndBodyReadTimeout() throws Exception {
+        TinyHttpdAdapter adapter = new TinyHttpdAdapter();
+        RestApp a = bodyApp(adapter);
+        a.server(o -> o.headerTimeout(300, TimeUnit.MILLISECONDS).bodyReadTimeout(1, TimeUnit.SECONDS));
+        int port = a.listen(0).port();
+
+        // Http.get adds Host and Connection: 98 pads make 100 fields, 99 make 101.
+        assertEquals(200, Http.status(Http.send(port, Http.get("/h", padHeaders(98, 20)))));
+        assertEquals(431, Http.status(Http.send(port, Http.get("/h", padHeaders(99, 20)))));
+
+        try (Socket s = new Socket()) {
+            s.connect(new InetSocketAddress("127.0.0.1", port), 5000);
+            s.setSoTimeout(10000);
+            s.getOutputStream().write("GET /h HTTP/1.1\r\nHost: 127.0.0.1\r\n".getBytes(StandardCharsets.ISO_8859_1));
+            s.getOutputStream().flush();
+            assertEquals(408, Http.status(Http.readAll(s.getInputStream())));
+        }
+
+        long start = System.nanoTime();
+        try (Socket s = openBody(port, 10, "  ")) {
+            String response = Http.readAll(s.getInputStream());
+            long tookMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
+            assertEquals(response, 408, Http.status(response));
+            assertEquals(response, "close", header(response, "Connection"));
+            assertTrue("took " + tookMs, tookMs >= 900 && tookMs < 4500);
+        }
+    }
+
+    // FR-ENGINE-003 AC-5
+    @Test(timeout = 30000)
+    public void FR_ENGINE_003_AC5_dripFedBodyIsAnswered408AfterTheGraceAndClosed() throws Exception {
+        TinyHttpdAdapter adapter = new TinyHttpdAdapter();
+        int port = bodyApp(adapter).listen(0).port();
+        assertEquals(240, adapter.config().getMinRequestBodyRate());
+
+        long start = System.nanoTime();
+        try (Socket s = openBody(port, 1000, "")) {
+            Thread drip = new Thread(() -> {
+                try {
+                    OutputStream out = s.getOutputStream();
+                    for (int i = 0; i < 1000; i++) {
+                        out.write(' ');
+                        out.flush();
+                        Thread.sleep(100);
+                    }
+                } catch (Exception closed) {
+                    // the server closed the connection
+                }
+            });
+            drip.setDaemon(true);
+            drip.start();
+            // readAll returns only at end of stream, so returning shows the server closed the connection.
+            String response = Http.readAll(s.getInputStream());
+            long tookMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
+            assertEquals(response, 408, Http.status(response));
+            assertEquals(response, "close", header(response, "Connection"));
+            assertTrue("took " + tookMs, tookMs >= 4500 && tookMs < 20000);
+        }
+    }
+
+    // FR-ENGINE-003 AC-6
+    @Test(timeout = 30000)
+    public void FR_ENGINE_003_AC6_contentLengthWithChunkedIsRejectedBeforeDispatch() throws Exception {
+        TinyHttpdAdapter adapter = new TinyHttpdAdapter();
+        RestApp a = app(adapter);
+        AtomicInteger handler = new AtomicInteger();
+        List<Throwable> onError = Collections.synchronizedList(new ArrayList<Throwable>());
+        a.post("/c", (req, res) -> {
+            handler.incrementAndGet();
+            res.send("reached");
+        });
+        a.onError((err, req, res) -> {
+            onError.add(err);
+            res.status(500).send("recorded");
+        });
+        int port = a.listen(0).port();
+        int infoBefore = log.info().size();
+
+        String r = Http.send(port, "POST /c HTTP/1.1\r\nHost: 127.0.0.1\r\nContent-Length: 5\r\n"
+                + "Transfer-Encoding: chunked\r\nConnection: close\r\n\r\n5\r\nhello\r\n0\r\n\r\n");
+        assertEquals(r, 400, Http.status(r));
+
+        // The one dispatched request after the rejection adds the only access-log line.
+        assertEquals(200, Http.status(Http.send(port, Http.get("/h"))));
+        long deadline = System.currentTimeMillis() + 5000;
+        while (log.info().size() < infoBefore + 1 && System.currentTimeMillis() < deadline) {
+            Thread.sleep(10);
+        }
+        List<String> lines = log.info();
+        assertEquals(lines.toString(), infoBefore + 1, lines.size());
+        assertTrue(lines.get(infoBefore), lines.get(infoBefore).startsWith("GET /h 200"));
+        assertEquals(0, handler.get());
+        assertEquals(Collections.emptyList(), onError);
     }
 }

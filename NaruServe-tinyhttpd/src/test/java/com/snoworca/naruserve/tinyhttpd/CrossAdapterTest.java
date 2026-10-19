@@ -2,6 +2,7 @@ package com.snoworca.naruserve.tinyhttpd;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import com.snoworca.naruserve.RestApp;
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientResponse;
@@ -182,5 +183,48 @@ public class CrossAdapterTest {
     public void sdsAc3_FR_ENGINE_007_AC3_handlerReachingPathsGiveTheSameRawPathAndDecodedValuesOnBoth()
             throws Exception {
         onBoth(BothAdaptersCases::handlerReachingCases);
+    }
+
+    // FR-ENGINE-008 AC-4
+    @Test(timeout = 30000)
+    public void FR_ENGINE_008_AC4_proxyTrustGivesTheSameRemoteAddressAndIsSecureOnBoth() throws Exception {
+        onBoth(BothAdaptersCases::proxyTrustCases);
+    }
+
+    // FR-ENGINE-008 AC-4: the trust decision lives in DefaultRequest, so no adapter class names a forwarded header.
+    @Test
+    public void FR_ENGINE_008_AC4_noAdapterClassReadsForwardedHeaders() throws Exception {
+        Map<String, String> classes = new java.util.TreeMap<>();
+        for (java.io.File f : AdapterSurfaceTest.mainClassFiles()) {
+            classes.put(f.getName(), AdapterSurfaceTest.classText(f));
+        }
+        assertFalse(classes.isEmpty());
+        // The in-memory adapter comes from the NaruServe-api test-fixtures jar.
+        java.net.URL url = com.snoworca.naruserve.testing.InMemoryHttpAdapter.class.getResource("InMemoryHttpAdapter.class");
+        int inMemory = 0;
+        try (java.util.jar.JarFile jar = ((java.net.JarURLConnection) url.openConnection()).getJarFile()) {
+            for (java.util.jar.JarEntry e : java.util.Collections.list(jar.entries())) {
+                if (e.getName().startsWith("com/snoworca/naruserve/testing/InMemoryHttpAdapter")
+                        && e.getName().endsWith(".class")) {
+                    try (java.io.InputStream in = jar.getInputStream(e)) {
+                        ByteArrayOutputStream buf = new ByteArrayOutputStream();
+                        byte[] b = new byte[8192];
+                        for (int n; (n = in.read(b)) >= 0; ) {
+                            buf.write(b, 0, n);
+                        }
+                        classes.put(e.getName(), new String(buf.toByteArray(), StandardCharsets.ISO_8859_1));
+                        inMemory++;
+                    }
+                }
+            }
+        }
+        assertTrue(inMemory > 0);
+        List<String> hits = new ArrayList<>();
+        for (Map.Entry<String, String> c : classes.entrySet()) {
+            if (c.getValue().toLowerCase(Locale.ROOT).contains("forwarded")) {
+                hits.add(c.getKey());
+            }
+        }
+        assertEquals(new ArrayList<String>(), hits);
     }
 }
