@@ -171,6 +171,13 @@ public class AppLifecycleGuardTest {
         if (type == boolean.class) {
             return true;
         }
+        // wave 6: IR-STATIC-001 AC-5 puts both staticFiles overloads and defaultCache under the same guard
+        if (type == java.io.File.class) {
+            return new java.io.File("public");
+        }
+        if (type == com.snoworca.naruserve.CachePolicy.class) {
+            return com.snoworca.naruserve.CachePolicy.noCache();
+        }
         throw new AssertionError("no test argument for " + type);
     }
 
@@ -183,7 +190,8 @@ public class AppLifecycleGuardTest {
         return args;
     }
 
-    // SDS-AC-4; FR-APP-002 AC-4
+    // SDS-AC-4; FR-APP-002 AC-4; re-pointed to IR-STATIC-001 AC-5: multipart, formLimit, both staticFiles overloads,
+    // defaultCache and mimeTypes().register are refused after listen()
     @Test
     public void sdsAc4_FR_APP_002_AC4_reflectionFindsEveryRestAppAndRouteBuilderRegistrationRefusedInRunning()
             throws Exception {
@@ -193,11 +201,13 @@ public class AppLifecycleGuardTest {
         assertEquals(AppState.RUNNING, app.state());
         List<String> accepted = new ArrayList<>();
         int checked = 0;
+        List<String> guarded = new ArrayList<>();
         for (java.lang.reflect.Method m : RestApp.class.getMethods()) {
             if (Modifier.isStatic(m.getModifiers()) || m.getReturnType() != RestApp.class) {
                 continue;
             }
             checked++;
+            guarded.add(m.getName() + "/" + m.getParameterCount());
             try {
                 m.invoke(app, argsFor(m));
                 accepted.add("RestApp." + m.getName());
@@ -223,6 +233,16 @@ public class AppLifecycleGuardTest {
         }
         assertEquals(new ArrayList<String>(), accepted);
         assertTrue("checked " + checked, checked >= 30);
+        for (String wave6 : new String[] {"multipart/1", "formLimit/1", "staticFiles/2", "staticFiles/3",
+                "defaultCache/1"}) {
+            assertTrue(wave6 + " in " + guarded, guarded.contains(wave6));
+        }
+        try {
+            app.mimeTypes().register("webp", "image/webp");
+            fail("mimeTypes().register accepted in RUNNING");
+        } catch (IllegalStateException expected) {
+            // guarded like the RestApp setters
+        }
         // Not guarded: reads and route(String).
         app.logger();
         assertEquals(AppState.RUNNING, app.state());

@@ -26,8 +26,8 @@ import org.junit.Test;
 public class HttpApiSurfaceTest {
 
     // IR-JSON-002 AC-8: body and json left this list in wave 5; FR-COOKIE-002 AC-8: so did the cookie methods;
-    // IR-MULTIPART-002 AC-6: form, file, files and parts left it in wave 6.
-    private static final List<String> LATER_WAVE_NAMES = Arrays.asList("download", "cache", "sse");
+    // IR-MULTIPART-002 AC-6: form, file, files and parts left it in wave 6; IR-STATIC-002 AC-5: so did cache and download.
+    private static final List<String> LATER_WAVE_NAMES = Arrays.asList("sse");
 
     /** "name(paramSimpleNames)->returnSimpleName" for every public method a type declares. */
     private static Set<String> signatures(Class<?> type) {
@@ -123,7 +123,8 @@ public class HttpApiSurfaceTest {
         assertTrue(read.getAnnotatedReturnType().isAnnotationPresent(Nullable.class));
     }
 
-    // SDS-AC-2; IR-HTTP-001 AC-2; SDS-AC-11 (wave 5-3); FR-COOKIE-002 AC-8 adds addCookie
+    // SDS-AC-2; IR-HTTP-001 AC-2; SDS-AC-11 (wave 5-3); FR-COOKIE-002 AC-8 adds addCookie; IR-STATIC-002 AC-5 adds
+    // cache, file and download
     @Test
     public void sdsAc2_IR_HTTP_001_AC2_responseStatusAndHeaderReturnReceiverWritersReturnVoid() throws Exception {
         assertTrue(Response.class.isInterface());
@@ -134,7 +135,10 @@ public class HttpApiSurfaceTest {
                 // wave 5: IR-JSON-002 AC-8
                 "json(Object)->void",
                 // wave 5: FR-COOKIE-002 AC-8
-                "addCookie(Cookie)->Response"), signatures(Response.class));
+                "addCookie(Cookie)->Response",
+                // wave 6: IR-STATIC-002 AC-5
+                "cache(CachePolicy)->Response", "file(File)->void", "download(File,String)->void"),
+                signatures(Response.class));
         assertEquals(InputStream.class, Response.class.getMethod("stream", InputStream.class, String.class)
                 .getParameterTypes()[0]);
     }
@@ -152,7 +156,8 @@ public class HttpApiSurfaceTest {
 
     // SDS-AC-2; IR-HTTP-001 AC-3, re-pointed by IR-APP-004 AC-3: service and application are expected from wave 4;
     // SDS-AC-11 (wave 5-3); FR-COOKIE-002 AC-8: cookie, getCookies and addCookie are expected from wave 5;
-    // IR-MULTIPART-002 AC-6: form, file, files and parts are expected from wave 6
+    // IR-MULTIPART-002 AC-6: form, file, files and parts are expected from wave 6; IR-STATIC-002 AC-5: cache and
+    // download too
     @Test
     public void sdsAc2_IR_HTTP_001_AC3_laterWaveMethodNamesAreAbsent() {
         for (Class<?> type : new Class<?>[] {Request.class, Response.class}) {
@@ -162,7 +167,8 @@ public class HttpApiSurfaceTest {
         }
     }
 
-    // SDS-AC-3; IR-HTTP-001 AC-4; IR-HTTP-005 AC-5; SDS-AC-11 (wave 5-3); FR-COOKIE-002 AC-8; IR-MULTIPART-002 AC-6
+    // SDS-AC-3; IR-HTTP-001 AC-4; IR-HTTP-005 AC-5; SDS-AC-11 (wave 5-3); FR-COOKIE-002 AC-8; IR-MULTIPART-002 AC-6;
+    // IR-STATIC-002 AC-5: the parameter of defaultCache is the only new RestApp @Nullable position
     @Test
     public void sdsAc3_IR_HTTP_001_AC4_packageNullMarkedAndNullableOnlyOnListedPositions() throws Exception {
         assertNotNull(Request.class.getPackage().getAnnotation(NullMarked.class));
@@ -185,7 +191,8 @@ public class HttpApiSurfaceTest {
                 "UploadFile.filename[]#return",
                 "UploadFile.contentType[]#return"),
                 nullablePositions(Request.class, Response.class, UploadFile.class));
-        assertEquals(setOf(), nullablePositions(RestApp.class, RouteBuilder.class, RouteHandler.class));
+        assertEquals(setOf("RestApp.defaultCache[class com.snoworca.naruserve.CachePolicy]#p0"),
+                nullablePositions(RestApp.class, RouteBuilder.class, RouteHandler.class));
     }
 
     // SDS-AC-11 (wave 5-3); FR-COOKIE-002 AC-8
@@ -241,7 +248,8 @@ public class HttpApiSurfaceTest {
     }
 
     // SDS-AC-6; IR-HTTP-005 AC-1, AC-2, AC-3, AC-5; IR-APP-002 AC-2 (wave 4 SDS-AC-5: re-pointed to the wave 4 set);
-    // SDS-AC-3 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-5-4.sds.md; IR-ENGINE-001 AC-7: the wave 5 set
+    // SDS-AC-3 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-5-4.sds.md; IR-ENGINE-001 AC-7: the wave 5 set;
+    // IR-STATIC-002 AC-5: the wave 6 set
     @Test
     public void sdsAc6_IR_HTTP_005_AC1_AC2_AC3_AC5_IR_APP_002_AC2_restAppDeclaresExactlyTheWave4Methods() {
         assertTrue(RestApp.class.isInterface());
@@ -278,7 +286,10 @@ public class HttpApiSurfaceTest {
                 // wave 5: IR-ENGINE-001 AC-1, AC-7
                 "server(Configurer)->RestApp", "trustProxy(boolean)->RestApp",
                 // wave 6: IR-MULTIPART-001 AC-1, AC-4
-                "multipart(Configurer)->RestApp", "formLimit(long)->RestApp"), signatures(RestApp.class));
+                "multipart(Configurer)->RestApp", "formLimit(long)->RestApp",
+                // wave 6: IR-STATIC-001 AC-1, IR-STATIC-002 AC-2, AC-4
+                "staticFiles(String,File)->RestApp", "staticFiles(String,File,Configurer)->RestApp",
+                "mimeTypes()->MimeTypes", "defaultCache(CachePolicy)->RestApp"), signatures(RestApp.class));
         assertEquals(0, RestApp.class.getInterfaces().length);
         List<String> statics = new java.util.ArrayList<>();
         for (java.lang.reflect.Method m : RestApp.class.getDeclaredMethods()) {

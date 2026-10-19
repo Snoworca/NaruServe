@@ -3,12 +3,14 @@ package com.snoworca.naruserve.internal;
 import com.snoworca.naruserve.AccessLogOptions;
 import com.snoworca.naruserve.AppStartException;
 import com.snoworca.naruserve.AppState;
+import com.snoworca.naruserve.CachePolicy;
 import com.snoworca.naruserve.Configurer;
 import com.snoworca.naruserve.ConsoleLogger;
 import com.snoworca.naruserve.ErrorHandler;
 import com.snoworca.naruserve.LifecycleCallback;
 import com.snoworca.naruserve.Logger;
 import com.snoworca.naruserve.Method;
+import com.snoworca.naruserve.MimeTypes;
 import com.snoworca.naruserve.MethodSet;
 import com.snoworca.naruserve.Middleware;
 import com.snoworca.naruserve.MultipartOptions;
@@ -17,6 +19,7 @@ import com.snoworca.naruserve.RouteBuilder;
 import com.snoworca.naruserve.RouteHandler;
 import com.snoworca.naruserve.ServerHandle;
 import com.snoworca.naruserve.ServerOptions;
+import com.snoworca.naruserve.StaticOptions;
 import com.snoworca.naruserve.routing.RouteKind;
 import com.snoworca.naruserve.routing.RoutePattern;
 import com.snoworca.naruserve.routing.Router;
@@ -25,6 +28,7 @@ import com.snoworca.naruserve.spi.ExchangeHandler;
 import com.snoworca.naruserve.spi.HttpAdapter;
 import com.snoworca.naruserve.spi.JsonCodec;
 import com.snoworca.naruserve.spi.ServerSettings;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -97,8 +101,11 @@ public final class DefaultRestApp implements RestApp {
     private volatile long jsonLimit = JsonBodyReader.DEFAULT_LIMIT;
     private volatile MultipartSettings multipartSettings = new MultipartSettings();
     private volatile long formLimit = 1048576L;
+    private final List<StaticMount> staticMounts = new ArrayList<>();
+    private volatile @Nullable CachePolicy defaultCache;
     private volatile Logger logger;
     private final AppLifecycle lifecycle = new AppLifecycle();
+    private final DefaultMimeTypes mimeTypes = new DefaultMimeTypes(lifecycle);
     private final DefaultApplicationContext context = new DefaultApplicationContext(lifecycle, this);
     private final DefaultAccessLogOptions accessLogOptions = new DefaultAccessLogOptions();
     private final DefaultServerOptions serverOptions = new DefaultServerOptions();
@@ -216,6 +223,65 @@ public final class DefaultRestApp implements RestApp {
         }
         this.formLimit = bytes;
         return this;
+    }
+
+    // @req IR-STATIC-001
+    @Override
+    public RestApp staticFiles(String prefix, File dir) {
+        return addStatic(prefix, dir, null);
+    }
+
+    // @req IR-STATIC-001
+    @Override
+    public RestApp staticFiles(String prefix, File dir, Configurer<StaticOptions> options) {
+        return addStatic(prefix, dir, Objects.requireNonNull(options, "options"));
+    }
+
+    /**
+     * Registers one mount after the configurer ran on fresh options; a throwing configurer registers nothing. The
+     * directory is not checked here: a missing root serves nothing.
+     */
+    // @req IR-STATIC-001
+    synchronized RestApp addStatic(String prefix, File dir, @Nullable Configurer<StaticOptions> options) {
+        lifecycle.requireConfigurable("staticFiles");
+        Objects.requireNonNull(prefix, "prefix");
+        Objects.requireNonNull(dir, "dir");
+        if (!prefix.startsWith("/")) {
+            throw new IllegalArgumentException("static prefix must start with '/': " + prefix);
+        }
+        String p = prefix.length() > 1 && prefix.endsWith("/") ? prefix.substring(0, prefix.length() - 1) : prefix;
+        DefaultStaticOptions o = new DefaultStaticOptions();
+        if (options != null) {
+            options.configure(o);
+        }
+        staticMounts.add(new StaticMount(p, dir, o));
+        return this;
+    }
+
+    /** The registered mounts in registration order. */
+    // @req IR-STATIC-001
+    public synchronized List<StaticMount> staticMounts() {
+        return Collections.unmodifiableList(new ArrayList<>(staticMounts));
+    }
+
+    // @req IR-STATIC-002
+    @Override
+    public MimeTypes mimeTypes() {
+        return mimeTypes;
+    }
+
+    // @req IR-STATIC-002
+    @Override
+    public synchronized RestApp defaultCache(@Nullable CachePolicy policy) {
+        lifecycle.requireConfigurable("defaultCache");
+        this.defaultCache = policy;
+        return this;
+    }
+
+    /** The app-wide Cache-Control policy; null (the default) adds none. */
+    // @req IR-STATIC-002
+    public @Nullable CachePolicy defaultCachePolicy() {
+        return defaultCache;
     }
 
     // @req IR-APP-006
