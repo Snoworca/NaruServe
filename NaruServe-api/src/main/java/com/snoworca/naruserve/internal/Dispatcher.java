@@ -54,6 +54,7 @@ public final class Dispatcher implements ExchangeHandler {
     private final MultipartSettings multipart;
     private final long formLimit;
     private final SpoolRegistry spool;
+    private final StaticHandler statics;
 
     /**
      * Wave 3 shape: no middleware, no onError handler, access log off, a {@link ConsoleLogger}. {@code router} must
@@ -112,6 +113,16 @@ public final class Dispatcher implements ExchangeHandler {
     Dispatcher(Router<RouteHandler> router, MiddlewarePipeline pipeline, ErrorPath errors, AccessLog accessLog,
             @Nullable ApplicationContext context, @Nullable JsonCodec codec, long jsonLimit, boolean trustProxy,
             MultipartSettings multipart, long formLimit, SpoolRegistry spool) {
+        this(router, pipeline, errors, accessLog, context, codec, jsonLimit, trustProxy, multipart, formLimit, spool,
+                new StaticHandler(Collections.<StaticMount>emptyList()));
+    }
+
+    /** As above, with the app's static mounts, consulted in the terminal fallback after routes and middleware. */
+    // @req FR-STATIC-001
+    Dispatcher(Router<RouteHandler> router, MiddlewarePipeline pipeline, ErrorPath errors, AccessLog accessLog,
+            @Nullable ApplicationContext context, @Nullable JsonCodec codec, long jsonLimit, boolean trustProxy,
+            MultipartSettings multipart, long formLimit, SpoolRegistry spool, StaticHandler statics) {
+        this.statics = Objects.requireNonNull(statics, "statics");
         this.spool = Objects.requireNonNull(spool, "spool");
         this.multipart = Objects.requireNonNull(multipart, "multipart");
         this.formLimit = formLimit;
@@ -147,6 +158,7 @@ public final class Dispatcher implements ExchangeHandler {
         DefaultRequest req = new DefaultRequest(ex, method,
                 routed ? m.params() : Collections.<String, String>emptyMap(), context, codec, jsonLimit, trustProxy,
                 multipart, formLimit, spool);
+        req.requestId(rid);
         DefaultResponse res = new DefaultResponse(ex, method == Method.HEAD, codec);
         res.onDone(() -> {
             req.releaseUploads(); // complete or abort: the request ended
@@ -164,7 +176,7 @@ public final class Dispatcher implements ExchangeHandler {
             RouteHandler handler = h;
             terminal = (rq, rs) -> invokeRoute(req, res, handler);
         } else {
-            terminal = (rq, rs) -> fallback(m, res, rid);
+            terminal = (rq, rs) -> fallback(m, req, res, rid);
         }
         try {
             pipeline.run(req, res, route, terminal, errors, rid);
@@ -301,12 +313,21 @@ public final class Dispatcher implements ExchangeHandler {
     /**
      * Terminal step for every non-MATCHED lookup and for a MATCHED WebSocket route (no handshake until app.ws
      * exists). Answers through {@code res}, keeping headers middleware set; a response already left NEW is not
-     * touched.
+     * touched. NOT_FOUND, and METHOD_MISMATCH for GET and HEAD, try the static mounts first; WebSocket kinds and 501
+     * never do.
      */
     // @req FR-HTTP-022
     // @req FR-APP-003
-    void fallback(RouteMatch<RouteHandler> m, DefaultResponse res, String requestId) {
+    // @req FR-STATIC-001
+    // @req FR-STATIC-002
+    void fallback(RouteMatch<RouteHandler> m, DefaultRequest req, DefaultResponse res, String requestId)
+            throws IOException {
         if (res.state() != ResponseState.NEW) {
+            return;
+        }
+        boolean mismatch = m.kind() == RouteMatch.Kind.METHOD_MISMATCH;
+        boolean getLike = req.method() == Method.GET || req.method() == Method.HEAD;
+        if ((m.kind() == RouteMatch.Kind.NO_MATCH || mismatch && getLike) && statics.serve(req, res, mismatch)) {
             return;
         }
         switch (m.kind()) {

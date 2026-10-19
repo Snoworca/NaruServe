@@ -32,6 +32,7 @@ import org.jspecify.annotations.Nullable;
 public final class DefaultRequest implements Request {
 
     private final HttpExchange ex;
+    private volatile String requestId = "";
     private final Method method;
     private final Map<String, String> params;
     private final String path;
@@ -301,6 +302,20 @@ public final class DefaultRequest implements Request {
     @Override
     public String rawPath() {
         return ex.rawPath();
+    }
+
+    /** The raw query after '?', or null; the static 301 Location keeps it as sent. */
+    @Nullable String rawQuery() {
+        return ex.rawQuery();
+    }
+
+    /** The id the dispatcher gave this request, for automatic error bodies; empty until set. */
+    String requestId() {
+        return requestId;
+    }
+
+    void requestId(String id) {
+        this.requestId = id;
     }
 
     // @req FR-HTTP-009
