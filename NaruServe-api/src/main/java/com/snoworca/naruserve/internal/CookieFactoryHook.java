@@ -17,9 +17,7 @@ final class CookieFactoryHook {
 
     static {
         try {
-            // Class.forName also initialises Cookie.
-            Method m = Class.forName("com.snoworca.naruserve.Cookie")
-                    .getDeclaredMethod("unvalidated", String.class, String.class);
+            Method m = Cookie.class.getDeclaredMethod("unvalidated", String.class, String.class);
             m.setAccessible(true);
             UNVALIDATED = m;
         } catch (ReflectiveOperationException e) {

@@ -16,6 +16,12 @@ public class TypeRefTest {
     static final class User {
     }
 
+    /** The Java {@code new TypeRef<List<String>>() {}} type of IR-JSON-001 AC-1, for the Kotlin AC-4 comparison. */
+    static Type javaListOfString() {
+        return new TypeRef<List<String>>() {
+        }.getType();
+    }
+
     private static <X> TypeRef<X> make() {
         return new TypeRef<X>() {
         };

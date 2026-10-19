@@ -29,7 +29,7 @@ final class TinyHttpdExchange implements HttpExchange {
     private final Request req;
     private final Response res;
     private final CountDownLatch ended = new CountDownLatch(1);
-    // Guarded by this.
+    // Guarded by this, which also serialises every touch of res by the core so abort() can hand res back safely.
     private boolean started;
     private volatile boolean aborted;
 
@@ -54,9 +54,18 @@ final class TinyHttpdExchange implements HttpExchange {
             Thread.currentThread().interrupt();
         }
         if (ex.aborted) {
-            // shortcut: before commit TinyHttpd answers this IOException with its plain 500 page instead of a bare
-            // close (its public API has no abort hook); SDS wave-5-6 owns the TinyHttpd error path.
-            res.setCloseConnection(true);
+            // Waits for a core write still inside res (bounded by writeTimeout) before TinyHttpd takes res back.
+            synchronized (ex) {
+                res.setCloseConnection(true);
+                if (!ex.started && !res.isCommitted()) {
+                    // TinyHttpd has no abort hook: a declared byte that never comes makes it close the connection,
+                    // so the client sees a truncated response instead of a complete error page.
+                    ex.started = true;
+                    res.setStatus(500);
+                    res.setContentLengthLong(1);
+                    return;
+                }
+            }
             throw new IOException("exchange aborted");
         }
     }
@@ -116,41 +125,44 @@ final class TinyHttpdExchange implements HttpExchange {
         return req.isSecure();
     }
 
-    private synchronized void start() {
-        if (started) {
-            throw new IllegalStateException("the response was already started");
-        }
-        started = true;
-    }
-
     @Override
-    public OutputStream commit(int status, List<Map.Entry<String, String>> headers, long contentLength)
+    public synchronized OutputStream commit(int status, List<Map.Entry<String, String>> headers, long contentLength)
             throws IOException {
         if (aborted) {
             throw new IOException("exchange aborted");
         }
-        start();
+        if (started) {
+            throw new IllegalStateException("the response was already started");
+        }
+        started = true;
         res.setStatus(status);
         for (Map.Entry<String, String> h : headers) {
             res.addHeader(h.getKey(), h.getValue());
         }
+        final TinyHttpdExchange lock = this;
         return new FilterOutputStream(res.getOutputStream()) {
             @Override
             public void write(int b) throws IOException {
-                check();
-                out.write(b);
+                synchronized (lock) {
+                    check();
+                    out.write(b);
+                }
             }
 
             @Override
             public void write(byte[] b, int off, int len) throws IOException {
-                check();
-                out.write(b, off, len);
+                synchronized (lock) {
+                    check();
+                    out.write(b, off, len);
+                }
             }
 
             @Override
             public void flush() throws IOException {
-                check();
-                out.flush();
+                synchronized (lock) {
+                    check();
+                    out.flush();
+                }
             }
 
             @Override
@@ -167,7 +179,7 @@ final class TinyHttpdExchange implements HttpExchange {
     }
 
     @Override
-    public void finish() throws IOException {
+    public synchronized void finish() throws IOException {
         if (aborted) {
             throw new IOException("exchange aborted");
         }
@@ -175,6 +187,7 @@ final class TinyHttpdExchange implements HttpExchange {
     }
 
     // shortcut: a body write already blocked in the socket is not woken; it fails at TinyHttpd's writeTimeout.
+    // Lock-free on purpose so abort() never waits for a writer.
     @Override
     public void abort() {
         aborted = true;

@@ -140,4 +140,20 @@ public class TransportRejectionTest {
         assertTrue(lines.get(infoBefore + 1), lines.get(infoBefore + 1).startsWith("GET /ok 200"));
         assertEquals(Collections.emptyList(), onError);
     }
+
+    // FR-ENGINE-005: an empty rendered error body (the plain bind overload's renderer) is not labelled JSON
+    @Test(timeout = 20000)
+    public void FR_ENGINE_005_emptyErrorBodyCarriesNoJsonContentType() throws Exception {
+        TinyHttpdAdapter bare = new TinyHttpdAdapter();
+        try {
+            bare.bind(Http.settings().errorRenderer(status -> "").allowedHosts("myphone.local").build(),
+                    ex -> ex.abort());
+            String r = Http.send(bare.boundPort(), "GET / HTTP/1.1\r\nHost: evil.example\r\nConnection: close\r\n\r\n");
+            assertEquals(r, 421, Http.status(r));
+            assertEquals(r, "0", header(r, "Content-Length"));
+            assertEquals(r, null, header(r, "Content-Type"));
+        } finally {
+            Http.stopQuietly(bare);
+        }
+    }
 }

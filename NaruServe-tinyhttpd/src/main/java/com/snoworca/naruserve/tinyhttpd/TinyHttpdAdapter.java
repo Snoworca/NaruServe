@@ -47,7 +47,7 @@ public final class TinyHttpdAdapter implements HttpAdapter {
     // @req FR-ENGINE-001
     @Override
     public void bind(String host, int port, ExchangeHandler handler) throws IOException {
-        // This overload answers TinyHttpd's own errors with a zero-byte application/json body.
+        // This overload answers TinyHttpd's own errors with a zero-byte body and no content type.
         bind(ServerSettings.builder().port(port).bindAddress(host).logger(new ConsoleLogger())
                 .errorRenderer(status -> "").build(), handler);
     }

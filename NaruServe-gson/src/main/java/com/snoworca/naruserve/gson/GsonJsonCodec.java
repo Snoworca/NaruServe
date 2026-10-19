@@ -3,6 +3,7 @@ package com.snoworca.naruserve.gson;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonIOException;
+import com.google.gson.JsonParseException;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.Strictness;
 import com.google.gson.reflect.TypeToken;
@@ -80,6 +81,12 @@ public final class GsonJsonCodec implements JsonCodec {
             }
             return value;
         } catch (MalformedJsonException | JsonSyntaxException e) {
+            throw new IOException(e.getMessage(), e);
+        } catch (JsonIOException e) {
+            // A type error (e.g. no usable constructor) stays unchecked.
+            throw e;
+        } catch (JsonParseException e) {
+            // A user JsonDeserializer rejecting the input: wrong input, like JsonSyntaxException.
             throw new IOException(e.getMessage(), e);
         } catch (IllegalStateException | NumberFormatException | EOFException e) {
             // "Expected X but was Y", a non-number for a floating-point target, or truncated input: wrong or

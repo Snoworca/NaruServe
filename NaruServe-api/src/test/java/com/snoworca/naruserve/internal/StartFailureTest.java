@@ -135,7 +135,7 @@ public class StartFailureTest {
         app.server(o -> o.maxWorkers(4).maxSseStreams(2).maxConnections(5));
         Throwable e = listenFails(app);
         assertEquals(IllegalStateException.class, e.getClass());
-        for (String part : new String[] {"maxConnections", "5", "maxWorkers", "4", "maxSseStreams", "2"}) {
+        for (String part : new String[] {"maxConnections (5)", "maxWorkers (4)", "maxSseStreams (2)"}) {
             org.junit.Assert.assertTrue(e.getMessage(), e.getMessage().contains(part));
         }
         assertEquals(Arrays.asList("onStart", "logger.flush FAILED", "logger.close FAILED"), events);

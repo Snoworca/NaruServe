@@ -470,4 +470,19 @@ public class GsonJsonCodecTest {
         assertEquals(com.google.gson.JsonParser.parseString("{\"n\":42.0}"),
                 com.google.gson.JsonParser.parseString(text(post(adapter, "/map", "{\"n\":42}"))));
     }
+
+    // FR-JSON-003: a user JsonDeserializer rejecting input with JsonParseException is bad input, so IOException
+    @Test
+    public void FR_JSON_003_deserializerJsonParseExceptionBecomesIOException() {
+        Gson gson = new GsonBuilder().registerTypeAdapter(User.class,
+                (com.google.gson.JsonDeserializer<User>) (json, t, ctx) -> {
+                    throw new JsonParseException("bad");
+                }).create();
+        try {
+            new GsonJsonCodec(gson).decode(new StringReader("{}"), User.class);
+            fail("expected IOException");
+        } catch (IOException e) {
+            assertTrue(String.valueOf(e.getCause()), e.getCause() instanceof JsonParseException);
+        }
+    }
 }

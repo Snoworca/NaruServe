@@ -21,13 +21,18 @@ final class JsonErrorHandler implements ErrorHandler {
         this.renderer = renderer;
     }
 
-    /** Writes the status, the JSON type and the renderer body, which carries a fresh request id. */
+    /**
+     * Writes the status, the JSON type and the renderer body, which carries a fresh request id; an empty body gets
+     * no content type, since zero bytes are not JSON.
+     */
     // @req FR-ENGINE-005
     @Override
     public void render(int status, @Nullable String message, Request request, Response response) throws IOException {
         byte[] body = renderer.render(status).getBytes(StandardCharsets.UTF_8);
         response.setStatus(status);
-        response.setContentType("application/json; charset=UTF-8");
+        if (body.length > 0) {
+            response.setContentType("application/json; charset=UTF-8");
+        }
         response.setContentLengthLong(body.length);
         response.getOutputStream().write(body);
     }

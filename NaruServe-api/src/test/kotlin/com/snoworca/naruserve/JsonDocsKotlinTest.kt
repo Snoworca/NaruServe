@@ -43,11 +43,14 @@ inline fun <reified T : Any> Request.body(): T = body(T::class.java) ?: throw Ht
 /** `null` decodes to null; anything else to a fresh instance of the raw target (or a one-element list). */
 private class DocsCodec : JsonCodec {
     override fun <T : Any> decode(reader: Reader, type: Type): T? {
-        if (reader.readText().trim() == "null") return null
+        val text = reader.readText().trim()
+        if (text == "null") return null
         val raw = if (type is ParameterizedType) type.rawType else type
         @Suppress("UNCHECKED_CAST")
-        return when (raw) {
-            List::class.java -> listOf(User("l")) as T
+        return when {
+            raw == CreateUserRequest::class.java && text == "{\"name\":\"a\"}" ->
+                CreateUserRequest().apply { name = "a" } as T
+            raw == List::class.java -> listOf(User("l")) as T
             else -> (raw as Class<*>).getDeclaredConstructor().newInstance() as T
         }
     }
@@ -153,6 +156,7 @@ class JsonDocsKotlinTest {
         }
         assertEquals(400, post(adapter, "/users", "null"))
         assertEquals(400, post(adapter, "/users", "{}"))
+        assertEquals(201, post(adapter, "/users", "{\"name\":\"a\"}"))
     }
 
     // SDS-AC-5; OPS-JSON-001 AC-4, AC-5 — express-migration.md Kotlin todo example

@@ -26,9 +26,10 @@ final class CookieParser {
                 if (eq < 0) {
                     continue;
                 }
-                String name = pair.substring(0, eq);
+                // Like Express's cookie parser, whitespace around '=' is not part of the name or the value.
+                String name = pair.substring(0, eq).trim();
                 if (DefaultResponse.isToken(name)) {
-                    out.add(CookieFactoryHook.create(name, pair.substring(eq + 1)));
+                    out.add(CookieFactoryHook.create(name, pair.substring(eq + 1).trim()));
                 }
             }
         }

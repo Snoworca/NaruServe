@@ -43,8 +43,12 @@ class JsonKotlinTest {
     fun `IR-JSON-001 AC-4 Kotlin object TypeRef captures List of String`() {
         val t = object : TypeRef<List<String>>() {}
         assertEquals(object : TypeRef<List<String>>() {}.type, t.type)
-        // Kotlin writes its declaration-site variance into the supertype signature: List<out E> becomes
-        // List<? extends String>, unlike the Java new TypeRef<List<String>>() {}.
+        // Kotlin writes List<? extends String> into the supertype signature; TypeRef drops that covariant
+        // wildcard, so the type equals the Java new TypeRef<List<String>>() {} of AC-1, both ways round.
+        assertEquals(TypeRefTest.javaListOfString(), t.type)
+        assertEquals(t.type, TypeRefTest.javaListOfString())
+        assertEquals(TypeRefTest.javaListOfString().hashCode(), t.type.hashCode())
+        assertEquals(String::class.java, (t.type as ParameterizedType).actualTypeArguments.single())
         val p = t.type as ParameterizedType
         assertEquals(List::class.java, p.rawType)
         val arg = p.actualTypeArguments.single()

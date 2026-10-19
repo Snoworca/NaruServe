@@ -105,7 +105,7 @@ public final class DocsExamplesCompileTest {
             skip("multipart.md", "app.post(\"/api/upload\", (req, res) -> {", "later-wave method `Request.form(String)`"),
             skip("multipart.md", "app.multipart(config -> {", "later-wave method `RestApp.multipart`"),
             skip("request.md", "// GET /users/42/posts?page=2&tag=a&tag=b",
-                    "app-defined type `PostService` (the block calls the app's `postService.find`)"),
+                    "app-defined variable `postService` (the block calls the app's `postService.find`)"),
             skip("request.md", "User user = req.body(User.class);", "app-defined type `User`"),
             skip("request.md", "User user = req.body(User.class);   // 한 번 읽고",
                     "app-defined type `User` (the block also calls the app's `service`)"),
@@ -113,13 +113,13 @@ public final class DocsExamplesCompileTest {
                     "app-defined type `User` (the block also calls the app's `authenticate`)"),
             skip("request.md", "app.get(\"/users\", (req, res) -> {", "app-defined type `UserService`"),
             skip("response.md", "res.status(201).header(\"X-Request-ID\", id).json(created);",
-                    "app-defined type `Created` (the block sends the app's `created` value)"),
+                    "app-defined variables `id` and `created` (the block sends the app's `created` value)"),
             skip("response.md", "res.json(user);                                        // POJO",
-                    "app-defined type `User` (the block sends the app's `user1` and `user2` values)"),
+                    "app-defined variables `user`, `user1` and `user2` (the block sends the app's values)"),
             skip("response.md", "app.get(\"/report\", (req, res) -> res.file(new File(\"/data/report.pdf\")));",
                     "later-wave method `Response.file(File)`"),
             skip("routing.md", "app.route(Method.get().post().delete(), \"/users/:id\", (req, res) -> {",
-                    "app-defined type `UserRepository` (the block calls the app's `find`, `create` and `remove`)"),
+                    "app-defined methods `find`, `create` and `remove` (the block calls them on the app)"),
             skip("servlet.md", "// 앱 구성: 내장 엔진과 같은 코드",
                     "app-defined type `UserService` (the block is a method declaration, not statements)"),
             skip("sse.md", "#1", "later-wave method `Response.sse()`"),
@@ -137,7 +137,8 @@ public final class DocsExamplesCompileTest {
                     "app-defined type `Auth` (the block calls `auth.isAuthorized(req)`)")));
 
     private static final Pattern REASON =
-            Pattern.compile("(later-wave method|illustrative copy of|absent type|app-defined type) `[^`]+`.*");
+            Pattern.compile("(later-wave method|illustrative copy of|absent type|app-defined type"
+                    + "|app-defined variables?|app-defined methods) `[^`]+`.*");
     private static final Pattern TYPE_DECL = Pattern.compile(
             "^(@\\w+(\\([^)]*\\))?\\s+)*((public|protected|private|abstract|final|static|sealed)\\s+)*"
                     + "(class|interface|enum|@interface)\\s+(\\w+).*");
@@ -582,6 +583,17 @@ public final class DocsExamplesCompileTest {
                 if (s != null && (body.contains(".json(") || body.contains("req.body("))
                         && (s.reason.contains("Response.json") || s.reason.contains("Request.body"))) {
                     stale.add(s.toString());
+                }
+                // Every backticked name of a reason (last dotted segment, without its argument list) is in the block.
+                java.util.regex.Matcher named = s == null ? null : Pattern.compile("`([^`]+)`").matcher(s.reason);
+                while (named != null && named.find()) {
+                    String name = named.group(1);
+                    int paren = name.indexOf('(');
+                    name = paren < 0 ? name : name.substring(0, paren);
+                    name = name.substring(name.lastIndexOf('.') + 1);
+                    if (!body.contains(name)) {
+                        stale.add(s + ": `" + name + "` is not in the block");
+                    }
                 }
             }
         }

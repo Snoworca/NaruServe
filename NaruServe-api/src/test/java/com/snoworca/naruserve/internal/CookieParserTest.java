@@ -42,6 +42,13 @@ public class CookieParserTest {
         assertEquals(0, CookieParser.parse(Arrays.asList("", ";", "a\u0000b=1", "é=1")).length);
     }
 
+    // FR-COOKIE-002 AC-4: whitespace around '=' is trimmed from name and value, as Express's cookie parser does
+    @Test
+    public void FR_COOKIE_002_AC4_whitespaceAroundTheEqualsSignIsTrimmed() {
+        assertEquals(Arrays.asList("a=1", "b=\"x y\""),
+                pairs(CookieParser.parse(Collections.singletonList("a = 1; b =\t\"x y\" "))));
+    }
+
     // SDS-AC-3; FR-COOKIE-002 AC-3, AC-6; IR-COOKIE-001 AC-6
     @Test
     public void sdsAc3_FR_COOKIE_002_AC3_AC6_parsedCookiesComeFromTheUnvalidatedFactoryWithDefaults() {
