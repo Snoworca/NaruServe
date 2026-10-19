@@ -1,210 +1,233 @@
 {
- "run_id": "2026-10-19.NaruServe.naruserve-v1",
- "decisions": [
-  {
-   "gate_id": "intake-qna",
-   "question_id": "Q-1",
-   "question": "How should NaruServe depend on TinyHttpd?",
-   "options": [
-    "composite",
-    "publish-local",
-    "vendor"
-   ],
-   "votes": [
-    "composite",
-    "composite",
-    "composite"
-   ],
-   "confidences": [
-    0.88,
-    0.9,
-    0.85
-   ],
-   "merge_method": {
-    "rule": "majority",
-    "outcome": "unanimous"
-   },
-   "decision": "composite",
-   "confidence": 0.88
-  },
-  {
-   "gate_id": "intake-qna",
-   "question_id": "Q-2",
-   "question": "May lanes modify the TinyHttpd repository?",
-   "options": [
-    "read-only",
-    "allow-edits"
-   ],
-   "votes": [
-    "read-only",
-    "read-only",
-    "read-only"
-   ],
-   "confidences": [
-    0.9,
-    0.88,
-    0.85
-   ],
-   "merge_method": {
-    "rule": "majority",
-    "outcome": "unanimous"
-   },
-   "decision": "read-only",
-   "confidence": 0.88
-  },
-  {
-   "gate_id": "intake-qna",
-   "question_id": "Q-3",
-   "question": "How to handle Android API 21 verification (T10,T12,T47)?",
-   "options": [
-    "automate-build-manual-device",
-    "try-install-api21",
-    "drop"
-   ],
-   "votes": [
-    "automate-build-manual-device",
-    "automate-build-manual-device",
-    "automate-build-manual-device"
-   ],
-   "confidences": [
-    0.85,
-    0.85,
-    0.8
-   ],
-   "merge_method": {
-    "rule": "majority",
-    "outcome": "unanimous"
-   },
-   "decision": "automate-build-manual-device",
-   "confidence": 0.83
-  },
-  {
-   "gate_id": "intake-qna",
-   "question_id": "Q-4",
-   "question": "Scope of #18 and #19 in this run?",
-   "options": [
-    "include-both-late",
-    "include-18-defer-19",
-    "defer-both"
-   ],
-   "votes": [
-    "include-both-late",
-    "include-both-late",
-    "include-both-late"
-   ],
-   "confidences": [
-    0.75,
-    0.7,
-    0.7
-   ],
-   "merge_method": {
-    "rule": "majority",
-    "outcome": "unanimous"
-   },
-   "decision": "include-both-late",
-   "confidence": 0.72
-  },
-  {
-   "gate_id": "intake-qna",
-   "question_id": "Q-5",
-   "question": "Android sample build vs root-only build rule?",
-   "options": [
-    "separate-sample-build",
-    "include-in-root",
-    "no-sample"
-   ],
-   "votes": [
-    "separate-sample-build",
-    "separate-sample-build",
-    "separate-sample-build"
-   ],
-   "confidences": [
-    0.85,
-    0.85,
-    0.8
-   ],
-   "merge_method": {
-    "rule": "majority",
-    "outcome": "unanimous"
-   },
-   "decision": "separate-sample-build",
-   "confidence": 0.83
-  },
-  {
-   "gate_id": "design-intake-insufficient",
-   "note": "critical gate delegated to committee by standing user instruction (user asleep: never stop, committee decides)",
-   "options": [
-    "fix-and-freeze",
-    "fix-and-extend",
-    "abort"
-   ],
-   "votes": [
-    "fix-and-freeze",
-    "fix-and-freeze",
-    "fix-and-freeze"
-   ],
-   "confidences": [
-    0.82,
-    0.85,
-    0.85
-   ],
-   "merge_method": {
-    "rule": "majority",
-    "outcome": "unanimous"
-   },
-   "decision": "fix-and-freeze",
-   "confidence": 0.84,
-   "conditions": [
-    "residual 13 findings carried into owning waves' loop W",
-    "cap exhaustion recorded as deviation",
-    "if fixes fail marking check or add a high/contradiction, one targeted loop D round on changed items"
-   ]
-  },
-  {
-   "gate_id": "new-scope",
-   "note": "kiwi-srs Phase 2.5 scope gate, run-wide vocabulary",
-   "options": [
-    "per-area",
-    "per-wave",
-    "single-scope"
-   ],
-   "votes": [
-    "per-area",
-    "per-area",
-    "per-area"
-   ],
-   "confidences": [
-    0.82,
-    0.82,
-    0.85
-   ],
-   "merge_method": {
-    "rule": "majority",
-    "outcome": "unanimous"
-   },
-   "decision": "per-area",
-   "confidence": 0.83,
-   "scopes": {
-    "Build": "BUILD",
-    "Routing": "ROUTE",
-    "HTTP Core": "HTTP",
-    "Application": "APP",
-    "Engine Adapter": "ENGINE",
-    "JSON": "JSON",
-    "Cookie": "COOKIE",
-    "Multipart": "UPLOAD",
-    "Static Files": "STATIC",
-    "WebSocket": "WS",
-    "SSE": "SSE",
-    "Kotlin": "KOTLIN",
-    "Servlet": "SERVLET",
-    "Android": "ANDROID",
-    "Release": "RELEASE"
-   },
-   "conditions": [
-    "create a scope when its first wave needs it, serially on the host",
-    "greatest-responsibility rule for cross-area requirements"
-   ]
-  }
- ]
+  "run_id": "2026-10-19.NaruServe.naruserve-v1",
+  "decisions": [
+    {
+      "gate_id": "intake-qna",
+      "question_id": "Q-1",
+      "question": "How should NaruServe depend on TinyHttpd?",
+      "options": [
+        "composite",
+        "publish-local",
+        "vendor"
+      ],
+      "votes": [
+        "composite",
+        "composite",
+        "composite"
+      ],
+      "confidences": [
+        0.88,
+        0.9,
+        0.85
+      ],
+      "merge_method": {
+        "rule": "majority",
+        "outcome": "unanimous"
+      },
+      "decision": "composite",
+      "confidence": 0.88
+    },
+    {
+      "gate_id": "intake-qna",
+      "question_id": "Q-2",
+      "question": "May lanes modify the TinyHttpd repository?",
+      "options": [
+        "read-only",
+        "allow-edits"
+      ],
+      "votes": [
+        "read-only",
+        "read-only",
+        "read-only"
+      ],
+      "confidences": [
+        0.9,
+        0.88,
+        0.85
+      ],
+      "merge_method": {
+        "rule": "majority",
+        "outcome": "unanimous"
+      },
+      "decision": "read-only",
+      "confidence": 0.88
+    },
+    {
+      "gate_id": "intake-qna",
+      "question_id": "Q-3",
+      "question": "How to handle Android API 21 verification (T10,T12,T47)?",
+      "options": [
+        "automate-build-manual-device",
+        "try-install-api21",
+        "drop"
+      ],
+      "votes": [
+        "automate-build-manual-device",
+        "automate-build-manual-device",
+        "automate-build-manual-device"
+      ],
+      "confidences": [
+        0.85,
+        0.85,
+        0.8
+      ],
+      "merge_method": {
+        "rule": "majority",
+        "outcome": "unanimous"
+      },
+      "decision": "automate-build-manual-device",
+      "confidence": 0.83
+    },
+    {
+      "gate_id": "intake-qna",
+      "question_id": "Q-4",
+      "question": "Scope of #18 and #19 in this run?",
+      "options": [
+        "include-both-late",
+        "include-18-defer-19",
+        "defer-both"
+      ],
+      "votes": [
+        "include-both-late",
+        "include-both-late",
+        "include-both-late"
+      ],
+      "confidences": [
+        0.75,
+        0.7,
+        0.7
+      ],
+      "merge_method": {
+        "rule": "majority",
+        "outcome": "unanimous"
+      },
+      "decision": "include-both-late",
+      "confidence": 0.72
+    },
+    {
+      "gate_id": "intake-qna",
+      "question_id": "Q-5",
+      "question": "Android sample build vs root-only build rule?",
+      "options": [
+        "separate-sample-build",
+        "include-in-root",
+        "no-sample"
+      ],
+      "votes": [
+        "separate-sample-build",
+        "separate-sample-build",
+        "separate-sample-build"
+      ],
+      "confidences": [
+        0.85,
+        0.85,
+        0.8
+      ],
+      "merge_method": {
+        "rule": "majority",
+        "outcome": "unanimous"
+      },
+      "decision": "separate-sample-build",
+      "confidence": 0.83
+    },
+    {
+      "gate_id": "design-intake-insufficient",
+      "note": "critical gate delegated to committee by standing user instruction (user asleep: never stop, committee decides)",
+      "options": [
+        "fix-and-freeze",
+        "fix-and-extend",
+        "abort"
+      ],
+      "votes": [
+        "fix-and-freeze",
+        "fix-and-freeze",
+        "fix-and-freeze"
+      ],
+      "confidences": [
+        0.82,
+        0.85,
+        0.85
+      ],
+      "merge_method": {
+        "rule": "majority",
+        "outcome": "unanimous"
+      },
+      "decision": "fix-and-freeze",
+      "confidence": 0.84,
+      "conditions": [
+        "residual 13 findings carried into owning waves' loop W",
+        "cap exhaustion recorded as deviation",
+        "if fixes fail marking check or add a high/contradiction, one targeted loop D round on changed items"
+      ]
+    },
+    {
+      "gate_id": "new-scope",
+      "note": "kiwi-srs Phase 2.5 scope gate, run-wide vocabulary",
+      "options": [
+        "per-area",
+        "per-wave",
+        "single-scope"
+      ],
+      "votes": [
+        "per-area",
+        "per-area",
+        "per-area"
+      ],
+      "confidences": [
+        0.82,
+        0.82,
+        0.85
+      ],
+      "merge_method": {
+        "rule": "majority",
+        "outcome": "unanimous"
+      },
+      "decision": "per-area",
+      "confidence": 0.83,
+      "scopes": {
+        "Build": "BUILD",
+        "Routing": "ROUTE",
+        "HTTP Core": "HTTP",
+        "Application": "APP",
+        "Engine Adapter": "ENGINE",
+        "JSON": "JSON",
+        "Cookie": "COOKIE",
+        "Multipart": "UPLOAD",
+        "Static Files": "STATIC",
+        "WebSocket": "WS",
+        "SSE": "SSE",
+        "Kotlin": "KOTLIN",
+        "Servlet": "SERVLET",
+        "Android": "ANDROID",
+        "Release": "RELEASE"
+      },
+      "conditions": [
+        "create a scope when its first wave needs it, serially on the host",
+        "greatest-responsibility rule for cross-area requirements"
+      ]
+    },
+    {
+      "gate_id": "partition-review-unrecorded",
+      "question": "Stage 3 partition review",
+      "options": [
+        "pass",
+        "revise",
+        "abort"
+      ],
+      "votes": [
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "confidences": [
+        0.88,
+        0.88,
+        0.9
+      ],
+      "decision": "pass",
+      "rule": "majority",
+      "confidence": 0.89,
+      "ts": "2026-10-19T00:55:32.869508Z"
+    }
+  ]
 }
