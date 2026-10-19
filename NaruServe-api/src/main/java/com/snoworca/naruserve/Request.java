@@ -4,8 +4,8 @@ import java.util.List;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Read-only view of one HTTP request plus a per-request attribute store. Wave 3 holds no body, form, file,
- * cookie, service or application access; later waves add them.
+ * Read-only view of one HTTP request plus a per-request attribute store and the app context. No body, form, file
+ * or cookie access yet; later waves add them.
  */
 // @req IR-HTTP-001
 public interface Request {
@@ -51,4 +51,20 @@ public interface Request {
      * class such as {@code int.class} (Kotlin's {@code Int::class.java}) reads the boxed value.
      */
     <T> @Nullable T attribute(String key, Class<T> type);
+
+    /**
+     * The app's {@link ApplicationContext}. The default throws {@link UnsupportedOperationException} so request
+     * fakes written for wave 3 still compile.
+     */
+    // shortcut: DefaultRequest does not override this yet, so req.service throws; the FR-APP-007 SDS wires it.
+    // @req IR-APP-004
+    default ApplicationContext application() {
+        throw new UnsupportedOperationException(getClass().getName() + " has no application context");
+    }
+
+    /** The service registered under {@code type}: {@code application().get(type)}. */
+    // @req IR-APP-004
+    default <T> T service(Class<T> type) {
+        return application().get(type);
+    }
 }

@@ -26,7 +26,7 @@ import org.junit.Test;
 public class HttpApiSurfaceTest {
 
     private static final List<String> LATER_WAVE_NAMES = Arrays.asList("body", "form", "file", "files", "parts", "json",
-            "download", "cache", "sse", "cookie", "getCookies", "addCookie", "service", "application");
+            "download", "cache", "sse", "cookie", "getCookies", "addCookie");
 
     /** "name(paramSimpleNames)->returnSimpleName" for every public method a type declares. */
     private static Set<String> signatures(Class<?> type) {
@@ -81,7 +81,7 @@ public class HttpApiSurfaceTest {
         return app.route("/u/:id").get(h1).put(h2).delete(h3).post(h1).patch(h2).head(h3).options(h1);
     }
 
-    // SDS-AC-1; IR-HTTP-001 AC-1
+    // SDS-AC-1; IR-HTTP-001 AC-1; IR-APP-004 AC-3 adds application and service from wave 4
     @Test
     public void sdsAc1_IR_HTTP_001_AC1_requestDeclaresTheWave3Methods() throws Exception {
         assertTrue(Request.class.isInterface());
@@ -90,7 +90,8 @@ public class HttpApiSurfaceTest {
         assertEquals(setOf("method()->Method", "path()->String", "rawPath()->String", "param(String)->String",
                 "query(String)->String", "queries(String)->List", "header(String)->String", "headers(String)->List",
                 "remoteAddress()->String", "isSecure()->boolean", "lastEventId()->String",
-                "attribute(String,Object)->void", "attribute(String,Class)->Object"), signatures(Request.class));
+                "attribute(String,Object)->void", "attribute(String,Class)->Object",
+                "application()->ApplicationContext", "service(Class)->Object"), signatures(Request.class));
         for (String name : new String[] {"queries", "headers"}) {
             assertEquals(name, "java.util.List<java.lang.String>",
                     Request.class.getMethod(name, String.class).getGenericReturnType().getTypeName());
@@ -124,7 +125,18 @@ public class HttpApiSurfaceTest {
                 .getParameterTypes()[0]);
     }
 
-    // SDS-AC-2; IR-HTTP-001 AC-3
+    // SDS-AC-2 (wave 4-2); IR-APP-004 AC-3: the IR-HTTP-001 AC-3 surface test is re-pointed to expect these
+    @Test
+    public void sdsAc2_IR_APP_004_AC3_requestDeclaresApplicationAndGenericService() throws Exception {
+        assertEquals(ApplicationContext.class, Request.class.getMethod("application").getReturnType());
+        java.lang.reflect.Method service = Request.class.getMethod("service", Class.class);
+        assertEquals(1, service.getTypeParameters().length);
+        assertEquals(service.getTypeParameters()[0], service.getGenericReturnType());
+        assertEquals("java.lang.Class<" + service.getTypeParameters()[0].getName() + ">",
+                service.getGenericParameterTypes()[0].getTypeName());
+    }
+
+    // SDS-AC-2; IR-HTTP-001 AC-3, re-pointed by IR-APP-004 AC-3: service and application are expected from wave 4
     @Test
     public void sdsAc2_IR_HTTP_001_AC3_laterWaveMethodNamesAreAbsent() {
         for (Class<?> type : new Class<?>[] {Request.class, Response.class}) {
@@ -211,7 +223,14 @@ public class HttpApiSurfaceTest {
                 "route(Method,String,Middleware,RouteHandler)->RestApp",
                 "route(MethodSet,String,Middleware,RouteHandler)->RestApp",
                 // wave 4: IR-APP-003
-                "onError(ErrorHandler)->RestApp"), signatures(RestApp.class));
+                "onError(ErrorHandler)->RestApp",
+                // wave 4: IR-APP-005
+                "onStart(LifecycleCallback)->RestApp", "onStop(LifecycleCallback)->RestApp",
+                "listen(int)->ServerHandle", "shutdown(long,TimeUnit)->void", "state()->AppState",
+                // wave 4: IR-APP-006
+                "logger()->Logger", "logger(Logger)->RestApp",
+                // wave 4: IR-APP-007
+                "accessLog(Configurer)->RestApp"), signatures(RestApp.class));
         assertEquals(0, RestApp.class.getInterfaces().length);
         List<String> statics = new java.util.ArrayList<>();
         for (java.lang.reflect.Method m : RestApp.class.getDeclaredMethods()) {

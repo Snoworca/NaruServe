@@ -5,16 +5,21 @@ import com.snoworca.naruserve.internal.DefaultRestApp;
 import com.snoworca.naruserve.routing.RouterPolicy;
 import com.snoworca.naruserve.spi.HttpAdapter;
 import com.snoworca.naruserve.spi.JsonCodec;
+import java.util.concurrent.TimeUnit;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Route, middleware and error-handler registration plus routing policy. Every instance method except
- * {@link #route(String)} returns this app. Obtain one with {@link #create()} or {@link #builder()}.
+ * Route, middleware, error-handler and lifecycle registration, routing policy, logger, access log options and
+ * the lifecycle itself. Every registration and configuration method returns this app. Obtain one with
+ * {@link #create()} or {@link #builder()}.
  */
 // @req IR-HTTP-005
 // @req IR-APP-001
 // @req IR-APP-002
 // @req IR-APP-003
+// @req IR-APP-005
+// @req IR-APP-006
+// @req IR-APP-007
 // @req FR-APP-001
 public interface RestApp {
 
@@ -89,6 +94,41 @@ public interface RestApp {
     /** Appends {@code handler} to the error handler chain. */
     // @req IR-APP-003
     RestApp onError(ErrorHandler handler);
+
+    /** Appends {@code cb} to the callbacks {@link #listen(int)} runs, in order, before the app serves. */
+    // @req IR-APP-005
+    RestApp onStart(LifecycleCallback cb);
+
+    /** Appends {@code cb} to the callbacks {@link #shutdown(long, TimeUnit)} runs after serving stopped. */
+    // @req IR-APP-005
+    RestApp onStop(LifecycleCallback cb);
+
+    /**
+     * Starts the app on {@code 127.0.0.1:port} ({@code 0} picks a free port) and returns once it serves.
+     * {@link IllegalArgumentException} for a port outside {@code 0..65535}, before any state change.
+     */
+    // @req IR-APP-005
+    ServerHandle listen(int port);
+
+    /** Stops serving within {@code timeout}, runs the onStop callbacks and ends in {@link AppState#TERMINATED}. */
+    // @req IR-APP-005
+    void shutdown(long timeout, TimeUnit unit);
+
+    /** The current lifecycle state. */
+    // @req IR-APP-005
+    AppState state();
+
+    /** The app logger; readable in every state. */
+    // @req IR-APP-006
+    Logger logger();
+
+    /** Replaces the app logger. */
+    // @req IR-APP-006
+    RestApp logger(Logger logger);
+
+    /** Runs {@code configurer} at once on the app's one access log options; calls accumulate in order. */
+    // @req IR-APP-007
+    RestApp accessLog(Configurer<AccessLogOptions> configurer);
 
     /** Explicit app assembly; each setter returns this builder and each {@link #build()} returns a new app. */
     // @req IR-APP-001

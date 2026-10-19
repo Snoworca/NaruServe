@@ -186,7 +186,7 @@ public final class DefaultRequest implements Request {
         return (T) wrapper(type).cast(attributes.get(key));
     }
 
-    private static Class<?> wrapper(Class<?> type) {
+    static Class<?> wrapper(Class<?> type) {
         if (!type.isPrimitive()) {
             return type;
         }

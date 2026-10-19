@@ -1,7 +1,12 @@
 package com.snoworca.naruserve.internal;
 
+import com.snoworca.naruserve.AccessLogOptions;
+import com.snoworca.naruserve.AppStartException;
+import com.snoworca.naruserve.AppState;
+import com.snoworca.naruserve.Configurer;
 import com.snoworca.naruserve.ConsoleLogger;
 import com.snoworca.naruserve.ErrorHandler;
+import com.snoworca.naruserve.LifecycleCallback;
 import com.snoworca.naruserve.Logger;
 import com.snoworca.naruserve.Method;
 import com.snoworca.naruserve.MethodSet;
@@ -12,6 +17,7 @@ import com.snoworca.naruserve.Response;
 import com.snoworca.naruserve.RestApp;
 import com.snoworca.naruserve.RouteBuilder;
 import com.snoworca.naruserve.RouteHandler;
+import com.snoworca.naruserve.ServerHandle;
 import com.snoworca.naruserve.routing.RouteKind;
 import com.snoworca.naruserve.routing.RoutePattern;
 import com.snoworca.naruserve.routing.Router;
@@ -23,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -35,6 +42,9 @@ import org.jspecify.annotations.Nullable;
 // @req IR-APP-001
 // @req IR-APP-002
 // @req IR-APP-003
+// @req IR-APP-005
+// @req IR-APP-006
+// @req IR-APP-007
 public final class DefaultRestApp implements RestApp {
 
     /** One registration call as recorded; the router is built from these at freeze. */
@@ -67,13 +77,18 @@ public final class DefaultRestApp implements RestApp {
 
     private final @Nullable HttpAdapter adapter;
     private final @Nullable JsonCodec codec;
-    private final Logger logger;
+    private volatile Logger logger;
+    private volatile AppState state = AppState.NEW;
+    private final DefaultApplicationContext context = new DefaultApplicationContext(this);
+    private final DefaultAccessLogOptions accessLogOptions = new DefaultAccessLogOptions();
 
     // Guarded by this.
     private final List<Registration> registrations = new ArrayList<>();
     private final List<Middleware> globalMiddleware = new ArrayList<>();
     private final List<PrefixMiddleware> prefixMiddleware = new ArrayList<>();
     private final List<ErrorHandler> errorHandlers = new ArrayList<>();
+    private final List<LifecycleCallback> startCallbacks = new ArrayList<>();
+    private final List<LifecycleCallback> stopCallbacks = new ArrayList<>();
     private RouterPolicy policy = RouterPolicy.strict();
     private @Nullable Dispatcher dispatcher;
 
@@ -103,8 +118,143 @@ public final class DefaultRestApp implements RestApp {
         return codec;
     }
 
+    // @req IR-APP-006
+    @Override
     public Logger logger() {
         return logger;
+    }
+
+    // shortcut: logger(l), accessLog, onStart and onStop skip the NEW-state guard; the FR-APP-002 SDS adds it.
+    // @req IR-APP-006
+    @Override
+    public RestApp logger(Logger logger) {
+        this.logger = Objects.requireNonNull(logger, "logger");
+        return this;
+    }
+
+    // @req IR-APP-007
+    @Override
+    public RestApp accessLog(Configurer<AccessLogOptions> configurer) {
+        Objects.requireNonNull(configurer, "configurer");
+        synchronized (accessLogOptions) {
+            configurer.configure(accessLogOptions);
+        }
+        return this;
+    }
+
+    /** The app's one context, passed to every lifecycle callback. */
+    // @req IR-APP-004
+    public DefaultApplicationContext context() {
+        return context;
+    }
+
+    // @req IR-APP-005
+    @Override
+    public synchronized RestApp onStart(LifecycleCallback cb) {
+        startCallbacks.add(Objects.requireNonNull(cb, "cb"));
+        return this;
+    }
+
+    // @req IR-APP-005
+    @Override
+    public synchronized RestApp onStop(LifecycleCallback cb) {
+        stopCallbacks.add(Objects.requireNonNull(cb, "cb"));
+        return this;
+    }
+
+    // @req IR-APP-005
+    @Override
+    public AppState state() {
+        return state;
+    }
+
+    /**
+     * Runs the onStart callbacks, freezes, binds {@code 127.0.0.1:port} and enters RUNNING.
+     * shortcut: no start gate, pending stop or adapter/resource cleanup on failure; the FR-APP-009/FR-APP-010
+     * SDSs replace this with the AppLifecycle state machine.
+     */
+    // @req IR-APP-005
+    @Override
+    public synchronized ServerHandle listen(int port) {
+        if (port < 0 || port > 65535) {
+            throw new IllegalArgumentException("port must be in 0..65535: " + port);
+        }
+        HttpAdapter a = adapter;
+        if (a == null) {
+            throw new IllegalStateException("this app has no HttpAdapter; build it with RestApp.builder()");
+        }
+        if (state != AppState.NEW) {
+            throw new IllegalStateException("listen() not allowed in state " + state);
+        }
+        state = AppState.STARTING;
+        try {
+            for (LifecycleCallback cb : new ArrayList<>(startCallbacks)) {
+                cb.handle(context);
+            }
+            freeze();
+            a.bind("127.0.0.1", port, dispatcher());
+        } catch (RuntimeException | Error e) {
+            state = AppState.FAILED;
+            throw e;
+        } catch (Exception e) {
+            state = AppState.FAILED;
+            throw new AppStartException("app start failed: " + e, e);
+        }
+        state = AppState.RUNNING;
+        int bound = a.boundPort();
+        return new ServerHandle() {
+            @Override
+            public int port() {
+                return bound;
+            }
+
+            @Override
+            public String address() {
+                return "127.0.0.1";
+            }
+
+            @Override
+            public AppState state() {
+                return DefaultRestApp.this.state;
+            }
+        };
+    }
+
+    /**
+     * RUNNING: adapter stop and release, the onStop callbacks, then TERMINATED. NEW goes straight to TERMINATED;
+     * other states do nothing.
+     * shortcut: no shutdown participants, owned-resource or logger close; the FR-APP-011/FR-APP-012 SDS replaces
+     * this with the fixed shutdown sequence.
+     */
+    // @req IR-APP-005
+    @Override
+    public synchronized void shutdown(long timeout, TimeUnit unit) {
+        if (timeout < 0) {
+            throw new IllegalArgumentException("timeout must not be negative: " + timeout);
+        }
+        Objects.requireNonNull(unit, "unit");
+        if (state == AppState.NEW) {
+            state = AppState.TERMINATED;
+            return;
+        }
+        HttpAdapter a = adapter;
+        if (state != AppState.RUNNING || a == null) {
+            return;
+        }
+        state = AppState.STOPPING;
+        try {
+            a.stop(timeout, unit);
+            a.release();
+            for (LifecycleCallback cb : new ArrayList<>(stopCallbacks)) {
+                try {
+                    cb.handle(context);
+                } catch (Exception e) {
+                    logger.error("onStop callback failed", e);
+                }
+            }
+        } finally {
+            state = AppState.TERMINATED;
+        }
     }
 
     @Override
