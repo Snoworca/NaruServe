@@ -1,0 +1,5 @@
+{"schema_version":"1.0.0","run_id":"2026-10-19.naruserve.naruserve-v1-wave-4-6","sds_path":"docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-6.sds.md","sds_sha256":"6b1cc87ad9b1fdd4900eb28b7a73f90691cc4d2e68afffb4959aa969ab3afc25","target":"wave-4","req_ids":["FR-APP-007","FR-APP-008"],"spawn_context":"pm-child","phase":"done","failed":false,
+"red_evidence":{"command":"./gradlew :NaruServe-api:test --tests '*ServicesAcceptanceTest'","exit_code":1,"captured_failure":"10 tests completed, 8 failed (sdsAc1, sdsAc4, sdsAc5, sdsAc9, sdsAc12 x2, sdsAc13 x2); OwnedResourcesTest and DefaultApplicationContextTest: compile error cannot find symbol OwnedResources / closeOwned"},
+"green_evidence":{"command":"./gradlew build","exit_code":0},
+"review":{"prickly":"0 CRITICAL, 0 HIGH; 1 MEDIUM fixed (failStart own race, lock barrier in closeOwned); 3 LOW fixed (Javadoc, FAILED-state test, STOPPING assertion); LOW left: Error thrown by close stops loop (SDS says catch Exception), shutdown owned close not in finally (part 7 sequence)"},
+"mcp_call_log":"deferred: 26 lines appended to the lane deferred-srs-queue.jsonl (24 add_verification_evidence, 2 update_status implemented)"}

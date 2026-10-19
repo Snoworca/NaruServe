@@ -1,0 +1,386 @@
+{
+ "schema_version": "1.0.0",
+ "run_id": "2026-10-19.naruserve.naruserve-v1-wave-4-8",
+ "sds_path": "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-8.sds.md",
+ "target": "wave-4",
+ "req_ids": [
+  "FR-APP-014",
+  "FR-APP-015",
+  "SEC-APP-001"
+ ],
+ "spawn_context": "pm-child",
+ "phase": "done",
+ "failed": false,
+ "next_resume_hint": null,
+ "red_evidence": {
+  "command": "./gradlew :NaruServe-api:compileTestJava",
+  "exit_code": 1,
+  "captured_failure": "constructor AccessLog(DefaultAccessLogOptions,SafeLogger) not found; cannot find symbol format/escape/excluded/BodyState.stream",
+  "timestamp": "2026-10-19T07:49:14Z"
+ },
+ "green_evidence": {
+  "command": "./gradlew build",
+  "exit_code": 0,
+  "timestamp": "2026-10-19T07:49:14Z"
+ },
+ "regression_baseline": {
+  "command": "./gradlew build",
+  "exit_code": 0,
+  "failed_test_ids": []
+ },
+ "mcp_call_log": [
+  {
+   "called_at": "2026-10-19T07:49:14Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-APP-014",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/LoggerIsolationTest.java:sdsAc1_FR_APP_014_AC1_AC3_throwingLoggerChangesNoResponse",
+    "covers": "AC-1",
+    "notes": "command ./gradlew build result pass (exit 0)"
+   },
+   "args_hash": "f2e9bfcbc5e8759ac0ce34c98ef72521280083a8",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-4-8"
+  },
+  {
+   "called_at": "2026-10-19T07:49:14Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-APP-014",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/LoggerIsolationTest.java:sdsAc2_FR_APP_014_AC2_AC3_listenAndShutdownCompleteWithAThrowingLogger",
+    "covers": "AC-2",
+    "notes": "command ./gradlew build result pass (exit 0)"
+   },
+   "args_hash": "404fefb2880cc9dc74cec81513f755b660a3a3aa",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-4-8"
+  },
+  {
+   "called_at": "2026-10-19T07:49:14Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-APP-014",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AccessLogTest.java:sdsAc3_FR_APP_014_AC3_writeWithAThrowingLoggerReturnsNormally",
+    "covers": "AC-3",
+    "notes": "command ./gradlew build result pass (exit 0)"
+   },
+   "args_hash": "4161061fa38afa95302238a7706d7e32439bc3f2",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-4-8"
+  },
+  {
+   "called_at": "2026-10-19T07:49:14Z",
+   "tool": "update_status",
+   "args": {
+    "id": "FR-APP-014",
+    "status": "implemented"
+   },
+   "args_hash": "752287a81adb462097cf1ee0b6799d62d9bef34e",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-4-8"
+  },
+  {
+   "called_at": "2026-10-19T07:49:14Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-APP-015",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogAcceptanceTest.java:sdsAc4_FR_APP_015_AC1_defaultLineForGetUsers7",
+    "covers": "AC-1",
+    "notes": "command ./gradlew build result pass (exit 0)"
+   },
+   "args_hash": "d49f22223af931a0324f558ce8a24aef2a4a37ae",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-4-8"
+  },
+  {
+   "called_at": "2026-10-19T07:49:14Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-APP-015",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AccessLogTest.java:sdsAc5_FR_APP_015_AC2_partsOffDropEachPartWithItsLeadingSpace",
+    "covers": "AC-2",
+    "notes": "command ./gradlew build result pass (exit 0)"
+   },
+   "args_hash": "598c2dc45975123956cd93075901191404377ec6",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-4-8"
+  },
+  {
+   "called_at": "2026-10-19T07:49:14Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-APP-015",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AccessLogTest.java:sdsAc5_FR_APP_015_AC2_levelSelectsTheLoggerMethod",
+    "covers": "AC-2",
+    "notes": "command ./gradlew build result pass (exit 0)"
+   },
+   "args_hash": "c79d88163132859aa2aaaa56a36ded5b3baa6be7",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-4-8"
+  },
+  {
+   "called_at": "2026-10-19T07:49:14Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-APP-015",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogAcceptanceTest.java:sdsAc6_FR_APP_015_AC3_abortedAfterCommitLogsTheCommittedStatusAndAborted",
+    "covers": "AC-3",
+    "notes": "command ./gradlew build result pass (exit 0)"
+   },
+   "args_hash": "b16ed35593e6a9bf179c1b6300642121eee3a36b",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-4-8"
+  },
+  {
+   "called_at": "2026-10-19T07:49:14Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-APP-015",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogAcceptanceTest.java:sdsAc6_FR_APP_015_AC3_everyAutomaticAnswerAndRejectionWritesExactlyOneLine",
+    "covers": "AC-3",
+    "notes": "command ./gradlew build result pass (exit 0)"
+   },
+   "args_hash": "618a556b12f0a096d2678ea25138f1c430a8a573",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-4-8"
+  },
+  {
+   "called_at": "2026-10-19T07:49:14Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-APP-015",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogAcceptanceTest.java:sdsAc6_FR_APP_015_AC3_lifecycleGate503WritesExactlyOneLine",
+    "covers": "AC-3",
+    "notes": "command ./gradlew build result pass (exit 0)"
+   },
+   "args_hash": "6b746dc6009af5fe6d6df65a0050adb7e78a8f76",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-4-8"
+  },
+  {
+   "called_at": "2026-10-19T07:49:14Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-APP-015",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogAcceptanceTest.java:sdsAc7_FR_APP_015_AC4_streamCountsCopiedBytesAndHeadCountsZero",
+    "covers": "AC-4",
+    "notes": "command ./gradlew build result pass (exit 0)"
+   },
+   "args_hash": "31f80e5342923de9c853a4e5107fbccaf9bb6f2d",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-4-8"
+  },
+  {
+   "called_at": "2026-10-19T07:49:14Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-APP-015",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java:sdsAc8_FR_APP_015_AC5_inCountsTheBodyBytesReadNotTheDeclaredLength",
+    "covers": "AC-5",
+    "notes": "command ./gradlew build result pass (exit 0)"
+   },
+   "args_hash": "a23b3018a3b63bfe29ca9da39da96303fee76516",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-4-8"
+  },
+  {
+   "called_at": "2026-10-19T07:49:14Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-APP-015",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogAcceptanceTest.java:sdsAc9_FR_APP_015_AC6_excludedRawPathWritesNoLine",
+    "covers": "AC-6",
+    "notes": "command ./gradlew build result pass (exit 0)"
+   },
+   "args_hash": "2b08a8bc3ed96a6d4465d4f0148bed3d02eceb86",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-4-8"
+  },
+  {
+   "called_at": "2026-10-19T07:49:14Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-APP-015",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogAcceptanceTest.java:sdsAc9_FR_APP_015_AC6_disabledWritesNoLine",
+    "covers": "AC-6",
+    "notes": "command ./gradlew build result pass (exit 0)"
+   },
+   "args_hash": "6c3d2d973197f8f3c667d07209b3fc776e871b86",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-4-8"
+  },
+  {
+   "called_at": "2026-10-19T07:49:14Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-APP-015",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogAcceptanceTest.java:sdsAc10_FR_APP_015_AC7_lineRidEqualsTheErrorBodyRequestId",
+    "covers": "AC-7",
+    "notes": "command ./gradlew build result pass (exit 0)"
+   },
+   "args_hash": "10ee9f34545a907294ba1022d79d1c5e3e9fae88",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-4-8"
+  },
+  {
+   "called_at": "2026-10-19T07:49:14Z",
+   "tool": "update_status",
+   "args": {
+    "id": "FR-APP-015",
+    "status": "implemented"
+   },
+   "args_hash": "c5c59ea552e8538913da7ba5e0dd31eb17c1a806",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-4-8"
+  },
+  {
+   "called_at": "2026-10-19T07:49:14Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "SEC-APP-001",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogAcceptanceTest.java:sdsAc11_SEC_APP_001_AC1_noQueryHeaderOrBodySecretInTheLine",
+    "covers": "AC-1",
+    "notes": "command ./gradlew build result pass (exit 0)"
+   },
+   "args_hash": "d7e53d14310c397f0bb8827ff4f69142c03f11cf",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-4-8"
+  },
+  {
+   "called_at": "2026-10-19T07:49:14Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "SEC-APP-001",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AccessLogTest.java:sdsAc12_SEC_APP_001_AC2_escapeControlCharsAndBackslashKeepPercentEncodingRaw",
+    "covers": "AC-2",
+    "notes": "command ./gradlew build result pass (exit 0)"
+   },
+   "args_hash": "48563b4b27d532dc863ae93bacbf2b13ba4fcd1d",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-4-8"
+  },
+  {
+   "called_at": "2026-10-19T07:49:14Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "SEC-APP-001",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogAcceptanceTest.java:sdsAc13_SEC_APP_001_AC3_headerValuesAreAbsentFromTheLine",
+    "covers": "AC-3",
+    "notes": "command ./gradlew build result pass (exit 0)"
+   },
+   "args_hash": "deb3b1c9205e7e9da95ad370c06a3d488c47ff95",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-4-8"
+  },
+  {
+   "called_at": "2026-10-19T07:49:14Z",
+   "tool": "update_status",
+   "args": {
+    "id": "SEC-APP-001",
+    "status": "implemented"
+   },
+   "args_hash": "b63ed6255af6be2ae0972a25e620bf208dc81168",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-4-8"
+  },
+  {
+   "called_at": "2026-10-19T07:49:14Z",
+   "tool": "add_completed_work",
+   "args": {
+    "date": "2026-10-19",
+    "summary": "[sds] 2026-10-19.naruserve.naruserve-v1-wave-4-8 - SafeLogger isolation, access log line format/levels/exclude, one line per request incl. pre-request rejections and gate 503, rid shared with error body, in/out byte counting, control-char escaping. green=PASS (./gradlew build). files: AccessLog.java, DefaultAccessLogOptions.java, BodyState.java, DefaultResponse.java, Dispatcher.java, DefaultRestApp.java, GatedExchangeHandler.java. SDS-AC: 1..13 PASS.",
+    "requirementIds": [
+     "FR-APP-014",
+     "FR-APP-015",
+     "SEC-APP-001"
+    ],
+    "target": "wave-4",
+    "allowIncomplete": false
+   },
+   "args_hash": "83ea04e7c2aa5fba34201b4ef4f2e692b547dc80",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-4-8"
+  }
+ ],
+ "updated_at": "2026-10-19T07:49:14Z"
+}

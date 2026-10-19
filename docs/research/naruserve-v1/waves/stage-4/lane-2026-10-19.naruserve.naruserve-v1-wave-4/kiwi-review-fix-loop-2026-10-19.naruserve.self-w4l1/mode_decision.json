@@ -1,0 +1,498 @@
+{
+ "mode": "self",
+ "self_scope": {
+  "source": "base-head",
+  "commit_range": "2a39267e4ec4f147e5c3b8968a49443c4682de82..HEAD",
+  "files": [
+   "NaruServe-api/src/main/java/com/snoworca/naruserve/AccessLogOptions.java",
+   "NaruServe-api/src/main/java/com/snoworca/naruserve/AppStartException.java",
+   "NaruServe-api/src/main/java/com/snoworca/naruserve/AppState.java",
+   "NaruServe-api/src/main/java/com/snoworca/naruserve/ApplicationContext.java",
+   "NaruServe-api/src/main/java/com/snoworca/naruserve/Configurer.java",
+   "NaruServe-api/src/main/java/com/snoworca/naruserve/ConsoleLogger.java",
+   "NaruServe-api/src/main/java/com/snoworca/naruserve/ErrorHandler.java",
+   "NaruServe-api/src/main/java/com/snoworca/naruserve/HttpException.java",
+   "NaruServe-api/src/main/java/com/snoworca/naruserve/LifecycleCallback.java",
+   "NaruServe-api/src/main/java/com/snoworca/naruserve/LogLevel.java",
+   "NaruServe-api/src/main/java/com/snoworca/naruserve/Logger.java",
+   "NaruServe-api/src/main/java/com/snoworca/naruserve/Middleware.java",
+   "NaruServe-api/src/main/java/com/snoworca/naruserve/Next.java",
+   "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java",
+   "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java",
+   "NaruServe-api/src/main/java/com/snoworca/naruserve/RouteBuilder.java",
+   "NaruServe-api/src/main/java/com/snoworca/naruserve/ServerHandle.java",
+   "NaruServe-api/src/main/java/com/snoworca/naruserve/ServiceNotFoundException.java",
+   "NaruServe-api/src/main/java/com/snoworca/naruserve/ServiceRegistry.java",
+   "NaruServe-api/src/main/java/com/snoworca/naruserve/UnsupportedMediaTypeException.java",
+   "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/AccessLog.java",
+   "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/AppFactoryLoader.java",
+   "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/AppLifecycle.java",
+   "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/BodyState.java",
+   "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ChainNext.java",
+   "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultAccessLogOptions.java",
+   "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultApplicationContext.java",
+   "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java",
+   "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+   "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+   "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+   "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ErrorPath.java",
+   "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/GatedExchangeHandler.java",
+   "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/MiddlewarePipeline.java",
+   "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/OwnedResources.java",
+   "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/PrefixMatcher.java",
+   "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/RequestIds.java",
+   "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/SafeLogger.java",
+   "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ShutdownParticipants.java",
+   "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StandardErrors.java",
+   "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/AppFactory.java",
+   "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/JsonCodec.java",
+   "NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogAcceptanceTest.java",
+   "NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogOptionsTest.java",
+   "NaruServe-api/src/test/java/com/snoworca/naruserve/AppDocsTest.java",
+   "NaruServe-api/src/test/java/com/snoworca/naruserve/AppEntryApiTest.java",
+   "NaruServe-api/src/test/java/com/snoworca/naruserve/AppLifecycleApiTest.java",
+   "NaruServe-api/src/test/java/com/snoworca/naruserve/ConsoleLoggerTest.java",
+   "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java",
+   "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java",
+   "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java",
+   "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpExceptionTest.java",
+   "NaruServe-api/src/test/java/com/snoworca/naruserve/LoggerIsolationTest.java",
+   "NaruServe-api/src/test/java/com/snoworca/naruserve/RestAppBuilderTest.java",
+   "NaruServe-api/src/test/java/com/snoworca/naruserve/RoutingDocsTest.java",
+   "NaruServe-api/src/test/java/com/snoworca/naruserve/ServicesAcceptanceTest.java",
+   "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AccessLogTest.java",
+   "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AppFactoryLoaderTest.java",
+   "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AppIsolationTest.java",
+   "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AppLifecycleGuardTest.java",
+   "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ChainNextTest.java",
+   "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultApplicationContextTest.java",
+   "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRequestTest.java",
+   "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRestAppTest.java",
+   "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java",
+   "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ErrorPathTest.java",
+   "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ListenStartupTest.java",
+   "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MiddlewarePipelineTest.java",
+   "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/OwnedResourcesTest.java",
+   "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/PercentDecoderTest.java",
+   "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/PrefixMatcherTest.java",
+   "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownParticipantsTest.java",
+   "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownSequenceTest.java",
+   "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownStatesTest.java",
+   "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StandardErrorsTest.java",
+   "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StartFailureTest.java",
+   "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StartGateTest.java",
+   "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StoppingGateTest.java",
+   "NaruServe-api/src/test/java/com/snoworca/naruserve/testing/InMemoryHttpAdapterTest.java",
+   "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppEntryKotlinTest.kt",
+   "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppLifecycleKotlinTest.kt",
+   "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/StubJsonCodec.java",
+   "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/TestApp.java",
+   "NaruServe-filelog/src/main/java/com/snoworca/naruserve/filelog/RotatingFileLogger.java",
+   "NaruServe-filelog/src/test/java/com/snoworca/naruserve/filelog/FailedListenWriterThreadTest.java",
+   "NaruServe-filelog/src/test/java/com/snoworca/naruserve/filelog/RotatingFileLoggerTest.java",
+   "NaruServe-logcat/src/main/java/com/snoworca/naruserve/logcat/LogcatLogger.java",
+   "NaruServe-logcat/src/test/java/android/util/Log.java",
+   "NaruServe-logcat/src/test/java/com/snoworca/naruserve/logcat/LogcatLoggerTest.java",
+   "NaruServe-slf4j/src/main/java/com/snoworca/naruserve/slf4j/Slf4jLogger.java",
+   "NaruServe-slf4j/src/test/java/com/snoworca/naruserve/slf4j/Slf4jLoggerTest.java",
+   "NaruServe-slf4j/src/test/java/org/slf4j/impl/StaticLoggerBinder.java",
+   "build.gradle",
+   "src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java",
+   "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java"
+  ],
+  "excluded_prose": [
+   "docs/api/README.md",
+   "docs/api/app.md",
+   "docs/api/express-migration.md",
+   "docs/api/lifecycle.md",
+   "docs/api/logging.md",
+   "docs/api/middleware.md",
+   "docs/api/routing.md"
+  ],
+  "refused_artifacts": [],
+  "unclassified_files": []
+ },
+ "review_denominator": [
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/AccessLogOptions.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/AppStartException.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/AppState.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/ApplicationContext.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/Configurer.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/ConsoleLogger.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/ErrorHandler.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/HttpException.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/LifecycleCallback.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/LogLevel.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/Logger.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/Middleware.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/Next.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java",
+   "hunks_total": 2
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java",
+   "hunks_total": 6
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/RouteBuilder.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/ServerHandle.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/ServiceNotFoundException.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/ServiceRegistry.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/UnsupportedMediaTypeException.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/AccessLog.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/AppFactoryLoader.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/AppLifecycle.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/BodyState.java",
+   "hunks_total": 4
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ChainNext.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultAccessLogOptions.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultApplicationContext.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java",
+   "hunks_total": 9
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+   "hunks_total": 15
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+   "hunks_total": 38
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+   "hunks_total": 32
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ErrorPath.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/GatedExchangeHandler.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/MiddlewarePipeline.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/OwnedResources.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/PrefixMatcher.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/RequestIds.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/SafeLogger.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ShutdownParticipants.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StandardErrors.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/AppFactory.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/JsonCodec.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogAcceptanceTest.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogOptionsTest.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/AppDocsTest.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/AppEntryApiTest.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/AppLifecycleApiTest.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/ConsoleLoggerTest.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java",
+   "hunks_total": 20
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java",
+   "hunks_total": 11
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java",
+   "hunks_total": 22
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpExceptionTest.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/LoggerIsolationTest.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/RestAppBuilderTest.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/RoutingDocsTest.java",
+   "hunks_total": 8
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/ServicesAcceptanceTest.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AccessLogTest.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AppFactoryLoaderTest.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AppIsolationTest.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AppLifecycleGuardTest.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ChainNextTest.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultApplicationContextTest.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRequestTest.java",
+   "hunks_total": 19
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRestAppTest.java",
+   "hunks_total": 4
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java",
+   "hunks_total": 63
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ErrorPathTest.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ListenStartupTest.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MiddlewarePipelineTest.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/OwnedResourcesTest.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/PercentDecoderTest.java",
+   "hunks_total": 2
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/PrefixMatcherTest.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownParticipantsTest.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownSequenceTest.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownStatesTest.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StandardErrorsTest.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StartFailureTest.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StartGateTest.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StoppingGateTest.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/testing/InMemoryHttpAdapterTest.java",
+   "hunks_total": 2
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppEntryKotlinTest.kt",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppLifecycleKotlinTest.kt",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/StubJsonCodec.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/TestApp.java",
+   "hunks_total": 7
+  },
+  {
+   "file": "NaruServe-filelog/src/main/java/com/snoworca/naruserve/filelog/RotatingFileLogger.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-filelog/src/test/java/com/snoworca/naruserve/filelog/FailedListenWriterThreadTest.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-filelog/src/test/java/com/snoworca/naruserve/filelog/RotatingFileLoggerTest.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-logcat/src/main/java/com/snoworca/naruserve/logcat/LogcatLogger.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-logcat/src/test/java/android/util/Log.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-logcat/src/test/java/com/snoworca/naruserve/logcat/LogcatLoggerTest.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-slf4j/src/main/java/com/snoworca/naruserve/slf4j/Slf4jLogger.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-slf4j/src/test/java/com/snoworca/naruserve/slf4j/Slf4jLoggerTest.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-slf4j/src/test/java/org/slf4j/impl/StaticLoggerBinder.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "build.gradle",
+   "hunks_total": 4
+  },
+  {
+   "file": "src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java",
+   "hunks_total": 39
+  }
+ ],
+ "identity_ok": true
+}

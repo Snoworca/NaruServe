@@ -1,0 +1,117 @@
+{
+ "mode": "self",
+ "self_scope": {
+  "source": "base-head",
+  "commit_range": "e680e56169d4cde7c86ed9f4c2d2b093978596e6..HEAD",
+  "files": [
+   "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/AccessLog.java",
+   "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/AppLifecycle.java",
+   "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ChainNext.java",
+   "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultAccessLogOptions.java",
+   "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+   "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/GatedExchangeHandler.java",
+   "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/MiddlewarePipeline.java",
+   "NaruServe-api/src/test/java/com/snoworca/naruserve/AppEntryApiTest.java",
+   "NaruServe-api/src/test/java/com/snoworca/naruserve/LoggerIsolationTest.java",
+   "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AccessLogTest.java",
+   "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ChainNextTest.java",
+   "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownSequenceTest.java",
+   "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownStatesTest.java",
+   "NaruServe-filelog/src/main/java/com/snoworca/naruserve/filelog/RotatingFileLogger.java",
+   "NaruServe-filelog/src/test/java/com/snoworca/naruserve/filelog/RotatingFileLoggerTest.java",
+   "NaruServe-logcat/src/main/java/com/snoworca/naruserve/logcat/LogcatLogger.java",
+   "NaruServe-slf4j/src/main/java/com/snoworca/naruserve/slf4j/Slf4jLogger.java",
+   "NaruServe-slf4j/src/test/java/com/snoworca/naruserve/slf4j/Slf4jLoggerTest.java",
+   "build.gradle",
+   "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java"
+  ],
+  "excluded_prose": [
+   "docs/api/lifecycle.md"
+  ],
+  "refused_artifacts": [],
+  "unclassified_files": []
+ },
+ "review_denominator": [
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/AccessLog.java",
+   "hunks_total": 6
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/AppLifecycle.java",
+   "hunks_total": 2
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ChainNext.java",
+   "hunks_total": 3
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultAccessLogOptions.java",
+   "hunks_total": 2
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+   "hunks_total": 11
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/GatedExchangeHandler.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/MiddlewarePipeline.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/AppEntryApiTest.java",
+   "hunks_total": 2
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/LoggerIsolationTest.java",
+   "hunks_total": 9
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AccessLogTest.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ChainNextTest.java",
+   "hunks_total": 5
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownSequenceTest.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownStatesTest.java",
+   "hunks_total": 4
+  },
+  {
+   "file": "NaruServe-filelog/src/main/java/com/snoworca/naruserve/filelog/RotatingFileLogger.java",
+   "hunks_total": 15
+  },
+  {
+   "file": "NaruServe-filelog/src/test/java/com/snoworca/naruserve/filelog/RotatingFileLoggerTest.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-logcat/src/main/java/com/snoworca/naruserve/logcat/LogcatLogger.java",
+   "hunks_total": 4
+  },
+  {
+   "file": "NaruServe-slf4j/src/main/java/com/snoworca/naruserve/slf4j/Slf4jLogger.java",
+   "hunks_total": 3
+  },
+  {
+   "file": "NaruServe-slf4j/src/test/java/com/snoworca/naruserve/slf4j/Slf4jLoggerTest.java",
+   "hunks_total": 4
+  },
+  {
+   "file": "build.gradle",
+   "hunks_total": 1
+  },
+  {
+   "file": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java",
+   "hunks_total": 5
+  }
+ ],
+ "identity_ok": true
+}

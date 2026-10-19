@@ -1,0 +1,32 @@
+[
+ {
+  "id": "R1-001",
+  "severity": "MEDIUM",
+  "title": "shutdown() from a request handler while another shutdown is already STOPPING still waits for its own request",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+   "line_range": "385-391"
+  },
+  "description": "The S2-002 fix checks onRequestThread() only in the RUNNING/beginStop-winner branch. If another thread (signal hook, second /shutdown request, Android Service.onDestroy) already won beginStop, a handler calling app.shutdown(t, unit) lands in the default STOPPING branch, ownThread is false, and it blocks in awaitTerminated. TERMINATED needs adapter.stop to finish, which waits for in-flight exchanges including this one, so the handler stalls for its whole timeout and its response is then force-closed: the exact self-wait S2-002 described. docs/api/lifecycle.md ('\uc694\uccad \ud578\ub4e4\ub7ec \uc548\uc5d0\uc11c shutdown') promises an immediate return and a fully delivered response with no such exception."
+ },
+ {
+  "id": "R1-002",
+  "severity": "MEDIUM",
+  "title": "A rename that keeps failing makes every later write delete one more rotated backup and lets naruserve.log grow without bound",
+  "location": {
+   "file": "NaruServe-filelog/src/main/java/com/snoworca/naruserve/filelog/RotatingFileLogger.java",
+   "line_range": "241-279"
+  },
+  "description": "After the S1-001 fix a failed live-file rename appends to naruserve.log and sets size = file.length(), which is already > maxFileBytes. So the very next record triggers closeStream() + rotate() again: rotate() deletes naruserve.log.(maxFiles-1) and shifts .n to .n+1 before the live rename fails again. With maxFiles=5 the four backups are deleted one per record (the old truncation loss is replaced by backup loss), the live file is no longer bounded by maxFileBytes (disk-fill risk on Android), every record pays a close/open plus several file renames on the writer thread, and nothing is counted or reported. The new test uses maxFiles=2 with a directory blocker, where the shift loop is empty, so it cannot see this."
+ },
+ {
+  "id": "R1-003",
+  "severity": "LOW",
+  "title": "If starting the naruserve-shutdown thread fails, the app stays STOPPING forever",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+   "line_range": "370-378"
+  },
+  "description": "beginStop() has already moved the app to STOPPING when new Thread(...).start() runs. An OutOfMemoryError ('unable to create native thread', realistic on low-end Android) propagates to the handler, runShutdownSequence never runs, terminate() is never called, and every later shutdown() waits its full timeout on a TERMINATED that never comes; the adapter, onStop callbacks and the logger close never run."
+ }
+]

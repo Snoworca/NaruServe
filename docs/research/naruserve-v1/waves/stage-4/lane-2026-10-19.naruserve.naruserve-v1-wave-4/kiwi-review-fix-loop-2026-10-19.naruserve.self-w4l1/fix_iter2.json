@@ -1,0 +1,44 @@
+{
+  "iter": 2,
+  "fixes": [
+    {
+      "finding_id": "R1-001",
+      "files_changed": [
+        {"path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java", "line_range": "338,395-397"},
+        {"path": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownStatesTest.java", "line_range": "220-246"},
+        {"path": "docs/api/lifecycle.md", "line_range": "173"}
+      ],
+      "red": "ShutdownStatesTest.FR_APP_011_AC5_shutdownFromARouteHandlerDuringAnotherStopDoesNotWaitForItself FAILED: java.lang.AssertionError: shutdown took 5010180833 ns (the handler waited its full 5 s timeout on its own exchange while an external shutdown was STOPPING)",
+      "rationale_full": "The STOPPING/FAILED branch of shutdown() now skips awaitTerminated when lifecycle.onRequestThread() is true, as it already did for ownThread: TERMINATED waits for adapter.stop, which waits for this request, so waiting there is a self-wait. The test holds a /stop request until an external shutdown (pool thread) moves the app to STOPPING, then calls shutdown(5 s) from the handler; it now returns at once, the response is delivered (200, not abnormally closed) and the app reaches TERMINATED. lifecycle.md states the rule. Ran 3x green.",
+      "mock_scan_passed": true,
+      "external_module_touch": false
+    },
+    {
+      "finding_id": "R1-002",
+      "files_changed": [
+        {"path": "NaruServe-filelog/src/main/java/com/snoworca/naruserve/filelog/RotatingFileLogger.java", "line_range": "43-47,58,66-67,156-161,255-268,279-297"},
+        {"path": "NaruServe-filelog/src/test/java/com/snoworca/naruserve/filelog/RotatingFileLoggerTest.java", "line_range": "210-241"},
+        {"path": "docs/api/logging.md", "line_range": "118"}
+      ],
+      "red": "RotatingFileLoggerTest.FR_APP_017_AC2_persistentRenameFailureKeepsBackupsAndBacksOff FAILED: java.nio.file.NoSuchFileException: .../logs/naruserve.log.2 (with maxFiles=3 and a live-file rename that always fails, each record re-ran rotate() and deleted one more backup until none was left)",
+      "rationale_full": "Bounded behaviour: (1) rotate() shifts backups only up to the first free slot and deletes the oldest only when every slot is taken, so after a failed live rename (which leaves .1 free) a retry deletes nothing more; with all slots full the old delete-oldest-and-shift behaviour is unchanged. (2) After a failed rotation the next attempt waits until the live file grows by another maxFileBytes (retryRotationAt), reset on success, so the writer no longer close/opens and renames on every record. (3) Failures are counted in the new public RotatingFileLogger.rotationFailureCount() (addition only). The package-private StreamFactory test hook gains a default rename(File, File) (File.renameTo) so the test can fail only the live-file rename; no mock library. logging.md documents the append-on-failure, retry-after-maxFileBytes, no-further-backup-deletion rule, that naruserve.log can exceed maxFileBytes while failures persist, and rotationFailureCount(). Ran 3x green.",
+      "mock_scan_passed": true,
+      "external_module_touch": false
+    },
+    {
+      "finding_id": "R1-003",
+      "files_changed": [
+        {"path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java", "line_range": "29,98-99,378-386"},
+        {"path": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownStatesTest.java", "line_range": "248-267"},
+        {"path": "docs/api/lifecycle.md", "line_range": "173"}
+      ],
+      "red": "ShutdownStatesTest.FR_APP_011_AC5_shutdownThreadStartFailureStillReachesTerminated FAILED: java.util.concurrent.ExecutionException: java.lang.OutOfMemoryError: unable to create native thread (thrown into the handler; the stop sequence never ran)",
+      "rationale_full": "The naruserve-shutdown thread is made by a package-private ThreadFactory field shutdownThreads (default: new Thread(r, \"naruserve-shutdown\"), same as before) used as a test seam. t.start() is wrapped in try/catch(Throwable); on failure runShutdownSequence(deadline) runs inline on the request thread, so once beginStop was won the app always reaches TERMINATED (it may then wait for its own request up to the timeout, which lifecycle.md states). Ran 3x green.",
+      "mock_scan_passed": true,
+      "external_module_touch": false
+    }
+  ],
+  "skipped": [],
+  "out_of_lease": [],
+  "build": {"command": "./gradlew build", "exit_code": 0}
+}

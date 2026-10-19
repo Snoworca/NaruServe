@@ -1,0 +1,77 @@
+{
+ "branch": "kiwi/orch/2026-10-19.NaruServe.naruserve-v1/lane-2026-10-19.naruserve.naruserve-v1-wave-4",
+ "worktree_path": "/Users/beom/work/git/NaruServe/.claude/worktrees/agent-af0ed6f1ef896f5c1",
+ "head_sha": "e344a664b14f2b0fe577f556373ce0b0222c9a56",
+ "commits": [
+  "d39522781993188e36f6d0f22663fb03c7ab4d54",
+  "e612f8fe3a2f95cb8c94c6d836017fb447434a92",
+  "b4bf9d84ff28d07ffa85ea39ca39569c91e296fd",
+  "18f79a529b9ecb4e6d3b605f90bf2df3dfad5494",
+  "b0869b93e712dda6b48a1f7001862877ea1056b9",
+  "7cb379bec63d289fae06d288ae01a92c37223d55",
+  "9e5488314eacccd5383e9c10fecd35d122ed63c4",
+  "217f6d75e4b46887d073c89a19ad41d35fb16cd9",
+  "a452c0ca77b3d08a15f5758b710a3363c4377355",
+  "e680e56169d4cde7c86ed9f4c2d2b093978596e6",
+  "0c9bfb4ee13638e5de052decedb48d5800a30843",
+  "9b502e31d25812a02ebddc8f1c01a97f308e0583",
+  "e344a664b14f2b0fe577f556373ce0b0222c9a56"
+ ],
+ "deferred_queue": "/Users/beom/work/git/NaruServe/kiwi/orchestrator/2026-10-19.NaruServe.naruserve-v1/lanes/lane-2026-10-19.naruserve.naruserve-v1-wave-4/deferred-srs-queue.jsonl",
+ "reports": [
+  "docs/analysis/kiwi-review-fix-loop-2026-10-19.naruserve.self-w4l1/mode_decision.json",
+  "docs/analysis/kiwi-review-fix-loop-2026-10-19.naruserve.self-w4l1/review_inventory.json",
+  "docs/analysis/kiwi-review-fix-loop-2026-10-19.naruserve.self-w4l1/classified_findings.json",
+  "docs/analysis/kiwi-review-fix-loop-2026-10-19.naruserve.self-w4l1/fix_iter1.json",
+  "docs/analysis/kiwi-review-fix-loop-2026-10-19.naruserve.self-w4l1/prickly_recheck_iter1.json",
+  "docs/analysis/kiwi-review-fix-loop-2026-10-19.naruserve.self-w4l1/fix_iter2.json",
+  "docs/analysis/kiwi-review-fix-loop-2026-10-19.naruserve.self-w4l1/prickly_recheck_iter2.json",
+  "docs/analysis/kiwi-review-fix-loop-2026-10-19.naruserve.self-w4l1/test_sufficiency.json",
+  ".kiwi/sessions/2026-10-19.naruserve.naruserve-v1-wave-4-4/lanes/w4s4l1/reports/coder-2026-10-19.naruserve.naruserve-v1-wave-4-4.md",
+  ".kiwi/sessions/2026-10-19.naruserve.naruserve-v1-wave-4-5/lanes/w4s4l1/reports/coder-2026-10-19.naruserve.naruserve-v1-wave-4-5.md",
+  ".kiwi/w4-final-build.log"
+ ],
+ "red_evidence": [
+  {"test_id": "wave-4-1: AppEntryKotlinTest, AppEntryApiTest, RestAppBuilderTest, HttpExceptionTest, AppFactoryLoaderTest", "failure": ":NaruServe-api:test compile failed: Unresolved reference JsonCodec / Builder / builder / Middleware"},
+  {"test_id": "wave-4-2: AppLifecycleKotlinTest", "failure": "Unresolved reference service / onStart / register / listen / shutdown / attribute"},
+  {"test_id": "wave-4-3: AppIsolationTest, AppLifecycleGuardTest, ListenStartupTest, StartGateTest", "failure": "compileTestJava: cannot find symbol AppLifecycle / GatedExchangeHandler / StubJsonCodec"},
+  {"test_id": "wave-4-4: MiddlewarePipelineTest, PrefixMatcherTest, ChainNextTest, DispatcherTest", "failure": "cannot find symbol PrefixMatcher, MiddlewarePipeline, ErrorPath, Dispatcher.methodOf"},
+  {"test_id": "wave-4-4: InMemoryHttpAdapterTest.sdsAc8_FR_HTTP_001_AC2", "failure": "ComparisonFailure: empty 405 vs FR-HTTP-022 JSON body (re-pointed to the stricter successor check)"},
+  {"test_id": "wave-4-5: ErrorPathTest, DispatcherTest, DefaultRequestTest, MiddlewarePipelineTest, StandardErrorsTest", "failure": "23 tests FAILED with signature stubs"},
+  {"test_id": "wave-4-6: ServicesAcceptanceTest", "failure": "10 tests completed, 8 failed"},
+  {"test_id": "wave-4-7: StartFailureTest, ShutdownSequenceTest, ShutdownStatesTest, StoppingGateTest", "failure": "36 tests completed, 19 failed (order, participants, logger close, FAILED vs TERMINATED, pending stop)"},
+  {"test_id": "wave-4-8: AccessLogTest, DispatcherTest sdsAc8", "failure": "constructor AccessLog(DefaultAccessLogOptions,SafeLogger) cannot be applied; cannot find symbol format/escape/excluded"},
+  {"test_id": "wave-4-9: LogcatLoggerTest, Slf4jLoggerTest, RotatingFileLoggerTest, FailedListenWriterThreadTest", "failure": "compileTestJava: cannot find symbol LogcatLogger / Slf4jLogger / RotatingFileLogger"},
+  {"test_id": "wave-4-10: AppDocsTest (10 cases), RoutingDocsTest.noMarkerRemains, DocsExamplesCompileTest sdsAc12-14", "failure": "markers still present / stale skip reasons / skipped blocks now compile"},
+  {"test_id": "review iter1: RotatingFileLoggerTest, ShutdownStatesTest, AccessLogTest, ChainNextTest, DocsExamplesCompileTest guard", "failure": "rename failure truncated live log; close() hang; throwing toString reached caller; lifecycleThread race (failed at iteration 100/200); in-request shutdown waited full timeout; post-listen exclude applied; dropped exception"},
+  {"test_id": "review iter2: ShutdownStatesTest (R1-001, R1-003), RotatingFileLoggerTest (R1-002)", "failure": "handler waited 5010180833 ns; OutOfMemoryError reached handler; NoSuchFileException naruserve.log.2"}
+ ],
+ "review_outcome": {"status": "TASK_DONE", "residual_critical": 0, "residual_high": 0},
+ "intentionally_empty": null,
+ "design_refuted": [],
+ "out_of_lease_paths": [],
+ "notes": [
+  "SDS fragments ran in numeric order 1..10; the card lists them lexicographically, and 4-10 is the docs SDS that depends on 1..9.",
+  "wave-4-4: MiddlewarePipeline.run and Dispatcher.fallback take ErrorPath and requestId beyond the SDS Interfaces text; update at SDS close.",
+  "wave-4-5: a STREAMING response that arrived NEW is copied, not aborted, per FR-APP-005 AC-9; SDS-AC-7 wording may need clarification at close.",
+  "Review residual LOW only: R2-001 (inline shutdown fallback release timing), R2-002 (rotationFailureCount() and the in-request 'naruserve-shutdown' thread are documented in docs/api but not in FR-APP-017/FR-APP-011 text; candidate for srs-sync), plus 20 auto-rejected LOW from round 1.",
+  "BuildLayoutTest (outside write set) still cites superseded OPS-HTTP-002 AC-1; BuildChecksTest now cites OPS-HTTP-004 AC-1. HttpApiKotlinTest FixedRequest (outside write set) relies on the Request.application() default.",
+  "build.gradle checkClassReferences for :NaruServe-filelog does not forbid org/slf4j/ or android/; only RotatingFileLoggerTest.fr_APP_017_AC6 enforces it.",
+  "docs/api/app.md settings table may still list jsonCodec(codec) on RestApp while the setter is on RestApp.Builder; not re-verified.",
+  "Fragments 1-6 queue no add_completed_work (kiwi-pm --no-final); fragments 7-10 each queued one after their implemented/evidence lines. 3 extra evidence lines appended for the test-sufficiency fill tests.",
+  "Untracked and not committed (outside write set): .kiwi/ session files, docs/analysis/kiwi-review-fix-loop-2026-10-19.naruserve.self-w4l1/, and a staging copy of this manifest under kiwi/orchestrator/ in the worktree."
+ ],
+ "test_sufficiency": {
+  "command": "speckiwi coverage --tests --ids <fragment ids> --sds <fragment> --json",
+  "verdict": "pass",
+  "first_run_gaps": {
+   "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-9.sds.md": ["FR-APP-017 AC-6"],
+   "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-10.sds.md": ["OPS-HTTP-004 AC-1"]
+  },
+  "fill_commit": "e344a664b14f2b0fe577f556373ce0b0222c9a56",
+  "fragments_passed": 10,
+  "fragments_total": 10,
+  "detail": "docs/analysis/kiwi-review-fix-loop-2026-10-19.naruserve.self-w4l1/test_sufficiency.json"
+ },
+ "verification": {"command": "./gradlew build", "exit_code": 0}
+}

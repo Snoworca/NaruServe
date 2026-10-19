@@ -1,0 +1,20 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "2026-10-19.naruserve.naruserve-v1-wave-4-3",
+  "sds_path": "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-3.sds.md",
+  "sds_sha256": "e4cdc0a850b7adb6ced324fddc7a2a7f99841e83a5defcf9743e57b090860c23",
+  "target": "wave-4",
+  "req_ids": ["FR-APP-002", "FR-APP-009"],
+  "spawn_context": "pm-child",
+  "flags": ["--auto", "--auto-cost-warning", "--auto-integration", "--defer-srs-mutation"],
+  "phase": "phase-3.2",
+  "failed": false,
+  "regression_baseline": {"command": "./gradlew build", "exit_code": 0, "head_sha": "e612f8f"},
+  "red_evidence": {
+    "command": "./gradlew :NaruServe-api:compileTestJava",
+    "exit_code": 1,
+    "captured_failure": "cannot find symbol: AppLifecycle, GatedExchangeHandler, StubJsonCodec (AppIsolationTest, AppLifecycleGuardTest, ListenStartupTest, StartGateTest, DispatcherTest, InMemoryHttpAdapterTest)",
+    "timestamp": "2026-10-19T07:00:00Z"
+  },
+  "green_evidence": {"command": "./gradlew build", "exit_code": 0, "timestamp": "2026-10-19T07:20:00Z"}
+}

@@ -1,0 +1,20 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "2026-10-19.naruserve.naruserve-v1-wave-4-10",
+  "sds_path": "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-10.sds.md",
+  "target": "wave-4",
+  "req_ids": ["OPS-APP-001", "OPS-APP-002", "OPS-HTTP-003", "OPS-HTTP-004", "OPS-ROUTE-003"],
+  "mode": "normal",
+  "spawn_context": "pm-child",
+  "phase": "done",
+  "failed": false,
+  "red_evidence": {
+    "command": "./gradlew :NaruServe-api:test --tests '*DocsTest' :test --tests '*DocsExamplesCompileTest' --continue",
+    "exit_code": 1,
+    "captured_failure": "AppDocsTest 10/10 failed (app.md lacks `RestApp.builder()` without marker, ...); HttpDocsTest sdsAc9_OPS_HTTP_003_AC8_routingKeepsNoMarker; RoutingDocsTest noMarkerRemains; DocsExamplesCompileTest sdsAc13 (wave 4 member as reason: RestApp.create()), sdsAc12 (no app-defined reason), sdsAc14 (skipped blocks compile now)",
+    "timestamp": "2026-10-19T08:10:00Z"
+  },
+  "green_evidence": {"command": "./gradlew build", "exit_code": 0, "timestamp": "2026-10-19T08:20:00Z"},
+  "regression_baseline": {"command": "./gradlew build", "exit_code": 0, "head_sha": "a452c0ca77b3d08a15f5758b710a3363c4377355"},
+  "next_resume_hint": null
+}

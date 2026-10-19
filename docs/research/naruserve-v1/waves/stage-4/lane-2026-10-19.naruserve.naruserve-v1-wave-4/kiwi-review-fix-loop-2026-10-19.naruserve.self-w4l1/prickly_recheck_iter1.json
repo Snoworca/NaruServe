@@ -1,0 +1,316 @@
+{
+ "resolved_findings": [
+  "S1-001",
+  "S1-002",
+  "S1-003",
+  "S1-004",
+  "S1-005",
+  "S2-001",
+  "S2-002",
+  "S2-003",
+  "S2-004",
+  "S2-005",
+  "S3-001",
+  "S3-003",
+  "S4-001",
+  "S4-002",
+  "S4-003",
+  "S4-004",
+  "S4-005"
+ ],
+ "unresolved": [],
+ "findings": [
+  {
+   "id": "R1-001",
+   "axis": "P2",
+   "severity": "MEDIUM",
+   "title": "shutdown() from a request handler while another shutdown is already STOPPING still waits for its own request",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+    "line_range": "385-391"
+   },
+   "description": "The S2-002 fix checks onRequestThread() only in the RUNNING/beginStop-winner branch. If another thread (signal hook, second /shutdown request, Android Service.onDestroy) already won beginStop, a handler calling app.shutdown(t, unit) lands in the default STOPPING branch, ownThread is false, and it blocks in awaitTerminated. TERMINATED needs adapter.stop to finish, which waits for in-flight exchanges including this one, so the handler stalls for its whole timeout and its response is then force-closed: the exact self-wait S2-002 described. docs/api/lifecycle.md ('요청 핸들러 안에서 shutdown') promises an immediate return and a fully delivered response with no such exception.",
+   "suggested_fix": "In the STOPPING/FAILED branch, skip the wait (return at once) when lifecycle.onRequestThread() is true, as for ownThread; add a test with two concurrent /stop requests or an external shutdown in flight; mention the rule in lifecycle.md.",
+   "is_behavioral": true,
+   "tags": [
+    "self-wait",
+    "shutdown",
+    "request-thread",
+    "S2-002-followup"
+   ]
+  },
+  {
+   "id": "R1-002",
+   "axis": "P1",
+   "severity": "MEDIUM",
+   "title": "A rename that keeps failing makes every later write delete one more rotated backup and lets naruserve.log grow without bound",
+   "location": {
+    "file": "NaruServe-filelog/src/main/java/com/snoworca/naruserve/filelog/RotatingFileLogger.java",
+    "line_range": "241-279"
+   },
+   "description": "After the S1-001 fix a failed live-file rename appends to naruserve.log and sets size = file.length(), which is already > maxFileBytes. So the very next record triggers closeStream() + rotate() again: rotate() deletes naruserve.log.(maxFiles-1) and shifts .n to .n+1 before the live rename fails again. With maxFiles=5 the four backups are deleted one per record (the old truncation loss is replaced by backup loss), the live file is no longer bounded by maxFileBytes (disk-fill risk on Android), every record pays a close/open plus several file renames on the writer thread, and nothing is counted or reported. The new test uses maxFiles=2 with a directory blocker, where the shift loop is empty, so it cannot see this.",
+   "suggested_fix": "Do the shift only when the live rename can succeed (e.g. rename live to a temp/.1 first, then shift), or after a failed rotation back off (skip rotation until size exceeds a further threshold or N records) and count the failure; add a test with maxFiles>=3 and a persistent rename failure asserting the backups survive.",
+   "is_behavioral": true,
+   "tags": [
+    "data-loss",
+    "rotation",
+    "unbounded-growth",
+    "S1-001-followup"
+   ]
+  },
+  {
+   "id": "R1-003",
+   "axis": "P4",
+   "severity": "LOW",
+   "title": "If starting the naruserve-shutdown thread fails, the app stays STOPPING forever",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+    "line_range": "370-378"
+   },
+   "description": "beginStop() has already moved the app to STOPPING when new Thread(...).start() runs. An OutOfMemoryError ('unable to create native thread', realistic on low-end Android) propagates to the handler, runShutdownSequence never runs, terminate() is never called, and every later shutdown() waits its full timeout on a TERMINATED that never comes; the adapter, onStop callbacks and the logger close never run.",
+   "suggested_fix": "Wrap t.start() in try/catch (Throwable) and fall back to runShutdownSequence(deadline) inline (or terminate()) so the stop sequence always runs once beginStop was won.",
+   "is_behavioral": true,
+   "tags": [
+    "robustness",
+    "shutdown",
+    "thread-start"
+   ]
+  }
+ ],
+ "coverage_rows": [
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/AccessLog.java",
+   "hunks_total": 6,
+   "anchors": [
+    "import java.util.Set;",
+    "DefaultAccessLogOptions",
+    "SafeLogger",
+    "req",
+    "options",
+    "excluded"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/AppLifecycle.java",
+   "hunks_total": 2,
+   "anchors": [
+    "beginStart",
+    "exitRequest"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ChainNext.java",
+   "hunks_total": 3,
+   "anchors": [
+    "import org.jspecify.annotations.Nullable;",
+    "throwable",
+    "routedError"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultAccessLogOptions.java",
+   "hunks_total": 2,
+   "anchors": [
+    "import java.util.Collections;",
+    "exclude"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+   "hunks_total": 11,
+   "anchors": [
+    "import java.util.concurrent.atomic.AtomicReference;",
+    "sequence",
+    "lifecycleThread",
+    "null",
+    "TERMINATED",
+    "currentThread",
+    "before",
+    "runShutdownSequence",
+    "Thread",
+    "compareAndSet",
+    "Decoding"
+   ],
+   "findings": [
+    "R1-001",
+    "R1-003"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/GatedExchangeHandler.java",
+   "hunks_total": 1,
+   "anchors": [
+    "dispatcher"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/MiddlewarePipeline.java",
+   "hunks_total": 1,
+   "anchors": [
+    "different"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/AppEntryApiTest.java",
+   "hunks_total": 2,
+   "anchors": [
+    "NullPointerException",
+    "undecodable"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/LoggerIsolationTest.java",
+   "hunks_total": 9,
+   "anchors": [
+    "AtomicInteger",
+    "incrementAndGet",
+    "warns",
+    "errors",
+    "            errors.incrementAndGet();",
+    "flushes",
+    "closes",
+    "unfinished",
+    "although"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AccessLogTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "exclude"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ChainNextTest.java",
+   "hunks_total": 5,
+   "anchors": [
+    "import static org.junit.Assert.assertTrue;",
+    "import com.snoworca.naruserve.ErrorHandler;",
+    "recording",
+    "RecordingLogger",
+    "singletonList"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownSequenceTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "shutdown"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownStatesTest.java",
+   "hunks_total": 4,
+   "anchors": [
+    "listenEndedFirst",
+    "shutdown",
+    "assertTrue",
+    "response"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-filelog/src/main/java/com/snoworca/naruserve/filelog/RotatingFileLogger.java",
+   "hunks_total": 15,
+   "anchors": [
+    "import org.jspecify.annotations.NullMarked;",
+    "@NullMarked",
+    "OutputStream",
+    "Throwable",
+    "LogLevel",
+    "message",
+    "private",
+    "while",
+    "queue",
+    "rotate",
+    "naruserve",
+    "void",
+    "delete",
+    "FILE_NAME",
+    "deleted"
+   ],
+   "findings": [
+    "R1-002"
+   ]
+  },
+  {
+   "file": "NaruServe-filelog/src/test/java/com/snoworca/naruserve/filelog/RotatingFileLoggerTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "truncating"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-logcat/src/main/java/com/snoworca/naruserve/logcat/LogcatLogger.java",
+   "hunks_total": 4,
+   "anchors": [
+    "import org.jspecify.annotations.NullMarked;",
+    "@NullMarked",
+    "Throwable",
+    "private"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-slf4j/src/main/java/com/snoworca/naruserve/slf4j/Slf4jLogger.java",
+   "hunks_total": 3,
+   "anchors": [
+    "import org.jspecify.annotations.NullMarked;",
+    "@NullMarked",
+    "Throwable"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-slf4j/src/test/java/com/snoworca/naruserve/slf4j/Slf4jLoggerTest.java",
+   "hunks_total": 4,
+   "anchors": [
+    "import java.lang.reflect.Proxy;",
+    "import org.slf4j.helpers.MarkerIgnoringBase;",
+    "recording",
+    "newProxyInstance"
+   ],
+   "findings": []
+  },
+  {
+   "file": "build.gradle",
+   "hunks_total": 1,
+   "anchors": [
+    "implementation"
+   ],
+   "findings": []
+  },
+  {
+   "file": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java",
+   "hunks_total": 5,
+   "anchors": [
+    "RestApp",
+    "UserService",
+    "middleware",
+    "defined",
+    "skipped"
+   ],
+   "findings": []
+  }
+ ],
+ "summary": {
+  "total": 3,
+  "by_severity": {
+   "MEDIUM": 2,
+   "LOW": 1
+  },
+  "notes": "S2-002 resolved for the RUNNING path it named; the STOPPING-path gap is new finding R1-001. S1-001 resolved (no truncation) but its fix introduced R1-002. Tests for :NaruServe-api :NaruServe-filelog :NaruServe-slf4j :NaruServe-logcat :test pass (./gradlew --offline). Checked and found fine: listenEnded latch (onStart/listen thread has ownThread so never waits; others bounded by deadline), lifecycleThread CAS clearing, ShutdownSequenceTest margin (upper bound still proves the 200 ms deduction), Slf4jLoggerTest recorder (stricter: wrong overloads throw), DocsExamplesCompileTest reasons plus new guard test, use(prefix) decode (policy cannot change the throw)."
+ }
+}

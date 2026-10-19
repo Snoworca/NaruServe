@@ -1,0 +1,172 @@
+[
+ {
+  "id": "S1-001",
+  "severity": "MEDIUM",
+  "title": "Rotation truncates the live log when a rename fails",
+  "location": {
+   "file": "NaruServe-filelog/src/main/java/com/snoworca/naruserve/filelog/RotatingFileLogger.java",
+   "line_range": "229-260"
+  },
+  "description": "rotate() ignores the boolean results of oldest.delete() and every renameTo(). If renaming naruserve.log to naruserve.log.1 fails (e.g. the file is held open by another process on Windows, a permission problem, or the .1 target could not be cleared because its delete failed), write() still calls streams.open(new File(directory, FILE_NAME), false), which truncates the current naruserve.log. Up to maxFileBytes (5 MiB by default) of log is silently lost and droppedCount() does not record it."
+ },
+ {
+  "id": "S1-002",
+  "severity": "MEDIUM",
+  "title": "Logger module packages are not @NullMarked, so their public API is a platform type in Kotlin",
+  "location": {
+   "file": "NaruServe-filelog/src/main/java/com/snoworca/naruserve/filelog/RotatingFileLogger.java",
+   "line_range": "1-30"
+  },
+  "description": "The com.snoworca.naruserve.filelog, .logcat and .slf4j package-info.java files have no @org.jspecify.annotations.NullMarked, unlike com.snoworca.naruserve and .spi, and no class in these modules carries @NonNull/@Nullable. RotatingFileLogger.builder(), the Builder setters and build(), new LogcatLogger(String) and new Slf4jLogger(org.slf4j.Logger) all reach Kotlin as platform types (T!). This breaks the CLAUDE.md rule that no platform types are left on public API (object.md 12). The -Xjspecify-annotations=strict setting does not help because nothing is annotated."
+ },
+ {
+  "id": "S1-003",
+  "severity": "LOW",
+  "title": "close() can hang forever when the writer thread has died",
+  "location": {
+   "file": "NaruServe-filelog/src/main/java/com/snoworca/naruserve/filelog/RotatingFileLogger.java",
+   "line_range": "168-190"
+  },
+  "description": "write() catches only IOException and RuntimeException. An Error from the stream factory or the stream (e.g. OutOfMemoryError, or a LinkageError from a custom stream) ends drain() and the writer thread. log() keeps offering until the queue is full and then drops, which is fine. But close() then calls queue.put(STOP) without checking writer.isAlive(), so it blocks forever, and the app's shutdown hangs in the logger-close step past its deadline. flush() already guards this case and close() does not."
+ },
+ {
+  "id": "S1-004",
+  "severity": "LOW",
+  "title": "Formatting runs on the caller thread outside any guard, so a logging call can throw",
+  "location": {
+   "file": "NaruServe-filelog/src/main/java/com/snoworca/naruserve/filelog/RotatingFileLogger.java",
+   "line_range": "107-130"
+  },
+  "description": "The class contract says no logging call blocks or throws. But log() calls format() on the caller thread, and format() calls error.printStackTrace(...). That reaches user-controlled toString()/getMessage()/getStackTrace() of the Throwable and its causes, so a throwing override reaches the caller. LogcatLogger swallows every Throwable for the same contract. RotatingFileLogger does not."
+ },
+ {
+  "id": "S1-005",
+  "severity": "LOW",
+  "title": "slf4j-api is an implementation dependency although Slf4jLogger exposes org.slf4j.Logger in a public constructor",
+  "location": {
+   "file": "build.gradle",
+   "line_range": "59"
+  },
+  "description": "NaruServe-slf4j declares org.slf4j:slf4j-api as implementation. Its public constructor Slf4jLogger(org.slf4j.Logger) puts an SLF4J type in its ABI, so consumers have no slf4j-api on their compile classpath. new Slf4jLogger(LoggerFactory.getLogger(...)) does not compile unless they add SLF4J themselves, and the published metadata gives it runtime scope only."
+ },
+ {
+  "id": "S2-001",
+  "severity": "MEDIUM",
+  "title": "listen()'s finally clears lifecycleThread that a concurrent shutdown sequence just set, so an onStop callback calling shutdown() waits on itself",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+   "line_range": "219-225"
+  },
+  "description": "lifecycleThread is a single volatile field written by both listen() (line 220, cleared in its finally at 224) and runShutdownSequence() (line 394, cleared at 426). After start() calls markRunning() the app is RUNNING but listen() has not yet run its finally. If thread B calls shutdown() in that window, beginStop() wins, runShutdownSequence sets lifecycleThread=B, and then listen's finally sets it to null. An onStop callback (or after-onStop participant / resource close) on B that calls app.shutdown(t, unit) then computes ownThread=false, sees STOPPING and blocks in awaitTerminated for its whole timeout on a TERMINATED latch only it can release, stalling shutdown by the full timeout. The ownThread guard exists precisely to prevent this self-wait."
+ },
+ {
+  "id": "S2-002",
+  "severity": "MEDIUM",
+  "title": "shutdown() called from a request handler runs the stop sequence on that request thread and waits for its own exchange until the deadline",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+   "line_range": "363-366"
+  },
+  "description": "A RUNNING app whose handler calls app.shutdown(5, SECONDS) (the Express 'POST /shutdown' pattern) wins beginStop on the request thread and runs runShutdownSequence inline; a.stop(left(deadline)) at line 399 waits for in-flight exchanges, which include the calling one, so it always burns the full timeout and then force-closes, aborting the very response the handler is producing (or already sent but not yet finished by the adapter). lifecycleThread/ownThread only guards listen and the sequence thread, not request threads. Neither the code nor docs/api/lifecycle.md states this limitation."
+ },
+ {
+  "id": "S2-003",
+  "severity": "LOW",
+  "title": "Access log exclude list is read live from the escaped options object, contradicting 'fixed at listen()', and takes a lock on every request",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/AccessLog.java",
+   "line_range": "52"
+  },
+  "description": "AccessLog copies enabled/level/include flags at freeze but calls options.excluded(rawPath) per request (DefaultAccessLogOptions.excluded is synchronized, lines 62-64). A Configurer that keeps the AccessLogOptions reference can call exclude(\"/x\") after listen() and it takes effect, bypassing the NEW-state guard (IR-APP-007 AC-3) while enabled(false)/level() calls after listen are silently ignored; docs/api/logging.md:34 says the options are fixed at listen(). Every request on every worker thread also contends on the one options monitor."
+ },
+ {
+  "id": "S2-004",
+  "severity": "LOW",
+  "title": "use(prefix, mw) accepts an undecodable prefix and fails only at listen(), terminating the app",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+   "line_range": "493-501"
+  },
+  "description": "use(prefix) checks only the leading '/'. A prefix such as \"/%zz\" is recorded and PrefixMatcher's Router.decodeSegments (PrefixMatcher.java:21) throws IllegalArgumentException inside freeze() during listen(), which goes through failStart to FAILED/TERMINATED, so the app can never be fixed and restarted. Route patterns, by contrast, are validated at registration (RoutePattern.parse in record(), line 604)."
+ },
+ {
+  "id": "S2-005",
+  "severity": "LOW",
+  "title": "An exception thrown after next.error(e) routed the request is swallowed without any log",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/MiddlewarePipeline.java",
+   "line_range": "84-88"
+  },
+  "description": "Once any ChainNext set chain.errorRouted, every later exception escaping root.run() is dropped. E.g. middleware A calls next.run(), B calls next.error(e1) and returns, then A throws e2 (or B throws a different exception after next.error): e2 is neither sent to the error path nor logged, so a real bug disappears silently."
+ },
+ {
+  "id": "S3-001",
+  "severity": "MEDIUM",
+  "title": "LoggerIsolationTest proves FR-APP-014 only through loose call counts; flush/close reach and the RuntimeException flush case are not asserted",
+  "location": {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/LoggerIsolationTest.java",
+   "line_range": "57-66,93,108"
+  },
+  "description": "FR-APP-014 AC-2 requires shutdown to reach TERMINATED 'even when the logger's flush and close also throw'. The test asserts only logger.calls >= 3 (comment: 'error, flush, close') and >= 5 for AC-1. Any three logger calls (e.g. onStop error plus two access/lifecycle lines) satisfy it, so a regression where SafeLogger.flushAndClose is never invoked on the replaced logger, or flush is skipped, stays green. Also flush() throws only a checked IOException; the requirement text is about RuntimeException from the logger, and a RuntimeException from flush() is never exercised."
+ },
+ {
+  "id": "S3-003",
+  "severity": "LOW",
+  "title": "try/catch without fail() lets the null-middleware call silently succeed",
+  "location": {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/AppEntryApiTest.java",
+   "line_range": "207-212"
+  },
+  "description": "The 'nothing was recorded' block wraps t.app().get(\"/x\", null, h) in try/catch NullPointerException with no fail() after the call. If the null check regressed and the route were recorded with a null middleware, the following 404 assertion would fail for a different reason (or NPE at dispatch), obscuring the cause; the intent (NPE before any recording) is not asserted at this point."
+ },
+ {
+  "id": "S4-001",
+  "severity": "MEDIUM",
+  "title": "Skip reasons swap the later-wave member a block still needs for an app-defined type",
+  "location": {
+   "file": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java",
+   "line_range": "73-107"
+  },
+  "description": "OPS-APP-002 AC-2 requires a block that still needs a later-wave member (res.json, req.body, ...) to stay skipped 'with the name of that member'. Several re-pointed entries now name only an app-defined type even though the block calls res.json/req.body: README.md block #1 (res.json, req.body) -> 'app-defined type `User`' (l.73); express-migration.md onStart block (res.json) -> 'app-defined type `UserService`' (l.80-81); middleware.md 'app.get(\"/users/:id\"...' (res.json) was JSON and is now 'app-defined type `User`' (l.99), a regression to a less useful reason; request.md 'app.use(...)' and 'app.get(\"/users\"...' (both res.json) -> app-defined types (l.106-107). everySkippedBlockStillFailsToCompile still keeps compilable blocks from hiding, but the skip list no longer records which later-wave member unblocks these blocks, so wave 5 cannot find them by member."
+ },
+ {
+  "id": "S4-002",
+  "severity": "MEDIUM",
+  "title": "Pending-stop test accepts shutdown returning before listen() ended, against FR-APP-012 AC-2",
+  "location": {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownStatesTest.java",
+   "line_range": "107-111"
+  },
+  "description": "FR-APP-012 AC-2 says 'shutdown returns after listen() ended'. The test explicitly allows 'shutdown returned' and 'listen threw' in either order (comment: TERMINATED is listen's last step before it throws). So the test does not check that part of the AC, and the implementation lets shutdown return while listen() is still running."
+ },
+ {
+  "id": "S4-003",
+  "severity": "MEDIUM",
+  "title": "throwAfterNextError test cannot tell whether the error reached the error path twice",
+  "location": {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ChainNextTest.java",
+   "line_range": "224-243"
+  },
+  "description": "The ErrorPath is built with no onError handlers, and the test asserts only status 500 and commits==1. If the pipeline also gave the rethrown e to the error path a second time, the response would already be COMPLETED, the second pass would do nothing, and every assertion would still pass. The property in the test name is not checked."
+ },
+ {
+  "id": "S4-004",
+  "severity": "MEDIUM",
+  "title": "Deadline test relies on Thread.sleep and tight wall-clock bounds",
+  "location": {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownSequenceTest.java",
+   "line_range": "180-194"
+  },
+  "description": "The before-wait participant sleeps 200 ms and the test requires adapter.stop to get 500-800 ms of the 1 s budget. On a loaded CI machine, sleep overshoot plus scheduling can exceed 300 ms and break the lower bound. The test passes or fails by timing, not by logic."
+ },
+ {
+  "id": "S4-005",
+  "severity": "MEDIUM",
+  "title": "SLF4J recording proxy records only method names, so error(String,Throwable) and error(String,Object) look the same",
+  "location": {
+   "file": "NaruServe-slf4j/src/test/java/com/snoworca/naruserve/slf4j/Slf4jLoggerTest.java",
+   "line_range": "21-48"
+  },
+  "description": "FR-APP-018 AC-1 needs each method forwarded to the matching SLF4J method with the same throwable. The java.lang.reflect.Proxy records method.getName()+args, so a forward to error(String, Object) (or a format overload) with the throwable as argument gives the same 'error[e2, ...]' string and passes. FR-APP-018 AC-4 also asks for a hand-written implementation of org.slf4j.Logger; a dynamic proxy is not one."
+ }
+]

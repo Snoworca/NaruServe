@@ -1,0 +1,105 @@
+{
+ "findings": [
+  {
+   "id": "S1-001", "axis": "P3", "severity": "MEDIUM",
+   "title": "Rotation truncates the live log when a rename fails",
+   "location": {"file": "NaruServe-filelog/src/main/java/com/snoworca/naruserve/filelog/RotatingFileLogger.java", "line_range": "229-260"},
+   "description": "rotate() ignores the boolean results of oldest.delete() and every renameTo(). If renaming naruserve.log to naruserve.log.1 fails (e.g. the file is held open by another process on Windows, a permission problem, or the .1 target could not be cleared because its delete failed), write() still calls streams.open(new File(directory, FILE_NAME), false), which truncates the current naruserve.log. Up to maxFileBytes (5 MiB by default) of log is silently lost and droppedCount() does not record it.",
+   "suggested_fix": "Check the result of the final rename. If it fails, reopen with append=true (or count a drop and keep appending past the limit) instead of truncating. Or open with append=false only when the file no longer exists.",
+   "is_behavioral": true, "tags": ["bug"]
+  },
+  {
+   "id": "S1-002", "axis": "P6", "severity": "MEDIUM",
+   "title": "Logger module packages are not @NullMarked, so their public API is a platform type in Kotlin",
+   "location": {"file": "NaruServe-filelog/src/main/java/com/snoworca/naruserve/filelog/RotatingFileLogger.java", "line_range": "1-30"},
+   "description": "The com.snoworca.naruserve.filelog, .logcat and .slf4j package-info.java files have no @org.jspecify.annotations.NullMarked, unlike com.snoworca.naruserve and .spi, and no class in these modules carries @NonNull/@Nullable. RotatingFileLogger.builder(), the Builder setters and build(), new LogcatLogger(String) and new Slf4jLogger(org.slf4j.Logger) all reach Kotlin as platform types (T!). This breaks the CLAUDE.md rule that no platform types are left on public API (object.md 12). The -Xjspecify-annotations=strict setting does not help because nothing is annotated.",
+   "suggested_fix": "Add @org.jspecify.annotations.NullMarked to the three package-info.java files (jspecify is already compileOnly for every naru module). Mark RotatingFileLogger.log/format's error parameter @Nullable.",
+   "is_behavioral": false, "tags": ["doc", "naming"]
+  },
+  {
+   "id": "S1-003", "axis": "P3", "severity": "LOW",
+   "title": "close() can hang forever when the writer thread has died",
+   "location": {"file": "NaruServe-filelog/src/main/java/com/snoworca/naruserve/filelog/RotatingFileLogger.java", "line_range": "168-190"},
+   "description": "write() catches only IOException and RuntimeException. An Error from the stream factory or the stream (e.g. OutOfMemoryError, or a LinkageError from a custom stream) ends drain() and the writer thread. log() keeps offering until the queue is full and then drops, which is fine. But close() then calls queue.put(STOP) without checking writer.isAlive(), so it blocks forever, and the app's shutdown hangs in the logger-close step past its deadline. flush() already guards this case and close() does not.",
+   "suggested_fix": "In close(), loop on queue.offer(STOP, 100, ms) and break out when !writer.isAlive(), as flush() does. Or catch Throwable around the write in drain() so the writer cannot die.",
+   "is_behavioral": true, "tags": ["bug"]
+  },
+  {
+   "id": "S1-004", "axis": "P3", "severity": "LOW",
+   "title": "Formatting runs on the caller thread outside any guard, so a logging call can throw",
+   "location": {"file": "NaruServe-filelog/src/main/java/com/snoworca/naruserve/filelog/RotatingFileLogger.java", "line_range": "107-130"},
+   "description": "The class contract says no logging call blocks or throws. But log() calls format() on the caller thread, and format() calls error.printStackTrace(...). That reaches user-controlled toString()/getMessage()/getStackTrace() of the Throwable and its causes, so a throwing override reaches the caller. LogcatLogger swallows every Throwable for the same contract. RotatingFileLogger does not.",
+   "suggested_fix": "Wrap format() in log() in try/catch(RuntimeException) and count the record as dropped.",
+   "is_behavioral": true, "tags": ["bug"]
+  },
+  {
+   "id": "S1-005", "axis": "P6", "severity": "LOW",
+   "title": "slf4j-api is an implementation dependency although Slf4jLogger exposes org.slf4j.Logger in a public constructor",
+   "location": {"file": "build.gradle", "line_range": "59"},
+   "description": "NaruServe-slf4j declares org.slf4j:slf4j-api as implementation. Its public constructor Slf4jLogger(org.slf4j.Logger) puts an SLF4J type in its ABI, so consumers have no slf4j-api on their compile classpath. new Slf4jLogger(LoggerFactory.getLogger(...)) does not compile unless they add SLF4J themselves, and the published metadata gives it runtime scope only.",
+   "suggested_fix": "Declare slf4j-api as api for NaruServe-slf4j.",
+   "is_behavioral": false, "tags": ["regression"]
+  },
+  {
+   "id": "S1-006", "axis": "P6", "severity": "LOW",
+   "title": "FR-APP-017 AC-6 (no SLF4J / android.* in filelog) has no explicit gate",
+   "location": {"file": "build.gradle", "line_range": "124-136"},
+   "description": "classRefPrefixes adds 'org/slf4j/' only for :NaruServe-api and 'android/' only for :NaruServe-api and :NaruServe-logcat. :NaruServe-filelog gets only 'javax/servlet/'. The android-api-level-21 animal-sniffer signature contains android.*, so it would not flag an android reference either. Today AC-6 holds only because the compile classpath happens to lack those jars; nothing fails if one is added later. The logcat module is likewise not checked for org/slf4j/.",
+   "suggested_fix": "Add 'android/' and 'org/slf4j/' to the prefixes for :NaruServe-filelog, and 'org/slf4j/' for :NaruServe-logcat.",
+   "is_behavioral": false, "tags": ["regression"]
+  },
+  {
+   "id": "S1-007", "axis": "P8", "severity": "LOW",
+   "title": "attribute(String, Object)/attribute(String, Class) overload makes a null literal or a Class value read instead of write",
+   "location": {"file": "NaruServe-api/src/main/java/com/snoworca/naruserve/ApplicationContext.java", "line_range": "10-16"},
+   "description": "In Java, ctx.attribute(\"k\", null) resolves to the more specific reader attribute(String, Class<T>), so the documented 'null removes the key' call does not remove (docs/api/lifecycle.md:128 admits it NPEs and asks for an (Object) cast). Storing a Class value, ctx.attribute(\"type\", Foo.class), also silently reads and discards the result. The overload is copied from Request but is now a second public surface with the same trap.",
+   "suggested_fix": "Since this is a new interface, add an explicit removeAttribute(String) (and keep the overload). Or at least have the reader throw a clear message for a null type rather than an NPE.",
+   "is_behavioral": false, "tags": ["naming"]
+  },
+  {
+   "id": "S1-008", "axis": "P5", "severity": "LOW",
+   "title": "A new SimpleDateFormat for every log record (and every access-log line)",
+   "location": {"file": "NaruServe-api/src/main/java/com/snoworca/naruserve/ConsoleLogger.java", "line_range": "77-81"},
+   "description": "ConsoleLogger.format and RotatingFileLogger.format (line 122) build a SimpleDateFormat for each record, on the caller (request) thread. The access log writes one INFO line per request, so every request pays the pattern parse plus a Calendar/DateFormatSymbols allocation, which is noticeable on API 21 devices. The comment justifies it as reading the default time zone each time, but a ThreadLocal<SimpleDateFormat> with setTimeZone(TimeZone.getDefault()) per call keeps that behaviour cheaply. The two formatters are also duplicated code.",
+   "suggested_fix": "Use a ThreadLocal<SimpleDateFormat> and call setTimeZone(TimeZone.getDefault()) before format. Optionally share one timestamp helper.",
+   "is_behavioral": false, "tags": ["performance"]
+  },
+  {
+   "id": "S1-009", "axis": "P1", "severity": "LOW",
+   "title": "Builder.build() hands the same HttpAdapter instance to every app it builds",
+   "location": {"file": "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java", "line_range": "161-174"},
+   "description": "The javadoc promises 'each build() returns a new app'. But the adapter (and codec/logger) instances are shared. Two apps built from one builder share one stateful HttpAdapter, and the second listen()/shutdown() acts on the first app's server. A shared logger is closed by whichever app shuts down first (logging.md admits this only for loggers). Nothing documents or rejects the adapter case.",
+   "suggested_fix": "Document that build() reuses the configured instances and one adapter must back only one app, or make the builder single-use.",
+   "is_behavioral": false, "tags": ["doc"]
+  }
+ ],
+ "coverage_rows": [
+  {"file": "NaruServe-api/src/main/java/com/snoworca/naruserve/AccessLogOptions.java", "hunks_total": 1, "anchors": ["AccessLogOptions exclude(String path);"], "findings": []},
+  {"file": "NaruServe-api/src/main/java/com/snoworca/naruserve/AppStartException.java", "hunks_total": 1, "anchors": ["public class AppStartException extends RuntimeException {"], "findings": []},
+  {"file": "NaruServe-api/src/main/java/com/snoworca/naruserve/AppState.java", "hunks_total": 1, "anchors": ["NEW, STARTING, RUNNING, STOPPING, FAILED, TERMINATED"], "findings": []},
+  {"file": "NaruServe-api/src/main/java/com/snoworca/naruserve/ApplicationContext.java", "hunks_total": 1, "anchors": ["void attribute(String key, @Nullable Object value);"], "findings": ["S1-007"]},
+  {"file": "NaruServe-api/src/main/java/com/snoworca/naruserve/Configurer.java", "hunks_total": 1, "anchors": ["void configure(T target);"], "findings": []},
+  {"file": "NaruServe-api/src/main/java/com/snoworca/naruserve/ConsoleLogger.java", "hunks_total": 1, "anchors": ["public final class ConsoleLogger implements Logger, Flushable, AutoCloseable {"], "findings": ["S1-008"]},
+  {"file": "NaruServe-api/src/main/java/com/snoworca/naruserve/ErrorHandler.java", "hunks_total": 1, "anchors": ["void handle(Throwable error, Request req, Response res) throws Exception;"], "findings": []},
+  {"file": "NaruServe-api/src/main/java/com/snoworca/naruserve/HttpException.java", "hunks_total": 1, "anchors": ["public class HttpException extends RuntimeException {"], "findings": []},
+  {"file": "NaruServe-api/src/main/java/com/snoworca/naruserve/LifecycleCallback.java", "hunks_total": 1, "anchors": ["void handle(ApplicationContext ctx) throws Exception;"], "findings": []},
+  {"file": "NaruServe-api/src/main/java/com/snoworca/naruserve/LogLevel.java", "hunks_total": 1, "anchors": ["TRACE, DEBUG, INFO, WARN, ERROR"], "findings": []},
+  {"file": "NaruServe-api/src/main/java/com/snoworca/naruserve/Logger.java", "hunks_total": 1, "anchors": ["void error(String message, Throwable error);"], "findings": []},
+  {"file": "NaruServe-api/src/main/java/com/snoworca/naruserve/Middleware.java", "hunks_total": 1, "anchors": ["void handle(Request req, Response res, Next next) throws Exception;"], "findings": []},
+  {"file": "NaruServe-api/src/main/java/com/snoworca/naruserve/Next.java", "hunks_total": 1, "anchors": ["void error(Throwable error);"], "findings": []},
+  {"file": "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java", "hunks_total": 2, "anchors": ["* or cookie access yet; later waves add them.", "default ApplicationContext application() {"], "findings": []},
+  {"file": "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java", "hunks_total": 6, "anchors": ["import com.snoworca.naruserve.internal.AppFactoryLoader;", "import com.snoworca.naruserve.spi.HttpAdapter;", "* {@link #create()} or {@link #builder()}.", "// @req IR-APP-003", "static RestApp create() {", "RestApp use(Middleware mw);"], "findings": ["S1-009"]},
+  {"file": "NaruServe-api/src/main/java/com/snoworca/naruserve/RouteBuilder.java", "hunks_total": 1, "anchors": ["RouteBuilder use(Middleware mw);"], "findings": []},
+  {"file": "NaruServe-api/src/main/java/com/snoworca/naruserve/ServerHandle.java", "hunks_total": 1, "anchors": ["String address();"], "findings": []},
+  {"file": "NaruServe-api/src/main/java/com/snoworca/naruserve/ServiceNotFoundException.java", "hunks_total": 1, "anchors": ["public ServiceNotFoundException(Class<?> type) {"], "findings": []},
+  {"file": "NaruServe-api/src/main/java/com/snoworca/naruserve/ServiceRegistry.java", "hunks_total": 1, "anchors": ["<T> void registerExternal(Class<T> type, T instance);"], "findings": []},
+  {"file": "NaruServe-api/src/main/java/com/snoworca/naruserve/UnsupportedMediaTypeException.java", "hunks_total": 1, "anchors": ["public class UnsupportedMediaTypeException extends HttpException {"], "findings": []},
+  {"file": "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/AppFactory.java", "hunks_total": 1, "anchors": ["public interface AppFactory {"], "findings": []},
+  {"file": "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/JsonCodec.java", "hunks_total": 1, "anchors": ["void encode(@Nullable Object value, Writer writer) throws IOException;"], "findings": []},
+  {"file": "NaruServe-filelog/src/main/java/com/snoworca/naruserve/filelog/RotatingFileLogger.java", "hunks_total": 1, "anchors": ["public final class RotatingFileLogger implements Logger, Flushable, AutoCloseable {"], "findings": ["S1-001", "S1-002", "S1-003", "S1-004", "S1-008"]},
+  {"file": "NaruServe-logcat/src/main/java/com/snoworca/naruserve/logcat/LogcatLogger.java", "hunks_total": 1, "anchors": ["public final class LogcatLogger implements Logger {"], "findings": ["S1-002"]},
+  {"file": "NaruServe-slf4j/src/main/java/com/snoworca/naruserve/slf4j/Slf4jLogger.java", "hunks_total": 1, "anchors": ["public final class Slf4jLogger implements Logger {"], "findings": ["S1-002", "S1-005"]},
+  {"file": "build.gradle", "hunks_total": 4, "anchors": ["// @req CON-APP-001", "prefixes += ['org/slf4j/']", "testImplementation testFixtures(project(':NaruServe-api'))", "tasks.named('check') { dependsOn checkLoggerPlacement }"], "findings": ["S1-005", "S1-006"]}
+ ],
+ "summary": {"total": 9, "by_severity": {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 2, "LOW": 7}}
+}

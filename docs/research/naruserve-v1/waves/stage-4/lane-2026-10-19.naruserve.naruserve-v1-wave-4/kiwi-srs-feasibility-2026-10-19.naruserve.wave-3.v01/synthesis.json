@@ -1,0 +1,53 @@
+{
+ "run": "2026-10-19.naruserve.wave-3.v01",
+ "total": 30,
+ "feasibility_distribution": {
+  "high": 28,
+  "medium": 2
+ },
+ "target_verdict": "go (28 high, 2 medium; no blockers)",
+ "critical_blockers": [],
+ "dependency_chains": [
+  [
+   "IR-HTTP-003",
+   "IR-HTTP-004",
+   "FR-HTTP-001",
+   "FR-HTTP-002",
+   "FR-HTTP-003/004/005/006"
+  ],
+  [
+   "IR-HTTP-002",
+   "IR-HTTP-005",
+   "IR-HTTP-006/FR-HTTP-007/FR-HTTP-008"
+  ],
+  [
+   "IR-HTTP-001",
+   "FR-HTTP-014/015",
+   "FR-HTTP-016",
+   "FR-HTTP-018"
+  ],
+  [
+   "FR-HTTP-019",
+   "FR-HTTP-020"
+  ],
+  [
+   "OPS-ROUTE-002 + IR-HTTP-005 + FR-HTTP-009/012/014",
+   "OPS-HTTP-001"
+  ]
+ ],
+ "stability_drift_candidates": [
+  {
+   "req_id": "IR-HTTP-002",
+   "note": "stale depends_on to discarded CON-ROUTE-001 (cannot be removed); successor CON-ROUTE-006 used"
+  },
+  {
+   "req_id": "CON-HTTP-001",
+   "note": "same stale depends_on row"
+  },
+  {
+   "req_id": "FR-HTTP-001",
+   "note": "high but depends on medium IR-HTTP-004"
+  }
+ ],
+ "average_score": 87.4
+}

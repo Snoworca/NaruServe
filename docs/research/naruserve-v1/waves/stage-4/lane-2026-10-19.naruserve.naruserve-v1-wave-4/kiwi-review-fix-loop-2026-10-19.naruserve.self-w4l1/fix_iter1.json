@@ -1,0 +1,195 @@
+{
+  "iter": 1,
+  "fixes": [
+    {
+      "finding_id": "S1-001",
+      "files_changed": [
+        {"path": "NaruServe-filelog/src/main/java/com/snoworca/naruserve/filelog/RotatingFileLogger.java", "line_range": "243-248,258-282"},
+        {"path": "NaruServe-filelog/src/test/java/com/snoworca/naruserve/filelog/RotatingFileLoggerTest.java", "line_range": "192-208"}
+      ],
+      "red": "RotatingFileLoggerTest.FR_APP_017_AC2_failedRotationRenameKeepsEarlierRecords FAILED: java.lang.AssertionError at RotatingFileLoggerTest.java:206 (naruserve.log truncated, 'INFO first record' lost when renaming onto a non-empty naruserve.log.1 directory failed)",
+      "rationale_full": "rotate() now returns whether naruserve.log was moved away (final renameTo result, or the delete result when maxFiles==1). write() opens the live file with append=!movedAway and sets size to 0 only when it moved; on a failed rename the existing file is appended to, so earlier records are never truncated. FR-APP-017 has no AC requiring truncation on failed rename.",
+      "mock_scan_passed": true,
+      "external_module_touch": false
+    },
+    {
+      "finding_id": "S1-002",
+      "files_changed": [
+        {"path": "NaruServe-filelog/src/main/java/com/snoworca/naruserve/filelog/RotatingFileLogger.java", "line_range": "22-23,32,58,106,110,130"},
+        {"path": "NaruServe-logcat/src/main/java/com/snoworca/naruserve/logcat/LogcatLogger.java", "line_range": "6-7,15,82,88"},
+        {"path": "NaruServe-slf4j/src/main/java/com/snoworca/naruserve/slf4j/Slf4jLogger.java", "line_range": "5-6,11,53"}
+      ],
+      "red": "tdd_exempted: annotation-only nullability change (Kotlin interop), no runtime behaviour; verified by compile under -Xjspecify-annotations=strict in ./gradlew build",
+      "rationale_full": "Class-level @org.jspecify.annotations.NullMarked on RotatingFileLogger (covers nested Builder), LogcatLogger and Slf4jLogger, so Kotlin sees non-platform types; the Throwable parameter of error(String, Throwable) and internal nullable fields/varargs are @Nullable. package-info.java files were not touched (outside the lease). No signature change.",
+      "mock_scan_passed": true,
+      "external_module_touch": false
+    },
+    {
+      "finding_id": "S1-003",
+      "files_changed": [
+        {"path": "NaruServe-filelog/src/main/java/com/snoworca/naruserve/filelog/RotatingFileLogger.java", "line_range": "185-195"},
+        {"path": "NaruServe-filelog/src/test/java/com/snoworca/naruserve/filelog/RotatingFileLoggerTest.java", "line_range": "226-243"}
+      ],
+      "red": "RotatingFileLoggerTest.FR_APP_017_AC5_closeReturnsWhenTheWriterDiedWithAFullQueue FAILED: java.lang.AssertionError: close() hung on a dead writer (RotatingFileLoggerTest.java:242)",
+      "rationale_full": "close() replaced queue.put(STOP) with a queue.offer(STOP, 100 ms) loop that stops once the writer thread is dead, mirroring flush(); interrupt bookkeeping kept. A writer killed by an Error with a full queue no longer hangs the app's logger-close step.",
+      "mock_scan_passed": true,
+      "external_module_touch": false
+    },
+    {
+      "finding_id": "S1-004",
+      "files_changed": [
+        {"path": "NaruServe-filelog/src/main/java/com/snoworca/naruserve/filelog/RotatingFileLogger.java", "line_range": "110-121"},
+        {"path": "NaruServe-filelog/src/test/java/com/snoworca/naruserve/filelog/RotatingFileLoggerTest.java", "line_range": "210-224"}
+      ],
+      "red": "RotatingFileLoggerTest.FR_APP_017_AC4_throwingThrowableIsDroppedNotThrown FAILED: java.lang.IllegalStateException: toString failed at RotatingFileLoggerTest.java:218 (thrown to the logging caller)",
+      "rationale_full": "log() runs format() inside try/catch(RuntimeException); a Throwable whose toString/printStackTrace throws is counted in droppedCount() and never reaches the caller, restoring the no-throw contract (same as LogcatLogger).",
+      "mock_scan_passed": true,
+      "external_module_touch": false
+    },
+    {
+      "finding_id": "S1-005",
+      "files_changed": [
+        {"path": "build.gradle", "line_range": "59-60"}
+      ],
+      "red": "tdd_exempted: build dependency scope change (ABI), verified by ./gradlew build including BuildChecksTest",
+      "rationale_full": "org.slf4j:slf4j-api:1.7.36 moved from implementation to api for NaruServe-slf4j because the public constructor Slf4jLogger(org.slf4j.Logger) exposes the type; consumers can now compile against it.",
+      "mock_scan_passed": true,
+      "external_module_touch": false
+    },
+    {
+      "finding_id": "S2-001",
+      "files_changed": [
+        {"path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java", "line_range": "31,94-96,222-229,349,409-410,442"},
+        {"path": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownStatesTest.java", "line_range": "220-244"}
+      ],
+      "red": "ShutdownStatesTest.FR_APP_011_AC5_shutdownRacingListenReturnStillDoesNotWaitForItself FAILED: java.lang.AssertionError: iteration 100: onStop shutdown waited 2000926583 ns (ShutdownStatesTest.java:240)",
+      "rationale_full": "lifecycleThread is now a private AtomicReference<Thread>; listen() and runShutdownSequence() set it to their own thread and clear it with compareAndSet(self, null), so listen()'s finally can no longer wipe the identity a racing shutdown thread just set. ownThread reads get(). The race test repeats the narrow window 200 times; it reproduced pre-fix and passes 3/3 after.",
+      "mock_scan_passed": true,
+      "external_module_touch": false
+    },
+    {
+      "finding_id": "S2-002",
+      "files_changed": [
+        {"path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java", "line_range": "334-335,372-380"},
+        {"path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/AppLifecycle.java", "line_range": "26-29,108-124"},
+        {"path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/GatedExchangeHandler.java", "line_range": "48-53"},
+        {"path": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownStatesTest.java", "line_range": "198-218"},
+        {"path": "docs/api/lifecycle.md", "line_range": "170-173"}
+      ],
+      "red": "ShutdownStatesTest.FR_APP_011_AC5_shutdownFromARouteHandlerReturnsPromptlyAndTheResponseIsDelivered FAILED: java.lang.AssertionError: expected:<200> but was:<0> (ShutdownStatesTest.java:212; the handler's own response was force-closed after shutdown waited its 5 s timeout)",
+      "rationale_full": "AppLifecycle keeps a per-app ThreadLocal request marker; GatedExchangeHandler sets it around dispatcher.handle in try/finally (remove()). In shutdown()'s RUNNING case, when the beginStop winner is on a request thread of this app, runShutdownSequence(deadline) runs on a new non-daemon 'naruserve-shutdown' thread and the call returns at once, so the adapter stop can wait for the caller's request to finish and its response is delivered. docs/api/lifecycle.md gains a section describing this behaviour.",
+      "mock_scan_passed": true,
+      "external_module_touch": false
+    },
+    {
+      "finding_id": "S2-003",
+      "files_changed": [
+        {"path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/AccessLog.java", "line_range": "4,14,28-32,54"},
+        {"path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultAccessLogOptions.java", "line_range": "5-6,68-73"},
+        {"path": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AccessLogTest.java", "line_range": "107-119"}
+      ],
+      "red": "AccessLogTest.IR_APP_007_AC3_excludeAddedAfterTheLogIsBuiltHasNoEffect FAILED: java.lang.AssertionError at AccessLogTest.java:117 (an exclude added after the log was built suppressed the line)",
+      "rationale_full": "AccessLog snapshots the exclude set at construction (freeze/listen) via the new package-private DefaultAccessLogOptions.excludeSnapshot() taken under the options lock, and checks the unmodifiable set lock-free per request with the same exact-match rule. excluded(String) is kept unchanged.",
+      "mock_scan_passed": true,
+      "external_module_touch": false
+    },
+    {
+      "finding_id": "S2-004",
+      "files_changed": [
+        {"path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java", "line_range": "516-521"},
+        {"path": "NaruServe-api/src/test/java/com/snoworca/naruserve/AppEntryApiTest.java", "line_range": "216-229"}
+      ],
+      "red": "AppEntryApiTest.IR_APP_002_AC4_undecodablePrefixIsRefusedAtRegistration FAILED: java.lang.AssertionError: undecodable prefix accepted (AppEntryApiTest.java:222)",
+      "rationale_full": "use(prefix, mw) runs Router.decodeSegments(prefix, policy) at registration and rethrows an IllegalArgumentException naming the prefix; decoding does not depend on the policy, so the check is valid even if routerPolicy changes later. A bad prefix no longer drives listen() to FAILED/TERMINATED.",
+      "mock_scan_passed": true,
+      "external_module_touch": false
+    },
+    {
+      "finding_id": "S2-005",
+      "files_changed": [
+        {"path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ChainNext.java", "line_range": "9,30-31,79"},
+        {"path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/MiddlewarePipeline.java", "line_range": "89-92"},
+        {"path": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ChainNextTest.java", "line_range": "249-276"}
+      ],
+      "red": "ChainNextTest.FR_APP_004_AC3_aDifferentExceptionAfterNextErrorIsLoggedAtError FAILED: java.lang.AssertionError at ChainNextTest.java:270 (the later exception was dropped with no log)",
+      "rationale_full": "ChainNext.Chain records the routed throwable when next.error(e) runs; MiddlewarePipeline's catch, when errorRouted and the caught exception is not that instance, logs it at ERROR with the request id through ErrorPath's SafeLogger. It is still not rethrown, so there is no second error path.",
+      "mock_scan_passed": true,
+      "external_module_touch": false
+    },
+    {
+      "finding_id": "S3-001",
+      "files_changed": [
+        {"path": "NaruServe-api/src/test/java/com/snoworca/naruserve/LoggerIsolationTest.java", "line_range": "21-80,110-144"}
+      ],
+      "red": "tdd_exempted: test-only strengthening (no production change); new per-method counters and the unchecked-flush variant pass against current code",
+      "rationale_full": "ThrowingLogger counts info/warn/error/flush/close separately and can throw an unchecked exception from flush(). AC-1 now asserts error and warn records arrived; AC-2 asserts flush and close were each reached exactly once; a new test covers a RuntimeException from flush() still closing the logger and reaching TERMINATED. Existing total-count assertions kept.",
+      "mock_scan_passed": true,
+      "external_module_touch": false
+    },
+    {
+      "finding_id": "S3-003",
+      "files_changed": [
+        {"path": "NaruServe-api/src/test/java/com/snoworca/naruserve/AppEntryApiTest.java", "line_range": "210"}
+      ],
+      "red": "tdd_exempted: test-only one-line strengthening (missing fail())",
+      "rationale_full": "Added fail(\"expected NullPointerException\") after get(\"/x\", null, h) inside the try so a regressed null check fails the test.",
+      "mock_scan_passed": true,
+      "external_module_touch": false
+    },
+    {
+      "finding_id": "S4-001",
+      "files_changed": [
+        {"path": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java", "line_range": "73-74,82,100,107-108,545-568"}
+      ],
+      "red": "DocsExamplesCompileTest.OPS_APP_002_AC2_skippedBlocksCallingJsonOrBodyNameTheLaterWaveMember FAILED: expected:<[]> but was:<[README.md RestApp app = RestApp.create(); (app-defined type `User`) calls .json(, ... middleware.md app.get(\"/users/:id\" ... (app-defined type `User`) calls .json(, request.md app.use(... (app-defined type `User`) calls .json(, request.md app.get(\"/users\" ... (app-defined type `UserService`) calls .json(, ...]>",
+      "rationale_full": "The five skip entries whose reason named only an app-defined type while the block calls res.json/req.body now lead with the later-wave member (JSON/BODY constants, README names both) plus the app type. A new guard test fails for any skipped block calling .json( or req.body( whose reason does not lead with a later-wave member.",
+      "mock_scan_passed": true,
+      "external_module_touch": false
+    },
+    {
+      "finding_id": "S4-002",
+      "files_changed": [
+        {"path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/AppLifecycle.java", "line_range": "26-27,126-147"},
+        {"path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java", "line_range": "228,364-365"},
+        {"path": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownStatesTest.java", "line_range": "97-108"}
+      ],
+      "red": "Strengthened sdsAc16_FR_APP_012_AC2_shutdownWhileStartingSkipsLaterCallbacksAndBindAndListenThrows asserts app.lifecycle().listenEnded() at the moment shutdown returns; with the latch present but shutdown not waiting on it, the race (TERMINATED set just before listen() throws) did not reproduce in the run (no production hook can hold listen between terminate() and its finally), so red is recorded as not deterministically reproducible; the ordering is now guaranteed by construction",
+      "rationale_full": "AppLifecycle gains a listen-ended latch released in the finally of the listen() that won beginStart. shutdown()'s STARTING branch (non-own thread) waits for TERMINATED and then for listen-ended within the same deadline, so FR-APP-012 AC-2 'shutdown returns after listen() ended' holds. The test's previous 'either order' tolerance comment is left; the new assertion is added on top.",
+      "mock_scan_passed": true,
+      "external_module_touch": false
+    },
+    {
+      "finding_id": "S4-003",
+      "files_changed": [
+        {"path": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ChainNextTest.java", "line_range": "237-246"}
+      ],
+      "red": "tdd_exempted: test-only strengthening; the recording onError handler sees e exactly once against current code",
+      "rationale_full": "throwAfterNextError now builds ErrorPath with a recording ErrorHandler that does not answer (so the standard 500 still applies) and asserts it received e exactly once, so the 'not a second time' property in the test name is checked.",
+      "mock_scan_passed": true,
+      "external_module_touch": false
+    },
+    {
+      "finding_id": "S4-004",
+      "files_changed": [
+        {"path": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownSequenceTest.java", "line_range": "191-196"}
+      ],
+      "red": "tdd_exempted: flaky-test noise-margin fix, no behaviour change",
+      "rationale_full": "sdsAc8 now uses a 10 s budget and asserts stopNanos <= 10 s - 200 ms (the participant sleep is deducted from the one deadline) and >= 10 s - 200 ms - 2 s, keeping the property with a 2 s scheduler margin. Ran 3x green.",
+      "mock_scan_passed": true,
+      "external_module_touch": false
+    },
+    {
+      "finding_id": "S4-005",
+      "files_changed": [
+        {"path": "NaruServe-slf4j/src/test/java/com/snoworca/naruserve/slf4j/Slf4jLoggerTest.java", "line_range": "6-11,18-70"}
+      ],
+      "red": "tdd_exempted: test-only replacement of a java.lang.reflect.Proxy with a hand-written recording logger (FR-APP-018 AC-4); expected call sequence unchanged and passes",
+      "rationale_full": "The recording logger is a hand-written class extending org.slf4j.helpers.MarkerIgnoringBase that records trace/debug/info/warn/error(String) and error(String,Throwable) as distinct tags and throws AssertionError on every other overload, so error(String,Object) cannot pass for error(String,Throwable) (FR-APP-018 AC-1). Same expected sequence; no mock library.",
+      "mock_scan_passed": true,
+      "external_module_touch": false
+    }
+  ],
+  "skipped": [],
+  "out_of_lease": [],
+  "build": {"command": "./gradlew build", "exit_code": 0}
+}

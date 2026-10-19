@@ -1,0 +1,15 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "2026-10-19.naruserve.naruserve-v1-wave-4-9",
+  "sds_path": "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-9.sds.md",
+  "target": "wave-4",
+  "req_ids": ["FR-APP-016", "FR-APP-017", "FR-APP-018", "CON-APP-001"],
+  "spawn_context": "pm-child",
+  "phase": "done",
+  "failed": false,
+  "next_resume_hint": null,
+  "red_evidence": {"command": "./gradlew :NaruServe-logcat:test :NaruServe-slf4j:test :NaruServe-filelog:test --continue", "exit_code": 1, "captured_failure": "compileTestJava FAILED: cannot find symbol LogcatLogger / Slf4jLogger / RotatingFileLogger; package com.snoworca.naruserve.testing does not exist (filelog testFixtures)", "timestamp": "2026-10-19T07:50:00Z"},
+  "green_evidence": {"command": "./gradlew build", "exit_code": 0, "timestamp": "2026-10-19T08:00:00Z"},
+  "deferred_queue": "/Users/beom/work/git/NaruServe/kiwi/orchestrator/2026-10-19.NaruServe.naruserve-v1/lanes/lane-2026-10-19.naruserve.naruserve-v1-wave-4/deferred-srs-queue.jsonl",
+  "deferred_lines_appended": 25
+}

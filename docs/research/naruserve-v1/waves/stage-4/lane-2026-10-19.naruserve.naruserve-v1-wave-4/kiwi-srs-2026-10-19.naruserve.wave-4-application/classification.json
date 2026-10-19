@@ -1,0 +1,9 @@
+{"target":"wave-4","classification":"new-scope","proposed_scope":"NEW: Application","proposed_prefix":"APP",
+ "affected_existing_reqs":[
+  {"id":"FR-HTTP-002","relation":"supersedes","diff_summary":"pre-request 400 gets the standard error body; middleware/onError excluded"},
+  {"id":"FR-HTTP-003","relation":"supersedes","diff_summary":"404/405/426/501 get the standard error body; middleware runs first"},
+  {"id":"FR-HTTP-005","relation":"supersedes","diff_summary":"non-/ raw path 400 gets the standard error body"},
+  {"id":"FR-HTTP-006","relation":"supersedes","diff_summary":"interim failure handling replaced by the wave 4 error path; D-126 warning"},
+  {"id":"FR-HTTP-010","relation":"supersedes","diff_summary":"malformed query 400 through middleware/onError with standard body"}],
+ "scope_boundary_impact":null,"external_module_impact":null,
+ "committee":"successor scope = HTTP (auto_decisions.json wave-4-srs-supersede-successor-scope)"}

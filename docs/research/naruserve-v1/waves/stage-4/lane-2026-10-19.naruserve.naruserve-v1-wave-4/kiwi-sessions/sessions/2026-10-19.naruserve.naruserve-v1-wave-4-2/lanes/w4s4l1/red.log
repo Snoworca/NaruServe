@@ -1,0 +1,45 @@
+e: file:///Users/beom/work/git/NaruServe/.claude/worktrees/agent-af0ed6f1ef896f5c1/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppLifecycleKotlinTest.kt:23:17 Unresolved reference 'service'.
+e: file:///Users/beom/work/git/NaruServe/.claude/worktrees/agent-af0ed6f1ef896f5c1/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppLifecycleKotlinTest.kt:38:13 Unresolved reference 'onStart'.
+e: file:///Users/beom/work/git/NaruServe/.claude/worktrees/agent-af0ed6f1ef896f5c1/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppLifecycleKotlinTest.kt:38:23 Cannot infer type for this parameter. Specify it explicitly.
+e: file:///Users/beom/work/git/NaruServe/.claude/worktrees/agent-af0ed6f1ef896f5c1/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppLifecycleKotlinTest.kt:39:17 Unresolved reference 'register'.
+e: file:///Users/beom/work/git/NaruServe/.claude/worktrees/agent-af0ed6f1ef896f5c1/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppLifecycleKotlinTest.kt:40:40 Initializer type mismatch: expected 'UserService', actual 'UserService?'.
+e: file:///Users/beom/work/git/NaruServe/.claude/worktrees/agent-af0ed6f1ef896f5c1/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppLifecycleKotlinTest.kt:40:40 Type mismatch: inferred type is 'UserService?', but 'UserService' was expected.
+e: file:///Users/beom/work/git/NaruServe/.claude/worktrees/agent-af0ed6f1ef896f5c1/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppLifecycleKotlinTest.kt:42:58 Cannot infer type for this parameter. Specify it explicitly.
+e: file:///Users/beom/work/git/NaruServe/.claude/worktrees/agent-af0ed6f1ef896f5c1/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppLifecycleKotlinTest.kt:42:58 Unresolved reference. None of the following candidates is applicable because of a receiver type mismatch:
+fun <T, R> T.let(block: (T) -> R): R
+    [R|Contract description]
+     <
+        CallsInPlace(block, EXACTLY_ONCE)
+    >
+e: file:///Users/beom/work/git/NaruServe/.claude/worktrees/agent-af0ed6f1ef896f5c1/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppLifecycleKotlinTest.kt:42:62 Cannot infer type for this parameter. Specify it explicitly.
+e: file:///Users/beom/work/git/NaruServe/.claude/worktrees/agent-af0ed6f1ef896f5c1/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppLifecycleKotlinTest.kt:45:13 Unresolved reference 'listen'.
+e: file:///Users/beom/work/git/NaruServe/.claude/worktrees/agent-af0ed6f1ef896f5c1/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppLifecycleKotlinTest.kt:46:13 Unresolved reference 'shutdown'.
+e: file:///Users/beom/work/git/NaruServe/.claude/worktrees/agent-af0ed6f1ef896f5c1/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppLifecycleKotlinTest.kt:56:33 Unresolved reference 'onStart'.
+e: file:///Users/beom/work/git/NaruServe/.claude/worktrees/agent-af0ed6f1ef896f5c1/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppLifecycleKotlinTest.kt:56:43 Cannot infer type for this parameter. Specify it explicitly.
+e: file:///Users/beom/work/git/NaruServe/.claude/worktrees/agent-af0ed6f1ef896f5c1/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppLifecycleKotlinTest.kt:57:17 Unresolved reference 'attribute'.
+e: file:///Users/beom/work/git/NaruServe/.claude/worktrees/agent-af0ed6f1ef896f5c1/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppLifecycleKotlinTest.kt:58:26 Unresolved reference 'attribute'.
+e: file:///Users/beom/work/git/NaruServe/.claude/worktrees/agent-af0ed6f1ef896f5c1/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppLifecycleKotlinTest.kt:61:21 Unresolved reference 'listen'.
+e: file:///Users/beom/work/git/NaruServe/.claude/worktrees/agent-af0ed6f1ef896f5c1/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppLifecycleKotlinTest.kt:63:22 Unresolved reference 'AppState'.
+e: file:///Users/beom/work/git/NaruServe/.claude/worktrees/agent-af0ed6f1ef896f5c1/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppLifecycleKotlinTest.kt:63:44 Unresolved reference 'state'.
+e: file:///Users/beom/work/git/NaruServe/.claude/worktrees/agent-af0ed6f1ef896f5c1/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppLifecycleKotlinTest.kt:64:13 Unresolved reference 'shutdown'.
+e: file:///Users/beom/work/git/NaruServe/.claude/worktrees/agent-af0ed6f1ef896f5c1/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppLifecycleKotlinTest.kt:65:22 Unresolved reference 'AppState'.
+e: file:///Users/beom/work/git/NaruServe/.claude/worktrees/agent-af0ed6f1ef896f5c1/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppLifecycleKotlinTest.kt:72:19 Unresolved reference 'AccessLogOptions'.
+e: file:///Users/beom/work/git/NaruServe/.claude/worktrees/agent-af0ed6f1ef896f5c1/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppLifecycleKotlinTest.kt:73:37 Unresolved reference 'accessLog'.
+e: file:///Users/beom/work/git/NaruServe/.claude/worktrees/agent-af0ed6f1ef896f5c1/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppLifecycleKotlinTest.kt:73:49 Unresolved reference 'it'.
+e: file:///Users/beom/work/git/NaruServe/.claude/worktrees/agent-af0ed6f1ef896f5c1/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppLifecycleKotlinTest.kt:74:13 Unresolved reference 'accessLog'.
+e: file:///Users/beom/work/git/NaruServe/.claude/worktrees/agent-af0ed6f1ef896f5c1/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppLifecycleKotlinTest.kt:74:32 Unresolved reference 'it'.
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':NaruServe-api:compileTestKotlin'.
+> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
+   > Compilation error. See log for more details
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 484ms

@@ -1,0 +1,42 @@
+{
+  "iter": 3,
+  "findings": [
+    {
+      "id": "A-3-1",
+      "severity": "LOW",
+      "req_id": "FR-APP-013",
+      "ac": "AC-4",
+      "design_ref": "wave decision: Lifecycle gate; D-428",
+      "description": "The AC-4 Decision 'the lifecycle gate is the first check of the dispatcher' contradicts in wording FR-APP-009 AC-8 (added in iteration 2): 'the gates wrap the dispatcher instead of living inside it', where the wave 3 Dispatcher(Router) and DefaultRestApp.dispatcher() stay ungated. FR-HTTP-021's statement now says 'an exchange ... that passed the lifecycle gate', which matches FR-APP-009 AC-8. The behaviour is the same, but an implementer reading FR-APP-013 AC-4 alone would put the gate inside Dispatcher and break the ungated wave 3 unit tests that FR-APP-009 AC-8 protects.",
+      "suggested_fix": "In FR-APP-013 AC-4 replace 'Decision: the lifecycle gate is the first check of the dispatcher.' with 'Decision: the lifecycle gate is the first check of the exchange handler that `listen()` passes to the adapter, which wraps the dispatcher (FR-APP-009 AC-8).'"
+    },
+    {
+      "id": "A-3-2",
+      "severity": "LOW",
+      "req_id": "OPS-HTTP-003",
+      "ac": "AC-4",
+      "design_ref": "D-398; D-114",
+      "description": "The successor restates the wave 3 parenthetical '(in wave 3 the internal implementation rejects a call after the harness freeze with IllegalStateException, FR-HTTP-008)'. From wave 4, routing.md should describe the NEW-state guard of FR-APP-002 (IllegalStateException outside NEW). Read literally, the AC asks docs written in wave 4 to describe the wave 3 harness. HttpDocsTest only checks for `NEW`, `listen()` and `IllegalStateException`, so nothing breaks.",
+      "suggested_fix": "Replace the parenthetical with '(a call outside `NEW` is rejected with `IllegalStateException` by the state guard of FR-APP-002)'."
+    },
+    {
+      "id": "A-3-3",
+      "severity": "LOW",
+      "req_id": "OPS-HTTP-004",
+      "ac": null,
+      "design_ref": "I-009",
+      "description": "OPS-HTTP-004 does not say that the DocsExamplesCompileTest tests (currently named sdsAcN_OPS_HTTP_002_ACn) are re-pointed to it, unlike OPS-ROUTE-003 AC-3 (RoutingDocsTest) and OPS-HTTP-003 AC-8 (HttpDocsTest). It also dropped two links its predecessor had: the Code row build.gradle, although AC-1 is about build.gradle, and depends_on IR-HTTP-001. The second is the same pattern as A-2-6, which OPS-HTTP-003 had fixed.",
+      "suggested_fix": "Append to AC-6 ' `DocsExamplesCompileTest` is re-pointed to this requirement.'; add_trace_link Code build.gradle implements 'trace_intent=addition_site'; add_trace_link Requirement IR-HTTP-001 depends_on 'wave 3 API surface'."
+    },
+    {
+      "id": "A-3-4",
+      "severity": "LOW",
+      "req_id": "OPS-APP-001",
+      "ac": null,
+      "design_ref": null,
+      "description": "Follow-up to A-2-5 from a different angle: iteration 2 added the successor rows but kept the old rows. OPS-APP-001 still has 'extends OPS-HTTP-001' (discarded), next to 'extends OPS-HTTP-003'. OPS-APP-002 still has 'extends OPS-HTTP-002' (discarded), next to 'extends OPS-HTTP-004'. These are wave-4 requirements, not verified ones, and the relation is extends, not depends_on, so dependency hygiene holds. Still, each now points at both the predecessor and its successor.",
+      "suggested_fix": "Remove the 'extends OPS-HTTP-001' row from OPS-APP-001 and the 'extends OPS-HTTP-002' row from OPS-APP-002 (edit_requirement_table_rows), or leave them if trace history is wanted."
+    }
+  ],
+  "summary": {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 0, "LOW": 4}
+}

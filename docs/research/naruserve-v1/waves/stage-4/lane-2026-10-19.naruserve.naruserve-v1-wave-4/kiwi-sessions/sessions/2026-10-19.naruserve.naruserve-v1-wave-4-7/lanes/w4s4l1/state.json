@@ -1,0 +1,22 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "2026-10-19.naruserve.naruserve-v1-wave-4-7",
+  "sds_path": "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-7.sds.md",
+  "sds_sha256": "03c7e6f7310a15ef7f46ac0835b42f45894db8a5032c9d63c1d99ca70244b346",
+  "target": "wave-4",
+  "req_ids": ["FR-APP-010", "FR-APP-011", "FR-APP-012", "FR-APP-013"],
+  "spawn_context": "pm-child",
+  "phase": "done",
+  "failed": false,
+  "next_resume_hint": null,
+  "regression_baseline": {"command": "./gradlew build", "head_sha": "7cb379bec63d289fae06d288ae01a92c37223d55", "exit_code": 0},
+  "red_evidence": {
+    "command": "./gradlew :NaruServe-api:test --tests '*StartFailureTest' --tests '*Shutdown*Test' --tests '*StoppingGateTest' --tests '*StartGateTest' --tests '*DefaultApplicationContextTest'",
+    "exit_code": 1,
+    "captured_failure": "36 tests completed, 19 failed (compile red first: ShutdownParticipants missing)",
+    "timestamp": "2026-10-19T07:25:00Z"
+  },
+  "green_evidence": {"command": "./gradlew build", "exit_code": 0, "timestamp": "2026-10-19T07:40:00Z"},
+  "review": {"prickly_round1": {"HIGH": 1, "MEDIUM": 3, "LOW": 5}, "fixed": ["HIGH re-entrant shutdown", "MEDIUM x3", "LOW self-suppression, requireNonNull in try, javadoc, appRef/await"], "left_low": ["release after logger close (SDS order)", "Error in participant skips release (finally still terminates)", "shutdown from a request handler waits on its own exchange"]},
+  "mcp_call_log_ref": "deferred queue (34 lines appended)"
+}

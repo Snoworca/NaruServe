@@ -1,0 +1,68 @@
+{
+  "classification": "new-scope",
+  "mode": "live",
+  "key_to_id": {
+    "R01": "IR-ROUTE-001",
+    "R02": "IR-ROUTE-002",
+    "R03": "FR-ROUTE-001",
+    "R04": "IR-ROUTE-003",
+    "R05": "CON-ROUTE-001",
+    "R06": "FR-ROUTE-002",
+    "R07": "FR-ROUTE-003",
+    "R08": "FR-ROUTE-004",
+    "R09": "FR-ROUTE-005",
+    "R10": "FR-ROUTE-006",
+    "R11": "FR-ROUTE-007",
+    "R12": "FR-ROUTE-008",
+    "R13": "IR-ROUTE-004",
+    "R14": "FR-ROUTE-009",
+    "R15": "FR-ROUTE-010",
+    "R16": "FR-ROUTE-011",
+    "R17": "FR-ROUTE-012",
+    "R18": "FR-ROUTE-013",
+    "R19": "FR-ROUTE-014",
+    "R20": "FR-ROUTE-015",
+    "R21": "FR-ROUTE-016",
+    "R22": "FR-ROUTE-017",
+    "R23": "OPS-ROUTE-001"
+  },
+  "added_ids": [
+    "IR-ROUTE-001",
+    "IR-ROUTE-002",
+    "FR-ROUTE-001",
+    "IR-ROUTE-003",
+    "CON-ROUTE-001",
+    "FR-ROUTE-002",
+    "FR-ROUTE-003",
+    "FR-ROUTE-004",
+    "FR-ROUTE-005",
+    "FR-ROUTE-006",
+    "FR-ROUTE-007",
+    "FR-ROUTE-008",
+    "IR-ROUTE-004",
+    "FR-ROUTE-009",
+    "FR-ROUTE-010",
+    "FR-ROUTE-011",
+    "FR-ROUTE-012",
+    "FR-ROUTE-013",
+    "FR-ROUTE-014",
+    "FR-ROUTE-015",
+    "FR-ROUTE-016",
+    "FR-ROUTE-017",
+    "OPS-ROUTE-001"
+  ],
+  "trace_links_added": 24,
+  "trace_links_detail": {
+    "CON-ROUTE-001->CON-BUILD-004/011/012/013": 4,
+    "R02-R04->IR-ROUTE-001": 3,
+    "R06-R22->CON-ROUTE-001": 17
+  },
+  "validate_spec_result": {
+    "errors": 0,
+    "warnings": 23,
+    "warning_codes": {
+      "SRS-W023": 23
+    },
+    "note": "All 23 warnings are SRS-W023 (Stability=draft, not yet an implementation contract), one per new ROUTE block; expected until kiwi-srs-feasibility promotes stability. No other diagnostics workspace-wide."
+  }
+}

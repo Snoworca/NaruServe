@@ -1,0 +1,1723 @@
+{
+ "findings": [
+  {
+   "id": "S1-001",
+   "axis": "P3",
+   "severity": "MEDIUM",
+   "title": "Rotation truncates the live log when a rename fails",
+   "location": {
+    "file": "NaruServe-filelog/src/main/java/com/snoworca/naruserve/filelog/RotatingFileLogger.java",
+    "line_range": "229-260"
+   },
+   "description": "rotate() ignores the boolean results of oldest.delete() and every renameTo(). If renaming naruserve.log to naruserve.log.1 fails (e.g. the file is held open by another process on Windows, a permission problem, or the .1 target could not be cleared because its delete failed), write() still calls streams.open(new File(directory, FILE_NAME), false), which truncates the current naruserve.log. Up to maxFileBytes (5 MiB by default) of log is silently lost and droppedCount() does not record it.",
+   "suggested_fix": "Check the result of the final rename. If it fails, reopen with append=true (or count a drop and keep appending past the limit) instead of truncating. Or open with append=false only when the file no longer exists.",
+   "is_behavioral": true,
+   "tags": [
+    "bug"
+   ]
+  },
+  {
+   "id": "S1-002",
+   "axis": "P6",
+   "severity": "MEDIUM",
+   "title": "Logger module packages are not @NullMarked, so their public API is a platform type in Kotlin",
+   "location": {
+    "file": "NaruServe-filelog/src/main/java/com/snoworca/naruserve/filelog/RotatingFileLogger.java",
+    "line_range": "1-30"
+   },
+   "description": "The com.snoworca.naruserve.filelog, .logcat and .slf4j package-info.java files have no @org.jspecify.annotations.NullMarked, unlike com.snoworca.naruserve and .spi, and no class in these modules carries @NonNull/@Nullable. RotatingFileLogger.builder(), the Builder setters and build(), new LogcatLogger(String) and new Slf4jLogger(org.slf4j.Logger) all reach Kotlin as platform types (T!). This breaks the CLAUDE.md rule that no platform types are left on public API (object.md 12). The -Xjspecify-annotations=strict setting does not help because nothing is annotated.",
+   "suggested_fix": "Add @org.jspecify.annotations.NullMarked to the three package-info.java files (jspecify is already compileOnly for every naru module). Mark RotatingFileLogger.log/format's error parameter @Nullable.",
+   "is_behavioral": false,
+   "tags": [
+    "doc",
+    "naming"
+   ]
+  },
+  {
+   "id": "S1-003",
+   "axis": "P3",
+   "severity": "LOW",
+   "title": "close() can hang forever when the writer thread has died",
+   "location": {
+    "file": "NaruServe-filelog/src/main/java/com/snoworca/naruserve/filelog/RotatingFileLogger.java",
+    "line_range": "168-190"
+   },
+   "description": "write() catches only IOException and RuntimeException. An Error from the stream factory or the stream (e.g. OutOfMemoryError, or a LinkageError from a custom stream) ends drain() and the writer thread. log() keeps offering until the queue is full and then drops, which is fine. But close() then calls queue.put(STOP) without checking writer.isAlive(), so it blocks forever, and the app's shutdown hangs in the logger-close step past its deadline. flush() already guards this case and close() does not.",
+   "suggested_fix": "In close(), loop on queue.offer(STOP, 100, ms) and break out when !writer.isAlive(), as flush() does. Or catch Throwable around the write in drain() so the writer cannot die.",
+   "is_behavioral": true,
+   "tags": [
+    "bug"
+   ]
+  },
+  {
+   "id": "S1-004",
+   "axis": "P3",
+   "severity": "LOW",
+   "title": "Formatting runs on the caller thread outside any guard, so a logging call can throw",
+   "location": {
+    "file": "NaruServe-filelog/src/main/java/com/snoworca/naruserve/filelog/RotatingFileLogger.java",
+    "line_range": "107-130"
+   },
+   "description": "The class contract says no logging call blocks or throws. But log() calls format() on the caller thread, and format() calls error.printStackTrace(...). That reaches user-controlled toString()/getMessage()/getStackTrace() of the Throwable and its causes, so a throwing override reaches the caller. LogcatLogger swallows every Throwable for the same contract. RotatingFileLogger does not.",
+   "suggested_fix": "Wrap format() in log() in try/catch(RuntimeException) and count the record as dropped.",
+   "is_behavioral": true,
+   "tags": [
+    "bug"
+   ]
+  },
+  {
+   "id": "S1-005",
+   "axis": "P6",
+   "severity": "LOW",
+   "title": "slf4j-api is an implementation dependency although Slf4jLogger exposes org.slf4j.Logger in a public constructor",
+   "location": {
+    "file": "build.gradle",
+    "line_range": "59"
+   },
+   "description": "NaruServe-slf4j declares org.slf4j:slf4j-api as implementation. Its public constructor Slf4jLogger(org.slf4j.Logger) puts an SLF4J type in its ABI, so consumers have no slf4j-api on their compile classpath. new Slf4jLogger(LoggerFactory.getLogger(...)) does not compile unless they add SLF4J themselves, and the published metadata gives it runtime scope only.",
+   "suggested_fix": "Declare slf4j-api as api for NaruServe-slf4j.",
+   "is_behavioral": false,
+   "tags": [
+    "regression"
+   ]
+  },
+  {
+   "id": "S1-006",
+   "axis": "P6",
+   "severity": "LOW",
+   "title": "FR-APP-017 AC-6 (no SLF4J / android.* in filelog) has no explicit gate",
+   "location": {
+    "file": "build.gradle",
+    "line_range": "124-136"
+   },
+   "description": "classRefPrefixes adds 'org/slf4j/' only for :NaruServe-api and 'android/' only for :NaruServe-api and :NaruServe-logcat. :NaruServe-filelog gets only 'javax/servlet/'. The android-api-level-21 animal-sniffer signature contains android.*, so it would not flag an android reference either. Today AC-6 holds only because the compile classpath happens to lack those jars; nothing fails if one is added later. The logcat module is likewise not checked for org/slf4j/.",
+   "suggested_fix": "Add 'android/' and 'org/slf4j/' to the prefixes for :NaruServe-filelog, and 'org/slf4j/' for :NaruServe-logcat.",
+   "is_behavioral": false,
+   "tags": [
+    "regression"
+   ]
+  },
+  {
+   "id": "S1-007",
+   "axis": "P8",
+   "severity": "LOW",
+   "title": "attribute(String, Object)/attribute(String, Class) overload makes a null literal or a Class value read instead of write",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/ApplicationContext.java",
+    "line_range": "10-16"
+   },
+   "description": "In Java, ctx.attribute(\"k\", null) resolves to the more specific reader attribute(String, Class<T>), so the documented 'null removes the key' call does not remove (docs/api/lifecycle.md:128 admits it NPEs and asks for an (Object) cast). Storing a Class value, ctx.attribute(\"type\", Foo.class), also silently reads and discards the result. The overload is copied from Request but is now a second public surface with the same trap.",
+   "suggested_fix": "Since this is a new interface, add an explicit removeAttribute(String) (and keep the overload). Or at least have the reader throw a clear message for a null type rather than an NPE.",
+   "is_behavioral": false,
+   "tags": [
+    "naming"
+   ]
+  },
+  {
+   "id": "S1-008",
+   "axis": "P5",
+   "severity": "LOW",
+   "title": "A new SimpleDateFormat for every log record (and every access-log line)",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/ConsoleLogger.java",
+    "line_range": "77-81"
+   },
+   "description": "ConsoleLogger.format and RotatingFileLogger.format (line 122) build a SimpleDateFormat for each record, on the caller (request) thread. The access log writes one INFO line per request, so every request pays the pattern parse plus a Calendar/DateFormatSymbols allocation, which is noticeable on API 21 devices. The comment justifies it as reading the default time zone each time, but a ThreadLocal<SimpleDateFormat> with setTimeZone(TimeZone.getDefault()) per call keeps that behaviour cheaply. The two formatters are also duplicated code.",
+   "suggested_fix": "Use a ThreadLocal<SimpleDateFormat> and call setTimeZone(TimeZone.getDefault()) before format. Optionally share one timestamp helper.",
+   "is_behavioral": false,
+   "tags": [
+    "performance"
+   ]
+  },
+  {
+   "id": "S1-009",
+   "axis": "P1",
+   "severity": "LOW",
+   "title": "Builder.build() hands the same HttpAdapter instance to every app it builds",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java",
+    "line_range": "161-174"
+   },
+   "description": "The javadoc promises 'each build() returns a new app'. But the adapter (and codec/logger) instances are shared. Two apps built from one builder share one stateful HttpAdapter, and the second listen()/shutdown() acts on the first app's server. A shared logger is closed by whichever app shuts down first (logging.md admits this only for loggers). Nothing documents or rejects the adapter case.",
+   "suggested_fix": "Document that build() reuses the configured instances and one adapter must back only one app, or make the builder single-use.",
+   "is_behavioral": false,
+   "tags": [
+    "doc"
+   ]
+  },
+  {
+   "id": "S2-001",
+   "axis": "P2",
+   "severity": "MEDIUM",
+   "title": "listen()'s finally clears lifecycleThread that a concurrent shutdown sequence just set, so an onStop callback calling shutdown() waits on itself",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+    "line_range": "219-225"
+   },
+   "description": "lifecycleThread is a single volatile field written by both listen() (line 220, cleared in its finally at 224) and runShutdownSequence() (line 394, cleared at 426). After start() calls markRunning() the app is RUNNING but listen() has not yet run its finally. If thread B calls shutdown() in that window, beginStop() wins, runShutdownSequence sets lifecycleThread=B, and then listen's finally sets it to null. An onStop callback (or after-onStop participant / resource close) on B that calls app.shutdown(t, unit) then computes ownThread=false, sees STOPPING and blocks in awaitTerminated for its whole timeout on a TERMINATED latch only it can release, stalling shutdown by the full timeout. The ownThread guard exists precisely to prevent this self-wait.",
+   "suggested_fix": "Clear the field only if it still holds the current thread (AtomicReference<Thread>.compareAndSet(current, null)) in both places, or keep the lifecycle owner in a ThreadLocal/boolean per sequence instead of one shared field.",
+   "is_behavioral": true,
+   "tags": [
+    "bug"
+   ]
+  },
+  {
+   "id": "S2-002",
+   "axis": "P1",
+   "severity": "MEDIUM",
+   "title": "shutdown() called from a request handler runs the stop sequence on that request thread and waits for its own exchange until the deadline",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+    "line_range": "363-366"
+   },
+   "description": "A RUNNING app whose handler calls app.shutdown(5, SECONDS) (the Express 'POST /shutdown' pattern) wins beginStop on the request thread and runs runShutdownSequence inline; a.stop(left(deadline)) at line 399 waits for in-flight exchanges, which include the calling one, so it always burns the full timeout and then force-closes, aborting the very response the handler is producing (or already sent but not yet finished by the adapter). lifecycleThread/ownThread only guards listen and the sequence thread, not request threads. Neither the code nor docs/api/lifecycle.md states this limitation.",
+   "suggested_fix": "Detect a call from a dispatcher/request thread (e.g. a ThreadLocal set by Dispatcher.handle) and run the sequence on a separate thread (return without waiting, or wait only for STOPPING), or at minimum document in docs/api/lifecycle.md that shutdown must not be called from a handler.",
+   "is_behavioral": true,
+   "tags": [
+    "bug"
+   ]
+  },
+  {
+   "id": "S2-003",
+   "axis": "P6",
+   "severity": "LOW",
+   "title": "Access log exclude list is read live from the escaped options object, contradicting 'fixed at listen()', and takes a lock on every request",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/AccessLog.java",
+    "line_range": "52"
+   },
+   "description": "AccessLog copies enabled/level/include flags at freeze but calls options.excluded(rawPath) per request (DefaultAccessLogOptions.excluded is synchronized, lines 62-64). A Configurer that keeps the AccessLogOptions reference can call exclude(\"/x\") after listen() and it takes effect, bypassing the NEW-state guard (IR-APP-007 AC-3) while enabled(false)/level() calls after listen are silently ignored; docs/api/logging.md:34 says the options are fixed at listen(). Every request on every worker thread also contends on the one options monitor.",
+   "suggested_fix": "Snapshot the exclude set in the AccessLog constructor (new HashSet<>(...) under the options lock, wrapped unmodifiable) and check that set lock-free.",
+   "is_behavioral": true,
+   "tags": [
+    "performance",
+    "doc"
+   ]
+  },
+  {
+   "id": "S2-004",
+   "axis": "P3",
+   "severity": "LOW",
+   "title": "use(prefix, mw) accepts an undecodable prefix and fails only at listen(), terminating the app",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+    "line_range": "493-501"
+   },
+   "description": "use(prefix) checks only the leading '/'. A prefix such as \"/%zz\" is recorded and PrefixMatcher's Router.decodeSegments (PrefixMatcher.java:21) throws IllegalArgumentException inside freeze() during listen(), which goes through failStart to FAILED/TERMINATED, so the app can never be fixed and restarted. Route patterns, by contrast, are validated at registration (RoutePattern.parse in record(), line 604).",
+   "suggested_fix": "Validate the prefix at registration, e.g. call Router.decodeSegments(prefix, RouterPolicy.strict()) (or PathValidator.isValid) in use(prefix, mw) and throw IllegalArgumentException before recording.",
+   "is_behavioral": true,
+   "tags": [
+    "bug"
+   ]
+  },
+  {
+   "id": "S2-005",
+   "axis": "P3",
+   "severity": "LOW",
+   "title": "An exception thrown after next.error(e) routed the request is swallowed without any log",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/MiddlewarePipeline.java",
+    "line_range": "84-88"
+   },
+   "description": "Once any ChainNext set chain.errorRouted, every later exception escaping root.run() is dropped. E.g. middleware A calls next.run(), B calls next.error(e1) and returns, then A throws e2 (or B throws a different exception after next.error): e2 is neither sent to the error path nor logged, so a real bug disappears silently.",
+   "suggested_fix": "Keep the no-second-error-path rule but log the dropped exception through errors.logger (ERROR, with requestId) unless it is the same instance that was routed.",
+   "is_behavioral": true,
+   "tags": [
+    "bug"
+   ]
+  },
+  {
+   "id": "S2-006",
+   "axis": "P6",
+   "severity": "LOW",
+   "title": "ErrorPath logs every non-HttpException at ERROR before onError runs, even when onError answers it",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ErrorPath.java",
+    "line_range": "36-39"
+   },
+   "description": "FR-APP-005 AC-8 says an error that ends in a standard 500 response is logged at ERROR. The log happens before the onError chain, keyed only on statusOf(error)==500, so an app whose onError maps e.g. ValidationException to its own 422 still gets an ERROR line with stack trace for every such request.",
+   "suggested_fix": "Decide the log after the onError chain: log at ERROR only when afterFailure is going to write the standard 500 (response still NEW) or abort, or document that every non-HttpException is logged regardless of onError and align AC-8.",
+   "is_behavioral": true,
+   "tags": [
+    "doc"
+   ]
+  },
+  {
+   "id": "S3-001",
+   "axis": "P7",
+   "severity": "MEDIUM",
+   "title": "LoggerIsolationTest proves FR-APP-014 only through loose call counts; flush/close reach and the RuntimeException flush case are not asserted",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/LoggerIsolationTest.java",
+    "line_range": "57-66,93,108"
+   },
+   "description": "FR-APP-014 AC-2 requires shutdown to reach TERMINATED 'even when the logger's flush and close also throw'. The test asserts only logger.calls >= 3 (comment: 'error, flush, close') and >= 5 for AC-1. Any three logger calls (e.g. onStop error plus two access/lifecycle lines) satisfy it, so a regression where SafeLogger.flushAndClose is never invoked on the replaced logger, or flush is skipped, stays green. Also flush() throws only a checked IOException; the requirement text is about RuntimeException from the logger, and a RuntimeException from flush() is never exercised.",
+   "suggested_fix": "Count flush and close calls separately (AtomicInteger flushes/closes) and assert each == 1 after shutdown; add a variant whose flush() throws a RuntimeException. For AC-1 assert the specific paths were hit (e.g. info/warn/error counters > 0) instead of a total >= 5.",
+   "is_behavioral": false,
+   "tags": [
+    "regression"
+   ]
+  },
+  {
+   "id": "S3-002",
+   "axis": "P7",
+   "severity": "LOW",
+   "title": "Gate-503 access-log case covers only TERMINATED and leaves out unchecked",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogAcceptanceTest.java",
+    "line_range": "169-184"
+   },
+   "description": "FR-APP-015 AC-3 says 'each lifecycle-gate 503 produce exactly one line'; only the post-TERMINATED 503 is driven. The STOPPING 503 and the start-gate 503 (bind fails while a request is held) are not checked for exactly one line. The line regex also accepts any out=\\d+ although the 503 body length is known (Content-Length of the response).",
+   "suggested_fix": "Assert out=<r.body().length> exactly, and add a STOPPING-state request (adapter that dispatches during stop) to the one-line check.",
+   "is_behavioral": false,
+   "tags": [
+    "regression"
+   ]
+  },
+  {
+   "id": "S3-003",
+   "axis": "P7",
+   "severity": "LOW",
+   "title": "try/catch without fail() lets the null-middleware call silently succeed",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/AppEntryApiTest.java",
+    "line_range": "207-212"
+   },
+   "description": "The 'nothing was recorded' block wraps t.app().get(\"/x\", null, h) in try/catch NullPointerException with no fail() after the call. If the null check regressed and the route were recorded with a null middleware, the following 404 assertion would fail for a different reason (or NPE at dispatch), obscuring the cause; the intent (NPE before any recording) is not asserted at this point.",
+   "suggested_fix": "Add fail(\"expected NullPointerException\") after the get(...) call inside the try.",
+   "is_behavioral": false,
+   "tags": [
+    "style"
+   ]
+  },
+  {
+   "id": "S3-004",
+   "axis": "P3",
+   "severity": "LOW",
+   "title": "16-thread test does not release the executor or the app on failure",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/ServicesAcceptanceTest.java",
+    "line_range": "159-175"
+   },
+   "description": "pool.shutdown() and app.shutdown(...) run only on the success path. If an assertion or f.get timeout fails, 16 non-daemon pool threads and a RUNNING app are left behind in the test JVM.",
+   "suggested_fix": "Wrap the request/assert section in try/finally { pool.shutdownNow(); app.shutdown(1, TimeUnit.SECONDS); }.",
+   "is_behavioral": false,
+   "tags": [
+    "style"
+   ]
+  },
+  {
+   "id": "S3-005",
+   "axis": "P1",
+   "severity": "LOW",
+   "title": "StubJsonCodec writes NaN/Infinity as invalid JSON",
+   "location": {
+    "file": "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/StubJsonCodec.java",
+    "line_range": "27-33"
+   },
+   "description": "encode uses String.valueOf(value) for any Number, so Double.NaN / Infinity produce the tokens NaN / Infinity, which are not JSON. The fixture claims to encode numbers 'as their JSON literal'.",
+   "suggested_fix": "Throw UnsupportedOperationException for non-finite Double/Float, or narrow the Javadoc.",
+   "is_behavioral": true,
+   "tags": [
+    "bug"
+   ]
+  },
+  {
+   "id": "S3-006",
+   "axis": "P8",
+   "severity": "LOW",
+   "title": "Re-pointed marker test lost its requirement-citing name and duplicates HttpDocsTest",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/RoutingDocsTest.java",
+    "line_range": "66-76"
+   },
+   "description": "Every other re-pointed test keeps the sdsAcN_REQ_ACn_ naming; this one became noMarkerRemains, so OPS-ROUTE-003 AC-3 traceability now relies on the comment only. HttpDocsTest.sdsAc9_OPS_HTTP_003_AC8_routingKeepsNoMarker asserts the identical condition on routing.md.",
+   "suggested_fix": "Rename to sdsAc10_OPS_ROUTE_003_AC3_noMarkerRemains and drop one of the two duplicate checks (or make the HttpDocsTest one delegate).",
+   "is_behavioral": false,
+   "tags": [
+    "naming"
+   ]
+  },
+  {
+   "id": "S3-007",
+   "axis": "P8",
+   "severity": "LOW",
+   "title": "Static-factory set of RestApp asserted twice with different filters",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java",
+    "line_range": "235-242,300-310"
+   },
+   "description": "sdsAc6_... now ends with a static-method-name check (any visibility, non-synthetic) and the new sdsAc5_FR_APP_002_AC5_... checks public static factories again. Two slightly different definitions of the same contract to maintain.",
+   "suggested_fix": "Keep the dedicated FR-APP-002 AC-5 test and remove the inline block from sdsAc6.",
+   "is_behavioral": false,
+   "tags": [
+    "style"
+   ]
+  },
+  {
+   "id": "S3-008",
+   "axis": "P7",
+   "severity": "LOW",
+   "title": "Kotlin getOrNull nullability is not compile-enforced and the /u route is never exercised",
+   "location": {
+    "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppLifecycleKotlinTest.kt",
+    "line_range": "36-48"
+   },
+   "description": "ctx.getOrNull(String::class.java)?.let { ... } compiles (with only a warning) even if getOrNull lost its @Nullable and became a non-null T, so the T11 nullability claim for getOrNull is not compile-checked. The registered GET /u (serviceOf) is never requested, so req.service is only compile-checked, not run.",
+   "suggested_fix": "Assign to an explicitly nullable-only use, e.g. `val n: String? = ctx.getOrNull(String::class.java); assertNull(n)`, and add a negative compile guard via `allWarningsAsErrors` or drop the claim; send GET /u through a TestApp to run serviceOf.",
+   "is_behavioral": false,
+   "tags": [
+    "regression"
+   ]
+  },
+  {
+   "id": "S4-001",
+   "axis": "P6",
+   "severity": "MEDIUM",
+   "title": "Skip reasons swap the later-wave member a block still needs for an app-defined type",
+   "location": {
+    "file": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java",
+    "line_range": "73-107"
+   },
+   "description": "OPS-APP-002 AC-2 requires a block that still needs a later-wave member (res.json, req.body, ...) to stay skipped 'with the name of that member'. Several re-pointed entries now name only an app-defined type even though the block calls res.json/req.body: README.md block #1 (res.json, req.body) -> 'app-defined type `User`' (l.73); express-migration.md onStart block (res.json) -> 'app-defined type `UserService`' (l.80-81); middleware.md 'app.get(\"/users/:id\"...' (res.json) was JSON and is now 'app-defined type `User`' (l.99), a regression to a less useful reason; request.md 'app.use(...)' and 'app.get(\"/users\"...' (both res.json) -> app-defined types (l.106-107). everySkippedBlockStillFailsToCompile still keeps compilable blocks from hiding, but the skip list no longer records which later-wave member unblocks these blocks, so wave 5 cannot find them by member.",
+   "suggested_fix": "Name the later-wave member (JSON / BODY constants) as the reason for every block that calls res.json or req.body; use 'app-defined type' only for blocks whose sole blocker is the app type. Optionally add a check that a block containing '.json(' or 'req.body(' uses the JSON/BODY reason.",
+   "is_behavioral": false,
+   "tags": [
+    "doc",
+    "regression"
+   ]
+  },
+  {
+   "id": "S4-002",
+   "axis": "P6",
+   "severity": "MEDIUM",
+   "title": "Pending-stop test accepts shutdown returning before listen() ended, against FR-APP-012 AC-2",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownStatesTest.java",
+    "line_range": "107-111"
+   },
+   "description": "FR-APP-012 AC-2 says 'shutdown returns after listen() ended'. The test explicitly allows 'shutdown returned' and 'listen threw' in either order (comment: TERMINATED is listen's last step before it throws). So the test does not check that part of the AC, and the implementation lets shutdown return while listen() is still running.",
+   "suggested_fix": "Either make shutdown wait until listen() has fully returned/thrown (e.g. a completion latch released in listen's finally) and assert 'listen threw' comes before 'shutdown returned', or clarify the AC (via SRS) to 'returns after the state is TERMINATED'.",
+   "is_behavioral": true,
+   "tags": [
+    "bug"
+   ]
+  },
+  {
+   "id": "S4-003",
+   "axis": "P7",
+   "severity": "MEDIUM",
+   "title": "throwAfterNextError test cannot tell whether the error reached the error path twice",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ChainNextTest.java",
+    "line_range": "224-243"
+   },
+   "description": "The ErrorPath is built with no onError handlers, and the test asserts only status 500 and commits==1. If the pipeline also gave the rethrown e to the error path a second time, the response would already be COMPLETED, the second pass would do nothing, and every assertion would still pass. The property in the test name is not checked.",
+   "suggested_fix": "Register a recording ErrorHandler in the ErrorPath (or count SafeLogger ERROR records) and assert it saw e exactly once.",
+   "is_behavioral": false,
+   "tags": [
+    "bug"
+   ]
+  },
+  {
+   "id": "S4-004",
+   "axis": "P7",
+   "severity": "MEDIUM",
+   "title": "Deadline test relies on Thread.sleep and tight wall-clock bounds",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownSequenceTest.java",
+    "line_range": "180-194"
+   },
+   "description": "The before-wait participant sleeps 200 ms and the test requires adapter.stop to get 500-800 ms of the 1 s budget. On a loaded CI machine, sleep overshoot plus scheduling can exceed 300 ms and break the lower bound. The test passes or fails by timing, not by logic.",
+   "suggested_fix": "Inject a clock/nanoTime source into the shutdown deadline, or keep only the bound that can be relied on (stopNanos <= 800 ms and > 0) and widen the budget (e.g. 10 s timeout, require stopNanos <= timeout - 200 ms).",
+   "is_behavioral": false,
+   "tags": [
+    "bug"
+   ]
+  },
+  {
+   "id": "S4-005",
+   "axis": "P7",
+   "severity": "MEDIUM",
+   "title": "SLF4J recording proxy records only method names, so error(String,Throwable) and error(String,Object) look the same",
+   "location": {
+    "file": "NaruServe-slf4j/src/test/java/com/snoworca/naruserve/slf4j/Slf4jLoggerTest.java",
+    "line_range": "21-48"
+   },
+   "description": "FR-APP-018 AC-1 needs each method forwarded to the matching SLF4J method with the same throwable. The java.lang.reflect.Proxy records method.getName()+args, so a forward to error(String, Object) (or a format overload) with the throwable as argument gives the same 'error[e2, ...]' string and passes. FR-APP-018 AC-4 also asks for a hand-written implementation of org.slf4j.Logger; a dynamic proxy is not one.",
+   "suggested_fix": "Write a small recording class implementing org.slf4j.Logger (or extending MarkerIgnoringBase) whose trace/debug/info/warn/error(String) and error(String, Throwable) record distinct tags, and have the other overloads fail the test; or at least record method.getParameterTypes() in the proxy.",
+   "is_behavioral": false,
+   "tags": [
+    "bug"
+   ]
+  },
+  {
+   "id": "S4-006",
+   "axis": "P7",
+   "severity": "LOW",
+   "title": "Held pre-check requests are checked only with assertNotEquals(503)",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StoppingGateTest.java",
+    "line_range": "154-158"
+   },
+   "description": "After RUNNING, OPTIONS *, FROB /x and GET x must get their pre-request answers (204, 501, 400 with the standard body). assertNotEquals(503) also passes for 200, 404 or 500, so a wrong release path would go unnoticed.",
+   "suggested_fix": "Assert the exact statuses 204/501/400 in order (the futures are kept in submit order) and the standard error body for 501/400.",
+   "is_behavioral": false,
+   "tags": [
+    "bug"
+   ]
+  },
+  {
+   "id": "S4-007",
+   "axis": "P7",
+   "severity": "LOW",
+   "title": "closeOwned(null).isEmpty() asserts no close failures, not that nothing was closed",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultApplicationContextTest.java",
+    "line_range": "84-85,222-227"
+   },
+   "description": "closeOwned returns the list of close exceptions. In sdsAc14 (FR-APP-008 AC-5) the service is a plain class that cannot be closed, and closeOwned is called after shutdown already ran, so the assertion always passes. It does not show that 'nothing is closed for it'. Line 84 has the same issue; there the real check is the `closed` list on line 85.",
+   "suggested_fix": "Drop the vacuous closeOwned assertions. For AC-5, register an AutoCloseable alongside the plain service and assert only that one was closed, or assert the owned list size through a package-private accessor.",
+   "is_behavioral": false,
+   "tags": [
+    "style"
+   ]
+  },
+  {
+   "id": "S4-008",
+   "axis": "P3",
+   "severity": "LOW",
+   "title": "Releaser threads poll forever when adapter.stop is never recorded",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownSequenceTest.java",
+    "line_range": "284-297"
+   },
+   "description": "The non-daemon releaser loops `while (!events.contains(\"adapter.stop\")) Thread.sleep(5)` with no deadline (same pattern in StoppingGateTest l.93-106). If a regression makes shutdown skip or fail before adapter.stop, join(5000) returns but the thread keeps spinning and can keep the test JVM alive. The 100 ms sleep is also only a heuristic for 'stop is waiting'.",
+   "suggested_fix": "Bound the loop by a deadline, make the thread a daemon, and signal adapter.stop entry with a latch from RecordingAdapter.stop instead of polling the event list.",
+   "is_behavioral": false,
+   "tags": [
+    "bug"
+   ]
+  },
+  {
+   "id": "S4-009",
+   "axis": "P8",
+   "severity": "LOW",
+   "title": "Stale 'global pipeline lands later' comments; start-gate 503 never checked against a global middleware",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StartGateTest.java",
+    "line_range": "76-84"
+   },
+   "description": "The comment 'Route middleware: the global pipeline lands with the FR-APP-003 SDS.' (also AppIsolationTest l.87) is stale now that app.use exists in this wave. Because of it, the FR-APP-009 AC-6 test ('no middleware ... runs') uses only route middleware. Global middleware, which does run for fallback answers, is never checked against the start-gate 503.",
+   "suggested_fix": "Remove the stale comments and add a recording app.use(...) global middleware to StartGateTest.app(), asserting it records nothing for the 503 and runs for the normal case.",
+   "is_behavioral": false,
+   "tags": [
+    "doc"
+   ]
+  },
+  {
+   "id": "S4-010",
+   "axis": "P7",
+   "severity": "LOW",
+   "title": "Rotation check 'contains(\"record 4\")' also matches records 40-48",
+   "location": {
+    "file": "NaruServe-filelog/src/test/java/com/snoworca/naruserve/filelog/RotatingFileLoggerTest.java",
+    "line_range": "91-94"
+   },
+   "description": "naruserve.log.1 is checked with contains(\"record 4\"), which is true for any of records 4 and 40-49, so it says little about rotation order. The test also never checks that the oldest file was dropped (FR-APP-017 AC-2).",
+   "suggested_fix": "Assert the highest record number in naruserve.log.1 is lower than the lowest in naruserve.log, and that naruserve.log.2 holds older records than .1.",
+   "is_behavioral": false,
+   "tags": [
+    "style"
+   ]
+  },
+  {
+   "id": "S4-011",
+   "axis": "P7",
+   "severity": "LOW",
+   "title": "Access-log exclude test checks the predicate, not that /health/x and /healthz are logged",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AccessLogTest.java",
+    "line_range": "92-105"
+   },
+   "description": "FR-APP-015 AC-6 says GET /health/x and GET /healthz produce a line. The test only asserts excluded() is false for them; it never writes them and checks a line came out. A write path that dropped them for another reason would pass.",
+   "suggested_fix": "Write /health/x and /healthz through the same AccessLog and assert one line each.",
+   "is_behavioral": false,
+   "tags": [
+    "style"
+   ]
+  },
+  {
+   "id": "S4-012",
+   "axis": "P7",
+   "severity": "LOW",
+   "title": "FAILED-state shutdown test has no evidence that B started while the state was FAILED",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownStatesTest.java",
+    "line_range": "228-249"
+   },
+   "description": "FR-APP-012 AC-5 needs shutdown in FAILED to wait for TERMINATED. The test depends on Thread.sleep(100) in the close hook so that B calls shutdown while still FAILED, and it checks only 'B returned TERMINATED' and waited < 5 s. If B started after TERMINATED, the test passes without checking the wait.",
+   "suggested_fix": "Have B record app.state() right before calling shutdown, assert it was FAILED, and replace the sleep with a latch that B counts down after it entered shutdown (e.g. poll lifecycle for a waiter).",
+   "is_behavioral": false,
+   "tags": [
+    "style"
+   ]
+  },
+  {
+   "id": "S4-013",
+   "axis": "P3",
+   "severity": "LOW",
+   "title": "URLClassLoader instances are never closed",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AppFactoryLoaderTest.java",
+    "line_range": "46-58"
+   },
+   "description": "loaderWith() returns a new URLClassLoader per call and no test closes it. That leaks open file handles on the temp directory, and on Windows TemporaryFolder cleanup can fail.",
+   "suggested_fix": "Track the loaders and close them in an @After method, or use try-with-resources in each test.",
+   "is_behavioral": false,
+   "tags": [
+    "style"
+   ]
+  },
+  {
+   "id": "S4-014",
+   "axis": "P6",
+   "severity": "LOW",
+   "title": "Exception-passthrough tests cite FR-APP-004 AC-3, which does not state that behaviour",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ChainNextTest.java",
+    "line_range": "157-197"
+   },
+   "description": "FR-APP-004 AC-3 is about a marker recorded after next.run() seeing the handler marker and a committed response. The two tests that check next.run() rethrows a downstream RuntimeException/IOException unwrapped cite AC-3, so traceability points at an AC they do not verify, and no AC covers the passthrough behaviour.",
+   "suggested_fix": "Cite the SDS-AC that defines passthrough (SDS-AC-11 only) or add the passthrough rule to an FR-APP-004 AC via SRS.",
+   "is_behavioral": false,
+   "tags": [
+    "doc"
+   ]
+  }
+ ],
+ "coverage_rows": [
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/AccessLogOptions.java",
+   "hunks_total": 1,
+   "anchors": [
+    "AccessLogOptions exclude(String path);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/AppStartException.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class AppStartException extends RuntimeException {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/AppState.java",
+   "hunks_total": 1,
+   "anchors": [
+    "NEW, STARTING, RUNNING, STOPPING, FAILED, TERMINATED"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/ApplicationContext.java",
+   "hunks_total": 1,
+   "anchors": [
+    "void attribute(String key, @Nullable Object value);"
+   ],
+   "findings": [
+    "S1-007"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/Configurer.java",
+   "hunks_total": 1,
+   "anchors": [
+    "void configure(T target);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/ConsoleLogger.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public final class ConsoleLogger implements Logger, Flushable, AutoCloseable {"
+   ],
+   "findings": [
+    "S1-008"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/ErrorHandler.java",
+   "hunks_total": 1,
+   "anchors": [
+    "void handle(Throwable error, Request req, Response res) throws Exception;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/HttpException.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class HttpException extends RuntimeException {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/LifecycleCallback.java",
+   "hunks_total": 1,
+   "anchors": [
+    "void handle(ApplicationContext ctx) throws Exception;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/LogLevel.java",
+   "hunks_total": 1,
+   "anchors": [
+    "TRACE, DEBUG, INFO, WARN, ERROR"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/Logger.java",
+   "hunks_total": 1,
+   "anchors": [
+    "void error(String message, Throwable error);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/Middleware.java",
+   "hunks_total": 1,
+   "anchors": [
+    "void handle(Request req, Response res, Next next) throws Exception;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/Next.java",
+   "hunks_total": 1,
+   "anchors": [
+    "void error(Throwable error);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java",
+   "hunks_total": 2,
+   "anchors": [
+    "* or cookie access yet; later waves add them.",
+    "default ApplicationContext application() {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java",
+   "hunks_total": 6,
+   "anchors": [
+    "import com.snoworca.naruserve.internal.AppFactoryLoader;",
+    "import com.snoworca.naruserve.spi.HttpAdapter;",
+    "* {@link #create()} or {@link #builder()}.",
+    "// @req IR-APP-003",
+    "static RestApp create() {",
+    "RestApp use(Middleware mw);"
+   ],
+   "findings": [
+    "S1-009"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/RouteBuilder.java",
+   "hunks_total": 1,
+   "anchors": [
+    "RouteBuilder use(Middleware mw);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/ServerHandle.java",
+   "hunks_total": 1,
+   "anchors": [
+    "String address();"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/ServiceNotFoundException.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public ServiceNotFoundException(Class<?> type) {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/ServiceRegistry.java",
+   "hunks_total": 1,
+   "anchors": [
+    "<T> void registerExternal(Class<T> type, T instance);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/UnsupportedMediaTypeException.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class UnsupportedMediaTypeException extends HttpException {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/AppFactory.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public interface AppFactory {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/JsonCodec.java",
+   "hunks_total": 1,
+   "anchors": [
+    "void encode(@Nullable Object value, Writer writer) throws IOException;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-filelog/src/main/java/com/snoworca/naruserve/filelog/RotatingFileLogger.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public final class RotatingFileLogger implements Logger, Flushable, AutoCloseable {"
+   ],
+   "findings": [
+    "S1-001",
+    "S1-002",
+    "S1-003",
+    "S1-004",
+    "S1-008"
+   ]
+  },
+  {
+   "file": "NaruServe-logcat/src/main/java/com/snoworca/naruserve/logcat/LogcatLogger.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public final class LogcatLogger implements Logger {"
+   ],
+   "findings": [
+    "S1-002"
+   ]
+  },
+  {
+   "file": "NaruServe-slf4j/src/main/java/com/snoworca/naruserve/slf4j/Slf4jLogger.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public final class Slf4jLogger implements Logger {"
+   ],
+   "findings": [
+    "S1-002",
+    "S1-005"
+   ]
+  },
+  {
+   "file": "build.gradle",
+   "hunks_total": 4,
+   "anchors": [
+    "// @req CON-APP-001",
+    "prefixes += ['org/slf4j/']",
+    "testImplementation testFixtures(project(':NaruServe-api'))",
+    "tasks.named('check') { dependsOn checkLoggerPlacement }"
+   ],
+   "findings": [
+    "S1-005",
+    "S1-006"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/AccessLog.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.internal;"
+   ],
+   "findings": [
+    "S2-003"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/AppFactoryLoader.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.internal;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/AppLifecycle.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.internal;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/BodyState.java",
+   "hunks_total": 4,
+   "anchors": [
+    "import java.io.FilterInputStream;",
+    "import java.util.concurrent.atomic.AtomicLong;",
+    "private final AtomicLong bytesRead = new AtomicLong();",
+    "/**"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ChainNext.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.internal;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultAccessLogOptions.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.internal;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultApplicationContext.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.internal;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java",
+   "hunks_total": 9,
+   "anchors": [
+    "import com.snoworca.naruserve.ApplicationContext;",
+    "private final @Nullable ApplicationContext context;",
+    "/** {@code params} are the decoded variables of the RouteMatch. */",
+    "this(ex, method, params, null);",
+    "/** Parses the raw query once; IllegalArgumentException for bad %XX or invalid UTF-8 (the Dispatcher answers 400). */",
+    "// @req FR-HTTP-025",
+    "query = parseQuery(ex.rawQuery());",
+    "private static Class<?> wrapper(Class<?> type) {",
+    "/** The app's one context, identical for every request of the app. */"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+   "hunks_total": 15,
+   "anchors": [
+    "import java.util.concurrent.atomic.AtomicLong;",
+    "private final AtomicLong bytesWritten = new AtomicLong();",
+    "private @Nullable Runnable onDone;",
+    "bytesWritten.addAndGet(n);",
+    "synchronized (this) {",
+    "cb.run();",
+    "// shortcut: error is not kept; record it when wave 4 onError needs the cause.",
+    "fireDone(); // a running copy fires it when it ends",
+    "* The Dispatcher's rule after the handler threw: NEW drops the status and headers set so far and sends 500 with",
+    "void afterFailure(Throwable error) {",
+    "if (state == ResponseState.STREAMING) {",
+    "status = 500;",
+    "c = prepare(EMPTY, null);",
+    "bytesWritten.addAndGet(c.body.length);",
+    "fireDone();"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+   "hunks_total": 38,
+   "anchors": [
+    "import com.snoworca.naruserve.AccessLogOptions;",
+    "import com.snoworca.naruserve.Middleware;",
+    "import com.snoworca.naruserve.ServerHandle;",
+    "import com.snoworca.naruserve.spi.HttpAdapter;",
+    "import java.util.Objects;",
+    "* the policy in effect only at {@link #freeze()}, so a policy set after a registration still applies to it. After",
+    "// @req IR-APP-001",
+    "/** One {@code use(prefix, mw)} call as recorded. */",
+    "private final List<Middleware> globalMiddleware = new ArrayList<>();",
+    "/** Policy {@link RouterPolicy#strict()} until {@link #routerPolicy} is called. */",
+    "this.adapter = null;",
+    "return route(Method.GET, path, h);",
+    "return route(Method.POST, path, h);",
+    "return route(Method.PUT, path, h);",
+    "return route(Method.PATCH, path, h);",
+    "return route(Method.DELETE, path, h);",
+    "return route(Method.HEAD, path, h);",
+    "return route(Method.OPTIONS, path, h);",
+    "lifecycle.requireConfigurable(\"route\");",
+    "public synchronized RestApp route(MethodSet methods, String path, RouteHandler h) {",
+    "checkNotFrozen();",
+    "record(MethodSet.of(Method.GET), path, h, RouteKind.WEBSOCKET);",
+    "private void record(MethodSet methods, String path, RouteHandler h, RouteKind kind) {",
+    "registrations.add(new Registration(methods, path, h, kind));",
+    "// @req FR-APP-014",
+    "dispatcher = new Dispatcher(router);",
+    "public synchronized ExchangeHandler dispatcher() {",
+    "return dispatcher;",
+    "// @req FR-APP-002",
+    "// Guarded by DefaultRestApp.this; each registration snapshots it.",
+    "private RouteBuilder add(Method method, RouteHandler h) {",
+    "return add(Method.GET, h);",
+    "return add(Method.POST, h);",
+    "return add(Method.PUT, h);",
+    "return add(Method.PATCH, h);",
+    "return add(Method.DELETE, h);",
+    "return add(Method.HEAD, h);",
+    "return add(Method.OPTIONS, h);"
+   ],
+   "findings": [
+    "S2-001",
+    "S2-002",
+    "S2-004"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+   "hunks_total": 32,
+   "anchors": [
+    "import com.snoworca.naruserve.ApplicationContext;",
+    "import com.snoworca.naruserve.Middleware;",
+    "import com.snoworca.naruserve.routing.RouterPolicy;",
+    "import java.io.OutputStream;",
+    "import java.util.Collections;",
+    "* Engine-free entry the adapter calls per exchange. It is the only core-side place that maps pre-checks and",
+    "// @req FR-HTTP-002",
+    "private static final Method[] METHODS = Method.values();",
+    "private final MiddlewarePipeline pipeline;",
+    "/** {@code router} must already be frozen. */",
+    "if (router == null) {",
+    "// @req FR-HTTP-003",
+    "// @req FR-APP-015",
+    "if (preCheck(ex)) {",
+    "String rawPath = ex.rawPath();",
+    "RouteMatch<RouteHandler> m = router.lookup(token, ex.rawPath(), upgrade);",
+    "res.afterHandler();",
+    "/** Answers OPTIONS *, a raw path not starting with '/' and a validator rejection; true when it answered. */",
+    "if (\"OPTIONS\".equals(ex.methodToken()) && \"*\".equals(rawPath)) {",
+    "automatic(ex, 400, null, false);",
+    "/** Writes an empty-body reply straight to the exchange; 204 carries no Content-Length header. */",
+    "byte[] body = new byte[0];",
+    "headers.add(new SimpleImmutableEntry<>(\"Content-Length\", \"0\"));",
+    "boolean head = \"HEAD\".equals(ex.methodToken());",
+    "ex.commit(status, headers, 0);",
+    "} catch (IOException e) {",
+    "accessLog.write(ex.methodToken(), ex.rawPath(), status, aborted, start, 0, written, rid);",
+    "* Runs the matched HTTP handler, then applies the interim failure rules: an Exception while NEW is answered 500",
+    "// @req FR-HTTP-004",
+    "DefaultResponse res = new DefaultResponse(ex, method == Method.HEAD);",
+    "private static void error(DefaultResponse res, int status, String requestId) {",
+    "// @req FR-HTTP-005"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ErrorPath.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.internal;"
+   ],
+   "findings": [
+    "S2-006"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/GatedExchangeHandler.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.internal;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/MiddlewarePipeline.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.internal;"
+   ],
+   "findings": [
+    "S2-005"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/OwnedResources.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.internal;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/PrefixMatcher.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.internal;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/RequestIds.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.internal;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/SafeLogger.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.internal;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ShutdownParticipants.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.internal;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StandardErrors.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.internal;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogAcceptanceTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve;"
+   ],
+   "findings": [
+    "S3-002"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogOptionsTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/AppDocsTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/AppEntryApiTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve;"
+   ],
+   "findings": [
+    "S3-003"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/AppLifecycleApiTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/ConsoleLoggerTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java",
+   "hunks_total": 20,
+   "anchors": [
+    "// SDS-AC-14; T02, FR-HTTP-003 AC-7",
+    "public void sdsAc14_T02_FR_HTTP_003_AC7_anyExceptDeleteAnswersDelete405() {",
+    "assertEmpty(405, r);",
+    "// SDS-AC-14; T05, FR-HTTP-003 AC-3",
+    "public void sdsAc14_T05_FR_HTTP_003_AC3_automaticOptionsListsAllowWithoutBody() {",
+    "// SDS-AC-14; T06, FR-HTTP-003 AC-1, FR-HTTP-003 AC-2, FR-HTTP-003 AC-4",
+    "public void sdsAc14_T06_FR_HTTP_003_AC1_AC2_AC4_noPathNoMethodUnknownMethod() {",
+    "assertEmpty(404, t.send(\"GET\", \"/nothing\"));",
+    "assertEmpty(405, mismatch);",
+    "assertEmpty(501, t.send(\"FOO\", \"/p\"));",
+    "// SDS-AC-14; T06, FR-HTTP-003 AC-5, FR-HTTP-003 AC-6",
+    "public void sdsAc14_T06_FR_HTTP_003_AC5_AC6_webSocketOnlyHookRouteGives426() {",
+    "assertEmpty(426, r);",
+    "// SDS-AC-14; FR-HTTP-005 AC-1, FR-HTTP-005 AC-2, FR-HTTP-005 AC-3, FR-HTTP-005 AC-4",
+    "public void sdsAc14_FR_HTTP_005_AC1_AC2_AC3_AC4_asteriskAndNonSlashTargets() {",
+    "assertEmpty(400, t.send(\"GET\", \"abc\"));",
+    "// SDS-3-AC-14; FR-HTTP-002 AC-1, FR-HTTP-002 AC-5, FR-HTTP-002 AC-6",
+    "public void sds3Ac14_FR_HTTP_002_AC1_AC5_matchedRequestReachesTheHandlerOnce() {",
+    "assertEmpty(405, t.send(\"PUT\", \"/users/1\"));",
+    "// SDS-AC-12 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-3.sds.md; FR-APP-009 AC-7"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java",
+   "hunks_total": 11,
+   "anchors": [
+    "\"download\", \"cache\", \"sse\", \"cookie\", \"getCookies\", \"addCookie\", \"service\", \"application\");",
+    "// SDS-AC-1; IR-HTTP-001 AC-1",
+    "\"attribute(String,Object)->void\", \"attribute(String,Class)->Object\"), signatures(Request.class));",
+    "// SDS-AC-2; IR-HTTP-001 AC-3",
+    "// SDS-AC-6; IR-HTTP-005 AC-1, AC-2, AC-3, AC-5",
+    "public void sdsAc6_IR_HTTP_005_AC1_AC2_AC3_AC5_restAppDeclaresExactlyTheRegistrationAndPolicyMethods() {",
+    "\"routerPolicy(RouterPolicy)->RestApp\"), signatures(RestApp.class));",
+    "List<String> statics = new java.util.ArrayList<>();",
+    "// SDS-AC-7; IR-HTTP-006 AC-1",
+    "\"options(RouteHandler)->RouteBuilder\"), signatures(RouteBuilder.class));",
+    "// SDS-AC-5 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-3.sds.md; FR-APP-002 AC-5 (re-points FR-HTTP-008 AC-6)"
+   ],
+   "findings": [
+    "S3-007"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java",
+   "hunks_total": 22,
+   "anchors": [
+    "/** Wave 3 decisions recorded in docs/api (OPS-HTTP-001); routing.md's marker count is RoutingDocsTest. */",
+    "// SDS-AC-1; OPS-HTTP-001 AC-1",
+    "public void sdsAc1_OPS_HTTP_001_AC1_rawPathRowIsRawPathWithoutQuery() throws IOException {",
+    "// SDS-AC-1; OPS-HTTP-001 AC-2",
+    "public void sdsAc1_OPS_HTTP_001_AC2_attributeTypeMismatchAndNullRemoval() throws IOException {",
+    "// SDS-AC-1; OPS-HTTP-001 AC-8",
+    "public void sdsAc1_OPS_HTTP_001_AC8_requestKeepsOtherIssuesMarkers() throws IOException {",
+    "// SDS-AC-2; OPS-HTTP-001 AC-3",
+    "public void sdsAc2_OPS_HTTP_001_AC3_octetStreamAndStreamClosing() throws IOException {",
+    "// SDS-AC-2; OPS-HTTP-001 AC-8",
+    "public void sdsAc2_OPS_HTTP_001_AC8_responseKeepsFileAndRedirectMarkers() throws IOException {",
+    "// SDS-AC-3; OPS-HTTP-001 AC-4",
+    "public void sdsAc3_OPS_HTTP_001_AC4_routerPolicyDocumented() throws IOException {",
+    "// SDS-AC-5; OPS-HTTP-001 AC-7",
+    "public void sdsAc5_OPS_HTTP_001_AC7_expressRawPathAndRawTextMapping() throws IOException {",
+    "// SDS-AC-5; OPS-HTTP-001 AC-8",
+    "public void sdsAc5_OPS_HTTP_001_AC8_expressKeepsOtherIssuesMarkers() throws IOException {",
+    "// SDS-AC-6; OPS-HTTP-001 AC-5",
+    "public void sdsAc6_OPS_HTTP_001_AC5_appListsRouterPolicy() throws IOException {",
+    "// SDS-AC-6; OPS-HTTP-001 AC-6",
+    "public void sdsAc6_OPS_HTTP_001_AC6_defaultsNamesTraceConnectPolicy() throws IOException {",
+    "// SDS-AC-9; OPS-HTTP-003 AC-8"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpExceptionTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/LoggerIsolationTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve;"
+   ],
+   "findings": [
+    "S3-001"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/RestAppBuilderTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/RoutingDocsTest.java",
+   "hunks_total": 8,
+   "anchors": [
+    "/** Routing semantics in docs/api/routing.md with no marker left (OPS-ROUTE-003). */",
+    "// SDS-AC-4; OPS-ROUTE-002 AC-2",
+    "public void sdsAc4_OPS_ROUTE_002_AC2_accessorsNamedWithJavaKotlinAndExpressNote() throws IOException {",
+    "// SDS-AC-4; OPS-ROUTE-002 AC-3",
+    "public void sdsAc4_OPS_ROUTE_002_AC3_onlyTheUseMiddlewareMarkerRemains() throws IOException {",
+    "assertEquals(markerLines.toString(), 1, markerLines.size());",
+    "// SDS-AC-4; OPS-ROUTE-002 AC-1",
+    "public void sdsAc4_OPS_ROUTE_002_AC1_routingRulesSectionPresent() throws IOException {"
+   ],
+   "findings": [
+    "S3-006"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/ServicesAcceptanceTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve;"
+   ],
+   "findings": [
+    "S3-004"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/testing/InMemoryHttpAdapterTest.java",
+   "hunks_total": 2,
+   "anchors": [
+    "assertEquals(\"0\", viaHarness.header(\"Content-Length\"));",
+    "// SDS-AC-12 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-3.sds.md; FR-APP-009 AC-7"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppEntryKotlinTest.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppLifecycleKotlinTest.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve"
+   ],
+   "findings": [
+    "S3-008"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/StubJsonCodec.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.testing;"
+   ],
+   "findings": [
+    "S3-005"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/TestApp.java",
+   "hunks_total": 7,
+   "anchors": [
+    "* Test harness: a {@link DefaultRestApp} served by an {@link InMemoryHttpAdapter}. Register through {@link #app()},",
+    "// @req FR-APP-009",
+    "private final DefaultRestApp app = new DefaultRestApp();",
+    "this.app = (DefaultRestApp) RestApp.builder().httpAdapter(adapter).jsonCodec(new StubJsonCodec()).build();",
+    "/** Freezes once and binds port 0; a freeze exception propagates as thrown, unwrapped. */",
+    "req",
+    "app.freeze();"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AccessLogTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.internal;"
+   ],
+   "findings": [
+    "S4-011"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AppFactoryLoaderTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.internal;"
+   ],
+   "findings": [
+    "S4-013"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AppIsolationTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.internal;"
+   ],
+   "findings": [
+    "S4-009"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AppLifecycleGuardTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.internal;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ChainNextTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.internal;"
+   ],
+   "findings": [
+    "S4-003",
+    "S4-014"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultApplicationContextTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.internal;"
+   ],
+   "findings": [
+    "S4-007"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRequestTest.java",
+   "hunks_total": 19,
+   "anchors": [
+    "import static org.junit.Assert.assertNotSame;",
+    "import com.snoworca.naruserve.HttpException;",
+    "// SDS-AC-3; FR-HTTP-010 AC-1",
+    "public void sdsAc3_FR_HTTP_010_AC1_repeatedNamesKeepRequestOrder() {",
+    "// SDS-AC-3; FR-HTTP-010 AC-2",
+    "public void sdsAc3_FR_HTTP_010_AC2_plusIsSpaceAndUtf8NamesAndValuesDecode() {",
+    "// SDS-AC-17 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-5.sds.md; FR-HTTP-025 AC-2",
+    "public void sdsAc3_FR_HTTP_010_AC2_pairWithoutEqualsIsEmptyValueAndEmptyNameIsKept() {",
+    "// SDS-AC-17 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-5.sds.md; FR-HTTP-025 AC-1",
+    "public void sdsAc3_FR_HTTP_010_AC1_queriesListIsUnmodifiable() {",
+    "// SDS-AC-4; FR-HTTP-010 AC-3",
+    "public void sdsAc4_FR_HTTP_010_AC3_parseQueryRejectsMalformedPercentAndInvalidUtf8() {",
+    "// SDS-AC-16 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-5.sds.md; FR-HTTP-025 AC-3",
+    "public void sdsAc4_FR_HTTP_010_AC3_decodeQueryThrowsForMalformedQuery() {",
+    "HttpException first = null;",
+    "req.decodeQuery();",
+    "SDS",
+    "public void sdsAc4_FR_HTTP_010_AC3_malformedQueryIs400WithContentLength0AndHandlerNotCalled() {",
+    "assertEquals(target, 400, r.status());"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRestAppTest.java",
+   "hunks_total": 4,
+   "anchors": [
+    "// SDS-AC-14; FR-HTTP-008 AC-6",
+    "&& RestApp.class.isAssignableFrom(m.getReturnType())) {",
+    "assertEquals(new ArrayList<String>(), offenders);",
+    "// SDS-AC-5 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-3.sds.md; FR-APP-002 AC-5"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java",
+   "hunks_total": 63,
+   "anchors": [
+    "* Dispatcher checks and handler invocation. SDS-AC-n cites docs/sds/2026-10-19.naruserve.naruserve-v1-wave-3-3.sds.md.",
+    "// SDS-AC-1; FR-HTTP-002 AC-2",
+    "public void sdsAc1_FR_HTTP_002_AC2_optionsAsteriskIsAnswered204BeforePathValidation() {",
+    "// SDS-AC-1; FR-HTTP-002 AC-2, FR-HTTP-002 AC-3",
+    "public void sdsAc1_FR_HTTP_002_AC2_AC3_validatorRejectionIs400BeforeAnyMatch() {",
+    "assertEmpty(400, send(\"GET\", \"/%2e%2e\"));",
+    "// SDS-AC-2; FR-HTTP-002 AC-4, FR-HTTP-005 AC-3",
+    "public void sdsAc2_FR_HTTP_002_AC4_FR_HTTP_005_AC3_preRequestRejectionsNeverReachTheHandler() {",
+    "assertEmpty(501, send(\"FOO\", \"/x\"));",
+    "// SDS-AC-3; FR-HTTP-003 AC-2",
+    "public void sdsAc3_FR_HTTP_003_AC2_methodMismatchListsAllowInDeclarationOrder() {",
+    "assertEmpty(405, p);",
+    "assertEmpty(405, r);",
+    "// SDS-AC-3; FR-HTTP-003 AC-7",
+    "public void sdsAc3_FR_HTTP_003_AC7_anyExceptDeleteGives405WithAllow() {",
+    "assertError(405, \"METHOD_NOT_ALLOWED\", \"Method Not Allowed\", r);",
+    "// SDS-AC-3; FR-HTTP-005 AC-1",
+    "public void sdsAc3_FR_HTTP_005_AC1_optionsAsteriskAllowIsMethodAnyWithNoRoutes() {",
+    "assertNull(r.header(\"Content-Length\"));",
+    "// SDS-AC-19 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-4.sds.md; FR-HTTP-022 AC-2",
+    "public void sdsAc3_FR_HTTP_003_AC2_allowHeaderJoinsInMethodOrder() {",
+    "// SDS-AC-4; FR-HTTP-003 AC-6",
+    "public void sdsAc4_FR_HTTP_003_AC6_splitUpgradeHeadersAreJoinedBeforeLookup() {",
+    "assertEmpty(426, r);",
+    "// SDS-AC-5; FR-HTTP-003 AC-5, FR-HTTP-003 AC-6",
+    "public void sdsAc5_FR_HTTP_003_AC5_AC6_webSocketOnlyRouteGives426ForPlainAndUpgradeGet() {",
+    "assertEmpty(426, plain);",
+    "assertEmpty(426, upgrade);",
+    "// SDS-AC-6; FR-HTTP-003 AC-1, FR-HTTP-003 AC-4",
+    "public void sdsAc6_FR_HTTP_003_AC1_AC4_noMatchAndUnsupportedCarryContentLengthZero() {",
+    "assertEmpty(404, send(\"GET\", \"/missing\"));",
+    "// SDS-AC-6; FR-HTTP-003 AC-3",
+    "public void sdsAc6_FR_HTTP_003_AC3_automaticOptionsIs204WithoutContentLength() {",
+    "assertEquals(0L, r.contentLength()); // SDS-AC-6: 204 commits with content length 0",
+    "// SDS-AC-1; FR-HTTP-002 AC-3",
+    "public void sdsAc1_FR_HTTP_002_AC3_doubleEncodedDotsReachVariableRouteOnceDecoded() {",
+    "// SDS-AC-8; FR-HTTP-006 AC-1",
+    "public void sdsAc8_FR_HTTP_006_AC1_runtimeExceptionBeforeAnyWriteGives500() {",
+    "assertEmpty(500, send(\"GET\", \"/f\"));",
+    "// SDS-AC-8; FR-HTTP-006 AC-2",
+    "public void sdsAc8_FR_HTTP_006_AC2_checkedExceptionAfterStatusDropsStatusAndHeaders() {",
+    "assertEmpty(500, r);",
+    "assertEquals(1, r.headers().size());",
+    "// SDS-AC-9; FR-HTTP-006 AC-3",
+    "public void sdsAc9_FR_HTTP_006_AC3_throwWhileStreamingAborts() {",
+    "// SDS-AC-5 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-5.sds.md; FR-HTTP-024 AC-3",
+    "public void sdsAc9_FR_HTTP_006_AC3_throwAfterSendKeepsTheSentBytes() {",
+    "// SDS-AC-10; FR-HTTP-006 AC-4",
+    "public void sdsAc10_FR_HTTP_006_AC4_returnWithoutBodyEndsTheResponse() {",
+    "router.add(Method.GET, \"/m\", (req, res) -> res.send(\"never\"));",
+    "assertEquals(java.util.Collections.singletonList(\"WARN response not finished by the handler: GET /e\"),",
+    "// SDS-AC-10; FR-HTTP-006 AC-4, FR-HTTP-014 AC-7",
+    "public void sdsAc10_FR_HTTP_006_AC4_pendingStreamCopiesOnTheHandlerThreadAfterReturn() {",
+    "start();",
+    "assertTrue(log.lines.isEmpty());",
+    "SDS",
+    "public void sdsAc9_FR_HTTP_006_AC3_throwWhileStreamingIsAbortedByTheCoreNotTheAdapter() {",
+    "// SDS-AC-9; FR-HTTP-006 AC-3, FR-HTTP-014 AC-5",
+    "public void sdsAc9_FR_HTTP_006_AC3_errorAfterStreamClosesTheInputBeforePropagating() {",
+    "// SDS-AC-14 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-5.sds.md; FR-HTTP-024 AC-2",
+    "public void sdsAc8_FR_HTTP_006_AC2_failureAnswer500MovesTheResponseOutOfNew() {",
+    "assertEquals(1, ex.headers.size());",
+    "// SDS-AC-13 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-3.sds.md; FR-APP-009 AC-8"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ErrorPathTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.internal;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ListenStartupTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.internal;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MiddlewarePipelineTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.internal;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/OwnedResourcesTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.internal;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/PercentDecoderTest.java",
+   "hunks_total": 2,
+   "anchors": [
+    "// FR-ROUTE-005; FR-HTTP-009; FR-HTTP-010",
+    "// FR-ROUTE-005; FR-HTTP-010"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/PrefixMatcherTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.internal;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownParticipantsTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.internal;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownSequenceTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.internal;"
+   ],
+   "findings": [
+    "S4-004",
+    "S4-008"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownStatesTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.internal;"
+   ],
+   "findings": [
+    "S4-002",
+    "S4-012"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StandardErrorsTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.internal;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StartFailureTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.internal;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StartGateTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.internal;"
+   ],
+   "findings": [
+    "S4-009"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StoppingGateTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.internal;"
+   ],
+   "findings": [
+    "S4-006",
+    "S4-008"
+   ]
+  },
+  {
+   "file": "NaruServe-filelog/src/test/java/com/snoworca/naruserve/filelog/FailedListenWriterThreadTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.filelog;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-filelog/src/test/java/com/snoworca/naruserve/filelog/RotatingFileLoggerTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.filelog;"
+   ],
+   "findings": [
+    "S4-010"
+   ]
+  },
+  {
+   "file": "NaruServe-logcat/src/test/java/android/util/Log.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package android.util;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-logcat/src/test/java/com/snoworca/naruserve/logcat/LogcatLoggerTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.logcat;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-slf4j/src/test/java/com/snoworca/naruserve/slf4j/Slf4jLoggerTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.slf4j;"
+   ],
+   "findings": [
+    "S4-005"
+   ]
+  },
+  {
+   "file": "NaruServe-slf4j/src/test/java/org/slf4j/impl/StaticLoggerBinder.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package org.slf4j.impl;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "// SDS-AC-5; FR-APP-016 AC-4"
+   ],
+   "findings": []
+  },
+  {
+   "file": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java",
+   "hunks_total": 39,
+   "anchors": [
+    "// @req OPS-APP-002",
+    "private static final String CREATE = \"later-wave method `RestApp.create()`\";",
+    "HTTP",
+    "skip(\"README.md\", \"RestApp app = RestApp.create();\", CREATE),",
+    "\"later-wave method `RestApp.onStart`\"),",
+    "skip(\"json.md\", \"public interface JsonCodec {\", \"absent type `JsonCodec`\"),",
+    "skip(\"logging.md\", \"app.accessLog(options -> {\", \"later-wave method `RestApp.accessLog`\"),",
+    "skip(\"request.md\", \"app.use((req, res, next) -> {\", USE),",
+    "skip(\"servlet.md\", \"// \uc571 \uad6c\uc131: \ub0b4\uc7a5 \uc5d4\uc9c4\uacfc \uac19\uc740 \ucf54\ub4dc\", \"later-wave method `RestApp.onStart`\"),",
+    "skip(\"websocket.md\", \"app.use(\\\"/ws\\\", (req, res, next) -> {\", USE)));",
+    "Pattern.compile(\"(later-wave method|illustrative copy of|absent type) `[^`]+`.*\");",
+    "// @req OPS-HTTP-002",
+    "// @req OPS-HTTP-004",
+    "+ \"import com.snoworca.naruserve.spi.*;\\n\"",
+    "+ \"import java.util.concurrent.*;\\n\"",
+    "req",
+    "+ \"    ApplicationContext ctx;\\n\"",
+    "OPS",
+    "if (skipFor(e.getKey(), i + 1, body) != null) {",
+    "// SDS-AC-7; OPS-HTTP-002 AC-2",
+    "public void sdsAc7_OPS_HTTP_002_AC2_everyJavaFenceOfEveryDocIsExtracted() throws IOException {",
+    "// SDS-AC-7; OPS-HTTP-002 AC-3",
+    "public void sdsAc7_OPS_HTTP_002_AC3_nonTypeBlocksAreWrappedInTheTemplate() {",
+    "\"import java.util.*;\", \"import java.io.*;\", \"class DocExample3 {\", \"RestApp app;\", \"Request req;\",",
+    "// SDS-AC-7; OPS-HTTP-002 AC-5",
+    "public void sdsAc7_OPS_HTTP_002_AC5_noJavaScriptInJavaFences() throws IOException {",
+    "// SDS-AC-8; OPS-HTTP-002 AC-3",
+    "public void sdsAc8_OPS_HTTP_002_AC3_compilerRunsInProcessAndReportsErrors() throws IOException {",
+    "// SDS-AC-11; OPS-HTTP-004 AC-3",
+    "public void sdsAc8_OPS_HTTP_002_AC3_everyNonSkippedDocsBlockCompiles() throws IOException {",
+    "// SDS-AC-9; OPS-HTTP-002 AC-4",
+    "public void sdsAc9_OPS_HTTP_002_AC4_everySkipNamesFileBlockAndReason() {",
+    "// SDS-AC-14; OPS-APP-002 AC-2",
+    "public void sdsAc9_OPS_HTTP_002_AC4_everySkippedBlockStillFailsToCompile() throws IOException {",
+    "// SDS-AC-10; OPS-HTTP-002 AC-6",
+    "public void sdsAc10_OPS_HTTP_002_AC6_noStaleSkip() throws IOException {",
+    "// SDS-AC-11; OPS-HTTP-002 AC-7",
+    "public void sdsAc11_OPS_HTTP_002_AC7_responseAndRoutingBlocksAreCompiled() throws IOException {",
+    "/** Wave 4 members: they exist now, so no skip may name one as a missing method or type. */"
+   ],
+   "findings": [
+    "S4-001"
+   ]
+  }
+ ]
+}

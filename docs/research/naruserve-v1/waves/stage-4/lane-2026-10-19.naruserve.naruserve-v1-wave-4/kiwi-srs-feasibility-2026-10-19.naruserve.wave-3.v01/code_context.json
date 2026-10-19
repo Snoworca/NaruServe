@@ -1,0 +1,531 @@
+{
+ "modules": [
+  {
+   "name": "NaruServe-api",
+   "path": "NaruServe-api/src/main/java/com/snoworca/naruserve",
+   "files": 11,
+   "loc": 1009,
+   "exports": [
+    "Method",
+    "MethodSet",
+    "routing.Router",
+    "routing.RouterPolicy",
+    "routing.RoutePattern",
+    "routing.RouteMatch",
+    "routing.RouteKind",
+    "routing.PathValidator",
+    "routing.RoutingConfigException"
+   ],
+   "complexity": "low-moderate; Router 317 LOC, RoutePattern 187, MethodSet 155; no Request/Response/RestApp/spi/internal yet"
+  },
+  {
+   "name": "root build.gradle",
+   "notes": "java-test-fixtures applied to NaruServe-api (no testFixtures sources yet); root src/test has BuildChecksTest, BuildLayoutTest, depends on testFixturesJar; animal-sniffer API21 on androidModules main; checkClassReferences registered per module and wired into check"
+  }
+ ],
+ "trace_validation": [
+  {
+   "req_id": "IR-HTTP-001",
+   "trace_paths": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java",
+     "exists": false,
+     "expected_new": true
+    },
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/Response.java",
+     "exists": false,
+     "expected_new": true
+    },
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/Method.java",
+     "exists": true,
+     "expected_new": false
+    }
+   ],
+   "all_existing_paths_exist": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "IR-HTTP-002",
+   "trace_paths": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/RouteHandler.java",
+     "exists": false,
+     "expected_new": true
+    }
+   ],
+   "all_existing_paths_exist": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "IR-HTTP-003",
+   "trace_paths": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpAdapter.java",
+     "exists": false,
+     "expected_new": true
+    },
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpExchange.java",
+     "exists": false,
+     "expected_new": true
+    }
+   ],
+   "all_existing_paths_exist": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "IR-HTTP-004",
+   "trace_paths": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpAdapter.java",
+     "exists": false,
+     "expected_new": true
+    }
+   ],
+   "all_existing_paths_exist": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "CON-HTTP-001",
+   "trace_paths": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpAdapter.java",
+     "exists": false,
+     "expected_new": true
+    },
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+     "exists": false,
+     "expected_new": true
+    },
+    {
+     "path": "build.gradle",
+     "exists": true,
+     "expected_new": false
+    }
+   ],
+   "all_existing_paths_exist": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "FR-HTTP-001",
+   "trace_paths": [
+    {
+     "path": "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/InMemoryHttpAdapter.java",
+     "exists": false,
+     "expected_new": true
+    },
+    {
+     "path": "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/TestApp.java",
+     "exists": false,
+     "expected_new": true
+    },
+    {
+     "path": "build.gradle",
+     "exists": true,
+     "expected_new": false
+    }
+   ],
+   "all_existing_paths_exist": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "FR-HTTP-002",
+   "trace_paths": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+     "exists": false,
+     "expected_new": true
+    },
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java",
+     "exists": true,
+     "expected_new": false
+    },
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/PathValidator.java",
+     "exists": true,
+     "expected_new": false
+    }
+   ],
+   "all_existing_paths_exist": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "FR-HTTP-003",
+   "trace_paths": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+     "exists": false,
+     "expected_new": true
+    },
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouteMatch.java",
+     "exists": true,
+     "expected_new": false
+    }
+   ],
+   "all_existing_paths_exist": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "FR-HTTP-004",
+   "trace_paths": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+     "exists": false,
+     "expected_new": true
+    }
+   ],
+   "all_existing_paths_exist": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "FR-HTTP-005",
+   "trace_paths": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+     "exists": false,
+     "expected_new": true
+    }
+   ],
+   "all_existing_paths_exist": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "FR-HTTP-006",
+   "trace_paths": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+     "exists": false,
+     "expected_new": true
+    }
+   ],
+   "all_existing_paths_exist": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "IR-HTTP-005",
+   "trace_paths": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java",
+     "exists": false,
+     "expected_new": true
+    },
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouterPolicy.java",
+     "exists": true,
+     "expected_new": false
+    }
+   ],
+   "all_existing_paths_exist": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "IR-HTTP-006",
+   "trace_paths": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/RouteBuilder.java",
+     "exists": false,
+     "expected_new": true
+    },
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RoutingConfigException.java",
+     "exists": true,
+     "expected_new": false
+    }
+   ],
+   "all_existing_paths_exist": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "FR-HTTP-007",
+   "trace_paths": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+     "exists": false,
+     "expected_new": true
+    },
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java",
+     "exists": false,
+     "expected_new": true
+    }
+   ],
+   "all_existing_paths_exist": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "FR-HTTP-008",
+   "trace_paths": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+     "exists": false,
+     "expected_new": true
+    },
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RoutePattern.java",
+     "exists": true,
+     "expected_new": false
+    },
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java",
+     "exists": true,
+     "expected_new": false
+    }
+   ],
+   "all_existing_paths_exist": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "FR-HTTP-009",
+   "trace_paths": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java",
+     "exists": false,
+     "expected_new": true
+    }
+   ],
+   "all_existing_paths_exist": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "FR-HTTP-010",
+   "trace_paths": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java",
+     "exists": false,
+     "expected_new": true
+    },
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+     "exists": false,
+     "expected_new": true
+    }
+   ],
+   "all_existing_paths_exist": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "FR-HTTP-011",
+   "trace_paths": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java",
+     "exists": false,
+     "expected_new": true
+    }
+   ],
+   "all_existing_paths_exist": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "FR-HTTP-012",
+   "trace_paths": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java",
+     "exists": false,
+     "expected_new": true
+    }
+   ],
+   "all_existing_paths_exist": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "FR-HTTP-013",
+   "trace_paths": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+     "exists": false,
+     "expected_new": true
+    }
+   ],
+   "all_existing_paths_exist": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "FR-HTTP-014",
+   "trace_paths": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+     "exists": false,
+     "expected_new": true
+    }
+   ],
+   "all_existing_paths_exist": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "FR-HTTP-015",
+   "trace_paths": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+     "exists": false,
+     "expected_new": true
+    }
+   ],
+   "all_existing_paths_exist": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "FR-HTTP-016",
+   "trace_paths": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+     "exists": false,
+     "expected_new": true
+    }
+   ],
+   "all_existing_paths_exist": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "FR-HTTP-017",
+   "trace_paths": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+     "exists": false,
+     "expected_new": true
+    }
+   ],
+   "all_existing_paths_exist": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "FR-HTTP-018",
+   "trace_paths": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+     "exists": false,
+     "expected_new": true
+    }
+   ],
+   "all_existing_paths_exist": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "FR-HTTP-019",
+   "trace_paths": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/BodyAlreadyConsumedException.java",
+     "exists": false,
+     "expected_new": true
+    },
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/BodyState.java",
+     "exists": false,
+     "expected_new": true
+    }
+   ],
+   "all_existing_paths_exist": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "FR-HTTP-020",
+   "trace_paths": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/LimitedInputStream.java",
+     "exists": false,
+     "expected_new": true
+    }
+   ],
+   "all_existing_paths_exist": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "OPS-HTTP-001",
+   "trace_paths": [
+    {
+     "path": "docs/api/request.md",
+     "exists": true,
+     "expected_new": false
+    },
+    {
+     "path": "docs/api/response.md",
+     "exists": true,
+     "expected_new": false
+    },
+    {
+     "path": "docs/api/routing.md",
+     "exists": true,
+     "expected_new": false
+    },
+    {
+     "path": "docs/api/app.md",
+     "exists": true,
+     "expected_new": false
+    },
+    {
+     "path": "docs/api/defaults.md",
+     "exists": true,
+     "expected_new": false
+    },
+    {
+     "path": "docs/api/express-migration.md",
+     "exists": true,
+     "expected_new": false
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/RoutingDocsTest.java",
+     "exists": true,
+     "expected_new": false
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/DocsExamplesCompileTest.java",
+     "exists": false,
+     "expected_new": true
+    },
+    {
+     "path": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java",
+     "exists": false,
+     "expected_new": true
+    }
+   ],
+   "all_existing_paths_exist": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "OPS-ROUTE-002",
+   "trace_paths": [
+    {
+     "path": "docs/api/routing.md",
+     "exists": true,
+     "expected_new": false
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/RoutingDocsTest.java",
+     "exists": true,
+     "expected_new": false
+    }
+   ],
+   "all_existing_paths_exist": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "CON-ROUTE-006",
+   "trace_paths": [
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterRegistrationTest.java",
+     "exists": true,
+     "expected_new": false
+    },
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java",
+     "exists": true,
+     "expected_new": false
+    }
+   ],
+   "all_existing_paths_exist": true,
+   "external_paths_detected": []
+  }
+ ],
+ "code_metrics": {
+  "main_java_files": 11,
+  "main_loc": 1009,
+  "test_files_api": 16,
+  "test_files_root": 2,
+  "testFixtures_files": 0,
+  "total_java_tracked": 37
+ }
+}

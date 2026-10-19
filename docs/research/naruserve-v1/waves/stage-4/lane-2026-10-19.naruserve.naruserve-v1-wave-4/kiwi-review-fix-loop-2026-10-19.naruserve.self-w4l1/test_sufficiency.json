@@ -1,0 +1,161 @@
+{
+ "verdict": "pass",
+ "first_run_gaps": {
+  "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-9.sds.md": {
+   "requirements": [
+    {
+     "requirementId": "FR-APP-017",
+     "acIds": [
+      "AC-6"
+     ]
+    }
+   ],
+   "sdsContracts": []
+  },
+  "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-10.sds.md": {
+   "requirements": [
+    {
+     "requirementId": "OPS-HTTP-004",
+     "acIds": [
+      "AC-1"
+     ]
+    }
+   ],
+   "sdsContracts": []
+  }
+ },
+ "fill_added_tests": [
+  "NaruServe-filelog/src/test/java/com/snoworca/naruserve/filelog/RotatingFileLoggerTest.java:fr_APP_017_AC6_mainClassesReferenceNoSlf4jOrAndroidType",
+  "src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java:fr_APP_017_AC6_filelogPassesAndIsGuardedByTheApi21AnimalSniffer",
+  "src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java:ops_HTTP_004_AC1_apiMainOnRootTestClasspathWithWave1ConventionsKept"
+ ],
+ "fragments": {
+  "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-1.sds.md": {
+   "ids": [
+    "IR-APP-001",
+    "IR-APP-002",
+    "IR-APP-003",
+    "FR-APP-001"
+   ],
+   "passed": true,
+   "gaps": {
+    "requirements": [],
+    "sdsContracts": []
+   }
+  },
+  "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-2.sds.md": {
+   "ids": [
+    "IR-APP-004",
+    "IR-APP-005",
+    "IR-APP-006",
+    "IR-APP-007"
+   ],
+   "passed": true,
+   "gaps": {
+    "requirements": [],
+    "sdsContracts": []
+   }
+  },
+  "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-3.sds.md": {
+   "ids": [
+    "FR-APP-002",
+    "FR-APP-009"
+   ],
+   "passed": true,
+   "gaps": {
+    "requirements": [],
+    "sdsContracts": []
+   }
+  },
+  "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-4.sds.md": {
+   "ids": [
+    "FR-APP-003",
+    "FR-APP-004",
+    "FR-HTTP-021",
+    "FR-HTTP-022",
+    "FR-HTTP-023"
+   ],
+   "passed": true,
+   "gaps": {
+    "requirements": [],
+    "sdsContracts": []
+   }
+  },
+  "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-5.sds.md": {
+   "ids": [
+    "FR-APP-005",
+    "FR-APP-006",
+    "FR-HTTP-024",
+    "FR-HTTP-025"
+   ],
+   "passed": true,
+   "gaps": {
+    "requirements": [],
+    "sdsContracts": []
+   }
+  },
+  "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-6.sds.md": {
+   "ids": [
+    "FR-APP-007",
+    "FR-APP-008"
+   ],
+   "passed": true,
+   "gaps": {
+    "requirements": [],
+    "sdsContracts": []
+   }
+  },
+  "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-7.sds.md": {
+   "ids": [
+    "FR-APP-010",
+    "FR-APP-011",
+    "FR-APP-012",
+    "FR-APP-013"
+   ],
+   "passed": true,
+   "gaps": {
+    "requirements": [],
+    "sdsContracts": []
+   }
+  },
+  "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-8.sds.md": {
+   "ids": [
+    "FR-APP-014",
+    "FR-APP-015",
+    "SEC-APP-001"
+   ],
+   "passed": true,
+   "gaps": {
+    "requirements": [],
+    "sdsContracts": []
+   }
+  },
+  "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-9.sds.md": {
+   "ids": [
+    "FR-APP-016",
+    "FR-APP-017",
+    "FR-APP-018",
+    "CON-APP-001"
+   ],
+   "passed": true,
+   "gaps": {
+    "requirements": [],
+    "sdsContracts": []
+   }
+  },
+  "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-10.sds.md": {
+   "ids": [
+    "OPS-APP-001",
+    "OPS-APP-002",
+    "OPS-HTTP-003",
+    "OPS-HTTP-004",
+    "OPS-ROUTE-003"
+   ],
+   "passed": true,
+   "gaps": {
+    "requirements": [],
+    "sdsContracts": []
+   }
+  }
+ }
+}

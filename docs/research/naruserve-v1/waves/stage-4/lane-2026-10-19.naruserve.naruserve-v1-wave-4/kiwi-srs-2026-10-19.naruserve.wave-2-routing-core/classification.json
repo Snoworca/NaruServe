@@ -1,0 +1,28 @@
+{
+ "target": "wave-2",
+ "classification": "new-scope",
+ "rationale": "No existing requirement covers routing; scope Routing/ROUTE created per wave-1 convention (scope per functional area).",
+ "proposed_scope": "Routing (created: docs/spec/03.routing.srs.md)",
+ "proposed_prefix": "ROUTE",
+ "affected_existing_reqs": [
+  {
+   "id": "CON-BUILD-004",
+   "relation": "depends_on"
+  },
+  {
+   "id": "CON-BUILD-011",
+   "relation": "depends_on"
+  },
+  {
+   "id": "CON-BUILD-012",
+   "relation": "depends_on"
+  },
+  {
+   "id": "CON-BUILD-013",
+   "relation": "depends_on"
+  }
+ ],
+ "confidence": "high",
+ "scope_boundary_impact": null,
+ "external_module_impact": null
+}

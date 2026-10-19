@@ -1,0 +1,108 @@
+{
+ "resolved_findings": [
+  "R1-001",
+  "R1-002",
+  "R1-003"
+ ],
+ "unresolved": [],
+ "findings": [
+  {
+   "id": "R2-001",
+   "axis": "correctness",
+   "severity": "LOW",
+   "title": "Inline shutdown fallback runs adapter release() on the request worker: extra self-wait, self-interrupt, swallowed Error",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+    "line_range": "378-385"
+   },
+   "description": "When t.start() throws, runShutdownSequence runs on the request thread. adapter.stop(left) then waits for (and on timeout aborts) the very exchange that called shutdown, and a.release() waits the adapter's fixed release margin for its own worker pool, which contains the current thread; InMemoryHttpAdapter.release() then calls shutdownNow(), interrupting the calling request thread, which goes back into the handler (res.send) with the interrupt flag set. So the call takes timeout + release margin, not 'up to the timeout' as docs/api/lifecycle.md says, and that request's response is force-closed. The caught Throwable is also dropped without a log line, so the operator never learns the shutdown thread could not be created. OOM path only, hence LOW.",
+   "suggested_fix": "Log the caught Throwable at ERROR (best effort) before running inline, and say in lifecycle.md that in this fallback the calling request's response is force-closed at the timeout and the call may also take the adapter's release margin; optionally clear the interrupt flag the self-release leaves on the request thread.",
+   "is_behavioral": true,
+   "tags": [
+    "shutdown",
+    "android",
+    "docs-drift"
+   ]
+  },
+  {
+   "id": "R2-002",
+   "axis": "contract",
+   "severity": "LOW",
+   "title": "New public API RotatingFileLogger.rotationFailureCount() and the rotation back-off/backup-preserving behavior are not in FR-APP-017 or the wave-4 SDS",
+   "location": {
+    "file": "NaruServe-filelog/src/main/java/com/snoworca/naruserve/filelog/RotatingFileLogger.java",
+    "line_range": "156-160, 255-267, 278-297"
+   },
+   "description": "The fix adds a public method and two observable behaviors (rotation retried only after another maxFileBytes; oldest backup deleted only when every slot is taken). docs/api/logging.md documents them, but FR-APP-017 (requirement text and AC-2) and SDS wave-4-9 Interfaces list only droppedCount(); CLAUDE.md forbids behavior not covered by an SRS requirement. The new test cites FR-APP-017 AC-2, whose text does not mention these behaviors.",
+   "suggested_fix": "Add an FR-APP-017 AC (via speckiwi MCP) covering rotationFailureCount() and the failed-rename back-off, or fold it into AC-2's Decision line.",
+   "is_behavioral": false,
+   "tags": [
+    "srs-drift",
+    "public-api"
+   ]
+  }
+ ],
+ "coverage_rows": [
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+   "hunks_total": 6,
+   "anchors": [
+    "import java.util.concurrent.ThreadFactory;",
+    "ThreadFactory shutdownThreads = r -> new Thread(r, \"naruserve-shutdown\");",
+    "* request of this app); STOPPING and FAILED wait for TERMINATED (not from a request of this app); TERMINATED",
+    "Thread t = shutdownThreads.newThread(() -> runShutdownSequence(deadline));",
+    "} catch (Throwable e) {",
+    "if (!ownThread && !lifecycle.onRequestThread()) {"
+   ],
+   "findings": [
+    "R2-001"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownStatesTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public void FR_APP_011_AC5_shutdownThreadStartFailureStillReachesTerminated() throws Exception {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-filelog/src/main/java/com/snoworca/naruserve/filelog/RotatingFileLogger.java",
+   "hunks_total": 12,
+   "anchors": [
+    "default boolean rename(File from, File to) {",
+    "private final AtomicLong rotationFailures = new AtomicLong();",
+    "private long retryRotationAt;",
+    "public long rotationFailureCount() {",
+    "if (size > 0 && size + bytes.length > Math.max(maxFileBytes, retryRotationAt)) {",
+    "retryRotationAt = size + maxFileBytes;",
+    "* is deleted only when every slot is taken, so a rename that keeps failing deletes no further backup. Returns",
+    "File oldest = new File(directory, FILE_NAME + \".\" + (maxFiles - 1));",
+    "oldest = new File(directory, FILE_NAME);",
+    "int free = 1;",
+    "new File(directory, FILE_NAME + \".\" + free).delete();",
+    "return streams.rename(new File(directory, FILE_NAME), new File(directory, FILE_NAME + \".1\"));"
+   ],
+   "findings": [
+    "R2-002"
+   ]
+  },
+  {
+   "file": "NaruServe-filelog/src/test/java/com/snoworca/naruserve/filelog/RotatingFileLoggerTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public void FR_APP_017_AC2_persistentRenameFailureKeepsBackupsAndBacksOff() throws IOException {"
+   ],
+   "findings": []
+  }
+ ],
+ "summary": {
+  "total": 2,
+  "by_severity": {
+   "CRITICAL": 0,
+   "HIGH": 0,
+   "MEDIUM": 0,
+   "LOW": 2
+  }
+ }
+}

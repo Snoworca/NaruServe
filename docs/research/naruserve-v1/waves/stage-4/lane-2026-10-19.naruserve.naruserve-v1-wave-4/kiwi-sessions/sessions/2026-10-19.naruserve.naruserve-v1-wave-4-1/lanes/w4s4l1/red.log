@@ -1,0 +1,60 @@
+e: file:///Users/beom/work/git/NaruServe/.claude/worktrees/agent-af0ed6f1ef896f5c1/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppEntryKotlinTest.kt:4:35 Unresolved reference 'JsonCodec'.
+e: file:///Users/beom/work/git/NaruServe/.claude/worktrees/agent-af0ed6f1ef896f5c1/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppEntryKotlinTest.kt:15:30 Unresolved reference 'JsonCodec'.
+e: file:///Users/beom/work/git/NaruServe/.claude/worktrees/agent-af0ed6f1ef896f5c1/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppEntryKotlinTest.kt:16:5 'decode' overrides nothing.
+e: file:///Users/beom/work/git/NaruServe/.claude/worktrees/agent-af0ed6f1ef896f5c1/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppEntryKotlinTest.kt:17:5 'encode' overrides nothing.
+e: file:///Users/beom/work/git/NaruServe/.claude/worktrees/agent-af0ed6f1ef896f5c1/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppEntryKotlinTest.kt:27:30 Unresolved reference 'Builder'.
+e: file:///Users/beom/work/git/NaruServe/.claude/worktrees/agent-af0ed6f1ef896f5c1/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppEntryKotlinTest.kt:27:48 Unresolved reference 'builder'.
+e: file:///Users/beom/work/git/NaruServe/.claude/worktrees/agent-af0ed6f1ef896f5c1/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppEntryKotlinTest.kt:28:36 Unresolved reference 'build'.
+e: file:///Users/beom/work/git/NaruServe/.claude/worktrees/agent-af0ed6f1ef896f5c1/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppEntryKotlinTest.kt:30:35 Unresolved reference 'jsonCodec'.
+e: file:///Users/beom/work/git/NaruServe/.claude/worktrees/agent-af0ed6f1ef896f5c1/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppEntryKotlinTest.kt:31:31 Unresolved reference 'httpAdapter'.
+e: file:///Users/beom/work/git/NaruServe/.claude/worktrees/agent-af0ed6f1ef896f5c1/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppEntryKotlinTest.kt:42:18 Unresolved reference 'Middleware'.
+e: file:///Users/beom/work/git/NaruServe/.claude/worktrees/agent-af0ed6f1ef896f5c1/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppEntryKotlinTest.kt:42:31 Cannot infer type for this parameter. Specify it explicitly.
+e: file:///Users/beom/work/git/NaruServe/.claude/worktrees/agent-af0ed6f1ef896f5c1/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppEntryKotlinTest.kt:42:34 Cannot infer type for this parameter. Specify it explicitly.
+e: file:///Users/beom/work/git/NaruServe/.claude/worktrees/agent-af0ed6f1ef896f5c1/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppEntryKotlinTest.kt:42:37 Cannot infer type for this parameter. Specify it explicitly.
+e: file:///Users/beom/work/git/NaruServe/.claude/worktrees/agent-af0ed6f1ef896f5c1/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppEntryKotlinTest.kt:44:18 Cannot infer type for this parameter. Specify it explicitly.
+e: file:///Users/beom/work/git/NaruServe/.claude/worktrees/agent-af0ed6f1ef896f5c1/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppEntryKotlinTest.kt:44:21 No value passed for parameter 'block'.
+e: file:///Users/beom/work/git/NaruServe/.claude/worktrees/agent-af0ed6f1ef896f5c1/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppEntryKotlinTest.kt:46:35 Unresolved reference. None of the following candidates is applicable because of a receiver type mismatch:
+fun <T : Closeable?, R> T.use(block: (T) -> R): R
+    [R|Contract description]
+     <
+        CallsInPlace(block, EXACTLY_ONCE)
+    >
+e: file:///Users/beom/work/git/NaruServe/.claude/worktrees/agent-af0ed6f1ef896f5c1/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppEntryKotlinTest.kt:46:44 Cannot infer type for this parameter. Specify it explicitly.
+e: file:///Users/beom/work/git/NaruServe/.claude/worktrees/agent-af0ed6f1ef896f5c1/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppEntryKotlinTest.kt:46:47 Cannot infer type for this parameter. Specify it explicitly.
+e: file:///Users/beom/work/git/NaruServe/.claude/worktrees/agent-af0ed6f1ef896f5c1/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppEntryKotlinTest.kt:46:60 Cannot infer type for this parameter. Specify it explicitly.
+e: file:///Users/beom/work/git/NaruServe/.claude/worktrees/agent-af0ed6f1ef896f5c1/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppEntryKotlinTest.kt:46:63 No value passed for parameter 'block'.
+e: file:///Users/beom/work/git/NaruServe/.claude/worktrees/agent-af0ed6f1ef896f5c1/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppEntryKotlinTest.kt:47:37 Unresolved reference. None of the following candidates is applicable because of a receiver type mismatch:
+fun <T : Closeable?, R> T.use(block: (T) -> R): R
+    [R|Contract description]
+     <
+        CallsInPlace(block, EXACTLY_ONCE)
+    >
+e: file:///Users/beom/work/git/NaruServe/.claude/worktrees/agent-af0ed6f1ef896f5c1/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppEntryKotlinTest.kt:47:51 Cannot infer type for this parameter. Specify it explicitly.
+e: file:///Users/beom/work/git/NaruServe/.claude/worktrees/agent-af0ed6f1ef896f5c1/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppEntryKotlinTest.kt:47:54 Cannot infer type for this parameter. Specify it explicitly.
+e: file:///Users/beom/work/git/NaruServe/.claude/worktrees/agent-af0ed6f1ef896f5c1/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppEntryKotlinTest.kt:47:57 Cannot infer type for this parameter. Specify it explicitly.
+e: file:///Users/beom/work/git/NaruServe/.claude/worktrees/agent-af0ed6f1ef896f5c1/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppEntryKotlinTest.kt:47:70 Cannot infer type for this parameter. Specify it explicitly.
+e: file:///Users/beom/work/git/NaruServe/.claude/worktrees/agent-af0ed6f1ef896f5c1/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppEntryKotlinTest.kt:47:73 No value passed for parameter 'block'.
+e: file:///Users/beom/work/git/NaruServe/.claude/worktrees/agent-af0ed6f1ef896f5c1/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppEntryKotlinTest.kt:48:49 Too many arguments for 'fun get(p0: String, p1: RouteHandler): RestApp'.
+e: file:///Users/beom/work/git/NaruServe/.claude/worktrees/agent-af0ed6f1ef896f5c1/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppEntryKotlinTest.kt:48:51 Cannot infer type for this parameter. Specify it explicitly.
+e: file:///Users/beom/work/git/NaruServe/.claude/worktrees/agent-af0ed6f1ef896f5c1/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppEntryKotlinTest.kt:48:54 Cannot infer type for this parameter. Specify it explicitly.
+e: file:///Users/beom/work/git/NaruServe/.claude/worktrees/agent-af0ed6f1ef896f5c1/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppEntryKotlinTest.kt:50:17 Unresolved reference 'send'.
+e: file:///Users/beom/work/git/NaruServe/.claude/worktrees/agent-af0ed6f1ef896f5c1/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppEntryKotlinTest.kt:52:38 Unresolved reference 'onError'.
+e: file:///Users/beom/work/git/NaruServe/.claude/worktrees/agent-af0ed6f1ef896f5c1/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppEntryKotlinTest.kt:52:48 Cannot infer type for this parameter. Specify it explicitly.
+e: file:///Users/beom/work/git/NaruServe/.claude/worktrees/agent-af0ed6f1ef896f5c1/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppEntryKotlinTest.kt:52:51 Cannot infer type for this parameter. Specify it explicitly.
+e: file:///Users/beom/work/git/NaruServe/.claude/worktrees/agent-af0ed6f1ef896f5c1/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppEntryKotlinTest.kt:52:54 Cannot infer type for this parameter. Specify it explicitly.
+e: file:///Users/beom/work/git/NaruServe/.claude/worktrees/agent-af0ed6f1ef896f5c1/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppEntryKotlinTest.kt:52:65 Unresolved reference 'status'.
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':NaruServe-api:compileTestKotlin'.
+> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
+   > Compilation error. See log for more details
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 653ms

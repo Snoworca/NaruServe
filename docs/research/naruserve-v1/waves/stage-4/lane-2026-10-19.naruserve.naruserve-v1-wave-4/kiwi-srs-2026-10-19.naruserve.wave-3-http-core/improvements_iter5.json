@@ -1,0 +1,81 @@
+{
+  "iter": 5,
+  "findings": [
+    {
+      "id": "F5-01",
+      "severity": "MEDIUM",
+      "req_id": "OPS-HTTP-001 (no requirement holds I-011)",
+      "ac": "AC-6",
+      "description": "I-011 is not covered. design.md:5 says the integration items hold at this wave's merge for the components that exist by then. I-011 (00.design.md:687) says: 'The default values in docs/api/defaults.md SHALL equal the defaults in the configuration classes, checked by a test.' RouterPolicy is a configuration class that exists at the wave 3 merge. defaults.md:40 '| `TRACE`, `CONNECT` 메서드 | 라우팅 안 함 | 명시 정책 (**(미확정)**) |' documents its default. OPS-HTTP-001 AC-6 edits that row, but no AC checks that the documented default ('라우팅 안 함') equals RouterPolicy's default (enableTrace()/enableConnect() false on RouterPolicy.builder().build() / strict()). No requirement in 04.http-core.srs.md cites I-011.",
+      "evidence": "00.design.md:687 [I-011]; docs/api/defaults.md:40; OPS-HTTP-001 AC-6 'docs/api/defaults.md names app.routerPolicy(...) with enableTrace/enableConnect as the explicit TRACE/CONNECT policy'; grep 'I-011' docs/spec/*.md -> no hit",
+      "suggested_fix": "Add to OPS-HTTP-001 AC-6: 'and a test checks that the default of that row (TRACE and CONNECT not routed) equals RouterPolicy.builder().build().enableTrace() == false and enableConnect() == false [I-011]'."
+    },
+    {
+      "id": "F5-02",
+      "severity": "LOW",
+      "req_id": "OPS-HTTP-001",
+      "ac": "AC-9",
+      "description": "The method template has 'app (RestApp), req (Request) and res (Response) in scope'. If req and res are method parameters or locals, a block with a `(req, res) -> ...` lambda does not compile, because a lambda parameter cannot redeclare a local in the enclosing scope. The examples wave 3 must add are likely written that way: the stream example of AC-3 and the routerPolicy examples of AC-4/AC-5. Fields of the enclosing class avoid the clash, so the AC can be met, but the text does not say which to use.",
+      "evidence": "AC-9 '...placed in a method template that declares `throws Exception`, has `app` (`RestApp`), `req` (`Request`) and `res` (`Response`) in scope...'; routing.md block 2 'app.route(Method.get().post().delete(), \"/users/:id\", (req, res) -> {'",
+      "suggested_fix": "Say that app, req and res are fields of the template class (an instance method template, so `this`-free stubs and lambdas named req/res compile)."
+    },
+    {
+      "id": "F5-03",
+      "severity": "LOW",
+      "req_id": "IR-HTTP-001 / IR-HTTP-005",
+      "ac": "IR-HTTP-001 AC-4; IR-HTTP-005 AC-5",
+      "description": "'D-072 is met by the wave 1 convention: package com.snoworca.naruserve is annotated JSpecify @NullMarked'. The @NullMarked package annotation is not from wave 1. Wave 1 (CON-BUILD-011) annotated each method explicitly (NullabilityFixture: '@Nullable String annotatedNullable()', '@NonNull String annotatedNonNull()'). The package-info.java that carries @NullMarked is tagged '// @req IR-ROUTE-003', which is wave 2. The rule works, but the AC names the wrong source for it.",
+      "evidence": "NaruServe-api/src/main/java/com/snoworca/naruserve/package-info.java '// @req IR-ROUTE-003 @org.jspecify.annotations.NullMarked'; NaruServe-api/src/test/java/com/snoworca/naruserve/NullabilityFixture.java",
+      "suggested_fix": "Replace 'the wave 1 convention' with 'the wave 2 package convention (JSpecify of CON-BUILD-011, @NullMarked package as in com.snoworca.naruserve.routing)'."
+    },
+    {
+      "id": "F5-04",
+      "severity": "LOW",
+      "req_id": "CON-HTTP-001 / IR-HTTP-001 / IR-HTTP-005",
+      "ac": "-",
+      "description": "I-003 ('The public API of NaruServe-api MUST NOT expose java.nio.file, CompletableFuture or java.net.http types') is checked only for the SPI (CON-HTTP-001 AC-1). Wave 3 adds most of the public API (Request, Response, RestApp, RouteBuilder, RouteHandler, BodyAlreadyConsumedException), and no AC checks these types. No wave 1 or wave 2 check covers I-003 either (grep I-003 docs/spec -> no hit). The current design makes this easy to meet, but no test traces it at the merge.",
+      "evidence": "00.design.md:676 [I-003]; CON-HTTP-001 AC-1 '...Every type of the HttpAdapter SPI ... signatures reference only java.* types (excluding java.nio.file.*, ...CompletableFuture and java.net.http.*)'",
+      "suggested_fix": "Widen CON-HTTP-001 AC-1, or the reflection tests of IR-HTTP-001 AC-4 and IR-HTTP-005 AC-5, to cover every public type in com.snoworca.naruserve [I-003]."
+    },
+    {
+      "id": "F5-05",
+      "severity": "LOW",
+      "req_id": "IR-HTTP-004",
+      "ac": "AC-2, AC-3, AC-4",
+      "description": "The in-memory adapter binds, runs the drain loop on 'an adapter-chosen thread' and has 'adapter threads' that the final release waits for. I-015 ('Every test that starts a server SHALL assert after shutdown that no server thread ... remains') is not stated for these bind/stop tests. Whether the in-memory adapter counts as a server is open, but the final-release AC never asserts that its threads are gone.",
+      "evidence": "00.design.md:695 [I-015]; IR-HTTP-004 AC-4 'a separate final release that waits at most a fixed margin for the adapter's threads to end; the in-memory adapter implements both and a test shows an in-flight exchange still running at the deadline is force-closed'",
+      "suggested_fix": "Add to AC-4: 'and after the final release the test finds no thread the in-memory adapter started still alive [I-015]'."
+    },
+    {
+      "id": "F5-06",
+      "severity": "LOW",
+      "req_id": "IR-HTTP-002 / CON-HTTP-001",
+      "ac": "Trace Links",
+      "description": "Both requirements still depend only on the discarded CON-ROUTE-001 ('Requirement | CON-ROUTE-001 | depends_on'), and neither has a depends_on row to its successor CON-ROUTE-006. Rows cannot be removed, but a successor row can be added.",
+      "evidence": "04.http-core.srs.md IR-HTTP-002 trace 'CON-ROUTE-001 | depends_on | RouteHandler is the router handler type'; CON-HTTP-001 trace 'CON-ROUTE-001 | depends_on | same engine-free rule as the router'",
+      "suggested_fix": "add_trace_link Requirement CON-ROUTE-006 depends_on on both."
+    },
+    {
+      "id": "F5-07",
+      "severity": "LOW",
+      "req_id": "FR-HTTP-002",
+      "ac": "AC-3",
+      "description": "The AC says 'the validator sees the raw form with a single decoding', but the carried rule says 'the validator does not decode' (carried-into-wave-3.md). PathValidator does decode each segment internally to find an encoded '/' or '..'; it just never returns a decoded path. The meaning is clear from the example, but the wording conflicts with the carried bullet.",
+      "evidence": "FR-HTTP-002 AC-3; carried-into-wave-3.md 'the validator does not decode'; PathValidator.java 'It answers accept or reject only; it never returns a decoded path.'",
+      "suggested_fix": "Reword to 'the validator receives the raw path undecoded and checks each segment after one percent-decoding'."
+    }
+  ],
+  "summary": {
+    "critical": 0,
+    "high": 0,
+    "medium": 1,
+    "low": 6,
+    "design_items_covered": "55/55 (every D-id of design.md lines 12-90 is cited in 04.http-core.srs.md)",
+    "wave_decisions_covered": "all 16 wave decisions, the 3 carried bullets, loop-D V1-006/V2-004 (FR-HTTP-005, FR-HTTP-001 AC-7) and residuals r5 W2-001 (OPS-ROUTE-002), W2-002 (FR-HTTP-002 AC-4/AC-5, FR-HTTP-010 note), W1-001/W2-003 (deferred, IR-HTTP-003 rationale)",
+    "integration_items": "I-009, I-012, I-014, I-021 are cited. I-007, I-010 and I-017 are covered implicitly through D-045, the Kotlin ACs and D-098. I-011 is missing (F5-01). I-003 and I-015 have no AC (F5-04, F5-05).",
+    "deferred_required": "none: no AC requires a D-392 method, the TinyHttpd halves of D-399/D-442/I-021, or 426 over TinyHttpd",
+    "regression_scan": "Wave 1/2 tests checked: MethodTest, RouterPolicyTest, RouterFreezeTest, RouteMatchTest, PathValidatorTest, RoutingDocsTest, RouterRegistrationTest, BuildLayoutTest, BuildChecksTest. Only the two intended supersedes break: RoutingDocsTest#sdsAc10_OPS_ROUTE_001_AC3 (4 marker lines -> OPS-ROUTE-002 AC-3) and RouterRegistrationTest#sdsAc1_CON_ROUTE_001_AC2 (Class.forName absence -> CON-ROUTE-006 AC-2). RoutingDocsTest AC-1 needs the heading '## 라우팅 규칙 (wave 2 결정)', and OPS-HTTP-001 AC-4 keeps it.",
+    "ac9_root_classpath": "Feasible. testImplementation project(':NaruServe-api') on the root project is test scope, so CON-BUILD-006 ('later waves add only test-scope dependencies') holds. checkDependencyRules and the dependency-report tests cover the nine modules only. BuildChecksTest#sdsAc11 asserts that the TestKit copy has no root src, which is unaffected. javax.tools is in the Java 8 API under options.release = 8. The compilable docs blocks are response.md #4/#5 and routing.md #1/#4/#5. Every other block matches a skip reason, and sse.md #2 is JavaScript and must be relabelled js.",
+    "route_successors": "Consistent. OPS-ROUTE-002 restates AC-1/AC-2 (dropping only the 'without naming configuration API methods' clause) and states AC-3 as exactly one marker line naming use(middleware). That matches routing.md:21 once lines 72, 127 and 155 are removed. CON-ROUTE-006 restates AC-1/3/4 and turns AC-2 into a check that routing-package classes reference none of the four types, which matches Router<H>."
+  }
+}
