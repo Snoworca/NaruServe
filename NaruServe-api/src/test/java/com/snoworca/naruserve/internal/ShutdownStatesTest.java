@@ -217,6 +217,55 @@ public class ShutdownStatesTest {
         assertTrue(events.toString(), events.contains("onStop"));
     }
 
+    // FR-APP-011 AC-5 — shutdown() from a route handler while another shutdown is already STOPPING does not wait for
+    // its own request either
+    @Test
+    public void FR_APP_011_AC5_shutdownFromARouteHandlerDuringAnotherStopDoesNotWaitForItself() throws Exception {
+        RecordingAdapter adapter = new RecordingAdapter(events);
+        DefaultRestApp app = app(adapter);
+        CountDownLatch inHandler = new CountDownLatch(1);
+        long[] took = new long[1];
+        app.get("/stop", (req, res) -> {
+            inHandler.countDown();
+            awaitTrue("STOPPING", () -> app.state() == AppState.STOPPING);
+            long t0 = System.nanoTime();
+            app.shutdown(5, TimeUnit.SECONDS);
+            took[0] = System.nanoTime() - t0;
+            res.send("bye");
+        });
+        app.listen(0);
+        Future<ClientResponse> r = adapter.delegate.submit(ClientRequest.of("GET", "/stop"));
+        assertTrue(inHandler.await(5, TimeUnit.SECONDS));
+        Future<?> external = pool.submit(() -> app.shutdown(10, TimeUnit.SECONDS));
+        ClientResponse resp = r.get(15, TimeUnit.SECONDS);
+        external.get(15, TimeUnit.SECONDS);
+        assertTrue("shutdown took " + took[0] + " ns", took[0] < TimeUnit.SECONDS.toNanos(2));
+        assertEquals(200, resp.status());
+        assertFalse(resp.abnormallyClosed());
+        assertEquals(AppState.TERMINATED, app.state());
+    }
+
+    // FR-APP-011 AC-5 — when the naruserve-shutdown thread cannot be started, the sequence still runs to TERMINATED
+    @Test
+    public void FR_APP_011_AC5_shutdownThreadStartFailureStillReachesTerminated() throws Exception {
+        RecordingAdapter adapter = new RecordingAdapter(events);
+        DefaultRestApp app = app(adapter);
+        app.shutdownThreads = r -> new Thread(r) {
+            @Override
+            public synchronized void start() {
+                throw new OutOfMemoryError("unable to create native thread");
+            }
+        };
+        app.get("/stop", (req, res) -> {
+            app.shutdown(0, TimeUnit.SECONDS);
+            res.send("bye");
+        });
+        app.listen(0);
+        adapter.delegate.submit(ClientRequest.of("GET", "/stop")).get(10, TimeUnit.SECONDS);
+        assertTrue("app reaches TERMINATED", app.lifecycle().awaitTerminated(5, TimeUnit.SECONDS));
+        assertTrue(events.toString(), events.contains("onStop"));
+    }
+
     // FR-APP-011 AC-5 — listen()'s exit never clears the shutdown thread's identity, so an onStop shutdown() that
     // races listen() returning still does not wait for itself. The window is narrow, so it is tried repeatedly.
     @Test

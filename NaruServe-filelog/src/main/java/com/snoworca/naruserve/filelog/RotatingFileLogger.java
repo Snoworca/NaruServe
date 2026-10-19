@@ -40,6 +40,11 @@ public final class RotatingFileLogger implements Logger, Flushable, AutoCloseabl
     // @req FR-APP-017
     interface StreamFactory {
         OutputStream open(File file, boolean append) throws IOException;
+
+        /** Renames a log file; the test hook that lets tests fail a rename. */
+        default boolean rename(File from, File to) {
+            return from.renameTo(to);
+        }
     }
 
     final File directory;
@@ -50,6 +55,7 @@ public final class RotatingFileLogger implements Logger, Flushable, AutoCloseabl
     private final StreamFactory streams;
     private final BlockingQueue<Object> queue;
     private final AtomicLong dropped = new AtomicLong();
+    private final AtomicLong rotationFailures = new AtomicLong();
     // Guards closed against log(): no record enters the queue after the STOP marker.
     private final Object lock = new Object();
     private boolean closed;
@@ -57,6 +63,8 @@ public final class RotatingFileLogger implements Logger, Flushable, AutoCloseabl
     // Writer thread only.
     private @Nullable OutputStream out;
     private long size;
+    // After a failed rotation, the size the live file must pass before the next attempt; 0 when none failed.
+    private long retryRotationAt;
 
     /** Defaults: directory {@code ./logs}, 5242880 bytes per file, 5 files, 1024 queued records, level INFO. */
     // @req FR-APP-017
@@ -143,6 +151,12 @@ public final class RotatingFileLogger implements Logger, Flushable, AutoCloseabl
     // @req FR-APP-017
     public long droppedCount() {
         return dropped.get();
+    }
+
+    /** Rotations that could not move {@code naruserve.log} away; the live file then keeps growing. */
+    // @req FR-APP-017
+    public long rotationFailureCount() {
+        return rotationFailures.get();
     }
 
     /** Returns once every record queued before the call is written (or dropped); at once after close. */
@@ -238,13 +252,19 @@ public final class RotatingFileLogger implements Logger, Flushable, AutoCloseabl
                 size = file.length();
                 out = streams.open(file, true);
             }
-            if (size > 0 && size + bytes.length > maxFileBytes) {
+            if (size > 0 && size + bytes.length > Math.max(maxFileBytes, retryRotationAt)) {
                 closeStream();
                 File file = new File(directory, FILE_NAME);
                 // A failed rename keeps the live file: append to it rather than truncate earlier records.
                 boolean movedAway = rotate();
                 out = streams.open(file, !movedAway);
                 size = movedAway ? 0 : file.length();
+                if (movedAway) {
+                    retryRotationAt = 0;
+                } else {
+                    rotationFailures.incrementAndGet();
+                    retryRotationAt = size + maxFileBytes;
+                }
             }
             out.write(bytes, 0, bytes.length);
             out.flush();
@@ -256,26 +276,24 @@ public final class RotatingFileLogger implements Logger, Flushable, AutoCloseabl
     }
 
     /**
-     * {@code naruserve.log} becomes {@code .1}, {@code .n} becomes {@code .n+1}; the oldest is deleted. Returns whether
-     * {@code naruserve.log} was moved or deleted, so the caller may start it empty.
+     * {@code naruserve.log} becomes {@code .1}, {@code .n} becomes {@code .n+1} up to the first free slot; the oldest
+     * is deleted only when every slot is taken, so a rename that keeps failing deletes no further backup. Returns
+     * whether {@code naruserve.log} was moved or deleted, so the caller may start it empty.
      */
     // @req FR-APP-017
     boolean rotate() {
-        File oldest = new File(directory, FILE_NAME + "." + (maxFiles - 1));
         if (maxFiles == 1) {
-            oldest = new File(directory, FILE_NAME);
+            return new File(directory, FILE_NAME).delete();
         }
-        boolean deleted = oldest.delete();
-        for (int n = maxFiles - 2; n >= 1; n--) {
-            File from = new File(directory, FILE_NAME + "." + n);
-            if (from.exists()) {
-                from.renameTo(new File(directory, FILE_NAME + "." + (n + 1)));
-            }
+        int free = 1;
+        while (free < maxFiles - 1 && new File(directory, FILE_NAME + "." + free).exists()) {
+            free++;
         }
-        if (maxFiles > 1) {
-            return new File(directory, FILE_NAME).renameTo(new File(directory, FILE_NAME + ".1"));
+        new File(directory, FILE_NAME + "." + free).delete();
+        for (int n = free - 1; n >= 1; n--) {
+            streams.rename(new File(directory, FILE_NAME + "." + n), new File(directory, FILE_NAME + "." + (n + 1)));
         }
-        return deleted;
+        return streams.rename(new File(directory, FILE_NAME), new File(directory, FILE_NAME + ".1"));
     }
 
     private void closeStream() {

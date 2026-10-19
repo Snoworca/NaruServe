@@ -115,6 +115,7 @@ public interface Logger {
 
 `RotatingFileLogger.builder()`의 기본값은 폴더 `./logs`, 파일당 5 MiB(5242880 바이트), 최대 5개, 대기 큐 1024건, 레벨 `INFO`이며, 파일 이름은 `naruserve.log`이고 가득 차면 `naruserve.log.1`, `naruserve.log.2` … `naruserve.log.4`로 밀려나고 가장 오래된 파일은 지워집니다.
 줄 형식은 콘솔 로거와 같은 `<timestamp> <LEVEL> <message>`입니다. 별도 스레드가 파일에 쓰며, 큐가 가득 차거나 쓰기가 실패하면 그 줄을 버리고 `droppedCount()`로 셉니다.
+`naruserve.log`의 이름을 바꾸지 못해 회전이 실패하면 기존 줄을 지우지 않고 같은 파일에 이어 쓰며, 실패 횟수는 `rotationFailureCount()`로 셉니다. 다음 회전은 그 파일이 `maxFileBytes`만큼 더 커진 뒤에 다시 시도하고, 백업은 빈 번호가 없을 때만 가장 오래된 것을 지우므로 실패가 되풀이되어도 백업이 더 지워지지 않습니다. 실패가 계속되는 동안 `naruserve.log`는 `maxFileBytes`보다 커질 수 있으니 `rotationFailureCount()`가 0이 아니면 폴더 권한과 디스크를 확인하세요.
 
 Android에서는 작업 폴더 `./logs`에 쓸 수 없으므로 `context.getFilesDir()` 같은 쓰기 가능한 폴더를 넘기세요. 기본 폴더를 Android용으로 바꾸지 않은 이유는 `NaruServe-filelog`가 `android.*`에 의존하지 않기 때문입니다.
 

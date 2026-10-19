@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import org.jspecify.annotations.Nullable;
@@ -94,6 +95,8 @@ public final class DefaultRestApp implements RestApp {
     // The thread inside listen() or the shutdown sequence; a shutdown() from it must not wait for itself. Each owner
     // clears only its own entry, so listen() returning never wipes the identity a racing shutdown thread just set.
     private final AtomicReference<@Nullable Thread> lifecycleThread = new AtomicReference<>();
+    /** Makes the thread a shutdown() from a request runs the sequence on; a test seam. */
+    ThreadFactory shutdownThreads = r -> new Thread(r, "naruserve-shutdown");
 
     // Guarded by this.
     private final List<Registration> registrations = new ArrayList<>();
@@ -332,7 +335,7 @@ public final class DefaultRestApp implements RestApp {
     /**
      * Dispatch on the state: NEW terminates at once; STARTING records a pending stop and waits for listen to end;
      * RUNNING runs the sequence in the one beginStop winner (on a new thread, without waiting, when the winner is a
-     * request of this app); STOPPING and FAILED wait for TERMINATED; TERMINATED
+     * request of this app); STOPPING and FAILED wait for TERMINATED (not from a request of this app); TERMINATED
      * returns. A wait that times out returns normally. Not synchronized, so a loser waits only its own timeout.
      */
     // @req IR-APP-005
@@ -372,9 +375,14 @@ public final class DefaultRestApp implements RestApp {
                         if (lifecycle.onRequestThread()) {
                             // The adapter stop waits for in-flight requests, this one included: run the sequence on
                             // its own thread so this request can finish and the caller returns at once.
-                            Thread t = new Thread(() -> runShutdownSequence(deadline), "naruserve-shutdown");
+                            Thread t = shutdownThreads.newThread(() -> runShutdownSequence(deadline));
                             t.setDaemon(false);
-                            t.start();
+                            try {
+                                t.start();
+                            } catch (Throwable e) {
+                                // No thread (OOM on low-end devices): run inline so the app still reaches TERMINATED.
+                                runShutdownSequence(deadline);
+                            }
                         } else {
                             runShutdownSequence(deadline);
                         }
@@ -384,8 +392,9 @@ public final class DefaultRestApp implements RestApp {
                 case TERMINATED:
                     return;
                 default:
-                    // STOPPING or FAILED: a thread is on its way to TERMINATED; when it is this one, don't wait.
-                    if (!ownThread) {
+                    // STOPPING or FAILED: a thread is on its way to TERMINATED; when it is this one, or TERMINATED
+                    // waits for this request to finish, don't wait.
+                    if (!ownThread && !lifecycle.onRequestThread()) {
                         lifecycle.awaitTerminated(left(deadline), TimeUnit.NANOSECONDS);
                     }
                     return;

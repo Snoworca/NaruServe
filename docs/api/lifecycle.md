@@ -170,6 +170,7 @@ NEW ──listen──> STARTING ──성공──> RUNNING ──shutdown─�
 ### 요청 핸들러 안에서 shutdown
 
 라우트 핸들러나 미들웨어 안에서 `shutdown(timeout, unit)`을 부르면 종료 순서는 별도 스레드에서 돌고 호출은 기다리지 않고 바로 반환하며, 그 요청의 응답은 평소대로 끝까지 전송되는데, 종료 순서가 처리 중인 요청이 끝나기를 기다리므로 같은 스레드에서 기다리면 자기 자신을 timeout까지 기다린 뒤 응답을 강제로 끊게 되기 때문입니다(Express에서 `res.send()` 뒤 `server.close()`를 부르는 것과 같은 결과). `TERMINATED`가 되는 것을 확인하려면 다른 스레드에서 `app.state()`를 보세요.
+다른 곳(신호 처리, 다른 요청, `Service.onDestroy`)에서 이미 시작한 종료가 진행 중(`STOPPING`)일 때 요청 핸들러에서 `shutdown(...)`을 불러도 기다리지 않고 바로 반환합니다. 종료 스레드를 만들 수 없으면(메모리 부족 등) 종료 순서는 호출한 요청 스레드에서 바로 돌며, 이때는 그 요청을 timeout까지 기다릴 수 있지만 앱은 반드시 `TERMINATED`가 됩니다.
 
 ## Android
 

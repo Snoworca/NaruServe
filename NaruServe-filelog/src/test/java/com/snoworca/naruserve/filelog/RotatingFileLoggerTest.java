@@ -207,6 +207,38 @@ public class RotatingFileLoggerTest {
         assertTrue(text, text.contains("INFO second record"));
     }
 
+    // FR-APP-017 AC-2 — a live-file rename that keeps failing deletes no further backup, is retried only after another
+    // maxFileBytes, and is counted
+    @Test
+    public void FR_APP_017_AC2_persistentRenameFailureKeepsBackupsAndBacksOff() throws IOException {
+        File dir = tmp.newFolder("logs");
+        java.nio.file.Files.write(new File(dir, "naruserve.log.1").toPath(), "b1".getBytes(StandardCharsets.UTF_8));
+        java.nio.file.Files.write(new File(dir, "naruserve.log.2").toPath(), "b2".getBytes(StandardCharsets.UTF_8));
+        RotatingFileLogger.Builder b = RotatingFileLogger.builder().directory(dir).maxFileBytes(200).maxFiles(3);
+        RotatingFileLogger logger = track(new RotatingFileLogger(b, new RotatingFileLogger.StreamFactory() {
+            @Override
+            public OutputStream open(File file, boolean append) throws IOException {
+                return new FileOutputStream(file, append);
+            }
+
+            @Override
+            public boolean rename(File from, File to) {
+                return !from.getName().equals("naruserve.log") && from.renameTo(to);
+            }
+        }));
+        int records = 12;
+        for (int i = 0; i < records; i++) {
+            logger.info("record " + i + " padding padding");
+        }
+        logger.close();
+        String live = read(new File(dir, "naruserve.log"));
+        assertEquals(live, records, lines(live));
+        assertEquals("b1", read(new File(dir, "naruserve.log.2")));
+        long failures = logger.rotationFailureCount();
+        assertTrue("failures " + failures, failures >= 1 && failures <= records / 3);
+        assertEquals(0, logger.droppedCount());
+    }
+
     // FR-APP-017 AC-4 — a Throwable whose toString throws is dropped and counted, never thrown to the caller
     @Test
     public void FR_APP_017_AC4_throwingThrowableIsDroppedNotThrown() throws IOException {
