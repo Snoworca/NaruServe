@@ -443,4 +443,29 @@ public class BuildLayoutTest {
         assertFalse(claude.contains("rest-kotlin"));
         assertFalse(read(new File(ROOT, "docs/api/kotlin.md")).contains("rest-kotlin"));
     }
+
+    // CON-HTTP-001 AC-2, CON-HTTP-001 AC-3
+    @Test
+    public void CON_HTTP_001_AC2_AC3_apiMainHoldingSpiAndDispatcherIsClassRefCheckedAndSniffedAtApi21()
+            throws IOException {
+        File main = new File(ROOT, "NaruServe-api/build/classes/java/main/com/snoworca/naruserve");
+        for (String c : new String[] {"spi/HttpAdapter.class", "spi/HttpExchange.class", "spi/ExchangeHandler.class",
+            "internal/Dispatcher.class"}) {
+            assertTrue(c + " is compiled from the NaruServe-api main source set", new File(main, c).isFile());
+        }
+        String build = read(new File(ROOT, "build.gradle"));
+        // AC-2: :NaruServe-api's class-reference check names every forbidden prefix and runs under check.
+        assertTrue(build.contains("prefixes += ['android/', 'jakarta/servlet/', 'com/google/gson/', "
+                + "'com/snoworca/tinyhttpd/', 'kotlin/']"));
+        assertTrue(build.contains("def prefixes = path in androidModules ? ['javax/servlet/'] : []"));
+        assertTrue(build.contains("p.tasks.named('check') { dependsOn checkClassReferences }"));
+        // AC-3: NaruServe-api is an Android module, sniffed over its main source set with the API 21 signature.
+        assertTrue(build.contains("def androidModules = naruModules - [':NaruServe-servlet', ':NaruServe-slf4j']"));
+        assertTrue(build.contains("':NaruServe-api'"));
+        Matcher sniff = Pattern.compile("configure\\(androidModules\\.collect \\{ project\\(it\\) \\}\\) \\{"
+                + "\\s*apply plugin: 'ru\\.vyarus\\.animalsniffer'"
+                + "\\s*animalsniffer \\{\\s*sourceSets = \\[sourceSets\\.main\\]\\s*}\\s*dependencies \\{\\s*"
+                + "signature 'net\\.sf\\.androidscents\\.signature:android-api-level-21:[^']+@signature'").matcher(build);
+        assertTrue("animal-sniffer API 21 over sourceSets.main of every Android module", sniff.find());
+    }
 }

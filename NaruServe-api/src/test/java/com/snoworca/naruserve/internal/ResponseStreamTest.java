@@ -23,6 +23,7 @@ import java.io.FilterInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.Test;
 
@@ -167,6 +168,8 @@ public class ResponseStreamTest {
         assertEquals(50000L, in.bytesRead);
         assertEquals(ResponseState.COMPLETED, last.get().state());
         assertEquals(50000, r.body().length);
+        assertEquals(-1L, r.contentLength()); // commit with unknown length
+        assertNull(r.header("Content-Length"));
     }
 
     // SDS-AC-5; FR-HTTP-016 AC-5
@@ -231,6 +234,7 @@ public class ResponseStreamTest {
         ClientResponse r = t.send("HEAD", "/s");
         assertEquals(200, r.status());
         assertEquals("text/plain", r.header("Content-Type"));
+        assertEquals(0L, r.contentLength());
         assertEquals(0, r.body().length);
         assertEquals(0L, in.bytesRead);
         assertEquals(1, in.closes);
@@ -263,14 +267,17 @@ public class ResponseStreamTest {
     static final class RecordingExchange implements HttpExchange {
         final String method;
         final String path;
-        int commits;
-        int finishes;
-        int aborts;
-        int status;
+        // Atomic and volatile: the core may call these from the handler thread and an abort-caller thread at once.
+        final AtomicInteger commits = new AtomicInteger();
+        final AtomicInteger finishes = new AtomicInteger();
+        final AtomicInteger aborts = new AtomicInteger();
+        volatile int status;
+        /** The length passed to commit; -2 before any commit. */
+        volatile long contentLength = -2;
         long failWriteAfter = Long.MAX_VALUE;
         Runnable onWrite = () -> { };
         Runnable onCommit = () -> { };
-        List<Map.Entry<String, String>> headers = Collections.emptyList();
+        volatile List<Map.Entry<String, String>> headers = Collections.emptyList();
         final ByteArrayOutputStream body = new ByteArrayOutputStream();
 
         /** Values of committed header {@code name}, case-insensitive. */
@@ -331,8 +338,9 @@ public class ResponseStreamTest {
 
         @Override
         public OutputStream commit(int status, List<Map.Entry<String, String>> headers, long contentLength) {
-            commits++;
+            commits.incrementAndGet();
             this.status = status;
+            this.contentLength = contentLength;
             this.headers = headers;
             onCommit.run();
             return new OutputStream() {
@@ -354,12 +362,12 @@ public class ResponseStreamTest {
 
         @Override
         public void finish() {
-            finishes++;
+            finishes.incrementAndGet();
         }
 
         @Override
         public void abort() {
-            aborts++;
+            aborts.incrementAndGet();
         }
 
         @Override
@@ -389,9 +397,9 @@ public class ResponseStreamTest {
         res.stream(in, "text/plain");
         res.runTransfer();
         assertEquals(ResponseState.ABORTED, res.state());
-        assertEquals(1, ex.commits);
-        assertEquals(1, ex.aborts);
-        assertEquals(0, ex.finishes);
+        assertEquals(1, ex.commits.get());
+        assertEquals(1, ex.aborts.get());
+        assertEquals(0, ex.finishes.get());
         assertEquals(1, in.closes);
     }
 
@@ -405,7 +413,7 @@ public class ResponseStreamTest {
         res.stream(in, "text/plain");
         res.runTransfer();
         assertEquals(ResponseState.ABORTED, res.state());
-        assertEquals(1, ex.aborts);
+        assertEquals(1, ex.aborts.get());
         assertEquals(1, in.closes);
         assertEquals(8192, ex.body.size());
     }
@@ -420,11 +428,11 @@ public class ResponseStreamTest {
         res.stream(in, "text/plain");
         res.runTransfer();
         assertEquals(ResponseState.ABORTED, res.state());
-        assertEquals(1, ex.aborts);
+        assertEquals(1, ex.aborts.get());
         res.abort(new IOException("again"));
         res.abort(null);
         assertEquals(ResponseState.ABORTED, res.state());
-        assertEquals(1, ex.aborts);
+        assertEquals(1, ex.aborts.get());
         assertEquals(1, in.closes);
         assertEquals(0, ex.body.size());
     }
@@ -437,8 +445,8 @@ public class ResponseStreamTest {
         res.send("x");
         res.abort(new IOException("late"));
         assertEquals(ResponseState.COMPLETED, res.state());
-        assertEquals(0, ex.aborts);
-        assertEquals(1, ex.finishes);
+        assertEquals(0, ex.aborts.get());
+        assertEquals(1, ex.finishes.get());
     }
 
     /** Runs {@code call} on another thread and reports whether it returned within two seconds. */
@@ -479,7 +487,7 @@ public class ResponseStreamTest {
         copier.join(5000);
         assertFalse(copier.isAlive());
         assertEquals(ResponseState.ABORTED, res.state());
-        assertEquals(1, ex.aborts);
+        assertEquals(1, ex.aborts.get());
         assertEquals(1, in.closes);
         assertEquals(0, ex.body.size());
     }
@@ -510,7 +518,7 @@ public class ResponseStreamTest {
         assertFalse(writer.isAlive());
         assertEquals(ResponseState.COMPLETED, res.state());
         assertEquals(20000, ex.body.size());
-        assertEquals(1, ex.finishes);
+        assertEquals(1, ex.finishes.get());
         assertEquals(1, in.closes);
     }
 
@@ -529,7 +537,7 @@ public class ResponseStreamTest {
         };
         res.send("x");
         assertTrue("isCommitted waited on the exchange commit", prompt[0]);
-        assertEquals(1, ex.commits);
+        assertEquals(1, ex.commits.get());
         assertEquals(ResponseState.COMPLETED, res.state());
     }
 
@@ -543,6 +551,7 @@ public class ResponseStreamTest {
         res.runTransfer();
         assertTrue(ex.committed("Content-Length").isEmpty());
         assertTrue(ex.committed("Transfer-Encoding").isEmpty());
+        assertEquals(-1L, ex.contentLength);
         assertEquals(Collections.singletonList("text/plain"), ex.committed("Content-Type"));
         assertEquals(10, ex.body.size());
     }
@@ -554,9 +563,11 @@ public class ResponseStreamTest {
         DefaultResponse res = new DefaultResponse(ex, false);
         res.status(204).header("Content-Length", "5").send("hello");
         assertTrue(ex.committed("Content-Length").isEmpty());
+        assertEquals(0L, ex.contentLength);
         assertEquals(0, ex.body.size());
         RecordingExchange ex2 = new RecordingExchange("GET", "/r");
         new DefaultResponse(ex2, false).header("content-length", "99").send("hello");
         assertEquals(Collections.singletonList("5"), ex2.committed("Content-Length"));
+        assertEquals(5L, ex2.contentLength);
     }
 }

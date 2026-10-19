@@ -46,6 +46,9 @@ public interface Request {
     /** Stores {@code value} under {@code key}; a {@code null} value removes the key. */
     void attribute(String key, @Nullable Object value);
 
-    /** The value stored under {@code key} cast to {@code type}, or {@code null} when nothing is stored. */
+    /**
+     * The value stored under {@code key} cast to {@code type}, or {@code null} when nothing is stored. A primitive
+     * class such as {@code int.class} (Kotlin's {@code Int::class.java}) reads the boxed value.
+     */
     <T> @Nullable T attribute(String key, Class<T> type);
 }

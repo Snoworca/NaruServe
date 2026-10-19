@@ -228,9 +228,29 @@ public class DefaultRequestTest {
         assertNull(req.attribute("none", StringBuilder.class));
     }
 
-    // SDS-AC-7; FR-HTTP-012 AC-2
+    // SDS-AC-7; FR-HTTP-012 AC-1 - a primitive class (Kotlin's Int::class.java is int.class) reads the boxed value.
     @Test
-    public void sdsAc7_FR_HTTP_012_AC2_attributesAreIsolatedBetweenConcurrentRequests() throws Exception {
+    public void sdsAc7_FR_HTTP_012_AC1_primitiveClassReadsTheBoxedValue() {
+        DefaultRequest req = request("/x");
+        req.attribute("n", 5);
+        req.attribute("b", true);
+        req.attribute("l", 7L);
+        assertEquals(Integer.valueOf(5), req.attribute("n", int.class));
+        assertEquals(Boolean.TRUE, req.attribute("b", boolean.class));
+        assertEquals(Long.valueOf(7), req.attribute("l", long.class));
+        assertNull(req.attribute("none", int.class));
+        try {
+            req.attribute("b", int.class);
+            fail("expected ClassCastException");
+        } catch (ClassCastException expected) {
+            // a stored Boolean is not an int
+        }
+    }
+
+    // SDS-AC-7; FR-HTTP-012 AC-2 (unit part: two request objects never share a store, written from two threads;
+    // two requests in flight through the Dispatcher at once is HttpAcceptanceTest.FR_HTTP_012_AC2_*)
+    @Test
+    public void sdsAc7_FR_HTTP_012_AC2_twoRequestObjectsKeepSeparateStoresAcrossThreads() throws Exception {
         DefaultRequest first = request("/x");
         DefaultRequest second = request("/x");
         ExecutorService pool = Executors.newFixedThreadPool(2);

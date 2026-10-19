@@ -5,14 +5,18 @@ import java.io.IOException;
 import java.io.InputStream;
 
 /**
- * Fails a read once more than {@code limit} bytes came from the source, with or without a declared length. It
- * hands out at most {@code limit} bytes, then takes one probe byte from the source; a probe byte fails the read.
+ * Fails a read once more than {@code limit} bytes came from the source, with or without a declared length. A
+ * declared length within the limit ends the body there and the source is never read past it. Without a declared
+ * length it hands out at most {@code limit} bytes, then takes one probe byte from the source; a probe byte fails the
+ * read.
  */
 // @req FR-HTTP-020
 public final class LimitedInputStream extends FilterInputStream {
 
     private final long limit;
     private final long declaredLength;
+    /** Bytes the body may hold: the declared length when known and within the limit, else the limit. */
+    private final long cap;
     private long count;
 
     /** {@code declaredLength} is the request Content-Length, or -1 when absent. */
@@ -24,13 +28,14 @@ public final class LimitedInputStream extends FilterInputStream {
         }
         this.limit = limit;
         this.declaredLength = declaredLength;
+        this.cap = declaredLength >= 0 && declaredLength <= limit ? declaredLength : limit;
     }
 
     // @req FR-HTTP-020
     @Override
     public int read() throws IOException {
         checkLimit();
-        if (count == limit) {
+        if (count == cap) {
             return probe();
         }
         int r = in.read();
@@ -47,7 +52,7 @@ public final class LimitedInputStream extends FilterInputStream {
         if (len == 0) {
             return 0;
         }
-        long room = limit - count;
+        long room = cap - count;
         if (room == 0) {
             return probe();
         }
@@ -62,7 +67,7 @@ public final class LimitedInputStream extends FilterInputStream {
     @Override
     public long skip(long n) throws IOException {
         checkLimit();
-        long room = limit - count;
+        long room = cap - count;
         if (room == 0) {
             return n <= 0 ? 0 : Math.max(0, probe());
         }
@@ -88,9 +93,12 @@ public final class LimitedInputStream extends FilterInputStream {
         throw new IOException("mark/reset not supported");
     }
 
-    /** At the limit: takes one more byte from the source, so byte limit+1 is detected but never handed out. */
+    /**
+     * At the cap: a declared length ends the body; otherwise takes one more byte from the source, so byte limit+1
+     * is detected but never handed out.
+     */
     private int probe() throws IOException {
-        if (in.read() < 0) {
+        if (declaredLength >= 0 || in.read() < 0) {
             return -1;
         }
         count++;

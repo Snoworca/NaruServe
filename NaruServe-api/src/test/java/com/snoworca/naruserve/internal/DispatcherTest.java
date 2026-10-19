@@ -25,8 +25,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.junit.Test;
 
 /**
- * Dispatcher checks and handler invocation. SDS-AC-n cites docs/sds/2026-10-19.naruserve.naruserve-v1-wave-3-3.sds.md
- * (written SDS-3-AC-n where the handler is reached).
+ * Dispatcher checks and handler invocation. SDS-AC-n cites docs/sds/2026-10-19.naruserve.naruserve-v1-wave-3-3.sds.md.
  */
 public class DispatcherTest {
 
@@ -51,6 +50,7 @@ public class DispatcherTest {
     private static void assertEmpty(int status, ClientResponse r) {
         assertEquals(status, r.status());
         assertEquals("0", r.header("Content-Length"));
+        assertEquals(0L, r.contentLength()); // SDS-AC-6: automatic answers commit with length 0
         assertEquals(0, r.body().length);
         assertFalse(r.abnormallyClosed());
     }
@@ -190,6 +190,7 @@ public class DispatcherTest {
         assertEquals(204, r.status());
         assertEquals("GET, HEAD, POST, OPTIONS", r.header("Allow"));
         assertNull(r.header("Content-Length"));
+        assertEquals(0L, r.contentLength()); // SDS-AC-6: 204 commits with content length 0
         assertEquals(0, r.body().length);
         assertFalse(r.abnormallyClosed());
         assertEquals(0, calls.get());
@@ -205,9 +206,9 @@ public class DispatcherTest {
         };
     }
 
-    // SDS-3-AC-1; FR-HTTP-002 AC-3
+    // SDS-AC-1; FR-HTTP-002 AC-3
     @Test
-    public void sds3Ac1_FR_HTTP_002_AC3_doubleEncodedDotsReachVariableRouteOnceDecoded() {
+    public void sdsAc1_FR_HTTP_002_AC3_doubleEncodedDotsReachVariableRouteOnceDecoded() {
         List<String> params = new ArrayList<>();
         router.add(Method.GET, "/:x", (req, res) -> {
             params.add(req.param("x"));
@@ -219,9 +220,9 @@ public class DispatcherTest {
         assertEquals("%2e%2e", params.get(0));
     }
 
-    // SDS-3-AC-7; FR-HTTP-004 AC-1, FR-HTTP-004 AC-2, FR-HTTP-007 AC-4
+    // SDS-AC-7; FR-HTTP-004 AC-1, FR-HTTP-004 AC-2, FR-HTTP-007 AC-4
     @Test
-    public void sds3Ac7_FR_HTTP_004_AC1_AC2_FR_HTTP_007_AC4_autoHeadRunsGetHandlerInHeadMode() {
+    public void sdsAc7_FR_HTTP_004_AC1_AC2_FR_HTTP_007_AC4_autoHeadRunsGetHandlerInHeadMode() {
         List<Method> methods = new ArrayList<>();
         router.add(Method.GET, "/h", capturing((req, res) -> {
             methods.add(req.method());
@@ -241,9 +242,9 @@ public class DispatcherTest {
         assertEquals(Method.GET, methods.get(1));
     }
 
-    // SDS-3-AC-8; FR-HTTP-006 AC-1
+    // SDS-AC-8; FR-HTTP-006 AC-1
     @Test
-    public void sds3Ac8_FR_HTTP_006_AC1_runtimeExceptionBeforeAnyWriteGives500() {
+    public void sdsAc8_FR_HTTP_006_AC1_runtimeExceptionBeforeAnyWriteGives500() {
         router.add(Method.GET, "/f", (req, res) -> {
             throw new IllegalArgumentException("boom");
         });
@@ -251,9 +252,9 @@ public class DispatcherTest {
         assertEmpty(500, send("GET", "/f"));
     }
 
-    // SDS-3-AC-8; FR-HTTP-006 AC-2
+    // SDS-AC-8; FR-HTTP-006 AC-2
     @Test
-    public void sds3Ac8_FR_HTTP_006_AC2_checkedExceptionAfterStatusDropsStatusAndHeaders() {
+    public void sdsAc8_FR_HTTP_006_AC2_checkedExceptionAfterStatusDropsStatusAndHeaders() {
         router.add(Method.GET, "/f", (req, res) -> {
             res.status(201).header("X-A", "1");
             throw new IOException("boom");
@@ -265,9 +266,9 @@ public class DispatcherTest {
         assertEquals(1, r.headers().size());
     }
 
-    // SDS-3-AC-9; FR-HTTP-006 AC-3
+    // SDS-AC-9; FR-HTTP-006 AC-3
     @Test
-    public void sds3Ac9_FR_HTTP_006_AC3_throwWhileStreamingAborts() {
+    public void sdsAc9_FR_HTTP_006_AC3_throwWhileStreamingAborts() {
         AtomicInteger closes = new AtomicInteger();
         InputStream in = new ByteArrayInputStream(new byte[100]) {
             @Override
@@ -287,9 +288,9 @@ public class DispatcherTest {
         assertEquals(1, closes.get());
     }
 
-    // SDS-3-AC-9; FR-HTTP-006 AC-3
+    // SDS-AC-9; FR-HTTP-006 AC-3
     @Test
-    public void sds3Ac9_FR_HTTP_006_AC3_throwAfterSendKeepsTheSentBytes() {
+    public void sdsAc9_FR_HTTP_006_AC3_throwAfterSendKeepsTheSentBytes() {
         router.add(Method.GET, "/s", capturing((req, res) -> {
             res.send("x");
             throw new IllegalStateException("after send");
@@ -302,9 +303,9 @@ public class DispatcherTest {
         assertEquals(ResponseState.COMPLETED, last.get().state());
     }
 
-    // SDS-3-AC-10; FR-HTTP-006 AC-4
+    // SDS-AC-10; FR-HTTP-006 AC-4
     @Test
-    public void sds3Ac10_FR_HTTP_006_AC4_returnWithoutBodyEndsTheResponse() {
+    public void sdsAc10_FR_HTTP_006_AC4_returnWithoutBodyEndsTheResponse() {
         router.add(Method.GET, "/e", capturing((req, res) -> res.status(202).header("X-A", "1")));
         start();
         ClientResponse r = send("GET", "/e");
@@ -313,9 +314,9 @@ public class DispatcherTest {
         assertEquals(ResponseState.COMPLETED, last.get().state());
     }
 
-    // SDS-3-AC-10; FR-HTTP-006 AC-4, FR-HTTP-014 AC-7
+    // SDS-AC-10; FR-HTTP-006 AC-4, FR-HTTP-014 AC-7
     @Test
-    public void sds3Ac10_FR_HTTP_006_AC4_pendingStreamCopiesOnTheHandlerThreadAfterReturn() {
+    public void sdsAc10_FR_HTTP_006_AC4_pendingStreamCopiesOnTheHandlerThreadAfterReturn() {
         List<Thread> threads = new ArrayList<>();
         InputStream in = new ByteArrayInputStream("abc".getBytes(StandardCharsets.UTF_8)) {
             @Override
@@ -339,9 +340,9 @@ public class DispatcherTest {
         }
     }
 
-    // SDS-3-AC-9; FR-HTTP-006 AC-3
+    // SDS-AC-9; FR-HTTP-006 AC-3
     @Test
-    public void sds3Ac9_FR_HTTP_006_AC3_throwWhileStreamingIsAbortedByTheCoreNotTheAdapter() {
+    public void sdsAc9_FR_HTTP_006_AC3_throwWhileStreamingIsAbortedByTheCoreNotTheAdapter() {
         router.add(Method.GET, "/s", capturing((req, res) -> {
             res.stream(new ByteArrayInputStream(new byte[10]), "text/plain");
             throw new IOException("after stream");
@@ -349,15 +350,15 @@ public class DispatcherTest {
         router.freeze();
         ResponseStreamTest.RecordingExchange ex = new ResponseStreamTest.RecordingExchange("GET", "/s");
         new Dispatcher(router).handle(ex);
-        assertEquals(1, ex.commits);
-        assertEquals(1, ex.aborts);
-        assertEquals(0, ex.finishes);
+        assertEquals(1, ex.commits.get());
+        assertEquals(1, ex.aborts.get());
+        assertEquals(0, ex.finishes.get());
         assertEquals(ResponseState.ABORTED, last.get().state());
     }
 
-    // SDS-3-AC-9; FR-HTTP-006 AC-3, FR-HTTP-014 AC-5
+    // SDS-AC-9; FR-HTTP-006 AC-3, FR-HTTP-014 AC-5
     @Test
-    public void sds3Ac9_FR_HTTP_006_AC3_errorAfterStreamClosesTheInputBeforePropagating() {
+    public void sdsAc9_FR_HTTP_006_AC3_errorAfterStreamClosesTheInputBeforePropagating() {
         AtomicInteger closes = new AtomicInteger();
         InputStream in = new ByteArrayInputStream(new byte[10]) {
             @Override
@@ -379,13 +380,13 @@ public class DispatcherTest {
             assertSame(thrown, e);
         }
         assertEquals(1, closes.get());
-        assertEquals(1, ex.aborts);
+        assertEquals(1, ex.aborts.get());
         assertEquals(ResponseState.ABORTED, last.get().state());
     }
 
-    // SDS-3-AC-8; FR-HTTP-006 AC-2
+    // SDS-AC-8; FR-HTTP-006 AC-2
     @Test
-    public void sds3Ac8_FR_HTTP_006_AC2_failureAnswer500MovesTheResponseOutOfNew() {
+    public void sdsAc8_FR_HTTP_006_AC2_failureAnswer500MovesTheResponseOutOfNew() {
         router.add(Method.GET, "/f", capturing((req, res) -> {
             res.status(201).header("X-A", "1");
             throw new IOException("boom");
@@ -394,7 +395,7 @@ public class DispatcherTest {
         ResponseStreamTest.RecordingExchange ex = new ResponseStreamTest.RecordingExchange("GET", "/f");
         new Dispatcher(router).handle(ex);
         assertEquals(500, ex.status);
-        assertEquals(1, ex.commits);
+        assertEquals(1, ex.commits.get());
         assertEquals(1, ex.headers.size());
         assertEquals(java.util.Collections.singletonList("0"), ex.committed("Content-Length"));
         assertEquals(ResponseState.COMPLETED, last.get().state());
@@ -402,7 +403,7 @@ public class DispatcherTest {
             last.get().send("late");
             org.junit.Assert.fail("expected IllegalStateException");
         } catch (IllegalStateException expected) {
-            assertEquals(1, ex.commits);
+            assertEquals(1, ex.commits.get());
         }
     }
 }

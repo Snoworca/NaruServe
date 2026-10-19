@@ -237,9 +237,11 @@ public final class InMemoryHttpAdapter implements HttpAdapter {
         private final byte[] body;
         private final boolean abnormallyClosed;
         private final boolean upgradeHandedOver;
+        private final long contentLength;
 
         ClientResponse(int status, List<Map.Entry<String, String>> headers, byte[] body, boolean abnormallyClosed,
-                boolean upgradeHandedOver) {
+                boolean upgradeHandedOver, long contentLength) {
+            this.contentLength = contentLength;
             this.status = status;
             this.headers = Collections.unmodifiableList(new ArrayList<>(headers));
             this.body = body;
@@ -280,6 +282,14 @@ public final class InMemoryHttpAdapter implements HttpAdapter {
         public boolean upgradeHandedOver() {
             return upgradeHandedOver;
         }
+
+        /**
+         * The {@code contentLength} the core passed to {@link HttpExchange#commit}: -1 unknown, or -2 when the
+         * response was not started by commit.
+         */
+        public long contentLength() {
+            return contentLength;
+        }
     }
 
     // @req FR-HTTP-001
@@ -297,6 +307,7 @@ public final class InMemoryHttpAdapter implements HttpAdapter {
         private boolean ended;
         private boolean aborted;
         private boolean upgradeHandedOver;
+        private long contentLength = -2;
         private @Nullable Future<?> drain;
 
         Exchange(ClientRequest request) {
@@ -363,6 +374,10 @@ public final class InMemoryHttpAdapter implements HttpAdapter {
             if (ended) {
                 throw new IOException(aborted ? "exchange aborted" : "exchange finished");
             }
+            if (contentLength >= 0 && body.size() + len > contentLength) {
+                // A framed connection cannot carry more than the committed length.
+                throw new IOException("body exceeds the committed length " + contentLength);
+            }
             body.write(b, off, len);
         }
 
@@ -383,7 +398,22 @@ public final class InMemoryHttpAdapter implements HttpAdapter {
         @Override
         public OutputStream commit(int status, List<Map.Entry<String, String>> headers, long contentLength)
                 throws IOException {
+            if (contentLength < -1) {
+                throw new IllegalArgumentException("content length " + contentLength);
+            }
+            int lengths = 0;
+            for (Map.Entry<String, String> h : headers) {
+                if (h.getKey().equalsIgnoreCase("Content-Length")) {
+                    lengths++;
+                }
+            }
+            if (lengths > 1) {
+                throw new IllegalArgumentException("more than one Content-Length header");
+            }
             start(status, headers);
+            synchronized (this) {
+                this.contentLength = contentLength;
+            }
             return bodyStream();
         }
 
@@ -491,7 +521,8 @@ public final class InMemoryHttpAdapter implements HttpAdapter {
         }
 
         synchronized ClientResponse response() {
-            return new ClientResponse(status, responseHeaders, body.toByteArray(), aborted, upgradeHandedOver);
+            return new ClientResponse(status, responseHeaders, body.toByteArray(), aborted, upgradeHandedOver,
+                    contentLength);
         }
     }
 }

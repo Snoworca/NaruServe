@@ -185,8 +185,34 @@ public final class DefaultRequest implements Request {
 
     // @req FR-HTTP-012
     @Override
+    @SuppressWarnings("unchecked") // a wrapper class stands for its primitive T, which is the boxed type at runtime
     public <T> @Nullable T attribute(String key, Class<T> type) {
-        return type.cast(attributes.get(key));
+        // Kotlin's Int::class.java is int.class, and Class.cast always fails for a primitive class.
+        return (T) wrapper(type).cast(attributes.get(key));
+    }
+
+    private static Class<?> wrapper(Class<?> type) {
+        if (!type.isPrimitive()) {
+            return type;
+        }
+        if (type == int.class) {
+            return Integer.class;
+        } else if (type == long.class) {
+            return Long.class;
+        } else if (type == boolean.class) {
+            return Boolean.class;
+        } else if (type == double.class) {
+            return Double.class;
+        } else if (type == float.class) {
+            return Float.class;
+        } else if (type == short.class) {
+            return Short.class;
+        } else if (type == byte.class) {
+            return Byte.class;
+        } else if (type == char.class) {
+            return Character.class;
+        }
+        return Void.class;
     }
 
     /** One strict UTF-8 percent-decoding pass; '+' becomes a space when {@code plusAsSpace}. */

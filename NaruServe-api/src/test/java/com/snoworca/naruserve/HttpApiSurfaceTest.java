@@ -8,6 +8,8 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.snoworca.naruserve.routing.RouterPolicy;
+import com.snoworca.naruserve.testing.InMemoryHttpAdapter;
+import com.snoworca.naruserve.testing.TestApp;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.AnnotatedType;
@@ -224,5 +226,33 @@ public class HttpApiSurfaceTest {
                 "put(RouteHandler)->RouteBuilder", "patch(RouteHandler)->RouteBuilder",
                 "delete(RouteHandler)->RouteBuilder", "head(RouteHandler)->RouteBuilder",
                 "options(RouteHandler)->RouteBuilder"), signatures(RouteBuilder.class));
+    }
+
+    // IR-HTTP-006 AC-2
+    @Test
+    public void IR_HTTP_006_AC2_routeBuilderHandlersEachReachOnlyTheirOwnMethod() {
+        TestApp t = TestApp.create();
+        List<String> calls = new java.util.ArrayList<>();
+        t.app().route("/u/:id")
+                .get((req, res) -> {
+                    calls.add("h1 " + req.param("id"));
+                    res.send("h1");
+                })
+                .put((req, res) -> {
+                    calls.add("h2 " + req.param("id"));
+                    res.send("h2");
+                })
+                .delete((req, res) -> {
+                    calls.add("h3 " + req.param("id"));
+                    res.send("h3");
+                });
+        for (String[] c : new String[][] {{"GET", "h1"}, {"PUT", "h2"}, {"DELETE", "h3"}}) {
+            InMemoryHttpAdapter.ClientResponse r = t.send(c[0], "/u/1");
+            assertEquals(c[0], 200, r.status());
+            assertEquals(c[0], c[1], new String(r.body(), java.nio.charset.StandardCharsets.UTF_8));
+        }
+        assertEquals(Arrays.asList("h1 1", "h2 1", "h3 1"), calls);
+        assertEquals(405, t.send("POST", "/u/1").status());
+        assertEquals(3, calls.size());
     }
 }

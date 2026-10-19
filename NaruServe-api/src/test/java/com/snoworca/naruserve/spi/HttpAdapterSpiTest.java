@@ -125,6 +125,7 @@ public class HttpAdapterSpiTest {
         AtomicReference<Thread> handlerThread = new AtomicReference<>();
         AtomicReference<Thread> drainThread = new AtomicReference<>();
         AtomicReference<Boolean> returnedBeforeEnd = new AtomicReference<>();
+        CountDownLatch handlerReturned = new CountDownLatch(1);
         InMemoryHttpAdapter adapter = bound(exchange -> {
             handlerThread.set(Thread.currentThread());
             try {
@@ -143,6 +144,7 @@ public class HttpAdapterSpiTest {
                 throw new AssertionError(e);
             }
             returnedBeforeEnd.set(end.getCount() == 1);
+            handlerReturned.countDown();
         });
         Future<ClientResponse> f = adapter.submit(ClientRequest.of("GET", "/events"));
         assertTrue(drainStarted.await(5, TimeUnit.SECONDS));
@@ -152,7 +154,9 @@ public class HttpAdapterSpiTest {
         } catch (TimeoutException expected) {
             // the drain is still running
         }
-        assertTrue(returnedBeforeEnd.get());
+        // eventStream blocking until the drain ends would leave this latch at 1 while the end is still unreported.
+        assertTrue("eventStream did not return while the drain ran", handlerReturned.await(5, TimeUnit.SECONDS));
+        assertTrue("eventStream returned only after the end", Boolean.TRUE.equals(returnedBeforeEnd.get()));
         end.countDown();
         ClientResponse r = f.get(5, TimeUnit.SECONDS);
         assertEquals(200, r.status());
@@ -326,5 +330,36 @@ public class HttpAdapterSpiTest {
         for (Class<?> callback : new Class<?>[] {ExchangeHandler.class, UpgradeHandler.class, StreamDrain.class}) {
             assertTrue(callback + " is @FunctionalInterface", callback.isAnnotationPresent(FunctionalInterface.class));
         }
+    }
+
+    // CON-HTTP-001 AC-2
+    @Test
+    public void CON_HTTP_001_AC2_dispatcherIsApiMainAndReferencesNoEngineOrPlatformClass() throws Exception {
+        Class<?> dispatcher = com.snoworca.naruserve.internal.Dispatcher.class;
+        String location = dispatcher.getProtectionDomain().getCodeSource().getLocation().getPath();
+        assertTrue(location, location.contains("NaruServe-api/build/classes/java/main")
+                || location.matches(".*/NaruServe-api/build/libs/NaruServe-api-[^/]*[0-9T]\\.jar"));
+        java.util.regex.Pattern forbidden = java.util.regex.Pattern.compile(
+                "(android|javax/servlet|jakarta/servlet|com/google/gson|com/snoworca/tinyhttpd|kotlin)/");
+        List<Class<?>> scanned = new ArrayList<>(SPI_TYPES);
+        scanned.add(dispatcher);
+        for (Class<?> c : scanned) {
+            String resource = c.getName().replace('.', '/') + ".class";
+            java.io.ByteArrayOutputStream buf = new java.io.ByteArrayOutputStream();
+            try (java.io.InputStream in = c.getClassLoader().getResourceAsStream(resource)) {
+                assertNotNull(resource, in);
+                byte[] chunk = new byte[8192];
+                for (int n; (n = in.read(chunk)) > 0; ) {
+                    buf.write(chunk, 0, n);
+                }
+            }
+            // ISO-8859-1 keeps every byte, so the constant pool's internal class names survive the decode.
+            java.util.regex.Matcher m = forbidden.matcher(new String(buf.toByteArray(), StandardCharsets.ISO_8859_1));
+            if (m.find()) {
+                fail(resource + " references " + m.group());
+            }
+        }
+        // The scan bites: the same pattern finds kotlin/ in a Kotlin-compiled test class.
+        assertTrue(forbidden.matcher("Lkotlin/jvm/internal/Intrinsics;").find());
     }
 }

@@ -37,6 +37,10 @@ public interface HttpExchange {
     // @req IR-HTTP-003
     List<Map.Entry<String, String>> headers();
 
+    /**
+     * The request body, ending (-1) where the message body ends by its Content-Length or chunked framing; it never
+     * reads into the next request on the connection.
+     */
     // @req IR-HTTP-003
     InputStream requestBody();
 
@@ -46,7 +50,14 @@ public interface HttpExchange {
     // @req IR-HTTP-003
     boolean isSecure();
 
-    /** Sends status and headers and returns the body stream; {@code contentLength} -1 means unknown. */
+    /**
+     * Sends status and headers and returns the body stream. {@code headers} are sent as given: they already carry
+     * Content-Length when the core knows it (a HEAD response carries the length the GET body would have had), and
+     * the adapter never adds, removes or changes Content-Length. {@code contentLength} is the number of body bytes
+     * the core will write to the returned stream: 0 for a bodyless response (204, 304, HEAD), or -1 when unknown,
+     * which the adapter frames itself (chunked, or close on HTTP/1.0) and is the only case where it may add a
+     * framing header.
+     */
     // @req IR-HTTP-003
     OutputStream commit(int status, List<Map.Entry<String, String>> headers, long contentLength) throws IOException;
 

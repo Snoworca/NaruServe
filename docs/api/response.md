@@ -13,7 +13,7 @@ res.status(201).header("X-Request-ID", id).json(created);
 | 메서드 | 반환 | Express | 설명 |
 |---|---|---|---|
 | `status(code)` | `Response` | `res.status(code)` | 상태 코드. 기본은 `200` |
-| `header(name, value)` | `Response` | `res.set(name, value)` | 응답 헤더. 같은 이름(대소문자 무시)이 있으면 바꿔 씁니다. 이름이나 값에 CR/LF가 있으면 `IllegalArgumentException` |
+| `header(name, value)` | `Response` | `res.set(name, value)` | 응답 헤더. 같은 이름(대소문자 무시)이 있으면 바꿔 씁니다. 이름이 HTTP 토큰이 아니거나(빈 이름, 공백·`:` 포함 등) 값에 CR/LF·NUL 같은 제어 문자(탭 제외)가 있으면 `IllegalArgumentException` |
 | `addCookie(cookie)` | `Response` | `res.cookie(...)` | `Set-Cookie` 추가. [Cookie](cookie.md) |
 | `cache(policy)` | `Response` | `res.set('Cache-Control', ...)` | 캐시 정책. [캐시](static.md#캐시-정책) |
 | `isCommitted()` | `boolean` | `res.headersSent` | 상태·헤더를 이미 보냈는지 |

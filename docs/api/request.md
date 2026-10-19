@@ -132,7 +132,7 @@ app.get("/me", (req, res) -> {
 ```
 
 요청 속성은 그 요청이 끝나면 사라집니다. 다른 요청과 공유되지 않습니다.
-저장된 값이 `type`이 아니면 `ClassCastException`이 납니다.
+저장된 값이 `type`이 아니면 `ClassCastException`이 납니다. `int.class`나 Kotlin의 `Int::class.java` 같은 기본형 클래스는 래퍼 타입(`Integer`)으로 읽습니다.
 
 값을 지우려면 타입이 있는 `null` 변수를 저장합니다. `req.attribute("user", null)`처럼 `null` 리터럴을 넘기면 Java가 읽기 오버로드 `attribute(key, Class<T> type)`를 고르고, `type`이 `null`이라 `NullPointerException`이 납니다. `(Object) null`로 캐스팅해도 지워집니다.
 

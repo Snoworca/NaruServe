@@ -160,4 +160,31 @@ public class LimitedInputStreamTest {
             assertEquals(0, single.taken);
         }
     }
+
+    // SDS-AC-12; FR-HTTP-020 AC-2 — a declared length within the limit ends the body there: no probe byte is taken
+    // from the source, so a keep-alive stream's next request is never read.
+    @Test
+    public void sdsAc12_FR_HTTP_020_AC2_declaredLengthWithinLimitNeverReadsPastTheBody() throws IOException {
+        CountingSource atLimit = new CountingSource(14);
+        InputStream in = new LimitedInputStream(atLimit, 10, 10);
+        byte[] buf = new byte[64];
+        int total = 0;
+        int n;
+        while ((n = in.read(buf, total, buf.length - total)) > 0) {
+            total += n;
+        }
+        assertEquals(10, total);
+        assertEquals(-1, in.read());
+        assertEquals(0, in.skip(5));
+        assertEquals(10, atLimit.taken);
+
+        CountingSource under = new CountingSource(14);
+        InputStream small = new LimitedInputStream(under, 10, 5);
+        for (int i = 0; i < 5; i++) {
+            assertEquals(0, small.read());
+        }
+        assertEquals(-1, small.read());
+        assertEquals(-1, small.read(buf, 0, 8));
+        assertEquals(5, under.taken);
+    }
 }

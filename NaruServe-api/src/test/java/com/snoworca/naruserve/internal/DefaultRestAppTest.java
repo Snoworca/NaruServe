@@ -17,6 +17,7 @@ import com.snoworca.naruserve.spi.ExchangeHandler;
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter;
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientRequest;
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientResponse;
+import com.snoworca.naruserve.testing.TestApp;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
@@ -28,6 +29,7 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.Scanner;
 import java.util.jar.JarEntry;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.jar.JarFile;
 import org.jspecify.annotations.NullMarked;
 import org.junit.Test;
@@ -182,18 +184,27 @@ public class DefaultRestAppTest {
     // SDS-AC-13; FR-HTTP-008 AC-3
     @Test
     public void sdsAc13_FR_HTTP_008_AC3_policySetAfterGetAppliesToIt() {
-        DefaultRestApp strict = new DefaultRestApp();
-        strict.get("/a/b", h);
-        strict.freeze();
-        assertEquals(404, send(strict, "DELETE", "/a//b").status());
+        AtomicInteger hits = new AtomicInteger();
+        RouteHandler hit = (req, res) -> {
+            hits.incrementAndGet();
+            res.send("hit");
+        };
+        TestApp strict = TestApp.create();
+        strict.app().get("/a/b", hit);
+        assertEquals(404, strict.send("GET", "/a//b").status());
+        assertEquals(0, hits.get());
 
-        DefaultRestApp merged = new DefaultRestApp();
-        merged.get("/a/b", h);
-        assertSame(merged, merged.routerPolicy(RouterPolicy.builder().mergeSlashes(true).build()));
-        merged.freeze();
-        ClientResponse r = send(merged, "DELETE", "/a//b");
-        assertEquals(405, r.status());
-        assertEquals("GET, HEAD, OPTIONS", r.header("Allow"));
+        TestApp merged = TestApp.create();
+        RestApp app = merged.app();
+        app.get("/a/b", hit);
+        assertSame(app, app.routerPolicy(RouterPolicy.builder().mergeSlashes(true).build()));
+        ClientResponse r = merged.send("GET", "/a//b"); // the harness freezes here, after the policy was set
+        assertEquals(200, r.status());
+        assertEquals("hit", new String(r.body(), StandardCharsets.UTF_8));
+        assertEquals(1, hits.get());
+        ClientResponse mismatch = merged.send("DELETE", "/a//b");
+        assertEquals(405, mismatch.status());
+        assertEquals("GET, HEAD, OPTIONS", mismatch.header("Allow"));
     }
 
     // SDS-AC-13; FR-HTTP-008 AC-5

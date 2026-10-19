@@ -123,6 +123,18 @@ class HttpApiKotlinTest {
     }
 
     @Test
+    fun `SDS-AC-4 IR-HTTP-001 AC-5 FR-HTTP-012 AC-1 Kotlin reads an Int attribute with Int class java`() {
+        val t = TestApp.create()
+        t.app().get("/n") { req, res ->
+            req.attribute("n", 5)
+            val n: Int? = req.attribute("n", Int::class.java)
+            val none: Int? = req.attribute("none", Int::class.java)
+            res.send("$n $none")
+        }
+        assertEquals("5 null", String(t.send("GET", "/n").body(), Charsets.UTF_8))
+    }
+
+    @Test
     fun `SDS-AC-4 IR-HTTP-001 AC-5 Kotlin trailing lambdas handle real requests through TestApp`() {
         val t = TestApp.create()
         val seen = ArrayList<Any?>()

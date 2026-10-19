@@ -61,14 +61,17 @@ public final class DefaultResponse implements Response {
         return this;
     }
 
-    /** Replaces a same-name header (case-insensitive), as Express res.set does. */
+    /**
+     * Replaces a same-name header (case-insensitive), as Express res.set does. The name must be an RFC 9110 token
+     * and the value may hold no control character but HTAB (so no CR or LF).
+     */
     // @req FR-HTTP-013
     // @req FR-HTTP-015
     @Override
     public synchronized Response header(String name, String value) {
         requireNew();
-        if (hasCrLf(name) || hasCrLf(value)) {
-            throw crLf();
+        if (!isToken(name) || !isFieldValue(value)) {
+            throw badHeader();
         }
         put(name, value);
         return this;
@@ -112,7 +115,7 @@ public final class DefaultResponse implements Response {
         Commit c = null;
         boolean bodyless = false;
         synchronized (this) {
-            refusal = state != ResponseState.NEW ? notNew() : hasCrLf(contentType) ? crLf() : null;
+            refusal = state != ResponseState.NEW ? notNew() : !isFieldValue(contentType) ? badHeader() : null;
             if (refusal == null) {
                 pendingIn = in;
                 put("Content-Type", contentType);
@@ -307,8 +310,7 @@ public final class DefaultResponse implements Response {
         if (status != 204 && status != 304) {
             put("Content-Length", String.valueOf(body.length));
         }
-        // shortcut: HEAD passes 0 as the commit length with the GET Content-Length header; pin the SPI meaning
-        // when the TinyHttpd adapter lands.
+        // HEAD: commit length 0 (no body bytes) while the header keeps the GET length, per HttpExchange.commit.
         return bodyless() ? begin(0, EMPTY) : begin(body.length, body);
     }
 
@@ -362,8 +364,8 @@ public final class DefaultResponse implements Response {
         return new IllegalStateException("response is " + state);
     }
 
-    private static IllegalArgumentException crLf() {
-        return new IllegalArgumentException("header name or value contains CR or LF");
+    private static IllegalArgumentException badHeader() {
+        return new IllegalArgumentException("bad header: name not a token, or CR, LF or a control char in the value");
     }
 
     private void put(String name, String value) {
@@ -388,8 +390,30 @@ public final class DefaultResponse implements Response {
         return false;
     }
 
-    private static boolean hasCrLf(String s) {
-        return s.indexOf('\r') >= 0 || s.indexOf('\n') >= 0;
+    /** RFC 9110 token: one or more tchar. */
+    private static boolean isToken(String s) {
+        if (s.isEmpty()) {
+            return false;
+        }
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            boolean alnum = c >= '0' && c <= '9' || c >= 'A' && c <= 'Z' || c >= 'a' && c <= 'z';
+            if (!alnum && "!#$%&'*+-.^_`|~".indexOf(c) < 0) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /** No control character (CR, LF, NUL, DEL, ...) except HTAB. */
+    private static boolean isFieldValue(String s) {
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if (c < 0x20 && c != '\t' || c == 0x7F) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private static void closeQuietly(InputStream in) {

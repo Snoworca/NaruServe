@@ -20,6 +20,8 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.lang.reflect.AnnotatedType;
+import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 import org.junit.Test;
 
@@ -159,5 +161,45 @@ public class RouterRegistrationTest {
         } catch (RoutingConfigException e) {
             assertEquals("GET /chat conflicts with GET /chat", e.getMessage());
         }
+    }
+
+    // CON-ROUTE-006 AC-3
+    @Test
+    public void CON_ROUTE_006_AC3_publicRouterTypesCarryJSpecifyNullness() throws Exception {
+        // @NullMarked on the package makes every unannotated public signature non-null; nullable ones say so.
+        assertNotNull(Router.class.getPackage().getAnnotation(NullMarked.class));
+        for (String name : new String[] {"handler", "method", "routeKind", "allow"}) {
+            assertNotNull("RouteMatch." + name + "() is @Nullable",
+                    RouteMatch.class.getMethod(name).getAnnotatedReturnType().getAnnotation(Nullable.class));
+        }
+        AnnotatedType[] ws = Router.class.getMethod("isWebSocketUpgrade", String.class, String.class, String.class)
+                .getAnnotatedParameterTypes();
+        assertNull(ws[0].getAnnotation(Nullable.class));
+        assertNotNull(ws[1].getAnnotation(Nullable.class));
+        assertNotNull(ws[2].getAnnotation(Nullable.class));
+        assertNull("lookup never returns null",
+                Router.class.getMethod("lookup", String.class, String.class, boolean.class)
+                        .getAnnotatedReturnType().getAnnotation(Nullable.class));
+    }
+
+    // CON-ROUTE-006 AC-4
+    @Test
+    public void CON_ROUTE_006_AC4_lookupNeverParsesAuthorityOrAbsoluteFormAndDropsTheQuery() {
+        Router<String> r = new Router<>(RouterPolicy.strict());
+        r.add(Method.GET, "/users", "h");
+        r.freeze();
+        // Absolute and authority forms are the adapter's rewrite; the router refuses them instead of parsing.
+        for (String target : new String[] {"http://h/users", "h:443", "*"}) {
+            try {
+                r.lookup("GET", target, false);
+                fail("lookup parsed " + target);
+            } catch (IllegalArgumentException expected) {
+                // left to the adapter
+            }
+        }
+        // Text from the first '?' is dropped before decoding, so a malformed escape there is never decoded.
+        RouteMatch<String> m = r.lookup("GET", "/users?x=%zz&y=/a?b", false);
+        assertEquals(RouteMatch.Kind.MATCHED, m.kind());
+        assertEquals("h", m.handler());
     }
 }

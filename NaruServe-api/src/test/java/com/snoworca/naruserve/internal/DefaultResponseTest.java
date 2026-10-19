@@ -74,6 +74,7 @@ public class DefaultResponseTest {
         ClientResponse r = get((req, res) -> res.send("ok"));
         assertEquals(200, r.status());
         assertEquals("2", r.header("Content-Length"));
+        assertEquals(2L, r.contentLength()); // wave-3-2 SDS-AC-2: the length goes in the commit call
     }
 
     // SDS-AC-1; FR-HTTP-013 AC-1
@@ -128,6 +129,7 @@ public class DefaultResponseTest {
         assertEquals(202, r.status());
         assertEquals("1", r.header("X-A"));
         assertEquals("0", r.header("Content-Length"));
+        assertEquals(0L, r.contentLength());
         assertEquals(0, r.body().length);
         assertFalse(r.abnormallyClosed());
         assertEquals(ResponseState.COMPLETED, last.get().state());
@@ -152,6 +154,37 @@ public class DefaultResponseTest {
         assertNull(r.header("X"));
         assertNull(r.header("X\r\nY"));
         assertEquals(200, r.status());
+    }
+
+    // SDS-AC-7; FR-HTTP-015 AC-4 - beyond CR/LF: a name must be an RFC 9110 token and a value holds no control
+    // character other than HTAB, so no malformed header line reaches the adapter.
+    @Test
+    public void sdsAc7_FR_HTTP_015_AC4_nonTokenNamesAndControlCharactersAreRefused() {
+        List<String> refused = new ArrayList<>();
+        List<String> streamRefused = new ArrayList<>();
+        ClientResponse r = get((req, res) -> {
+            String[][] bad = {{"", "1"}, {"X A", "1"}, {"X-A:", "1"}, {"X\u0000", "1"}, {"X(", "1"},
+                {"X", "a\u0000b"}, {"X", "a\u0001b"}, {"X", "a\u007Fb"}};
+            for (String[] h : bad) {
+                try {
+                    res.header(h[0], h[1]);
+                } catch (IllegalArgumentException e) {
+                    refused.add(h[0] + "=" + h[1]);
+                }
+            }
+            try {
+                res.stream(new ByteArrayInputStream(new byte[0]), "text/plain\u0000");
+            } catch (IllegalArgumentException e) {
+                streamRefused.add("stream");
+            }
+            res.header("X-Tab", "a\tb ~!#$%&'*+.^_`|").send("ok");
+        });
+        assertEquals(8, refused.size());
+        assertEquals(1, streamRefused.size());
+        assertEquals(200, r.status());
+        assertEquals("a\tb ~!#$%&'*+.^_`|", r.header("X-Tab"));
+        assertNull(r.header("X"));
+        assertNull(r.header("X A"));
     }
 
     // SDS-AC-7; FR-HTTP-015 AC-4, FR-HTTP-016 AC-2
@@ -239,6 +272,7 @@ public class DefaultResponseTest {
         assertEquals(204, r.status());
         assertEquals(0, r.body().length);
         assertNull(r.header("Content-Length"));
+        assertEquals(0L, r.contentLength());
         assertFalse(r.abnormallyClosed());
         assertTrue(last.get().bodyless());
     }
@@ -250,6 +284,7 @@ public class DefaultResponseTest {
         assertEquals(304, r.status());
         assertEquals(0, r.body().length);
         assertNull(r.header("Content-Length"));
+        assertEquals(0L, r.contentLength());
     }
 
     // SDS-AC-12; FR-HTTP-017 AC-4
@@ -275,6 +310,8 @@ public class DefaultResponseTest {
         assertEquals(200, r.status());
         assertEquals("1", r.header("X-A"));
         assertEquals("4", r.header("Content-Length"));
+        assertEquals(1, count(r, "Content-Length"));
+        assertEquals(0L, r.contentLength()); // HttpExchange.commit: HEAD writes no body bytes, header keeps GET's
         assertEquals(0, r.body().length);
         assertFalse(r.abnormallyClosed());
         assertTrue(last.get().bodyless());
@@ -339,8 +376,8 @@ public class DefaultResponseTest {
         res.abort(null);
         assertFalse(res.isCommitted());
         assertEquals(ResponseState.ABORTED, res.state());
-        assertEquals(0, ex.commits);
-        assertEquals(1, ex.aborts);
+        assertEquals(0, ex.commits.get());
+        assertEquals(1, ex.aborts.get());
     }
 
     // SDS-AC-10; FR-HTTP-016 AC-1, FR-HTTP-016 AC-2
@@ -363,9 +400,10 @@ public class DefaultResponseTest {
         assertEquals(true, during.get(1));
         assertTrue(String.valueOf(during.get(2)), String.valueOf(during.get(2)).contains("COMMITTED"));
         assertEquals(ResponseState.COMPLETED, res.state());
-        assertEquals(1, ex.commits);
+        assertEquals(1, ex.commits.get());
         assertEquals(200, ex.status);
-        assertEquals(1, ex.finishes);
-        assertEquals(0, ex.aborts);
+        assertEquals(1, ex.finishes.get());
+        assertEquals(3L, ex.contentLength);
+        assertEquals(0, ex.aborts.get());
     }
 }
