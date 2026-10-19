@@ -124,4 +124,5 @@ public interface UploadFile extends AutoCloseable {
 - 임시 파일은 요청이 끝날 때, `save()`가 성공한 뒤, 한도를 넘어 `413`으로 답한 뒤, 클라이언트가 중간에 끊었을 때, 앱을 `shutdown`할 때 지워집니다.
 - 요청은 응답이 끝나고 **그리고** 핸들러가 반환했을 때 끝납니다. 그래서 `res.status(202).send("queued")`로 먼저 답한 뒤 같은 핸들러 안에서 `file.save(dest)`해도 됩니다. 이렇게 정한 이유는 먼저 답하고 나중에 처리하는 Express/multer 패턴을 그대로 쓰게 하려는 것입니다.
 - 그래서 **요청이 끝난 뒤에는 `UploadFile`을 쓸 수 없습니다.** `inputStream()`을 다른 스레드에 넘겨 나중에 읽지 마세요. 나중에 처리할 파일은 핸들러 안에서 `save()`하세요.
+- `save()`나 `close()`는 그 파트의 `inputStream()`으로 받은 스트림을 먼저 닫고 임시 파일을 지웁니다. 열린 스트림이 Windows에서 삭제를 막지 않게 하려는 것입니다. 삭제가 실패한 임시 파일은 계속 추적해 `shutdown` 때 다시 지웁니다.
 - 이미 쓸 수 없게 된 파트에 `save(dest)`를 부르면 `dest`를 건드리지 않고 `IllegalStateException`을 던집니다. 앞서 저장한 파일이 지워지지 않습니다.

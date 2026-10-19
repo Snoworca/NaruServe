@@ -13,8 +13,18 @@ import java.util.Set;
 // @req FR-MULTIPART-006
 public final class SpoolRegistry {
 
+    /** Deletes a file; true when it is gone. A test hook replaces it to make a delete fail. */
+    interface Deleter {
+        boolean delete(File f);
+    }
+
     private final Set<File> open = new LinkedHashSet<>();
     private boolean closed;
+    private volatile Deleter deleter = f -> f.delete() || !f.exists();
+
+    void deleter(Deleter d) {
+        deleter = d;
+    }
 
     /** A new server-named temp file in {@code dir}, never named after client input; HttpException(500) once closed. */
     // @req FR-MULTIPART-004
@@ -35,13 +45,14 @@ public final class SpoolRegistry {
         throw new HttpException(500, "upload spool is closed");
     }
 
-    /** Deletes {@code f} and stops tracking it. */
+    /** Deletes {@code f} and stops tracking it; a failed delete keeps it tracked so the stop cleanup retries it. */
     // @req FR-MULTIPART-004
     public void forget(File f) {
-        synchronized (this) {
-            open.remove(f);
+        if (deleter.delete(f)) {
+            synchronized (this) {
+                open.remove(f);
+            }
         }
-        f.delete();
     }
 
     /** Deletes every open temp file, then refuses new ones. */
@@ -53,8 +64,9 @@ public final class SpoolRegistry {
             files = new ArrayList<>(open);
             open.clear();
         }
+        Deleter d = deleter;
         for (File f : files) {
-            f.delete();
+            d.delete(f);
         }
     }
 }

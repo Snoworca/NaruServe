@@ -225,4 +225,49 @@ public class SpoolCleanupTest {
         }
         assertEquals(0, files(dir));
     }
+
+    // FR-MULTIPART-004, FR-MULTIPART-006: a temp file whose delete failed stays tracked, so the stop cleanup retries it
+    @Test
+    public void FR_MULTIPART_006_failedDeleteIsRetriedAtStop() throws Exception {
+        File dir = tmp.newFolder("retry");
+        SpoolRegistry spool = new SpoolRegistry();
+        File f = spool.createTemp(dir);
+        boolean[] failOnce = {true};
+        spool.deleter(file -> {
+            if (failOnce[0]) {
+                failOnce[0] = false;
+                return false; // as on Windows while a stream is still open
+            }
+            return file.delete();
+        });
+        spool.forget(f);
+        assertTrue(f.exists());
+        spool.closeAndDeleteAll();
+        assertFalse(f.exists());
+    }
+
+    // FR-MULTIPART-005, FR-MULTIPART-004: close and save close the streams handed out by inputStream() first
+    @Test
+    public void FR_MULTIPART_004_closeAndSaveCloseHandedOutStreams() throws Exception {
+        File dir = tmp.newFolder("streams");
+        for (boolean save : new boolean[] {false, true}) {
+            SpoolRegistry spool = new SpoolRegistry();
+            File f = spool.createTemp(dir);
+            java.nio.file.Files.write(f.toPath(), new byte[] {1, 2, 3});
+            DefaultUploadFile u = new DefaultUploadFile("f", "a.bin", null, 3, null, f, spool);
+            java.io.InputStream held = u.inputStream();
+            if (save) {
+                u.save(new File(tmp.getRoot(), "saved.bin"));
+            } else {
+                u.close();
+            }
+            try {
+                held.read();
+                org.junit.Assert.fail("handed-out stream still open after " + (save ? "save" : "close"));
+            } catch (java.io.IOException expected) {
+                // closed
+            }
+            assertFalse(f.exists());
+        }
+    }
 }

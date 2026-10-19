@@ -98,18 +98,8 @@ public final class DefaultUploadFile implements UploadFile {
     // @req FR-MULTIPART-005
     // @req FR-MULTIPART-006
     public void release() {
-        List<InputStream> open;
         synchronized (this) {
             ended = ended || !released;
-            open = new ArrayList<>(streams);
-            streams.clear();
-        }
-        for (InputStream in : open) {
-            try {
-                in.close();
-            } catch (IOException ignored) {
-                // the content is released next either way
-            }
         }
         close();
     }
@@ -159,16 +149,29 @@ public final class DefaultUploadFile implements UploadFile {
         return out.toByteArray();
     }
 
-    /** Releases the content and deletes the temp file; the metadata stays readable. Idempotent. */
+    /**
+     * Closes every stream handed out, then releases the content and deletes the temp file (an open stream would block
+     * the delete on Windows); the metadata stays readable. Idempotent.
+     */
     // @req FR-MULTIPART-005
     @Override
     public void close() {
         File f;
+        List<InputStream> open;
         synchronized (this) {
             released = true;
             f = file;
             file = null;
             memory = null;
+            open = new ArrayList<>(streams);
+            streams.clear();
+        }
+        for (InputStream in : open) {
+            try {
+                in.close();
+            } catch (IOException ignored) {
+                // the content is released next either way
+            }
         }
         if (f != null) {
             spool.forget(f);
