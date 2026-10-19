@@ -96,12 +96,15 @@ final class DefaultMimeTypes implements MimeTypes {
         return e.toLowerCase(Locale.ROOT);
     }
 
-    /** {@code type} checked non-empty. */
+    /** {@code type} checked non-empty and a valid header field value, so a bad type fails at setup, not per request. */
     // @req IR-STATIC-002
     static String type(String type) {
         Objects.requireNonNull(type, "type");
         if (type.isEmpty()) {
             throw new IllegalArgumentException("MIME type must not be empty");
+        }
+        if (!DefaultResponse.isFieldValue(type)) {
+            throw new IllegalArgumentException("MIME type is not a valid header value: " + type);
         }
         return type;
     }

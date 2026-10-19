@@ -101,6 +101,8 @@ app.mimeTypes()
    .register(".custom", "text/plain");
 ```
 
+MIME 타입이 빈 문자열이거나 CR, LF 같은 제어 문자를 담아 헤더 값으로 쓸 수 없으면 `register`와 `options.mime` 호출 때 `IllegalArgumentException`입니다. 요청마다 `500`이 나는 대신 설정 단계에서 바로 알 수 있게 하려는 것입니다.
+
 ### 내장 표
 
 | 확장자 | MIME |

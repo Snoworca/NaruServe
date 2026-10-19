@@ -64,4 +64,27 @@ public class DefaultMimeTypesTest {
             // unmodifiable
         }
     }
+
+    // IR-STATIC-002: a MIME type that is not a valid header field value is refused at setup, in both registries
+    @Test
+    public void IR_STATIC_002_typeWithControlCharacterIsRefusedAtSetup() {
+        DefaultMimeTypes m = new DefaultMimeTypes(new AppLifecycle());
+        DefaultStaticOptions o = new DefaultStaticOptions();
+        for (String bad : new String[] {"text/plain\r\nX-Evil: 1", "text/plain\n", "text/\u0000plain", "text/\u010Aplain"}) {
+            try {
+                m.register(".x", bad);
+                fail("register accepted " + bad);
+            } catch (IllegalArgumentException expected) {
+                // refused
+            }
+            try {
+                o.mime(".x", bad);
+                fail("mime accepted " + bad);
+            } catch (IllegalArgumentException expected) {
+                // refused
+            }
+        }
+        m.register(".x", "text/plain;\tcharset=UTF-8");
+        assertEquals("text/plain;\tcharset=UTF-8", m.lookup("a.x", NONE));
+    }
 }
