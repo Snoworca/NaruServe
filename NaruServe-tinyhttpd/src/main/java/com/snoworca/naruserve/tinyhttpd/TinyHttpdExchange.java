@@ -24,6 +24,7 @@ import org.jspecify.annotations.Nullable;
  * the raw query from {@code getQueryString()}, never from the decoded, slash-merging {@code getPath()}.
  */
 // @req FR-ENGINE-001
+// @req FR-ENGINE-010
 final class TinyHttpdExchange implements HttpExchange {
 
     private final Request req;
@@ -209,12 +210,13 @@ final class TinyHttpdExchange implements HttpExchange {
     @Override
     public synchronized void sendFile(int status, List<Map.Entry<String, String>> headers, File file, long offset,
             long length) throws IOException {
-        start();
-        try {
-            TinyHttpdFeatures.sendFile(res, status, headers, file, offset, length);
-        } catch (UnsupportedOperationException e) {
-            unsupported(e);
+        // Checked before commit so a bad range leaves the response unstarted.
+        long size = file.length();
+        if (offset < 0 || length < 0 || offset > size - length) {
+            throw new IllegalArgumentException(
+                    "range offset " + offset + " length " + length + " outside file of " + size + " bytes");
         }
+        TinyHttpdFeatures.sendFile(this, status, headers, file, offset, length);
     }
 
     @Override

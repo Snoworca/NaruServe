@@ -3,7 +3,11 @@ package com.snoworca.naruserve.tinyhttpd;
 import com.snoworca.naruserve.spi.StreamDrain;
 import com.snoworca.naruserve.spi.UpgradeHandler;
 import com.snoworca.tinyhttpd.http.Response;
+import java.io.EOFException;
 import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.RandomAccessFile;
 import java.util.List;
 import java.util.Map;
 
@@ -12,15 +16,33 @@ import java.util.Map;
  * waves fill these bodies without editing the adapter core.
  */
 // @req FR-ENGINE-001
+// @req FR-ENGINE-010
 final class TinyHttpdFeatures {
 
     private TinyHttpdFeatures() {
     }
 
-    // @req FR-ENGINE-001
-    static void sendFile(Response res, int status, List<Map.Entry<String, String>> headers, File file, long offset,
-            long length) {
-        throw new UnsupportedOperationException("file transfer on the TinyHttpd adapter arrives in wave 6");
+    /**
+     * Commits through {@code ex} and copies exactly {@code length} bytes of {@code file} from {@code offset} with
+     * plain buffered reads; the caller holds the exchange lock and has checked the range.
+     */
+    // @req FR-ENGINE-010
+    static void sendFile(TinyHttpdExchange ex, int status, List<Map.Entry<String, String>> headers, File file,
+            long offset, long length) throws IOException {
+        OutputStream out = ex.commit(status, headers, length);
+        try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
+            raf.seek(offset);
+            byte[] buf = new byte[8192];
+            for (long left = length; left > 0; ) {
+                int n = raf.read(buf, 0, (int) Math.min(buf.length, left));
+                if (n < 0) {
+                    throw new EOFException("file ended " + left + " bytes before the requested range: " + file);
+                }
+                out.write(buf, 0, n);
+                left -= n;
+            }
+        }
+        out.flush();
     }
 
     // @req FR-ENGINE-001
