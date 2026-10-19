@@ -406,4 +406,18 @@ public class DispatcherTest {
             assertEquals(1, ex.commits.get());
         }
     }
+
+    // SDS-AC-13 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-3.sds.md; FR-APP-009 AC-8
+    @Test
+    public void sdsAc13_FR_APP_009_AC8_dispatcherBoundWithoutListenDispatchesUngatedInNew() {
+        DefaultRestApp app = new DefaultRestApp();
+        app.get("/g", recording);
+        app.freeze();
+        assertEquals(com.snoworca.naruserve.AppState.NEW, app.state());
+        assertTrue(app.dispatcher() instanceof Dispatcher);
+        assertFalse(app.dispatcher() instanceof GatedExchangeHandler);
+        adapter.bind("127.0.0.1", 0, app.dispatcher());
+        assertEquals(200, send("GET", "/g").status());
+        assertEquals(1, calls.get());
+    }
 }

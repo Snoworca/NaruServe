@@ -326,4 +326,26 @@ public class DefaultRestAppTest {
             return s.useDelimiter("\\A").hasNext() ? s.next() : "";
         }
     }
+
+    // SDS-AC-5 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-3.sds.md; FR-APP-002 AC-5
+    @Test
+    public void sdsAc5_FR_APP_002_AC5_freezeInNewRejectsThroughTheOneGuardNamingTheMethod() {
+        DefaultRestApp app = new DefaultRestApp();
+        app.get("/x", h);
+        app.freeze();
+        assertEquals(com.snoworca.naruserve.AppState.NEW, app.state());
+        List<Runnable> calls = Arrays.<Runnable>asList(() -> app.get("/a", h),
+                () -> app.use((req, res, next) -> next.run()), () -> app.onStart(ctx -> { }),
+                () -> app.logger(new com.snoworca.naruserve.ConsoleLogger()), () -> app.routerPolicy(RouterPolicy.strict()));
+        String[] names = {"get", "use", "onStart", "logger", "routerPolicy"};
+        for (int i = 0; i < calls.size(); i++) {
+            try {
+                calls.get(i).run();
+                fail(names[i] + " accepted after freeze");
+            } catch (IllegalStateException e) {
+                assertTrue(e.getMessage(), e.getMessage().contains(names[i]));
+            }
+        }
+        assertEquals(1, app.registrations().size());
+    }
 }

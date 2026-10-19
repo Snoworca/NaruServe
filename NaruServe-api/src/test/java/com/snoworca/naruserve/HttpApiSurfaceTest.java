@@ -296,4 +296,16 @@ public class HttpApiSurfaceTest {
         assertEquals(405, t.send("POST", "/u/1").status());
         assertEquals(3, calls.size());
     }
+
+    // SDS-AC-5 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-3.sds.md; FR-APP-002 AC-5 (re-points FR-HTTP-008 AC-6)
+    @Test
+    public void sdsAc5_FR_APP_002_AC5_builderAndCreateAreTheOnlyPublicStaticRestAppFactoriesOfRestApp() {
+        Set<String> factories = new TreeSet<>();
+        for (java.lang.reflect.Method m : RestApp.class.getDeclaredMethods()) {
+            if (Modifier.isPublic(m.getModifiers()) && Modifier.isStatic(m.getModifiers())) {
+                factories.add(m.getName() + "->" + m.getReturnType().getSimpleName());
+            }
+        }
+        assertEquals(setOf("builder->Builder", "create->RestApp"), factories);
+    }
 }

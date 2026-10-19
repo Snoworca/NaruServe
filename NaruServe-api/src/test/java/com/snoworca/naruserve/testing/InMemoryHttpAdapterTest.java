@@ -167,4 +167,40 @@ public class InMemoryHttpAdapterTest {
         assertArrayEquals(new String[] {"/a", "x=1"}, InMemoryHttpAdapter.splitTarget("http://example.com/a?x=1"));
         assertArrayEquals(new String[] {"*", null}, InMemoryHttpAdapter.splitTarget("*"));
     }
+
+    // SDS-AC-12 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-3.sds.md; FR-APP-009 AC-7
+    @Test
+    public void sdsAc12_FR_APP_009_AC7_harnessBuildsThroughTheBuilderWithStubCodecAndStartsByListen() {
+        InMemoryHttpAdapter adapter = new InMemoryHttpAdapter();
+        TestApp t = TestApp.create(adapter);
+        DefaultRestApp app = (DefaultRestApp) t.app();
+        assertSame(adapter, app.httpAdapter());
+        assertTrue(app.jsonCodec() instanceof StubJsonCodec);
+        assertEquals(com.snoworca.naruserve.AppState.NEW, app.state());
+        t.start();
+        t.start();
+        assertEquals(com.snoworca.naruserve.AppState.RUNNING, app.state());
+        assertTrue(adapter.boundPort() > 0);
+        // The harness exchange handler is the gated one listen() bound, not the bare dispatcher.
+        assertEquals(404, t.send("GET", "/none").status());
+
+        TestApp dup = TestApp.create();
+        dup.app().get("/d", (req, res) -> { });
+        dup.app().get("/d", (req, res) -> { });
+        try {
+            dup.start();
+            fail("duplicate GET /d accepted");
+        } catch (RoutingConfigException e) {
+            assertEquals(RoutingConfigException.class, e.getClass());
+        }
+    }
+
+    // SDS-AC-12 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-3.sds.md; FR-APP-009 AC-7
+    @Test
+    public void sdsAc12_FR_APP_009_AC7_stubCodecIsAFixturesJsonCodecWithoutGson() throws IOException {
+        assertTrue(com.snoworca.naruserve.spi.JsonCodec.class.isAssignableFrom(StubJsonCodec.class));
+        java.io.StringWriter w = new java.io.StringWriter();
+        new StubJsonCodec().encode(null, w);
+        assertEquals("null", w.toString());
+    }
 }

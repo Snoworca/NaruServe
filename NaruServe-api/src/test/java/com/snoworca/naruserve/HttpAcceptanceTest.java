@@ -246,4 +246,19 @@ public class HttpAcceptanceTest {
             adapter.release();
         }
     }
+
+    // SDS-AC-12 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-3.sds.md; FR-APP-009 AC-7
+    @Test
+    public void sdsAc12_FR_APP_009_AC7_harnessRunsTheAppThroughListenSoHandlersSeeRunning() {
+        TestApp t = TestApp.create();
+        List<AppState> seen = new ArrayList<>();
+        t.app().get("/s", (req, res) -> {
+            seen.add(t.app().state());
+            res.send("s");
+        });
+        assertEquals(AppState.NEW, t.app().state());
+        ClientResponse r = t.send("GET", "/s");
+        assertEquals(200, r.status());
+        assertEquals(Arrays.asList(AppState.RUNNING), seen);
+    }
 }

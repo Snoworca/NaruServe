@@ -34,8 +34,9 @@ import org.jspecify.annotations.Nullable;
 
 /**
  * {@link RestApp} implementation. Patterns are parsed at each registration call; the {@link Router} is built with
- * the policy in effect only at {@link #freeze()}, so a policy set after a registration still applies to it. After
- * a successful freeze every registration and policy call throws {@link IllegalStateException}.
+ * the policy in effect only at {@link #freeze()}, so a policy set after a registration still applies to it. Every
+ * registration and configuration call goes through {@link AppLifecycle#requireConfigurable}, which throws
+ * {@link IllegalStateException} outside NEW or after a successful freeze.
  */
 // @req FR-HTTP-008
 // @req FR-HTTP-007
@@ -45,6 +46,8 @@ import org.jspecify.annotations.Nullable;
 // @req IR-APP-005
 // @req IR-APP-006
 // @req IR-APP-007
+// @req FR-APP-002
+// @req FR-APP-009
 public final class DefaultRestApp implements RestApp {
 
     /** One registration call as recorded; the router is built from these at freeze. */
@@ -78,7 +81,7 @@ public final class DefaultRestApp implements RestApp {
     private final @Nullable HttpAdapter adapter;
     private final @Nullable JsonCodec codec;
     private volatile Logger logger;
-    private volatile AppState state = AppState.NEW;
+    private final AppLifecycle lifecycle = new AppLifecycle();
     private final DefaultApplicationContext context = new DefaultApplicationContext(this);
     private final DefaultAccessLogOptions accessLogOptions = new DefaultAccessLogOptions();
 
@@ -124,22 +127,29 @@ public final class DefaultRestApp implements RestApp {
         return logger;
     }
 
-    // shortcut: logger(l), accessLog, onStart and onStop skip the NEW-state guard; the FR-APP-002 SDS adds it.
     // @req IR-APP-006
+    // @req FR-APP-002
     @Override
-    public RestApp logger(Logger logger) {
+    public synchronized RestApp logger(Logger logger) {
+        lifecycle.requireConfigurable("logger");
         this.logger = Objects.requireNonNull(logger, "logger");
         return this;
     }
 
     // @req IR-APP-007
     @Override
-    public RestApp accessLog(Configurer<AccessLogOptions> configurer) {
+    public synchronized RestApp accessLog(Configurer<AccessLogOptions> configurer) {
+        lifecycle.requireConfigurable("accessLog");
         Objects.requireNonNull(configurer, "configurer");
         synchronized (accessLogOptions) {
             configurer.configure(accessLogOptions);
         }
         return this;
+    }
+
+    /** The app's state machine, for same-package tests. */
+    AppLifecycle lifecycle() {
+        return lifecycle;
     }
 
     /** The app's one context, passed to every lifecycle callback. */
@@ -151,6 +161,7 @@ public final class DefaultRestApp implements RestApp {
     // @req IR-APP-005
     @Override
     public synchronized RestApp onStart(LifecycleCallback cb) {
+        lifecycle.requireConfigurable("onStart");
         startCallbacks.add(Objects.requireNonNull(cb, "cb"));
         return this;
     }
@@ -158,6 +169,7 @@ public final class DefaultRestApp implements RestApp {
     // @req IR-APP-005
     @Override
     public synchronized RestApp onStop(LifecycleCallback cb) {
+        lifecycle.requireConfigurable("onStop");
         stopCallbacks.add(Objects.requireNonNull(cb, "cb"));
         return this;
     }
@@ -165,17 +177,19 @@ public final class DefaultRestApp implements RestApp {
     // @req IR-APP-005
     @Override
     public AppState state() {
-        return state;
+        return lifecycle.state();
     }
 
     /**
-     * Runs the onStart callbacks, freezes, binds {@code 127.0.0.1:port} and enters RUNNING.
-     * shortcut: no start gate, pending stop or adapter/resource cleanup on failure; the FR-APP-009/FR-APP-010
-     * SDSs replace this with the AppLifecycle state machine.
+     * STARTING by compareAndSet, the onStart callbacks in order, the route-table freeze, one bind of the gated
+     * handler on {@code 127.0.0.1:port}, then RUNNING. Not synchronized: requests held on the start gate and
+     * onStart callbacks must not wait for this call.
+     * shortcut: no pending stop or adapter/resource cleanup on failure; the FR-APP-010/FR-APP-012 SDS adds them.
      */
     // @req IR-APP-005
+    // @req FR-APP-009
     @Override
-    public synchronized ServerHandle listen(int port) {
+    public ServerHandle listen(int port) {
         if (port < 0 || port > 65535) {
             throw new IllegalArgumentException("port must be in 0..65535: " + port);
         }
@@ -183,25 +197,27 @@ public final class DefaultRestApp implements RestApp {
         if (a == null) {
             throw new IllegalStateException("this app has no HttpAdapter; build it with RestApp.builder()");
         }
-        if (state != AppState.NEW) {
-            throw new IllegalStateException("listen() not allowed in state " + state);
-        }
-        state = AppState.STARTING;
+        lifecycle.beginStart();
+        int bound;
         try {
-            for (LifecycleCallback cb : new ArrayList<>(startCallbacks)) {
+            List<LifecycleCallback> callbacks;
+            synchronized (this) {
+                callbacks = new ArrayList<>(startCallbacks);
+            }
+            for (LifecycleCallback cb : callbacks) {
                 cb.handle(context);
             }
             freeze();
-            a.bind("127.0.0.1", port, dispatcher());
+            a.bind("127.0.0.1", port, new GatedExchangeHandler(lifecycle, frozenDispatcher(), new AccessLog()));
+            bound = a.boundPort();
         } catch (RuntimeException | Error e) {
-            state = AppState.FAILED;
+            lifecycle.fail();
             throw e;
         } catch (Exception e) {
-            state = AppState.FAILED;
+            lifecycle.fail();
             throw new AppStartException("app start failed: " + e, e);
         }
-        state = AppState.RUNNING;
-        int bound = a.boundPort();
+        lifecycle.markRunning();
         return new ServerHandle() {
             @Override
             public int port() {
@@ -215,7 +231,7 @@ public final class DefaultRestApp implements RestApp {
 
             @Override
             public AppState state() {
-                return DefaultRestApp.this.state;
+                return lifecycle.state();
             }
         };
     }
@@ -233,15 +249,13 @@ public final class DefaultRestApp implements RestApp {
             throw new IllegalArgumentException("timeout must not be negative: " + timeout);
         }
         Objects.requireNonNull(unit, "unit");
-        if (state == AppState.NEW) {
-            state = AppState.TERMINATED;
+        if (lifecycle.terminateIfNew()) {
             return;
         }
         HttpAdapter a = adapter;
-        if (state != AppState.RUNNING || a == null) {
+        if (a == null || !lifecycle.beginStop()) {
             return;
         }
-        state = AppState.STOPPING;
         try {
             a.stop(timeout, unit);
             a.release();
@@ -253,64 +267,64 @@ public final class DefaultRestApp implements RestApp {
                 }
             }
         } finally {
-            state = AppState.TERMINATED;
+            lifecycle.terminate();
         }
     }
 
     @Override
     public RestApp get(String path, RouteHandler h) {
-        return route(Method.GET, path, h);
+        return register("get", MethodSet.of(Method.GET), path, null, false, h);
     }
 
     @Override
     public RestApp post(String path, RouteHandler h) {
-        return route(Method.POST, path, h);
+        return register("post", MethodSet.of(Method.POST), path, null, false, h);
     }
 
     @Override
     public RestApp put(String path, RouteHandler h) {
-        return route(Method.PUT, path, h);
+        return register("put", MethodSet.of(Method.PUT), path, null, false, h);
     }
 
     @Override
     public RestApp patch(String path, RouteHandler h) {
-        return route(Method.PATCH, path, h);
+        return register("patch", MethodSet.of(Method.PATCH), path, null, false, h);
     }
 
     @Override
     public RestApp delete(String path, RouteHandler h) {
-        return route(Method.DELETE, path, h);
+        return register("delete", MethodSet.of(Method.DELETE), path, null, false, h);
     }
 
     @Override
     public RestApp head(String path, RouteHandler h) {
-        return route(Method.HEAD, path, h);
+        return register("head", MethodSet.of(Method.HEAD), path, null, false, h);
     }
 
     @Override
     public RestApp options(String path, RouteHandler h) {
-        return route(Method.OPTIONS, path, h);
+        return register("options", MethodSet.of(Method.OPTIONS), path, null, false, h);
     }
 
     // @req FR-HTTP-007
     // @req FR-HTTP-008
     @Override
     public RestApp route(Method method, String path, RouteHandler h) {
+        lifecycle.requireConfigurable("route");
         return route(MethodSet.of(method), path, h);
     }
 
     // @req FR-HTTP-007
     // @req FR-HTTP-008
     @Override
-    public synchronized RestApp route(MethodSet methods, String path, RouteHandler h) {
-        record(methods, path, Collections.<Middleware>emptyList(), h, RouteKind.HTTP);
-        return this;
+    public RestApp route(MethodSet methods, String path, RouteHandler h) {
+        return register("route", methods, path, null, false, h);
     }
 
     // @req IR-APP-002
     @Override
     public synchronized RestApp use(Middleware mw) {
-        checkNotFrozen();
+        lifecycle.requireConfigurable("use");
         globalMiddleware.add(Objects.requireNonNull(mw, "mw"));
         return this;
     }
@@ -318,7 +332,7 @@ public final class DefaultRestApp implements RestApp {
     // @req IR-APP-002
     @Override
     public synchronized RestApp use(String prefix, Middleware mw) {
-        checkNotFrozen();
+        lifecycle.requireConfigurable("use");
         Objects.requireNonNull(prefix, "prefix");
         Objects.requireNonNull(mw, "mw");
         if (!prefix.startsWith("/")) {
@@ -330,57 +344,68 @@ public final class DefaultRestApp implements RestApp {
 
     @Override
     public RestApp get(String path, Middleware mw, RouteHandler h) {
-        return route(Method.GET, path, mw, h);
+        return register("get", MethodSet.of(Method.GET), path, mw, true, h);
     }
 
     @Override
     public RestApp post(String path, Middleware mw, RouteHandler h) {
-        return route(Method.POST, path, mw, h);
+        return register("post", MethodSet.of(Method.POST), path, mw, true, h);
     }
 
     @Override
     public RestApp put(String path, Middleware mw, RouteHandler h) {
-        return route(Method.PUT, path, mw, h);
+        return register("put", MethodSet.of(Method.PUT), path, mw, true, h);
     }
 
     @Override
     public RestApp patch(String path, Middleware mw, RouteHandler h) {
-        return route(Method.PATCH, path, mw, h);
+        return register("patch", MethodSet.of(Method.PATCH), path, mw, true, h);
     }
 
     @Override
     public RestApp delete(String path, Middleware mw, RouteHandler h) {
-        return route(Method.DELETE, path, mw, h);
+        return register("delete", MethodSet.of(Method.DELETE), path, mw, true, h);
     }
 
     @Override
     public RestApp head(String path, Middleware mw, RouteHandler h) {
-        return route(Method.HEAD, path, mw, h);
+        return register("head", MethodSet.of(Method.HEAD), path, mw, true, h);
     }
 
     @Override
     public RestApp options(String path, Middleware mw, RouteHandler h) {
-        return route(Method.OPTIONS, path, mw, h);
+        return register("options", MethodSet.of(Method.OPTIONS), path, mw, true, h);
     }
 
     // @req IR-APP-002
     @Override
     public RestApp route(Method method, String path, Middleware mw, RouteHandler h) {
+        lifecycle.requireConfigurable("route");
         Objects.requireNonNull(method, "method");
         return route(MethodSet.of(method), path, mw, h);
     }
 
     // @req IR-APP-002
     @Override
-    public synchronized RestApp route(MethodSet methods, String path, Middleware mw, RouteHandler h) {
-        record(methods, path, Collections.singletonList(Objects.requireNonNull(mw, "mw")), h, RouteKind.HTTP);
+    public RestApp route(MethodSet methods, String path, Middleware mw, RouteHandler h) {
+        return register("route", methods, path, mw, true, h);
+    }
+
+    /** Guard, then record one HTTP registration. */
+    // @req FR-APP-002
+    private synchronized RestApp register(String name, MethodSet methods, String path, @Nullable Middleware mw,
+            boolean withMiddleware, RouteHandler h) {
+        lifecycle.requireConfigurable(name);
+        List<Middleware> route = withMiddleware ? Collections.singletonList(Objects.requireNonNull(mw, "mw"))
+                : Collections.<Middleware>emptyList();
+        record(name, methods, path, route, h, RouteKind.HTTP);
         return this;
     }
 
     // @req IR-APP-003
     @Override
     public synchronized RestApp onError(ErrorHandler handler) {
-        checkNotFrozen();
+        lifecycle.requireConfigurable("onError");
         errorHandlers.add(Objects.requireNonNull(handler, "handler"));
         return this;
     }
@@ -393,7 +418,7 @@ public final class DefaultRestApp implements RestApp {
     // @req FR-HTTP-008
     @Override
     public synchronized RestApp routerPolicy(RouterPolicy policy) {
-        checkNotFrozen();
+        lifecycle.requireConfigurable("routerPolicy");
         if (policy == null) {
             throw new NullPointerException("policy");
         }
@@ -404,12 +429,14 @@ public final class DefaultRestApp implements RestApp {
     /** Internal hook for a WebSocket route (kind WEBSOCKET, counted as GET); not on {@link RestApp}. */
     // @req FR-HTTP-008
     public synchronized DefaultRestApp webSocketRoute(String path, RouteHandler h) {
-        record(MethodSet.of(Method.GET), path, Collections.<Middleware>emptyList(), h, RouteKind.WEBSOCKET);
+        record("webSocketRoute", MethodSet.of(Method.GET), path, Collections.<Middleware>emptyList(), h,
+                RouteKind.WEBSOCKET);
         return this;
     }
 
-    private void record(MethodSet methods, String path, List<Middleware> route, RouteHandler h, RouteKind kind) {
-        checkNotFrozen();
+    private void record(String name, MethodSet methods, String path, List<Middleware> route, RouteHandler h,
+            RouteKind kind) {
+        lifecycle.requireConfigurable(name);
         if (methods == null || h == null) {
             throw new NullPointerException(methods == null ? "methods" : "h");
         }
@@ -465,12 +492,6 @@ public final class DefaultRestApp implements RestApp {
         throw (E) t;
     }
 
-    private void checkNotFrozen() {
-        if (dispatcher != null) {
-            throw new IllegalStateException("RestApp is frozen; register routes and set the policy before freeze");
-        }
-    }
-
     /**
      * Builds and freezes the router from the registrations, then the dispatcher. A {@code RoutingConfigException}
      * propagates unchanged and leaves the app unfrozen. Later calls after success do nothing.
@@ -490,15 +511,22 @@ public final class DefaultRestApp implements RestApp {
         }
         router.freeze();
         dispatcher = new Dispatcher(router);
+        lifecycle.markFrozen();
     }
 
     /** The dispatcher built by a successful {@link #freeze()}; {@link IllegalStateException} before that. */
     // @req FR-HTTP-008
-    public synchronized ExchangeHandler dispatcher() {
-        if (dispatcher == null) {
+    // @req FR-APP-009
+    public ExchangeHandler dispatcher() {
+        return frozenDispatcher();
+    }
+
+    private synchronized Dispatcher frozenDispatcher() {
+        Dispatcher d = dispatcher;
+        if (d == null) {
             throw new IllegalStateException("RestApp is not frozen; call freeze() first");
         }
-        return dispatcher;
+        return d;
     }
 
     /** Snapshot of the recorded registrations, for tests. */
@@ -509,6 +537,7 @@ public final class DefaultRestApp implements RestApp {
 
     /** Builder bound to one path; each method registers through this app, so freeze rules apply. */
     // @req FR-HTTP-008
+    // @req FR-APP-002
     final class DefaultRouteBuilder implements RouteBuilder {
         private final String path;
         // Guarded by DefaultRestApp.this; each registration snapshots it.
@@ -518,9 +547,9 @@ public final class DefaultRestApp implements RestApp {
             this.path = path;
         }
 
-        private RouteBuilder add(Method method, RouteHandler h) {
+        private RouteBuilder add(String name, Method method, RouteHandler h) {
             synchronized (DefaultRestApp.this) {
-                record(MethodSet.of(method), path, middleware, h, RouteKind.HTTP);
+                record(name, MethodSet.of(method), path, middleware, h, RouteKind.HTTP);
             }
             return this;
         }
@@ -529,7 +558,7 @@ public final class DefaultRestApp implements RestApp {
         @Override
         public RouteBuilder use(Middleware mw) {
             synchronized (DefaultRestApp.this) {
-                checkNotFrozen();
+                lifecycle.requireConfigurable("use");
                 middleware.add(Objects.requireNonNull(mw, "mw"));
             }
             return this;
@@ -537,37 +566,37 @@ public final class DefaultRestApp implements RestApp {
 
         @Override
         public RouteBuilder get(RouteHandler h) {
-            return add(Method.GET, h);
+            return add("get", Method.GET, h);
         }
 
         @Override
         public RouteBuilder post(RouteHandler h) {
-            return add(Method.POST, h);
+            return add("post", Method.POST, h);
         }
 
         @Override
         public RouteBuilder put(RouteHandler h) {
-            return add(Method.PUT, h);
+            return add("put", Method.PUT, h);
         }
 
         @Override
         public RouteBuilder patch(RouteHandler h) {
-            return add(Method.PATCH, h);
+            return add("patch", Method.PATCH, h);
         }
 
         @Override
         public RouteBuilder delete(RouteHandler h) {
-            return add(Method.DELETE, h);
+            return add("delete", Method.DELETE, h);
         }
 
         @Override
         public RouteBuilder head(RouteHandler h) {
-            return add(Method.HEAD, h);
+            return add("head", Method.HEAD, h);
         }
 
         @Override
         public RouteBuilder options(RouteHandler h) {
-            return add(Method.OPTIONS, h);
+            return add("options", Method.OPTIONS, h);
         }
     }
 }
