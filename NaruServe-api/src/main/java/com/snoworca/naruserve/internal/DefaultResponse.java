@@ -1,7 +1,10 @@
 package com.snoworca.naruserve.internal;
 
+import com.snoworca.naruserve.CachePolicy;
 import com.snoworca.naruserve.Cookie;
 import com.snoworca.naruserve.HttpException;
+import com.snoworca.naruserve.Method;
+import com.snoworca.naruserve.ResourceResolver;
 import com.snoworca.naruserve.Response;
 import com.snoworca.naruserve.spi.HttpExchange;
 import com.snoworca.naruserve.spi.JsonCodec;
@@ -64,6 +67,10 @@ public final class DefaultResponse implements Response {
     private @Nullable Runnable onDone;
     private boolean doneFired;
     private @Nullable DefaultMimeTypes mimeTypes;
+    private @Nullable DefaultRequest request;
+    private @Nullable CachePolicy defaultCache;
+    /** Bytes the pending copy must deliver; -1 copies to the end of the input. */
+    private long pendingLimit = -1;
 
     /** Status 200, no headers, state NEW; {@code headRequest} makes every body bodyless. */
     // @req FR-HTTP-013
@@ -84,25 +91,112 @@ public final class DefaultResponse implements Response {
         this.mimeTypes = mimeTypes;
     }
 
+    /** The request whose method and conditional headers {@link #file} and {@link #download} evaluate. */
+    void request(DefaultRequest request) {
+        this.request = request;
+    }
+
+    /** The app's {@code defaultCache}: at commit it becomes Cache-Control when the response holds none. */
+    // @req FR-STATIC-008
+    synchronized void applyDefaultCache(@Nullable CachePolicy policy) {
+        this.defaultCache = policy;
+    }
+
+    /** Replaces Cache-Control; the last call before commit wins. */
+    // @req FR-STATIC-008
+    @Override
+    public Response cache(CachePolicy policy) {
+        return header("Cache-Control", Objects.requireNonNull(policy, "policy").getHeaderValue());
+    }
+
     /**
-     * Streams {@code file} through {@link FileResourceResolver#forFile}; a symbolic link, directory or missing file
+     * Sends {@code file} like a static file, with no Content-Disposition; a symbolic link, directory or missing file
      * throws {@link HttpException} 404 for the error path.
      */
-    // shortcut: whole body only, no cache or conditional headers and no download; FileResponder replaces this
     // @req FR-STATIC-006
+    // @req FR-STATIC-011
     @Override
     public void file(File file) {
-        Objects.requireNonNull(file, "file");
-        InputStream in;
+        answerFile(Objects.requireNonNull(file, "file"), null);
+    }
+
+    /** As {@link #file}, with {@code Content-Disposition: attachment} naming the sanitised {@code filename}. */
+    // @req FR-STATIC-011
+    @Override
+    public void download(File file, String filename) {
+        Objects.requireNonNull(filename, "filename");
+        answerFile(Objects.requireNonNull(file, "file"), disposition(filename));
+    }
+
+    // @req FR-STATIC-011
+    private void answerFile(File file, @Nullable String disposition) {
+        DefaultMimeTypes m = mimeTypes != null ? mimeTypes : new DefaultMimeTypes(new AppLifecycle());
+        String type = m.lookup(file.getName(), Collections.<String, String>emptyMap());
+        DefaultRequest req = request;
+        if (req == null) {
+            Method method;
+            try {
+                method = Method.valueOf(ex.methodToken());
+            } catch (IllegalArgumentException e) {
+                method = Method.GET;
+            }
+            req = new DefaultRequest(ex, headRequest ? Method.HEAD : method, Collections.<String, String>emptyMap());
+        }
         try {
-            in = FileResourceResolver.forFile(file).open(file.getName());
+            ResourceResolver r = FileResourceResolver.forFile(file);
+            if (disposition != null) {
+                header("Content-Disposition", disposition);
+            }
+            FileResponder.respond(req, this, r, file.getName(), type, null);
         } catch (FileNotFoundException e) {
             throw new HttpException(404, null, e);
         } catch (IOException e) {
             throw new HttpException(500, null, e);
         }
-        DefaultMimeTypes m = mimeTypes != null ? mimeTypes : new DefaultMimeTypes(new AppLifecycle());
-        stream(in, m.lookup(file.getName(), Collections.<String, String>emptyMap()));
+    }
+
+    /**
+     * {@code attachment; filename="..."} with CR, LF, '"', '\\' and other controls dropped and non-ASCII replaced by
+     * '_', plus {@code filename*=UTF-8''} percent-encoding when the name holds non-ASCII.
+     */
+    // @req FR-STATIC-011
+    public static String disposition(String filename) {
+        StringBuilder clean = new StringBuilder();
+        StringBuilder ascii = new StringBuilder();
+        boolean nonAscii = false;
+        for (int i = 0; i < filename.length(); i++) {
+            char c = filename.charAt(i);
+            if (Character.isISOControl(c) || c == '"' || c == '\\') {
+                continue;
+            }
+            clean.append(c);
+            if (c > 0x7E) {
+                nonAscii = true;
+                if (Character.isHighSurrogate(c)) {
+                    continue; // one '_' for the pair, written at its low surrogate
+                }
+                ascii.append('_');
+            } else {
+                ascii.append(c);
+            }
+        }
+        String v = "attachment; filename=\"" + ascii + "\"";
+        if (!nonAscii) {
+            return v;
+        }
+        StringBuilder enc = new StringBuilder();
+        for (byte x : clean.toString().getBytes(StandardCharsets.UTF_8)) {
+            int c = x & 0xFF;
+            boolean attr = c >= 'A' && c <= 'Z' || c >= 'a' && c <= 'z' || c >= '0' && c <= '9'
+                    || "!#$&+-.^_`|~".indexOf(c) >= 0;
+            if (attr) {
+                enc.append((char) c);
+            } else {
+                enc.append('%').append(Character.toUpperCase(Character.forDigit(c >> 4, 16)))
+                        .append(Character.toUpperCase(Character.forDigit(c & 0xF, 16)));
+            }
+        }
+        return v + "; filename*=UTF-8''" + enc;
     }
 
     // @req FR-HTTP-013
@@ -208,18 +302,61 @@ public final class DefaultResponse implements Response {
     // @req FR-HTTP-017
     @Override
     public void stream(InputStream in, String contentType) {
+        startBody(in, 0, contentType, -1);
+    }
+
+    /**
+     * A file body: skips {@code skip} bytes of {@code in} (looping over {@link InputStream#skip}, then reading),
+     * commits {@code status} with Content-Length {@code length} and copies exactly {@code length} bytes in 8192-byte
+     * reads like {@link #stream}; never {@link HttpExchange#sendFile}. Closes {@code in}. A skip that reaches the
+     * end of {@code in} throws {@link IOException} before the commit; a stream whose skip passes its end, or that ends
+     * inside the body, aborts the response after the commit.
+     */
+    // @req FR-STATIC-003
+    // @req FR-STATIC-011
+    public void sendBody(int status, InputStream in, long skip, long length) throws IOException {
+        try {
+            for (long left = skip; left > 0; ) {
+                long k = in.skip(left);
+                if (k <= 0) {
+                    if (in.read() < 0) {
+                        throw new IOException("the file ends before byte " + skip);
+                    }
+                    k = 1;
+                }
+                left -= k;
+            }
+        } catch (IOException | RuntimeException e) {
+            closeQuietly(in);
+            throw e;
+        }
+        startBody(in, status, null, length);
+    }
+
+    /** Commits for a body copied from {@code in}: {@code length} -1 is unknown; status 0 keeps the current one. */
+    private void startBody(InputStream in, int newStatus, @Nullable String contentType, long length) {
         RuntimeException refusal;
         Commit c = null;
         boolean bodyless = false;
         synchronized (this) {
-            refusal = state != ResponseState.NEW ? notNew() : !isFieldValue(contentType) ? badHeader() : null;
+            refusal = state != ResponseState.NEW ? notNew()
+                    : contentType != null && !isFieldValue(contentType) ? badHeader() : null;
             if (refusal == null) {
+                if (newStatus != 0) {
+                    status = newStatus;
+                }
                 pendingIn = in;
-                put("Content-Type", contentType);
-                remove("Content-Length"); // the length is unknown; the adapter frames the body
+                pendingLimit = length;
+                if (contentType != null) {
+                    put("Content-Type", contentType);
+                }
+                remove("Content-Length"); // an unknown length leaves the framing to the adapter
                 remove("Transfer-Encoding");
+                if (length >= 0) {
+                    put("Content-Length", String.valueOf(length));
+                }
                 bodyless = bodyless();
-                c = begin(bodyless ? 0 : -1, EMPTY);
+                c = begin(bodyless ? 0 : length, EMPTY);
             }
         }
         if (refusal != null) {
@@ -269,24 +406,35 @@ public final class DefaultResponse implements Response {
     public void runTransfer() {
         InputStream in;
         OutputStream out;
+        long left;
         synchronized (this) {
             if (state != ResponseState.STREAMING || pendingIn == null || pendingOut == null) {
                 return;
             }
             in = pendingIn;
             out = pendingOut;
+            left = pendingLimit;
             pendingOut = null; // claims the copy: a second runTransfer finds nothing to run
             copying = true;
         }
         try {
             byte[] buf = new byte[CHUNK];
-            int n;
-            while ((n = in.read(buf, 0, buf.length)) != -1) {
+            while (left != 0) {
+                int n = in.read(buf, 0, left < 0 ? buf.length : (int) Math.min(buf.length, left));
+                if (n == -1) {
+                    if (left > 0) {
+                        throw new IOException("the source ended " + left + " bytes before the committed length");
+                    }
+                    break;
+                }
                 if (state() != ResponseState.STREAMING) {
                     return; // aborted meanwhile
                 }
                 out.write(buf, 0, n);
                 bytesWritten.addAndGet(n);
+                if (left > 0) {
+                    left -= n;
+                }
             }
             ex.finish();
             synchronized (this) {
@@ -471,6 +619,10 @@ public final class DefaultResponse implements Response {
 
     /** NEW to COMMITTED with a snapshot of status and headers; the caller holds the lock. */
     private Commit begin(long length, byte[] body) {
+        CachePolicy fallback = defaultCache;
+        if (fallback != null && !hasHeader("Cache-Control")) {
+            put("Cache-Control", fallback.getHeaderValue()); // FR-STATIC-008 AC-5: whatever set it, a value stays
+        }
         committed = true;
         state = ResponseState.COMMITTED;
         return new Commit(status, new ArrayList<>(headers), length, body);

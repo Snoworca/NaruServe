@@ -1,10 +1,10 @@
 package com.snoworca.naruserve.internal;
 
+import com.snoworca.naruserve.CachePolicy;
 import com.snoworca.naruserve.Method;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -24,17 +24,25 @@ final class StaticHandler {
 
     private final List<StaticMount> mounts;
     private final DefaultMimeTypes mimeTypes;
+    private final @Nullable CachePolicy defaultCache;
 
     /** As below, with an empty MIME registry: the built-in table only. */
     StaticHandler(List<StaticMount> registered) {
         this(registered, new DefaultMimeTypes(new AppLifecycle()));
     }
 
+    /** As below, with no app {@code defaultCache}. */
+    StaticHandler(List<StaticMount> registered, DefaultMimeTypes mimeTypes) {
+        this(registered, mimeTypes, null);
+    }
+
     /** Freezes each mount, taking its canonical root now; {@code mimeTypes} is the app's registry. */
     // @req FR-STATIC-001
     // @req FR-STATIC-007
-    StaticHandler(List<StaticMount> registered, DefaultMimeTypes mimeTypes) {
+    // @req FR-STATIC-008
+    StaticHandler(List<StaticMount> registered, DefaultMimeTypes mimeTypes, @Nullable CachePolicy defaultCache) {
         this.mimeTypes = mimeTypes;
+        this.defaultCache = defaultCache;
         List<StaticMount> frozen = new ArrayList<>(registered.size());
         for (StaticMount m : registered) {
             frozen.add(m.freeze());
@@ -148,22 +156,27 @@ final class StaticHandler {
         if (f.isDirectory()) {
             if (!slash) {
                 String q = req.rawQuery();
-                res.status(301).header("Location", req.rawPath() + "/" + (q == null ? "" : "?" + q));
+                res.status(301).header("Location", req.rawPath() + "/" + (q == null ? "" : "?" + q))
+                        .header("X-Content-Type-Options", "nosniff");
                 res.end();
                 return true;
             }
             String index = path.isEmpty() ? m.options().indexName() : path + "/" + m.options().indexName();
-            if (send(m, index, res)) {
+            if (send(m, index, req, res)) {
                 return true;
             }
             if (m.options().directoryListingOn()) {
-                // shortcut: a listing directory answers 404 until FR-STATIC-003 adds the listing body
-                error(req, res, 404);
+                if (!listable(m, f)) {
+                    error(req, res, 404);
+                    return true;
+                }
+                res.status(200).header("X-Content-Type-Options", "nosniff");
+                res.html(DirectoryListing.render(req.rawPath(), f));
                 return true;
             }
             return false;
         }
-        return !slash && send(m, path, res);
+        return !slash && send(m, path, req, res);
     }
 
     /** SPA fallback on the first registered mount with spaFallback(true) whose prefix matches. */
@@ -178,7 +191,7 @@ final class StaticHandler {
             if (StaticPath.check(rel) != 0 || !acceptsHtml(req) || spaExcluded(rawPath, m.options().spaExcludes())) {
                 return false;
             }
-            return send(m, m.options().indexName(), res);
+            return send(m, m.options().indexName(), req, res);
         }
         return false;
     }
@@ -192,32 +205,56 @@ final class StaticHandler {
         return false;
     }
 
+    /**
+     * Whether directory {@code f} lies under the mount's canonical root and, unless symbolic links are allowed, is
+     * reached through no symbolic link below it.
+     */
+    // @req FR-STATIC-003
+    private static boolean listable(StaticMount m, File f) throws IOException {
+        FileResourceResolver r = m.resolver();
+        File root = m.root();
+        if (r == null || root == null) {
+            return false;
+        }
+        String canonical = f.getCanonicalPath();
+        String prefix = root.getPath().endsWith(File.separator) ? root.getPath() : root.getPath() + File.separator;
+        return (canonical.equals(root.getPath()) || canonical.startsWith(prefix)) && (r.allowSymlinks() || r.linkFree(f));
+    }
+
     /** The app's MIME registry, also used by {@code res.file}. */
     DefaultMimeTypes mimeTypes() {
         return mimeTypes;
     }
 
-    /** Streams the resolver's file at {@code path} with its MIME type; false when it is missing or refused. */
+    /** The app's {@code defaultCache}, which every response applies at commit. */
+    @Nullable CachePolicy defaultCache() {
+        return defaultCache;
+    }
+
+    /**
+     * Answers the resolver's file at {@code path} through {@link FileResponder} with its MIME type and the first
+     * matching cache pattern; false when it is missing or refused.
+     */
     // @req FR-STATIC-007
-    private boolean send(StaticMount m, String path, DefaultResponse res) throws IOException {
+    // @req FR-STATIC-008
+    private boolean send(StaticMount m, String path, DefaultRequest req, DefaultResponse res) throws IOException {
         FileResourceResolver r = m.resolver();
         if (r == null) {
             return false;
         }
-        InputStream in;
+        String name = path.substring(path.lastIndexOf('/') + 1);
+        CachePolicy policy = CachePattern.select(m.options().cachePatterns(), "/" + path);
         try {
-            in = r.open(path);
+            FileResponder.respond(req, res, r, path, mimeTypes.lookup(name, m.options().mimes()), policy);
         } catch (FileNotFoundException e) {
             return false;
         }
-        // shortcut: no cache headers yet; FR-STATIC-003 replaces this body
-        String name = path.substring(path.lastIndexOf('/') + 1);
-        res.status(200).stream(in, mimeTypes.lookup(name, m.options().mimes()));
         return true;
     }
 
     private static void error(DefaultRequest req, DefaultResponse res, int status) {
-        res.status(status).header("Content-Type", StandardErrors.JSON_TYPE);
+        res.status(status).header("Content-Type", StandardErrors.JSON_TYPE)
+                .header("X-Content-Type-Options", "nosniff");
         res.send(StandardErrors.json(status, StandardErrors.reason(status), req.requestId()));
     }
 }

@@ -134,7 +134,7 @@ final class FileResourceResolver implements ResourceResolver {
     @Override
     public String etag(String path) throws IOException {
         File f = file(path);
-        return "\"" + Long.toHexString(f.length()) + "-" + Long.toHexString(f.lastModified()) + "\"";
+        return FileResponder.etag(f.length(), f.lastModified());
     }
 
     // @req IR-STATIC-001
