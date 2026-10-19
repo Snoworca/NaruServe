@@ -1,0 +1,67 @@
+{
+ "round": 4,
+ "findings": [
+  {
+   "finding_id": "W2-001",
+   "severity": "medium",
+   "items": [
+    "D-399",
+    "I-021",
+    "D-052"
+   ],
+   "claim": "carried-into-wave-5.md requires the cross-adapter comparison to use requests that reach a handler and include an encoded slash segment (/a%2Fb). Such a request can never reach a handler. D-052 rejects an encoded '/' with 400 on every adapter. PathValidator.isValid returns false when a decoded segment contains '/'. TinyHttpd rejects encoded slashes with 400 before the handler runs. So the wave-5 test cannot be written as specified. Also, %2F is not what tells getPath() apart from getRequestURI(): getPath() is decoded, so any percent-encoded byte that is allowed shows the difference.",
+   "evidence": "docs/research/naruserve-v1/waves/carried-into-wave-5.md:3; docs/research/naruserve-v1/design/00.design.md:88; NaruServe-api/src/main/java/com/snoworca/naruserve/routing/PathValidator.java:31; /Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/http/Request.java:33-36",
+   "suggested_fix": "Replace /a%2Fb with an accepted percent-encoded segment such as /a%20b or /caf%C3%A9. rawPath() must keep it encoded where getPath() would decode it. Keep /a//b, and keep %2F among the rejected, status-only cases."
+  },
+  {
+   "finding_id": "W2-002",
+   "severity": "medium",
+   "items": [
+    "D-048",
+    "D-393",
+    "D-398",
+    "D-040",
+    "D-041",
+    "D-043"
+   ],
+   "claim": "The 'Working app' decision records registrations and builds the Router only at the freeze, so a policy call made after app.get(...) still applies. Taken literally, this postpones Router.add, and Router.add is where RoutePattern.parse rejects bad patterns. A bad pattern (Express wildcard syntax, an invalid variable name, an unmatchable literal) would then fail at the freeze, not at registration. That contradicts D-048 ('Registering a pattern ... SHALL fail') and docs/api/routing.md, which says these errors are raised on the spot when the route is registered. Conflict detection is a separate check and belongs at the freeze.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-3/design.md:111; docs/research/naruserve-v1/design/00.design.md:84; docs/api/routing.md:118-119,220; NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java add() -> RoutePattern.parse",
+   "suggested_fix": "State that each registration call runs RoutePattern.parse (public) right away and throws on a bad pattern. Only adding the parsed routes to the Router built with the final policy, and the conflict check, wait for the freeze."
+  },
+  {
+   "finding_id": "W2-003",
+   "severity": "medium",
+   "items": [
+    "D-086",
+    "D-085",
+    "I-014",
+    "I-008"
+   ],
+   "claim": "The 'Body ownership' decision puts BodyAlreadyConsumedException among 'internal components', next to BodyState and the limit stream. D-086 defines it as an unchecked exception in NaruServe-api. docs/api/request.md and express-migration.md document it as the exception users see and catch. If wave 3 puts it in an internal package, users who catch it depend on a non-contract type. Moving it later would change its FQN and break their code.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-3/design.md:114; docs/research/naruserve-v1/design/00.design.md:174; docs/api/request.md:71,86; docs/api/express-migration.md:129",
+   "suggested_fix": "Make BodyAlreadyConsumedException a public class in a contract package (for example com.snoworca.naruserve) from wave 3 on. Keep only BodyState and the limit-enforcing stream internal."
+  },
+  {
+   "finding_id": "W2-004",
+   "severity": "low",
+   "items": [
+    "D-408",
+    "D-020",
+    "D-395"
+   ],
+   "claim": "The '426 over TinyHttpd' decision and carried-into-wave-7.md let the wave 7 end-to-end test assert only Upgrade: websocket. The frozen D-408 still requires Connection: Upgrade over the TinyHttpd adapter. The TinyHttpd fact is correct: Connection values other than close are dropped, and only close/keep-alive is written. So D-408 cannot pass as frozen. The decision changes a frozen wave-7 item through a wave-3 note, and nothing stops D-408 from being promoted to verified on the weaker test.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-3/design.md:125; docs/research/naruserve-v1/design/00.design.md:527; /Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/ExchangeResponse.java:172-177,466-470",
+   "suggested_fix": "Open the D-020 deferred TinyHttpd-gap issue now. carried-into-wave-7.md should say that D-408 is promoted only with that issue cited as a known deviation, or that it stays unverified, never verified on the weaker assertion alone."
+  },
+  {
+   "finding_id": "W2-005",
+   "severity": "low",
+   "items": [
+    "D-086"
+   ],
+   "claim": "The decision says no wave adds a public raw-body accessor. That settles an open item, yet docs/api/express-migration.md:84 still lists express.raw()/express.text() as (\ubbf8\ud655\uc815) ('the API that reads a raw non-JSON body has no name in the spec'). The marker is in neither the decision's removal list nor its list of markers owned by other issues, so the docs contradict the decision.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-3/design.md:114; docs/api/express-migration.md:84",
+   "suggested_fix": "Either remove or reword the express-migration.md:84 marker in wave 3 ('not provided in v1; read through ...'), or soften the decision to 'wave 3 adds none' and list that marker among the ones that stay."
+  }
+ ]
+}

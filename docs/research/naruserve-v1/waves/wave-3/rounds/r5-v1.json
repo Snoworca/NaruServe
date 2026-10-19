@@ -1,0 +1,238 @@
+{
+ "rows": [
+  {
+   "id": "D-071",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-072",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-392",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-040",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-041",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-042",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-043",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-044",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-045",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-046",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-393",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-394",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-395",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-396",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-442",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-397",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-073",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-074",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-075",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-076",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-077",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-078",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-079",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-080",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-081",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-082",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-083",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-084",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-085",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-086",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-087",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-088",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-089",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-090",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-091",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-092",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-093",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-094",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-095",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-096",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-097",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-098",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-099",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-100",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-101",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-102",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-103",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-104",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-105",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-106",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-107",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-108",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-399",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-109",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-398",
+   "verdict": "covered"
+  }
+ ],
+ "findings": [
+  {
+   "finding_id": "W1-001",
+   "severity": "medium",
+   "items": [
+    "D-399",
+    "I-021",
+    "D-053"
+   ],
+   "claim": "carried-into-wave-5.md requires the value-parity requests, including the repeated-slash case /a//b, to reach a handler, but does not say this case needs the mergeSlashes policy. Under the strict default policy no route can match /a//b: RoutePattern.parse rejects a pattern with an empty interior segment and a :variable never matches an empty segment, and Router.decodeSegments keeps the empty segment unless policy.mergeSlashes() is set. A wave-5 implementer following the note under the default policy gets 404 and has no handler-side rawPath()/query() to compare, so the getPath() '//'-merging hazard stays untested. Round 3 W2-005 asked for '/a//b under the default and the mergeSlashes policy'; the note dropped the policy qualifier.",
+   "evidence": "docs/research/naruserve-v1/waves/carried-into-wave-5.md:3; NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RoutePattern.java:49-50; NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RoutePattern.java:101; NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:296-300",
+   "suggested_fix": "In carried-into-wave-5.md say that /a//b is sent with RouterPolicy.builder().mergeSlashes(true) (app.routerPolicy) to a /a/b route so it reaches the handler, and compare rawPath() (which must keep '//') across both adapters; under the strict default compare /a//b by status (404) only."
+  }
+ ]
+}

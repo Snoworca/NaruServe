@@ -1,0 +1,6 @@
+{"confirmed":["W2-001","W2-002","W2-003","W2-004","W2-005","W2-006","W2-007"],
+"rebutted":[],
+"added":[{"finding_id":"W1-110","severity":"low","items":["D-109","D-398","D-074","D-093","D-082"],
+"claim":"The wave decisions settle only two of D-109's four (미확정) items (stream closing, and through W2-006 the HEAD method value) and none of D-398's routing-policy API names. Query inclusion in rawPath(), the default Content-Type of send(byte[]), the exception type for an attribute type mismatch, and the policy API names (// handling, trailing slash, case, TRACE/CONNECT opt-in) are still marked (미확정) in docs/api. Nothing says that the implementer decides them in this wave. W2-004 shows that the policy API shape also affects when the Router is built.",
+"evidence":"docs/research/naruserve-v1/waves/wave-3/design.md:89-90,111-118; docs/api/request.md:13,135; docs/api/response.md:36; docs/api/routing.md:72,127,155",
+"suggested_fix":"Add a wave decision that records each remaining choice, for example: rawPath() includes the query, like Express originalUrl; send(byte[]) defaults to application/octet-stream; the attribute mismatch throws ClassCastException. Or state that the implementer settles them under D-109/D-398, and make the wave-3 merge check require that docs/api/request.md, response.md, routing.md and app.md have no remaining wave-3-owned (미확정) markers."}]}

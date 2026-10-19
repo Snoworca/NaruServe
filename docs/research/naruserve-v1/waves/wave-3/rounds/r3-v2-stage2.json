@@ -1,0 +1,14 @@
+{
+ "confirmed": ["W1-001", "W1-002", "W1-003"],
+ "rebutted": [],
+ "added": [
+  {
+   "finding_id": "W2-101",
+   "severity": "low",
+   "items": ["D-053", "D-398", "D-109"],
+   "claim": "The 'Remaining markers' decision settles the routing-policy setting API as app.routerPolicy(RouterPolicy) with enableTrace/enableConnect/mergeSlashes/ignoreTrailingSlash/caseInsensitive, but the same 'setting API (미확정)' marker also appears in docs/api/defaults.md:40 (TRACE/CONNECT explicit policy), which is not among the files the decision edits, and in docs/api/routing.md:72 and :127, which the decision does not name explicitly as markers to remove. The same gap W1-001 found for express-migration.md applies here: after wave 3, defaults.md would still say the policy API is undecided.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-3/design.md:122; docs/api/defaults.md:40; docs/api/routing.md:72; docs/api/routing.md:127",
+   "suggested_fix": "Add docs/api/defaults.md to the decision's file list, and name routing.md:72, routing.md:127 and defaults.md:40 as markers that the routerPolicy decision removes, linking them to app.routerPolicy(RouterPolicy.builder()...build())."
+  }
+ ]
+}

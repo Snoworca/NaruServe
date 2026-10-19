@@ -1,0 +1,259 @@
+{
+ "rows": [
+  {
+   "id": "D-071",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-072",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-392",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-040",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-041",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-042",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-043",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-044",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-045",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-046",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-393",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-394",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-395",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-396",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-442",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-397",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-073",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-074",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-075",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-076",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-077",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-078",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-079",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-080",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-081",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-082",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-083",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-084",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-085",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-086",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-087",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-088",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-089",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-090",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-091",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-092",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-093",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-094",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-095",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-096",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-097",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-098",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-099",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-100",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-101",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-102",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-103",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-104",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-105",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-106",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-107",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-108",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-399",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-109",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-398",
+   "verdict": "covered"
+  }
+ ],
+ "findings": [
+  {
+   "finding_id": "W1-001",
+   "severity": "low",
+   "items": [
+    "I-021",
+    "D-399",
+    "D-442"
+   ],
+   "claim": "The W2-002 decision narrows the integration items to the components that exist at this merge, but the preamble still says without qualification that I-001..I-021 hold at this wave's merge. The two lines now contradict each other on whether I-021's TinyHttpd half is checked at the wave 3 merge.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-3/design.md:5,112",
+   "suggested_fix": "Reword line 5 to 'hold at this wave's merge for the components that exist (see Wave decisions)'."
+  },
+  {
+   "finding_id": "W1-002",
+   "severity": "low",
+   "items": [
+    "D-086"
+   ],
+   "claim": "The W2-004 decision does not settle the 'raw' read named in D-086. Round 1 W2-004 asked for 'raw' to be dropped or recorded as (미확정)/post-v1, because docs/api/request.md has no raw body accessor. The decision only says wave 3 exposes no public body-reading method, so it is still open which accessor 'raw' means.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-3/design.md:53,114; docs/research/naruserve-v1/waves/wave-3/rounds/r1-merged.json (W2-004 suggested_fix)",
+   "suggested_fix": "Add one clause to the body-ownership decision: v1 has no public raw body accessor, so 'raw' in D-086 refers only to internal reads of the body stream. BodyState enforces it for the readers that waves 5 and 6 add."
+  },
+  {
+   "finding_id": "W1-003",
+   "severity": "low",
+   "items": [
+    "D-094",
+    "D-109"
+   ],
+   "claim": "The stream-closing decision names `res.stream(InputStream)`, but the frozen item D-094 and docs/api/response.md define the signature as `stream(InputStream, contentType)`. An implementer could read this as a one-argument overload.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-3/design.md:117,64; docs/api/response.md:29",
+   "suggested_fix": "Write `res.stream(InputStream, contentType)` in the decision."
+  }
+ ]
+}

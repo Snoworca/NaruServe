@@ -1,0 +1,1851 @@
+{
+ "req_summaries": [
+  {
+   "id": "IR-HTTP-001",
+   "scope": "HTTP",
+   "type": "interface",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 5,
+   "trace_count": 6,
+   "deps": [
+    {
+     "target": "IR-ROUTE-001",
+     "relation": "depends_on",
+     "status": "verified",
+     "stability": "evolving",
+     "discarded": false
+    }
+   ]
+  },
+  {
+   "id": "IR-HTTP-002",
+   "scope": "HTTP",
+   "type": "interface",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 2,
+   "trace_count": 6,
+   "deps": [
+    {
+     "target": "IR-HTTP-001",
+     "relation": "depends_on",
+     "status": "planned",
+     "stability": "draft",
+     "discarded": false
+    },
+    {
+     "target": "CON-ROUTE-001",
+     "relation": "depends_on",
+     "status": "discarded",
+     "stability": "evolving",
+     "discarded": true
+    },
+    {
+     "target": "CON-ROUTE-006",
+     "relation": "depends_on",
+     "status": "planned",
+     "stability": "draft",
+     "discarded": false
+    }
+   ]
+  },
+  {
+   "id": "IR-HTTP-003",
+   "scope": "HTTP",
+   "type": "interface",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 3,
+   "trace_count": 5,
+   "deps": [
+    {
+     "target": "FR-ROUTE-005",
+     "relation": "depends_on",
+     "status": "verified",
+     "stability": "evolving",
+     "discarded": false
+    }
+   ]
+  },
+  {
+   "id": "IR-HTTP-004",
+   "scope": "HTTP",
+   "type": "interface",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 4,
+   "trace_count": 4,
+   "deps": [
+    {
+     "target": "IR-HTTP-003",
+     "relation": "depends_on",
+     "status": "planned",
+     "stability": "draft",
+     "discarded": false
+    }
+   ]
+  },
+  {
+   "id": "CON-HTTP-001",
+   "scope": "HTTP",
+   "type": "constraint",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 3,
+   "trace_count": 8,
+   "deps": [
+    {
+     "target": "IR-HTTP-003",
+     "relation": "depends_on",
+     "status": "planned",
+     "stability": "draft",
+     "discarded": false
+    },
+    {
+     "target": "CON-ROUTE-001",
+     "relation": "depends_on",
+     "status": "discarded",
+     "stability": "evolving",
+     "discarded": true
+    },
+    {
+     "target": "CON-ROUTE-006",
+     "relation": "depends_on",
+     "status": "planned",
+     "stability": "draft",
+     "discarded": false
+    }
+   ]
+  },
+  {
+   "id": "FR-HTTP-001",
+   "scope": "HTTP",
+   "type": "functional",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 7,
+   "trace_count": 7,
+   "deps": [
+    {
+     "target": "IR-HTTP-003",
+     "relation": "depends_on",
+     "status": "planned",
+     "stability": "draft",
+     "discarded": false
+    },
+    {
+     "target": "IR-HTTP-004",
+     "relation": "depends_on",
+     "status": "planned",
+     "stability": "draft",
+     "discarded": false
+    }
+   ]
+  },
+  {
+   "id": "FR-HTTP-002",
+   "scope": "HTTP",
+   "type": "functional",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 6,
+   "trace_count": 9,
+   "deps": [
+    {
+     "target": "FR-ROUTE-004",
+     "relation": "depends_on",
+     "status": "verified",
+     "stability": "evolving",
+     "discarded": false
+    },
+    {
+     "target": "IR-ROUTE-004",
+     "relation": "depends_on",
+     "status": "verified",
+     "stability": "evolving",
+     "discarded": false
+    },
+    {
+     "target": "FR-HTTP-001",
+     "relation": "depends_on",
+     "status": "planned",
+     "stability": "draft",
+     "discarded": false
+    },
+    {
+     "target": "CON-HTTP-001",
+     "relation": "depends_on",
+     "status": "planned",
+     "stability": "draft",
+     "discarded": false
+    }
+   ]
+  },
+  {
+   "id": "FR-HTTP-003",
+   "scope": "HTTP",
+   "type": "functional",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 7,
+   "trace_count": 10,
+   "deps": [
+    {
+     "target": "FR-ROUTE-009",
+     "relation": "depends_on",
+     "status": "verified",
+     "stability": "evolving",
+     "discarded": false
+    },
+    {
+     "target": "FR-ROUTE-010",
+     "relation": "depends_on",
+     "status": "verified",
+     "stability": "evolving",
+     "discarded": false
+    },
+    {
+     "target": "FR-ROUTE-012",
+     "relation": "depends_on",
+     "status": "verified",
+     "stability": "evolving",
+     "discarded": false
+    },
+    {
+     "target": "FR-ROUTE-013",
+     "relation": "depends_on",
+     "status": "verified",
+     "stability": "evolving",
+     "discarded": false
+    },
+    {
+     "target": "FR-ROUTE-016",
+     "relation": "depends_on",
+     "status": "verified",
+     "stability": "evolving",
+     "discarded": false
+    },
+    {
+     "target": "FR-HTTP-002",
+     "relation": "depends_on",
+     "status": "planned",
+     "stability": "draft",
+     "discarded": false
+    }
+   ]
+  },
+  {
+   "id": "FR-HTTP-004",
+   "scope": "HTTP",
+   "type": "functional",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 2,
+   "trace_count": 5,
+   "deps": [
+    {
+     "target": "FR-ROUTE-011",
+     "relation": "depends_on",
+     "status": "verified",
+     "stability": "evolving",
+     "discarded": false
+    },
+    {
+     "target": "FR-HTTP-002",
+     "relation": "depends_on",
+     "status": "planned",
+     "stability": "draft",
+     "discarded": false
+    }
+   ]
+  },
+  {
+   "id": "FR-HTTP-005",
+   "scope": "HTTP",
+   "type": "functional",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 4,
+   "trace_count": 6,
+   "deps": [
+    {
+     "target": "IR-ROUTE-001",
+     "relation": "depends_on",
+     "status": "verified",
+     "stability": "evolving",
+     "discarded": false
+    },
+    {
+     "target": "FR-HTTP-002",
+     "relation": "depends_on",
+     "status": "planned",
+     "stability": "draft",
+     "discarded": false
+    },
+    {
+     "target": "FR-HTTP-001",
+     "relation": "depends_on",
+     "status": "planned",
+     "stability": "draft",
+     "discarded": false
+    }
+   ]
+  },
+  {
+   "id": "FR-HTTP-006",
+   "scope": "HTTP",
+   "type": "functional",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 4,
+   "trace_count": 4,
+   "deps": [
+    {
+     "target": "FR-HTTP-002",
+     "relation": "depends_on",
+     "status": "planned",
+     "stability": "draft",
+     "discarded": false
+    }
+   ]
+  },
+  {
+   "id": "IR-HTTP-005",
+   "scope": "HTTP",
+   "type": "interface",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 6,
+   "trace_count": 9,
+   "deps": [
+    {
+     "target": "IR-HTTP-002",
+     "relation": "depends_on",
+     "status": "planned",
+     "stability": "draft",
+     "discarded": false
+    },
+    {
+     "target": "FR-ROUTE-002",
+     "relation": "depends_on",
+     "status": "verified",
+     "stability": "evolving",
+     "discarded": false
+    },
+    {
+     "target": "FR-ROUTE-006",
+     "relation": "depends_on",
+     "status": "verified",
+     "stability": "evolving",
+     "discarded": false
+    },
+    {
+     "target": "FR-ROUTE-014",
+     "relation": "depends_on",
+     "status": "verified",
+     "stability": "evolving",
+     "discarded": false
+    },
+    {
+     "target": "IR-ROUTE-001",
+     "relation": "depends_on",
+     "status": "verified",
+     "stability": "evolving",
+     "discarded": false
+    }
+   ]
+  },
+  {
+   "id": "IR-HTTP-006",
+   "scope": "HTTP",
+   "type": "interface",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 4,
+   "trace_count": 6,
+   "deps": [
+    {
+     "target": "IR-HTTP-005",
+     "relation": "depends_on",
+     "status": "planned",
+     "stability": "draft",
+     "discarded": false
+    },
+    {
+     "target": "FR-ROUTE-008",
+     "relation": "depends_on",
+     "status": "verified",
+     "stability": "evolving",
+     "discarded": false
+    }
+   ]
+  },
+  {
+   "id": "FR-HTTP-007",
+   "scope": "HTTP",
+   "type": "functional",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 4,
+   "trace_count": 7,
+   "deps": [
+    {
+     "target": "IR-HTTP-005",
+     "relation": "depends_on",
+     "status": "planned",
+     "stability": "draft",
+     "discarded": false
+    },
+    {
+     "target": "FR-ROUTE-002",
+     "relation": "depends_on",
+     "status": "verified",
+     "stability": "evolving",
+     "discarded": false
+    },
+    {
+     "target": "FR-HTTP-004",
+     "relation": "depends_on",
+     "status": "planned",
+     "stability": "draft",
+     "discarded": false
+    }
+   ]
+  },
+  {
+   "id": "FR-HTTP-008",
+   "scope": "HTTP",
+   "type": "functional",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 7,
+   "trace_count": 9,
+   "deps": [
+    {
+     "target": "IR-HTTP-005",
+     "relation": "depends_on",
+     "status": "planned",
+     "stability": "draft",
+     "discarded": false
+    },
+    {
+     "target": "FR-ROUTE-003",
+     "relation": "depends_on",
+     "status": "verified",
+     "stability": "evolving",
+     "discarded": false
+    },
+    {
+     "target": "FR-ROUTE-008",
+     "relation": "depends_on",
+     "status": "verified",
+     "stability": "evolving",
+     "discarded": false
+    },
+    {
+     "target": "FR-HTTP-002",
+     "relation": "depends_on",
+     "status": "planned",
+     "stability": "draft",
+     "discarded": false
+    }
+   ]
+  },
+  {
+   "id": "FR-HTTP-009",
+   "scope": "HTTP",
+   "type": "functional",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 4,
+   "trace_count": 6,
+   "deps": [
+    {
+     "target": "IR-HTTP-001",
+     "relation": "depends_on",
+     "status": "planned",
+     "stability": "draft",
+     "discarded": false
+    },
+    {
+     "target": "FR-ROUTE-005",
+     "relation": "depends_on",
+     "status": "verified",
+     "stability": "evolving",
+     "discarded": false
+    },
+    {
+     "target": "IR-HTTP-003",
+     "relation": "depends_on",
+     "status": "planned",
+     "stability": "draft",
+     "discarded": false
+    }
+   ]
+  },
+  {
+   "id": "FR-HTTP-010",
+   "scope": "HTTP",
+   "type": "functional",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 3,
+   "trace_count": 7,
+   "deps": [
+    {
+     "target": "IR-HTTP-001",
+     "relation": "depends_on",
+     "status": "planned",
+     "stability": "draft",
+     "discarded": false
+    },
+    {
+     "target": "IR-HTTP-003",
+     "relation": "depends_on",
+     "status": "planned",
+     "stability": "draft",
+     "discarded": false
+    },
+    {
+     "target": "FR-HTTP-002",
+     "relation": "depends_on",
+     "status": "planned",
+     "stability": "draft",
+     "discarded": false
+    }
+   ]
+  },
+  {
+   "id": "FR-HTTP-011",
+   "scope": "HTTP",
+   "type": "functional",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 3,
+   "trace_count": 5,
+   "deps": [
+    {
+     "target": "IR-HTTP-001",
+     "relation": "depends_on",
+     "status": "planned",
+     "stability": "draft",
+     "discarded": false
+    },
+    {
+     "target": "IR-HTTP-003",
+     "relation": "depends_on",
+     "status": "planned",
+     "stability": "draft",
+     "discarded": false
+    }
+   ]
+  },
+  {
+   "id": "FR-HTTP-012",
+   "scope": "HTTP",
+   "type": "functional",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 5,
+   "trace_count": 4,
+   "deps": [
+    {
+     "target": "IR-HTTP-001",
+     "relation": "depends_on",
+     "status": "planned",
+     "stability": "draft",
+     "discarded": false
+    }
+   ]
+  },
+  {
+   "id": "FR-HTTP-013",
+   "scope": "HTTP",
+   "type": "functional",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 2,
+   "trace_count": 4,
+   "deps": [
+    {
+     "target": "IR-HTTP-001",
+     "relation": "depends_on",
+     "status": "planned",
+     "stability": "draft",
+     "discarded": false
+    }
+   ]
+  },
+  {
+   "id": "FR-HTTP-014",
+   "scope": "HTTP",
+   "type": "functional",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 7,
+   "trace_count": 5,
+   "deps": [
+    {
+     "target": "IR-HTTP-001",
+     "relation": "depends_on",
+     "status": "planned",
+     "stability": "draft",
+     "discarded": false
+    },
+    {
+     "target": "IR-HTTP-003",
+     "relation": "depends_on",
+     "status": "planned",
+     "stability": "draft",
+     "discarded": false
+    }
+   ]
+  },
+  {
+   "id": "FR-HTTP-015",
+   "scope": "HTTP",
+   "type": "functional",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 4,
+   "trace_count": 4,
+   "deps": [
+    {
+     "target": "IR-HTTP-001",
+     "relation": "depends_on",
+     "status": "planned",
+     "stability": "draft",
+     "discarded": false
+    }
+   ]
+  },
+  {
+   "id": "FR-HTTP-016",
+   "scope": "HTTP",
+   "type": "functional",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 5,
+   "trace_count": 5,
+   "deps": [
+    {
+     "target": "FR-HTTP-014",
+     "relation": "depends_on",
+     "status": "planned",
+     "stability": "draft",
+     "discarded": false
+    },
+    {
+     "target": "FR-HTTP-015",
+     "relation": "depends_on",
+     "status": "planned",
+     "stability": "draft",
+     "discarded": false
+    }
+   ]
+  },
+  {
+   "id": "FR-HTTP-017",
+   "scope": "HTTP",
+   "type": "functional",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 4,
+   "trace_count": 4,
+   "deps": [
+    {
+     "target": "FR-HTTP-014",
+     "relation": "depends_on",
+     "status": "planned",
+     "stability": "draft",
+     "discarded": false
+    }
+   ]
+  },
+  {
+   "id": "FR-HTTP-018",
+   "scope": "HTTP",
+   "type": "functional",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 3,
+   "trace_count": 5,
+   "deps": [
+    {
+     "target": "FR-HTTP-016",
+     "relation": "depends_on",
+     "status": "planned",
+     "stability": "draft",
+     "discarded": false
+    },
+    {
+     "target": "FR-HTTP-015",
+     "relation": "depends_on",
+     "status": "planned",
+     "stability": "draft",
+     "discarded": false
+    }
+   ]
+  },
+  {
+   "id": "FR-HTTP-019",
+   "scope": "HTTP",
+   "type": "functional",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 5,
+   "trace_count": 6,
+   "deps": [
+    {
+     "target": "IR-HTTP-001",
+     "relation": "depends_on",
+     "status": "planned",
+     "stability": "draft",
+     "discarded": false
+    },
+    {
+     "target": "IR-HTTP-003",
+     "relation": "depends_on",
+     "status": "planned",
+     "stability": "draft",
+     "discarded": false
+    }
+   ]
+  },
+  {
+   "id": "FR-HTTP-020",
+   "scope": "HTTP",
+   "type": "functional",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 4,
+   "trace_count": 4,
+   "deps": [
+    {
+     "target": "FR-HTTP-019",
+     "relation": "depends_on",
+     "status": "planned",
+     "stability": "draft",
+     "discarded": false
+    }
+   ]
+  },
+  {
+   "id": "OPS-HTTP-001",
+   "scope": "HTTP",
+   "type": "operational",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 9,
+   "trace_count": 16,
+   "deps": [
+    {
+     "target": "OPS-ROUTE-002",
+     "relation": "depends_on",
+     "status": "planned",
+     "stability": "draft",
+     "discarded": false
+    },
+    {
+     "target": "IR-HTTP-005",
+     "relation": "depends_on",
+     "status": "planned",
+     "stability": "draft",
+     "discarded": false
+    },
+    {
+     "target": "FR-HTTP-014",
+     "relation": "depends_on",
+     "status": "planned",
+     "stability": "draft",
+     "discarded": false
+    },
+    {
+     "target": "FR-HTTP-012",
+     "relation": "depends_on",
+     "status": "planned",
+     "stability": "draft",
+     "discarded": false
+    },
+    {
+     "target": "FR-HTTP-009",
+     "relation": "depends_on",
+     "status": "planned",
+     "stability": "draft",
+     "discarded": false
+    }
+   ]
+  },
+  {
+   "id": "OPS-ROUTE-002",
+   "scope": "ROUTE",
+   "type": "operational",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 3,
+   "trace_count": 5,
+   "deps": [
+    {
+     "target": "OPS-ROUTE-001",
+     "relation": "supersedes",
+     "status": "discarded",
+     "stability": "evolving",
+     "discarded": true
+    }
+   ]
+  },
+  {
+   "id": "CON-ROUTE-006",
+   "scope": "ROUTE",
+   "type": "constraint",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 4,
+   "trace_count": 5,
+   "deps": [
+    {
+     "target": "CON-ROUTE-001",
+     "relation": "supersedes",
+     "status": "discarded",
+     "stability": "evolving",
+     "discarded": true
+    }
+   ]
+  }
+ ],
+ "dependency_graph": {
+  "nodes": [
+   {
+    "id": "CON-HTTP-001",
+    "status": "planned",
+    "stability": "draft",
+    "discarded": false
+   },
+   {
+    "id": "CON-ROUTE-001",
+    "status": "discarded",
+    "stability": "evolving",
+    "discarded": true
+   },
+   {
+    "id": "CON-ROUTE-006",
+    "status": "planned",
+    "stability": "draft",
+    "discarded": false
+   },
+   {
+    "id": "FR-HTTP-001",
+    "status": "planned",
+    "stability": "draft",
+    "discarded": false
+   },
+   {
+    "id": "FR-HTTP-002",
+    "status": "planned",
+    "stability": "draft",
+    "discarded": false
+   },
+   {
+    "id": "FR-HTTP-003",
+    "status": "planned",
+    "stability": "draft",
+    "discarded": false
+   },
+   {
+    "id": "FR-HTTP-004",
+    "status": "planned",
+    "stability": "draft",
+    "discarded": false
+   },
+   {
+    "id": "FR-HTTP-005",
+    "status": "planned",
+    "stability": "draft",
+    "discarded": false
+   },
+   {
+    "id": "FR-HTTP-006",
+    "status": "planned",
+    "stability": "draft",
+    "discarded": false
+   },
+   {
+    "id": "FR-HTTP-007",
+    "status": "planned",
+    "stability": "draft",
+    "discarded": false
+   },
+   {
+    "id": "FR-HTTP-008",
+    "status": "planned",
+    "stability": "draft",
+    "discarded": false
+   },
+   {
+    "id": "FR-HTTP-009",
+    "status": "planned",
+    "stability": "draft",
+    "discarded": false
+   },
+   {
+    "id": "FR-HTTP-010",
+    "status": "planned",
+    "stability": "draft",
+    "discarded": false
+   },
+   {
+    "id": "FR-HTTP-011",
+    "status": "planned",
+    "stability": "draft",
+    "discarded": false
+   },
+   {
+    "id": "FR-HTTP-012",
+    "status": "planned",
+    "stability": "draft",
+    "discarded": false
+   },
+   {
+    "id": "FR-HTTP-013",
+    "status": "planned",
+    "stability": "draft",
+    "discarded": false
+   },
+   {
+    "id": "FR-HTTP-014",
+    "status": "planned",
+    "stability": "draft",
+    "discarded": false
+   },
+   {
+    "id": "FR-HTTP-015",
+    "status": "planned",
+    "stability": "draft",
+    "discarded": false
+   },
+   {
+    "id": "FR-HTTP-016",
+    "status": "planned",
+    "stability": "draft",
+    "discarded": false
+   },
+   {
+    "id": "FR-HTTP-017",
+    "status": "planned",
+    "stability": "draft",
+    "discarded": false
+   },
+   {
+    "id": "FR-HTTP-018",
+    "status": "planned",
+    "stability": "draft",
+    "discarded": false
+   },
+   {
+    "id": "FR-HTTP-019",
+    "status": "planned",
+    "stability": "draft",
+    "discarded": false
+   },
+   {
+    "id": "FR-HTTP-020",
+    "status": "planned",
+    "stability": "draft",
+    "discarded": false
+   },
+   {
+    "id": "FR-ROUTE-002",
+    "status": "verified",
+    "stability": "evolving",
+    "discarded": false
+   },
+   {
+    "id": "FR-ROUTE-003",
+    "status": "verified",
+    "stability": "evolving",
+    "discarded": false
+   },
+   {
+    "id": "FR-ROUTE-004",
+    "status": "verified",
+    "stability": "evolving",
+    "discarded": false
+   },
+   {
+    "id": "FR-ROUTE-005",
+    "status": "verified",
+    "stability": "evolving",
+    "discarded": false
+   },
+   {
+    "id": "FR-ROUTE-006",
+    "status": "verified",
+    "stability": "evolving",
+    "discarded": false
+   },
+   {
+    "id": "FR-ROUTE-008",
+    "status": "verified",
+    "stability": "evolving",
+    "discarded": false
+   },
+   {
+    "id": "FR-ROUTE-009",
+    "status": "verified",
+    "stability": "evolving",
+    "discarded": false
+   },
+   {
+    "id": "FR-ROUTE-010",
+    "status": "verified",
+    "stability": "evolving",
+    "discarded": false
+   },
+   {
+    "id": "FR-ROUTE-011",
+    "status": "verified",
+    "stability": "evolving",
+    "discarded": false
+   },
+   {
+    "id": "FR-ROUTE-012",
+    "status": "verified",
+    "stability": "evolving",
+    "discarded": false
+   },
+   {
+    "id": "FR-ROUTE-013",
+    "status": "verified",
+    "stability": "evolving",
+    "discarded": false
+   },
+   {
+    "id": "FR-ROUTE-014",
+    "status": "verified",
+    "stability": "evolving",
+    "discarded": false
+   },
+   {
+    "id": "FR-ROUTE-016",
+    "status": "verified",
+    "stability": "evolving",
+    "discarded": false
+   },
+   {
+    "id": "IR-HTTP-001",
+    "status": "planned",
+    "stability": "draft",
+    "discarded": false
+   },
+   {
+    "id": "IR-HTTP-002",
+    "status": "planned",
+    "stability": "draft",
+    "discarded": false
+   },
+   {
+    "id": "IR-HTTP-003",
+    "status": "planned",
+    "stability": "draft",
+    "discarded": false
+   },
+   {
+    "id": "IR-HTTP-004",
+    "status": "planned",
+    "stability": "draft",
+    "discarded": false
+   },
+   {
+    "id": "IR-HTTP-005",
+    "status": "planned",
+    "stability": "draft",
+    "discarded": false
+   },
+   {
+    "id": "IR-HTTP-006",
+    "status": "planned",
+    "stability": "draft",
+    "discarded": false
+   },
+   {
+    "id": "IR-ROUTE-001",
+    "status": "verified",
+    "stability": "evolving",
+    "discarded": false
+   },
+   {
+    "id": "IR-ROUTE-004",
+    "status": "verified",
+    "stability": "evolving",
+    "discarded": false
+   },
+   {
+    "id": "OPS-HTTP-001",
+    "status": "planned",
+    "stability": "draft",
+    "discarded": false
+   },
+   {
+    "id": "OPS-ROUTE-001",
+    "status": "discarded",
+    "stability": "evolving",
+    "discarded": true
+   },
+   {
+    "id": "OPS-ROUTE-002",
+    "status": "planned",
+    "stability": "draft",
+    "discarded": false
+   }
+  ],
+  "edges": [
+   {
+    "from": "IR-HTTP-001",
+    "to": "IR-ROUTE-001",
+    "relation": "depends_on"
+   },
+   {
+    "from": "IR-HTTP-002",
+    "to": "IR-HTTP-001",
+    "relation": "depends_on"
+   },
+   {
+    "from": "IR-HTTP-002",
+    "to": "CON-ROUTE-001",
+    "relation": "depends_on"
+   },
+   {
+    "from": "IR-HTTP-002",
+    "to": "CON-ROUTE-006",
+    "relation": "depends_on"
+   },
+   {
+    "from": "IR-HTTP-003",
+    "to": "FR-ROUTE-005",
+    "relation": "depends_on"
+   },
+   {
+    "from": "IR-HTTP-004",
+    "to": "IR-HTTP-003",
+    "relation": "depends_on"
+   },
+   {
+    "from": "CON-HTTP-001",
+    "to": "IR-HTTP-003",
+    "relation": "depends_on"
+   },
+   {
+    "from": "CON-HTTP-001",
+    "to": "CON-ROUTE-001",
+    "relation": "depends_on"
+   },
+   {
+    "from": "CON-HTTP-001",
+    "to": "CON-ROUTE-006",
+    "relation": "depends_on"
+   },
+   {
+    "from": "FR-HTTP-001",
+    "to": "IR-HTTP-003",
+    "relation": "depends_on"
+   },
+   {
+    "from": "FR-HTTP-001",
+    "to": "IR-HTTP-004",
+    "relation": "depends_on"
+   },
+   {
+    "from": "FR-HTTP-002",
+    "to": "FR-ROUTE-004",
+    "relation": "depends_on"
+   },
+   {
+    "from": "FR-HTTP-002",
+    "to": "IR-ROUTE-004",
+    "relation": "depends_on"
+   },
+   {
+    "from": "FR-HTTP-002",
+    "to": "FR-HTTP-001",
+    "relation": "depends_on"
+   },
+   {
+    "from": "FR-HTTP-002",
+    "to": "CON-HTTP-001",
+    "relation": "depends_on"
+   },
+   {
+    "from": "FR-HTTP-003",
+    "to": "FR-ROUTE-009",
+    "relation": "depends_on"
+   },
+   {
+    "from": "FR-HTTP-003",
+    "to": "FR-ROUTE-010",
+    "relation": "depends_on"
+   },
+   {
+    "from": "FR-HTTP-003",
+    "to": "FR-ROUTE-012",
+    "relation": "depends_on"
+   },
+   {
+    "from": "FR-HTTP-003",
+    "to": "FR-ROUTE-013",
+    "relation": "depends_on"
+   },
+   {
+    "from": "FR-HTTP-003",
+    "to": "FR-ROUTE-016",
+    "relation": "depends_on"
+   },
+   {
+    "from": "FR-HTTP-003",
+    "to": "FR-HTTP-002",
+    "relation": "depends_on"
+   },
+   {
+    "from": "FR-HTTP-004",
+    "to": "FR-ROUTE-011",
+    "relation": "depends_on"
+   },
+   {
+    "from": "FR-HTTP-004",
+    "to": "FR-HTTP-002",
+    "relation": "depends_on"
+   },
+   {
+    "from": "FR-HTTP-005",
+    "to": "IR-ROUTE-001",
+    "relation": "depends_on"
+   },
+   {
+    "from": "FR-HTTP-005",
+    "to": "FR-HTTP-002",
+    "relation": "depends_on"
+   },
+   {
+    "from": "FR-HTTP-005",
+    "to": "FR-HTTP-001",
+    "relation": "depends_on"
+   },
+   {
+    "from": "FR-HTTP-006",
+    "to": "FR-HTTP-002",
+    "relation": "depends_on"
+   },
+   {
+    "from": "IR-HTTP-005",
+    "to": "IR-HTTP-002",
+    "relation": "depends_on"
+   },
+   {
+    "from": "IR-HTTP-005",
+    "to": "FR-ROUTE-002",
+    "relation": "depends_on"
+   },
+   {
+    "from": "IR-HTTP-005",
+    "to": "FR-ROUTE-006",
+    "relation": "depends_on"
+   },
+   {
+    "from": "IR-HTTP-005",
+    "to": "FR-ROUTE-014",
+    "relation": "depends_on"
+   },
+   {
+    "from": "IR-HTTP-005",
+    "to": "IR-ROUTE-001",
+    "relation": "depends_on"
+   },
+   {
+    "from": "IR-HTTP-006",
+    "to": "IR-HTTP-005",
+    "relation": "depends_on"
+   },
+   {
+    "from": "IR-HTTP-006",
+    "to": "FR-ROUTE-008",
+    "relation": "depends_on"
+   },
+   {
+    "from": "FR-HTTP-007",
+    "to": "IR-HTTP-005",
+    "relation": "depends_on"
+   },
+   {
+    "from": "FR-HTTP-007",
+    "to": "FR-ROUTE-002",
+    "relation": "depends_on"
+   },
+   {
+    "from": "FR-HTTP-007",
+    "to": "FR-HTTP-004",
+    "relation": "depends_on"
+   },
+   {
+    "from": "FR-HTTP-008",
+    "to": "IR-HTTP-005",
+    "relation": "depends_on"
+   },
+   {
+    "from": "FR-HTTP-008",
+    "to": "FR-ROUTE-003",
+    "relation": "depends_on"
+   },
+   {
+    "from": "FR-HTTP-008",
+    "to": "FR-ROUTE-008",
+    "relation": "depends_on"
+   },
+   {
+    "from": "FR-HTTP-008",
+    "to": "FR-HTTP-002",
+    "relation": "depends_on"
+   },
+   {
+    "from": "FR-HTTP-009",
+    "to": "IR-HTTP-001",
+    "relation": "depends_on"
+   },
+   {
+    "from": "FR-HTTP-009",
+    "to": "FR-ROUTE-005",
+    "relation": "depends_on"
+   },
+   {
+    "from": "FR-HTTP-009",
+    "to": "IR-HTTP-003",
+    "relation": "depends_on"
+   },
+   {
+    "from": "FR-HTTP-010",
+    "to": "IR-HTTP-001",
+    "relation": "depends_on"
+   },
+   {
+    "from": "FR-HTTP-010",
+    "to": "IR-HTTP-003",
+    "relation": "depends_on"
+   },
+   {
+    "from": "FR-HTTP-010",
+    "to": "FR-HTTP-002",
+    "relation": "depends_on"
+   },
+   {
+    "from": "FR-HTTP-011",
+    "to": "IR-HTTP-001",
+    "relation": "depends_on"
+   },
+   {
+    "from": "FR-HTTP-011",
+    "to": "IR-HTTP-003",
+    "relation": "depends_on"
+   },
+   {
+    "from": "FR-HTTP-012",
+    "to": "IR-HTTP-001",
+    "relation": "depends_on"
+   },
+   {
+    "from": "FR-HTTP-013",
+    "to": "IR-HTTP-001",
+    "relation": "depends_on"
+   },
+   {
+    "from": "FR-HTTP-014",
+    "to": "IR-HTTP-001",
+    "relation": "depends_on"
+   },
+   {
+    "from": "FR-HTTP-014",
+    "to": "IR-HTTP-003",
+    "relation": "depends_on"
+   },
+   {
+    "from": "FR-HTTP-015",
+    "to": "IR-HTTP-001",
+    "relation": "depends_on"
+   },
+   {
+    "from": "FR-HTTP-016",
+    "to": "FR-HTTP-014",
+    "relation": "depends_on"
+   },
+   {
+    "from": "FR-HTTP-016",
+    "to": "FR-HTTP-015",
+    "relation": "depends_on"
+   },
+   {
+    "from": "FR-HTTP-017",
+    "to": "FR-HTTP-014",
+    "relation": "depends_on"
+   },
+   {
+    "from": "FR-HTTP-018",
+    "to": "FR-HTTP-016",
+    "relation": "depends_on"
+   },
+   {
+    "from": "FR-HTTP-018",
+    "to": "FR-HTTP-015",
+    "relation": "depends_on"
+   },
+   {
+    "from": "FR-HTTP-019",
+    "to": "IR-HTTP-001",
+    "relation": "depends_on"
+   },
+   {
+    "from": "FR-HTTP-019",
+    "to": "IR-HTTP-003",
+    "relation": "depends_on"
+   },
+   {
+    "from": "FR-HTTP-020",
+    "to": "FR-HTTP-019",
+    "relation": "depends_on"
+   },
+   {
+    "from": "OPS-HTTP-001",
+    "to": "OPS-ROUTE-002",
+    "relation": "depends_on"
+   },
+   {
+    "from": "OPS-HTTP-001",
+    "to": "IR-HTTP-005",
+    "relation": "depends_on"
+   },
+   {
+    "from": "OPS-HTTP-001",
+    "to": "FR-HTTP-014",
+    "relation": "depends_on"
+   },
+   {
+    "from": "OPS-HTTP-001",
+    "to": "FR-HTTP-012",
+    "relation": "depends_on"
+   },
+   {
+    "from": "OPS-HTTP-001",
+    "to": "FR-HTTP-009",
+    "relation": "depends_on"
+   },
+   {
+    "from": "OPS-ROUTE-002",
+    "to": "OPS-ROUTE-001",
+    "relation": "supersedes"
+   },
+   {
+    "from": "CON-ROUTE-006",
+    "to": "CON-ROUTE-001",
+    "relation": "supersedes"
+   }
+  ]
+ },
+ "cycles": [],
+ "deps_on_discarded": [
+  {
+   "req": "IR-HTTP-002",
+   "dep": "CON-ROUTE-001",
+   "relation": "depends_on",
+   "status": "discarded",
+   "stability": "evolving",
+   "discarded": true
+  },
+  {
+   "req": "CON-HTTP-001",
+   "dep": "CON-ROUTE-001",
+   "relation": "depends_on",
+   "status": "discarded",
+   "stability": "evolving",
+   "discarded": true
+  },
+  {
+   "req": "OPS-ROUTE-002",
+   "dep": "OPS-ROUTE-001",
+   "relation": "supersedes",
+   "status": "discarded",
+   "stability": "evolving",
+   "discarded": true
+  },
+  {
+   "req": "CON-ROUTE-006",
+   "dep": "CON-ROUTE-001",
+   "relation": "supersedes",
+   "status": "discarded",
+   "stability": "evolving",
+   "discarded": true
+  }
+ ],
+ "deps_on_draft": [
+  {
+   "req": "IR-HTTP-002",
+   "dep": "IR-HTTP-001",
+   "relation": "depends_on",
+   "status": "planned",
+   "stability": "draft",
+   "discarded": false
+  },
+  {
+   "req": "IR-HTTP-002",
+   "dep": "CON-ROUTE-006",
+   "relation": "depends_on",
+   "status": "planned",
+   "stability": "draft",
+   "discarded": false
+  },
+  {
+   "req": "IR-HTTP-004",
+   "dep": "IR-HTTP-003",
+   "relation": "depends_on",
+   "status": "planned",
+   "stability": "draft",
+   "discarded": false
+  },
+  {
+   "req": "CON-HTTP-001",
+   "dep": "IR-HTTP-003",
+   "relation": "depends_on",
+   "status": "planned",
+   "stability": "draft",
+   "discarded": false
+  },
+  {
+   "req": "CON-HTTP-001",
+   "dep": "CON-ROUTE-006",
+   "relation": "depends_on",
+   "status": "planned",
+   "stability": "draft",
+   "discarded": false
+  },
+  {
+   "req": "FR-HTTP-001",
+   "dep": "IR-HTTP-003",
+   "relation": "depends_on",
+   "status": "planned",
+   "stability": "draft",
+   "discarded": false
+  },
+  {
+   "req": "FR-HTTP-001",
+   "dep": "IR-HTTP-004",
+   "relation": "depends_on",
+   "status": "planned",
+   "stability": "draft",
+   "discarded": false
+  },
+  {
+   "req": "FR-HTTP-002",
+   "dep": "FR-HTTP-001",
+   "relation": "depends_on",
+   "status": "planned",
+   "stability": "draft",
+   "discarded": false
+  },
+  {
+   "req": "FR-HTTP-002",
+   "dep": "CON-HTTP-001",
+   "relation": "depends_on",
+   "status": "planned",
+   "stability": "draft",
+   "discarded": false
+  },
+  {
+   "req": "FR-HTTP-003",
+   "dep": "FR-HTTP-002",
+   "relation": "depends_on",
+   "status": "planned",
+   "stability": "draft",
+   "discarded": false
+  },
+  {
+   "req": "FR-HTTP-004",
+   "dep": "FR-HTTP-002",
+   "relation": "depends_on",
+   "status": "planned",
+   "stability": "draft",
+   "discarded": false
+  },
+  {
+   "req": "FR-HTTP-005",
+   "dep": "FR-HTTP-002",
+   "relation": "depends_on",
+   "status": "planned",
+   "stability": "draft",
+   "discarded": false
+  },
+  {
+   "req": "FR-HTTP-005",
+   "dep": "FR-HTTP-001",
+   "relation": "depends_on",
+   "status": "planned",
+   "stability": "draft",
+   "discarded": false
+  },
+  {
+   "req": "FR-HTTP-006",
+   "dep": "FR-HTTP-002",
+   "relation": "depends_on",
+   "status": "planned",
+   "stability": "draft",
+   "discarded": false
+  },
+  {
+   "req": "IR-HTTP-005",
+   "dep": "IR-HTTP-002",
+   "relation": "depends_on",
+   "status": "planned",
+   "stability": "draft",
+   "discarded": false
+  },
+  {
+   "req": "IR-HTTP-006",
+   "dep": "IR-HTTP-005",
+   "relation": "depends_on",
+   "status": "planned",
+   "stability": "draft",
+   "discarded": false
+  },
+  {
+   "req": "FR-HTTP-007",
+   "dep": "IR-HTTP-005",
+   "relation": "depends_on",
+   "status": "planned",
+   "stability": "draft",
+   "discarded": false
+  },
+  {
+   "req": "FR-HTTP-007",
+   "dep": "FR-HTTP-004",
+   "relation": "depends_on",
+   "status": "planned",
+   "stability": "draft",
+   "discarded": false
+  },
+  {
+   "req": "FR-HTTP-008",
+   "dep": "IR-HTTP-005",
+   "relation": "depends_on",
+   "status": "planned",
+   "stability": "draft",
+   "discarded": false
+  },
+  {
+   "req": "FR-HTTP-008",
+   "dep": "FR-HTTP-002",
+   "relation": "depends_on",
+   "status": "planned",
+   "stability": "draft",
+   "discarded": false
+  },
+  {
+   "req": "FR-HTTP-009",
+   "dep": "IR-HTTP-001",
+   "relation": "depends_on",
+   "status": "planned",
+   "stability": "draft",
+   "discarded": false
+  },
+  {
+   "req": "FR-HTTP-009",
+   "dep": "IR-HTTP-003",
+   "relation": "depends_on",
+   "status": "planned",
+   "stability": "draft",
+   "discarded": false
+  },
+  {
+   "req": "FR-HTTP-010",
+   "dep": "IR-HTTP-001",
+   "relation": "depends_on",
+   "status": "planned",
+   "stability": "draft",
+   "discarded": false
+  },
+  {
+   "req": "FR-HTTP-010",
+   "dep": "IR-HTTP-003",
+   "relation": "depends_on",
+   "status": "planned",
+   "stability": "draft",
+   "discarded": false
+  },
+  {
+   "req": "FR-HTTP-010",
+   "dep": "FR-HTTP-002",
+   "relation": "depends_on",
+   "status": "planned",
+   "stability": "draft",
+   "discarded": false
+  },
+  {
+   "req": "FR-HTTP-011",
+   "dep": "IR-HTTP-001",
+   "relation": "depends_on",
+   "status": "planned",
+   "stability": "draft",
+   "discarded": false
+  },
+  {
+   "req": "FR-HTTP-011",
+   "dep": "IR-HTTP-003",
+   "relation": "depends_on",
+   "status": "planned",
+   "stability": "draft",
+   "discarded": false
+  },
+  {
+   "req": "FR-HTTP-012",
+   "dep": "IR-HTTP-001",
+   "relation": "depends_on",
+   "status": "planned",
+   "stability": "draft",
+   "discarded": false
+  },
+  {
+   "req": "FR-HTTP-013",
+   "dep": "IR-HTTP-001",
+   "relation": "depends_on",
+   "status": "planned",
+   "stability": "draft",
+   "discarded": false
+  },
+  {
+   "req": "FR-HTTP-014",
+   "dep": "IR-HTTP-001",
+   "relation": "depends_on",
+   "status": "planned",
+   "stability": "draft",
+   "discarded": false
+  },
+  {
+   "req": "FR-HTTP-014",
+   "dep": "IR-HTTP-003",
+   "relation": "depends_on",
+   "status": "planned",
+   "stability": "draft",
+   "discarded": false
+  },
+  {
+   "req": "FR-HTTP-015",
+   "dep": "IR-HTTP-001",
+   "relation": "depends_on",
+   "status": "planned",
+   "stability": "draft",
+   "discarded": false
+  },
+  {
+   "req": "FR-HTTP-016",
+   "dep": "FR-HTTP-014",
+   "relation": "depends_on",
+   "status": "planned",
+   "stability": "draft",
+   "discarded": false
+  },
+  {
+   "req": "FR-HTTP-016",
+   "dep": "FR-HTTP-015",
+   "relation": "depends_on",
+   "status": "planned",
+   "stability": "draft",
+   "discarded": false
+  },
+  {
+   "req": "FR-HTTP-017",
+   "dep": "FR-HTTP-014",
+   "relation": "depends_on",
+   "status": "planned",
+   "stability": "draft",
+   "discarded": false
+  },
+  {
+   "req": "FR-HTTP-018",
+   "dep": "FR-HTTP-016",
+   "relation": "depends_on",
+   "status": "planned",
+   "stability": "draft",
+   "discarded": false
+  },
+  {
+   "req": "FR-HTTP-018",
+   "dep": "FR-HTTP-015",
+   "relation": "depends_on",
+   "status": "planned",
+   "stability": "draft",
+   "discarded": false
+  },
+  {
+   "req": "FR-HTTP-019",
+   "dep": "IR-HTTP-001",
+   "relation": "depends_on",
+   "status": "planned",
+   "stability": "draft",
+   "discarded": false
+  },
+  {
+   "req": "FR-HTTP-019",
+   "dep": "IR-HTTP-003",
+   "relation": "depends_on",
+   "status": "planned",
+   "stability": "draft",
+   "discarded": false
+  },
+  {
+   "req": "FR-HTTP-020",
+   "dep": "FR-HTTP-019",
+   "relation": "depends_on",
+   "status": "planned",
+   "stability": "draft",
+   "discarded": false
+  },
+  {
+   "req": "OPS-HTTP-001",
+   "dep": "OPS-ROUTE-002",
+   "relation": "depends_on",
+   "status": "planned",
+   "stability": "draft",
+   "discarded": false
+  },
+  {
+   "req": "OPS-HTTP-001",
+   "dep": "IR-HTTP-005",
+   "relation": "depends_on",
+   "status": "planned",
+   "stability": "draft",
+   "discarded": false
+  },
+  {
+   "req": "OPS-HTTP-001",
+   "dep": "FR-HTTP-014",
+   "relation": "depends_on",
+   "status": "planned",
+   "stability": "draft",
+   "discarded": false
+  },
+  {
+   "req": "OPS-HTTP-001",
+   "dep": "FR-HTTP-012",
+   "relation": "depends_on",
+   "status": "planned",
+   "stability": "draft",
+   "discarded": false
+  },
+  {
+   "req": "OPS-HTTP-001",
+   "dep": "FR-HTTP-009",
+   "relation": "depends_on",
+   "status": "planned",
+   "stability": "draft",
+   "discarded": false
+  }
+ ],
+ "scope_distribution": {
+  "HTTP": 28,
+  "ROUTE": 2
+ }
+}

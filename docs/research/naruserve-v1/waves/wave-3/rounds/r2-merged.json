@@ -1,0 +1,141 @@
+{
+ "round": 2,
+ "findings": [
+  {
+   "finding_id": "W1-001",
+   "severity": "low",
+   "items": [
+    "I-021",
+    "D-399",
+    "D-442"
+   ],
+   "claim": "The W2-002 decision narrows the integration items to the components that exist at this merge, but the preamble still says without qualification that I-001..I-021 hold at this wave's merge. The two lines now contradict each other on whether I-021's TinyHttpd half is checked at the wave 3 merge.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-3/design.md:5,112",
+   "suggested_fix": "Reword line 5 to 'hold at this wave's merge for the components that exist (see Wave decisions)'."
+  },
+  {
+   "finding_id": "W1-002",
+   "severity": "low",
+   "items": [
+    "D-086"
+   ],
+   "claim": "The W2-004 decision does not settle the 'raw' read named in D-086. Round 1 W2-004 asked for 'raw' to be dropped or recorded as (\ubbf8\ud655\uc815)/post-v1, because docs/api/request.md has no raw body accessor. The decision only says wave 3 exposes no public body-reading method, so it is still open which accessor 'raw' means.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-3/design.md:53,114; docs/research/naruserve-v1/waves/wave-3/rounds/r1-merged.json (W2-004 suggested_fix)",
+   "suggested_fix": "Add one clause to the body-ownership decision: v1 has no public raw body accessor, so 'raw' in D-086 refers only to internal reads of the body stream. BodyState enforces it for the readers that waves 5 and 6 add."
+  },
+  {
+   "finding_id": "W1-003",
+   "severity": "low",
+   "items": [
+    "D-094",
+    "D-109"
+   ],
+   "claim": "The stream-closing decision names `res.stream(InputStream)`, but the frozen item D-094 and docs/api/response.md define the signature as `stream(InputStream, contentType)`. An implementer could read this as a one-argument overload.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-3/design.md:117,64; docs/api/response.md:29",
+   "suggested_fix": "Write `res.stream(InputStream, contentType)` in the decision."
+  },
+  {
+   "finding_id": "W2-001",
+   "severity": "medium",
+   "items": [
+    "D-078",
+    "D-090",
+    "D-394",
+    "D-397",
+    "D-126",
+    "D-127",
+    "D-129",
+    "D-134"
+   ],
+   "claim": "Wave 3 never says how its dispatcher ends a request whose handler throws, or whose handler returns without completing the response. Error handling (D-127, D-129, D-134) and the finishing behaviour for an unfinished response (D-126) belong to wave 4. Wave 3 still needs one answer for each case: the in-memory harness has to finish every exchange, and T07 needs the D-078 query-decoding 400 at HTTP level in this wave. The 'Automatic response bodies' decision lists a 400, but it does not say where the D-078 400 comes from. It could come from an eager query decode in the dispatcher, before the handler runs, or from an exception thrown by req.query() inside the handler, which then needs an exception-to-status path that wave 3 lacks. docs/api/request.md:45 already promises that a handler exception becomes 500 through error handling.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-3/design.md:42,29,118; docs/research/naruserve-v1/design/00.design.md:239,240,245,250; docs/api/request.md:45",
+   "suggested_fix": "Add a wave decision covering three cases. (1) The dispatcher decodes the raw query once, before the handler runs, and answers malformed input with 400 and an empty body, just like the D-052 path rejection. (2) An exception escaping the handler gets an interim 500 with an empty body while the response is uncommitted, and an abort once it is committed. (3) A handler that returns without completing a non-streaming response has it completed by the dispatcher with the current status and no body. Wave 4 replaces (2) and (3) with D-127/D-129/D-134 and D-126."
+  },
+  {
+   "finding_id": "W2-002",
+   "severity": "medium",
+   "items": [
+    "D-399",
+    "D-442",
+    "I-021",
+    "D-209",
+    "D-224"
+   ],
+   "claim": "The 'Adapter halves' decision moves the TinyHttpd halves of D-399, D-442 and I-021 to wave 5. No frozen wave-5 item names them: D-209 only says the adapter implements the SPI, and D-224 covers T07 only. Nothing makes sure the wave-5 implementer learns that the adapter must take getRequestURI()/getQueryString() and never getPath(). I-021 checks status results only. Its path-rejection checks would not catch a rawPath or query value taken from the decoded, '//'-merging getPath().",
+   "evidence": "docs/research/naruserve-v1/waves/wave-3/design.md:85,112; docs/research/naruserve-v1/design/00.design.md:364,390,688; /Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/RequestParser.java:93-97",
+   "suggested_fix": "Record the deferred TinyHttpd halves of D-399 and D-442 in a carried-into-wave-5 note, the same mechanism as carried-into-wave-3.md, and have wave 5 test rawPath() and query() values through the TinyHttpd adapter for an encoded-segment path and a '//' path."
+  },
+  {
+   "finding_id": "W2-003",
+   "severity": "low",
+   "items": [
+    "D-442",
+    "D-052",
+    "D-394"
+   ],
+   "claim": "The carried note says 'the dispatcher and every adapter run the wave 2 path validator before the router lookup'. PathValidator.isValid('*') returns false, and Router.lookup throws IllegalArgumentException on an invalid path. If an adapter, or the dispatcher, runs the validator before checking for the asterisk form, OPTIONS * gets 400, which contradicts D-442's 204.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-3/design.md:32,104; NaruServe-api/src/main/java/com/snoworca/naruserve/routing/PathValidator.java:26-31; NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:164-171",
+   "suggested_fix": "State the order: the method token OPTIONS with raw path '*' is answered first (204 with Allow = Method.any()), and only then does PathValidator run (400 on rejection), followed by Router.lookup."
+  },
+  {
+   "finding_id": "W2-004",
+   "severity": "low",
+   "items": [
+    "D-053",
+    "D-398",
+    "D-393"
+   ],
+   "claim": "Router takes its RouterPolicy only through its constructor, and add() is the only way to register routes. If the internal RestApp builds the Router eagerly, a routing-policy call made after app.get(...) cannot take effect. Express users set routing options in any order before listen.",
+   "evidence": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:53,63; docs/research/naruserve-v1/waves/wave-3/design.md:111",
+   "suggested_fix": "Have the internal RestApp keep its registrations and policy and build the Router at freeze time, so the policy API can be called in any order before the freeze. Add a test that sets the policy after a route was registered."
+  },
+  {
+   "finding_id": "W2-005",
+   "severity": "low",
+   "items": [
+    "D-086",
+    "D-085"
+   ],
+   "claim": "The 'Body ownership' decision resolves most of r1 W2-004, but not the 'raw' read that D-086 lists. No docs/api file has a raw body accessor, and wave 3 exposes none, so D-086's 'raw' case has no owner in any wave.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-3/design.md:53,114; docs/api/request.md:47-95",
+   "suggested_fix": "Add to the decision that 'raw' in D-086 means any internal consumer of the body stream, tested directly on BodyState in wave 3. A public raw body accessor is a post-v1 item."
+  },
+  {
+   "finding_id": "W2-006",
+   "severity": "low",
+   "items": [
+    "I-009",
+    "I-001",
+    "I-021"
+   ],
+   "claim": "Line 5 still says integration items I-001..I-021 'hold at this wave's merge' without qualification. The decision at line 112 limits that to 'components that exist'. The blanket line also conflicts with I-009, because docs/api Java examples use res.json, which arrives in wave 5, and they cannot compile at the wave-3 merge.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-3/design.md:5,112; docs/api/request.md:41; docs/api/routing.md:27",
+   "suggested_fix": "Reword line 5 to match the decision, and say how docs/api examples that depend on later-wave methods are excluded from the I-009 compile check until their wave."
+  },
+  {
+   "finding_id": "W2-007",
+   "severity": "low",
+   "items": [
+    "D-393",
+    "D-111"
+   ],
+   "claim": "'A non-exported package' means nothing on Java 8, which has no module system. The internal RestApp has to be public so that wave 4's D-111 entry point and the bootstrap module can reach it, so it becomes visible to users anyway.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-3/design.md:111; docs/research/naruserve-v1/design/00.design.md:220",
+   "suggested_fix": "Say 'an internal package (for example com.snoworca.naruserve.internal) documented as not public API and outside I-014'."
+  },
+  {
+   "finding_id": "W1-110",
+   "severity": "low",
+   "items": [
+    "D-109",
+    "D-398",
+    "D-074",
+    "D-093",
+    "D-082"
+   ],
+   "claim": "The wave decisions settle only two of D-109's four (\ubbf8\ud655\uc815) items (stream closing, and through W2-006 the HEAD method value) and none of D-398's routing-policy API names. Query inclusion in rawPath(), the default Content-Type of send(byte[]), the exception type for an attribute type mismatch, and the policy API names (// handling, trailing slash, case, TRACE/CONNECT opt-in) are still marked (\ubbf8\ud655\uc815) in docs/api. Nothing says that the implementer decides them in this wave. W2-004 shows that the policy API shape also affects when the Router is built.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-3/design.md:89-90,111-118; docs/api/request.md:13,135; docs/api/response.md:36; docs/api/routing.md:72,127,155",
+   "suggested_fix": "Add a wave decision that records each remaining choice, for example: rawPath() includes the query, like Express originalUrl; send(byte[]) defaults to application/octet-stream; the attribute mismatch throws ClassCastException. Or state that the implementer settles them under D-109/D-398, and make the wave-3 merge check require that docs/api/request.md, response.md, routing.md and app.md have no remaining wave-3-owned (\ubbf8\ud655\uc815) markers."
+  }
+ ]
+}

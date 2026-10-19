@@ -1,0 +1,53 @@
+{
+  "rows": [],
+  "findings": [
+    {
+      "finding_id": "W2-001",
+      "severity": "medium",
+      "items": ["D-395", "D-069", "D-408", "D-020", "D-209"],
+      "claim": "The 426 answer of D-395 must carry `Connection: Upgrade`, and D-408 (wave 7) asserts it end to end over the TinyHttpd adapter. TinyHttpd at 46b973e treats `Connection` as a server-managed header. `setHeader`/`addHeader(\"Connection\", v)` only records `close` and drops every other value, and the commit writes only `Connection: close` (or `keep-alive` for HTTP/1.0). A non-101 response through TinyHttpd can never carry `Connection: Upgrade`. The wave 3 dispatcher can set it, and in-memory tests will pass, but the header is lost on the real engine. No wave records this as a TinyHttpd gap under D-020.",
+      "evidence": "/Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/ExchangeResponse.java:172-177 and :466-470; docs/research/naruserve-v1/design/00.design.md:151 and :527; docs/research/naruserve-v1/waves/wave-3/design.md:30",
+      "suggested_fix": "Keep the dispatcher behaviour for wave 3 (in-memory). Add a wave decision recording that TinyHttpd drops `Connection: Upgrade` on non-101 responses, as a deferred TinyHttpd gap under D-020. Carry it into wave 7 (a carried-into-wave-7 note), so D-408's TinyHttpd assertion checks `Upgrade: websocket` only and documents the missing `Connection: upgrade` token. The other option is for wave 7 to find an adapter-side way to write it without patching TinyHttpd."
+    },
+    {
+      "finding_id": "W2-002",
+      "severity": "medium",
+      "items": ["D-099", "D-131", "D-127", "D-394"],
+      "claim": "The 'Interim failure handling' decision says that 'an exception thrown by a handler gives 500 with an empty body', with no condition attached. It drops the committed case that round-2 W2-001 asked for: abort once committed. A handler that throws after `res.send(...)` completed, or during `res.stream(...)`, cannot get a 500, because D-099 allows one commit only. Taken literally, the dispatcher would try a second commit or hit the IllegalStateException of D-084. The frozen end state (D-131) aborts in that case. Round-2 W2-001 is therefore only partly resolved.",
+      "evidence": "docs/research/naruserve-v1/waves/wave-3/design.md:120; docs/research/naruserve-v1/waves/wave-3/rounds/r2-merged.json (W2-001 fix, case 2); docs/research/naruserve-v1/design/00.design.md:247",
+      "suggested_fix": "Reword the decision: a handler exception gives 500 with an empty body while the response is NEW (uncommitted). Once committed or streaming, the dispatcher aborts the response (D-097). Once COMPLETED, the exception is dropped (wave 4 adds logging). Add an in-memory test for the committed case."
+    },
+    {
+      "finding_id": "W2-003",
+      "severity": "low",
+      "items": ["D-074", "D-109", "I-008"],
+      "claim": "The decision makes `rawPath()` exclude the query string. docs/api/request.md:13 still maps `rawPath()` to Express `req.originalUrl`, which includes the query, and the decision does not say the Express column changes. Once the marker is removed, the docs would tell Express users the two are the same when they are not. That breaks the CLAUDE.md rule that docs/api gives correct Express equivalents.",
+      "evidence": "docs/research/naruserve-v1/waves/wave-3/design.md:122; docs/api/request.md:13",
+      "suggested_fix": "Add to the decision that request.md's Express column for `rawPath()` changes to say it is `req.originalUrl` without the query string (the query is available through `req.query`/`queries`). The other option is to include the query, as originalUrl does."
+    },
+    {
+      "finding_id": "W2-004",
+      "severity": "low",
+      "items": ["D-053", "D-398", "D-114", "D-152"],
+      "claim": "The decision says `app.routerPolicy(RouterPolicy)` is 'allowed only in NEW like every setting'. App state (D-152) and the shared state guard (D-114) arrive in wave 4. In wave 3 the internal RestApp has no NEW state, so it is undefined what a policy call or route registration after the harness freeze does. The Router is built at that freeze, so a later call would be silently lost.",
+      "evidence": "docs/research/naruserve-v1/waves/wave-3/design.md:111,122; docs/research/naruserve-v1/design/00.design.md (D-114, D-152)",
+      "suggested_fix": "State the wave 3 rule: after the harness freeze, `routerPolicy` and every route registration throw IllegalStateException. Wave 4's D-114 guard (state != NEW) replaces this check without changing what callers see."
+    },
+    {
+      "finding_id": "W2-005",
+      "severity": "low",
+      "items": ["D-399", "I-021", "D-224"],
+      "claim": "carried-into-wave-5.md asks the TinyHttpd tests to 'also compare the rawPath() and decoded query values' for the OPTIONS * and D-052 path-rejection cases. Those requests are answered with 204 or 400 before any handler runs, so there is no `rawPath()` value to compare. The `getPath()` hazard the note guards against (merged `//` and an already-decoded path) shows only on accepted requests. Round-2 W2-002 asked for an encoded-segment path and a `//` path, and the note names neither.",
+      "evidence": "docs/research/naruserve-v1/waves/carried-into-wave-5.md:3; docs/research/naruserve-v1/waves/wave-3/rounds/r2-merged.json (W2-002); /Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/PercentCodec.java:31-53",
+      "suggested_fix": "Reword the note: status parity covers OPTIONS * and the D-052 rejection cases. A separate value-parity test sends accepted requests to a matching route on both adapters, for example `/a%20b?x=%41+b` and `/a//b` under the default and the mergeSlashes policy, and compares `path()`, `rawPath()` and `query()`."
+    },
+    {
+      "finding_id": "W2-006",
+      "severity": "low",
+      "items": ["D-082", "D-083", "D-072"],
+      "claim": "Nothing defines storing a null value. In Java, `req.attribute(\"k\", null)` resolves to the more specific `attribute(String, Class<T>)` read overload, so a call meant to clear the attribute silently reads it. A value variable that holds null reaches the store, and the concurrent store of D-083, the obvious choice being ConcurrentHashMap, throws NullPointerException for it. D-072 requires the `value` parameter to be annotated @Nullable or @NonNull, so wave 3 has to choose one.",
+      "evidence": "docs/api/request.md:119-120; docs/research/naruserve-v1/waves/wave-3/design.md:46-47",
+      "suggested_fix": "Decide in wave 3 that the `value` parameter is @Nullable and a null value removes the key (clear with `req.attribute(\"k\", (Object) null)`), or that it is @NonNull and null throws NullPointerException. Record the choice in request.md."
+    }
+  ]
+}

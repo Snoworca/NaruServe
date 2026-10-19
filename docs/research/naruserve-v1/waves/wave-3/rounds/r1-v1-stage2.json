@@ -1,0 +1,6 @@
+{"confirmed":["W2-001","W2-002","W2-003","W2-004","W2-005","W2-006","W2-007","W2-008"],
+"rebutted":[],
+"added":[{"finding_id":"W1-101","severity":"low","items":["D-084","D-100","D-392"],
+"claim":"D-084 lists addCookie and cache among the mutating Response calls that throw after completion, without the 'once waves 5 and 6 add them' qualifier that D-089 and D-100 carry. D-392 adds addCookie in wave 5 and cache in wave 6, so the wave 3 tests for D-084 cannot cover those two calls, and the item reads as if wave 3 must deliver them.",
+"evidence":"docs/research/naruserve-v1/waves/wave-3/design.md:48,59,73,14",
+"suggested_fix":"Add the D-100 qualifier to D-084: 'addCookie or cache once waves 5 and 6 add them'. Waves 5 and 6 then add the after-completion assertions for those methods."}]}

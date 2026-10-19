@@ -1,0 +1,122 @@
+{
+ "round": 1,
+ "findings": [
+  {
+   "finding_id": "W2-001",
+   "severity": "high",
+   "items": [
+    "D-393",
+    "D-394",
+    "D-397",
+    "D-044",
+    "D-108",
+    "D-058",
+    "D-111",
+    "D-154"
+   ],
+   "claim": "Wave 3 has no way to build a working RestApp or freeze its route table. The frozen design puts the explicit entry point that takes an HttpAdapter in wave 4 (D-111), and the router freeze inside listen() in wave 4 (D-058, D-154). Router.lookup throws while the router is not frozen. D-397 still requires the HTTP-level T01, T02, T03, T05 and T06 assertions to run through the in-memory adapter in wave 3, and D-044 requires the T03 duplicate (app.get plus app.route(path).get on one path) to be reported. That error only shows up when the table is frozen. As written, the wave cannot construct an app, freeze its routes, feed the dispatcher or assert the T03 duplicate.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-3/design.md:22,25,29,33; docs/research/naruserve-v1/design/00.design.md:97,220,276; NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:164-167",
+   "suggested_fix": "Have wave 3 add an internal RestApp implementation plus a test-fixture harness, next to the in-memory adapter of D-108. The harness freezes the router (raising D-056/D-057 RoutingConfigException) and feeds requests to the dispatcher. Wave 4's entry point (D-111) and listen() (D-154) then wrap this harness without changing it. Wave 3 asserts the T03 duplicate through the harness freeze; wave 4 asserts it again through listen()."
+  },
+  {
+   "finding_id": "W2-002",
+   "severity": "high",
+   "items": [
+    "D-442",
+    "D-399",
+    "I-021",
+    "D-209"
+   ],
+   "claim": "Wave 3 requires behaviour from the TinyHttpd adapter, which does not exist until wave 5 (D-209). D-399 sets how the TinyHttpd adapter takes the raw path and query: from getRequestURI()/getQueryString(), never from getPath(). D-442 requires the OPTIONS * and non-'/' answers to be identical on the in-memory and TinyHttpd adapters. The wave design also says I-001..I-021 hold at this wave's merge, and I-021 runs against both adapters. The NaruServe-tinyhttpd module has only package-info.java, so the TinyHttpd halves cannot be implemented or verified in wave 3. The TinyHttpd facts themselves hold at 46b973e: RequestParser sets requestUri=path='*' only for OPTIONS, answers 400 for '*' on any other method, and getRequestURI() excludes the query string.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-3/design.md:5,32,85; docs/research/naruserve-v1/design/00.design.md:364,688; /Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/RequestParser.java:65-70,93-97",
+   "suggested_fix": "Narrow wave 3 to the parts it can deliver: the SPI contract (raw path and raw query passed separately) and the in-memory side of D-442 and I-021. Leave the TinyHttpd-adapter halves of D-399, D-442 and I-021 to wave 5 (with D-209/D-224). Replace the blanket 'I-001..I-021 hold at this wave's merge' with 'hold for the components that exist at this merge'."
+  },
+  {
+   "finding_id": "W2-003",
+   "severity": "medium",
+   "items": [
+    "D-071",
+    "D-392"
+   ],
+   "claim": "D-071's rule disagrees with D-392's list. D-071 says to create in wave 3 every method whose parameter and return types exist by the end of wave 3. Several methods D-392 sends to later waves already meet that rule using only JDK types: req.body(Class) (Class -> T), req.form(String) -> String, res.json(Object), res.file(File) and res.download(File, String). Reading D-071 literally would create them in wave 3, with no JSON codec or body parser behind them.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-3/design.md:12,14",
+   "suggested_fix": "Reword D-071 to: create every docs/api/request.md and response.md method except those D-392 assigns to a later wave. D-392's list then governs."
+  },
+  {
+   "finding_id": "W2-004",
+   "severity": "medium",
+   "items": [
+    "D-085",
+    "D-086",
+    "D-087",
+    "D-088",
+    "I-012"
+   ],
+   "claim": "Wave 3 cannot test the body-ownership items through any public read path. Request has no body-reading method in wave 3: req.body comes in wave 5, form/file/files/parts in wave 6, and object.md's 'raw' read (cited in D-086) has no accessor anywhere in docs/api/request.md. D-088 also needs a size limit and a 413 path. In wave 3 no limit value or configuration exists (JSON 1 MiB is D-188 in wave 5, form 1 MiB is D-238 in wave 6), and the 413 route through onError and the standard error body is wave 4 (D-129, D-132). I-012 forbids an unlimited default.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-3/design.md:52-55; object.md:248; docs/api/request.md:49-95; docs/research/naruserve-v1/design/00.design.md:245,248,329,415,689",
+   "suggested_fix": "Say that wave 3 delivers BodyState, BodyAlreadyConsumedException and a limit-enforcing bounded body InputStream as internal components, tested directly with a test-supplied limit. Say that the per-type limits and the HTTP-level 413 assertions are added by waves 5 and 6. Either drop 'raw' from D-086 or record a raw body accessor as (\ubbf8\ud655\uc815)/post-v1."
+  },
+  {
+   "finding_id": "W2-005",
+   "severity": "low",
+   "items": [
+    "D-084",
+    "D-097",
+    "D-099",
+    "D-173"
+   ],
+   "claim": "D-084 keeps abort() usable after the response completed. D-097 says abort sets the state to ABORTED. Nothing says what abort() on a COMPLETED response does. If it moved COMPLETED to ABORTED, it would break the terminal state of D-099 and could produce a second access-log line, against D-173's one line per request.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-3/design.md:48,67,72; docs/research/naruserve-v1/design/00.design.md:304",
+   "suggested_fix": "State that abort() after COMPLETED (or after ABORTED) is a no-op and leaves the state unchanged."
+  },
+  {
+   "finding_id": "W2-006",
+   "severity": "low",
+   "items": [
+    "D-042",
+    "D-398",
+    "D-396"
+   ],
+   "claim": "D-042 requires req.method() to report the actual request method, so it already settles the automatic-HEAD value that D-398 says is still to be decided. If D-398 chose GET, it would contradict D-042. docs/api/routing.md still lists HEAD or GET as open.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-3/design.md:20,90; docs/api/routing.md:155",
+   "suggested_fix": "Decide in D-398 that req.method() returns HEAD during automatic HEAD. This matches D-042 and Express, where req.method is 'HEAD'. Record it in routing.md."
+  },
+  {
+   "finding_id": "W2-007",
+   "severity": "low",
+   "items": [
+    "D-094",
+    "D-103",
+    "D-109"
+   ],
+   "claim": "D-103 lets res.stream() stay in STREAMING after the handler returns, so the copy can run after the handler exits. If the caller wraps the stream in try-with-resources, the stream is closed before or during that deferred copy. The stream-closing decision of D-109 is therefore tied to D-103 and cannot be made on its own. docs/api/response.md:22 already says the framework closes the stream.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-3/design.md:64,76,89; docs/api/response.md:22,36,72",
+   "suggested_fix": "When deciding D-109, either copy synchronously inside stream() or document that the framework owns and closes the InputStream and the caller must not close it. Add a test for the chosen behaviour."
+  },
+  {
+   "finding_id": "W2-008",
+   "severity": "low",
+   "items": [
+    "D-395",
+    "D-442",
+    "D-132",
+    "D-135"
+   ],
+   "claim": "docs/api/routing.md says the 404/405 bodies use the standard error format. That format (D-132), including the requestId taken from the access log (D-135), arrives in wave 4. Wave 3 does not say which body its automatic 404/405/501/426/400 responses carry. Wave 4 would then change the observable bodies.",
+   "evidence": "docs/api/routing.md:156; docs/research/naruserve-v1/design/00.design.md:248",
+   "suggested_fix": "State that the wave 3 automatic responses carry no body, or an interim body, and that wave 4 replaces it with the D-132 body. Leave the docs/api line as it is, since it describes the end state."
+  },
+  {
+   "finding_id": "W1-101",
+   "severity": "low",
+   "items": [
+    "D-084",
+    "D-100",
+    "D-392"
+   ],
+   "claim": "D-084 lists addCookie and cache among the mutating Response calls that throw after completion, without the 'once waves 5 and 6 add them' qualifier that D-089 and D-100 carry. D-392 adds addCookie in wave 5 and cache in wave 6, so the wave 3 tests for D-084 cannot cover those two calls, and the item reads as if wave 3 must deliver them.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-3/design.md:48,59,73,14",
+   "suggested_fix": "Add the D-100 qualifier to D-084: 'addCookie or cache once waves 5 and 6 add them'. Waves 5 and 6 then add the after-completion assertions for those methods."
+  }
+ ]
+}
