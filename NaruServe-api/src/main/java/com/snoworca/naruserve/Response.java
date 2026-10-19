@@ -1,15 +1,17 @@
 package com.snoworca.naruserve;
 
+import java.io.File;
 import java.io.InputStream;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Writer for one HTTP response, with {@link #json} and {@link #addCookie} since wave 5. No file, download, cache or
- * sse method yet; later waves add them.
+ * Writer for one HTTP response, with {@link #json} and {@link #addCookie} since wave 5 and {@link #cache},
+ * {@link #file} and {@link #download} since wave 6. No sse method yet; a later wave adds it.
  */
 // @req IR-HTTP-001
 // @req IR-JSON-002
 // @req FR-COOKIE-001
+// @req IR-STATIC-002
 public interface Response {
 
     /**
@@ -63,5 +65,33 @@ public interface Response {
     // @req FR-COOKIE-001
     default Response addCookie(Cookie cookie) {
         throw new UnsupportedOperationException(getClass().getName() + " has no cookie writer");
+    }
+
+    /**
+     * Sets {@code Cache-Control} from {@code policy}, replacing an earlier value; returns this response. A committed
+     * response throws {@link IllegalStateException} as {@link #header} does.
+     */
+    // @req IR-STATIC-002
+    default Response cache(CachePolicy policy) {
+        return header("Cache-Control", policy.getHeaderValue());
+    }
+
+    /**
+     * Sends {@code file} as the whole body with its MIME type and no {@code Content-Disposition}, like Express
+     * {@code res.sendFile}; ends the response like {@link #send(String)}. The default throws
+     * {@link UnsupportedOperationException}.
+     */
+    // @req IR-STATIC-002
+    default void file(File file) {
+        throw new UnsupportedOperationException(getClass().getName() + " has no file writer");
+    }
+
+    /**
+     * Sends {@code file} as an attachment named {@code filename}, like Express {@code res.download}; ends the
+     * response like {@link #send(String)}. The default throws {@link UnsupportedOperationException}.
+     */
+    // @req IR-STATIC-002
+    default void download(File file, String filename) {
+        throw new UnsupportedOperationException(getClass().getName() + " has no file writer");
     }
 }

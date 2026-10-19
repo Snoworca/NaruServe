@@ -5,6 +5,7 @@ import com.snoworca.naruserve.internal.DefaultRestApp;
 import com.snoworca.naruserve.routing.RouterPolicy;
 import com.snoworca.naruserve.spi.HttpAdapter;
 import com.snoworca.naruserve.spi.JsonCodec;
+import java.io.File;
 import java.util.concurrent.TimeUnit;
 import org.jspecify.annotations.Nullable;
 
@@ -21,6 +22,8 @@ import org.jspecify.annotations.Nullable;
 // @req IR-APP-006
 // @req IR-APP-007
 // @req FR-APP-001
+// @req IR-STATIC-001
+// @req IR-STATIC-002
 public interface RestApp {
 
     /**
@@ -141,6 +144,44 @@ public interface RestApp {
      */
     // @req IR-JSON-002
     RestApp jsonLimit(long bytes);
+
+    /**
+     * Runs {@code configurer} at once on a copy of the app's multipart options, as {@code app.multipart(o ->
+     * o.maxFileSize(1024 * 1024))}, and keeps the copy only when it returns; calls apply in order. Out-of-range
+     * values throw {@link IllegalArgumentException}.
+     */
+    // @req IR-MULTIPART-001
+    RestApp multipart(Configurer<MultipartOptions> configurer);
+
+    /**
+     * The largest urlencoded form body in bytes, {@code 1..1073741824}; default 1048576 (1 MiB), as Express
+     * {@code express.urlencoded({ limit })}.
+     */
+    // @req IR-MULTIPART-001
+    RestApp formLimit(long bytes);
+
+    /**
+     * Serves the files below {@code dir} under {@code prefix}, like Express {@code app.use(prefix,
+     * express.static(dir))}. The prefix must start with {@code /} ({@link IllegalArgumentException}); a trailing
+     * {@code /} is ignored. Several calls register several mounts in order; {@code dir} need not exist yet.
+     */
+    // @req IR-STATIC-001
+    RestApp staticFiles(String prefix, File dir);
+
+    /** As {@link #staticFiles(String, File)}, with {@code options} run at once on this mount's options. */
+    // @req IR-STATIC-001
+    RestApp staticFiles(String prefix, File dir, Configurer<StaticOptions> options);
+
+    /** The app's own MIME registry; registering after {@code listen()} throws {@link IllegalStateException}. */
+    // @req IR-STATIC-002
+    MimeTypes mimeTypes();
+
+    /**
+     * The {@code Cache-Control} policy for responses that set none themselves; default {@code null}, which adds no
+     * header.
+     */
+    // @req IR-STATIC-002
+    RestApp defaultCache(@Nullable CachePolicy policy);
 
     /**
      * Runs {@code configurer} at once on the app's one server options, as {@code app.server(o ->

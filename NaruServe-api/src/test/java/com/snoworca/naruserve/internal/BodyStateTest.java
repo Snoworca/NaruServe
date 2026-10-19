@@ -245,15 +245,20 @@ public class BodyStateTest {
         assertEquals("m", new BodyAlreadyConsumedException("m").getMessage());
     }
 
-    // SDS-AC-11; FR-HTTP-019 AC-5, re-pointed by IR-JSON-002 AC-8: body(Class) and body(TypeRef) are the only readers
+    // SDS-AC-11; FR-HTTP-019 AC-5, re-pointed by IR-JSON-002 AC-8: body(Class) and body(TypeRef) are the JSON readers;
+    // re-pointed by IR-MULTIPART-002 AC-6: form, file, files and parts are the only other readers, of the FORM kind
     @Test
     public void sdsAc11_FR_HTTP_019_AC5_requestHasNoPublicBodyReadingMethod() {
-        List<String> bodyNames = Arrays.asList("json", "form", "file", "files", "parts", "text", "bytes",
-                "stream", "inputStream", "raw");
+        List<String> bodyNames = Arrays.asList("json", "text", "bytes", "stream", "inputStream", "raw");
+        List<String> formReaders = Arrays.asList("form", "file", "files", "parts");
         List<String> bodyReaders = new java.util.ArrayList<>();
+        java.util.Set<String> seenFormReaders = new java.util.TreeSet<>();
         for (Method m : Request.class.getMethods()) {
             if (m.getName().equals("body")) {
                 bodyReaders.add(Arrays.toString(m.getParameterTypes()));
+            }
+            if (formReaders.contains(m.getName())) {
+                seenFormReaders.add(m.getName() + Arrays.toString(m.getParameterTypes()));
             }
             assertFalse(m.getName(), bodyNames.contains(m.getName()));
             assertFalse(m.getName(), java.io.InputStream.class.isAssignableFrom(m.getReturnType()));
@@ -261,6 +266,8 @@ public class BodyStateTest {
         }
         java.util.Collections.sort(bodyReaders);
         assertEquals(Arrays.asList("[class com.snoworca.naruserve.TypeRef]", "[class java.lang.Class]"), bodyReaders);
+        assertEquals(new java.util.TreeSet<>(Arrays.asList("file[class java.lang.String]",
+                "files[class java.lang.String]", "form[class java.lang.String]", "parts[]")), seenFormReaders);
         Method body;
         try {
             body = DefaultRequest.class.getDeclaredMethod("body");

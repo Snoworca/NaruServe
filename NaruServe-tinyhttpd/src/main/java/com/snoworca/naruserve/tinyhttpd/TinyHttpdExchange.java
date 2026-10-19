@@ -24,6 +24,7 @@ import org.jspecify.annotations.Nullable;
  * the raw query from {@code getQueryString()}, never from the decoded, slash-merging {@code getPath()}.
  */
 // @req FR-ENGINE-001
+// @req FR-ENGINE-010
 final class TinyHttpdExchange implements HttpExchange {
 
     private final Request req;
@@ -190,13 +191,18 @@ final class TinyHttpdExchange implements HttpExchange {
 
     /** The abort check and single-start rule shared by every way to start the response; caller holds this. */
     private void start() throws IOException {
+        requireStartable();
+        started = true;
+    }
+
+    /** The checks of {@link #start()} without starting; caller holds this. */
+    private void requireStartable() throws IOException {
         if (aborted) {
             throw new IOException("exchange aborted");
         }
         if (started) {
             throw new IllegalStateException("the response was already started");
         }
-        started = true;
     }
 
     // A feature not yet available never touched res, so the response stays unstarted and the core can still commit.
@@ -209,12 +215,14 @@ final class TinyHttpdExchange implements HttpExchange {
     @Override
     public synchronized void sendFile(int status, List<Map.Entry<String, String>> headers, File file, long offset,
             long length) throws IOException {
-        start();
-        try {
-            TinyHttpdFeatures.sendFile(res, status, headers, file, offset, length);
-        } catch (UnsupportedOperationException e) {
-            unsupported(e);
+        // Checked before commit so a bad range leaves the response unstarted.
+        long size = file.length();
+        if (offset < 0 || length < 0 || offset > size - length) {
+            throw new IllegalArgumentException(
+                    "range offset " + offset + " length " + length + " outside file of " + size + " bytes");
         }
+        requireStartable(); // the abort check and single-start rule win over a failed open, which comes next
+        TinyHttpdFeatures.sendFile(this, status, headers, file, offset, length);
     }
 
     @Override

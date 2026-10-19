@@ -6,6 +6,7 @@ import com.snoworca.naruserve.HttpException;
 import com.snoworca.naruserve.Method;
 import com.snoworca.naruserve.Request;
 import com.snoworca.naruserve.TypeRef;
+import com.snoworca.naruserve.UploadFile;
 import com.snoworca.naruserve.spi.HttpExchange;
 import com.snoworca.naruserve.spi.JsonCodec;
 import java.io.InputStream;
@@ -14,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
@@ -26,9 +28,11 @@ import org.jspecify.annotations.Nullable;
 // @req FR-HTTP-012
 // @req FR-JSON-001
 // @req FR-COOKIE-002
+// @req FR-MULTIPART-003
 public final class DefaultRequest implements Request {
 
     private final HttpExchange ex;
+    private volatile String requestId = "";
     private final Method method;
     private final Map<String, String> params;
     private final String path;
@@ -40,6 +44,13 @@ public final class DefaultRequest implements Request {
     private final @Nullable JsonCodec codec;
     private final long jsonLimit;
     private final boolean trustProxy;
+    private final MultipartSettings multipart;
+    private final long formLimit;
+    private final SpoolRegistry spool;
+    private final Object uploadLock = new Object();
+    // Guarded by uploadLock.
+    private @Nullable FormData parsed;
+    private boolean uploadsReleased;
 
     /** {@code params} are the decoded variables of the RouteMatch; no application context. */
     // @req FR-HTTP-009
@@ -65,6 +76,18 @@ public final class DefaultRequest implements Request {
     // @req FR-ENGINE-008
     public DefaultRequest(HttpExchange ex, Method method, Map<String, String> params,
             @Nullable ApplicationContext context, @Nullable JsonCodec codec, long jsonLimit, boolean trustProxy) {
+        this(ex, method, params, context, codec, jsonLimit, trustProxy, new MultipartSettings(), 1048576L,
+                new SpoolRegistry());
+    }
+
+    /** As above, with the app's multipart settings, urlencoded form limit and spool for the form accessors. */
+    // @req FR-MULTIPART-003
+    public DefaultRequest(HttpExchange ex, Method method, Map<String, String> params,
+            @Nullable ApplicationContext context, @Nullable JsonCodec codec, long jsonLimit, boolean trustProxy,
+            MultipartSettings multipart, long formLimit, SpoolRegistry spool) {
+        this.multipart = Objects.requireNonNull(multipart, "multipart");
+        this.formLimit = formLimit;
+        this.spool = Objects.requireNonNull(spool, "spool");
         this.trustProxy = trustProxy;
         this.codec = codec;
         this.jsonLimit = jsonLimit;
@@ -165,6 +188,107 @@ public final class DefaultRequest implements Request {
         }
     }
 
+    /**
+     * The one shared parse of a form body. A body whose media type (before ';', trimmed, case-insensitive) is neither
+     * urlencoded nor multipart/form-data gives EMPTY while UNREAD, without reading it; once taken, sharedParse throws
+     * BodyAlreadyConsumedException. A failed parse leaves later calls with that exception too.
+     */
+    // @req FR-MULTIPART-003
+    FormData formData() {
+        String type = header("Content-Type");
+        int semi = type == null ? -1 : type.indexOf(';');
+        String media = type == null ? "" : (semi < 0 ? type : type.substring(0, semi)).trim().toLowerCase(Locale.ROOT);
+        boolean urlencoded = media.equals("application/x-www-form-urlencoded");
+        boolean multipartBody = media.equals("multipart/form-data");
+        if (!urlencoded && !multipartBody && body.state() == BodyState.State.UNREAD) {
+            return FormData.EMPTY;
+        }
+        try {
+            FormData d = body.sharedParse(() -> {
+                if (urlencoded) {
+                    return FormData.urlencoded(FormBodyReader.read(bodyStream(), contentLength(), formLimit));
+                }
+                if (!multipartBody) {
+                    return FormData.EMPTY; // unreachable: sharedParse refuses a body that is not UNREAD
+                }
+                String boundary = MultipartParser.boundary(type);
+                if (boundary == null) {
+                    throw new HttpException(400, "multipart/form-data without a valid boundary");
+                }
+                return FormData.multipart(MultipartParser.parse(bodyStream(), contentLength(), boundary, multipart,
+                        formLimit, spool));
+            });
+            boolean late;
+            synchronized (uploadLock) {
+                parsed = d;
+                late = uploadsReleased;
+            }
+            if (late) {
+                releaseUploads(); // a parse that finished after the request ended keeps no file
+            }
+            return d;
+        } catch (RuntimeException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new HttpException(400, null, e); // an IOException reading the body, as for a JSON body
+        }
+    }
+
+    /** The request ended: release() on every part of the cached parse, and on one that finishes later; idempotent. */
+    // @req FR-MULTIPART-006
+    void releaseUploads() {
+        FormData d;
+        synchronized (uploadLock) {
+            uploadsReleased = true;
+            d = parsed;
+        }
+        if (d != null) {
+            for (UploadFile p : d.parts()) {
+                ((DefaultUploadFile) p).release();
+            }
+        }
+    }
+
+    /** The Content-Length header, or -1 when absent or not a number (the adapter frames the body). */
+    private long contentLength() {
+        String v = header("Content-Length");
+        if (v == null) {
+            return -1;
+        }
+        try {
+            return Long.parseLong(v.trim());
+        } catch (NumberFormatException e) {
+            return -1;
+        }
+    }
+
+    // @req FR-MULTIPART-003
+    @Override
+    public @Nullable String form(String name) {
+        Objects.requireNonNull(name, "name");
+        return formData().firstText(name);
+    }
+
+    // @req FR-MULTIPART-003
+    @Override
+    public @Nullable UploadFile file(String name) {
+        Objects.requireNonNull(name, "name");
+        return formData().firstFile(name);
+    }
+
+    // @req FR-MULTIPART-003
+    @Override
+    public List<UploadFile> files(String name) {
+        Objects.requireNonNull(name, "name");
+        return formData().files(name);
+    }
+
+    // @req FR-MULTIPART-003
+    @Override
+    public List<UploadFile> parts() {
+        return formData().parts();
+    }
+
     @Override
     public Method method() {
         return method;
@@ -178,6 +302,20 @@ public final class DefaultRequest implements Request {
     @Override
     public String rawPath() {
         return ex.rawPath();
+    }
+
+    /** The raw query after '?', or null; the static 301 Location keeps it as sent. */
+    @Nullable String rawQuery() {
+        return ex.rawQuery();
+    }
+
+    /** The id the dispatcher gave this request, for automatic error bodies; empty until set. */
+    String requestId() {
+        return requestId;
+    }
+
+    void requestId(String id) {
+        this.requestId = id;
     }
 
     // @req FR-HTTP-009

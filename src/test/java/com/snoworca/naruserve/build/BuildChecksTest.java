@@ -378,5 +378,14 @@ public class BuildChecksTest {
             assertTrue("root build.gradle holds " + part, build.contains(part));
         }
     }
+
+    // SDS-AC-6; FR-STATIC-006 AC-6 — wave-6-7 SDS: every test task turns the Java 8 canonical-path cache off
+    @Test
+    public void sdsAc6_FR_STATIC_006_AC6_everyTestTaskSetsCanonCachesOff() throws IOException {
+        String build = BuildLayoutTest.read(new File(root, "build.gradle"));
+        assertTrue(build.contains(
+                "tasks.withType(Test).configureEach { systemProperty 'sun.io.useCanonCaches', 'false' }"));
+        assertEquals("false", System.getProperty("sun.io.useCanonCaches"));
+    }
 }
 

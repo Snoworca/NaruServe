@@ -3,19 +3,23 @@ package com.snoworca.naruserve.internal;
 import com.snoworca.naruserve.AccessLogOptions;
 import com.snoworca.naruserve.AppStartException;
 import com.snoworca.naruserve.AppState;
+import com.snoworca.naruserve.CachePolicy;
 import com.snoworca.naruserve.Configurer;
 import com.snoworca.naruserve.ConsoleLogger;
 import com.snoworca.naruserve.ErrorHandler;
 import com.snoworca.naruserve.LifecycleCallback;
 import com.snoworca.naruserve.Logger;
 import com.snoworca.naruserve.Method;
+import com.snoworca.naruserve.MimeTypes;
 import com.snoworca.naruserve.MethodSet;
 import com.snoworca.naruserve.Middleware;
+import com.snoworca.naruserve.MultipartOptions;
 import com.snoworca.naruserve.RestApp;
 import com.snoworca.naruserve.RouteBuilder;
 import com.snoworca.naruserve.RouteHandler;
 import com.snoworca.naruserve.ServerHandle;
 import com.snoworca.naruserve.ServerOptions;
+import com.snoworca.naruserve.StaticOptions;
 import com.snoworca.naruserve.routing.RouteKind;
 import com.snoworca.naruserve.routing.RoutePattern;
 import com.snoworca.naruserve.routing.Router;
@@ -24,6 +28,7 @@ import com.snoworca.naruserve.spi.ExchangeHandler;
 import com.snoworca.naruserve.spi.HttpAdapter;
 import com.snoworca.naruserve.spi.JsonCodec;
 import com.snoworca.naruserve.spi.ServerSettings;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -94,14 +99,25 @@ public final class DefaultRestApp implements RestApp {
     // Written only in NEW under this; the Dispatcher reads both once at freeze.
     private volatile @Nullable JsonCodec codec;
     private volatile long jsonLimit = JsonBodyReader.DEFAULT_LIMIT;
+    private volatile MultipartSettings multipartSettings = new MultipartSettings();
+    private volatile long formLimit = 1048576L;
+    private final List<StaticMount> staticMounts = new ArrayList<>();
+    private volatile @Nullable CachePolicy defaultCache;
     private volatile Logger logger;
     private final AppLifecycle lifecycle = new AppLifecycle();
+    private final DefaultMimeTypes mimeTypes = new DefaultMimeTypes(lifecycle);
     private final DefaultApplicationContext context = new DefaultApplicationContext(lifecycle, this);
     private final DefaultAccessLogOptions accessLogOptions = new DefaultAccessLogOptions();
     private final DefaultServerOptions serverOptions = new DefaultServerOptions();
     // Written only in NEW; the Dispatcher reads it once at freeze.
     private volatile boolean trustProxy;
     private final ShutdownParticipants shutdownParticipants = new ShutdownParticipants();
+    private final SpoolRegistry spool = new SpoolRegistry();
+
+    {
+        // Deletes the temp uploads still open once in-flight requests finished or were force-closed.
+        shutdownParticipants.add(ShutdownParticipants.Phase.AFTER_ON_STOP, spool::closeAndDeleteAll);
+    }
     // Set by the one listen() that won beginStart.
     private volatile boolean bindAttempted;
     // The thread inside listen() or the shutdown sequence; a shutdown() from it must not wait for itself. Each owner
@@ -175,6 +191,99 @@ public final class DefaultRestApp implements RestApp {
         return this;
     }
 
+    /** The current multipart settings; the defaults unless {@link #multipart(Configurer)} changed them. */
+    // @req IR-MULTIPART-001
+    public MultipartSettings multipartSettings() {
+        return multipartSettings;
+    }
+
+    // @req IR-MULTIPART-001
+    @Override
+    public synchronized RestApp multipart(Configurer<MultipartOptions> configurer) {
+        lifecycle.requireConfigurable("multipart");
+        Objects.requireNonNull(configurer, "configurer");
+        MultipartSettings next = multipartSettings.copy();
+        configurer.configure(next);
+        this.multipartSettings = next;
+        return this;
+    }
+
+    /** The urlencoded form body limit in bytes; 1048576 unless {@link #formLimit(long)} changed it. */
+    // @req IR-MULTIPART-001
+    public long formLimit() {
+        return formLimit;
+    }
+
+    // @req IR-MULTIPART-001
+    @Override
+    public synchronized RestApp formLimit(long bytes) {
+        lifecycle.requireConfigurable("formLimit");
+        if (bytes < 1 || bytes > 1073741824L) {
+            throw new IllegalArgumentException("formLimit must be in 1..1073741824 bytes: " + bytes);
+        }
+        this.formLimit = bytes;
+        return this;
+    }
+
+    // @req IR-STATIC-001
+    @Override
+    public RestApp staticFiles(String prefix, File dir) {
+        return addStatic(prefix, dir, null);
+    }
+
+    // @req IR-STATIC-001
+    @Override
+    public RestApp staticFiles(String prefix, File dir, Configurer<StaticOptions> options) {
+        return addStatic(prefix, dir, Objects.requireNonNull(options, "options"));
+    }
+
+    /**
+     * Registers one mount after the configurer ran on fresh options; a throwing configurer registers nothing. The
+     * directory is not checked here: a missing root serves nothing.
+     */
+    // @req IR-STATIC-001
+    synchronized RestApp addStatic(String prefix, File dir, @Nullable Configurer<StaticOptions> options) {
+        lifecycle.requireConfigurable("staticFiles");
+        Objects.requireNonNull(prefix, "prefix");
+        Objects.requireNonNull(dir, "dir");
+        if (!prefix.startsWith("/")) {
+            throw new IllegalArgumentException("static prefix must start with '/': " + prefix);
+        }
+        String p = prefix.length() > 1 && prefix.endsWith("/") ? prefix.substring(0, prefix.length() - 1) : prefix;
+        DefaultStaticOptions o = new DefaultStaticOptions();
+        if (options != null) {
+            options.configure(o);
+        }
+        staticMounts.add(new StaticMount(p, dir, o));
+        return this;
+    }
+
+    /** The registered mounts in registration order. */
+    // @req IR-STATIC-001
+    public synchronized List<StaticMount> staticMounts() {
+        return Collections.unmodifiableList(new ArrayList<>(staticMounts));
+    }
+
+    // @req IR-STATIC-002
+    @Override
+    public MimeTypes mimeTypes() {
+        return mimeTypes;
+    }
+
+    // @req IR-STATIC-002
+    @Override
+    public synchronized RestApp defaultCache(@Nullable CachePolicy policy) {
+        lifecycle.requireConfigurable("defaultCache");
+        this.defaultCache = policy;
+        return this;
+    }
+
+    /** The app-wide Cache-Control policy; null (the default) adds none. */
+    // @req IR-STATIC-002
+    public @Nullable CachePolicy defaultCachePolicy() {
+        return defaultCache;
+    }
+
     // @req IR-APP-006
     @Override
     public Logger logger() {
@@ -232,6 +341,12 @@ public final class DefaultRestApp implements RestApp {
     // @req FR-APP-011
     ShutdownParticipants shutdownParticipants() {
         return shutdownParticipants;
+    }
+
+    /** The app's open temp uploads, closed by its after-onStop shutdown participant. */
+    // @req FR-MULTIPART-006
+    SpoolRegistry spool() {
+        return spool;
     }
 
     /** The app's state machine, for same-package tests. */
@@ -754,7 +869,8 @@ public final class DefaultRestApp implements RestApp {
         }
         SafeLogger safe = new SafeLogger(logger); // the logger is fixed from here: logger(...) needs an unfrozen app
         dispatcher = new Dispatcher(router, pipeline, new ErrorPath(errorHandlers, safe),
-                new AccessLog(accessLogOptions, safe), context, jsonCodec(), jsonLimit(), trustProxy);
+                new AccessLog(accessLogOptions, safe), context, jsonCodec(), jsonLimit(), trustProxy,
+                multipartSettings(), formLimit(), spool(), new StaticHandler(staticMounts, mimeTypes, defaultCache));
         lifecycle.markFrozen();
     }
 

@@ -17,12 +17,12 @@ import java.util.List;
 import java.util.Map;
 import org.junit.Test;
 
-/** Wave 4 decisions recorded in docs/api with the wave 5 marker set (OPS-APP-003, successor of OPS-APP-001). */
+/** Wave 4 decisions recorded in docs/api with the wave 6 marker set (OPS-APP-004, successor of OPS-APP-003). */
 public class AppDocsTest {
 
     private static final String MARKER = "(미확정)";
 
-    /** Per file, phrases decided in waves 4 and 5: each appears, and no line holding it carries the marker. */
+    /** Per file, phrases decided in waves 4 to 6: each appears, and no line holding it carries the marker. */
     static final Map<String, List<String>> REMOVED;
 
     /** Per file, phrases owned by later waves: each appears, and every line holding it carries the marker. */
@@ -41,16 +41,17 @@ public class AppDocsTest {
         r.put("express-migration.md", Arrays.asList("`auth, admin, h`", "`req.path()`", "`INTERNAL_ERROR`",
                 "| 마지막 404 미들웨어", "| `app.set('trust proxy', ...)`", "0.0.0.0", "| `cookie-parser`"));
         r.put("cookie.md", Arrays.asList("| `getMaxAge()`", "`Expires`"));
-        r.put("defaults.md", Arrays.asList("| 바인딩 주소", "| 프록시 헤더"));
+        r.put("defaults.md", Arrays.asList("| 바인딩 주소", "| 프록시 헤더", "| 심볼릭 링크"));
+        r.put("static.md", Arrays.asList("SPA fallback은", "`/docs/`로 301", "`cache(pattern, policy)`",
+                "심볼릭 링크(루트 안을"));
+        r.put("multipart.md", Arrays.asList("| `tempDirectory`", "무제한 설정 허용 여부"));
         REMOVED = Collections.unmodifiableMap(r);
 
         Map<String, List<String>> k = new LinkedHashMap<>();
         k.put("app.md", Arrays.asList("`ws`의 반환 타입", "`ws`에 넘기는 콜백"));
         k.put("express-migration.md", Arrays.asList("| `express.Router()`", "| `cors()`", "| `res.redirect(url)`"));
-        k.put("websocket.md", Arrays.asList("Ping 주기", "`101` 응답 전/후"));
-        k.put("static.md", Arrays.asList("SPA fallback은", "`/docs/`로 301"));
-        k.put("multipart.md", Arrays.asList("| `tempDirectory`"));
-        k.put("sse.md", Arrays.asList("heartbeat"));
+        k.put("websocket.md", Arrays.asList("idle timeout", "Ping 주기", "handshake timeout", "`101` 응답 전/후"));
+        k.put("sse.md", Arrays.asList("heartbeat", "연결별 송신 큐 기본값"));
         KEPT = Collections.unmodifiableMap(k);
     }
 
@@ -88,9 +89,9 @@ public class AppDocsTest {
         return found.get(0);
     }
 
-    // SDS-AC-7; OPS-APP-003 AC-6
+    // SDS-AC-5; OPS-APP-004 AC-6
     @Test
-    public void sdsAc7_OPS_APP_003_AC6_decidedMarkersAreGone() throws IOException {
+    public void sdsAc5_OPS_APP_004_AC6_decidedMarkersAreGone() throws IOException {
         for (Map.Entry<String, List<String>> e : REMOVED.entrySet()) {
             String d = doc(e.getKey());
             for (String phrase : e.getValue()) {
@@ -103,9 +104,9 @@ public class AppDocsTest {
         }
     }
 
-    // SDS-AC-7; OPS-APP-003 AC-6
+    // SDS-AC-5; OPS-APP-004 AC-6
     @Test
-    public void sdsAc7_OPS_APP_003_AC6_laterWaveMarkersAreKept() throws IOException {
+    public void sdsAc5_OPS_APP_004_AC6_laterWaveMarkersAreKept() throws IOException {
         for (Map.Entry<String, List<String>> e : KEPT.entrySet()) {
             String d = doc(e.getKey());
             for (String phrase : e.getValue()) {
@@ -118,18 +119,18 @@ public class AppDocsTest {
         }
     }
 
-    // SDS-AC-7; OPS-APP-003 AC-6
+    // SDS-AC-5; OPS-APP-004 AC-6
     @Test
-    public void sdsAc7_OPS_APP_003_AC6_wave4PagesKeepNoMarker() throws IOException {
+    public void sdsAc5_OPS_APP_004_AC6_wave4PagesKeepNoMarker() throws IOException {
         for (String f : new String[] {"middleware.md", "lifecycle.md", "logging.md", "routing.md"}) {
             List<String> m = markerLines(doc(f));
             assertEquals(f + ": " + m, 0, m.size());
         }
     }
 
-    // OPS-APP-003 AC-1
+    // OPS-APP-004 AC-1
     @Test
-    public void OPS_APP_003_AC1_builderFactoryServerHandleAndKeeperThread() throws IOException {
+    public void OPS_APP_004_AC1_builderFactoryServerHandleAndKeeperThread() throws IOException {
         String app = doc("app.md");
         String builder = lineWith(app, "`RestApp.builder()`는");
         for (String m : new String[] {"`httpAdapter(HttpAdapter)`", "`jsonCodec(JsonCodec)`", "`logger(Logger)`",
@@ -162,9 +163,9 @@ public class AppDocsTest {
         assertTrue(readme, readme.contains("`jsonCodec`"));
     }
 
-    // SDS-AC-7; OPS-APP-003 AC-6
+    // SDS-AC-5; OPS-APP-004 AC-6
     @Test
-    public void sdsAc7_OPS_APP_003_AC6_wsMarkersSitOnTheirOwnLines() throws IOException {
+    public void sdsAc5_OPS_APP_004_AC6_wsMarkersSitOnTheirOwnLines() throws IOException {
         String app = doc("app.md");
         for (String l : markerLines(app)) {
             for (String decided : new String[] {"라우트 미들웨어", "onStart", "onStop", "onError", "daemon"}) {
@@ -175,9 +176,9 @@ public class AppDocsTest {
         assertEquals(1, linesWith(app, "`ws`에 넘기는 콜백").size());
     }
 
-    // OPS-APP-003 AC-2
+    // OPS-APP-004 AC-2
     @Test
-    public void OPS_APP_003_AC2_middlewareAndRoutingDecisions() throws IOException {
+    public void OPS_APP_004_AC2_middlewareAndRoutingDecisions() throws IOException {
         String mw = doc("middleware.md");
         String use = lineWith(mw, "`RouteBuilder.use(middleware)`");
         assertTrue(use, use.contains(".use(") && use.contains("여러"));
@@ -210,9 +211,9 @@ public class AppDocsTest {
         assertTrue(rQueue, rQueue.contains("`503`") && rQueue.contains("TinyHttpd") && rQueue.contains("평문"));
     }
 
-    // OPS-APP-003 AC-7
+    // OPS-APP-004 AC-7
     @Test
-    public void OPS_APP_003_AC7_decisionsCarryAReason() throws IOException {
+    public void OPS_APP_004_AC7_decisionsCarryAReason() throws IOException {
         String mw = doc("middleware.md");
         String use = lineWith(mw, "가변 인자 오버로드 대신 `RouteBuilder.use`");
         assertTrue(use, use.contains("이유"));
@@ -236,9 +237,9 @@ public class AppDocsTest {
         assertTrue(lineWith(doc("express-migration.md"), "| `app.use('/api', mw)`").contains("이유"));
     }
 
-    // OPS-APP-003 AC-3
+    // OPS-APP-004 AC-3
     @Test
-    public void OPS_APP_003_AC3_lifecycleStartGateAndPendingStop() throws IOException {
+    public void OPS_APP_004_AC3_lifecycleStartGateAndPendingStop() throws IOException {
         String d = doc("lifecycle.md");
         assertTrue(lineWith(d, "`registerExternal`").contains("닫지 않"));
         assertTrue(d.contains("<T> void registerExternal(Class<T> type, T instance);"));
@@ -254,9 +255,9 @@ public class AppDocsTest {
         assertTrue(nullAttr, nullAttr.contains("`NullPointerException`"));
     }
 
-    // OPS-APP-003 AC-4
+    // OPS-APP-004 AC-4
     @Test
-    public void OPS_APP_003_AC4_loggingFormatDefaultsAndClose() throws IOException {
+    public void OPS_APP_004_AC4_loggingFormatDefaultsAndClose() throws IOException {
         String d = doc("logging.md");
         assertTrue(d.contains("`<method> <path> <status>[ aborted][ <n>ms][ in=<i> out=<o>][ rid=<id>]`"));
         String defaults = lineWith(d, "기본값:");
@@ -277,9 +278,9 @@ public class AppDocsTest {
         assertTrue(lineWith(d, "여러 앱이").contains("`close()`"));
     }
 
-    // OPS-APP-003 AC-5
+    // OPS-APP-004 AC-5
     @Test
-    public void OPS_APP_003_AC5_expressMigrationRows() throws IOException {
+    public void OPS_APP_004_AC5_expressMigrationRows() throws IOException {
         String d = doc("express-migration.md");
         String route = lineWith(d, "| `app.get('/x', auth, h)`");
         assertFalse(route, route.contains(MARKER));

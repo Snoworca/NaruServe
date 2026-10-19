@@ -82,7 +82,46 @@ List<User> users = req.body(new TypeRef<List<User>>() {});
 | `form(name)` | `String` | `null` | `application/x-www-form-urlencoded` 또는 multipart의 텍스트 필드 |
 | `file(name)` | `UploadFile` | `null` | multipart 파일 하나 |
 | `files(name)` | `List<UploadFile>` | 빈 리스트 | 같은 이름의 파일 여러 개 |
-| `parts()` | `List<…>` | 빈 리스트 | 모든 파트. 원소 타입과 텍스트 필드 포함 여부는 **(미확정)** |
+| `parts()` | `List<UploadFile>` | 빈 리스트 | multipart의 모든 파트를 본문 순서대로. 텍스트 필드도 포함하며, 텍스트 필드는 `filename()`이 `null`입니다 |
+
+`parts()`가 텍스트 필드도 `UploadFile`로 돌려주는 이유는 파트 하나를 한 타입으로 다뤄 본문 순서를 그대로 보여 주기 위해서입니다.
+
+| 설정 | 기본값 | Express | 설명 |
+|---|---|---|---|
+| `app.formLimit(bytes)` | 1 MiB | `express.urlencoded({ limit })` | urlencoded 본문의 최대 크기이자, 한 요청의 multipart 텍스트 필드 내용 합계 한도입니다. 범위는 1 – 1073741824(1 GiB)이고, 넘는 요청은 `413`입니다 |
+
+`jsonLimit`과 같은 모양으로 `formLimit`이라는 이름을 정한 이유는 Express의 `express.json({ limit })`/`express.urlencoded({ limit })` 짝을 그대로 옮기기 위해서입니다.
+
+```java
+app.formLimit(2L * 1024 * 1024);   // 2 MiB
+
+app.post("/profile", (req, res) -> {
+    String name = req.form("name");                  // 텍스트 필드
+    UploadFile avatar = req.file("avatar");          // 파일 하나, 없으면 null
+    List<UploadFile> photos = req.files("photos");   // 같은 이름의 파일 여러 개
+    int fields = 0;
+    for (UploadFile part : req.parts()) {            // 텍스트 필드도 포함
+        if (part.filename() == null) {
+            fields++;
+        }
+    }
+    res.json(Collections.singletonMap("photos", photos.size()));
+});
+```
+
+Kotlin:
+
+```kotlin
+app.formLimit(2L * 1024 * 1024)
+
+app.post("/profile") { req, res ->
+    val name: String? = req.form("name")
+    val avatar: UploadFile? = req.file("avatar")
+    val photos: List<UploadFile> = req.files("photos")
+    val fields = req.parts().count { it.filename() == null }
+    res.json(mapOf("photos" to photos.size))
+}
+```
 
 [파일 업로드](multipart.md)
 

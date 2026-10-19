@@ -66,9 +66,9 @@ public class AdapterSurfaceTest {
         return Modifier.isPublic(modifiers) || Modifier.isProtected(modifiers);
     }
 
-    // SDS-AC-1; FR-ENGINE-001 AC-1
+    // SDS-AC-1; FR-ENGINE-010 AC-1
     @Test
-    public void sdsAc1_FR_ENGINE_001_AC1_noEngineTypeInAnyPublicSignature() throws Exception {
+    public void sdsAc1_FR_ENGINE_010_AC1_noEngineTypeInAnyPublicSignature() throws Exception {
         int mod = TinyHttpdAdapter.class.getModifiers();
         assertTrue(Modifier.isPublic(mod) && Modifier.isFinal(mod));
         assertTrue(HttpAdapter.class.isAssignableFrom(TinyHttpdAdapter.class));
@@ -133,10 +133,10 @@ public class AdapterSurfaceTest {
         return sb.toString();
     }
 
-    // FR-ENGINE-001 AC-2: the feature hooks share commit()'s lock, abort check and single-start rule, so later waves
+    // FR-ENGINE-010 AC-2: the feature hooks share commit()'s lock, abort check and single-start rule, so later waves
     // fill TinyHttpdFeatures without racing an abort or starting the response twice
     @Test(timeout = 20000)
-    public void FR_ENGINE_001_AC2_featureHooksShareTheCommitLockAbortCheckAndSingleStart() throws Exception {
+    public void FR_ENGINE_010_AC2_featureHooksShareTheCommitLockAbortCheckAndSingleStart() throws Exception {
         for (String name : new String[] {"commit", "sendFile", "eventStream", "upgrade"}) {
             for (Method m : TinyHttpdExchange.class.getDeclaredMethods()) {
                 if (m.getName().equals(name)) {
@@ -175,44 +175,51 @@ public class AdapterSurfaceTest {
         assertEquals("IOException,IOException,IOException,", afterAbort.get());
     }
 
-    // SDS-AC-2; FR-ENGINE-001 AC-2
+    // FR-ENGINE-010 AC-2: from wave 6 sendFile is a buffered copy that throws no UnsupportedOperationException; the
+    // event-stream and upgrade hooks still throw naming wave 7
     @Test(timeout = 20000)
-    public void sdsAc2_FR_ENGINE_001_AC2_featureHooksThrowNamingTheirWave() throws Exception {
+    public void FR_ENGINE_010_AC2_sendFileIsFilledAndTheOtherHooksThrowNamingWave7() throws Exception {
+        File empty = File.createTempFile("naru-empty", ".bin");
+        empty.deleteOnExit();
         AtomicReference<String> seen = new AtomicReference<>();
-        adapter.bind(RawTargetSocketTest.Http.settings().build(), RawTargetSocketTest.Http.ok(ex -> {
+        adapter.bind(RawTargetSocketTest.Http.settings().build(), ex -> {
             StringBuilder sb = new StringBuilder();
             try {
-                ex.sendFile(200, Collections.emptyList(), new File("missing"), 0, 0);
-            } catch (UnsupportedOperationException e) {
-                sb.append(e.getMessage()).append('|');
-            }
-            try {
                 ex.eventStream(200, Collections.emptyList(), out -> { });
-            } catch (UnsupportedOperationException e) {
+            } catch (UnsupportedOperationException | IOException e) {
                 sb.append(e.getMessage()).append('|');
             }
             try {
                 ex.upgrade(Collections.emptyList(), (in, out) -> { });
-            } catch (UnsupportedOperationException e) {
-                sb.append(e.getMessage());
+            } catch (UnsupportedOperationException | IOException e) {
+                sb.append(e.getMessage()).append('|');
+            }
+            try {
+                ex.sendFile(200, Collections.<java.util.Map.Entry<String, String>>singletonList(
+                        new java.util.AbstractMap.SimpleEntry<>("Content-Length", "0")), empty, 0, 0);
+                sb.append("sent");
+                ex.finish();
+            } catch (RuntimeException | IOException e) {
+                sb.append(e);
+                ex.abort();
             }
             seen.set(sb.toString());
-        }));
+        });
         assertEquals(200, RawTargetSocketTest.Http.status(
                 RawTargetSocketTest.Http.send(adapter.boundPort(), RawTargetSocketTest.Http.get("/f"))));
         String[] parts = seen.get().split("\\|", -1);
         assertEquals(seen.get(), 3, parts.length);
-        assertTrue(parts[0], parts[0].contains("wave 6"));
+        assertTrue(parts[0], parts[0].contains("wave 7"));
         assertTrue(parts[1], parts[1].contains("wave 7"));
-        assertTrue(parts[2], parts[2].contains("wave 7"));
+        assertEquals("sent", parts[2]);
         // The hooks live in their own class, not in the exchange bridge.
         assertTrue(classText(new File(TinyHttpdAdapter.class.getResource("TinyHttpdExchange.class").toURI()))
                 .contains("com/snoworca/naruserve/tinyhttpd/TinyHttpdFeatures"));
     }
 
-    // SDS-AC-3; FR-ENGINE-001 AC-3
+    // SDS-AC-3; FR-ENGINE-010 AC-3
     @Test
-    public void sdsAc3_FR_ENGINE_001_AC3_noClassReferencesTlsConfig() throws Exception {
+    public void sdsAc3_FR_ENGINE_010_AC3_noClassReferencesTlsConfig() throws Exception {
         List<String> hits = new ArrayList<>();
         List<File> files = mainClassFiles();
         assertFalse(files.isEmpty());
