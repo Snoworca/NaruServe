@@ -423,6 +423,27 @@
       "confidence": 0.89,
       "lane_plan_digest": "sha256:39563522ffd876481ec5b500129fa788b7ebc501749cc96b3e6ca0a026a504c5",
       "ts": "2026-10-19T13:20:02.539766Z"
+    },
+    {
+      "gate_id": "wave-design-insufficient",
+      "question": "Wave 6 loop W ended fail-cap (0 altered, last medium settled in Residual)",
+      "options": [
+        "A proceed",
+        "B extra round",
+        "C abort"
+      ],
+      "votes": [
+        "A",
+        "A"
+      ],
+      "confidences": [
+        0.85,
+        0.85
+      ],
+      "decision": "A",
+      "rule": "majority (stopped after 2 agreeing votes)",
+      "confidence": 0.85,
+      "ts": "2026-10-19T17:05:37.101304Z"
     }
   ]
 }

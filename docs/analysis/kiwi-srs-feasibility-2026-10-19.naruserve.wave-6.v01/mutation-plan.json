@@ -1,0 +1,228 @@
+{
+ "run": "2026-10-19.naruserve.wave-6.v01",
+ "target": "wave-6",
+ "mapping": {
+  "high": "evolving (auto)",
+  "medium": "keep",
+  "low": "draft",
+  "blocked": "deprecated (needs user)"
+ },
+ "plan": [
+  {
+   "req_id": "IR-MULTIPART-001",
+   "current_stability": "draft",
+   "proposed_stability": "evolving",
+   "matched_rule_index": 0,
+   "requires_user_confirm": false,
+   "reason": "Feasibility=high (score 95). Blockers: none. Run: 2026-10-19.naruserve.wave-6.v01"
+  },
+  {
+   "req_id": "IR-MULTIPART-002",
+   "current_stability": "draft",
+   "proposed_stability": "evolving",
+   "matched_rule_index": 0,
+   "requires_user_confirm": false,
+   "reason": "Feasibility=high (score 94). Blockers: none. Run: 2026-10-19.naruserve.wave-6.v01"
+  },
+  {
+   "req_id": "FR-MULTIPART-001",
+   "current_stability": "draft",
+   "proposed_stability": "evolving",
+   "matched_rule_index": 0,
+   "requires_user_confirm": false,
+   "reason": "Feasibility=high (score 90). Blockers: none. Run: 2026-10-19.naruserve.wave-6.v01"
+  },
+  {
+   "req_id": "FR-MULTIPART-002",
+   "current_stability": "draft",
+   "proposed_stability": "evolving",
+   "matched_rule_index": 0,
+   "requires_user_confirm": false,
+   "reason": "Feasibility=high (score 93). Blockers: none. Run: 2026-10-19.naruserve.wave-6.v01"
+  },
+  {
+   "req_id": "FR-MULTIPART-003",
+   "current_stability": "draft",
+   "proposed_stability": "evolving",
+   "matched_rule_index": 0,
+   "requires_user_confirm": false,
+   "reason": "Feasibility=high (score 93). Blockers: none. Run: 2026-10-19.naruserve.wave-6.v01"
+  },
+  {
+   "req_id": "FR-MULTIPART-004",
+   "current_stability": "draft",
+   "proposed_stability": "evolving",
+   "matched_rule_index": 0,
+   "requires_user_confirm": false,
+   "reason": "Feasibility=high (score 90). Blockers: none. Run: 2026-10-19.naruserve.wave-6.v01"
+  },
+  {
+   "req_id": "FR-MULTIPART-005",
+   "current_stability": "draft",
+   "proposed_stability": "evolving",
+   "matched_rule_index": 0,
+   "requires_user_confirm": false,
+   "reason": "Feasibility=high (score 94). Blockers: none. Run: 2026-10-19.naruserve.wave-6.v01"
+  },
+  {
+   "req_id": "FR-MULTIPART-006",
+   "current_stability": "draft",
+   "proposed_stability": "evolving",
+   "matched_rule_index": 0,
+   "requires_user_confirm": false,
+   "reason": "Feasibility=high (score 89). Blockers: none. Run: 2026-10-19.naruserve.wave-6.v01"
+  },
+  {
+   "req_id": "OPS-MULTIPART-001",
+   "current_stability": "draft",
+   "proposed_stability": "evolving",
+   "matched_rule_index": 0,
+   "requires_user_confirm": false,
+   "reason": "Feasibility=high (score 94). Blockers: none. Run: 2026-10-19.naruserve.wave-6.v01"
+  },
+  {
+   "req_id": "IR-STATIC-001",
+   "current_stability": "draft",
+   "proposed_stability": "evolving",
+   "matched_rule_index": 0,
+   "requires_user_confirm": false,
+   "reason": "Feasibility=high (score 94). Blockers: none. Run: 2026-10-19.naruserve.wave-6.v01"
+  },
+  {
+   "req_id": "IR-STATIC-002",
+   "current_stability": "draft",
+   "proposed_stability": "evolving",
+   "matched_rule_index": 0,
+   "requires_user_confirm": false,
+   "reason": "Feasibility=high (score 94). Blockers: none. Run: 2026-10-19.naruserve.wave-6.v01"
+  },
+  {
+   "req_id": "FR-STATIC-001",
+   "current_stability": "draft",
+   "proposed_stability": "evolving",
+   "matched_rule_index": 0,
+   "requires_user_confirm": false,
+   "reason": "Feasibility=high (score 93). Blockers: none. Run: 2026-10-19.naruserve.wave-6.v01"
+  },
+  {
+   "req_id": "FR-STATIC-002",
+   "current_stability": "draft",
+   "proposed_stability": "evolving",
+   "matched_rule_index": 0,
+   "requires_user_confirm": false,
+   "reason": "Feasibility=high (score 91). Blockers: none. Run: 2026-10-19.naruserve.wave-6.v01"
+  },
+  {
+   "req_id": "FR-STATIC-003",
+   "current_stability": "draft",
+   "proposed_stability": "evolving",
+   "matched_rule_index": 0,
+   "requires_user_confirm": false,
+   "reason": "Feasibility=high (score 90). Blockers: none. Run: 2026-10-19.naruserve.wave-6.v01"
+  },
+  {
+   "req_id": "FR-STATIC-004",
+   "current_stability": "draft",
+   "proposed_stability": "evolving",
+   "matched_rule_index": 0,
+   "requires_user_confirm": false,
+   "reason": "Feasibility=high (score 93). Blockers: none. Run: 2026-10-19.naruserve.wave-6.v01"
+  },
+  {
+   "req_id": "FR-STATIC-005",
+   "current_stability": "draft",
+   "proposed_stability": "evolving",
+   "matched_rule_index": 0,
+   "requires_user_confirm": false,
+   "reason": "Feasibility=high (score 96). Blockers: none. Run: 2026-10-19.naruserve.wave-6.v01"
+  },
+  {
+   "req_id": "FR-STATIC-006",
+   "current_stability": "draft",
+   "proposed_stability": "evolving",
+   "matched_rule_index": 0,
+   "requires_user_confirm": false,
+   "reason": "Feasibility=high (score 87). Blockers: none. Run: 2026-10-19.naruserve.wave-6.v01"
+  },
+  {
+   "req_id": "FR-STATIC-007",
+   "current_stability": "draft",
+   "proposed_stability": "evolving",
+   "matched_rule_index": 0,
+   "requires_user_confirm": false,
+   "reason": "Feasibility=high (score 93). Blockers: none. Run: 2026-10-19.naruserve.wave-6.v01"
+  },
+  {
+   "req_id": "FR-STATIC-008",
+   "current_stability": "draft",
+   "proposed_stability": "evolving",
+   "matched_rule_index": 0,
+   "requires_user_confirm": false,
+   "reason": "Feasibility=high (score 93). Blockers: none. Run: 2026-10-19.naruserve.wave-6.v01"
+  },
+  {
+   "req_id": "FR-STATIC-009",
+   "current_stability": "draft",
+   "proposed_stability": "evolving",
+   "matched_rule_index": 0,
+   "requires_user_confirm": false,
+   "reason": "Feasibility=high (score 94). Blockers: none. Run: 2026-10-19.naruserve.wave-6.v01"
+  },
+  {
+   "req_id": "FR-STATIC-010",
+   "current_stability": "draft",
+   "proposed_stability": "evolving",
+   "matched_rule_index": 0,
+   "requires_user_confirm": false,
+   "reason": "Feasibility=high (score 94). Blockers: none. Run: 2026-10-19.naruserve.wave-6.v01"
+  },
+  {
+   "req_id": "FR-STATIC-011",
+   "current_stability": "draft",
+   "proposed_stability": "evolving",
+   "matched_rule_index": 0,
+   "requires_user_confirm": false,
+   "reason": "Feasibility=high (score 92). Blockers: none. Run: 2026-10-19.naruserve.wave-6.v01"
+  },
+  {
+   "req_id": "OPS-STATIC-001",
+   "current_stability": "draft",
+   "proposed_stability": "evolving",
+   "matched_rule_index": 0,
+   "requires_user_confirm": false,
+   "reason": "Feasibility=high (score 93). Blockers: none. Run: 2026-10-19.naruserve.wave-6.v01"
+  },
+  {
+   "req_id": "FR-ENGINE-010",
+   "current_stability": "draft",
+   "proposed_stability": "evolving",
+   "matched_rule_index": 0,
+   "requires_user_confirm": false,
+   "reason": "Feasibility=high (score 95). Blockers: none. Run: 2026-10-19.naruserve.wave-6.v01"
+  },
+  {
+   "req_id": "OPS-HTTP-006",
+   "current_stability": "draft",
+   "proposed_stability": "evolving",
+   "matched_rule_index": 0,
+   "requires_user_confirm": false,
+   "reason": "Feasibility=high (score 96). Blockers: none. Run: 2026-10-19.naruserve.wave-6.v01"
+  },
+  {
+   "req_id": "OPS-APP-004",
+   "current_stability": "draft",
+   "proposed_stability": "evolving",
+   "matched_rule_index": 0,
+   "requires_user_confirm": false,
+   "reason": "Feasibility=high (score 93). Blockers: none. Run: 2026-10-19.naruserve.wave-6.v01"
+  }
+ ],
+ "summary": {
+  "total": 26,
+  "to_evolving": 26,
+  "keep": 0,
+  "to_draft": 0,
+  "to_deprecated": 0,
+  "requires_user_confirm": 0
+ }
+}

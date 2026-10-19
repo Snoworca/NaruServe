@@ -1,0 +1,52 @@
+{
+ "round": 2,
+ "findings": [
+  {
+   "finding_id": "W2-001",
+   "severity": "medium",
+   "items": [
+    "D-267",
+    "D-268",
+    "D-052"
+   ],
+   "claim": "The new 301 decision for a directory request without a trailing slash (Location = same path plus '/') can create an open redirect. The strict default router does not merge '//', and no wave-6 item says what static resolution does with empty segments. java.io.File(root, \"/assets\") silently normalises a leading empty segment. So GET //assets on a '/' mount, where www/assets is a directory, would answer 301 Location: //assets/, a protocol-relative URL that sends the browser to host 'assets'. This is the serve-static CVE-2015-1164 pattern. The decision also does not say whether Location is built from the raw (percent-encoded) path or the decoded one; a decoded one could put non-ASCII or unsafe characters in the header.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-6/design.md:134; docs/api/routing.md:174,216; docs/research/naruserve-v1/design/00.design.md:88 (D-052 rejects '.'/'..' but not empty segments)",
+   "suggested_fix": "In the decision, have static mounts answer 404 for a path with an empty segment (or collapse leading slashes before building Location, as serve-static does). Build Location from the raw, already-encoded request path, the mount prefix included. Add a T29 case for GET //<dir>."
+  },
+  {
+   "finding_id": "W2-002",
+   "severity": "low",
+   "items": [
+    "D-255",
+    "D-240",
+    "D-241"
+   ],
+   "claim": "The spool-registry decision says a parse after shutdown began 'fails to spool with an IOException (answered as 500)'. But req.form/file/files/parts do not declare IOException (docs/api/request.md), so an IOException cannot leave them as is. The obvious wrapper, java.io.UncheckedIOException, is API 24+ and would fail the animal-sniffer API 21 check (the code base already avoids it, DefaultResponse.java:30). The existing body-read convention also maps IOException to 400 (JsonBodyReader), which is not the 500 the decision states.",
+   "evidence": "design.md:128; NaruServe-api/src/main/java/com/snoworca/naruserve/internal/JsonBodyReader.java:59-83; NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java:30",
+   "suggested_fix": "State that the accessor throws HttpException(500) with the IOException as its cause (closed spool registry), keeps 400 for a client-side read failure, and never uses UncheckedIOException."
+  },
+  {
+   "finding_id": "W2-003",
+   "severity": "low",
+   "items": [
+    "D-291",
+    "D-106"
+   ],
+   "claim": "The file-body decision leaves HttpExchange.sendFile unused, and the TinyHttpd hook still throws UnsupportedOperationException(\"... arrives in wave 6\"). D-106 says waves 6-8 fill the file-transfer, event-stream and upgrade extension points with adapter classes. After wave 6, the reference adapter would still not implement an SPI method, and nothing assigns that method a later owner. The message would also be stale.",
+   "evidence": "design.md:127; NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdFeatures.java:21-24; docs/research/naruserve-v1/design/00.design.md:203",
+   "suggested_fix": "Either implement the TinyHttpd sendFile hook as a plain buffered copy (unused by the core but working), or record in the decision that it stays unsupported in v1 and change the exception message to match."
+  },
+  {
+   "finding_id": "W2-004",
+   "severity": "low",
+   "items": [
+    "D-259",
+    "D-265",
+    "D-395"
+   ],
+   "claim": "The precedence decision says static mounts are consulted only when no explicit route matches the path, but the frozen wording keeps explicit routes and WebSocket routes apart (D-265: 'no explicit or WebSocket route'). The decision therefore does not say whether a plain GET to an app.ws path, which the dispatcher now answers with 426, should go to a static file at the same path instead.",
+   "evidence": "design.md:130; design.md:67; NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:285-290",
+   "suggested_fix": "Extend the decision so a WebSocket route that matches the path also wins over static mounts (keeping 426), consistent with D-265."
+  }
+ ]
+}

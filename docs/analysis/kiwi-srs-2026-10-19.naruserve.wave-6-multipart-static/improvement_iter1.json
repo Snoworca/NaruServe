@@ -1,0 +1,39 @@
+[
+  {
+    "improvement_iter1": {
+      "date": "2026-10-20",
+      "fixed": {
+        "W6-A-001": "FR-STATIC-003 AC-2 order now <x>&.txt, a b.txt, b.txt; Decision: String.compareTo on the raw unescaped name",
+        "W6-A-002": "FR-MULTIPART-003 AC-5: req.body after a FORM read throws BodyAlreadyConsumedException; body-state check runs before FR-JSON-001 media-type check (matches DefaultRequest.readJson)",
+        "W6-A-003": "FR-STATIC-008 AC-5: defaultCache applies at commit only when no Cache-Control is present; tested via global middleware res.header; SSE header (D-326) verified in wave 7; D-410 kept",
+        "W6-A-004": "no wave-6 depends_on toward verified reqs that depend_on FR-ENGINE-001: FR-ENGINE-010->FR-ENGINE-003/004 and OPS-APP-004->FR-ENGINE-006 relations changed to extends (verified wave-5 links themselves untouched)",
+        "W6-A-005": "FR-MULTIPART-004 AC-5: text parts never spool, capped at formLimit (413), count against maxRequestSize/maxParts not maxFileSize",
+        "W6-A-006": "FR-MULTIPART-003 AC-2: after body() read, form/file/files/parts throw BodyAlreadyConsumedException (request.md:91)",
+        "W6-A-007": "FR-STATIC-004 statement: path and method match; GET/HEAD after method mismatch falls through; file checked in any mount",
+        "W6-A-008": "FR-STATIC-001 AC-3: SPA fallback only after every mount missed; first spaFallback mount whose prefix matches; test case added",
+        "W6-A-009": "FR-STATIC-009 AC-2: 304 carries same ETag and Cache-Control (RFC 9110 15.4.5)",
+        "W6-A-010": "OPS-STATIC-001 AC-1: static.md records app.defaultCache, null default and precedence",
+        "W6-A-011": "IR-STATIC-001 AC-2 / IR-STATIC-002 AC-2: ext with or without leading dot for mime and register; FR-STATIC-007 AC-3 tests both",
+        "W6-A-012": "FR-MULTIPART-005 AC-5: after successful save, content methods throw IllegalStateException",
+        "W6-A-013": "OPS-HTTP-006 title drops '(wave 5)'",
+        "W6-A-014": "FR-STATIC-011 HttpExchange trace relation implements -> uses",
+        "W6-A-018": "FR-MULTIPART-004 AC-3 single backslash; FR-STATIC-011 AC-2 'double quote, backslash' in prose"
+      },
+      "skipped": {
+        "W6-A-013 rationale": "edit_requirement_fields has no rationale field; Rationale of FR-ENGINE-010/OPS-HTTP-006/OPS-APP-004 stays '-'",
+        "OPS-MULTIPART-001 rationale escaped quotes": "same tool gap (rationale not editable via MCP)",
+        "W6-A-015": "needs exact AppDocsTest/docs phrases; not verified",
+        "W6-A-016": "T17 in-memory disconnect simulation not designed; left for SDS",
+        "W6-A-017": "kept-marker list scope change in OPS-HTTP-006 AC-8/OPS-APP-004 AC-6 deferred"
+      },
+      "validate": {
+        "errors": 0,
+        "warnings": 42
+      },
+      "coverage": {
+        "ids": 70,
+        "missing": []
+      }
+    }
+  }
+]

@@ -1,0 +1,19 @@
+{
+ "round": 5,
+ "findings": [
+  {
+   "finding_id": "W2-001",
+   "severity": "medium",
+   "items": [
+    "D-260",
+    "D-262",
+    "D-265",
+    "D-271",
+    "D-395"
+   ],
+   "claim": "D-260 gives 405 with 'Allow: GET, HEAD' to a non-GET/HEAD request for 'a path served only by a static mount'. Neither D-260 nor the wave decisions say what 'served' means. Under the router, any path no route matches reaches the fallback as NOT_FOUND. Router.lookup returns NOT_FOUND for every unmatched path, so the fallback cannot tell the cases apart unless the static code first resolves the path. One reading is that any path under the mount prefix counts. With the common '/' mount (and with spaFallback(true) above all), that turns every non-GET 404 in the app into 405. 'POST /api/typo' and 'POST /.env' would get 405 with 'Allow: GET, HEAD' instead of 404. That goes against D-271's 404 for dot segments and against the intent of D-266, which keeps '/api/' paths away from static (SPA) content. The other reading is that only paths for which a GET would actually be served count (a file, an index, a listing or a redirect). That reading keeps the 404 there. Two implementers would ship different statuses, and the T27/T29 tests would assert different things.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-6/design.md:58 (D-260), design.md:131 (OPTIONS decision only covers the method, not which paths count); NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:181-227 (NOT_FOUND for every unmatched path); NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:278-297 (fallback maps kinds to 404/405)",
+   "suggested_fix": "Add one wave decision. A non-GET/HEAD request gets D-260's 405 with 'Allow: GET, HEAD' only when a GET for the same path would be answered by the mount from the file system: a regular file, a directory index, a directory listing, or the trailing-slash 301. SPA fallback content does not count. Every other path keeps the dispatcher's 404, including the D-271 dot-segment paths and the D-266 '/api/' and '/ws/' paths. Record this in docs/api/static.md, and add a T27 case that asserts POST to a missing path under a '/' mount returns 404."
+  }
+ ]
+}

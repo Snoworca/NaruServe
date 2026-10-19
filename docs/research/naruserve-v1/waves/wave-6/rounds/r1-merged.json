@@ -1,0 +1,108 @@
+{
+ "round": 1,
+ "findings": [
+  {
+   "finding_id": "W2-001",
+   "severity": "high",
+   "items": [
+    "D-447",
+    "D-270",
+    "D-409"
+   ],
+   "claim": "D-447 applies the D-270 symbolic-link component check to res.file and res.download, but D-270 is defined only relative to a mount's canonical root and res.file/res.download have no root. Read literally (components checked from the filesystem root), it would refuse app-chosen files under a symlinked path such as Android's /sdcard (-> /storage/self/primary), the use case D-269 explicitly protects for mounts. It also contradicts docs/api/response.md, which says only staticFiles does path-escape checks.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-6/design.md:77; design.md:75 (\"below the canonical root\"); design.md:74 (D-269 /sdcard); docs/api/response.md:90",
+   "suggested_fix": "Limit the D-447 re-check (canonical path and symlink components) to static mounts. For res.file/res.download, re-open only through the resolver and check that the file is a regular file (or define the parent directory as the root), and record that in docs/api/response.md."
+  },
+  {
+   "finding_id": "W2-002",
+   "severity": "medium",
+   "items": [
+    "D-447",
+    "D-291",
+    "D-409",
+    "D-264"
+   ],
+   "claim": "The only file-transfer extension point in the SPI is HttpExchange.sendFile(File, offset, length). It reopens the file by path inside the adapter, so the descriptor that D-447 checked after opening is not the one being sent. That reopens the TOCTOU window D-447 was meant to narrow. D-291 invites the TinyHttpd adapter to use this zero-copy path, and wave 6 must implement it, because TinyHttpdFeatures.sendFile still throws. TinyHttpd itself only does a buffered copy (FileTransfer) and offers sendFile(FileChannel), which the SPI cannot carry. I-014 and D-106 forbid changing the SPI signature.",
+   "evidence": "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpExchange.java:78-79; NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdFeatures.java:21-24; /Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/FileTransfer.java:10; design.md:77,109",
+   "suggested_fix": "Require static, res.file and res.download bodies to be streamed from the resolver-opened InputStream (skipped or limited for ranges) through HttpExchange.commit. Use sendFile(File) only where no D-447 check applies, or drop the zero-copy allowance in D-291."
+  },
+  {
+   "finding_id": "W2-003",
+   "severity": "medium",
+   "items": [
+    "D-255",
+    "D-254"
+   ],
+   "claim": "D-255 says that the after-onStop cleanup runs only after in-flight requests 'finished or were force-closed'. But force-closing a connection does not stop its handler thread. TinyHttpd stop() closes sockets and interrupts workers, and the workers end only by the later adapter release (awaitTermination). So a handler still running can create a new spool file after cleanup ran (for example by calling req.file() lazily, which triggers the D-087 parse), or can be inside save()/transferTo while its file is deleted. That leaves temp files behind and breaks I-015.",
+   "evidence": "design.md:48; docs/research/naruserve-v1/design/00.design.md:285 (D-162 order: after-onStop participants run before the adapter release); /Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/TinyHttpd.java:67,82",
+   "suggested_fix": "Make the cleanup participant also close the app's spool registry. After that, any spool creation fails (or deletes at once), and each upload deletes its own file when its request ends. Add a test in which a handler parses after shutdown began."
+  },
+  {
+   "finding_id": "W2-004",
+   "severity": "medium",
+   "items": [
+    "D-270",
+    "D-447",
+    "D-411"
+   ],
+   "claim": "The java.io-only symlink detection and the post-open re-check rely on File.getCanonicalPath(). On a Java 8 JVM (a supported runtime), canonical paths are cached for up to 30 s by default (sun.io.useCanonCaches=true, ExpiringCache). A component swapped for a symlink can therefore be reported with its stale non-link canonical path, which defeats D-447 and D-270 on Java 8. The T29 swap test would still pass on the local JDK 17, where the cache is off by default.",
+   "evidence": "design.md:75,77; CLAUDE.md (Java 8+ JVM runtime, local JDK 17); JDK 8 java.io.UnixFileSystem useCanonCaches default",
+   "suggested_fix": "Record the Java 8 canon-cache limit in docs/api/static.md as part of the residual TOCTOU note. Optionally also compare File.lastModified/length or run the hidden and symlink check on the parent's list(). Either run the swap test on a Java 8 runtime or note that the test uses -Dsun.io.useCanonCaches=false."
+  },
+  {
+   "finding_id": "W2-005",
+   "severity": "medium",
+   "items": [
+    "D-259",
+    "D-260",
+    "D-395"
+   ],
+   "claim": "Precedence is undefined when an explicit route matches the path but not the method, and a static file exists at the same path (for example POST /report route plus www/report). The dispatcher returns METHOD_MISMATCH (405, Allow: POST, OPTIONS) before the fallback point. That means a GET never reaches the static mount, and D-260's 'Allow: GET, HEAD' cannot be merged with the route's Allow. object.md 16.5 says 'explicit routes miss -> StaticMount'.",
+   "evidence": "design.md:55,57; NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:139,285-290; object.md:1001-1006",
+   "suggested_fix": "State whether a METHOD_MISMATCH falls through to static mounts for GET/HEAD, and how Allow is merged. Record it in docs/api/static.md."
+  },
+  {
+   "finding_id": "W2-006",
+   "severity": "low",
+   "items": [
+    "D-260",
+    "D-395"
+   ],
+   "claim": "An OPTIONS request to a static-only path gets 405 with 'Allow: GET, HEAD' under D-260. An explicit route on the same app answers OPTIONS automatically with 204, and its 405 Allow lists HEAD and OPTIONS (D-395). This is inconsistent behaviour within one app.",
+   "evidence": "design.md:57; docs/research/naruserve-v1/design/00.design.md:151",
+   "suggested_fix": "Answer OPTIONS on a static path with 204 'Allow: GET, HEAD, OPTIONS' and list OPTIONS in the static 405 Allow, or state the exception in docs/api/static.md."
+  },
+  {
+   "finding_id": "W2-007",
+   "severity": "low",
+   "items": [
+    "D-271",
+    "D-268"
+   ],
+   "claim": "D-271 says any segment starting with '.' gets 404, but D-052 already rejects '.' and '..' segments with 400 before routing on every adapter, and D-268 also says 400 for '..'. The '.' segment itself therefore never reaches the D-271 rule.",
+   "evidence": "design.md:78; docs/research/naruserve-v1/design/00.design.md:88",
+   "suggested_fix": "Word D-271 as 'any other segment starting with .' (dotfiles such as .git and .env), with D-052 and D-268 taking precedence."
+  },
+  {
+   "finding_id": "W2-008",
+   "severity": "low",
+   "items": [
+    "D-235"
+   ],
+   "claim": "D-235 limits the length of part header lines and the total part header size, but gives no status for exceeding them (400 or 413), unlike D-233 and D-236. Two implementers could reasonably choose differently.",
+   "evidence": "design.md:16",
+   "suggested_fix": "Fix the status (for example 413, consistent with D-233 limit semantics) and record the header limits in docs/api/defaults.md."
+  },
+  {
+   "finding_id": "W2-009",
+   "severity": "low",
+   "items": [
+    "D-266",
+    "D-267"
+   ],
+   "claim": "D-266 makes /api/ and /ws/ exclusions absolute ('never'), while D-267 lets wave 6 decide an excluded-prefix configuration. The configuration must therefore only add prefixes, and must stay absolute paths even for a mount with a non-root prefix. Neither item states this.",
+   "evidence": "design.md:68-69",
+   "suggested_fix": "In D-267's decision, state that configured prefixes are added to the fixed /api and /ws exclusions and are matched on the full request path."
+  }
+ ]
+}
