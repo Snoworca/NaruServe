@@ -187,6 +187,32 @@ public class DefaultResponseTest {
         assertNull(r.header("X A"));
     }
 
+    // SDS-AC-7; FR-HTTP-015 AC-4 - a char above U+00FF is refused: an adapter keeping the low byte would turn
+    // U+010A into LF and U+010D into CR (cf. Node CVE-2018-12116). ISO-8859-1 chars such as "café" pass.
+    @Test
+    public void sdsAc7_FR_HTTP_015_AC4_charsAboveLatin1AreRefused() {
+        List<String> refused = new ArrayList<>();
+        ClientResponse r = get((req, res) -> {
+            for (String v : new String[] {"aĊb", "ačb"}) {
+                try {
+                    res.header("X", v);
+                } catch (IllegalArgumentException e) {
+                    refused.add(v);
+                }
+            }
+            try {
+                res.stream(new ByteArrayInputStream(new byte[0]), "text/plainĊ");
+            } catch (IllegalArgumentException e) {
+                refused.add("stream");
+            }
+            res.header("X-Latin1", "café").send("ok");
+        });
+        assertEquals(3, refused.size());
+        assertEquals(200, r.status());
+        assertNull(r.header("X"));
+        assertEquals("café", r.header("X-Latin1"));
+    }
+
     // SDS-AC-7; FR-HTTP-015 AC-4, FR-HTTP-016 AC-2
     @Test
     public void sdsAc7_FR_HTTP_015_AC4_stateCheckRunsBeforeTheCrLfCheck() {

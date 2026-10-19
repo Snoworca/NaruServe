@@ -63,7 +63,7 @@ public final class DefaultResponse implements Response {
 
     /**
      * Replaces a same-name header (case-insensitive), as Express res.set does. The name must be an RFC 9110 token
-     * and the value may hold no control character but HTAB (so no CR or LF).
+     * and the value may hold no control character but HTAB (so no CR or LF) and no char above U+00FF.
      */
     // @req FR-HTTP-013
     // @req FR-HTTP-015
@@ -365,7 +365,7 @@ public final class DefaultResponse implements Response {
     }
 
     private static IllegalArgumentException badHeader() {
-        return new IllegalArgumentException("bad header: name not a token, or CR, LF or a control char in the value");
+        return new IllegalArgumentException("bad header: name not a token, or CR, LF, a control char or a char above U+00FF in the value");
     }
 
     private void put(String name, String value) {
@@ -405,11 +405,14 @@ public final class DefaultResponse implements Response {
         return true;
     }
 
-    /** No control character (CR, LF, NUL, DEL, ...) except HTAB. */
+    /**
+     * No control character (CR, LF, NUL, DEL, ...) except HTAB, and no char above U+00FF: an adapter writing the
+     * low byte would turn U+010A into LF (cf. Node CVE-2018-12116), so headers stay ISO-8859-1, one byte per char.
+     */
     private static boolean isFieldValue(String s) {
         for (int i = 0; i < s.length(); i++) {
             char c = s.charAt(i);
-            if (c < 0x20 && c != '\t' || c == 0x7F) {
+            if (c < 0x20 && c != '\t' || c == 0x7F || c > 0xFF) {
                 return false;
             }
         }

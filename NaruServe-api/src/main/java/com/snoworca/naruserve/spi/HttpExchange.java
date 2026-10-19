@@ -56,7 +56,8 @@ public interface HttpExchange {
      * the adapter never adds, removes or changes Content-Length. {@code contentLength} is the number of body bytes
      * the core will write to the returned stream: 0 for a bodyless response (204, 304, HEAD), or -1 when unknown,
      * which the adapter frames itself (chunked, or close on HTTP/1.0) and is the only case where it may add a
-     * framing header.
+     * framing header. Header names and values are ISO-8859-1: the core guarantees every char is at most U+00FF
+     * and never CR or LF, so the adapter writes each char as one byte.
      */
     // @req IR-HTTP-003
     OutputStream commit(int status, List<Map.Entry<String, String>> headers, long contentLength) throws IOException;
