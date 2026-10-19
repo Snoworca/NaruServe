@@ -1,0 +1,22 @@
+{
+  "confirmed": ["P2-001", "P2-002", "P2-003", "P2-004", "P2-005"],
+  "rebutted": [],
+  "added": [
+    {
+      "finding_id": "S2-001",
+      "severity": "low",
+      "items": ["FR-STATIC-011", "FR-STATIC-010", "FR-STATIC-009"],
+      "claim": "FileResponder.answer sets ETag, Last-Modified, Accept-Ranges, X-Content-Type-Options, the file's Content-Type, Cache-Control (policy) and, for a 206, Content-Range before calling res.sendBody. sendBody can throw IOException before the commit: its skip loop throws 'the file ends before byte N' when the file shrank between length() and open(). The response is still NEW, so a user onError handler that answers itself (res.status(500).json(...)) sends those file headers on its error response, including Content-Range and a strong ETag. The wave already guards this case for Content-Disposition (dropDisposition, 'a failed download keeps no attachment header, so an onError answer is not saved as a file'), but not for the validator and range headers. Only the default error path (afterFailure clears headers) is clean.",
+      "evidence": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/FileResponder.java:86-108 (headers set before sendBody); DefaultResponse.java:332-349 (skip throws before commit); DefaultResponse.java:166-171 (only Content-Disposition is dropped); ErrorPath.java:43-50 (onError runs on the NEW response before afterFailure)",
+      "suggested_fix": "In FileResponder.respond's catch block, remove the headers answer() set (ETag, Last-Modified, Accept-Ranges, Content-Range, Cache-Control when policy set) while the response is still NEW, the same way dropDisposition does. Add one test where a range read on a shrunk file reaches a custom onError and its answer has no ETag or Content-Range."
+    },
+    {
+      "finding_id": "S2-002",
+      "severity": "low",
+      "items": ["FR-MULTIPART-004", "FR-MULTIPART-006"],
+      "claim": "SpoolRegistry.forget removes the file from the tracked set before File.delete() and ignores the delete result. DefaultUploadFile.close() (also run by save()) does not close streams already handed out by inputStream(). On Windows, a temp file with an open stream cannot be deleted, so delete() fails silently. The file is then untracked, so closeAndDeleteAll at stop never retries it, and the temp file leaks. This happens when a handler calls save() or close() while it still holds a stream from inputStream(). release() closes handed-out streams first, but close() and save() do not. Linux and Android are not affected, because unlink works while the file is open.",
+      "evidence": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/SpoolRegistry.java:40-45; DefaultUploadFile.java:123-128, 165-176 (close does not close `streams`; contrast release() at :100-115)",
+      "suggested_fix": "In forget(), keep the file in `open` when delete() returns false, so closeAndDeleteAll retries it at stop. Optionally, have close() also close the handed-out streams, as release() does."
+    }
+  ]
+}

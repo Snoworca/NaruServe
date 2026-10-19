@@ -1,0 +1,1224 @@
+{
+ "req_ac": [
+  {
+   "id": "IR-MULTIPART-001 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartApiTest.java#IR_MULTIPART_001_AC1_aConfigurerSettingAllFiveValuesIsApplied; NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartApiTest.java#sdsAc1_IR_MULTIPART_001_AC1_aThrowingConfigurerKeepsEveryEarlierSetting"
+  },
+  {
+   "id": "IR-MULTIPART-001 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartApiTest.java#sdsAc4_IR_MULTIPART_001_AC2_defaultsAndTmpdirReadOnceAtConstruction"
+  },
+  {
+   "id": "IR-MULTIPART-001 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartApiTest.java#sdsAc2_IR_MULTIPART_001_AC3_settersRejectZeroNegativeAndAboveTheUpperBoundNamingTheSetting; NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartApiTest.java#sdsAc2_IR_MULTIPART_001_AC3_tempDirectoryNullThrowsNullPointerException"
+  },
+  {
+   "id": "IR-MULTIPART-001 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartApiTest.java#IR_MULTIPART_001_AC4_formLimitDefaultsToOneMebibyteAndRejectsOutOfRange"
+  },
+  {
+   "id": "IR-MULTIPART-001 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartApiTest.java#IR_MULTIPART_001_AC5_partHeaderLimitsAreFixedAndHaveNoSetter"
+  },
+  {
+   "id": "IR-MULTIPART-001 AC-6",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartApiTest.java#sdsAc3_IR_MULTIPART_001_AC6_multipartAndFormLimitAfterListenThrowBeforeTheConfigurerRuns"
+  },
+  {
+   "id": "IR-MULTIPART-001 AC-7",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/WaveSixKotlinTest.kt#IR-MULTIPART-001 AC-7 multipart and formLimit as SAM lambdas with non-platform returns"
+  },
+  {
+   "id": "IR-MULTIPART-002 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/FormAccessorsTest.java#IR_MULTIPART_002_AC1_requestDeclaresTheFourAccessors"
+  },
+  {
+   "id": "IR-MULTIPART-002 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/FormAccessorsTest.java#IR_MULTIPART_002_AC2_uploadFileDeclaresItsMethods; NaruServe-api/src/test/java/com/snoworca/naruserve/FormAccessorsTest.java#IR_MULTIPART_002_AC2_textPartHasNullFilenameAndContentType"
+  },
+  {
+   "id": "IR-MULTIPART-002 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/FormAccessorsTest.java#FR_MULTIPART_003_AC3_AC4_mixedMultipartExposesFieldsFilesAndPartsInBodyOrder; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/FormDataTest.java#sdsAc4_IR_MULTIPART_002_AC3_partsIsTheSameUnmodifiableListOnEveryCall"
+  },
+  {
+   "id": "IR-MULTIPART-002 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultUploadFileTest.java#FR_MULTIPART_005_AC3_bytesLimitIs8MiB"
+  },
+  {
+   "id": "IR-MULTIPART-002 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/FormAccessorsTest.java#IR_MULTIPART_002_AC5_noJavaNioFileInTheNewSignatures"
+  },
+  {
+   "id": "IR-MULTIPART-002 AC-6",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java#sdsAc1_IR_HTTP_001_AC1_requestDeclaresTheWave3Methods; NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java#sdsAc2_IR_HTTP_001_AC3_laterWaveMethodNamesAreAbsent"
+  },
+  {
+   "id": "IR-MULTIPART-002 AC-7",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/WaveSixKotlinTest.kt#IR-MULTIPART-002 AC-7 form file parts and use from Kotlin without platform types"
+  },
+  {
+   "id": "FR-MULTIPART-001 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/MultipartCrossAdapterTest.java#FR_MULTIPART_001_AC1_accessorsGiveTheSameResultsOnBothAdapters; NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/MultipartCrossAdapterTest.java#FR_MULTIPART_001_AC1_limitsGiveTheSame413OnBothAdapters"
+  },
+  {
+   "id": "FR-MULTIPART-001 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MultipartParserTest.java#sdsAc1_FR_MULTIPART_001_AC2_boundaryNameIsCaseInsensitiveAndQuotedValuesAreUnquoted; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MultipartParserTest.java#sdsAc1_FR_MULTIPART_001_AC2_missingEmptyLongBadCharOrTrailingSpaceBoundaryIsNull"
+  },
+  {
+   "id": "FR-MULTIPART-001 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MultipartParserTest.java#FR_MULTIPART_001_AC3_nestedMultipartPartIsOneRawPart"
+  },
+  {
+   "id": "FR-MULTIPART-001 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartLimitsTest.java#sdsAc4_FR_MULTIPART_001_AC4_headerLineOf8192IsAcceptedAnd8193Gives413; NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartLimitsTest.java#sdsAc4_FR_MULTIPART_001_AC4_headerTotalAbove16384Gives413AndCrlfIsNotCounted"
+  },
+  {
+   "id": "FR-MULTIPART-001 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/MultipartCrossAdapterTest.java#sdsAc7_FR_MULTIPART_001_AC5_sixtyFourMebibytesPassOverTinyHttpdAndOneByteMoreGives413"
+  },
+  {
+   "id": "FR-MULTIPART-002 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartLimitsTest.java#sdsAc5_FR_MULTIPART_002_AC1_twentyPartsAreAcceptedAndTheTwentyFirstGives413BeforeItsHeaders; NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartLimitsTest.java#sdsAc6_FR_MULTIPART_002_AC1_fileOf1024IsAcceptedAnd1025Gives413OnTheFirstByteAbove"
+  },
+  {
+   "id": "FR-MULTIPART-002 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartLimitsTest.java#sdsAc7_FR_MULTIPART_002_AC2_chunkedBodyOverMaxRequestSizeStopsWithinOneReadBuffer; NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartLimitsTest.java#sdsAc7_FR_MULTIPART_002_AC2_contentLengthAboveMaxRequestSizeGives413BeforeAnyRead"
+  },
+  {
+   "id": "FR-MULTIPART-002 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartLimitsTest.java#sdsAc8_FR_MULTIPART_002_AC3_urlencodedBodyOfOneMebibyteParsesAndOneByteMoreGives413; NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartLimitsTest.java#sdsAc8_FR_MULTIPART_002_AC3_urlencodedPairsAreDecodedInOrder"
+  },
+  {
+   "id": "FR-MULTIPART-003 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/FormAccessorsTest.java#sdsAc2_FR_MULTIPART_003_AC1_pairWithoutEqualsIsEmptyAndEmptyPairIsSkipped; NaruServe-api/src/test/java/com/snoworca/naruserve/FormAccessorsTest.java#sdsAc2_FR_MULTIPART_003_AC1_multipartTextPartWithMalformedUtf8Gives400"
+  },
+  {
+   "id": "FR-MULTIPART-003 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/FormAccessorsTest.java#sdsAc1_FR_MULTIPART_003_AC2_jsonBodyStaysUnreadAndBodyStillReadsIt; NaruServe-api/src/test/java/com/snoworca/naruserve/FormAccessorsTest.java#sdsAc1_FR_MULTIPART_003_AC2_afterBodyEveryAccessorThrowsBodyAlreadyConsumed"
+  },
+  {
+   "id": "FR-MULTIPART-003 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/FormAccessorsTest.java#FR_MULTIPART_003_AC3_AC4_mixedMultipartExposesFieldsFilesAndPartsInBodyOrder"
+  },
+  {
+   "id": "FR-MULTIPART-003 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/FormAccessorsTest.java#FR_MULTIPART_003_AC3_AC4_mixedMultipartExposesFieldsFilesAndPartsInBodyOrder"
+  },
+  {
+   "id": "FR-MULTIPART-003 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/FormAccessorsTest.java#FR_MULTIPART_003_AC5_repeatedCallsReturnTheSameInstancesAndBodyThenThrows; NaruServe-api/src/test/java/com/snoworca/naruserve/FormAccessorsTest.java#sdsAc5_FR_MULTIPART_003_AC5_secondFormAfter413ThrowsBodyAlreadyConsumed"
+  },
+  {
+   "id": "FR-MULTIPART-004 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartSpoolingTest.java#sdsAc1_FR_MULTIPART_004_AC1_partAboveThresholdSpoolsToOneTempFile"
+  },
+  {
+   "id": "FR-MULTIPART-004 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartSpoolingTest.java#FR_MULTIPART_004_AC2_spooledUploadKeepsHeapGrowthUnder8MiB"
+  },
+  {
+   "id": "FR-MULTIPART-004 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartSpoolingTest.java#sdsAc2_FR_MULTIPART_004_AC3_tempNamesNeverDeriveFromClientValues"
+  },
+  {
+   "id": "FR-MULTIPART-004 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartSpoolingTest.java#sdsAc2_FR_MULTIPART_004_AC3_tempNamesNeverDeriveFromClientValues; NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartSpoolingTest.java#FR_MULTIPART_004_AC4_rawBackslashInFilenameIsKept"
+  },
+  {
+   "id": "FR-MULTIPART-004 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartSpoolingTest.java#FR_MULTIPART_004_AC5_textPartTotalIsCappedByFormLimit"
+  },
+  {
+   "id": "FR-MULTIPART-005 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultUploadFileTest.java#sdsAc3_FR_MULTIPART_005_AC1_saveReplacesDestinationThenDeletesTempFile"
+  },
+  {
+   "id": "FR-MULTIPART-005 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultUploadFileTest.java#FR_MULTIPART_005_AC2_transferToCopiesAndNeverClosesTarget"
+  },
+  {
+   "id": "FR-MULTIPART-005 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultUploadFileTest.java#FR_MULTIPART_005_AC3_bytesLimitIs8MiB"
+  },
+  {
+   "id": "FR-MULTIPART-005 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultUploadFileTest.java#sdsAc4_FR_MULTIPART_005_AC4_releaseClosesHandedOutStreams"
+  },
+  {
+   "id": "FR-MULTIPART-005 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultUploadFileTest.java#sdsAc5_FR_MULTIPART_005_AC5_closeReleasesContentAndKeepsMetadata; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultUploadFileTest.java#sdsAc3_FR_MULTIPART_005_AC1_saveReplacesDestinationThenDeletesTempFile"
+  },
+  {
+   "id": "FR-MULTIPART-006 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/SpoolCleanupTest.java#sdsAc6_FR_MULTIPART_006_AC1_requestEndDeletesTempFilesOnEveryPath; NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/MultipartDisconnectSocketTest.java#sdsAc6_FR_MULTIPART_006_AC1_halfSentSpooledPartLeavesNoTempFile"
+  },
+  {
+   "id": "FR-MULTIPART-006 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/SpoolCleanupTest.java#sdsAc8_FR_MULTIPART_006_AC2_openUploadAtShutdownDeletedAfterOnStop"
+  },
+  {
+   "id": "FR-MULTIPART-006 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/SpoolCleanupTest.java#sdsAc7_FR_MULTIPART_006_AC3_parseAfterCleanupParticipantGets500AndNoFile"
+  },
+  {
+   "id": "FR-MULTIPART-006 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/SpoolCleanupTest.java#FR_MULTIPART_006_AC4_eachUploadDeletesOnlyItsOwnTempFile"
+  },
+  {
+   "id": "OPS-MULTIPART-001 AC-1",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/WaveSixDocsTest.java#multipartDecisions"
+  },
+  {
+   "id": "OPS-MULTIPART-001 AC-2",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/WaveSixDocsTest.java#requestFormDecisions"
+  },
+  {
+   "id": "OPS-MULTIPART-001 AC-3",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/WaveSixDocsTest.java#defaultsMatchCode"
+  },
+  {
+   "id": "OPS-MULTIPART-001 AC-4",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/WaveSixDocsTest.java#expressMigrationRows"
+  },
+  {
+   "id": "OPS-MULTIPART-001 AC-5",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java#sdsAc3_OPS_MULTIPART_001_AC5_waveSixBlocksAreCompiled; NaruServe-api/src/test/kotlin/com/snoworca/naruserve/WaveSixKotlinTest.kt#OPS-MULTIPART-001 AC-5 multipart limits and req file from Kotlin"
+  },
+  {
+   "id": "IR-STATIC-001 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticApiTest.java#sdsAc1_IR_STATIC_001_AC1_trailingSlashIsStrippedAndDuplicatePrefixesAreBothKept; NaruServe-api/src/test/java/com/snoworca/naruserve/StaticApiTest.java#IR_STATIC_001_AC1_badPrefixAndNullArgumentsAreRefused"
+  },
+  {
+   "id": "IR-STATIC-001 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticApiTest.java#sdsAc3_IR_STATIC_001_AC2_badIndexAndSpaExcludeArgumentsAreRefused; NaruServe-api/src/test/java/com/snoworca/naruserve/StaticApiTest.java#IR_STATIC_001_AC2_everyOptionSetterReturnsTheSameOptions"
+  },
+  {
+   "id": "IR-STATIC-001 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticApiTest.java#IR_STATIC_001_AC3_AC4_resolverIsAcceptedNowhereAndNoSignatureNamesNioFile; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/FileResourceResolverTest.java#sdsAc4_IR_STATIC_001_AC3_missingFileThrowsFileNotFoundExceptionFromEveryMethod"
+  },
+  {
+   "id": "IR-STATIC-001 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticApiTest.java#IR_STATIC_001_AC3_AC4_resolverIsAcceptedNowhereAndNoSignatureNamesNioFile"
+  },
+  {
+   "id": "IR-STATIC-001 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AppLifecycleGuardTest.java#sdsAc4_FR_APP_002_AC4_reflectionFindsEveryRestAppAndRouteBuilderRegistrationRefusedInRunning"
+  },
+  {
+   "id": "IR-STATIC-001 AC-6",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/WaveSixKotlinTest.kt#IR-STATIC-001 AC-6 staticFiles with options lambda and without from Kotlin"
+  },
+  {
+   "id": "IR-STATIC-002 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/CachePolicyTest.java#IR_STATIC_002_AC1_factoriesRenderTheT32Values; NaruServe-api/src/test/java/com/snoworca/naruserve/CachePolicyTest.java#IR_STATIC_002_AC1_immutableReturnsANewPolicyAndKeepsTheReceiver"
+  },
+  {
+   "id": "IR-STATIC-002 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/CachePolicyTest.java#IR_STATIC_002_AC2_mimeTypesRegisterChainsAndTwoAppsHaveTwoRegistries"
+  },
+  {
+   "id": "IR-STATIC-002 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/CachePolicyTest.java#IR_STATIC_002_AC3_resCacheSetsCacheControlAndReturnsTheResponse; NaruServe-api/src/test/java/com/snoworca/naruserve/CachePolicyTest.java#sdsAc6_IR_STATIC_002_AC3_cacheAfterSendThrowsIllegalStateException"
+  },
+  {
+   "id": "IR-STATIC-002 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/CachePolicyTest.java#IR_STATIC_002_AC4_defaultCacheReturnsTheAppAndDefaultsToNull"
+  },
+  {
+   "id": "IR-STATIC-002 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java#sdsAc6_IR_HTTP_005_AC1_AC2_AC3_AC5_IR_APP_002_AC2_restAppDeclaresExactlyTheWave4Methods; NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java#sdsAc2_IR_HTTP_001_AC2_responseStatusAndHeaderReturnReceiverWritersReturnVoid"
+  },
+  {
+   "id": "IR-STATIC-002 AC-6",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/WaveSixKotlinTest.kt#IR-STATIC-002 AC-6 CachePolicy res cache and mimeTypes register from Kotlin"
+  },
+  {
+   "id": "FR-STATIC-001 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMountingTest.java#FR_STATIC_001_AC1_AC2_AC4_filesIndexesAndRoutesFirst"
+  },
+  {
+   "id": "FR-STATIC-001 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMountingTest.java#FR_STATIC_001_AC1_AC2_AC4_filesIndexesAndRoutesFirst; NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMountingTest.java#FR_STATIC_001_AC2_optionsKeptByTheConfigurerDoNotChangeARunningMount"
+  },
+  {
+   "id": "FR-STATIC-001 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMountingTest.java#sdsAc5_FR_STATIC_001_AC3_mountsInOrderThenSpaOnce"
+  },
+  {
+   "id": "FR-STATIC-001 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMountingTest.java#FR_STATIC_001_AC1_AC2_AC4_filesIndexesAndRoutesFirst"
+  },
+  {
+   "id": "FR-STATIC-001 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMountingTest.java#FR_STATIC_001_AC5_globalMiddlewareRunsOnStaticAndCanEndIt"
+  },
+  {
+   "id": "FR-STATIC-001 AC-6",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticTraversalTest.java#sdsAc2_FR_STATIC_005_AC2_dotSegments400FirstHiddenFiles404EmptySegment404; NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMountingTest.java#sdsAc4_FR_STATIC_001_AC6_directoryWithoutSlashIs301WithRawLocation"
+  },
+  {
+   "id": "FR-STATIC-002 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMethodTest.java#sdsAc8_FR_STATIC_002_AC1_nonGetOnServedPathIs405AllowGetHead"
+  },
+  {
+   "id": "FR-STATIC-002 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMethodTest.java#sdsAc8_FR_STATIC_002_AC1_nonGetOnServedPathIs405AllowGetHead; NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMethodTest.java#FR_STATIC_002_AC2_unknownOrDisabledMethodIs501BeforeStatic"
+  },
+  {
+   "id": "FR-STATIC-002 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMethodTest.java#sdsAc9_FR_STATIC_002_AC3_getAfterRouteMethodMismatchFallsThroughPutKeepsRouteAllow; NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMethodTest.java#sdsAc9_FR_STATIC_002_AC3_spaAfterMismatchAndRoute405WhenNoMountServes"
+  },
+  {
+   "id": "FR-STATIC-002 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMethodTest.java#FR_STATIC_002_AC4_webSocketRoutePathIsNeverServedStatically"
+  },
+  {
+   "id": "FR-STATIC-002 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMethodTest.java#sdsAc8_FR_STATIC_002_AC5_spaContentDoesNotCountFor405; NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMethodTest.java#sdsAc3_FR_STATIC_002_AC5_staticPathCheckRunsBeforeMethodDecision"
+  },
+  {
+   "id": "FR-STATIC-003 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticConditionalTest.java#FR_STATIC_003_AC1_directoryWithoutIndexIs404WhileListingIsOff"
+  },
+  {
+   "id": "FR-STATIC-003 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DirectoryListingTest.java#sdsAc1_FR_STATIC_003_AC2_entriesSortedRawThenEscapedAndEncoded; NaruServe-api/src/test/java/com/snoworca/naruserve/StaticConditionalTest.java#FR_STATIC_003_AC2_listingIsEscapedSortedAndRefusesLinkedDirectories"
+  },
+  {
+   "id": "FR-STATIC-003 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticConditionalTest.java#sdsAc2_FR_STATIC_003_AC3_nosniffOnEveryStaticOutcome"
+  },
+  {
+   "id": "FR-STATIC-003 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/StaticCrossAdapterTest.java#FR_STATIC_003_AC4_a64MiBStaticFileStreamsWithinABoundedHeap"
+  },
+  {
+   "id": "FR-STATIC-004 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticSpaTest.java#sdsAc6_FR_STATIC_004_AC1_AC2_acceptMustNameTextHtml; NaruServe-api/src/test/java/com/snoworca/naruserve/StaticSpaTest.java#sdsAc6_FR_STATIC_004_AC1_spaOffMeans404"
+  },
+  {
+   "id": "FR-STATIC-004 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticSpaTest.java#sdsAc6_FR_STATIC_004_AC1_AC2_acceptMustNameTextHtml"
+  },
+  {
+   "id": "FR-STATIC-004 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticSpaTest.java#sdsAc7_FR_STATIC_004_AC3_apiAndWsExcludedOnSegmentBoundaries"
+  },
+  {
+   "id": "FR-STATIC-004 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticSpaTest.java#sdsAc7_FR_STATIC_004_AC4_spaExcludeAddsToDefaults"
+  },
+  {
+   "id": "FR-STATIC-005 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StaticPathTest.java#sdsAc1_FR_STATIC_005_AC1_traversalEncodedSlashNulAndDoubleEncodingAre400; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StaticPathTest.java#sdsAc1_sdsAc2_plainPathsPassAndSegmentsAreDecodedOnce"
+  },
+  {
+   "id": "FR-STATIC-005 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StaticPathTest.java#sdsAc2_FR_STATIC_005_AC2_dotSegmentsAndEmptySegmentsAre404AfterThe400Checks; NaruServe-api/src/test/java/com/snoworca/naruserve/StaticTraversalTest.java#sdsAc2_FR_STATIC_005_AC2_dotSegments400FirstHiddenFiles404EmptySegment404"
+  },
+  {
+   "id": "FR-STATIC-006 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticSymlinkTest.java#sdsAc1_FR_STATIC_006_AC1_rootReachedThroughLinkServesButLinkInsideRefused; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/FileResourceResolverTest.java#sdsAc5_FR_STATIC_006_AC1_siblingRootSharingThePrefixIsNotUnderTheRoot"
+  },
+  {
+   "id": "FR-STATIC-006 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticSymlinkTest.java#sdsAc1_FR_STATIC_006_AC2_linkToFileInsideRootIsRefused404ByDefault"
+  },
+  {
+   "id": "FR-STATIC-006 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticSymlinkTest.java#sdsAc2_FR_STATIC_006_AC3_allowSymlinksServesInsideTargetsAndRefusesOutside"
+  },
+  {
+   "id": "FR-STATIC-006 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticSymlinkTest.java#sdsAc3_FR_STATIC_006_AC4_componentSwappedForLinkBetweenCheckAndOpenIsRefused"
+  },
+  {
+   "id": "FR-STATIC-006 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/FileResponseTest.java#sdsAc4_FR_STATIC_006_AC5_resFileOnLinkDirectoryOrMissingIs404StandardBody"
+  },
+  {
+   "id": "FR-STATIC-006 AC-6",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticSymlinkTest.java#sdsAc6_FR_STATIC_006_AC6_testJvmRunsWithCanonCachesOff; src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java#sdsAc6_FR_STATIC_006_AC6_everyTestTaskSetsCanonCachesOff"
+  },
+  {
+   "id": "FR-STATIC-007 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/MimeTypesTest.java#FR_STATIC_007_AC1_mountThenAppThenBuiltInThenOctetStream; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultMimeTypesTest.java#sdsAc7_FR_STATIC_007_AC1_extensionIsTextAfterLastDotCaseInsensitive"
+  },
+  {
+   "id": "FR-STATIC-007 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultMimeTypesTest.java#FR_STATIC_007_AC2_builtInTableIsExactlyTheDocsTable"
+  },
+  {
+   "id": "FR-STATIC-007 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/MimeTypesTest.java#FR_STATIC_007_AC3_extensionsMatchWithoutRegardToCaseOrLeadingDot"
+  },
+  {
+   "id": "FR-STATIC-007 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/MimeTypesTest.java#sdsAc8_FR_STATIC_007_AC4_onlyBareTextTypesGainUtf8Charset"
+  },
+  {
+   "id": "FR-STATIC-007 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/MimeTypesTest.java#FR_STATIC_007_AC5_registrationChainsAndStaysInItsApp; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultMimeTypesTest.java#FR_STATIC_007_AC5_builtInIsUnmodifiableAndRegistrationLeavesItAlone"
+  },
+  {
+   "id": "FR-STATIC-008 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticCacheTest.java#FR_STATIC_008_AC1_policyHeaderValues"
+  },
+  {
+   "id": "FR-STATIC-008 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticCacheTest.java#FR_STATIC_008_AC2_lastResCacheBeforeCommitWins"
+  },
+  {
+   "id": "FR-STATIC-008 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticCacheTest.java#FR_STATIC_008_AC3_patternsOnARootMount"
+  },
+  {
+   "id": "FR-STATIC-008 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/CachePatternTest.java#sdsAc3_FR_STATIC_008_AC4_doubleStarSegmentsAndSingleStarWithinOne; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/CachePatternTest.java#sdsAc3_FR_STATIC_008_AC4_patternWithoutSlashMatchesAnyDepth"
+  },
+  {
+   "id": "FR-STATIC-008 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticCacheTest.java#sdsAc4_FR_STATIC_008_AC5_defaultCacheFillsOnlyAnEmptyCacheControl"
+  },
+  {
+   "id": "FR-STATIC-009 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticConditionalTest.java#FR_STATIC_009_AC1_staticFileAndDownloadCarryEtagLastModifiedAndAcceptRanges"
+  },
+  {
+   "id": "FR-STATIC-009 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticConditionalTest.java#FR_STATIC_009_AC2_matchingIfNoneMatchIs304AndWinsOverIfModifiedSince; NaruServe-api/src/test/java/com/snoworca/naruserve/FileResponseTest.java#sdsAc5_FR_STATIC_009_AC2_otherMethodsIgnoreConditionalsAndRange"
+  },
+  {
+   "id": "FR-STATIC-009 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticConditionalTest.java#sdsAc6_FR_STATIC_009_AC3_ifModifiedSinceComparesWholeSeconds"
+  },
+  {
+   "id": "FR-STATIC-009 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticConditionalTest.java#FR_STATIC_009_AC4_headCarriesTheGetHeadersAndNoBody"
+  },
+  {
+   "id": "FR-STATIC-010 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticRangeTest.java#FR_STATIC_010_AC1_singleRangesGive206AndClipTheEnd; NaruServe-api/src/test/java/com/snoworca/naruserve/StaticRangeTest.java#sdsAc7_FR_STATIC_010_AC1_headIgnoresRange"
+  },
+  {
+   "id": "FR-STATIC-010 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticRangeTest.java#sdsAc8_FR_STATIC_010_AC2_unsatisfiableRangeIs416WithStarContentRange"
+  },
+  {
+   "id": "FR-STATIC-010 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticRangeTest.java#FR_STATIC_010_AC3_multipleOrMalformedRangesGiveTheFull200"
+  },
+  {
+   "id": "FR-STATIC-010 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticRangeTest.java#sdsAc9_FR_STATIC_010_AC4_ifRangeHoldsOnlyForTheCurrentStrongValidator"
+  },
+  {
+   "id": "FR-STATIC-010 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticRangeTest.java#FR_STATIC_010_AC5_rangeAndCacheCombined"
+  },
+  {
+   "id": "FR-STATIC-011 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/FileResponseTest.java#sdsAc11_FR_STATIC_011_AC1_resFileSendsTheMimeTypeAndActsLikeAStaticFile; NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/StaticCrossAdapterTest.java#sdsAc11_FR_STATIC_011_AC1_AC3_fileAndStaticAnswersMatchOnBothAdapters"
+  },
+  {
+   "id": "FR-STATIC-011 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/FileResponseTest.java#sdsAc10_FR_STATIC_011_AC2_downloadDispositionIsSanitised; NaruServe-api/src/test/java/com/snoworca/naruserve/FileResponseTest.java#FR_STATIC_011_AC2_failedDownloadDropsDispositionBeforeOnError"
+  },
+  {
+   "id": "FR-STATIC-011 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/StaticCrossAdapterTest.java#sdsAc11_FR_STATIC_011_AC1_AC3_fileAndStaticAnswersMatchOnBothAdapters"
+  },
+  {
+   "id": "FR-STATIC-011 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/FileResponseTest.java#sdsAc12_FR_STATIC_011_AC4_fileBodiesGoThroughCommitWithTheRangeLength; NaruServe-api/src/test/java/com/snoworca/naruserve/FileResponseTest.java#sdsAc12_FR_STATIC_011_AC4_skipLoopsAndFailsWhenTheSourceIsShort"
+  },
+  {
+   "id": "FR-STATIC-011 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/FileResourceResolverTest.java#FR_STATIC_011_AC5_staticFileAndDownloadReadThroughTheBuiltInResolver"
+  },
+  {
+   "id": "OPS-STATIC-001 AC-1",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/WaveSixDocsTest.java#staticDecisions"
+  },
+  {
+   "id": "OPS-STATIC-001 AC-2",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/WaveSixDocsTest.java#toctouAndCanonCacheShareOneParagraph"
+  },
+  {
+   "id": "OPS-STATIC-001 AC-3",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/WaveSixDocsTest.java#staticDecisions"
+  },
+  {
+   "id": "OPS-STATIC-001 AC-4",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/WaveSixDocsTest.java#responseFileDecisions"
+  },
+  {
+   "id": "OPS-STATIC-001 AC-5",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/WaveSixDocsTest.java#defaultsStaticRows; src/test/java/com/snoworca/naruserve/docs/WaveSixDocsTest.java#expressMigrationRows"
+  },
+  {
+   "id": "OPS-STATIC-001 AC-6",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java#sdsAc3_OPS_STATIC_001_AC6_noSkipNamesAWave6MemberAsLaterWave; src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java#sdsAc3_OPS_STATIC_001_AC6_appAndExpressSkipsKeepOnlyAppDefinedTypes"
+  },
+  {
+   "id": "FR-ENGINE-010 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/AdapterSurfaceTest.java#sdsAc1_FR_ENGINE_010_AC1_noEngineTypeInAnyPublicSignature"
+  },
+  {
+   "id": "FR-ENGINE-010 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/SendFileSocketTest.java#sdsAc1_FR_ENGINE_010_AC2_badOffsetOrLengthIsRefusedBeforeTheResponseStarts; NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/SendFileSocketTest.java#sdsAc2_FR_ENGINE_010_AC2_fileShrinkingDuringTheCopyThrowsIOExceptionAndAborts"
+  },
+  {
+   "id": "FR-ENGINE-010 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/AdapterSurfaceTest.java#sdsAc3_FR_ENGINE_010_AC3_noClassReferencesTlsConfig"
+  },
+  {
+   "id": "FR-ENGINE-010 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/RawTargetSocketTest.java#sdsAc4_FR_ENGINE_010_AC4_rawPathAndRawQueryReachTheCoreUndecoded"
+  },
+  {
+   "id": "FR-ENGINE-010 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/RawTargetSocketTest.java#FR_ENGINE_010_AC5_requestLineHeadersAndRemoteAddressReachTheCoreUnchanged"
+  },
+  {
+   "id": "OPS-HTTP-006 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java#OPS_HTTP_006_AC1_rawPathRowIsRawPathWithoutQuery"
+  },
+  {
+   "id": "OPS-HTTP-006 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java#OPS_HTTP_006_AC2_attributeTypeMismatchAndNullRemoval"
+  },
+  {
+   "id": "OPS-HTTP-006 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java#OPS_HTTP_006_AC3_octetStreamAndStreamClosing"
+  },
+  {
+   "id": "OPS-HTTP-006 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java#OPS_HTTP_006_AC4_routerPolicyDocumented"
+  },
+  {
+   "id": "OPS-HTTP-006 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java#OPS_HTTP_006_AC5_appListsRouterPolicy"
+  },
+  {
+   "id": "OPS-HTTP-006 AC-6",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java#OPS_HTTP_006_AC6_defaultsNamesTraceConnectPolicy"
+  },
+  {
+   "id": "OPS-HTTP-006 AC-7",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java#OPS_HTTP_006_AC7_expressRawPathAndRawTextMapping"
+  },
+  {
+   "id": "OPS-HTTP-006 AC-8",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java#sdsAc6_OPS_HTTP_006_AC8_requestKeepsNoMarker; NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java#sdsAc6_OPS_HTTP_006_AC8_responseKeepsOnlyRedirectMarker"
+  },
+  {
+   "id": "OPS-APP-004 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/AppDocsTest.java#OPS_APP_004_AC1_builderFactoryServerHandleAndKeeperThread"
+  },
+  {
+   "id": "OPS-APP-004 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/AppDocsTest.java#OPS_APP_004_AC2_middlewareAndRoutingDecisions"
+  },
+  {
+   "id": "OPS-APP-004 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/AppDocsTest.java#OPS_APP_004_AC3_lifecycleStartGateAndPendingStop"
+  },
+  {
+   "id": "OPS-APP-004 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/AppDocsTest.java#OPS_APP_004_AC4_loggingFormatDefaultsAndClose"
+  },
+  {
+   "id": "OPS-APP-004 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/AppDocsTest.java#OPS_APP_004_AC5_expressMigrationRows"
+  },
+  {
+   "id": "OPS-APP-004 AC-6",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/AppDocsTest.java#sdsAc5_OPS_APP_004_AC6_decidedMarkersAreGone; NaruServe-api/src/test/java/com/snoworca/naruserve/AppDocsTest.java#sdsAc5_OPS_APP_004_AC6_laterWaveMarkersAreKept"
+  },
+  {
+   "id": "OPS-APP-004 AC-7",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/AppDocsTest.java#OPS_APP_004_AC7_decisionsCarryAReason"
+  }
+ ],
+ "design": [
+  {
+   "id": "D-231",
+   "verdict": "match",
+   "pointer": "IR-MULTIPART-001 AC-1 -> NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartApiTest.java#IR_MULTIPART_001_AC1_aConfigurerSettingAllFiveValuesIsApplied; IR-MULTIPART-001 AC-6 -> NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartApiTest.java#sdsAc3_IR_MULTIPART_001_AC6_multipartAndFormLimitAfterListenThrowBeforeTheConfigurerRuns"
+  },
+  {
+   "id": "D-232",
+   "verdict": "match",
+   "pointer": "IR-MULTIPART-001 AC-2 -> NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartApiTest.java#sdsAc4_IR_MULTIPART_001_AC2_defaultsAndTmpdirReadOnceAtConstruction; FR-MULTIPART-001 AC-5 -> NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/MultipartCrossAdapterTest.java#sdsAc7_FR_MULTIPART_001_AC5_sixtyFourMebibytesPassOverTinyHttpdAndOneByteMoreGives413"
+  },
+  {
+   "id": "D-233",
+   "verdict": "match",
+   "pointer": "FR-MULTIPART-001 AC-4 -> NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartLimitsTest.java#sdsAc4_FR_MULTIPART_001_AC4_headerLineOf8192IsAcceptedAnd8193Gives413; FR-MULTIPART-002 AC-1 -> NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartLimitsTest.java#sdsAc5_FR_MULTIPART_002_AC1_twentyPartsAreAcceptedAndTheTwentyFirstGives413BeforeItsHeaders"
+  },
+  {
+   "id": "D-234",
+   "verdict": "match",
+   "pointer": "FR-MULTIPART-002 AC-2 -> NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartLimitsTest.java#sdsAc7_FR_MULTIPART_002_AC2_chunkedBodyOverMaxRequestSizeStopsWithinOneReadBuffer; FR-MULTIPART-002 AC-3 -> NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartLimitsTest.java#sdsAc8_FR_MULTIPART_002_AC3_urlencodedBodyOfOneMebibyteParsesAndOneByteMoreGives413"
+  },
+  {
+   "id": "D-235",
+   "verdict": "match",
+   "pointer": "IR-MULTIPART-001 AC-5 -> NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartApiTest.java#IR_MULTIPART_001_AC5_partHeaderLimitsAreFixedAndHaveNoSetter; FR-MULTIPART-001 AC-4 -> NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartLimitsTest.java#sdsAc4_FR_MULTIPART_001_AC4_headerLineOf8192IsAcceptedAnd8193Gives413"
+  },
+  {
+   "id": "D-236",
+   "verdict": "match",
+   "pointer": "FR-MULTIPART-001 AC-2 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MultipartParserTest.java#sdsAc1_FR_MULTIPART_001_AC2_boundaryNameIsCaseInsensitiveAndQuotedValuesAreUnquoted"
+  },
+  {
+   "id": "D-237",
+   "verdict": "match",
+   "pointer": "FR-MULTIPART-001 AC-3 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MultipartParserTest.java#FR_MULTIPART_001_AC3_nestedMultipartPartIsOneRawPart"
+  },
+  {
+   "id": "D-238",
+   "verdict": "match",
+   "pointer": "IR-MULTIPART-001 AC-4 -> NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartApiTest.java#IR_MULTIPART_001_AC4_formLimitDefaultsToOneMebibyteAndRejectsOutOfRange; IR-MULTIPART-001 AC-6 -> NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartApiTest.java#sdsAc3_IR_MULTIPART_001_AC6_multipartAndFormLimitAfterListenThrowBeforeTheConfigurerRuns"
+  },
+  {
+   "id": "D-239",
+   "verdict": "match",
+   "pointer": "IR-MULTIPART-001 AC-2 -> NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartApiTest.java#sdsAc4_IR_MULTIPART_001_AC2_defaultsAndTmpdirReadOnceAtConstruction; IR-MULTIPART-001 AC-3 -> NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartApiTest.java#sdsAc2_IR_MULTIPART_001_AC3_settersRejectZeroNegativeAndAboveTheUpperBoundNamingTheSetting"
+  },
+  {
+   "id": "D-240",
+   "verdict": "match",
+   "pointer": "IR-MULTIPART-002 AC-1 -> NaruServe-api/src/test/java/com/snoworca/naruserve/FormAccessorsTest.java#IR_MULTIPART_002_AC1_requestDeclaresTheFourAccessors; IR-MULTIPART-002 AC-6 -> NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java#sdsAc1_IR_HTTP_001_AC1_requestDeclaresTheWave3Methods"
+  },
+  {
+   "id": "D-241",
+   "verdict": "match",
+   "pointer": "IR-MULTIPART-002 AC-1 -> NaruServe-api/src/test/java/com/snoworca/naruserve/FormAccessorsTest.java#IR_MULTIPART_002_AC1_requestDeclaresTheFourAccessors; IR-MULTIPART-002 AC-6 -> NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java#sdsAc1_IR_HTTP_001_AC1_requestDeclaresTheWave3Methods"
+  },
+  {
+   "id": "D-242",
+   "verdict": "match",
+   "pointer": "IR-MULTIPART-002 AC-6 -> NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java#sdsAc1_IR_HTTP_001_AC1_requestDeclaresTheWave3Methods; FR-MULTIPART-003 AC-4 -> NaruServe-api/src/test/java/com/snoworca/naruserve/FormAccessorsTest.java#FR_MULTIPART_003_AC3_AC4_mixedMultipartExposesFieldsFilesAndPartsInBodyOrder"
+  },
+  {
+   "id": "D-243",
+   "verdict": "match",
+   "pointer": "FR-MULTIPART-004 AC-1 -> NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartSpoolingTest.java#sdsAc1_FR_MULTIPART_004_AC1_partAboveThresholdSpoolsToOneTempFile; FR-MULTIPART-004 AC-5 -> NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartSpoolingTest.java#FR_MULTIPART_004_AC5_textPartTotalIsCappedByFormLimit"
+  },
+  {
+   "id": "D-244",
+   "verdict": "match",
+   "pointer": "FR-MULTIPART-004 AC-2 -> NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartSpoolingTest.java#FR_MULTIPART_004_AC2_spooledUploadKeepsHeapGrowthUnder8MiB; FR-MULTIPART-004 AC-5 -> NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartSpoolingTest.java#FR_MULTIPART_004_AC5_textPartTotalIsCappedByFormLimit"
+  },
+  {
+   "id": "D-245",
+   "verdict": "match",
+   "pointer": "FR-MULTIPART-004 AC-3 -> NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartSpoolingTest.java#sdsAc2_FR_MULTIPART_004_AC3_tempNamesNeverDeriveFromClientValues"
+  },
+  {
+   "id": "D-246",
+   "verdict": "match",
+   "pointer": "FR-MULTIPART-004 AC-4 -> NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartSpoolingTest.java#sdsAc2_FR_MULTIPART_004_AC3_tempNamesNeverDeriveFromClientValues"
+  },
+  {
+   "id": "D-247",
+   "verdict": "match",
+   "pointer": "FR-MULTIPART-001 AC-1 -> NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/MultipartCrossAdapterTest.java#FR_MULTIPART_001_AC1_accessorsGiveTheSameResultsOnBothAdapters; FR-MULTIPART-001 AC-5 -> NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/MultipartCrossAdapterTest.java#sdsAc7_FR_MULTIPART_001_AC5_sixtyFourMebibytesPassOverTinyHttpdAndOneByteMoreGives413"
+  },
+  {
+   "id": "D-248",
+   "verdict": "match",
+   "pointer": "IR-MULTIPART-002 AC-2 -> NaruServe-api/src/test/java/com/snoworca/naruserve/FormAccessorsTest.java#IR_MULTIPART_002_AC2_uploadFileDeclaresItsMethods; IR-MULTIPART-002 AC-7 -> NaruServe-api/src/test/kotlin/com/snoworca/naruserve/WaveSixKotlinTest.kt#IR-MULTIPART-002 AC-7 form file parts and use from Kotlin without platform types"
+  },
+  {
+   "id": "D-249",
+   "verdict": "match",
+   "pointer": "FR-MULTIPART-005 AC-1 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultUploadFileTest.java#sdsAc3_FR_MULTIPART_005_AC1_saveReplacesDestinationThenDeletesTempFile; FR-MULTIPART-005 AC-5 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultUploadFileTest.java#sdsAc5_FR_MULTIPART_005_AC5_closeReleasesContentAndKeepsMetadata"
+  },
+  {
+   "id": "D-250",
+   "verdict": "match",
+   "pointer": "FR-MULTIPART-005 AC-2 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultUploadFileTest.java#FR_MULTIPART_005_AC2_transferToCopiesAndNeverClosesTarget"
+  },
+  {
+   "id": "D-251",
+   "verdict": "match",
+   "pointer": "IR-MULTIPART-002 AC-4 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultUploadFileTest.java#FR_MULTIPART_005_AC3_bytesLimitIs8MiB; FR-MULTIPART-005 AC-3 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultUploadFileTest.java#FR_MULTIPART_005_AC3_bytesLimitIs8MiB"
+  },
+  {
+   "id": "D-252",
+   "verdict": "match",
+   "pointer": "FR-MULTIPART-005 AC-4 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultUploadFileTest.java#sdsAc4_FR_MULTIPART_005_AC4_releaseClosesHandedOutStreams; FR-MULTIPART-005 AC-5 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultUploadFileTest.java#sdsAc5_FR_MULTIPART_005_AC5_closeReleasesContentAndKeepsMetadata"
+  },
+  {
+   "id": "D-253",
+   "verdict": "match",
+   "pointer": "IR-MULTIPART-002 AC-5 -> NaruServe-api/src/test/java/com/snoworca/naruserve/FormAccessorsTest.java#IR_MULTIPART_002_AC5_noJavaNioFileInTheNewSignatures"
+  },
+  {
+   "id": "D-254",
+   "verdict": "match",
+   "pointer": "FR-MULTIPART-006 AC-1 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/SpoolCleanupTest.java#sdsAc6_FR_MULTIPART_006_AC1_requestEndDeletesTempFilesOnEveryPath; FR-MULTIPART-006 AC-3 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/SpoolCleanupTest.java#sdsAc7_FR_MULTIPART_006_AC3_parseAfterCleanupParticipantGets500AndNoFile"
+  },
+  {
+   "id": "D-255",
+   "verdict": "match",
+   "pointer": "FR-MULTIPART-006 AC-2 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/SpoolCleanupTest.java#sdsAc8_FR_MULTIPART_006_AC2_openUploadAtShutdownDeletedAfterOnStop; FR-MULTIPART-006 AC-3 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/SpoolCleanupTest.java#sdsAc7_FR_MULTIPART_006_AC3_parseAfterCleanupParticipantGets500AndNoFile"
+  },
+  {
+   "id": "D-256",
+   "verdict": "match",
+   "pointer": "IR-STATIC-001 AC-1 -> NaruServe-api/src/test/java/com/snoworca/naruserve/StaticApiTest.java#sdsAc1_IR_STATIC_001_AC1_trailingSlashIsStrippedAndDuplicatePrefixesAreBothKept; IR-STATIC-001 AC-5 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AppLifecycleGuardTest.java#sdsAc4_FR_APP_002_AC4_reflectionFindsEveryRestAppAndRouteBuilderRegistrationRefusedInRunning"
+  },
+  {
+   "id": "D-257",
+   "verdict": "match",
+   "pointer": "FR-STATIC-001 AC-2 -> NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMountingTest.java#FR_STATIC_001_AC1_AC2_AC4_filesIndexesAndRoutesFirst"
+  },
+  {
+   "id": "D-258",
+   "verdict": "match",
+   "pointer": "IR-STATIC-001 AC-1 -> NaruServe-api/src/test/java/com/snoworca/naruserve/StaticApiTest.java#sdsAc1_IR_STATIC_001_AC1_trailingSlashIsStrippedAndDuplicatePrefixesAreBothKept; FR-STATIC-001 AC-3 -> NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMountingTest.java#sdsAc5_FR_STATIC_001_AC3_mountsInOrderThenSpaOnce"
+  },
+  {
+   "id": "D-259",
+   "verdict": "match",
+   "pointer": "FR-STATIC-001 AC-4 -> NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMountingTest.java#FR_STATIC_001_AC1_AC2_AC4_filesIndexesAndRoutesFirst; FR-STATIC-002 AC-3 -> NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMethodTest.java#sdsAc9_FR_STATIC_002_AC3_getAfterRouteMethodMismatchFallsThroughPutKeepsRouteAllow"
+  },
+  {
+   "id": "D-407",
+   "verdict": "match",
+   "pointer": "FR-STATIC-001 AC-5 -> NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMountingTest.java#FR_STATIC_001_AC5_globalMiddlewareRunsOnStaticAndCanEndIt"
+  },
+  {
+   "id": "D-260",
+   "verdict": "match",
+   "pointer": "FR-STATIC-002 AC-1 -> NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMethodTest.java#sdsAc8_FR_STATIC_002_AC1_nonGetOnServedPathIs405AllowGetHead; FR-STATIC-002 AC-2 -> NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMethodTest.java#sdsAc8_FR_STATIC_002_AC1_nonGetOnServedPathIs405AllowGetHead"
+  },
+  {
+   "id": "D-261",
+   "verdict": "match",
+   "pointer": "IR-STATIC-001 AC-2 -> NaruServe-api/src/test/java/com/snoworca/naruserve/StaticApiTest.java#sdsAc3_IR_STATIC_001_AC2_badIndexAndSpaExcludeArgumentsAreRefused; IR-STATIC-001 AC-6 -> NaruServe-api/src/test/kotlin/com/snoworca/naruserve/WaveSixKotlinTest.kt#IR-STATIC-001 AC-6 staticFiles with options lambda and without from Kotlin"
+  },
+  {
+   "id": "D-262",
+   "verdict": "match",
+   "pointer": "FR-STATIC-002 AC-5 -> NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMethodTest.java#sdsAc8_FR_STATIC_002_AC5_spaContentDoesNotCountFor405; FR-STATIC-003 AC-1 -> NaruServe-api/src/test/java/com/snoworca/naruserve/StaticConditionalTest.java#FR_STATIC_003_AC1_directoryWithoutIndexIs404WhileListingIsOff"
+  },
+  {
+   "id": "D-420",
+   "verdict": "match",
+   "pointer": "FR-STATIC-003 AC-2 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DirectoryListingTest.java#sdsAc1_FR_STATIC_003_AC2_entriesSortedRawThenEscapedAndEncoded"
+  },
+  {
+   "id": "D-263",
+   "verdict": "match",
+   "pointer": "FR-STATIC-003 AC-3 -> NaruServe-api/src/test/java/com/snoworca/naruserve/StaticConditionalTest.java#sdsAc2_FR_STATIC_003_AC3_nosniffOnEveryStaticOutcome"
+  },
+  {
+   "id": "D-264",
+   "verdict": "match",
+   "pointer": "FR-STATIC-003 AC-4 -> NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/StaticCrossAdapterTest.java#FR_STATIC_003_AC4_a64MiBStaticFileStreamsWithinABoundedHeap; FR-STATIC-011 AC-4 -> NaruServe-api/src/test/java/com/snoworca/naruserve/FileResponseTest.java#sdsAc12_FR_STATIC_011_AC4_fileBodiesGoThroughCommitWithTheRangeLength"
+  },
+  {
+   "id": "D-409",
+   "verdict": "match",
+   "pointer": "IR-STATIC-001 AC-3 -> NaruServe-api/src/test/java/com/snoworca/naruserve/StaticApiTest.java#IR_STATIC_001_AC3_AC4_resolverIsAcceptedNowhereAndNoSignatureNamesNioFile; IR-STATIC-001 AC-4 -> NaruServe-api/src/test/java/com/snoworca/naruserve/StaticApiTest.java#IR_STATIC_001_AC3_AC4_resolverIsAcceptedNowhereAndNoSignatureNamesNioFile"
+  },
+  {
+   "id": "D-265",
+   "verdict": "match",
+   "pointer": "FR-STATIC-001 AC-3 -> NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMountingTest.java#sdsAc5_FR_STATIC_001_AC3_mountsInOrderThenSpaOnce; FR-STATIC-002 AC-4 -> NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMethodTest.java#FR_STATIC_002_AC4_webSocketRoutePathIsNeverServedStatically"
+  },
+  {
+   "id": "D-266",
+   "verdict": "match",
+   "pointer": "FR-STATIC-004 AC-3 -> NaruServe-api/src/test/java/com/snoworca/naruserve/StaticSpaTest.java#sdsAc7_FR_STATIC_004_AC3_apiAndWsExcludedOnSegmentBoundaries"
+  },
+  {
+   "id": "D-267",
+   "verdict": "match",
+   "pointer": "IR-STATIC-001 AC-2 -> NaruServe-api/src/test/java/com/snoworca/naruserve/StaticApiTest.java#sdsAc3_IR_STATIC_001_AC2_badIndexAndSpaExcludeArgumentsAreRefused; FR-STATIC-001 AC-6 -> NaruServe-api/src/test/java/com/snoworca/naruserve/StaticTraversalTest.java#sdsAc2_FR_STATIC_005_AC2_dotSegments400FirstHiddenFiles404EmptySegment404"
+  },
+  {
+   "id": "D-268",
+   "verdict": "match",
+   "pointer": "FR-STATIC-002 AC-5 -> NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMethodTest.java#sdsAc8_FR_STATIC_002_AC5_spaContentDoesNotCountFor405; FR-STATIC-003 AC-2 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DirectoryListingTest.java#sdsAc1_FR_STATIC_003_AC2_entriesSortedRawThenEscapedAndEncoded"
+  },
+  {
+   "id": "D-269",
+   "verdict": "match",
+   "pointer": "FR-STATIC-003 AC-2 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DirectoryListingTest.java#sdsAc1_FR_STATIC_003_AC2_entriesSortedRawThenEscapedAndEncoded; FR-STATIC-006 AC-1 -> NaruServe-api/src/test/java/com/snoworca/naruserve/StaticSymlinkTest.java#sdsAc1_FR_STATIC_006_AC1_rootReachedThroughLinkServesButLinkInsideRefused"
+  },
+  {
+   "id": "D-270",
+   "verdict": "match",
+   "pointer": "IR-STATIC-001 AC-4 -> NaruServe-api/src/test/java/com/snoworca/naruserve/StaticApiTest.java#IR_STATIC_001_AC3_AC4_resolverIsAcceptedNowhereAndNoSignatureNamesNioFile; FR-STATIC-003 AC-2 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DirectoryListingTest.java#sdsAc1_FR_STATIC_003_AC2_entriesSortedRawThenEscapedAndEncoded"
+  },
+  {
+   "id": "D-411",
+   "verdict": "match",
+   "pointer": "FR-STATIC-006 AC-1 -> NaruServe-api/src/test/java/com/snoworca/naruserve/StaticSymlinkTest.java#sdsAc1_FR_STATIC_006_AC1_rootReachedThroughLinkServesButLinkInsideRefused; FR-STATIC-006 AC-6 -> NaruServe-api/src/test/java/com/snoworca/naruserve/StaticSymlinkTest.java#sdsAc6_FR_STATIC_006_AC6_testJvmRunsWithCanonCachesOff"
+  },
+  {
+   "id": "D-447",
+   "verdict": "match",
+   "pointer": "FR-STATIC-006 AC-4 -> NaruServe-api/src/test/java/com/snoworca/naruserve/StaticSymlinkTest.java#sdsAc3_FR_STATIC_006_AC4_componentSwappedForLinkBetweenCheckAndOpenIsRefused; FR-STATIC-006 AC-5 -> NaruServe-api/src/test/java/com/snoworca/naruserve/FileResponseTest.java#sdsAc4_FR_STATIC_006_AC5_resFileOnLinkDirectoryOrMissingIs404StandardBody"
+  },
+  {
+   "id": "D-271",
+   "verdict": "match",
+   "pointer": "FR-STATIC-002 AC-5 -> NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMethodTest.java#sdsAc8_FR_STATIC_002_AC5_spaContentDoesNotCountFor405; FR-STATIC-003 AC-2 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DirectoryListingTest.java#sdsAc1_FR_STATIC_003_AC2_entriesSortedRawThenEscapedAndEncoded"
+  },
+  {
+   "id": "D-272",
+   "verdict": "match",
+   "pointer": "IR-STATIC-001 AC-2 -> NaruServe-api/src/test/java/com/snoworca/naruserve/StaticApiTest.java#sdsAc3_IR_STATIC_001_AC2_badIndexAndSpaExcludeArgumentsAreRefused; FR-STATIC-006 AC-3 -> NaruServe-api/src/test/java/com/snoworca/naruserve/StaticSymlinkTest.java#sdsAc2_FR_STATIC_006_AC3_allowSymlinksServesInsideTargetsAndRefusesOutside"
+  },
+  {
+   "id": "D-273",
+   "verdict": "match",
+   "pointer": "FR-STATIC-007 AC-1 -> NaruServe-api/src/test/java/com/snoworca/naruserve/MimeTypesTest.java#FR_STATIC_007_AC1_mountThenAppThenBuiltInThenOctetStream"
+  },
+  {
+   "id": "D-274",
+   "verdict": "match",
+   "pointer": "FR-STATIC-007 AC-2 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultMimeTypesTest.java#FR_STATIC_007_AC2_builtInTableIsExactlyTheDocsTable"
+  },
+  {
+   "id": "D-275",
+   "verdict": "match",
+   "pointer": "IR-STATIC-001 AC-2 -> NaruServe-api/src/test/java/com/snoworca/naruserve/StaticApiTest.java#sdsAc3_IR_STATIC_001_AC2_badIndexAndSpaExcludeArgumentsAreRefused; FR-STATIC-007 AC-3 -> NaruServe-api/src/test/java/com/snoworca/naruserve/MimeTypesTest.java#FR_STATIC_007_AC3_extensionsMatchWithoutRegardToCaseOrLeadingDot"
+  },
+  {
+   "id": "D-276",
+   "verdict": "match",
+   "pointer": "FR-STATIC-007 AC-4 -> NaruServe-api/src/test/java/com/snoworca/naruserve/MimeTypesTest.java#sdsAc8_FR_STATIC_007_AC4_onlyBareTextTypesGainUtf8Charset"
+  },
+  {
+   "id": "D-277",
+   "verdict": "match",
+   "pointer": "IR-STATIC-001 AC-5 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AppLifecycleGuardTest.java#sdsAc4_FR_APP_002_AC4_reflectionFindsEveryRestAppAndRouteBuilderRegistrationRefusedInRunning; IR-STATIC-002 AC-2 -> NaruServe-api/src/test/java/com/snoworca/naruserve/CachePolicyTest.java#IR_STATIC_002_AC2_mimeTypesRegisterChainsAndTwoAppsHaveTwoRegistries"
+  },
+  {
+   "id": "D-278",
+   "verdict": "match",
+   "pointer": "IR-STATIC-002 AC-1 -> NaruServe-api/src/test/java/com/snoworca/naruserve/CachePolicyTest.java#IR_STATIC_002_AC1_factoriesRenderTheT32Values; IR-STATIC-002 AC-6 -> NaruServe-api/src/test/kotlin/com/snoworca/naruserve/WaveSixKotlinTest.kt#IR-STATIC-002 AC-6 CachePolicy res cache and mimeTypes register from Kotlin"
+  },
+  {
+   "id": "D-279",
+   "verdict": "match",
+   "pointer": "FR-STATIC-008 AC-1 -> NaruServe-api/src/test/java/com/snoworca/naruserve/StaticCacheTest.java#FR_STATIC_008_AC1_policyHeaderValues"
+  },
+  {
+   "id": "D-280",
+   "verdict": "match",
+   "pointer": "IR-STATIC-002 AC-3 -> NaruServe-api/src/test/java/com/snoworca/naruserve/CachePolicyTest.java#IR_STATIC_002_AC3_resCacheSetsCacheControlAndReturnsTheResponse; IR-STATIC-002 AC-5 -> NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java#sdsAc6_IR_HTTP_005_AC1_AC2_AC3_AC5_IR_APP_002_AC2_restAppDeclaresExactlyTheWave4Methods"
+  },
+  {
+   "id": "D-281",
+   "verdict": "match",
+   "pointer": "FR-STATIC-008 AC-3 -> NaruServe-api/src/test/java/com/snoworca/naruserve/StaticCacheTest.java#FR_STATIC_008_AC3_patternsOnARootMount"
+  },
+  {
+   "id": "D-410",
+   "verdict": "match",
+   "pointer": "IR-STATIC-001 AC-5 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AppLifecycleGuardTest.java#sdsAc4_FR_APP_002_AC4_reflectionFindsEveryRestAppAndRouteBuilderRegistrationRefusedInRunning; IR-STATIC-002 AC-4 -> NaruServe-api/src/test/java/com/snoworca/naruserve/CachePolicyTest.java#IR_STATIC_002_AC4_defaultCacheReturnsTheAppAndDefaultsToNull"
+  },
+  {
+   "id": "D-282",
+   "verdict": "match",
+   "pointer": "FR-STATIC-008 AC-4 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/CachePatternTest.java#sdsAc3_FR_STATIC_008_AC4_doubleStarSegmentsAndSingleStarWithinOne; OPS-STATIC-001 AC-1 -> src/test/java/com/snoworca/naruserve/docs/WaveSixDocsTest.java#staticDecisions"
+  },
+  {
+   "id": "D-283",
+   "verdict": "match",
+   "pointer": "FR-STATIC-009 AC-1 -> NaruServe-api/src/test/java/com/snoworca/naruserve/StaticConditionalTest.java#FR_STATIC_009_AC1_staticFileAndDownloadCarryEtagLastModifiedAndAcceptRanges; FR-STATIC-011 AC-1 -> NaruServe-api/src/test/java/com/snoworca/naruserve/FileResponseTest.java#sdsAc11_FR_STATIC_011_AC1_resFileSendsTheMimeTypeAndActsLikeAStaticFile"
+  },
+  {
+   "id": "D-284",
+   "verdict": "match",
+   "pointer": "FR-STATIC-009 AC-2 -> NaruServe-api/src/test/java/com/snoworca/naruserve/StaticConditionalTest.java#FR_STATIC_009_AC2_matchingIfNoneMatchIs304AndWinsOverIfModifiedSince"
+  },
+  {
+   "id": "D-285",
+   "verdict": "match",
+   "pointer": "FR-STATIC-009 AC-3 -> NaruServe-api/src/test/java/com/snoworca/naruserve/StaticConditionalTest.java#sdsAc6_FR_STATIC_009_AC3_ifModifiedSinceComparesWholeSeconds"
+  },
+  {
+   "id": "D-286",
+   "verdict": "match",
+   "pointer": "FR-STATIC-009 AC-4 -> NaruServe-api/src/test/java/com/snoworca/naruserve/StaticConditionalTest.java#FR_STATIC_009_AC4_headCarriesTheGetHeadersAndNoBody"
+  },
+  {
+   "id": "D-287",
+   "verdict": "match",
+   "pointer": "FR-STATIC-010 AC-1 -> NaruServe-api/src/test/java/com/snoworca/naruserve/StaticRangeTest.java#FR_STATIC_010_AC1_singleRangesGive206AndClipTheEnd; FR-STATIC-011 AC-1 -> NaruServe-api/src/test/java/com/snoworca/naruserve/FileResponseTest.java#sdsAc11_FR_STATIC_011_AC1_resFileSendsTheMimeTypeAndActsLikeAStaticFile"
+  },
+  {
+   "id": "D-288",
+   "verdict": "match",
+   "pointer": "FR-STATIC-010 AC-2 -> NaruServe-api/src/test/java/com/snoworca/naruserve/StaticRangeTest.java#sdsAc8_FR_STATIC_010_AC2_unsatisfiableRangeIs416WithStarContentRange"
+  },
+  {
+   "id": "D-289",
+   "verdict": "match",
+   "pointer": "FR-STATIC-010 AC-3 -> NaruServe-api/src/test/java/com/snoworca/naruserve/StaticRangeTest.java#FR_STATIC_010_AC3_multipleOrMalformedRangesGiveTheFull200"
+  },
+  {
+   "id": "D-290",
+   "verdict": "match",
+   "pointer": "FR-STATIC-010 AC-4 -> NaruServe-api/src/test/java/com/snoworca/naruserve/StaticRangeTest.java#sdsAc9_FR_STATIC_010_AC4_ifRangeHoldsOnlyForTheCurrentStrongValidator"
+  },
+  {
+   "id": "D-432",
+   "verdict": "match",
+   "pointer": "FR-STATIC-010 AC-5 -> NaruServe-api/src/test/java/com/snoworca/naruserve/StaticRangeTest.java#FR_STATIC_010_AC5_rangeAndCacheCombined"
+  },
+  {
+   "id": "D-291",
+   "verdict": "match",
+   "pointer": "FR-STATIC-011 AC-3 -> NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/StaticCrossAdapterTest.java#sdsAc11_FR_STATIC_011_AC1_AC3_fileAndStaticAnswersMatchOnBothAdapters; FR-STATIC-011 AC-4 -> NaruServe-api/src/test/java/com/snoworca/naruserve/FileResponseTest.java#sdsAc12_FR_STATIC_011_AC4_fileBodiesGoThroughCommitWithTheRangeLength"
+  },
+  {
+   "id": "D-292",
+   "verdict": "match",
+   "pointer": "IR-STATIC-002 AC-3 -> NaruServe-api/src/test/java/com/snoworca/naruserve/CachePolicyTest.java#IR_STATIC_002_AC3_resCacheSetsCacheControlAndReturnsTheResponse; IR-STATIC-002 AC-5 -> NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java#sdsAc6_IR_HTTP_005_AC1_AC2_AC3_AC5_IR_APP_002_AC2_restAppDeclaresExactlyTheWave4Methods"
+  },
+  {
+   "id": "D-293",
+   "verdict": "match",
+   "pointer": "IR-STATIC-002 AC-3 -> NaruServe-api/src/test/java/com/snoworca/naruserve/CachePolicyTest.java#IR_STATIC_002_AC3_resCacheSetsCacheControlAndReturnsTheResponse; FR-STATIC-011 AC-1 -> NaruServe-api/src/test/java/com/snoworca/naruserve/FileResponseTest.java#sdsAc11_FR_STATIC_011_AC1_resFileSendsTheMimeTypeAndActsLikeAStaticFile"
+  }
+ ],
+ "constraints": [
+  {
+   "id": "C-01",
+   "verdict": "match",
+   "pointer": "build.gradle (only Gradle files changed; no other build tool); ./gradlew build exit 0"
+  },
+  {
+   "id": "C-02",
+   "verdict": "match",
+   "pointer": "build.gradle options.release=8 unchanged; NaruServe-api:animalsnifferMain ran in ./gradlew build (pass); no java.nio.file in NaruServe-api/src/main (grep)"
+  },
+  {
+   "id": "C-03",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/WaveSixKotlinTest.kt (IR-MULTIPART-001 AC-7, IR-MULTIPART-002 AC-7, IR-STATIC-001 AC-6, IR-STATIC-002 AC-6); HttpApiSurfaceTest @Nullable positions"
+  },
+  {
+   "id": "C-04",
+   "verdict": "match",
+   "pointer": "Request.form/file/files/parts, UploadFile, Response.file/download/cache (HttpApiSurfaceTest signature sets)"
+  },
+  {
+   "id": "C-05",
+   "verdict": "match",
+   "pointer": "docs/api/express-migration.md (express.static, res.sendFile, res.download, multer, express.urlencoded rows); WaveSixDocsTest; OPS-MULTIPART-001 AC-4, OPS-STATIC-001 AC-5"
+  },
+  {
+   "id": "C-06",
+   "verdict": "match",
+   "pointer": "settings.gradle includes :NaruServe-api and :NaruServe-servlet, unchanged in window"
+  },
+  {
+   "id": "C-07",
+   "verdict": "match",
+   "pointer": "docs/api/static.md, multipart.md, request.md carry 0 (미확정) markers; AppDocsTest#sdsAc5_OPS_APP_004_AC6_decidedMarkersAreGone, HttpDocsTest#sdsAc6_OPS_HTTP_006_AC8_requestKeepsNoMarker"
+  },
+  {
+   "id": "C-08",
+   "verdict": "match",
+   "pointer": "docs/analysis/2026-10-19.NaruServe.naruserve-v1/auto_decisions.json (stage 6 gates recorded by committee, no user stop)"
+  },
+  {
+   "id": "C-09",
+   "verdict": "match",
+   "pointer": "object.md T13-T18, T27-T32, T35 static part covered by FR-MULTIPART-001..006 and FR-STATIC-001..011 tests; 0 failing tests in ./gradlew build"
+  }
+ ],
+ "preservation": [
+  {
+   "item": "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java",
+   "verdict": "intended-improvement",
+   "evidence": "Adds form/file/files/parts only; class doc line updated (IR-MULTIPART-002 AC-1, AC-6)"
+  },
+  {
+   "item": "NaruServe-api/src/main/java/com/snoworca/naruserve/Response.java",
+   "verdict": "intended-improvement",
+   "evidence": "Adds cache/file/download only; class doc updated (IR-STATIC-002 AC-3, AC-5)"
+  },
+  {
+   "item": "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java",
+   "verdict": "intended-improvement",
+   "evidence": "Additions only: multipart, formLimit, staticFiles x2, mimeTypes, defaultCache (IR-MULTIPART-001 AC-1/AC-4, IR-STATIC-001 AC-1, IR-STATIC-002 AC-2/AC-4)"
+  },
+  {
+   "item": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java",
+   "verdict": "intended-improvement",
+   "evidence": "Additions only (no removed lines): form accessors, FORM body kind, upload release (FR-MULTIPART-003 AC-1..AC-5, FR-MULTIPART-006 AC-4)"
+  },
+  {
+   "item": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+   "verdict": "intended-improvement",
+   "evidence": "stream() refactored into startBody(in,0,type,-1) keeping wave-3 behaviour (Content-Length removed, adapter framing); adds sendBody/file/download/cache/defaultCache (FR-STATIC-011 AC-4, FR-STATIC-008 AC-2/AC-5, FR-STATIC-003 AC-4)"
+  },
+  {
+   "item": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+   "verdict": "intended-improvement",
+   "evidence": "Additions only: settings, mounts, mime registry, AFTER_ON_STOP spool participant (IR-MULTIPART-001, IR-STATIC-001/002, FR-MULTIPART-006 AC-2)"
+  },
+  {
+   "item": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+   "verdict": "intended-improvement",
+   "evidence": "Wave-5 constructors delegate with defaults; fallback consults static mounts for NO_MATCH and GET/HEAD METHOD_MISMATCH before the existing 404/405 switch; upload release on request end (FR-STATIC-001 AC-4/AC-5, FR-STATIC-002 AC-3, FR-MULTIPART-006 AC-1)"
+  },
+  {
+   "item": "NaruServe-api/src/test/java/com/snoworca/naruserve/AppDocsTest.java",
+   "verdict": "intended-improvement",
+   "evidence": "Re-pointed to OPS-APP-004 AC-6: static.md/multipart.md phrases moved from KEPT to REMOVED as wave 6 decided them; KEPT list grows (websocket idle/handshake, sse queue); no assertion weakened"
+  },
+  {
+   "item": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java",
+   "verdict": "intended-improvement",
+   "evidence": "Re-pointed to IR-MULTIPART-002 AC-6 / IR-STATIC-002 AC-5: exact signature and @Nullable sets extended, LATER_WAVE_NAMES reduced to sse as the AC requires; equality assertions kept"
+  },
+  {
+   "item": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java",
+   "verdict": "intended-improvement",
+   "evidence": "Re-pointed to OPS-HTTP-006 AC-8: request.md marker count 1 -> 0 and response.md 2 -> 1 with new positive content checks (List<UploadFile>, no Content-Disposition)"
+  },
+  {
+   "item": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AppLifecycleGuardTest.java",
+   "verdict": "intended-improvement",
+   "evidence": "Re-pointed to IR-STATIC-001 AC-5: adds File/CachePolicy test args, asserts the five wave-6 setters are guarded and mimeTypes().register throws; existing assertions kept"
+  },
+  {
+   "item": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/BodyStateTest.java",
+   "verdict": "intended-improvement",
+   "evidence": "Re-pointed to IR-MULTIPART-002 AC-6: form/file/files/parts moved from banned names to an exact-set assertion of FORM readers; other bans kept"
+  },
+  {
+   "item": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdExchange.java",
+   "verdict": "intended-improvement",
+   "evidence": "sendFile no longer maps UnsupportedOperationException; delegates to the filled buffered copy under the commit lock (FR-ENGINE-010 AC-2; wave decision File bodies come from the opened stream)"
+  },
+  {
+   "item": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdFeatures.java",
+   "verdict": "intended-improvement",
+   "evidence": "sendFile 'arrives in wave 6' throw replaced by plain buffered copy of exactly length bytes (FR-ENGINE-010 AC-2)"
+  },
+  {
+   "item": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/AbortSocketTest.java",
+   "verdict": "intended-improvement",
+   "evidence": "Rename/re-point FR-ENGINE-001 -> FR-ENGINE-010 AC-2 only; bodies unchanged (manifest-listed out-of-lease path)"
+  },
+  {
+   "item": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/AdapterSurfaceTest.java",
+   "verdict": "intended-improvement",
+   "evidence": "Re-pointed to FR-ENGINE-010 AC-1..AC-3; hook test now asserts sendFile succeeds ('sent', status 200) and eventStream/upgrade still name wave 7, as FR-ENGINE-010 AC-2 requires"
+  },
+  {
+   "item": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/RawTargetSocketTest.java",
+   "verdict": "intended-improvement",
+   "evidence": "Rename/re-point FR-ENGINE-001 -> FR-ENGINE-010 AC-2/AC-4/AC-5 only; bodies unchanged"
+  },
+  {
+   "item": "build.gradle",
+   "verdict": "intended-improvement",
+   "evidence": "Adds sun.io.useCanonCaches=false to every Test task (FR-STATIC-006 AC-6) and testImplementation jspecify for docs blocks (OPS-MULTIPART-001 AC-1/AC-5)"
+  },
+  {
+   "item": "docs/analysis/2026-10-19.NaruServe.naruserve-v1/auto_decisions.json",
+   "verdict": "intended-improvement",
+   "evidence": "Appends stage-6 committee gate records only (C-08)"
+  },
+  {
+   "item": "docs/api/defaults.md",
+   "verdict": "intended-improvement",
+   "evidence": "Multipart/symlink/cache rows rewritten without markers (OPS-MULTIPART-001 AC-3, OPS-STATIC-001 AC-5); WebSocket/SSE markers kept"
+  },
+  {
+   "item": "docs/api/express-migration.md",
+   "verdict": "intended-improvement",
+   "evidence": "multer/express.static/res.sendFile/res.download/urlencoded rows updated (OPS-MULTIPART-001 AC-4, OPS-STATIC-001 AC-5); Router/cors/redirect markers kept (OPS-HTTP-006 AC-8)"
+  },
+  {
+   "item": "docs/api/multipart.md",
+   "verdict": "intended-improvement",
+   "evidence": "tempDirectory, unlimited, parts, bytes limit decided, markers removed (OPS-MULTIPART-001 AC-1)"
+  },
+  {
+   "item": "docs/api/request.md",
+   "verdict": "intended-improvement",
+   "evidence": "parts() row decided as List<UploadFile> incl. text fields; formLimit row (OPS-MULTIPART-001 AC-2, OPS-HTTP-006 AC-8)"
+  },
+  {
+   "item": "docs/api/response.md",
+   "verdict": "intended-improvement",
+   "evidence": "file(File) row decided (no Content-Disposition), cache/download/defaultCache documented; redirect marker kept (OPS-STATIC-001 AC-4)"
+  },
+  {
+   "item": "docs/api/static.md",
+   "verdict": "intended-improvement",
+   "evidence": "SPA exclusions, 301 redirect, cache pattern syntax, allowSymlinks, TOCTOU + canon-cache notes, method rules recorded (OPS-STATIC-001 AC-1..AC-3)"
+  },
+  {
+   "item": "src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java",
+   "verdict": "intended-improvement",
+   "evidence": "Adds sdsAc6_FR_STATIC_006_AC6_everyTestTaskSetsCanonCachesOff; nothing removed"
+  },
+  {
+   "item": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java",
+   "verdict": "intended-improvement",
+   "evidence": "Removes wave-6 skips and narrows app.md/express-migration.md skip reasons to app-defined types (verified: TodoService/Todo, Database/UserService present) per OPS-STATIC-001 AC-6 / OPS-MULTIPART-001 AC-5; adds guard tests; stricter, not weaker"
+  }
+ ],
+ "unit": [
+  {
+   "id": "lane-2026-10-19.naruserve.naruserve-v1-wave-6",
+   "verdict": "match",
+   "pointer": "13 manifest commits a32d75a..050b49f all ancestors of integration HEAD (merge 9ef602c); ./gradlew build exit 0, 0 failing tests"
+  }
+ ],
+ "findings": [],
+ "roll_up": "ALL_MATCH"
+}

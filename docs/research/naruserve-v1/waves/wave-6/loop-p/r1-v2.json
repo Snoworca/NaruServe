@@ -1,0 +1,50 @@
+{
+  "findings": [
+    {
+      "finding_id": "P2-001",
+      "severity": "LOW",
+      "severity_class": "api-robustness / thread-safety",
+      "claim": "app.multipart(configurer) hands the configurer the very MultipartSettings instance that freeze() later passes to the Dispatcher, and no copy is taken at listen. A configurer that keeps its argument (o -> saved = o) can change maxFileSize/maxRequestSize/maxParts/memoryThreshold/tempDirectory on the running app after listen(), skipping the NEW-state guard, and the plain (non-volatile) fields are read unsafely by worker threads. Static mounts guard against exactly this: DefaultStaticOptions.copy() runs at freeze, and docs/api/static.md says so. Multipart behaves differently from that pattern.",
+      "evidence": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:202-209 (next is handed to the configurer and stored), :873 (multipartSettings() is passed as-is to the Dispatcher); compare StaticMount.java:35-43 / DefaultStaticOptions.copy()",
+      "suggested_fix": "Pass multipartSettings().copy() to the Dispatcher in freeze() (one call), and add a test that a captured MultipartOptions changed after listen() does not affect parsing."
+    },
+    {
+      "finding_id": "P2-002",
+      "severity": "LOW",
+      "severity_class": "docs-correctness (public Javadoc)",
+      "claim": "The MultipartOptions Javadoc says 'no value means unlimited'. That is wrong: every setting has a bounded default and a bounded range, and docs/api/multipart.md says plainly that unlimited is not allowed. Kotlin and Java users read this Javadoc in the IDE.",
+      "evidence": "NaruServe-api/src/main/java/com/snoworca/naruserve/MultipartOptions.java:8 vs docs/api/multipart.md ('무제한 설정 허용 여부: 허용하지 않습니다')",
+      "suggested_fix": "Replace the phrase with 'there is no unlimited value; each setting has the default and range shown on its setter'."
+    },
+    {
+      "finding_id": "P2-003",
+      "severity": "LOW",
+      "severity_class": "api-contract drift",
+      "claim": "Refactoring stream() into startBody() changed what res.stream(in, null) does. Before wave 6 it failed (isFieldValue(null) threw NPE). Now it commits silently with no Content-Type, because the null check meant for the internal sendBody path also applies to the public stream(). The parameter is non-null under @NullMarked, so Java callers lose fail-fast behaviour. No test pins either behaviour.",
+      "evidence": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java:319-321 (stream delegates with contentType), :358 (contentType != null && ...)",
+      "suggested_fix": "In stream(), call Objects.requireNonNull(contentType, \"contentType\") (closing in first) before delegating, so only sendBody passes null."
+    },
+    {
+      "finding_id": "P2-004",
+      "severity": "LOW",
+      "severity_class": "correctness-under-concurrency / performance",
+      "claim": "FileResponder.respond reads length(), etag() and modified() as three separate resolver calls. Each one repeats the full check(): getCanonicalPath, then one getCanonicalPath per path component in linkFree, then isFile. etag() then stats the file again for its own length and lastModified. A file rewritten during a request can therefore get an ETag that disagrees with the Content-Length and Last-Modified sent next to it, and that wrong ETag gets cached and later answered with 304. For a path of depth d, one static GET makes about 5*(d+2) canonicalisations (open() checks twice) before any byte is sent. That cost matters on Android API 21, which has no canonical cache, and on JVMs run with useCanonCaches=false, as the docs recommend.",
+      "evidence": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/FileResponder.java:51-53; FileResourceResolver.java:54-60, 73-92, 129-144",
+      "suggested_fix": "Inside the internal path, take one checked snapshot (length + lastModified from one File after one check) and build the ETag from that snapshot. Leave the public ResourceResolver shape as it is."
+    },
+    {
+      "finding_id": "P2-005",
+      "severity": "LOW",
+      "severity_class": "validation-at-config-time",
+      "claim": "app.mimeTypes().register(ext, type) and options.mime(ext, type) only check that type is non-empty. A type containing CR/LF or another control character is accepted at configuration time. It then fails res.header(\"Content-Type\", type) on every request for a matching file, so each of those requests gets a 500 instead of the IllegalArgumentException at registration that other setters give.",
+      "evidence": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultMimeTypes.java:101-107; FileResponder.java:101",
+      "suggested_fix": "In DefaultMimeTypes.type(), reject a value that is not a valid header field value (the isFieldValue rule), throwing IllegalArgumentException."
+    }
+  ],
+  "regression": {
+    "command": "./gradlew build --rerun-tasks",
+    "exit_code": 0,
+    "failing_tests": []
+  },
+  "substantive_clean": true
+}
