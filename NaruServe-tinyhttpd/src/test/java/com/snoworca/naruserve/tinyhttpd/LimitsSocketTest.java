@@ -184,16 +184,6 @@ public class LimitsSocketTest {
         assertEquals(200, Http.status(Http.send(port, Http.get("/h", padHeaders(4, 5000)))));
     }
 
-    private static String header(String response, String name) {
-        for (String line : response.substring(0, Math.max(0, response.indexOf("\r\n\r\n"))).split("\r\n")) {
-            int c = line.indexOf(':');
-            if (c > 0 && line.substring(0, c).equalsIgnoreCase(name)) {
-                return line.substring(c + 1).trim();
-            }
-        }
-        return null;
-    }
-
     /** An app whose POST /b reads the JSON body (whitespace, so the fixture codec is never reached). */
     private RestApp bodyApp(TinyHttpdAdapter adapter) {
         RestApp a = app(adapter);
@@ -265,7 +255,7 @@ public class LimitsSocketTest {
             String response = Http.readAll(s.getInputStream());
             long tookMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
             assertEquals(response, 408, Http.status(response));
-            assertEquals(response, "close", header(response, "Connection"));
+            assertEquals(response, "close", Http.header(response, "Connection"));
             assertTrue("took " + tookMs, tookMs >= 900 && tookMs < 4500);
         }
     }
@@ -297,7 +287,7 @@ public class LimitsSocketTest {
             String response = Http.readAll(s.getInputStream());
             long tookMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
             assertEquals(response, 408, Http.status(response));
-            assertEquals(response, "close", header(response, "Connection"));
+            assertEquals(response, "close", Http.header(response, "Connection"));
             assertTrue("took " + tookMs, tookMs >= 4500 && tookMs < 20000);
         }
     }

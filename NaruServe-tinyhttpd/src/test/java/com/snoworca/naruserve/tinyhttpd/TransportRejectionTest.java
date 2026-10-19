@@ -48,16 +48,6 @@ public class TransportRejectionTest {
         app.shutdown(2, TimeUnit.SECONDS);
     }
 
-    private static String header(String response, String name) {
-        for (String line : response.substring(0, Math.max(0, response.indexOf("\r\n\r\n"))).split("\r\n")) {
-            int c = line.indexOf(':');
-            if (c > 0 && line.substring(0, c).equalsIgnoreCase(name)) {
-                return line.substring(c + 1).trim();
-            }
-        }
-        return null;
-    }
-
     /** The INFO lines once there are at least {@code n}: the access line may land just after the response. */
     private List<String> awaitInfo(int n) throws InterruptedException {
         long deadline = System.currentTimeMillis() + 5000;
@@ -75,7 +65,7 @@ public class TransportRejectionTest {
 
     private void assertPlain(int status, String response) {
         assertEquals(response, status, Http.status(response));
-        assertEquals(response, "text/plain; charset=UTF-8", header(response, "Content-Type"));
+        assertEquals(response, "text/plain; charset=UTF-8", Http.header(response, "Content-Type"));
         assertEquals(response, status + " ", Http.body(response).substring(0, 4));
     }
 
@@ -86,7 +76,7 @@ public class TransportRejectionTest {
         String second = Http.send(port, "GET /ok HTTP/1.1\r\nHost: evil.example\r\nConnection: close\r\n\r\n");
         for (String r : new String[] {first, second}) {
             assertEquals(r, 421, Http.status(r));
-            assertEquals(r, "application/json; charset=UTF-8", header(r, "Content-Type"));
+            assertEquals(r, "application/json; charset=UTF-8", Http.header(r, "Content-Type"));
             assertTrue(r, Http.body(r).startsWith("{\"error\":{\"code\":\"HTTP_421\",\"message\":\"Misdirected Request\""));
         }
         assertNotEquals(requestId(first), requestId(second));
@@ -129,7 +119,7 @@ public class TransportRejectionTest {
         int infoBefore = log.info().size();
         String dispatched = Http.send(port, "CONNECT / HTTP/1.1\r\nHost: 127.0.0.1\r\nConnection: close\r\n\r\n");
         assertEquals(dispatched, 501, Http.status(dispatched));
-        assertEquals(dispatched, "application/json; charset=UTF-8", header(dispatched, "Content-Type"));
+        assertEquals(dispatched, "application/json; charset=UTF-8", Http.header(dispatched, "Content-Type"));
         String transport = Http.send(port, "CONNECT example.com:443 HTTP/1.1\r\nHost: example.com:443\r\n\r\n");
         assertPlain(501, transport);
         assertEquals(200, Http.status(Http.send(port, Http.get("/ok"))));
@@ -150,8 +140,8 @@ public class TransportRejectionTest {
                     ex -> ex.abort());
             String r = Http.send(bare.boundPort(), "GET / HTTP/1.1\r\nHost: evil.example\r\nConnection: close\r\n\r\n");
             assertEquals(r, 421, Http.status(r));
-            assertEquals(r, "0", header(r, "Content-Length"));
-            assertEquals(r, null, header(r, "Content-Type"));
+            assertEquals(r, "0", Http.header(r, "Content-Length"));
+            assertEquals(r, null, Http.header(r, "Content-Type"));
         } finally {
             Http.stopQuietly(bare);
         }

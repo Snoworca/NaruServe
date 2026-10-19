@@ -28,18 +28,18 @@ public class KeeperThreadTest {
         int port = adapter.boundPort();
         try {
             assertEquals(200, Http.status(Http.send(port, Http.get("/x"))));
-            List<Thread> keepers = ShutdownSocketTest.threads("naruserve-keeper-" + port);
+            List<Thread> keepers = Http.threads("naruserve-keeper-" + port);
             assertEquals(1, keepers.size());
             assertFalse(keepers.get(0).isDaemon());
-            List<Thread> engine = new ArrayList<>(ShutdownSocketTest.threads("tinyhttpd-acceptor-" + port));
-            engine.addAll(ShutdownSocketTest.threads("naruserve-" + port + "-worker-"));
+            List<Thread> engine = new ArrayList<>(Http.threads("tinyhttpd-acceptor-" + port));
+            engine.addAll(Http.threads("naruserve-" + port + "-worker-"));
             assertTrue(engine.size() >= 2);
             for (Thread t : engine) {
                 assertTrue(t.getName(), t.isDaemon());
             }
             adapter.stop(1, TimeUnit.SECONDS);
             // The keeper ends when the stop begins.
-            assertEquals(new ArrayList<Thread>(), ShutdownSocketTest.threads("naruserve-keeper-" + port));
+            assertEquals(new ArrayList<Thread>(), Http.threads("naruserve-keeper-" + port));
         } finally {
             Http.stopQuietly(adapter);
         }
@@ -57,7 +57,7 @@ public class KeeperThreadTest {
             } catch (IOException expected) {
                 // BindException
             }
-            assertEquals(new ArrayList<Thread>(), ShutdownSocketTest.threads("naruserve-keeper-" + port));
+            assertEquals(new ArrayList<Thread>(), Http.threads("naruserve-keeper-" + port));
         }
     }
 

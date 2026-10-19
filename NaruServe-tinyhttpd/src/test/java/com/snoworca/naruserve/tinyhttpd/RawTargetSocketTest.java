@@ -233,6 +233,32 @@ public class RawTargetSocketTest {
             return Integer.parseInt(response.substring(9, 12));
         }
 
+        /** The first {@code name} header value of a raw response, trimmed; null when absent. */
+        static String header(String response, String name) {
+            for (String line : response.substring(0, Math.max(0, response.indexOf("\r\n\r\n"))).split("\r\n")) {
+                int c = line.indexOf(':');
+                if (c > 0 && line.substring(0, c).equalsIgnoreCase(name)) {
+                    return line.substring(c + 1).trim();
+                }
+            }
+            return null;
+        }
+
+        /**
+         * Live threads named {@code name}; a name ending in '-' is a prefix. Exact full names keep port 80 from
+         * matching port 8080.
+         */
+        static List<Thread> threads(String name) {
+            List<Thread> out = new ArrayList<>();
+            for (Thread t : Thread.getAllStackTraces().keySet()) {
+                String n = t.getName();
+                if (t.isAlive() && (name.endsWith("-") ? n.startsWith(name) : n.equals(name))) {
+                    out.add(t);
+                }
+            }
+            return out;
+        }
+
         static String body(String response) {
             int i = response.indexOf("\r\n\r\n");
             return i < 0 ? "" : response.substring(i + 4);

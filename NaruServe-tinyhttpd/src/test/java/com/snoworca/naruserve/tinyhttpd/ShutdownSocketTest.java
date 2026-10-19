@@ -104,22 +104,22 @@ public class ShutdownSocketTest {
         RestApp app = app();
         app.get("/ok", (req, res) -> res.send("ok"));
         // TinyHttpd's watchdog name carries no port: only the one this app starts is checked.
-        List<Thread> otherWatchdogs = threads("tinyhttpd-watchdog");
+        List<Thread> otherWatchdogs = Http.threads("tinyhttpd-watchdog");
         int port = app.listen(0).port();
         for (int i = 0; i < 3; i++) {
             assertEquals(200, Http.status(Http.send(port, Http.get("/ok"))));
         }
-        assertFalse(threads("naruserve-" + port + "-worker-").isEmpty());
-        assertFalse(threads("tinyhttpd-acceptor-" + port).isEmpty());
-        assertFalse(threads("naruserve-keeper-" + port).isEmpty());
+        assertFalse(Http.threads("naruserve-" + port + "-worker-").isEmpty());
+        assertFalse(Http.threads("tinyhttpd-acceptor-" + port).isEmpty());
+        assertFalse(Http.threads("naruserve-keeper-" + port).isEmpty());
 
         app.shutdown(2, TimeUnit.SECONDS);
 
-        assertEquals(new ArrayList<Thread>(), threads("naruserve-" + port + "-"));
-        assertEquals(new ArrayList<Thread>(), threads("tinyhttpd-acceptor-" + port));
-        assertEquals(new ArrayList<Thread>(), threads("naruserve-keeper-" + port));
+        assertEquals(new ArrayList<Thread>(), Http.threads("naruserve-" + port + "-"));
+        assertEquals(new ArrayList<Thread>(), Http.threads("tinyhttpd-acceptor-" + port));
+        assertEquals(new ArrayList<Thread>(), Http.threads("naruserve-keeper-" + port));
         // TinyHttpd exposes no handle on its watchdog; it leaves its loop once the server is stopped.
-        List<Thread> ours = threads("tinyhttpd-watchdog");
+        List<Thread> ours = Http.threads("tinyhttpd-watchdog");
         ours.removeAll(otherWatchdogs);
         for (Thread w : ours) {
             w.join(1000);
@@ -208,15 +208,5 @@ public class ShutdownSocketTest {
             }
         }
         return new String(buf.toByteArray(), StandardCharsets.ISO_8859_1);
-    }
-
-    static List<Thread> threads(String prefix) {
-        List<Thread> out = new ArrayList<>();
-        for (Thread t : Thread.getAllStackTraces().keySet()) {
-            if (t.getName().startsWith(prefix) && t.isAlive()) {
-                out.add(t);
-            }
-        }
-        return out;
     }
 }

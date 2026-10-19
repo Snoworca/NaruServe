@@ -65,16 +65,6 @@ public class BindingSocketTest {
         return "GET /h HTTP/1.1\r\nHost: " + host + "\r\nConnection: close\r\n\r\n";
     }
 
-    private static int threadsNamed(String name) {
-        int n = 0;
-        for (Thread t : Thread.getAllStackTraces().keySet()) {
-            if (t.getName().equals(name) && t.isAlive()) {
-                n++;
-            }
-        }
-        return n;
-    }
-
     // SDS-AC-5; FR-ENGINE-002 AC-1
     @Test(timeout = 20000)
     public void sdsAc5_FR_ENGINE_002_AC1_defaultBindIsTheExplicitIpv4Loopback() throws Exception {
@@ -168,8 +158,8 @@ public class BindingSocketTest {
     @Test(timeout = 30000)
     public void sdsAc7_FR_ENGINE_002_AC6_aTakenPortFailsTheSecondAppAndLeavesTheFirstServing() throws Exception {
         int port = app(new TinyHttpdAdapter()).listen(0).port();
-        int acceptors = threadsNamed("tinyhttpd-acceptor-" + port);
-        int watchdogs = threadsNamed("tinyhttpd-watchdog");
+        int acceptors = Http.threads("tinyhttpd-acceptor-" + port).size();
+        int watchdogs = Http.threads("tinyhttpd-watchdog").size();
         assertEquals(1, acceptors);
 
         TinyHttpdAdapter secondAdapter = new TinyHttpdAdapter();
@@ -181,8 +171,8 @@ public class BindingSocketTest {
             assertTrue(String.valueOf(e.getCause()), e.getCause() instanceof BindException);
         }
         assertEquals(AppState.TERMINATED, second.state());
-        assertEquals(acceptors, threadsNamed("tinyhttpd-acceptor-" + port));
-        assertEquals(watchdogs, threadsNamed("tinyhttpd-watchdog"));
+        assertEquals(acceptors, Http.threads("tinyhttpd-acceptor-" + port).size());
+        assertEquals(watchdogs, Http.threads("tinyhttpd-watchdog").size());
         try {
             secondAdapter.boundPort();
             fail("a failed bind leaves no bound port");
