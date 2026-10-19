@@ -49,14 +49,36 @@ public final class PercentDecoder {
             }
         }
         try {
-            return StandardCharsets.UTF_8.newDecoder()
-                    .onMalformedInput(CodingErrorAction.REPORT)
-                    .onUnmappableCharacter(CodingErrorAction.REPORT)
-                    .decode(ByteBuffer.wrap(bytes.toByteArray()))
-                    .toString();
+            return strictUtf8(bytes.toByteArray());
         } catch (CharacterCodingException e) {
             return null;
         }
+    }
+
+    /** {@code bytes} as UTF-8, malformed or unmappable input reported rather than replaced. */
+    // @req FR-HTTP-010
+    // @req FR-MULTIPART-002
+    // @req FR-MULTIPART-003
+    static String strictUtf8(byte[] bytes) throws CharacterCodingException {
+        return StandardCharsets.UTF_8.newDecoder().onMalformedInput(CodingErrorAction.REPORT)
+                .onUnmappableCharacter(CodingErrorAction.REPORT).decode(ByteBuffer.wrap(bytes)).toString();
+    }
+
+    /** UTF-8 bytes of {@code s} as upper-case {@code %XX}, except ASCII letters, digits and {@code safeExtra}. */
+    // @req FR-STATIC-003
+    // @req FR-STATIC-011
+    static String percentEncode(String s, String safeExtra) {
+        StringBuilder b = new StringBuilder();
+        for (byte x : s.getBytes(StandardCharsets.UTF_8)) {
+            int c = x & 0xFF;
+            if (c >= 'A' && c <= 'Z' || c >= 'a' && c <= 'z' || c >= '0' && c <= '9' || safeExtra.indexOf(c) >= 0) {
+                b.append((char) c);
+            } else {
+                b.append('%').append(Character.toUpperCase(Character.forDigit(c >> 4, 16)))
+                        .append(Character.toUpperCase(Character.forDigit(c & 0xF, 16)));
+            }
+        }
+        return b.toString();
     }
 
     /** ASCII hex digit value, or -1; Character.digit would also take non-ASCII digits. */

@@ -5,10 +5,7 @@ import com.snoworca.naruserve.UploadFile;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.ByteBuffer;
 import java.nio.charset.CharacterCodingException;
-import java.nio.charset.CodingErrorAction;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -73,14 +70,8 @@ final class FormData {
     private static String utf8(DefaultUploadFile p) {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         try (InputStream in = p.inputStream()) {
-            byte[] b = new byte[4096];
-            int n;
-            while ((n = in.read(b)) >= 0) {
-                out.write(b, 0, n);
-            }
-            return StandardCharsets.UTF_8.newDecoder().onMalformedInput(CodingErrorAction.REPORT)
-                    .onUnmappableCharacter(CodingErrorAction.REPORT).decode(ByteBuffer.wrap(out.toByteArray()))
-                    .toString();
+            DefaultUploadFile.copy(in, out);
+            return PercentDecoder.strictUtf8(out.toByteArray());
         } catch (CharacterCodingException e) {
             throw new HttpException(400, "multipart text field is not UTF-8", e);
         } catch (IOException e) {

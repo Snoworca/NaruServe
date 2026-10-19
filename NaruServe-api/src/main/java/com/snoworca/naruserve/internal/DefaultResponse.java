@@ -216,19 +216,7 @@ public final class DefaultResponse implements Response {
         if (!nonAscii) {
             return v;
         }
-        StringBuilder enc = new StringBuilder();
-        for (byte x : clean.toString().getBytes(StandardCharsets.UTF_8)) {
-            int c = x & 0xFF;
-            boolean attr = c >= 'A' && c <= 'Z' || c >= 'a' && c <= 'z' || c >= '0' && c <= '9'
-                    || "!#$&+-.^_`|~".indexOf(c) >= 0;
-            if (attr) {
-                enc.append((char) c);
-            } else {
-                enc.append('%').append(Character.toUpperCase(Character.forDigit(c >> 4, 16)))
-                        .append(Character.toUpperCase(Character.forDigit(c & 0xF, 16)));
-            }
-        }
-        return v + "; filename*=UTF-8''" + enc;
+        return v + "; filename*=UTF-8''" + PercentDecoder.percentEncode(clean.toString(), "!#$&+-.^_`|~");
     }
 
     // @req FR-HTTP-013

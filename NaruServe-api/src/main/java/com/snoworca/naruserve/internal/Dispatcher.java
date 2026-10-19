@@ -367,7 +367,7 @@ public final class Dispatcher implements ExchangeHandler {
         }
     }
 
-    private static void error(DefaultResponse res, int status, String requestId) {
+    static void error(DefaultResponse res, int status, String requestId) {
         res.status(status).header("Content-Type", StandardErrors.JSON_TYPE);
         res.send(StandardErrors.json(status, StandardErrors.reason(status), requestId));
     }

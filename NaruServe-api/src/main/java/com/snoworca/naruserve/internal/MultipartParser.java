@@ -140,7 +140,8 @@ public final class MultipartParser {
         return count[0];
     }
 
-    private static String mediaType(String value) {
+    /** The media type before ';', trimmed and lower-cased. */
+    static String mediaType(String value) {
         int semi = value.indexOf(';');
         return (semi < 0 ? value : value.substring(0, semi)).trim().toLowerCase(Locale.ROOT);
     }

@@ -59,6 +59,17 @@ final class FileResourceResolver implements ResourceResolver {
         return canonical;
     }
 
+    /**
+     * Whether file or directory {@code f} is the root or lies under it and, unless symbolic links are allowed, is
+     * reached through no symbolic link below it.
+     */
+    // @req FR-STATIC-003
+    // @req FR-STATIC-006
+    boolean reachable(File f) throws IOException {
+        String canonical = f.getCanonicalPath();
+        return (canonical.equals(rootPath) || under(canonical)) && (allowSymlinks || linkFree(f));
+    }
+
     /** Root itself, or below it on a separator boundary: {@code /root2} is not under {@code /root}. */
     private boolean under(String canonical) {
         String prefix = rootPath.endsWith(File.separator) ? rootPath : rootPath + File.separator;
@@ -148,9 +159,5 @@ final class FileResourceResolver implements ResourceResolver {
     @Override
     public long modified(String path) throws IOException {
         return file(path).lastModified();
-    }
-
-    boolean allowSymlinks() {
-        return allowSymlinks;
     }
 }

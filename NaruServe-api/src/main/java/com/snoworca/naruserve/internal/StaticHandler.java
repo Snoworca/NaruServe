@@ -221,14 +221,8 @@ final class StaticHandler {
     // @req FR-STATIC-003
     // @req FR-STATIC-006
     private static boolean reachable(StaticMount m, File f) throws IOException {
-        FileResourceResolver r = m.resolver();
-        File root = m.root();
-        if (r == null || root == null) {
-            return false;
-        }
-        String canonical = f.getCanonicalPath();
-        String prefix = root.getPath().endsWith(File.separator) ? root.getPath() : root.getPath() + File.separator;
-        return (canonical.equals(root.getPath()) || canonical.startsWith(prefix)) && (r.allowSymlinks() || r.linkFree(f));
+        FileResourceResolver r = m.resolver(); // rooted at the mount's canonical root
+        return r != null && r.reachable(f);
     }
 
     /** Test hook for the resolver static mounts, {@code res.file} and {@code res.download} read through. */
@@ -273,8 +267,7 @@ final class StaticHandler {
     }
 
     private static void error(DefaultRequest req, DefaultResponse res, int status) {
-        res.status(status).header("Content-Type", StandardErrors.JSON_TYPE)
-                .header("X-Content-Type-Options", "nosniff");
-        res.send(StandardErrors.json(status, StandardErrors.reason(status), req.requestId()));
+        res.header("X-Content-Type-Options", "nosniff");
+        Dispatcher.error(res, status, req.requestId());
     }
 }

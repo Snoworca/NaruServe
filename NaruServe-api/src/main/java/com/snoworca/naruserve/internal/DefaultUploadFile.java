@@ -126,7 +126,7 @@ public final class DefaultUploadFile implements UploadFile {
         target.flush();
     }
 
-    private static void copy(InputStream in, OutputStream out) throws IOException {
+    static void copy(InputStream in, OutputStream out) throws IOException {
         byte[] b = new byte[8192];
         int n;
         while ((n = in.read(b)) >= 0) {

@@ -105,9 +105,8 @@ final class FileResponder {
         if (status == 304) {
             res.status(304).end();
         } else if (status == 416) {
-            res.status(416).header("Content-Range", "bytes */" + length)
-                    .header("Content-Type", StandardErrors.JSON_TYPE);
-            res.send(StandardErrors.json(416, StandardErrors.reason(416), req.requestId()));
+            res.header("Content-Range", "bytes */" + length);
+            Dispatcher.error(res, 416, req.requestId());
         } else if (in != null) {
             res.header("Content-Type", type);
             if (range != null) {

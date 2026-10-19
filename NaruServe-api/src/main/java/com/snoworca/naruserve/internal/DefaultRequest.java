@@ -15,7 +15,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
@@ -196,8 +195,7 @@ public final class DefaultRequest implements Request {
     // @req FR-MULTIPART-003
     FormData formData() {
         String type = header("Content-Type");
-        int semi = type == null ? -1 : type.indexOf(';');
-        String media = type == null ? "" : (semi < 0 ? type : type.substring(0, semi)).trim().toLowerCase(Locale.ROOT);
+        String media = type == null ? "" : MultipartParser.mediaType(type);
         boolean urlencoded = media.equals("application/x-www-form-urlencoded");
         boolean multipartBody = media.equals("multipart/form-data");
         if (!urlencoded && !multipartBody && body.state() == BodyState.State.UNREAD) {

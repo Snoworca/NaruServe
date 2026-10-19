@@ -2,7 +2,6 @@ package com.snoworca.naruserve.internal;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -60,18 +59,6 @@ final class DirectoryListing {
 
     /** UTF-8 percent-encoding of everything but RFC 3986 unreserved characters. */
     static String encode(String s) {
-        StringBuilder b = new StringBuilder();
-        for (byte x : s.getBytes(StandardCharsets.UTF_8)) {
-            int c = x & 0xFF;
-            boolean unreserved = c >= 'A' && c <= 'Z' || c >= 'a' && c <= 'z' || c >= '0' && c <= '9'
-                    || c == '-' || c == '.' || c == '_' || c == '~';
-            if (unreserved) {
-                b.append((char) c);
-            } else {
-                b.append('%').append(Character.toUpperCase(Character.forDigit(c >> 4, 16)))
-                        .append(Character.toUpperCase(Character.forDigit(c & 0xF, 16)));
-            }
-        }
-        return b.toString();
+        return PercentDecoder.percentEncode(s, "-._~");
     }
 }
