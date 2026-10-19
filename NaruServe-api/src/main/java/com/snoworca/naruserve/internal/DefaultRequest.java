@@ -1,5 +1,6 @@
 package com.snoworca.naruserve.internal;
 
+import com.snoworca.naruserve.ApplicationContext;
 import com.snoworca.naruserve.HttpException;
 import com.snoworca.naruserve.Method;
 import com.snoworca.naruserve.Request;
@@ -26,10 +27,19 @@ public final class DefaultRequest implements Request {
     private final ConcurrentHashMap<String, Object> attributes = new ConcurrentHashMap<>();
     private final BodyState body = new BodyState();
     private volatile @Nullable Map<String, List<String>> query;
+    private final @Nullable ApplicationContext context;
 
-    /** {@code params} are the decoded variables of the RouteMatch. */
+    /** {@code params} are the decoded variables of the RouteMatch; no application context. */
     // @req FR-HTTP-009
     public DefaultRequest(HttpExchange ex, Method method, Map<String, String> params) {
+        this(ex, method, params, null);
+    }
+
+    /** As above, with the app's one context returned by {@link #application()}. */
+    // @req FR-APP-007
+    public DefaultRequest(HttpExchange ex, Method method, Map<String, String> params,
+            @Nullable ApplicationContext context) {
+        this.context = context;
         this.ex = ex;
         this.method = method;
         this.params = params;
@@ -226,5 +236,22 @@ public final class DefaultRequest implements Request {
             throw new IllegalArgumentException("malformed percent-encoding or invalid UTF-8");
         }
         return decoded;
+    }
+
+    /** The app's one context, identical for every request of the app. */
+    // @req FR-APP-007
+    @Override
+    public ApplicationContext application() {
+        ApplicationContext c = context;
+        if (c == null) {
+            throw new UnsupportedOperationException("this request was built without an application context");
+        }
+        return c;
+    }
+
+    // @req FR-APP-007
+    @Override
+    public <T> T service(Class<T> type) {
+        return application().get(type);
     }
 }

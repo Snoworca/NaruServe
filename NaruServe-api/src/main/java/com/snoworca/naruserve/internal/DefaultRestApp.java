@@ -46,6 +46,8 @@ import org.jspecify.annotations.Nullable;
 // @req FR-APP-002
 // @req FR-APP-009
 // @req FR-APP-003
+// @req FR-APP-007
+// @req FR-APP-008
 public final class DefaultRestApp implements RestApp {
 
     /** One registration call as recorded; the router is built from these at freeze. */
@@ -80,7 +82,7 @@ public final class DefaultRestApp implements RestApp {
     private final @Nullable JsonCodec codec;
     private volatile Logger logger;
     private final AppLifecycle lifecycle = new AppLifecycle();
-    private final DefaultApplicationContext context = new DefaultApplicationContext(this);
+    private final DefaultApplicationContext context = new DefaultApplicationContext(lifecycle, this);
     private final DefaultAccessLogOptions accessLogOptions = new DefaultAccessLogOptions();
 
     // Guarded by this.
@@ -150,8 +152,9 @@ public final class DefaultRestApp implements RestApp {
         return lifecycle;
     }
 
-    /** The app's one context, passed to every lifecycle callback. */
+    /** The app's one context, created with the app: onStart, onStop and every request receive this instance. */
     // @req IR-APP-004
+    // @req FR-APP-007
     public DefaultApplicationContext context() {
         return context;
     }
@@ -179,13 +182,16 @@ public final class DefaultRestApp implements RestApp {
     }
 
     /**
-     * STARTING by compareAndSet, the onStart callbacks in order, the route-table freeze, one bind of the gated
-     * handler on {@code 127.0.0.1:port}, then RUNNING. Not synchronized: requests held on the start gate and
-     * onStart callbacks must not wait for this call.
-     * shortcut: no pending stop or adapter/resource cleanup on failure; the FR-APP-010/FR-APP-012 SDS adds them.
+     * STARTING by compareAndSet, the onStart callbacks in order (each once), the context freeze, the route-table
+     * freeze, one bind of the gated handler on {@code 127.0.0.1:port}, then RUNNING. On failure: FAILED, then the
+     * owned resources close in reverse order and each close failure is suppressed on the thrown exception. Not
+     * synchronized: requests held on the start gate and onStart callbacks must not wait for this call.
+     * shortcut: no pending stop, adapter cleanup or logger close on failure; the FR-APP-010/012 SDS adds them.
      */
     // @req IR-APP-005
     // @req FR-APP-009
+    // @req FR-APP-007
+    // @req FR-APP-008
     @Override
     public ServerHandle listen(int port) {
         if (port < 0 || port > 65535) {
@@ -205,15 +211,16 @@ public final class DefaultRestApp implements RestApp {
             for (LifecycleCallback cb : callbacks) {
                 cb.handle(context);
             }
+            context.freeze();
             freeze();
             a.bind("127.0.0.1", port, new GatedExchangeHandler(lifecycle, frozenDispatcher(), new AccessLog()));
             bound = a.boundPort();
-        } catch (RuntimeException | Error e) {
-            lifecycle.fail();
-            throw e;
+        } catch (RuntimeException e) {
+            throw failStart(e);
+        } catch (Error e) {
+            throw failStart(e);
         } catch (Exception e) {
-            lifecycle.fail();
-            throw new AppStartException("app start failed: " + e, e);
+            throw failStart(new AppStartException("app start failed: " + e, e));
         }
         lifecycle.markRunning();
         return new ServerHandle() {
@@ -234,13 +241,24 @@ public final class DefaultRestApp implements RestApp {
         };
     }
 
+    /** FAILED, then the owned close; each close failure is added as suppressed to {@code e}, which is returned. */
+    // @req FR-APP-008
+    private <X extends Throwable> X failStart(X e) {
+        lifecycle.fail();
+        for (Exception closeFailure : context.closeOwned(logger)) {
+            e.addSuppressed(closeFailure);
+        }
+        return e;
+    }
+
     /**
-     * RUNNING: adapter stop and release, the onStop callbacks, then TERMINATED. NEW goes straight to TERMINATED;
-     * other states do nothing.
-     * shortcut: no shutdown participants, owned-resource or logger close; the FR-APP-011/FR-APP-012 SDS replaces
+     * RUNNING: adapter stop and release, the onStop callbacks, the owned close (each failure logged at ERROR),
+     * then TERMINATED. NEW goes straight to TERMINATED; other states do nothing.
+     * shortcut: no shutdown participants or logger close; the FR-APP-011/FR-APP-012 SDS replaces
      * this with the fixed shutdown sequence.
      */
     // @req IR-APP-005
+    // @req FR-APP-008
     @Override
     public synchronized void shutdown(long timeout, TimeUnit unit) {
         if (timeout < 0) {
@@ -263,6 +281,10 @@ public final class DefaultRestApp implements RestApp {
                 } catch (Exception e) {
                     logger.error("onStop callback failed", e);
                 }
+            }
+            SafeLogger log = new SafeLogger(logger);
+            for (Exception e : context.closeOwned(logger)) {
+                log.error("owned resource close failed", e);
             }
         } finally {
             lifecycle.terminate();
@@ -473,7 +495,7 @@ public final class DefaultRestApp implements RestApp {
             pipeline.addPrefix(pm.prefix, pm.middleware);
         }
         dispatcher = new Dispatcher(router, pipeline, new ErrorPath(errorHandlers, new SafeLogger(logger)),
-                new AccessLog());
+                new AccessLog(), context);
         lifecycle.markFrozen();
     }
 

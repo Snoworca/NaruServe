@@ -1,5 +1,6 @@
 package com.snoworca.naruserve.internal;
 
+import com.snoworca.naruserve.ApplicationContext;
 import com.snoworca.naruserve.ConsoleLogger;
 import com.snoworca.naruserve.ErrorHandler;
 import com.snoworca.naruserve.Method;
@@ -44,6 +45,7 @@ public final class Dispatcher implements ExchangeHandler {
     private final MiddlewarePipeline pipeline;
     private final ErrorPath errors;
     private final AccessLog accessLog;
+    private final @Nullable ApplicationContext context;
 
     /**
      * Wave 3 shape: no middleware, no onError handler, access log off, a {@link ConsoleLogger}. {@code router} must
@@ -53,12 +55,24 @@ public final class Dispatcher implements ExchangeHandler {
     public Dispatcher(Router<RouteHandler> router) {
         this(router, new MiddlewarePipeline(RouterPolicy.strict()),
                 new ErrorPath(Collections.<ErrorHandler>emptyList(), new SafeLogger(new ConsoleLogger())),
-                new AccessLog());
+                new AccessLog(), null);
     }
 
-    /** Built by {@code DefaultRestApp.freeze}; {@code router} must already be frozen. */
+    /** The full shape without an application context, for tests that dispatch without an app. */
     // @req FR-APP-003
     Dispatcher(Router<RouteHandler> router, MiddlewarePipeline pipeline, ErrorPath errors, AccessLog accessLog) {
+        this(router, pipeline, errors, accessLog, null);
+    }
+
+    /**
+     * Built by {@code DefaultRestApp.freeze}; {@code router} must already be frozen. Every request gets
+     * {@code context} as its {@code application()}.
+     */
+    // @req FR-APP-003
+    // @req FR-APP-007
+    Dispatcher(Router<RouteHandler> router, MiddlewarePipeline pipeline, ErrorPath errors, AccessLog accessLog,
+            @Nullable ApplicationContext context) {
+        this.context = context;
         this.router = Objects.requireNonNull(router, "router");
         this.pipeline = Objects.requireNonNull(pipeline, "pipeline");
         this.errors = Objects.requireNonNull(errors, "errors");
@@ -82,7 +96,7 @@ public final class Dispatcher implements ExchangeHandler {
                 ? (m.autoHead() ? Method.HEAD : Objects.requireNonNull(m.method()))
                 : Objects.requireNonNull(methodOf(token)); // preCheck answered every unrecognised token
         DefaultRequest req = new DefaultRequest(ex, method,
-                routed ? m.params() : Collections.<String, String>emptyMap());
+                routed ? m.params() : Collections.<String, String>emptyMap(), context);
         DefaultResponse res = new DefaultResponse(ex, method == Method.HEAD);
         List<Middleware> route = Collections.emptyList();
         RouteHandler terminal;

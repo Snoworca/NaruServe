@@ -56,7 +56,6 @@ public interface Request {
      * The app's {@link ApplicationContext}. The default throws {@link UnsupportedOperationException} so request
      * fakes written for wave 3 still compile.
      */
-    // shortcut: DefaultRequest does not override this yet, so req.service throws; the FR-APP-007 SDS wires it.
     // @req IR-APP-004
     default ApplicationContext application() {
         throw new UnsupportedOperationException(getClass().getName() + " has no application context");
