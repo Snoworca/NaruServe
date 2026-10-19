@@ -189,6 +189,14 @@ project(':NaruServe-filelog') {
     }
 }
 
+// GsonJsonCodec tests drive req.body and res.json over the in-memory adapter (FR-JSON-003 AC-2, AC-3, AC-8).
+project(':NaruServe-gson') {
+    // @req FR-JSON-003
+    dependencies {
+        testImplementation testFixtures(project(':NaruServe-api'))
+    }
+}
+
 // Android 5.0 (API 21) is the minimum runtime: fail the build on any API that API 21 lacks.
 configure(androidModules.collect { project(it) }) {
     apply plugin: 'ru.vyarus.animalsniffer'
