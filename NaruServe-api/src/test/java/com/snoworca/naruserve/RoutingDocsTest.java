@@ -50,9 +50,9 @@ public class RoutingDocsTest {
         return sb.toString();
     }
 
-    // SDS-AC-9; OPS-ROUTE-001 AC-2
+    // SDS-AC-4; OPS-ROUTE-002 AC-2
     @Test
-    public void sdsAc9_OPS_ROUTE_001_AC2_accessorsNamedWithJavaKotlinAndExpressNote() throws IOException {
+    public void sdsAc4_OPS_ROUTE_002_AC2_accessorsNamedWithJavaKotlinAndExpressNote() throws IOException {
         String s = section(doc(), "### MethodSet 조회");
         for (String name : new String[] {"contains(Method)", "iterator()", "size()"}) {
             assertTrue("accessor " + name, s.contains("`" + name + "`"));
@@ -62,25 +62,22 @@ public class RoutingDocsTest {
         assertTrue("Express note", s.contains("Express에는 대응하는 API가 없습니다"));
     }
 
-    // SDS-AC-10; OPS-ROUTE-001 AC-3
+    // SDS-AC-4; OPS-ROUTE-002 AC-3
     @Test
-    public void sdsAc10_OPS_ROUTE_001_AC3_wave1MarkersKeptAndNoneAdded() throws IOException {
+    public void sdsAc4_OPS_ROUTE_002_AC3_onlyTheUseMiddlewareMarkerRemains() throws IOException {
         List<String> markerLines = new ArrayList<>();
         for (String line : doc().split("\n")) {
             if (line.contains(MARKER)) {
                 markerLines.add(line);
             }
         }
-        assertEquals(markerLines.toString(), 4, markerLines.size());
+        assertEquals(markerLines.toString(), 1, markerLines.size());
         assertTrue(markerLines.get(0), markerLines.get(0).contains("`use(middleware)`"));
-        assertTrue(markerLines.get(1), markerLines.get(1).contains("`TRACE`, `CONNECT`"));
-        assertTrue(markerLines.get(2), markerLines.get(2).contains("`//` 처리, 끝 슬래시, 대소문자"));
-        assertTrue(markerLines.get(3), markerLines.get(3).contains("`req.method()`"));
     }
 
-    // SDS-AC-10; OPS-ROUTE-001 AC-1
+    // SDS-AC-4; OPS-ROUTE-002 AC-1
     @Test
-    public void sdsAc10_OPS_ROUTE_001_AC1_routingRulesSectionPresent() throws IOException {
+    public void sdsAc4_OPS_ROUTE_002_AC1_routingRulesSectionPresent() throws IOException {
         String s = section(doc(), "## 라우팅 규칙 (wave 2 결정)");
         String[] required = {
             "엄격", "TRACE", "CONNECT", "Allow", "HEAD", "OPTIONS", "WebSocket", "426",

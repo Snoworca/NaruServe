@@ -82,6 +82,23 @@ public interface RouteHandler {
 | `accessLog(options -> ...)` | 접근 로그 설정 | [로깅](logging.md) |
 | `logger(logger)` | 앱 로거 교체 | [로깅](logging.md) |
 | `logger()` | 현재 앱 로거 | [로깅](logging.md) |
+| `routerPolicy(RouterPolicy)` | `//`·끝 슬래시·대소문자 정책과 `TRACE`/`CONNECT` 켜기 | [라우팅](routing.md#라우터-정책) |
+
+### 라우터 정책
+
+`routerPolicy(RouterPolicy)`는 `RestApp`을 돌려줍니다. 기본은 모든 스위치가 꺼진 엄격 정책입니다. Express의 `app.set('strict routing', ...)`, `app.set('case sensitive routing', ...)`에 해당합니다.
+
+```java
+app.routerPolicy(RouterPolicy.builder().ignoreTrailingSlash(true).build())
+   .get("/users", (req, res) -> res.send("users"));   // /users/ 도 맞습니다
+```
+
+Kotlin:
+
+```kotlin
+app.routerPolicy(RouterPolicy.builder().ignoreTrailingSlash(true).build())
+    .get("/users") { req, res -> res.send("users") }
+```
 
 ### 수명주기
 

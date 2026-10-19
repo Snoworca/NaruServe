@@ -33,7 +33,7 @@ res.status(201).header("X-Request-ID", id).json(created);
 | `sse()` | `text/event-stream` | — | SSE 스트림 시작. `SseClient` 반환. [SSE](sse.md) |
 | `abort(error)` | — | `res.destroy()` | 응답을 비정상 종료합니다(연결 끊기). 이미 끝났거나 끊긴 응답에서는 아무것도 하지 않습니다. |
 
-`send(byte[])`에 Content-Type이 없으면 Express가 `Buffer`에 그러듯 `application/octet-stream`을 씁니다.
+`send(byte[])`에 `Content-Type`이 없으면 Express가 `Buffer`에 그러듯 `application/octet-stream`을 씁니다. `stream(InputStream, contentType)`은 스트림의 소유권을 가져가서 성공·실패·`abort` 어느 경우든 닫습니다. [스트림](#스트림)
 
 ### Express와 다른 점: `send`는 텍스트만
 
@@ -88,6 +88,27 @@ app.get("/export", (req, res) -> {
 - `Range` 요청에 `206`으로 답합니다. 범위를 충족할 수 없으면(시작 위치 ≥ 파일 크기) `416`, 잘못된 형식이거나 여러 범위면 `Range`를 무시하고 `200`입니다. `ETag`/`Last-Modified` 조건부 요청에 `304`로 답합니다. [정적 파일](static.md#range와-조건부-요청)
 - `file()`에 사용자 입력으로 만든 경로를 넘기지 마세요. 경로 이탈 검사는 `staticFiles`만 합니다.
 - `download()`의 `filename`은 헤더 인젝션 문자를 걸러서 씁니다.
+
+## 스트림
+
+`stream(in, contentType)`은 상태와 헤더를 그 자리에서 보내고(그 뒤의 `status`/`header`는 `IllegalStateException`) 곧바로 반환합니다. 상태와 헤더는 먼저 정하세요. 핸들러 안에서 부르면 핸들러가 반환한 뒤 요청 스레드에서 `in`을 끝까지 복사합니다. 스트림은 NaruServe가 닫으므로 try-with-resources로 감싸지 마세요. 감싸면 복사를 시작하기 전에 닫힙니다.
+
+```java
+app.get("/video", (req, res) -> {
+    InputStream in = new FileInputStream(new File("/data/video.mp4"));
+    res.stream(in, "video/mp4");   // 닫기는 NaruServe가 합니다
+});
+```
+
+Kotlin (`use { }`로 감싸지 않습니다):
+
+```kotlin
+app.get("/video") { req, res ->
+    res.stream(FileInputStream(File("/data/video.mp4")), "video/mp4")
+}
+```
+
+Express: `fs.createReadStream(path).pipe(res)`.
 
 ## 상태 코드만 보내기
 

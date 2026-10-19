@@ -37,7 +37,7 @@ NaruServe는 저사양 Android 5.0 기기에서도 안전하게 돌도록 **모�
 | 오류 응답의 stack trace | 보내지 않음 | — |
 | 접근 로그의 민감 값 | 기록하지 않음 | 바꾸지 않는 것을 권장 |
 | 프록시 헤더(`X-Forwarded-*`) | 믿지 않음 | 명시 신뢰 설정 (**(미확정)**) |
-| `TRACE`, `CONNECT` 메서드 | 라우팅 안 함 | 명시 정책 (**(미확정)**) |
+| `TRACE`, `CONNECT` 메서드 | 라우팅 안 함 | `app.routerPolicy(...)`에서 `enableTrace`/`enableConnect`를 켭니다. [라우터 정책](routing.md#라우터-정책) |
 | JSON 다형성 자동 바인딩 | 끔 | — |
 
 ## HTTP 프로토콜 방어

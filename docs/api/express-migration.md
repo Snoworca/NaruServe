@@ -42,8 +42,9 @@ Express 코드의 구조(라우트·미들웨어·req/res)는 대부분 그대�
 | `req.file` (multer) | `req.file("avatar")` | `UploadFile` |
 | `req.files` (multer) | `req.files("attachments")` | `List<UploadFile>` |
 | `req.method` | `req.method()` | 문자열이 아니라 `Method` enum |
-| `req.path` | `req.path()` | |
-| `req.originalUrl` | `req.rawPath()` | 디코딩 전 경로. Express `originalUrl`은 쿼리를 포함합니다. `rawPath()`의 쿼리 포함 여부는 **(미확정)** |
+| `req.path` (디코딩 전) | `req.rawPath()` | 디코딩 전 경로. 쿼리 문자열은 들어가지 않습니다. Express `req.path`와 같은 값입니다. |
+| (없음) | `req.path()` | NaruServe가 더하는 퍼센트 디코딩한 경로입니다. Express `req.path`는 디코딩하지 않습니다. |
+| `req.originalUrl` | `req.rawPath()` + `req.query(...)` | 직접 대응하는 메서드는 없습니다. 경로는 `req.rawPath()`, 쿼리 값은 `req.query(...)`/`req.queries(...)`로 읽습니다. |
 | `req.ip` | `req.remoteAddress()` | |
 | `req.secure` | `req.isSecure()` | |
 | `req.user = u` / `res.locals.user = u` | `req.attribute("user", u)` | 요청 범위 저장소 |
@@ -81,7 +82,7 @@ Express 코드의 구조(라우트·미들웨어·req/res)는 대부분 그대�
 | `app.use((err, req, res, next) => ...)` | `app.onError((err, req, res) -> ...)` | 인자 3개(`next` 없음), 순서는 Express와 같음 |
 | 마지막 404 미들웨어 | 필요 없음 | 기본 404/405를 보냅니다. 본문을 바꾸는 방법은 **(미확정)** |
 | `express.json()`, `express.urlencoded()` | 필요 없음 | `req.body(...)`, `req.form(...)`이 읽습니다. |
-| `express.raw()`, `express.text()` | **(미확정)** | JSON이 아닌 원본 본문을 읽는 API는 사양서에 이름이 없습니다. |
+| `express.raw()`, `express.text()` | 없음 | v1에는 원본·텍스트 본문을 읽는 API가 없습니다. 본문은 `req.body(...)`(JSON), `req.form(...)`, `req.file(...)`로 읽습니다. |
 | `cors()` | **(미확정)** | 전역 `app.use`에서 `Access-Control-Allow-*` 헤더를 설정합니다. preflight(`OPTIONS` + `Access-Control-Request-Method`)는 `res.status(204).end()`로 바로 끝내고 `next.run()`을 부르지 마세요. 그러지 않으면 `/api` 인증 미들웨어가 preflight를 401로 거부합니다. |
 | `cookie-parser` | 필요 없음 | 내장. 서명 쿠키(`secret`)·값 자동 인코딩은 **(미확정)** |
 | `multer` | `app.multipart(config -> ...)` | 한도 설정만 합니다. |
@@ -297,7 +298,6 @@ app.listen(3000)
 
 - `express.Router()`와 라우터 마운트
 - CORS 미들웨어(`cors()`)
-- 원본 본문 읽기(`express.raw()`, `express.text()`)
 - `res.redirect`, `res.type`, `res.location`, `res.format`, `res.sendStatus`
 - `req.hostname`, `req.is(type)`, `req.accepts(...)`
 - `app.param(...)`

@@ -10,7 +10,7 @@
 |---|---|---|---|
 | `method()` | `Method` | `req.method` | `Method.GET` 등 enum |
 | `path()` | `String` | `req.path` | 디코딩된 경로. 쿼리 문자열 제외 (Express `req.path`는 퍼센트 디코딩하지 않습니다) |
-| `rawPath()` | `String` | `req.originalUrl` | 디코딩 전 경로. 쿼리 문자열 포함 여부 **(미확정)** (Express `originalUrl`은 포함) |
+| `rawPath()` | `String` | `req.path` (디코딩 전) | 디코딩 전 경로. 쿼리 문자열 제외(쿼리는 `req.query(...)`로 읽습니다). |
 | `remoteAddress()` | `String` | `req.ip` | 접속한 상대 주소 |
 | `isSecure()` | `boolean` | `req.secure` | TLS 연결이면 `true` |
 
@@ -116,7 +116,7 @@ Express에서 `req.user = user`나 `res.locals.user = user`로 미들웨어끼�
 
 | 메서드 | 설명 |
 |---|---|
-| `attribute(key, value)` | 값 저장 |
+| `attribute(key, value)` | 값 저장. `value`가 `null`이면 지웁니다 |
 | `attribute(key, Class<T> type)` | 값 읽기. 없으면 `null` |
 
 ```java
@@ -132,7 +132,22 @@ app.get("/me", (req, res) -> {
 ```
 
 요청 속성은 그 요청이 끝나면 사라집니다. 다른 요청과 공유되지 않습니다.
-저장된 값이 `type`이 아니면 `ClassCastException`이 납니다(**(미확정)**: 예외 종류).
+저장된 값이 `type`이 아니면 `ClassCastException`이 납니다.
+
+값을 지우려면 타입이 있는 `null` 변수를 저장합니다. `req.attribute("user", null)`처럼 `null` 리터럴을 넘기면 Java가 읽기 오버로드 `attribute(key, Class<T> type)`를 고르고, `type`이 `null`이라 `NullPointerException`이 납니다. `(Object) null`로 캐스팅해도 지워집니다.
+
+```java
+Object none = null;
+req.attribute("user", none);                       // "user" 속성을 지웁니다
+String left = req.attribute("user", String.class); // null
+```
+
+Kotlin:
+
+```kotlin
+req.attribute("user", null as Any?)                // "user" 속성을 지웁니다
+val left = req.attribute("user", String::class.java)
+```
 
 ## 서비스와 앱 전역 값
 
