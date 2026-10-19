@@ -1,8 +1,14 @@
 package com.snoworca.naruserve.docs;
 
+import static com.snoworca.naruserve.docs.WaveFiveDocsTest.contains;
+import static com.snoworca.naruserve.docs.WaveFiveDocsTest.dflt;
+import static com.snoworca.naruserve.docs.WaveFiveDocsTest.doc;
+import static com.snoworca.naruserve.docs.WaveFiveDocsTest.lineWith;
+import static com.snoworca.naruserve.docs.WaveFiveDocsTest.linesWith;
+import static com.snoworca.naruserve.docs.WaveFiveDocsTest.max;
+import static com.snoworca.naruserve.docs.WaveFiveDocsTest.row;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -12,13 +18,8 @@ import com.snoworca.naruserve.internal.DefaultRestApp;
 import com.snoworca.naruserve.internal.DefaultUploadFile;
 import com.snoworca.naruserve.internal.MultipartSettings;
 import com.snoworca.naruserve.testing.SettingsCapturingAdapter;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.List;
 import org.junit.Test;
 
@@ -29,64 +30,9 @@ public final class WaveSixDocsTest {
 
     private static final String MARKER = "(미확정)";
 
-    private static String doc(String name) throws IOException {
-        String root = System.getProperty("naruserve.rootDir");
-        assertNotNull("naruserve.rootDir system property", root);
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        try (InputStream in = new FileInputStream(new File(root, "docs/api/" + name))) {
-            byte[] buf = new byte[8192];
-            for (int n = in.read(buf); n > 0; n = in.read(buf)) {
-                out.write(buf, 0, n);
-            }
-        }
-        return new String(out.toByteArray(), StandardCharsets.UTF_8);
-    }
-
-    private static List<String> linesWith(String doc, String phrase) {
-        List<String> out = new ArrayList<>();
-        for (String l : doc.split("\n")) {
-            if (l.contains(phrase)) {
-                out.add(l);
-            }
-        }
-        return out;
-    }
-
-    private static String lineWith(String doc, String phrase) {
-        List<String> found = linesWith(doc, phrase);
-        assertFalse("no line holds " + phrase, found.isEmpty());
-        return found.get(0);
-    }
-
-    private static void contains(String where, String text, String... parts) {
-        for (String p : parts) {
-            assertTrue(p + " in " + where + ": " + text, text.contains(p));
-        }
-    }
-
     private static void noMarker(String file) throws IOException {
         List<String> m = linesWith(doc(file), MARKER);
         assertTrue(file + ": " + m, m.isEmpty());
-    }
-
-    /** The cells of the defaults.md table row whose first cell is {@code label}. */
-    private static String[] row(String defaults, String label) {
-        String line = lineWith(defaults, "| " + label + " |");
-        String[] raw = line.split("\\|", -1);
-        String[] cells = new String[raw.length - 2];
-        for (int i = 1; i < raw.length - 1; i++) {
-            cells[i - 1] = raw[i].trim();
-        }
-        assertEquals(label, cells[0]);
-        return cells;
-    }
-
-    private static long dflt(String d, String label) {
-        return WaveFiveDocsTest.value(row(d, label)[1]);
-    }
-
-    private static long max(String d, String label) {
-        return WaveFiveDocsTest.value(row(d, label)[2]);
     }
 
     private interface Setter {

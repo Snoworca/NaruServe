@@ -42,7 +42,7 @@ public final class WaveFiveDocsTest {
 
     private static final String MARKER = "(미확정)";
 
-    private static String doc(String name) throws IOException {
+    static String doc(String name) throws IOException {
         String root = System.getProperty("naruserve.rootDir");
         assertNotNull("naruserve.rootDir system property", root);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -55,7 +55,7 @@ public final class WaveFiveDocsTest {
         return new String(out.toByteArray(), StandardCharsets.UTF_8);
     }
 
-    private static List<String> linesWith(String doc, String phrase) {
+    static List<String> linesWith(String doc, String phrase) {
         List<String> out = new ArrayList<>();
         for (String l : doc.split("\n")) {
             if (l.contains(phrase)) {
@@ -65,7 +65,7 @@ public final class WaveFiveDocsTest {
         return out;
     }
 
-    private static String lineWith(String doc, String phrase) {
+    static String lineWith(String doc, String phrase) {
         List<String> found = linesWith(doc, phrase);
         assertFalse("no line holds " + phrase, found.isEmpty());
         return found.get(0);
@@ -89,7 +89,7 @@ public final class WaveFiveDocsTest {
         }
     }
 
-    private static void contains(String where, String text, String... parts) {
+    static void contains(String where, String text, String... parts) {
         for (String p : parts) {
             assertTrue(p + " in " + where + ": " + text, text.contains(p));
         }
@@ -122,7 +122,7 @@ public final class WaveFiveDocsTest {
     }
 
     /** The cells of the defaults.md table row whose first cell is {@code label}. */
-    private static String[] row(String defaults, String label) {
+    static String[] row(String defaults, String label) {
         String line = lineWith(defaults, "| " + label + " |");
         String[] raw = line.split("\\|", -1);
         String[] cells = new String[raw.length - 2];
@@ -133,11 +133,11 @@ public final class WaveFiveDocsTest {
         return cells;
     }
 
-    private static long dflt(String defaults, String label) {
+    static long dflt(String defaults, String label) {
         return value(row(defaults, label)[1]);
     }
 
-    private static long max(String defaults, String label) {
+    static long max(String defaults, String label) {
         return value(row(defaults, label)[2]);
     }
 
