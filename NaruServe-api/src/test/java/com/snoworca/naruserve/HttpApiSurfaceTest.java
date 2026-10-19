@@ -25,9 +25,9 @@ import org.junit.Test;
 
 public class HttpApiSurfaceTest {
 
-    // IR-JSON-002 AC-8: body and json left this list in wave 5.
+    // IR-JSON-002 AC-8: body and json left this list in wave 5; FR-COOKIE-002 AC-8: so did the cookie methods.
     private static final List<String> LATER_WAVE_NAMES = Arrays.asList("form", "file", "files", "parts",
-            "download", "cache", "sse", "cookie", "getCookies", "addCookie");
+            "download", "cache", "sse");
 
     /** "name(paramSimpleNames)->returnSimpleName" for every public method a type declares. */
     private static Set<String> signatures(Class<?> type) {
@@ -82,7 +82,8 @@ public class HttpApiSurfaceTest {
         return app.route("/u/:id").get(h1).put(h2).delete(h3).post(h1).patch(h2).head(h3).options(h1);
     }
 
-    // SDS-AC-1; IR-HTTP-001 AC-1; IR-APP-004 AC-3 adds application and service from wave 4
+    // SDS-AC-1; IR-HTTP-001 AC-1; IR-APP-004 AC-3 adds application and service from wave 4; SDS-AC-11 of
+    // docs/sds/2026-10-19.naruserve.naruserve-v1-wave-5-3.sds.md; FR-COOKIE-002 AC-8 adds the cookie readers
     @Test
     public void sdsAc1_IR_HTTP_001_AC1_requestDeclaresTheWave3Methods() throws Exception {
         assertTrue(Request.class.isInterface());
@@ -94,7 +95,9 @@ public class HttpApiSurfaceTest {
                 "attribute(String,Object)->void", "attribute(String,Class)->Object",
                 "application()->ApplicationContext", "service(Class)->Object",
                 // wave 5: IR-JSON-002 AC-8
-                "body(Class)->Object", "body(TypeRef)->Object"), signatures(Request.class));
+                "body(Class)->Object", "body(TypeRef)->Object",
+                // wave 5: FR-COOKIE-002 AC-8
+                "cookie(String)->Cookie", "getCookies()->Cookie[]"), signatures(Request.class));
         for (String name : new String[] {"queries", "headers"}) {
             assertEquals(name, "java.util.List<java.lang.String>",
                     Request.class.getMethod(name, String.class).getGenericReturnType().getTypeName());
@@ -116,7 +119,7 @@ public class HttpApiSurfaceTest {
         assertTrue(read.getAnnotatedReturnType().isAnnotationPresent(Nullable.class));
     }
 
-    // SDS-AC-2; IR-HTTP-001 AC-2
+    // SDS-AC-2; IR-HTTP-001 AC-2; SDS-AC-11 (wave 5-3); FR-COOKIE-002 AC-8 adds addCookie
     @Test
     public void sdsAc2_IR_HTTP_001_AC2_responseStatusAndHeaderReturnReceiverWritersReturnVoid() throws Exception {
         assertTrue(Response.class.isInterface());
@@ -125,7 +128,9 @@ public class HttpApiSurfaceTest {
                 "send(byte[])->void", "html(String)->void", "stream(InputStream,String)->void", "end()->void",
                 "isCommitted()->boolean", "abort(Throwable)->void",
                 // wave 5: IR-JSON-002 AC-8
-                "json(Object)->void"), signatures(Response.class));
+                "json(Object)->void",
+                // wave 5: FR-COOKIE-002 AC-8
+                "addCookie(Cookie)->Response"), signatures(Response.class));
         assertEquals(InputStream.class, Response.class.getMethod("stream", InputStream.class, String.class)
                 .getParameterTypes()[0]);
     }
@@ -141,7 +146,8 @@ public class HttpApiSurfaceTest {
                 service.getGenericParameterTypes()[0].getTypeName());
     }
 
-    // SDS-AC-2; IR-HTTP-001 AC-3, re-pointed by IR-APP-004 AC-3: service and application are expected from wave 4
+    // SDS-AC-2; IR-HTTP-001 AC-3, re-pointed by IR-APP-004 AC-3: service and application are expected from wave 4;
+    // SDS-AC-11 (wave 5-3); FR-COOKIE-002 AC-8: cookie, getCookies and addCookie are expected from wave 5
     @Test
     public void sdsAc2_IR_HTTP_001_AC3_laterWaveMethodNamesAreAbsent() {
         for (Class<?> type : new Class<?>[] {Request.class, Response.class}) {
@@ -151,7 +157,7 @@ public class HttpApiSurfaceTest {
         }
     }
 
-    // SDS-AC-3; IR-HTTP-001 AC-4; IR-HTTP-005 AC-5
+    // SDS-AC-3; IR-HTTP-001 AC-4; IR-HTTP-005 AC-5; SDS-AC-11 (wave 5-3); FR-COOKIE-002 AC-8
     @Test
     public void sdsAc3_IR_HTTP_001_AC4_packageNullMarkedAndNullableOnlyOnListedPositions() throws Exception {
         assertNotNull(Request.class.getPackage().getAnnotation(NullMarked.class));
@@ -165,9 +171,25 @@ public class HttpApiSurfaceTest {
                 // wave 5: IR-JSON-002 AC-8
                 "Request.body[class java.lang.Class]#return",
                 "Request.body[class com.snoworca.naruserve.TypeRef]#return",
-                "Response.json[class java.lang.Object]#p0"),
+                "Response.json[class java.lang.Object]#p0",
+                // wave 5: FR-COOKIE-002 AC-8
+                "Request.cookie[class java.lang.String]#return"),
                 nullablePositions(Request.class, Response.class));
         assertEquals(setOf(), nullablePositions(RestApp.class, RouteBuilder.class, RouteHandler.class));
+    }
+
+    // SDS-AC-11 (wave 5-3); FR-COOKIE-002 AC-8
+    @Test
+    public void sdsAc11_FR_COOKIE_002_AC8_cookieMethodsAreDeclaredAndOnlyCookieReturnIsNullable() throws Exception {
+        java.lang.reflect.Method cookie = Request.class.getMethod("cookie", String.class);
+        assertTrue(cookie.getAnnotatedReturnType().isAnnotationPresent(Nullable.class));
+        assertFalse(cookie.getAnnotatedParameterTypes()[0].isAnnotationPresent(Nullable.class));
+        java.lang.reflect.Method all = Request.class.getMethod("getCookies");
+        assertEquals(Cookie[].class, all.getReturnType());
+        assertFalse(all.getAnnotatedReturnType().isAnnotationPresent(Nullable.class));
+        java.lang.reflect.Method add = Response.class.getMethod("addCookie", Cookie.class);
+        assertEquals(Response.class, add.getReturnType());
+        assertFalse(add.getAnnotatedParameterTypes()[0].isAnnotationPresent(Nullable.class));
     }
 
     // SDS-AC-5; IR-HTTP-002 AC-1

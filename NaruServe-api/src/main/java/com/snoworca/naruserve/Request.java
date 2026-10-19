@@ -4,11 +4,12 @@ import java.util.List;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Read-only view of one HTTP request plus a per-request attribute store, the app context and the JSON body reader.
- * No form, file or cookie access yet; later waves add them.
+ * Read-only view of one HTTP request plus a per-request attribute store, the app context, the JSON body reader and
+ * the request cookies. No form or file access yet; later waves add them.
  */
 // @req IR-HTTP-001
 // @req IR-JSON-002
+// @req FR-COOKIE-002
 public interface Request {
 
     /** The actual request method. */
@@ -85,5 +86,25 @@ public interface Request {
     // @req FR-JSON-001
     default <T> @Nullable T body(TypeRef<T> type) {
         throw new UnsupportedOperationException(getClass().getName() + " has no JSON body reader");
+    }
+
+    /**
+     * The first request cookie named {@code name}, or {@code null}; the value is exactly as the client sent it (no
+     * decoding), like Express {@code req.cookies[name]} with cookie-parser. The default throws
+     * {@link UnsupportedOperationException}.
+     */
+    // @req FR-COOKIE-002
+    default @Nullable Cookie cookie(String name) {
+        throw new UnsupportedOperationException(getClass().getName() + " has no cookie reader");
+    }
+
+    /**
+     * Every request cookie in header order, duplicates kept, as a new array on each call (length 0 without a
+     * {@code Cookie} header). Pairs without '=' or with a non-token name are skipped. The default throws
+     * {@link UnsupportedOperationException}.
+     */
+    // @req FR-COOKIE-002
+    default Cookie[] getCookies() {
+        throw new UnsupportedOperationException(getClass().getName() + " has no cookie reader");
     }
 }

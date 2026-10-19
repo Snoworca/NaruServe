@@ -1,6 +1,7 @@
 package com.snoworca.naruserve.internal;
 
 import com.snoworca.naruserve.ApplicationContext;
+import com.snoworca.naruserve.Cookie;
 import com.snoworca.naruserve.HttpException;
 import com.snoworca.naruserve.Method;
 import com.snoworca.naruserve.Request;
@@ -24,6 +25,7 @@ import org.jspecify.annotations.Nullable;
 // @req FR-HTTP-011
 // @req FR-HTTP-012
 // @req FR-JSON-001
+// @req FR-COOKIE-002
 public final class DefaultRequest implements Request {
 
     private final HttpExchange ex;
@@ -33,6 +35,7 @@ public final class DefaultRequest implements Request {
     private final ConcurrentHashMap<String, Object> attributes = new ConcurrentHashMap<>();
     private final BodyState body = new BodyState();
     private volatile @Nullable Map<String, List<String>> query;
+    private volatile Cookie @Nullable [] cookies;
     private final @Nullable ApplicationContext context;
     private final @Nullable JsonCodec codec;
     private final long jsonLimit;
@@ -285,6 +288,45 @@ public final class DefaultRequest implements Request {
             throw new IllegalArgumentException("malformed percent-encoding or invalid UTF-8");
         }
         return decoded;
+    }
+
+    /** The Cookie header lines parsed once; a race parses twice to equal results, which is harmless. */
+    // @req FR-COOKIE-002
+    private Cookie[] parsedCookies() {
+        Cookie[] c = cookies;
+        if (c == null) {
+            c = CookieParser.parse(headers("Cookie"));
+            cookies = c;
+        }
+        return c;
+    }
+
+    // @req FR-COOKIE-002
+    @Override
+    public @Nullable Cookie cookie(String name) {
+        Objects.requireNonNull(name, "name");
+        for (Cookie c : parsedCookies()) {
+            if (c.getName().equals(name)) {
+                return copy(c);
+            }
+        }
+        return null;
+    }
+
+    // @req FR-COOKIE-002
+    @Override
+    public Cookie[] getCookies() {
+        Cookie[] parsed = parsedCookies();
+        Cookie[] out = new Cookie[parsed.length];
+        for (int i = 0; i < out.length; i++) {
+            out[i] = copy(parsed[i]);
+        }
+        return out;
+    }
+
+    /** Cookie is mutable, so a reader never hands out the parsed instance: changing one leaves later reads intact. */
+    private static Cookie copy(Cookie c) {
+        return CookieFactoryHook.create(c.getName(), c.getValue());
     }
 
     /** The app's one context, identical for every request of the app. */

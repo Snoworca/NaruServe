@@ -1,5 +1,6 @@
 package com.snoworca.naruserve.internal;
 
+import com.snoworca.naruserve.Cookie;
 import com.snoworca.naruserve.HttpException;
 import com.snoworca.naruserve.Response;
 import com.snoworca.naruserve.spi.HttpExchange;
@@ -16,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import org.jspecify.annotations.Nullable;
@@ -34,6 +36,7 @@ import org.jspecify.annotations.Nullable;
 // @req FR-HTTP-017
 // @req FR-HTTP-018
 // @req FR-JSON-002
+// @req FR-COOKIE-001
 public final class DefaultResponse implements Response {
 
     private static final int CHUNK = 8192;
@@ -97,6 +100,20 @@ public final class DefaultResponse implements Response {
             throw badHeader();
         }
         put(name, value);
+        return this;
+    }
+
+    /** Appends one Set-Cookie line, never replacing an earlier one; nothing is added when validation throws. */
+    // @req FR-COOKIE-001
+    @Override
+    public synchronized Response addCookie(Cookie cookie) {
+        Objects.requireNonNull(cookie, "cookie");
+        requireNew();
+        String line = CookieSerializer.serialize(cookie);
+        if (!isFieldValue(line)) {
+            throw badHeader(); // a char above U+00FF in path or domain, same rule as res.header
+        }
+        headers.add(new SimpleImmutableEntry<>("Set-Cookie", line));
         return this;
     }
 
@@ -497,8 +514,8 @@ public final class DefaultResponse implements Response {
         return false;
     }
 
-    /** RFC 9110 token: one or more tchar. */
-    private static boolean isToken(String s) {
+    /** RFC 9110 token: one or more tchar; the cookie parser shares it. */
+    static boolean isToken(String s) {
         if (s.isEmpty()) {
             return false;
         }
