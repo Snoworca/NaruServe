@@ -55,4 +55,22 @@ public class StandardErrorsTest {
         assertArrayEquals(("{\"error\":{\"code\":\"BAD_REQUEST\",\"message\":\"q\\\"\\u001f한\",\"requestId\":\"r\"}}")
                 .getBytes(StandardCharsets.UTF_8), body);
     }
+
+    // SDS-AC-7 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-5-4.sds.md; IR-ENGINE-002 AC-5, FR-ENGINE-005 AC-2
+    @Test
+    public void sdsAc7_IR_ENGINE_002_AC5_rendererGives421And408BodiesWithFreshRequestIds() {
+        com.snoworca.naruserve.spi.ErrorRenderer r = StandardErrors.renderer();
+        String a = r.render(421);
+        String b = r.render(421);
+        String pattern = "\\{\"error\":\\{\"code\":\"HTTP_421\",\"message\":\"Misdirected Request\","
+                + "\"requestId\":\"[0-9a-f]{16}\"}}";
+        org.junit.Assert.assertTrue(a, a.matches(pattern));
+        org.junit.Assert.assertTrue(b, b.matches(pattern));
+        org.junit.Assert.assertNotEquals(a, b);
+        String t = r.render(408);
+        org.junit.Assert.assertTrue(t, t.matches("\\{\"error\":\\{\"code\":\"HTTP_408\","
+                + "\"message\":\"Request Timeout\",\"requestId\":\"[0-9a-f]{16}\"}}"));
+        assertEquals("Request Timeout", StandardErrors.reason(408));
+        assertEquals("Misdirected Request", StandardErrors.reason(421));
+    }
 }

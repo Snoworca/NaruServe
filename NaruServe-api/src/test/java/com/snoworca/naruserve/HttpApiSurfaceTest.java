@@ -230,7 +230,8 @@ public class HttpApiSurfaceTest {
         h.handle(null, null);
     }
 
-    // SDS-AC-6; IR-HTTP-005 AC-1, AC-2, AC-3, AC-5; IR-APP-002 AC-2 (wave 4 SDS-AC-5: re-pointed to the wave 4 set)
+    // SDS-AC-6; IR-HTTP-005 AC-1, AC-2, AC-3, AC-5; IR-APP-002 AC-2 (wave 4 SDS-AC-5: re-pointed to the wave 4 set);
+    // SDS-AC-3 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-5-4.sds.md; IR-ENGINE-001 AC-7: the wave 5 set
     @Test
     public void sdsAc6_IR_HTTP_005_AC1_AC2_AC3_AC5_IR_APP_002_AC2_restAppDeclaresExactlyTheWave4Methods() {
         assertTrue(RestApp.class.isInterface());
@@ -263,7 +264,9 @@ public class HttpApiSurfaceTest {
                 // wave 4: IR-APP-007
                 "accessLog(Configurer)->RestApp",
                 // wave 5: IR-JSON-002 AC-1, AC-2
-                "jsonCodec(JsonCodec)->RestApp", "jsonLimit(long)->RestApp"), signatures(RestApp.class));
+                "jsonCodec(JsonCodec)->RestApp", "jsonLimit(long)->RestApp",
+                // wave 5: IR-ENGINE-001 AC-1, AC-7
+                "server(Configurer)->RestApp", "trustProxy(boolean)->RestApp"), signatures(RestApp.class));
         assertEquals(0, RestApp.class.getInterfaces().length);
         List<String> statics = new java.util.ArrayList<>();
         for (java.lang.reflect.Method m : RestApp.class.getDeclaredMethods()) {

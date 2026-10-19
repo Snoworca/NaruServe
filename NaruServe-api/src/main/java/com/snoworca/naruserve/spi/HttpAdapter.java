@@ -13,6 +13,15 @@ public interface HttpAdapter {
     void bind(String host, int port, ExchangeHandler handler) throws IOException;
 
     /**
+     * Binds with the frozen server settings; {@code listen()} calls this once. The default binds
+     * {@code settings.bindAddress()} and {@code settings.port()} through {@link #bind(String, int, ExchangeHandler)}.
+     */
+    // @req IR-ENGINE-002
+    default void bind(ServerSettings settings, ExchangeHandler handler) throws IOException {
+        bind(settings.bindAddress(), settings.port(), handler);
+    }
+
+    /**
      * The actual bound port, stable until stop.
      *
      * @throws IllegalStateException before bind

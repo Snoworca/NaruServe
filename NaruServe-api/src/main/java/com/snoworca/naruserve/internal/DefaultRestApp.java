@@ -15,6 +15,7 @@ import com.snoworca.naruserve.RestApp;
 import com.snoworca.naruserve.RouteBuilder;
 import com.snoworca.naruserve.RouteHandler;
 import com.snoworca.naruserve.ServerHandle;
+import com.snoworca.naruserve.ServerOptions;
 import com.snoworca.naruserve.routing.RouteKind;
 import com.snoworca.naruserve.routing.RoutePattern;
 import com.snoworca.naruserve.routing.Router;
@@ -22,6 +23,7 @@ import com.snoworca.naruserve.routing.RouterPolicy;
 import com.snoworca.naruserve.spi.ExchangeHandler;
 import com.snoworca.naruserve.spi.HttpAdapter;
 import com.snoworca.naruserve.spi.JsonCodec;
+import com.snoworca.naruserve.spi.ServerSettings;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -40,6 +42,10 @@ import org.jspecify.annotations.Nullable;
 // @req FR-HTTP-008
 // @req FR-HTTP-007
 // @req IR-APP-001
+// @req IR-ENGINE-001
+// @req IR-ENGINE-002
+// @req FR-ENGINE-002
+// @req FR-ENGINE-004
 // @req IR-APP-002
 // @req IR-APP-003
 // @req IR-APP-005
@@ -92,6 +98,9 @@ public final class DefaultRestApp implements RestApp {
     private final AppLifecycle lifecycle = new AppLifecycle();
     private final DefaultApplicationContext context = new DefaultApplicationContext(lifecycle, this);
     private final DefaultAccessLogOptions accessLogOptions = new DefaultAccessLogOptions();
+    private final DefaultServerOptions serverOptions = new DefaultServerOptions();
+    // Written only in NEW; the Dispatcher reads it once at freeze.
+    private volatile boolean trustProxy;
     private final ShutdownParticipants shutdownParticipants = new ShutdownParticipants();
     // Set by the one listen() that won beginStart.
     private volatile boolean bindAttempted;
@@ -192,6 +201,33 @@ public final class DefaultRestApp implements RestApp {
         return this;
     }
 
+    // @req IR-ENGINE-001
+    @Override
+    public synchronized RestApp server(Configurer<ServerOptions> configurer) {
+        lifecycle.requireConfigurable("server");
+        Objects.requireNonNull(configurer, "configurer");
+        configurer.configure(serverOptions);
+        return this;
+    }
+
+    // @req IR-ENGINE-001
+    // @req FR-ENGINE-008
+    @Override
+    public synchronized RestApp trustProxy(boolean trust) {
+        lifecycle.requireConfigurable("trustProxy");
+        this.trustProxy = trust;
+        return this;
+    }
+
+    /** True for 127.0.0.0/8, ::1 and localhost, the binds that need no LAN warning. */
+    // @req FR-ENGINE-002
+    static boolean isLoopback(String address) {
+        String a = address.startsWith("[") && address.endsWith("]") ? address.substring(1, address.length() - 1)
+                : address;
+        return a.equalsIgnoreCase("localhost") || a.equals("::1") || a.equals("0:0:0:0:0:0:0:1")
+                || a.matches("127\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}");
+    }
+
     /** The app's internal shutdown participant registry; later waves add their steps here. */
     // @req FR-APP-011
     ShutdownParticipants shutdownParticipants() {
@@ -234,7 +270,8 @@ public final class DefaultRestApp implements RestApp {
 
     /**
      * STARTING by compareAndSet, the onStart callbacks in order (each once), the context freeze, the route-table
-     * freeze, one bind of the gated handler on {@code 127.0.0.1:port}, then RUNNING. A stop requested meanwhile is
+     * freeze, the server-settings freeze (its connection check throws {@link IllegalStateException}), one warning
+     * for a non-loopback bind address, one settings bind of the gated handler, then RUNNING. A stop requested meanwhile is
      * checked before each callback, before bind and at the move to RUNNING, and ends the start like a failure. Not
      * synchronized: requests held on the start gate and onStart callbacks must not wait for this call.
      */
@@ -266,6 +303,7 @@ public final class DefaultRestApp implements RestApp {
 
     private ServerHandle start(HttpAdapter a, int port) {
         int bound;
+        ServerSettings settings;
         try {
             List<LifecycleCallback> callbacks;
             synchronized (this) {
@@ -277,10 +315,16 @@ public final class DefaultRestApp implements RestApp {
             }
             context.freeze();
             freeze();
+            ServerSettings frozen = serverOptions.freeze(port, logger, StandardErrors.renderer());
+            settings = frozen;
             throwIfStopPending();
+            if (!isLoopback(frozen.bindAddress())) {
+                frozen.logger().warn("listening on " + frozen.bindAddress() + ", reachable beyond this device:"
+                        + " the app must add its own authentication");
+            }
             bindAttempted = true;
             Dispatcher d = frozenDispatcher();
-            a.bind("127.0.0.1", port, new GatedExchangeHandler(lifecycle, d, d.accessLog()));
+            a.bind(frozen, new GatedExchangeHandler(lifecycle, d, d.accessLog()));
             bound = a.boundPort();
             if (!lifecycle.markRunning()) {
                 throw stopWhileStarting();
@@ -296,7 +340,7 @@ public final class DefaultRestApp implements RestApp {
 
             @Override
             public String address() {
-                return "127.0.0.1";
+                return settings.bindAddress();
             }
 
             @Override
@@ -710,7 +754,7 @@ public final class DefaultRestApp implements RestApp {
         }
         SafeLogger safe = new SafeLogger(logger); // the logger is fixed from here: logger(...) needs an unfrozen app
         dispatcher = new Dispatcher(router, pipeline, new ErrorPath(errorHandlers, safe),
-                new AccessLog(accessLogOptions, safe), context, jsonCodec(), jsonLimit());
+                new AccessLog(accessLogOptions, safe), context, jsonCodec(), jsonLimit(), trustProxy);
         lifecycle.markFrozen();
     }
 

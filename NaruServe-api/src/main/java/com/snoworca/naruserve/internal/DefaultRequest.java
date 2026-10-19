@@ -39,6 +39,7 @@ public final class DefaultRequest implements Request {
     private final @Nullable ApplicationContext context;
     private final @Nullable JsonCodec codec;
     private final long jsonLimit;
+    private final boolean trustProxy;
 
     /** {@code params} are the decoded variables of the RouteMatch; no application context. */
     // @req FR-HTTP-009
@@ -57,6 +58,14 @@ public final class DefaultRequest implements Request {
     // @req FR-JSON-001
     public DefaultRequest(HttpExchange ex, Method method, Map<String, String> params,
             @Nullable ApplicationContext context, @Nullable JsonCodec codec, long jsonLimit) {
+        this(ex, method, params, context, codec, jsonLimit, false);
+    }
+
+    /** As above; {@code trustProxy} makes X-Forwarded-For and X-Forwarded-Proto count (app.trustProxy). */
+    // @req FR-ENGINE-008
+    public DefaultRequest(HttpExchange ex, Method method, Map<String, String> params,
+            @Nullable ApplicationContext context, @Nullable JsonCodec codec, long jsonLimit, boolean trustProxy) {
+        this.trustProxy = trustProxy;
         this.codec = codec;
         this.jsonLimit = jsonLimit;
         this.context = context;
@@ -223,15 +232,17 @@ public final class DefaultRequest implements Request {
         return values == null ? Collections.<String>emptyList() : Collections.unmodifiableList(values);
     }
 
-    /** The adapter's value; X-Forwarded-* and Forwarded are not consulted. */
+    /** The adapter's value; X-Forwarded-For only under app.trustProxy(true); Forwarded never. */
+    // @req FR-ENGINE-008
     @Override
     public String remoteAddress() {
-        return ex.remoteAddress();
+        return ProxyTrust.remoteAddress(ex, trustProxy);
     }
 
+    // @req FR-ENGINE-008
     @Override
     public boolean isSecure() {
-        return ex.isSecure();
+        return ProxyTrust.isSecure(ex, trustProxy);
     }
 
     @Override

@@ -1,6 +1,7 @@
 package com.snoworca.naruserve.internal;
 
 import com.snoworca.naruserve.HttpException;
+import com.snoworca.naruserve.spi.ErrorRenderer;
 import java.nio.charset.StandardCharsets;
 
 /** Standard error table and body, built by the core without the app's codec; public for {@code HttpException.code()}. */
@@ -28,13 +29,16 @@ public final class StandardErrors {
 
     /** The reason phrase of {@code status}, {@code Error} when unlisted. */
     // @req FR-APP-006
+    // @req FR-ENGINE-005
     static String reason(int status) {
         switch (status) {
             case 400: return "Bad Request";
             case 404: return "Not Found";
             case 405: return "Method Not Allowed";
+            case 408: return "Request Timeout";
             case 413: return "Payload Too Large";
             case 415: return "Unsupported Media Type";
+            case 421: return "Misdirected Request";
             case 422: return "Unprocessable Entity";
             case 426: return "Upgrade Required";
             case 500: return "Internal Server Error";
@@ -42,6 +46,13 @@ public final class StandardErrors {
             case 503: return "Service Unavailable";
             default: return "Error";
         }
+    }
+
+    /** The renderer adapters get: the standard body of a status with its reason and a fresh request id. */
+    // @req IR-ENGINE-002
+    // @req FR-ENGINE-005
+    static ErrorRenderer renderer() {
+        return status -> new String(json(status, reason(status), RequestIds.next()), StandardCharsets.UTF_8);
     }
 
     /** UTF-8 {@code {"error":{"code":...,"message":...,"requestId":...}}}, built without the app's codec. */

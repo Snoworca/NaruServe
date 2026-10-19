@@ -398,6 +398,9 @@ public final class DefaultResponse implements Response {
                 this.status = status;
                 headers.clear();
                 put("Content-Type", StandardErrors.JSON_TYPE);
+                if (status == 408) {
+                    put("Connection", "close"); // FR-ENGINE-005 AC-2: the adapter closes after a 408
+                }
                 c = prepare(body, null);
             } else {
                 return;

@@ -167,6 +167,10 @@ public class AppLifecycleGuardTest {
         if (type == long.class) {
             return 5L;
         }
+        // wave 5: IR-ENGINE-001 AC-1 puts trustProxy under the same guard
+        if (type == boolean.class) {
+            return true;
+        }
         throw new AssertionError("no test argument for " + type);
     }
 

@@ -50,6 +50,7 @@ public final class Dispatcher implements ExchangeHandler {
     private final @Nullable ApplicationContext context;
     private final @Nullable JsonCodec codec;
     private final long jsonLimit;
+    private final boolean trustProxy;
 
     /**
      * Wave 3 shape: no middleware, no onError handler, access log off, a {@link ConsoleLogger}. {@code router} must
@@ -83,6 +84,14 @@ public final class Dispatcher implements ExchangeHandler {
     // @req IR-JSON-002
     Dispatcher(Router<RouteHandler> router, MiddlewarePipeline pipeline, ErrorPath errors, AccessLog accessLog,
             @Nullable ApplicationContext context, @Nullable JsonCodec codec, long jsonLimit) {
+        this(router, pipeline, errors, accessLog, context, codec, jsonLimit, false);
+    }
+
+    /** As above, with the app.trustProxy setting that {@code DefaultRestApp.freeze} read. */
+    // @req FR-ENGINE-008
+    Dispatcher(Router<RouteHandler> router, MiddlewarePipeline pipeline, ErrorPath errors, AccessLog accessLog,
+            @Nullable ApplicationContext context, @Nullable JsonCodec codec, long jsonLimit, boolean trustProxy) {
+        this.trustProxy = trustProxy;
         this.codec = codec;
         this.jsonLimit = jsonLimit;
         this.context = context;
@@ -112,7 +121,7 @@ public final class Dispatcher implements ExchangeHandler {
                 ? (m.autoHead() ? Method.HEAD : Objects.requireNonNull(m.method()))
                 : Objects.requireNonNull(methodOf(token)); // preCheck answered every unrecognised token
         DefaultRequest req = new DefaultRequest(ex, method,
-                routed ? m.params() : Collections.<String, String>emptyMap(), context, codec, jsonLimit);
+                routed ? m.params() : Collections.<String, String>emptyMap(), context, codec, jsonLimit, trustProxy);
         DefaultResponse res = new DefaultResponse(ex, method == Method.HEAD, codec);
         res.onDone(() -> accessLog.write(token, rawPath, res.statusCode(),
                 res.state() == ResponseState.ABORTED, start, req.body().bytesRead(), res.bytesWritten(), rid));
