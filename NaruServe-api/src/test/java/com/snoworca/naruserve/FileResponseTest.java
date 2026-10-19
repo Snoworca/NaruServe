@@ -24,7 +24,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.ArrayList;
@@ -45,10 +44,6 @@ public class FileResponseTest {
     @Rule
     public final TemporaryFolder tmp = new TemporaryFolder();
 
-    private static String text(ClientResponse r) {
-        return new String(r.body(), StandardCharsets.UTF_8);
-    }
-
     // SDS-AC-4; FR-STATIC-006 AC-5
     @Test
     public void sdsAc4_FR_STATIC_006_AC5_resFileOnLinkDirectoryOrMissingIs404StandardBody() throws IOException {
@@ -67,12 +62,12 @@ public class FileResponseTest {
         t.app().get("/missing", (req, res) -> res.file(missing));
         ClientResponse ok = t.send("GET", "/real");
         assertEquals(200, ok.status());
-        assertEquals("REAL", text(ok));
+        assertEquals("REAL", ok.text());
         assertEquals("text/html; charset=UTF-8", ok.header("Content-Type"));
         for (String p : new String[] {"/link", "/dir", "/missing"}) {
             ClientResponse r = t.send("GET", p);
             assertEquals(p, 404, r.status());
-            assertTrue(p + ": " + text(r), text(r).startsWith("{\"error\":{\"code\":\"NOT_FOUND\""));
+            assertTrue(p + ": " + r.text(), r.text().startsWith("{\"error\":{\"code\":\"NOT_FOUND\""));
         }
     }
 
@@ -109,7 +104,7 @@ public class FileResponseTest {
         t.app().get("/d", (req, res) -> res.download(missing, "x.pdf"));
         ClientResponse r = t.send("GET", "/d");
         assertEquals(404, r.status());
-        assertEquals("gone", text(r));
+        assertEquals("gone", r.text());
         assertNull(r.header("Content-Disposition"));
     }
 

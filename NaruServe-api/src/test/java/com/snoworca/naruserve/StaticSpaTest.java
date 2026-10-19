@@ -7,7 +7,6 @@ import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientResponse;
 import com.snoworca.naruserve.testing.TestApp;
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -28,23 +27,19 @@ public class StaticSpaTest {
         return t;
     }
 
-    private static String text(ClientResponse r) {
-        return new String(r.body(), StandardCharsets.UTF_8);
-    }
-
     // SDS-AC-6; FR-STATIC-004 AC-1; FR-STATIC-004 AC-2
     @Test
     public void sdsAc6_FR_STATIC_004_AC1_AC2_acceptMustNameTextHtml() throws IOException {
         TestApp t = app(o -> o.spaFallback(true));
         ClientResponse r = t.send("GET", "/app/users/7", "Accept", "text/html,application/xhtml+xml");
         assertEquals(200, r.status());
-        assertEquals("SPA", text(r));
-        assertEquals("SPA", text(t.send("GET", "/app/users/7", "Accept", "TEXT/HTML")));
+        assertEquals("SPA", r.text());
+        assertEquals("SPA", t.send("GET", "/app/users/7", "Accept", "TEXT/HTML").text());
         assertEquals(404, t.send("GET", "/app/users/7", "Accept", "*/*").status());
         assertEquals(404, t.send("GET", "/app/users/7", "Accept", "application/json").status());
         assertEquals(404, t.send("GET", "/app/users/7").status());
-        assertEquals("REAL", text(t.send("GET", "/real.txt", "Accept", "text/html")));
-        assertEquals("ROUTE", text(t.send("GET", "/routed", "Accept", "text/html")));
+        assertEquals("REAL", t.send("GET", "/real.txt", "Accept", "text/html").text());
+        assertEquals("ROUTE", t.send("GET", "/routed", "Accept", "text/html").text());
         ClientResponse head = t.send("HEAD", "/app/x", "Accept", "text/html");
         assertEquals(200, head.status());
         assertEquals(0, head.body().length);
@@ -64,7 +59,7 @@ public class StaticSpaTest {
         for (String path : new String[] {"/api/x", "/api", "/ws/chat", "/ws"}) {
             assertEquals(path, 404, t.send("GET", path, "Accept", "text/html").status());
         }
-        assertEquals("SPA", text(t.send("GET", "/apix", "Accept", "text/html")));
+        assertEquals("SPA", t.send("GET", "/apix", "Accept", "text/html").text());
     }
 
     // SDS-AC-7; FR-STATIC-004 AC-4
@@ -74,6 +69,6 @@ public class StaticSpaTest {
         assertEquals(404, t.send("GET", "/admin/x", "Accept", "text/html").status());
         assertEquals(404, t.send("GET", "/admin", "Accept", "text/html").status());
         assertEquals(404, t.send("GET", "/api/x", "Accept", "text/html").status());
-        assertEquals("SPA", text(t.send("GET", "/adminx", "Accept", "text/html")));
+        assertEquals("SPA", t.send("GET", "/adminx", "Accept", "text/html").text());
     }
 }

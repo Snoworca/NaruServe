@@ -118,10 +118,6 @@ public class GsonJsonCodecTest {
                 .body(body.getBytes(StandardCharsets.UTF_8)));
     }
 
-    private static String text(ClientResponse r) {
-        return new String(r.body(), StandardCharsets.UTF_8);
-    }
-
     /** An app over the in-memory adapter using {@code codec}, echoing req.body(type) through res.json. */
     private static InMemoryHttpAdapter echoApp(JsonCodec codec) {
         InMemoryHttpAdapter adapter = new InMemoryHttpAdapter();
@@ -241,7 +237,7 @@ public class GsonJsonCodecTest {
         for (String json : new String[] {"{a:1}", "{'a':1}", "{\"name\":\"a\" /* c */}"}) {
             ClientResponse r = post(adapter, "/user", json);
             assertEquals(json, 400, r.status());
-            assertTrue(text(r), text(r).contains("BAD_REQUEST"));
+            assertTrue(r.text(), r.text().contains("BAD_REQUEST"));
         }
     }
 
@@ -304,10 +300,10 @@ public class GsonJsonCodecTest {
         InMemoryHttpAdapter adapter = echoApp(new GsonJsonCodec());
         ClientResponse deep = post(adapter, "/object", nested(65));
         assertEquals(400, deep.status());
-        assertTrue(text(deep), text(deep).contains("BAD_REQUEST"));
+        assertTrue(deep.text(), deep.text().contains("BAD_REQUEST"));
         ClientResponse ok = post(adapter, "/object", nested(64));
         assertEquals(200, ok.status());
-        assertEquals(nested(64), text(ok));
+        assertEquals(nested(64), ok.text());
     }
 
     // ---- SDS-AC-5 ----
@@ -348,7 +344,7 @@ public class GsonJsonCodecTest {
         for (String json : new String[] {"{\"a\":1} x", "{} {}"}) {
             ClientResponse r = post(adapter, "/map", json);
             assertEquals(json, 400, r.status());
-            assertTrue(text(r), text(r).contains("BAD_REQUEST"));
+            assertTrue(r.text(), r.text().contains("BAD_REQUEST"));
         }
     }
 
@@ -358,7 +354,7 @@ public class GsonJsonCodecTest {
         InMemoryHttpAdapter adapter = echoApp(new GsonJsonCodec());
         ClientResponse r = post(adapter, "/map", "\uFEFF{\"a\":1}");
         assertEquals(200, r.status());
-        assertEquals(com.google.gson.JsonParser.parseString("{\"a\":1.0}"), com.google.gson.JsonParser.parseString(text(r)));
+        assertEquals(com.google.gson.JsonParser.parseString("{\"a\":1.0}"), com.google.gson.JsonParser.parseString(r.text()));
         assertEquals(400, post(adapter, "/map", "\uFEFF\uFEFF{}").status());
     }
 
@@ -393,7 +389,7 @@ public class GsonJsonCodecTest {
         for (String path : new String[] {"/double", "/int"}) {
             ClientResponse r = post(adapter, path, "\"abc\"");
             assertEquals(path, 400, r.status());
-            assertTrue(text(r), text(r).contains("BAD_REQUEST"));
+            assertTrue(r.text(), r.text().contains("BAD_REQUEST"));
         }
     }
 
@@ -489,19 +485,19 @@ public class GsonJsonCodecTest {
         InMemoryHttpAdapter adapter = echoApp(new GsonJsonCodec());
         Gson gson = new Gson();
         String user = "{\"name\":\"kim\",\"age\":30}";
-        assertEquals(gson.fromJson(user, User.class), gson.fromJson(text(post(adapter, "/user", user)), User.class));
+        assertEquals(gson.fromJson(user, User.class), gson.fromJson(post(adapter, "/user", user).text(), User.class));
         String users = "[{\"name\":\"a\",\"age\":1},{\"name\":\"b\",\"age\":2}]";
-        assertEquals(users, text(post(adapter, "/users", users)));
-        assertEquals("\"x\"", text(post(adapter, "/string", "\"x\"")));
-        assertEquals("42", text(post(adapter, "/int", "42")));
-        assertEquals("1.5", text(post(adapter, "/double", "1.5")));
-        assertEquals("true", text(post(adapter, "/bool", "true")));
+        assertEquals(users, post(adapter, "/users", users).text());
+        assertEquals("\"x\"", post(adapter, "/string", "\"x\"").text());
+        assertEquals("42", post(adapter, "/int", "42").text());
+        assertEquals("1.5", post(adapter, "/double", "1.5").text());
+        assertEquals("true", post(adapter, "/bool", "true").text());
         ClientResponse nul = post(adapter, "/user", "null");
         assertEquals(200, nul.status());
-        assertEquals("null", text(nul));
+        assertEquals("null", nul.text());
         // untyped Map decodes numbers as Double: compare as JSON values
         assertEquals(com.google.gson.JsonParser.parseString("{\"n\":42.0}"),
-                com.google.gson.JsonParser.parseString(text(post(adapter, "/map", "{\"n\":42}"))));
+                com.google.gson.JsonParser.parseString(post(adapter, "/map", "{\"n\":42}").text()));
     }
 
     // FR-JSON-003: a user JsonDeserializer rejecting input with JsonParseException is bad input, so IOException

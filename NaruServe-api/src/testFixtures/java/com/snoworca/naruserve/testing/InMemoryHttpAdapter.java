@@ -276,6 +276,11 @@ public final class InMemoryHttpAdapter implements HttpAdapter {
             return body.clone();
         }
 
+        /** The body decoded as UTF-8. */
+        public String text() {
+            return new String(body, java.nio.charset.StandardCharsets.UTF_8);
+        }
+
         /** True when the exchange was aborted or ended without a normal finish. */
         public boolean abnormallyClosed() {
             return abnormallyClosed;

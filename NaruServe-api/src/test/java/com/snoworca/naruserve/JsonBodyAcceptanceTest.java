@@ -147,14 +147,10 @@ public class JsonBodyAcceptanceTest {
         return post(t, adapter, "/b", contentType, body.getBytes(StandardCharsets.UTF_8), true);
     }
 
-    static String text(ClientResponse r) {
-        return new String(r.body(), StandardCharsets.UTF_8);
-    }
-
     static void assertError(int status, String code, ClientResponse r) {
-        assertEquals(text(r), status, r.status());
+        assertEquals(r.text(), status, r.status());
         assertEquals("application/json; charset=UTF-8", r.header("Content-Type"));
-        String body = text(r);
+        String body = r.text();
         assertTrue(body, body.matches("\\{\"error\":\\{\"code\":\"" + code
                 + "\",\"message\":\"[^\"]*\",\"requestId\":\"[0-9a-f]{16}\"}}"));
     }
@@ -172,7 +168,7 @@ public class JsonBodyAcceptanceTest {
                 "application/problem+json", "APPLICATION/JSON", "application/json;charset=\"UTF-8\""}) {
             ClientResponse r = post(ct, "\"x\"");
             assertEquals(ct, 200, r.status());
-            assertEquals(ct, "text:\"x\"", text(r));
+            assertEquals(ct, "text:\"x\"", r.text());
         }
     }
 
@@ -209,7 +205,7 @@ public class JsonBodyAcceptanceTest {
     public void sdsAc8_FR_JSON_001_AC2_leadingWhitespaceAndFirstCharReachTheCodec() {
         ClientResponse r = post("application/json", "  \"abc\"");
         assertEquals(200, r.status());
-        assertEquals("text:\"abc\"", text(r));
+        assertEquals("text:\"abc\"", r.text());
     }
 
     // SDS-AC-9; FR-JSON-001 AC-4
@@ -248,7 +244,7 @@ public class JsonBodyAcceptanceTest {
         for (boolean length : new boolean[] {true, false}) {
             ClientResponse r = post(app, a, "/b", "application/json", ten, length);
             assertEquals(200, r.status());
-            assertEquals("\"12345678\"", text(r));
+            assertEquals("\"12345678\"", r.text());
         }
     }
 
@@ -272,7 +268,7 @@ public class JsonBodyAcceptanceTest {
                 ClientResponse r = post(t, adapter, path, "application/json", body.getBytes(StandardCharsets.UTF_8),
                         true);
                 assertEquals(path + " " + body, 200, r.status());
-                assertEquals(path + " " + body, "<null>", text(r));
+                assertEquals(path + " " + body, "<null>", r.text());
             }
         }
     }

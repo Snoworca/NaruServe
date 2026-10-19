@@ -11,7 +11,6 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.List;
 import org.junit.Rule;
@@ -39,22 +38,18 @@ public class StaticSymlinkTest {
         Files.createSymbolicLink(new File(root, "indir").toPath(), new File(root, "dir").toPath());
     }
 
-    private static String text(ClientResponse r) {
-        return new String(r.body(), StandardCharsets.UTF_8);
-    }
-
     // SDS-AC-1; FR-STATIC-006 AC-2 (T29)
     @Test
     public void sdsAc1_FR_STATIC_006_AC2_linkToFileInsideRootIsRefused404ByDefault() throws IOException {
         tree();
         TestApp t = TestApp.create();
         t.app().staticFiles("/", root);
-        assertEquals("REAL", text(t.send("GET", "/real.txt")));
+        assertEquals("REAL", t.send("GET", "/real.txt").text());
         assertEquals(404, t.send("GET", "/inlink.txt").status());
         assertEquals(404, t.send("GET", "/indir/in.txt").status());
         ClientResponse out = t.send("GET", "/outlink.txt");
         assertEquals(404, out.status());
-        assertFalse(text(out).contains("OUTSIDE"));
+        assertFalse(out.text().contains("OUTSIDE"));
     }
 
     // SDS-AC-1; FR-STATIC-006 AC-1
@@ -65,8 +60,8 @@ public class StaticSymlinkTest {
         Files.createSymbolicLink(link.toPath(), root.toPath());
         TestApp t = TestApp.create();
         t.app().staticFiles("/", link);
-        assertEquals("REAL", text(t.send("GET", "/real.txt")));
-        assertEquals("INSIDE", text(t.send("GET", "/dir/in.txt")));
+        assertEquals("REAL", t.send("GET", "/real.txt").text());
+        assertEquals("INSIDE", t.send("GET", "/dir/in.txt").text());
         assertEquals(404, t.send("GET", "/inlink.txt").status());
     }
 
@@ -78,11 +73,11 @@ public class StaticSymlinkTest {
         t.app().staticFiles("/", root, o -> o.allowSymlinks(true));
         ClientResponse in = t.send("GET", "/inlink.txt");
         assertEquals(200, in.status());
-        assertEquals("REAL", text(in));
-        assertEquals("INSIDE", text(t.send("GET", "/indir/in.txt")));
+        assertEquals("REAL", in.text());
+        assertEquals("INSIDE", t.send("GET", "/indir/in.txt").text());
         ClientResponse out = t.send("GET", "/outlink.txt");
         assertEquals(404, out.status());
-        assertFalse(text(out).contains("OUTSIDE"));
+        assertFalse(out.text().contains("OUTSIDE"));
     }
 
     // SDS-AC-3; FR-STATIC-006 AC-4 (T29 swap through the afterCheck hook)
@@ -91,7 +86,7 @@ public class StaticSymlinkTest {
         tree();
         TestApp t = TestApp.create();
         t.app().staticFiles("/", root);
-        assertEquals("INSIDE", text(t.send("GET", "/dir/in.txt"))); // starts the app and proves the path serves
+        assertEquals("INSIDE", t.send("GET", "/dir/in.txt").text()); // starts the app and proves the path serves
         File dir = new File(root, "dir");
         Runnable swap = () -> {
             try {
@@ -104,7 +99,7 @@ public class StaticSymlinkTest {
         afterCheck(t, swap);
         ClientResponse r = t.send("GET", "/dir/in.txt");
         assertEquals(404, r.status());
-        assertFalse(text(r).contains("OUTSIDE"));
+        assertFalse(r.text().contains("OUTSIDE"));
     }
 
     // SDS-AC-6; FR-STATIC-006 AC-6

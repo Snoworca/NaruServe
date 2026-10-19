@@ -11,7 +11,6 @@ import com.snoworca.naruserve.RouteHandler;
 import com.snoworca.naruserve.routing.RouterPolicy;
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientResponse;
 import com.snoworca.naruserve.testing.TestApp;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -40,10 +39,6 @@ public class MiddlewarePipelineTest {
         };
     }
 
-    private static String text(ClientResponse r) {
-        return new String(r.body(), StandardCharsets.UTF_8);
-    }
-
     // SDS-AC-1; FR-APP-003 AC-1, T35
     @Test
     public void sdsAc1_FR_APP_003_AC1_globalsThenPrefixesThenRouteMiddlewareThenHandler() {
@@ -55,10 +50,10 @@ public class MiddlewarePipelineTest {
         app.use("/api", mw("p2"));
         app.route("/api/users").use(mw("r1")).use(mw("r2")).get(h("h"));
         app.get("/b", mw("r3"), h("h2"));
-        assertEquals("h", text(t.send("GET", "/api/users")));
+        assertEquals("h", t.send("GET", "/api/users").text());
         assertEquals(Arrays.asList("g1", "g2", "p1", "p2", "r1", "r2", "h"), calls);
         calls.clear();
-        assertEquals("h2", text(t.send("GET", "/b")));
+        assertEquals("h2", t.send("GET", "/b").text());
         assertEquals(Arrays.asList("g1", "g2", "r3", "h2"), calls);
     }
 
@@ -127,7 +122,7 @@ public class MiddlewarePipelineTest {
         t.app().onError((error, req, res) -> calls.add("onError"));
         ClientResponse r = t.send("GET", "/api/missing");
         assertEquals(404, r.status());
-        assertTrue(text(r), text(r).startsWith("{\"error\":{\"code\":\"NOT_FOUND\""));
+        assertTrue(r.text(), r.text().startsWith("{\"error\":{\"code\":\"NOT_FOUND\""));
         assertEquals(Arrays.asList("g", "p"), calls);
         // Control (FR-APP-005 AC-7): the recording onError is wired, so the empty call lists above are meaningful.
         calls.clear();
@@ -237,7 +232,7 @@ public class MiddlewarePipelineTest {
         });
         ClientResponse r = t.send("TRACE", "/x");
         assertEquals(501, r.status());
-        assertTrue(text(r), text(r).startsWith("{\"error\":{\"code\":\"NOT_IMPLEMENTED\""));
+        assertTrue(r.text(), r.text().startsWith("{\"error\":{\"code\":\"NOT_IMPLEMENTED\""));
         assertEquals(Collections.singletonList(Method.TRACE), seen);
     }
 }

@@ -11,7 +11,6 @@ import com.snoworca.naruserve.RouteHandler;
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientResponse;
 import com.snoworca.naruserve.testing.RecordingLogger;
 import com.snoworca.naruserve.testing.TestApp;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -50,10 +49,6 @@ public class ChainNextTest {
         }
     }
 
-    private static String text(ClientResponse r) {
-        return new String(r.body(), StandardCharsets.UTF_8);
-    }
-
     // SDS-AC-9; FR-APP-004 AC-1, T35
     @Test
     public void sdsAc9_FR_APP_004_AC1_secondRunThrowsAndDownstreamRanOnce() {
@@ -64,7 +59,7 @@ public class ChainNextTest {
         });
         t.app().use(mw("m2"));
         t.app().get("/x", h("h"));
-        assertEquals("h", text(t.send("GET", "/x")));
+        assertEquals("h", t.send("GET", "/x").text());
         assertEquals(Arrays.asList("m2", "h", "second run ISE"), calls);
     }
 
@@ -98,7 +93,7 @@ public class ChainNextTest {
         t.app().use(mw("m2"));
         t.app().get("/x", h("h"));
         ClientResponse r = t.send("GET", "/x");
-        assertEquals("x", text(r));
+        assertEquals("x", r.text());
         assertEquals(Collections.singletonList("run after send ISE"), calls);
     }
 
@@ -153,7 +148,7 @@ public class ChainNextTest {
         t.app().get("/x", mw("r"), h("h"));
         ClientResponse r = t.send("GET", "/x");
         assertEquals(401, r.status());
-        assertEquals("no", text(r));
+        assertEquals("no", r.text());
         assertEquals(new ArrayList<String>(), calls);
     }
 
@@ -208,7 +203,7 @@ public class ChainNextTest {
             next.run();
         });
         t.app().get("/x", h("h"));
-        assertEquals("h", text(t.send("GET", "/x")));
+        assertEquals("h", t.send("GET", "/x").text());
         assertEquals(Arrays.asList("error(null) NPE", "h"), calls);
     }
 
@@ -288,7 +283,7 @@ public class ChainNextTest {
             next.run();
         });
         t.app().get("/x", h("h"));
-        assertEquals("h", text(t.send("GET", "/x")));
+        assertEquals("h", t.send("GET", "/x").text());
         assertEquals(Arrays.asList("other thread run ISE", "h"), calls);
     }
 }

@@ -7,7 +7,6 @@ import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientResponse;
 import com.snoworca.naruserve.testing.TestApp;
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.Rule;
 import org.junit.Test;
@@ -18,10 +17,6 @@ public class StaticMountingTest {
 
     @Rule
     public final TemporaryFolder tmp = new TemporaryFolder();
-
-    private static String text(ClientResponse r) {
-        return new String(r.body(), StandardCharsets.UTF_8);
-    }
 
     // FR-STATIC-001 AC-1; FR-STATIC-001 AC-2; FR-STATIC-001 AC-4
     @Test
@@ -34,18 +29,18 @@ public class StaticMountingTest {
         TestApp t = TestApp.create();
         t.app().get("/index.html", (req, res) -> res.send("ROUTE"));
         t.app().staticFiles("/", root);
-        assertEquals("INDEX", text(t.send("GET", "/")));
+        assertEquals("INDEX", t.send("GET", "/").text());
         ClientResponse app = t.send("GET", "/assets/app.js");
         assertEquals(200, app.status());
-        assertEquals("APP", text(app));
-        assertEquals("DOCS", text(t.send("GET", "/docs/")));
-        assertEquals("ROUTE", text(t.send("GET", "/index.html")));
+        assertEquals("APP", app.text());
+        assertEquals("DOCS", t.send("GET", "/docs/").text());
+        assertEquals("ROUTE", t.send("GET", "/index.html").text());
         assertEquals(404, t.send("GET", "/nothing").status());
         assertEquals(404, t.send("GET", "/assets/app.js/").status());
 
         TestApp main = TestApp.create();
         main.app().staticFiles("/", root, o -> o.index("main.html"));
-        assertEquals("MAIN", text(main.send("GET", "/docs/")));
+        assertEquals("MAIN", main.send("GET", "/docs/").text());
     }
 
     // SDS-AC-4; FR-STATIC-001 AC-6
@@ -75,7 +70,7 @@ public class StaticMountingTest {
         ClientResponse r = t.send("GET", "/docs");
         assertEquals(301, r.status());
         assertEquals("/docs/", r.header("Location"));
-        assertEquals("INDEX", text(t.send("GET", "/docs/")));
+        assertEquals("INDEX", t.send("GET", "/docs/").text());
         assertEquals(404, t.send("GET", "/docsx/index.html").status());
     }
 
@@ -91,11 +86,11 @@ public class StaticMountingTest {
         TestApp t = TestApp.create();
         t.app().staticFiles("/", a, o -> o.spaFallback(true));
         t.app().staticFiles("/static", b, o -> o.spaFallback(true));
-        assertEquals("X", text(t.send("GET", "/static/x.css", "Accept", "text/html")));
-        assertEquals("A", text(t.send("GET", "/a.txt")));
+        assertEquals("X", t.send("GET", "/static/x.css", "Accept", "text/html").text());
+        assertEquals("A", t.send("GET", "/a.txt").text());
         ClientResponse spa = t.send("GET", "/static/missing.css", "Accept", "text/html");
         assertEquals(200, spa.status());
-        assertEquals("SPA-A", text(spa));
+        assertEquals("SPA-A", spa.text());
     }
 
     // FR-STATIC-001 AC-5
@@ -114,9 +109,9 @@ public class StaticMountingTest {
         });
         t.app().staticFiles("/", root);
         ClientResponse r = t.send("GET", "/assets/app.js");
-        assertEquals("APP", text(r));
+        assertEquals("APP", r.text());
         assertEquals("1", r.header("X-Mw"));
-        assertEquals("STOPPED", text(t.send("GET", "/assets/app.js?stop=1")));
+        assertEquals("STOPPED", t.send("GET", "/assets/app.js?stop=1").text());
     }
 
     // FR-STATIC-001 AC-2; FR-APP-002: the options a mount serves with are fixed at listen, so a configurer that kept
@@ -130,10 +125,10 @@ public class StaticMountingTest {
         AtomicReference<StaticOptions> held = new AtomicReference<>();
         TestApp t = TestApp.create();
         t.app().staticFiles("/", root, held::set);
-        assertEquals("DOCS", text(t.send("GET", "/docs/"))); // listens
+        assertEquals("DOCS", t.send("GET", "/docs/").text()); // listens
         String type = t.send("GET", "/a.weird").header("Content-Type");
         held.get().index("main.html").mime("weird", "text/x-weird").spaFallback(true).directoryListing(true);
-        assertEquals("DOCS", text(t.send("GET", "/docs/")));
+        assertEquals("DOCS", t.send("GET", "/docs/").text());
         assertEquals(type, t.send("GET", "/a.weird").header("Content-Type"));
         assertEquals(404, t.send("GET", "/missing", "Accept", "text/html").status());
     }

@@ -9,7 +9,6 @@ import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientResponse;
 import com.snoworca.naruserve.testing.TestApp;
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import org.junit.Rule;
 import org.junit.Test;
@@ -31,10 +30,6 @@ public class StaticMethodTest {
         return root;
     }
 
-    private static String text(ClientResponse r) {
-        return new String(r.body(), StandardCharsets.UTF_8);
-    }
-
     // SDS-AC-8; FR-STATIC-002 AC-1; FR-STATIC-002 AC-2
     @Test
     public void sdsAc8_FR_STATIC_002_AC1_nonGetOnServedPathIs405AllowGetHead() throws IOException {
@@ -45,8 +40,8 @@ public class StaticMethodTest {
             ClientResponse r = t.send(c[0], c[1]);
             assertEquals(c[0] + c[1], 405, r.status());
             assertEquals(c[0] + c[1], "GET, HEAD", r.header("Allow"));
-            assertFalse(text(r).contains("APP"));
-            assertFalse(text(r).contains("DOCS"));
+            assertFalse(r.text().contains("APP"));
+            assertFalse(r.text().contains("DOCS"));
         }
     }
 
@@ -81,7 +76,7 @@ public class StaticMethodTest {
         t.app().post("/:x", (req, res) -> res.send("ROUTE " + req.param("x")));
         ClientResponse r = t.send("POST", "/a%252Fb");
         assertEquals(200, r.status());
-        assertEquals("ROUTE a%2Fb", text(r));
+        assertEquals("ROUTE a%2Fb", r.text());
     }
 
     // SDS-AC-9; FR-STATIC-002 AC-3
@@ -91,7 +86,7 @@ public class StaticMethodTest {
         TestApp t = TestApp.create();
         t.app().post("/login", (req, res) -> res.send("POSTED"));
         t.app().staticFiles("/", root());
-        assertEquals("LOGINFILE", text(t.send("GET", "/login")));
+        assertEquals("LOGINFILE", t.send("GET", "/login").text());
         ClientResponse head = t.send("HEAD", "/login");
         assertEquals(200, head.status());
         assertEquals(0, head.body().length);
@@ -108,7 +103,7 @@ public class StaticMethodTest {
         TestApp spa = TestApp.create();
         spa.app().post("/login", (req, res) -> res.send("POSTED"));
         spa.app().staticFiles("/", spaRoot, o -> o.spaFallback(true));
-        assertEquals("SPA", text(spa.send("GET", "/login", "Accept", "text/html")));
+        assertEquals("SPA", spa.send("GET", "/login", "Accept", "text/html").text());
 
         TestApp none = TestApp.create();
         none.app().post("/login", (req, res) -> res.send("POSTED"));
@@ -129,8 +124,8 @@ public class StaticMethodTest {
         t.webSocketRoute("/chat");
         ClientResponse r = t.send("GET", "/chat", "Accept", "text/html");
         assertEquals(426, r.status());
-        assertFalse(text(r).contains("CHATFILE"));
-        assertFalse(text(r).contains("SPA"));
+        assertFalse(r.text().contains("CHATFILE"));
+        assertFalse(r.text().contains("SPA"));
     }
 
     // FR-STATIC-002 AC-2

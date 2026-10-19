@@ -131,10 +131,6 @@ public class MultipartSpoolingTest {
         }
     }
 
-    private static String text(ClientResponse r) {
-        return new String(r.body(), StandardCharsets.UTF_8);
-    }
-
     // FR-MULTIPART-004 AC-4: a browser sends a backslash in filename raw; it reaches filename() unchanged
     @Test
     public void FR_MULTIPART_004_AC4_rawBackslashInFilenameIsKept() throws Exception {
@@ -170,7 +166,7 @@ public class MultipartSpoolingTest {
             seen.clear();
             ClientResponse r = post(dir, body, h);
             assertEquals(413, r.status());
-            assertTrue(text(r), text(r).startsWith("{\"error\":{\"code\":\"PAYLOAD_TOO_LARGE\""));
+            assertTrue(r.text(), r.text().startsWith("{\"error\":{\"code\":\"PAYLOAD_TOO_LARGE\""));
             assertEquals(Arrays.asList(), seen);
         }
         assertEquals(0, dir.list().length);
@@ -201,7 +197,7 @@ public class MultipartSpoolingTest {
             System.gc();
             heap[0] = mem.getHeapMemoryUsage().getUsed();
             ClientResponse r = adapter.send(request);
-            assertEquals(text(r), "33554432", text(r));
+            assertEquals(r.text(), "33554432", r.text());
         } finally {
             app.shutdown(5, TimeUnit.SECONDS);
         }

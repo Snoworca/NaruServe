@@ -129,10 +129,6 @@ public class HttpAcceptanceTest {
         assertEquals(0, calls.get());
     }
 
-    private static String text(ClientResponse r) {
-        return new String(r.body(), StandardCharsets.UTF_8);
-    }
-
     // SDS-3-AC-14; FR-HTTP-021 AC-1, FR-HTTP-021 AC-5, FR-HTTP-021 AC-6
     @Test
     public void sds3Ac14_FR_HTTP_021_AC1_AC5_matchedRequestReachesTheHandlerOnce() {
@@ -148,7 +144,7 @@ public class HttpAcceptanceTest {
         assertEquals(1, calls.get());
         assertEquals(201, r.status());
         assertEquals("7", r.header("X-Id"));
-        assertEquals("user 7", text(r));
+        assertEquals("user 7", r.text());
         assertNotNull(seen.get(0));
         assertEquals(Arrays.asList(Method.GET, "/users/7"), seen);
     }
@@ -162,9 +158,9 @@ public class HttpAcceptanceTest {
             methods.add(req.method());
             res.send(req.method().name());
         });
-        assertEquals("GET", text(t.send("GET", "/users/1")));
-        assertEquals("POST", text(t.send("POST", "/users/1")));
-        assertEquals("DELETE", text(t.send("DELETE", "/users/1")));
+        assertEquals("GET", t.send("GET", "/users/1").text());
+        assertEquals("POST", t.send("POST", "/users/1").text());
+        assertEquals("DELETE", t.send("DELETE", "/users/1").text());
         ClientResponse head = t.send("HEAD", "/users/1");
         assertEquals(200, head.status());
         assertEquals(0, head.body().length);
@@ -253,8 +249,8 @@ public class HttpAcceptanceTest {
         try {
             Future<ClientResponse> a = adapter.submit(ClientRequest.of("GET", "/a"));
             Future<ClientResponse> b = adapter.submit(ClientRequest.of("GET", "/b"));
-            assertEquals("null", text(b.get(10, TimeUnit.SECONDS)));
-            assertEquals("first", text(a.get(10, TimeUnit.SECONDS)));
+            assertEquals("null", b.get(10, TimeUnit.SECONDS).text());
+            assertEquals("first", a.get(10, TimeUnit.SECONDS).text());
         } finally {
             adapter.release();
         }

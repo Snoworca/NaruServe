@@ -196,7 +196,7 @@ public class FileResourceResolverTest {
         });
         ClientResponse r = t.send("GET", "/s/a.txt", "Range", "bytes=2-");
         assertEquals(500, r.status());
-        assertEquals("failed", new String(r.body(), StandardCharsets.UTF_8));
+        assertEquals("failed", r.text());
         for (String h : new String[] {"ETag", "Last-Modified", "Accept-Ranges", "Cache-Control", "Content-Range",
                 "Content-Disposition"}) {
             assertEquals(h, null, r.header(h));

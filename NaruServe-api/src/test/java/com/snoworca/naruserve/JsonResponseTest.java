@@ -14,7 +14,6 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
 import java.lang.reflect.Type;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -38,10 +37,6 @@ public class JsonResponseTest {
         }
     }
 
-    private static String text(ClientResponse r) {
-        return new String(r.body(), StandardCharsets.UTF_8);
-    }
-
     // FR-JSON-002 AC-1, AC-3
     @Test
     public void FR_JSON_002_AC1_AC3_jsonSendsTheEncodedBytesWithJsonTypeAndLength() {
@@ -56,17 +51,17 @@ public class JsonResponseTest {
         assertEquals(200, r.status());
         assertEquals("application/json; charset=UTF-8", r.header("Content-Type"));
         assertEquals("7", r.header("Content-Length"));
-        assertEquals("\"hello\"", text(r));
+        assertEquals("\"hello\"", r.text());
         assertEquals(1, codec.encodes.get());
         ClientResponse n = t.send("GET", "/null");
-        assertEquals("null", text(n));
+        assertEquals("null", n.text());
         assertEquals("4", n.header("Content-Length"));
         ClientResponse c = t.send("GET", "/created");
         assertEquals(201, c.status());
-        assertEquals("5", text(c));
+        assertEquals("5", c.text());
         ClientResponse u = t.send("GET", "/utf8");
         assertEquals("4", u.header("Content-Length"));
-        assertEquals("\"\u00e9\"", text(u));
+        assertEquals("\"\u00e9\"", u.text());
         assertEquals(4, codec.encodes.get());
     }
 
@@ -82,7 +77,7 @@ public class JsonResponseTest {
         assertEquals(500, r.status());
         assertFalse(r.abnormallyClosed());
         assertEquals("application/json; charset=UTF-8", r.header("Content-Type"));
-        String body = text(r);
+        String body = r.text();
         assertTrue(body, body.matches("\\{\"error\":\\{\"code\":\"INTERNAL_ERROR\",\"message\":\"Internal Server Error\","
                 + "\"requestId\":\"[0-9a-f]{16}\"}}"));
         assertFalse(body, body.contains("partial"));
@@ -107,7 +102,7 @@ public class JsonResponseTest {
         });
         ClientResponse r = t.send("GET", "/committed");
         assertTrue(r.abnormallyClosed());
-        assertFalse(text(r), text(r).contains("\"error\""));
+        assertFalse(r.text(), r.text().contains("\"error\""));
         assertEquals(1, thrown.size());
         assertSame(IllegalStateException.class, thrown.get(0).getClass());
         assertEquals(0, codec.encodes.get());
@@ -132,7 +127,7 @@ public class JsonResponseTest {
         ClientResponse r = t.send("GET", "/done");
         assertFalse(r.abnormallyClosed());
         assertEquals(200, r.status());
-        assertEquals("x", text(r));
+        assertEquals("x", r.text());
         assertEquals(1, thrown.size());
         assertSame(IllegalStateException.class, thrown.get(0).getClass());
         assertEquals(0, codec.encodes.get());

@@ -57,10 +57,6 @@ public class ErrorPathTest {
         return t;
     }
 
-    private static String text(ClientResponse r) {
-        return new String(r.body(), StandardCharsets.UTF_8);
-    }
-
     private static RouteHandler throwing(Exception e) {
         return (req, res) -> {
             throw e;
@@ -142,7 +138,7 @@ public class ErrorPathTest {
         t.app().get("/pass", throwing(boom));
         ClientResponse answered = t.send("GET", "/answer");
         assertEquals(418, answered.status());
-        assertEquals("first", text(answered));
+        assertEquals("first", answered.text());
         assertEquals(Collections.singletonList("first /answer"), calls);
         calls.clear();
         assertEquals(500, t.send("GET", "/pass").status());
@@ -203,7 +199,7 @@ public class ErrorPathTest {
         ClientResponse c = t.send("GET", "/c");
         assertFalse(c.abnormallyClosed());
         assertEquals(200, c.status());
-        assertEquals("x", text(c));
+        assertEquals("x", c.text());
         assertEquals(2, seen.size());
         assertEquals(ResponseState.COMPLETED, ((DefaultResponse) seen.get(1).res).state());
     }
@@ -218,7 +214,7 @@ public class ErrorPathTest {
         t.app().get("/f", throwing(new IllegalStateException("x")));
         ClientResponse r = t.send("GET", "/f");
         assertEquals(503, r.status());
-        assertEquals("down", text(r));
+        assertEquals("down", r.text());
         assertFalse(r.abnormallyClosed());
     }
 
@@ -323,7 +319,7 @@ public class ErrorPathTest {
         t.app().get("/f", throwing(new RuntimeException("secret com.example.Foo")));
         ClientResponse r = t.send("GET", "/f");
         DispatcherTest.assertError(500, "INTERNAL_ERROR", "Internal Server Error", r);
-        String body = text(r);
+        String body = r.text();
         assertFalse(body.contains("secret"));
         assertFalse(body.contains("RuntimeException"));
         assertFalse(body.contains("at "));
