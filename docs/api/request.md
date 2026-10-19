@@ -58,7 +58,9 @@ User user = req.body(User.class);
 List<User> users = req.body(new TypeRef<List<User>>() {});
 ```
 
-- `Content-Type`이 `application/json`(또는 허용된 `+json` 타입)일 때만 읽습니다.
+- `Content-Type`이 `application/json` 또는 `application/<이름>+json`(예: `application/merge-patch+json`)일 때만 읽습니다.
+- 본문은 UTF-8로만 읽습니다. `charset` 파라미터가 있으면 `utf-8`(대소문자 무관)이어야 하고, 다른 charset(예: `charset=iso-8859-1`)은 Express body-parser처럼 `415`입니다. 잘못된 UTF-8 바이트는 `400`입니다.
+- 본문 맨 앞의 UTF-8 BOM(`EF BB BF`) 하나는 기본 Gson 코덱이 건너뛰므로, Express body-parser처럼 BOM이 붙은 본문도 읽힙니다. BOM이 두 번 이상이면 `400`입니다. 직접 만든 `JsonCodec`에서는 BOM 처리를 그 코덱이 정합니다.
 - 본문이 JSON `null`이면 `null`을 돌려줍니다(`@Nullable`). 빈 본문은 `null`이 아니라 `400`입니다.
 - Express의 `req.body`처럼 타입 없이 아무 Map으로 바꾸지 않습니다. 필요하면 `req.body(Map.class)`를 쓰세요. 기본 Gson에서는 숫자가 `Double`(`42` → `42.0`)로, 중첩 객체가 `Map`으로 들어옵니다.
 - v1에는 `jsonTree()`/`jsonMap()`이 없습니다. 타입 없는 값은 `req.body(Map.class)`로 읽습니다. 이렇게 정한 이유는 JSON 트리 타입을 공개 API에 두면 Gson 같은 특정 JSON 라이브러리의 타입이 드러나거나 별도 트리 모델을 하나 더 만들어야 하기 때문입니다.
@@ -67,8 +69,8 @@ List<User> users = req.body(new TypeRef<List<User>>() {});
 
 | 상황 | 결과 |
 |---|---|
-| `Content-Type`이 JSON이 아님 | `415` |
-| JSON 문법 오류, 값 뒤의 다른 데이터, 빈 본문 | `400` (`BAD_REQUEST`) |
+| `Content-Type`이 JSON이 아님, `charset`이 UTF-8이 아님 | `415` |
+| JSON 문법 오류, 값 뒤의 다른 데이터, 빈 본문, 잘못된 UTF-8 | `400` (`BAD_REQUEST`) |
 | 본문이 한도(기본 1 MiB, `app.jsonLimit(bytes)`)를 넘음 | `413` |
 | 중첩 깊이가 한도(기본 64)를 넘음 | `400` |
 | 본문을 이미 읽음 | `BodyAlreadyConsumedException` |

@@ -352,6 +352,16 @@ public class GsonJsonCodecTest {
         }
     }
 
+    // FR-JSON-001: Gson's reader skips one leading UTF-8 BOM, so the default codec accepts it, as docs/api/request.md states
+    @Test
+    public void FR_JSON_001_bomPrefixedBodyIsDecodedByTheDefaultCodec() {
+        InMemoryHttpAdapter adapter = echoApp(new GsonJsonCodec());
+        ClientResponse r = post(adapter, "/map", "\uFEFF{\"a\":1}");
+        assertEquals(200, r.status());
+        assertEquals(com.google.gson.JsonParser.parseString("{\"a\":1.0}"), com.google.gson.JsonParser.parseString(text(r)));
+        assertEquals(400, post(adapter, "/map", "\uFEFF\uFEFF{}").status());
+    }
+
     // ---- SDS-AC-6 ----
 
     // SDS-AC-6; FR-JSON-003 AC-6

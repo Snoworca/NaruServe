@@ -35,7 +35,7 @@ NaruServe는 저사양 Android 5.0 기기에서도 안전하게 돌도록 **모�
 | 본문 읽기 timeout | 30초 | 1시간 | `408` | `bodyReadTimeout(timeout, unit)` |
 | 쓰기 timeout | 30초 | 1시간 | 연결 종료 | `writeTimeout(timeout, unit)` |
 | 최소 본문 전송 속도 | 240 B/s | 104857600 B/s | `408` | `minBodyRate(bytesPerSecond)` |
-| HTTP 작업 스레드 | 64 | 1024 | 대기 큐에서 기다림 | `maxWorkers(workers)` |
+| HTTP 작업 스레드 | 64 | 1024 | 대기 큐에서 기다림 | `maxWorkers(workers)`. 엔진 스레드 풀은 `maxWorkers + maxSseStreams`(기본 192)이고, SSE 스트림은 그중 `maxSseStreams`개까지만 쓰므로 일반 요청에는 항상 `maxWorkers`개 이상이 남습니다. 열린 SSE 스트림이 없으면 일반 요청이 풀 전체를 쓸 수 있어, `maxWorkers`는 일반 요청 스레드의 상한이 아니라 보장된 몫입니다. |
 | 동시 SSE 스트림 | 128 | 1024 | `503` | `maxSseStreams(streams)` |
 | 열린 연결 | 512 | 65536 | 소켓 수준 `503` | `maxConnections(connections)`. `maxWorkers + maxSseStreams` 이상이어야 하며, 작으면 `listen()`이 `IllegalStateException`을 던집니다. |
 | 대기 큐 | 320 | — | 소켓 수준 `503` | 따로 없습니다. `maxConnections - maxWorkers - maxSseStreams`로 정해집니다. |

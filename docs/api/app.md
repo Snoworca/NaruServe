@@ -125,6 +125,8 @@ public interface RouteHandler {
 | `maxUpgradedConnections(connections)` | 128 | 1..65536 |
 | `maxConnectionsPerAddress(connections)` | 256 | 1..65536 |
 
+`maxWorkers`는 일반 HTTP 요청에 보장되는 작업 스레드 수입니다. 엔진 스레드 풀은 `maxWorkers + maxSseStreams`이고 SSE 스트림은 그중 `maxSseStreams`개까지만 쓰므로, 열린 SSE 스트림이 없으면 일반 요청이 최대 `maxWorkers + maxSseStreams`개 스레드(기본 192)에서 돌 수 있습니다. 스레드 수를 줄이려면 두 값을 함께 낮추세요.
+
 범위 밖의 값은 설정 이름과 범위를 담은 `IllegalArgumentException`을 던지고, 무제한을 뜻하는 값은 없습니다. `maxConnections`가 `maxWorkers + maxSseStreams`보다 작으면 설정 메서드가 아니라 `listen()`이 `IllegalStateException`을 던집니다. 세 값을 어떤 순서로 바꿔도 되게 하려고 조합 검사는 시작할 때 합니다. 각 한도가 넘쳤을 때의 응답은 [기본값과 보안](defaults.md#시간연결-수-한도)에 있습니다.
 
 같은 LAN의 다른 기기에서 접속하려면 모든 인터페이스에 바인딩하고, 기기 이름으로 접속한다면 그 이름을 허용 Host에 넣습니다.

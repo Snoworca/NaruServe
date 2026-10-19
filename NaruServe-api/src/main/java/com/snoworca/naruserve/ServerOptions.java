@@ -37,7 +37,11 @@ public interface ServerOptions {
     /** Minimum request body rate, {@code 1..104857600} bytes per second; default 240. */
     ServerOptions minBodyRate(int bytesPerSecond);
 
-    /** HTTP worker threads, {@code 1..1024}; default 64. */
+    /**
+     * HTTP worker budget, {@code 1..1024}; default 64. The engine thread pool is maxWorkers + maxSseStreams:
+     * SSE streams use at most maxSseStreams of it, so at least maxWorkers threads stay for ordinary requests,
+     * which may also use idle SSE slots (up to maxWorkers + maxSseStreams threads when no stream is open).
+     */
     ServerOptions maxWorkers(int workers);
 
     /** Concurrent SSE streams, {@code 1..1024}; default 128. */
