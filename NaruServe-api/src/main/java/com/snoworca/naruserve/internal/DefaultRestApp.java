@@ -240,7 +240,8 @@ public final class DefaultRestApp implements RestApp {
             freeze();
             throwIfStopPending();
             bindAttempted = true;
-            a.bind("127.0.0.1", port, new GatedExchangeHandler(lifecycle, frozenDispatcher(), new AccessLog()));
+            Dispatcher d = frozenDispatcher();
+            a.bind("127.0.0.1", port, new GatedExchangeHandler(lifecycle, d, d.accessLog()));
             bound = a.boundPort();
             if (!lifecycle.markRunning()) {
                 throw stopWhileStarting();
@@ -610,6 +611,8 @@ public final class DefaultRestApp implements RestApp {
      * propagates unchanged and leaves the app unfrozen. Later calls after success do nothing.
      */
     // @req FR-HTTP-008
+    // @req FR-APP-014
+    // @req FR-APP-015
     public synchronized void freeze() {
         if (dispatcher != null) {
             return;
@@ -630,8 +633,9 @@ public final class DefaultRestApp implements RestApp {
         for (PrefixMiddleware pm : prefixMiddleware) {
             pipeline.addPrefix(pm.prefix, pm.middleware);
         }
-        dispatcher = new Dispatcher(router, pipeline, new ErrorPath(errorHandlers, new SafeLogger(logger)),
-                new AccessLog(), context);
+        SafeLogger safe = new SafeLogger(logger); // the logger is fixed from here: logger(...) needs an unfrozen app
+        dispatcher = new Dispatcher(router, pipeline, new ErrorPath(errorHandlers, safe),
+                new AccessLog(accessLogOptions, safe), context);
         lifecycle.markFrozen();
     }
 

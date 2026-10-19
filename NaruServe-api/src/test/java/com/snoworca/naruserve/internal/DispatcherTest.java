@@ -532,4 +532,34 @@ public class DispatcherTest {
         assertEquals(200, send("GET", "/g").status());
         assertEquals(1, calls.get());
     }
+
+    // SDS-AC-8 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-8.sds.md; FR-APP-015 AC-5
+    @Test
+    public void sdsAc8_FR_APP_015_AC5_inCountsTheBodyBytesReadNotTheDeclaredLength() {
+        ErrorPathTest.RecordingLogger log = new ErrorPathTest.RecordingLogger();
+        AtomicReference<com.snoworca.naruserve.spi.HttpExchange> current = new AtomicReference<>();
+        router.add(Method.POST, "/b", (req, res) -> {
+            InputStream body = ((DefaultRequest) req).body().stream(current.get().requestBody());
+            assertEquals(4, body.read(new byte[4], 0, 4));
+            res.send("ok");
+        });
+        router.add(Method.POST, "/n", (req, res) -> res.send("ok"));
+        router.freeze();
+        Dispatcher d = new Dispatcher(router, new MiddlewarePipeline(RouterPolicy.strict()),
+                new ErrorPath(java.util.Collections.emptyList(), new SafeLogger(log)),
+                new AccessLog(new DefaultAccessLogOptions(), new SafeLogger(log)));
+        adapter.bind("127.0.0.1", 0, ex -> {
+            current.set(ex);
+            d.handle(ex);
+        });
+        byte[] ten = new byte[10];
+        assertEquals(200, adapter.send(ClientRequest.of("POST", "/b").header("Content-Length", "10").body(ten))
+                .status());
+        assertEquals(1, log.lines.size());
+        assertTrue(log.lines.get(0), log.lines.get(0).matches("INFO POST /b 200 \\d+ms in=4 out=2 rid=[0-9a-f]{16}"));
+        log.lines.clear();
+        adapter.send(ClientRequest.of("POST", "/n").header("Content-Length", "10").body(ten));
+        assertEquals(1, log.lines.size());
+        assertTrue(log.lines.get(0), log.lines.get(0).matches("INFO POST /n 200 \\d+ms in=0 out=2 rid=[0-9a-f]{16}"));
+    }
 }

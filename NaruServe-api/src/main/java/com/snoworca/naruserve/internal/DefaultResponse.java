@@ -12,6 +12,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -35,6 +36,7 @@ public final class DefaultResponse implements Response {
     private final HttpExchange ex;
     private final boolean headRequest;
     private final AtomicBoolean inputClosed = new AtomicBoolean();
+    private final AtomicLong bytesWritten = new AtomicLong();
 
     // Guarded by this.
     private ResponseState state = ResponseState.NEW;
@@ -46,6 +48,8 @@ public final class DefaultResponse implements Response {
     private boolean copying;
     private boolean handlerDone;
     private @Nullable Throwable handlerFailure;
+    private @Nullable Runnable onDone;
+    private boolean doneFired;
 
     /** Status 200, no headers, state NEW; {@code headRequest} makes every body bodyless. */
     // @req FR-HTTP-013
@@ -194,6 +198,7 @@ public final class DefaultResponse implements Response {
                     return; // aborted meanwhile
                 }
                 out.write(buf, 0, n);
+                bytesWritten.addAndGet(n);
             }
             ex.finish();
             synchronized (this) {
@@ -208,7 +213,48 @@ public final class DefaultResponse implements Response {
             throw e;
         } finally {
             closeInput();
+            synchronized (this) {
+                copying = false;
+            }
+            fireDone();
         }
+    }
+
+    /** Body bytes handed to the exchange OutputStream; 0 for HEAD and bodyless responses. */
+    // @req FR-APP-015
+    long bytesWritten() {
+        return bytesWritten.get();
+    }
+
+    /** The committed status, or the current status when never committed. */
+    // @req FR-APP-015
+    synchronized int statusCode() {
+        return status;
+    }
+
+    /**
+     * Runs {@code callback} once, on the first entry to COMPLETED or ABORTED and only after a running copy ended;
+     * at once when that already happened.
+     */
+    // @req FR-APP-015
+    void onDone(Runnable callback) {
+        synchronized (this) {
+            onDone = callback;
+        }
+        fireDone();
+    }
+
+    private void fireDone() {
+        Runnable cb;
+        synchronized (this) {
+            boolean ended = state == ResponseState.COMPLETED || state == ResponseState.ABORTED;
+            if (!ended || copying || doneFired || onDone == null) {
+                return;
+            }
+            doneFired = true;
+            cb = onDone;
+        }
+        cb.run();
     }
 
     // @req FR-HTTP-015
@@ -237,6 +283,7 @@ public final class DefaultResponse implements Response {
         if (!copyRunning) {
             closeInput();
         }
+        fireDone(); // a running copy fires it when it ends
     }
 
     // @req FR-HTTP-016
@@ -344,6 +391,7 @@ public final class DefaultResponse implements Response {
             OutputStream out = ex.commit(c.status, c.headers, c.length);
             if (c.body.length > 0) {
                 out.write(c.body);
+                bytesWritten.addAndGet(c.body.length);
             }
             ex.finish();
         } catch (IOException | RuntimeException e) {
@@ -358,6 +406,7 @@ public final class DefaultResponse implements Response {
                 state = ResponseState.COMPLETED;
             }
         }
+        fireDone();
     }
 
     /** Closes the stream's input at most once, whichever of success, failure or abort gets here first. */

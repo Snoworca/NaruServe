@@ -83,14 +83,17 @@ public final class Dispatcher implements ExchangeHandler {
     // @req FR-HTTP-022
     // @req FR-APP-003
     @Override
+    // @req FR-APP-015
     public void handle(HttpExchange ex) {
-        if (preCheck(ex)) {
+        String rid = RequestIds.next();
+        long start = System.nanoTime();
+        if (preCheck(ex, rid, start)) {
             return;
         }
-        String rid = RequestIds.next();
         String token = ex.methodToken();
+        String rawPath = ex.rawPath();
         boolean upgrade = Router.isWebSocketUpgrade(token, joined(ex, "Connection"), joined(ex, "Upgrade"));
-        RouteMatch<RouteHandler> m = router.lookup(token, ex.rawPath(), upgrade);
+        RouteMatch<RouteHandler> m = router.lookup(token, rawPath, upgrade);
         boolean routed = m.kind() == RouteMatch.Kind.MATCHED && m.routeKind() == RouteKind.HTTP;
         Method method = m.kind() == RouteMatch.Kind.MATCHED
                 ? (m.autoHead() ? Method.HEAD : Objects.requireNonNull(m.method()))
@@ -98,6 +101,8 @@ public final class Dispatcher implements ExchangeHandler {
         DefaultRequest req = new DefaultRequest(ex, method,
                 routed ? m.params() : Collections.<String, String>emptyMap(), context);
         DefaultResponse res = new DefaultResponse(ex, method == Method.HEAD);
+        res.onDone(() -> accessLog.write(token, rawPath, res.statusCode(),
+                res.state() == ResponseState.ABORTED, start, req.body().bytesRead(), res.bytesWritten(), rid));
         List<Middleware> route = Collections.emptyList();
         RouteHandler terminal;
         if (routed) {
@@ -137,8 +142,10 @@ public final class Dispatcher implements ExchangeHandler {
     /**
      * After the pipeline returned: a response still NEW (no step answered, no error path ran) gets one warn naming
      * the method and path, then ends with the status and headers set so far; STREAMING runs the copy without a warn.
+     * The warn goes through the SafeLogger, so a throwing logger never changes this path.
      */
     // @req FR-HTTP-024
+    // @req FR-APP-014
     void finish(DefaultRequest req, DefaultResponse res) {
         if (res.state() == ResponseState.NEW) {
             errors.logger.warn("response not finished by the handler: " + req.method().name() + " " + req.rawPath());
@@ -153,19 +160,20 @@ public final class Dispatcher implements ExchangeHandler {
     // @req FR-HTTP-021
     // @req FR-HTTP-023
     // @req FR-APP-003
-    boolean preCheck(HttpExchange ex) {
+    // @req FR-APP-015
+    boolean preCheck(HttpExchange ex, String rid, long start) {
         String rawPath = ex.rawPath();
         String token = ex.methodToken();
         if ("OPTIONS".equals(token) && "*".equals(rawPath)) {
-            automatic(ex, 204, Method.any(), false);
+            automatic(ex, 204, Method.any(), false, rid, start);
             return true;
         }
         if (!rawPath.startsWith("/") || !PathValidator.isValid(rawPath)) {
-            automatic(ex, 400, null, false);
+            automatic(ex, 400, null, false, rid, start);
             return true;
         }
         if (methodOf(token) == null) {
-            automatic(ex, 501, null, false);
+            automatic(ex, 501, null, false, rid, start);
             return true;
         }
         return false;
@@ -185,11 +193,14 @@ public final class Dispatcher implements ExchangeHandler {
 
     /**
      * A pre-request answer written straight to the exchange: 204 with no body and no Content-Length, any other
-     * status with the standard error body (a HEAD token keeps the Content-Length and writes no bytes).
+     * status with the standard error body carrying {@code rid} (a HEAD token keeps the Content-Length and writes no
+     * bytes). Writes its one access line.
      */
     // @req FR-HTTP-021
     // @req FR-HTTP-023
-    void automatic(HttpExchange ex, int status, @Nullable MethodSet allow, boolean upgradeHeaders) {
+    // @req FR-APP-015
+    void automatic(HttpExchange ex, int status, @Nullable MethodSet allow, boolean upgradeHeaders, String rid,
+            long start) {
         List<Map.Entry<String, String>> headers = new ArrayList<>(5);
         if (allow != null) {
             headers.add(new SimpleImmutableEntry<>("Allow", allowHeader(allow)));
@@ -200,20 +211,30 @@ public final class Dispatcher implements ExchangeHandler {
         }
         byte[] body = new byte[0];
         if (status != 204) {
-            body = StandardErrors.json(status, StandardErrors.reason(status), RequestIds.next());
+            body = StandardErrors.json(status, StandardErrors.reason(status), rid);
             headers.add(new SimpleImmutableEntry<>("Content-Type", "application/json; charset=UTF-8"));
             headers.add(new SimpleImmutableEntry<>("Content-Length", String.valueOf(body.length)));
         }
         boolean head = "HEAD".equals(ex.methodToken());
+        boolean aborted = false;
+        long written = 0;
         try {
             OutputStream out = ex.commit(status, headers, head ? 0 : body.length);
             if (!head && body.length > 0) {
                 out.write(body);
+                written = body.length;
             }
             ex.finish();
         } catch (IOException | RuntimeException e) {
+            aborted = true;
             ex.abort();
         }
+        accessLog.write(ex.methodToken(), ex.rawPath(), status, aborted, start, 0, written, rid);
+    }
+
+    /** The access log this dispatcher writes, shared with the lifecycle gate in front of it. */
+    AccessLog accessLog() {
+        return accessLog;
     }
 
     /**

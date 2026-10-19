@@ -1,7 +1,11 @@
 package com.snoworca.naruserve.internal;
 
 import com.snoworca.naruserve.BodyAlreadyConsumedException;
+import java.io.FilterInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicLong;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -21,11 +25,59 @@ public final class BodyState {
         JSON, FORM, RAW
     }
 
+    private final AtomicLong bytesRead = new AtomicLong();
     private State state = State.UNREAD;
     private @Nullable Kind kind;
     private boolean shared;
     private boolean sharing;
     private @Nullable Object cache;
+
+    /**
+     * Wraps the adapter's body stream; every byte returned by read and skip is added to {@link #bytesRead}.
+     * shortcut: no core body reader exists yet, so in= stays 0 in real traffic; the body readers must read through this.
+     */
+    // @req FR-APP-015
+    public InputStream stream(InputStream source) {
+        return new FilterInputStream(source) {
+            @Override
+            public int read() throws IOException {
+                int b = super.read();
+                if (b >= 0) {
+                    bytesRead.incrementAndGet();
+                }
+                return b;
+            }
+
+            @Override
+            public int read(byte[] b, int off, int len) throws IOException {
+                int n = super.read(b, off, len);
+                if (n > 0) {
+                    bytesRead.addAndGet(n);
+                }
+                return n;
+            }
+
+            @Override
+            public long skip(long n) throws IOException {
+                long skipped = super.skip(n);
+                if (skipped > 0) {
+                    bytesRead.addAndGet(skipped);
+                }
+                return skipped;
+            }
+
+            @Override
+            public boolean markSupported() {
+                return false; // a reset would re-read counted bytes
+            }
+        };
+    }
+
+    /** Body bytes the core read so far; 0 when never read. */
+    // @req FR-APP-015
+    public long bytesRead() {
+        return bytesRead.get();
+    }
 
     public synchronized State state() {
         return state;

@@ -61,16 +61,18 @@ final class GatedExchangeHandler implements ExchangeHandler {
         headers.add(new SimpleImmutableEntry<>("Content-Length", String.valueOf(body.length)));
         headers.add(new SimpleImmutableEntry<>("Connection", "close"));
         boolean aborted = false;
+        long written = 0;
         try {
             OutputStream out = ex.commit(503, headers, head ? 0 : body.length);
             if (!head) {
                 out.write(body);
+                written = body.length;
             }
             ex.finish();
         } catch (IOException | RuntimeException e) {
             aborted = true;
             ex.abort();
         }
-        accessLog.write(ex.methodToken(), ex.rawPath(), 503, aborted, start, 0, head ? 0 : body.length, rid);
+        accessLog.write(ex.methodToken(), ex.rawPath(), 503, aborted, start, 0, written, rid);
     }
 }

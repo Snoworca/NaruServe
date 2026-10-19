@@ -83,6 +83,7 @@ public class AppIsolationTest {
 
         Built(String name) {
             app = RestApp.builder().httpAdapter(adapter).jsonCodec(new StubJsonCodec()).logger(logger).build();
+            app.accessLog(o -> o.enabled(false)); // access lines (FR-APP-015) would mask the onStop-error checks
             // Route middleware: the global pipeline lands with the FR-APP-003 SDS.
             app.get("/" + name, (req, res, next) -> {
                 trail.add("mw-" + name);

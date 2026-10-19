@@ -8,6 +8,7 @@ import java.util.Set;
 
 /** The app's one mutable access log options: enabled, INFO, every include on, no exclude. */
 // @req IR-APP-007
+// @req FR-APP-015
 final class DefaultAccessLogOptions implements AccessLogOptions {
 
     // Guarded by this.
@@ -54,6 +55,32 @@ final class DefaultAccessLogOptions implements AccessLogOptions {
     public synchronized AccessLogOptions exclude(String path) {
         exclude.add(Objects.requireNonNull(path, "path"));
         return this;
+    }
+
+    /** Exact, case-sensitive match of the raw path (no query) against an exclude entry. */
+    // @req FR-APP-015
+    synchronized boolean excluded(String rawPath) {
+        return exclude.contains(rawPath);
+    }
+
+    synchronized boolean isEnabled() {
+        return enabled;
+    }
+
+    synchronized LogLevel logLevel() {
+        return level;
+    }
+
+    synchronized boolean requestIdOn() {
+        return includeRequestId;
+    }
+
+    synchronized boolean durationOn() {
+        return includeDuration;
+    }
+
+    synchronized boolean bytesOn() {
+        return includeBytes;
     }
 
     @Override
