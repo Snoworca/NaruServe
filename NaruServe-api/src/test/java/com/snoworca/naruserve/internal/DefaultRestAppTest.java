@@ -263,7 +263,7 @@ public class DefaultRestAppTest {
         assertTrue(text, text.contains("not part of the API contract"));
     }
 
-    // SDS-AC-14; FR-HTTP-008 AC-6
+    // SDS-AC-14; FR-HTTP-008 AC-6; FR-APP-001 AC-1
     @Test
     public void sdsAc14_FR_HTTP_008_AC6_noPublicFactoryInTheApiPackageReturnsRestApp() throws Exception {
         List<String> offenders = new ArrayList<>();
@@ -273,7 +273,8 @@ public class DefaultRestAppTest {
             checked++;
             for (java.lang.reflect.Method m : c.getDeclaredMethods()) {
                 if (Modifier.isPublic(m.getModifiers()) && Modifier.isStatic(m.getModifiers())
-                        && RestApp.class.isAssignableFrom(m.getReturnType())) {
+                        && (RestApp.class.isAssignableFrom(m.getReturnType())
+                                || RestApp.Builder.class.isAssignableFrom(m.getReturnType()))) {
                     offenders.add(c.getName() + "." + m.getName());
                 }
             }
@@ -284,7 +285,11 @@ public class DefaultRestAppTest {
             }
         }
         assertTrue("checked " + checked, checked >= 7);
-        assertEquals(new ArrayList<String>(), offenders);
+        // AC-6 is a wave 3 statement; wave 4 re-points it: builder() and create() are the only public static
+        // factories of a RestApp or its builder (FR-APP-002 AC-5, FR-APP-001 AC-1).
+        java.util.Collections.sort(offenders);
+        assertEquals(java.util.Arrays.asList("com.snoworca.naruserve.RestApp.builder",
+                "com.snoworca.naruserve.RestApp.create"), offenders);
     }
 
     /** Simple names of the top-level and nested classes compiled into package com.snoworca.naruserve. */
@@ -320,5 +325,27 @@ public class DefaultRestAppTest {
         try (Scanner s = new Scanner(f, StandardCharsets.UTF_8.name())) {
             return s.useDelimiter("\\A").hasNext() ? s.next() : "";
         }
+    }
+
+    // SDS-AC-5 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-3.sds.md; FR-APP-002 AC-5
+    @Test
+    public void sdsAc5_FR_APP_002_AC5_freezeInNewRejectsThroughTheOneGuardNamingTheMethod() {
+        DefaultRestApp app = new DefaultRestApp();
+        app.get("/x", h);
+        app.freeze();
+        assertEquals(com.snoworca.naruserve.AppState.NEW, app.state());
+        List<Runnable> calls = Arrays.<Runnable>asList(() -> app.get("/a", h),
+                () -> app.use((req, res, next) -> next.run()), () -> app.onStart(ctx -> { }),
+                () -> app.logger(new com.snoworca.naruserve.ConsoleLogger()), () -> app.routerPolicy(RouterPolicy.strict()));
+        String[] names = {"get", "use", "onStart", "logger", "routerPolicy"};
+        for (int i = 0; i < calls.size(); i++) {
+            try {
+                calls.get(i).run();
+                fail(names[i] + " accepted after freeze");
+            } catch (IllegalStateException e) {
+                assertTrue(e.getMessage(), e.getMessage().contains(names[i]));
+            }
+        }
+        assertEquals(1, app.registrations().size());
     }
 }

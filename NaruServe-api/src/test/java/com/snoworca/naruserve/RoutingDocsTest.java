@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.junit.Test;
 
+/** Routing semantics in docs/api/routing.md with no marker left (OPS-ROUTE-003). */
 public class RoutingDocsTest {
 
     private static final String MARKER = "(미확정)";
@@ -50,9 +51,9 @@ public class RoutingDocsTest {
         return sb.toString();
     }
 
-    // SDS-AC-4; OPS-ROUTE-002 AC-2
+    // SDS-AC-10; OPS-ROUTE-003 AC-2
     @Test
-    public void sdsAc4_OPS_ROUTE_002_AC2_accessorsNamedWithJavaKotlinAndExpressNote() throws IOException {
+    public void sdsAc10_OPS_ROUTE_003_AC2_accessorsNamedWithJavaKotlinAndExpressNote() throws IOException {
         String s = section(doc(), "### MethodSet 조회");
         for (String name : new String[] {"contains(Method)", "iterator()", "size()"}) {
             assertTrue("accessor " + name, s.contains("`" + name + "`"));
@@ -62,22 +63,21 @@ public class RoutingDocsTest {
         assertTrue("Express note", s.contains("Express에는 대응하는 API가 없습니다"));
     }
 
-    // SDS-AC-4; OPS-ROUTE-002 AC-3
+    // SDS-AC-10; OPS-ROUTE-003 AC-3
     @Test
-    public void sdsAc4_OPS_ROUTE_002_AC3_onlyTheUseMiddlewareMarkerRemains() throws IOException {
+    public void noMarkerRemains() throws IOException {
         List<String> markerLines = new ArrayList<>();
         for (String line : doc().split("\n")) {
             if (line.contains(MARKER)) {
                 markerLines.add(line);
             }
         }
-        assertEquals(markerLines.toString(), 1, markerLines.size());
-        assertTrue(markerLines.get(0), markerLines.get(0).contains("`use(middleware)`"));
+        assertEquals(markerLines.toString(), 0, markerLines.size());
     }
 
-    // SDS-AC-4; OPS-ROUTE-002 AC-1
+    // SDS-AC-10; OPS-ROUTE-003 AC-1
     @Test
-    public void sdsAc4_OPS_ROUTE_002_AC1_routingRulesSectionPresent() throws IOException {
+    public void sdsAc10_OPS_ROUTE_003_AC1_routingRulesSectionPresent() throws IOException {
         String s = section(doc(), "## 라우팅 규칙 (wave 2 결정)");
         String[] required = {
             "엄격", "TRACE", "CONNECT", "Allow", "HEAD", "OPTIONS", "WebSocket", "426",

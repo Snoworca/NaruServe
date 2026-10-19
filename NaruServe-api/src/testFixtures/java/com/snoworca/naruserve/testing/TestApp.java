@@ -7,20 +7,23 @@ import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientResponse;
 import org.jspecify.annotations.NullMarked;
 
 /**
- * Test harness: a {@link DefaultRestApp} served by an {@link InMemoryHttpAdapter}. Register through {@link #app()},
- * then {@link #start()} (or the first {@link #send}) freezes the route table once and binds the adapter.
+ * Test harness: one app built by {@code RestApp.builder()} over one {@link InMemoryHttpAdapter} and a
+ * {@link StubJsonCodec}. Register through {@link #app()}, then {@link #start()} (or the first {@link #send}) calls
+ * {@code listen(0)} once, which freezes the route table and binds the adapter.
  */
 // @req FR-HTTP-001
+// @req FR-APP-009
 @NullMarked
 public final class TestApp {
 
-    private final DefaultRestApp app = new DefaultRestApp();
+    private final DefaultRestApp app;
     private final InMemoryHttpAdapter adapter;
     // Guarded by this.
     private boolean started;
 
     private TestApp(InMemoryHttpAdapter adapter) {
         this.adapter = adapter;
+        this.app = (DefaultRestApp) RestApp.builder().httpAdapter(adapter).jsonCodec(new StubJsonCodec()).build();
     }
 
     /** A new unfrozen app over a default in-memory adapter. */
@@ -49,12 +52,12 @@ public final class TestApp {
         return this;
     }
 
-    /** Freezes once and binds port 0; a freeze exception propagates as thrown, unwrapped. */
+    /** Calls {@code listen(0)} once; a freeze exception propagates as thrown, unwrapped. */
     // @req FR-HTTP-001
+    // @req FR-APP-009
     public synchronized TestApp start() {
         if (!started) {
-            app.freeze();
-            adapter.bind("127.0.0.1", 0, app.dispatcher());
+            app.listen(0);
             started = true;
         }
         return this;

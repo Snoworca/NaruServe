@@ -59,7 +59,8 @@ app.get("/api/users/:id") { req, res ->
 | `onStop(ctx -> ...)` | `shutdown()` 중, 서비스를 닫기 **전**에 한 번 | 사용자 정리 작업. 서비스를 아직 쓸 수 있습니다. |
 
 - 여러 번 등록하면 등록 순서대로 실행합니다.
-- `onStart`에서 예외가 나면 포트를 열지 않고, 이미 `own`/`register`한 리소스를 역순으로 닫은 뒤 `listen()`이 그 예외(checked 예외라면 이를 감싼 unchecked 예외, 정확한 타입은 **(미확정)**)를 던집니다.
+- `onStart`에서 예외가 나면 포트를 열지 않고, 이미 `own`/`register`한 리소스를 역순으로 닫은 뒤 `listen()`이 그 예외를 던집니다. 정리 중에 난 예외는 던지는 예외의 `getSuppressed()`에 붙습니다.
+- unchecked 예외는 그대로, checked 예외는 `AppStartException`(unchecked)으로 감싸 던지고, 시작 도중 `shutdown()`으로 시작이 멈춘 경우도 `AppStartException`인데, 감싸는 이유는 `listen()`에 `throws Exception`을 두지 않아 Java·Kotlin 호출부를 단순하게 하려는 것입니다.
 - `onStop`은 `RUNNING`까지 정상으로 올라간 앱에서만 실행됩니다. 시작에 실패한 앱에서는 실행되지 않습니다.
 
 ## ApplicationContext
@@ -68,14 +69,15 @@ app.get("/api/users/:id") { req, res ->
 
 ```java
 public interface ServiceRegistry {
-    <T> void register(Class<T> type, T instance);
+    <T> void register(Class<T> type, T instance);          // AutoCloseable이면 종료 때 닫음
+    <T> void registerExternal(Class<T> type, T instance);  // 닫지 않음
     <T> T get(Class<T> type);           // 없으면 ServiceNotFoundException
     <T> T getOrNull(Class<T> type);     // 없으면 null
     boolean contains(Class<?> type);
 }
 
 public interface ApplicationContext extends ServiceRegistry {
-    void attribute(String key, Object value);
+    void attribute(String key, Object value);   // null이면 키를 지움
     <T> T attribute(String key, Class<T> type);
     void own(AutoCloseable resource);
     Logger logger();
@@ -107,7 +109,11 @@ ctx.register(JdbcUserService.class, impl);   // 같은 객체, 닫기는 한 번
 
 `own`과 `register`한 `AutoCloseable`은 등록한 **역순**으로 닫힙니다. 위 예제에서는 `UserService`(`AutoCloseable`일 때) → `Database` 순서입니다. 닫다가 예외가 나도 나머지를 계속 닫습니다.
 
-외부에서 만든 객체(다른 곳과 공유하는 커넥션 풀 등)를 자동으로 닫지 않게 등록하는 방법은 **(미확정)** 입니다(`registerExternal` 또는 `Ownership.EXTERNAL` 검토 중).
+외부에서 만든 객체(다른 곳과 공유하는 커넥션 풀 등)는 `registerExternal`(`ctx.registerExternal(Type.class, instance)`)로 등록하면 조회는 `register`와 같고 프레임워크가 닫지 않으며, `Ownership.EXTERNAL` 같은 인자 대신 메서드를 나눈 이유는 호출부에서 소유권이 이름으로 바로 보이기 때문입니다.
+
+```java
+ctx.registerExternal(ConnectionPool.class, sharedPool);   // 종료 때 닫지 않음
+```
 
 ### attribute
 
@@ -116,7 +122,11 @@ ctx.register(JdbcUserService.class, impl);   // 같은 객체, 닫기는 한 번
 ```java
 ctx.attribute("appVersion", "1.0.0");
 String v = req.application().attribute("appVersion", String.class);
+ctx.attribute("appVersion", (Object) null);   // 지우기
 ```
+
+값을 지우려면 `null`을 저장하는데, `ctx.attribute("appVersion", null)`처럼 `null` 리터럴을 쓰면 읽기 오버로드 `attribute(String, Class<T>)`가 골라져 `NullPointerException`이 나므로 `(Object) null`로 캐스팅하거나 타입이 있는 `null` 변수를 넘기세요.
+저장된 값이 요청한 타입이 아니면 `ClassCastException`입니다.
 
 ## 저장소 범위
 
@@ -143,13 +153,24 @@ NEW ──listen──> STARTING ──성공──> RUNNING ──shutdown─�
 | 상태 | 의미 |
 |---|---|
 | `NEW` | 설정 중. 라우트·미들웨어·설정을 바꿀 수 있는 유일한 상태 |
-| `STARTING` | `onStart` 실행·검사·바인딩 중. 요청을 받지 않음 |
+| `STARTING` | `onStart` 실행·검사·바인딩 중. 바인딩 뒤 도착한 요청은 `RUNNING`이 될 때까지 기다렸다가 처리되고, 시작이 실패하면 기다리던 요청은 `503`과 `Connection: close`로 답을 받습니다(멈춤 요청이 이미 있으면 기다리지 않고 바로 `503`) |
 | `RUNNING` | 요청 처리 중 |
-| `STOPPING` | 종료 중. 새 요청·Upgrade를 거부 |
+| `STOPPING` | 종료 중. 새 요청·Upgrade를 `503` + `Connection: close`(표준 오류 본문)로 거부 |
 | `FAILED` | 시작 실패. 정리 후 `TERMINATED` |
 | `TERMINATED` | 끝. 다시 시작할 수 없음 |
 
 `listen()`을 두 번 부르거나 동시에 부를 수 없습니다. 종료된 앱 대신 새 `RestApp`을 만드세요.
+
+`STARTING`에서 기다리게 한 이유는 `listen()`이 반환하기 직전에 들어온 요청을 거절하지 않으려는 것입니다.
+
+### 시작 중 shutdown
+
+`STARTING` 중에 `shutdown(timeout, unit)`을 부르면 멈춤 요청을 기록하고 `listen()`이 끝나기를 기다리며(`onStart` 콜백 안에서 부르면 기다리지 않고 바로 반환), timeout이 지나면 예외 없이 반환하지만 멈춤 요청은 그대로 남아 `listen()`은 다음 검사 지점(다음 `onStart` 콜백 전, 바인딩 전, `RUNNING`으로 바뀔 때)에서 시작을 멈추고 `AppStartException`을 던지는데, 멈춤 요청을 유지하는 이유는 timeout이 지났다고 멈춤을 취소하면 앱이 아무도 모르게 `RUNNING`으로 올라가기 때문입니다.
+
+### 요청 핸들러 안에서 shutdown
+
+라우트 핸들러나 미들웨어 안에서 `shutdown(timeout, unit)`을 부르면 종료 순서는 별도 스레드에서 돌고 호출은 기다리지 않고 바로 반환하며, 그 요청의 응답은 평소대로 끝까지 전송되는데, 종료 순서가 처리 중인 요청이 끝나기를 기다리므로 같은 스레드에서 기다리면 자기 자신을 timeout까지 기다린 뒤 응답을 강제로 끊게 되기 때문입니다(Express에서 `res.send()` 뒤 `server.close()`를 부르는 것과 같은 결과). `TERMINATED`가 되는 것을 확인하려면 다른 스레드에서 `app.state()`를 보세요.
+다른 곳(신호 처리, 다른 요청, `Service.onDestroy`)에서 이미 시작한 종료가 진행 중(`STOPPING`)일 때 요청 핸들러에서 `shutdown(...)`을 불러도 기다리지 않고 바로 반환합니다. 종료 스레드를 만들 수 없으면(메모리 부족 등) 종료 순서는 호출한 요청 스레드에서 바로 돌며, 이때는 그 요청을 timeout까지 기다릴 수 있지만 앱은 반드시 `TERMINATED`가 됩니다.
 
 ## Android
 

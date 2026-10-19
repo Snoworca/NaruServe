@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.junit.Test;
 
-/** Wave 3 decisions recorded in docs/api (OPS-HTTP-001); routing.md's marker count is RoutingDocsTest. */
+/** Wave 3 decisions recorded in docs/api (OPS-HTTP-003); routing.md keeps no marker, checked by RoutingDocsTest. */
 public class HttpDocsTest {
 
     private static final String MARKER = "(미확정)";
@@ -97,9 +97,9 @@ public class HttpDocsTest {
         return out;
     }
 
-    // SDS-AC-1; OPS-HTTP-001 AC-1
+    // SDS-AC-9; OPS-HTTP-003 AC-1
     @Test
-    public void sdsAc1_OPS_HTTP_001_AC1_rawPathRowIsRawPathWithoutQuery() throws IOException {
+    public void sdsAc9_OPS_HTTP_003_AC1_rawPathRowIsRawPathWithoutQuery() throws IOException {
         String row = line(doc("request.md"), "| `rawPath()`");
         assertFalse(row, row.contains(MARKER));
         assertTrue(row, row.contains("`req.path`"));
@@ -109,9 +109,9 @@ public class HttpDocsTest {
         assertFalse(row, row.contains("originalUrl"));
     }
 
-    // SDS-AC-1; OPS-HTTP-001 AC-2
+    // SDS-AC-9; OPS-HTTP-003 AC-2
     @Test
-    public void sdsAc1_OPS_HTTP_001_AC2_attributeTypeMismatchAndNullRemoval() throws IOException {
+    public void sdsAc9_OPS_HTTP_003_AC2_attributeTypeMismatchAndNullRemoval() throws IOException {
         String s = section(doc("request.md"), "## 요청 속성");
         assertTrue(s, s.contains("`ClassCastException`"));
         for (String l : s.split("\n")) {
@@ -130,9 +130,9 @@ public class HttpDocsTest {
         assertFalse("kotlin block", blocks(s, "kotlin").isEmpty());
     }
 
-    // SDS-AC-1; OPS-HTTP-001 AC-8
+    // SDS-AC-9; OPS-HTTP-003 AC-8
     @Test
-    public void sdsAc1_OPS_HTTP_001_AC8_requestKeepsOtherIssuesMarkers() throws IOException {
+    public void sdsAc9_OPS_HTTP_003_AC8_requestKeepsOtherIssuesMarkers() throws IOException {
         List<String> m = markerLines(doc("request.md"));
         assertEquals(m.toString(), 3, m.size());
         assertTrue(m.get(0), m.get(0).contains("프록시"));
@@ -140,9 +140,9 @@ public class HttpDocsTest {
         assertTrue(m.get(2), m.get(2).startsWith("| `parts()`"));
     }
 
-    // SDS-AC-2; OPS-HTTP-001 AC-3
+    // SDS-AC-9; OPS-HTTP-003 AC-3
     @Test
-    public void sdsAc2_OPS_HTTP_001_AC3_octetStreamAndStreamClosing() throws IOException {
+    public void sdsAc9_OPS_HTTP_003_AC3_octetStreamAndStreamClosing() throws IOException {
         String d = doc("response.md");
         String note = line(d, "`send(byte[])`에 `Content-Type`이 없으면");
         assertFalse(note, note.contains(MARKER));
@@ -161,18 +161,18 @@ public class HttpDocsTest {
         assertFalse("no use {}", kotlin.get(0).contains(".use"));
     }
 
-    // SDS-AC-2; OPS-HTTP-001 AC-8
+    // SDS-AC-9; OPS-HTTP-003 AC-8
     @Test
-    public void sdsAc2_OPS_HTTP_001_AC8_responseKeepsFileAndRedirectMarkers() throws IOException {
+    public void sdsAc9_OPS_HTTP_003_AC8_responseKeepsFileAndRedirectMarkers() throws IOException {
         List<String> m = markerLines(doc("response.md"));
         assertEquals(m.toString(), 2, m.size());
         assertTrue(m.get(0), m.get(0).startsWith("| `file(File)`"));
         assertTrue(m.get(1), m.get(1).contains("`res.redirect`"));
     }
 
-    // SDS-AC-3; OPS-HTTP-001 AC-4
+    // SDS-AC-9; OPS-HTTP-003 AC-4
     @Test
-    public void sdsAc3_OPS_HTTP_001_AC4_routerPolicyDocumented() throws IOException {
+    public void sdsAc9_OPS_HTTP_003_AC4_routerPolicyDocumented() throws IOException {
         String d = doc("routing.md");
         String s = section(d, "## 라우터 정책");
         boolean java = false;
@@ -195,9 +195,9 @@ public class HttpDocsTest {
         assertTrue(head, head.contains("`HEAD`를 돌려줍니다"));
     }
 
-    // SDS-AC-5; OPS-HTTP-001 AC-7
+    // SDS-AC-9; OPS-HTTP-003 AC-7
     @Test
-    public void sdsAc5_OPS_HTTP_001_AC7_expressRawPathAndRawTextMapping() throws IOException {
+    public void sdsAc9_OPS_HTTP_003_AC7_expressRawPathAndRawTextMapping() throws IOException {
         String d = doc("express-migration.md");
         String original = line(d, "| `req.originalUrl`");
         assertFalse(original, original.contains(MARKER));
@@ -221,9 +221,9 @@ public class HttpDocsTest {
         assertFalse(undecided, undecided.contains("express.raw"));
     }
 
-    // SDS-AC-5; OPS-HTTP-001 AC-8
+    // SDS-AC-9; OPS-HTTP-003 AC-8
     @Test
-    public void sdsAc5_OPS_HTTP_001_AC8_expressKeepsOtherIssuesMarkers() throws IOException {
+    public void sdsAc9_OPS_HTTP_003_AC8_expressKeepsOtherIssuesMarkers() throws IOException {
         String d = doc("express-migration.md");
         for (String prefix : new String[] {"| `app.set('trust proxy', ...)`", "| `express.Router()`",
                 "| `res.redirect(url)`", "| `cors()`"}) {
@@ -231,9 +231,9 @@ public class HttpDocsTest {
         }
     }
 
-    // SDS-AC-6; OPS-HTTP-001 AC-5
+    // SDS-AC-9; OPS-HTTP-003 AC-5
     @Test
-    public void sdsAc6_OPS_HTTP_001_AC5_appListsRouterPolicy() throws IOException {
+    public void sdsAc9_OPS_HTTP_003_AC5_appListsRouterPolicy() throws IOException {
         String d = doc("app.md");
         String row = line(d, "| `routerPolicy(RouterPolicy)`");
         assertFalse(row, row.contains(MARKER));
@@ -248,13 +248,20 @@ public class HttpDocsTest {
         assertTrue(kotlin.get(0), kotlin.get(0).contains("app.routerPolicy("));
     }
 
-    // SDS-AC-6; OPS-HTTP-001 AC-6
+    // SDS-AC-9; OPS-HTTP-003 AC-6
     @Test
-    public void sdsAc6_OPS_HTTP_001_AC6_defaultsNamesTraceConnectPolicy() throws IOException {
+    public void sdsAc9_OPS_HTTP_003_AC6_defaultsNamesTraceConnectPolicy() throws IOException {
         String row = line(doc("defaults.md"), "| `TRACE`, `CONNECT` 메서드");
         assertFalse(row, row.contains(MARKER));
         assertTrue(row, row.contains("`app.routerPolicy(...)`"));
         assertTrue(row, row.contains("`enableTrace`"));
         assertTrue(row, row.contains("`enableConnect`"));
+    }
+
+    // SDS-AC-9; OPS-HTTP-003 AC-8
+    @Test
+    public void sdsAc9_OPS_HTTP_003_AC8_routingKeepsNoMarker() throws IOException {
+        List<String> m = markerLines(doc("routing.md"));
+        assertTrue(m.toString(), m.isEmpty());
     }
 }

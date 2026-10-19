@@ -8,7 +8,7 @@ import org.junit.Test;
 /** The one strict UTF-8 percent decoder shared by the path validator and the request (w3-D-001). */
 public class PercentDecoderTest {
 
-    // FR-ROUTE-005; FR-HTTP-009; FR-HTTP-010
+    // SDS-AC-17 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-5.sds.md; FR-ROUTE-005; FR-HTTP-009; FR-HTTP-025 AC-2
     @Test
     public void pathFormKeepsPlusAndQueryFormMapsItToSpace() {
         assertEquals("a+b é", PercentDecoder.decode("a+b%20%C3%A9", false));
@@ -17,7 +17,7 @@ public class PercentDecoderTest {
         assertEquals("plain", PercentDecoder.decode("plain", false));
     }
 
-    // FR-ROUTE-005; FR-HTTP-010
+    // SDS-AC-16 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-5.sds.md; FR-ROUTE-005; FR-HTTP-025 AC-3
     @Test
     public void malformedInputIsNull() {
         assertNull(PercentDecoder.decode("%", false));

@@ -23,7 +23,7 @@ Express 코드의 구조(라우트·미들웨어·req/res)는 대부분 그대�
 | `app.route('/b').get(h1).post(h2)` | `app.route("/b").get(h1).post(h2)` | 같습니다. |
 | (없음) | `app.route(Method.get().post(), "/x", h)` | 여러 메서드를 한 핸들러로 받습니다. |
 | (없음) | `app.route(Method.any().except(Method.DELETE), "/x", h)` | 특정 메서드만 뺍니다. |
-| `app.get('/x', auth, h)` | `app.get("/x", auth, h)` | 라우트 미들웨어. 여러 개(`auth, admin, h`)를 넘기는 오버로드는 **(미확정)** |
+| `app.get('/x', auth, h)` | `app.get("/x", auth, h)` | 라우트 미들웨어 하나. 여러 개(`auth, admin, h`)는 `app.route("/x").use(auth).use(admin).get(h)`로 붙입니다. Java 가변 인자는 맨 끝에만 올 수 있어 `RouteBuilder.use`로 정했습니다. |
 | `express.Router()` + `app.use('/api', router)` | **(미확정)** | 지금은 `app.use("/api", mw)`와 전체 경로 등록으로 대신합니다. |
 | `'/ab?cd'`, `'/a*'`, 정규식 경로 (Express 4) / `{/:opt}`, `/*splat` (Express 5) | 지원하지 않음 | `:name` 변수와 고정 세그먼트만 씁니다. |
 
@@ -77,10 +77,10 @@ Express 코드의 구조(라우트·미들웨어·req/res)는 대부분 그대�
 | Express | NaruServe (Java) | 비고 |
 |---|---|---|
 | `app.use((req, res, next) => { ...; next() })` | `app.use((req, res, next) -> { ...; next.run(); })` | |
-| `app.use('/api', mw)` | `app.use("/api", mw)` | Express는 마운트된 미들웨어 안에서 `req.path`에서 prefix를 뺍니다(`req.baseUrl`). NaruServe의 `req.path()`가 prefix를 빼는지는 **(미확정)** 이므로 전체 경로로 비교하세요. |
+| `app.use('/api', mw)` | `app.use("/api", mw)` | Express는 마운트된 미들웨어 안에서 `req.path`에서 prefix를 뺍니다(`req.baseUrl`). NaruServe의 `req.path()`는 prefix를 빼지 않고 전체 경로(`/api/users`)를 돌려주므로 전체 경로로 비교하세요. 이렇게 정한 이유는 같은 요청에서 미들웨어와 핸들러가 늘 같은 경로를 보게 하려는 것입니다. |
 | `next(err)` | `next.error(err)` 또는 `throw` | |
 | `app.use((err, req, res, next) => ...)` | `app.onError((err, req, res) -> ...)` | 인자 3개(`next` 없음), 순서는 Express와 같음 |
-| 마지막 404 미들웨어 | 필요 없음 | 기본 404/405를 보냅니다. 본문을 바꾸는 방법은 **(미확정)** |
+| 마지막 404 미들웨어 | 필요 없음 | 기본 404/405를 [표준 오류 형식](middleware.md#표준-오류-형식)으로 보냅니다. v1에서는 이 본문을 바꿀 수 없습니다. |
 | `express.json()`, `express.urlencoded()` | 필요 없음 | `req.body(...)`, `req.form(...)`이 읽습니다. |
 | `express.raw()`, `express.text()` | 없음 | v1에는 원본·텍스트 본문을 읽는 API가 없습니다. 본문은 `req.body(...)`(JSON), `req.form(...)`, `req.file(...)`로 읽습니다. |
 | `cors()` | **(미확정)** | 전역 `app.use`에서 `Access-Control-Allow-*` 헤더를 설정합니다. preflight(`OPTIONS` + `Access-Control-Request-Method`)는 `res.status(204).end()`로 바로 끝내고 `next.run()`을 부르지 마세요. 그러지 않으면 `/api` 인증 미들웨어가 preflight를 401로 거부합니다. |
@@ -155,7 +155,7 @@ LAN에 열 때는 인증 미들웨어를 함께 거세요. 전역 인증 없이 
 
 ### 7. 오류 응답은 정해진 JSON입니다
 
-처리되지 않은 예외와 파싱 오류는 stack trace 없이 이 형식으로 나갑니다. 아래는 JSON 파싱 오류(`400`) 예시이며, `500`의 `code` 값은 **(미확정)** 입니다.
+처리되지 않은 예외와 파싱 오류는 stack trace 없이 이 형식으로 나갑니다. 아래는 JSON 파싱 오류(`400`) 예시이며, `500`의 `code` 값은 `INTERNAL_ERROR`입니다(상태별 값은 [표준 오류 형식](middleware.md#표준-오류-형식)).
 
 ```json
 {"error":{"code":"BAD_REQUEST","message":"Invalid JSON request","requestId":"..."}}
@@ -184,6 +184,7 @@ app.get("/users", (req, res) -> res.json(req.service(UserService.class).findAll(
 Express는 `app.use`를 등록 순서 하나로 실행합니다. NaruServe는 **전역 → prefix → 라우트 미들웨어 → 핸들러** 순서이고, 같은 종류 안에서만 등록 순서를 따릅니다.
 
 ```java
+Middleware requestId = (req, res, next) -> next.run();   // 요청마다 ID를 붙이는 전역 미들웨어라고 합시다
 app.use("/api", auth);   // Express: 1번째, NaruServe: 2번째
 app.use(requestId);      // Express: 2번째, NaruServe: 1번째
 ```

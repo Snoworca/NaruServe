@@ -56,7 +56,8 @@ def mainDependencies = [
     ':NaruServe'          : [api: [':NaruServe-api'],
                              implementation: [':NaruServe-tinyhttpd', ':NaruServe-gson', ':NaruServe-logcat']],
     ':NaruServe-kotlin'   : [api: [':NaruServe-api', "org.jetbrains.kotlin:kotlin-stdlib:${kotlinVersion}"]],
-    ':NaruServe-slf4j'    : [api: [':NaruServe-api'], implementation: ['org.slf4j:slf4j-api:1.7.36']],
+    // api scope: the public Slf4jLogger(org.slf4j.Logger) constructor exposes the SLF4J type.
+    ':NaruServe-slf4j'    : [api: [':NaruServe-api', 'org.slf4j:slf4j-api:1.7.36']],
     ':NaruServe-filelog'  : [api: [':NaruServe-api']],
     ':NaruServe-logcat'   : [api: [':NaruServe-api']],
 ]
@@ -121,10 +122,12 @@ def scanClassRefs = { FileCollection classesDirs, List<String> prefixes ->
 
 // @req CON-BUILD-008
 // @req CON-BUILD-013
+// @req CON-APP-001
 def classRefPrefixes = { String path ->
     def prefixes = path in androidModules ? ['javax/servlet/'] : []
     if (path == ':NaruServe-api') {
         prefixes += ['android/', 'jakarta/servlet/', 'com/google/gson/', 'com/snoworca/tinyhttpd/', 'kotlin/']
+        prefixes += ['org/slf4j/']
     }
     if (path == ':NaruServe-logcat') {
         prefixes += ['android/']
@@ -167,6 +170,14 @@ project(':NaruServe-api') {
     // @req FR-HTTP-001
     dependencies {
         testFixturesCompileOnly 'org.jspecify:jspecify:1.0.0'
+    }
+}
+
+// The rotating file logger's failed-listen test drives an app over the in-memory adapter (FR-APP-017 AC-7).
+project(':NaruServe-filelog') {
+    // @req FR-APP-017
+    dependencies {
+        testImplementation testFixtures(project(':NaruServe-api'))
     }
 }
 
@@ -238,6 +249,40 @@ def checkDependencyRules = tasks.register('checkDependencyRules') {
     }
 }
 tasks.named('check') { dependsOn checkDependencyRules }
+
+// @req CON-APP-001
+// Each logger class sits in its own module jar and no class of a logger package sits in the api jar.
+def loggerClasses = [
+    ':NaruServe-filelog': 'com/snoworca/naruserve/filelog/RotatingFileLogger.class',
+    ':NaruServe-slf4j'  : 'com/snoworca/naruserve/slf4j/Slf4jLogger.class',
+    ':NaruServe-logcat' : 'com/snoworca/naruserve/logcat/LogcatLogger.class',
+]
+def checkLoggerPlacement = tasks.register('checkLoggerPlacement') {
+    description = 'Fails when a logger class sits in the NaruServe-api jar or is missing from its module jar.'
+    group = 'verification'
+    def jars = ([':NaruServe-api'] + loggerClasses.keySet()).collectEntries { path ->
+        [path, project(path).tasks.named('jar').flatMap { it.archiveFile }]
+    }
+    dependsOn jars.keySet().collect { "${it}:jar" }
+    doLast {
+        def entries = { String path ->
+            new java.util.zip.ZipFile(jars[path].get().asFile).withCloseable { z -> z.entries().collect { it.name } }
+        }
+        def violations = []
+        def loggerPackages = loggerClasses.values().collect { it.substring(0, it.lastIndexOf('/') + 1) }
+        entries(':NaruServe-api').findAll { e -> loggerPackages.any { e.startsWith(it) && e.endsWith('.class') } }
+                .each { violations << "NaruServe-api jar holds ${it}" }
+        loggerClasses.each { path, cls ->
+            if (!(cls in entries(path))) {
+                violations << "${path.substring(1)} jar lacks ${cls}"
+            }
+        }
+        if (!violations.isEmpty()) {
+            throw new GradleException('checkLoggerPlacement: ' + violations.join('\ncheckLoggerPlacement: '))
+        }
+    }
+}
+tasks.named('check') { dependsOn checkLoggerPlacement }
 
 // Root tests inspect the module outputs and run TestKit negative cases (OPS-BUILD-002 AC-4).
 configureCompile(project)

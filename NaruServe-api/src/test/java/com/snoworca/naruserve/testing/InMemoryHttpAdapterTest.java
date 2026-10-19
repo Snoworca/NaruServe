@@ -122,8 +122,12 @@ public class InMemoryHttpAdapterTest {
         ClientResponse viaHarness = t.send("GET", "/p");
         assertEquals(405, viaHarness.status());
         assertEquals("POST, OPTIONS", viaHarness.header("Allow"));
-        assertEquals("0", viaHarness.header("Content-Length"));
-        assertEquals(0, viaHarness.body().length);
+        // FR-HTTP-022 AC-2 (wave 4 successor of FR-HTTP-003): the 405 carries the standard error body.
+        assertEquals(String.valueOf(viaHarness.body().length), viaHarness.header("Content-Length"));
+        assertEquals("application/json; charset=UTF-8", viaHarness.header("Content-Type"));
+        String body = new String(viaHarness.body(), java.nio.charset.StandardCharsets.UTF_8);
+        assertTrue(body, body.matches("\\{\"error\":\\{\"code\":\"METHOD_NOT_ALLOWED\","
+                + "\"message\":\"Method Not Allowed\",\"requestId\":\"[0-9a-f]{16}\"}}"));
         // The adapter handed to create() is the one bound: it reaches the same dispatcher directly.
         ClientResponse direct = adapter.send(ClientRequest.of("GET", "/nothing"));
         assertEquals(404, direct.status());
@@ -166,5 +170,41 @@ public class InMemoryHttpAdapterTest {
         assertArrayEquals(new String[] {"OPTIONS", "*", null}, r.send("OPTIONS", "*"));
         assertArrayEquals(new String[] {"/a", "x=1"}, InMemoryHttpAdapter.splitTarget("http://example.com/a?x=1"));
         assertArrayEquals(new String[] {"*", null}, InMemoryHttpAdapter.splitTarget("*"));
+    }
+
+    // SDS-AC-12 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-3.sds.md; FR-APP-009 AC-7
+    @Test
+    public void sdsAc12_FR_APP_009_AC7_harnessBuildsThroughTheBuilderWithStubCodecAndStartsByListen() {
+        InMemoryHttpAdapter adapter = new InMemoryHttpAdapter();
+        TestApp t = TestApp.create(adapter);
+        DefaultRestApp app = (DefaultRestApp) t.app();
+        assertSame(adapter, app.httpAdapter());
+        assertTrue(app.jsonCodec() instanceof StubJsonCodec);
+        assertEquals(com.snoworca.naruserve.AppState.NEW, app.state());
+        t.start();
+        t.start();
+        assertEquals(com.snoworca.naruserve.AppState.RUNNING, app.state());
+        assertTrue(adapter.boundPort() > 0);
+        // The harness exchange handler is the gated one listen() bound, not the bare dispatcher.
+        assertEquals(404, t.send("GET", "/none").status());
+
+        TestApp dup = TestApp.create();
+        dup.app().get("/d", (req, res) -> { });
+        dup.app().get("/d", (req, res) -> { });
+        try {
+            dup.start();
+            fail("duplicate GET /d accepted");
+        } catch (RoutingConfigException e) {
+            assertEquals(RoutingConfigException.class, e.getClass());
+        }
+    }
+
+    // SDS-AC-12 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-3.sds.md; FR-APP-009 AC-7
+    @Test
+    public void sdsAc12_FR_APP_009_AC7_stubCodecIsAFixturesJsonCodecWithoutGson() throws IOException {
+        assertTrue(com.snoworca.naruserve.spi.JsonCodec.class.isAssignableFrom(StubJsonCodec.class));
+        java.io.StringWriter w = new java.io.StringWriter();
+        new StubJsonCodec().encode(null, w);
+        assertEquals("null", w.toString());
     }
 }

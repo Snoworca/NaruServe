@@ -1,0 +1,175 @@
+package com.snoworca.naruserve.internal;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+import com.snoworca.naruserve.AppState;
+import com.snoworca.naruserve.RestApp;
+import com.snoworca.naruserve.ServerHandle;
+import com.snoworca.naruserve.routing.RoutingConfigException;
+import com.snoworca.naruserve.spi.ExchangeHandler;
+import com.snoworca.naruserve.spi.HttpAdapter;
+import com.snoworca.naruserve.testing.StubJsonCodec;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import org.junit.Test;
+
+/** listen() startup sequence. SDS-AC-n cites docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-3.sds.md. */
+public class ListenStartupTest {
+
+    /** Records bind and boundPort calls with the app state seen at bind. */
+    static final class RecordingAdapter implements HttpAdapter {
+        final List<String> events = Collections.synchronizedList(new ArrayList<>());
+        volatile RestApp app;
+        volatile boolean bound;
+        final int port;
+
+        RecordingAdapter(int port) {
+            this.port = port;
+        }
+
+        @Override
+        public void bind(String host, int port, ExchangeHandler handler) {
+            String frozen;
+            try {
+                ((DefaultRestApp) app).dispatcher();
+                frozen = "frozen";
+            } catch (IllegalStateException e) {
+                frozen = "unfrozen";
+            }
+            events.add("bind " + app.state() + " " + frozen);
+            bound = true;
+        }
+
+        @Override
+        public int boundPort() {
+            if (!bound) {
+                throw new IllegalStateException("not bound");
+            }
+            return port;
+        }
+
+        @Override
+        public void stop(long timeout, TimeUnit unit) {
+        }
+
+        @Override
+        public void release() {
+        }
+    }
+
+    private static RestApp app(RecordingAdapter adapter) {
+        RestApp app = RestApp.builder().httpAdapter(adapter).jsonCodec(new StubJsonCodec()).build();
+        adapter.app = app;
+        return app;
+    }
+
+    // SDS-AC-6; FR-APP-009 AC-1
+    @Test
+    public void sdsAc6_FR_APP_009_AC1_concurrentListenLetsOnlyTheCompareAndSetWinnerProceed() throws Exception {
+        for (int round = 0; round < 20; round++) {
+            RecordingAdapter adapter = new RecordingAdapter(8080);
+            RestApp app = app(adapter);
+            CountDownLatch go = new CountDownLatch(1);
+            ExecutorService pool = Executors.newFixedThreadPool(2);
+            try {
+                List<Future<Object>> results = new ArrayList<>();
+                for (int i = 0; i < 2; i++) {
+                    results.add(pool.submit(() -> {
+                        go.await();
+                        try {
+                            return app.listen(0);
+                        } catch (IllegalStateException e) {
+                            return e;
+                        }
+                    }));
+                }
+                go.countDown();
+                int handles = 0;
+                int refused = 0;
+                for (Future<Object> f : results) {
+                    Object r = f.get(5, TimeUnit.SECONDS);
+                    if (r instanceof ServerHandle) {
+                        handles++;
+                    } else if (r instanceof IllegalStateException) {
+                        refused++;
+                    }
+                }
+                assertEquals(1, handles);
+                assertEquals(1, refused);
+                assertEquals(Arrays.asList("bind STARTING frozen"), adapter.events);
+            } finally {
+                pool.shutdownNow();
+            }
+            try {
+                app.listen(0);
+                fail("listen after a successful listen");
+            } catch (IllegalStateException e) {
+                assertTrue(e.getMessage(), e.getMessage().contains("RUNNING"));
+            }
+        }
+    }
+
+    // SDS-AC-7; FR-APP-009 AC-2
+    @Test
+    public void sdsAc7_FR_APP_009_AC2_listenRunsStartingCallbacksFreezeOneBindRunningInOrder() {
+        RecordingAdapter adapter = new RecordingAdapter(8081);
+        DefaultRestApp app = (DefaultRestApp) app(adapter);
+        app.get("/x", (req, res) -> { });
+        app.onStart(ctx -> {
+            adapter.events.add("cb1 " + app.state());
+            try {
+                app.dispatcher();
+                adapter.events.add("frozen too early");
+            } catch (IllegalStateException expected) {
+                // not frozen yet
+            }
+        });
+        app.onStart(ctx -> adapter.events.add("cb2 " + app.state()));
+        ServerHandle h = app.listen(0);
+        adapter.events.add("returned " + app.state());
+        assertEquals(Arrays.asList("cb1 STARTING", "cb2 STARTING", "bind STARTING frozen", "returned RUNNING"),
+                adapter.events);
+        // frozen by listen
+        app.dispatcher();
+        assertEquals(AppState.RUNNING, h.state());
+    }
+
+    // SDS-AC-8; FR-APP-009 AC-3
+    @Test
+    public void sdsAc8_FR_APP_009_AC3_duplicateRouteThrowsTheFreezeExceptionAfterOnStartAndBeforeBind() {
+        RecordingAdapter adapter = new RecordingAdapter(8082);
+        RestApp app = app(adapter);
+        app.get("/x", (req, res) -> { });
+        app.get("/x", (req, res) -> { });
+        app.onStart(ctx -> adapter.events.add("cb"));
+        try {
+            app.listen(0);
+            fail("duplicate GET /x accepted");
+        } catch (RoutingConfigException e) {
+            assertEquals(RoutingConfigException.class, e.getClass());
+            assertNull(e.getCause());
+        }
+        assertEquals(Arrays.asList("cb"), adapter.events);
+    }
+
+    // SDS-AC-9; FR-APP-009 AC-4
+    @Test
+    public void sdsAc9_FR_APP_009_AC4_handlePortIsTheBoundPortAndListenReturnsAfterBind() {
+        RecordingAdapter adapter = new RecordingAdapter(8123);
+        RestApp app = app(adapter);
+        ServerHandle h = app.listen(0);
+        assertTrue(adapter.bound);
+        assertEquals(8123, h.port());
+        assertEquals(AppState.RUNNING, h.state());
+    }
+}

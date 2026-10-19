@@ -30,7 +30,21 @@ app.accessLog(options -> {
 | `includeBytes(boolean)` | 주고받은 바이트 포함 |
 | `exclude(path)` | 이 경로는 기록하지 않음 |
 
-로그 한 줄의 형식과 각 옵션의 기본값은 **(미확정)** 입니다.
+기본값: `enabled(true)`, `level(LogLevel.INFO)`, `includeRequestId(true)`, `includeDuration(true)`, `includeBytes(true)`, 제외 경로 없음. 기본을 모두 켠 이유는 저사양 기기에서도 문제를 추적할 정보가 처음부터 남게 하려는 것입니다.
+`accessLog(...)`는 여러 번 불러도 앱의 옵션 하나에 순서대로 쌓이고, `listen()` 때 그 값으로 고정됩니다. `exclude(path)`는 쿼리를 뺀 원본 경로(`req.rawPath()`)와 대소문자까지 정확히 같을 때만 제외합니다.
+
+### 한 줄 형식
+
+요청 하나에 한 줄을 씁니다: `<method> <path> <status>[ aborted][ <n>ms][ in=<i> out=<o>][ rid=<id>]`. 대괄호 부분은 해당 옵션이 켜져 있을 때만 붙고(`aborted`는 응답이 중단됐을 때), 순서를 고정한 이유는 `grep`·`awk`로 바로 자르기 위해서입니다.
+
+```text
+GET /api/users/42 200 3ms in=0 out=27 rid=5f2c9a1e
+POST /upload 413 aborted 12ms in=1048576 out=0 rid=5f2c9a1f
+```
+
+- `<path>`는 쿼리 문자열을 뺀 원본 경로입니다.
+- `in`/`out`은 실제로 읽고 쓴 본문 바이트입니다(헤더 제외).
+- `rid`는 요청 ID로, 같은 요청의 앱 로그·표준 오류 본문의 `requestId`와 같은 값입니다.
 
 ### 언제 기록하나
 
@@ -55,7 +69,7 @@ app.accessLog(options -> {
 
 ```java
 app.logger().info("Server initialized");
-app.logger().error("Upload failed", exception);
+app.logger().error("Upload failed", new IOException("disk full"));
 ```
 
 ```java
@@ -70,6 +84,8 @@ public interface Logger {
 ```
 
 `onStart`/`onStop` 안에서는 `ctx.logger()`로도 같은 로거를 씁니다.
+
+`RestApp.builder()`에서 `logger(...)`를 부르지 않으면 `ConsoleLogger`를 씁니다. 형식은 `<timestamp> <LEVEL> <message>`(timestamp는 `yyyy-MM-dd'T'HH:mm:ss.SSSZ`)이고, 기본 레벨은 `INFO`이며, `TRACE`·`DEBUG`·`INFO`는 `System.out`, `WARN`·`ERROR`는 `System.err`로 씁니다. `new ConsoleLogger(LogLevel.DEBUG)`처럼 레벨을 정할 수 있습니다.
 
 ### 로거 교체
 
@@ -89,4 +105,27 @@ public interface Logger {
 | SLF4J 어댑터 | `NaruServe-slf4j` | `com.snoworca.naruserve:NaruServe-slf4j:0.1.0-SNAPSHOT` (`org.slf4j:slf4j-api:1.7.36`) | 미지원(JVM 전용) |
 
 `RestApp.create()`용 `NaruServe` 모듈은 `NaruServe-logcat`을 실행 시점에만 함께 가져옵니다. 로거 클래스를 코드에서 직접 쓰려면 해당 모듈을 의존성에 넣으세요.
-파일 로거 예시 설정은 폴더 `./logs`, 파일당 5 MiB, 최대 5개입니다. 로그 쓰기가 실패해도 HTTP 서비스는 멈추지 않습니다.
+로그 쓰기가 실패해도 HTTP 서비스는 멈추지 않습니다.
+
+### Logcat 로거
+
+`new LogcatLogger()`는 태그 `NaruServe`로 씁니다. 다른 태그는 `new LogcatLogger("MyServer")`로 정합니다. Android가 아닌 JVM에서 만들면 `IllegalStateException`입니다.
+
+### 파일 로거
+
+`RotatingFileLogger.builder()`의 기본값은 폴더 `./logs`, 파일당 5 MiB(5242880 바이트), 최대 5개, 대기 큐 1024건, 레벨 `INFO`이며, 파일 이름은 `naruserve.log`이고 가득 차면 `naruserve.log.1`, `naruserve.log.2` … `naruserve.log.4`로 밀려나고 가장 오래된 파일은 지워집니다.
+줄 형식은 콘솔 로거와 같은 `<timestamp> <LEVEL> <message>`입니다. 별도 스레드가 파일에 쓰며, 큐가 가득 차거나 쓰기가 실패하면 그 줄을 버리고 `droppedCount()`로 셉니다.
+`naruserve.log`의 이름을 바꾸지 못해 회전이 실패하면 기존 줄을 지우지 않고 같은 파일에 이어 쓰며, 실패 횟수는 `rotationFailureCount()`로 셉니다. 다음 회전은 그 파일이 `maxFileBytes`만큼 더 커진 뒤에 다시 시도하고, 백업은 빈 번호가 없을 때만 가장 오래된 것을 지우므로 실패가 되풀이되어도 백업이 더 지워지지 않습니다. 실패가 계속되는 동안 `naruserve.log`는 `maxFileBytes`보다 커질 수 있으니 `rotationFailureCount()`가 0이 아니면 폴더 권한과 디스크를 확인하세요.
+
+Android에서는 작업 폴더 `./logs`에 쓸 수 없으므로 `context.getFilesDir()` 같은 쓰기 가능한 폴더를 넘기세요. 기본 폴더를 Android용으로 바꾸지 않은 이유는 `NaruServe-filelog`가 `android.*`에 의존하지 않기 때문입니다.
+
+```java
+RotatingFileLogger logger = RotatingFileLogger.builder()
+    .directory(new File(context.getFilesDir(), "logs"))
+    .build();
+```
+
+### 종료와 로거
+
+`shutdown(...)`과 시작 실패 정리는 끝 무렵(HTTP 어댑터를 놓기 직전)에 앱 로거를 `flush()`(`Flushable`일 때)한 뒤 `close()`(`AutoCloseable`일 때)하며, 그렇게 하는 이유는 파일 로거의 큐에 남은 줄을 잃지 않기 위해서입니다. `ConsoleLogger`의 `close()`는 `System.out`/`System.err`를 flush만 하고 닫지 않습니다.
+여러 앱이 로거 하나를 같이 쓰면 먼저 종료한 앱이 그 로거를 닫으므로, 앱마다 `close()`가 아무것도 하지 않는(`AutoCloseable`을 구현하지 않은) 위임 로거를 넘기세요.

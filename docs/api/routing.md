@@ -18,7 +18,8 @@ app.route("/users/:id")
 ```
 
 `app.get(path, getUser); app.put(path, updateUser); app.delete(path, deleteUser);`와 같습니다.
-`RouteBuilder`는 `get`, `post`, `put`, `patch`, `delete`, `head`, `options`를 가집니다. 이 경로에만 적용할 `use(middleware)`는 **(미확정)** 입니다(사양서는 대안으로만 언급).
+`RouteBuilder`는 `get`, `post`, `put`, `patch`, `delete`, `head`, `options`와 `use(middleware)`를 가지며 모두 같은 `RouteBuilder`를 돌려줍니다. `use(middleware)`는 라우트 미들웨어를 여러 개 붙이는 방법으로, `app.route("/admin").use(auth).use(adminOnly).get(h)`는 `auth` → `adminOnly` → `h` 순서로 실행하고 `use` 뒤에 등록하는 메서드에만 적용됩니다. [미들웨어](middleware.md#등록)
+가변 인자 오버로드 대신 `RouteBuilder.use`를 고른 이유는 Java의 가변 인자가 맨 끝에만 올 수 있어 `get(path, Middleware..., RouteHandler)`를 만들 수 없기 때문입니다.
 
 ### 한 핸들러로 여러 메서드
 
@@ -150,6 +151,8 @@ app.get("/users/me", getMe);     // /users/me 요청은 항상 여기로
 | `GET` 라우트에 `HEAD` 요청 | GET 핸들러를 실행하고 본문은 보내지 않음 |
 | `OPTIONS` 요청 (핸들러 없음) | `204` + `Allow` 헤더 |
 | 서버가 모르는 메서드 | `501` |
+| 앱이 종료 중(`STOPPING`) | `503` + `Connection: close`, 본문은 [표준 오류 형식](middleware.md#표준-오류-형식)(`SERVICE_UNAVAILABLE`) |
+| 대기 큐가 가득 참(과부하) | `503`. TinyHttpd가 전송 계층에서 바로 보내는 평문 본문이며 라우팅·미들웨어를 거치지 않습니다 |
 
 명시한 `head(...)`, `options(...)` 핸들러가 있으면 자동 응답보다 우선합니다.
 자동 HEAD 처리 때 `req.method()`는 `HEAD`를 돌려줍니다. GET 핸들러가 실행되더라도 `GET`이 아닙니다. 메서드로 분기하는 핸들러는 위 예제처럼 `HEAD`를 `GET`과 함께 처리하세요.

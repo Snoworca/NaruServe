@@ -103,7 +103,7 @@ Java에서는 `express.json()` 같은 본문 파서를 따로 등록하지 않�
 HTTP 엔진은 TinyHttpd 체크아웃을 그대로 빌드하며, 커밋 `46b973e`에서 검증했습니다. 체크아웃 HEAD가 다르면 빌드는 실패하지 않고 경고만 냅니다.
 
 `RestApp.create()`는 `NaruServe` 모듈이 기본 HTTP 엔진(TinyHttpd)과 Gson을 자동으로 조립합니다.
-엔진과 JSON 구현을 직접 고르려면 `RestApp.builder()`(이름 **(미확정)**)를 씁니다([RestApp](app.md#앱-만들기) 참고).
+엔진과 JSON 구현을 직접 고르려면 `RestApp.builder()`에 `httpAdapter`, `jsonCodec`(필수)과 `logger`(선택)를 넘기고 `build()`합니다([RestApp](app.md#앱-만들기) 참고).
 
 ```groovy
 // RestApp.create()로 바로 시작합니다. 컴파일 시점에는 NaruServe-api가,
