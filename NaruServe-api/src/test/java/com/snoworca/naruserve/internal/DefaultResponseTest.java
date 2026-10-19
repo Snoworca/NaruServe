@@ -77,6 +77,24 @@ public class DefaultResponseTest {
         assertEquals(2L, r.contentLength()); // wave-3-2 SDS-AC-2: the length goes in the commit call
     }
 
+    // FR-HTTP-013 AC-1 (w3-P2-002): Express 5 res.status throws RangeError outside 100..999
+    @Test
+    public void FR_HTTP_013_AC1_statusOutside100To999IsRefused() {
+        List<Integer> refused = new ArrayList<>();
+        ClientResponse r = get((req, res) -> {
+            for (int code : new int[] {Integer.MIN_VALUE, -1, 0, 99, 1000, Integer.MAX_VALUE}) {
+                try {
+                    res.status(code);
+                } catch (IllegalArgumentException e) {
+                    refused.add(code);
+                }
+            }
+            res.status(100).status(999).status(201).send("ok");
+        });
+        assertEquals(6, refused.size());
+        assertEquals(201, r.status());
+    }
+
     // SDS-AC-1; FR-HTTP-013 AC-1
     @Test
     public void sdsAc1_FR_HTTP_013_AC1_sameNameInOtherCaseReplacesTheEntry() {

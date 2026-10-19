@@ -17,7 +17,8 @@ import org.jspecify.annotations.Nullable;
 /**
  * {@link Response} over one exchange. Leaving NEW is decided under the lock, once, and the status and headers are
  * snapshotted there; every exchange call (commit, body write, finish, abort) runs outside the lock so abort never
- * waits on I/O. An exchange failure ends the response ABORTED instead of throwing, as Express ignores a dead socket
+ * waits on I/O. A copy may outlive the handler (D-103); the adapter keeps the exchange open until the core finishes
+ * or aborts it, and a concurrent abort makes the copy's next write fail. An exchange failure ends the response ABORTED instead of throwing, as Express ignores a dead socket
  * on send (UncheckedIOException is also API 24+).
  */
 // @req FR-HTTP-013
@@ -42,6 +43,7 @@ public final class DefaultResponse implements Response {
     private final List<Map.Entry<String, String>> headers = new ArrayList<>();
     private @Nullable InputStream pendingIn;
     private @Nullable OutputStream pendingOut;
+    private boolean copying;
     private boolean handlerDone;
     private @Nullable Throwable handlerFailure;
 
@@ -56,6 +58,9 @@ public final class DefaultResponse implements Response {
     // @req FR-HTTP-016
     @Override
     public synchronized Response status(int code) {
+        if (code < 100 || code > 999) {
+            throw new IllegalArgumentException("status " + code + " is outside 100..999");
+        }
         requireNew();
         status = code;
         return this;
@@ -179,6 +184,7 @@ public final class DefaultResponse implements Response {
             in = pendingIn;
             out = pendingOut;
             pendingOut = null; // claims the copy: a second runTransfer finds nothing to run
+            copying = true;
         }
         try {
             byte[] buf = new byte[CHUNK];
@@ -211,19 +217,27 @@ public final class DefaultResponse implements Response {
         return committed;
     }
 
-    /** No-op once COMPLETED or ABORTED; otherwise ABORTED, the exchange aborted and a pending stream closed. */
+    /**
+     * No-op once COMPLETED or ABORTED; otherwise ABORTED, the exchange aborted and a pending stream closed. Safe from
+     * any thread: a running copy keeps the input and closes it itself once its read returns, so the input is never
+     * closed under a read.
+     */
     // @req FR-HTTP-015
     @Override
     public void abort(@Nullable Throwable error) {
         // shortcut: error is not kept; record it when wave 4 onError needs the cause.
+        boolean copyRunning;
         synchronized (this) {
             if (state == ResponseState.COMPLETED || state == ResponseState.ABORTED) {
                 return;
             }
             state = ResponseState.ABORTED;
+            copyRunning = copying;
         }
         ex.abort();
-        closeInput();
+        if (!copyRunning) {
+            closeInput();
+        }
     }
 
     // @req FR-HTTP-016

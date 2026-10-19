@@ -33,7 +33,10 @@ public class DefaultRequestTest {
     private static DefaultRequest request(InMemoryHttpAdapter adapter, String target, Map<String, String> params,
             String... headerPairs) {
         DefaultRequest[] captured = new DefaultRequest[1];
-        adapter.bind("127.0.0.1", 0, ex -> captured[0] = new DefaultRequest(ex, Method.GET, params));
+        adapter.bind("127.0.0.1", 0, ex -> {
+            captured[0] = new DefaultRequest(ex, Method.GET, params);
+            ex.abort(); // the adapter keeps an unended exchange open after handle() returns (HttpExchange contract)
+        });
         ClientRequest r = ClientRequest.of("GET", target);
         for (int i = 0; i < headerPairs.length; i += 2) {
             r.header(headerPairs[i], headerPairs[i + 1]);

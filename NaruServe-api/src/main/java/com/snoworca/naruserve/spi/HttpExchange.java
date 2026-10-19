@@ -11,7 +11,9 @@ import org.jspecify.annotations.Nullable;
 /**
  * One request/response exchange, implemented by the adapter. Request values are undecoded; the core decodes once.
  * The response is started exactly once, by {@link #commit}, {@link #sendFile}, {@link #upgrade} or
- * {@link #eventStream}; a second start throws {@link IllegalStateException}.
+ * {@link #eventStream}; a second start throws {@link IllegalStateException}. The exchange outlives
+ * {@link ExchangeHandler#handle} until the core calls {@link #finish} or {@link #abort} (or the adapter's stop
+ * deadline force-closes it).
  */
 // @req IR-HTTP-003
 // @req IR-HTTP-004
@@ -66,7 +68,10 @@ public interface HttpExchange {
     // @req IR-HTTP-003
     void finish() throws IOException;
 
-    /** Closes the connection abnormally. Idempotent. */
+    /**
+     * Closes the connection abnormally. Idempotent and thread-safe: it may run on any thread, also while another
+     * thread is in {@link #commit}, a body write or {@link #finish}, which then fail with an {@link IOException}.
+     */
     // @req IR-HTTP-003
     void abort();
 

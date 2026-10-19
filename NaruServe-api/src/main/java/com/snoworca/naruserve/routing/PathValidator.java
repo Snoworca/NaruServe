@@ -1,10 +1,6 @@
 package com.snoworca.naruserve.routing;
 
-import java.io.ByteArrayOutputStream;
-import java.nio.ByteBuffer;
-import java.nio.charset.CharacterCodingException;
-import java.nio.charset.CodingErrorAction;
-import java.nio.charset.StandardCharsets;
+import com.snoworca.naruserve.internal.PercentDecoder;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -52,46 +48,6 @@ public final class PathValidator {
     /** One UTF-8 percent-decoding pass; '+' stays '+'. Null for malformed {@code %XX} or invalid UTF-8. */
     // @req FR-ROUTE-005
     static @Nullable String decode(String segment) {
-        if (segment.indexOf('%') < 0) {
-            return segment;
-        }
-        ByteArrayOutputStream bytes = new ByteArrayOutputStream(segment.length());
-        int i = 0;
-        while (i < segment.length()) {
-            char c = segment.charAt(i);
-            if (c == '%') {
-                int hi = i + 2 < segment.length() ? hex(segment.charAt(i + 1)) : -1;
-                int lo = hi < 0 ? -1 : hex(segment.charAt(i + 2));
-                if (lo < 0) {
-                    return null;
-                }
-                bytes.write(hi * 16 + lo);
-                i += 3;
-            } else {
-                int next = segment.indexOf('%', i);
-                int end = next < 0 ? segment.length() : next;
-                byte[] run = segment.substring(i, end).getBytes(StandardCharsets.UTF_8);
-                bytes.write(run, 0, run.length);
-                i = end;
-            }
-        }
-        return utf8(bytes.toByteArray());
-    }
-
-    /** ASCII hex digit value, or -1; Character.digit would also take non-ASCII digits. */
-    private static int hex(char c) {
-        return c < 0x80 ? Character.digit(c, 16) : -1;
-    }
-
-    private static @Nullable String utf8(byte[] bytes) {
-        try {
-            return StandardCharsets.UTF_8.newDecoder()
-                    .onMalformedInput(CodingErrorAction.REPORT)
-                    .onUnmappableCharacter(CodingErrorAction.REPORT)
-                    .decode(ByteBuffer.wrap(bytes))
-                    .toString();
-        } catch (CharacterCodingException e) {
-            return null;
-        }
+        return PercentDecoder.decode(segment, false);
     }
 }

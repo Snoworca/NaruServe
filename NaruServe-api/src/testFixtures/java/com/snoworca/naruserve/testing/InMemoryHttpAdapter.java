@@ -39,6 +39,8 @@ public final class InMemoryHttpAdapter implements HttpAdapter {
 
     private static final AtomicInteger NEXT_PORT = new AtomicInteger(49152);
     private static final long RELEASE_MARGIN_MS = 1000;
+    /** How long {@link #send} waits for the core to end an exchange left open after handle() returned. */
+    private static final long END_TIMEOUT_MS = 5000;
     private static final AtomicInteger THREADS = new AtomicInteger();
 
     private final String remoteAddress;
@@ -161,8 +163,9 @@ public final class InMemoryHttpAdapter implements HttpAdapter {
                     throw e;
                 }
                 exchange.awaitDrain();
-                // An exchange the core left unfinished is closed abnormally; no-op after finish.
-                exchange.abort();
+                // The core may still be copying on another thread (HttpExchange contract): wait for its finish or
+                // abort, bounded so a test that never ends the exchange still returns, closed abnormally.
+                exchange.awaitEnd(END_TIMEOUT_MS);
             }
             return exchange.response();
         } finally {
@@ -426,6 +429,7 @@ public final class InMemoryHttpAdapter implements HttpAdapter {
                 throw new IOException("exchange aborted");
             }
             ended = true;
+            notifyAll();
         }
 
         @Override
@@ -433,6 +437,7 @@ public final class InMemoryHttpAdapter implements HttpAdapter {
             if (!ended) {
                 ended = true;
                 aborted = true;
+                notifyAll();
             }
         }
 
@@ -518,6 +523,23 @@ public final class InMemoryHttpAdapter implements HttpAdapter {
                 abort();
                 Thread.currentThread().interrupt();
             }
+        }
+
+        /** Waits up to {@code timeoutMs} for finish or abort, then aborts an exchange still open. */
+        synchronized void awaitEnd(long timeoutMs) {
+            long deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(timeoutMs);
+            try {
+                while (!ended) {
+                    long left = deadline - System.nanoTime();
+                    if (left <= 0) {
+                        break;
+                    }
+                    TimeUnit.NANOSECONDS.timedWait(this, left);
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            abort();
         }
 
         synchronized ClientResponse response() {

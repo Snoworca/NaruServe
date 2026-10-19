@@ -3,11 +3,6 @@ package com.snoworca.naruserve.internal;
 import com.snoworca.naruserve.Method;
 import com.snoworca.naruserve.Request;
 import com.snoworca.naruserve.spi.HttpExchange;
-import java.io.ByteArrayOutputStream;
-import java.nio.ByteBuffer;
-import java.nio.charset.CharacterCodingException;
-import java.nio.charset.CodingErrorAction;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -215,45 +210,12 @@ public final class DefaultRequest implements Request {
         return Void.class;
     }
 
-    /** One strict UTF-8 percent-decoding pass; '+' becomes a space when {@code plusAsSpace}. */
+    /** {@link PercentDecoder#decode}; IllegalArgumentException for bad %XX or invalid UTF-8. */
     private static String decode(String s, boolean plusAsSpace) {
-        if (s.indexOf('%') < 0) {
-            return plusAsSpace ? s.replace('+', ' ') : s;
+        String decoded = PercentDecoder.decode(s, plusAsSpace);
+        if (decoded == null) {
+            throw new IllegalArgumentException("malformed percent-encoding or invalid UTF-8");
         }
-        ByteArrayOutputStream bytes = new ByteArrayOutputStream(s.length());
-        int i = 0;
-        while (i < s.length()) {
-            char c = s.charAt(i);
-            if (c == '%') {
-                int hi = i + 2 < s.length() ? hex(s.charAt(i + 1)) : -1;
-                int lo = hi < 0 ? -1 : hex(s.charAt(i + 2));
-                if (lo < 0) {
-                    throw new IllegalArgumentException("malformed percent-encoding at offset " + i);
-                }
-                bytes.write(hi * 16 + lo);
-                i += 3;
-            } else {
-                int next = s.indexOf('%', i);
-                int end = next < 0 ? s.length() : next;
-                String run = s.substring(i, end);
-                byte[] b = (plusAsSpace ? run.replace('+', ' ') : run).getBytes(StandardCharsets.UTF_8);
-                bytes.write(b, 0, b.length);
-                i = end;
-            }
-        }
-        try {
-            return StandardCharsets.UTF_8.newDecoder()
-                    .onMalformedInput(CodingErrorAction.REPORT)
-                    .onUnmappableCharacter(CodingErrorAction.REPORT)
-                    .decode(ByteBuffer.wrap(bytes.toByteArray()))
-                    .toString();
-        } catch (CharacterCodingException e) {
-            throw new IllegalArgumentException("percent-encoded bytes are not valid UTF-8", e);
-        }
-    }
-
-    /** ASCII hex digit value, or -1; Character.digit would also take non-ASCII digits. */
-    private static int hex(char c) {
-        return c < 0x80 ? Character.digit(c, 16) : -1;
+        return decoded;
     }
 }

@@ -10,7 +10,10 @@ import org.jspecify.annotations.Nullable;
 // @req IR-HTTP-001
 public interface Response {
 
-    /** Sets the status code; returns this response. */
+    /**
+     * Sets the status code; returns this response. A code outside 100..999 throws {@link IllegalArgumentException},
+     * as Express 5 {@code res.status} throws a RangeError.
+     */
     Response status(int code);
 
     /** Adds a header; returns this response. */

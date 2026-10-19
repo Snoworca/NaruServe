@@ -23,6 +23,16 @@ import java.io.FilterInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import com.snoworca.naruserve.testing.InMemoryHttpAdapter;
+import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientRequest;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Proxy;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.Test;
@@ -569,5 +579,136 @@ public class ResponseStreamTest {
         new DefaultResponse(ex2, false).header("content-length", "99").send("hello");
         assertEquals(Collections.singletonList("5"), ex2.committed("Content-Length"));
         assertEquals(5L, ex2.contentLength);
+    }
+
+    private static void await(CountDownLatch latch) {
+        try {
+            if (!latch.await(5, TimeUnit.SECONDS)) {
+                throw new AssertionError("latch timed out");
+            }
+        } catch (InterruptedException e) {
+            throw new AssertionError(e);
+        }
+    }
+
+    // FR-HTTP-016 AC-4 (D-103), IR-HTTP-003 (w3-P2-001): the adapter keeps the exchange open after handle() returns
+    @Test
+    public void FR_HTTP_016_AC4_IR_HTTP_003_copyThatOutlivesTheHandlerDeliversTheWholeBody() throws Exception {
+        byte[] d = data(100000);
+        CountingInputStream in = new CountingInputStream(d);
+        in.afterFirstRead = () -> {
+            try {
+                Thread.sleep(300); // handle() has long returned when the copy goes on
+            } catch (InterruptedException e) {
+                throw new AssertionError(e);
+            }
+        };
+        AtomicReference<Thread> streamer = new AtomicReference<>();
+        InMemoryHttpAdapter adapter = new InMemoryHttpAdapter();
+        adapter.bind("127.0.0.1", 0, ex -> {
+            CountDownLatch committing = new CountDownLatch(1);
+            CountDownLatch handlerReturned = new CountDownLatch(1);
+            // Holds commit open until the handler has returned, so the stream() thread owns the copy afterwards.
+            HttpExchange gated = (HttpExchange) Proxy.newProxyInstance(HttpExchange.class.getClassLoader(),
+                    new Class<?>[] {HttpExchange.class}, (proxy, m, args) -> {
+                        if (m.getName().equals("commit")) {
+                            committing.countDown();
+                            await(handlerReturned);
+                        }
+                        try {
+                            return m.invoke(ex, args);
+                        } catch (InvocationTargetException e) {
+                            throw e.getCause();
+                        }
+                    });
+            DefaultResponse res = new DefaultResponse(gated, false);
+            last.set(res);
+            Thread th = new Thread(() -> res.stream(in, "text/plain"));
+            streamer.set(th);
+            th.start();
+            await(committing);
+            res.afterHandler(); // the handler returned while the commit was in flight
+            handlerReturned.countDown();
+        });
+        ExecutorService pool = Executors.newSingleThreadExecutor();
+        try {
+            Future<ClientResponse> f = pool.submit(() -> adapter.send(ClientRequest.of("GET", "/s")));
+            ClientResponse r = f.get(10, TimeUnit.SECONDS);
+            streamer.get().join(5000);
+            assertFalse(r.abnormallyClosed());
+            assertArrayEquals(d, r.body());
+            assertEquals(ResponseState.COMPLETED, last.get().state());
+            assertEquals(1, in.closes);
+        } finally {
+            pool.shutdownNow();
+            adapter.release();
+        }
+    }
+
+    // FR-HTTP-015 AC-2, IR-HTTP-003 (w3-P2-001): abort() from another thread while the copy runs
+    @Test
+    public void FR_HTTP_015_AC2_IR_HTTP_003_concurrentAbortDuringTheCopyEndsTheExchangeCleanly() throws Exception {
+        CountDownLatch inSecondRead = new CountDownLatch(1);
+        CountDownLatch release = new CountDownLatch(1);
+        AtomicBoolean reading = new AtomicBoolean();
+        AtomicBoolean closedWhileReading = new AtomicBoolean();
+        AtomicInteger closes = new AtomicInteger();
+        InputStream in = new InputStream() {
+            int reads;
+
+            @Override
+            public int read() {
+                throw new AssertionError("single-byte read used by the copy");
+            }
+
+            @Override
+            public int read(byte[] b, int off, int len) {
+                reading.set(true);
+                try {
+                    if (reads++ > 0) {
+                        inSecondRead.countDown();
+                        await(release);
+                    }
+                    return len;
+                } finally {
+                    reading.set(false);
+                }
+            }
+
+            @Override
+            public void close() {
+                closes.incrementAndGet();
+                if (reading.get()) {
+                    closedWhileReading.set(true);
+                }
+            }
+        };
+        t.app().get("/s", (req, res) -> {
+            last.set((DefaultResponse) res);
+            res.stream(in, "text/plain");
+        });
+        t.start();
+        ExecutorService pool = Executors.newSingleThreadExecutor();
+        try {
+            Future<ClientResponse> f = pool.submit(() -> t.send("GET", "/s"));
+            await(inSecondRead);
+            Throwable escaped = null;
+            try {
+                last.get().abort(new IOException("client went away"));
+            } catch (Throwable e) {
+                escaped = e;
+            }
+            release.countDown();
+            ClientResponse r = f.get(10, TimeUnit.SECONDS);
+            assertNull(escaped);
+            assertTrue(r.abnormallyClosed());
+            assertEquals(8192, r.body().length);
+            assertEquals(ResponseState.ABORTED, last.get().state());
+            assertEquals(1, closes.get());
+            assertFalse("abort closed the input under a running read", closedWhileReading.get());
+        } finally {
+            release.countDown();
+            pool.shutdownNow();
+        }
     }
 }
