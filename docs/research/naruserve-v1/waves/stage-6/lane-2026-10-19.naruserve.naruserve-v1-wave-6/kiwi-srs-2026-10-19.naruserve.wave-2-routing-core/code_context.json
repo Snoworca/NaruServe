@@ -1,0 +1,45 @@
+{
+  "relevant_files": [
+    {"path": "build.gradle", "line_range": "28-44", "signature": "configureCompile: release 8, jvmTarget 1.8, -Xjspecify-annotations=strict", "relevance": "Router code must be Java 8 and JSpecify-annotated"},
+    {"path": "build.gradle", "line_range": "72-83", "signature": "configureDependencies: compileOnly org.jspecify:jspecify:1.0.0; testImplementation junit 4.13.2 + kotlin-stdlib", "relevance": "annotation lib and test deps"},
+    {"path": "build.gradle", "line_range": "122-133", "signature": "classRefPrefixes: :NaruServe-api forbids android/, jakarta/servlet/, com/google/gson/, com/snoworca/tinyhttpd/, kotlin/ (and javax/servlet/)", "relevance": "router must not reference these packages"},
+    {"path": "build.gradle", "line_range": "135-162", "signature": "checkClassReferences registered per module, wired into check", "relevance": "gate on router main classes"},
+    {"path": "build.gradle", "line_range": "164-167", "signature": "java-test-fixtures applied to :NaruServe-api", "relevance": "optional place for shared test fixtures (src/testFixtures does not exist yet)"},
+    {"path": "build.gradle", "line_range": "169-180", "signature": "animalsniffer android-api-level-21 on androidModules (includes api)", "relevance": "no Java 9+/API>21 calls (no List.of, Map.of, java.nio.file, streams-heavy new APIs; Java 8 java.util.function/Optional are NOT in API 21 - avoid Optional, Function, Stream, Objects.requireNonNullElse; Objects.* ok from API 19)"},
+    {"path": "NaruServe-api/src/test/java/com/snoworca/naruserve/SmokeTest.java", "line_range": "1-16", "signature": "JUnit4 @Test naming <sdsAc>_<REQ>_AC<n>_description", "relevance": "test naming/citation convention"},
+    {"path": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/NullabilityKotlinTest.kt", "line_range": "1-20", "signature": "Kotlin JUnit4 tests, backtick names citing REQ AC", "relevance": "where Kotlin tests for api live (T11)"},
+    {"path": "NaruServe-api/src/test/java/com/snoworca/naruserve/NullabilityFixture.java", "line_range": "1-22", "signature": "JSpecify @Nullable/@NonNull usage example (type-use, e.g. public static @Nullable String x())", "relevance": "annotation usage pattern"},
+    {"path": "docs/api/routing.md", "line_range": "1-127", "signature": "Korean API doc: Method/MethodSet table, path patterns, precedence, auto responses, ws relation", "relevance": "doc to update; uses Method.get()/any()/of()/except(), TRACE/CONNECT not in any(), (미확정) markers for config API"},
+    {"path": "src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java", "line_range": "", "signature": "root-project build checks (inspect module outputs)", "relevance": "root tests; may need no change, but verify they do not assert api main is empty"},
+    {"path": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java", "line_range": "", "signature": "root-project layout checks", "relevance": "verify no assertion on api main contents"}
+  ],
+  "related_modules": [":NaruServe-api (router lives here)", ":NaruServe-kotlin (rest-kotlin; Kotlin-only sugar belongs here)", ":NaruServe-tinyhttpd and :NaruServe-servlet (later adapters, consume router)", ":NaruServe (bootstrap)"],
+  "missing_evidence": [
+    "NaruServe-api/src/main/java is EMPTY: no Method, MethodSet, Router, route pattern, path validator, lookup result types exist anywhere (grep confirmed)",
+    "Package layout for router (suggest com.snoworca.naruserve.routing or flat com.snoworca.naruserve; Method must be com.snoworca.naruserve.Method per docs)",
+    "Method enum + static Method.get()/any()/of(), immutable MethodSet",
+    "Route pattern parser (:name segments), path validator (single decode, NUL, .., bad percent), freeze-time conflict detection, lookup with six results (match, not-found, method-not-allowed w/ allow set, etc.), WebSocket route kind, TRACE/CONNECT and path-form policies",
+    "Java and Kotlin tests for all of the above; Kotlin test for nullability/lambda shape (T11)",
+    "docs/api/routing.md updates (config API stays (미확정) unless spec names it)",
+    "No package-info.java / @NullMarked present in api; decide whether to add (jspecify is compileOnly, available)",
+    "No src/testFixtures dir yet"
+  ],
+  "external_paths_detected": [],
+  "build_facts": {
+    "annotation_lib": "org.jspecify:jspecify:1.0.0 (compileOnly main, testImplementation); org.jspecify.annotations.Nullable/NonNull; Kotlin flag -Xjspecify-annotations=strict (build.gradle:42, 76, 79)",
+    "test_framework": "JUnit 4.13.2 (build.gradle:80, useJUnit at :142); root tests also JUnit4 + gradleTestKit (:241-243)",
+    "java_test_dir": "NaruServe-api/src/test/java/com/snoworca/naruserve/",
+    "kotlin_test_dir": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/ (kotlin-stdlib test scope only, :82)",
+    "root_test_dir": "src/test/java/com/snoworca/naruserve/build/",
+    "main_dir": "NaruServe-api/src/main/java (empty)",
+    "check_tasks": {
+      "checkClassReferences": "build.gradle:147 (api forbids android/, jakarta/servlet/, com/google/gson/, com/snoworca/tinyhttpd/, kotlin/, javax/servlet/ :125-127)",
+      "animalsnifferMain": "plugin applied :171, signature android-api-level-21 :178",
+      "checkDependencyRules": "build.gradle:186, wired to check :236",
+      "root test": "build.gradle:244-260 (depends on checkDependencyRules and all :testClasses)",
+      "run": "./gradlew :NaruServe-api:check  (or ./gradlew build)"
+    },
+    "compile": "options.release=8 (:35), jvmTarget 1.8 (:40), no Kotlin stdlib in api main",
+    "one_build_file": "root build.gradle only, no per-module build files; settings.gradle includes TinyHttpd via includeBuild"
+  }
+}

@@ -1,0 +1,81 @@
+{
+  "iter": 2,
+  "fixes": [
+    {
+      "finding_id": "FND-B002",
+      "files_changed": [
+        {"path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StaticHandler.java", "line_range": "94-115,164-168,218-235"},
+        {"path": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMethodTest.java", "line_range": "13,144-180"},
+        {"path": "docs/api/static.md", "line_range": "28-29"}
+      ],
+      "red_test": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMethodTest.java#FR_STATIC_002_AC5_refusedSymlinksGet404NotAllowOr301",
+      "red_failure": "AssertionError: POST /inlink.txt expected:<404> but was:<405>",
+      "rationale_strip": "",
+      "rationale_full": "wouldServeGet and the no-slash 301 branch of serveFrom now apply the mount's containment + link check (the former listable(), renamed reachable() and widened to files) before deciding, and the index file is checked the same way. A refused or outside-pointing symlink file or directory now gets 404 for POST (no Allow) and GET (no 301), matching FR-STATIC-002 AC-5 and FR-STATIC-006 AC-2; with allowSymlinks(true) inside links still get 405/301 and outside links 404.",
+      "mock_scan_passed": true,
+      "external_module_touch": false
+    },
+    {
+      "finding_id": "FND-B003",
+      "files_changed": [
+        {"path": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdFeatures.java", "line_range": "25-48"},
+        {"path": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdExchange.java", "line_range": "192-206,224"},
+        {"path": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/SendFileSocketTest.java", "line_range": "8,164-183"}
+      ],
+      "red_test": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/SendFileSocketTest.java#FR_ENGINE_010_AC2_missingFileThrowsBeforeTheResponseStarts",
+      "red_failure": "AssertionError: expected:<200> but was:<500> (the head was committed before the failed open)",
+      "rationale_full": "TinyHttpdFeatures.sendFile opens the RandomAccessFile and seeks before ex.commit, so a missing/unreadable file throws with the response unstarted. To keep the abort check and single-start rule ahead of the open (AdapterSurfaceTest FR_ENGINE_010_AC2_featureHooksShareTheCommitLockAbortCheckAndSingleStart), TinyHttpdExchange.start() was split into requireStartable() + set, and sendFile calls requireStartable() under the exchange lock before the open. Lock is kept (sendFile stays synchronized).",
+      "rationale_strip": "",
+      "mock_scan_passed": true,
+      "external_module_touch": false
+    },
+    {
+      "finding_id": "FND-B004",
+      "files_changed": [
+        {"path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultStaticOptions.java", "line_range": "84-100"},
+        {"path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StaticMount.java", "line_range": "33-43"},
+        {"path": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMountingTest.java", "line_range": "11,121-139"},
+        {"path": "docs/api/static.md", "line_range": "58-59"}
+      ],
+      "red_test": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMountingTest.java#FR_STATIC_001_AC2_optionsKeptByTheConfigurerDoNotChangeARunningMount",
+      "red_failure": "ComparisonFailure: expected:<[DOCS]> but was:<[MAIN]>",
+      "rationale_full": "StaticMount.freeze() now keeps DefaultStaticOptions.copy(), a private copy (lists/maps copied, accessors already unmodifiable) reachable only through the frozen mount and published by StaticHandler's final fields. A configurer that kept its StaticOptions reference can no longer change index, MIME, SPA or listing of a running mount or race worker iteration. The copy's setters were not made to throw: nothing outside the mount holds it.",
+      "rationale_strip": "",
+      "mock_scan_passed": true,
+      "external_module_touch": false
+    },
+    {
+      "finding_id": "FND-B006",
+      "files_changed": [
+        {"path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StaticPath.java", "line_range": "10-11,20-21,30-31"},
+        {"path": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticTraversalTest.java", "line_range": "70-82"},
+        {"path": "docs/api/static.md", "line_range": "28,77"}
+      ],
+      "red_test": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticTraversalTest.java#FR_STATIC_005_AC1_decodedBackslashIs400",
+      "red_failure": "AssertionError: GET /a%5C..%5C.env expected:<400> but was:<404>",
+      "rationale_full": "StaticPath.check refuses a decoded segment holding a backslash with 400 like '/', on every platform, closing the Windows-JVM bypass of the hidden-path 404 under allowSymlinks(true). docs/api/static.md lists %5C among the refused encodings.",
+      "rationale_strip": "",
+      "mock_scan_passed": true,
+      "external_module_touch": false
+    },
+    {
+      "finding_id": "FND-B007",
+      "files_changed": [
+        {"path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/FileResponder.java", "line_range": "31-40"},
+        {"path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StaticHandler.java", "line_range": "28,246-255,268"},
+        {"path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java", "line_range": "165"},
+        {"path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java", "line_range": "70,95-99,152"},
+        {"path": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/FileResourceResolverTest.java", "line_range": "7-21,99-172"}
+      ],
+      "red_test": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/FileResourceResolverTest.java#FR_STATIC_011_AC5_staticFileAndDownloadReadThroughTheBuiltInResolver",
+      "red_failure": "compile error: cannot find symbol method resolverTap(...) on StaticHandler (no seam to observe the resolver calls)",
+      "rationale_full": "Added a package-private test seam: FileResponder.ResolverTap (own interface, no java.util.function for API 21) held as a volatile instance field of StaticHandler and handed per request by Dispatcher to DefaultResponse; static mounts and res.file/res.download wrap their resolver through FileResponder.tapped. Instance state only, so FR-APP-002 AC-2's no-mutable-static scan still holds. The engine-free test installs a real recording ResourceResolver and asserts length, etag, modified and open are each called on a FileResourceResolver delegate for a static mount GET, res.file and res.download.",
+      "rationale_strip": "",
+      "mock_scan_passed": true,
+      "external_module_touch": false
+    }
+  ],
+  "not_fixed": [],
+  "out_of_lease": [],
+  "build_exit_code": 0
+}

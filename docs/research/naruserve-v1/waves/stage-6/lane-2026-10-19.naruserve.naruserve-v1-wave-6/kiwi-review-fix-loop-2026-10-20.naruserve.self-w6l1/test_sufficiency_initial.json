@@ -1,0 +1,123 @@
+{
+ "fragment-1": {
+  "sds": "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-6-1.sds.md",
+  "ids": [
+   "IR-MULTIPART-001"
+  ],
+  "gaps": [
+   "IR-MULTIPART-001 AC-7"
+  ],
+  "verdict": "gap"
+ },
+ "fragment-2": {
+  "sds": "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-6-2.sds.md",
+  "ids": [
+   "FR-MULTIPART-001",
+   "FR-MULTIPART-002"
+  ],
+  "gaps": [
+   "SDS-AC-1(FR-MULTIPART-001 AC-2)",
+   "SDS-AC-2(FR-MULTIPART-001 AC-2)",
+   "SDS-AC-3(FR-MULTIPART-001 AC-2)",
+   "SDS-AC-4(FR-MULTIPART-001 AC-4)",
+   "SDS-AC-5(FR-MULTIPART-002 AC-1)",
+   "SDS-AC-6(FR-MULTIPART-002 AC-1)",
+   "SDS-AC-7(FR-MULTIPART-002 AC-2)",
+   "SDS-AC-8(FR-MULTIPART-002 AC-3)"
+  ],
+  "verdict": "gap"
+ },
+ "fragment-3": {
+  "sds": "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-6-3.sds.md",
+  "ids": [
+   "IR-MULTIPART-002",
+   "FR-MULTIPART-003"
+  ],
+  "gaps": [
+   "IR-MULTIPART-002 AC-7"
+  ],
+  "verdict": "gap"
+ },
+ "fragment-4": {
+  "sds": "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-6-4.sds.md",
+  "ids": [
+   "FR-MULTIPART-004",
+   "FR-MULTIPART-005",
+   "FR-MULTIPART-006"
+  ],
+  "gaps": [
+   "SDS-AC-1(FR-MULTIPART-004 AC-1)",
+   "SDS-AC-2(FR-MULTIPART-004 AC-3)",
+   "SDS-AC-3(FR-MULTIPART-005 AC-1)",
+   "SDS-AC-4(FR-MULTIPART-005 AC-4)",
+   "SDS-AC-5(FR-MULTIPART-005 AC-5)",
+   "SDS-AC-6(FR-MULTIPART-006 AC-1)",
+   "SDS-AC-7(FR-MULTIPART-006 AC-3)",
+   "SDS-AC-8(FR-MULTIPART-006 AC-2)"
+  ],
+  "verdict": "gap"
+ },
+ "fragment-5": {
+  "sds": "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-6-5.sds.md",
+  "ids": [
+   "IR-STATIC-001",
+   "IR-STATIC-002"
+  ],
+  "gaps": [
+   "IR-STATIC-001 AC-6",
+   "IR-STATIC-002 AC-6"
+  ],
+  "verdict": "gap"
+ },
+ "fragment-6": {
+  "sds": "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-6-6.sds.md",
+  "ids": [
+   "FR-STATIC-001",
+   "FR-STATIC-002",
+   "FR-STATIC-004",
+   "FR-STATIC-005"
+  ],
+  "gaps": [],
+  "verdict": "pass"
+ },
+ "fragment-7": {
+  "sds": "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-6-7.sds.md",
+  "ids": [
+   "FR-STATIC-006",
+   "FR-STATIC-007"
+  ],
+  "gaps": [],
+  "verdict": "pass"
+ },
+ "fragment-8": {
+  "sds": "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-6-8.sds.md",
+  "ids": [
+   "FR-STATIC-003",
+   "FR-STATIC-008",
+   "FR-STATIC-009",
+   "FR-STATIC-010",
+   "FR-STATIC-011"
+  ],
+  "gaps": [],
+  "verdict": "pass"
+ },
+ "fragment-9": {
+  "sds": "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-6-9.sds.md",
+  "ids": [
+   "FR-ENGINE-010"
+  ],
+  "gaps": [],
+  "verdict": "pass"
+ },
+ "fragment-10": {
+  "sds": "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-6-10.sds.md",
+  "ids": [
+   "OPS-MULTIPART-001",
+   "OPS-STATIC-001",
+   "OPS-HTTP-006",
+   "OPS-APP-004"
+  ],
+  "gaps": [],
+  "verdict": "pass"
+ }
+}

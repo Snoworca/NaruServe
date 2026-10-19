@@ -1,0 +1,490 @@
+{
+ "findings": [
+  {
+   "id": "FND-A001",
+   "axis": "P7",
+   "severity": "HIGH",
+   "title": "Cross-adapter multipart test is a stale reflection stopgap that bypasses the real request accessors",
+   "location": {
+    "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/MultipartCrossAdapterTest.java",
+    "line_range": "37-65"
+   },
+   "description": "The class comment still says the handler reaches the parser 'the way the request accessors of a later fragment will', and upload() calls DefaultRequest.bodyStream via setAccessible(true), then runs MultipartParser.parse directly with its own MultipartSettings, a literal 1048576L form limit and a fresh SpoolRegistry. The accessors now exist (req.file/parts/form), so this test never exercises DefaultRequest.formData, BodyState.sharedParse, the app spool registry, onError or the standard 413/400 error body over TinyHttpd. FR-MULTIPART-001 AC-1 requires the T13-T16 tests to run over both adapters with the same results; the TinyHttpd side here only tests the parser over a socket stream, not the framework path.",
+   "suggested_fix": "Drop the reflection helper; register a handler that calls req.parts()/req.file() on an app configured with app.multipart(o -> o.tempDirectory(tmp)), and assert status plus standard error body for the 400/413 cases on both adapters.",
+   "is_behavioral": false,
+   "tags": [
+    "test"
+   ]
+  },
+  {
+   "id": "FND-A002",
+   "axis": "P7",
+   "severity": "HIGH",
+   "title": "FR-MULTIPART-004 AC-5 (text-part total capped by formLimit) and AC-2 (heap bound) have no test",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/MultipartParser.java",
+    "line_range": "104-108"
+   },
+   "description": "MultipartParser caps text parts with formLimit - textTotal, but no test sends one text part of 1048576 bytes (accepted), one of 1048577 (413) or two of 600000 (413), and none checks the 413 standard error body for it; grep for 600000/1048577/'FR-MULTIPART-004 AC-5' finds nothing in the multipart tests. The heap-bound AC (32 MiB upload, < 8 MiB heap growth with the default threshold) has no test either; MultipartSpoolingTest covers only AC-1/AC-3/AC-4. A regression that dropped the text total or buffered spooled parts in memory would pass the suite.",
+   "suggested_fix": "Add MultipartLimitsTest cases for the three AC-5 sizes through req.form() with an end-to-end 413 body check; add a heap test (System.gc + MemoryMXBean used-heap delta while the handler holds a 32 MiB UploadFile).",
+   "is_behavioral": false,
+   "tags": [
+    "test"
+   ]
+  },
+  {
+   "id": "FND-A003",
+   "axis": "P7",
+   "severity": "MEDIUM",
+   "title": "Multipart 400/413 limits are only tested against the parser, not through the accessor and onError",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartLimitsTest.java",
+    "line_range": "104-117"
+   },
+   "description": "parse()/assert413 call MultipartParser.parse directly and only check HttpException.status(). FR-MULTIPART-002 AC-1 and FR-MULTIPART-001 AC-2/AC-4 require each 413/400 to carry the FR-APP-006 standard error body and pass through onError when an accessor reads the body. Nothing checks that path end to end for maxFileSize, maxParts, maxRequestSize, header limits or a bad boundary.",
+   "suggested_fix": "Add at least one app-level test per limit kind asserting status, standard error body and that an onError handler saw the HttpException.",
+   "is_behavioral": false,
+   "tags": [
+    "test"
+   ]
+  },
+  {
+   "id": "FND-A004",
+   "axis": "P1",
+   "severity": "MEDIUM",
+   "title": "Quoted-string backslash unescaping mangles real browser filenames",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/MultipartParser.java",
+    "line_range": "171-186"
+   },
+   "description": "params() treats a backslash inside a quoted value as an escape and drops it. Browsers do not escape backslashes in the Content-Disposition filename (the HTML multipart encoding only percent-encodes '\"', CR and LF), and some clients send 'C:\\fakepath\\a.txt'; filename() then returns 'C:fakepatha.txt', violating FR-MULTIPART-004 AC-4 (filename unchanged). MultipartSpoolingTest line 90 hides this by doubling the backslash on the wire before sending.",
+   "suggested_fix": "For Content-Disposition parameters keep backslashes literally (end the quoted value only at '\"'), or unescape only an escaped quote and an escaped backslash; change the test to send the raw single backslash as a browser does.",
+   "is_behavioral": true,
+   "tags": [
+    "bug",
+    "test"
+   ]
+  },
+  {
+   "id": "FND-A005",
+   "axis": "P1",
+   "severity": "MEDIUM",
+   "title": "Uploads are released when the response completes, so save() after res.send() in the same handler throws",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+    "line_range": "166-170"
+   },
+   "description": "releaseUploads() runs in res.onDone, which fires as soon as a non-streaming response is delivered, while the handler may still be running. A handler doing res.status(202).send(\"queued\"); f.save(dest); gets IllegalStateException 'used after its request ended'. docs/api/multipart.md:123 tells users to save() inside the handler, which does not hold once the response was sent; respond-then-process is common for Express/multer users.",
+   "suggested_fix": "Release when both the response is done and the handler returned (Dispatcher finish/after-handler path), or document that the request ends at response completion and add a save-after-send test.",
+   "is_behavioral": true,
+   "tags": [
+    "bug",
+    "doc"
+   ]
+  },
+  {
+   "id": "FND-A006",
+   "axis": "P4",
+   "severity": "LOW",
+   "title": "res.download leaves Content-Disposition set when the file lookup fails after it was added",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+    "line_range": "145-157"
+   },
+   "description": "answerFile puts Content-Disposition: attachment before FileResponder.respond, which can still throw FileNotFoundException/IOException (r.length, r.open). The default error path clears headers in afterFailure, but a user onError handler that writes res.status(404).json(...) keeps the attachment header, so the browser downloads the error JSON as a file.",
+   "suggested_fix": "Add Content-Disposition only after the resolver checks pass (pass it into FileResponder to set at commit), or remove it in the catch blocks.",
+   "is_behavioral": true,
+   "tags": [
+    "bug"
+   ]
+  },
+  {
+   "id": "FND-A007",
+   "axis": "P8",
+   "severity": "LOW",
+   "title": "Telescoping Dispatcher/DefaultRequest constructors create orphan SpoolRegistry instances no shutdown participant closes",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+    "line_range": "95-118"
+   },
+   "description": "Three extra Dispatcher overloads and the 7-arg DefaultRequest constructor (DefaultRequest.java:79-80) build new MultipartSettings()/new SpoolRegistry() defaults. Temp files created through these paths are outside the app spool and are never deleted by the AFTER_ON_STOP participant (FR-MULTIPART-006 AC-2). They exist only to keep older tests compiling, and each wave adds another overload.",
+   "suggested_fix": "Collapse to one constructor taking the full config (or a small settings holder) and update the tests, so no code path can spool outside the app registry.",
+   "is_behavioral": false,
+   "tags": [
+    "style"
+   ]
+  },
+  {
+   "id": "FND-A008",
+   "axis": "P8",
+   "severity": "LOW",
+   "title": "Default formLimit 1048576L is a magic literal duplicated in three classes",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+    "line_range": "103-103"
+   },
+   "description": "1048576L appears in DefaultRestApp.java:103, Dispatcher.java:99 and DefaultRequest.java:79 (plus tests), while jsonLimit uses JsonBodyReader.DEFAULT_LIMIT. Changing the default in one place silently diverges the others.",
+   "suggested_fix": "Add FormBodyReader.DEFAULT_LIMIT and reference it everywhere.",
+   "is_behavioral": false,
+   "tags": [
+    "style"
+   ]
+  },
+  {
+   "id": "FND-A009",
+   "axis": "P8",
+   "severity": "LOW",
+   "title": "MultipartOptions javadoc says 'no value means unlimited', which reads as the opposite of the contract",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/MultipartOptions.java",
+    "line_range": "5-9"
+   },
+   "description": "'...and no value means unlimited' reads as 'leaving a setting unset means unlimited', but unset means the listed defaults and unlimited is impossible (IR-MULTIPART-001 AC-3).",
+   "suggested_fix": "Reword: 'no setting accepts an unlimited value; an unset setting keeps its default'.",
+   "is_behavioral": false,
+   "tags": [
+    "doc"
+   ]
+  },
+  {
+   "id": "FND-A010",
+   "axis": "P5",
+   "severity": "LOW",
+   "title": "DefaultUploadFile keeps every stream it ever handed out until request end",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultUploadFile.java",
+    "line_range": "78-87"
+   },
+   "description": "inputStream() appends to streams and nothing removes a stream when the caller closes it; FormData.utf8, bytes() and transferTo() each add one. A handler that calls bytes() repeatedly grows the list and keeps FileInputStream objects reachable for the whole request.",
+   "suggested_fix": "Remove the stream from the list in ClosableStream.close() (callback to the owner), or keep only open streams.",
+   "is_behavioral": true,
+   "tags": [
+    "performance"
+   ]
+  },
+  {
+   "id": "FND-A011",
+   "axis": "P7",
+   "severity": "LOW",
+   "title": "Disconnect test uses a same-thread CountDownLatch as a boolean and sleep-polling",
+   "location": {
+    "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/MultipartDisconnectSocketTest.java",
+    "line_range": "60-75"
+   },
+   "description": "'spooled' is counted down and awaited with 0 s on the test thread, so it is just a boolean, and two 5 ms sleep loops make the test timing-dependent: on a slow CI the spool may appear after the 5 s poll and the test fails spuriously.",
+   "suggested_fix": "Use a plain assert for the spool check and a latch the server side counts down once the temp file exists; keep one bounded poll for the directory.",
+   "is_behavioral": false,
+   "tags": [
+    "test"
+   ]
+  }
+ ],
+ "coverage_rows": [
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/MultipartOptions.java",
+   "hunks_total": 1,
+   "anchors": [
+    "* Multipart settings, configured through {@code app.multipart(o -> o.maxFileSize(1024 * 1024))}. Each setter returns"
+   ],
+   "findings": [
+    "FND-A009"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java",
+   "hunks_total": 3,
+   "anchors": [
+    "* the request cookies. No form or file access yet; later waves add them.",
+    "// @req IR-MULTIPART-002",
+    "* The first text field {@code name} of an {@code application/x-www-form-urlencoded} or"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/Response.java",
+   "hunks_total": 4,
+   "anchors": [
+    "import java.io.File;",
+    "* Writer for one HTTP response, with {@link #json} and {@link #addCookie} since wave 5. No file, download, cache or",
+    "// @req IR-STATIC-002",
+    "* Sets {@code Cache-Control} from {@code policy}, replacing an earlier value; returns this response. A committed"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java",
+   "hunks_total": 3,
+   "anchors": [
+    "import java.io.File;",
+    "// @req IR-STATIC-001",
+    "* Runs {@code configurer} at once on a copy of the app's multipart options, as {@code app.multipart(o ->"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java",
+   "hunks_total": 8,
+   "anchors": [
+    "import com.snoworca.naruserve.UploadFile;",
+    "import java.util.Locale;",
+    "// @req FR-MULTIPART-003",
+    "private volatile String requestId = \"\";",
+    "private final Object uploadLock = new Object();",
+    "this(ex, method, params, context, codec, jsonLimit, trustProxy, new MultipartSettings(), 1048576L,",
+    "* The one shared parse of a form body. A body whose media type (before ';', trimmed, case-insensitive) is neither",
+    "/** The raw query after '?', or null; the static 301 Location keeps it as sent. */"
+   ],
+   "findings": [
+    "FND-A007",
+    "FND-A008"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+   "hunks_total": 17,
+   "anchors": [
+    "import com.snoworca.naruserve.CachePolicy;",
+    "import com.snoworca.naruserve.ResourceResolver;",
+    "import java.io.FileNotFoundException;",
+    "import java.util.Collections;",
+    "/** Bytes the pending copy must deliver; -1 copies to the end of the input. */",
+    "/** The app's MIME registry for {@link #file}; unset means the built-in table only. */",
+    "* A file body: skips {@code skip} bytes of {@code in} (looping over {@link InputStream#skip}, then reading),",
+    "refusal = state != ResponseState.NEW ? notNew() : !isFieldValue(contentType) ? badHeader() : null;",
+    "if (newStatus != 0) {",
+    "remove(\"Content-Length\"); // the length is unknown; the adapter frames the body",
+    "put(\"Content-Length\", String.valueOf(length));",
+    "c = begin(bodyless ? 0 : length, EMPTY);",
+    "long left;",
+    "left = pendingLimit;",
+    "int n = in.read(buf, 0, left < 0 ? buf.length : (int) Math.min(buf.length, left));",
+    "if (left > 0) {",
+    "put(\"Cache-Control\", fallback.getHeaderValue()); // FR-STATIC-008 AC-5: whatever set it, a value stays"
+   ],
+   "findings": [
+    "FND-A006"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+   "hunks_total": 11,
+   "anchors": [
+    "import com.snoworca.naruserve.CachePolicy;",
+    "import com.snoworca.naruserve.MimeTypes;",
+    "import com.snoworca.naruserve.MultipartOptions;",
+    "import com.snoworca.naruserve.StaticOptions;",
+    "import java.io.File;",
+    "private volatile MultipartSettings multipartSettings = new MultipartSettings();",
+    "private final DefaultMimeTypes mimeTypes = new DefaultMimeTypes(lifecycle);",
+    "// Deletes the temp uploads still open once in-flight requests finished or were force-closed.",
+    "/** The current multipart settings; the defaults unless {@link #multipart(Configurer)} changed them. */",
+    "/** The app's open temp uploads, closed by its after-onStop shutdown participant. */",
+    "new AccessLog(accessLogOptions, safe), context, jsonCodec(), jsonLimit(), trustProxy);"
+   ],
+   "findings": [
+    "FND-A008"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+   "hunks_total": 10,
+   "anchors": [
+    "private final MultipartSettings multipart;",
+    "this(router, pipeline, errors, accessLog, context, codec, jsonLimit, trustProxy, new MultipartSettings(),",
+    "routed ? m.params() : Collections.<String, String>emptyMap(), context, codec, jsonLimit, trustProxy);",
+    "res.onDone(() -> accessLog.write(token, rawPath, res.statusCode(),",
+    "terminal = (rq, rs) -> fallback(m, req, res, rid);",
+    "req.releaseUploads();",
+    "releaseUploads",
+    "* touched. NOT_FOUND, and METHOD_MISMATCH for GET and HEAD, try the static mounts first; WebSocket kinds and 501",
+    "void fallback(RouteMatch<RouteHandler> m, DefaultResponse res, String requestId) {",
+    "boolean mismatch = m.kind() == RouteMatch.Kind.METHOD_MISMATCH;"
+   ],
+   "findings": [
+    "FND-A005",
+    "FND-A007",
+    "FND-A008"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/FormBodyReader.java",
+   "hunks_total": 1,
+   "anchors": [
+    "/** Reads one {@code application/x-www-form-urlencoded} body under {@code formLimit}: 413 above it, 400 if malformed. */"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/FormData.java",
+   "hunks_total": 1,
+   "anchors": [
+    "/** One parsed form or multipart body: text fields in body order and every part in body order. */"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/MultipartParser.java",
+   "hunks_total": 1,
+   "anchors": [
+    "* The one streaming {@code multipart/form-data} parser of the core, shared by every adapter: no adapter, engine or"
+   ],
+   "findings": [
+    "FND-A002",
+    "FND-A004"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/MultipartSettings.java",
+   "hunks_total": 1,
+   "anchors": [
+    "* The app's multipart settings: range checks on every setter, the defaults until set. The part header limits are"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/SpoolRegistry.java",
+   "hunks_total": 1,
+   "anchors": [
+    "/** The open temporary upload files of one app; no static state. */"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/SpoolingBuffer.java",
+   "hunks_total": 1,
+   "anchors": [
+    "/** A file part's content: memory up to {@code threshold} bytes, then one temp file. Text parts never spool. */"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/FormAccessorsTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientRequest;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java",
+   "hunks_total": 10,
+   "anchors": [
+    "// IR-JSON-002 AC-8: body and json left this list in wave 5; FR-COOKIE-002 AC-8: so did the cookie methods.",
+    "// docs/sds/2026-10-19.naruserve.naruserve-v1-wave-5-3.sds.md; FR-COOKIE-002 AC-8 adds the cookie readers",
+    "\"cookie(String)->Cookie\", \"getCookies()->Cookie[]\"), signatures(Request.class));",
+    "// SDS-AC-2; IR-HTTP-001 AC-2; SDS-AC-11 (wave 5-3); FR-COOKIE-002 AC-8 adds addCookie",
+    "\"addCookie(Cookie)->Response\"), signatures(Response.class));",
+    "// SDS-AC-11 (wave 5-3); FR-COOKIE-002 AC-8: cookie, getCookies and addCookie are expected from wave 5",
+    "// SDS-AC-3; IR-HTTP-001 AC-4; IR-HTTP-005 AC-5; SDS-AC-11 (wave 5-3); FR-COOKIE-002 AC-8",
+    "assertEquals(setOf(), nullablePositions(RestApp.class, RouteBuilder.class, RouteHandler.class));",
+    "// SDS-AC-3 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-5-4.sds.md; IR-ENGINE-001 AC-7: the wave 5 set",
+    "\"server(Configurer)->RestApp\", \"trustProxy(boolean)->RestApp\"), signatures(RestApp.class));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartApiTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "import com.snoworca.naruserve.testing.SettingsCapturingAdapter;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartLimitsTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "/** Multipart and urlencoded size limits. SDS-AC-n cites docs/sds/2026-10-19.naruserve.naruserve-v1-wave-6-2.sds.md. */"
+   ],
+   "findings": [
+    "FND-A003"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartSpoolingTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientRequest;"
+   ],
+   "findings": [
+    "FND-A004"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AppLifecycleGuardTest.java",
+   "hunks_total": 5,
+   "anchors": [
+    "// wave 6: IR-STATIC-001 AC-5 puts both staticFiles overloads and defaultCache under the same guard",
+    "// SDS-AC-4; FR-APP-002 AC-4; re-pointed to IR-STATIC-001 AC-5: multipart, formLimit, both staticFiles overloads,",
+    "List<String> guarded = new ArrayList<>();",
+    "guarded.add(m.getName() + \"/\" + m.getParameterCount());",
+    "for (String wave6 : new String[] {\"multipart/1\", \"formLimit/1\", \"staticFiles/2\", \"staticFiles/3\","
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/BodyStateTest.java",
+   "hunks_total": 5,
+   "anchors": [
+    "// SDS-AC-11; FR-HTTP-019 AC-5, re-pointed by IR-JSON-002 AC-8: body(Class) and body(TypeRef) are the only readers",
+    "List<String> bodyNames = Arrays.asList(\"json\", \"form\", \"file\", \"files\", \"parts\", \"text\", \"bytes\",",
+    "java.util.Set<String> seenFormReaders = new java.util.TreeSet<>();",
+    "seenFormReaders.add(m.getName() + Arrays.toString(m.getParameterTypes()));",
+    "assertEquals(new java.util.TreeSet<>(Arrays.asList(\"file[class java.lang.String]\","
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/FormDataTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "private DefaultUploadFile textPart(String name, String value) {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MultipartParserTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "/** The engine-free multipart parser. SDS-AC-n cites docs/sds/2026-10-19.naruserve.naruserve-v1-wave-6-2.sds.md. */"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/SpoolCleanupTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientRequest;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/MultipartCrossAdapterTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientRequest;"
+   ],
+   "findings": [
+    "FND-A001"
+   ]
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/MultipartDisconnectSocketTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "* A client that closes the socket halfway through a spooled part leaves no temp file."
+   ],
+   "findings": [
+    "FND-A011"
+   ]
+  }
+ ],
+ "summary": {
+  "total": 11,
+  "by_severity": {
+   "HIGH": 2,
+   "MEDIUM": 3,
+   "LOW": 6
+  }
+ }
+}

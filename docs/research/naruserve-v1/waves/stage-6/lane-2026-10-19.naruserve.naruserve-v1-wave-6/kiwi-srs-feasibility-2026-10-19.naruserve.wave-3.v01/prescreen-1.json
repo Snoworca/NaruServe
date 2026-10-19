@@ -1,0 +1,21 @@
+{
+ "run": "2026-10-19.naruserve.wave-3.v01",
+ "chunk": 1,
+ "req_ids": [
+  "IR-HTTP-001",
+  "IR-HTTP-002",
+  "IR-HTTP-003",
+  "IR-HTTP-004",
+  "CON-HTTP-001"
+ ],
+ "quick_pass": [
+  "IR-HTTP-001",
+  "IR-HTTP-003"
+ ],
+ "quick_block": [],
+ "senior_targets": [
+  "IR-HTTP-002",
+  "IR-HTTP-004",
+  "CON-HTTP-001"
+ ]
+}

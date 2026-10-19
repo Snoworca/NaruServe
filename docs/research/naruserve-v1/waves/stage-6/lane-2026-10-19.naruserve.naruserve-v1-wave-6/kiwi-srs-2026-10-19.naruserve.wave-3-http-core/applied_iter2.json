@@ -1,0 +1,14 @@
+{"iter":2,"applied":[
+{"id":"F2-01","req":"OPS-HTTP-001","change":"AC-9 restated: every ```java block of every docs/api/*.md compiled; top-level type blocks as own compilation unit, others in method template with app/req/res and stub handlers (getUser...); skip list entries name file + reason (later-wave method named, or illustrative copy of existing type such as Method/RouteHandler); JavaScript in ```java fences relabelled ```js. Tags [I-009; wave decision: Docs examples]"},
+{"id":"F2-02","req":"FR-HTTP-010","change":"AC-4 removed; Implementation Note added (malformed query decoded after Request exists, wave 4 middleware/onError see the 400; D-117, D-129; wave-3 residual: pre-request rejections). Residual still cited by FR-HTTP-002 AC-4 and AC-5"},
+{"id":"F2-03","req":"FR-HTTP-014","change":"AC-7 added: res.stream() does not block; commits and returns, copy runs after handler returns, STREAMING until copy ends [D-094; D-103; wave decision: stream() closing]"},
+{"id":"F2-04","req":"FR-HTTP-006","change":"AC-3 restated: throw while COMMITTED/STREAMING -> ABORTED + abnormal close; throw after COMPLETED -> stays COMPLETED (abort no-op), bytes unchanged, no 500 [D-097; D-099; wave decision: abort() after completion; wave decision: Interim failure handling]"},
+{"id":"F2-05","req":"IR-HTTP-001, IR-HTTP-005","change":"IR-HTTP-001 AC-4 and IR-HTTP-005 AC-5: D-072 met by @NullMarked package (counts as @NonNull) + @Nullable on nullable positions; test checks package annotation and docs/api-listed @Nullable positions. IR-HTTP-001 statement aligned"},
+{"id":"F2-06","req":"FR-HTTP-020","change":"AC-3/AC-4: over-limit failure is a distinct internal IOException subclass (name left to implementer) so later waves map it to 413"},
+{"id":"F2-07","req":"FR-HTTP-003","change":"AC-6 added: upgrade GET (Upgrade: websocket, Connection: Upgrade) to WebSocket-only hook route (router MATCHED/WEBSOCKET) answered same 426 with both headers, no handshake until wave 7; cross-references FR-HTTP-008 AC-7 (unchanged, consistent)"},
+{"id":"F2-08","req":"FR-HTTP-002","change":"AC-2 reworded to observable orderings only: OPTIONS * 204 before path validation; validator rejection before lookup (GET abc, GET /%2e%2e -> 400, handler on /:x not called, no lookup exception)"}
+],
+"rejected":[
+{"id":"F2-09","reason":"Completed Work Log (docs/spec/91.completed-work-log.md) is a read-only summary for agents; SRS-W015 for superseded OPS-ROUTE-001 is accepted and to be noted at wave close, no SRS mutation"}
+],
+"validate":{"errors":0,"warnings":30,"byCode":{"SRS-W023":29,"SRS-W015":1}}}

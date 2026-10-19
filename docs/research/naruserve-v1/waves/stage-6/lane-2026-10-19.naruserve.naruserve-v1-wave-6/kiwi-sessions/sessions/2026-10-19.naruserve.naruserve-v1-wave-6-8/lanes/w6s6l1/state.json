@@ -1,0 +1,20 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "2026-10-19.naruserve.naruserve-v1-wave-6-8",
+  "sds_path": "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-6-8.sds.md",
+  "target": "wave-6",
+  "req_ids": ["FR-STATIC-003", "FR-STATIC-008", "FR-STATIC-009", "FR-STATIC-010", "FR-STATIC-011"],
+  "spawn_context": "pm-child",
+  "phase": "done",
+  "next_resume_hint": null,
+  "failed": false,
+  "regression_baseline": {"command": "./gradlew build", "head_sha": "294bba8"},
+  "red_evidence": {
+    "command": "./gradlew :NaruServe-api:compileTestJava",
+    "exit_code": 1,
+    "captured_failure": "CachePatternTest.java:33: error: cannot find symbol (CachePattern, DirectoryListing, DefaultResponse.sendBody/disposition missing)",
+    "timestamp": "2026-10-20T00:00:00Z"
+  },
+  "green_evidence": {"command": "./gradlew build", "exit_code": 0, "timestamp": "2026-10-20T00:00:00Z"},
+  "mcp_call_log": "deferred to lane queue"
+}

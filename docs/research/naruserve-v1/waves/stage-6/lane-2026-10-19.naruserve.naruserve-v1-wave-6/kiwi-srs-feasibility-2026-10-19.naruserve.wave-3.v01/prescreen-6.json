@@ -1,0 +1,21 @@
+{
+ "run": "2026-10-19.naruserve.wave-3.v01",
+ "chunk": 6,
+ "req_ids": [
+  "FR-HTTP-019",
+  "FR-HTTP-020",
+  "OPS-HTTP-001",
+  "OPS-ROUTE-002",
+  "CON-ROUTE-006"
+ ],
+ "quick_pass": [
+  "OPS-ROUTE-002",
+  "CON-ROUTE-006"
+ ],
+ "quick_block": [],
+ "senior_targets": [
+  "FR-HTTP-019",
+  "FR-HTTP-020",
+  "OPS-HTTP-001"
+ ]
+}

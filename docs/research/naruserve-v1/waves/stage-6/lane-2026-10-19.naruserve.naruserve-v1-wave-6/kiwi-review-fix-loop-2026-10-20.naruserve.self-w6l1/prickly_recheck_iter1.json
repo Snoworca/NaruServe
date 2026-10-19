@@ -1,0 +1,403 @@
+{
+ "resolved_findings": [
+  "FND-A001",
+  "FND-A002",
+  "FND-A003",
+  "FND-A004",
+  "FND-A005",
+  "FND-A006",
+  "FND-B001",
+  "FND-B002",
+  "FND-B003",
+  "FND-B004",
+  "FND-B006",
+  "FND-B007"
+ ],
+ "unresolved_findings": [],
+ "findings": [
+  {
+   "id": "FND-R001",
+   "axis": "correctness",
+   "severity": "LOW",
+   "title": "Failed download drops only Content-Disposition; other file headers stay for onError",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+    "line_range": "151-171"
+   },
+   "description": "dropDisposition removes Content-Disposition while state is NEW, but FileResponder.answer (FileResponder.java:86-108) has already set ETag, Last-Modified, Accept-Ranges, X-Content-Type-Options, Content-Type and Cache-Control before sendBody; a pre-commit IOException there leaves those file validators on the onError 500 answer. The FND-A006 header is fixed; the rest is the same class of leak.",
+   "suggested_fix": "On a pre-commit failure, remove every header answerFile/FileResponder added (snapshot names before respond), or defer them to commit.",
+   "is_behavioral": true,
+   "tags": [
+    "static",
+    "download",
+    "residual"
+   ]
+  },
+  {
+   "id": "FND-R002",
+   "axis": "maintainability",
+   "severity": "LOW",
+   "title": "Production ResolverTap hook exists only for one reflection-based test",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StaticHandler.java",
+    "line_range": "28,234-242"
+   },
+   "description": "A volatile ResolverTap field in StaticHandler, a per-request copy into DefaultResponse (Dispatcher.java:165, DefaultResponse.java:70,96) and FileResponder.tapped (FileResponder.java:31-39) were added to production code solely so FileResourceResolverTest:150-156 can wrap the resolver, and that test still needs reflection on Dispatcher.statics to reach it. Harmless at runtime (null tap) but extra surface and a volatile read per request.",
+   "suggested_fix": "Accept as a documented test seam, or set it once at construction instead of a mutable volatile.",
+   "is_behavioral": false,
+   "tags": [
+    "test-hook"
+   ]
+  },
+  {
+   "id": "FND-R003",
+   "axis": "test",
+   "severity": "LOW",
+   "title": "Heap-growth test depends on System.gc() hint and used-heap sampling",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartSpoolingTest.java",
+    "line_range": "179-208"
+   },
+   "description": "The 8 MiB bound is measured as MemoryMXBean used heap after System.gc(), which is only a hint; with parallel forks or -XX:+DisableExplicitGC the delta can include unrelated garbage and flake.",
+   "suggested_fix": "Repeat gc and take the minimum sample; keep the bound.",
+   "is_behavioral": false,
+   "tags": [
+    "flaky"
+   ]
+  },
+  {
+   "id": "FND-R004",
+   "axis": "style",
+   "severity": "LOW",
+   "title": "New lines exceed 120 columns",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StaticPath.java",
+    "line_range": "21"
+   },
+   "description": "StaticPath.java:21 (183 cols, javadoc) and StaticHandler.java:268 (133 cols) break the 120-column wrapping the rest of the code keeps.",
+   "suggested_fix": "Rewrap.",
+   "is_behavioral": false,
+   "tags": [
+    "style"
+   ]
+  }
+ ],
+ "coverage_rows": [
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+   "hunks_total": 6,
+   "anchors": [
+    "private FileResponder.@Nullable ResolverTap tap;",
+    "/** The app's test hook for the resolver {@link #file} and {@link #download} read through. */",
+    "ResourceResolver r = FileResourceResolver.forFile(file);",
+    "dropDisposition(disposition);",
+    "dropDisposition",
+    "/** A failed download keeps no attachment header, so an onError answer is not saved as a file. */"
+   ],
+   "findings": [
+    "FND-R001"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultStaticOptions.java",
+   "hunks_total": 1,
+   "anchors": [
+    "* A private copy taken at listen, so a configurer that kept this instance cannot change a running mount; it is"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultUploadFile.java",
+   "hunks_total": 4,
+   "anchors": [
+    "/** Copies through a truncating FileOutputStream, never File.renameTo, then releases the content. */",
+    "try (OutputStream out = new FileOutputStream(destination)) {",
+    "byte[] b = new byte[8192];",
+    "private static void copy(InputStream in, OutputStream out) throws IOException {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+   "hunks_total": 5,
+   "anchors": [
+    "import java.util.concurrent.atomic.AtomicInteger;",
+    "res.resolverTap(statics.resolverTap());",
+    "// The request ends once the response finished (complete or abort) and the handler chain returned, so a",
+    "req.releaseUploads(); // complete or abort: the request ended",
+    "} finally {"
+   ],
+   "findings": [
+    "FND-R002"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/FileResponder.java",
+   "hunks_total": 1,
+   "anchors": [
+    "/** Test hook wrapping the resolver a file answer reads through (no java.util.function type: absent from API 21). */"
+   ],
+   "findings": [
+    "FND-R002"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/MultipartParser.java",
+   "hunks_total": 2,
+   "anchors": [
+    "/** The parameters after the first ';', names lower-cased, first occurrence kept, quoted-strings unquoted. */",
+    "if (c == '\\\\' && i < n) {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StaticHandler.java",
+   "hunks_total": 11,
+   "anchors": [
+    "private volatile FileResponder.@Nullable ResolverTap tap;",
+    "/** Whether a GET for {@code rawPath} would be answered from the file system: file, index, listing or 301. */",
+    "boolean wouldServeGet(String rawPath) {",
+    "if (f == null) {",
+    "if (!slash || new File(f, m.options().indexName()).isFile() || m.options().directoryListingOn()) {",
+    "if (!reachable(m, f)) {",
+    "if (!listable(m, f)) {",
+    "* Whether directory {@code f} lies under the mount's canonical root and, unless symbolic links are allowed, is",
+    "private static boolean listable(StaticMount m, File f) throws IOException {",
+    "/** Test hook for the resolver static mounts, {@code res.file} and {@code res.download} read through. */",
+    "FileResponder.respond(req, res, r, path, mimeTypes.lookup(name, m.options().mimes()), policy);"
+   ],
+   "findings": [
+    "FND-R002",
+    "FND-R004"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StaticMount.java",
+   "hunks_total": 2,
+   "anchors": [
+    "/** This mount with its canonical root and resolver taken now. */",
+    "return new StaticMount(prefix, dir, options, canonical);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StaticPath.java",
+   "hunks_total": 3,
+   "anchors": [
+    "* decoded exactly once; a segment that would still decode to a dot segment, '/' or NUL is refused rather than decoded",
+    "* 0 when the path may be looked up; 400 for a segment that decodes to {@code .} or {@code ..}, holds '/' or NUL,",
+    "if (d == null || d.equals(\".\") || d.equals(\"..\") || d.indexOf('/') >= 0 || d.indexOf('\\0') >= 0) {"
+   ],
+   "findings": [
+    "FND-R004"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/FileResponseTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "// FR-STATIC-011 AC-2: a failed download leaves no Content-Disposition for the onError answer"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartLimitsTest.java",
+   "hunks_total": 4,
+   "anchors": [
+    "import com.snoworca.naruserve.testing.InMemoryHttpAdapter;",
+    "import java.util.ArrayList;",
+    "import java.util.concurrent.TimeUnit;",
+    "* Posts {@code body} with {@code contentType} to an app limited by {@code config}; the handler reads"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartSpoolingTest.java",
+   "hunks_total": 3,
+   "anchors": [
+    "import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientResponse;",
+    "import java.io.FileInputStream;",
+    "/** One text part named {@code name} of {@code size} 't' bytes, without the close delimiter. */"
+   ],
+   "findings": [
+    "FND-R003"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMethodTest.java",
+   "hunks_total": 2,
+   "anchors": [
+    "import java.nio.file.Files;",
+    "// FR-STATIC-002 AC-5; FR-STATIC-006 AC-2: a refused symbolic link is not \"served by GET\", so no 405 and no 301"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMountingTest.java",
+   "hunks_total": 2,
+   "anchors": [
+    "import java.util.concurrent.atomic.AtomicReference;",
+    "// FR-STATIC-001 AC-2; FR-APP-002: the options a mount serves with are fixed at listen, so a configurer that kept"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticTraversalTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "// FR-STATIC-005 AC-1: a decoded backslash is refused like '/' on every platform (a Windows separator)"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultUploadFileTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "// FR-MULTIPART-005 AC-4, FR-MULTIPART-005 AC-5: a refused save leaves the destination untouched"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/FileResourceResolverTest.java",
+   "hunks_total": 4,
+   "anchors": [
+    "import com.snoworca.naruserve.ResourceResolver;",
+    "import java.io.IOException;",
+    "import java.lang.reflect.Field;",
+    "/** A real resolver that records each call with its delegate's class, then delegates. */"
+   ],
+   "findings": [
+    "FND-R002"
+   ]
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdExchange.java",
+   "hunks_total": 3,
+   "anchors": [
+    "requireStartable();",
+    "started = true;",
+    "requireStartable(); // the abort check and single-start rule win over a failed open, which comes next"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdFeatures.java",
+   "hunks_total": 3,
+   "anchors": [
+    "* plain buffered reads; the caller holds the exchange lock and has checked the range.",
+    "OutputStream out = ex.commit(status, headers, length);",
+    "out = ex.commit(status, headers, length);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/MultipartCrossAdapterTest.java",
+   "hunks_total": 20,
+   "anchors": [
+    "import com.snoworca.naruserve.Configurer;",
+    "import com.snoworca.naruserve.internal.DefaultRequest;",
+    "import java.io.InputStream;",
+    "import java.lang.reflect.Method;",
+    "import org.jspecify.annotations.Nullable;",
+    "* The one core multipart parser over the in-memory adapter and a TinyHttpd socket. The handler reaches the parser",
+    "/** Parses the body with the default limits, answers part names and sizes, then deletes the temp files. */",
+    "for (DefaultUploadFile p : parts) {",
+    "p.release();",
+    "private static RestApp configure(RestApp app, File dir, Configurer<MultipartOptions> config) {",
+    "return inMemory(MP, body, DEFAULTS);",
+    "File dir = tmp.getRoot();",
+    ".header(\"Host\", \"x\").header(\"Content-Type\", \"multipart/form-data; boundary=\" + B)",
+    "return socket(port, MP, length, body);",
+    "String head = \"POST /up HTTP/1.1\\r\\nHost: 127.0.0.1\\r\\nContent-Type: multipart/form-data; boundary=\" + B",
+    "return tinyApp(DEFAULTS);",
+    "app.post(\"/up\", (req, res) -> upload(req, res, dir));",
+    "RestApp app = tinyApp();",
+    "return socket(port, bytes.length, out -> out.write(bytes));",
+    "private static String part(String name, @Nullable String filename, String content) {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/SendFileSocketTest.java",
+   "hunks_total": 2,
+   "anchors": [
+    "import java.io.FileNotFoundException;",
+    "// FR-ENGINE-010 AC-2: the file is opened before the head is committed, so a missing file leaves it unstarted"
+   ],
+   "findings": []
+  }
+ ],
+ "coverage_rows_redo": [
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/AppDocsTest.java",
+   "hunks_total": 24,
+   "anchors": [
+    "/** Wave 4 decisions recorded in docs/api with the wave 5 marker set (OPS-APP-003, successor of OPS-APP-001). */",
+    "/** Per file, phrases decided in waves 4 and 5: each appears, and no line holding it carries the marker. */",
+    "r.put(\"defaults.md\", Arrays.asList(\"| 바인딩 주소\", \"| 프록시 헤더\"));",
+    "k.put(\"websocket.md\", Arrays.asList(\"Ping 주기\", \"`101` 응답 전/후\"));",
+    "// SDS-AC-7; OPS-APP-003 AC-6",
+    "public void sdsAc7_OPS_APP_003_AC6_decidedMarkersAreGone() throws IOException {",
+    "// SDS-AC-5; OPS-APP-004 AC-6",
+    "public void sdsAc7_OPS_APP_003_AC6_laterWaveMarkersAreKept() throws IOException {",
+    "SDS",
+    "public void sdsAc7_OPS_APP_003_AC6_wave4PagesKeepNoMarker() throws IOException {",
+    "// OPS-APP-003 AC-1",
+    "public void OPS_APP_003_AC1_builderFactoryServerHandleAndKeeperThread() throws IOException {",
+    "AC",
+    "public void sdsAc7_OPS_APP_003_AC6_wsMarkersSitOnTheirOwnLines() throws IOException {",
+    "// OPS-APP-003 AC-2",
+    "public void OPS_APP_003_AC2_middlewareAndRoutingDecisions() throws IOException {",
+    "// OPS-APP-003 AC-7",
+    "public void OPS_APP_003_AC7_decisionsCarryAReason() throws IOException {",
+    "// OPS-APP-003 AC-3",
+    "public void OPS_APP_003_AC3_lifecycleStartGateAndPendingStop() throws IOException {",
+    "// OPS-APP-003 AC-4",
+    "public void OPS_APP_003_AC4_loggingFormatDefaultsAndClose() throws IOException {",
+    "// OPS-APP-003 AC-5",
+    "public void OPS_APP_003_AC5_expressMigrationRows() throws IOException {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java",
+   "hunks_total": 24,
+   "anchors": [
+    "/** Wave 3 decisions recorded in docs/api (OPS-HTTP-005, successor of OPS-HTTP-003); routing.md keeps no marker, checked by RoutingDocsTest. */",
+    "// OPS-HTTP-005 AC-1",
+    "public void OPS_HTTP_005_AC1_rawPathRowIsRawPathWithoutQuery() throws IOException {",
+    "// OPS-HTTP-005 AC-2",
+    "public void OPS_HTTP_005_AC2_attributeTypeMismatchAndNullRemoval() throws IOException {",
+    "// SDS-AC-8; OPS-HTTP-005 AC-8",
+    "public void sdsAc8_OPS_HTTP_005_AC8_requestKeepsOtherIssuesMarkers() throws IOException {",
+    "assertEquals(m.toString(), 1, m.size());",
+    "// OPS-HTTP-005 AC-3",
+    "public void OPS_HTTP_005_AC3_octetStreamAndStreamClosing() throws IOException {",
+    "// SDS-AC-6; OPS-HTTP-006 AC-8",
+    "public void sdsAc8_OPS_HTTP_005_AC8_responseKeepsFileAndRedirectMarkers() throws IOException {",
+    "// OPS-HTTP-005 AC-4",
+    "public void OPS_HTTP_005_AC4_routerPolicyDocumented() throws IOException {",
+    "// OPS-HTTP-005 AC-7",
+    "public void OPS_HTTP_005_AC7_expressRawPathAndRawTextMapping() throws IOException {",
+    "SDS",
+    "public void sdsAc8_OPS_HTTP_005_AC8_expressKeepsOtherIssuesMarkers() throws IOException {",
+    "// OPS-HTTP-005 AC-5",
+    "public void OPS_HTTP_005_AC5_appListsRouterPolicy() throws IOException {",
+    "// OPS-HTTP-005 AC-6",
+    "public void OPS_HTTP_005_AC6_defaultsNamesTraceConnectPolicy() throws IOException {",
+    "AC",
+    "public void sdsAc8_OPS_HTTP_005_AC8_routingKeepsNoMarker() throws IOException {"
+   ],
+   "findings": []
+  }
+ ],
+ "summary": {
+  "total": 4,
+  "by_severity": {
+   "CRITICAL": 0,
+   "HIGH": 0,
+   "MEDIUM": 0,
+   "LOW": 4
+  }
+ }
+}

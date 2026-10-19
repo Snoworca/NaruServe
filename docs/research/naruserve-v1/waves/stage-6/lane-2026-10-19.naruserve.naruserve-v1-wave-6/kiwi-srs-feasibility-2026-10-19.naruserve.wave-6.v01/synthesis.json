@@ -1,0 +1,61 @@
+{
+ "run": "2026-10-19.naruserve.wave-6.v01",
+ "target": "wave-6",
+ "total": 26,
+ "distribution": {
+  "high": 26,
+  "medium": 0,
+  "low": 0,
+  "blocked": 0
+ },
+ "score_min": 87,
+ "score_max": 96,
+ "target_verdict": "ready: all 26 high; promote draft -> evolving",
+ "critical_blockers": [],
+ "notable_conditions": [
+  "FR-STATIC-007 AC-4 (.txt -> text/plain) conflicts with AC-2 + static.md built-in table, which has no .txt row: add the row or change the example.",
+  "Residual 'served only by a static mount' (design.md) is implementable as written in FR-STATIC-002 AC-5 via a side-effect-free GET-resolution probe at the Dispatcher fallback.",
+  "FR-MULTIPART-006 AC-3 needs the in-memory adapter; heap-bound ACs (FR-MULTIPART-004 AC-2, FR-STATIC-003 AC-4) need isolated fixed-heap runs.",
+  "Link hygiene: 7 verified ENGINE requirements still depends_on discarded FR-ENGINE-001.",
+  "TinyHttpd HEAD 38051b6 vs verified 46b973e."
+ ],
+ "dependency_chains": [
+  {
+   "chain": [
+    "IR-MULTIPART-001",
+    "IR-MULTIPART-002",
+    "FR-MULTIPART-001..006",
+    "OPS-MULTIPART-001",
+    "OPS-HTTP-006",
+    "OPS-APP-004"
+   ],
+   "health": "all wave-6 or verified"
+  },
+  {
+   "chain": [
+    "IR-STATIC-001",
+    "IR-STATIC-002",
+    "FR-STATIC-001..011",
+    "OPS-STATIC-001",
+    "OPS-HTTP-006",
+    "OPS-APP-004"
+   ],
+   "health": "all wave-6 or verified"
+  },
+  {
+   "chain": [
+    "FR-STATIC-011",
+    "FR-ENGINE-010",
+    "(supersedes) FR-ENGINE-001 discarded"
+   ],
+   "health": "supersede edge only; no depends_on into discarded"
+  },
+  {
+   "chain": [
+    "FR-STATIC-010",
+    "FR-STATIC-009"
+   ],
+   "health": "wave-6"
+  }
+ ]
+}

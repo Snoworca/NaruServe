@@ -1,0 +1,86 @@
+{
+  "branch": "kiwi/orch/2026-10-19.NaruServe.naruserve-v1/lane-2026-10-19.naruserve.naruserve-v1-wave-6",
+  "worktree_path": "/Users/beom/work/git/NaruServe/.claude/worktrees/agent-a623d24cf87a99082",
+  "head_sha": "050b49fd67addda1696da305c767ce46e2f39b77",
+  "commits": [
+    "a32d75a6d71a113f3443a0a81a198cf76c82639a",
+    "83a0ee6337d3d76b56d1827f36aa6b669e80927d",
+    "ed2fe3033831bba5ed092046dca905b332b14d59",
+    "dc2ba034eaee05b62eb9b1f9c339c82b72cb2297",
+    "e5dd65caa748eb2fdb8198571dd931a90d312c2c",
+    "8cf8a6bb40ca8c1f6f70eaed03e2c3359263df41",
+    "294bba8634d98e4328ff2374c5b3bf00f7c30b17",
+    "9a3aa6bd3bab4b8759f657aa47881e854e301bff",
+    "79a0e3e0ecbf054a52a82522c1085745cc97ba87",
+    "0584e4ce3049a13d38a9e3d34fc35977327fac83",
+    "b528a61a241e35657b4ac4850305661dd3c886d2",
+    "f1697289066efde4576a564664a16f1a8b5f3563",
+    "050b49fd67addda1696da305c767ce46e2f39b77"
+  ],
+  "deferred_queue": "/Users/beom/work/git/NaruServe/kiwi/orchestrator/2026-10-19.NaruServe.naruserve-v1/lanes/lane-2026-10-19.naruserve.naruserve-v1-wave-6/deferred-srs-queue.jsonl",
+  "reports": [
+    "docs/analysis/kiwi-review-fix-loop-2026-10-20.naruserve.self-w6l1/mode_decision.json",
+    "docs/analysis/kiwi-review-fix-loop-2026-10-20.naruserve.self-w6l1/review_A_iter0.json",
+    "docs/analysis/kiwi-review-fix-loop-2026-10-20.naruserve.self-w6l1/review_B_iter0.json",
+    "docs/analysis/kiwi-review-fix-loop-2026-10-20.naruserve.self-w6l1/classified_findings.json",
+    "docs/analysis/kiwi-review-fix-loop-2026-10-20.naruserve.self-w6l1/fix_iter1.json",
+    "docs/analysis/kiwi-review-fix-loop-2026-10-20.naruserve.self-w6l1/fix_iter2.json",
+    "docs/analysis/kiwi-review-fix-loop-2026-10-20.naruserve.self-w6l1/recheck_denominator_iter1.json",
+    "docs/analysis/kiwi-review-fix-loop-2026-10-20.naruserve.self-w6l1/prickly_recheck_iter1.json",
+    "docs/analysis/kiwi-review-fix-loop-2026-10-20.naruserve.self-w6l1/test_sufficiency_initial.json",
+    "docs/analysis/kiwi-review-fix-loop-2026-10-20.naruserve.self-w6l1/test_sufficiency.json"
+  ],
+  "red_evidence": [
+    {"test_id": "NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartApiTest.java#*", "failure": "compileTestJava: cannot find symbol MultipartOptions, MultipartSettings, multipart, formLimit"},
+    {"test_id": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MultipartParserTest.java#*", "failure": "compileTestJava: cannot find symbol MultipartParser, SpoolRegistry, DefaultUploadFile"},
+    {"test_id": "NaruServe-api/src/test/java/com/snoworca/naruserve/FormAccessorsTest.java#sdsAc1_FR_MULTIPART_003_AC2_jsonBodyStaysUnreadAndBodyStillReadsIt", "failure": "compileTestJava: Request has no form/file/files/parts"},
+    {"test_id": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultUploadFileTest.java#FR_MULTIPART_005_AC3_bytesLimitIs8MiB", "failure": "AssertionError: bytes() above 8 MiB did not throw"},
+    {"test_id": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/SpoolCleanupTest.java#sdsAc8_FR_MULTIPART_006_AC2_openUploadAtShutdownDeletedAfterOnStop", "failure": "AssertionError: temp file still exists after shutdown"},
+    {"test_id": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticApiTest.java#sdsAc1_IR_STATIC_001_AC1_trailingSlashIsStrippedAndDuplicatePrefixesAreBothKept", "failure": "compileTestJava: cannot find symbol StaticMount / staticFiles"},
+    {"test_id": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMethodTest.java#sdsAc8_FR_STATIC_002_AC1_nonGetOnServedPathIs405AllowGetHead", "failure": "got 404, expected 405 with Allow: GET, HEAD"},
+    {"test_id": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticTraversalTest.java#sdsAc1_FR_STATIC_005_AC1_traversalRequestsAre400AndSecretNeverSent", "failure": "status was not 400"},
+    {"test_id": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticSymlinkTest.java#sdsAc1_FR_STATIC_006_AC2_linkToFileInsideRootIsRefused404ByDefault", "failure": "expected 404, symlink served"},
+    {"test_id": "NaruServe-api/src/test/java/com/snoworca/naruserve/MimeTypesTest.java#sdsAc8_FR_STATIC_007_AC4_onlyBareTextTypesGainUtf8Charset", "failure": "expected text/x-custom; charset=UTF-8 but was application/octet-stream"},
+    {"test_id": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/CachePatternTest.java#sdsAc3_FR_STATIC_008_AC4_doubleStarSegmentsAndSingleStarWithinOne", "failure": "compileTestJava: cannot find symbol CachePattern, DirectoryListing (fragment 8 was red at compile time only)"},
+    {"test_id": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/SendFileSocketTest.java#sdsAc3_FR_ENGINE_010_AC2_sendFileWritesExactlyTheRequestedRangeAndCommitsOnce", "failure": "UnsupportedOperationException 'arrives in wave 6'"},
+    {"test_id": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java#sdsAc6_OPS_HTTP_006_AC8_requestKeepsNoMarker", "failure": "request.md still had the parts() (미확정) marker"},
+    {"test_id": "NaruServe-api/src/test/java/com/snoworca/naruserve/AppDocsTest.java#sdsAc5_OPS_APP_004_AC6_decidedMarkersAreGone", "failure": "static.md, multipart.md and defaults.md still carried (미확정)"},
+    {"test_id": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultUploadFileTest.java (review FND-B001)", "failure": "second save on released upload left dest at 0 bytes, expected 3000"},
+    {"test_id": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMethodTest.java#FR_STATIC_002_AC5_refusedSymlinksGet404NotAllowOr301", "failure": "POST /inlink.txt expected 404, got 405"},
+    {"test_id": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/SendFileSocketTest.java#FR_ENGINE_010_AC2_missingFileThrowsBeforeTheResponseStarts", "failure": "expected 200, got 500"},
+    {"test_id": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticTraversalTest.java#FR_STATIC_005_AC1_decodedBackslashIs400", "failure": "/a%5C..%5C.env expected 400, got 404"}
+  ],
+  "review_outcome": {"status": "TASK_DONE", "residual_critical": 0, "residual_high": 0},
+  "intentionally_empty": null,
+  "design_refuted": [],
+  "design_deviations": [
+    {"sds": "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-6-7.sds.md", "item": "DefaultMimeTypes static final Map BUILT_IN", "implemented_as": "private static String[] table exposed through static builtIn(), which returns an unmodifiable copy", "reason": "the existing AppIsolationTest (FR-APP-002 AC-2) forbids static Map fields; the behaviour contract is unchanged"},
+    {"sds": "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-6-2.sds.md", "item": "MultipartParser.parse signature", "implemented_as": "a Content-Length overload was added; the 5-argument SDS signature delegates to it with -1", "reason": "SDS-AC-7 needs the Content-Length"}
+  ],
+  "out_of_lease_paths": [
+    "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/AdapterSurfaceTest.java",
+    "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/RawTargetSocketTest.java",
+    "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/AbortSocketTest.java",
+    "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/WaveSixKotlinTest.kt"
+  ],
+  "review": {
+    "findings_total": 26,
+    "classified": {"immediate_fix": 12, "discussion_needed": 0, "rejected": 14},
+    "recheck_iter1": {"resolved": 12, "critical": 0, "high": 0, "medium": 0, "low": 4},
+    "coverage_note": "Round 0 split B had 4 non-identifier anchors in AppDocsTest and HttpDocsTest. Those two files were reviewed again in round 1, and the anchors matched."
+  },
+  "test_sufficiency": {
+    "command": "speckiwi coverage --tests --ids <fragment Requirements ids> --sds <fragment> --json",
+    "initial_gaps": {
+      "fragment-1": ["IR-MULTIPART-001 AC-7"],
+      "fragment-2": ["SDS-AC-1..8 not cited"],
+      "fragment-3": ["IR-MULTIPART-002 AC-7"],
+      "fragment-4": ["SDS-AC-1..8 not cited"],
+      "fragment-5": ["IR-STATIC-001 AC-6", "IR-STATIC-002 AC-6"]
+    },
+    "fill_commit": "050b49fd67addda1696da305c767ce46e2f39b77",
+    "final": {"fragment-1": "pass", "fragment-2": "pass", "fragment-3": "pass", "fragment-4": "pass", "fragment-5": "pass", "fragment-6": "pass", "fragment-7": "pass", "fragment-8": "pass", "fragment-9": "pass", "fragment-10": "pass"},
+    "known_weak": ["FR-STATIC-011 AC-3 is verified only through the cross-adapter test"]
+  },
+  "verification": {"command": "./gradlew build", "exit_code": 0, "note": "run with --rerun-tasks at the head sha: 63 tasks executed"}
+}

@@ -1,0 +1,407 @@
+{
+  "run": "2026-10-19.naruserve.wave-1.v01",
+  "repo": "/Users/beom/work/git/NaruServe",
+  "modules": {
+    "existing": [
+      "NaruServe-api",
+      "NaruServe-servlet"
+    ],
+    "existing_note": "Both module dirs hold only an empty src/main/java; no Java or Kotlin source exists yet.",
+    "planned_additions": [
+      "NaruServe-tinyhttpd",
+      "NaruServe-gson",
+      "NaruServe",
+      "NaruServe-kotlin",
+      "<SLF4J Logger module, NaruServe- prefix>",
+      "<rotating file Logger module, NaruServe- prefix>",
+      "<Logcat Logger module, NaruServe- prefix>"
+    ],
+    "settings_includes_now": [
+      "settings.gradle:3",
+      "settings.gradle:4"
+    ]
+  },
+  "external_paths_read": [
+    "/Users/beom/work/git/TinyHttpd (includeBuild source, HEAD 46b973e, git status clean at analysis time)"
+  ],
+  "requirements": {
+    "CON-BUILD-001": {
+      "trace_paths": [
+        {
+          "path": "gradle/wrapper/gradle-wrapper.properties",
+          "exists": true,
+          "trace_intent": "addition_site",
+          "valid": true,
+          "classification": "exists (will be modified)",
+          "srs_line": "docs/spec/02.build.srs.md:80"
+        }
+      ],
+      "trace_valid": true,
+      "non_code_traces": [],
+      "external_paths_detected": [],
+      "external_write_side_effects": []
+    },
+    "CON-BUILD-002": {
+      "trace_paths": [
+        {
+          "path": "settings.gradle",
+          "exists": true,
+          "trace_intent": "addition_site",
+          "valid": true,
+          "classification": "exists (will be modified)",
+          "srs_line": "docs/spec/02.build.srs.md:135"
+        }
+      ],
+      "trace_valid": true,
+      "non_code_traces": [],
+      "external_paths_detected": [],
+      "external_write_side_effects": []
+    },
+    "CON-BUILD-003": {
+      "trace_paths": [
+        {
+          "path": "build.gradle",
+          "exists": true,
+          "trace_intent": "addition_site",
+          "valid": true,
+          "classification": "exists (will be modified)",
+          "srs_line": "docs/spec/02.build.srs.md:188"
+        }
+      ],
+      "trace_valid": true,
+      "non_code_traces": [
+        "Requirement:CON-BUILD-002"
+      ],
+      "external_paths_detected": [],
+      "external_write_side_effects": []
+    },
+    "CON-BUILD-004": {
+      "trace_paths": [
+        {
+          "path": "build.gradle",
+          "exists": true,
+          "trace_intent": "addition_site",
+          "valid": true,
+          "classification": "exists (will be modified)",
+          "srs_line": "docs/spec/02.build.srs.md:243"
+        }
+      ],
+      "trace_valid": true,
+      "non_code_traces": [
+        "Requirement:CON-BUILD-003"
+      ],
+      "external_paths_detected": [],
+      "external_write_side_effects": []
+    },
+    "CON-BUILD-005": {
+      "trace_paths": [
+        {
+          "path": "build.gradle",
+          "exists": true,
+          "trace_intent": "addition_site",
+          "valid": true,
+          "classification": "exists (will be modified)",
+          "srs_line": "docs/spec/02.build.srs.md:296"
+        }
+      ],
+      "trace_valid": true,
+      "non_code_traces": [],
+      "external_paths_detected": [],
+      "external_write_side_effects": []
+    },
+    "CON-BUILD-006": {
+      "trace_paths": [
+        {
+          "path": "build.gradle",
+          "exists": true,
+          "trace_intent": "addition_site",
+          "valid": true,
+          "classification": "exists (will be modified)",
+          "srs_line": "docs/spec/02.build.srs.md:356"
+        }
+      ],
+      "trace_valid": true,
+      "non_code_traces": [
+        "Requirement:CON-BUILD-002",
+        "Requirement:CON-BUILD-003"
+      ],
+      "external_paths_detected": [],
+      "external_write_side_effects": [
+        {
+          "path": "/Users/beom/work/git/TinyHttpd/**/build, /Users/beom/work/git/TinyHttpd/.gradle",
+          "kind": "gradle build output of the included TinyHttpd build",
+          "tracked": false,
+          "evidence": [
+            "/Users/beom/work/git/TinyHttpd/.gitignore:2",
+            "/Users/beom/work/git/TinyHttpd/.gitignore:13"
+          ],
+          "note": "Git-ignored in the TinyHttpd checkout, so git status stays clean (CON-BUILD-010 AC-1); not a write to tracked files."
+        }
+      ]
+    },
+    "CON-BUILD-007": {
+      "trace_paths": [
+        {
+          "path": "gradle.properties",
+          "exists": false,
+          "trace_intent": "addition_site",
+          "valid": true,
+          "classification": "addition_site (to be created)",
+          "srs_line": "docs/spec/02.build.srs.md:414"
+        },
+        {
+          "path": "build.gradle",
+          "exists": true,
+          "trace_intent": "addition_site",
+          "valid": true,
+          "classification": "exists (will be modified)",
+          "srs_line": "docs/spec/02.build.srs.md:415"
+        }
+      ],
+      "trace_valid": true,
+      "non_code_traces": [
+        "Requirement:CON-BUILD-006"
+      ],
+      "external_paths_detected": [],
+      "external_write_side_effects": []
+    },
+    "CON-BUILD-008": {
+      "trace_paths": [
+        {
+          "path": "build.gradle",
+          "exists": true,
+          "trace_intent": "addition_site",
+          "valid": true,
+          "classification": "exists (will be modified)",
+          "srs_line": "docs/spec/02.build.srs.md:468"
+        }
+      ],
+      "trace_valid": true,
+      "non_code_traces": [
+        "Requirement:CON-BUILD-006"
+      ],
+      "external_paths_detected": [],
+      "external_write_side_effects": []
+    },
+    "CON-BUILD-009": {
+      "trace_paths": [
+        {
+          "path": "build.gradle",
+          "exists": true,
+          "trace_intent": "addition_site",
+          "valid": true,
+          "classification": "exists (will be modified)",
+          "srs_line": "docs/spec/02.build.srs.md:579"
+        }
+      ],
+      "trace_valid": true,
+      "non_code_traces": [
+        "Requirement:OPS-BUILD-001",
+        "Requirement:CON-BUILD-006"
+      ],
+      "external_paths_detected": [],
+      "external_write_side_effects": [
+        {
+          "path": "/Users/beom/work/git/TinyHttpd/**/build, /Users/beom/work/git/TinyHttpd/.gradle",
+          "kind": "gradle build output of the included TinyHttpd build",
+          "tracked": false,
+          "evidence": [
+            "/Users/beom/work/git/TinyHttpd/.gitignore:2",
+            "/Users/beom/work/git/TinyHttpd/.gitignore:13"
+          ],
+          "note": "Git-ignored in the TinyHttpd checkout, so git status stays clean (CON-BUILD-010 AC-1); not a write to tracked files."
+        }
+      ]
+    },
+    "CON-BUILD-010": {
+      "trace_paths": [],
+      "trace_valid": true,
+      "non_code_traces": [
+        "Requirement:OPS-BUILD-001",
+        "Issue:https://github.com/Snoworca/NaruServe/issues/1"
+      ],
+      "external_paths_detected": [],
+      "external_write_side_effects": [],
+      "note": "No Code trace: the requirement constrains the TinyHttpd checkout rather than adding a file; verified by git status in /Users/beom/work/git/TinyHttpd."
+    },
+    "CON-BUILD-011": {
+      "trace_paths": [
+        {
+          "path": "build.gradle",
+          "exists": true,
+          "trace_intent": "addition_site",
+          "valid": true,
+          "classification": "exists (will be modified)",
+          "srs_line": "docs/spec/02.build.srs.md:745"
+        }
+      ],
+      "trace_valid": true,
+      "non_code_traces": [
+        "Requirement:CON-BUILD-006"
+      ],
+      "external_paths_detected": [],
+      "external_write_side_effects": []
+    },
+    "CON-BUILD-012": {
+      "trace_paths": [
+        {
+          "path": "build.gradle",
+          "exists": true,
+          "trace_intent": "addition_site",
+          "valid": true,
+          "classification": "exists (will be modified)",
+          "srs_line": "docs/spec/02.build.srs.md:799"
+        }
+      ],
+      "trace_valid": true,
+      "non_code_traces": [
+        "Requirement:CON-BUILD-002"
+      ],
+      "external_paths_detected": [],
+      "external_write_side_effects": []
+    },
+    "CON-BUILD-013": {
+      "trace_paths": [
+        {
+          "path": "build.gradle",
+          "exists": true,
+          "trace_intent": "addition_site",
+          "valid": true,
+          "classification": "exists (will be modified)",
+          "srs_line": "docs/spec/02.build.srs.md:854"
+        }
+      ],
+      "trace_valid": true,
+      "non_code_traces": [
+        "Requirement:CON-BUILD-006"
+      ],
+      "external_paths_detected": [],
+      "external_write_side_effects": []
+    },
+    "OPS-BUILD-001": {
+      "trace_paths": [
+        {
+          "path": "settings.gradle",
+          "exists": true,
+          "trace_intent": "addition_site",
+          "valid": true,
+          "classification": "exists (will be modified)",
+          "srs_line": "docs/spec/02.build.srs.md:523"
+        },
+        {
+          "path": "gradle.properties",
+          "exists": false,
+          "trace_intent": "addition_site",
+          "valid": true,
+          "classification": "addition_site (to be created)",
+          "srs_line": "docs/spec/02.build.srs.md:524"
+        }
+      ],
+      "trace_valid": true,
+      "non_code_traces": [],
+      "external_paths_detected": [],
+      "external_write_side_effects": [
+        {
+          "path": "/Users/beom/work/git/TinyHttpd/**/build, /Users/beom/work/git/TinyHttpd/.gradle",
+          "kind": "gradle build output of the included TinyHttpd build",
+          "tracked": false,
+          "evidence": [
+            "/Users/beom/work/git/TinyHttpd/.gitignore:2",
+            "/Users/beom/work/git/TinyHttpd/.gitignore:13"
+          ],
+          "note": "Git-ignored in the TinyHttpd checkout, so git status stays clean (CON-BUILD-010 AC-1); not a write to tracked files."
+        }
+      ]
+    },
+    "OPS-BUILD-002": {
+      "trace_paths": [
+        {
+          "path": "build.gradle",
+          "exists": true,
+          "trace_intent": "addition_site",
+          "valid": true,
+          "classification": "exists (will be modified)",
+          "srs_line": "docs/spec/02.build.srs.md:691"
+        }
+      ],
+      "trace_valid": true,
+      "non_code_traces": [
+        "Requirement:CON-BUILD-003"
+      ],
+      "external_paths_detected": [],
+      "external_write_side_effects": [
+        {
+          "path": "/Users/beom/work/git/TinyHttpd/**/build, /Users/beom/work/git/TinyHttpd/.gradle",
+          "kind": "gradle build output of the included TinyHttpd build",
+          "tracked": false,
+          "evidence": [
+            "/Users/beom/work/git/TinyHttpd/.gitignore:2",
+            "/Users/beom/work/git/TinyHttpd/.gitignore:13"
+          ],
+          "note": "Git-ignored in the TinyHttpd checkout, so git status stays clean (CON-BUILD-010 AC-1); not a write to tracked files."
+        }
+      ]
+    },
+    "OPS-BUILD-003": {
+      "trace_paths": [
+        {
+          "path": "CLAUDE.md",
+          "exists": true,
+          "trace_intent": "addition_site",
+          "valid": true,
+          "classification": "exists (will be modified)",
+          "srs_line": "docs/spec/02.build.srs.md:912"
+        },
+        {
+          "path": "docs/api/README.md",
+          "exists": true,
+          "trace_intent": "addition_site",
+          "valid": true,
+          "classification": "exists (will be modified)",
+          "srs_line": "docs/spec/02.build.srs.md:913"
+        },
+        {
+          "path": "docs/api/app.md",
+          "exists": true,
+          "trace_intent": "addition_site",
+          "valid": true,
+          "classification": "exists (will be modified)",
+          "srs_line": "docs/spec/02.build.srs.md:914"
+        },
+        {
+          "path": "docs/api/json.md",
+          "exists": true,
+          "trace_intent": "addition_site",
+          "valid": true,
+          "classification": "exists (will be modified)",
+          "srs_line": "docs/spec/02.build.srs.md:915"
+        },
+        {
+          "path": "docs/api/kotlin.md",
+          "exists": true,
+          "trace_intent": "addition_site",
+          "valid": true,
+          "classification": "exists (will be modified)",
+          "srs_line": "docs/spec/02.build.srs.md:916"
+        },
+        {
+          "path": "docs/api/logging.md",
+          "exists": true,
+          "trace_intent": "addition_site",
+          "valid": true,
+          "classification": "exists (will be modified)",
+          "srs_line": "docs/spec/02.build.srs.md:917"
+        }
+      ],
+      "trace_valid": true,
+      "non_code_traces": [
+        "Requirement:CON-BUILD-002",
+        "Requirement:CON-BUILD-012"
+      ],
+      "external_paths_detected": [],
+      "external_write_side_effects": []
+    }
+  },
+  "external_paths_detected_total": 0,
+  "summary": "No requirement needs to WRITE a path outside the repo. The only out-of-repo writes are git-ignored Gradle build outputs inside the included TinyHttpd build."
+}

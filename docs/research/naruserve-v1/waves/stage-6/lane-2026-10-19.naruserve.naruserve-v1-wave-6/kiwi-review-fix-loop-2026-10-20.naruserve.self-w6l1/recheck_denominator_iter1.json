@@ -1,0 +1,93 @@
+{
+ "range": "0584e4c..HEAD",
+ "denominator": [
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+   "hunks_total": 6
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultStaticOptions.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultUploadFile.java",
+   "hunks_total": 4
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+   "hunks_total": 5
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/FileResponder.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/MultipartParser.java",
+   "hunks_total": 2
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StaticHandler.java",
+   "hunks_total": 11
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StaticMount.java",
+   "hunks_total": 2
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StaticPath.java",
+   "hunks_total": 3
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/FileResponseTest.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartLimitsTest.java",
+   "hunks_total": 4
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartSpoolingTest.java",
+   "hunks_total": 3
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMethodTest.java",
+   "hunks_total": 2
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMountingTest.java",
+   "hunks_total": 2
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticTraversalTest.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultUploadFileTest.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/FileResourceResolverTest.java",
+   "hunks_total": 4
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdExchange.java",
+   "hunks_total": 3
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdFeatures.java",
+   "hunks_total": 3
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/MultipartCrossAdapterTest.java",
+   "hunks_total": 20
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/SendFileSocketTest.java",
+   "hunks_total": 2
+  }
+ ],
+ "excluded_prose": [
+  "docs/api/multipart.md",
+  "docs/api/static.md"
+ ]
+}

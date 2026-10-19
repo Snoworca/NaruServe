@@ -1,0 +1,18 @@
+{
+ "mode": "--auto",
+ "phase_1_5": "skipped (--auto)",
+ "ambiguities_resolved": [
+  {
+   "id": "A1",
+   "resolution": "Settled by wave decision lookup order + per-method priority: a matching explicit HEAD route wins; automatic HEAD only when none matches."
+  },
+  {
+   "id": "A2",
+   "resolution": "Same for OPTIONS."
+  },
+  {
+   "id": "A3",
+   "resolution": "Settled by path-form decision: parameter values always as received (decoded once)."
+  }
+ ]
+}

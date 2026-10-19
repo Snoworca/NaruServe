@@ -1,0 +1,137 @@
+{
+  "iter": 1,
+  "fixes": [
+    {
+      "finding_id": "FND-A001",
+      "files_changed": [
+        {
+          "path": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/MultipartCrossAdapterTest.java",
+          "line_range": "1-300 (rewrite of 1-217)"
+        }
+      ],
+      "red_test": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/MultipartCrossAdapterTest.java#FR_MULTIPART_001_AC1_accessorsGiveTheSameResultsOnBothAdapters",
+      "red_failure": "n/a (test-only finding): the old test bypassed the framework via reflection; new cross-adapter cases go through req.parts()/form()/file() and passed on first run, so no production defect",
+      "rationale_strip": "",
+      "rationale_full": "Removed the reflection bodyStream helper and the stale class comment; the handler now uses req.parts()/req.form()/req.file() on an app configured with app.multipart(o -> o.tempDirectory(tmp)). Added mixed-field, spooled-part, maxFileSize/maxParts 413 and bad-boundary/truncated 400 cases asserting equal status+standard error body over InMemoryHttpAdapter and a TinyHttpd socket and an empty temp dir (FR-MULTIPART-001 AC-1/AC-2). Existing header-limit and 64 MiB tests kept, now via the accessors.",
+      "mock_scan_passed": true,
+      "external_module_touch": false
+    },
+    {
+      "finding_id": "FND-A002",
+      "files_changed": [
+        {
+          "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartSpoolingTest.java",
+          "line_range": "108-235"
+        }
+      ],
+      "red_test": "NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartSpoolingTest.java#FR_MULTIPART_004_AC5_textPartTotalIsCappedByFormLimit",
+      "red_failure": "n/a (test-only finding): AC-5 sizes (1048576 ok, 1048577 and 2x600000 -> 413 PAYLOAD_TOO_LARGE) and AC-2 heap bound (<8 MiB growth for 32 MiB upload) pass against existing code",
+      "rationale_strip": "",
+      "rationale_full": "Added app-level tests for FR-MULTIPART-004 AC-5 (three text sizes through req.form()/req.parts() with standard 413 body) and AC-2 (MemoryMXBean used heap after System.gc() before the upload and inside the handler holding the 32 MiB UploadFile). No production change needed.",
+      "mock_scan_passed": true,
+      "external_module_touch": false
+    },
+    {
+      "finding_id": "FND-A003",
+      "files_changed": [
+        {
+          "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartLimitsTest.java",
+          "line_range": "259-334"
+        }
+      ],
+      "red_test": "NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartLimitsTest.java#FR_MULTIPART_002_AC1_limitsAnswer413StandardBodyThroughOnError",
+      "red_failure": "n/a (test-only finding): passes against existing code",
+      "rationale_strip": "",
+      "rationale_full": "Added app-level tests (maxFileSize, maxRequestSize, 21 parts, header line 8193, header total >16384 -> 413; missing/empty/too-long/invalid boundary, no delimiter, no close delimiter -> 400) asserting status, FR-APP-006 standard error body, that the accessor threw HttpException and onError saw it, and that the temp dir is empty. Parser-level tests kept.",
+      "mock_scan_passed": true,
+      "external_module_touch": false
+    },
+    {
+      "finding_id": "FND-A004",
+      "files_changed": [
+        {
+          "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/MultipartParser.java",
+          "line_range": "148-151,180-181"
+        },
+        {
+          "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartSpoolingTest.java",
+          "line_range": "136-147"
+        },
+        {
+          "path": "docs/api/multipart.md",
+          "line_range": "116"
+        }
+      ],
+      "red_test": "NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartSpoolingTest.java#FR_MULTIPART_004_AC4_rawBackslashInFilenameIsKept",
+      "red_failure": "AssertionError: a/b\\c.txt expected:<[a/b\\c.txt]> but was:<[a/bc.txt]>",
+      "rationale_strip": "",
+      "rationale_full": "params() now treats a backslash in a quoted value as an escape only before '\"' or '\\'; any other backslash is kept literally, so browser-sent raw names (a/b\\c.txt, C:\\fakepath\\a.txt) reach filename() unchanged (FR-MULTIPART-004 AC-3/AC-4) while a\\\"b.txt still yields a\"b.txt. The existing doubled-backslash test is untouched and still green. docs/api/multipart.md states the rule.",
+      "mock_scan_passed": true,
+      "external_module_touch": false
+    },
+    {
+      "finding_id": "FND-A005",
+      "files_changed": [
+        {
+          "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+          "line_range": "26,167-176,203-204"
+        },
+        {
+          "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartSpoolingTest.java",
+          "line_range": "209-234"
+        },
+        {
+          "path": "docs/api/multipart.md",
+          "line_range": "124-127"
+        }
+      ],
+      "red_test": "NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartSpoolingTest.java#FR_MULTIPART_006_AC1_saveAfterSendInTheSameHandlerWorks",
+      "red_failure": "AssertionError: expected:<[100000]> but was:<[java.lang.IllegalStateException: upload 'f' used after its request ended]>",
+      "rationale_strip": "",
+      "rationale_full": "Dispatcher releases uploads through an AtomicInteger(2) countdown decremented by res.onDone and by a finally after pipeline.run, so the request ends when the response finished and the handler returned, whichever is last. The existing error-path releases and the AFTER_ON_STOP participant remain. docs/api/multipart.md now says the request ends after the response finished and the handler returned, so respond-then-save works.",
+      "mock_scan_passed": true,
+      "external_module_touch": false
+    },
+    {
+      "finding_id": "FND-A006",
+      "files_changed": [
+        {
+          "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+          "line_range": "152-166"
+        },
+        {
+          "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/FileResponseTest.java",
+          "line_range": "103-115"
+        }
+      ],
+      "red_test": "NaruServe-api/src/test/java/com/snoworca/naruserve/FileResponseTest.java#FR_STATIC_011_AC2_failedDownloadDropsDispositionBeforeOnError",
+      "red_failure": "AssertionError: expected null, but was:<attachment; filename=\"x.pdf\">",
+      "rationale_strip": "",
+      "rationale_full": "answerFile's FileNotFoundException/IOException catch blocks remove the Content-Disposition header it added (only while the response is NEW) before throwing HttpException, so a user onError answer is not downloaded as an attachment.",
+      "mock_scan_passed": true,
+      "external_module_touch": false
+    },
+    {
+      "finding_id": "FND-B001",
+      "files_changed": [
+        {
+          "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultUploadFile.java",
+          "line_range": "117-146"
+        },
+        {
+          "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultUploadFileTest.java",
+          "line_range": "179-205"
+        }
+      ],
+      "red_test": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultUploadFileTest.java#FR_MULTIPART_005_AC5_refusedSaveNeverTruncatesDestination",
+      "red_failure": "ArrayComparisonFailure: array lengths differed, expected.length=3000 actual.length=0",
+      "rationale_strip": "",
+      "rationale_full": "save() opens the content stream (which throws IllegalStateException on a released part) before the truncating FileOutputStream, so a second save or a save after the request ended leaves the destination intact; shared copy loop with transferTo. Public signatures unchanged.",
+      "mock_scan_passed": true,
+      "external_module_touch": false
+    }
+  ],
+  "not_fixed": [],
+  "out_of_lease": [],
+  "build_exit_code": 0
+}
