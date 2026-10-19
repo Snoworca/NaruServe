@@ -326,6 +326,7 @@ dependencies {
     testImplementation gradleTestKit()
     // @req OPS-HTTP-002
     testImplementation project(':NaruServe-api')
+    testImplementation testFixtures(project(':NaruServe-api'))
     // @req OPS-ENGINE-001
     testImplementation project(':NaruServe-gson')
 }

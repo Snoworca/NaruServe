@@ -13,11 +13,11 @@ import com.snoworca.naruserve.RestApp;
 import com.snoworca.naruserve.ServerOptions;
 import com.snoworca.naruserve.gson.GsonJsonCodec;
 import com.snoworca.naruserve.spi.ExchangeHandler;
-import com.snoworca.naruserve.spi.HttpAdapter;
 import com.snoworca.naruserve.spi.HttpExchange;
 import com.snoworca.naruserve.spi.ServerSettings;
 import com.snoworca.naruserve.spi.StreamDrain;
 import com.snoworca.naruserve.spi.UpgradeHandler;
+import com.snoworca.naruserve.testing.SettingsCapturingAdapter;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -141,36 +141,6 @@ public final class WaveFiveDocsTest {
         return value(row(defaults, label)[2]);
     }
 
-    /** Records the frozen settings listen() hands over and the handler, so exchanges can be driven in process. */
-    private static final class CapturingAdapter implements HttpAdapter {
-        ServerSettings settings;
-        ExchangeHandler handler;
-
-        @Override
-        public void bind(String host, int port, ExchangeHandler h) {
-            throw new AssertionError("the core binds through bind(ServerSettings, ExchangeHandler)");
-        }
-
-        @Override
-        public void bind(ServerSettings s, ExchangeHandler h) {
-            settings = s;
-            handler = h;
-        }
-
-        @Override
-        public int boundPort() {
-            return 1;
-        }
-
-        @Override
-        public void stop(long timeout, TimeUnit unit) {
-        }
-
-        @Override
-        public void release() {
-        }
-    }
-
     /** A POST /j exchange with a JSON body and a declared Content-Length; records the committed status. */
     private static final class JsonExchange implements HttpExchange {
         final byte[] body;
@@ -252,16 +222,16 @@ public final class WaveFiveDocsTest {
         }
     }
 
-    private static RestApp app(CapturingAdapter adapter) {
+    private static RestApp app(SettingsCapturingAdapter adapter) {
         return RestApp.builder().httpAdapter(adapter).jsonCodec(new GsonJsonCodec()).build();
     }
 
     /** {@code set} accepts {@code max} and rejects {@code max + 1} with IllegalArgumentException. */
     private static void bounded(String name, Configurer<ServerOptions> atMax, Configurer<ServerOptions> aboveMax)
             throws Exception {
-        app(new CapturingAdapter()).server(atMax);
+        app(new SettingsCapturingAdapter()).server(atMax);
         try {
-            app(new CapturingAdapter()).server(aboveMax);
+            app(new SettingsCapturingAdapter()).server(aboveMax);
             fail(name + " accepted a value above its documented maximum");
         } catch (IllegalArgumentException expected) {
             // documented maximum + 1 is out of range
@@ -300,7 +270,7 @@ public final class WaveFiveDocsTest {
     @Test
     public void defaultsMatchCode() throws Exception {
         String d = doc("defaults.md");
-        CapturingAdapter adapter = new CapturingAdapter();
+        SettingsCapturingAdapter adapter = new SettingsCapturingAdapter();
         RestApp app = app(adapter);
         app.post("/j", (req, res) -> {
             assertNull(req.body(Object.class));
@@ -339,9 +309,9 @@ public final class WaveFiveDocsTest {
         }
 
         long jsonMax = max(d, "JSON 요청 본문");
-        app(new CapturingAdapter()).jsonLimit(jsonMax);
+        app(new SettingsCapturingAdapter()).jsonLimit(jsonMax);
         try {
-            app(new CapturingAdapter()).jsonLimit(jsonMax + 1);
+            app(new SettingsCapturingAdapter()).jsonLimit(jsonMax + 1);
             fail("jsonLimit accepted a value above its documented maximum");
         } catch (IllegalArgumentException expected) {
             assertEquals("jsonLimit must be in 1..1073741824 bytes: " + (jsonMax + 1), expected.getMessage());
@@ -398,7 +368,7 @@ public final class WaveFiveDocsTest {
     @Test
     public void maxConnectionsBelowWorkersPlusSseFailsListen() throws IOException {
         assertTrue(lineWith(doc("defaults.md"), "| 열린 연결 |").contains("`IllegalStateException`"));
-        RestApp app = app(new CapturingAdapter());
+        RestApp app = app(new SettingsCapturingAdapter());
         app.server(o -> o.maxConnections(100));
         try {
             app.listen(0);

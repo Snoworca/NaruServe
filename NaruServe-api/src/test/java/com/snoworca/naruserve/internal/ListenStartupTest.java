@@ -11,6 +11,7 @@ import com.snoworca.naruserve.ServerHandle;
 import com.snoworca.naruserve.routing.RoutingConfigException;
 import com.snoworca.naruserve.spi.ExchangeHandler;
 import com.snoworca.naruserve.spi.HttpAdapter;
+import com.snoworca.naruserve.testing.SettingsCapturingAdapter;
 import com.snoworca.naruserve.testing.StubJsonCodec;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -173,67 +174,41 @@ public class ListenStartupTest {
         assertEquals(AppState.RUNNING, h.state());
     }
 
-    /** Records every bind(ServerSettings, ...) call; warns through settings.logger() when asked. */
-    static final class SettingsRecordingAdapter implements HttpAdapter {
-        final List<com.snoworca.naruserve.spi.ServerSettings> settings =
-                Collections.synchronizedList(new ArrayList<>());
-        volatile boolean useLogger;
-        volatile boolean bound;
-
+    /** Also logs through settings.logger() while binding. */
+    static final class LoggingAdapter extends SettingsCapturingAdapter {
         @Override
         public void bind(com.snoworca.naruserve.spi.ServerSettings s, ExchangeHandler handler) {
-            settings.add(s);
-            if (useLogger) {
-                s.logger().warn("adapter warning");
-                s.logger().error("adapter error", new RuntimeException("x"));
-                s.logger().info("adapter info");
-            }
-            bound = true;
-        }
-
-        @Override
-        public void bind(String host, int port, ExchangeHandler handler) {
-            throw new AssertionError("listen must use bind(ServerSettings, ExchangeHandler)");
-        }
-
-        @Override
-        public int boundPort() {
-            return 8080;
-        }
-
-        @Override
-        public void stop(long timeout, TimeUnit unit) {
-        }
-
-        @Override
-        public void release() {
+            s.logger().warn("adapter warning");
+            s.logger().error("adapter error", new RuntimeException("x"));
+            s.logger().info("adapter info");
+            super.bind(s, handler);
         }
     }
 
-    private static RestApp settingsApp(SettingsRecordingAdapter adapter, com.snoworca.naruserve.Logger logger) {
+    private static RestApp settingsApp(SettingsCapturingAdapter adapter, com.snoworca.naruserve.Logger logger) {
         return RestApp.builder().httpAdapter(adapter).jsonCodec(new StubJsonCodec()).logger(logger).build();
     }
 
     // SDS-AC-5 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-5-4.sds.md; IR-ENGINE-002 AC-2, FR-ENGINE-002 AC-2
     @Test
     public void sdsAc5_IR_ENGINE_002_AC2_listenBindsOnceWithTheFrozenSettings() {
-        SettingsRecordingAdapter loopback = new SettingsRecordingAdapter();
+        SettingsCapturingAdapter loopback = new SettingsCapturingAdapter();
         RestApp first = settingsApp(loopback, new com.snoworca.naruserve.testing.RecordingLogger());
         ServerHandle h1 = first.listen(8080);
-        assertEquals(1, loopback.settings.size());
-        assertEquals("127.0.0.1", loopback.settings.get(0).bindAddress());
-        assertEquals(8080, loopback.settings.get(0).port());
+        assertEquals(1, loopback.binds.size());
+        assertEquals("127.0.0.1", loopback.binds.get(0).bindAddress());
+        assertEquals(8080, loopback.binds.get(0).port());
         assertEquals("127.0.0.1", h1.address());
         first.shutdown(1, TimeUnit.SECONDS);
 
-        SettingsRecordingAdapter lan = new SettingsRecordingAdapter();
+        SettingsCapturingAdapter lan = new SettingsCapturingAdapter();
         RestApp second = settingsApp(lan, new com.snoworca.naruserve.testing.RecordingLogger())
                 .server(o -> o.bindAddress("0.0.0.0").maxHeaderSize(32768));
         ServerHandle h2 = second.listen(9090);
-        assertEquals(1, lan.settings.size());
-        assertEquals("0.0.0.0", lan.settings.get(0).bindAddress());
-        assertEquals(9090, lan.settings.get(0).port());
-        assertEquals(32768, lan.settings.get(0).maxHeaderSize());
+        assertEquals(1, lan.binds.size());
+        assertEquals("0.0.0.0", lan.binds.get(0).bindAddress());
+        assertEquals(9090, lan.binds.get(0).port());
+        assertEquals(32768, lan.binds.get(0).maxHeaderSize());
         assertEquals("0.0.0.0", h2.address());
         second.shutdown(1, TimeUnit.SECONDS);
     }
@@ -241,8 +216,7 @@ public class ListenStartupTest {
     // SDS-AC-6 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-5-4.sds.md; IR-ENGINE-002 AC-4
     @Test
     public void sdsAc6_IR_ENGINE_002_AC4_aThrowingAppLoggerNeverReachesTheAdapterThroughSettingsLogger() {
-        SettingsRecordingAdapter adapter = new SettingsRecordingAdapter();
-        adapter.useLogger = true;
+        LoggingAdapter adapter = new LoggingAdapter();
         java.util.concurrent.atomic.AtomicInteger calls = new java.util.concurrent.atomic.AtomicInteger();
         com.snoworca.naruserve.testing.RecordingLogger throwing = new com.snoworca.naruserve.testing.RecordingLogger() {
             @Override
@@ -276,7 +250,7 @@ public class ListenStartupTest {
 
     private static int lanWarnings(String bindAddress, boolean withMiddleware) {
         com.snoworca.naruserve.testing.RecordingLogger log = new com.snoworca.naruserve.testing.RecordingLogger();
-        RestApp app = settingsApp(new SettingsRecordingAdapter(), log);
+        RestApp app = settingsApp(new SettingsCapturingAdapter(), log);
         if (bindAddress != null) {
             app.server(o -> o.bindAddress(bindAddress));
         }

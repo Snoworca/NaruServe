@@ -5,9 +5,8 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import com.snoworca.naruserve.spi.ExchangeHandler;
-import com.snoworca.naruserve.spi.HttpAdapter;
 import com.snoworca.naruserve.spi.ServerSettings;
+import com.snoworca.naruserve.testing.SettingsCapturingAdapter;
 import com.snoworca.naruserve.testing.StubJsonCodec;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
@@ -17,37 +16,7 @@ import org.junit.Test;
 /** app.server(...) and ServerOptions. SDS-AC-n cites docs/sds/2026-10-19.naruserve.naruserve-v1-wave-5-4.sds.md. */
 public class ServerOptionsTest {
 
-    /** Keeps the settings value listen() hands over. */
-    static final class SettingsAdapter implements HttpAdapter {
-        volatile ServerSettings settings;
-        volatile boolean bound;
-
-        @Override
-        public void bind(ServerSettings settings, ExchangeHandler handler) {
-            this.settings = settings;
-            bound = true;
-        }
-
-        @Override
-        public void bind(String host, int port, ExchangeHandler handler) {
-            throw new AssertionError("listen must use bind(ServerSettings, ExchangeHandler)");
-        }
-
-        @Override
-        public int boundPort() {
-            return 8080;
-        }
-
-        @Override
-        public void stop(long timeout, TimeUnit unit) {
-        }
-
-        @Override
-        public void release() {
-        }
-    }
-
-    private final SettingsAdapter adapter = new SettingsAdapter();
+    private final SettingsCapturingAdapter adapter = new SettingsCapturingAdapter();
 
     private RestApp app() {
         return RestApp.builder().httpAdapter(adapter).jsonCodec(new StubJsonCodec()).build();
@@ -62,7 +31,7 @@ public class ServerOptionsTest {
 
     private static void rejected(String name, String range, Consumer<ServerOptions> setter) {
         try {
-            RestApp.builder().httpAdapter(new SettingsAdapter()).jsonCodec(new StubJsonCodec()).build()
+            RestApp.builder().httpAdapter(new SettingsCapturingAdapter()).jsonCodec(new StubJsonCodec()).build()
                     .server(setter::accept);
             fail(name + " accepted an out-of-range value");
         } catch (IllegalArgumentException e) {
@@ -73,7 +42,7 @@ public class ServerOptionsTest {
 
     private static void refused(String what, Consumer<ServerOptions> setter) {
         try {
-            RestApp.builder().httpAdapter(new SettingsAdapter()).jsonCodec(new StubJsonCodec()).build()
+            RestApp.builder().httpAdapter(new SettingsCapturingAdapter()).jsonCodec(new StubJsonCodec()).build()
                     .server(setter::accept);
             fail(what + " was accepted");
         } catch (NullPointerException | IllegalArgumentException expected) {
@@ -82,7 +51,7 @@ public class ServerOptionsTest {
     }
 
     private static void accepted(Consumer<ServerOptions> setter) {
-        RestApp.builder().httpAdapter(new SettingsAdapter()).jsonCodec(new StubJsonCodec()).build()
+        RestApp.builder().httpAdapter(new SettingsCapturingAdapter()).jsonCodec(new StubJsonCodec()).build()
                 .server(setter::accept);
     }
 
