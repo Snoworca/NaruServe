@@ -1,0 +1,29 @@
+{
+  "rows": [],
+  "findings": [
+    {
+      "finding_id": "W2-001",
+      "severity": "medium",
+      "items": ["D-187", "D-189", "D-192", "D-198"],
+      "claim": "The depth decision tells GsonJsonCodec to build its own JsonReader, call setNestingLimit(64) and decode through gson.fromJson(JsonReader, Type). Unlike gson.fromJson(Reader, Type), that overload never checks that the whole input was consumed. So a body such as {\"a\":1} x, {} {} or 1 2 decodes without error and the handler gets the first value, even with the default STRICT Gson. D-187 says such a body must give 400. A checked run against gson-2.14.0.jar: fromJson(JsonReader) returned {a=1.0} for '{\"a\":1} x', while fromJson(Reader) threw JsonSyntaxException. A caller-built Gson with no strictness set is affected the same way. The wave design does not mention the missing full-consumption check.",
+      "evidence": "docs/research/naruserve-v1/waves/wave-5/design.md:119; docs/research/naruserve-v1/waves/wave-5/design.md:20; gson-2.14.0.jar (local run: JsonReader path decoded '{\"a\":1} x' as {a=1.0}; Reader path threw JsonSyntaxException)",
+      "suggested_fix": "Extend the depth decision: after gson.fromJson(jsonReader, type), GsonJsonCodec requires jsonReader.peek() == JsonToken.END_DOCUMENT and otherwise throws, so the core answers D-187's 400. Add T09 cases for trailing data and for two top-level values, run with both the default codec and new GsonJsonCodec(callerGson)."
+    },
+    {
+      "finding_id": "W2-002",
+      "severity": "low",
+      "items": ["D-414", "D-225", "D-215"],
+      "claim": "D-414 promises that every accepted request-line value passes TinyHttpd's builder validation, through inputBufferBytes = max(8192, limit + 2). For a limit of Integer.MAX_VALUE - 1, or Integer.MAX_VALUE without TinyHttpd.UNLIMITED handling, limit + 2 overflows to a negative number. The max then gives 8192, and the builder rejects it with 'inputBufferBytes must be >= maxRequestLineBytes + 2'. A large but valid limit also sets the per-connection input buffer to that size, which on API 21 devices means out-of-memory errors under maxConnections 512. The wave decisions do not bound the value or say whether 'unlimited' is accepted. docs/api/defaults.md:3 still marks the unlimited question (미확정), and TinyHttpd HEAD 38051b6 added UNLIMITED semantics after the verified commit 46b973e.",
+      "evidence": "docs/research/naruserve-v1/waves/wave-5/design.md:64; /Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/TinyHttpd.java:746-747; docs/api/defaults.md:3; settings.gradle (verifiedTinyHttpd = '46b973e')",
+      "suggested_fix": "In the wave 5 SRS for D-225/D-414, give the request-line setter an upper bound (for example 64 KiB) and reject larger values with IllegalArgumentException when it is set. Compute the buffer in long arithmetic or clamp it, and either refuse 'unlimited' or document it, settling the defaults.md:3 marker."
+    },
+    {
+      "finding_id": "W2-003",
+      "severity": "low",
+      "items": ["D-205", "D-206", "D-207", "D-200"],
+      "claim": "The lenient-parsing decision has request values kept exactly as the client sent them. That includes values outside the RFC 6265 cookie-octet grammar, which browsers do send, such as spaces or commas. It also says new Cookie(...) and its setters throw on such values. So the request parser, in com.snoworca.naruserve.internal, cannot build request cookies with the public constructor, and Cookie, in com.snoworca.naruserve, has no unvalidated path the internal package can reach without adding public API. The design does not say how parsed cookies are built. An implementer who uses the public constructor makes req.getCookies() throw, which breaks the 'parsing never throws' half of the decision.",
+      "evidence": "docs/research/naruserve-v1/waves/wave-5/design.md:114; docs/research/naruserve-v1/waves/wave-5/design.md:44,49",
+      "suggested_fix": "State that request cookies are built through a non-public path, for example a package-private Cookie factory reached from an accessor in com.snoworca.naruserve, or a parser placed in that package. Add a T34 case whose request value contains a space or comma: req.cookie(...) returns it unchanged, and res.addCookie of it throws."
+    }
+  ]
+}

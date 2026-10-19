@@ -1,0 +1,58 @@
+{
+ "target": "wave-5",
+ "classification": "new-scope",
+ "mode": "live",
+ "scopes_created": [
+  "06.engine-adapter.srs.md (ENGINE)",
+  "07.json.srs.md (JSON)",
+  "08.cookie.srs.md (COOKIE)"
+ ],
+ "added_ids": {
+  "ENGINE": [
+   "IR-ENGINE-001",
+   "IR-ENGINE-002",
+   "FR-ENGINE-001",
+   "FR-ENGINE-002",
+   "FR-ENGINE-003",
+   "FR-ENGINE-004",
+   "FR-ENGINE-005",
+   "FR-ENGINE-006",
+   "FR-ENGINE-007",
+   "FR-ENGINE-008",
+   "FR-ENGINE-009",
+   "OPS-ENGINE-001"
+  ],
+  "JSON": [
+   "IR-JSON-001",
+   "IR-JSON-002",
+   "FR-JSON-001",
+   "FR-JSON-002",
+   "FR-JSON-003",
+   "OPS-JSON-001"
+  ],
+  "COOKIE": [
+   "IR-COOKIE-001",
+   "FR-COOKIE-001",
+   "FR-COOKIE-002",
+   "OPS-COOKIE-001"
+  ],
+  "APP": [
+   "OPS-APP-003"
+  ],
+  "HTTP": [
+   "OPS-HTTP-005"
+  ]
+ },
+ "supersedes": {
+  "OPS-APP-001": "OPS-APP-003",
+  "OPS-HTTP-003": "OPS-HTTP-005"
+ },
+ "not_superseded": {
+  "IR-APP-005": "committee B",
+  "IR-APP-001": "committee B"
+ },
+ "tests_to_repoint": {
+  "AppDocsTest": "OPS-APP-003",
+  "HttpDocsTest": "OPS-HTTP-005"
+ }
+}

@@ -275,6 +275,132 @@
    "rule": "majority",
    "confidence": 0.89,
    "ts": "2026-10-19T05:08:47.127483Z"
+  },
+  {
+   "gate_id": "wave-design-insufficient",
+   "question": "Wave 5 loop W ended fail-cap; D-211 altered by the 127.0.0.1 bind decision",
+   "options": [
+    "A: proceed with the 127.0.0.1 interpretation",
+    "B: follow D-211 literally",
+    "C: abort"
+   ],
+   "votes": [
+    "A",
+    "A"
+   ],
+   "confidences": [
+    0.85,
+    0.85
+   ],
+   "decision": "A",
+   "rule": "majority (2 of 3; third vote not needed)",
+   "confidence": 0.85,
+   "conditions": [
+    "SRS criterion names 127.0.0.1 and cites the wave decision",
+    "run report records the interpretation of frozen D-211",
+    "T49 asserts the default bind and ServerHandle.address()"
+   ],
+   "ts": "2026-10-19T10:58:42.658415Z"
+  },
+  {
+   "gate_id": "wave-5-srs-supersede",
+   "question": "Wave 5 kiwi-srs: supersede IR-APP-005 (AC-3 address()/listen binds 127.0.0.1) because of the LAN binding API?",
+   "options": [
+    "A: supersede",
+    "B: keep; AC-3 describes the default configuration"
+   ],
+   "votes": [
+    "B",
+    "A",
+    "B"
+   ],
+   "confidences": [
+    0.7,
+    0.6,
+    0.6
+   ],
+   "decision": "B",
+   "rule": "majority 2 of 3 (confidence below 0.7; fallback to the run rule 'only supersede where the verified AC really changes', which favours B)",
+   "confidence": 0.65,
+   "conditions": [
+    "wave-5 ENGINE requirement states ServerHandle.address() after a LAN bind",
+    "IR-APP-005 AC-3 test keeps passing unchanged under the default 127.0.0.1"
+   ],
+   "ts": "2026-10-19T11:49:15.956596Z"
+  },
+  {
+   "gate_id": "wave-5-srs-supersede",
+   "question": "Wave 5 kiwi-srs: supersede IR-APP-001 (AC-5 JsonCodec nullness) because decode gains @Nullable on its return?",
+   "options": [
+    "A: supersede",
+    "B: keep; AC-4/AC-5 stay literally true"
+   ],
+   "votes": [
+    "B",
+    "B",
+    "B"
+   ],
+   "confidences": [
+    0.65,
+    0.65,
+    0.55
+   ],
+   "decision": "B",
+   "rule": "unanimous 3 of 3 (confidence below 0.7; fallback to the run rule 'only supersede where the verified AC really changes')",
+   "confidence": 0.62,
+   "conditions": [
+    "IR-JSON-002 states the @Nullable return of JsonCodec.decode",
+    "AppEntryApiTest keeps passing; a new JSON test asserts the annotation"
+   ],
+   "ts": "2026-10-19T11:49:15.956596Z"
+  },
+  {
+   "gate_id": "wave-5-srs-supersede",
+   "question": "Wave 5 kiwi-srs: supersede OPS-HTTP-003 (AC-8 keeps proxy-trust and jsonTree()/jsonMap() markers in request.md)?",
+   "options": [
+    "A: supersede",
+    "B: keep"
+   ],
+   "votes": [
+    "A",
+    "A"
+   ],
+   "confidences": [
+    0.8,
+    0.9
+   ],
+   "decision": "A",
+   "rule": "majority (2 of 3; third vote also A at 0.85)",
+   "confidence": 0.85,
+   "conditions": [
+    "successor restates AC-1..AC-7 and AC-8 with the wave-5 marker set",
+    "HttpDocsTest re-pointed to the successor"
+   ],
+   "ts": "2026-10-19T11:49:15.956596Z"
+  },
+  {
+   "gate_id": "wave-5-srs-supersede",
+   "question": "Wave 5 kiwi-srs: supersede OPS-APP-001 (AC-6 keeps cookie and LAN-binding markers; AC-1 server-thread wording)?",
+   "options": [
+    "A: supersede",
+    "B: keep"
+   ],
+   "votes": [
+    "A",
+    "A"
+   ],
+   "confidences": [
+    0.85,
+    0.9
+   ],
+   "decision": "A",
+   "rule": "majority (2 of 3; third vote also A at 0.85)",
+   "confidence": 0.88,
+   "conditions": [
+    "successor restates unchanged ACs and changes AC-1 wording and AC-6 kept-marker list",
+    "AppDocsTest re-pointed to the successor"
+   ],
+   "ts": "2026-10-19T11:49:15.956596Z"
   }
  ]
 }

@@ -1,0 +1,293 @@
+{
+ "rows": [
+  {
+   "id": "D-183",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-184",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-421",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-185",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-186",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-187",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-188",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-189",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-190",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-191",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-431",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-440",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-192",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-193",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-194",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-195",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-196",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-197",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-198",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-199",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-200",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-201",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-202",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-203",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-204",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-205",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-206",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-207",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-208",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-209",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-210",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-211",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-212",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-213",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-214",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-433",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-215",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-414",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-437",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-216",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-413",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-217",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-218",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-219",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-443",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-220",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-400",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-422",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-405",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-418",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-404",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-415",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-221",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-222",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-223",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-224",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-225",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-226",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-227",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-228",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-229",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-402",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-230",
+   "verdict": "covered"
+  }
+ ],
+ "findings": [
+  {
+   "finding_id": "W1-001",
+   "severity": "low",
+   "items": [
+    "D-205",
+    "D-203"
+   ],
+   "claim": "The 'Request cookies are parsed leniently' wave decision lists `res.cookie` as one of the app-side calls where D-205's exception applies. NaruServe has no `res.cookie`. D-203 and the contract name the method `res.addCookie`, and `res.cookie` appears in docs/api only as the Express equivalent. An implementer could read this as a new method to add, or could leave `addCookie` out of the validation.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-5/design.md:114; docs/api/response.md:17; docs/api/express-migration.md:65",
+   "suggested_fix": "Change `res.cookie` to `res.addCookie` in the decision."
+  },
+  {
+   "finding_id": "W1-002",
+   "severity": "low",
+   "items": [
+    "D-205",
+    "D-206",
+    "D-207",
+    "D-203"
+   ],
+   "claim": "The decision keeps a request cookie value exactly as sent, even when it falls outside the RFC 6265 grammar. It limits D-205 validation to the constructor and setters. So the request Cookie objects must be built through a path that skips validation, and the decision never says whether `res.addCookie` re-checks name and value before it serialises. An app that echoes a request cookie (`res.addCookie(req.cookie(\"x\"))`) could then emit a Set-Cookie whose value breaks the grammar, with no exception, despite D-205. Header injection is not possible here, because CR/LF and `;` cannot get through the parser.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-5/design.md:114; docs/research/naruserve-v1/waves/wave-5/design.md:49",
+   "suggested_fix": "State that `res.addCookie` checks the name and value against the D-205 grammar, so request-built cookies are checked too and throw there. Or state that the non-validating construction of request cookies is internal-only and record that in docs/api/cookie.md."
+  },
+  {
+   "finding_id": "W1-003",
+   "severity": "low",
+   "items": [
+    "D-206",
+    "D-208"
+   ],
+   "claim": "The decision says lenient parsing with the value 'kept as sent' 'matches Express's cookie-parser'. That is not true. cookie-parser parses through the `cookie` package, which percent-decodes each value with decodeURIComponent, and Express's res.cookie percent-encodes. An Express user who moves code over would expect decoded values. The decision states the opposite and calls it Express behaviour, and docs/api/cookie.md says nothing about encoding.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-5/design.md:114; docs/api/cookie.md:56-63",
+   "suggested_fix": "Drop the claim that this matches cookie-parser, or adopt the cookie-parser behaviour: percent-decode on read when it decodes cleanly, otherwise keep the raw value. Either way, record the decoding rule in docs/api/cookie.md under the D-208 update."
+  }
+ ]
+}

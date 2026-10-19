@@ -1,0 +1,66 @@
+{
+ "round": 4,
+ "findings": [
+  {
+   "finding_id": "W1-001",
+   "severity": "low",
+   "items": [
+    "D-225",
+    "D-212",
+    "D-221"
+   ],
+   "claim": "The 'Server settings reach the adapter' decision makes the bind address configurable on RestApp, but says nothing about ServerHandle.address(). The merged core hardcodes it to \"127.0.0.1\", and docs/api/app.md documents address() as `127.0.0.1`. With a LAN bind (D-212), the handle would report the wrong address unless the wave also changes it.",
+   "evidence": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:251,267; NaruServe-api/src/main/java/com/snoworca/naruserve/ServerHandle.java:10; docs/api/app.md:146; waves/wave-5/design.md:113",
+   "suggested_fix": "Add to the settings decision: ServerHandle.address() reports the configured bind address (loopback by default), and update the ServerHandle javadoc and the docs/api/app.md line 146."
+  },
+  {
+   "finding_id": "W2-001",
+   "severity": "high",
+   "items": [
+    "D-211",
+    "D-221",
+    "D-224",
+    "D-225"
+   ],
+   "claim": "D-211 has the adapter bind InetAddress.getLoopbackAddress() by default. On Android that call returns the IPv6 loopback ::1, not 127.0.0.1. Lollipop libcore returns Inet6Address.LOOPBACK, and the ojluni libcore of Android 7+ returns loopbackAddresses()[0], which is ::1. On a JVM run with java.net.preferIPv6Addresses=true it also returns ::1. A ServerSocket bound to ::1 does not accept IPv4 connections to 127.0.0.1. But the merged core passes the host \"127.0.0.1\" to bind() and reports \"127.0.0.1\" from ServerHandle.address(), RestApp.listen's Javadoc promises 127.0.0.1:port, and docs/api/app.md documents address() as 127.0.0.1. If the adapter follows D-211 word for word, an Android app (and the Android parts of T10/T12 in section 8) is unreachable at the address the handle reports, e.g. from a WebView loading http://127.0.0.1:port. If it uses the core's \"127.0.0.1\" instead, it departs from D-211. The wave design does not say which one wins: its 'listen(port) keeps the loopback default' line names no address.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-5/design.md:58; NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:251,267; NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java (listen Javadoc '127.0.0.1:port'); docs/api/app.md:146; /Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/HttpServer.java:112",
+   "suggested_fix": "Add a wave decision: the default bind address is the IPv4 loopback 127.0.0.1 (InetAddress.getByName(\"127.0.0.1\") or the core's host string), passed to TinyHttpd explicitly. This keeps D-211's intent (an explicit loopback, never the TinyHttpd wildcard) and matches ServerHandle.address() and docs/api/app.md. Never use InetAddress.getLoopbackAddress(), which returns ::1 on Android. Add a test that the default listen binds 127.0.0.1."
+  },
+  {
+   "finding_id": "W2-002",
+   "severity": "medium",
+   "items": [
+    "D-189",
+    "D-192",
+    "D-182",
+    "D-185",
+    "D-196",
+    "D-198"
+   ],
+   "claim": "The JSON depth limit (default 64) can be enforced only inside the codec. The core gives the codec a Reader through the frozen decode(Reader, Type) of D-182, which has no depth parameter. Gson 2.14's GsonBuilder has no nesting-limit setter: only JsonReader.setNestingLimit exists, and its default is 255. So GsonJsonCodec has to build its own JsonReader, call setNestingLimit(64) and then call gson.fromJson(JsonReader, Type). The wave decisions settle where every adapter setting lives (on RestApp, reaching the adapter through a settings value), but say nothing about the depth setting. If D-192 puts depth beside the size limit as a RestApp setting, it cannot reach any codec through the frozen SPI. Two further points are left open: whether app.jsonCodec(new GsonJsonCodec(callerGson)), as docs/api/json.md:44 shows, still enforces 64, since D-189 says only 'with the default codec', and how a RestApp.create() user changes the depth.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-5/design.md:22,27,113; NaruServe-api/src/main/java/com/snoworca/naruserve/spi/JsonCodec.java; gson-2.14.0.jar (javap: JsonReader.setNestingLimit present, GsonBuilder has no nesting setter); docs/api/json.md:44,59-61; docs/api/defaults.md:12",
+   "suggested_fix": "Add a wave decision: the depth limit belongs to GsonJsonCodec. It applies the limit through JsonReader.setNestingLimit, with 64 as the default for every GsonJsonCodec, the caller-built Gson case included, and a constructor or factory argument to change it. A custom JsonCodec enforces its own depth. The JSON size limit stays a core setting enforced on the byte stream (D-188). docs/api/json.md and defaults.md should say so."
+  },
+  {
+   "finding_id": "W2-003",
+   "severity": "low",
+   "items": [
+    "D-220",
+    "D-225"
+   ],
+   "claim": "The 'Server settings reach the adapter' decision says the settings value carries 'the app Logger' for D-220. The core already wraps the app logger in SafeLogger at freeze, so a logger that throws cannot break request handling (FR-APP-014). TinyHttpd calls its TinyLog from acceptor, worker and watchdog threads, inside catch blocks such as Connection.error and ioFailure. If the adapter gets the raw user Logger, a throwing logger can escape into TinyHttpd threads. The decision does not say which of the two loggers is passed.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-5/design.md:113; NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:679; NaruServe-api/src/main/java/com/snoworca/naruserve/internal/SafeLogger.java:31-48; /Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/Connection.java:378-381",
+   "suggested_fix": "State that the settings value carries the frozen, exception-safe app logger (the SafeLogger the dispatcher uses), not the raw Logger."
+  },
+  {
+   "finding_id": "W2-004",
+   "severity": "low",
+   "items": [
+    "D-167"
+   ],
+   "claim": "The carried wave 4 item has the TinyHttpd adapter hold one non-daemon thread from bind until stop, and notes that TinyHttpd's own threads are daemon by default. docs/api/app.md:143 instead says the server threads are not daemon (\uc11c\ubc84 \uc2a4\ub808\ub4dc\ub294 daemon\uc774 \uc544\ub2c8\uba70), which is not true under the keeper-thread design. Its parenthesis also still says the TinyHttpd adapter is added in the next step.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-5/design.md:106; docs/api/app.md:143; /Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/TinyHttpd.java:260 (daemon = true)",
+   "suggested_fix": "When wave 5 delivers the adapter, rewrite app.md:143 to say that the TinyHttpd adapter keeps one non-daemon thread alive from listen() until shutdown, and remove '\ub2e4\uc74c \ub2e8\uacc4\uc5d0\uc11c \ucd94\uac00'."
+  }
+ ]
+}

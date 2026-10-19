@@ -1,0 +1,70 @@
+{
+ "round": 1,
+ "findings": [
+  {
+   "finding_id": "W2-001",
+   "severity": "medium",
+   "items": [
+    "D-225",
+    "D-220",
+    "D-213",
+    "D-211",
+    "D-212",
+    "D-418",
+    "D-404",
+    "D-413",
+    "D-415",
+    "I-014",
+    "D-104"
+   ],
+   "claim": "The wave design never says how the app-level configuration of D-225 (LAN bind address, allowed host names, header/request-line/timeout/body-rate/connection limits) and the app Logger of D-220 get into the TinyHttpd adapter. The HttpAdapter SPI from wave 3 only has bind(String host, int port, ExchangeHandler), boundPort(), stop() and release(), so it cannot carry them. The core also hardcodes the bind host \"127.0.0.1\", so the adapter-side loopback default of D-211 (InetAddress.getLoopbackAddress()) never runs. With RestApp.create(), the bootstrap module builds the adapter and the user never touches it. So the D-225 settings have to live on RestApp (D-225 tells the wave to update docs/api/app.md) and reach the adapter through some new path. That path has to add SPI methods using only JDK types (I-014 allows additions only, D-104 forbids engine types). If the design stays silent, the implementer may put the settings on an adapter-only builder that RestApp.create() users cannot reach.",
+   "evidence": "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpAdapter.java:13; NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:251; docs/research/naruserve-v1/waves/wave-5/design.md (D-211, D-220, D-225); docs/research/naruserve-v1/design/00.design.md:690 (I-014)",
+   "suggested_fix": "State in the wave design that the D-225 settings and the bind host are RestApp configuration, frozen in listen() (D-415). State that they reach the adapter through a new HttpAdapter method that takes a JDK/NaruServe-only configuration object plus the current app Logger, added before bind or as a bind overload with the old bind kept. State that the core passes the configured host (loopback by default) and that the core logs the D-213 warning."
+  },
+  {
+   "finding_id": "W2-002",
+   "severity": "medium",
+   "items": [
+    "D-205",
+    "D-206",
+    "D-207"
+   ],
+   "claim": "D-205 rejects a cookie name or value outside the RFC 6265 grammar with an exception 'when it is set', which includes the Cookie(String,String) constructor. D-206/D-207 build Cookie objects from the request Cookie header. Browsers and other clients often send values outside cookie-octet (spaces, commas, raw quotes, non-ASCII). If request parsing goes through the validating constructor, one malformed foreign cookie makes req.cookie()/req.getCookies() throw, which turns into a 500, for every cookie on the request. The design does not say whether request parsing skips invalid pairs, keeps them without validation, or answers 400.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-5/design.md (D-205, D-206, D-207); docs/api/cookie.md:72-77",
+   "suggested_fix": "Add to D-206/D-207 (decided under D-208) that request-cookie parsing never throws: pairs that break the grammar are skipped (or kept through an internal non-validating path), and D-205 validation applies only to app-side construction and setValue. Record this in docs/api/cookie.md and test it in T34."
+  },
+  {
+   "finding_id": "W2-003",
+   "severity": "medium",
+   "items": [
+    "D-431",
+    "D-182",
+    "D-072"
+   ],
+   "claim": "D-431 requires req.body(...) to return null for a JSON null body and to carry @Nullable. The codec underneath is JsonCodec.decode, declared `<T> T decode(Reader, Type)` in the @NullMarked package com.snoworca.naruserve.spi. There the unbounded T and the return value are non-null, so a codec that returns null for JSON null (which Gson does) breaks the SPI's own nullness contract. Kotlin implementers of JsonCodec also cannot return null without a warning or error. The wave design adds @Nullable to req.body but not to the SPI method it delegates to.",
+   "evidence": "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/JsonCodec.java:9; NaruServe-api/src/main/java/com/snoworca/naruserve/spi/package-info.java (@NullMarked); docs/research/naruserve-v1/waves/wave-5/design.md (D-431)",
+   "suggested_fix": "Have wave 5 annotate the JsonCodec.decode return as @Nullable (or declare <T extends @Nullable Object>). This changes no binary signature, so I-014 is not violated. Update the SPI docs and the Kotlin nullability test to match."
+  },
+  {
+   "finding_id": "W2-004",
+   "severity": "low",
+   "items": [
+    "D-219",
+    "D-443"
+   ],
+   "claim": "D-219 maps TinyHttpd body exceptions to 413 for size overruns. D-443 leaves maxRequestBodyBytes at -1, and TinyHttpd raises BodyTooLargeException only when that limit is set (BodyInput.read). So the 413 branch of D-219 can never fire on this adapter. Every NaruServe 413 comes from the core's own LimitedInputStream. A test written for D-219's 413 branch cannot be produced over sockets.",
+   "evidence": "/Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/BodyInput.java:75; /Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/TinyHttpd.java:268",
+   "suggested_fix": "Narrow D-219 to the 408 (SocketTimeoutException) and 400 (TruncatedBodyException/MalformedBodyException) mappings, and point to D-443/D-188 for 413. Alternatively, keep the 413 mapping as a defensive branch tested only at unit level."
+  },
+  {
+   "finding_id": "W2-005",
+   "severity": "low",
+   "items": [
+    "D-213"
+   ],
+   "claim": "D-213 logs the security warning for every non-loopback bind. docs/api/defaults.md says the warning appears only when the server is opened to the LAN 'without global auth' (\uc804\uc5ed \uc778\uc99d \uc5c6\uc774). The framework cannot detect global auth, so the contract text and the frozen item disagree.",
+   "evidence": "docs/api/defaults.md:32; docs/research/naruserve-v1/waves/wave-5/design.md (D-213)",
+   "suggested_fix": "When wave 5 resolves the LAN-binding (\ubbf8\ud655\uc815) marker of D-225, also reword the defaults.md row to the unconditional warning of D-213."
+  }
+ ]
+}

@@ -1,0 +1,91 @@
+{
+ "round": 2,
+ "findings": [
+  {
+   "finding_id": "W1-001",
+   "severity": "low",
+   "items": [
+    "D-205",
+    "D-203"
+   ],
+   "claim": "The 'Request cookies are parsed leniently' wave decision lists `res.cookie` as one of the app-side calls where D-205's exception applies. NaruServe has no `res.cookie`. D-203 and the contract name the method `res.addCookie`, and `res.cookie` appears in docs/api only as the Express equivalent. An implementer could read this as a new method to add, or could leave `addCookie` out of the validation.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-5/design.md:114; docs/api/response.md:17; docs/api/express-migration.md:65",
+   "suggested_fix": "Change `res.cookie` to `res.addCookie` in the decision."
+  },
+  {
+   "finding_id": "W1-002",
+   "severity": "low",
+   "items": [
+    "D-205",
+    "D-206",
+    "D-207",
+    "D-203"
+   ],
+   "claim": "The decision keeps a request cookie value exactly as sent, even when it falls outside the RFC 6265 grammar. It limits D-205 validation to the constructor and setters. So the request Cookie objects must be built through a path that skips validation, and the decision never says whether `res.addCookie` re-checks name and value before it serialises. An app that echoes a request cookie (`res.addCookie(req.cookie(\"x\"))`) could then emit a Set-Cookie whose value breaks the grammar, with no exception, despite D-205. Header injection is not possible here, because CR/LF and `;` cannot get through the parser.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-5/design.md:114; docs/research/naruserve-v1/waves/wave-5/design.md:49",
+   "suggested_fix": "State that `res.addCookie` checks the name and value against the D-205 grammar, so request-built cookies are checked too and throw there. Or state that the non-validating construction of request cookies is internal-only and record that in docs/api/cookie.md."
+  },
+  {
+   "finding_id": "W1-003",
+   "severity": "low",
+   "items": [
+    "D-206",
+    "D-208"
+   ],
+   "claim": "The decision says lenient parsing with the value 'kept as sent' 'matches Express's cookie-parser'. That is not true. cookie-parser parses through the `cookie` package, which percent-decodes each value with decodeURIComponent, and Express's res.cookie percent-encodes. An Express user who moves code over would expect decoded values. The decision states the opposite and calls it Express behaviour, and docs/api/cookie.md says nothing about encoding.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-5/design.md:114; docs/api/cookie.md:56-63",
+   "suggested_fix": "Drop the claim that this matches cookie-parser, or adopt the cookie-parser behaviour: percent-decode on read when it decodes cleanly, otherwise keep the raw value. Either way, record the decoding rule in docs/api/cookie.md under the D-208 update."
+  },
+  {
+   "finding_id": "W2-001",
+   "severity": "medium",
+   "items": [
+    "D-225",
+    "D-220",
+    "D-405",
+    "D-418",
+    "D-104"
+   ],
+   "claim": "The 'Server settings reach the adapter' decision says the core passes the frozen values and the app logger in one immutable settings value of the SPI 'that uses only JDK types'. That is stricter than D-104, which allows JDK and NaruServe types, and it contradicts the decision itself: the app Logger that D-220 needs is the NaruServe type com.snoworca.naruserve.Logger. The decision also leaves out what D-405/D-418 need. The adapter's TinyHttpd ErrorHandler must render the core's standard error body (D-132) with a fresh request id. But StandardErrors.json(...) and RequestIds.next() are package-private in com.snoworca.naruserve.internal, so the separate NaruServe-tinyhttpd module cannot call them. The implementer would have to copy the JSON escaping and the id format into the adapter (they would drift apart) or widen internals without a stated plan.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-5/design.md:113; docs/research/naruserve-v1/design/00.design.md:201 (D-104); NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StandardErrors.java:49; NaruServe-api/src/main/java/com/snoworca/naruserve/internal/RequestIds.java:6-13; NaruServe-api/src/main/java/com/snoworca/naruserve/Logger.java",
+   "suggested_fix": "Reword the decision: the settings value uses only JDK and NaruServe types (D-104). It carries the app Logger and a core-provided renderer of the standard error body (status, message -> content type + bytes, with a fresh request id), so the TinyHttpd ErrorHandler of D-405 calls back into the core instead of copying StandardErrors and RequestIds."
+  },
+  {
+   "finding_id": "W2-002",
+   "severity": "medium",
+   "items": [
+    "D-187",
+    "D-431",
+    "D-194",
+    "D-196"
+   ],
+   "claim": "The 'A JSON null decodes to null' decision says the Gson codec returns null for a JSON null document, but it says nothing about an empty body. Gson 2.14's Gson.fromJson(Reader/JsonReader, ...) returns null when the input is empty (EOF at the start of the document, whatever the Strictness), so a codec that just calls gson.fromJson makes an empty or whitespace-only application/json body return null from req.body(...). That cannot be told apart from a real JSON null. Empty input is not valid JSON (RFC 8259), so D-187 expects 400 BAD_REQUEST for it, and a T09 test of that case would fail or come out by accident.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-5/design.md:115; docs/research/naruserve-v1/waves/wave-5/design.md:20 (D-187); com.google.gson.Gson#fromJson(JsonReader, TypeToken) in gson-2.14.0 (empty document -> null)",
+   "suggested_fix": "Extend the decision: a body with no JSON value (zero bytes or only whitespace) is a syntax error answered with 400 BAD_REQUEST (D-187). The Gson codec peeks the JsonReader and throws on END_DOCUMENT/EOF instead of relying on fromJson's empty-to-null. Add that case to T09 and docs/api/json.md."
+  },
+  {
+   "finding_id": "W2-003",
+   "severity": "low",
+   "items": [
+    "D-225",
+    "D-080"
+   ],
+   "claim": "The settings decision lists proxy trust among the values handed to the adapter at listen(). D-080 is core behaviour: req.remoteAddress()/req.isSecure() are computed in DefaultRequest from the exchange. The new bind method's default implementation, which the in-memory and third-party adapters inherit, drops the settings. So if proxy trust were applied in the adapter, D-080 would behave differently on the in-memory adapter and its tests would not cover the TinyHttpd path.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-5/design.md:113; NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java:174-182; docs/research/naruserve-v1/design/00.design.md:165 (D-080)",
+   "suggested_fix": "State that proxy trust is RestApp configuration applied by the core when it builds req.remoteAddress()/req.isSecure(), and that it is not part of the adapter settings value."
+  },
+  {
+   "finding_id": "W2-004",
+   "severity": "low",
+   "items": [
+    "D-203",
+    "D-205",
+    "D-206",
+    "D-207"
+   ],
+   "claim": "The lenient request-cookie decision names `res.cookie` as an app-side setter. No such NaruServe method exists or is frozen: D-203 and docs/api/response.md:17 define only res.addCookie, and res.cookie is the Express name. The decision also claims to 'match Express's cookie-parser', but cookie-parser percent-decodes values, while the decision keeps values exactly as sent. Finally, a Cookie that comes from request parsing and keeps a value outside the RFC 6265 grammar can be passed to res.addCookie, and the decision does not say whether addCookie validates again when it serialises.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-5/design.md:114; docs/api/response.md:17; docs/api/cookie.md:14,20",
+   "suggested_fix": "Replace `res.cookie` with `res.addCookie`. Drop the cookie-parser equivalence claim, or state 'no percent-decoding (Servlet behaviour)' in docs/api/cookie.md. State that res.addCookie checks name and value against D-205 when it serialises, so a request-parsed cookie sent back cannot emit an invalid Set-Cookie."
+  }
+ ]
+}

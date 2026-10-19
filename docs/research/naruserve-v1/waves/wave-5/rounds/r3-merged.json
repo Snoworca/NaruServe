@@ -1,0 +1,32 @@
+{
+ "round": 3,
+ "findings": [
+  {
+   "finding_id": "W1-001",
+   "severity": "medium",
+   "items": [
+    "D-205",
+    "D-206",
+    "D-203",
+    "D-208"
+   ],
+   "claim": "The 'Request cookies are parsed leniently' decision now percent-decodes request cookie values (cookie-parser style) but keeps D-205's reject-on-write with no matching percent-encode on res.addCookie. Read and write are therefore asymmetric: a value the app legally sets, e.g. setValue(\"a%20b\") or a token containing \"%3D\" (all cookie-octets), comes back from req.cookie(...) as \"a b\" / \"=\", so it no longer equals what was set; and the decision's own echo case res.addCookie(req.cookie(\"x\")) now throws for a perfectly valid incoming cookie \"a%20b\", because the decoded space is outside the grammar. Express avoids this because res.cookie encodes with encodeURIComponent on write; NaruServe's write side cannot encode under D-205 as frozen (it must reject). The T34 round-trip and the echo behaviour would both be surprising to an Express user and to a Servlet user (Servlet does not decode).",
+   "evidence": "docs/research/naruserve-v1/waves/wave-5/design.md:114; docs/research/naruserve-v1/waves/wave-5/design.md:49 (D-205); docs/research/naruserve-v1/waves/wave-5/rounds/r2-merged.json (W1-003/W2-004 offered 'keep raw' as an equal option)",
+   "suggested_fix": "Make read and write symmetric: either keep request values raw (strip only surrounding DQUOTEs, no percent-decoding, Servlet behaviour) and say so in docs/api/cookie.md, or keep decoding but state that res.addCookie/Cookie serialisation percent-encodes characters outside cookie-octet (validation under D-205 then applies only to the name and to CR/LF/NUL in the value). Add a T34 case that sets a value containing '%XX', reads it back and echoes it."
+  },
+  {
+   "finding_id": "W2-001",
+   "severity": "medium",
+   "items": [
+    "D-203",
+    "D-205",
+    "D-206",
+    "D-207",
+    "D-208"
+   ],
+   "claim": "The round 2 fix to the 'Request cookies are parsed leniently' decision made reads asymmetric with writes. Request values are now percent-decoded as UTF-8 (cookie-parser style) and their surrounding double quotes are removed, but the write path does not percent-encode: D-205 and the same decision make new Cookie(...), the setters and res.addCookie reject any value outside the RFC 6265 grammar. Express is symmetric because res.cookie encodes with encodeURIComponent, and NaruServe is not. Two results contradict the decision's own intent. (1) A value that is valid on the wire does not round-trip. The app sets new Cookie(\"x\", \"a%2Cb\") ('%' is a legal cookie-octet), and on the next request req.cookie(\"x\").getValue() returns \"a,b\". A quoted value \"\\\"abc\\\"\", which is legal per RFC 6265, comes back as abc. (2) The decision says only a request cookie 'with an invalid name or value' throws when echoed through res.addCookie(req.cookie(\"x\")). With decoding, a fully valid browser cookie such as a%20b becomes \"a b\" once decoded, and echoing it now throws IllegalArgumentException. Code that never touched the value can turn into a 500.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-5/design.md:114 (cookie decision: percent-decode on read, D-205 exception on new Cookie/setters/res.addCookie); design/00.design.md D-205; docs/api/cookie.md:43 (value row) and :78 (security: reject only, no encoding)",
+   "suggested_fix": "Make read and write symmetric. Option A, which is consistent with D-205's reject-not-encode rule and the Servlet model the Cookie class already follows: keep request values exactly as sent (no percent-decoding, no quote stripping) and still skip pairs with an invalid name. Then res.addCookie(req.cookie(x)) re-validates and throws only for values that really are invalid. Option B: keep decode-on-read and add encode-on-write in res.addCookie (encodeURIComponent for the value) instead of rejecting non-octet values. This needs D-205 narrowed to names and to CR/LF/';' in values, which is a frozen-item change, so Option A is preferred. Record the chosen rule and its round-trip guarantee in docs/api/cookie.md, and add a T34 round-trip case for a value containing '%'."
+  }
+ ]
+}
