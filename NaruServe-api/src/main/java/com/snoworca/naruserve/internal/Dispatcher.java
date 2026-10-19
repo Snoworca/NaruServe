@@ -51,6 +51,10 @@ public final class Dispatcher implements ExchangeHandler {
     private final @Nullable JsonCodec codec;
     private final long jsonLimit;
     private final boolean trustProxy;
+    private final MultipartSettings multipart;
+    private final long formLimit;
+    // shortcut: one spool per dispatcher; the spooling fragment of wave 6 hands in the app's registry instead.
+    private final SpoolRegistry spool = new SpoolRegistry();
 
     /**
      * Wave 3 shape: no middleware, no onError handler, access log off, a {@link ConsoleLogger}. {@code router} must
@@ -91,6 +95,17 @@ public final class Dispatcher implements ExchangeHandler {
     // @req FR-ENGINE-008
     Dispatcher(Router<RouteHandler> router, MiddlewarePipeline pipeline, ErrorPath errors, AccessLog accessLog,
             @Nullable ApplicationContext context, @Nullable JsonCodec codec, long jsonLimit, boolean trustProxy) {
+        this(router, pipeline, errors, accessLog, context, codec, jsonLimit, trustProxy, new MultipartSettings(),
+                1048576L);
+    }
+
+    /** As above, with the multipart settings and form limit that {@code DefaultRestApp.freeze} read. */
+    // @req FR-MULTIPART-003
+    Dispatcher(Router<RouteHandler> router, MiddlewarePipeline pipeline, ErrorPath errors, AccessLog accessLog,
+            @Nullable ApplicationContext context, @Nullable JsonCodec codec, long jsonLimit, boolean trustProxy,
+            MultipartSettings multipart, long formLimit) {
+        this.multipart = Objects.requireNonNull(multipart, "multipart");
+        this.formLimit = formLimit;
         this.trustProxy = trustProxy;
         this.codec = codec;
         this.jsonLimit = jsonLimit;
@@ -121,7 +136,8 @@ public final class Dispatcher implements ExchangeHandler {
                 ? (m.autoHead() ? Method.HEAD : Objects.requireNonNull(m.method()))
                 : Objects.requireNonNull(methodOf(token)); // preCheck answered every unrecognised token
         DefaultRequest req = new DefaultRequest(ex, method,
-                routed ? m.params() : Collections.<String, String>emptyMap(), context, codec, jsonLimit, trustProxy);
+                routed ? m.params() : Collections.<String, String>emptyMap(), context, codec, jsonLimit, trustProxy,
+                multipart, formLimit, spool);
         DefaultResponse res = new DefaultResponse(ex, method == Method.HEAD, codec);
         res.onDone(() -> accessLog.write(token, rawPath, res.statusCode(),
                 res.state() == ResponseState.ABORTED, start, req.body().bytesRead(), res.bytesWritten(), rid));

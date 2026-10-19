@@ -25,9 +25,9 @@ import org.junit.Test;
 
 public class HttpApiSurfaceTest {
 
-    // IR-JSON-002 AC-8: body and json left this list in wave 5; FR-COOKIE-002 AC-8: so did the cookie methods.
-    private static final List<String> LATER_WAVE_NAMES = Arrays.asList("form", "file", "files", "parts",
-            "download", "cache", "sse");
+    // IR-JSON-002 AC-8: body and json left this list in wave 5; FR-COOKIE-002 AC-8: so did the cookie methods;
+    // IR-MULTIPART-002 AC-6: form, file, files and parts left it in wave 6.
+    private static final List<String> LATER_WAVE_NAMES = Arrays.asList("download", "cache", "sse");
 
     /** "name(paramSimpleNames)->returnSimpleName" for every public method a type declares. */
     private static Set<String> signatures(Class<?> type) {
@@ -83,7 +83,8 @@ public class HttpApiSurfaceTest {
     }
 
     // SDS-AC-1; IR-HTTP-001 AC-1; IR-APP-004 AC-3 adds application and service from wave 4; SDS-AC-11 of
-    // docs/sds/2026-10-19.naruserve.naruserve-v1-wave-5-3.sds.md; FR-COOKIE-002 AC-8 adds the cookie readers
+    // docs/sds/2026-10-19.naruserve.naruserve-v1-wave-5-3.sds.md; FR-COOKIE-002 AC-8 adds the cookie readers; IR-MULTIPART-002 AC-6 adds
+    // form, file, files and parts
     @Test
     public void sdsAc1_IR_HTTP_001_AC1_requestDeclaresTheWave3Methods() throws Exception {
         assertTrue(Request.class.isInterface());
@@ -97,7 +98,10 @@ public class HttpApiSurfaceTest {
                 // wave 5: IR-JSON-002 AC-8
                 "body(Class)->Object", "body(TypeRef)->Object",
                 // wave 5: FR-COOKIE-002 AC-8
-                "cookie(String)->Cookie", "getCookies()->Cookie[]"), signatures(Request.class));
+                "cookie(String)->Cookie", "getCookies()->Cookie[]",
+                // wave 6: IR-MULTIPART-002 AC-6
+                "form(String)->String", "file(String)->UploadFile", "files(String)->List", "parts()->List"),
+                signatures(Request.class));
         for (String name : new String[] {"queries", "headers"}) {
             assertEquals(name, "java.util.List<java.lang.String>",
                     Request.class.getMethod(name, String.class).getGenericReturnType().getTypeName());
@@ -147,7 +151,8 @@ public class HttpApiSurfaceTest {
     }
 
     // SDS-AC-2; IR-HTTP-001 AC-3, re-pointed by IR-APP-004 AC-3: service and application are expected from wave 4;
-    // SDS-AC-11 (wave 5-3); FR-COOKIE-002 AC-8: cookie, getCookies and addCookie are expected from wave 5
+    // SDS-AC-11 (wave 5-3); FR-COOKIE-002 AC-8: cookie, getCookies and addCookie are expected from wave 5;
+    // IR-MULTIPART-002 AC-6: form, file, files and parts are expected from wave 6
     @Test
     public void sdsAc2_IR_HTTP_001_AC3_laterWaveMethodNamesAreAbsent() {
         for (Class<?> type : new Class<?>[] {Request.class, Response.class}) {
@@ -157,7 +162,7 @@ public class HttpApiSurfaceTest {
         }
     }
 
-    // SDS-AC-3; IR-HTTP-001 AC-4; IR-HTTP-005 AC-5; SDS-AC-11 (wave 5-3); FR-COOKIE-002 AC-8
+    // SDS-AC-3; IR-HTTP-001 AC-4; IR-HTTP-005 AC-5; SDS-AC-11 (wave 5-3); FR-COOKIE-002 AC-8; IR-MULTIPART-002 AC-6
     @Test
     public void sdsAc3_IR_HTTP_001_AC4_packageNullMarkedAndNullableOnlyOnListedPositions() throws Exception {
         assertNotNull(Request.class.getPackage().getAnnotation(NullMarked.class));
@@ -173,8 +178,13 @@ public class HttpApiSurfaceTest {
                 "Request.body[class com.snoworca.naruserve.TypeRef]#return",
                 "Response.json[class java.lang.Object]#p0",
                 // wave 5: FR-COOKIE-002 AC-8
-                "Request.cookie[class java.lang.String]#return"),
-                nullablePositions(Request.class, Response.class));
+                "Request.cookie[class java.lang.String]#return",
+                // wave 6: IR-MULTIPART-002 AC-6
+                "Request.form[class java.lang.String]#return",
+                "Request.file[class java.lang.String]#return",
+                "UploadFile.filename[]#return",
+                "UploadFile.contentType[]#return"),
+                nullablePositions(Request.class, Response.class, UploadFile.class));
         assertEquals(setOf(), nullablePositions(RestApp.class, RouteBuilder.class, RouteHandler.class));
     }
 

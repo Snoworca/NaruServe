@@ -5,11 +5,12 @@ import org.jspecify.annotations.Nullable;
 
 /**
  * Read-only view of one HTTP request plus a per-request attribute store, the app context, the JSON body reader and
- * the request cookies. No form or file access yet; later waves add them.
+ * the request cookies, and the form and multipart accessors.
  */
 // @req IR-HTTP-001
 // @req IR-JSON-002
 // @req FR-COOKIE-002
+// @req IR-MULTIPART-002
 public interface Request {
 
     /** The actual request method. */
@@ -106,5 +107,41 @@ public interface Request {
     // @req FR-COOKIE-002
     default Cookie[] getCookies() {
         throw new UnsupportedOperationException(getClass().getName() + " has no cookie reader");
+    }
+
+    /**
+     * The first text field {@code name} of an {@code application/x-www-form-urlencoded} or
+     * {@code multipart/form-data} body, or {@code null}; like Express {@code req.body[name]}. A non-form body is not
+     * read and gives {@code null}. The four form accessors share one parse; after {@code body(...)} they throw
+     * {@link BodyAlreadyConsumedException}. The default throws {@link UnsupportedOperationException}.
+     */
+    // @req IR-MULTIPART-002
+    // @req FR-MULTIPART-003
+    default @Nullable String form(String name) {
+        throw new UnsupportedOperationException(getClass().getName() + " has no form reader");
+    }
+
+    /** The first file part {@code name} (a part with a {@code filename}), or {@code null}; see {@link #form}. */
+    // @req IR-MULTIPART-002
+    // @req FR-MULTIPART-003
+    default @Nullable UploadFile file(String name) {
+        throw new UnsupportedOperationException(getClass().getName() + " has no form reader");
+    }
+
+    /** Every file part {@code name} in body order as an unmodifiable list, empty when none; see {@link #form}. */
+    // @req IR-MULTIPART-002
+    // @req FR-MULTIPART-003
+    default List<UploadFile> files(String name) {
+        throw new UnsupportedOperationException(getClass().getName() + " has no form reader");
+    }
+
+    /**
+     * Every multipart part in body order, text fields included, as an unmodifiable list; empty for an urlencoded or
+     * non-form body. See {@link #form}.
+     */
+    // @req IR-MULTIPART-002
+    // @req FR-MULTIPART-003
+    default List<UploadFile> parts() {
+        throw new UnsupportedOperationException(getClass().getName() + " has no form reader");
     }
 }

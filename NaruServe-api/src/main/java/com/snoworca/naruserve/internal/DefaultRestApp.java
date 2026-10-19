@@ -791,7 +791,8 @@ public final class DefaultRestApp implements RestApp {
         }
         SafeLogger safe = new SafeLogger(logger); // the logger is fixed from here: logger(...) needs an unfrozen app
         dispatcher = new Dispatcher(router, pipeline, new ErrorPath(errorHandlers, safe),
-                new AccessLog(accessLogOptions, safe), context, jsonCodec(), jsonLimit(), trustProxy);
+                new AccessLog(accessLogOptions, safe), context, jsonCodec(), jsonLimit(), trustProxy,
+                multipartSettings(), formLimit());
         lifecycle.markFrozen();
     }
 
