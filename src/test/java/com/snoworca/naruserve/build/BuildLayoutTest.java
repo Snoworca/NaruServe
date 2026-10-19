@@ -263,6 +263,23 @@ public class BuildLayoutTest {
         assertTrue(new File(ROOT, "NaruServe-api/build/libs/NaruServe-api-0.1.0-SNAPSHOT-test-fixtures.jar").isFile());
     }
 
+    // SDS-AC-11; OPS-HTTP-002 AC-1
+    @Test
+    public void sdsAc11_OPS_HTTP_002_AC1_apiMainOnRootTestClasspathWithWave1ConventionsKept() throws Exception {
+        for (String type : new String[] {"Request", "Response", "RestApp"}) {
+            Class<?> c = Class.forName("com.snoworca.naruserve." + type);
+            String location = c.getProtectionDomain().getCodeSource().getLocation().getPath();
+            assertTrue(type + " from " + location, location.contains("NaruServe-api"));
+        }
+        String build = read(new File(ROOT, "build.gradle"));
+        for (String part : new String[] {"testImplementation project(':NaruServe-api')",
+                "testImplementation 'junit:junit:4.13.2'", "testImplementation gradleTestKit()",
+                "dependsOn checkDependencyRules", "dependsOn ':NaruServe-api:testFixturesJar'",
+                "systemProperty 'naruserve.rootDir'", "systemProperty 'naruserve.testKitWorkDir'"}) {
+            assertTrue("root build.gradle holds " + part, build.contains(part));
+        }
+    }
+
     // CON-BUILD-007 AC-1, CON-BUILD-007 AC-2
     @Test
     public void con_BUILD_007_AC1_AC2_kotlinStdlibOnlyInKotlinModule() throws IOException {
@@ -425,5 +442,30 @@ public class BuildLayoutTest {
         assertTrue(moduleLine.contains("JVM 전용"));
         assertFalse(claude.contains("rest-kotlin"));
         assertFalse(read(new File(ROOT, "docs/api/kotlin.md")).contains("rest-kotlin"));
+    }
+
+    // CON-HTTP-001 AC-2, CON-HTTP-001 AC-3
+    @Test
+    public void CON_HTTP_001_AC2_AC3_apiMainHoldingSpiAndDispatcherIsClassRefCheckedAndSniffedAtApi21()
+            throws IOException {
+        File main = new File(ROOT, "NaruServe-api/build/classes/java/main/com/snoworca/naruserve");
+        for (String c : new String[] {"spi/HttpAdapter.class", "spi/HttpExchange.class", "spi/ExchangeHandler.class",
+            "internal/Dispatcher.class"}) {
+            assertTrue(c + " is compiled from the NaruServe-api main source set", new File(main, c).isFile());
+        }
+        String build = read(new File(ROOT, "build.gradle"));
+        // AC-2: :NaruServe-api's class-reference check names every forbidden prefix and runs under check.
+        assertTrue(build.contains("prefixes += ['android/', 'jakarta/servlet/', 'com/google/gson/', "
+                + "'com/snoworca/tinyhttpd/', 'kotlin/']"));
+        assertTrue(build.contains("def prefixes = path in androidModules ? ['javax/servlet/'] : []"));
+        assertTrue(build.contains("p.tasks.named('check') { dependsOn checkClassReferences }"));
+        // AC-3: NaruServe-api is an Android module, sniffed over its main source set with the API 21 signature.
+        assertTrue(build.contains("def androidModules = naruModules - [':NaruServe-servlet', ':NaruServe-slf4j']"));
+        assertTrue(build.contains("':NaruServe-api'"));
+        Matcher sniff = Pattern.compile("configure\\(androidModules\\.collect \\{ project\\(it\\) \\}\\) \\{"
+                + "\\s*apply plugin: 'ru\\.vyarus\\.animalsniffer'"
+                + "\\s*animalsniffer \\{\\s*sourceSets = \\[sourceSets\\.main\\]\\s*}\\s*dependencies \\{\\s*"
+                + "signature 'net\\.sf\\.androidscents\\.signature:android-api-level-21:[^']+@signature'").matcher(build);
+        assertTrue("animal-sniffer API 21 over sourceSets.main of every Android module", sniff.find());
     }
 }

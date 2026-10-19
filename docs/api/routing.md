@@ -69,7 +69,7 @@ public enum Method { GET, HEAD, POST, PUT, PATCH, DELETE, OPTIONS, TRACE, CONNEC
 - `Method.get()`, `Method.any()`, `Method.of(...)`는 `Method`의 **정적** 메서드입니다. `Method.GET.delete()` 같은 인스턴스 메서드는 없습니다.
 - `MethodSet`에는 `get()`, `head()`, `post()`, `put()`, `patch()`, `delete()`, `options()`, `except(Method)`가 있습니다. `with(Method)`는 임의의 메서드(`TRACE`, `CONNECT` 포함)를 더한 새 집합을 돌려줍니다.
 - 이미 들어 있는 메서드를 더하거나 없는 메서드를 빼면 같은 값의 집합이 돌아옵니다. `Method.of(...)`에 `null` 배열이나 `null` 원소를 넘기면 `NullPointerException`입니다.
-- `TRACE`, `CONNECT`는 기본으로 라우팅에 열리지 않습니다. `Method.any()`에도 들어가지 않습니다. 열려면 명시 정책이 필요합니다(설정 API **(미확정)**).
+- `TRACE`, `CONNECT`는 기본으로 라우팅에 열리지 않습니다. `Method.any()`에도 들어가지 않습니다. 열려면 [`app.routerPolicy(...)`](#라우터-정책)에서 `enableTrace(true)`/`enableConnect(true)`를 켭니다.
 - Express `app.all(path, h)`는 `app.route(Method.any(), path, h)`입니다(`TRACE`/`CONNECT` 제외).
 - 메서드 하나만 쓸 때는 `app.route(Method.GET, "/health", h)`처럼 enum을 바로 넘깁니다.
 
@@ -124,7 +124,7 @@ val n = set.size()                             // 1
 
 - **대소문자를 구분합니다.** `/Users`는 `/users`에 맞지 않습니다.
 - **끝 슬래시를 구분합니다.** `/users/`는 `/users`에 맞지 않습니다.
-- `//` 처리, 끝 슬래시, 대소문자 정책은 설정으로 바꿀 수 있습니다(설정 API **(미확정)**).
+- `//` 처리, 끝 슬래시, 대소문자 정책은 [`app.routerPolicy(RouterPolicy)`](#라우터-정책)로 바꿉니다.
 - URL은 **정확히 한 번** 디코딩합니다. 잘못된 퍼센트 인코딩, `NUL`, 경로 이탈(`..`)이 있는 요청은 거부합니다.
 
 ### 우선순위
@@ -152,7 +152,7 @@ app.get("/users/me", getMe);     // /users/me 요청은 항상 여기로
 | 서버가 모르는 메서드 | `501` |
 
 명시한 `head(...)`, `options(...)` 핸들러가 있으면 자동 응답보다 우선합니다.
-자동 HEAD 처리 때 `req.method()`가 돌려주는 값(`HEAD`/`GET`)은 **(미확정)** 입니다. 메서드로 분기하는 핸들러는 위 예제처럼 `HEAD`를 `GET`과 함께 처리하세요.
+자동 HEAD 처리 때 `req.method()`는 `HEAD`를 돌려줍니다. GET 핸들러가 실행되더라도 `GET`이 아닙니다. 메서드로 분기하는 핸들러는 위 예제처럼 `HEAD`를 `GET`과 함께 처리하세요.
 `404`/`405` 응답 본문은 [표준 오류 형식](middleware.md#표준-오류-형식)입니다.
 
 ## 정적 파일·WebSocket과의 관계
@@ -162,9 +162,47 @@ app.get("/users/me", getMe);     // /users/me 요청은 항상 여기로
 - `app.ws`만 있는 경로에 `Upgrade` 없이 오면 `426 Upgrade Required`입니다(`OPTIONS`는 자동 OPTIONS 응답). 자세한 순서는 [찾기 결과와 순서](#찾기-결과와-순서)를 보세요.
 - 전역 미들웨어는 이 모두보다 먼저 실행됩니다. [미들웨어](middleware.md)
 
+## 라우터 정책
+
+`app.routerPolicy(RouterPolicy)`로 경로 형태 정책과 `TRACE`/`CONNECT`를 켭니다. 정책은 `RouterPolicy.builder()`로 만듭니다. Express의 `app.set('strict routing', ...)`, `app.set('case sensitive routing', ...)`에 해당하지만 기본값이 다릅니다(NaruServe는 끝 슬래시와 대소문자를 모두 구분하는 엄격 기본값).
+
+| builder 메서드 | 켜면 | Express |
+|---|---|---|
+| `mergeSlashes(boolean)` | `/a//b`를 `/a/b`로 봅니다 | (없음) |
+| `ignoreTrailingSlash(boolean)` | 끝 슬래시 하나를 무시합니다. `/`는 그대로 | `strict routing` 꺼짐(Express 기본) |
+| `caseInsensitive(boolean)` | 고정 세그먼트를 대소문자 없이 비교합니다 | `case sensitive routing` 꺼짐(Express 기본) |
+| `enableTrace(boolean)` | `TRACE` 라우트를 등록하고 라우팅합니다 | (없음) |
+| `enableConnect(boolean)` | `CONNECT` 라우트를 등록하고 라우팅합니다 | (없음) |
+
+- 모든 스위치의 기본은 꺼짐입니다. `RouterPolicy.strict()`는 모두 꺼진 정책이고, `routerPolicy`를 부르지 않은 앱의 정책입니다.
+- 다른 설정처럼 앱 상태가 `NEW`일 때(`listen()` 전)만 부를 수 있습니다. 라우트 테이블을 고정한 뒤(`listen()` 뒤)에 부르면 `IllegalStateException`입니다. `null`을 넘기면 `NullPointerException`입니다.
+- 다시 부르면 앞의 정책을 바꿉니다. 정책은 라우트 테이블을 고정할 때 모든 라우트에 적용되므로 라우트 등록 전후 어디서 불러도 같습니다.
+- `RouterPolicy`는 불변입니다. `build()`는 그때까지 정한 값을 복사합니다.
+
+```java
+app.routerPolicy(RouterPolicy.builder()
+    .mergeSlashes(true)
+    .ignoreTrailingSlash(true)
+    .caseInsensitive(false)
+    .enableTrace(false)
+    .enableConnect(false)
+    .build());
+```
+
+Kotlin:
+
+```kotlin
+app.routerPolicy(
+    RouterPolicy.builder()
+        .ignoreTrailingSlash(true)
+        .caseInsensitive(true)
+        .build()
+)
+```
+
 ## 라우팅 규칙 (wave 2 결정)
 
-라우터가 지키는 규칙을 모았습니다. 정책을 켜고 끄는 설정 API 이름은 위에 표시한 대로 아직 정하지 않았습니다.
+라우터가 지키는 규칙을 모았습니다. 정책은 `app.routerPolicy(RouterPolicy)`로 켜고 끕니다([라우터 정책](#라우터-정책)).
 
 ### 경로 형태 정책
 
