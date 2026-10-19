@@ -312,4 +312,40 @@ public class BuildChecksTest {
         String missing = runner(":NaruServe-servlet:animalsnifferMain").buildAndFail().getOutput();
         assertTrue(missing, missing.contains("not found in project ':NaruServe-servlet'"));
     }
+
+    // SDS-AC-5; FR-APP-016 AC-4
+    @Test
+    public void sdsAc5_FR_APP_016_AC4_logcatMainHasNoAndroidReferenceAndTheFakeLivesInTests() {
+        assertTrue(new File(root, "NaruServe-logcat/src/test/java/android/util/Log.java").isFile());
+        assertFalse(new File(root, "NaruServe-logcat/src/main/java/android").exists());
+        BuildResult result = runner(":NaruServe-logcat:checkClassReferences").build();
+        assertEquals(TaskOutcome.SUCCESS, result.task(":NaruServe-logcat:checkClassReferences").getOutcome());
+    }
+
+    // SDS-AC-14; CON-APP-001 AC-1, CON-APP-001 AC-3
+    @Test
+    public void sdsAc14_CON_APP_001_AC1_AC3_apiMainClassReferencingSlf4jFails() throws IOException {
+        for (String row : BuildLayoutTest.read(new File(BuildLayoutTest.property("naruserve.depReport"))).split("\n")) {
+            assertFalse(row, row.startsWith(":NaruServe-api|") && row.contains("|org.slf4j:")
+                    && (row.contains("|compileClasspath|") || row.contains("|runtimeClasspath|")));
+        }
+        appendBuild("project(':NaruServe-api') { dependencies { compileOnly 'org.slf4j:slf4j-api:1.7.36' } }");
+        addSource("NaruServe-api/src/main/java/com/snoworca/naruserve/probe/UsesSlf4j.java",
+                "package com.snoworca.naruserve.probe;\n"
+                        + "public class UsesSlf4j { public org.slf4j.Logger logger; }\n");
+        String out = runner(":NaruServe-api:checkClassReferences").buildAndFail().getOutput();
+        assertTrue(out, out.contains("com/snoworca/naruserve/probe/UsesSlf4j -> org/slf4j/Logger"));
+        assertTrue(BuildLayoutTest.read(new File(root, "build.gradle")).contains("'org/slf4j/'"));
+    }
+
+    // SDS-AC-15; CON-APP-001 AC-2, CON-APP-001 AC-3, FR-APP-018 AC-3
+    @Test
+    public void sdsAc15_CON_APP_001_AC2_FR_APP_018_AC3_loggerClassInTheApiJarFailsPlacement() throws IOException {
+        String dry = runner("-m", "build").build().getOutput();
+        assertTrue(dry, dry.contains(":checkLoggerPlacement"));
+        addSource("NaruServe-api/src/main/java/com/snoworca/naruserve/slf4j/Stray.java",
+                "package com.snoworca.naruserve.slf4j;\npublic class Stray { }\n");
+        String out = runner(":checkLoggerPlacement").buildAndFail().getOutput();
+        assertTrue(out, out.contains("checkLoggerPlacement: NaruServe-api jar holds com/snoworca/naruserve/slf4j/Stray.class"));
+    }
 }
