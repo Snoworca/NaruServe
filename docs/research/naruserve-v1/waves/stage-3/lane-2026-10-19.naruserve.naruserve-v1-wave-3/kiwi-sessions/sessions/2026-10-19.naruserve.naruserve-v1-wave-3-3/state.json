@@ -1,0 +1,1050 @@
+{
+ "schema_version": "1.0.0",
+ "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-3",
+ "sds_path": "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-3-3.sds.md",
+ "sds_sha256": "10813e7dcc4b727b46c63de81f2ff45f1f8eaecad996e46a2d256650e3435b3e",
+ "target": "wave-3",
+ "spawn_context": "pm-child",
+ "phase": "done",
+ "failed": false,
+ "next_resume_hint": null,
+ "regression_baseline": {
+  "command": "./gradlew build",
+  "exit_code": 0,
+  "head_sha": "5a9322d",
+  "captured_at": "2026-10-19T01:22:29Z"
+ },
+ "red_evidence": {
+  "command": "./gradlew :NaruServe-api:test",
+  "exit_code": 1,
+  "captured_failure": "compileTestKotlin: Unresolved reference 'TestApp' (TestApp, DefaultRestApp, Dispatcher absent)",
+  "timestamp": "2026-10-19T01:22:29Z"
+ },
+ "green_evidence": {
+  "command": "./gradlew build",
+  "exit_code": 0,
+  "timestamp": "2026-10-19T01:22:29Z"
+ },
+ "deferred_sds_acs": [
+  "SDS-AC-7",
+  "SDS-AC-8",
+  "SDS-AC-9",
+  "SDS-AC-10",
+  "SDS-AC-1 (%252e reaches /:x)"
+ ],
+ "mcp_call_log": [
+  {
+   "called_at": "2026-10-19T01:22:29Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-HTTP-002",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java#sdsAc1_FR_HTTP_002_AC2_optionsAsteriskIsAnswered204BeforePathValidation",
+    "covers": "AC-2",
+    "notes": "./gradlew build exit 0"
+   },
+   "args_hash": "bc9ced760a47de6ce6b6ffb6f282da51356d8426",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-3"
+  },
+  {
+   "called_at": "2026-10-19T01:22:29Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-HTTP-002",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java#sdsAc1_FR_HTTP_002_AC2_AC3_validatorRejectionIs400BeforeAnyMatch",
+    "covers": "AC-2",
+    "notes": "./gradlew build exit 0"
+   },
+   "args_hash": "fdfee3178f701b1f48c1e9a0f906a08fef45aafb",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-3"
+  },
+  {
+   "called_at": "2026-10-19T01:22:29Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-HTTP-002",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java#sdsAc1_FR_HTTP_002_AC2_AC3_validatorRejectionIs400BeforeAnyMatch",
+    "covers": "AC-3",
+    "notes": "./gradlew build exit 0"
+   },
+   "args_hash": "f1e5ae03c95516e1ceb9f4a2a2d7852ca8cf29ca",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-3"
+  },
+  {
+   "called_at": "2026-10-19T01:22:29Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-HTTP-002",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java#sdsAc2_FR_HTTP_002_AC4_FR_HTTP_005_AC3_preRequestRejectionsNeverReachTheHandler",
+    "covers": "AC-4",
+    "notes": "./gradlew build exit 0"
+   },
+   "args_hash": "e740e9e33a966e4b023e34d70febd71667323f27",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-3"
+  },
+  {
+   "called_at": "2026-10-19T01:22:29Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-HTTP-005",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java#sdsAc2_FR_HTTP_002_AC4_FR_HTTP_005_AC3_preRequestRejectionsNeverReachTheHandler",
+    "covers": "AC-3",
+    "notes": "./gradlew build exit 0"
+   },
+   "args_hash": "52ae20fd76d89c43d03f0920f080fc94a5fd3ef5",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-3"
+  },
+  {
+   "called_at": "2026-10-19T01:22:29Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-HTTP-003",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java#sdsAc3_FR_HTTP_003_AC2_methodMismatchListsAllowInDeclarationOrder",
+    "covers": "AC-2",
+    "notes": "./gradlew build exit 0"
+   },
+   "args_hash": "a1d8161a60bb5804bcc86ddd5df18699ab280e47",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-3"
+  },
+  {
+   "called_at": "2026-10-19T01:22:29Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-HTTP-003",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java#sdsAc3_FR_HTTP_003_AC7_anyExceptDeleteGives405WithAllow",
+    "covers": "AC-7",
+    "notes": "./gradlew build exit 0"
+   },
+   "args_hash": "1fbb2d310717f693b9b6834ca94f015b268d9436",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-3"
+  },
+  {
+   "called_at": "2026-10-19T01:22:29Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-HTTP-005",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java#sdsAc3_FR_HTTP_005_AC1_optionsAsteriskAllowIsMethodAnyWithNoRoutes",
+    "covers": "AC-1",
+    "notes": "./gradlew build exit 0"
+   },
+   "args_hash": "3522cf694683c63fb1c033f3eb2817e4631790e7",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-3"
+  },
+  {
+   "called_at": "2026-10-19T01:22:29Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-HTTP-003",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java#sdsAc3_FR_HTTP_003_AC2_allowHeaderJoinsInMethodOrder",
+    "covers": "AC-2",
+    "notes": "./gradlew build exit 0"
+   },
+   "args_hash": "658931d5d90ca02aa12ee95cc124372da09a8ac1",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-3"
+  },
+  {
+   "called_at": "2026-10-19T01:22:29Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-HTTP-003",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java#sdsAc4_FR_HTTP_003_AC6_splitUpgradeHeadersAreJoinedBeforeLookup",
+    "covers": "AC-6",
+    "notes": "./gradlew build exit 0"
+   },
+   "args_hash": "b19081120f4a5547e49963906444f984e2b11b1a",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-3"
+  },
+  {
+   "called_at": "2026-10-19T01:22:29Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-HTTP-003",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java#sdsAc5_FR_HTTP_003_AC5_AC6_webSocketOnlyRouteGives426ForPlainAndUpgradeGet",
+    "covers": "AC-5",
+    "notes": "./gradlew build exit 0"
+   },
+   "args_hash": "600ec7247a435310d436ac495fa67f8e261e6710",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-3"
+  },
+  {
+   "called_at": "2026-10-19T01:22:29Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-HTTP-003",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java#sdsAc5_FR_HTTP_003_AC5_AC6_webSocketOnlyRouteGives426ForPlainAndUpgradeGet",
+    "covers": "AC-6",
+    "notes": "./gradlew build exit 0"
+   },
+   "args_hash": "a6139dc0aa8609ee630657c6b5b7a7c8232c5694",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-3"
+  },
+  {
+   "called_at": "2026-10-19T01:22:29Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-HTTP-003",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java#sdsAc6_FR_HTTP_003_AC1_AC4_noMatchAndUnsupportedCarryContentLengthZero",
+    "covers": "AC-1",
+    "notes": "./gradlew build exit 0"
+   },
+   "args_hash": "12503bdd996fb1be659e3d7080b6f040337556ed",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-3"
+  },
+  {
+   "called_at": "2026-10-19T01:22:29Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-HTTP-003",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java#sdsAc6_FR_HTTP_003_AC1_AC4_noMatchAndUnsupportedCarryContentLengthZero",
+    "covers": "AC-4",
+    "notes": "./gradlew build exit 0"
+   },
+   "args_hash": "f6b41ad457d25502737a4baf50b38cb2b6ddd129",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-3"
+  },
+  {
+   "called_at": "2026-10-19T01:22:29Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-HTTP-003",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java#sdsAc6_FR_HTTP_003_AC3_automaticOptionsIs204WithoutContentLength",
+    "covers": "AC-3",
+    "notes": "./gradlew build exit 0"
+   },
+   "args_hash": "17a98810fffb86b6eb7197f4ef579581fbd836c9",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-3"
+  },
+  {
+   "called_at": "2026-10-19T01:22:29Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "IR-HTTP-006",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRestAppTest.java#sdsAc11_IR_HTTP_006_AC4_appGetAndBuilderGetRecordTheSameRegistration",
+    "covers": "AC-4",
+    "notes": "./gradlew build exit 0"
+   },
+   "args_hash": "dff1838c3e22f37cb6ff7b6cfb5f33fca5b45a68",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-3"
+  },
+  {
+   "called_at": "2026-10-19T01:22:29Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "IR-HTTP-006",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRestAppTest.java#sdsAc11_IR_HTTP_006_AC3_appGetPlusBuilderGetIsADuplicateAtFreeze",
+    "covers": "AC-3",
+    "notes": "./gradlew build exit 0"
+   },
+   "args_hash": "f7875346248423aac99d590664b371c700cb4ee7",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-3"
+  },
+  {
+   "called_at": "2026-10-19T01:22:29Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-HTTP-007",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRestAppTest.java#sdsAc11_FR_HTTP_007_AC1_eachRegistrationMethodRecordsItsMethods",
+    "covers": "AC-1",
+    "notes": "./gradlew build exit 0"
+   },
+   "args_hash": "2ec0625651046b8de87997b68ba97e0bfb8cee55",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-3"
+  },
+  {
+   "called_at": "2026-10-19T01:22:29Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-HTTP-007",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRestAppTest.java#sdsAc11_FR_HTTP_007_AC1_unregisteredMethodOfAMethodSetRouteIs405",
+    "covers": "AC-1",
+    "notes": "./gradlew build exit 0"
+   },
+   "args_hash": "494a3c61d248731e4359e8e461c8d824b78c9ef9",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-3"
+  },
+  {
+   "called_at": "2026-10-19T01:22:29Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-HTTP-008",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRestAppTest.java#sdsAc12_FR_HTTP_008_AC2_badPatternThrowsAtTheRegistrationCall",
+    "covers": "AC-2",
+    "notes": "./gradlew build exit 0"
+   },
+   "args_hash": "968ceb35bf3529f1cc18092cf532e3268ad10b97",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-3"
+  },
+  {
+   "called_at": "2026-10-19T01:22:29Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-HTTP-008",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRestAppTest.java#sdsAc12_FR_HTTP_008_AC4_duplicateThrowsOnlyAtFreezeAndLeavesTheAppUnfrozen",
+    "covers": "AC-4",
+    "notes": "./gradlew build exit 0"
+   },
+   "args_hash": "9a8530c29097577df516103c6c388c3972b7b077",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-3"
+  },
+  {
+   "called_at": "2026-10-19T01:22:29Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-HTTP-008",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRestAppTest.java#sdsAc12_FR_HTTP_008_AC4_dispatcherBeforeFreezeThrowsAndFreezeRunsOnce",
+    "covers": "AC-4",
+    "notes": "./gradlew build exit 0"
+   },
+   "args_hash": "ad627e8828b7d8e5db313bab34db1a3d4db78617",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-3"
+  },
+  {
+   "called_at": "2026-10-19T01:22:29Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-HTTP-008",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRestAppTest.java#sdsAc13_FR_HTTP_008_AC3_policySetAfterGetAppliesToIt",
+    "covers": "AC-3",
+    "notes": "./gradlew build exit 0"
+   },
+   "args_hash": "2f38a1cae178f91525488040c8f47e7cabeaa138",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-3"
+  },
+  {
+   "called_at": "2026-10-19T01:22:29Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-HTTP-008",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRestAppTest.java#sdsAc13_FR_HTTP_008_AC5_everyCallAfterFreezeThrowsAndRecordsNothing",
+    "covers": "AC-5",
+    "notes": "./gradlew build exit 0"
+   },
+   "args_hash": "adead3647376bbce8675f2f201767dcb7fc4f250",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-3"
+  },
+  {
+   "called_at": "2026-10-19T01:22:29Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-HTTP-008",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRestAppTest.java#sdsAc13_FR_HTTP_008_AC7_webSocketHookRecordsAWebSocketRegistration",
+    "covers": "AC-7",
+    "notes": "./gradlew build exit 0"
+   },
+   "args_hash": "38ed097bffc120f165343f1ba0d9e050e5438c61",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-3"
+  },
+  {
+   "called_at": "2026-10-19T01:22:29Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-HTTP-008",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRestAppTest.java#sdsAc14_FR_HTTP_008_AC1_implementationIsAPublicInternalClassWithAPublicCtor",
+    "covers": "AC-1",
+    "notes": "./gradlew build exit 0"
+   },
+   "args_hash": "2047de7fbf4cc10bf3241353c4d2ec3b58149eca",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-3"
+  },
+  {
+   "called_at": "2026-10-19T01:22:29Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-HTTP-008",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRestAppTest.java#sdsAc14_FR_HTTP_008_AC6_noPublicFactoryInTheApiPackageReturnsRestApp",
+    "covers": "AC-6",
+    "notes": "./gradlew build exit 0"
+   },
+   "args_hash": "eace6e833df3dbb753f68f10f3b5b514e1aac678",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-3"
+  },
+  {
+   "called_at": "2026-10-19T01:22:29Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-HTTP-003",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java#sdsAc14_T02_FR_HTTP_003_AC7_anyExceptDeleteAnswersDelete405",
+    "covers": "AC-7",
+    "notes": "./gradlew build exit 0"
+   },
+   "args_hash": "56dcb267d0f0cc2980bcc72f743b7fdcf1af5ac3",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-3"
+  },
+  {
+   "called_at": "2026-10-19T01:22:29Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "IR-HTTP-006",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java#sdsAc11_T03_IR_HTTP_006_AC3_duplicateBuilderAndAppGetFailsTheHarnessFreeze",
+    "covers": "AC-3",
+    "notes": "./gradlew build exit 0"
+   },
+   "args_hash": "69a30b1ad4ca1d5d07c98f36f0e0e22794b31f9e",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-3"
+  },
+  {
+   "called_at": "2026-10-19T01:22:29Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-HTTP-003",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java#sdsAc14_T05_FR_HTTP_003_AC3_automaticOptionsListsAllowWithoutBody",
+    "covers": "AC-3",
+    "notes": "./gradlew build exit 0"
+   },
+   "args_hash": "470e113ec6bc4eead1d475c224cffda0cf6217a1",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-3"
+  },
+  {
+   "called_at": "2026-10-19T01:22:29Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-HTTP-003",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java#sdsAc14_T06_FR_HTTP_003_AC1_AC2_AC4_noPathNoMethodUnknownMethod",
+    "covers": "AC-1",
+    "notes": "./gradlew build exit 0"
+   },
+   "args_hash": "f525f39e7db947a76cdbc756e771d081ac09eb28",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-3"
+  },
+  {
+   "called_at": "2026-10-19T01:22:29Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-HTTP-003",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java#sdsAc14_T06_FR_HTTP_003_AC1_AC2_AC4_noPathNoMethodUnknownMethod",
+    "covers": "AC-2",
+    "notes": "./gradlew build exit 0"
+   },
+   "args_hash": "83eaa6eaba2346c510f55f0c7e7e3329c92867de",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-3"
+  },
+  {
+   "called_at": "2026-10-19T01:22:29Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-HTTP-003",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java#sdsAc14_T06_FR_HTTP_003_AC1_AC2_AC4_noPathNoMethodUnknownMethod",
+    "covers": "AC-4",
+    "notes": "./gradlew build exit 0"
+   },
+   "args_hash": "c2a34edaa5f62ad8e32669a36a0dd7ea03beb465",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-3"
+  },
+  {
+   "called_at": "2026-10-19T01:22:29Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-HTTP-003",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java#sdsAc14_T06_FR_HTTP_003_AC5_AC6_webSocketOnlyHookRouteGives426",
+    "covers": "AC-5",
+    "notes": "./gradlew build exit 0"
+   },
+   "args_hash": "9b23562c2ba0f952f43b64cfcad9ee8dded22a0b",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-3"
+  },
+  {
+   "called_at": "2026-10-19T01:22:29Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-HTTP-003",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java#sdsAc14_T06_FR_HTTP_003_AC5_AC6_webSocketOnlyHookRouteGives426",
+    "covers": "AC-6",
+    "notes": "./gradlew build exit 0"
+   },
+   "args_hash": "1bc9220465509004a3c4571b9706238314fef6d8",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-3"
+  },
+  {
+   "called_at": "2026-10-19T01:22:29Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-HTTP-005",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java#sdsAc14_FR_HTTP_005_AC1_AC2_AC3_AC4_asteriskAndNonSlashTargets",
+    "covers": "AC-1",
+    "notes": "./gradlew build exit 0"
+   },
+   "args_hash": "fcf08ca44a09020429cb9e341d16006433d54213",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-3"
+  },
+  {
+   "called_at": "2026-10-19T01:22:29Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-HTTP-005",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java#sdsAc14_FR_HTTP_005_AC1_AC2_AC3_AC4_asteriskAndNonSlashTargets",
+    "covers": "AC-2",
+    "notes": "./gradlew build exit 0"
+   },
+   "args_hash": "90c99f7c74e38ee246d8e5ec8f7755192428f826",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-3"
+  },
+  {
+   "called_at": "2026-10-19T01:22:29Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-HTTP-005",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java#sdsAc14_FR_HTTP_005_AC1_AC2_AC3_AC4_asteriskAndNonSlashTargets",
+    "covers": "AC-3",
+    "notes": "./gradlew build exit 0"
+   },
+   "args_hash": "0912d1fbca4c58ae4de29dadbf4c4fc36cacd2c8",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-3"
+  },
+  {
+   "called_at": "2026-10-19T01:22:29Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-HTTP-005",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java#sdsAc14_FR_HTTP_005_AC1_AC2_AC3_AC4_asteriskAndNonSlashTargets",
+    "covers": "AC-4",
+    "notes": "./gradlew build exit 0"
+   },
+   "args_hash": "ea1e69625150e7ce49c8cd4e3fc32c1002e309fc",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-3"
+  },
+  {
+   "called_at": "2026-10-19T01:22:29Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-HTTP-001",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/testing/InMemoryHttpAdapterTest.java#sdsAc8_FR_HTTP_001_AC3_freezeErrorReachesTheCallerUnwrapped",
+    "covers": "AC-3",
+    "notes": "./gradlew build exit 0"
+   },
+   "args_hash": "26ff3f38a9397cb2c2c749e66f742b1f44b989f2",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-3"
+  },
+  {
+   "called_at": "2026-10-19T01:22:29Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-HTTP-001",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/testing/InMemoryHttpAdapterTest.java#sdsAc8_FR_HTTP_001_AC3_startIsIdempotentAndThenRefusesRegistration",
+    "covers": "AC-3",
+    "notes": "./gradlew build exit 0"
+   },
+   "args_hash": "2a797d20fded2a51e96fc9470ba76ac4e29118bc",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-3"
+  },
+  {
+   "called_at": "2026-10-19T01:22:29Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-HTTP-001",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/testing/InMemoryHttpAdapterTest.java#sdsAc8_FR_HTTP_001_AC2_requestsRunThroughTheAppDispatcherOnTheInMemoryAdapter",
+    "covers": "AC-2",
+    "notes": "./gradlew build exit 0"
+   },
+   "args_hash": "6e0198b449d080cc5e9b12812bff07f0aadf5393",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-3"
+  },
+  {
+   "called_at": "2026-10-19T01:22:29Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "CON-HTTP-001",
+    "type": "test",
+    "reference": "build.gradle#class-reference check (:NaruServe-api main incl. internal/Dispatcher)",
+    "covers": "AC-2",
+    "notes": "./gradlew build exit 0"
+   },
+   "args_hash": "cae4a421a6be98b13bf8e52abfc3cd88e21658f4",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-3"
+  },
+  {
+   "called_at": "2026-10-19T01:22:29Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "CON-HTTP-001",
+    "type": "test",
+    "reference": "build.gradle#animal-sniffer API 21 (:NaruServe-api main incl. internal/Dispatcher)",
+    "covers": "AC-3",
+    "notes": "./gradlew build exit 0"
+   },
+   "args_hash": "027d0c1250a318e017c2d24208678516854576ca",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-3"
+  },
+  {
+   "called_at": "2026-10-19T01:22:29Z",
+   "tool": "update_status",
+   "args": {
+    "id": "FR-HTTP-003",
+    "status": "implemented"
+   },
+   "args_hash": "de0522a6bfca696709d99205027878f77b155cc1",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-3"
+  },
+  {
+   "called_at": "2026-10-19T01:22:29Z",
+   "tool": "update_status",
+   "args": {
+    "id": "FR-HTTP-005",
+    "status": "implemented"
+   },
+   "args_hash": "da54c7ede02f0f54702c5ef5c74a0ee164a85746",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-3"
+  },
+  {
+   "called_at": "2026-10-19T01:22:29Z",
+   "tool": "update_status",
+   "args": {
+    "id": "FR-HTTP-008",
+    "status": "implemented"
+   },
+   "args_hash": "0636458b07958ed02987207982dc946a9318cc78",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-3"
+  },
+  {
+   "called_at": "2026-10-19T01:22:29Z",
+   "tool": "update_status",
+   "args": {
+    "id": "CON-HTTP-001",
+    "status": "implemented"
+   },
+   "args_hash": "104d1ce7f26a219bd1fe8f2d844e30b317a82196",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-3"
+  },
+  {
+   "called_at": "2026-10-19T01:22:29Z",
+   "tool": "update_status",
+   "args": {
+    "id": "FR-HTTP-001",
+    "status": "in_progress"
+   },
+   "args_hash": "73e966ff57b3e0478a61d207c5fd7bd42e7bc837",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-3"
+  },
+  {
+   "called_at": "2026-10-19T01:22:29Z",
+   "tool": "update_status",
+   "args": {
+    "id": "FR-HTTP-002",
+    "status": "in_progress"
+   },
+   "args_hash": "ff117773f8332146095dab7b5251dccd6d4b9f01",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-3"
+  },
+  {
+   "called_at": "2026-10-19T01:22:29Z",
+   "tool": "update_status",
+   "args": {
+    "id": "FR-HTTP-004",
+    "status": "in_progress"
+   },
+   "args_hash": "271e386299af74b5529b858b56a12e6a5a1e2872",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-3"
+  },
+  {
+   "called_at": "2026-10-19T01:22:29Z",
+   "tool": "update_status",
+   "args": {
+    "id": "FR-HTTP-006",
+    "status": "in_progress"
+   },
+   "args_hash": "5246ed5f5473da13617aae45701f40229766127a",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-3"
+  },
+  {
+   "called_at": "2026-10-19T01:22:29Z",
+   "tool": "update_status",
+   "args": {
+    "id": "FR-HTTP-007",
+    "status": "in_progress"
+   },
+   "args_hash": "bfda847b765ea2e00b4b368969a04dc6c349fbd9",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-3"
+  },
+  {
+   "called_at": "2026-10-19T01:22:29Z",
+   "tool": "add_trace_link",
+   "args": {
+    "id": "FR-HTTP-002",
+    "type": "Code",
+    "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+    "relation": "implements"
+   },
+   "args_hash": "5e33ed0085cfd56b3a9eed3374ef67ba243fb4b1",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-3"
+  },
+  {
+   "called_at": "2026-10-19T01:22:29Z",
+   "tool": "add_trace_link",
+   "args": {
+    "id": "FR-HTTP-003",
+    "type": "Code",
+    "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+    "relation": "implements"
+   },
+   "args_hash": "74ff364dbacf3184436390d59bbd0e53907a1976",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-3"
+  },
+  {
+   "called_at": "2026-10-19T01:22:29Z",
+   "tool": "add_trace_link",
+   "args": {
+    "id": "FR-HTTP-005",
+    "type": "Code",
+    "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+    "relation": "implements"
+   },
+   "args_hash": "23eb86f5b14726b57897074a5c4bf2e046febabd",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-3"
+  },
+  {
+   "called_at": "2026-10-19T01:22:29Z",
+   "tool": "add_trace_link",
+   "args": {
+    "id": "CON-HTTP-001",
+    "type": "Code",
+    "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+    "relation": "implements"
+   },
+   "args_hash": "9b32368a8333b3ba1a64dcaa311db39886792402",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-3"
+  },
+  {
+   "called_at": "2026-10-19T01:22:29Z",
+   "tool": "add_trace_link",
+   "args": {
+    "id": "FR-HTTP-008",
+    "type": "Code",
+    "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+    "relation": "implements"
+   },
+   "args_hash": "9f3a39edef1b76cfc04a95e0e2348601b30ddb2c",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-3"
+  },
+  {
+   "called_at": "2026-10-19T01:22:29Z",
+   "tool": "add_trace_link",
+   "args": {
+    "id": "FR-HTTP-007",
+    "type": "Code",
+    "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+    "relation": "implements"
+   },
+   "args_hash": "40d8651d53bd5f33552f31ea7e6fbf38c9800b6b",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-3"
+  },
+  {
+   "called_at": "2026-10-19T01:22:29Z",
+   "tool": "add_trace_link",
+   "args": {
+    "id": "FR-HTTP-001",
+    "type": "Code",
+    "reference": "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/TestApp.java",
+    "relation": "implements"
+   },
+   "args_hash": "c7f3803c2bd86299b7aae9c2b1177213c6710825",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-3"
+  },
+  {
+   "called_at": "2026-10-19T01:22:29Z",
+   "tool": "add_completed_work",
+   "args": {
+    "date": "2026-10-19",
+    "summary": "[sds] 2026-10-19.naruserve.naruserve-v1-wave-3-3 - internal DefaultRestApp (deferred Router build, freeze, WebSocket hook, DefaultRouteBuilder) and Dispatcher pre-checks plus automatic responses (204/400/404/405/426/501, Allow, Content-Length rules); fragment-2 remainder TestApp harness. green=PASS. SDS-AC: 1..6, 11..14 PASS (SDS-AC-1 %252e-reaches-/:x case pending); 7..10 DEFERRED - Dispatcher.invoke is a stub until DefaultRequest/DefaultResponse (parts 4/5). ./gradlew build exit 0.",
+    "requirementIds": [
+     "CON-HTTP-001",
+     "FR-HTTP-001",
+     "FR-HTTP-002",
+     "FR-HTTP-003",
+     "FR-HTTP-004",
+     "FR-HTTP-005",
+     "FR-HTTP-006",
+     "FR-HTTP-007",
+     "FR-HTTP-008"
+    ],
+    "target": "wave-3",
+    "allowIncomplete": true
+   },
+   "args_hash": "76d810f27b08901182e32d26c604976faff8a311",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-3"
+  }
+ ]
+}

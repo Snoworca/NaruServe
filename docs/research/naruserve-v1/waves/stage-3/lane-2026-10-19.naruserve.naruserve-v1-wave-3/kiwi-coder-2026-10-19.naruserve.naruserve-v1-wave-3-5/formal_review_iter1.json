@@ -1,0 +1,19 @@
+{
+  "pass": "formal-check (script)",
+  "sds": "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-3-5.sds.md",
+  "round": 1,
+  "severity_summary": {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 0, "LOW": 0},
+  "axes": {
+    "mock_regex": "grep Mockito|mock(|@Mock|EasyMock|MockK|mockk over NaruServe-api/src: 0 hits (RecordingExchange and CountingInputStream are hand-written real implementations)",
+    "build": "./gradlew build exit 0 (includes animalsnifferMain API 21; first attempt caught java.io.UncheckedIOException as API 24+, removed)",
+    "sds_code_mapping": "ResponseState enum with NEW, COMMITTED, STREAMING, COMPLETED, ABORTED; DefaultResponse(HttpExchange, boolean), status, header, send(String), html, send(byte[]), stream, runTransfer, end, isCommitted, abort, state, bodyless all defined; Dispatcher -> DefaultResponse referenced from Dispatcher.invoke",
+    "test_coverage": "speckiwi coverage --tests --ids FR-HTTP-013..018 --sds <SDS>: passed, gaps none; every Test Plan row's test file exists and its tests ran green (DefaultResponseTest, ResponseStreamTest)"
+  },
+  "out_of_sds_files": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java (PM extra scope 1)",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java (PM extra scope 1)",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java (PM extra scope 1, 3)",
+    "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/HttpApiKotlinTest.kt (PM extra scope 2)",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRequestTest.java (control assertion pinned the removed UnsupportedOperationException stub; now asserts the handler runs)"
+  ]
+}

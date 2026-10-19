@@ -1,0 +1,33 @@
+{
+  "evaluator": "verify-pass-2",
+  "iter": 2,
+  "findings": [],
+  "resolved_from_iter1": [
+    {"id": "F01", "finding_hash": "2b677753ec5fdf91c5863015eb268d10966a0d5d", "status": "resolved", "note": "All 16 entries requires_user_confirm=false, summary.user_confirm_required=0, apply_with states automatic draft->evolving."},
+    {"id": "F02", "finding_hash": "51940c110673d5ad44258e25d847d8347208313a", "status": "resolved", "note": "CLAUDE.md authorization condition removed; product_fit 10, total 83 (axis sum checks), label high, plan draft->evolving. D-448 at design.md:60 confirmed."},
+    {"id": "F03", "finding_hash": "8c08c075d59a530f0f1e7c1ec0f90d38f1a69171", "status": "resolved", "note": "Both unbacked reasons removed; re-scored 23/14/12/12/10/10 = 81, high. Remaining condition (three custom checks plus negative fixtures) matches 02.build.srs.md:841-843."},
+    {"id": "F04", "finding_hash": "045d3bfa92c433d958e598f57ab293b19589571d", "status": "resolved", "note": "Synthesis no longer cites the CLAUDE.md condition; distribution 16/0/0/0, average 87.4 (computed 87.375), drift candidates empty, plan summary 16 changes all agree."},
+    {"id": "F05", "finding_hash": "3f83047840097f27f88f4ae5908a88eed8d64d2d", "status": "resolved", "note": "ordering_constraints records CON-BUILD-011 decision before CON-BUILD-006, co-implemented; CON-BUILD-006 conditions updated."},
+    {"id": "F06", "finding_hash": "ff4571d5d646ae950c7d07e8be9392cd0d571445", "status": "resolved", "note": "OPS-BUILD-002 -> CON-BUILD-004 and -> CON-BUILD-007 chains added; no cycle."},
+    {"id": "F07", "finding_hash": "3b9145b8f0b7304c2cb52e1caffbb2cb4c181dbe", "status": "resolved", "note": "Evidence pointer is CLAUDE.md:35 (nullability compileOnly rule, verified)."},
+    {"id": "F08", "finding_hash": "83845b8d62cf433ba54684e6e3b307d2a86d8055", "status": "resolved", "note": "KGP download moved to informational note; OPS-BUILD-002 dependency_health 12/15 attributed only to upstream requirements."}
+  ],
+  "checks": {
+    "score_label_consistency": "pass: all 16 totals >= 80 labelled high",
+    "evidence_existence": "pass: every evidence path exists and every line number is within the file; spot-checked design.md:5/53/59/60, TinyHttpd build.gradle:51-61, 02.build.srs.md:841-843/899-901, docs/api/app.md:22, docs/api/logging.md:33, TinyHttpd HEAD 46b973e",
+    "ac_verifiability_ground": "pass",
+    "dependency_cycle": "pass: trace-link edges acyclic; semantic 011/006 ordering recorded",
+    "blocker_substantiation": "pass: no blockers; conditions are factual",
+    "mapping_conformance": "pass: high->evolving x16, no user confirmation required",
+    "guard_verdict": "pass: GO_WITH_CONDITIONS consistent with 16 high, 0 blockers",
+    "status_conflict": "pass: all planned/draft, no verification evidence, has_verification=false matches",
+    "internal_coherence": "pass: every axis sum equals total_score; synthesis and plan agree",
+    "golden_rule": "pass: dry-run, no MCP mutation performed"
+  },
+  "summary": {
+    "CRITICAL": 0,
+    "HIGH": 0,
+    "MEDIUM": 0,
+    "LOW": 0
+  }
+}

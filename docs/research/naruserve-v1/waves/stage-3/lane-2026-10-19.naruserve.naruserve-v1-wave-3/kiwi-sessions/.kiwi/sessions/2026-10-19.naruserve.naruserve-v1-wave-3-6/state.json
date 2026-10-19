@@ -1,0 +1,24 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-6",
+  "sds_path": "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-3-6.sds.md",
+  "target": "wave-3",
+  "req_ids": ["OPS-HTTP-001", "OPS-HTTP-002", "OPS-ROUTE-002"],
+  "mode": "normal",
+  "flags": ["--auto", "--auto-cost-warning", "--auto-integration", "--regression-baseline ./gradlew build", "--defer-srs-mutation"],
+  "spawn_context": "pm-child",
+  "phase": "done",
+  "next_resume_hint": null,
+  "regression_summary": {"command": "./gradlew build --offline", "exit_code": 0, "scope": "full"},
+  "mcp_mutations": "34 entries appended to the deferred queue (status in_progress, trace links, test evidence, completed work)",
+  "failed": false,
+  "regression_baseline": {"command": "./gradlew build --offline", "exit_code": 0, "failed_test_ids": [], "head_sha": "8fb4835"},
+  "red_evidence": {
+    "command": "./gradlew --offline :NaruServe-api:test --tests HttpDocsTest --tests RoutingDocsTest :test --tests DocsExamplesCompileTest --continue",
+    "exit_code": 1,
+    "captured_failure": "HttpDocsTest 8/10 failed (markers still present, routerPolicy/stream/attribute text absent); RoutingDocsTest sdsAc4_OPS_ROUTE_002_AC3 failed (4 marker lines, expected 1); DocsExamplesCompileTest sdsAc8/sdsAc10/sdsAc11 failed (app.md #6 create() compiled because skip #7 stale before the routerPolicy block existed)",
+    "timestamp": "2026-10-19T02:01:00Z"
+  },
+  "red_evidence_meta": {"note": "sdsAc7_OPS_HTTP_002_AC5 passed at red: docs/api JS fences were already labelled ```javascript, so AC-5 holds as a guard"},
+  "green_evidence": {"command": "same as red", "exit_code": 0, "timestamp": "2026-10-19T02:02:55Z"}
+}

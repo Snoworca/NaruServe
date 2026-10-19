@@ -1,0 +1,127 @@
+{
+  "findings": [
+    {
+      "id": "A-001",
+      "axis": "P1",
+      "severity": "MEDIUM",
+      "title": "LimitedInputStream probes one byte past a declared Content-Length that is within the limit",
+      "location": {"file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/LimitedInputStream.java", "line_range": "31-41, 45-59, 92-98"},
+      "description": "When declaredLength is known and <= limit (e.g. Content-Length == limit), after limit bytes the stream still calls in.read() as an over-limit probe. The body is already known to be exactly declaredLength bytes, so the probe is pointless; worse, HttpExchange.requestBody() (spi/HttpExchange.java:40-41) has no contract saying the stream is EOF-bounded to the message body. On an adapter that hands out the raw keep-alive socket stream, the probe blocks waiting for the next request or eats the first byte of a pipelined request and then throws BodyTooLargeException (a false 413). Same applies to skip().",
+      "suggested_fix": "Only probe when declaredLength < 0 (unknown length); when 0 <= declaredLength <= limit, cap reads at declaredLength and return -1 there. Also document on HttpExchange.requestBody() that it returns EOF at the end of the message body (Content-Length or chunked framing) and never reads into the next request.",
+      "is_behavioral": true,
+      "tags": ["bug", "spi-contract"]
+    },
+    {
+      "id": "A-002",
+      "axis": "P6",
+      "severity": "MEDIUM",
+      "title": "req.attribute(key, Int::class.java) from Kotlin always throws ClassCastException",
+      "location": {"file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java", "line_range": "186-190"},
+      "description": "type.cast(...) is used directly. In Kotlin, Int::class.java / Long::class.java / Boolean::class.java are the primitive classes (int.class), and Class.cast on a primitive class throws ClassCastException for every non-null value, including a stored Integer. A Kotlin user storing req.attribute(\"n\", 5) and reading req.attribute(\"n\", Int::class.java) gets a CCE, contradicting FR-HTTP-012 AC-1 semantics. A future reified extension in NaruServe-kotlin using T::class.java hits the same trap.",
+      "suggested_fix": "Map a primitive Class to its wrapper before casting (small switch on int/long/boolean/double/float/short/byte/char), or document and use javaObjectType in the Kotlin module; add a Kotlin test (T11) reading an Int attribute.",
+      "is_behavioral": true,
+      "tags": ["kotlin-interop", "bug"]
+    },
+    {
+      "id": "A-003",
+      "axis": "P3",
+      "severity": "MEDIUM",
+      "title": "res.header accepts empty/non-token names and NUL/other control characters",
+      "location": {"file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java", "line_range": "67-75, 391-393"},
+      "description": "Only CR and LF are rejected. An empty name, a name with ':' or whitespace (\"X-A: forged\"), or a value with NUL / other CTL characters is passed verbatim to the adapter, producing a malformed header line that some clients/proxies parse differently (header confusion). RFC 9110 requires names to be tokens and forbids NUL/CTL (except HTAB) in field values. The same check is used for stream()'s contentType.",
+      "suggested_fix": "Validate name as an RFC 9110 token (non-empty, tchar only) and value as no CTL except HTAB; keep throwing IllegalArgumentException so FR-HTTP-015 AC-4 still holds.",
+      "is_behavioral": true,
+      "tags": ["security", "header-injection"]
+    },
+    {
+      "id": "A-004",
+      "axis": "P4",
+      "severity": "MEDIUM",
+      "title": "SPI commit(contentLength) vs Content-Length header meaning is undefined; HEAD sends conflicting values",
+      "location": {"file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java", "line_range": "300-313"},
+      "description": "The core both puts a Content-Length header into the header list and passes contentLength to HttpExchange.commit. For HEAD the header says N while contentLength is 0; for a HEAD stream() there is no header and contentLength 0. HttpExchange.commit's javadoc (spi/HttpExchange.java:49-51) only says '-1 means unknown' and does not say whether the adapter adds its own framing header or trusts the list. An adapter that emits Content-Length from the argument will send two conflicting Content-Length headers (response-splitting/smuggling class bug, and RFC 9110 violation) or a wrong 0 for HEAD. The shortcut comment defers this to the TinyHttpd adapter, but the SPI is published in this wave (IR-HTTP-003 AC-2).",
+      "suggested_fix": "Pin the contract in HttpExchange.commit javadoc now: 'headers already contain the framing header when the length is known; contentLength is the number of body bytes the core will write (0 for bodyless); the adapter must not add or alter Content-Length, and uses chunked/close framing only for -1'. Add an InMemoryHttpAdapter assertion that at most one Content-Length reaches the exchange.",
+      "is_behavioral": false,
+      "tags": ["spi-contract", "spec"]
+    },
+    {
+      "id": "A-005",
+      "axis": "P1",
+      "severity": "LOW",
+      "title": "res.status accepts any int, including values that cannot form a status line",
+      "location": {"file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java", "line_range": "57-62"},
+      "description": "status(0), status(-1), status(1000) or a 1xx code with a body are stored and later handed to the adapter, which must then produce an invalid status line or fail at commit time (ending ABORTED with no diagnostic for the handler). Node/Express throws RangeError for codes outside 100-999.",
+      "suggested_fix": "Throw IllegalArgumentException for codes outside 100..999 (or 200..599 plus 1xx rejection for body writers) at status() time.",
+      "is_behavioral": true,
+      "tags": ["validation"]
+    },
+    {
+      "id": "A-006",
+      "axis": "P7",
+      "severity": "LOW",
+      "title": "Dispatcher.automatic lets a RuntimeException from the exchange escape to the adapter",
+      "location": {"file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java", "line_range": "107-112"},
+      "description": "Only IOException is caught. A RuntimeException from ex.commit/finish (e.g. the documented IllegalStateException for a second start, or an adapter bug) propagates out of handle() without ex.abort(), while DefaultResponse.deliver treats IOException | RuntimeException uniformly. Inconsistent and leaves the connection state to the adapter.",
+      "suggested_fix": "catch (IOException | RuntimeException e) { ex.abort(); } to match DefaultResponse.deliver.",
+      "is_behavioral": true,
+      "tags": ["error-handling"]
+    },
+    {
+      "id": "A-007",
+      "axis": "P4",
+      "severity": "LOW",
+      "title": "isCommitted() turns true before the adapter received the headers and stays true when commit failed",
+      "location": {"file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java", "line_range": "315-320, 323-336"},
+      "description": "begin() sets committed=true and state=COMMITTED under the lock, and ex.commit runs afterwards outside it. FR-HTTP-015 AC-1 / FR-HTTP-016 AC-1 define COMMITTED as 'handed to the adapter'. Another thread can observe isCommitted()==true before anything was sent, and if ex.commit throws the response is ABORTED with isCommitted()==true although no status line went out. Harmless on the single-thread path but the javadoc/spec wording does not match.",
+      "suggested_fix": "Either document that COMMITTED means 'the single commit was claimed' (and update the SRS wording via the proper workflow), or flip committed only after ex.commit returns.",
+      "is_behavioral": false,
+      "tags": ["spec", "concurrency"]
+    },
+    {
+      "id": "A-008",
+      "axis": "P8",
+      "severity": "LOW",
+      "title": "Percent-decoder duplicated from routing.PathValidator; trivial allowHeader wrapper",
+      "location": {"file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java", "line_range": "192-232"},
+      "description": "DefaultRequest.decode/hex is a near line-for-line copy of PathValidator.decode/hex/utf8 (routing package), differing only in plusAsSpace and throw-vs-null. Two copies of a security-relevant decoder will drift. Dispatcher.allowHeader (Dispatcher.java:149-151) is a one-line wrapper over MethodSet.toString.",
+      "suggested_fix": "Expose one shared decoder (e.g. a package-internal util in routing or internal taking plusAsSpace and returning null on failure) and use it from both; inline allowHeader.",
+      "is_behavioral": false,
+      "tags": ["duplication"]
+    },
+    {
+      "id": "A-009",
+      "axis": "P3",
+      "severity": "LOW",
+      "title": "LimitedInputStream.available() reports source bytes beyond the limit",
+      "location": {"file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/LimitedInputStream.java", "line_range": "12-106"},
+      "description": "available() is inherited from FilterInputStream and returns in.available() even when count == limit or the declared length already exceeds the limit, so a later reader sizing a buffer from available() may over-allocate and is told data exists that read() will refuse.",
+      "suggested_fix": "Override available(): return 0 when declaredLength > limit or count >= limit, otherwise min(in.available(), limit - count).",
+      "is_behavioral": true,
+      "tags": ["resource-limits"]
+    }
+  ],
+  "coverage_rows": [
+    {"file": "NaruServe-api/src/main/java/com/snoworca/naruserve/BodyAlreadyConsumedException.java", "hunks_total": 1, "anchors": ["public class BodyAlreadyConsumedException extends RuntimeException {"], "findings": []},
+    {"file": "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java", "hunks_total": 1, "anchors": ["    <T> @Nullable T attribute(String key, Class<T> type);"], "findings": ["A-002"]},
+    {"file": "NaruServe-api/src/main/java/com/snoworca/naruserve/Response.java", "hunks_total": 1, "anchors": ["    Response header(String name, String value);"], "findings": ["A-003"]},
+    {"file": "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java", "hunks_total": 1, "anchors": ["    RestApp routerPolicy(RouterPolicy policy);"], "findings": []},
+    {"file": "NaruServe-api/src/main/java/com/snoworca/naruserve/RouteBuilder.java", "hunks_total": 1, "anchors": ["public interface RouteBuilder {"], "findings": []},
+    {"file": "NaruServe-api/src/main/java/com/snoworca/naruserve/RouteHandler.java", "hunks_total": 1, "anchors": ["    void handle(Request req, Response res) throws Exception;"], "findings": []},
+    {"file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/BodyState.java", "hunks_total": 1, "anchors": ["    public <T> T sharedParse(Callable<T> parser) throws Exception {"], "findings": []},
+    {"file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/BodyTooLargeException.java", "hunks_total": 1, "anchors": ["public final class BodyTooLargeException extends IOException {"], "findings": []},
+    {"file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java", "hunks_total": 1, "anchors": ["        return type.cast(attributes.get(key));"], "findings": ["A-002", "A-008"]},
+    {"file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java", "hunks_total": 1, "anchors": ["        return bodyless() ? begin(0, EMPTY) : begin(body.length, body);"], "findings": ["A-003", "A-004", "A-005", "A-007"]},
+    {"file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java", "hunks_total": 1, "anchors": ["    public synchronized void freeze() {"], "findings": []},
+    {"file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java", "hunks_total": 1, "anchors": ["        } catch (IOException e) {"], "findings": ["A-006", "A-008"]},
+    {"file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/LimitedInputStream.java", "hunks_total": 1, "anchors": ["    private int probe() throws IOException {"], "findings": ["A-001", "A-009"]},
+    {"file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ResponseState.java", "hunks_total": 1, "anchors": ["    NEW, COMMITTED, STREAMING, COMPLETED, ABORTED"], "findings": []},
+    {"file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/package-info.java", "hunks_total": 1, "anchors": ["package com.snoworca.naruserve.internal;"], "findings": []},
+    {"file": "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/ExchangeHandler.java", "hunks_total": 1, "anchors": ["    void handle(HttpExchange exchange);"], "findings": []},
+    {"file": "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpAdapter.java", "hunks_total": 1, "anchors": ["    void bind(String host, int port, ExchangeHandler handler) throws IOException;"], "findings": []},
+    {"file": "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpExchange.java", "hunks_total": 1, "anchors": ["    OutputStream commit(int status, List<Map.Entry<String, String>> headers, long contentLength) throws IOException;"], "findings": ["A-001", "A-004"]},
+    {"file": "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/StreamDrain.java", "hunks_total": 1, "anchors": ["    void drain(OutputStream out) throws IOException;"], "findings": []},
+    {"file": "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/UpgradeHandler.java", "hunks_total": 1, "anchors": ["    void upgraded(InputStream in, OutputStream out) throws IOException;"], "findings": []},
+    {"file": "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/package-info.java", "hunks_total": 1, "anchors": ["package com.snoworca.naruserve.spi;"], "findings": []}
+  ],
+  "summary": {"total": 9, "by_severity": {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 4, "LOW": 5}}
+}

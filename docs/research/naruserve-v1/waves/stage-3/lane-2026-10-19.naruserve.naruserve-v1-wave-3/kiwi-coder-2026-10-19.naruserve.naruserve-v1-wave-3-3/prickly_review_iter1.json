@@ -1,0 +1,11 @@
+{
+ "pass": "prickly-review",
+ "sds": "2026-10-19.naruserve.naruserve-v1-wave-3-3",
+ "findings": {
+  "CRITICAL": 0,
+  "HIGH": 0,
+  "MEDIUM": 1,
+  "LOW": 4
+ },
+ "resolved": "comment claim fixed; Dispatcher router null check; %252e case documented as pending; empty MethodSet and pre-bound TestApp adapter left as notes"
+}

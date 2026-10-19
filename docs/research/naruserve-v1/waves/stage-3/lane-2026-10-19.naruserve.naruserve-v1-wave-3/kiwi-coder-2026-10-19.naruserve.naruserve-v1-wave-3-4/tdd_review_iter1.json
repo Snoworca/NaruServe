@@ -1,0 +1,9 @@
+{"pass":"tdd-review","sds":"docs/sds/2026-10-19.naruserve.naruserve-v1-wave-3-4.sds.md","iter":1,"severity":{"CRITICAL":0,"HIGH":1,"MEDIUM":3,"LOW":3},
+"findings":[
+{"severity":"HIGH","axis":"intent-alignment","issue":"FR-HTTP-009 AC-3 param test fed pre-decoded params","resolution":"fixed: params now come from a real Router lookup of /files/:name for /files/a%20b"},
+{"severity":"MEDIUM","axis":"tech-quality","issue":"bulk-read taken<=11 could not fail with an 11-byte source","resolution":"fixed: 100-byte source"},
+{"severity":"MEDIUM","axis":"intent-alignment","issue":"skip() override not listed in SDS Interfaces","resolution":"kept: inherited FilterInputStream.skip would bypass the FR-HTTP-020 limit; reported as SDS note"},
+{"severity":"MEDIUM","axis":"tech-quality","issue":"malformed-query 400 test lacked a positive control","resolution":"fixed: a well-formed query reaches the invoke stub (UnsupportedOperationException)"},
+{"severity":"LOW","axis":"intent-alignment","issue":"isolation test used different keys","resolution":"fixed: same key on both requests"},
+{"severity":"LOW","axis":"intent-alignment","issue":"not all kind pairs covered; begin after failed parse","resolution":"fixed: all Kind pairs, begin after failed parse"},
+{"severity":"LOW","axis":"intent-alignment","issue":"BodyTooLargeException.limit() accessor not named in SDS","resolution":"kept: SDS says the exception carries the limit; reported as SDS note"}]}

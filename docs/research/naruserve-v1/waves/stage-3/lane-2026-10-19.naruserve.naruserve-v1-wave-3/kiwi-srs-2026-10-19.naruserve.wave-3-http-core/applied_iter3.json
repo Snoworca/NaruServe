@@ -1,0 +1,14 @@
+{"iter": 3, "applied": [
+{"id":"F3-01","req":"OPS-HTTP-001","ac":"AC-9","action":"fixed imports (com.snoworca.naruserve.*, .routing.*, java.util.*, java.io.*) added; third skip reason: block declares/uses a later-wave type or one from a library absent from the NaruServe-api test classpath (entry names the type: Gson @SerializedName, Logger, JsonCodec, UploadFile, Middleware); test path named DocsExamplesCompileTest.java"},
+{"id":"F3-02","req":"OPS-HTTP-001","action":"statement extended with I-009 docs-example compile obligation; Verification Method inspection->test; trace Code NaruServe-api/src/test/java/com/snoworca/naruserve/DocsExamplesCompileTest.java verifies (trace_intent=addition_site)"},
+{"id":"F3-03","req":"OPS-HTTP-001","ac":"AC-7","action":"also removes raw/text bullet from express-migration.md undecided list so the file states once that v1 has no raw or text body reader"},
+{"id":"F3-04","req":"FR-HTTP-016","ac":"AC-4","action":"reworded: After res.stream(...) returns, STREAMING until copy ends, then COMPLETED, or ABORTED on abort"},
+{"id":"F3-05","req":"FR-HTTP-006","ac":"AC-3","action":"COMMITTED unreachable from a wave 3 handler (send/html/end go COMMITTED->COMPLETED in one call, stream leaves STREAMING); reworded to STREAMING/COMPLETED only"},
+{"id":"F3-06","req":"FR-HTTP-002","ac":"AC-2","action":"validator-ordering examples now /%2e%2e and /a%2Fb; abc stays under the non-'/' rule in AC-4"},
+{"id":"F3-07","req":"FR-HTTP-003","ac":"AC-6","action":"tag changed to [D-395; T06; FR-ROUTE-015] (wave-2 WebSocket route resolution/upgrade flag)"},
+{"id":"F3-08","req":"IR-HTTP-003","ac":"AC-1","action":"request line now includes the HTTP version [D-105]"}
+],
+"rejected": [
+{"id":"F3-09","reason":"wave decision (Automatic response bodies) states empty body with Content-Length: 0 for wave 3 and the ACs already say 'in wave 3 (until wave 4 adds the standard error body)'; empty-body ACs kept"}
+],
+"validate_spec": {"errors":0,"warnings":30,"note":"all pre-existing SRS-W023 draft + SRS-W015"}}

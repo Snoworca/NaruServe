@@ -1,0 +1,14 @@
+{
+  "pass": "prickly-review round 3 (interleavings of handler thread and another writer)",
+  "sds": "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-3-5.sds.md",
+  "round": 3,
+  "severity_summary": {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 2, "LOW": 3},
+  "findings": [
+    {"severity": "MEDIUM", "issue": "Error from ex.commit in stream() left COMMITTED and the input open", "disposition": "fixed: catch Error, abort, rethrow"},
+    {"severity": "MEDIUM", "issue": "Error from commit/write/finish in deliver() left COMMITTED", "disposition": "fixed: catch Error, abort, rethrow"},
+    {"severity": "LOW", "issue": "runTransfer could run twice concurrently", "disposition": "fixed: pendingOut is cleared under the lock when a copy claims it"},
+    {"severity": "LOW", "issue": "refused stream(sameIn) closes the in-flight input outside the CAS", "disposition": "accepted: caller misuse edge, reported only"},
+    {"severity": "LOW", "issue": "commit may reach an exchange a concurrent abort already closed", "disposition": "accepted: HttpExchange.abort is idempotent; SPI wording to pin with the TinyHttpd adapter"}
+  ],
+  "loop_end": "CRITICAL=0 HIGH=0 after round 3; ./gradlew build exit 0"
+}

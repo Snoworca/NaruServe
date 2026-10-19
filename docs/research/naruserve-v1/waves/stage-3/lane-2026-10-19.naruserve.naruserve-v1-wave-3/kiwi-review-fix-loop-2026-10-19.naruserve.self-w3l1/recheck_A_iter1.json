@@ -1,0 +1,98 @@
+{
+  "resolved_findings": ["A-001", "A-002", "A-003", "A-004", "B-001"],
+  "unresolved_findings": [],
+  "findings": [
+    {
+      "id": "RA-001",
+      "axis": "P1",
+      "severity": "MEDIUM",
+      "title": "Header values above U+00FF pass validation and the SPI does not pin the header encoding",
+      "location": {"file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java", "line_range": "408-416"},
+      "description": "isFieldValue only rejects C0 controls and DEL. Any char above 0x7F passes, including chars above 0xFF such as U+010A or U+010D. HttpExchange.commit takes headers as Java Strings and does not say how the adapter turns them into bytes. An adapter that writes headers as ISO-8859-1 by keeping the low byte (the classic char-to-byte cast, the cause of Node.js header-splitting CVE-2018-12116) turns U+010A into LF and U+010D into CR, which gets past the CR/LF guard the A-003 fix was meant to provide. The core is the trust boundary here and the SPI leaves the encoding open.",
+      "suggested_fix": "Either reject chars > 0xFF in isFieldValue (RFC 9110 allows only obs-text 0x80-0xFF), or state in HttpExchange.commit javadoc how header strings become bytes (for example ISO-8859-1, with chars > 0xFF never reaching the adapter). Add a test case {\"X\", \"a\\u010Ab\"} next to the existing bad-header table.",
+      "is_behavioral": true,
+      "tags": ["security", "header-injection", "spi-contract"]
+    },
+    {
+      "id": "RA-002",
+      "axis": "P2",
+      "severity": "LOW",
+      "title": "The in-memory adapter still does not catch a short body or a header/argument length mismatch",
+      "location": {"file": "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/InMemoryHttpAdapter.java", "line_range": "398-429"},
+      "description": "B-001 is resolved: the length is recorded, exposed, asserted in the tests, and an over-long write fails. Two parts of the suggested fix were not done. (1) finish() does not mark the exchange abnormal when fewer than contentLength bytes were written, so a regression that commits N and writes less would still pass. (2) commit() counts Content-Length headers (more than one fails) but does not check that a single header equals contentLength on a non-HEAD response, which is the rule the new HttpExchange.commit javadoc sets.",
+      "suggested_fix": "In finish(), when contentLength >= 0 and body.size() < contentLength, mark the exchange aborted or throw IOException. Optionally, when the request method is not HEAD and a Content-Length header is present, require it to equal contentLength.",
+      "is_behavioral": true,
+      "tags": ["test-fixture", "spi-contract"]
+    }
+  ],
+  "coverage_rows": [
+    {
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java",
+      "hunks_total": 1,
+      "anchors": ["+     * class such as {@code int.class} (Kotlin's {@code Int::class.java}) reads the boxed value."],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java",
+      "hunks_total": 2,
+      "anchors": [
+        "+    @SuppressWarnings(\"unchecked\") // a wrapper class stands for its primitive T, which is the boxed type at runtime",
+        "+        return (T) wrapper(type).cast(attributes.get(key));"
+      ],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+      "hunks_total": 6,
+      "anchors": [
+        "+     * Replaces a same-name header (case-insensitive), as Express res.set does. The name must be an RFC 9110 token",
+        "+        if (!isToken(name) || !isFieldValue(value)) {",
+        "+            refusal = state != ResponseState.NEW ? notNew() : !isFieldValue(contentType) ? badHeader() : null;",
+        "+        // HEAD: commit length 0 (no body bytes) while the header keeps the GET length, per HttpExchange.commit.",
+        "+    private static IllegalArgumentException badHeader() {",
+        "+            if (c < 0x20 && c != '\\t' || c == 0x7F) {"
+      ],
+      "findings": ["RA-001"]
+    },
+    {
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/LimitedInputStream.java",
+      "hunks_total": 8,
+      "anchors": [
+        "+ * declared length within the limit ends the body there and the source is never read past it. Without a declared",
+        "+    private final long cap;",
+        "+        this.cap = declaredLength >= 0 && declaredLength <= limit ? declaredLength : limit;",
+        "+        if (count == cap) {",
+        "-        long room = limit - count;",
+        "+        long room = cap - count;",
+        "+     * At the cap: a declared length ends the body; otherwise takes one more byte from the source, so byte limit+1",
+        "+        if (declaredLength >= 0 || in.read() < 0) {"
+      ],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpExchange.java",
+      "hunks_total": 2,
+      "anchors": [
+        "+     * reads into the next request on the connection.",
+        "+     * the adapter never adds, removes or changes Content-Length. {@code contentLength} is the number of body bytes"
+      ],
+      "findings": ["RA-001"]
+    },
+    {
+      "file": "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/InMemoryHttpAdapter.java",
+      "hunks_total": 8,
+      "anchors": [
+        "+        private final long contentLength;",
+        "+                boolean upgradeHandedOver, long contentLength) {",
+        "+        public long contentLength() {",
+        "+        private long contentLength = -2;",
+        "+                throw new IOException(\"body exceeds the committed length \" + contentLength);",
+        "+                throw new IllegalArgumentException(\"more than one Content-Length header\");",
+        "+                this.contentLength = contentLength;",
+        "+            return new ClientResponse(status, responseHeaders, body.toByteArray(), aborted, upgradeHandedOver,"
+      ],
+      "findings": ["RA-002"]
+    }
+  ],
+  "summary": {"total": 2, "by_severity": {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 1, "LOW": 1}}
+}

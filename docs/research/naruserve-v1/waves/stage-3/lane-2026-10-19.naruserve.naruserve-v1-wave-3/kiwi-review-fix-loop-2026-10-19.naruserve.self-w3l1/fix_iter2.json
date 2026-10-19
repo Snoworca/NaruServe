@@ -1,0 +1,9 @@
+{"iter":2,"fixes":[{"finding_id":"RA-001","files_changed":[
+{"path":"NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java","change":"isFieldValue also rejects c > 0xFF; header() javadoc and badHeader() message updated"},
+{"path":"NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpExchange.java","change":"commit javadoc states header strings are ISO-8859-1, chars <= U+00FF and never CR/LF guaranteed by the core, one byte per char"},
+{"path":"NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultResponseTest.java","change":"added sdsAc7_FR_HTTP_015_AC4_charsAboveLatin1AreRefused"},
+{"path":"docs/api/response.md","change":"header() rule sentence mentions chars above U+00FF and the ISO-8859-1 encoding"}],
+"red_test":"DefaultResponseTest.sdsAc7_FR_HTTP_015_AC4_charsAboveLatin1AreRefused",
+"rationale_full":"FR-HTTP-015 AC-4. The value check refused chars < 0x20 (except HTAB) and 0x7F but let chars above U+00FF through; an adapter that writes the low byte of each char turns U+010A into LF and U+010D into CR, bypassing the CR/LF guard (cf. Node CVE-2018-12116). isFieldValue now also refuses c > 0xFF, throwing the same IllegalArgumentException. stream()'s content type already goes through isFieldValue, so the same change covers it (asserted in the new test). Names are RFC 9110 tokens (ASCII only) already. The SPI contract now states the ISO-8859-1 one-byte-per-char encoding so adapters can rely on it. Positive control: 'café' is accepted and round-trips."}],
+"red_evidence":[{"test_id":"DefaultResponseTest.sdsAc7_FR_HTTP_015_AC4_charsAboveLatin1AreRefused","failure":"java.lang.AssertionError: expected:<3> but was:<0>"}],
+"build_exit_code":0}

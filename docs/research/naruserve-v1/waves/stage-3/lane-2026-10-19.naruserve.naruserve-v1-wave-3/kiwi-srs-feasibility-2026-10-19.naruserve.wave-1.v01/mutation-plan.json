@@ -1,0 +1,194 @@
+{
+  "run": "2026-10-19.naruserve.wave-1.v01",
+  "target": "wave-1",
+  "policy": "default mapping (no policy file; see policy-resolved.json)",
+  "mode": "dry-run proposal; no MCP mutation performed",
+  "apply_with": "MCP update_stability per requirement; draft->evolving is applied automatically under the default policy (user confirmation only for stable promotion or deprecation/demotion)",
+  "plan": [
+    {
+      "id": "CON-BUILD-001",
+      "current_stability": "draft",
+      "proposed_stability": "evolving",
+      "change": true,
+      "label": "high",
+      "score": 98,
+      "requires_user_confirm": false,
+      "mapping_rule": "high->evolving (has_verification=false)",
+      "reason": "Feasibility=high (score 98). Blockers: none. Key condition: Keep the repo free of pom.xml/build.xml/mvnw (none present at analysis time). Run: 2026-10-19.naruserve.wave-1.v01"
+    },
+    {
+      "id": "CON-BUILD-002",
+      "current_stability": "draft",
+      "proposed_stability": "evolving",
+      "change": true,
+      "label": "high",
+      "score": 91,
+      "requires_user_confirm": false,
+      "mapping_rule": "high->evolving (has_verification=false)",
+      "reason": "Feasibility=high (score 91). Blockers: none. Key condition: Implementer picks the three logger module suffixes under C-07 within the NaruServe- prefix; the chosen names must then flow into OPS-BUILD-003. Run: 2026-10-19.naruserve.wave-1.v01"
+    },
+    {
+      "id": "CON-BUILD-003",
+      "current_stability": "draft",
+      "proposed_stability": "evolving",
+      "change": true,
+      "label": "high",
+      "score": 94,
+      "requires_user_confirm": false,
+      "mapping_rule": "high->evolving (has_verification=false)",
+      "reason": "Feasibility=high (score 94). Blockers: none. Key condition: Seven new modules need only a directory plus an include line; per-module build files stay forbidden. Run: 2026-10-19.naruserve.wave-1.v01"
+    },
+    {
+      "id": "CON-BUILD-004",
+      "current_stability": "draft",
+      "proposed_stability": "evolving",
+      "change": true,
+      "label": "high",
+      "score": 86,
+      "requires_user_confirm": false,
+      "mapping_rule": "high->evolving (has_verification=false)",
+      "reason": "Feasibility=high (score 86). Blockers: none. Key condition: On JDK 17 the Kotlin Gradle Plugin JVM-target validation compares jvmTarget 1.8 with the Java task target; set sourceCompatibility/targetCompatibility = 1.8 next to options.release = 8 (Implementation Notes) or AC-3 fails. Run: 2026-10-19.naruserve.wave-1.v01"
+    },
+    {
+      "id": "CON-BUILD-005",
+      "current_stability": "draft",
+      "proposed_stability": "evolving",
+      "change": true,
+      "label": "high",
+      "score": 95,
+      "requires_user_confirm": false,
+      "mapping_rule": "high->evolving (has_verification=false)",
+      "reason": "Feasibility=high (score 95). Blockers: none. Key condition: Package check covers main source sets only; test-scope fake android.util.Log (D-403) is allowed. Run: 2026-10-19.naruserve.wave-1.v01"
+    },
+    {
+      "id": "CON-BUILD-006",
+      "current_stability": "draft",
+      "proposed_stability": "evolving",
+      "change": true,
+      "label": "high",
+      "score": 86,
+      "requires_user_confirm": false,
+      "mapping_rule": "high->evolving (has_verification=false)",
+      "reason": "Feasibility=high (score 86). Blockers: none. Key condition: All named artifacts resolve on Maven Central at analysis time (gson 2.14.0, javax.websocket-api 1.1, slf4j-api 1.7.36, junit 4.13.2: HTTP 200). Run: 2026-10-19.naruserve.wave-1.v01"
+    },
+    {
+      "id": "CON-BUILD-007",
+      "current_stability": "draft",
+      "proposed_stability": "evolving",
+      "change": true,
+      "label": "high",
+      "score": 86,
+      "requires_user_confirm": false,
+      "mapping_rule": "high->evolving (has_verification=false)",
+      "reason": "Feasibility=high (score 86). Blockers: none. Key condition: The runtimeClasspath check is new code; TinyHttpd checkRuntimeDependencies (build.gradle:51-61) is a direct pattern to copy. Run: 2026-10-19.naruserve.wave-1.v01"
+    },
+    {
+      "id": "CON-BUILD-008",
+      "current_stability": "draft",
+      "proposed_stability": "evolving",
+      "change": true,
+      "label": "high",
+      "score": 85,
+      "requires_user_confirm": false,
+      "mapping_rule": "high->evolving (has_verification=false)",
+      "reason": "Feasibility=high (score 85). Blockers: none. Key condition: Reflection-only access to android.util.Log; a test-scope fake android.util.Log (D-403) is allowed but must stay out of the main source set so animal-sniffer and CON-BUILD-005 hold. Run: 2026-10-19.naruserve.wave-1.v01"
+    },
+    {
+      "id": "OPS-BUILD-001",
+      "current_stability": "draft",
+      "proposed_stability": "evolving",
+      "change": true,
+      "label": "high",
+      "score": 88,
+      "requires_user_confirm": false,
+      "mapping_rule": "high->evolving (has_verification=false)",
+      "reason": "Feasibility=high (score 88). Blockers: none. Key condition: The checkout must exist at /Users/beom/work/git/TinyHttpd (present, HEAD 46b973e at analysis time). Run: 2026-10-19.naruserve.wave-1.v01"
+    },
+    {
+      "id": "CON-BUILD-009",
+      "current_stability": "draft",
+      "proposed_stability": "evolving",
+      "change": true,
+      "label": "high",
+      "score": 88,
+      "requires_user_confirm": false,
+      "mapping_rule": "high->evolving (has_verification=false)",
+      "reason": "Feasibility=high (score 88). Blockers: none. Key condition: Composite substitution works because TinyHttpd projects carry group com.snoworca.tinyhttpd and project names tinyhttpd-core / tinyhttpd-websocket. Run: 2026-10-19.naruserve.wave-1.v01"
+    },
+    {
+      "id": "CON-BUILD-010",
+      "current_stability": "draft",
+      "proposed_stability": "evolving",
+      "change": true,
+      "label": "high",
+      "score": 83,
+      "requires_user_confirm": false,
+      "mapping_rule": "high->evolving (has_verification=false)",
+      "reason": "Feasibility=high (score 83). Blockers: none. Key condition: Relies on TinyHttpd .gitignore covering build/ and .gradle; a TinyHttpd build that emits a non-ignored file would break AC-1. Run: 2026-10-19.naruserve.wave-1.v01"
+    },
+    {
+      "id": "OPS-BUILD-002",
+      "current_stability": "draft",
+      "proposed_stability": "evolving",
+      "change": true,
+      "label": "high",
+      "score": 85,
+      "requires_user_confirm": false,
+      "mapping_rule": "high->evolving (has_verification=false)",
+      "reason": "Feasibility=high (score 85). Blockers: none. Key condition: Kotlin test source sets need kotlin-stdlib in test scope because kotlin.stdlib.default.dependency=false. Run: 2026-10-19.naruserve.wave-1.v01"
+    },
+    {
+      "id": "CON-BUILD-011",
+      "current_stability": "draft",
+      "proposed_stability": "evolving",
+      "change": true,
+      "label": "high",
+      "score": 82,
+      "requires_user_confirm": false,
+      "mapping_rule": "high->evolving (has_verification=false)",
+      "reason": "Feasibility=high (score 82). Blockers: none. Key condition: Library not chosen yet (C-07); it must be Kotlin-recognised, compileOnly, annotation-only and API 21 clean (e.g. JSpecify or JetBrains annotations). Run: 2026-10-19.naruserve.wave-1.v01"
+    },
+    {
+      "id": "CON-BUILD-012",
+      "current_stability": "draft",
+      "proposed_stability": "evolving",
+      "change": true,
+      "label": "high",
+      "score": 87,
+      "requires_user_confirm": false,
+      "mapping_rule": "high->evolving (has_verification=false)",
+      "reason": "Feasibility=high (score 87). Blockers: none. Key condition: Same plugin (ru.vyarus.animalsniffer 2.0.1) and signature as TinyHttpd, already wired for NaruServe-api. Run: 2026-10-19.naruserve.wave-1.v01"
+    },
+    {
+      "id": "CON-BUILD-013",
+      "current_stability": "draft",
+      "proposed_stability": "evolving",
+      "change": true,
+      "label": "high",
+      "score": 81,
+      "requires_user_confirm": false,
+      "mapping_rule": "high->evolving (has_verification=false)",
+      "reason": "Feasibility=high (score 81). Blockers: none. Key condition: Three new custom checks with no existing helper: two bytecode reference scans (forbidden packages in NaruServe-api main output; javax.servlet in seven Android modules) and one Gson version resolution check. Run: 2026-10-19.naruserve.wave-1.v01"
+    },
+    {
+      "id": "OPS-BUILD-003",
+      "current_stability": "draft",
+      "proposed_stability": "evolving",
+      "change": true,
+      "label": "high",
+      "score": 83,
+      "requires_user_confirm": false,
+      "mapping_rule": "high->evolving (has_verification=false)",
+      "reason": "Feasibility=high (score 83). Blockers: none. Key condition: AC-2 counts only (미확정) markers about module names or coordinates; the same files keep other (미확정) markers (e.g. docs/api/app.md:22, docs/api/logging.md:33), so the check needs a reviewer judgement, not a plain grep. Run: 2026-10-19.naruserve.wave-1.v01"
+    }
+  ],
+  "summary": {
+    "total": 16,
+    "changes": 16,
+    "keep": 0,
+    "by_transition": {
+      "draft->evolving": 16
+    },
+    "user_confirm_required": 0
+  }
+}

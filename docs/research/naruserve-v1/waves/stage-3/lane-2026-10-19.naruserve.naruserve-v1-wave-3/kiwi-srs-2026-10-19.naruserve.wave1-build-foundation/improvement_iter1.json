@@ -1,0 +1,33 @@
+{
+  "iter": 1,
+  "process": "B-apply",
+  "target": "wave-1",
+  "source": "improvements_iter1.md",
+  "mcp_calls": [
+    {"tool": "replace_acceptance_criteria", "id": "CON-BUILD-006", "findings": ["F-01", "F-02"], "ok": true},
+    {"tool": "append_section_note", "id": "CON-BUILD-006", "section": "implementation_notes", "mode": "append", "findings": ["F-02"], "ok": true},
+    {"tool": "append_section_note", "id": "CON-BUILD-006", "section": "rationale", "mode": "replace", "findings": ["F-02"], "ok": true},
+    {"tool": "replace_acceptance_criteria", "id": "CON-BUILD-010", "findings": ["F-03"], "ok": true},
+    {"tool": "append_section_note", "id": "CON-BUILD-010", "section": "implementation_notes", "mode": "append", "findings": ["F-03"], "ok": true},
+    {"tool": "replace_acceptance_criteria", "id": "OPS-BUILD-001", "findings": ["F-04", "F-09"], "ok": true},
+    {"tool": "append_section_note", "id": "OPS-BUILD-001", "section": "rationale", "mode": "replace", "findings": ["F-04"], "ok": true},
+    {"tool": "edit_requirement_fields", "id": "OPS-BUILD-001", "fields": ["statement"], "findings": ["F-09"], "ok": true},
+    {"tool": "validate_spec", "ok": true, "errors": 0, "warnings": {"SRS-W023": 16}},
+    {"tool": "replace_acceptance_criteria", "id": "CON-BUILD-013", "findings": ["F-05", "F-12", "F-14"], "ok": true},
+    {"tool": "edit_requirement_fields", "id": "CON-BUILD-013", "fields": ["title", "statement"], "findings": ["F-12"], "ok": true},
+    {"tool": "append_section_note", "id": "CON-BUILD-013", "section": "rationale", "mode": "replace", "findings": ["F-05", "F-12"], "ok": true},
+    {"tool": "replace_acceptance_criteria", "id": "CON-BUILD-011", "findings": ["F-06"], "ok": true},
+    {"tool": "replace_acceptance_criteria", "id": "CON-BUILD-002", "findings": ["F-08"], "ok": true},
+    {"tool": "append_section_note", "id": "CON-BUILD-002", "section": "rationale", "mode": "append", "findings": ["F-08"], "ok": true},
+    {"tool": "replace_acceptance_criteria", "id": "OPS-BUILD-003", "findings": ["F-10"], "ok": true},
+    {"tool": "replace_acceptance_criteria", "id": "CON-BUILD-004", "findings": ["F-13"], "ok": true},
+    {"tool": "edit_requirement_table_rows", "id": "CON-BUILD-010", "section": "trace_links", "operation": "delete rowIndex 0 (Code settings.gradle implements)", "dryRun": true, "findings": ["F-11"], "ok": true},
+    {"tool": "edit_requirement_table_rows", "id": "CON-BUILD-010", "section": "trace_links", "operation": "delete rowIndex 0 (Code settings.gradle implements)", "findings": ["F-11"], "ok": true},
+    {"tool": "add_trace_link", "id": "CON-BUILD-010", "type": "Issue", "reference": "https://github.com/Snoworca/NaruServe/issues/1", "relation": "tracks", "findings": ["F-11"], "ok": true},
+    {"tool": "append_section_note", "id": "CON-BUILD-006", "section": "implementation_notes", "mode": "replace", "note": "remove '- -' placeholder", "findings": ["F-02"], "ok": true},
+    {"tool": "append_section_note", "id": "CON-BUILD-010", "section": "implementation_notes", "mode": "replace", "note": "remove '- -' placeholder", "findings": ["F-03"], "ok": true},
+    {"tool": "validate_spec", "ok": true, "errors": 0, "warnings": {"SRS-W023": 16}}
+  ],
+  "not_applied": [{"finding": "F-07", "reason": "stability promotion belongs to /kiwi-srs-feasibility"}],
+  "side_effects": ["edit_requirement_fields title change on CON-BUILD-013 removed the tool-written [DRAFT — pending decision] heading marker; Stability row is still draft and validate_spec still reports SRS-W023 for it"]
+}

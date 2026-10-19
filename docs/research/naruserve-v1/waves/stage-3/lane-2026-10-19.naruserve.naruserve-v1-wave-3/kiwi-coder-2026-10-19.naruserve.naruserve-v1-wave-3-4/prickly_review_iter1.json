@@ -1,0 +1,9 @@
+{"pass":"prickly-review","sds":"docs/sds/2026-10-19.naruserve.naruserve-v1-wave-3-4.sds.md","iter":1,"severity":{"CRITICAL":0,"HIGH":0,"MEDIUM":3,"LOW":4},
+"findings":[
+{"severity":"MEDIUM","axis":7,"issue":"bulk-read AC-3 assertion returned<=10 did not pin behaviour","resolution":"fixed: stream now hands out exactly 10 bytes then a one-byte probe throws; test asserts returned==10 and source taken==11 (assertion made stricter, not weaker)"},
+{"severity":"MEDIUM","axis":4,"issue":"sharedParse ran the parser while holding the BodyState monitor; close() could block on body I/O","resolution":"fixed: parser runs outside the lock, concurrent callers wait for the result, close() notifies; tests added"},
+{"severity":"MEDIUM","axis":5,"issue":"DefaultRequest.decode duplicates routing PathValidator.decode","resolution":"kept: PathValidator.decode is package-private in routing and PathValidator.java is outside this SDS write set; noted for a later cleanup"},
+{"severity":"LOW","axis":3,"issue":"byte limit+1 written into caller buffer","resolution":"fixed by the probe-byte change"},
+{"severity":"LOW","axis":6,"issue":"complete() after close() threw IllegalStateException","resolution":"fixed: no-op when CLOSED; test added"},
+{"severity":"LOW","axis":2,"issue":"IllegalArgumentException messages echoed raw client input","resolution":"fixed: messages carry an offset only"},
+{"severity":"LOW","axis":7,"issue":"no sharedParse-while-PARSING case","resolution":"fixed: test added"}]}

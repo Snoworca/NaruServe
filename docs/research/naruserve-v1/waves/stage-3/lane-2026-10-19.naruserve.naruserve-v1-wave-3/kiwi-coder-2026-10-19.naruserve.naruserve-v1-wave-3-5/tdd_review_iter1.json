@@ -1,0 +1,21 @@
+{
+  "pass": "tdd-review (S1 intent-alignment + S2 technical-quality, one subagent)",
+  "sds": "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-3-5.sds.md",
+  "round": 1,
+  "severity_summary": {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 5, "LOW": 3},
+  "findings": [
+    {"severity": "HIGH", "axis": "tech-quality", "issue": "abnormallyClosed() cannot tell the response's abort from the in-memory adapter's fallback abort", "disposition": "fixed: hand-written ResponseStreamTest.RecordingExchange counts commit/finish/abort; added exchange-level tests for read failure, write failure, abort during transfer, abort before commit, and Dispatcher throw while STREAMING"},
+    {"severity": "MEDIUM", "axis": "intent-alignment", "issue": "abort in ABORTED not shown to skip the exchange", "disposition": "fixed: sdsAc9_FR_HTTP_015_AC2_AC3_abortDuringTransferCallsTheExchangeOnceThenIsNoOp, sdsAc8_sdsAc9_..._abortBeforeCommitAbortsTheExchangeOnceWithoutCommit"},
+    {"severity": "MEDIUM", "axis": "intent-alignment", "issue": "write-failure close path untested", "disposition": "fixed: sdsAc4_FR_HTTP_014_AC5_writeFailureAbortsAndClosesOnceWithoutRethrow"},
+    {"severity": "MEDIUM", "axis": "intent-alignment", "issue": "COMMITTED state never observed", "disposition": "fixed: sdsAc10_FR_HTTP_016_AC1_AC2_mutationWhileCommittedThrowsAndCommitIsSingle"},
+    {"severity": "MEDIUM", "axis": "tech-quality", "issue": "assertions inside handlers depend on Dispatcher not catching Error", "disposition": "rejected: SDS-3-AC-8 catches Exception only and the in-memory adapter rethrows Errors; catching Throwable would itself break the contract and the outer tests would fail on the missing 500/abort"},
+    {"severity": "MEDIUM", "axis": "intent-alignment", "issue": "stream() rejected after completion closes the caller's input: not in SDS", "disposition": "kept: FR-HTTP-014 says stream takes ownership of the stream and the Response javadoc says the response takes ownership of in; SDS-AC-10 'change nothing' concerns response state, which is unchanged"},
+    {"severity": "LOW", "axis": "intent-alignment", "issue": "handler-returned not proven at abort time", "disposition": "fixed: flag set as the handler's last statement and sampled in the read hook"},
+    {"severity": "LOW", "axis": "tech-quality", "issue": "header() ISE message not checked for STREAMING", "disposition": "fixed"},
+    {"severity": "LOW", "axis": "intent-alignment", "issue": "redundant assertNotNull for FR-HTTP-002 AC-5", "disposition": "accepted as is"}
+  ],
+  "script_checks": {
+    "req_mapping": "speckiwi sds check passed (0 errors); speckiwi coverage --tests passed, gaps none",
+    "red_verification": "compileTestJava failed: cannot find symbol DefaultResponse / ResponseState (exit 1)"
+  }
+}

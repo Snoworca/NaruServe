@@ -1,0 +1,46 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-4",
+  "sds_path": "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-3-4.sds.md",
+  "sds_sha256": "38a449dd360ce4b4e49dc1d9e7fe1b03c91094480b9b455b9880ba7e39ea9e17",
+  "target": "wave-3",
+  "req_ids": ["FR-HTTP-009", "FR-HTTP-010", "FR-HTTP-011", "FR-HTTP-012", "FR-HTTP-019", "FR-HTTP-020"],
+  "write_set": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/BodyAlreadyConsumedException.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/BodyState.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/LimitedInputStream.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/BodyTooLargeException.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java (PM lane allowance)",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRequestTest.java",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/BodyStateTest.java",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/LimitedInputStreamTest.java"
+  ],
+  "mode": "normal",
+  "flags": ["--auto", "--auto-cost-warning", "--auto-integration", "--defer-srs-mutation"],
+  "spawn_context": "pm-child",
+  "phase": "done",
+  "next_resume_hint": null,
+  "failed": false,
+  "severity_counters": {
+    "phase1": {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 3, "LOW": 3, "rounds": 1},
+    "phase2": {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 3, "LOW": 4, "rounds": 1}
+  },
+  "red_evidence": {
+    "command": "./gradlew :NaruServe-api:test --tests *DefaultRequestTest --tests *BodyStateTest --tests *LimitedInputStreamTest",
+    "exit_code": 1,
+    "captured_failure": "compileTestJava FAILED: cannot find symbol class BodyAlreadyConsumedException / BodyState / DefaultRequest / LimitedInputStream / BodyTooLargeException",
+    "timestamp": "2026-10-19T01:25:00Z"
+  },
+  "green_evidence": {
+    "command": "./gradlew :NaruServe-api:test --tests *DefaultRequestTest --tests *BodyStateTest --tests *LimitedInputStreamTest --tests *DispatcherTest",
+    "exit_code": 0,
+    "timestamp": "2026-10-19T01:40:00Z"
+  },
+  "green_evidence_meta": {"DefaultRequestTest": 18, "BodyStateTest": 12, "LimitedInputStreamTest": 8, "DispatcherTest": 11},
+  "regression_baseline": {"command": "./gradlew build", "exit_code": 0, "head_sha": "4917e40"},
+  "regression_summary": {"scope": "full", "command": "./gradlew build", "exit_code": 0, "regressed_files": []},
+  "pending_mutations": [],
+  "deferred_queue": "/Users/beom/work/git/NaruServe/kiwi/orchestrator/2026-10-19.NaruServe.naruserve-v1/lanes/lane-2026-10-19.naruserve.naruserve-v1-wave-3/deferred-srs-queue.jsonl",
+  "deferred_entries": 41
+}

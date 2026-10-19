@@ -1,0 +1,11 @@
+{
+ "pass": "tdd-review",
+ "sds": "2026-10-19.naruserve.naruserve-v1-wave-3-3",
+ "findings": {
+  "CRITICAL": 0,
+  "HIGH": 0,
+  "MEDIUM": 3,
+  "LOW": 7
+ },
+ "resolved": "3 MEDIUM fixed (header-join order, held-ServerSocket no-socket check, NullMarked by reflection); LOW renames, unwrapped and re-freeze asserts, X-Tag dropped; others noted"
+}

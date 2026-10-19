@@ -1,0 +1,552 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-1",
+  "sds_path": "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-3-1.sds.md",
+  "sds_sha256": "4b66813e25e13cd7709f18ce8d61710267686f5bf43e5cf01af551bb5e485153",
+  "target": "wave-3",
+  "req_ids": [
+    "IR-HTTP-001",
+    "IR-HTTP-002",
+    "IR-HTTP-005",
+    "IR-HTTP-006",
+    "CON-ROUTE-006"
+  ],
+  "mode": "normal",
+  "flags": [
+    "--auto",
+    "--auto-cost-warning",
+    "--auto-integration",
+    "--defer-srs-mutation"
+  ],
+  "spawn_context": "pm-child",
+  "started_at": "2026-10-19T01:04:28Z",
+  "updated_at": "2026-10-19T01:04:28Z",
+  "frozen_at": null,
+  "phase": "done",
+  "next_resume_hint": null,
+  "failed": false,
+  "red_evidence": {
+    "command": "./gradlew :NaruServe-api:test --offline",
+    "exit_code": 1,
+    "captured_failure": "e: HttpApiKotlinTest.kt:14:30 Unresolved reference 'Request'. (compileTestKotlin failed: Request, Response, RouteHandler, RouteBuilder, RestApp absent)",
+    "timestamp": "2026-10-19T01:04:28Z"
+  },
+  "green_evidence": {
+    "command": "./gradlew build --offline",
+    "exit_code": 0,
+    "timestamp": "2026-10-19T01:04:28Z"
+  },
+  "regression_baseline": {
+    "command": "./gradlew build",
+    "exit_code": 0,
+    "failed": 0,
+    "failed_test_ids": [],
+    "head_sha": "62eab3c",
+    "note": "pinned by parent"
+  },
+  "regression_summary": {
+    "last_run_at": "2026-10-19T01:04:28Z",
+    "scope": "full",
+    "failed": 0,
+    "regressed_files": []
+  },
+  "mcp_call_log": [
+    {
+      "called_at": "2026-10-19T01:04:28Z",
+      "tool": "update_status",
+      "args": {
+        "id": "IR-HTTP-001",
+        "status": "in_progress"
+      },
+      "args_hash": "e52f4184bbf61893d21d712cb0bbaa1052141d55",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-1"
+    },
+    {
+      "called_at": "2026-10-19T01:04:28Z",
+      "tool": "update_status",
+      "args": {
+        "id": "IR-HTTP-002",
+        "status": "in_progress"
+      },
+      "args_hash": "7a9c71d968977028a69297377d840a331472abd2",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-1"
+    },
+    {
+      "called_at": "2026-10-19T01:04:28Z",
+      "tool": "update_status",
+      "args": {
+        "id": "IR-HTTP-005",
+        "status": "in_progress"
+      },
+      "args_hash": "f9695e77940f94834bc9aee3fb77cabe9feec070",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-1"
+    },
+    {
+      "called_at": "2026-10-19T01:04:28Z",
+      "tool": "update_status",
+      "args": {
+        "id": "IR-HTTP-006",
+        "status": "in_progress"
+      },
+      "args_hash": "d8427c4743abb80f5a81401871fc72ab16922f43",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-1"
+    },
+    {
+      "called_at": "2026-10-19T01:04:28Z",
+      "tool": "update_status",
+      "args": {
+        "id": "CON-ROUTE-006",
+        "status": "in_progress"
+      },
+      "args_hash": "5740d3be64fbe01edd82e44f3dec66d75f1b91ed",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-1"
+    },
+    {
+      "called_at": "2026-10-19T01:04:28Z",
+      "tool": "add_trace_link",
+      "args": {
+        "id": "IR-HTTP-001",
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java",
+        "relation": "implements"
+      },
+      "args_hash": "8a99709e30bd66229e64e9c7fe0d5076b51ac128",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-1"
+    },
+    {
+      "called_at": "2026-10-19T01:04:28Z",
+      "tool": "add_trace_link",
+      "args": {
+        "id": "IR-HTTP-001",
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/Response.java",
+        "relation": "implements"
+      },
+      "args_hash": "e80d366d1b4f2645419b9885afe341668c236747",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-1"
+    },
+    {
+      "called_at": "2026-10-19T01:04:28Z",
+      "tool": "add_trace_link",
+      "args": {
+        "id": "IR-HTTP-002",
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/RouteHandler.java",
+        "relation": "implements"
+      },
+      "args_hash": "52dc049afd9798a217b38b315ec9b72e4e95e811",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-1"
+    },
+    {
+      "called_at": "2026-10-19T01:04:28Z",
+      "tool": "add_trace_link",
+      "args": {
+        "id": "IR-HTTP-005",
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java",
+        "relation": "implements"
+      },
+      "args_hash": "5b50b535e5f80df7e92acfb01a3d3e303e1bd6d1",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-1"
+    },
+    {
+      "called_at": "2026-10-19T01:04:28Z",
+      "tool": "add_trace_link",
+      "args": {
+        "id": "IR-HTTP-006",
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/RouteBuilder.java",
+        "relation": "implements"
+      },
+      "args_hash": "634db676f8b6437e61e29be770c2bb45ba760704",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-1"
+    },
+    {
+      "called_at": "2026-10-19T01:04:28Z",
+      "tool": "add_verification_evidence",
+      "args": {
+        "id": "IR-HTTP-001",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java#sdsAc1_IR_HTTP_001_AC1_requestDeclaresTheWave3Methods",
+        "covers": "AC-1",
+        "notes": "./gradlew build exit 0"
+      },
+      "args_hash": "d3edc712da68bb5d490fce2afa6f8f8e1027559d",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-1"
+    },
+    {
+      "called_at": "2026-10-19T01:04:28Z",
+      "tool": "add_verification_evidence",
+      "args": {
+        "id": "IR-HTTP-001",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java#sdsAc1_IR_HTTP_001_AC1_attributeOverloadsWriteVoidReadGenericNullable",
+        "covers": "AC-1",
+        "notes": "./gradlew build exit 0"
+      },
+      "args_hash": "4488b6aaafa5f4d5aaf39380d74316a9694dc016",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-1"
+    },
+    {
+      "called_at": "2026-10-19T01:04:28Z",
+      "tool": "add_verification_evidence",
+      "args": {
+        "id": "IR-HTTP-001",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java#sdsAc2_IR_HTTP_001_AC2_responseStatusAndHeaderReturnReceiverWritersReturnVoid",
+        "covers": "AC-2",
+        "notes": "./gradlew build exit 0"
+      },
+      "args_hash": "90743fb1272b38e88d0ea31059c6fff316262432",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-1"
+    },
+    {
+      "called_at": "2026-10-19T01:04:28Z",
+      "tool": "add_verification_evidence",
+      "args": {
+        "id": "IR-HTTP-001",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java#sdsAc2_IR_HTTP_001_AC3_laterWaveMethodNamesAreAbsent",
+        "covers": "AC-3",
+        "notes": "./gradlew build exit 0"
+      },
+      "args_hash": "6b0c7c300da6e08287567e37143d3629e6d8b22d",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-1"
+    },
+    {
+      "called_at": "2026-10-19T01:04:28Z",
+      "tool": "add_verification_evidence",
+      "args": {
+        "id": "IR-HTTP-001",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java#sdsAc3_IR_HTTP_001_AC4_packageNullMarkedAndNullableOnlyOnListedPositions",
+        "covers": "AC-4",
+        "notes": "./gradlew build exit 0"
+      },
+      "args_hash": "534dfbcd6a8b42f8396b36a34df9d4669aa51451",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-1"
+    },
+    {
+      "called_at": "2026-10-19T01:04:28Z",
+      "tool": "add_verification_evidence",
+      "args": {
+        "id": "IR-HTTP-001",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/HttpApiKotlinTest.kt#SDS-AC-4 IR-HTTP-001 AC-5 Kotlin lambda calls every wave 3 Request and Response method",
+        "covers": "AC-5",
+        "notes": "./gradlew build exit 0"
+      },
+      "args_hash": "9d1aa2129f5dc6ba25d8b71833149ecdf4029c4c",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-1"
+    },
+    {
+      "called_at": "2026-10-19T01:04:28Z",
+      "tool": "add_verification_evidence",
+      "args": {
+        "id": "IR-HTTP-002",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java#sdsAc5_IR_HTTP_002_AC1_routeHandlerIsFunctionalWithOneHandleMethod",
+        "covers": "AC-1",
+        "notes": "./gradlew build exit 0"
+      },
+      "args_hash": "3ea6ede8fa5c1ea930232ac5754fd90fa5dc6d90",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-1"
+    },
+    {
+      "called_at": "2026-10-19T01:04:28Z",
+      "tool": "add_verification_evidence",
+      "args": {
+        "id": "IR-HTTP-002",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java#sdsAc5_IR_HTTP_002_AC2_javaLambdaThrowingIOExceptionIsARouteHandler",
+        "covers": "AC-2",
+        "notes": "./gradlew build exit 0"
+      },
+      "args_hash": "2f91ecec3a7befaa39394caa105cfa02068a368a",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-1"
+    },
+    {
+      "called_at": "2026-10-19T01:04:28Z",
+      "tool": "add_verification_evidence",
+      "args": {
+        "id": "IR-HTTP-002",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/HttpApiKotlinTest.kt#SDS-AC-5 IR-HTTP-002 AC-2 Kotlin lambda is a RouteHandler without an adapter type",
+        "covers": "AC-2",
+        "notes": "./gradlew build exit 0"
+      },
+      "args_hash": "5e8576fee12501c369d17c46cc32f7048e0ae0d2",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-1"
+    },
+    {
+      "called_at": "2026-10-19T01:04:28Z",
+      "tool": "add_verification_evidence",
+      "args": {
+        "id": "IR-HTTP-005",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java#sdsAc6_IR_HTTP_005_AC1_AC2_AC3_AC5_restAppDeclaresExactlyTheRegistrationAndPolicyMethods",
+        "covers": "AC-1",
+        "notes": "./gradlew build exit 0"
+      },
+      "args_hash": "7764b44f8795534c8d154bf768c387e867dc20d2",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-1"
+    },
+    {
+      "called_at": "2026-10-19T01:04:28Z",
+      "tool": "add_verification_evidence",
+      "args": {
+        "id": "IR-HTTP-005",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java#sdsAc6_IR_HTTP_005_AC1_AC2_AC3_AC5_restAppDeclaresExactlyTheRegistrationAndPolicyMethods",
+        "covers": "AC-2",
+        "notes": "./gradlew build exit 0"
+      },
+      "args_hash": "434819f10ce2a060312aeaa1abed7bf063dd43c0",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-1"
+    },
+    {
+      "called_at": "2026-10-19T01:04:28Z",
+      "tool": "add_verification_evidence",
+      "args": {
+        "id": "IR-HTTP-005",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java#sdsAc6_IR_HTTP_005_AC3_routerPolicyTakesTheRoutingRouterPolicy",
+        "covers": "AC-3",
+        "notes": "./gradlew build exit 0"
+      },
+      "args_hash": "3149e74b49c1eff7125b4ffc2f33b67dc9cd5b39",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-1"
+    },
+    {
+      "called_at": "2026-10-19T01:04:28Z",
+      "tool": "add_verification_evidence",
+      "args": {
+        "id": "IR-HTTP-005",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java#sdsAc6_IR_HTTP_005_AC4_noServeMethod",
+        "covers": "AC-4",
+        "notes": "./gradlew build exit 0"
+      },
+      "args_hash": "8a5ec86c63f25dd7620bdedc372b8883e21770ec",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-1"
+    },
+    {
+      "called_at": "2026-10-19T01:04:28Z",
+      "tool": "add_verification_evidence",
+      "args": {
+        "id": "IR-HTTP-005",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java#sdsAc6_IR_HTTP_005_AC1_AC2_AC3_AC5_restAppDeclaresExactlyTheRegistrationAndPolicyMethods",
+        "covers": "AC-5",
+        "notes": "./gradlew build exit 0"
+      },
+      "args_hash": "a3c434fc6270372afcad89256a28c55773a171bf",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-1"
+    },
+    {
+      "called_at": "2026-10-19T01:04:28Z",
+      "tool": "add_verification_evidence",
+      "args": {
+        "id": "IR-HTTP-005",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/HttpApiKotlinTest.kt#SDS-AC-4 IR-HTTP-005 AC-6 app get with a trailing lambda returns RestApp",
+        "covers": "AC-6",
+        "notes": "./gradlew build exit 0"
+      },
+      "args_hash": "68bd7d30e7d658bccfc7f0f49b96c7e27a28659e",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-1"
+    },
+    {
+      "called_at": "2026-10-19T01:04:28Z",
+      "tool": "add_verification_evidence",
+      "args": {
+        "id": "IR-HTTP-006",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java#sdsAc7_IR_HTTP_006_AC1_routeBuilderMethodsTakeAHandlerAndReturnTheBuilder",
+        "covers": "AC-1",
+        "notes": "./gradlew build exit 0"
+      },
+      "args_hash": "67f248a12089d2d8d5cb77abd074d4b7a586ef97",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-1"
+    },
+    {
+      "called_at": "2026-10-19T01:04:28Z",
+      "tool": "add_verification_evidence",
+      "args": {
+        "id": "CON-ROUTE-006",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterRegistrationTest.java#CON_ROUTE_006_AC1_routerClassesLiveInApiMainUnderNaruServePackage",
+        "covers": "AC-1",
+        "notes": "./gradlew build exit 0"
+      },
+      "args_hash": "7647c4808c52a87ae7961c8494dec0ae63169b40",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-1"
+    },
+    {
+      "called_at": "2026-10-19T01:04:28Z",
+      "tool": "add_verification_evidence",
+      "args": {
+        "id": "CON-ROUTE-006",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterRegistrationTest.java#sdsAc8_CON_ROUTE_006_AC2_noRoutingClassReferencesRequestResponseHandlerOrApp",
+        "covers": "AC-2",
+        "notes": "./gradlew build exit 0"
+      },
+      "args_hash": "774633650193f5e5f1ea0a4a2cd14ec6bdd6401c",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-1"
+    },
+    {
+      "called_at": "2026-10-19T01:04:28Z",
+      "tool": "add_verification_evidence",
+      "args": {
+        "id": "CON-ROUTE-006",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterRegistrationTest.java#sdsAc8_CON_ROUTE_006_AC2_FR_ROUTE_002_AC1_methodSetRegistrationServesEveryMember",
+        "covers": "AC-2",
+        "notes": "./gradlew build exit 0"
+      },
+      "args_hash": "34cd376633daf98f4ebc44fdfad11bf1ca272132",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-1"
+    },
+    {
+      "called_at": "2026-10-19T01:04:28Z",
+      "tool": "add_completed_work",
+      "args": {
+        "date": "2026-10-19",
+        "summary": "[sds] 2026-10-19.naruserve.naruserve-v1-wave-3-1 - wave 3 public HTTP types Request, Response, RouteHandler, RouteBuilder, RestApp; RouterRegistrationTest re-pointed to CON-ROUTE-006. green=PASS (HttpApiSurfaceTest 11, HttpApiKotlinTest 3, RouterRegistrationTest 7). SDS-AC: 1..3,5,6,8 PASS; 4 PASS via Kotlin fakes (TestApp harness arrives in fragment 2); 7 PASS by signature and compile-time chaining (runtime same-instance needs DefaultRouteBuilder, fragment 3). ./gradlew build exit 0.",
+        "requirementIds": [
+          "IR-HTTP-001",
+          "IR-HTTP-002",
+          "IR-HTTP-005",
+          "IR-HTTP-006",
+          "CON-ROUTE-006"
+        ],
+        "target": "wave-3",
+        "allowIncomplete": false
+      },
+      "args_hash": "388f09c1253acd8ca46911ecd8987a34738aacf5",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-1"
+    }
+  ],
+  "pending_mutations": []
+}

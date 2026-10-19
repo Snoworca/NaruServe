@@ -1,0 +1,459 @@
+{
+  "run": "2026-10-19.naruserve.wave-1.v01",
+  "target": "wave-1",
+  "scope": "BUILD",
+  "file": "docs/spec/02.build.srs.md",
+  "count": 16,
+  "diagnostics": {
+    "errors": 0,
+    "warnings": 16,
+    "byCode": {
+      "SRS-W023": 16
+    }
+  },
+  "requirements": [
+    {
+      "id": "CON-BUILD-001",
+      "title": "Gradle 8.14.3 wrapper as the only build tool",
+      "type": "constraint",
+      "priority": "high",
+      "risk": "medium",
+      "status": "planned",
+      "stability": "draft",
+      "verification_method": "inspection",
+      "ac_count": 1,
+      "verification_evidence_rows": 0,
+      "heading": "docs/spec/02.build.srs.md:44",
+      "summary": "The system shall be built only through the Gradle 8.14.3 wrapper, and the repository shall contain no Maven or other build tool files.",
+      "design_items": [
+        "D-001"
+      ]
+    },
+    {
+      "id": "CON-BUILD-002",
+      "title": "Module set and root project name",
+      "type": "constraint",
+      "priority": "high",
+      "risk": "medium",
+      "status": "planned",
+      "stability": "draft",
+      "verification_method": "inspection",
+      "ac_count": 3,
+      "verification_evidence_rows": 0,
+      "heading": "docs/spec/02.build.srs.md:96",
+      "summary": "The system shall, in the root `settings.gradle`, name the root project `NaruServe-build` and include `NaruServe-api`, `NaruServe-servlet` and one module each for the TinyHttpd `HttpAdapter`, the Gson `JsonCodec`, the default bootstrap backing `RestApp.create()`, the Kotlin extensions, the SLF4J `Logger` adapter, the rotating file `Logger` and the Logcat `Logger`.",
+      "design_items": [
+        "D-002",
+        "D-008",
+        "D-364",
+        "W2-001"
+      ]
+    },
+    {
+      "id": "CON-BUILD-003",
+      "title": "Single root build file configures every module",
+      "type": "constraint",
+      "priority": "high",
+      "risk": "medium",
+      "status": "planned",
+      "stability": "draft",
+      "verification_method": "inspection",
+      "ac_count": 2,
+      "verification_evidence_rows": 0,
+      "heading": "docs/spec/02.build.srs.md:151",
+      "summary": "The system shall configure every module of the root build from the root `build.gradle`, with no per-module build file.",
+      "design_items": [
+        "D-003",
+        "D-004"
+      ]
+    },
+    {
+      "id": "CON-BUILD-004",
+      "title": "Java 8 bytecode target for Java and Kotlin compilation",
+      "type": "constraint",
+      "priority": "high",
+      "risk": "medium",
+      "status": "planned",
+      "stability": "draft",
+      "verification_method": "test",
+      "ac_count": 3,
+      "verification_evidence_rows": 0,
+      "heading": "docs/spec/02.build.srs.md:205",
+      "summary": "The system shall compile Java sources of every module with `options.release = 8` and Kotlin sources of every module and test source set with `jvmTarget = 1.8`.",
+      "design_items": [
+        "D-006",
+        "D-007"
+      ]
+    },
+    {
+      "id": "CON-BUILD-005",
+      "title": "Maven group and Java package root",
+      "type": "constraint",
+      "priority": "high",
+      "risk": "medium",
+      "status": "planned",
+      "stability": "draft",
+      "verification_method": "inspection",
+      "ac_count": 1,
+      "verification_evidence_rows": 0,
+      "heading": "docs/spec/02.build.srs.md:260",
+      "summary": "The system shall use one Maven group and one Java package root, fixed in issue #1 as `com.snoworca.naruserve`, for every module.",
+      "design_items": [
+        "D-008",
+        "D-403"
+      ]
+    },
+    {
+      "id": "CON-BUILD-006",
+      "title": "Main dependencies of every module declared in wave 1",
+      "type": "constraint",
+      "priority": "high",
+      "risk": "medium",
+      "status": "planned",
+      "stability": "draft",
+      "verification_method": "test",
+      "ac_count": 9,
+      "verification_evidence_rows": 0,
+      "heading": "docs/spec/02.build.srs.md:312",
+      "summary": "The system shall declare in wave 1 the complete main and compileOnly dependency set of every module, so later waves add only test-scope dependencies or the release plugins owned by issue #18.",
+      "design_items": [
+        "D-005",
+        "D-009",
+        "D-010",
+        "D-011",
+        "D-012",
+        "D-016",
+        "D-026",
+        "D-108",
+        "D-196",
+        "D-197",
+        "D-228",
+        "D-384",
+        "D-386"
+      ]
+    },
+    {
+      "id": "CON-BUILD-007",
+      "title": "kotlin-stdlib confined to the Kotlin extension module",
+      "type": "constraint",
+      "priority": "high",
+      "risk": "medium",
+      "status": "planned",
+      "stability": "draft",
+      "verification_method": "test",
+      "ac_count": 3,
+      "verification_evidence_rows": 0,
+      "heading": "docs/spec/02.build.srs.md:376",
+      "summary": "The system shall keep `kotlin-stdlib` off the main configurations of every module except the Kotlin extension module, and shall fail the build when any other module has `kotlin-stdlib` on its `runtimeClasspath`.",
+      "design_items": [
+        "D-011",
+        "D-387",
+        "D-388"
+      ]
+    },
+    {
+      "id": "CON-BUILD-008",
+      "title": "Logcat Logger module builds without an Android SDK",
+      "type": "constraint",
+      "priority": "high",
+      "risk": "medium",
+      "status": "planned",
+      "stability": "draft",
+      "verification_method": "test",
+      "ac_count": 1,
+      "verification_evidence_rows": 0,
+      "heading": "docs/spec/02.build.srs.md:432",
+      "summary": "The system shall build the Logcat `Logger` module with no compile-time Android dependency, reaching `android.util.Log` only through reflection at runtime.",
+      "design_items": [
+        "D-385",
+        "D-403"
+      ]
+    },
+    {
+      "id": "CON-BUILD-009",
+      "title": "TinyHttpd dependency boundaries",
+      "type": "constraint",
+      "priority": "high",
+      "risk": "medium",
+      "status": "planned",
+      "stability": "draft",
+      "verification_method": "test",
+      "ac_count": 4,
+      "verification_evidence_rows": 0,
+      "heading": "docs/spec/02.build.srs.md:540",
+      "summary": "The system shall reference TinyHttpd only from the TinyHttpd adapter module, only through the Maven coordinates `com.snoworca.tinyhttpd:tinyhttpd-core` and `com.snoworca.tinyhttpd:tinyhttpd-websocket`, and only in `implementation` scope.",
+      "design_items": [
+        "D-016",
+        "D-017",
+        "D-018",
+        "D-209",
+        "W2-006"
+      ]
+    },
+    {
+      "id": "CON-BUILD-010",
+      "title": "TinyHttpd checkout stays read-only",
+      "type": "constraint",
+      "priority": "high",
+      "risk": "medium",
+      "status": "planned",
+      "stability": "draft",
+      "verification_method": "inspection",
+      "ac_count": 2,
+      "verification_evidence_rows": 0,
+      "heading": "docs/spec/02.build.srs.md:597",
+      "summary": "The system shall leave every file inside the TinyHttpd checkout unmodified in every wave of the run, and shall record a TinyHttpd gap that the NaruServe adapter cannot fill as a deferred issue.",
+      "design_items": [
+        "D-019",
+        "D-020",
+        "I-006"
+      ]
+    },
+    {
+      "id": "CON-BUILD-011",
+      "title": "compileOnly nullability annotations recognised by Kotlin",
+      "type": "constraint",
+      "priority": "high",
+      "risk": "medium",
+      "status": "planned",
+      "stability": "draft",
+      "verification_method": "test",
+      "ac_count": 2,
+      "verification_evidence_rows": 0,
+      "heading": "docs/spec/02.build.srs.md:708",
+      "summary": "The system shall add in wave 1 one nullability annotation library that the Kotlin compiler recognises, declared in `compileOnly` scope with no runtime dependency.",
+      "design_items": [
+        "D-026"
+      ]
+    },
+    {
+      "id": "CON-BUILD-012",
+      "title": "animal-sniffer API 21 check on Android-bound modules",
+      "type": "constraint",
+      "priority": "high",
+      "risk": "medium",
+      "status": "planned",
+      "stability": "draft",
+      "verification_method": "test",
+      "ac_count": 2,
+      "verification_evidence_rows": 0,
+      "heading": "docs/spec/02.build.srs.md:762",
+      "summary": "The system shall run animal-sniffer with the `android-api-level-21` signature on the main source set of every Android-bound module as part of `check`, and shall not apply it to `NaruServe-servlet`.",
+      "design_items": [
+        "D-027",
+        "D-028"
+      ]
+    },
+    {
+      "id": "CON-BUILD-013",
+      "title": "Core isolation, servlet-free Android modules and single Gson version build checks",
+      "type": "constraint",
+      "priority": "high",
+      "risk": "medium",
+      "status": "planned",
+      "stability": "draft",
+      "verification_method": "test",
+      "ac_count": 3,
+      "verification_evidence_rows": 0,
+      "heading": "docs/spec/02.build.srs.md:816",
+      "summary": "The system shall fail the build when `NaruServe-api` main classes reference a forbidden package, when main classes of an Android-targeted module reference `javax.servlet`, and when dependency resolution of any module selects a Gson version other than 2.14.0.",
+      "design_items": [
+        "D-027",
+        "I-002",
+        "I-004",
+        "I-005"
+      ]
+    },
+    {
+      "id": "OPS-BUILD-001",
+      "title": "TinyHttpd composite build through a Gradle property",
+      "type": "operational",
+      "priority": "high",
+      "risk": "medium",
+      "status": "planned",
+      "stability": "draft",
+      "verification_method": "test",
+      "ac_count": 3,
+      "verification_evidence_rows": 0,
+      "heading": "docs/spec/02.build.srs.md:485",
+      "summary": "The system shall include TinyHttpd into the build with `includeBuild`, reading the checkout directory from a Gradle property whose default is `/Users/beom/work/git/TinyHttpd`, and shall fail while Gradle evaluates `settings.gradle` when that directory is missing.",
+      "design_items": [
+        "D-013",
+        "D-014",
+        "D-015",
+        "W2-004"
+      ]
+    },
+    {
+      "id": "OPS-BUILD-002",
+      "title": "Test tooling and the root build gate",
+      "type": "operational",
+      "priority": "high",
+      "risk": "medium",
+      "status": "planned",
+      "stability": "draft",
+      "verification_method": "test",
+      "ac_count": 5,
+      "verification_evidence_rows": 0,
+      "heading": "docs/spec/02.build.srs.md:651",
+      "summary": "The system shall run JUnit 4.13.2 Java tests and Kotlin tests compiled by Kotlin Gradle Plugin 2.x inside the root `./gradlew build`, including one Java and one Kotlin smoke test, and the build shall pass on JDK 17 without an Android SDK.",
+      "design_items": [
+        "D-005",
+        "D-022",
+        "D-023",
+        "D-024",
+        "D-025",
+        "D-349",
+        "D-351",
+        "D-355"
+      ]
+    },
+    {
+      "id": "OPS-BUILD-003",
+      "title": "Module names and coordinates in docs/api and CLAUDE.md",
+      "type": "operational",
+      "priority": "medium",
+      "risk": "medium",
+      "status": "planned",
+      "stability": "draft",
+      "verification_method": "inspection",
+      "ac_count": 5,
+      "verification_evidence_rows": 0,
+      "heading": "docs/spec/02.build.srs.md:872",
+      "summary": "The system shall name, in `docs/api/` and `CLAUDE.md`, the final module names, dependency coordinates, API 21 check targets and the TinyHttpd commit fixed in issue #1.",
+      "design_items": [
+        "D-021",
+        "D-027",
+        "D-029",
+        "D-358",
+        "D-448",
+        "W2-003",
+        "W2-005"
+      ]
+    }
+  ],
+  "dependency_graph": {
+    "edges": [
+      {
+        "from": "CON-BUILD-003",
+        "to": "CON-BUILD-002",
+        "note": "Root build file configures the module set",
+        "srs_line": "docs/spec/02.build.srs.md:189"
+      },
+      {
+        "from": "CON-BUILD-004",
+        "to": "CON-BUILD-003",
+        "note": "Compile targets set in the root build file",
+        "srs_line": "docs/spec/02.build.srs.md:244"
+      },
+      {
+        "from": "CON-BUILD-006",
+        "to": "CON-BUILD-002",
+        "note": "Dependencies are declared per module of the module set",
+        "srs_line": "docs/spec/02.build.srs.md:357"
+      },
+      {
+        "from": "CON-BUILD-006",
+        "to": "CON-BUILD-003",
+        "note": "Dependencies are declared in the root build file",
+        "srs_line": "docs/spec/02.build.srs.md:358"
+      },
+      {
+        "from": "CON-BUILD-007",
+        "to": "CON-BUILD-006",
+        "note": "stdlib check runs over the declared dependency set",
+        "srs_line": "docs/spec/02.build.srs.md:416"
+      },
+      {
+        "from": "CON-BUILD-008",
+        "to": "CON-BUILD-006",
+        "note": "Logcat module dependency set",
+        "srs_line": "docs/spec/02.build.srs.md:469"
+      },
+      {
+        "from": "CON-BUILD-009",
+        "to": "OPS-BUILD-001",
+        "note": "Coordinates substitute the included TinyHttpd build",
+        "srs_line": "docs/spec/02.build.srs.md:580"
+      },
+      {
+        "from": "CON-BUILD-009",
+        "to": "CON-BUILD-006",
+        "note": "TinyHttpd is part of the adapter module's declared main dependencies",
+        "srs_line": "docs/spec/02.build.srs.md:581"
+      },
+      {
+        "from": "CON-BUILD-010",
+        "to": "OPS-BUILD-001",
+        "note": "Read-only use of the included TinyHttpd checkout",
+        "srs_line": "docs/spec/02.build.srs.md:634"
+      },
+      {
+        "from": "CON-BUILD-011",
+        "to": "CON-BUILD-006",
+        "note": "compileOnly annotation dependency is part of the wave 1 dependency set",
+        "srs_line": "docs/spec/02.build.srs.md:746"
+      },
+      {
+        "from": "CON-BUILD-012",
+        "to": "CON-BUILD-002",
+        "note": "Check targets are modules of the module set",
+        "srs_line": "docs/spec/02.build.srs.md:800"
+      },
+      {
+        "from": "CON-BUILD-013",
+        "to": "CON-BUILD-006",
+        "note": "Checks run over the declared dependency set",
+        "srs_line": "docs/spec/02.build.srs.md:855"
+      },
+      {
+        "from": "OPS-BUILD-002",
+        "to": "CON-BUILD-003",
+        "note": "Test tooling configured in the root build file",
+        "srs_line": "docs/spec/02.build.srs.md:692"
+      },
+      {
+        "from": "OPS-BUILD-003",
+        "to": "CON-BUILD-002",
+        "note": "Docs name the final module set",
+        "srs_line": "docs/spec/02.build.srs.md:918"
+      },
+      {
+        "from": "OPS-BUILD-003",
+        "to": "CON-BUILD-012",
+        "note": "CLAUDE.md marks the API 21 check targets",
+        "srs_line": "docs/spec/02.build.srs.md:919"
+      }
+    ],
+    "roots": [
+      "CON-BUILD-001",
+      "CON-BUILD-002",
+      "CON-BUILD-005",
+      "OPS-BUILD-001"
+    ],
+    "dangling_edges": [],
+    "depth": {
+      "CON-BUILD-001": 1,
+      "CON-BUILD-002": 1,
+      "CON-BUILD-003": 2,
+      "CON-BUILD-004": 3,
+      "CON-BUILD-005": 1,
+      "CON-BUILD-006": 3,
+      "CON-BUILD-007": 4,
+      "CON-BUILD-008": 4,
+      "CON-BUILD-009": 4,
+      "CON-BUILD-010": 2,
+      "CON-BUILD-011": 4,
+      "CON-BUILD-012": 2,
+      "CON-BUILD-013": 4,
+      "OPS-BUILD-001": 1,
+      "OPS-BUILD-002": 3,
+      "OPS-BUILD-003": 3
+    }
+  },
+  "cycle_check": {
+    "has_cycle": false,
+    "cycles": []
+  },
+  "cross_scope_links": "None: every depends_on target is inside BUILD; CON-BUILD-010 links GitHub issue #1."
+}

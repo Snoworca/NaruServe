@@ -1,0 +1,46 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-5",
+  "sds_path": "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-3-5.sds.md",
+  "sds_sha256": "6c3dda9c1e21be9ee943f1ec58a98d48367da4e83d614a52c4e45679c00b57fc",
+  "target": "wave-3",
+  "req_ids": ["FR-HTTP-013", "FR-HTTP-014", "FR-HTTP-015", "FR-HTTP-016", "FR-HTTP-017", "FR-HTTP-018"],
+  "extra_req_ids": ["FR-HTTP-004", "FR-HTTP-006", "FR-HTTP-002", "FR-HTTP-007", "FR-HTTP-001", "FR-HTTP-009", "FR-HTTP-012", "IR-HTTP-001"],
+  "write_set": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ResponseState.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultResponseTest.java",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ResponseStreamTest.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java (PM extra scope)",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java (PM extra scope)",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java (PM extra scope)",
+    "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/HttpApiKotlinTest.kt (PM extra scope)",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRequestTest.java (stub control follow-up)"
+  ],
+  "mode": "normal",
+  "flags": ["--auto", "--auto-cost-warning", "--auto-integration", "--defer-srs-mutation"],
+  "spawn_context": "pm-child",
+  "phase": "done",
+  "next_resume_hint": null,
+  "failed": false,
+  "severity_counters": {
+    "phase1": {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 5, "LOW": 3, "rounds": 1},
+    "phase2": {"CRITICAL": 0, "HIGH": 2, "MEDIUM": 6, "LOW": 10, "rounds": 3}
+  },
+  "red_evidence": {
+    "command": "./gradlew :NaruServe-api:test",
+    "exit_code": 1,
+    "captured_failure": "compileTestJava FAILED: cannot find symbol class DefaultResponse / ResponseState (DefaultResponseTest, ResponseStreamTest, DispatcherTest); Dispatcher.invoke still the UnsupportedOperationException stub",
+    "timestamp": "2026-10-19T02:05:00Z"
+  },
+  "green_evidence": {
+    "command": "./gradlew build",
+    "exit_code": 0,
+    "timestamp": "2026-10-19T02:40:00Z"
+  },
+  "green_evidence_meta": {"DefaultResponseTest": 23, "ResponseStreamTest": 18, "DispatcherTest": 22, "HttpAcceptanceTest": 13, "HttpApiKotlinTest": 5, "DefaultRequestTest": 18},
+  "regression_baseline": {"command": "./gradlew build", "exit_code": 0, "head_sha": "1ae79fe"},
+  "regression_summary": {"scope": "full", "command": "./gradlew build", "exit_code": 0, "regressed_files": []},
+  "pending_mutations": [],
+  "deferred_queue": "/Users/beom/work/git/NaruServe/kiwi/orchestrator/2026-10-19.NaruServe.naruserve-v1/lanes/lane-2026-10-19.naruserve.naruserve-v1-wave-3/deferred-srs-queue.jsonl"
+}

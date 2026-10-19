@@ -1,0 +1,395 @@
+{
+ "findings": [
+  {
+   "id": "C-001",
+   "axis": "P2",
+   "severity": "MEDIUM",
+   "title": "Race on returnedBeforeEnd can NPE the drain test",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/spi/HttpAdapterSpiTest.java",
+    "line_range": "127,145,148-155"
+   },
+   "description": "returnedBeforeEnd is set by the handler thread after eventStream returns, but the main thread only waits on drainStarted, which the drain thread counts down, possibly before the handler thread reaches line 145. Only the 150 ms TimeoutException wait gives the handler time; on a loaded CI runner assertTrue(returnedBeforeEnd.get()) unboxes null and throws NullPointerException. The same null also turns the real failure (eventStream blocking until the drain ends) into an NPE instead of a clear assertion.",
+   "suggested_fix": "Add a CountDownLatch handlerReturned counted down right after line 145; await it (5 s) before line 155 and assert Boolean.TRUE.equals(returnedBeforeEnd.get()) with a message.",
+   "is_behavioral": true,
+   "tags": [
+    "flaky",
+    "test"
+   ]
+  },
+  {
+   "id": "C-002",
+   "axis": "P2",
+   "severity": "LOW",
+   "title": "Hard-coded artifact version in the SPI location check",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/spi/HttpAdapterSpiTest.java",
+    "line_range": "305-308"
+   },
+   "description": "The jar branch requires the exact name NaruServe-api-0.1.0-SNAPSHOT.jar, so a version bump breaks the CON-HTTP-001 AC-1 evidence for no behavioural reason. RouterRegistrationTest line 66 already uses a version-agnostic regex for the same check.",
+   "suggested_fix": "Use the RouterRegistrationTest pattern: w.matches(\".*/NaruServe-api/build/libs/NaruServe-api-[^/]*\\\\.jar\") (excluding the -test-fixtures jar).",
+   "is_behavioral": false,
+   "tags": [
+    "brittle",
+    "test"
+   ]
+  },
+  {
+   "id": "C-003",
+   "axis": "P2",
+   "severity": "LOW",
+   "title": "Wall-clock upper bounds on stop and release",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/spi/HttpAdapterSpiTest.java",
+    "line_range": "253-262"
+   },
+   "description": "stop(100 ms) must take >= 90 ms and < 2000 ms, release <= 1500 ms. The lower bound is sound; the upper bounds can trip under CI load (GC pause, oversubscribed runner) although IR-HTTP-004 AC-6 only needs the force-close at the deadline and a bounded release.",
+   "suggested_fix": "Keep the >= 90 ms lower bound; widen the upper bounds (for example 10 s) and rely on abnormallyClosed() plus f.get(5 s) for the force-close.",
+   "is_behavioral": true,
+   "tags": [
+    "flaky",
+    "timing"
+   ]
+  },
+  {
+   "id": "C-004",
+   "axis": "P4",
+   "severity": "LOW",
+   "title": "SPI type list is hard-coded and parameter annotations are not scanned",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/spi/HttpAdapterSpiTest.java",
+    "line_range": "40-41,300-329"
+   },
+   "description": "CON-HTTP-001 AC-1 covers every type of the SPI, but SPI_TYPES is a fixed list of five, so a type later added to com.snoworca.naruserve.spi is never checked. collect() reads only return-type annotations (line 318), not parameter annotations, so a disallowed annotation type on a parameter passes.",
+   "suggested_fix": "Enumerate the compiled classes of the spi package (reuse the classes-dir/jar walk of RouterRegistrationTest.routingClassFiles) and add the annotations of m.getAnnotatedParameterTypes() to refs.",
+   "is_behavioral": true,
+   "tags": [
+    "coverage",
+    "test"
+   ]
+  },
+  {
+   "id": "C-005",
+   "axis": "P8",
+   "severity": "LOW",
+   "title": "Tautological instanceof assertion",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/spi/HttpAdapterSpiTest.java",
+    "line_range": "83"
+   },
+   "description": "HttpExchange.headers() is declared to return List, so assertTrue(e.headers() instanceof List) cannot fail, and a null would already have failed line 82.",
+   "suggested_fix": "Delete line 83.",
+   "is_behavioral": false,
+   "tags": [
+    "dead-code"
+   ]
+  },
+  {
+   "id": "C-006",
+   "axis": "P8",
+   "severity": "LOW",
+   "title": "Redundant assertion and needless synchronized list",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java",
+    "line_range": "126,139,146"
+   },
+   "description": "assertNotNull(seen.get(0)) is implied by the assertEquals on line 140. TestApp.send runs the handler on the caller thread, so Collections.synchronizedList (lines 126, 146) adds nothing and suggests concurrency that does not exist.",
+   "suggested_fix": "Drop line 139 and use a plain ArrayList like the neighbouring tests.",
+   "is_behavioral": false,
+   "tags": [
+    "dead-code"
+   ]
+  },
+  {
+   "id": "C-007",
+   "axis": "P1",
+   "severity": "LOW",
+   "title": "Kotlin test name claims routing into Kotlin handlers that never run",
+   "location": {
+    "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/HttpApiKotlinTest.kt",
+    "line_range": "111-123"
+   },
+   "description": "'Kotlin trailing lambdas register on the real app and route through TestApp' only exercises the automatic 405, 404 and OPTIONS replies; neither Kotlin handler is invoked. The comment defers to 'the next test', wording that implies an order JUnit does not guarantee.",
+   "suggested_fix": "Rename to describe registration only, or send GET /x and POST /u/1 and assert the handler output; drop the 'next test' reference.",
+   "is_behavioral": false,
+   "tags": [
+    "naming",
+    "test"
+   ]
+  },
+  {
+   "id": "C-008",
+   "axis": "P8",
+   "severity": "LOW",
+   "title": "Proxy-based RestApp test is redundant and its comment is stale",
+   "location": {
+    "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/HttpApiKotlinTest.kt",
+    "line_range": "92-109"
+   },
+   "description": "The JDK proxy stands in for 'the app implementation of a later fragment', but DefaultRestApp and TestApp exist and the next two tests cover IR-HTTP-005 AC-6 on the real app. The proxy test duplicates that with a hand-rolled fake.",
+   "suggested_fix": "Delete it, moving assertSame(app, app.routerPolicy(RouterPolicy.strict())) into the real-app test before any send.",
+   "is_behavioral": false,
+   "tags": [
+    "duplication"
+   ]
+  },
+  {
+   "id": "C-009",
+   "axis": "P6",
+   "severity": "LOW",
+   "title": "Typed assignments do not prove the absence of platform types",
+   "location": {
+    "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/HttpApiKotlinTest.kt",
+    "line_range": "56-58,130-131"
+   },
+   "description": "IR-HTTP-001 AC-5 asks for no platform types. 'val q: String? = req.query(...)' and 'val p: String = req.path()' both compile when the return is a platform type String!, so these lines prove nothing. The real evidence is the FixedRequest override signatures (lines 15-32), which only bite while JSpecify is reported at strict level.",
+   "suggested_fix": "Pin the Kotlin test compile to -Xjspecify-annotations=strict with allWarningsAsErrors for compileTestKotlin, and say in a comment that the overrides are the platform-type check.",
+   "is_behavioral": false,
+   "tags": [
+    "kotlin-interop",
+    "test"
+   ]
+  },
+  {
+   "id": "C-010",
+   "axis": "P4",
+   "severity": "LOW",
+   "title": "FR-HTTP-001 AC-1 and AC-2 checks are weak proxies",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/testing/InMemoryHttpAdapterTest.java",
+    "line_range": "73-74,130-138"
+   },
+   "description": "AC-1 requires packaging in the test-fixtures jar; the check accepts any location containing 'testFixtures', which includes the classes dir. AC-2 'opens no socket' is approximated by binding a port a ServerSocket already holds, which only shows that port is not bound.",
+   "suggested_fix": "When the code source is a jar, assert it is the *-test-fixtures.jar (or point to the BuildLayoutTest jar check); name the held-port probe for what it shows.",
+   "is_behavioral": false,
+   "tags": [
+    "coverage"
+   ]
+  },
+  {
+   "id": "C-011",
+   "axis": "P8",
+   "severity": "LOW",
+   "title": "Docs-reading helpers duplicated with divergent behaviour",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java",
+    "line_range": "22-58"
+   },
+   "description": "doc() and section() are copied from RoutingDocsTest, but HttpDocsTest's section() ignores headings inside code fences and RoutingDocsTest's does not, so the two docs tests cut sections differently.",
+   "suggested_fix": "Extract one package-private helper (read plus fence-aware section) in the NaruServe-api test source set and use it from both classes.",
+   "is_behavioral": false,
+   "tags": [
+    "duplication"
+   ]
+  },
+  {
+   "id": "C-012",
+   "axis": "P4",
+   "severity": "LOW",
+   "title": "Fence-count cross-check reuses the extractor's own predicate",
+   "location": {
+    "file": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java",
+    "line_range": "177-193,405-413"
+   },
+   "description": "OPS-HTTP-002 AC-2 requires every ```java block to be extracted. The cross-check counts lines with l.trim().equals(\"```java\"), the predicate extractJavaBlocks itself uses, so a fence written '```java title=x', '``` java' or '~~~java' is missed by both and the test still passes.",
+   "suggested_fix": "Count candidate openers with a looser pattern such as ^\\s*(```|~~~)\\s*java\\b.* and fail on any line it accepts that the strict predicate rejects.",
+   "is_behavioral": true,
+   "tags": [
+    "tautology",
+    "test"
+   ]
+  },
+  {
+   "id": "C-013",
+   "axis": "P4",
+   "severity": "LOW",
+   "title": "Reference regex lets nested-type references through",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterRegistrationTest.java",
+    "line_range": "73-74"
+   },
+   "description": "The lookahead (?![A-Za-z0-9_$]) excludes '$', so a routing class referencing a nested type such as com/snoworca/naruserve/Response$State is not flagged, though that is still a dependency on Response under CON-ROUTE-006 AC-2.",
+   "suggested_fix": "Use (?![A-Za-z0-9_]) so Outer$Inner counts as a reference to Outer.",
+   "is_behavioral": true,
+   "tags": [
+    "coverage"
+   ]
+  },
+  {
+   "id": "C-014",
+   "axis": "P4",
+   "severity": "LOW",
+   "title": "Method-set test re-cited to an SDS-AC about the reference rule",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterRegistrationTest.java",
+    "line_range": "32-34"
+   },
+   "description": "The wave-2 citation SDS-AC-1 was replaced by wave-3-1 SDS-AC-8, whose EARS text is the class-file reference check, not method-set lookup, so the FR-ROUTE-002 AC-1 trace to its own SDS-AC is lost. (The CON-ROUTE-006 AC-2 String-handler clause is still verified here.)",
+   "suggested_fix": "Cite both, for example '// SDS-AC-8 (wave-3-1), wave-2 SDS-AC-1; CON-ROUTE-006 AC-2; FR-ROUTE-002 AC-1'.",
+   "is_behavioral": false,
+   "tags": [
+    "traceability"
+   ]
+  },
+  {
+   "id": "C-015",
+   "axis": "P8",
+   "severity": "LOW",
+   "title": "One javac run per skipped block",
+   "location": {
+    "file": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java",
+    "line_range": "377-385"
+   },
+   "description": "About 58 skip entries each get their own in-process javac run with the full test classpath, so the root suite gets slower with every new skip. The comment explains why, but the cost grows linearly.",
+   "suggested_fix": "Acceptable for now; if build time matters, batch the skipped units and fall back to per-block runs only for units without diagnostics.",
+   "is_behavioral": false,
+   "tags": [
+    "performance"
+   ]
+  },
+  {
+   "id": "C-016",
+   "axis": "P4",
+   "severity": "LOW",
+   "title": "OPS-HTTP-002 AC-1 check is a substring scan",
+   "location": {
+    "file": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java",
+    "line_range": "266-281"
+   },
+   "description": "location.contains(\"NaruServe-api\") is satisfied by any path under the module, and build.contains(...) does not check that the strings sit in the root project's test configuration rather than a subproject block or a comment.",
+   "suggested_fix": "Match the location against NaruServe-api/build/(classes/java/main|libs/NaruServe-api-[^/]*\\.jar) as RouterRegistrationTest does, and slice the root-project block of build.gradle before the contains checks.",
+   "is_behavioral": false,
+   "tags": [
+    "coverage"
+   ]
+  }
+ ],
+ "coverage_rows": [
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class HttpAcceptanceTest {"
+   ],
+   "findings": [
+    "C-006"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class HttpApiSurfaceTest {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class HttpDocsTest {"
+   ],
+   "findings": [
+    "C-011"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/RoutingDocsTest.java",
+   "hunks_total": 8,
+   "anchors": [
+    "    // SDS-AC-9; OPS-ROUTE-001 AC-2",
+    "    public void sdsAc4_OPS_ROUTE_002_AC2_accessorsNamedWithJavaKotlinAndExpressNote() throws IOException {",
+    "    // SDS-AC-10; OPS-ROUTE-001 AC-3",
+    "    public void sdsAc4_OPS_ROUTE_002_AC3_onlyTheUseMiddlewareMarkerRemains() throws IOException {",
+    "        assertEquals(markerLines.toString(), 1, markerLines.size());",
+    "        assertTrue(markerLines.get(1), markerLines.get(1).contains(\"`TRACE`, `CONNECT`\"));",
+    "    // SDS-AC-10; OPS-ROUTE-001 AC-1",
+    "    public void sdsAc4_OPS_ROUTE_002_AC1_routingRulesSectionPresent() throws IOException {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterRegistrationTest.java",
+   "hunks_total": 9,
+   "anchors": [
+    "import static org.junit.Assert.assertNotNull;",
+    "import java.util.jar.JarFile;",
+    "    // SDS-AC-8; CON-ROUTE-006 AC-2; FR-ROUTE-002 AC-1",
+    "    public void sdsAc8_CON_ROUTE_006_AC2_FR_ROUTE_002_AC1_methodSetRegistrationServesEveryMember() {",
+    "    // CON-ROUTE-006 AC-1",
+    "    public void CON_ROUTE_006_AC1_routerClassesLiveInApiMainUnderNaruServePackage() throws Exception {",
+    "    // SDS-AC-8; CON-ROUTE-006 AC-2",
+    "    public void sdsAc8_CON_ROUTE_006_AC2_noRoutingClassReferencesRequestResponseHandlerOrApp() throws Exception {",
+    "    private static byte[] readAll(InputStream in) throws IOException {"
+   ],
+   "findings": [
+    "C-013",
+    "C-014"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/spi/HttpAdapterSpiTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class HttpAdapterSpiTest {"
+   ],
+   "findings": [
+    "C-001",
+    "C-002",
+    "C-003",
+    "C-004",
+    "C-005"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/testing/InMemoryHttpAdapterTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class InMemoryHttpAdapterTest {"
+   ],
+   "findings": [
+    "C-010"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/HttpApiKotlinTest.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "class HttpApiKotlinTest {"
+   ],
+   "findings": [
+    "C-007",
+    "C-008",
+    "C-009"
+   ]
+  },
+  {
+   "file": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "    // SDS-AC-11; OPS-HTTP-002 AC-1"
+   ],
+   "findings": [
+    "C-016"
+   ]
+  },
+  {
+   "file": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public final class DocsExamplesCompileTest {"
+   ],
+   "findings": [
+    "C-012",
+    "C-015"
+   ]
+  }
+ ],
+ "summary": {
+  "total": 16,
+  "by_severity": {
+   "MEDIUM": 1,
+   "LOW": 15
+  }
+ }
+}

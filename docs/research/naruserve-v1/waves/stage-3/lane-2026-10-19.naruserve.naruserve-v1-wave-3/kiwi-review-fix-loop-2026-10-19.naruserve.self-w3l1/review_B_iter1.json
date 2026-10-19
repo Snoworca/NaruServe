@@ -1,0 +1,171 @@
+{
+  "findings": [
+    {
+      "id": "B-001",
+      "axis": "P1",
+      "severity": "MEDIUM",
+      "title": "Neither the in-memory adapter nor RecordingExchange records the commit contentLength, so the SDS commit-length clauses go untested",
+      "location": {"file": "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/InMemoryHttpAdapter.java", "line_range": "383-388, 234-248"},
+      "description": "Exchange.commit(status, headers, contentLength) throws contentLength away. ClientResponse does not expose it, and nothing checks the written byte count against it. ResponseStreamTest.RecordingExchange.commit (ResponseStreamTest.java:333) drops it as well. A real framed engine such as TinyHttpd frames the body with this argument. So these clauses are never asserted: wave-3-5 SDS-AC-12 ('commit with length 0' for 204/304), SDS-AC-5 ('commit with unknown length' for stream), SDS-AC-13 (HEAD), and wave-3-3 SDS-AC-6 ('204 commits with content length 0'). wave-3-2 SDS-AC-2 also says the length is passed in the commit call. DefaultResponse.java:310 even carries a 'shortcut' comment that HEAD passes 0 while the Content-Length header says N. With a fake that ignores the value, a regression (for example -1 for send(), or a body length for 204) would still pass.",
+      "suggested_fix": "Record contentLength in Exchange and expose it as ClientResponse.contentLength() (-2 when nothing was committed). When contentLength >= 0, make write() throw IOException once more than contentLength bytes have been written, and make finish() mark the exchange abnormally closed when fewer were written, as a framed connection would. Record contentLength in RecordingExchange too. Then assert it in DefaultResponseTest (send=N, 204/304=0, HEAD=0), ResponseStreamTest (stream=-1) and DispatcherTest (automatic=0).",
+      "is_behavioral": true,
+      "tags": ["fixture-fidelity", "test-gap"]
+    },
+    {
+      "id": "B-002",
+      "axis": "P4",
+      "severity": "MEDIUM",
+      "title": "FR-HTTP-008 AC-3 test never shows GET /a//b reaching h",
+      "location": {"file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRestAppTest.java", "line_range": "182-197"},
+      "description": "The AC says app.get(\"/a/b\", h) followed by routerPolicy(mergeSlashes) makes GET /a//b reach h after the harness freeze. The test registers a no-op h and sends DELETE /a//b, then infers the match from the 405 Allow header. The GET request and the handler call are never exercised. Freeze also runs through app.freeze() directly instead of the TestApp harness the AC names.",
+      "suggested_fix": "Register a recording handler that does res.send(\"hit\") through TestApp.create().app(), set the policy, then send GET /a//b. Assert 200, body 'hit' and one call. Keep the strict control and send it as GET expecting 404.",
+      "is_behavioral": true,
+      "tags": ["weak-assertion"]
+    },
+    {
+      "id": "B-003",
+      "axis": "P4",
+      "severity": "MEDIUM",
+      "title": "FR-HTTP-012 AC-2 'two requests handled concurrently' is not exercised",
+      "location": {"file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRequestTest.java", "line_range": "231-259, 33-43"},
+      "description": "The two DefaultRequest objects are built one after another by the request() helper, after each exchange has already ended (the fixture aborts it because the handler sends nothing). The test then writes attributes to two separate HashMap-backed objects from two threads. That only shows two distinct objects do not share a map. No two requests are in flight through the Dispatcher at once, which is what the AC asks for. The helper also hands out a DefaultRequest outside its exchange lifetime, which a real adapter would not allow.",
+      "suggested_fix": "Use TestApp with a GET /a/:id route whose handler stores attribute(\"k\", id), waits on a shared CyclicBarrier(2) with a timeout, then reads attribute(\"k\") back and sends it. Fire two requests with adapter.submit(...) and assert each body equals its own id.",
+      "is_behavioral": true,
+      "tags": ["weak-assertion", "concurrency"]
+    },
+    {
+      "id": "B-004",
+      "axis": "P2",
+      "severity": "MEDIUM",
+      "title": "RecordingExchange counters are plain ints, so the 'abort called once' assertion can pass on a lost update",
+      "location": {"file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ResponseStreamTest.java", "line_range": "263-269, 360-363, 453-485"},
+      "description": "abortFromAnotherThreadWhileTheCopyBlocks calls res.abort on the 'abort-caller' thread while runTransfer runs on the 'copier' thread. Both may reach ex.abort(). The test exists to prove the exchange is aborted exactly once (assertEquals(1, ex.aborts)). But aborts++ on a non-volatile int is not atomic, so two racing calls can collapse to 1 and hide the double abort the test is meant to catch. commits, finishes and status are read across threads the same way.",
+      "suggested_fix": "Make commits, finishes and aborts AtomicIntegers and status volatile (or synchronize the RecordingExchange methods), and read them with .get() in the assertions.",
+      "is_behavioral": false,
+      "tags": ["flaky", "false-pass"]
+    },
+    {
+      "id": "B-005",
+      "axis": "P2",
+      "severity": "LOW",
+      "title": "awaitDrain waits on the drain with no bound, so stop() cannot force-close an event stream",
+      "location": {"file": "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/InMemoryHttpAdapter.java", "line_range": "163, 474-491, 95-121"},
+      "description": "send() calls exchange.awaitDrain(), which calls f.get() with no timeout. stop() aborts in-flight exchanges, but a drain that is blocked and not writing never sees the abort. send() then never returns, and a broken test hangs the whole Gradle test JVM instead of failing. abort() also does not cancel the drain future.",
+      "suggested_fix": "In Exchange.abort(), call drain.cancel(true) when a drain is pending (the drain thread is interrupted, matching a socket close). Or wait with f.get(timeout) using a fixed generous bound and abort on TimeoutException.",
+      "is_behavioral": true,
+      "tags": ["hang-risk"]
+    },
+    {
+      "id": "B-006",
+      "axis": "P1",
+      "severity": "LOW",
+      "title": "splitTarget treats any non-'/' target containing '://' as absolute-form",
+      "location": {"file": "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/InMemoryHttpAdapter.java", "line_range": "185-198"},
+      "description": "abc?u=http://x/y has indexOf(\"://\") > 0 and does not start with '/'. It is rewritten to raw path /y, query null. A malformed origin target that the Dispatcher should answer 400 (FR-HTTP-005 AC-3) instead becomes a valid path. The scheme is not checked to be a token before '://', and a '?' or '/' before it is not ruled out.",
+      "suggested_fix": "Treat the target as absolute-form only when the text before \"://\" matches [A-Za-z][A-Za-z0-9+.-]* (no '/', '?' or '#'). Otherwise pass it through unchanged. Add a case to InMemoryHttpAdapterTest.",
+      "is_behavioral": true,
+      "tags": ["fixture-fidelity"]
+    },
+    {
+      "id": "B-007",
+      "axis": "P4",
+      "severity": "LOW",
+      "title": "Concurrent sharedParse test does not prove the second caller waited",
+      "location": {"file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/BodyStateTest.java", "line_range": "111-139"},
+      "description": "release.countDown() runs right after the second task is submitted, so the second call may start after the first parse finished. It then only hits the CONSUMED cache path, and the 'waits while PARSING' branch (BodyState.java:71-73) is never covered. The case where the first parser fails while a second caller waits (that caller should get BodyAlreadyConsumedException) is not tested either.",
+      "suggested_fix": "Before release.countDown(), poll until the second worker thread's state is WAITING (bounded loop, at most 5 s). Add a variant where the first parser throws and the waiting caller gets BodyAlreadyConsumedException.",
+      "is_behavioral": false,
+      "tags": ["weak-assertion"]
+    },
+    {
+      "id": "B-008",
+      "axis": "P4",
+      "severity": "LOW",
+      "title": "DispatcherTest cites the same SDS in two tag formats (SDS-AC-n and SDS-3-AC-n)",
+      "location": {"file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java", "line_range": "27-30, 208, 222, 244, 254, 268, 290, 305, 316, 342, 358, 386"},
+      "description": "The class javadoc says both forms point at wave-3-3. Tests from line 208 on are tagged 'SDS-3-AC-n' (for example SDS-3-AC-1 for FR-HTTP-002 AC-3, which is SDS-AC-1 in wave-3-3). The kiwi coverage tooling greps the citation form `SDS-AC-<n>`, so these tests do not show up as coverage for SDS-AC-7..10. The tests also look like they cite a different SDS.",
+      "suggested_fix": "Retag them as 'SDS-AC-n; <REQ> AC-m' and rename the methods sdsAcN_..., like the rest of the file.",
+      "is_behavioral": false,
+      "tags": ["traceability"]
+    },
+    {
+      "id": "B-009",
+      "axis": "P1",
+      "severity": "LOW",
+      "title": "TestApp WebSocket hook stub throws IllegalStateException, which the Dispatcher turns into a quiet 500",
+      "location": {"file": "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/TestApp.java", "line_range": "43-50"},
+      "description": "The stub is meant to fail loudly if a WebSocket hook route is ever dispatched. But Dispatcher.invoke catches Exception and answers 500. A test that only checks some other field would not see the bad dispatch.",
+      "suggested_fix": "Throw an AssertionError. Dispatcher rethrows Errors and the fixture send() propagates them, so the test fails loudly.",
+      "is_behavioral": true,
+      "tags": ["fixture-fidelity"]
+    },
+    {
+      "id": "B-010",
+      "axis": "P7",
+      "severity": "LOW",
+      "title": "TestApp has no stop/release, and every test leaks an adapter worker pool",
+      "location": {"file": "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/TestApp.java", "line_range": "15-75"},
+      "description": "TestApp owns an InMemoryHttpAdapter but exposes neither the adapter nor stop()/release(). Tests that start event streams or submit() leave daemon cached-pool threads behind until the JVM exits. DefaultRestAppTest.send and DefaultRequestTest.request create a fresh adapter per call and never release it. TestApp.send also cannot send a request body, which the later body waves will need.",
+      "suggested_fix": "Make TestApp implement Closeable, with close() calling adapter.stop(1, SECONDS) and then adapter.release(). Use it in try-with-resources or an @After. Add a send(ClientRequest) overload.",
+      "is_behavioral": false,
+      "tags": ["resource-leak"]
+    },
+    {
+      "id": "B-011",
+      "axis": "P8",
+      "severity": "LOW",
+      "title": "RecordingExchange is a shared test double hidden inside ResponseStreamTest",
+      "location": {"file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ResponseStreamTest.java", "line_range": "259-380"},
+      "description": "DefaultResponseTest and DispatcherTest reach into ResponseStreamTest.RecordingExchange, which couples three test classes. It also does not refuse a second commit, unlike the HttpExchange contract and the in-memory fixture, so commits==1 is checked only through a counter.",
+      "suggested_fix": "Move it to its own package-private test class (internal/RecordingExchange.java). Make a second start throw IllegalStateException, as the SPI javadoc requires.",
+      "is_behavioral": false,
+      "tags": ["duplication"]
+    },
+    {
+      "id": "B-012",
+      "axis": "P8",
+      "severity": "LOW",
+      "title": "Redundant hasNullableTypeUse helper in the FR-HTTP-012 AC-4 test",
+      "location": {"file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRequestTest.java", "line_range": "301-315"},
+      "description": "isAnnotationPresent(Nullable.class) already checks the same annotations that hasNullableTypeUse scans. The simple-name fallback also accepts any annotation named 'Nullable' (for example javax), which weakens the D-072 JSpecify check.",
+      "suggested_fix": "Drop the helper and assert value.isAnnotationPresent(org.jspecify.annotations.Nullable.class) only.",
+      "is_behavioral": false,
+      "tags": ["dead-code"]
+    },
+    {
+      "id": "B-013",
+      "axis": "P5",
+      "severity": "LOW",
+      "title": "Published testFixtures jar is outside the animal-sniffer API 21 check",
+      "location": {"file": "build.gradle", "line_range": "166-170, 177-183"},
+      "description": "animalsniffer.sourceSets = [sourceSets.main] only. InMemoryHttpAdapter and TestApp ship in NaruServe-api's testFixturesJar, which other Android modules' tests may consume. Current code uses only API 21-safe classes, but a later fixture change could pull in a JDK 9+ or API 24+ call unnoticed.",
+      "suggested_fix": "Either add sourceSets.testFixtures to the NaruServe-api animalsniffer config, or add a one-line comment stating the fixtures are JVM-only test code and exempt.",
+      "is_behavioral": false,
+      "tags": ["api21"]
+    },
+    {
+      "id": "B-014",
+      "axis": "P1",
+      "severity": "LOW",
+      "title": "Port counter has no upper bound",
+      "location": {"file": "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/InMemoryHttpAdapter.java", "line_range": "40, 80"},
+      "description": "NEXT_PORT.getAndIncrement() starting at 49152 goes past 65535 after 16384 port-0 binds in one JVM. boundPort() would then report an invalid port that bind() itself rejects, breaking IR-HTTP-004 AC-5 in a long test run.",
+      "suggested_fix": "Use 49152 + Math.floorMod(NEXT_PORT.getAndIncrement(), 16384).",
+      "is_behavioral": true,
+      "tags": ["edge-case"]
+    }
+  ],
+  "coverage_rows": [
+    {"file": "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/InMemoryHttpAdapter.java", "hunks_total": 1, "anchors": ["public final class InMemoryHttpAdapter implements HttpAdapter {"], "findings": ["B-001", "B-005", "B-006", "B-014"]},
+    {"file": "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/TestApp.java", "hunks_total": 1, "anchors": ["public final class TestApp {"], "findings": ["B-009", "B-010"]},
+    {"file": "build.gradle", "hunks_total": 2, "anchors": ["        testFixturesCompileOnly 'org.jspecify:jspecify:1.0.0'", "    testImplementation project(':NaruServe-api')"], "findings": ["B-013"]},
+    {"file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/BodyStateTest.java", "hunks_total": 1, "anchors": ["public class BodyStateTest {"], "findings": ["B-007"]},
+    {"file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRequestTest.java", "hunks_total": 1, "anchors": ["public class DefaultRequestTest {"], "findings": ["B-003", "B-012"]},
+    {"file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultResponseTest.java", "hunks_total": 1, "anchors": ["public class DefaultResponseTest {"], "findings": ["B-001"]},
+    {"file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRestAppTest.java", "hunks_total": 1, "anchors": ["public class DefaultRestAppTest {"], "findings": ["B-002", "B-010"]},
+    {"file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java", "hunks_total": 1, "anchors": ["public class DispatcherTest {"], "findings": ["B-001", "B-008"]},
+    {"file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/LimitedInputStreamTest.java", "hunks_total": 1, "anchors": ["public class LimitedInputStreamTest {"], "findings": []},
+    {"file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ResponseStreamTest.java", "hunks_total": 1, "anchors": ["public class ResponseStreamTest {"], "findings": ["B-001", "B-004", "B-011"]}
+  ],
+  "summary": {"total": 14, "by_severity": {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 4, "LOW": 10}}
+}

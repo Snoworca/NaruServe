@@ -1,0 +1,12 @@
+{
+  "pass": "prickly-review round 2 (concurrency / single-commit / close-once focus)",
+  "sds": "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-3-5.sds.md",
+  "round": 2,
+  "severity_summary": {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 0, "LOW": 3},
+  "findings": [
+    {"severity": "HIGH", "issue": "stream() from another thread inside ex.commit while the handler returns: afterHandler saw COMMITTED and left, nobody ran or aborted the copy", "disposition": "fixed: afterHandler/afterFailure set handlerDone (and handlerFailure) under the lock; stream() entering STREAMING after that runs runTransfer or abort itself; test sdsAc4_sdsAc5_FR_HTTP_014_AC5_AC7_streamCommittingWhileTheHandlerReturnsStillCopiesAndCloses"},
+    {"severity": "LOW", "issue": "commit/finish may reach an exchange already aborted by a concurrent abort", "disposition": "accepted: HttpExchange.abort is idempotent and commit/finish on an aborted exchange fail into the abort path"},
+    {"severity": "LOW", "issue": "null contentType from Java leaks the input", "disposition": "accepted: the package is @NullMarked; null is a contract violation"},
+    {"severity": "LOW", "issue": "Error during runTransfer left the exchange open", "disposition": "fixed: runTransfer aborts on Error and rethrows, matching Dispatcher.invoke"}
+  ]
+}

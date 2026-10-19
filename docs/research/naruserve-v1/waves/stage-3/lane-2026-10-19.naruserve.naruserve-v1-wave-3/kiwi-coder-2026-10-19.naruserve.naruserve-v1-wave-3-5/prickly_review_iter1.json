@@ -1,0 +1,17 @@
+{
+  "pass": "prickly-review (8 axes, one subagent, session model)",
+  "sds": "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-3-5.sds.md",
+  "round": 1,
+  "severity_summary": {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 4, "LOW": 4},
+  "findings": [
+    {"severity": "HIGH", "axis": 4, "issue": "ex.commit ran while the DefaultResponse monitor was held; abort could not break a stuck commit and the class javadoc claim was false", "disposition": "fixed: leaving NEW is decided and snapshotted under the lock (prepare/begin), every exchange call runs in deliver() or stream() outside it; test sdsAc8_FR_HTTP_015_AC1_FR_HTTP_016_AC1_exchangeCommitRunsOutsideTheLock"},
+    {"severity": "MEDIUM", "axis": 4, "issue": "Dispatcher read state() then acted; a concurrent write could commit twice or end() could throw to the adapter", "disposition": "fixed: package-private DefaultResponse.afterHandler()/afterFailure() decide and leave NEW under one lock; 500 now moves the response to COMPLETED so a late send throws ISE; test sds3Ac8_FR_HTTP_006_AC2_failureAnswer500MovesTheResponseOutOfNew"},
+    {"severity": "MEDIUM", "axis": 6, "issue": "RuntimeException from the adapter body stream or finish left the response COMMITTED", "disposition": "fixed: deliver() and stream() catch IOException | RuntimeException and abort"},
+    {"severity": "MEDIUM", "axis": 2, "issue": "user Content-Length / Transfer-Encoding kept on stream and on 204/304", "disposition": "fixed: framing headers removed before every commit; tests sdsAc5_FR_HTTP_014_AC7_streamDropsUserFramingHeaders, sdsAc12_FR_HTTP_017_AC1_status204DropsAUserContentLength"},
+    {"severity": "MEDIUM", "axis": 3, "issue": "HEAD commit length 0 vs header Content-Length: SPI meaning undefined", "disposition": "deferred: spi/HttpExchange is outside this write set; marked with a shortcut comment in DefaultResponse.prepare, to pin when the TinyHttpd adapter lands"},
+    {"severity": "LOW", "axis": 6, "issue": "Error after stream left the input open", "disposition": "fixed: Dispatcher.invoke aborts the response on Error then rethrows; test sds3Ac9_FR_HTTP_006_AC3_errorAfterStreamClosesTheInputBeforePropagating"},
+    {"severity": "LOW", "axis": 4, "issue": "abort between ex.finish() and COMPLETED reports ABORTED for a delivered body", "disposition": "accepted: ex.abort is idempotent after finish; reported only"},
+    {"severity": "LOW", "axis": 2, "issue": "header() accepts non-token names and CTLs other than CR/LF", "disposition": "rejected: FR-HTTP-015 AC-4 fixes CR/LF; wider validation is not in the SRS"},
+    {"severity": "LOW", "axis": 7, "issue": "no cross-thread abort test", "disposition": "fixed: sdsAc4_sdsAc9_FR_HTTP_014_AC5_FR_HTTP_015_AC2_abortFromAnotherThreadWhileTheCopyBlocks"}
+  ]
+}

@@ -1,0 +1,267 @@
+{
+  "resolved_findings": [
+    "A-001",
+    "A-002",
+    "A-003",
+    "B-001",
+    "B-002",
+    "B-003",
+    "B-004",
+    "B-008",
+    "C-001"
+  ],
+  "unresolved_findings": [],
+  "findings": [
+    {
+      "id": "RB-001",
+      "axis": "P1",
+      "severity": "LOW",
+      "title": "B-001 residual: the fixture refuses an over-length write but not a short body at finish()",
+      "location": {
+        "file": "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/InMemoryHttpAdapter.java",
+        "line_range": "373-382, 420-430"
+      },
+      "description": "write() now throws once the body would pass a non-negative committed length. finish() still completes normally when fewer than contentLength bytes were written. A framed engine would leave the client waiting or mark the connection broken. The other half of the suggestion, 'finish() marks the exchange abnormally closed when fewer were written', was not done. A regression that commits N and writes fewer bytes is caught only where a test also compares the body bytes.",
+      "suggested_fix": "In finish(), when contentLength >= 0 and body.size() < contentLength, mark the exchange aborted (or throw IOException), so ClientResponse reports an abnormal close.",
+      "is_behavioral": true,
+      "tags": [
+        "fixture-fidelity"
+      ]
+    },
+    {
+      "id": "RB-002",
+      "axis": "P4",
+      "severity": "LOW",
+      "title": "The A-003 regression test checks 'adds no header' for only two of the eight refused inputs",
+      "location": {
+        "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultResponseTest.java",
+        "line_range": "159-189"
+      },
+      "description": "FR-HTTP-015 AC-4 requires that each refused call adds no header. The test counts 8 IllegalArgumentExceptions, then asserts only that 'X' and 'X A' are absent. The response is never checked for the names '', 'X-A:', 'X\\u0000' and 'X(', so an implementation that appends the header and then throws would still pass for those four.",
+      "suggested_fix": "Assert that the sent header names are exactly X-Tab plus the framework headers (Content-Type, Content-Length).",
+      "is_behavioral": false,
+      "tags": [
+        "weak-assertion"
+      ]
+    },
+    {
+      "id": "RB-003",
+      "axis": "P4",
+      "severity": "LOW",
+      "title": "The CON-HTTP-001 AC-2 bytecode scan skips Dispatcher's nested classes and two SPI types",
+      "location": {
+        "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/spi/HttpAdapterSpiTest.java",
+        "line_range": "335-363"
+      },
+      "description": "The scan reads only Dispatcher.class and the five fixed SPI_TYPES. Dispatcher$1.class exists in build/classes, and spi/StreamDrain and spi/UpgradeHandler are compiled but not in SPI_TYPES, so this test does not see a forbidden reference placed in any of them. The Gradle checkClassReferences task still covers them, so the gap is only in this test's own evidence.",
+      "suggested_fix": "Scan every internal/Dispatcher*.class and spi/*.class file under the code-source location, rather than a fixed list of types.",
+      "is_behavioral": false,
+      "tags": [
+        "test-gap"
+      ]
+    },
+    {
+      "id": "RB-004",
+      "axis": "P4",
+      "severity": "LOW",
+      "title": "The BuildLayoutTest CON-HTTP-001 AC-2/AC-3 checks are unanchored substring matches on build.gradle",
+      "location": {
+        "file": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java",
+        "line_range": "447-470"
+      },
+      "description": "build.contains(\"prefixes += ['android/', ...]\") does not check that the line sits under `if (path == ':NaruServe-api')`. build.contains(\"':NaruServe-api'\") is true from any mention, including that `if` itself. If the prefix line moved to another module's branch, the test would stay green. This is the same pattern as C-016. AC-2 is still verified at the bytecode level by HttpAdapterSpiTest, and the animal-sniffer regex for AC-3 is anchored well enough.",
+      "suggested_fix": "Use a regex matching `if \\(path == ':NaruServe-api'\\) \\{\\s*prefixes \\+= \\[...\\]`, and check that ':NaruServe-api' appears inside the naruModules list literal.",
+      "is_behavioral": false,
+      "tags": [
+        "weak-assertion",
+        "traceability"
+      ]
+    },
+    {
+      "id": "RB-005",
+      "axis": "P4",
+      "severity": "LOW",
+      "title": "The CON-ROUTE-006 AC-3 test spot-checks 8 signatures rather than every public router type",
+      "location": {
+        "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterRegistrationTest.java",
+        "line_range": "166-182"
+      },
+      "description": "The AC covers the public signatures of every public router type. The test asserts @NullMarked on the package, which carries most of the evidence. It then checks only 8 signatures: four RouteMatch returns, three isWebSocketUpgrade parameters and the lookup return. A nullable return that lacks @Nullable on another type, such as RoutePattern or RouterPolicy, is not caught. This is acceptable, because @NullMarked is the JSpecify setup the AC names, but the test proves less than its name claims.",
+      "suggested_fix": "Optional: assert that no public routing type carries @NullUnmarked, or narrow the test name.",
+      "is_behavioral": false,
+      "tags": [
+        "weak-assertion"
+      ]
+    }
+  ],
+  "coverage_rows": [
+    {
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java",
+      "hunks_total": 2,
+      "anchors": [
+        "+import com.snoworca.naruserve.testing.InMemoryHttpAdapter;",
+        "+    // IR-HTTP-006 AC-2"
+      ],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRequestTest.java",
+      "hunks_total": 2,
+      "anchors": [
+        "-    // SDS-AC-7; FR-HTTP-012 AC-2",
+        "-    public void sdsAc7_FR_HTTP_012_AC2_attributesAreIsolatedBetweenConcurrentRequests() throws Exception {"
+      ],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultResponseTest.java",
+      "hunks_total": 9,
+      "anchors": [
+        "+        assertEquals(2L, r.contentLength()); // wave-3-2 SDS-AC-2: the length goes in the commit call",
+        "+        assertEquals(0L, r.contentLength());",
+        "+    // SDS-AC-7; FR-HTTP-015 AC-4 - beyond CR/LF: a name must be an RFC 9110 token and a value holds no control",
+        "+        assertEquals(0L, r.contentLength());",
+        "+        assertEquals(0L, r.contentLength());",
+        "+        assertEquals(1, count(r, \"Content-Length\"));",
+        "-        assertEquals(0, ex.commits);",
+        "-        assertEquals(1, ex.commits);",
+        "-        assertEquals(1, ex.finishes);"
+      ],
+      "findings": [
+        "RB-002"
+      ]
+    },
+    {
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRestAppTest.java",
+      "hunks_total": 3,
+      "anchors": [
+        "+import com.snoworca.naruserve.testing.TestApp;",
+        "+import java.util.concurrent.atomic.AtomicInteger;",
+        "-        DefaultRestApp strict = new DefaultRestApp();"
+      ],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java",
+      "hunks_total": 29,
+      "anchors": [
+        "- * Dispatcher checks and handler invocation. SDS-AC-n cites docs/sds/2026-10-19.naruserve.naruserve-v1-wave-3-3.sds.md",
+        "+        assertEquals(0L, r.contentLength()); // SDS-AC-6: automatic answers commit with length 0",
+        "+        assertEquals(0L, r.contentLength()); // SDS-AC-6: 204 commits with content length 0",
+        "-    // SDS-3-AC-1; FR-HTTP-002 AC-3",
+        "-    public void sds3Ac1_FR_HTTP_002_AC3_doubleEncodedDotsReachVariableRouteOnceDecoded() {",
+        "-    // SDS-3-AC-7; FR-HTTP-004 AC-1, FR-HTTP-004 AC-2, FR-HTTP-007 AC-4",
+        "-    public void sds3Ac7_FR_HTTP_004_AC1_AC2_FR_HTTP_007_AC4_autoHeadRunsGetHandlerInHeadMode() {",
+        "-    // SDS-3-AC-8; FR-HTTP-006 AC-1",
+        "-    public void sds3Ac8_FR_HTTP_006_AC1_runtimeExceptionBeforeAnyWriteGives500() {",
+        "-    // SDS-3-AC-8; FR-HTTP-006 AC-2",
+        "-    public void sds3Ac8_FR_HTTP_006_AC2_checkedExceptionAfterStatusDropsStatusAndHeaders() {",
+        "-    // SDS-3-AC-9; FR-HTTP-006 AC-3",
+        "-    public void sds3Ac9_FR_HTTP_006_AC3_throwWhileStreamingAborts() {",
+        "+    // SDS-AC-9; FR-HTTP-006 AC-3",
+        "-    public void sds3Ac9_FR_HTTP_006_AC3_throwAfterSendKeepsTheSentBytes() {",
+        "-    // SDS-3-AC-10; FR-HTTP-006 AC-4",
+        "-    public void sds3Ac10_FR_HTTP_006_AC4_returnWithoutBodyEndsTheResponse() {",
+        "-    // SDS-3-AC-10; FR-HTTP-006 AC-4, FR-HTTP-014 AC-7",
+        "-    public void sds3Ac10_FR_HTTP_006_AC4_pendingStreamCopiesOnTheHandlerThreadAfterReturn() {",
+        "-    // SDS-3-AC-9; FR-HTTP-006 AC-3",
+        "-    public void sds3Ac9_FR_HTTP_006_AC3_throwWhileStreamingIsAbortedByTheCoreNotTheAdapter() {",
+        "-        assertEquals(1, ex.commits);",
+        "-    // SDS-3-AC-9; FR-HTTP-006 AC-3, FR-HTTP-014 AC-5",
+        "-    public void sds3Ac9_FR_HTTP_006_AC3_errorAfterStreamClosesTheInputBeforePropagating() {",
+        "-        assertEquals(1, ex.aborts);",
+        "+    // SDS-AC-8; FR-HTTP-006 AC-2",
+        "-    public void sds3Ac8_FR_HTTP_006_AC2_failureAnswer500MovesTheResponseOutOfNew() {",
+        "+        assertEquals(1, ex.commits.get());",
+        "-            assertEquals(1, ex.commits);"
+      ],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/LimitedInputStreamTest.java",
+      "hunks_total": 1,
+      "anchors": [
+        "+    // SDS-AC-12; FR-HTTP-020 AC-2 — a declared length within the limit ends the body there: no probe byte is taken"
+      ],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ResponseStreamTest.java",
+      "hunks_total": 20,
+      "anchors": [
+        "+import java.util.concurrent.atomic.AtomicInteger;",
+        "+        assertEquals(-1L, r.contentLength()); // commit with unknown length",
+        "+        assertEquals(0L, r.contentLength());",
+        "-        int commits;",
+        "-        List<Map.Entry<String, String>> headers = Collections.emptyList();",
+        "-            commits++;",
+        "+            this.contentLength = contentLength;",
+        "-            finishes++;",
+        "-            aborts++;",
+        "-        assertEquals(1, ex.commits);",
+        "-        assertEquals(1, ex.aborts);",
+        "+        assertEquals(1, ex.aborts.get());",
+        "-        assertEquals(1, ex.aborts);",
+        "-        assertEquals(0, ex.aborts);",
+        "-        assertEquals(1, ex.aborts);",
+        "-        assertEquals(1, ex.finishes);",
+        "+        assertEquals(1, ex.commits.get());",
+        "+        assertEquals(-1L, ex.contentLength);",
+        "+        assertEquals(0L, ex.contentLength);",
+        "+        assertEquals(5L, ex2.contentLength);"
+      ],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterRegistrationTest.java",
+      "hunks_total": 2,
+      "anchors": [
+        "+import java.lang.reflect.AnnotatedType;",
+        "+    // CON-ROUTE-006 AC-3"
+      ],
+      "findings": [
+        "RB-005"
+      ]
+    },
+    {
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/spi/HttpAdapterSpiTest.java",
+      "hunks_total": 4,
+      "anchors": [
+        "+        CountDownLatch handlerReturned = new CountDownLatch(1);",
+        "+            handlerReturned.countDown();",
+        "-        assertTrue(returnedBeforeEnd.get());",
+        "+    // CON-HTTP-001 AC-2"
+      ],
+      "findings": [
+        "RB-003"
+      ]
+    },
+    {
+      "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/HttpApiKotlinTest.kt",
+      "hunks_total": 1,
+      "anchors": [
+        "+    @Test"
+      ],
+      "findings": []
+    },
+    {
+      "file": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java",
+      "hunks_total": 1,
+      "anchors": [
+        "+    // CON-HTTP-001 AC-2, CON-HTTP-001 AC-3"
+      ],
+      "findings": [
+        "RB-004"
+      ]
+    }
+  ],
+  "summary": {
+    "total": 5,
+    "by_severity": {
+      "CRITICAL": 0,
+      "HIGH": 0,
+      "MEDIUM": 0,
+      "LOW": 5
+    }
+  }
+}

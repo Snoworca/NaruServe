@@ -1,0 +1,17 @@
+{
+  "sds": "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-3-6.sds.md",
+  "tdd_review_iter1": {"verdict": "PASS", "findings": [
+    {"severity": "MEDIUM", "axis": "S1", "issue": "skip reasons never re-checked for truth", "resolution": "fixed: sdsAc9_OPS_HTTP_002_AC4_everySkippedBlockStillFailsToCompile"},
+    {"severity": "LOW", "axis": "S1", "issue": "undecided-sentence check uses one phrase", "resolution": "reported only"},
+    {"severity": "LOW", "axis": "S2", "issue": "module docs tests resolve docs via user.dir/.. (same as existing RoutingDocsTest)", "resolution": "reported only"},
+    {"severity": "LOW", "axis": "S1", "issue": "OPS-ROUTE-002 AC-1 keyword check unchanged from wave 2", "resolution": "reported only"}]},
+  "formal_check_iter1": {"mock_regex": "0 hits", "build": "./gradlew build --offline exit 0", "sds_code_match": "changed files are a subset of the SDS write set; SDS symbols present", "findings": []},
+  "prickly_review_iter1": {"findings": [
+    {"severity": "HIGH", "issue": "request.md said a literal-null attribute call only reads; it throws NullPointerException", "resolution": "fixed"},
+    {"severity": "MEDIUM", "issue": "stream() commits status/headers when called; thread wording", "resolution": "fixed"},
+    {"severity": "MEDIUM", "issue": "skipped blocks never checked to still fail", "resolution": "fixed (per-block javac pass)"},
+    {"severity": "LOW", "issue": "express req.path row order", "resolution": "fixed"},
+    {"severity": "LOW", "issue": "extractor/counter trim mismatch", "resolution": "fixed"},
+    {"severity": "LOW", "issue": "Kotlin snippets not compiled", "resolution": "reported only"},
+    {"severity": "LOW", "issue": "helper duplication across docs tests", "resolution": "reported only"}]}
+}

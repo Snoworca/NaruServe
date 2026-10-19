@@ -1,0 +1,7 @@
+{"pass":"formal-review (script)","sds":"docs/sds/2026-10-19.naruserve.naruserve-v1-wave-3-4.sds.md","iter":1,
+"axes":{
+"mock_regex":"0 hits (mockito|easymock|powermock|jmockit|mockk|@Mock) in the internal test package",
+"type_build":"./gradlew build exit 0 (includes animal-sniffer API 21)",
+"sds_code_mapping":"all SDS Files exist with declared symbols; changed files = SDS Files + Test Plan test files + Dispatcher.java (PM-allowed lane write set for FR-HTTP-010 AC-3)",
+"test_coverage":"speckiwi coverage --tests passed=true, gaps none (coverage_tests.json)"},
+"severity":{"CRITICAL":0,"HIGH":0,"MEDIUM":0,"LOW":0},"findings":[]}

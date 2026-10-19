@@ -1,0 +1,54 @@
+{
+  "resolved_findings": ["RA-001"],
+  "unresolved_findings": [],
+  "findings": [
+    {
+      "id": "R2-001",
+      "axis": "P2",
+      "severity": "LOW",
+      "title": "The test writes the attack chars as literal non-ASCII characters instead of \\u escapes",
+      "location": {"file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultResponseTest.java", "line_range": "190-214"},
+      "description": "\"aĊb\", \"ačb\" and \"text/plainĊ\" hold U+010A and U+010D as raw characters. They look almost the same as the ASCII letters C and c, so a reader cannot see which code point is under test, and an editor or tool that normalizes the text could quietly turn the case into ASCII. The build sets options.encoding = 'UTF-8', so it compiles correctly today. The point is readability and robustness, not correctness.",
+      "suggested_fix": "Write \"a\\u010Ab\", \"a\\u010Db\", \"text/plain\\u010A\" and \"caf\\u00E9\".",
+      "is_behavioral": false,
+      "tags": ["test-quality", "readability"]
+    },
+    {
+      "id": "R2-002",
+      "axis": "P3",
+      "severity": "LOW",
+      "title": "SDS-AC-7 still says CR/LF only, but the test is tagged SDS-AC-7 and now covers chars above U+00FF",
+      "location": {"file": "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-3-5.sds.md", "line_range": "43, 62"},
+      "description": "The fix makes header() refuse more than before: any char above U+00FF. This is stricter than FR-HTTP-015 AC-4 and does not conflict with it, and docs/api/response.md and the HttpExchange javadoc were both updated. The SDS acceptance contract and its Test Plan row were not updated, so the SDS no longer matches the code. That matters at the SDS-to-code match gate and at kiwi-sds --close, where the refusal set should move into the SRS AC as a clarification.",
+      "suggested_fix": "Extend SDS-AC-7 and its Test Plan row to name 'a control char other than HTAB or a char above U+00FF', or note it for the --close step so it lands in FR-HTTP-015 AC-4.",
+      "is_behavioral": false,
+      "tags": ["sds-drift", "traceability"]
+    }
+  ],
+  "coverage_rows": [
+    {
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+      "hunks_total": 4,
+      "anchors": [
+        "+     * and the value may hold no control character but HTAB (so no CR or LF) and no char above U+00FF.",
+        "+        return new IllegalArgumentException(\"bad header: name not a token, or CR, LF, a control char or a char above U+00FF in the value\");",
+        "+     * low byte would turn U+010A into LF (cf. Node CVE-2018-12116), so headers stay ISO-8859-1, one byte per char.",
+        "+            if (c < 0x20 && c != '\\t' || c == 0x7F || c > 0xFF) {"
+      ],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpExchange.java",
+      "hunks_total": 1,
+      "anchors": ["+     * framing header. Header names and values are ISO-8859-1: the core guarantees every char is at most U+00FF"],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultResponseTest.java",
+      "hunks_total": 1,
+      "anchors": ["+    public void sdsAc7_FR_HTTP_015_AC4_charsAboveLatin1AreRefused() {"],
+      "findings": ["R2-001", "R2-002"]
+    }
+  ],
+  "summary": {"total": 2, "by_severity": {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 0, "LOW": 2}}
+}

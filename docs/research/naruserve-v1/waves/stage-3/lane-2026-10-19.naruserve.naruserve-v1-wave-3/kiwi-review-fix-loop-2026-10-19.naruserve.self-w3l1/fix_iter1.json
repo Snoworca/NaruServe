@@ -1,0 +1,116 @@
+{
+  "iter": 1,
+  "fixes": [
+    {
+      "finding_id": "A-001",
+      "files_changed": [
+        {"path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/LimitedInputStream.java", "line_range": "8-12, 18-31, 38, 55, 70, 96-101"},
+        {"path": "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpExchange.java", "line_range": "40-43"},
+        {"path": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/LimitedInputStreamTest.java", "line_range": "163-189"}
+      ],
+      "red_test": "LimitedInputStreamTest.sdsAc12_FR_HTTP_020_AC2_declaredLengthWithinLimitNeverReadsPastTheBody",
+      "rationale_full": "A new final field cap = declaredLength when 0 <= declaredLength <= limit, else limit. read/read(byte[])/skip count room against cap. At the cap, probe() returns -1 without touching the source when a length was declared, so it never reads into the next request on a kept-alive connection. The over-limit probe still runs for an unknown length (FR-HTTP-020 AC-3). A declared length over the limit still fails before any read (AC-4). HttpExchange.requestBody() now documents that the stream ends at the framed end of the message body."
+    },
+    {
+      "finding_id": "A-002",
+      "files_changed": [
+        {"path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java", "line_range": "186-215"},
+        {"path": "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java", "line_range": "49-52"},
+        {"path": "docs/api/request.md", "line_range": "135"},
+        {"path": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRequestTest.java", "line_range": "231-253"},
+        {"path": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/HttpApiKotlinTest.kt", "line_range": "125-136"}
+      ],
+      "red_test": "DefaultRequestTest.sdsAc7_FR_HTTP_012_AC1_primitiveClassReadsTheBoxedValue; HttpApiKotlinTest 'SDS-AC-4 IR-HTTP-001 AC-5 FR-HTTP-012 AC-1 Kotlin reads an Int attribute with Int class java'",
+      "rationale_full": "attribute(key, type) maps a primitive Class (int.class, which is Kotlin's Int::class.java, plus long, boolean, double, float, short, byte, char) to its wrapper before Class.cast, so a stored Integer is read back. A stored value of the wrong type still throws ClassCastException. The Request javadoc and docs/api/request.md state this. The Kotlin T11 test reads an Int through TestApp."
+    },
+    {
+      "finding_id": "A-003",
+      "files_changed": [
+        {"path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java", "line_range": "64-75, 118, 367-368, 393-416"},
+        {"path": "docs/api/response.md", "line_range": "16"},
+        {"path": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultResponseTest.java", "line_range": "159-189"}
+      ],
+      "red_test": "DefaultResponseTest.sdsAc7_FR_HTTP_015_AC4_nonTokenNamesAndControlCharactersAreRefused",
+      "rationale_full": "res.header now requires the name to be an RFC 9110 token: non-empty, tchar only, so no ':', space, NUL or '(' . The value may hold no control character except HTAB, so CR, LF, NUL, 0x01 and DEL are refused. stream()'s contentType uses the same value check. It still throws IllegalArgumentException and adds nothing, so FR-HTTP-015 AC-4 (CR/LF) holds as a subset. The state check still runs first."
+    },
+    {
+      "finding_id": "A-004",
+      "files_changed": [
+        {"path": "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpExchange.java", "line_range": "53-60"},
+        {"path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java", "line_range": "313"},
+        {"path": "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/InMemoryHttpAdapter.java", "line_range": "401-414"},
+        {"path": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultResponseTest.java", "line_range": "287-289"}
+      ],
+      "red_test": "none for the contract itself; the code already matches the chosen reading. Mutation evidence: with stream() committing 0 instead of -1, 7 ResponseStreamTest cases fail against the framed fixture.",
+      "rationale_full": "The contract pinned in HttpExchange.commit javadoc follows the SDS: wave-3-5 SDS-AC-12 says 204/304 commit with length 0 and add no Content-Length header. SDS-AC-13 says HEAD sends the Content-Length the body would have had and writes zero body bytes. SDS-AC-5 says stream commits with unknown length. So the headers are sent as given and already carry Content-Length when it is known (for HEAD, the GET length). The adapter never adds, removes or changes Content-Length. contentLength is the number of body bytes the core writes: 0 for bodyless (204, 304, HEAD), or -1 for unknown, which the adapter frames itself (chunked or close) and is the only case where it may add a framing header. The code already did this, so only the 'shortcut' comment was replaced. The in-memory fixture now enforces the contract: at most one Content-Length header per commit, and no write past a non-negative commit length. A HEAD test asserts exactly one Content-Length header ('4') with commit length 0."
+    },
+    {
+      "finding_id": "B-001",
+      "files_changed": [
+        {"path": "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/InMemoryHttpAdapter.java", "line_range": "240-245, 285-292, 310, 377-380, 401-414, 524-525"},
+        {"path": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ResponseStreamTest.java", "line_range": "171-172, 237, 270-276, 341-343, 540, 554, 566, 571"},
+        {"path": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultResponseTest.java", "line_range": "77, 132, 275, 287-289, 405-407"},
+        {"path": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java", "line_range": "53, 193"}
+      ],
+      "red_test": "Mutation run: DefaultResponse.stream committing 0 instead of -1 makes 7 of 19 ResponseStreamTest cases fail (for example sdsAc5_FR_HTTP_016_AC5 'expected:<10> but was:<0>'). Before this change the fixture ignored the length and every case passed.",
+      "rationale_full": "The Exchange records contentLength, and ClientResponse.contentLength() exposes it (-2 when the response was not started by commit). write() throws IOException past a non-negative committed length, as a framed connection would. RecordingExchange records contentLength (volatile) too. New assertions: send commits N (2 and 3, wave-3-2 SDS-AC-2). end commits 0. 204/304 commit 0 (SDS-AC-12, in both the harness and RecordingExchange). HEAD commits 0 with the header '4' (SDS-AC-13). stream commits -1 with no Content-Length (SDS-AC-5, harness and RecordingExchange). HEAD stream commits 0. Dispatcher automatic answers commit 0, including 204 OPTIONS (wave-3-3 SDS-AC-6, through assertEmpty and the 204 test)."
+    },
+    {
+      "finding_id": "B-002",
+      "files_changed": [
+        {"path": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRestAppTest.java", "line_range": "20, 32, 187-207"}
+      ],
+      "red_test": "n/a (test strengthening; passes against the existing code)",
+      "rationale_full": "The test now goes through TestApp. A recording handler that sends 'hit' is registered with app().get, then routerPolicy(mergeSlashes) is set. GET /a//b, frozen by the harness on the first send, returns 200 with body 'hit' and exactly one call. The strict control sends GET /a//b and gets 404 with zero calls. The 405 Allow check is kept as an extra assertion."
+    },
+    {
+      "finding_id": "B-003",
+      "files_changed": [
+        {"path": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRequestTest.java", "line_range": "251-253"}
+      ],
+      "red_test": "n/a",
+      "rationale_full": "HttpAcceptanceTest.FR_HTTP_012_AC2_attributesAreIsolatedBetweenConcurrentRequests already sends two requests that are in flight through the Dispatcher at once (latched handlers, adapter.submit) and checks isolation end to end. The unit test was renamed to sdsAc7_FR_HTTP_012_AC2_twoRequestObjectsKeepSeparateStoresAcrossThreads. Its comment now claims only the unit part and points to the acceptance test."
+    },
+    {
+      "finding_id": "B-004",
+      "files_changed": [
+        {"path": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ResponseStreamTest.java", "line_range": "26, 270-280, 341-370"},
+        {"path": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultResponseTest.java", "line_range": "379-380, 403-407"},
+        {"path": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java", "line_range": "353-355, 383, 398, 406"}
+      ],
+      "red_test": "n/a (race hardening)",
+      "rationale_full": "RecordingExchange.commits, finishes and aborts are now AtomicInteger and are read with .get(). status, headers and contentLength are volatile. A double abort from the copier and abort-caller threads can no longer collapse into one lost update."
+    },
+    {
+      "finding_id": "C-001",
+      "files_changed": [
+        {"path": "NaruServe-api/src/test/java/com/snoworca/naruserve/spi/HttpAdapterSpiTest.java", "line_range": "128, 147, 157-159"}
+      ],
+      "red_test": "n/a (race hardening)",
+      "rationale_full": "A handlerReturned latch is counted down after returnedBeforeEnd is set. The main thread waits on it for up to 5 s, with a message, before it checks Boolean.TRUE.equals(returnedBeforeEnd.get()). An eventStream that blocked until the drain ended now fails with a clear assertion instead of an unboxing NPE."
+    }
+  ],
+  "gap_fills": [
+    {"id": "CON-ROUTE-006 AC-3", "test": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterRegistrationTest.java#CON_ROUTE_006_AC3_publicRouterTypesCarryJSpecifyNullness"},
+    {"id": "CON-ROUTE-006 AC-4", "test": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterRegistrationTest.java#CON_ROUTE_006_AC4_lookupNeverParsesAuthorityOrAbsoluteFormAndDropsTheQuery"},
+    {"id": "IR-HTTP-006 AC-2", "test": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java#IR_HTTP_006_AC2_routeBuilderHandlersEachReachOnlyTheirOwnMethod"},
+    {"id": "CON-HTTP-001 AC-2", "test": "NaruServe-api/src/test/java/com/snoworca/naruserve/spi/HttpAdapterSpiTest.java#CON_HTTP_001_AC2_dispatcherIsApiMainAndReferencesNoEngineOrPlatformClass; src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java#CON_HTTP_001_AC2_AC3_apiMainHoldingSpiAndDispatcherIsClassRefCheckedAndSniffedAtApi21"},
+    {"id": "CON-HTTP-001 AC-3", "test": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java#CON_HTTP_001_AC2_AC3_apiMainHoldingSpiAndDispatcherIsClassRefCheckedAndSniffedAtApi21"},
+    {"id": "wave-3-3 SDS-AC-7..SDS-AC-10", "test": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java: the SDS-3-AC-n tags were retagged to SDS-AC-n (requirement citations kept) and the sds3AcN_ methods were renamed to sdsAcN_"}
+  ],
+  "red_evidence": [
+    {"test_id": "LimitedInputStreamTest.sdsAc12_FR_HTTP_020_AC2_declaredLengthWithinLimitNeverReadsPastTheBody", "failure": "com.snoworca.naruserve.internal.BodyTooLargeException: request body exceeds the limit of 10 bytes (at LimitedInputStream.probe:97)"},
+    {"test_id": "DefaultRequestTest.sdsAc7_FR_HTTP_012_AC1_primitiveClassReadsTheBoxedValue", "failure": "java.lang.ClassCastException: Cannot cast java.lang.Integer to int"},
+    {"test_id": "HttpApiKotlinTest.SDS-AC-4 IR-HTTP-001 AC-5 FR-HTTP-012 AC-1 Kotlin reads an Int attribute with Int class java", "failure": "org.junit.ComparisonFailure: expected:<[5 null]> but was:<[]> (the handler threw ClassCastException before send)"},
+    {"test_id": "DefaultResponseTest.sdsAc7_FR_HTTP_015_AC4_nonTokenNamesAndControlCharactersAreRefused", "failure": "java.lang.AssertionError: expected:<8> but was:<0>"},
+    {"test_id": "ResponseStreamTest (B-001 mutation: stream commit length 0 instead of -1)", "failure": "7 of 19 failed, e.g. sdsAc5_FR_HTTP_016_AC5_statusAndHeaderThrowWhileStreaming: expected:<10> but was:<0>; mutation reverted"}
+  ],
+  "coverage_after": {"f1": true, "f2": true, "f3": true},
+  "build_exit_code": 0,
+  "design_notes": [
+    "A-004: the SPI Content-Length contract follows wave-3-5 SDS-AC-5/12/13. Headers are authoritative and the adapter never touches Content-Length. contentLength is the count of body bytes written: 0 for bodyless including HEAD, -1 for unknown, which the adapter frames itself. The TinyHttpd adapter (later wave) must implement exactly this. Consider promoting the sentence into an IR-HTTP-003 AC clarification through the SRS workflow (not done here: docs/spec is out of scope).",
+    "A-001: LimitedInputStream now also stops at a declared length below the limit (for example Content-Length 5 with limit 10 reads 5 then EOF). FR-HTTP-020 AC-2/AC-3/AC-4 still hold. This is defence in depth on top of the requestBody() EOF contract.",
+    "A-003: header validation is stricter than the FR-HTTP-015 AC-4 wording (CR/LF). It is a superset that throws the same IllegalArgumentException. An SRS AC clarification may be worth adding later."
+  ],
+  "out_of_lease": []
+}

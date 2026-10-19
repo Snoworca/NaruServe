@@ -1,0 +1,15 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "2026-10-19.naruserve.naruserve-v1-wave-3-2",
+  "sds_path": "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-3-2.sds.md",
+  "target": "wave-3",
+  "req_ids": ["IR-HTTP-003", "IR-HTTP-004", "CON-HTTP-001", "FR-HTTP-001", "OPS-HTTP-002"],
+  "spawn_context": "pm-child",
+  "phase": "phase-2",
+  "next_resume_hint": "phase-2.c (impl)",
+  "blocked_item": "TestApp (SDS Files) + SDS-AC-8 FR-HTTP-001 AC-3: needs DefaultRestApp, which is in SDS wave-3-3 Files and does not exist yet",
+  "red_evidence": {"command": "./gradlew :NaruServe-api:compileTestJava", "exit_code": 1, "captured_failure": "InMemoryHttpAdapterTest.java:9: error: cannot find symbol (com.snoworca.naruserve.spi / testing.InMemoryHttpAdapter absent)", "timestamp": "2026-10-19"},
+  "green_evidence": {"command": "./gradlew build", "exit_code": 0, "timestamp": "2026-10-19"},
+  "mcp_call_log": [],
+  "pending_mutations": []
+}

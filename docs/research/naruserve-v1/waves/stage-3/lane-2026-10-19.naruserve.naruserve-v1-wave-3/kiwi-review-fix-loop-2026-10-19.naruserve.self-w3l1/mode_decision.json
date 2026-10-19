@@ -1,0 +1,19 @@
+{
+  "mode": "self",
+  "pr_url": null,
+  "pr_number": null,
+  "self_scope": {
+    "source": "base-head",
+    "commit_range": "62eab3ceb1aa450cf443605efbe4fffbccf8104b..45469d2e1a7c931dc16bc9bc5ae907d4cd28c4cc",
+    "candidates": 47,
+    "files_included": 41,
+    "hunks_note": "every included file is new (1 hunk) except RouterRegistrationTest.java 9, RoutingDocsTest.java 8, build.gradle 2, BuildLayoutTest.java 1",
+    "excluded_prose": ["docs/api/app.md", "docs/api/defaults.md", "docs/api/express-migration.md", "docs/api/request.md", "docs/api/response.md", "docs/api/routing.md"],
+    "refused_artifacts": [],
+    "unclassified_files": [],
+    "identity": "41 + 6 + 0 + 0 = 47"
+  },
+  "req_filter": ["CON-HTTP-001","CON-ROUTE-006","FR-HTTP-001","FR-HTTP-002","FR-HTTP-003","FR-HTTP-004","FR-HTTP-005","FR-HTTP-006","FR-HTTP-007","FR-HTTP-008","FR-HTTP-009","FR-HTTP-010","FR-HTTP-011","FR-HTTP-012","FR-HTTP-013","FR-HTTP-014","FR-HTTP-015","FR-HTTP-016","FR-HTTP-017","FR-HTTP-018","FR-HTTP-019","FR-HTTP-020","IR-HTTP-001","IR-HTTP-002","IR-HTTP-003","IR-HTTP-004","IR-HTTP-005","IR-HTTP-006","OPS-HTTP-001","OPS-HTTP-002","OPS-ROUTE-002"],
+  "flags": ["--auto", "--no-pipeline-emit"],
+  "regression_baseline": {"command": "./gradlew build", "head_sha": "3a2717bbadfde9e626b3568bb2ee9455ad1030ac", "failing_tests": []}
+}
