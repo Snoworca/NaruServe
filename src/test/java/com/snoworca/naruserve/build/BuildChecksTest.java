@@ -348,4 +348,35 @@ public class BuildChecksTest {
         String out = runner(":checkLoggerPlacement").buildAndFail().getOutput();
         assertTrue(out, out.contains("checkLoggerPlacement: NaruServe-api jar holds com/snoworca/naruserve/slf4j/Stray.class"));
     }
+
+    // FR-APP-017 AC-6 — :NaruServe-filelog passes the API 21 animal-sniffer check, and that check does bite there
+    @Test
+    public void fr_APP_017_AC6_filelogPassesAndIsGuardedByTheApi21AnimalSniffer() throws IOException {
+        BuildResult clean = runner(":NaruServe-filelog:animalsnifferMain").build();
+        assertEquals(TaskOutcome.SUCCESS, clean.task(":NaruServe-filelog:animalsnifferMain").getOutcome());
+        addSource("NaruServe-filelog/src/main/java/com/snoworca/naruserve/filelog/probe/UsesOptional.java",
+                "package com.snoworca.naruserve.filelog.probe;\n"
+                        + "public class UsesOptional { public Object none() { return java.util.Optional.empty(); } }\n");
+        BuildResult sniffed = runner(":NaruServe-filelog:animalsnifferMain").buildAndFail();
+        assertEquals(TaskOutcome.FAILED, sniffed.task(":NaruServe-filelog:animalsnifferMain").getOutcome());
+        assertTrue(sniffed.getOutput(), sniffed.getOutput().contains("java.util.Optional"));
+    }
+
+    // OPS-HTTP-004 AC-1 — successor of OPS-HTTP-002 AC-1, same assertions plus useJUnit()
+    @Test
+    public void ops_HTTP_004_AC1_apiMainOnRootTestClasspathWithWave1ConventionsKept() throws Exception {
+        for (String type : new String[] {"Request", "Response", "RestApp"}) {
+            Class<?> c = Class.forName("com.snoworca.naruserve." + type);
+            String location = c.getProtectionDomain().getCodeSource().getLocation().getPath();
+            assertTrue(type + " from " + location, location.contains("NaruServe-api"));
+        }
+        String build = BuildLayoutTest.read(new File(root, "build.gradle"));
+        for (String part : new String[] {"testImplementation project(':NaruServe-api')",
+                "testImplementation 'junit:junit:4.13.2'", "testImplementation gradleTestKit()", "useJUnit()",
+                "dependsOn checkDependencyRules", "dependsOn ':NaruServe-api:testFixturesJar'",
+                "systemProperty 'naruserve.rootDir'", "systemProperty 'naruserve.testKitWorkDir'"}) {
+            assertTrue("root build.gradle holds " + part, build.contains(part));
+        }
+    }
 }
+

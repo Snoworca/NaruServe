@@ -273,4 +273,71 @@ public class RotatingFileLoggerTest {
         closer.join(3000);
         assertFalse("close() hung on a dead writer", closer.isAlive());
     }
+
+    /** Constant-pool scan of every main class (same rule as build.gradle scanClassRefs): Class names and L..; descriptors. */
+    private static List<String> mainClassRefs(String... prefixes) throws Exception {
+        File dir = new File(RotatingFileLogger.class.getProtectionDomain().getCodeSource().getLocation().toURI());
+        assertTrue("main classes dir " + dir, dir.isDirectory());
+        List<String> hits = new ArrayList<>();
+        List<File> pending = new ArrayList<>(Arrays.asList(dir));
+        while (!pending.isEmpty()) {
+            File f = pending.remove(pending.size() - 1);
+            File[] children = f.listFiles();
+            if (children != null) {
+                pending.addAll(Arrays.asList(children));
+                continue;
+            }
+            if (!f.getName().endsWith(".class")) {
+                continue;
+            }
+            try (java.io.DataInputStream in = new java.io.DataInputStream(new java.io.BufferedInputStream(
+                    new java.io.FileInputStream(f)))) {
+                in.readInt();
+                in.readUnsignedShort();
+                in.readUnsignedShort();
+                int count = in.readUnsignedShort();
+                java.util.Map<Integer, String> utf8 = new java.util.HashMap<>();
+                List<Integer> classNames = new ArrayList<>();
+                for (int i = 1; i < count; i++) {
+                    int tag = in.readUnsignedByte();
+                    switch (tag) {
+                        case 1: utf8.put(i, in.readUTF()); break;
+                        case 7: classNames.add(in.readUnsignedShort()); break;
+                        case 8: case 16: case 19: case 20: in.skipBytes(2); break;
+                        case 15: in.skipBytes(3); break;
+                        case 3: case 4: case 9: case 10: case 11: case 12: case 17: case 18: in.skipBytes(4); break;
+                        case 5: case 6: in.skipBytes(8); i++; break;
+                        default: throw new AssertionError("unknown constant pool tag " + tag + " in " + f);
+                    }
+                }
+                java.util.Set<String> refs = new java.util.TreeSet<>();
+                for (int index : classNames) {
+                    refs.add(utf8.get(index));
+                }
+                java.util.regex.Pattern descriptor = java.util.regex.Pattern.compile("L([^;<>()\\[\\]]+);");
+                for (String text : utf8.values()) {
+                    java.util.regex.Matcher m = descriptor.matcher(text);
+                    while (m.find()) {
+                        refs.add(m.group(1));
+                    }
+                }
+                for (String ref : refs) {
+                    for (String prefix : prefixes) {
+                        if (ref.startsWith(prefix)) {
+                            hits.add(f.getName() + " -> " + ref);
+                        }
+                    }
+                }
+            }
+        }
+        return hits;
+    }
+
+    // FR-APP-017 AC-6 — main classes reference no SLF4J or android.* type (animalsnifferMain: BuildChecksTest)
+    @Test
+    public void fr_APP_017_AC6_mainClassesReferenceNoSlf4jOrAndroidType() throws Exception {
+        // Control: the same scan does find a type the logger really uses, so an empty result below means something.
+        assertTrue(mainClassRefs("java/io/File").contains("RotatingFileLogger.class -> java/io/File"));
+        assertEquals(new ArrayList<String>(), mainClassRefs("org/slf4j/", "android/"));
+    }
 }
