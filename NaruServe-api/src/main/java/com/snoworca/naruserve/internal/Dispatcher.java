@@ -162,6 +162,7 @@ public final class Dispatcher implements ExchangeHandler {
         req.requestId(rid);
         DefaultResponse res = new DefaultResponse(ex, method == Method.HEAD, codec);
         res.mimeTypes(statics.mimeTypes());
+        res.resolverTap(statics.resolverTap());
         res.request(req);
         res.applyDefaultCache(statics.defaultCache());
         // The request ends once the response finished (complete or abort) and the handler chain returned, so a

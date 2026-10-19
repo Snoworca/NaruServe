@@ -81,6 +81,23 @@ final class DefaultStaticOptions implements StaticOptions {
         return this;
     }
 
+    /**
+     * A private copy taken at listen, so a configurer that kept this instance cannot change a running mount; it is
+     * reachable only through the frozen mount, whose final fields publish it to the worker threads.
+     */
+    // @req FR-STATIC-001
+    DefaultStaticOptions copy() {
+        DefaultStaticOptions c = new DefaultStaticOptions();
+        c.index = index;
+        c.directoryListing = directoryListing;
+        c.spaFallback = spaFallback;
+        c.spaExcludes.addAll(spaExcludes);
+        c.cachePatterns.addAll(cachePatterns);
+        c.mimes.putAll(mimes);
+        c.allowSymlinks = allowSymlinks;
+        return c;
+    }
+
     String indexName() {
         return index;
     }

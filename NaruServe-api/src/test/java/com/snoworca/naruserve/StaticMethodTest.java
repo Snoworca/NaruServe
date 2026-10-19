@@ -10,6 +10,7 @@ import com.snoworca.naruserve.testing.TestApp;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -139,5 +140,42 @@ public class StaticMethodTest {
         t.app().staticFiles("/", root());
         assertEquals(501, t.send("BREW", "/assets/app.js").status());
         assertEquals(501, t.send("TRACE", "/assets/app.js").status());
+    }
+
+    // FR-STATIC-002 AC-5; FR-STATIC-006 AC-2: a refused symbolic link is not "served by GET", so no 405 and no 301
+    @Test
+    public void FR_STATIC_002_AC5_refusedSymlinksGet404NotAllowOr301() throws IOException {
+        File base = tmp.getRoot();
+        File root = new File(base, "root");
+        File outside = new File(base, "outside");
+        write(new File(root, "real.txt"), "REAL");
+        write(new File(root, "dir/index.html"), "DIRINDEX");
+        write(new File(outside, "secret.txt"), "OUTSIDE");
+        write(new File(outside, "odir/index.html"), "OUTSIDE");
+        Files.createSymbolicLink(new File(root, "inlink.txt").toPath(), new File(root, "real.txt").toPath());
+        Files.createSymbolicLink(new File(root, "outlink.txt").toPath(), new File(outside, "secret.txt").toPath());
+        Files.createSymbolicLink(new File(root, "indir").toPath(), new File(root, "dir").toPath());
+        Files.createSymbolicLink(new File(root, "outdir").toPath(), new File(outside, "odir").toPath());
+        TestApp t = TestApp.create();
+        t.app().staticFiles("/", root);
+        assertEquals(405, t.send("POST", "/real.txt").status()); // control: a served file
+        for (String path : new String[] {"/inlink.txt", "/outlink.txt", "/indir", "/indir/", "/outdir",
+                "/outdir/"}) {
+            ClientResponse post = t.send("POST", path);
+            assertEquals("POST " + path, 404, post.status());
+            assertNull("POST " + path, post.header("Allow"));
+            ClientResponse get = t.send("GET", path);
+            assertEquals("GET " + path, 404, get.status());
+            assertNull("GET " + path, get.header("Location"));
+        }
+
+        TestApp allowed = TestApp.create();
+        allowed.app().staticFiles("/", root, o -> o.allowSymlinks(true));
+        assertEquals(405, allowed.send("POST", "/inlink.txt").status());
+        assertEquals(301, allowed.send("GET", "/indir").status());
+        for (String path : new String[] {"/outlink.txt", "/outdir", "/outdir/"}) {
+            assertEquals("POST " + path, 404, allowed.send("POST", path).status());
+            assertEquals("GET " + path, 404, allowed.send("GET", path).status());
+        }
     }
 }

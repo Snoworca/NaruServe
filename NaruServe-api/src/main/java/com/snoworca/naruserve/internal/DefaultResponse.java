@@ -67,6 +67,7 @@ public final class DefaultResponse implements Response {
     private @Nullable Runnable onDone;
     private boolean doneFired;
     private @Nullable DefaultMimeTypes mimeTypes;
+    private FileResponder.@Nullable ResolverTap tap;
     private @Nullable DefaultRequest request;
     private @Nullable CachePolicy defaultCache;
     /** Bytes the pending copy must deliver; -1 copies to the end of the input. */
@@ -89,6 +90,11 @@ public final class DefaultResponse implements Response {
     /** The app's MIME registry for {@link #file}; unset means the built-in table only. */
     void mimeTypes(DefaultMimeTypes mimeTypes) {
         this.mimeTypes = mimeTypes;
+    }
+
+    /** The app's test hook for the resolver {@link #file} and {@link #download} read through. */
+    void resolverTap(FileResponder.@Nullable ResolverTap tap) {
+        this.tap = tap;
     }
 
     /** The request whose method and conditional headers {@link #file} and {@link #download} evaluate. */
@@ -143,7 +149,7 @@ public final class DefaultResponse implements Response {
             req = new DefaultRequest(ex, headRequest ? Method.HEAD : method, Collections.<String, String>emptyMap());
         }
         try {
-            ResourceResolver r = FileResourceResolver.forFile(file);
+            ResourceResolver r = FileResponder.tapped(FileResourceResolver.forFile(file), tap);
             if (disposition != null) {
                 header("Content-Disposition", disposition);
             }

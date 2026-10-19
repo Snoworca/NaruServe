@@ -28,6 +28,16 @@ final class FileResponder {
     private FileResponder() {
     }
 
+    /** Test hook wrapping the resolver a file answer reads through (no java.util.function type: absent from API 21). */
+    // @req FR-STATIC-011
+    interface ResolverTap {
+        ResourceResolver wrap(ResourceResolver r);
+    }
+
+    static ResourceResolver tapped(ResourceResolver r, @Nullable ResolverTap tap) {
+        return tap == null ? r : tap.wrap(r);
+    }
+
     /**
      * Answers {@code path} of {@code r} with {@code type}; {@code policy}, when given, sets Cache-Control on every
      * outcome. A missing or refused file throws {@link java.io.FileNotFoundException} before the response changes.

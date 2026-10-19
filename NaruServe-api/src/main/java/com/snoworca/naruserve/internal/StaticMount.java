@@ -30,7 +30,7 @@ public final class StaticMount {
         this.resolver = root == null ? null : new FileResourceResolver(root, options.allowSymlinksOn());
     }
 
-    /** This mount with its canonical root and resolver taken now. */
+    /** This mount with its canonical root, resolver and a private copy of its options taken now. */
     // @req FR-STATIC-001
     StaticMount freeze() {
         File canonical;
@@ -39,7 +39,7 @@ public final class StaticMount {
         } catch (IOException e) {
             canonical = null;
         }
-        return new StaticMount(prefix, dir, options, canonical);
+        return new StaticMount(prefix, dir, options.copy(), canonical);
     }
 
     /** The prefix without a trailing {@code /}, except {@code /} itself. */

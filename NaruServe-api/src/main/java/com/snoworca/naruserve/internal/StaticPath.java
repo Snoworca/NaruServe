@@ -7,8 +7,8 @@ import java.util.Objects;
 
 /**
  * Static path checks on the mount-relative raw path (the request path after the prefix and its '/'). Each segment is
- * decoded exactly once; a segment that would still decode to a dot segment, '/' or NUL is refused rather than decoded
- * again.
+ * decoded exactly once; a segment that would still decode to a dot segment, '/', a backslash or NUL is refused rather
+ * than decoded again.
  */
 // @req FR-STATIC-005
 final class StaticPath {
@@ -17,8 +17,8 @@ final class StaticPath {
     }
 
     /**
-     * 0 when the path may be looked up; 400 for a segment that decodes to {@code .} or {@code ..}, holds '/' or NUL,
-     * still holds {@code %2e}, {@code %2f} or {@code %00}, or is malformed; then 404 for a decoded segment starting
+     * 0 when the path may be looked up; 400 for a segment that decodes to {@code .} or {@code ..}, holds '/', a
+     * backslash (a Windows separator, refused on every platform) or NUL, still holds {@code %2e}, {@code %2f} or {@code %00}, or is malformed; then 404 for a decoded segment starting
      * with '.' or an empty segment other than the trailing one.
      */
     // @req FR-STATIC-005
@@ -27,7 +27,8 @@ final class StaticPath {
         String[] decoded = new String[raw.length];
         for (int i = 0; i < raw.length; i++) {
             String d = PercentDecoder.decode(raw[i], false);
-            if (d == null || d.equals(".") || d.equals("..") || d.indexOf('/') >= 0 || d.indexOf('\0') >= 0) {
+            if (d == null || d.equals(".") || d.equals("..") || d.indexOf('/') >= 0 || d.indexOf('\\') >= 0
+                    || d.indexOf('\0') >= 0) {
                 return 400;
             }
             String lower = d.toLowerCase(Locale.ROOT);

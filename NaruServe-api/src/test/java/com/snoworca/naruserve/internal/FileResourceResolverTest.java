@@ -4,11 +4,20 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.snoworca.naruserve.ResourceResolver;
+import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientResponse;
+import com.snoworca.naruserve.testing.TestApp;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.Field;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.nio.file.Files;
 import org.junit.Rule;
 import org.junit.Test;
@@ -85,6 +94,80 @@ public class FileResourceResolverTest {
             fail("link inside served");
         } catch (FileNotFoundException expected) {
             // refused
+        }
+    }
+
+    /** A real resolver that records each call with its delegate's class, then delegates. */
+    private static final class Recording implements ResourceResolver {
+        private final ResourceResolver delegate;
+        private final List<String> calls;
+
+        Recording(ResourceResolver delegate, List<String> calls) {
+            this.delegate = delegate;
+            this.calls = calls;
+        }
+
+        private void see(String call) {
+            synchronized (calls) {
+                calls.add(call + ":" + delegate.getClass().getSimpleName());
+            }
+        }
+
+        @Override
+        public InputStream open(String path) throws IOException {
+            see("open");
+            return delegate.open(path);
+        }
+
+        @Override
+        public long length(String path) throws IOException {
+            see("length");
+            return delegate.length(path);
+        }
+
+        @Override
+        public String etag(String path) throws IOException {
+            see("etag");
+            return delegate.etag(path);
+        }
+
+        @Override
+        public long modified(String path) throws IOException {
+            see("modified");
+            return delegate.modified(path);
+        }
+    }
+
+    // FR-STATIC-011 AC-5: static mounts, res.file and res.download all read through the built-in java.io.File
+    // resolver, observed as its open, length, etag and modified calls for each of the three
+    @Test
+    public void FR_STATIC_011_AC5_staticFileAndDownloadReadThroughTheBuiltInResolver() throws Exception {
+        File root = tmp.newFolder("served");
+        try (OutputStream out = new FileOutputStream(new File(root, "a.txt"))) {
+            out.write("hello".getBytes(StandardCharsets.UTF_8));
+        }
+        TestApp t = TestApp.create();
+        t.app().staticFiles("/s", root);
+        t.app().get("/f", (req, res) -> res.file(new File(root, "a.txt")));
+        t.app().get("/d", (req, res) -> res.download(new File(root, "a.txt"), "a.txt"));
+        assertEquals(200, t.send("GET", "/s/a.txt").status()); // listens
+        Field f = Dispatcher.class.getDeclaredField("statics");
+        f.setAccessible(true);
+        StaticHandler statics = (StaticHandler) f.get(((DefaultRestApp) t.app()).dispatcher());
+        List<String> calls = new ArrayList<>();
+        statics.resolverTap(r -> new Recording(r, calls));
+        List<String> expected = Arrays.asList("length:FileResourceResolver", "etag:FileResourceResolver",
+                "modified:FileResourceResolver", "open:FileResourceResolver");
+        for (String path : new String[] {"/s/a.txt", "/f", "/d"}) {
+            synchronized (calls) {
+                calls.clear();
+            }
+            ClientResponse r = t.send("GET", path);
+            assertEquals(path, 200, r.status());
+            assertEquals(path, "hello", new String(r.body(), StandardCharsets.UTF_8));
+            synchronized (calls) {
+                assertEquals(path, expected, calls);
+            }
         }
     }
 }

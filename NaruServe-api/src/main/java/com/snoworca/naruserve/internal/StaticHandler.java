@@ -25,6 +25,7 @@ final class StaticHandler {
     private final List<StaticMount> mounts;
     private final DefaultMimeTypes mimeTypes;
     private final @Nullable CachePolicy defaultCache;
+    private volatile FileResponder.@Nullable ResolverTap tap;
 
     /** As below, with an empty MIME registry: the built-in table only. */
     StaticHandler(List<StaticMount> registered) {
@@ -90,17 +91,22 @@ final class StaticHandler {
         return spa(req, res);
     }
 
-    /** Whether a GET for {@code rawPath} would be answered from the file system: file, index, listing or 301. */
+    /**
+     * Whether a GET for {@code rawPath} would be answered from the file system: file, index, listing or 301. A path
+     * outside the canonical root or through a refused symbolic link is not, as GET answers it 404.
+     */
     // @req FR-STATIC-002
-    boolean wouldServeGet(String rawPath) {
+    // @req FR-STATIC-006
+    boolean wouldServeGet(String rawPath) throws IOException {
         boolean slash = rawPath.endsWith("/");
         for (StaticMount m : mounts) {
             File f = target(m, rawPath);
-            if (f == null) {
+            if (f == null || !reachable(m, f)) {
                 continue;
             }
             if (f.isDirectory()) {
-                if (!slash || new File(f, m.options().indexName()).isFile() || m.options().directoryListingOn()) {
+                File index = new File(f, m.options().indexName());
+                if (!slash || index.isFile() && reachable(m, index) || m.options().directoryListingOn()) {
                     return true;
                 }
             } else if (!slash && f.isFile()) {
@@ -155,6 +161,9 @@ final class StaticHandler {
         String path = sb.toString();
         if (f.isDirectory()) {
             if (!slash) {
+                if (!reachable(m, f)) {
+                    return false; // a refused symbolic link is missed like a missing file, never redirected
+                }
                 String q = req.rawQuery();
                 res.status(301).header("Location", req.rawPath() + "/" + (q == null ? "" : "?" + q))
                         .header("X-Content-Type-Options", "nosniff");
@@ -166,7 +175,7 @@ final class StaticHandler {
                 return true;
             }
             if (m.options().directoryListingOn()) {
-                if (!listable(m, f)) {
+                if (!reachable(m, f)) {
                     error(req, res, 404);
                     return true;
                 }
@@ -206,11 +215,12 @@ final class StaticHandler {
     }
 
     /**
-     * Whether directory {@code f} lies under the mount's canonical root and, unless symbolic links are allowed, is
-     * reached through no symbolic link below it.
+     * Whether file or directory {@code f} lies under the mount's canonical root and, unless symbolic links are
+     * allowed, is reached through no symbolic link below it.
      */
     // @req FR-STATIC-003
-    private static boolean listable(StaticMount m, File f) throws IOException {
+    // @req FR-STATIC-006
+    private static boolean reachable(StaticMount m, File f) throws IOException {
         FileResourceResolver r = m.resolver();
         File root = m.root();
         if (r == null || root == null) {
@@ -219,6 +229,16 @@ final class StaticHandler {
         String canonical = f.getCanonicalPath();
         String prefix = root.getPath().endsWith(File.separator) ? root.getPath() : root.getPath() + File.separator;
         return (canonical.equals(root.getPath()) || canonical.startsWith(prefix)) && (r.allowSymlinks() || r.linkFree(f));
+    }
+
+    /** Test hook for the resolver static mounts, {@code res.file} and {@code res.download} read through. */
+    // @req FR-STATIC-011
+    void resolverTap(FileResponder.@Nullable ResolverTap tap) {
+        this.tap = tap;
+    }
+
+    FileResponder.@Nullable ResolverTap resolverTap() {
+        return tap;
     }
 
     /** The app's MIME registry, also used by {@code res.file}. */
@@ -245,7 +265,7 @@ final class StaticHandler {
         String name = path.substring(path.lastIndexOf('/') + 1);
         CachePolicy policy = CachePattern.select(m.options().cachePatterns(), "/" + path);
         try {
-            FileResponder.respond(req, res, r, path, mimeTypes.lookup(name, m.options().mimes()), policy);
+            FileResponder.respond(req, res, FileResponder.tapped(r, tap), path, mimeTypes.lookup(name, m.options().mimes()), policy);
         } catch (FileNotFoundException e) {
             return false;
         }

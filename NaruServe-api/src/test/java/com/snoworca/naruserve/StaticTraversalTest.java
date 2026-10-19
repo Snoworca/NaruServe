@@ -67,4 +67,17 @@ public class StaticTraversalTest {
         }
         assertEquals("APP", new String(t.send("GET", "/assets/app.js").body(), StandardCharsets.UTF_8));
     }
+
+    // FR-STATIC-005 AC-1: a decoded backslash is refused like '/' on every platform (a Windows separator)
+    @Test
+    public void FR_STATIC_005_AC1_decodedBackslashIs400() throws IOException {
+        TestApp t = app();
+        for (String path : new String[] {"/a%5C..%5C.env", "/a%5cb.txt", "/assets%5Capp.js", "/%5C"}) {
+            for (String m : new String[] {"GET", "POST"}) {
+                ClientResponse r = t.send(m, path);
+                assertEquals(m + " " + path, 400, r.status());
+                assertFalse(path, new String(r.body(), StandardCharsets.UTF_8).contains("ENV"));
+            }
+        }
+    }
 }

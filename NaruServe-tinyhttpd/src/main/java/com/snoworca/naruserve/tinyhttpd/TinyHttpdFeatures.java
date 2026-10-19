@@ -24,14 +24,16 @@ final class TinyHttpdFeatures {
 
     /**
      * Commits through {@code ex} and copies exactly {@code length} bytes of {@code file} from {@code offset} with
-     * plain buffered reads; the caller holds the exchange lock and has checked the range.
+     * plain buffered reads; the caller holds the exchange lock and has checked the range. The file is opened before
+     * the commit, so a missing or unreadable file throws with the response still unstarted.
      */
     // @req FR-ENGINE-010
     static void sendFile(TinyHttpdExchange ex, int status, List<Map.Entry<String, String>> headers, File file,
             long offset, long length) throws IOException {
-        OutputStream out = ex.commit(status, headers, length);
+        OutputStream out;
         try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
             raf.seek(offset);
+            out = ex.commit(status, headers, length);
             byte[] buf = new byte[8192];
             for (long left = length; left > 0; ) {
                 int n = raf.read(buf, 0, (int) Math.min(buf.length, left));

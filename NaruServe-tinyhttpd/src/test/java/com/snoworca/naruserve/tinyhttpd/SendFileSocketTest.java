@@ -5,6 +5,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -159,5 +160,25 @@ public class SendFileSocketTest {
         for (String banned : Arrays.asList("transferTo", "transferFrom", "java/nio/channels/FileChannel")) {
             assertTrue(banned, !text.contains(banned));
         }
+    }
+
+    // FR-ENGINE-010 AC-2: the file is opened before the head is committed, so a missing file leaves it unstarted
+    @Test(timeout = 20000)
+    public void FR_ENGINE_010_AC2_missingFileThrowsBeforeTheResponseStarts() throws Exception {
+        File missing = new File(tmp.getRoot(), "missing.bin");
+        AtomicReference<String> seen = new AtomicReference<>();
+        adapter.bind(RawTargetSocketTest.Http.settings().build(), RawTargetSocketTest.Http.ok(ex -> {
+            try {
+                ex.sendFile(200, contentLength(0), missing, 0, 0);
+                seen.set("none");
+            } catch (FileNotFoundException e) {
+                seen.set("FileNotFoundException");
+            }
+        }));
+        // Http.ok commits after the failed sendFile, so a 200 "ok" proves the response was still unstarted.
+        String response = send(adapter, "/missing");
+        assertEquals("FileNotFoundException", seen.get());
+        assertEquals(200, RawTargetSocketTest.Http.status(response));
+        assertEquals("ok", RawTargetSocketTest.Http.body(response));
     }
 }

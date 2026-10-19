@@ -8,6 +8,7 @@ import com.snoworca.naruserve.testing.TestApp;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.atomic.AtomicReference;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -116,5 +117,24 @@ public class StaticMountingTest {
         assertEquals("APP", text(r));
         assertEquals("1", r.header("X-Mw"));
         assertEquals("STOPPED", text(t.send("GET", "/assets/app.js?stop=1")));
+    }
+
+    // FR-STATIC-001 AC-2; FR-APP-002: the options a mount serves with are fixed at listen, so a configurer that kept
+    // its StaticOptions reference cannot change a running mount
+    @Test
+    public void FR_STATIC_001_AC2_optionsKeptByTheConfigurerDoNotChangeARunningMount() throws IOException {
+        File root = tmp.getRoot();
+        write(new File(root, "docs/index.html"), "DOCS");
+        write(new File(root, "docs/main.html"), "MAIN");
+        write(new File(root, "a.weird"), "W");
+        AtomicReference<StaticOptions> held = new AtomicReference<>();
+        TestApp t = TestApp.create();
+        t.app().staticFiles("/", root, held::set);
+        assertEquals("DOCS", text(t.send("GET", "/docs/"))); // listens
+        String type = t.send("GET", "/a.weird").header("Content-Type");
+        held.get().index("main.html").mime("weird", "text/x-weird").spaFallback(true).directoryListing(true);
+        assertEquals("DOCS", text(t.send("GET", "/docs/")));
+        assertEquals(type, t.send("GET", "/a.weird").header("Content-Type"));
+        assertEquals(404, t.send("GET", "/missing", "Accept", "text/html").status());
     }
 }
