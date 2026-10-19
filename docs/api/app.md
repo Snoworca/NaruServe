@@ -24,7 +24,22 @@ RestApp app = RestApp.builder()
     .build();
 ```
 
-> 진입점 이름(`builder()`)과 메서드 목록은 **(미확정)** 입니다. 사양서는 `httpAdapter(...)`, `jsonCodec(...)`, `build()`에 "상응하는" 진입점을 요구합니다.
+`RestApp.builder()`는 `httpAdapter(HttpAdapter)`, `jsonCodec(JsonCodec)`, `logger(Logger)`, `build()`를 가지며 각 설정 메서드는 builder를 돌려줍니다. `httpAdapter`와 `jsonCodec`은 꼭 불러야 하고, 빠지면 `build()`가 `IllegalStateException`을 던집니다. `logger`를 부르지 않으면 새 `ConsoleLogger`를 씁니다. `build()`는 부를 때마다 `NEW` 상태의 새 앱을 만듭니다.
+`builder()`라는 이름을 고른 이유는 Java·Kotlin에서 가장 흔한 빌더 관례이고 `create()`와 나란히 두면 진입점 두 개가 한눈에 보이기 때문입니다.
+
+`create()`는 클래스패스에서 `com.snoworca.naruserve.spi.AppFactory` 구현을 `ServiceLoader`로 하나 찾아 그 앱을 돌려줍니다. 구현은 `NaruServe` 모듈이 TinyHttpd 어댑터와 함께 제공하며(다음 단계에서 추가), 그 전에는 구현이 없어 아래 예외가 납니다. 구현이 없으면 `IllegalStateException`을, 둘 이상이면 구현 클래스 이름을 담은 `IllegalStateException`을 던집니다. 없을 때의 메시지는 다음과 같습니다.
+
+```text
+No com.snoworca.naruserve.spi.AppFactory provider found. Add the com.snoworca.naruserve:NaruServe module to use RestApp.create(), or assemble the app with RestApp.builder().httpAdapter(...).jsonCodec(...).build()
+```
+
+`create()`가 `AppFactory` SPI를 거치는 이유는 `NaruServe-api`가 TinyHttpd와 Gson에 컴파일 의존하지 않고도 `RestApp.create()`를 제공하기 위해서입니다.
+
+```java
+public interface AppFactory {   // com.snoworca.naruserve.spi
+    RestApp create();
+}
+```
 
 `RestApp` 하나가 서버 하나입니다. 한 프로세스에 여러 개를 만들 수 있고, 서로 상태를 공유하지 않습니다.
 
@@ -47,7 +62,9 @@ RestApp app = RestApp.builder()
 | `route(path)` | `RouteBuilder`를 돌려줍니다. `.get(h).delete(h2)`로 메서드별 핸들러를 붙입니다. |
 | `ws(path, handler)` | WebSocket 엔드포인트. [WebSocket](websocket.md) |
 
-모두 `RestApp`을 돌려주므로 이어서 호출할 수 있습니다(`route(path)` 제외. `ws`와 라우트 미들웨어 오버로드의 반환 타입은 **(미확정)**). 자세한 규칙은 [라우팅](routing.md).
+모두 `RestApp`을 돌려주므로 이어서 호출할 수 있습니다(`route(path)`는 `RouteBuilder`를 돌려줍니다). 자세한 규칙은 [라우팅](routing.md).
+라우트 미들웨어 오버로드(`get(path, middleware, handler)` 등)도 `RestApp`을 돌려줍니다. 미들웨어를 여러 개 붙일 때는 `route(path).use(m1).use(m2).get(handler)`를 씁니다([미들웨어](middleware.md#등록)).
+`ws`의 반환 타입은 **(미확정)** 입니다.
 
 `RouteHandler`는 `(req, res) -> { ... }` 람다입니다.
 
@@ -110,7 +127,8 @@ app.routerPolicy(RouterPolicy.builder().ignoreTrailingSlash(true).build())
 | `shutdown(timeout, unit)` | 정상 종료 |
 | `state()` | 현재 상태: `NEW`, `STARTING`, `RUNNING`, `STOPPING`, `FAILED`, `TERMINATED` |
 
-`onStart`/`onStop`/`onError`/`ws`에 넘기는 콜백 인터페이스의 이름과 `throws Exception` 허용 여부는 **(미확정)** 입니다. `RouteHandler`와 `Middleware`만 `throws Exception`이 확정되어 있습니다.
+`onStart`/`onStop`의 콜백은 `LifecycleCallback`(`void handle(ApplicationContext ctx) throws Exception`), `onError`의 콜백은 `ErrorHandler`(`void handle(Throwable error, Request req, Response res) throws Exception`)이며, 둘 다 `RouteHandler`·`Middleware`처럼 `@FunctionalInterface`이고 `throws Exception`을 허용하는 이유는 콜백 안의 I/O 예외를 감싸지 않고 그대로 던지게 하려는 것입니다.
+`ws`에 넘기는 콜백 인터페이스의 이름은 **(미확정)** 입니다.
 
 [수명주기와 서비스](lifecycle.md)
 
@@ -122,10 +140,10 @@ ServerHandle server = app.listen(8080);
 
 - **동기**로 동작합니다. `onStart` 실행 → 라우트 검사 → 포트 바인딩이 모두 끝난 뒤 반환합니다. Express와 달리 콜백을 받지 않습니다.
 - 반환 전에는 요청을 받지 않습니다.
-- `listen()`이 반환한 뒤 `main`이 끝나도 프로세스가 계속 도는지(서버 스레드가 daemon인지)는 **(미확정)** 입니다.
+- `listen()`이 반환한 뒤 `main`이 끝나도 `shutdown(...)`을 부를 때까지 프로세스가 계속 돕니다. 서버 스레드는 daemon이 아니며, 이는 기본 TinyHttpd 어댑터(`NaruServe-tinyhttpd`, 다음 단계에서 추가)가 보장합니다. 이렇게 정한 이유는 Express의 `app.listen()`처럼 서버만 띄우는 `main`이 바로 끝나지 않게 하려는 것입니다.
 - 바인딩 실패, `onStart` 예외, 라우트 충돌 같은 설정 오류는 **예외로 던집니다**. 이때 포트는 열려 있지 않고, 이미 만든 리소스는 정리됩니다.
 - 기본으로 **localhost에만** 바인딩합니다. LAN 바인딩 설정 API는 **(미확정)** 입니다.
-- `ServerHandle`은 실제 포트·주소·상태를 담습니다(접근자 이름 **(미확정)**).
+- `ServerHandle`은 `port()`(실제 포트. `listen(0)`이면 고른 빈 포트), `address()`(`127.0.0.1`), `state()`(부를 때마다 읽는 앱 상태)를 가집니다. Express의 `server.address().port` 대신 짧은 접근자를 둔 이유는 `req.path()`처럼 다른 API와 같은 이름 규칙을 쓰기 위해서입니다.
 - Android에서는 메인 스레드에서 호출하지 마세요. 작업 스레드에서 호출합니다.
 
 ## shutdown
@@ -139,6 +157,7 @@ app.shutdown(10, TimeUnit.SECONDS);
 3. 시간 안에 안 끝나면 연결을 강제로 끊습니다.
 4. `onStop` 콜백을 실행합니다.
 5. `own`/`register`한 `AutoCloseable`을 생성·등록 역순으로 닫습니다.
+6. 앱 로거를 flush하고 닫은 뒤 HTTP 어댑터를 놓습니다([로깅](logging.md#종료와-로거)).
 
 여러 번 불러도 안전합니다. 종료된 앱은 다시 `listen`할 수 없습니다.
 Android에서는 메인 스레드에서 호출하지 마세요(최대 timeout만큼 막힙니다).
