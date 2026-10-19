@@ -105,6 +105,12 @@ public final class DefaultRestApp implements RestApp {
     // Written only in NEW; the Dispatcher reads it once at freeze.
     private volatile boolean trustProxy;
     private final ShutdownParticipants shutdownParticipants = new ShutdownParticipants();
+    private final SpoolRegistry spool = new SpoolRegistry();
+
+    {
+        // Deletes the temp uploads still open once in-flight requests finished or were force-closed.
+        shutdownParticipants.add(ShutdownParticipants.Phase.AFTER_ON_STOP, spool::closeAndDeleteAll);
+    }
     // Set by the one listen() that won beginStart.
     private volatile boolean bindAttempted;
     // The thread inside listen() or the shutdown sequence; a shutdown() from it must not wait for itself. Each owner
@@ -269,6 +275,12 @@ public final class DefaultRestApp implements RestApp {
     // @req FR-APP-011
     ShutdownParticipants shutdownParticipants() {
         return shutdownParticipants;
+    }
+
+    /** The app's open temp uploads, closed by its after-onStop shutdown participant. */
+    // @req FR-MULTIPART-006
+    SpoolRegistry spool() {
+        return spool;
     }
 
     /** The app's state machine, for same-package tests. */
@@ -792,7 +804,7 @@ public final class DefaultRestApp implements RestApp {
         SafeLogger safe = new SafeLogger(logger); // the logger is fixed from here: logger(...) needs an unfrozen app
         dispatcher = new Dispatcher(router, pipeline, new ErrorPath(errorHandlers, safe),
                 new AccessLog(accessLogOptions, safe), context, jsonCodec(), jsonLimit(), trustProxy,
-                multipartSettings(), formLimit());
+                multipartSettings(), formLimit(), spool());
         lifecycle.markFrozen();
     }
 

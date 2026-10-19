@@ -53,8 +53,7 @@ public final class Dispatcher implements ExchangeHandler {
     private final boolean trustProxy;
     private final MultipartSettings multipart;
     private final long formLimit;
-    // shortcut: one spool per dispatcher; the spooling fragment of wave 6 hands in the app's registry instead.
-    private final SpoolRegistry spool = new SpoolRegistry();
+    private final SpoolRegistry spool;
 
     /**
      * Wave 3 shape: no middleware, no onError handler, access log off, a {@link ConsoleLogger}. {@code router} must
@@ -104,6 +103,16 @@ public final class Dispatcher implements ExchangeHandler {
     Dispatcher(Router<RouteHandler> router, MiddlewarePipeline pipeline, ErrorPath errors, AccessLog accessLog,
             @Nullable ApplicationContext context, @Nullable JsonCodec codec, long jsonLimit, boolean trustProxy,
             MultipartSettings multipart, long formLimit) {
+        this(router, pipeline, errors, accessLog, context, codec, jsonLimit, trustProxy, multipart, formLimit,
+                new SpoolRegistry());
+    }
+
+    /** As above, with the app's spool registry, which its after-onStop participant closes. */
+    // @req FR-MULTIPART-006
+    Dispatcher(Router<RouteHandler> router, MiddlewarePipeline pipeline, ErrorPath errors, AccessLog accessLog,
+            @Nullable ApplicationContext context, @Nullable JsonCodec codec, long jsonLimit, boolean trustProxy,
+            MultipartSettings multipart, long formLimit, SpoolRegistry spool) {
+        this.spool = Objects.requireNonNull(spool, "spool");
         this.multipart = Objects.requireNonNull(multipart, "multipart");
         this.formLimit = formLimit;
         this.trustProxy = trustProxy;
@@ -139,8 +148,11 @@ public final class Dispatcher implements ExchangeHandler {
                 routed ? m.params() : Collections.<String, String>emptyMap(), context, codec, jsonLimit, trustProxy,
                 multipart, formLimit, spool);
         DefaultResponse res = new DefaultResponse(ex, method == Method.HEAD, codec);
-        res.onDone(() -> accessLog.write(token, rawPath, res.statusCode(),
-                res.state() == ResponseState.ABORTED, start, req.body().bytesRead(), res.bytesWritten(), rid));
+        res.onDone(() -> {
+            req.releaseUploads(); // complete or abort: the request ended
+            accessLog.write(token, rawPath, res.statusCode(), res.state() == ResponseState.ABORTED, start,
+                    req.body().bytesRead(), res.bytesWritten(), rid);
+        });
         List<Middleware> route = Collections.emptyList();
         RouteHandler terminal;
         if (routed) {
@@ -158,9 +170,11 @@ public final class Dispatcher implements ExchangeHandler {
             pipeline.run(req, res, route, terminal, errors, rid);
         } catch (Exception e) {
             errors.handle(e, req, res, rid);
+            req.releaseUploads();
             return;
         } catch (Error e) {
             res.abort(e); // closes a pending stream before the Error reaches the adapter
+            req.releaseUploads();
             throw e;
         }
         finish(req, res);
