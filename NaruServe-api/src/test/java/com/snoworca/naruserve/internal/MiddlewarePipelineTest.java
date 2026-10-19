@@ -121,11 +121,18 @@ public class MiddlewarePipelineTest {
         t.app().use("/api", mw("p"));
         t.app().use("/other", mw("o"));
         t.app().get("/api/users", mw("r"), h("h"));
+        t.app().get("/boom/now", (req, res) -> {
+            throw new IllegalStateException("boom");
+        });
         t.app().onError((error, req, res) -> calls.add("onError"));
         ClientResponse r = t.send("GET", "/api/missing");
         assertEquals(404, r.status());
         assertTrue(text(r), text(r).startsWith("{\"error\":{\"code\":\"NOT_FOUND\""));
         assertEquals(Arrays.asList("g", "p"), calls);
+        // Control (FR-APP-005 AC-7): the recording onError is wired, so the empty call lists above are meaningful.
+        calls.clear();
+        assertEquals(500, t.send("GET", "/boom/now").status());
+        assertTrue(calls.toString(), calls.contains("onError"));
     }
 
     // SDS-AC-6; FR-APP-003 AC-5
@@ -156,11 +163,18 @@ public class MiddlewarePipelineTest {
         t.app().use("/", mw("p"));
         t.app().onError((error, req, res) -> calls.add("onError"));
         t.app().route(Method.any(), "/", h("h")).route(Method.any(), "/:x", h("h"));
+        t.app().get("/boom/now", (req, res) -> {
+            throw new IllegalStateException("boom");
+        });
         assertEquals(501, t.send("FOO", "/x").status());
         assertEquals(400, t.send("GET", "abc").status());
         assertEquals(400, t.send("GET", "/%2e%2e").status());
         assertEquals(204, t.send("OPTIONS", "*").status());
         assertEquals(new ArrayList<String>(), calls);
+        // Control (FR-APP-005 AC-7): the recording onError is wired, so the empty call lists above are meaningful.
+        calls.clear();
+        assertEquals(500, t.send("GET", "/boom/now").status());
+        assertTrue(calls.toString(), calls.contains("onError"));
     }
 
     // SDS-AC-8; FR-APP-003 AC-8, FR-APP-004 AC-6
@@ -193,6 +207,9 @@ public class MiddlewarePipelineTest {
         t.app().use(mw("g"));
         t.app().onError((error, req, res) -> calls.add("onError"));
         t.app().get("/r", h("h")).post("/r", h("h"));
+        t.app().get("/boom/now", (req, res) -> {
+            throw new IllegalStateException("boom");
+        });
         String[][] cases = {{"GET", "/missing", "404"}, {"DELETE", "/r", "405"}, {"GET", "/ws", "426"},
             {"OPTIONS", "/r", "204"}, {"TRACE", "/x", "501"}, {"CONNECT", "/", "501"}};
         for (String[] c : cases) {
@@ -203,6 +220,10 @@ public class MiddlewarePipelineTest {
         calls.clear();
         assertEquals(501, t.send("BREW", "/r").status());
         assertEquals(new ArrayList<String>(), calls);
+        // Control (FR-APP-005 AC-7): the recording onError is wired, so the empty call lists above are meaningful.
+        calls.clear();
+        assertEquals(500, t.send("GET", "/boom/now").status());
+        assertTrue(calls.toString(), calls.contains("onError"));
     }
 
     // SDS-AC-17; FR-HTTP-022 AC-4

@@ -1,5 +1,6 @@
 package com.snoworca.naruserve.internal;
 
+import com.snoworca.naruserve.HttpException;
 import com.snoworca.naruserve.Method;
 import com.snoworca.naruserve.Request;
 import com.snoworca.naruserve.spi.HttpExchange;
@@ -41,11 +42,19 @@ public final class DefaultRequest implements Request {
         return decode(rawPath, false);
     }
 
-    /** Parses the raw query once; IllegalArgumentException for bad %XX or invalid UTF-8 (the Dispatcher answers 400). */
+    /**
+     * Parses the raw query once; a new {@code HttpException(400)} without message on every call for bad %XX or
+     * invalid UTF-8, which the error path answers.
+     */
     // @req FR-HTTP-010
+    // @req FR-HTTP-025
     void decodeQuery() {
         if (query == null) {
-            query = parseQuery(ex.rawQuery());
+            try {
+                query = parseQuery(ex.rawQuery());
+            } catch (IllegalArgumentException e) {
+                throw new HttpException(400);
+            }
         }
     }
 

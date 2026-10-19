@@ -1,13 +1,26 @@
 package com.snoworca.naruserve.internal;
 
+import com.snoworca.naruserve.HttpException;
 import java.nio.charset.StandardCharsets;
 
-/** Standard error table; public because {@code HttpException.code()} reads it. */
-// shortcut: no statusOf/messageOf yet; the FR-APP-006 SDS adds them and the full reason table.
+/** Standard error table and body, built by the core without the app's codec; public for {@code HttpException.code()}. */
 // @req FR-APP-006
 public final class StandardErrors {
 
     private StandardErrors() {
+    }
+
+    /** {@link HttpException#status()}, otherwise 500. */
+    // @req FR-APP-006
+    static int statusOf(Throwable error) {
+        return error instanceof HttpException ? ((HttpException) error).status() : 500;
+    }
+
+    /** The app-supplied message of an {@link HttpException}, otherwise the reason phrase; a 500 always the reason. */
+    // @req FR-APP-006
+    static String messageOf(Throwable error, int status) {
+        String message = error instanceof HttpException ? error.getMessage() : null;
+        return status == 500 || message == null ? reason(status) : message;
     }
 
     /** The reason phrase of {@code status}, {@code Error} when unlisted. */

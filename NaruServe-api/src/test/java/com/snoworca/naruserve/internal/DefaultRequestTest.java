@@ -2,11 +2,13 @@ package com.snoworca.naruserve.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.snoworca.naruserve.HttpException;
 import com.snoworca.naruserve.Method;
 import com.snoworca.naruserve.RouteHandler;
 import com.snoworca.naruserve.routing.Router;
@@ -85,9 +87,9 @@ public class DefaultRequestTest {
         }
     }
 
-    // SDS-AC-3; FR-HTTP-010 AC-1
+    // SDS-AC-17 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-5.sds.md; FR-HTTP-025 AC-1
     @Test
-    public void sdsAc3_FR_HTTP_010_AC1_repeatedNamesKeepRequestOrder() {
+    public void sdsAc17_FR_HTTP_025_AC1_repeatedNamesKeepRequestOrder() {
         DefaultRequest req = request("/x?a=1&a=2&b=3");
         assertEquals("1", req.query("a"));
         assertEquals(Arrays.asList("1", "2"), req.queries("a"));
@@ -96,17 +98,17 @@ public class DefaultRequestTest {
         assertTrue(req.queries("c").isEmpty());
     }
 
-    // SDS-AC-3; FR-HTTP-010 AC-2
+    // SDS-AC-17 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-5.sds.md; FR-HTTP-025 AC-2
     @Test
-    public void sdsAc3_FR_HTTP_010_AC2_plusIsSpaceAndUtf8NamesAndValuesDecode() {
+    public void sdsAc17_FR_HTTP_025_AC2_plusIsSpaceAndUtf8NamesAndValuesDecode() {
         DefaultRequest req = request("/x?q=a+b%20c&%ED%95%9C=%EA%B8%80");
         assertEquals("a b c", req.query("q"));
         assertEquals("글", req.query("한"));
     }
 
-    // SDS-AC-3; FR-HTTP-010 AC-2
+    // SDS-AC-17 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-5.sds.md; FR-HTTP-025 AC-2
     @Test
-    public void sdsAc3_FR_HTTP_010_AC2_pairWithoutEqualsIsEmptyValueAndEmptyNameIsKept() {
+    public void sdsAc17_FR_HTTP_025_AC2_pairWithoutEqualsIsEmptyValueAndEmptyNameIsKept() {
         Map<String, List<String>> q = DefaultRequest.parseQuery("flag&=v&k=a=b&p=%2B");
         assertEquals(Collections.singletonList(""), q.get("flag"));
         assertEquals(Collections.singletonList("v"), q.get(""));
@@ -116,9 +118,9 @@ public class DefaultRequestTest {
         assertTrue(DefaultRequest.parseQuery("").isEmpty());
     }
 
-    // SDS-AC-3; FR-HTTP-010 AC-1
+    // SDS-AC-17 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-5.sds.md; FR-HTTP-025 AC-1
     @Test
-    public void sdsAc3_FR_HTTP_010_AC1_queriesListIsUnmodifiable() {
+    public void sdsAc17_FR_HTTP_025_AC1_queriesListIsUnmodifiable() {
         DefaultRequest req = request("/x?a=1");
         try {
             req.queries("a").add("2");
@@ -128,9 +130,9 @@ public class DefaultRequestTest {
         }
     }
 
-    // SDS-AC-4; FR-HTTP-010 AC-3
+    // SDS-AC-16 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-5.sds.md; FR-HTTP-025 AC-3
     @Test
-    public void sdsAc4_FR_HTTP_010_AC3_parseQueryRejectsMalformedPercentAndInvalidUtf8() {
+    public void sdsAc16_FR_HTTP_025_AC3_parseQueryRejectsMalformedPercentAndInvalidUtf8() {
         for (String raw : new String[] {"x=%zz", "x=%E0%A4", "x=%C3%28", "x=%4", "%zz=1"}) {
             try {
                 DefaultRequest.parseQuery(raw);
@@ -141,21 +143,35 @@ public class DefaultRequestTest {
         }
     }
 
-    // SDS-AC-4; FR-HTTP-010 AC-3
+    // SDS-AC-16 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-5.sds.md; FR-HTTP-025 AC-3
     @Test
-    public void sdsAc4_FR_HTTP_010_AC3_decodeQueryThrowsForMalformedQuery() {
+    public void sdsAc16_FR_HTTP_025_AC3_decodeQueryThrowsANewHttpException400OnEveryCall() {
         DefaultRequest req = request("/x?x=%zz");
+        HttpException first = null;
+        for (int i = 0; i < 2; i++) {
+            try {
+                req.decodeQuery();
+                fail("expected HttpException");
+            } catch (HttpException e) {
+                assertEquals(400, e.status());
+                assertNull(e.getMessage());
+                if (first != null) {
+                    assertNotSame(first, e);
+                }
+                first = e;
+            }
+        }
         try {
-            req.decodeQuery();
-            fail("expected IllegalArgumentException");
-        } catch (IllegalArgumentException expected) {
-            // rejected
+            req.query("x");
+            fail("expected HttpException from req.query");
+        } catch (HttpException e) {
+            assertEquals(400, e.status());
         }
     }
 
-    // SDS-AC-4; FR-HTTP-010 AC-3
+    // SDS-AC-16 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-5.sds.md; FR-HTTP-025 AC-3
     @Test
-    public void sdsAc4_FR_HTTP_010_AC3_malformedQueryIs400WithContentLength0AndHandlerNotCalled() {
+    public void sdsAc16_FR_HTTP_025_AC3_malformedQueryIsTheStandard400AndHandlerNotCalled() {
         AtomicInteger calls = new AtomicInteger();
         RouteHandler recording = (req, res) -> calls.incrementAndGet();
         Router<RouteHandler> router = new Router<>(RouterPolicy.strict());
@@ -165,10 +181,7 @@ public class DefaultRequestTest {
         adapter.bind("127.0.0.1", 0, new Dispatcher(router));
         for (String target : new String[] {"/x?x=%zz", "/x?x=%E0%A4", "/x?x=%C3%28"}) {
             ClientResponse r = adapter.send(ClientRequest.of("GET", target));
-            assertEquals(target, 400, r.status());
-            assertEquals("0", r.header("Content-Length"));
-            assertEquals(0, r.body().length);
-            assertFalse(r.abnormallyClosed());
+            DispatcherTest.assertError(400, "BAD_REQUEST", "Bad Request", r);
         }
         assertEquals(0, calls.get());
         // Control: a well-formed query passes the check and reaches the handler.

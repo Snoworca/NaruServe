@@ -1,5 +1,7 @@
 package com.snoworca.naruserve.internal;
 
+import com.snoworca.naruserve.ConsoleLogger;
+import com.snoworca.naruserve.ErrorHandler;
 import com.snoworca.naruserve.Method;
 import com.snoworca.naruserve.MethodSet;
 import com.snoworca.naruserve.Middleware;
@@ -31,6 +33,8 @@ import org.jspecify.annotations.Nullable;
 // @req FR-HTTP-021
 // @req FR-HTTP-022
 // @req FR-HTTP-023
+// @req FR-HTTP-024
+// @req FR-HTTP-025
 // @req FR-APP-003
 public final class Dispatcher implements ExchangeHandler {
 
@@ -41,10 +45,14 @@ public final class Dispatcher implements ExchangeHandler {
     private final ErrorPath errors;
     private final AccessLog accessLog;
 
-    /** Wave 3 shape: no middleware, no onError handler, access log off. {@code router} must already be frozen. */
+    /**
+     * Wave 3 shape: no middleware, no onError handler, access log off, a {@link ConsoleLogger}. {@code router} must
+     * already be frozen.
+     */
     // @req FR-HTTP-021
     public Dispatcher(Router<RouteHandler> router) {
-        this(router, new MiddlewarePipeline(RouterPolicy.strict()), new ErrorPath(Collections.emptyList()),
+        this(router, new MiddlewarePipeline(RouterPolicy.strict()),
+                new ErrorPath(Collections.<ErrorHandler>emptyList(), new SafeLogger(new ConsoleLogger())),
                 new AccessLog());
     }
 
@@ -84,7 +92,8 @@ public final class Dispatcher implements ExchangeHandler {
                 route = ((MiddlewarePipeline.RouteChain) h).middleware;
                 h = ((MiddlewarePipeline.RouteChain) h).handler;
             }
-            terminal = invokeRoute(h);
+            RouteHandler handler = h;
+            terminal = (rq, rs) -> invokeRoute(req, res, handler);
         } else {
             terminal = (rq, rs) -> fallback(m, res, rid);
         }
@@ -97,25 +106,30 @@ public final class Dispatcher implements ExchangeHandler {
             res.abort(e); // closes a pending stream before the Error reaches the adapter
             throw e;
         }
-        res.afterHandler();
+        finish(req, res);
     }
 
     /**
-     * The terminal step of a matched HTTP route: the query is decoded, then the handler runs.
-     * shortcut: a malformed query still gets the wave 3 400 with Content-Length: 0 and no onError; the FR-HTTP-025
-     * SDS turns it into an HttpException(400) for the error path.
+     * The terminal step of a matched HTTP route, after its middleware: the query is decoded, then the handler runs.
+     * A malformed query throws HttpException(400) from here to the error path, and the handler never runs.
      */
     // @req FR-HTTP-021
-    private static RouteHandler invokeRoute(RouteHandler handler) {
-        return (req, res) -> {
-            try {
-                ((DefaultRequest) req).decodeQuery();
-            } catch (IllegalArgumentException e) {
-                res.status(400).end();
-                return;
-            }
-            handler.handle(req, res);
-        };
+    // @req FR-HTTP-025
+    void invokeRoute(DefaultRequest req, DefaultResponse res, RouteHandler handler) throws Exception {
+        req.decodeQuery();
+        handler.handle(req, res);
+    }
+
+    /**
+     * After the pipeline returned: a response still NEW (no step answered, no error path ran) gets one warn naming
+     * the method and path, then ends with the status and headers set so far; STREAMING runs the copy without a warn.
+     */
+    // @req FR-HTTP-024
+    void finish(DefaultRequest req, DefaultResponse res) {
+        if (res.state() == ResponseState.NEW) {
+            errors.logger.warn("response not finished by the handler: " + req.method().name() + " " + req.rawPath());
+        }
+        res.afterHandler();
     }
 
     /**

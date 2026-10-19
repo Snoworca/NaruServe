@@ -234,7 +234,8 @@ public class ChainNextTest {
         DefaultResponse res = new DefaultResponse(ex, false);
         // run returns normally, so the Dispatcher's catch never hands e to the error path a second time.
         pipeline.run(new DefaultRequest(ex, com.snoworca.naruserve.Method.GET, Collections.<String, String>emptyMap()),
-                res, Collections.<Middleware>emptyList(), h("h"), new ErrorPath(Collections.emptyList()),
+                res, Collections.<Middleware>emptyList(), h("h"),
+                new ErrorPath(Collections.emptyList(), new SafeLogger(new ErrorPathTest.RecordingLogger())),
                 "0000000000000000");
         assertEquals(500, ex.status);
         assertEquals(1, ex.commits.get());

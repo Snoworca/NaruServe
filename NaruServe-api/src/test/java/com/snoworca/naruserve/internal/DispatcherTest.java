@@ -243,7 +243,8 @@ public class DispatcherTest {
         });
         pipeline.addPrefix("/done", (req, res, next) -> res.status(418).send("tea"));
         adapter.bind("127.0.0.1", 0, new Dispatcher(router, pipeline,
-                new ErrorPath(java.util.Collections.emptyList()), new AccessLog()));
+                new ErrorPath(java.util.Collections.emptyList(), new SafeLogger(new ErrorPathTest.RecordingLogger())),
+                new AccessLog()));
         ClientResponse r = send("GET", "/missing");
         assertError(404, "NOT_FOUND", "Not Found", r);
         assertEquals("1", r.header("X-Mw"));
@@ -262,7 +263,8 @@ public class DispatcherTest {
             next.run();
         });
         adapter.bind("127.0.0.1", 0, new Dispatcher(router, pipeline,
-                new ErrorPath(java.util.Collections.emptyList()), new AccessLog()));
+                new ErrorPath(java.util.Collections.emptyList(), new SafeLogger(new ErrorPathTest.RecordingLogger())),
+                new AccessLog()));
         ClientResponse r = send("GET", "/missing");
         assertEquals(202, r.status());
         assertEquals("abc", new String(r.body(), StandardCharsets.UTF_8));
@@ -332,33 +334,33 @@ public class DispatcherTest {
         assertEquals(Method.GET, methods.get(1));
     }
 
-    // SDS-AC-8; FR-HTTP-006 AC-1
+    // SDS-AC-3, SDS-AC-14 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-5.sds.md; FR-HTTP-024 AC-1
     @Test
-    public void sdsAc8_FR_HTTP_006_AC1_runtimeExceptionBeforeAnyWriteGives500() {
+    public void sdsAc14_FR_HTTP_024_AC1_runtimeExceptionBeforeAnyWriteGivesTheStandard500() {
         router.add(Method.GET, "/f", (req, res) -> {
             throw new IllegalArgumentException("boom");
         });
         start();
-        assertEmpty(500, send("GET", "/f"));
+        assertError(500, "INTERNAL_ERROR", "Internal Server Error", send("GET", "/f"));
     }
 
-    // SDS-AC-8; FR-HTTP-006 AC-2
+    // SDS-AC-14 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-5.sds.md; FR-HTTP-024 AC-2
     @Test
-    public void sdsAc8_FR_HTTP_006_AC2_checkedExceptionAfterStatusDropsStatusAndHeaders() {
+    public void sdsAc14_FR_HTTP_024_AC2_checkedExceptionAfterStatusDropsStatusAndHeaders() {
         router.add(Method.GET, "/f", (req, res) -> {
             res.status(201).header("X-A", "1");
             throw new IOException("boom");
         });
         start();
         ClientResponse r = send("GET", "/f");
-        assertEmpty(500, r);
+        assertError(500, "INTERNAL_ERROR", "Internal Server Error", r);
         assertNull(r.header("X-A"));
-        assertEquals(1, r.headers().size());
+        assertEquals(2, r.headers().size()); // Content-Type and Content-Length only
     }
 
-    // SDS-AC-9; FR-HTTP-006 AC-3
+    // SDS-AC-5 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-5.sds.md; FR-HTTP-024 AC-3
     @Test
-    public void sdsAc9_FR_HTTP_006_AC3_throwWhileStreamingAborts() {
+    public void sdsAc5_FR_HTTP_024_AC3_throwWhileStreamingAborts() {
         AtomicInteger closes = new AtomicInteger();
         InputStream in = new ByteArrayInputStream(new byte[100]) {
             @Override
@@ -378,9 +380,9 @@ public class DispatcherTest {
         assertEquals(1, closes.get());
     }
 
-    // SDS-AC-9; FR-HTTP-006 AC-3
+    // SDS-AC-5 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-5.sds.md; FR-HTTP-024 AC-3
     @Test
-    public void sdsAc9_FR_HTTP_006_AC3_throwAfterSendKeepsTheSentBytes() {
+    public void sdsAc5_FR_HTTP_024_AC3_throwAfterSendKeepsTheSentBytes() {
         router.add(Method.GET, "/s", capturing((req, res) -> {
             res.send("x");
             throw new IllegalStateException("after send");
@@ -393,20 +395,33 @@ public class DispatcherTest {
         assertEquals(ResponseState.COMPLETED, last.get().state());
     }
 
-    // SDS-AC-10; FR-HTTP-006 AC-4
+    // SDS-AC-15 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-5.sds.md; FR-HTTP-024 AC-4
     @Test
-    public void sdsAc10_FR_HTTP_006_AC4_returnWithoutBodyEndsTheResponse() {
+    public void sdsAc15_FR_HTTP_024_AC4_returnWithoutBodyEndsTheResponseWithOneWarn() {
+        ErrorPathTest.RecordingLogger log = new ErrorPathTest.RecordingLogger();
         router.add(Method.GET, "/e", capturing((req, res) -> res.status(202).header("X-A", "1")));
-        start();
+        router.add(Method.GET, "/m", (req, res) -> res.send("never"));
+        router.freeze();
+        MiddlewarePipeline pipeline = new MiddlewarePipeline(RouterPolicy.strict());
+        pipeline.addPrefix("/m", (req, res, next) -> { });
+        adapter.bind("127.0.0.1", 0, new Dispatcher(router, pipeline,
+                new ErrorPath(java.util.Collections.emptyList(), new SafeLogger(log)), new AccessLog()));
         ClientResponse r = send("GET", "/e");
         assertEmpty(202, r);
         assertEquals("1", r.header("X-A"));
         assertEquals(ResponseState.COMPLETED, last.get().state());
+        assertEquals(java.util.Collections.singletonList("WARN response not finished by the handler: GET /e"),
+                log.lines);
+        log.lines.clear();
+        assertEmpty(200, send("GET", "/m"));
+        assertEquals(java.util.Collections.singletonList("WARN response not finished by the handler: GET /m"),
+                log.lines);
     }
 
-    // SDS-AC-10; FR-HTTP-006 AC-4, FR-HTTP-014 AC-7
+    // SDS-AC-15 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-5.sds.md; FR-HTTP-024 AC-4, FR-HTTP-014 AC-7
     @Test
-    public void sdsAc10_FR_HTTP_006_AC4_pendingStreamCopiesOnTheHandlerThreadAfterReturn() {
+    public void sdsAc15_FR_HTTP_024_AC4_pendingStreamCopiesOnTheHandlerThreadAfterReturnWithoutWarn() {
+        ErrorPathTest.RecordingLogger log = new ErrorPathTest.RecordingLogger();
         List<Thread> threads = new ArrayList<>();
         InputStream in = new ByteArrayInputStream("abc".getBytes(StandardCharsets.UTF_8)) {
             @Override
@@ -421,18 +436,21 @@ public class DispatcherTest {
             res.stream(in, "text/plain");
             assertTrue(threads.isEmpty());
         });
-        start();
+        router.freeze();
+        adapter.bind("127.0.0.1", 0, new Dispatcher(router, new MiddlewarePipeline(RouterPolicy.strict()),
+                new ErrorPath(java.util.Collections.emptyList(), new SafeLogger(log)), new AccessLog()));
         ClientResponse r = send("GET", "/s");
         assertEquals("abc", new String(r.body(), StandardCharsets.UTF_8));
+        assertTrue(log.lines.isEmpty());
         assertFalse(threads.isEmpty());
         for (Thread th : threads) {
             assertSame(handlerThread.get(0), th);
         }
     }
 
-    // SDS-AC-9; FR-HTTP-006 AC-3
+    // SDS-AC-5 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-5.sds.md; FR-HTTP-024 AC-3
     @Test
-    public void sdsAc9_FR_HTTP_006_AC3_throwWhileStreamingIsAbortedByTheCoreNotTheAdapter() {
+    public void sdsAc5_FR_HTTP_024_AC3_throwWhileStreamingIsAbortedByTheCoreNotTheAdapter() {
         router.add(Method.GET, "/s", capturing((req, res) -> {
             res.stream(new ByteArrayInputStream(new byte[10]), "text/plain");
             throw new IOException("after stream");
@@ -446,9 +464,9 @@ public class DispatcherTest {
         assertEquals(ResponseState.ABORTED, last.get().state());
     }
 
-    // SDS-AC-9; FR-HTTP-006 AC-3, FR-HTTP-014 AC-5
+    // SDS-AC-5 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-5.sds.md; FR-HTTP-024 AC-3, FR-HTTP-014 AC-5
     @Test
-    public void sdsAc9_FR_HTTP_006_AC3_errorAfterStreamClosesTheInputBeforePropagating() {
+    public void sdsAc5_FR_HTTP_024_AC3_errorAfterStreamClosesTheInputBeforePropagating() {
         AtomicInteger closes = new AtomicInteger();
         InputStream in = new ByteArrayInputStream(new byte[10]) {
             @Override
@@ -474,9 +492,9 @@ public class DispatcherTest {
         assertEquals(ResponseState.ABORTED, last.get().state());
     }
 
-    // SDS-AC-8; FR-HTTP-006 AC-2
+    // SDS-AC-14 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-5.sds.md; FR-HTTP-024 AC-2
     @Test
-    public void sdsAc8_FR_HTTP_006_AC2_failureAnswer500MovesTheResponseOutOfNew() {
+    public void sdsAc14_FR_HTTP_024_AC2_failureAnswer500MovesTheResponseOutOfNew() {
         router.add(Method.GET, "/f", capturing((req, res) -> {
             res.status(201).header("X-A", "1");
             throw new IOException("boom");
@@ -486,8 +504,12 @@ public class DispatcherTest {
         new Dispatcher(router).handle(ex);
         assertEquals(500, ex.status);
         assertEquals(1, ex.commits.get());
-        assertEquals(1, ex.headers.size());
-        assertEquals(java.util.Collections.singletonList("0"), ex.committed("Content-Length"));
+        assertEquals(2, ex.headers.size());
+        assertEquals(java.util.Collections.singletonList("application/json; charset=UTF-8"),
+                ex.committed("Content-Type"));
+        assertEquals(java.util.Collections.singletonList(String.valueOf(ex.body.size())),
+                ex.committed("Content-Length"));
+        assertTrue(ex.body.size() > 0);
         assertEquals(ResponseState.COMPLETED, last.get().state());
         try {
             last.get().send("late");

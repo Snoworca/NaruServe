@@ -404,6 +404,7 @@ public final class DefaultRestApp implements RestApp {
     }
 
     // @req IR-APP-003
+    // @req FR-APP-005
     @Override
     public synchronized RestApp onError(ErrorHandler handler) {
         lifecycle.requireConfigurable("onError");
@@ -471,7 +472,8 @@ public final class DefaultRestApp implements RestApp {
         for (PrefixMiddleware pm : prefixMiddleware) {
             pipeline.addPrefix(pm.prefix, pm.middleware);
         }
-        dispatcher = new Dispatcher(router, pipeline, new ErrorPath(errorHandlers), new AccessLog());
+        dispatcher = new Dispatcher(router, pipeline, new ErrorPath(errorHandlers, new SafeLogger(logger)),
+                new AccessLog());
         lifecycle.markFrozen();
     }
 

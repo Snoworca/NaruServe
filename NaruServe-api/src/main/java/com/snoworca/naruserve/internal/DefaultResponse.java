@@ -225,7 +225,6 @@ public final class DefaultResponse implements Response {
     // @req FR-HTTP-015
     @Override
     public void abort(@Nullable Throwable error) {
-        // shortcut: error is not kept; record it when wave 4 onError needs the cause.
         boolean copyRunning;
         synchronized (this) {
             if (state == ResponseState.COMPLETED || state == ResponseState.ABORTED) {
@@ -276,21 +275,25 @@ public final class DefaultResponse implements Response {
     }
 
     /**
-     * The Dispatcher's rule after the handler threw: NEW drops the status and headers set so far and sends 500 with
-     * only Content-Length: 0, STREAMING aborts, COMMITTED, COMPLETED and ABORTED are left to the writer.
+     * The error path's outcome, decided by the state read once under the lock after the onError chain: NEW drops the
+     * status and headers set so far and sends {@code status} with the JSON {@code body} (bodyless for HEAD),
+     * STREAMING and COMMITTED abort, COMPLETED and ABORTED stay unchanged.
      */
     // @req FR-HTTP-016
-    void afterFailure(Throwable error) {
+    // @req FR-APP-005
+    // @req FR-HTTP-024
+    void afterFailure(int status, byte[] body, Throwable error) {
         Commit c;
         synchronized (this) {
             handlerDone = true;
             handlerFailure = error;
-            if (state == ResponseState.STREAMING) {
+            if (state == ResponseState.STREAMING || state == ResponseState.COMMITTED) {
                 c = null;
             } else if (state == ResponseState.NEW) {
-                status = 500;
+                this.status = status;
                 headers.clear();
-                c = prepare(EMPTY, null);
+                put("Content-Type", "application/json; charset=UTF-8");
+                c = prepare(body, null);
             } else {
                 return;
             }
