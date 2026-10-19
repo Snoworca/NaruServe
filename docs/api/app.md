@@ -15,7 +15,7 @@ RestApp app = RestApp.create();
 implementation 'com.snoworca.naruserve:NaruServe:0.1.0-SNAPSHOT'
 ```
 
-엔진을 직접 고를 때는 builder를 씁니다. `NaruServe-api`만 의존하는 경우에도 이 방법을 씁니다.
+엔진을 직접 고를 때는 builder를 씁니다. `NaruServe-api`만 의존하는 경우에도 이 방법을 씁니다. 기본 JSON 구현을 코드에서 직접 넘기려면 Gson 모듈 `com.snoworca.naruserve:NaruServe-gson`을 넣고 `new GsonJsonCodec()`을 `jsonCodec(...)`에 넘깁니다([JSON](json.md#기본-gson-설정)).
 
 ```java
 RestApp app = RestApp.builder()
@@ -27,7 +27,7 @@ RestApp app = RestApp.builder()
 `RestApp.builder()`는 `httpAdapter(HttpAdapter)`, `jsonCodec(JsonCodec)`, `logger(Logger)`, `build()`를 가지며 각 설정 메서드는 builder를 돌려줍니다. `httpAdapter`와 `jsonCodec`은 꼭 불러야 하고, 빠지면 `build()`가 `IllegalStateException`을 던집니다. `logger`를 부르지 않으면 새 `ConsoleLogger`를 씁니다. `build()`는 부를 때마다 `NEW` 상태의 새 앱을 만듭니다.
 `builder()`라는 이름을 고른 이유는 Java·Kotlin에서 가장 흔한 빌더 관례이고 `create()`와 나란히 두면 진입점 두 개가 한눈에 보이기 때문입니다.
 
-`create()`는 클래스패스에서 `com.snoworca.naruserve.spi.AppFactory` 구현을 `ServiceLoader`로 하나 찾아 그 앱을 돌려줍니다. 구현은 `NaruServe` 모듈이 TinyHttpd 어댑터와 함께 제공하며(다음 단계에서 추가), 그 전에는 구현이 없어 아래 예외가 납니다. 구현이 없으면 `IllegalStateException`을, 둘 이상이면 구현 클래스 이름을 담은 `IllegalStateException`을 던집니다. 없을 때의 메시지는 다음과 같습니다.
+`create()`는 클래스패스에서 `com.snoworca.naruserve.spi.AppFactory` 구현을 `ServiceLoader`로 하나 찾아 그 앱을 돌려줍니다. 구현은 `NaruServe` 모듈이 TinyHttpd 어댑터, Gson 코덱과 함께 제공하며, 이 모듈이 클래스패스에 없으면 아래 예외가 납니다. 구현이 없으면 `IllegalStateException`을, 둘 이상이면 구현 클래스 이름을 담은 `IllegalStateException`을 던집니다. 없을 때의 메시지는 다음과 같습니다.
 
 ```text
 No com.snoworca.naruserve.spi.AppFactory provider found. Add the com.snoworca.naruserve:NaruServe module to use RestApp.create(), or assemble the app with RestApp.builder().httpAdapter(...).jsonCodec(...).build()
@@ -92,6 +92,9 @@ public interface RouteHandler {
 | 메서드 | 설명 | 문서 |
 |---|---|---|
 | `jsonCodec(codec)` | JSON 엔진 교체 | [JSON](json.md) |
+| `jsonLimit(bytes)` | JSON 요청 본문 한도(기본 1 MiB, 최대 1 GiB) | [JSON](json.md#한도) |
+| `server(options -> ...)` | 바인딩 주소, 허용 Host, 크기·시간·연결 한도 | [서버 설정](#서버-설정) |
+| `trustProxy(boolean)` | `X-Forwarded-For`·`X-Forwarded-Proto` 신뢰(기본 `false`) | [서버 설정](#서버-설정) |
 | `multipart(config -> ...)` | 업로드 한도·임시 폴더 | [파일 업로드](multipart.md) |
 | `staticFiles(prefix, dir)` | 정적 파일 폴더 마운트 | [정적 파일](static.md) |
 | `staticFiles(prefix, dir, options -> ...)` | 옵션과 함께 마운트 | [정적 파일](static.md) |
@@ -100,6 +103,57 @@ public interface RouteHandler {
 | `logger(logger)` | 앱 로거 교체 | [로깅](logging.md) |
 | `logger()` | 현재 앱 로거 | [로깅](logging.md) |
 | `routerPolicy(RouterPolicy)` | `//`·끝 슬래시·대소문자 정책과 `TRACE`/`CONNECT` 켜기 | [라우팅](routing.md#라우터-정책) |
+
+### 서버 설정
+
+`server(options -> ...)`는 `ServerOptions`를 받는 람다를 바로 실행하고 `RestApp`을 돌려줍니다. 여러 번 부르면 차례로 적용됩니다. Express에서 `app.listen(port, host)`와 `http.Server`의 `headersTimeout` 같은 속성으로 흩어져 있던 설정을 한곳에 모은 것입니다. 각 설정 메서드는 `ServerOptions`를 돌려주므로 이어서 부릅니다.
+
+| 설정 | 기본값 | 범위 |
+|---|---|---|
+| `bindAddress(address)` | `127.0.0.1` | 루프백이 아닌 주소면 `listen()`이 보안 경고를 남깁니다. |
+| `allowedHosts(names...)` | 없음 | 바인딩 주소, `localhost`, IP 리터럴 밖에 받을 `Host` 이름 |
+| `maxHeaderSize(bytes)` | 16384 | 1..1048576 |
+| `maxHeaderCount(count)` | 100 | 1..10000 |
+| `maxRequestLineLength(bytes)` | 8190 | 1..65534 |
+| `headerTimeout(timeout, unit)` | 10초 | 1 ms..1시간 |
+| `bodyReadTimeout(timeout, unit)` | 30초 | 1 ms..1시간 |
+| `writeTimeout(timeout, unit)` | 30초 | 1 ms..1시간 |
+| `minBodyRate(bytesPerSecond)` | 240 | 1..104857600 |
+| `maxWorkers(workers)` | 64 | 1..1024 |
+| `maxSseStreams(streams)` | 128 | 1..1024 |
+| `maxConnections(connections)` | 512 | 1..65536 |
+| `maxUpgradedConnections(connections)` | 128 | 1..65536 |
+| `maxConnectionsPerAddress(connections)` | 256 | 1..65536 |
+
+범위 밖의 값은 설정 이름과 범위를 담은 `IllegalArgumentException`을 던지고, 무제한을 뜻하는 값은 없습니다. `maxConnections`가 `maxWorkers + maxSseStreams`보다 작으면 설정 메서드가 아니라 `listen()`이 `IllegalStateException`을 던집니다. 세 값을 어떤 순서로 바꿔도 되게 하려고 조합 검사는 시작할 때 합니다. 각 한도가 넘쳤을 때의 응답은 [기본값과 보안](defaults.md#시간연결-수-한도)에 있습니다.
+
+같은 LAN의 다른 기기에서 접속하려면 모든 인터페이스에 바인딩하고, 기기 이름으로 접속한다면 그 이름을 허용 Host에 넣습니다.
+
+```java
+app.server(options -> options.bindAddress("0.0.0.0").allowedHosts("myphone.local"));
+app.server(options -> options.headerTimeout(5, TimeUnit.SECONDS).maxWorkers(16));
+```
+
+Kotlin:
+
+```kotlin
+app.server { options -> options.bindAddress("0.0.0.0").allowedHosts("myphone.local") }
+app.server { options -> options.headerTimeout(5, TimeUnit.SECONDS).maxWorkers(16) }
+```
+
+LAN에 열면 인증 여부와 상관없이 `listen()`이 보안 경고 로그를 남깁니다. 인증은 미들웨어로 직접 붙이세요([미들웨어](middleware.md)).
+
+리버스 프록시 뒤에서는 `app.trustProxy(true)`로 첫 `X-Forwarded-For` 헤더의 맨 왼쪽 값을 `req.remoteAddress()`에, 첫 `X-Forwarded-Proto` 값(`https`이면 `true`)을 `req.isSecure()`에 씁니다. Express의 `app.set('trust proxy', true)`에 해당합니다. 기본은 `false`이고, 값은 검증하지 않고 그대로 쓰므로 그 헤더를 덮어쓰는 프록시 뒤에서만 켜세요. `Forwarded` 헤더는 읽지 않습니다.
+
+```java
+app.trustProxy(true);
+```
+
+Kotlin:
+
+```kotlin
+app.trustProxy(true)
+```
 
 ### 라우터 정책
 
@@ -140,10 +194,10 @@ ServerHandle server = app.listen(8080);
 
 - **동기**로 동작합니다. `onStart` 실행 → 라우트 검사 → 포트 바인딩이 모두 끝난 뒤 반환합니다. Express와 달리 콜백을 받지 않습니다.
 - 반환 전에는 요청을 받지 않습니다.
-- `listen()`이 반환한 뒤 `main`이 끝나도 `shutdown(...)`을 부를 때까지 프로세스가 계속 돕니다. 서버 스레드는 daemon이 아니며, 이는 기본 TinyHttpd 어댑터(`NaruServe-tinyhttpd`, 다음 단계에서 추가)가 보장합니다. 이렇게 정한 이유는 Express의 `app.listen()`처럼 서버만 띄우는 `main`이 바로 끝나지 않게 하려는 것입니다.
+- `listen()`이 반환한 뒤 `main`이 끝나도 `shutdown(...)`을 부를 때까지 프로세스가 계속 돕니다. 기본 TinyHttpd 어댑터(`NaruServe-tinyhttpd`)가 daemon이 아닌 keeper 스레드 하나를 `shutdown`까지 띄워 두기 때문이며, TinyHttpd 자체의 스레드는 daemon으로 남습니다. 이렇게 정한 이유는 Express의 `app.listen()`처럼 서버만 띄우는 `main`이 바로 끝나지 않게 하면서, 작업 스레드가 JVM 종료를 막지 않게 하려는 것입니다.
 - 바인딩 실패, `onStart` 예외, 라우트 충돌 같은 설정 오류는 **예외로 던집니다**. 이때 포트는 열려 있지 않고, 이미 만든 리소스는 정리됩니다.
-- 기본으로 **localhost에만** 바인딩합니다. LAN 바인딩 설정 API는 **(미확정)** 입니다.
-- `ServerHandle`은 `port()`(실제 포트. `listen(0)`이면 고른 빈 포트), `address()`(`127.0.0.1`), `state()`(부를 때마다 읽는 앱 상태)를 가집니다. Express의 `server.address().port` 대신 짧은 접근자를 둔 이유는 `req.path()`처럼 다른 API와 같은 이름 규칙을 쓰기 위해서입니다.
+- 기본으로 **`127.0.0.1`에만** 바인딩합니다. LAN에 열려면 [서버 설정](#서버-설정)의 `options.bindAddress("0.0.0.0")`을 씁니다.
+- `ServerHandle`은 `port()`(실제 포트. `listen(0)`이면 고른 빈 포트), `address()`(바인딩에 쓴 주소. 설정값 그대로이며 기본 `127.0.0.1`), `state()`(부를 때마다 읽는 앱 상태)를 가집니다. Express의 `server.address().port` 대신 짧은 접근자를 둔 이유는 `req.path()`처럼 다른 API와 같은 이름 규칙을 쓰기 위해서입니다.
 - Android에서는 메인 스레드에서 호출하지 마세요. 작업 스레드에서 호출합니다.
 
 ## shutdown

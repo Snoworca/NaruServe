@@ -3,6 +3,7 @@ package com.snoworca.naruserve.docs;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.ByteArrayOutputStream;
@@ -36,6 +37,8 @@ import org.junit.rules.TemporaryFolder;
 /** Every ```java block of docs/api compiles against NaruServe-api, or sits on {@link #SKIPS} with a reason. */
 // @req OPS-HTTP-004
 // @req OPS-APP-002
+// @req OPS-JSON-001
+// @req OPS-COOKIE-001
 public final class DocsExamplesCompileTest {
 
     /** One skipped block: its file, a selector ({@code #n} ordinal or the block's first line) and one reason. */
@@ -64,21 +67,23 @@ public final class DocsExamplesCompileTest {
         return new Skip(file, block, reason);
     }
 
-    private static final String JSON = "later-wave method `Response.json(Object)`";
-    private static final String BODY = "later-wave method `Request.body(Class)`";
-
     // @req OPS-HTTP-004
     // @req OPS-APP-002
     static final List<Skip> SKIPS = Collections.unmodifiableList(Arrays.asList(
             skip("README.md", "RestApp app = RestApp.create();",
-                    "later-wave method `Request.body(Class)`, `Response.json(Object)` and app-defined type `User`"),
-            skip("app.md", "#8", "later-wave method `RestApp.staticFiles`"),
-            skip("express-migration.md", "// Express: let count = 0; 은 안전하지만 Java에서는 아닙니다.", JSON),
-            skip("express-migration.md", "User user = req.body(User.class);                         // 객체", BODY),
+                    "app-defined type `User` (the block also calls the app's `userService`)"),
+            skip("app.md", "#10",
+                    "later-wave method `RestApp.staticFiles` and app-defined types `Database` and `UserService`"),
+            skip("express-migration.md", "// Express: let count = 0; 은 안전하지만 Java에서는 아닙니다.",
+                    "absent type `AtomicLong` (java.util.concurrent.atomic is not among the fixed imports)"),
+            skip("express-migration.md", "User user = req.body(User.class);                         // 객체",
+                    "app-defined type `User`"),
             skip("express-migration.md", "app.onStart(ctx -> ctx.register(UserService.class, new UserService()));",
-                    JSON + " and app-defined type `UserService`"),
+                    "app-defined type `UserService`"),
             skip("express-migration.md", "RestApp app = RestApp.create();", "later-wave method `RestApp.staticFiles`"),
-            skip("json.md", "User user = req.body(User.class);                          // 요청 → 객체", BODY),
+            skip("json.md", "User user = req.body(User.class);                          // 요청 → 객체",
+                    "later-wave method `WebSocketSession.sendJson` (the block calls `ws.sendJson`) and app-defined"
+                            + " type `User`"),
             skip("json.md", "public class User {", "absent type `SerializedName` (Gson)"),
             skip("json.md", "Gson gson = new GsonBuilder()", "absent type `Gson`"),
             skip("json.md", "public interface JsonCodec {",
@@ -93,21 +98,30 @@ public final class DocsExamplesCompileTest {
             skip("logging.md", "RotatingFileLogger logger = RotatingFileLogger.builder()",
                     "absent type `RotatingFileLogger` (NaruServe-filelog, not on the root test classpath)"),
             skip("middleware.md", "#1", "illustrative copy of `Middleware` and `Next` (two public types in one unit)"),
-            skip("middleware.md", "#3", JSON),
-            skip("middleware.md", "app.get(\"/users/:id\", (req, res) -> {", JSON + " and app-defined type `User`"),
+            skip("middleware.md", "#3",
+                    "app-defined type `User` (the block also calls the app's `auth.isAuthorized` and `admin`)"),
+            skip("middleware.md", "app.get(\"/users/:id\", (req, res) -> {",
+                    "app-defined type `User` and `NotFoundException` (the block calls the app's `users.find`)"),
             skip("multipart.md", "app.post(\"/api/upload\", (req, res) -> {", "later-wave method `Request.form(String)`"),
             skip("multipart.md", "app.multipart(config -> {", "later-wave method `RestApp.multipart`"),
-            skip("request.md", "// GET /users/42/posts?page=2&tag=a&tag=b", JSON),
-            skip("request.md", "User user = req.body(User.class);", BODY),
-            skip("request.md", "User user = req.body(User.class);   // 한 번 읽고", BODY),
-            skip("request.md", "app.use((req, res, next) -> {", JSON + " and app-defined type `User`"),
-            skip("request.md", "app.get(\"/users\", (req, res) -> {", JSON + " and app-defined type `UserService`"),
-            skip("response.md", "res.status(201).header(\"X-Request-ID\", id).json(created);", JSON),
-            skip("response.md", "res.json(user);                                        // POJO", JSON),
+            skip("request.md", "// GET /users/42/posts?page=2&tag=a&tag=b",
+                    "app-defined type `PostService` (the block calls the app's `postService.find`)"),
+            skip("request.md", "User user = req.body(User.class);", "app-defined type `User`"),
+            skip("request.md", "User user = req.body(User.class);   // 한 번 읽고",
+                    "app-defined type `User` (the block also calls the app's `service`)"),
+            skip("request.md", "app.use((req, res, next) -> {",
+                    "app-defined type `User` (the block also calls the app's `authenticate`)"),
+            skip("request.md", "app.get(\"/users\", (req, res) -> {", "app-defined type `UserService`"),
+            skip("response.md", "res.status(201).header(\"X-Request-ID\", id).json(created);",
+                    "app-defined type `Created` (the block sends the app's `created` value)"),
+            skip("response.md", "res.json(user);                                        // POJO",
+                    "app-defined type `User` (the block sends the app's `user1` and `user2` values)"),
             skip("response.md", "app.get(\"/report\", (req, res) -> res.file(new File(\"/data/report.pdf\")));",
                     "later-wave method `Response.file(File)`"),
-            skip("routing.md", "app.route(Method.get().post().delete(), \"/users/:id\", (req, res) -> {", JSON),
-            skip("servlet.md", "// 앱 구성: 내장 엔진과 같은 코드", JSON),
+            skip("routing.md", "app.route(Method.get().post().delete(), \"/users/:id\", (req, res) -> {",
+                    "app-defined type `UserRepository` (the block calls the app's `find`, `create` and `remove`)"),
+            skip("servlet.md", "// 앱 구성: 내장 엔진과 같은 코드",
+                    "app-defined type `UserService` (the block is a method declaration, not statements)"),
             skip("sse.md", "#1", "later-wave method `Response.sse()`"),
             skip("sse.md", "app.get(\"/api/progress\", (req, res) -> {", "later-wave method `Response.sse()`"),
             skip("sse.md", "client.send(SseEvent.event(\"progress\")", "absent type `SseEvent`"),
@@ -538,28 +552,71 @@ public final class DocsExamplesCompileTest {
         }
     }
 
-    // OPS-APP-002 AC-2 — a skipped block that calls a later-wave member names that member, not only an app type
+    /** Wave 5 members: they exist now, so no skip may name one as a missing method or type. */
+    private static final String[] WAVE_5_MEMBERS = {"`Response.json", "`Request.body", "`TypeRef", "`RestApp.jsonCodec",
+        "`RestApp.jsonLimit", "`RestApp.server", "`RestApp.trustProxy", "`ServerOptions", "`Cookie", "`SameSite",
+        "`Request.cookie", "`Request.getCookies", "`Response.addCookie"};
+
+    // SDS-AC-4; OPS-JSON-001 AC-5; OPS-APP-002 AC-2
     @Test
-    public void OPS_APP_002_AC2_skippedBlocksCallingJsonOrBodyNameTheLaterWaveMember() throws IOException {
-        List<String> missing = new ArrayList<>();
+    public void sdsAc4_OPS_JSON_001_AC5_noSkipNamesAWave5Member() {
+        for (Skip s : SKIPS) {
+            if (s.reason.startsWith("illustrative copy of")) {
+                continue; // a copied declaration is a true reason; only "missing" claims are stale
+            }
+            for (String m : WAVE_5_MEMBERS) {
+                assertFalse("wave 5 member as reason: " + s, s.reason.contains(m));
+            }
+        }
+    }
+
+    // SDS-AC-4; OPS-JSON-001 AC-5; OPS-APP-002 AC-2 — a skipped block calling res.json/req.body names what still fails
+    @Test
+    public void sdsAc4_OPS_JSON_001_AC5_skippedJsonBlocksNameTheReasonThatStillApplies() throws IOException {
+        List<String> stale = new ArrayList<>();
         for (Map.Entry<String, List<String>> e : docs().entrySet()) {
             List<String> blocks = e.getValue();
             for (int i = 0; i < blocks.size(); i++) {
                 String body = blocks.get(i);
                 Skip s = skipFor(e.getKey(), i + 1, body);
-                // The reason must lead with a later-wave member, so the block is traced to the wave that unskips it.
-                if (s == null || s.reason.startsWith("later-wave method `")) {
-                    continue;
-                }
-                if (body.contains(".json(")) {
-                    missing.add(s + " calls .json(");
-                }
-                if (body.contains("req.body(")) {
-                    missing.add(s + " calls req.body(");
+                if (s != null && (body.contains(".json(") || body.contains("req.body("))
+                        && (s.reason.contains("Response.json") || s.reason.contains("Request.body"))) {
+                    stale.add(s.toString());
                 }
             }
         }
-        assertEquals(Collections.<String>emptyList(), missing);
+        assertEquals(Collections.<String>emptyList(), stale);
+    }
+
+    // SDS-AC-6; OPS-COOKIE-001 AC-5
+    @Test
+    public void sdsAc6_OPS_COOKIE_001_AC5_cookieBlocksCompileWithoutSkips() throws IOException {
+        for (Skip s : SKIPS) {
+            assertFalse("cookie.md skip: " + s, s.file.equals("cookie.md"));
+        }
+        assertTrue(String.join("\n", docsDiagnostics()), docsDiagnostics().isEmpty());
+        Integer n = compiledPerFile.get("cookie.md");
+        assertEquals(Integer.valueOf(docs().get("cookie.md").size()), n);
+        assertTrue("cookie.md compiled blocks: " + n, n > 0);
+    }
+
+    // OPS-ENGINE-001 AC-6 — the blocks calling server, trustProxy or ServerOptions are compiled, not skipped
+    @Test
+    public void OPS_ENGINE_001_AC6_serverSettingBlocksAreCompiled() throws IOException {
+        int found = 0;
+        for (Map.Entry<String, List<String>> e : docs().entrySet()) {
+            List<String> blocks = e.getValue();
+            for (int i = 0; i < blocks.size(); i++) {
+                String body = blocks.get(i);
+                if (body.contains(".server(") || body.contains("trustProxy(") || body.contains("ServerOptions")) {
+                    found++;
+                    assertNull("skipped server-setting block " + e.getKey() + " #" + (i + 1),
+                            skipFor(e.getKey(), i + 1, body));
+                }
+            }
+        }
+        assertTrue("docs/api has Java blocks calling server or trustProxy", found > 0);
+        assertTrue(String.join("\n", docsDiagnostics()), docsDiagnostics().isEmpty());
     }
 
     // SDS-AC-12; OPS-HTTP-004 AC-4

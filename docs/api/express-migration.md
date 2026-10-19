@@ -12,7 +12,8 @@ Express 코드의 구조(라우트·미들웨어·req/res)는 대부분 그대�
 | `app.listen(3000, () => ...)` | `ServerHandle h = app.listen(3000);` | 바인딩이 끝난 뒤 반환합니다. 콜백 없이 다음 줄이 "시작됨"입니다. 실패하면 예외를 던집니다. |
 | `server.close()` | `app.shutdown(10, TimeUnit.SECONDS);` | 진행 중인 요청을 기다린 뒤 종료합니다. |
 | `app.locals.x = v` | `ctx.attribute("x", v)` (`onStart` 안에서) | [수명주기](lifecycle.md) |
-| `app.set('trust proxy', ...)` | **(미확정)** | 프록시 헤더는 명시 설정할 때만 신뢰합니다. |
+| `app.set('trust proxy', ...)` | `app.trustProxy(true)` | 기본은 프록시 헤더를 믿지 않습니다. 켜면 `X-Forwarded-For`·`X-Forwarded-Proto`를 `req.remoteAddress()`·`req.isSecure()`에 씁니다. [서버 설정](app.md#서버-설정) |
+| `app.listen(3000, '0.0.0.0')` | `app.server(o -> o.bindAddress("0.0.0.0"))` 뒤 `app.listen(3000)` | 기본 바인딩은 `127.0.0.1`입니다. [4. 기본 바인딩은 localhost입니다](#4-기본-바인딩은-localhost입니다) |
 
 ### 라우팅
 
@@ -81,10 +82,10 @@ Express 코드의 구조(라우트·미들웨어·req/res)는 대부분 그대�
 | `next(err)` | `next.error(err)` 또는 `throw` | |
 | `app.use((err, req, res, next) => ...)` | `app.onError((err, req, res) -> ...)` | 인자 3개(`next` 없음), 순서는 Express와 같음 |
 | 마지막 404 미들웨어 | 필요 없음 | 기본 404/405를 [표준 오류 형식](middleware.md#표준-오류-형식)으로 보냅니다. v1에서는 이 본문을 바꿀 수 없습니다. |
-| `express.json()`, `express.urlencoded()` | 필요 없음 | `req.body(...)`, `req.form(...)`이 읽습니다. |
+| `express.json()`, `express.urlencoded()` | 필요 없음 | `req.body(...)`, `req.form(...)`이 읽습니다. `express.json({ limit })`의 한도는 `app.jsonLimit(bytes)`입니다. |
 | `express.raw()`, `express.text()` | 없음 | v1에는 원본·텍스트 본문을 읽는 API가 없습니다. 본문은 `req.body(...)`(JSON), `req.form(...)`, `req.file(...)`로 읽습니다. |
 | `cors()` | **(미확정)** | 전역 `app.use`에서 `Access-Control-Allow-*` 헤더를 설정합니다. preflight(`OPTIONS` + `Access-Control-Request-Method`)는 `res.status(204).end()`로 바로 끝내고 `next.run()`을 부르지 마세요. 그러지 않으면 `/api` 인증 미들웨어가 preflight를 401로 거부합니다. |
-| `cookie-parser` | 필요 없음 | 내장. 서명 쿠키(`secret`)·값 자동 인코딩은 **(미확정)** |
+| `cookie-parser` | 필요 없음 | 내장. v1은 서명 쿠키(`secret`)와 값 자동 인코딩을 제공하지 않습니다. 값은 그대로 쓰고 읽습니다. [Cookie](cookie.md#값-인코딩) |
 | `multer` | `app.multipart(config -> ...)` | 한도 설정만 합니다. |
 | `express.static('public')` | `app.staticFiles("/", new File("public"))` | |
 | `morgan('combined')` | `app.accessLog(o -> o.enabled(true))` | |
@@ -133,8 +134,8 @@ List<User> users = req.body(new TypeRef<List<User>>() {}); // 제네릭
 ### 4. 기본 바인딩은 localhost입니다
 
 Express의 `app.listen(3000)`은 모든 네트워크 인터페이스에서 받습니다. NaruServe의 `app.listen(3000)`은 **localhost에서만** 받습니다.
-같은 LAN의 다른 기기에서 접속하려면 `0.0.0.0` 바인딩을 명시해야 합니다(설정 API 이름 **(미확정)**).
-LAN에 열 때는 인증 미들웨어를 함께 거세요. 전역 인증 없이 LAN에 열면 보안 경고 로그를 남깁니다.
+같은 LAN의 다른 기기에서 접속하려면 `app.server(...)`에서 `bindAddress("0.0.0.0")`로 바인딩을 명시해야 합니다([서버 설정](app.md#서버-설정)).
+LAN에 열 때는 인증 미들웨어를 함께 거세요. 루프백이 아닌 주소에 바인딩하면 인증 여부와 상관없이 보안 경고 로그를 남깁니다.
 
 ### 5. 경로 매칭이 엄격합니다
 
@@ -277,7 +278,7 @@ app.use("/api") { req, res, next ->
 
 app.get("/api/todos") { req, res -> res.json(req.service(TodoService::class.java).findAll()) }
 app.post("/api/todos") { req, res ->
-    val todo = req.body(Todo::class.java)
+    val todo = req.body(Todo::class.java) ?: throw HttpException(400, "JSON body is null")
     res.status(201).json(req.service(TodoService::class.java).create(todo))
 }
 app.delete("/api/todos/:id") { req, res ->
@@ -303,4 +304,3 @@ app.listen(3000)
 - `req.hostname`, `req.is(type)`, `req.accepts(...)`
 - `app.param(...)`
 - 비동기 핸들러(Promise/`async`에 해당하는 것). Kotlin coroutine 지원은 별도 모듈로 검토 중입니다.
-- 프록시 신뢰(`trust proxy`)와 LAN 바인딩 설정 API

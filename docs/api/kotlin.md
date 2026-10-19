@@ -71,7 +71,7 @@ app.get("/users/:id") { req, res ->
 | `req.queries(name)` | `List<String>` | 빈 리스트 |
 | `req.files(name)` | `List<UploadFile>` | 빈 리스트 |
 | `req.service(type)` | `T` | 예외 |
-| `req.body(type)` | `T` | 본문이 JSON `null`이면 **(미확정)** |
+| `req.body(type)` | `T?` | 본문이 JSON `null`이면 `null` |
 
 ```kotlin
 val page = req.query("page")?.toIntOrNull() ?: 1
@@ -83,7 +83,7 @@ val token = req.cookie("session")?.value
 Kotlin에서는 `Class` 대신 `::class.java`를 씁니다.
 
 ```kotlin
-val user = req.body(User::class.java)
+val user: User? = req.body(User::class.java)
 val users = req.service(UserService::class.java)
 ctx.register(UserService::class.java, UserService(db))
 ```
@@ -91,7 +91,13 @@ ctx.register(UserService::class.java, UserService(db))
 제네릭 본문은 Java와 같이 `TypeRef`를 씁니다.
 
 ```kotlin
-val users: List<User> = req.body(object : TypeRef<List<User>>() {})
+val users: List<User>? = req.body(object : TypeRef<List<User>>() {})
+```
+
+`req.body(...)`는 본문이 JSON `null`이면 `null`을 돌려주므로 Kotlin 타입은 `T?`입니다. null 불가 값이 필요하면 `?:`로 처리합니다.
+
+```kotlin
+val user = req.body(User::class.java) ?: throw HttpException(400, "JSON body is null")
 ```
 
 ### NaruServe-kotlin 선택 확장
@@ -103,11 +109,12 @@ implementation 'com.snoworca.naruserve:NaruServe-kotlin:0.1.0-SNAPSHOT'
 ```
 
 ```kotlin
-inline fun <reified T : Any> Request.body(): T = body(T::class.java)
+inline fun <reified T : Any> Request.body(): T = body(T::class.java) ?: throw HttpException(400, "JSON body is null")
 
 val user = req.body<User>()
 ```
 
+이 확장은 null 불가 `T`를 돌려주고, 본문이 JSON `null`이면 `HttpException`(`400`)을 던집니다. null 불가 값을 달라고 한 호출자에게 JSON `null`은 클라이언트 오류이기 때문입니다. `null`을 받아야 하면 `req.body(User::class.java)`를 쓰세요.
 이 확장은 `List<User>`의 원소 타입을 보존하지 않습니다. 제네릭은 `TypeRef`를 쓰세요.
 
 ## 프로퍼티 문법
@@ -142,12 +149,12 @@ class CreateUserRequest {
 
 app.post("/users") { req, res ->
     val body = req.body(CreateUserRequest::class.java)
-    val name = body.name
+    val name = body?.name
     if (name.isNullOrBlank()) {
         res.status(400).json("name is required")
         return@post
     }
-    res.status(201).json(users.create(name, body.email))
+    res.status(201).json(users.create(name, body?.email))
 }
 ```
 

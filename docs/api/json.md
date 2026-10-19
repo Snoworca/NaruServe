@@ -11,8 +11,9 @@ res.json(users);                                            // 객체 → 응답
 ws.sendJson(user);                                          // WebSocket
 ```
 
-- `req.body(...)`는 `Content-Type`이 JSON일 때만 읽습니다. 오류와 한도는 [Request](request.md#json).
+- `req.body(...)`는 `Content-Type`이 JSON일 때만 읽습니다. 본문이 JSON `null`이면 `null`을 돌려줍니다. 오류와 한도는 [Request](request.md#json).
 - `TypeRef<T>`는 `List<User>` 같은 제네릭 타입 정보를 보존합니다. 끝의 `{}`(익명 클래스)를 빼먹지 마세요.
+- Kotlin의 `object : TypeRef<List<String>>() {}`는 Kotlin의 선언 위치 변성 때문에 `List<? extends String>`을 담습니다. 기본 Gson 코덱은 이 타입도 그대로 읽습니다.
 - `res.json`은 객체, 배열, `Map`, 문자열, 숫자, `null`을 모두 올바른 JSON으로 씁니다.
 
 ## DTO 작성
@@ -44,7 +45,7 @@ Gson gson = new GsonBuilder()
 app.jsonCodec(new GsonJsonCodec(gson));
 ```
 
-`GsonJsonCodec`은 `NaruServe-api`에 들어 있지 않습니다(공개 API는 Gson에 의존하지 않습니다). `GsonJsonCodec`은 `NaruServe-gson` 모듈에 있습니다. 이 모듈은 Gson을 `api`로 노출하므로 `Gson`을 직접 만들 때 따로 의존성을 넣지 않아도 됩니다. `RestApp.create()`용 `NaruServe` 모듈은 이 모듈을 실행 시점에만 함께 가져옵니다. 위처럼 `Gson`과 `GsonJsonCodec`을 코드에서 직접 쓰려면 아래 의존성을 따로 넣으세요.
+`GsonJsonCodec`은 `NaruServe-api`에 들어 있지 않습니다(공개 API는 Gson에 의존하지 않습니다). `GsonJsonCodec`은 `NaruServe-gson` 모듈에 있습니다. 이 모듈은 Gson을 `api`로 노출하므로 `Gson`을 직접 만들 때 따로 의존성을 넣지 않아도 됩니다. `RestApp.create()`용 bootstrap 모듈 `com.snoworca.naruserve:NaruServe`는 이 모듈을 실행 시점에만 함께 가져옵니다. 위처럼 `Gson`과 `GsonJsonCodec`을 코드에서 직접 쓰려면 아래 의존성을 따로 넣으세요.
 
 ```groovy
 implementation 'com.snoworca.naruserve:NaruServe-gson:0.1.0-SNAPSHOT'
@@ -52,13 +53,32 @@ implementation 'com.snoworca.naruserve:NaruServe-gson:0.1.0-SNAPSHOT'
 ```
 
 날짜 형식, 이름 규칙 등을 바꾸려면 Gson을 직접 만들어 `app.jsonCodec(...)`으로 넘깁니다. 위 두 보안 설정은 유지하세요.
+직접 만든 `Gson`의 strictness가 `Strictness.LEGACY_STRICT`(strictness를 정하지 않은 Gson의 기본값)이면 `GsonJsonCodec`이 읽을 때 `STRICT`로 올립니다. 느슨한 기본값이 주석이나 따옴표 없는 이름 같은 비표준 JSON을 받아들이지 않게 하려는 것입니다. 일부러 `LENIENT`로 만든 Gson은 그대로 둡니다.
+쓸 때는 Gson의 기본 HTML 이스케이프(`<`를 `\u003c`로)를 켜 둡니다. 응답 JSON이 HTML 안에 끼워져도 태그로 해석되지 않게 하려는 것입니다. 끄려면 `disableHtmlEscaping()`을 부른 Gson을 넘기세요.
 
-| 한도 | 기본값 |
-|---|---|
-| 요청 JSON 크기 | 1 MiB |
-| 중첩 깊이 | 64 |
+## 한도
 
-설정 API 이름은 **(미확정)** 입니다. [기본값과 보안](defaults.md)
+| 한도 | 기본값 | 최대값 | 넘으면 | 설정 |
+|---|---|---|---|---|
+| 요청 JSON 크기 | 1 MiB | 1 GiB | `413` | `app.jsonLimit(bytes)` |
+| 중첩 깊이 | 64 | 255 | `400` | `new GsonJsonCodec(gson, maxDepth)` |
+
+- 크기 한도는 앱 설정입니다. Express의 `express.json({ limit })`에 해당하며 바이트 수를 받습니다. 범위 밖이면 `IllegalArgumentException`(`jsonLimit must be in 1..1073741824 bytes: <n>`)을 던지고, 다른 설정처럼 `listen()` 전에만 부를 수 있습니다.
+- 깊이 한도는 코덱 설정입니다. 직접 만든 `Gson`을 넘길 때도 `new GsonJsonCodec(gson)`은 64를 쓰고, 다른 깊이는 생성자의 두 번째 인자로 정합니다. 한도가 코덱에 있는 이유는 다른 `JsonCodec` 구현마다 깊이를 세는 방법이 다르기 때문입니다.
+- 값 뒤에 다른 데이터가 있거나(`{} {}`) 빈 본문이면 `400`입니다. 빈 본문은 JSON `null`과 다르게 취급합니다.
+
+```java
+app.jsonLimit(256 * 1024);   // 256 KiB
+```
+
+Kotlin:
+
+```kotlin
+app.jsonLimit(256L * 1024)
+app.jsonCodec(GsonJsonCodec(GsonJsonCodec.defaultGson(), 32))
+```
+
+[기본값과 보안](defaults.md)
 
 ## 다른 JSON 라이브러리 쓰기
 
@@ -66,8 +86,8 @@ implementation 'com.snoworca.naruserve:NaruServe-gson:0.1.0-SNAPSHOT'
 
 ```java
 public interface JsonCodec {
-    <T> T decode(Reader reader, Type type) throws IOException;
-    void encode(Object value, Writer writer) throws IOException;
+    <T> @Nullable T decode(Reader reader, Type type) throws IOException;   // JSON null이면 null
+    void encode(@Nullable Object value, Writer writer) throws IOException;
 }
 ```
 
