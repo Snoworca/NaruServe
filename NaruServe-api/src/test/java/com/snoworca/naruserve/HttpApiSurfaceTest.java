@@ -266,7 +266,9 @@ public class HttpApiSurfaceTest {
                 // wave 5: IR-JSON-002 AC-1, AC-2
                 "jsonCodec(JsonCodec)->RestApp", "jsonLimit(long)->RestApp",
                 // wave 5: IR-ENGINE-001 AC-1, AC-7
-                "server(Configurer)->RestApp", "trustProxy(boolean)->RestApp"), signatures(RestApp.class));
+                "server(Configurer)->RestApp", "trustProxy(boolean)->RestApp",
+                // wave 6: IR-MULTIPART-001 AC-1, AC-4
+                "multipart(Configurer)->RestApp", "formLimit(long)->RestApp"), signatures(RestApp.class));
         assertEquals(0, RestApp.class.getInterfaces().length);
         List<String> statics = new java.util.ArrayList<>();
         for (java.lang.reflect.Method m : RestApp.class.getDeclaredMethods()) {

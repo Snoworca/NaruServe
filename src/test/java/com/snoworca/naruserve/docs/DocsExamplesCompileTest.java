@@ -103,7 +103,6 @@ public final class DocsExamplesCompileTest {
             skip("middleware.md", "app.get(\"/users/:id\", (req, res) -> {",
                     "app-defined type `User` and `NotFoundException` (the block calls the app's `users.find`)"),
             skip("multipart.md", "app.post(\"/api/upload\", (req, res) -> {", "later-wave method `Request.form(String)`"),
-            skip("multipart.md", "app.multipart(config -> {", "later-wave method `RestApp.multipart`"),
             skip("request.md", "// GET /users/42/posts?page=2&tag=a&tag=b",
                     "app-defined variable `postService` (the block calls the app's `postService.find`)"),
             skip("request.md", "User user = req.body(User.class);", "app-defined type `User`"),

@@ -11,6 +11,7 @@ import com.snoworca.naruserve.Logger;
 import com.snoworca.naruserve.Method;
 import com.snoworca.naruserve.MethodSet;
 import com.snoworca.naruserve.Middleware;
+import com.snoworca.naruserve.MultipartOptions;
 import com.snoworca.naruserve.RestApp;
 import com.snoworca.naruserve.RouteBuilder;
 import com.snoworca.naruserve.RouteHandler;
@@ -94,6 +95,8 @@ public final class DefaultRestApp implements RestApp {
     // Written only in NEW under this; the Dispatcher reads both once at freeze.
     private volatile @Nullable JsonCodec codec;
     private volatile long jsonLimit = JsonBodyReader.DEFAULT_LIMIT;
+    private volatile MultipartSettings multipartSettings = new MultipartSettings();
+    private volatile long formLimit = 1048576L;
     private volatile Logger logger;
     private final AppLifecycle lifecycle = new AppLifecycle();
     private final DefaultApplicationContext context = new DefaultApplicationContext(lifecycle, this);
@@ -172,6 +175,40 @@ public final class DefaultRestApp implements RestApp {
             throw new IllegalArgumentException("jsonLimit must be in 1..1073741824 bytes: " + bytes);
         }
         this.jsonLimit = bytes;
+        return this;
+    }
+
+    /** The current multipart settings; the defaults unless {@link #multipart(Configurer)} changed them. */
+    // @req IR-MULTIPART-001
+    public MultipartSettings multipartSettings() {
+        return multipartSettings;
+    }
+
+    // @req IR-MULTIPART-001
+    @Override
+    public synchronized RestApp multipart(Configurer<MultipartOptions> configurer) {
+        lifecycle.requireConfigurable("multipart");
+        Objects.requireNonNull(configurer, "configurer");
+        MultipartSettings next = multipartSettings.copy();
+        configurer.configure(next);
+        this.multipartSettings = next;
+        return this;
+    }
+
+    /** The urlencoded form body limit in bytes; 1048576 unless {@link #formLimit(long)} changed it. */
+    // @req IR-MULTIPART-001
+    public long formLimit() {
+        return formLimit;
+    }
+
+    // @req IR-MULTIPART-001
+    @Override
+    public synchronized RestApp formLimit(long bytes) {
+        lifecycle.requireConfigurable("formLimit");
+        if (bytes < 1 || bytes > 1073741824L) {
+            throw new IllegalArgumentException("formLimit must be in 1..1073741824 bytes: " + bytes);
+        }
+        this.formLimit = bytes;
         return this;
     }
 

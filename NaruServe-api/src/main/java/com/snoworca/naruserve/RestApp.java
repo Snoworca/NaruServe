@@ -143,6 +143,21 @@ public interface RestApp {
     RestApp jsonLimit(long bytes);
 
     /**
+     * Runs {@code configurer} at once on a copy of the app's multipart options, as {@code app.multipart(o ->
+     * o.maxFileSize(1024 * 1024))}, and keeps the copy only when it returns; calls apply in order. Out-of-range
+     * values throw {@link IllegalArgumentException}.
+     */
+    // @req IR-MULTIPART-001
+    RestApp multipart(Configurer<MultipartOptions> configurer);
+
+    /**
+     * The largest urlencoded form body in bytes, {@code 1..1073741824}; default 1048576 (1 MiB), as Express
+     * {@code express.urlencoded({ limit })}.
+     */
+    // @req IR-MULTIPART-001
+    RestApp formLimit(long bytes);
+
+    /**
      * Runs {@code configurer} at once on the app's one server options, as {@code app.server(o ->
      * o.bindAddress("0.0.0.0"))}; calls apply in order. Out-of-range values throw {@link IllegalArgumentException}.
      */
