@@ -1,0 +1,81 @@
+{
+ "round": 4,
+ "findings": [
+  {
+   "finding_id": "W1-001",
+   "severity": "medium",
+   "items": [
+    "D-117",
+    "D-129",
+    "D-166",
+    "D-428"
+   ],
+   "claim": "The 'Pre-request rejections' decision says 'Only three cases are answered without middleware and onError' (unknown method token 501, bad raw path / path-validator 400, OPTIONS *) and that 'The SRS records this narrowing of D-117 and D-129'. The 'Lifecycle gate' decision added in round 3 adds two more cases that skip middleware and onError: the start-gate 503 of D-428 and the STOPPING 503 of D-166, both of which reach the dispatcher, so D-117 ('every request that reaches the dispatcher') is narrowed for them too. The two decisions now contradict each other on the list of exempt cases. The SRS-narrowing sentence covers only the pre-request cases, so D-117's acceptance criteria could fail verification for the lifecycle-gate 503s.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-4/design.md:129; docs/research/naruserve-v1/waves/wave-4/design.md:139; docs/research/naruserve-v1/waves/wave-4/design.md:23",
+   "suggested_fix": "Change 'Only three cases' to 'Apart from the lifecycle-gate 503s (see Lifecycle gate), only three cases'. Have the Lifecycle gate decision state that the SRS acceptance criteria of D-117 and D-129 also record this narrowing for the start-gate and STOPPING 503s."
+  },
+  {
+   "finding_id": "W1-002",
+   "severity": "low",
+   "items": [
+    "D-162",
+    "D-180",
+    "D-169",
+    "D-402"
+   ],
+   "claim": "The 'Logger shutdown' decision closes the app logger 'only when the framework created it (the console, Logcat or default file logger)'. No frozen item makes a file logger the default of anything: D-169 and D-402 make only the console and Logcat loggers defaults, and D-180 describes a logger the user constructs. 'Default file logger' therefore names something that does not exist. A user-constructed rotating file logger passed to app.logger(...) is flushed but never closed by the app unless the user also calls ctx.own(...). Its writer thread then outlives shutdown, which conflicts with I-015 unless docs/api/logging.md tells users to own it. The decision also does not say that closing the console logger must leave System.out and System.err open.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-4/design.md:130; docs/research/naruserve-v1/design/00.design.md:299 (D-169), :399 (D-402), :695 (I-015)",
+   "suggested_fix": "Drop 'or default file logger'. State in docs/api/logging.md that a rotating file logger passed to app.logger(...) must also be passed to ctx.own(...), or closed by the user, so that its writer thread stops (I-015). Note that closing the console logger only flushes it and never closes the System streams."
+  },
+  {
+   "finding_id": "W2-001",
+   "severity": "medium",
+   "items": [
+    "D-117",
+    "D-129",
+    "D-134",
+    "D-166",
+    "D-428"
+   ],
+   "claim": "Two wave decisions contradict each other. The 'Pre-request rejections' decision says that ONLY three cases skip middleware and onError (unrecognised method token 501, raw-path/path-validator 400, OPTIONS *), and that the SRS records exactly this narrowing of D-117 and D-129. The 'Lifecycle gate' decision adds two more cases that skip middleware and onError: the start-gate 503 and the STOPPING 503. Both requests reach the dispatcher, so frozen D-117 ('every request that reaches the dispatcher') and D-134 (STOPPING 503 is part of the error status mapping) are narrowed here as well. That second narrowing is not recorded in the SRS acceptance criteria. An implementer or the promotion check following the first decision would run middleware/onError for the STOPPING 503.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-4/design.md:129 ('Only three cases are answered without middleware and onError'); docs/research/naruserve-v1/waves/wave-4/design.md:139; docs/research/naruserve-v1/design/00.design.md:250 (D-134)",
+   "suggested_fix": "In the Pre-request decision, change 'Only three cases' to say that these are the three pre-request cases, and that the lifecycle-gate 503s (start gate and STOPPING) also bypass middleware and onError, as the Lifecycle gate decision states. Have the SRS acceptance criteria of D-117 and D-129 record all five exclusions. Also note in docs/api/middleware.md that onError never sees the STOPPING 503."
+  },
+  {
+   "finding_id": "W2-002",
+   "severity": "medium",
+   "items": [
+    "D-162",
+    "D-180",
+    "D-167",
+    "I-015"
+   ],
+   "claim": "The 'Logger shutdown' decision closes the app logger only when 'the framework created it (the console, Logcat or default file logger)'. No frozen item has the framework create a file logger: D-169 and D-402 make only the console or Logcat logger a default. So the rotating file logger, the one logger with a writer thread, is always user-supplied through app.logger(...). Under this decision it is flushed but never closed, so its writer thread outlives shutdown. That defeats D-162's step 'flushing and closing log writers' (object.md section 11 step 7), and I-015 (no thread remains after shutdown). If the writer thread is non-daemon, it also breaks the D-167 decision that 'shutdown lets it exit'.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-4/design.md:130; docs/research/naruserve-v1/waves/wave-4/design.md:135; docs/research/naruserve-v1/design/00.design.md:299 (D-169); object.md:757",
+   "suggested_fix": "Drop 'default file logger' from the list of framework-created loggers. State in the decision and in docs/api/logging.md (with the Java and Kotlin example) that the caller closes the rotating file logger by passing it to ctx.own(...) in onStart, or by closing it after shutdown. Make the writer thread a daemon thread, so a forgotten close cannot keep the JVM alive. Have the I-015 tests that use the file logger own it."
+  },
+  {
+   "finding_id": "W2-003",
+   "severity": "low",
+   "items": [
+    "D-226",
+    "D-227",
+    "D-110"
+   ],
+   "claim": "The wave-4 line of carried-into-wave-5.md says that wave 5 re-runs the D-226 and D-227 tests 'with the real bootstrap module on the classpath, exactly one AppFactory provider'. D-227 is the case where the bootstrap module is missing, so it cannot be re-run with the bootstrap present. As written, the carried line asks for an impossible assertion.",
+   "evidence": "docs/research/naruserve-v1/waves/carried-into-wave-5.md:4",
+   "suggested_fix": "Reword to: wave 5 re-runs the D-226 lookup with the real bootstrap module and exactly one AppFactory provider, and asserts end to end that create() returns the assembled app (D-110). The D-227 missing-module test stays in NaruServe-api's own tests, where no bootstrap is on the classpath."
+  },
+  {
+   "finding_id": "W2-004",
+   "severity": "low",
+   "items": [
+    "D-226",
+    "D-227"
+   ],
+   "claim": "The decision tests the ServiceLoader lookup 'through a dedicated class loader' but does not say which class loader RestApp.create() searches. With ServiceLoader.load(AppFactory.class), the search uses the thread context class loader. On a thread whose TCCL is null, it falls back to the system loader, which on Android does not see the APK's META-INF/services, so create() would report the bootstrap module as missing. With AppFactory.class.getClassLoader(), a parent-first child loader in the test cannot inject the fake provider. Either way, the stated test design and the Android behaviour depend on a choice that has not been made.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-4/design.md:128",
+   "suggested_fix": "Decide the lookup: search AppFactory.class.getClassLoader() (and the TCCL first when it is non-null), through a package-private overload that takes a ClassLoader. The wave 4 tests call that overload with an isolated URLClassLoader that holds one fake provider, and with one that holds none."
+  }
+ ]
+}

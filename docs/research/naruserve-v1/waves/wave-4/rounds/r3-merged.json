@@ -1,0 +1,102 @@
+{
+ "round": 3,
+ "findings": [
+  {
+   "finding_id": "W1-001",
+   "severity": "medium",
+   "items": [
+    "D-162",
+    "D-149",
+    "D-148"
+   ],
+   "claim": "The 'Logger shutdown' decision closes the app logger 'as the last step of D-162'. Frozen D-162 puts 'flushing and closing log writers' before 'the adapter release of D-107 and the move to TERMINATED', so 'last step' moves the logger close after the adapter release and contradicts the frozen order. The round-2 fix asked for the logger close in D-162's own log-writer step, after the owned resources close and before the adapter release. The decision also moves the close of a logger passed to ctx.own(...) or registered out of its D-149 reverse-order position without saying so.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-4/design.md:130; docs/research/naruserve-v1/waves/wave-4/design.md:78 (D-162); docs/research/naruserve-v1/waves/wave-4/rounds/r2-merged.json W1-002/W2-002 suggested_fix",
+   "suggested_fix": "Replace 'As the last step of D-162' with 'In D-162's flushing-and-closing-log-writers step (after owned and registered resources are closed, before the adapter release)'. State that a logger that is also owned or registered is skipped in the D-149 reverse-order pass and closed once in that step."
+  },
+  {
+   "finding_id": "W1-002",
+   "severity": "low",
+   "items": [
+    "D-226",
+    "D-227"
+   ],
+   "claim": "The 'RestApp.create()' decision tests the ServiceLoader lookup 'with a test-fixtures factory and with none'. NaruServe-api applies java-test-fixtures, and its own test classpath plus every consumer of testFixtures (later bootstrap and adapter modules) includes the fixtures. If the fixture factory is registered through META-INF/services in testFixtures, the 'none' case cannot be observed in the same test JVM, and in wave 5 the real bootstrap factory would sit beside the fixture factory, which gives two providers. The decision says nothing about how this is kept apart. The interface name and the services path are also still left open (r2 W2-005).",
+   "evidence": "docs/research/naruserve-v1/waves/wave-4/design.md:128; build.gradle:166 (java-test-fixtures), build.gradle:255 (testFixturesJar consumed)",
+   "suggested_fix": "Register the test factory only in NaruServe-api's test source set, or load it through a dedicated ClassLoader in the test, and not in testFixtures. Name the factory interface and its META-INF/services path in docs/api/app.md when it is decided."
+  },
+  {
+   "finding_id": "W2-001",
+   "severity": "medium",
+   "items": [
+    "D-117",
+    "D-129",
+    "D-422",
+    "D-395"
+   ],
+   "claim": "The 'Pre-request rejections' decision justifies skipping middleware and onError for the dispatcher 501 because 'a Request cannot hold an unrecognised method'. But the merged Router also returns UNSUPPORTED_METHOD (501) for TRACE and CONNECT while RouterPolicy leaves them disabled (the default). Both are values of the Method enum, so a Request can be built for them. That includes `CONNECT / HTTP/1.1`, the exact dispatcher-501 case of D-422. The stated reason covers only unknown tokens, so the decision does not settle whether middleware and onError run for a disabled-TRACE/CONNECT 501, and an implementer may handle the two 501 sources differently. The rule 'requests for which a Request is built' is also circular: the wave 3 code builds no Request for 404/405/426/auto-OPTIONS either, yet D-117 requires middleware on 404/405.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-4/design.md:129; NaruServe-api/src/main/java/com/snoworca/naruserve/Method.java:10; NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:179-181; NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:60-73",
+   "suggested_fix": "State the narrowing by condition, not by whether a Request is built: middleware and onError are skipped only for a method token that is not a Method value, a raw path that does not start with '/', a path-validator rejection, and OPTIONS *. A disabled TRACE/CONNECT 501, 404, 405, 426 and auto-OPTIONS 204 build a Request and run global and prefix middleware (D-117, D-121). Alternatively, name disabled TRACE/CONNECT explicitly as pre-request too and give the reason."
+  },
+  {
+   "finding_id": "W2-002",
+   "severity": "medium",
+   "items": [
+    "D-162"
+   ],
+   "claim": "The 'Logger shutdown' decision closes the app logger 'as the last step of D-162'. D-162 and object.md section 11 step 7 put the log-writer flush/close before the adapter release of D-107 and the move to TERMINATED. Closing the logger last, after the release, contradicts the frozen order. Closing it in D-162's own slot contradicts the decision as written. Either way, an implementer cannot satisfy both.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-4/design.md:130; docs/research/naruserve-v1/design/00.design.md (D-162); object.md:757",
+   "suggested_fix": "Replace 'As the last step of D-162' with 'In D-162's step of flushing and closing log writers, after owned and registered resources are closed and before the adapter release'."
+  },
+  {
+   "finding_id": "W2-003",
+   "severity": "medium",
+   "items": [
+    "D-110",
+    "D-226",
+    "D-227",
+    "I-021"
+   ],
+   "claim": "The decision tests the ServiceLoader lookup 'with a test-fixtures factory'. NaruServe-api's testFixtures source set holds the shared InMemoryHttpAdapter that later waves' tests consume, for example I-021 and the wave 5 adapter comparison. A provider registered under META-INF/services in testFixtures would then sit on the test classpath of every consumer, next to the real bootstrap factory that wave 5 adds. ServiceLoader would then see two providers, and RestApp.create() in wave 5 tests could pick the fake one, depending on classpath order. The 'with none' case also cannot share a classpath with a registered provider unless the test uses an isolated class loader.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-4/design.md:128; build.gradle:164-170 (testFixtures for the later-wave in-memory adapter); NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/InMemoryHttpAdapter.java",
+   "suggested_fix": "Register the fake factory only in NaruServe-api's own test source set, or load it through an isolated class loader in the test, never in testFixtures. Also decide and document what create() does with more than one provider: either fail, or take the first and log a warning."
+  },
+  {
+   "finding_id": "W2-004",
+   "severity": "low",
+   "items": [
+    "D-162",
+    "D-113",
+    "D-148"
+   ],
+   "claim": "The decision closes the app logger whenever it implements AutoCloseable. The open point of round 1 W2-002 is still not addressed: a user-supplied logger passed to app.logger(l) and shared by two RestApp instances, or used by the rest of the application, is closed when the first app shuts down. After that, the second app's logging is silently dropped (D-171).",
+   "evidence": "docs/research/naruserve-v1/waves/wave-4/design.md:130; docs/research/naruserve-v1/waves/wave-4/rounds/r1-merged.json (W2-002)",
+   "suggested_fix": "Either close only loggers the framework created (defaults) plus ones passed to ctx.own(...), or state in docs/api/logging.md that app.logger(l) transfers ownership and that a shared logger must not implement AutoCloseable or must be wrapped."
+  },
+  {
+   "finding_id": "W2-005",
+   "severity": "low",
+   "items": [
+    "D-134",
+    "D-166",
+    "D-117",
+    "D-129",
+    "D-428"
+   ],
+   "claim": "The decisions give the STOPPING 503 the standard error body, but they do not say whether global/prefix middleware and onError run for a request that reaches the dispatcher after STOPPING began. D-117 and D-129 read as 'yes', and D-134 lists the case as an error mapping that onError would see. A shutdown fast path reads as 'no'. The start-gate 503 of D-428 is settled by D-156, but the STOPPING case is not.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-4/design.md:133; docs/research/naruserve-v1/design/00.design.md (D-134, D-166)",
+   "suggested_fix": "Decide it in the wave decisions. The suggested choice, which is consistent with D-156, is that the STOPPING 503 is a dispatcher automatic response like 426 and 501: no middleware and no onError, with an access-log line and the standard body plus Connection: close. Record it in docs/api/middleware.md and lifecycle.md."
+  },
+  {
+   "finding_id": "W2-006",
+   "severity": "low",
+   "items": [
+    "D-110",
+    "D-226",
+    "D-227"
+   ],
+   "claim": "The wave-4 line in carried-into-wave-5.md says D-226 and D-227 are 'already delivered', but it does not carry D-110 by id. D-110's assertion that create() returns an app assembled by the bootstrap module can only be checked in wave 5. The line also does not say who re-asserts D-226 and D-227 against the real bootstrap. As a result D-110 may be promoted in wave 4 without that evidence, or not promoted at all.",
+   "evidence": "docs/research/naruserve-v1/waves/carried-into-wave-5.md:4",
+   "suggested_fix": "Add to the line: 'D-110 is asserted end to end in wave 5 (create() returns an app with the TinyHttpd adapter and GsonJsonCodec); wave 5 re-runs the D-226/D-227 tests with the real bootstrap on the classpath.'"
+  }
+ ]
+}

@@ -1,0 +1,105 @@
+{
+ "iter": 2,
+ "findings": [
+  {
+   "id": "A-2-1",
+   "severity": "HIGH",
+   "req_id": "FR-APP-009",
+   "ac": "AC-7",
+   "design_ref": "wave-4 carried: listen runs the route-table freeze; wave-4 carried: standard error body",
+   "description": "AC-7 says 'every wave 3 test through TestApp keeps passing'. Several wave 3 TestApp tests assert the empty-body answers that wave 4 replaces. HttpAcceptanceTest.assertEmpty (lines 35-38), used at lines 47, 84-88, 98, 113-115 and 159, asserts Content-Length 0 and an empty body for 404/405/501/426/400. The standard error body of FR-HTTP-021 AC-3, FR-HTTP-022 AC-1/AC-2/AC-4/AC-5, FR-HTTP-023 AC-3 and FR-HTTP-024 AC-1/AC-2 makes those tests fail. AC-7 cannot hold together with the HTTP successors as written.",
+   "suggested_fix": "Replace the clause with: 'every wave 3 test through TestApp that cites a requirement not superseded in wave 4 keeps passing unchanged; tests citing FR-HTTP-002, -003, -005, -006 or -010 are re-pointed to FR-HTTP-021..025 and assert the standard error body (a requirement change, not a weakened test)'."
+  },
+  {
+   "id": "A-2-2",
+   "severity": "MEDIUM",
+   "req_id": "FR-APP-009",
+   "ac": null,
+   "design_ref": "D-428; D-156; D-114",
+   "description": "Regression not stated. Several verified, non-superseded tests dispatch on an app that never calls listen(). DefaultRestAppTest#send (lines 41-45: new DefaultRestApp(), freeze(), adapter.bind(..., app.dispatcher())) covers FR-HTTP-007 AC-1 and FR-HTTP-008 AC-7. DefaultRequestTest:165 and DispatcherTest:39 bind new Dispatcher(router) directly (FR-HTTP-004, -007, -009, -011, -012). Read literally, FR-APP-009's 'the dispatcher holds every request that reaches it before RUNNING' would hold those NEW-state requests forever. Also, the FR-HTTP-008 AC-5 test (DefaultRestAppTest:212) calls freeze() directly while the state is still NEW. A guard that checks only the state would not reject there, so FR-APP-002 AC-5's reason 'because the freeze runs inside listen()' does not hold for the verified test.",
+   "suggested_fix": "Add to FR-APP-009: 'The start gate belongs to the exchange handler that listen() passes to the adapter; the wave 3 Dispatcher(Router) constructor and DefaultRestApp.dispatcher() used by unit tests without listen() stay ungated, or those tests are re-pointed to TestApp.' Change FR-APP-002 AC-5's reason to: 'because the one guard rejects when the state is not NEW or the route table is frozen'."
+  },
+  {
+   "id": "A-2-3",
+   "severity": "MEDIUM",
+   "req_id": "FR-HTTP-021",
+   "ac": "AC-2",
+   "design_ref": "wave decision: Lifecycle gate; D-166; D-428",
+   "description": "FR-HTTP-021's statement ('checks the asterisk-form OPTIONS * first') and the AC-2 Decision ('the dispatcher checks in this order: OPTIONS * gives 204, ...') contradict FR-APP-013 AC-4 ('the lifecycle gate is the first check of the dispatcher'). For OPTIONS * during STOPPING, FR-HTTP-021 gives 204 and FR-APP-013 gives 503. The statement's order also leaves out where the unrecognised-method-token check falls, although AC-4 lists it.",
+   "suggested_fix": "Statement: 'after the lifecycle gate of FR-APP-009 and FR-APP-013, checks the asterisk-form OPTIONS * first, ...'. Add to the AC-2 Decision: 'This order applies to requests that passed the lifecycle gate; the unrecognised-method-token 501 follows the validator check and precedes building a Request.'"
+  },
+  {
+   "id": "A-2-4",
+   "severity": "MEDIUM",
+   "req_id": "OPS-APP-002",
+   "ac": "AC-1",
+   "design_ref": "I-008; verified OPS-HTTP-002 AC-3/AC-4",
+   "description": "AC-1 removes the skip entries whose reason is `shutdown`, `onStart` and similar, but the compile template of verified OPS-HTTP-002 AC-3 has the fixed imports com.snoworca.naruserve.*, routing.*, java.util.* and java.io.* (DocsExamplesCompileTest:209-212) and only RouteHandler, String and Object stubs. Once the `shutdown` skip at DocsExamplesCompileTest:77 is removed, the app.md block `app.shutdown(10, TimeUnit.SECONDS);` does not compile, because TimeUnit is not imported. Blocks that need docs-local types (UserService, Database) or HttpAdapter/JsonCodec from the spi package also fail. OPS-HTTP-002 AC-4 allows no skip reason for a missing import or a docs-local type, and OPS-APP-002 AC-2 only keeps blocks that need a later-wave member. So AC-1 cannot be met without either rewriting those docs blocks or changing a verified AC that wave 4 does not supersede.",
+   "suggested_fix": "Add to OPS-APP-002: 'Wave 4 docs blocks use only the template imports of OPS-HTTP-002 AC-3 (for example `java.util.concurrent.TimeUnit.SECONDS` written in full), and the template gains stub values for the names the docs use (`ctx`, `auth`, `requestId`, `myAdapter`, `myCodec`).' Alternatively, supersede OPS-HTTP-002 so that its fixed imports gain `java.util.concurrent.*` and `com.snoworca.naruserve.spi.*` and stub types are allowed."
+  },
+  {
+   "id": "A-2-5",
+   "severity": "LOW",
+   "req_id": "OPS-APP-001",
+   "ac": null,
+   "design_ref": null,
+   "description": "The OPS-HTTP-003 supersession leaves links pointing at the now-discarded OPS-HTTP-001. OPS-APP-001, a wave-4 requirement, has an 'extends OPS-HTTP-001' row. Verified OPS-HTTP-002 (04.http-core.srs.md:2424) has 'depends_on OPS-HTTP-001'. This is a new case of the A-1-17 pattern.",
+   "suggested_fix": "Re-point OPS-APP-001's row to 'Requirement | OPS-HTTP-003 | extends'. Leave verified OPS-HTTP-002 as is under the A-1-17 policy, since no wave-4 requirement depends_on it (OPS-APP-002 only extends it)."
+  },
+  {
+   "id": "A-2-6",
+   "severity": "LOW",
+   "req_id": "OPS-HTTP-003",
+   "ac": null,
+   "design_ref": null,
+   "description": "OPS-HTTP-003 carries none of its predecessor's Code links (docs/api/request.md, response.md, routing.md, app.md, defaults.md, express-migration.md, RoutingDocsTest, DocsExamplesCompileTest) and none of its depends_on rows (IR-HTTP-005, FR-HTTP-014, FR-HTTP-012, FR-HTTP-009). Unlike the Rationale field, trace links can be set through add_trace_link.",
+   "suggested_fix": "Use add_trace_link to add the six docs/api Code rows (implements), NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java (verifies), and Requirement depends_on IR-HTTP-005, FR-HTTP-014, FR-HTTP-012 and FR-HTTP-009 (all verified)."
+  },
+  {
+   "id": "A-2-7",
+   "severity": "LOW",
+   "req_id": "OPS-APP-001",
+   "ac": "AC-6",
+   "design_ref": "D-137",
+   "description": "Some markers have no stated owner. express-migration.md:27 (express.Router() + app.use('/api', router)) and :86 (cors()) are middleware-related markers that neither OPS-APP-001 AC-5 removes nor OPS-HTTP-003 AC-8 clearly keeps, since AC-8 keeps only markers 'owned by issues other than #4..#7'. Also, app.md:50 and :113 mix a wave-4 marker with a wave-7 `ws` marker on one line. The AC-6 docs test needs an exact keep or remove list.",
+   "suggested_fix": "Add to AC-6: 'the express.Router() and cors() markers of express-migration.md stay (not decided in v1 wave 4), and the mixed lines of app.md are split so the `ws` return-type and callback-name markers stay while the route-middleware and onStart/onStop/onError parts are decided'."
+  },
+  {
+   "id": "A-2-8",
+   "severity": "LOW",
+   "req_id": "FR-HTTP-025",
+   "ac": "AC-3",
+   "design_ref": "D-117; D-129",
+   "description": "'after the middleware ran and before the handler' does not say whether route middleware runs before the malformed-query 400. It also leaves open the answer for a malformed query on a path that matches no route (404 from the fallback point or 400).",
+   "suggested_fix": "Append: 'Decision: the query is parsed after the route middleware and before the handler; a request without a matched route gets the fallback answer (404/405/...) and its query is parsed only if a middleware reads it.'"
+  },
+  {
+   "id": "A-2-9",
+   "severity": "LOW",
+   "req_id": "FR-APP-016",
+   "ac": "AC-3",
+   "design_ref": "D-403",
+   "description": "AC-1 puts the fake android.util.Log in the NaruServe-logcat test source set, so it is on the test class path. That leaves 'Without android.util.Log on the class path' with no stated way to test.",
+   "suggested_fix": "Append: 'The case without android.util.Log loads LogcatLogger through a dedicated class loader that sees the NaruServe-logcat and NaruServe-api main classes but not the test classes.'"
+  },
+  {
+   "id": "A-2-10",
+   "severity": "LOW",
+   "req_id": "FR-APP-018",
+   "ac": "AC-2",
+   "design_ref": "D-179",
+   "description": "The build uses slf4j-api 1.7.36. With no binding, LoggerFactory.getLogger returns a NOPLogger whose getName() is 'NOP', so 'delegates to the SLF4J logger named NaruServe' cannot be observed when AC-4 adds no binding.",
+   "suggested_fix": "Append: 'checked through a hand-written test-scope org.slf4j.impl.StaticLoggerBinder whose ILoggerFactory records the requested names, which leaves the runtime dependencies binding-free'."
+  },
+  {
+   "id": "A-2-11",
+   "severity": "LOW",
+   "req_id": "FR-APP-012",
+   "ac": "AC-2",
+   "design_ref": "D-426",
+   "description": "'finishes the step in progress' is untested with more than one onStart callback. The AC does not say whether callbacks after the blocked one still run once a pending stop is recorded.",
+   "suggested_fix": "Append: 'Decision: with a pending stop recorded during onStart callback k, callbacks after k do not run.' Add that case to the latch test."
+  }
+ ],
+ "summary": {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 3, "LOW": 7}
+}

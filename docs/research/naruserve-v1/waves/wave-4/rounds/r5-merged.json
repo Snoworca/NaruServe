@@ -1,0 +1,48 @@
+{
+ "round": 5,
+ "findings": [
+  {
+   "finding_id": "W2-001",
+   "severity": "medium",
+   "items": [
+    "D-158",
+    "D-159",
+    "D-164",
+    "D-426",
+    "D-148",
+    "D-149",
+    "D-162",
+    "I-015"
+   ],
+   "claim": "The 'Logger shutdown' decision flushes and closes the app logger only in D-162's log-writer step, which is the RUNNING shutdown path. Three other paths also end in TERMINATED: start failure (D-158/D-159), a pending stop during STARTING (D-426), and shutdown in NEW (D-164). The decision says nothing about them. On those paths a rotating file logger passed to app.logger(l) keeps its writer thread after the app is TERMINATED, which contradicts the decision's own claim that 'no writer thread outlives shutdown (I-015)'. The decision also skips an owned or registered logger at its D-149 position so that it is closed once at the log step. On the start-failure path, which closes resources in reverse order (D-158) but has no log step, that logger is therefore never closed at all, and this breaks D-147 (close on start failure).",
+   "evidence": "docs/research/naruserve-v1/waves/wave-4/design.md:130 (decision scoped to D-162); design.md:74-75,81-82 (D-158, D-159, D-164, D-426 failure/NEW paths with no log-writer step); object.md \u00a711.4 start step 6 and \u00a711.3 FAILED->TERMINATED cleanup",
+   "suggested_fix": "State that every path into TERMINATED runs the same final log step after the reverse-order resource close: D-162 shutdown, the D-158/D-159 start failure, the D-426 pending stop, and D-164 NEW shutdown. That step flushes the logger if it is Flushable and closes it if it is AutoCloseable, at most once by identity. The D-149 skip of an owned or registered logger applies only where that step follows. Add a T43/T46 assertion that no file-logger writer thread remains after a failed listen()."
+  },
+  {
+   "finding_id": "W2-002",
+   "severity": "low",
+   "items": [
+    "D-110",
+    "D-226",
+    "D-227",
+    "I-014",
+    "I-008"
+   ],
+   "claim": "The 'RestApp.create()' decision calls for 'an internal overload taking a class loader' next to the static RestApp.create(). RestApp is an interface, and in Java 8 (release 8) every static interface method is implicitly public. Private interface methods arrive only in Java 9. So an overload declared on RestApp becomes permanent public API: I-014 forbids removing it later, and I-008 requires a docs/api entry for it. The decision does not say where the overload lives.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-4/design.md:128; NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:7 (public interface); build uses options.release = 8 (CLAUDE.md)",
+   "suggested_fix": "Put the class-loader-taking lookup in a non-exported helper in com.snoworca.naruserve.internal, for example an AppFactories.load(ClassLoader) method. RestApp.create() delegates to it with RestApp.class.getClassLoader(), and the wave 4 tests call the helper with their dedicated class loaders."
+  },
+  {
+   "finding_id": "W2-003",
+   "severity": "low",
+   "items": [
+    "D-129",
+    "D-121",
+    "D-137"
+   ],
+   "claim": "The 'Pre-request rejections' decision says that 'middleware and onError run for' 404, 405, 426, the automatic OPTIONS reply and the disabled TRACE/CONNECT 501. D-129 limits onError to unhandled exceptions, and in Express a 404 or an automatic OPTIONS reply never reaches the error handler. One reading of the decision is that onError is invoked for those automatic responses, including the 204 OPTIONS reply, which is not an error. The other reading is that onError only catches exceptions thrown by middleware on those requests. Implementers and the T35/T36 tests could pick different readings. Custom 404/405 bodies (D-137) might also be routed through onError without anyone deciding to.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-4/design.md:129; design.md D-129 (unhandled exceptions only); docs/api/middleware.md:81,152",
+   "suggested_fix": "Reword to: middleware runs for these requests, and onError receives exceptions thrown by that middleware or passed to next.error. The automatic 404/405/426/501/OPTIONS responses themselves are written by the dispatcher fallback and are not delivered to onError. Their custom bodies are settled under D-137."
+  }
+ ]
+}
