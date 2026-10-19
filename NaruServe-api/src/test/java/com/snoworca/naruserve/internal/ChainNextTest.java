@@ -2,7 +2,9 @@ package com.snoworca.naruserve.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
+import com.snoworca.naruserve.ErrorHandler;
 import com.snoworca.naruserve.Middleware;
 import com.snoworca.naruserve.Next;
 import com.snoworca.naruserve.RouteHandler;
@@ -232,14 +234,46 @@ public class ChainNextTest {
         });
         ResponseStreamTest.RecordingExchange ex = new ResponseStreamTest.RecordingExchange("GET", "/x");
         DefaultResponse res = new DefaultResponse(ex, false);
+        // A recording onError handler that does not answer, so the standard 500 still applies.
+        List<Throwable> seen = Collections.synchronizedList(new ArrayList<>());
+        ErrorHandler recording = (err, req, r) -> seen.add(err);
         // run returns normally, so the Dispatcher's catch never hands e to the error path a second time.
         pipeline.run(new DefaultRequest(ex, com.snoworca.naruserve.Method.GET, Collections.<String, String>emptyMap()),
                 res, Collections.<Middleware>emptyList(), h("h"),
-                new ErrorPath(Collections.emptyList(), new SafeLogger(new ErrorPathTest.RecordingLogger())),
+                new ErrorPath(Collections.singletonList(recording),
+                        new SafeLogger(new ErrorPathTest.RecordingLogger())),
                 "0000000000000000");
         assertEquals(500, ex.status);
         assertEquals(1, ex.commits.get());
         assertEquals(new ArrayList<String>(), calls);
+        assertEquals("the error path ran exactly once with e", Collections.singletonList(e), seen);
+    }
+
+    // FR-APP-004 AC-3 — a different exception thrown after next.error(e) is logged, not silently dropped
+    @Test
+    public void FR_APP_004_AC3_aDifferentExceptionAfterNextErrorIsLoggedAtError() {
+        IllegalArgumentException routed = new IllegalArgumentException("routed");
+        IllegalStateException later = new IllegalStateException("later");
+        MiddlewarePipeline pipeline = new MiddlewarePipeline(com.snoworca.naruserve.routing.RouterPolicy.strict());
+        pipeline.addGlobal((req, res, next) -> {
+            next.error(routed);
+            throw later;
+        });
+        ResponseStreamTest.RecordingExchange ex = new ResponseStreamTest.RecordingExchange("GET", "/x");
+        DefaultResponse res = new DefaultResponse(ex, false);
+        ErrorPathTest.RecordingLogger log = new ErrorPathTest.RecordingLogger();
+        pipeline.run(new DefaultRequest(ex, com.snoworca.naruserve.Method.GET, Collections.<String, String>emptyMap()),
+                res, Collections.<Middleware>emptyList(), h("h"),
+                new ErrorPath(Collections.emptyList(), new SafeLogger(log)), "0123456789abcdef");
+        assertEquals(500, ex.status);
+        assertEquals(1, ex.commits.get());
+        assertTrue(log.errors.toString(), log.errors.contains(later));
+        boolean namesRequest = false;
+        for (String line : log.lines) {
+            namesRequest |= line.startsWith("ERROR ") && line.contains("0123456789abcdef")
+                    && line.contains("after next.error");
+        }
+        assertTrue(log.lines.toString(), namesRequest);
     }
 
     // SDS-AC-8, SDS-AC-10; FR-APP-003 AC-8, FR-APP-004 AC-6

@@ -2,10 +2,13 @@ package com.snoworca.naruserve.slf4j;
 
 import com.snoworca.naruserve.Logger;
 import java.util.Objects;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.LoggerFactory;
 
 /** {@link Logger} forwarding each method to the same-named method of an {@code org.slf4j.Logger}. */
 // @req FR-APP-018
+@NullMarked
 public final class Slf4jLogger implements Logger {
 
     private final org.slf4j.Logger delegate;
@@ -47,7 +50,7 @@ public final class Slf4jLogger implements Logger {
     }
 
     @Override
-    public void error(String message, Throwable error) {
+    public void error(String message, @Nullable Throwable error) {
         delegate.error(message, error);
     }
 }

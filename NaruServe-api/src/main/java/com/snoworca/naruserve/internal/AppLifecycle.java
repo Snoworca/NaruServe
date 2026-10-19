@@ -23,6 +23,10 @@ final class AppLifecycle {
     private final AtomicReference<AppState> state = new AtomicReference<>(AppState.NEW);
     private final CountDownLatch startGate = new CountDownLatch(1);
     private final CountDownLatch terminated = new CountDownLatch(1);
+    // Released when the listen() that won beginStart returns or throws.
+    private final CountDownLatch listenEnded = new CountDownLatch(1);
+    // Set on a thread while it dispatches one of this app's requests (per app, so no static state).
+    private final ThreadLocal<Boolean> requestThread = new ThreadLocal<>();
     private final AtomicInteger held = new AtomicInteger();
     private volatile boolean frozen;
     // Written under this; read without it by the gate and by listen.
@@ -95,6 +99,46 @@ final class AppLifecycle {
     boolean awaitTerminated(long timeout, TimeUnit unit) {
         try {
             return terminated.await(timeout, unit);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return false;
+        }
+    }
+
+    /** Marks the calling thread as running one of this app's requests until {@link #exitRequest()}. */
+    // @req FR-APP-011
+    void enterRequest() {
+        requestThread.set(Boolean.TRUE);
+    }
+
+    // @req FR-APP-011
+    void exitRequest() {
+        requestThread.remove();
+    }
+
+    /** True on a thread inside one of this app's requests; a shutdown() there must not wait for that request. */
+    // @req FR-APP-011
+    boolean onRequestThread() {
+        return requestThread.get() != null;
+    }
+
+    /** Called from the finally of the listen() that won beginStart. */
+    // @req FR-APP-012
+    void markListenEnded() {
+        listenEnded.countDown();
+    }
+
+    /** True once {@link #markListenEnded()} ran. */
+    // @req FR-APP-012
+    boolean listenEnded() {
+        return listenEnded.getCount() == 0;
+    }
+
+    /** Waits for {@link #markListenEnded()}; false on timeout. An interrupt keeps the flag and returns false. */
+    // @req FR-APP-012
+    boolean awaitListenEnded(long timeout, TimeUnit unit) {
+        try {
+            return listenEnded.await(timeout, unit);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             return false;

@@ -86,6 +86,10 @@ public final class MiddlewarePipeline {
             if (!chain.errorRouted) {
                 throw e;
             }
+            // Still no second error path, but a different exception must not vanish without a trace.
+            if (e != chain.routedError) {
+                errors.logger.error("request " + requestId + ": exception after next.error(e) dropped", e);
+            }
         } finally {
             root.end();
         }

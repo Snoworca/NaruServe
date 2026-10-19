@@ -2,6 +2,8 @@ package com.snoworca.naruserve.internal;
 
 import com.snoworca.naruserve.AccessLogOptions;
 import com.snoworca.naruserve.LogLevel;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -61,6 +63,12 @@ final class DefaultAccessLogOptions implements AccessLogOptions {
     // @req FR-APP-015
     synchronized boolean excluded(String rawPath) {
         return exclude.contains(rawPath);
+    }
+
+    /** A copy of the exclude entries, for the access log fixed at listen(). */
+    // @req IR-APP-007
+    synchronized Set<String> excludeSnapshot() {
+        return Collections.unmodifiableSet(new HashSet<>(exclude));
     }
 
     synchronized boolean isEnabled() {

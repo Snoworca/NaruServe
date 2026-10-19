@@ -27,6 +27,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -90,8 +91,9 @@ public final class DefaultRestApp implements RestApp {
     private final ShutdownParticipants shutdownParticipants = new ShutdownParticipants();
     // Set by the one listen() that won beginStart.
     private volatile boolean bindAttempted;
-    // The thread inside listen() or the shutdown sequence; a shutdown() from it must not wait for itself.
-    private volatile @Nullable Thread lifecycleThread;
+    // The thread inside listen() or the shutdown sequence; a shutdown() from it must not wait for itself. Each owner
+    // clears only its own entry, so listen() returning never wipes the identity a racing shutdown thread just set.
+    private final AtomicReference<@Nullable Thread> lifecycleThread = new AtomicReference<>();
 
     // Guarded by this.
     private final List<Registration> registrations = new ArrayList<>();
@@ -217,11 +219,13 @@ public final class DefaultRestApp implements RestApp {
             throw new IllegalStateException("this app has no HttpAdapter; build it with RestApp.builder()");
         }
         lifecycle.beginStart();
-        lifecycleThread = Thread.currentThread();
+        Thread self = Thread.currentThread();
+        lifecycleThread.set(self);
         try {
             return start(a, port);
         } finally {
-            lifecycleThread = null;
+            lifecycleThread.compareAndSet(self, null);
+            lifecycle.markListenEnded();
         }
     }
 
@@ -327,7 +331,8 @@ public final class DefaultRestApp implements RestApp {
 
     /**
      * Dispatch on the state: NEW terminates at once; STARTING records a pending stop and waits for listen to end;
-     * RUNNING runs the sequence in the one beginStop winner; STOPPING and FAILED wait for TERMINATED; TERMINATED
+     * RUNNING runs the sequence in the one beginStop winner (on a new thread, without waiting, when the winner is a
+     * request of this app); STOPPING and FAILED wait for TERMINATED; TERMINATED
      * returns. A wait that times out returns normally. Not synchronized, so a loser waits only its own timeout.
      */
     // @req IR-APP-005
@@ -341,7 +346,7 @@ public final class DefaultRestApp implements RestApp {
         }
         Objects.requireNonNull(unit, "unit");
         long deadline = System.nanoTime() + unit.toNanos(timeout);
-        boolean ownThread = Thread.currentThread() == lifecycleThread;
+        boolean ownThread = Thread.currentThread() == lifecycleThread.get();
         for (;;) {
             switch (lifecycle.state()) {
                 case NEW:
@@ -356,13 +361,23 @@ public final class DefaultRestApp implements RestApp {
                     if (lifecycle.state() != AppState.RUNNING) {
                         if (!ownThread) {
                             lifecycle.awaitTerminated(left(deadline), TimeUnit.NANOSECONDS);
+                            // TERMINATED is set just before listen() throws; return only once listen() ended.
+                            lifecycle.awaitListenEnded(left(deadline), TimeUnit.NANOSECONDS);
                         }
                         return;
                     }
                     break;
                 case RUNNING:
                     if (lifecycle.beginStop()) {
-                        runShutdownSequence(deadline);
+                        if (lifecycle.onRequestThread()) {
+                            // The adapter stop waits for in-flight requests, this one included: run the sequence on
+                            // its own thread so this request can finish and the caller returns at once.
+                            Thread t = new Thread(() -> runShutdownSequence(deadline), "naruserve-shutdown");
+                            t.setDaemon(false);
+                            t.start();
+                        } else {
+                            runShutdownSequence(deadline);
+                        }
                         return;
                     }
                     break;
@@ -391,7 +406,8 @@ public final class DefaultRestApp implements RestApp {
     // @req FR-APP-011
     private void runShutdownSequence(long deadlineNanos) {
         SafeLogger log = new SafeLogger(logger);
-        lifecycleThread = Thread.currentThread();
+        Thread self = Thread.currentThread();
+        lifecycleThread.set(self);
         try {
             HttpAdapter a = Objects.requireNonNull(adapter, "adapter");
             shutdownParticipants.run(ShutdownParticipants.Phase.BEFORE_WAIT, log);
@@ -423,7 +439,7 @@ public final class DefaultRestApp implements RestApp {
                 log.error("adapter release failed", e);
             }
         } finally {
-            lifecycleThread = null;
+            lifecycleThread.compareAndSet(self, null);
             lifecycle.terminate();
         }
     }
@@ -496,6 +512,12 @@ public final class DefaultRestApp implements RestApp {
         Objects.requireNonNull(mw, "mw");
         if (!prefix.startsWith("/")) {
             throw new IllegalArgumentException("middleware prefix must start with '/': " + prefix);
+        }
+        // Decoding does not depend on the policy, so a prefix that decodes now also decodes at freeze.
+        try {
+            Router.decodeSegments(prefix, policy);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("middleware prefix is not decodable: " + prefix, e);
         }
         prefixMiddleware.add(new PrefixMiddleware(prefix, mw));
         return this;

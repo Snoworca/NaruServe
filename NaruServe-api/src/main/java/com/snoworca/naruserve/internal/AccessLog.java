@@ -1,6 +1,7 @@
 package com.snoworca.naruserve.internal;
 
 import com.snoworca.naruserve.LogLevel;
+import java.util.Set;
 
 /**
  * One access-log line per request: {@code <method> <path> <status>[ aborted][ <n>ms][ in=<i> out=<o>][ rid=<id>]}.
@@ -10,7 +11,7 @@ import com.snoworca.naruserve.LogLevel;
 // @req SEC-APP-001
 final class AccessLog {
 
-    private final DefaultAccessLogOptions options;
+    private final Set<String> exclude;
     private final SafeLogger logger;
     private final boolean enabled;
     private final LogLevel level;
@@ -24,10 +25,11 @@ final class AccessLog {
         this(disabled(), new SafeLogger(new com.snoworca.naruserve.ConsoleLogger()));
     }
 
-    /** Built at listen (in freeze) from the app's options and its SafeLogger; the flags are copied here. */
+    /** Built at listen (in freeze) from the app's options and its SafeLogger; the flags and excludes are copied here. */
     // @req FR-APP-015
+    // @req IR-APP-007
     AccessLog(DefaultAccessLogOptions options, SafeLogger logger) {
-        this.options = options;
+        this.exclude = options.excludeSnapshot();
         this.logger = logger;
         this.enabled = options.isEnabled();
         this.level = options.logLevel();
@@ -49,7 +51,7 @@ final class AccessLog {
     void write(String methodToken, String rawPath, int status, boolean aborted, long startNanos, long in, long out,
             String rid) {
         try {
-            if (!enabled || options.excluded(rawPath)) {
+            if (!enabled || exclude.contains(rawPath)) {
                 return;
             }
             long ms = (System.nanoTime() - startNanos) / 1_000_000;

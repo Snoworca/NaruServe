@@ -188,9 +188,11 @@ public class ShutdownSequenceTest {
             }
         });
         listen(app);
-        app.shutdown(1, TimeUnit.SECONDS);
-        assertTrue("stop got " + adapter.stopNanos, adapter.stopNanos >= TimeUnit.MILLISECONDS.toNanos(500));
-        assertTrue("stop got " + adapter.stopNanos, adapter.stopNanos <= TimeUnit.MILLISECONDS.toNanos(800));
+        // A 10 s budget leaves a 2 s scheduler margin below while keeping the 200 ms deduction exact above.
+        app.shutdown(10, TimeUnit.SECONDS);
+        assertTrue("stop got " + adapter.stopNanos,
+                adapter.stopNanos >= TimeUnit.MILLISECONDS.toNanos(10000 - 200 - 2000));
+        assertTrue("stop got " + adapter.stopNanos, adapter.stopNanos <= TimeUnit.MILLISECONDS.toNanos(10000 - 200));
     }
 
     // SDS-AC-9; FR-APP-011 AC-3

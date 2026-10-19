@@ -167,6 +167,10 @@ NEW ──listen──> STARTING ──성공──> RUNNING ──shutdown─�
 
 `STARTING` 중에 `shutdown(timeout, unit)`을 부르면 멈춤 요청을 기록하고 `listen()`이 끝나기를 기다리며(`onStart` 콜백 안에서 부르면 기다리지 않고 바로 반환), timeout이 지나면 예외 없이 반환하지만 멈춤 요청은 그대로 남아 `listen()`은 다음 검사 지점(다음 `onStart` 콜백 전, 바인딩 전, `RUNNING`으로 바뀔 때)에서 시작을 멈추고 `AppStartException`을 던지는데, 멈춤 요청을 유지하는 이유는 timeout이 지났다고 멈춤을 취소하면 앱이 아무도 모르게 `RUNNING`으로 올라가기 때문입니다.
 
+### 요청 핸들러 안에서 shutdown
+
+라우트 핸들러나 미들웨어 안에서 `shutdown(timeout, unit)`을 부르면 종료 순서는 별도 스레드에서 돌고 호출은 기다리지 않고 바로 반환하며, 그 요청의 응답은 평소대로 끝까지 전송되는데, 종료 순서가 처리 중인 요청이 끝나기를 기다리므로 같은 스레드에서 기다리면 자기 자신을 timeout까지 기다린 뒤 응답을 강제로 끊게 되기 때문입니다(Express에서 `res.send()` 뒤 `server.close()`를 부르는 것과 같은 결과). `TERMINATED`가 되는 것을 확인하려면 다른 스레드에서 `app.state()`를 보세요.
+
 ## Android
 
 - `RestApp`은 Android `Service` 안에서 만들고 관리하세요.

@@ -18,6 +18,13 @@ public class LoggerIsolationTest {
     /** Every method throws; flush and close throw too. Counts the calls. */
     static final class ThrowingLogger implements Logger, Flushable, AutoCloseable {
         final AtomicInteger calls = new AtomicInteger();
+        final AtomicInteger infos = new AtomicInteger();
+        final AtomicInteger warns = new AtomicInteger();
+        final AtomicInteger errors = new AtomicInteger();
+        final AtomicInteger flushes = new AtomicInteger();
+        final AtomicInteger closes = new AtomicInteger();
+        // false: flush throws IOException; true: flush throws an unchecked exception.
+        volatile boolean flushThrowsUnchecked;
 
         private RuntimeException fail() {
             calls.incrementAndGet();
@@ -36,32 +43,41 @@ public class LoggerIsolationTest {
 
         @Override
         public void info(String message) {
+            infos.incrementAndGet();
             throw fail();
         }
 
         @Override
         public void warn(String message) {
+            warns.incrementAndGet();
             throw fail();
         }
 
         @Override
         public void error(String message) {
+            errors.incrementAndGet();
             throw fail();
         }
 
         @Override
         public void error(String message, Throwable error) {
+            errors.incrementAndGet();
             throw fail();
         }
 
         @Override
         public void flush() throws IOException {
             calls.incrementAndGet();
+            flushes.incrementAndGet();
+            if (flushThrowsUnchecked) {
+                throw new IllegalStateException("flush down");
+            }
             throw new IOException("flush down");
         }
 
         @Override
         public void close() {
+            closes.incrementAndGet();
             throw fail();
         }
     }
@@ -91,6 +107,9 @@ public class LoggerIsolationTest {
         assertEquals(false, unfinished.abnormallyClosed());
         // access lines, the 500 error log and the unfinished-response warn all reached the logger and were dropped
         assertTrue(String.valueOf(logger.calls.get()), logger.calls.get() >= 5);
+        // FR-APP-014 AC-1: access lines (WARN), the 500 error record and the unfinished-response warn each arrived
+        assertTrue("error records " + logger.errors.get(), logger.errors.get() > 0);
+        assertTrue("warn records " + logger.warns.get(), logger.warns.get() >= 3);
     }
 
     // SDS-AC-2; FR-APP-014 AC-2, FR-APP-014 AC-3
@@ -106,5 +125,22 @@ public class LoggerIsolationTest {
         t.app().shutdown(1, TimeUnit.SECONDS);
         assertEquals(AppState.TERMINATED, t.app().state());
         assertTrue(String.valueOf(logger.calls.get()), logger.calls.get() >= 3); // error, flush, close
+        // FR-APP-014 AC-2: flush and close were each reached once although both throw
+        assertTrue("error records " + logger.errors.get(), logger.errors.get() > 0);
+        assertEquals(1, logger.flushes.get());
+        assertEquals(1, logger.closes.get());
+    }
+
+    // SDS-AC-2; FR-APP-014 AC-2, FR-APP-014 AC-3 — an unchecked exception from flush() is isolated too
+    @Test
+    public void sdsAc2_FR_APP_014_AC2_AC3_uncheckedFlushFailureStillClosesTheLoggerAndTerminates() {
+        logger.flushThrowsUnchecked = true;
+        TestApp t = TestApp.create();
+        t.app().logger(logger);
+        t.start();
+        t.app().shutdown(1, TimeUnit.SECONDS);
+        assertEquals(AppState.TERMINATED, t.app().state());
+        assertEquals(1, logger.flushes.get());
+        assertEquals(1, logger.closes.get());
     }
 }

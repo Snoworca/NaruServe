@@ -45,7 +45,12 @@ final class GatedExchangeHandler implements ExchangeHandler {
             s = lifecycle.state();
         }
         if (s == AppState.RUNNING) {
-            dispatcher.handle(ex);
+            lifecycle.enterRequest();
+            try {
+                dispatcher.handle(ex);
+            } finally {
+                lifecycle.exitRequest();
+            }
             return;
         }
         unavailable(ex, start);

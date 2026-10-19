@@ -104,6 +104,19 @@ public class AccessLogTest {
         assertEquals(Collections.emptyList(), log.lines);
     }
 
+    // IR-APP-007 AC-3, FR-APP-015 AC-6 — the exclude set is fixed when the log is built at listen()
+    @Test
+    public void IR_APP_007_AC3_excludeAddedAfterTheLogIsBuiltHasNoEffect() {
+        DefaultAccessLogOptions o = new DefaultAccessLogOptions();
+        o.exclude("/health");
+        AccessLog accessLog = accessLog(o);
+        o.exclude("/late");
+        accessLog.write("GET", "/health", 200, false, System.nanoTime(), 0, 0, RID);
+        assertEquals(Collections.emptyList(), log.lines);
+        accessLog.write("GET", "/late", 200, false, System.nanoTime(), 0, 0, RID);
+        assertEquals(log.lines.toString(), 1, log.lines.size());
+    }
+
     // SDS-AC-12; SEC-APP-001 AC-2
     @Test
     public void sdsAc12_SEC_APP_001_AC2_escapeControlCharsAndBackslashKeepPercentEncodingRaw() {

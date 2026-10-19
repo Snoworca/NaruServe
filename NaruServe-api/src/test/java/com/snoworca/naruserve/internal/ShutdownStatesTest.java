@@ -94,14 +94,18 @@ public class ShutdownStatesTest {
             }
         });
         assertTrue(inOnStart.await(5, TimeUnit.SECONDS));
+        boolean[] listenEndedFirst = new boolean[1];
         Future<?> shutdown = pool.submit(() -> {
             app.shutdown(5, TimeUnit.SECONDS);
+            // FR-APP-012 AC-2: shutdown returns only after listen() ended.
+            listenEndedFirst[0] = app.lifecycle().listenEnded();
             events.add("shutdown returned");
         });
         awaitTrue("pending stop recorded", () -> app.lifecycle().pendingStop());
         release.countDown();
         Throwable thrown = listen.get(5, TimeUnit.SECONDS);
         shutdown.get(5, TimeUnit.SECONDS);
+        assertTrue("shutdown returned before listen() ended", listenEndedFirst[0]);
         assertTrue(String.valueOf(thrown), thrown instanceof AppStartException);
         assertTrue(thrown.getMessage(), thrown.getMessage().contains("shutdown was requested while starting"));
         assertEquals(Arrays.asList("onStart1 done", "close second FAILED", "close first FAILED",
@@ -189,6 +193,53 @@ public class ShutdownStatesTest {
         app.listen(0);
         app.shutdown(5, TimeUnit.SECONDS);
         assertEquals(AppState.TERMINATED, app.state());
+    }
+
+    // FR-APP-011 AC-5 — shutdown() from a route handler neither waits for its own request nor cuts its response
+    @Test
+    public void FR_APP_011_AC5_shutdownFromARouteHandlerReturnsPromptlyAndTheResponseIsDelivered() throws Exception {
+        RecordingAdapter adapter = new RecordingAdapter(events);
+        DefaultRestApp app = app(adapter);
+        long[] took = new long[1];
+        app.get("/stop", (req, res) -> {
+            long t0 = System.nanoTime();
+            app.shutdown(5, TimeUnit.SECONDS);
+            took[0] = System.nanoTime() - t0;
+            res.send("bye");
+        });
+        app.listen(0);
+        ClientResponse r = adapter.delegate.submit(ClientRequest.of("GET", "/stop")).get(10, TimeUnit.SECONDS);
+        assertEquals(200, r.status());
+        assertEquals("bye", new String(r.body(), StandardCharsets.UTF_8));
+        assertFalse(r.abnormallyClosed());
+        assertTrue("shutdown took " + took[0] + " ns", took[0] < TimeUnit.SECONDS.toNanos(2));
+        assertTrue("app reaches TERMINATED", app.lifecycle().awaitTerminated(5, TimeUnit.SECONDS));
+        assertTrue(events.toString(), events.contains("onStop"));
+    }
+
+    // FR-APP-011 AC-5 — listen()'s exit never clears the shutdown thread's identity, so an onStop shutdown() that
+    // races listen() returning still does not wait for itself. The window is narrow, so it is tried repeatedly.
+    @Test
+    public void FR_APP_011_AC5_shutdownRacingListenReturnStillDoesNotWaitForItself() throws Exception {
+        for (int i = 0; i < 200; i++) {
+            DefaultRestApp app = app(new RecordingAdapter(new ArrayList<>()));
+            long[] inner = new long[1];
+            app.onStop(ctx -> {
+                long t0 = System.nanoTime();
+                app.shutdown(2, TimeUnit.SECONDS);
+                inner[0] = System.nanoTime() - t0;
+            });
+            Future<?> stopper = pool.submit(() -> {
+                while (app.state() != AppState.RUNNING) {
+                    Thread.yield();
+                }
+                app.shutdown(5, TimeUnit.SECONDS);
+            });
+            app.listen(0);
+            stopper.get(10, TimeUnit.SECONDS);
+            assertTrue("iteration " + i + ": onStop shutdown waited " + inner[0] + " ns",
+                    inner[0] < TimeUnit.SECONDS.toNanos(1));
+        }
     }
 
     // SDS-AC-18; FR-APP-012 AC-4

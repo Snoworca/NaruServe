@@ -207,9 +207,24 @@ public class AppEntryApiTest {
         TestApp t = TestApp.create();
         try {
             t.app().get("/x", AppEntryApiTest.<Middleware>nullOf(), h);
+            fail("expected NullPointerException");
         } catch (NullPointerException expected) {
         }
         assertEquals(404, t.send("GET", "/x").status());
+    }
+
+    // IR-APP-002 AC-4 — an undecodable prefix is refused at use(), not later at listen()
+    @Test
+    public void IR_APP_002_AC4_undecodablePrefixIsRefusedAtRegistration() {
+        TestApp t = TestApp.create();
+        try {
+            t.app().use("/%zz", (req, res, next) -> next.run());
+            fail("undecodable prefix accepted");
+        } catch (IllegalArgumentException e) {
+            assertTrue(e.getMessage(), e.getMessage().contains("/%zz"));
+        }
+        t.app().get("/x", (req, res) -> res.send("x"));
+        assertEquals(200, t.send("GET", "/x").status());
     }
 
     // SDS-AC-11; IR-APP-003 AC-5

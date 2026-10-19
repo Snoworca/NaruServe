@@ -56,7 +56,8 @@ def mainDependencies = [
     ':NaruServe'          : [api: [':NaruServe-api'],
                              implementation: [':NaruServe-tinyhttpd', ':NaruServe-gson', ':NaruServe-logcat']],
     ':NaruServe-kotlin'   : [api: [':NaruServe-api', "org.jetbrains.kotlin:kotlin-stdlib:${kotlinVersion}"]],
-    ':NaruServe-slf4j'    : [api: [':NaruServe-api'], implementation: ['org.slf4j:slf4j-api:1.7.36']],
+    // api scope: the public Slf4jLogger(org.slf4j.Logger) constructor exposes the SLF4J type.
+    ':NaruServe-slf4j'    : [api: [':NaruServe-api', 'org.slf4j:slf4j-api:1.7.36']],
     ':NaruServe-filelog'  : [api: [':NaruServe-api']],
     ':NaruServe-logcat'   : [api: [':NaruServe-api']],
 ]

@@ -188,4 +188,57 @@ public class RotatingFileLoggerTest {
         assertTrue(text, text.contains(" TRACE t\n"));
         assertTrue(text, text.contains(" ERROR failed\njava.lang.IllegalStateException: boom\n"));
     }
+
+    // FR-APP-017 AC-2 — a rotation whose rename fails keeps the live file instead of truncating it
+    @Test
+    public void FR_APP_017_AC2_failedRotationRenameKeepsEarlierRecords() throws IOException {
+        File dir = tmp.newFolder("logs");
+        File blocker = new File(dir, "naruserve.log.1");
+        assertTrue(blocker.mkdir());
+        assertTrue(new File(blocker, "keep").createNewFile());
+        RotatingFileLogger logger = track(RotatingFileLogger.builder().directory(dir).maxFileBytes(60).maxFiles(2)
+                .build());
+        logger.info("first record");
+        logger.flush();
+        logger.info("second record padding padding padding");
+        logger.close();
+        String text = read(new File(dir, "naruserve.log"));
+        assertTrue(text, text.contains("INFO first record"));
+        assertTrue(text, text.contains("INFO second record"));
+    }
+
+    // FR-APP-017 AC-4 — a Throwable whose toString throws is dropped and counted, never thrown to the caller
+    @Test
+    public void FR_APP_017_AC4_throwingThrowableIsDroppedNotThrown() throws IOException {
+        File dir = tmp.newFolder("logs");
+        RotatingFileLogger logger = track(RotatingFileLogger.builder().directory(dir).build());
+        Throwable bad = new Throwable() {
+            @Override
+            public String toString() {
+                throw new IllegalStateException("toString failed");
+            }
+        };
+        logger.error("x", bad);
+        logger.flush();
+        assertEquals(1, logger.droppedCount());
+    }
+
+    // FR-APP-017 AC-5 — close() returns even when the writer died and the queue is full
+    @Test(timeout = 10000)
+    public void FR_APP_017_AC5_closeReturnsWhenTheWriterDiedWithAFullQueue() throws Exception {
+        File dir = tmp.newFolder("logs");
+        RotatingFileLogger.Builder b = RotatingFileLogger.builder().directory(dir).queueCapacity(1);
+        RotatingFileLogger logger = new RotatingFileLogger(b, (file, append) -> {
+            throw new AssertionError("writer dies");
+        });
+        logger.info("kills the writer");
+        logger.writer.join(5000);
+        assertFalse(logger.writer.isAlive());
+        logger.info("fills the queue");
+        Thread closer = new Thread(logger::close);
+        closer.setDaemon(true);
+        closer.start();
+        closer.join(3000);
+        assertFalse("close() hung on a dead writer", closer.isAlive());
+    }
 }

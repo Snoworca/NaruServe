@@ -3,6 +3,8 @@ package com.snoworca.naruserve.logcat;
 import com.snoworca.naruserve.Logger;
 import java.lang.reflect.Method;
 import java.util.Objects;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 /**
  * {@link Logger} over {@code android.util.Log}: trace, debug, info, warn and error go to {@code Log.v}, {@code d},
@@ -10,6 +12,7 @@ import java.util.Objects;
  * a failing {@code Log} call is swallowed.
  */
 // @req FR-APP-016
+@NullMarked
 public final class LogcatLogger implements Logger {
 
     private static final String LOG_CLASS = "android.util.Log";
@@ -76,13 +79,13 @@ public final class LogcatLogger implements Logger {
     }
 
     @Override
-    public void error(String message, Throwable error) {
+    public void error(String message, @Nullable Throwable error) {
         invoke(eThrowable, tag, message, error);
     }
 
     // A logger must never fail its caller, so every Throwable of the call stays here.
     // @req FR-APP-016
-    private static void invoke(Method m, Object... args) {
+    private static void invoke(Method m, @Nullable Object... args) {
         try {
             m.invoke(null, args);
         } catch (Throwable ignored) {

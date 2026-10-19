@@ -6,6 +6,7 @@ import com.snoworca.naruserve.RouteHandler;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
+import org.jspecify.annotations.Nullable;
 
 /**
  * The {@link Next} handed to one middleware invocation. {@code run()} and {@code error(e)} together are its single
@@ -26,6 +27,8 @@ final class ChainNext implements Next {
         final Thread owner = Thread.currentThread();
         volatile boolean ended;
         volatile boolean errorRouted;
+        // The throwable next.error(e) handed to the error path; a rethrow of it is expected, anything else is logged.
+        volatile @Nullable Throwable routedError;
 
         Chain(List<Middleware> steps, RouteHandler terminal, DefaultRequest req, DefaultResponse res,
                 ErrorPath errors, String requestId) {
@@ -73,6 +76,7 @@ final class ChainNext implements Next {
     public void error(Throwable error) {
         Objects.requireNonNull(error, "error");
         consume("next.error(e)");
+        chain.routedError = error;
         chain.errorRouted = true;
         chain.errors.handle(error, chain.req, chain.res, chain.requestId);
     }

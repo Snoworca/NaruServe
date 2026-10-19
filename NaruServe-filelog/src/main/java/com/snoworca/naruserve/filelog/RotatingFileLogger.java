@@ -19,6 +19,8 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 /**
  * File {@link Logger}: records at or above the level go through a bounded queue to one writer thread that appends
@@ -27,6 +29,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * in {@link #droppedCount()}; no logging call blocks or throws.
  */
 // @req FR-APP-017
+@NullMarked
 public final class RotatingFileLogger implements Logger, Flushable, AutoCloseable {
 
     static final String FILE_NAME = "naruserve.log";
@@ -52,7 +55,7 @@ public final class RotatingFileLogger implements Logger, Flushable, AutoCloseabl
     private boolean closed;
 
     // Writer thread only.
-    private OutputStream out;
+    private @Nullable OutputStream out;
     private long size;
 
     /** Defaults: directory {@code ./logs}, 5242880 bytes per file, 5 files, 1024 queued records, level INFO. */
@@ -100,15 +103,22 @@ public final class RotatingFileLogger implements Logger, Flushable, AutoCloseabl
     }
 
     @Override
-    public void error(String message, Throwable error) {
+    public void error(String message, @Nullable Throwable error) {
         log(LogLevel.ERROR, message, error);
     }
 
-    private void log(LogLevel at, String message, Throwable error) {
+    private void log(LogLevel at, String message, @Nullable Throwable error) {
         if (at.compareTo(level) < 0) {
             return;
         }
-        String line = format(at, message, error);
+        String line;
+        try {
+            line = format(at, message, error);
+        } catch (RuntimeException e) {
+            // A Throwable whose toString or printStackTrace throws must not reach the caller.
+            dropped.incrementAndGet();
+            return;
+        }
         synchronized (lock) {
             if (closed || !queue.offer(line)) {
                 dropped.incrementAndGet();
@@ -117,7 +127,7 @@ public final class RotatingFileLogger implements Logger, Flushable, AutoCloseabl
     }
 
     /** The IR-APP-006 console line, with the stack trace on the following lines. */
-    private static String format(LogLevel at, String message, Throwable error) {
+    private static String format(LogLevel at, String message, @Nullable Throwable error) {
         StringBuilder sb = new StringBuilder()
                 .append(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ", Locale.US).format(new Date()))
                 .append(' ').append(at.name()).append(' ').append(message).append('\n');
@@ -173,10 +183,12 @@ public final class RotatingFileLogger implements Logger, Flushable, AutoCloseabl
             closed = true;
         }
         boolean interrupted = false;
-        while (true) {
+        // A writer that died from an Error never frees queue space; stop waiting once it is gone.
+        while (writer.isAlive()) {
             try {
-                queue.put(STOP);
-                break;
+                if (queue.offer(STOP, 100, TimeUnit.MILLISECONDS)) {
+                    break;
+                }
             } catch (InterruptedException e) {
                 interrupted = true;
             }
@@ -228,9 +240,11 @@ public final class RotatingFileLogger implements Logger, Flushable, AutoCloseabl
             }
             if (size > 0 && size + bytes.length > maxFileBytes) {
                 closeStream();
-                rotate();
-                out = streams.open(new File(directory, FILE_NAME), false);
-                size = 0;
+                File file = new File(directory, FILE_NAME);
+                // A failed rename keeps the live file: append to it rather than truncate earlier records.
+                boolean movedAway = rotate();
+                out = streams.open(file, !movedAway);
+                size = movedAway ? 0 : file.length();
             }
             out.write(bytes, 0, bytes.length);
             out.flush();
@@ -241,14 +255,17 @@ public final class RotatingFileLogger implements Logger, Flushable, AutoCloseabl
         }
     }
 
-    /** {@code naruserve.log} becomes {@code .1}, {@code .n} becomes {@code .n+1}; the oldest is deleted. */
+    /**
+     * {@code naruserve.log} becomes {@code .1}, {@code .n} becomes {@code .n+1}; the oldest is deleted. Returns whether
+     * {@code naruserve.log} was moved or deleted, so the caller may start it empty.
+     */
     // @req FR-APP-017
-    void rotate() {
+    boolean rotate() {
         File oldest = new File(directory, FILE_NAME + "." + (maxFiles - 1));
         if (maxFiles == 1) {
             oldest = new File(directory, FILE_NAME);
         }
-        oldest.delete();
+        boolean deleted = oldest.delete();
         for (int n = maxFiles - 2; n >= 1; n--) {
             File from = new File(directory, FILE_NAME + "." + n);
             if (from.exists()) {
@@ -256,8 +273,9 @@ public final class RotatingFileLogger implements Logger, Flushable, AutoCloseabl
             }
         }
         if (maxFiles > 1) {
-            new File(directory, FILE_NAME).renameTo(new File(directory, FILE_NAME + ".1"));
+            return new File(directory, FILE_NAME).renameTo(new File(directory, FILE_NAME + ".1"));
         }
+        return deleted;
     }
 
     private void closeStream() {
