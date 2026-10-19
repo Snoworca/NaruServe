@@ -149,9 +149,18 @@ public final class DefaultResponse implements Response {
             }
             FileResponder.respond(req, this, r, file.getName(), type, null);
         } catch (FileNotFoundException e) {
+            dropDisposition(disposition);
             throw new HttpException(404, null, e);
         } catch (IOException e) {
+            dropDisposition(disposition);
             throw new HttpException(500, null, e);
+        }
+    }
+
+    /** A failed download keeps no attachment header, so an onError answer is not saved as a file. */
+    private synchronized void dropDisposition(@Nullable String disposition) {
+        if (disposition != null && state == ResponseState.NEW) {
+            remove("Content-Disposition");
         }
     }
 

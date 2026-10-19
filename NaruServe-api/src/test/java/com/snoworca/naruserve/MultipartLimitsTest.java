@@ -9,15 +9,21 @@ import com.snoworca.naruserve.internal.FormBodyReader;
 import com.snoworca.naruserve.internal.MultipartParser;
 import com.snoworca.naruserve.internal.MultipartSettings;
 import com.snoworca.naruserve.internal.SpoolRegistry;
+import com.snoworca.naruserve.testing.InMemoryHttpAdapter;
+import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientRequest;
+import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientResponse;
+import com.snoworca.naruserve.testing.StubJsonCodec;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.SequenceInputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -249,5 +255,81 @@ public class MultipartLimitsTest {
         } catch (HttpException e) {
             assertEquals(400, e.status());
         }
+    }
+
+    /**
+     * Posts {@code body} with {@code contentType} to an app limited by {@code config}; the handler reads
+     * req.parts() and onError records the HttpException without answering, so the default answer goes out.
+     */
+    private ClientResponse viaApp(Configurer<MultipartOptions> config, String contentType, String body,
+            List<Object> seen) {
+        InMemoryHttpAdapter adapter = new InMemoryHttpAdapter();
+        RestApp app = RestApp.builder().httpAdapter(adapter).jsonCodec(new StubJsonCodec()).build();
+        app.multipart(o -> config.configure(o.tempDirectory(tmp.getRoot())));
+        app.onError((error, req, res) -> seen.add("onError " + ((HttpException) error).status()));
+        app.post("/up", (req, res) -> {
+            try {
+                req.parts();
+            } catch (HttpException e) {
+                seen.add("accessor " + e.status());
+                throw e;
+            }
+            res.send("ok");
+        });
+        app.listen(0);
+        try {
+            byte[] b = body.getBytes(StandardCharsets.ISO_8859_1);
+            return adapter.send(ClientRequest.of("POST", "/up").header("Content-Type", contentType)
+                    .header("Content-Length", String.valueOf(b.length)).body(b));
+        } finally {
+            app.shutdown(5, TimeUnit.SECONDS);
+        }
+    }
+
+    private void assertAnswered(int status, String code, Configurer<MultipartOptions> config, String contentType,
+            String body) {
+        List<Object> seen = new ArrayList<>();
+        ClientResponse r = viaApp(config, contentType, body, seen);
+        String text = new String(r.body(), StandardCharsets.UTF_8);
+        assertEquals(text, status, r.status());
+        assertTrue(text, text.startsWith("{\"error\":{\"code\":\"" + code + "\""));
+        assertEquals(Arrays.<Object>asList("accessor " + status, "onError " + status), seen);
+        assertEquals(0, tmp.getRoot().list().length);
+    }
+
+    // FR-MULTIPART-002 AC-1, FR-MULTIPART-001 AC-4: every 413 limit answers the standard body through onError
+    @Test
+    public void FR_MULTIPART_002_AC1_limitsAnswer413StandardBodyThroughOnError() {
+        String mp = "multipart/form-data; boundary=" + B;
+        Configurer<MultipartOptions> none = o -> { };
+        assertAnswered(413, "PAYLOAD_TOO_LARGE", o -> o.maxFileSize(1024).memoryThreshold(100), mp,
+                file("f", repeat('a', 1025)) + close());
+        assertAnswered(413, "PAYLOAD_TOO_LARGE", o -> o.maxRequestSize(4096), mp,
+                text("a", repeat('a', 4100)) + close());
+        StringBuilder parts = new StringBuilder();
+        for (int i = 0; i < 21; i++) {
+            parts.append(text("p" + i, "v"));
+        }
+        assertAnswered(413, "PAYLOAD_TOO_LARGE", none, mp, parts + close());
+        String prefix = "Content-Disposition: form-data; name=\"a\"; x=\"";
+        String line8193 = prefix + repeat('h', 8193 - prefix.length() - 1) + "\"";
+        assertAnswered(413, "PAYLOAD_TOO_LARGE", none, mp, "--" + B + "\r\n" + line8193 + "\r\n\r\nv\r\n" + close());
+        String filler = "X-Fill: " + repeat('f', 8000);
+        assertAnswered(413, "PAYLOAD_TOO_LARGE", none, mp, "--" + B + "\r\nContent-Disposition: form-data; name=\"a\"\r\n"
+                + filler + "\r\n" + filler + "\r\n" + filler + "\r\n\r\nv\r\n" + close());
+    }
+
+    // FR-MULTIPART-001 AC-2: a bad boundary or a missing delimiter answers 400 with the standard body through onError
+    @Test
+    public void FR_MULTIPART_001_AC2_malformedBodyAnswers400StandardBodyThroughOnError() {
+        Configurer<MultipartOptions> none = o -> { };
+        String body = text("a", "v") + close();
+        assertAnswered(400, "BAD_REQUEST", none, "multipart/form-data", body);
+        assertAnswered(400, "BAD_REQUEST", none, "multipart/form-data; boundary=", body);
+        assertAnswered(400, "BAD_REQUEST", none, "multipart/form-data; boundary=" + repeat('b', 71), body);
+        assertAnswered(400, "BAD_REQUEST", none, "multipart/form-data; boundary=a<b", body);
+        String mp = "multipart/form-data; boundary=" + B;
+        assertAnswered(400, "BAD_REQUEST", none, mp, "no delimiter here");
+        assertAnswered(400, "BAD_REQUEST", none, mp, text("a", "v"));
     }
 }

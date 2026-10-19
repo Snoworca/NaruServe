@@ -100,6 +100,19 @@ public class FileResponseTest {
         assertEquals("application/pdf", t.send("GET", "/d").header("Content-Type"));
     }
 
+    // FR-STATIC-011 AC-2: a failed download leaves no Content-Disposition for the onError answer
+    @Test
+    public void FR_STATIC_011_AC2_failedDownloadDropsDispositionBeforeOnError() {
+        File missing = new File(tmp.getRoot(), "missing.pdf");
+        TestApp t = TestApp.create();
+        t.app().onError((error, req, res) -> res.status(((HttpException) error).status()).send("gone"));
+        t.app().get("/d", (req, res) -> res.download(missing, "x.pdf"));
+        ClientResponse r = t.send("GET", "/d");
+        assertEquals(404, r.status());
+        assertEquals("gone", text(r));
+        assertNull(r.header("Content-Disposition"));
+    }
+
     // SDS-AC-5; FR-STATIC-009 AC-2
     @Test
     public void sdsAc5_FR_STATIC_009_AC2_otherMethodsIgnoreConditionalsAndRange() throws IOException {

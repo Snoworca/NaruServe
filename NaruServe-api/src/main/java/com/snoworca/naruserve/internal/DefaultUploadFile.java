@@ -114,12 +114,15 @@ public final class DefaultUploadFile implements UploadFile {
         close();
     }
 
-    /** Copies through a truncating FileOutputStream, never File.renameTo, then releases the content. */
+    /**
+     * Copies through a truncating FileOutputStream, never File.renameTo, then releases the content. The content
+     * stream is opened first, so a released part throws before the destination is truncated.
+     */
     // @req FR-MULTIPART-005
     @Override
     public void save(File destination) throws IOException {
-        try (OutputStream out = new FileOutputStream(destination)) {
-            transferTo(out);
+        try (InputStream in = inputStream(); OutputStream out = new FileOutputStream(destination)) {
+            copy(in, out);
         }
         close();
     }
@@ -128,13 +131,17 @@ public final class DefaultUploadFile implements UploadFile {
     @Override
     public void transferTo(OutputStream target) throws IOException {
         try (InputStream in = inputStream()) {
-            byte[] b = new byte[8192];
-            int n;
-            while ((n = in.read(b)) >= 0) {
-                target.write(b, 0, n);
-            }
+            copy(in, target);
         }
         target.flush();
+    }
+
+    private static void copy(InputStream in, OutputStream out) throws IOException {
+        byte[] b = new byte[8192];
+        int n;
+        while ((n = in.read(b)) >= 0) {
+            out.write(b, 0, n);
+        }
     }
 
     // @req FR-MULTIPART-005

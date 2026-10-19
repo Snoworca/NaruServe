@@ -176,6 +176,33 @@ public class DefaultUploadFileTest {
         }
     }
 
+    // FR-MULTIPART-005 AC-4, FR-MULTIPART-005 AC-5: a refused save leaves the destination untouched
+    @Test
+    public void FR_MULTIPART_005_AC5_refusedSaveNeverTruncatesDestination() throws Exception {
+        byte[] c = content(3000);
+        for (int threshold : new int[] {100, 65536}) {
+            File dest = tmp.newFile();
+            DefaultUploadFile f = part(c, threshold);
+            f.save(dest);
+            try {
+                f.save(dest);
+                fail("second save did not throw");
+            } catch (IllegalStateException expected) {
+                // the content was released by the first save
+            }
+            assertArrayEquals(c, read(dest));
+            DefaultUploadFile ended = part(c, threshold);
+            ended.release();
+            try {
+                ended.save(dest);
+                fail("save after the request ended did not throw");
+            } catch (IllegalStateException expected) {
+                // the request ended
+            }
+            assertArrayEquals(c, read(dest));
+        }
+    }
+
     // FR-MULTIPART-005 AC-5
     @Test
     public void sdsAc5_FR_MULTIPART_005_AC5_closeReleasesContentAndKeepsMetadata() throws Exception {

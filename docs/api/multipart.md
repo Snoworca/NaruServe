@@ -113,6 +113,7 @@ public interface UploadFile extends AutoCloseable {
 
 ## 보안
 
+- `filename()`은 클라이언트 값을 그대로 돌려줍니다. 브라우저처럼 역슬래시를 그대로 보낸 이름(`C:\fakepath\a.txt`)도 바뀌지 않고, 따옴표 안의 `\"`와 `\\`만 이스케이프로 풉니다.
 - **`filename()`을 저장 경로에 그대로 쓰지 마세요.** `../../etc/passwd` 같은 값이 올 수 있습니다. 서버에서 이름을 만들고, 허용 확장자와 내용을 검사하고, 정해진 폴더 안에만 저장하세요.
 - `contentType()`과 확장자는 클라이언트가 마음대로 정합니다. 파일 종류는 내용으로 확인하세요.
 
@@ -120,4 +121,6 @@ public interface UploadFile extends AutoCloseable {
 
 - 업로드 파일은 `memoryThreshold`를 넘으면 임시 폴더에 저장됩니다. 요청 전체를 메모리에 올리지 않습니다.
 - 임시 파일은 요청이 끝날 때, `save()`가 성공한 뒤, 한도를 넘어 `413`으로 답한 뒤, 클라이언트가 중간에 끊었을 때, 앱을 `shutdown`할 때 지워집니다.
+- 요청은 응답이 끝나고 **그리고** 핸들러가 반환했을 때 끝납니다. 그래서 `res.status(202).send("queued")`로 먼저 답한 뒤 같은 핸들러 안에서 `file.save(dest)`해도 됩니다. 이렇게 정한 이유는 먼저 답하고 나중에 처리하는 Express/multer 패턴을 그대로 쓰게 하려는 것입니다.
 - 그래서 **요청이 끝난 뒤에는 `UploadFile`을 쓸 수 없습니다.** `inputStream()`을 다른 스레드에 넘겨 나중에 읽지 마세요. 나중에 처리할 파일은 핸들러 안에서 `save()`하세요.
+- 이미 쓸 수 없게 된 파트에 `save(dest)`를 부르면 `dest`를 건드리지 않고 `IllegalStateException`을 던집니다. 앞서 저장한 파일이 지워지지 않습니다.

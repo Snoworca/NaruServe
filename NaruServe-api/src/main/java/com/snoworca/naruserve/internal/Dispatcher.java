@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -163,8 +164,16 @@ public final class Dispatcher implements ExchangeHandler {
         res.mimeTypes(statics.mimeTypes());
         res.request(req);
         res.applyDefaultCache(statics.defaultCache());
+        // The request ends once the response finished (complete or abort) and the handler chain returned, so a
+        // handler may still save() an upload after res.send(); whichever comes last releases the uploads.
+        AtomicInteger untilEnd = new AtomicInteger(2);
+        Runnable endOne = () -> {
+            if (untilEnd.decrementAndGet() == 0) {
+                req.releaseUploads();
+            }
+        };
         res.onDone(() -> {
-            req.releaseUploads(); // complete or abort: the request ended
+            endOne.run();
             accessLog.write(token, rawPath, res.statusCode(), res.state() == ResponseState.ABORTED, start,
                     req.body().bytesRead(), res.bytesWritten(), rid);
         });
@@ -191,6 +200,8 @@ public final class Dispatcher implements ExchangeHandler {
             res.abort(e); // closes a pending stream before the Error reaches the adapter
             req.releaseUploads();
             throw e;
+        } finally {
+            endOne.run();
         }
         finish(req, res);
     }

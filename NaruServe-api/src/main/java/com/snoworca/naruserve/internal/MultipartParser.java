@@ -145,7 +145,10 @@ public final class MultipartParser {
         return (semi < 0 ? value : value.substring(0, semi)).trim().toLowerCase(Locale.ROOT);
     }
 
-    /** The parameters after the first ';', names lower-cased, first occurrence kept, quoted-strings unquoted. */
+    /**
+     * The parameters after the first ';', names lower-cased, first occurrence kept, quoted-strings unquoted with
+     * only {@code \"} and {@code \\} unescaped.
+     */
     static Map<String, String> params(String value) {
         Map<String, String> m = new LinkedHashMap<>();
         int n = value.length();
@@ -174,7 +177,8 @@ public final class MultipartParser {
                     boolean closed = false;
                     while (i < n) {
                         char c = value.charAt(i++);
-                        if (c == '\\' && i < n) {
+                        // Browsers send a filename's backslash raw: only \" and \\ are escapes, others stay literal.
+                        if (c == '\\' && i < n && (value.charAt(i) == '"' || value.charAt(i) == '\\')) {
                             sb.append(value.charAt(i++));
                         } else if (c == '"') {
                             closed = true;

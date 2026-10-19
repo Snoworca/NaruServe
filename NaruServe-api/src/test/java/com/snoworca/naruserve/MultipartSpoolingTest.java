@@ -6,9 +6,15 @@ import static org.junit.Assert.assertTrue;
 
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter;
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientRequest;
+import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientResponse;
 import com.snoworca.naruserve.testing.StubJsonCodec;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryMXBean;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -98,5 +104,133 @@ public class MultipartSpoolingTest {
         assertFalse(new File("evil.sh").exists());
         assertFalse(new File(dir, "b").exists());
         assertEquals(Arrays.asList("t"), Arrays.asList(tmp.getRoot().list()));
+    }
+
+    /** One text part named {@code name} of {@code size} 't' bytes, without the close delimiter. */
+    private static String textPart(String name, int size) {
+        char[] v = new char[size];
+        Arrays.fill(v, 't');
+        return "--" + B + "\r\nContent-Disposition: form-data; name=\"" + name + "\"\r\n\r\n" + new String(v) + "\r\n";
+    }
+
+    /** Posts {@code body} to an app with the default limits, a temp directory {@code dir} and {@code handler}. */
+    private static ClientResponse post(File dir, byte[] body, RouteHandler handler) {
+        InMemoryHttpAdapter adapter = new InMemoryHttpAdapter();
+        RestApp app = RestApp.builder().httpAdapter(adapter).jsonCodec(new StubJsonCodec()).build();
+        app.multipart(o -> o.tempDirectory(dir));
+        app.post("/up", handler);
+        app.listen(0);
+        try {
+            return adapter.send(ClientRequest.of("POST", "/up")
+                    .header("Content-Type", "multipart/form-data; boundary=" + B)
+                    .header("Content-Length", String.valueOf(body.length)).body(body));
+        } finally {
+            app.shutdown(5, TimeUnit.SECONDS);
+        }
+    }
+
+    private static String text(ClientResponse r) {
+        return new String(r.body(), StandardCharsets.UTF_8);
+    }
+
+    // FR-MULTIPART-004 AC-4: a browser sends a backslash in filename raw; it reaches filename() unchanged
+    @Test
+    public void FR_MULTIPART_004_AC4_rawBackslashInFilenameIsKept() throws Exception {
+        File dir = tmp.newFolder("t");
+        String[][] cases = {{"a/b\\c.txt", "a/b\\c.txt"}, {"C:\\fakepath\\a.txt", "C:\\fakepath\\a.txt"},
+            {"a\\\"b.txt", "a\"b.txt"}};
+        for (String[] c : cases) {
+            List<Object> seen = new ArrayList<>();
+            upload(dir, filePart(c[0], 10), seen);
+            assertEquals(c[0], Arrays.asList(c[1]), seen);
+        }
+    }
+
+    // FR-MULTIPART-004 AC-5: text parts total at most formLimit (default 1 MiB); above it 413 with the standard body
+    @Test
+    public void FR_MULTIPART_004_AC5_textPartTotalIsCappedByFormLimit() throws Exception {
+        File dir = tmp.newFolder("t");
+        List<Object> seen = new ArrayList<>();
+        RouteHandler h = (req, res) -> {
+            String v = req.form("a");
+            seen.add(v == null ? -1 : v.length());
+            seen.add(req.parts().size());
+            seen.add(req.parts().get(0).size());
+            res.send("ok");
+        };
+        byte[] one = (textPart("a", 1048576) + "--" + B + "--\r\n").getBytes(StandardCharsets.UTF_8);
+        assertEquals(200, post(dir, one, h).status());
+        assertEquals(Arrays.<Object>asList(1048576, 1, 1048576L), seen);
+        byte[] over = (textPart("a", 1048577) + "--" + B + "--\r\n").getBytes(StandardCharsets.UTF_8);
+        byte[] two = (textPart("a", 600000) + textPart("b", 600000) + "--" + B + "--\r\n")
+                .getBytes(StandardCharsets.UTF_8);
+        for (byte[] body : new byte[][] {over, two}) {
+            seen.clear();
+            ClientResponse r = post(dir, body, h);
+            assertEquals(413, r.status());
+            assertTrue(text(r), text(r).startsWith("{\"error\":{\"code\":\"PAYLOAD_TOO_LARGE\""));
+            assertEquals(Arrays.asList(), seen);
+        }
+        assertEquals(0, dir.list().length);
+    }
+
+    // FR-MULTIPART-004 AC-2: a 32 MiB upload with the default 64 KiB threshold grows the used heap by under 8 MiB
+    @Test
+    public void FR_MULTIPART_004_AC2_spooledUploadKeepsHeapGrowthUnder8MiB() throws Exception {
+        File dir = tmp.newFolder("t");
+        MemoryMXBean mem = ManagementFactory.getMemoryMXBean();
+        InMemoryHttpAdapter adapter = new InMemoryHttpAdapter();
+        RestApp app = RestApp.builder().httpAdapter(adapter).jsonCodec(new StubJsonCodec()).build();
+        app.multipart(o -> o.tempDirectory(dir));
+        long[] heap = new long[2];
+        app.post("/up", (req, res) -> {
+            UploadFile f = req.file("f");
+            System.gc();
+            heap[1] = mem.getHeapMemoryUsage().getUsed();
+            res.send(f == null ? "none" : String.valueOf(f.size()));
+        });
+        app.listen(0);
+        try {
+            byte[] body = filePart("big.bin", 33554432);
+            ClientRequest request = ClientRequest.of("POST", "/up")
+                    .header("Content-Type", "multipart/form-data; boundary=" + B)
+                    .header("Content-Length", String.valueOf(body.length)).body(body);
+            body = null; // the request holds its own copy; only parser growth is measured
+            System.gc();
+            heap[0] = mem.getHeapMemoryUsage().getUsed();
+            ClientResponse r = adapter.send(request);
+            assertEquals(text(r), "33554432", text(r));
+        } finally {
+            app.shutdown(5, TimeUnit.SECONDS);
+        }
+        long growth = heap[1] - heap[0];
+        assertTrue("heap grew by " + growth, growth < 8388608L);
+    }
+
+    // FR-MULTIPART-005 AC-4, FR-MULTIPART-006 AC-1: the request ends when the handler returned and the response
+    // finished, so save() after res.send() in the same handler still works and the temp file is gone afterwards
+    @Test
+    public void FR_MULTIPART_006_AC1_saveAfterSendInTheSameHandlerWorks() throws Exception {
+        File dir = tmp.newFolder("t");
+        File dest = new File(tmp.getRoot(), "dest.bin");
+        List<Object> seen = new ArrayList<>();
+        ClientResponse r = post(dir, filePart("a.bin", 100000), (req, res) -> {
+            UploadFile f = req.file("f");
+            res.status(202).send("queued");
+            try {
+                if (f != null) {
+                    f.save(dest);
+                    seen.add(dest.length());
+                }
+            } catch (IllegalStateException | IOException e) {
+                seen.add(e.toString());
+            }
+        });
+        assertEquals(202, r.status());
+        assertEquals(Arrays.<Object>asList(100000L), seen);
+        try (InputStream in = new FileInputStream(dest)) {
+            assertEquals('x', in.read());
+        }
+        assertEquals(0, dir.list().length);
     }
 }
