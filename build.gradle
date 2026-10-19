@@ -197,6 +197,14 @@ project(':NaruServe-gson') {
     }
 }
 
+// TinyHttpd adapter socket tests drive a real app over the adapter with the fixture codec and logger (FR-ENGINE-001).
+project(':NaruServe-tinyhttpd') {
+    // @req FR-ENGINE-001
+    dependencies {
+        testImplementation testFixtures(project(':NaruServe-api'))
+    }
+}
+
 // Android 5.0 (API 21) is the minimum runtime: fail the build on any API that API 21 lacks.
 configure(androidModules.collect { project(it) }) {
     apply plugin: 'ru.vyarus.animalsniffer'
