@@ -14,6 +14,7 @@ import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -116,11 +117,21 @@ public final class Dispatcher implements ExchangeHandler {
      *
      * <p>shortcut: DefaultRequest and DefaultResponse arrive with wave-3 parts 4 and 5; until then a matched HTTP
      * route cannot run, so this throws and the adapter closes the exchange abnormally. Replace with the handler
-     * call and the interim failure rules (FR-HTTP-004, FR-HTTP-006) when those classes land.
+     * call and the interim failure rules (FR-HTTP-004, FR-HTTP-006) when those classes land. A malformed query is
+     * already answered 400 before the handler (FR-HTTP-010).
      */
     // @req FR-HTTP-004
     // @req FR-HTTP-006
+    // @req FR-HTTP-010
     void invoke(RouteMatch<RouteHandler> m, HttpExchange ex) {
+        Method method = m.autoHead() ? Method.HEAD : Objects.requireNonNull(m.method());
+        DefaultRequest req = new DefaultRequest(ex, method, m.params());
+        try {
+            req.decodeQuery();
+        } catch (IllegalArgumentException e) {
+            automatic(ex, 400, null, false);
+            return;
+        }
         throw new UnsupportedOperationException(
                 "handler invocation needs DefaultRequest and DefaultResponse (wave-3 parts 4 and 5)");
     }
