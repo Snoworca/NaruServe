@@ -163,6 +163,23 @@ public final class DefaultResponse implements Response {
         }
     }
 
+    /**
+     * A file body that failed before the commit keeps none of its validator, range and cache headers, so an onError
+     * answer does not carry them; {@code cache} also drops the Cache-Control the file answer set.
+     */
+    // @req FR-STATIC-011
+    synchronized void dropFileHeaders(boolean cache) {
+        if (state == ResponseState.NEW) {
+            remove("ETag");
+            remove("Last-Modified");
+            remove("Accept-Ranges");
+            remove("Content-Range");
+            if (cache) {
+                remove("Cache-Control");
+            }
+        }
+    }
+
     /** A failed download keeps no attachment header, so an onError answer is not saved as a file. */
     private synchronized void dropDisposition(@Nullable String disposition) {
         if (disposition != null && state == ResponseState.NEW) {
@@ -317,6 +334,10 @@ public final class DefaultResponse implements Response {
     // @req FR-HTTP-017
     @Override
     public void stream(InputStream in, String contentType) {
+        if (contentType == null) { // only the internal sendBody path passes no type
+            closeQuietly(in);
+            throw new NullPointerException("contentType");
+        }
         startBody(in, 0, contentType, -1);
     }
 

@@ -711,4 +711,20 @@ public class ResponseStreamTest {
             pool.shutdownNow();
         }
     }
+    // FR-HTTP-014: res.stream with a null content type throws NullPointerException before any commit and closes in
+    @Test
+    public void FR_HTTP_014_streamRejectsNullContentTypeBeforeCommit() {
+        RecordingExchange ex = new RecordingExchange("GET", "/s");
+        DefaultResponse res = new DefaultResponse(ex, false);
+        CountingInputStream in = new CountingInputStream(data(10));
+        try {
+            res.stream(in, null);
+            fail("null content type accepted");
+        } catch (NullPointerException expected) {
+            // refused
+        }
+        assertEquals(0, ex.commits.get());
+        assertEquals(ResponseState.NEW, res.state());
+        assertEquals(1, in.closes);
+    }
 }

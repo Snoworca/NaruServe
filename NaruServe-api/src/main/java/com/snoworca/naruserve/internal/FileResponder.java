@@ -48,9 +48,19 @@ final class FileResponder {
     // @req FR-STATIC-011
     static void respond(DefaultRequest req, DefaultResponse res, ResourceResolver r, String path, String type,
             @Nullable CachePolicy policy) throws IOException {
-        long length = r.length(path);
-        String tag = r.etag(path);
-        long modified = r.modified(path);
+        long length;
+        long modified;
+        String tag;
+        if (r instanceof FileResourceResolver) {
+            long[] stat = ((FileResourceResolver) r).stat(path); // one check, one File: the ETag matches the rest
+            length = stat[0];
+            modified = stat[1];
+            tag = etag(length, modified);
+        } else { // a ResolverTap test wrapper
+            length = r.length(path);
+            tag = r.etag(path);
+            modified = r.modified(path);
+        }
         long seconds = modified / 1000;
         Method method = req.method();
         boolean conditional = method == Method.GET || method == Method.HEAD;
@@ -79,6 +89,7 @@ final class FileResponder {
             if (in != null) {
                 in.close(); // a refused header (response already committed) must not leak the descriptor
             }
+            res.dropFileHeaders(policy != null);
             throw e;
         }
     }

@@ -124,6 +124,13 @@ final class FileResourceResolver implements ResourceResolver {
         return in;
     }
 
+    /** {@code {length, lastModified}} of one {@code File} after one check. */
+    // @req FR-STATIC-009
+    long[] stat(String path) throws IOException {
+        File f = file(path);
+        return new long[] {f.length(), f.lastModified()};
+    }
+
     // @req IR-STATIC-001
     @Override
     public long length(String path) throws IOException {
@@ -133,8 +140,8 @@ final class FileResourceResolver implements ResourceResolver {
     // @req IR-STATIC-001
     @Override
     public String etag(String path) throws IOException {
-        File f = file(path);
-        return FileResponder.etag(f.length(), f.lastModified());
+        long[] stat = stat(path);
+        return FileResponder.etag(stat[0], stat[1]);
     }
 
     // @req IR-STATIC-001

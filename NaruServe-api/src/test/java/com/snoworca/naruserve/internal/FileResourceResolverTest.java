@@ -98,7 +98,7 @@ public class FileResourceResolverTest {
     }
 
     /** A real resolver that records each call with its delegate's class, then delegates. */
-    private static final class Recording implements ResourceResolver {
+    private static class Recording implements ResourceResolver {
         private final ResourceResolver delegate;
         private final List<String> calls;
 
@@ -168,6 +168,59 @@ public class FileResourceResolverTest {
             synchronized (calls) {
                 assertEquals(path, expected, calls);
             }
+        }
+    }
+
+    // FR-STATIC-010, FR-STATIC-011: a file body that fails before the commit leaves none of the file headers for an
+    // onError handler that answers itself
+    @Test
+    public void FR_STATIC_011_failureBeforeCommitDropsFileHeadersForOnErrorAnswer() throws Exception {
+        File root = tmp.newFolder("shrunk");
+        try (OutputStream out = new FileOutputStream(new File(root, "a.txt"))) {
+            out.write("hello".getBytes(StandardCharsets.UTF_8));
+        }
+        TestApp t = TestApp.create();
+        t.app().staticFiles("/s", root, o -> o.cache("*", com.snoworca.naruserve.CachePolicy.noStore()));
+        t.app().onError((error, req, res) -> res.status(500).send("failed"));
+        assertEquals(200, t.send("GET", "/s/a.txt").status()); // listens
+        Field f = Dispatcher.class.getDeclaredField("statics");
+        f.setAccessible(true);
+        StaticHandler statics = (StaticHandler) f.get(((DefaultRestApp) t.app()).dispatcher());
+        // The file shrank to nothing between the metadata read and the open, so the range skip fails pre-commit.
+        statics.resolverTap(r -> new Recording(r, new ArrayList<String>()) {
+            @Override
+            public InputStream open(String path) throws IOException {
+                r.open(path).close();
+                return new java.io.ByteArrayInputStream(new byte[0]);
+            }
+        });
+        ClientResponse r = t.send("GET", "/s/a.txt", "Range", "bytes=2-");
+        assertEquals(500, r.status());
+        assertEquals("failed", new String(r.body(), StandardCharsets.UTF_8));
+        for (String h : new String[] {"ETag", "Last-Modified", "Accept-Ranges", "Cache-Control", "Content-Range",
+                "Content-Disposition"}) {
+            assertEquals(h, null, r.header(h));
+        }
+    }
+
+    // FR-STATIC-009: one checked snapshot gives the length and modified time the ETag is built from
+    @Test
+    public void FR_STATIC_009_statReadsLengthAndModifiedFromOneCheck() throws Exception {
+        File root = tmp.newFolder("stat").getCanonicalFile();
+        File a = new File(root, "a.txt");
+        try (OutputStream out = new FileOutputStream(a)) {
+            out.write("hello".getBytes(StandardCharsets.UTF_8));
+        }
+        FileResourceResolver r = new FileResourceResolver(root, false);
+        long[] stat = r.stat("a.txt");
+        assertEquals(5, stat[0]);
+        assertEquals(a.lastModified(), stat[1]);
+        assertEquals(FileResponder.etag(stat[0], stat[1]), r.etag("a.txt"));
+        try {
+            r.stat("missing.txt");
+            fail("missing file read");
+        } catch (FileNotFoundException expected) {
+            // refused
         }
     }
 }
