@@ -4,8 +4,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.snoworca.naruserve.RestApp;
-import com.snoworca.naruserve.gson.GsonJsonCodec;
-import com.snoworca.naruserve.tinyhttpd.TinyHttpdAdapter;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -23,8 +21,7 @@ public class JvmLifetimeTest {
     public static final class Child {
 
         public static void main(String[] args) {
-            // shortcut: assembled by hand until DefaultAppFactory (SDS wave-5-7) backs RestApp.create().
-            RestApp app = RestApp.builder().httpAdapter(new TinyHttpdAdapter()).jsonCodec(new GsonJsonCodec()).build();
+            RestApp app = RestApp.create();
             app.get("/alive", (req, res) -> res.send("alive"));
             app.get("/shutdown", (req, res) -> {
                 app.shutdown(5, TimeUnit.SECONDS);

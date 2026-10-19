@@ -205,6 +205,17 @@ project(':NaruServe-tinyhttpd') {
     }
 }
 
+// DefaultAppFactoryTest reads the services file and naruserve-bootstrap.pro from the built jar (FR-ENGINE-009 AC-4).
+project(':NaruServe') {
+    // @req FR-ENGINE-009
+    def bootstrapJar = tasks.named('jar').flatMap { it.archiveFile }
+    tasks.named('test') {
+        dependsOn tasks.named('jar')
+        inputs.file(bootstrapJar)
+        doFirst { systemProperty 'naruserve.bootstrapJar', bootstrapJar.get().asFile.absolutePath }
+    }
+}
+
 // Android 5.0 (API 21) is the minimum runtime: fail the build on any API that API 21 lacks.
 configure(androidModules.collect { project(it) }) {
     apply plugin: 'ru.vyarus.animalsniffer'
