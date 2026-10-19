@@ -5,6 +5,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 
 import com.snoworca.naruserve.Cookie;
+import java.io.File;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -76,5 +78,19 @@ public class CookieParserTest {
                 org.junit.Assert.assertTrue(expected.getMessage().contains("value"));
             }
         }
+    }
+
+    // IR-COOKIE-001 AC-6: the hook resolves its Method once through Class.forName, which also initialises Cookie
+    @Test
+    public void IR_COOKIE_001_AC6_hookResolvesTheFactoryThroughClassForName() throws Exception {
+        String rel = "src/main/java/com/snoworca/naruserve/internal/CookieFactoryHook.java";
+        File src = new File(System.getProperty("user.dir"), rel);
+        if (!src.isFile()) {
+            src = new File(System.getProperty("user.dir"), "NaruServe-api/" + rel);
+        }
+        String text = new String(java.nio.file.Files.readAllBytes(src.toPath()), StandardCharsets.UTF_8);
+        org.junit.Assert.assertTrue(text.contains("Class.forName(\"com.snoworca.naruserve.Cookie\")"));
+        org.junit.Assert.assertFalse(text.contains("Cookie.class"));
+        assertEquals("v", CookieFactoryHook.create("n", "v").getValue());
     }
 }
