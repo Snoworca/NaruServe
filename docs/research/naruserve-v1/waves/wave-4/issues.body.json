@@ -1,0 +1,98 @@
+{
+ "wave": 4,
+ "issues": [
+  {
+   "issueId": "w4-P1-001",
+   "wave": 4,
+   "class": "local-defect",
+   "source": "loop P r1 P1-001",
+   "resolutionKind": "commit-sha",
+   "resolutionRef": "44340a6ac4f4eed3ffdfd5fd00f3272c8b9c7e5d",
+   "userDecisionRef": null,
+   "designLockDigest": null,
+   "deferralReason": null
+  },
+  {
+   "issueId": "w4-P1-002",
+   "wave": 4,
+   "class": "local-defect",
+   "source": "loop P r1 P1-002 (= P2-001)",
+   "resolutionKind": "commit-sha",
+   "resolutionRef": "a6e9fbe31a145333369d669970648e17c0d38be9",
+   "userDecisionRef": null,
+   "designLockDigest": null,
+   "deferralReason": null
+  },
+  {
+   "issueId": "w4-P1-003",
+   "wave": 4,
+   "class": "local-defect",
+   "source": "loop P r1 P1-003",
+   "resolutionKind": "commit-sha",
+   "resolutionRef": "44340a6ac4f4eed3ffdfd5fd00f3272c8b9c7e5d",
+   "userDecisionRef": null,
+   "designLockDigest": null,
+   "deferralReason": null
+  },
+  {
+   "issueId": "w4-S2-001",
+   "wave": 4,
+   "class": "local-defect",
+   "source": "loop P r1 stage 2 S2-001",
+   "resolutionKind": "commit-sha",
+   "resolutionRef": "a6e9fbe31a145333369d669970648e17c0d38be9",
+   "userDecisionRef": null,
+   "designLockDigest": null,
+   "deferralReason": null
+  },
+  {
+   "issueId": "w4-S2-002",
+   "wave": 4,
+   "class": "local-defect",
+   "source": "loop P r1 stage 2 S2-002",
+   "resolutionKind": "commit-sha",
+   "resolutionRef": "a6e9fbe31a145333369d669970648e17c0d38be9",
+   "userDecisionRef": null,
+   "designLockDigest": null,
+   "deferralReason": null
+  },
+  {
+   "issueId": "w4-D-001",
+   "wave": 4,
+   "class": "local-defect",
+   "source": "stage 4 duplication audit",
+   "resolutionKind": "commit-sha",
+   "resolutionRef": "a6e9fbe31a145333369d669970648e17c0d38be9",
+   "userDecisionRef": null,
+   "designLockDigest": null,
+   "deferralReason": null
+  },
+  {
+   "issueId": "w4-D-002",
+   "wave": 4,
+   "class": "local-defect",
+   "source": "stage 4 duplication audit",
+   "resolutionKind": "commit-sha",
+   "resolutionRef": "a6e9fbe31a145333369d669970648e17c0d38be9",
+   "userDecisionRef": null,
+   "designLockDigest": null,
+   "deferralReason": null
+  },
+  {
+   "issueId": "w4-D-003",
+   "wave": 4,
+   "class": "local-defect",
+   "source": "stage 4 duplication audit",
+   "resolutionKind": "commit-sha",
+   "resolutionRef": "a6e9fbe31a145333369d669970648e17c0d38be9",
+   "userDecisionRef": null,
+   "designLockDigest": null,
+   "deferralReason": null
+  }
+ ],
+ "counts": {
+  "local-defect": 8,
+  "open": 0,
+  "resolved": 8
+ }
+}

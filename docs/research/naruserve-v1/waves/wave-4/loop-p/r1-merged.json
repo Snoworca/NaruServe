@@ -1,0 +1,47 @@
+{
+ "findings": [
+  {
+   "finding_id": "P1-001",
+   "severity": "medium",
+   "claim": "Process gap: behaviour and public API added by commit 9b502e3 have no SRS acceptance criterion. shutdown() called from a request thread runs the sequence on a separate non-daemon 'naruserve-shutdown' thread and returns at once (inline fallback when the thread cannot start), and RotatingFileLogger gains public rotationFailureCount() with backoff-on-rename-failure semantics. FR-APP-011 (AC-5 is two-thread concurrency) and FR-APP-017 (AC-2 is rotation naming) do not state either, yet tests cite them (FR_APP_011_AC5_shutdownFromARouteHandler..., FR_APP_017_AC2_persistentRenameFailure...). CLAUDE.md forbids behaviour not covered by an SRS requirement.",
+   "evidence": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:375; NaruServe-filelog/src/main/java/com/snoworca/naruserve/filelog/RotatingFileLogger.java:158; docs/api/lifecycle.md:170; docs/api/logging.md:118; docs/spec/05.application.srs.md:1217,1681",
+   "suggested_fix": "Add ACs through kiwi-srs-sync/MCP: FR-APP-011 AC for in-request shutdown (non-blocking, response completes, TERMINATED reached, inline fallback) and FR-APP-017 AC for rotation-failure counting/backoff with rotationFailureCount(); re-point the two test ids to them."
+  },
+  {
+   "finding_id": "P1-002",
+   "severity": "low",
+   "claim": "BuildLayoutTest still names the discarded OPS-HTTP-002 AC-1 (superseded by OPS-HTTP-004) in its comment and method id, so traceability scans see a reference to a discarded requirement.",
+   "evidence": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:266-268",
+   "suggested_fix": "Rename to cite OPS-HTTP-004 AC-1 (or drop the citation since BuildChecksTest:365 now carries it)."
+  },
+  {
+   "finding_id": "P1-003",
+   "severity": "low",
+   "claim": "SDS wave-4-4 (status agreed) interface signatures drift from code: MiddlewarePipeline.run gains ErrorPath and requestId parameters and Dispatcher.fallback gains requestId; SDS-AC-11 says the Dispatcher hands exceptions to ErrorPath while run now receives ErrorPath. Behaviour matches the SRS; only the SDS text is stale.",
+   "evidence": "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-4.sds.md:29,35,63; NaruServe-api/src/main/java/com/snoworca/naruserve/internal/MiddlewarePipeline.java:67; NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:247",
+   "suggested_fix": "Update the SDS signatures at kiwi-sds --close (or before closing) so the closed record matches code."
+  },
+  {
+   "finding_id": "P2-001",
+   "severity": "LOW",
+   "severity_class": "traceability",
+   "claim": "BuildLayoutTest still cites the DISCARDED requirement OPS-HTTP-002 AC-1 (superseded by OPS-HTTP-004) and duplicates the assertions now owned by BuildChecksTest.ops_HTTP_004_AC1_*; later waves scanning test citations will see a test tied to a discarded REQ.",
+   "evidence": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:266-268; src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java:365-367; docs/spec/04.http-core.srs.md:2355",
+   "suggested_fix": "Drop the duplicate test from BuildLayoutTest, or re-cite it as 'SDS-AC-11' only (no discarded REQ-ID)."
+  },
+  {
+   "finding_id": "S2-001",
+   "severity": "medium",
+   "claim": "The RUNNING shutdown sequence handles only Exception: a java.lang.Error from an onStop callback (LifecycleCallback.handle declares Exception, so NoClassDefFoundError/AssertionError/StackOverflowError escape) or from a shutdown participant (only RuntimeException is caught) leaves runShutdownSequence early. It then skips the owned-resource close, the logger flush and close, and adapter.release; only the finally moves the app to TERMINATED. Owned DB handles stay open, queued RotatingFileLogger records are lost (its writer is a daemon thread), and on the 'naruserve-shutdown' thread the Error ends as an uncaught exception. The failed-start path catches Throwable and still runs every cleanup step, so the two paths into TERMINATED disagree. Later waves add BEFORE_WAIT/AFTER_ON_STOP participants (WebSocket close, temp files) that run on this same path.",
+   "evidence": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:433-449 (catch Exception at :436, no Throwable guard before closeOwned :441, flushAndClose :444, release :446); NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ShutdownParticipants.java:52 (catch RuntimeException); compare DefaultRestApp.java:256 and :296-321 (failStart cleans up on Throwable)",
+   "suggested_fix": "In runShutdownSequence, run the cleanup steps (closeOwned, flushAndClose, release) in a finally block, or catch Throwable around each user step, keep the first Error and rethrow it after TERMINATED. Do the same in ShutdownParticipants.run. Add a test where onStop throws AssertionError and the owned resource and logger still close."
+  },
+  {
+   "finding_id": "S2-002",
+   "severity": "low",
+   "claim": "app.md says shutdown blocks the caller for at most the timeout. The code applies the deadline only to adapter.stop (FR-APP-011 AC-2). onStop callbacks, owned-resource closes and the logger flush (RotatingFileLogger.flush waits until the queue is written) run with no bound after that, so an Android caller that relies on the doc can block longer than the timeout.",
+   "evidence": "docs/api/app.md:163; NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:424 (only use of the deadline) vs :433-444; NaruServe-filelog/src/main/java/com/snoworca/naruserve/filelog/RotatingFileLogger.java:165-187",
+   "suggested_fix": "Change app.md:163 to say the timeout bounds waiting for in-flight requests, and that onStop, resource close and logger flush run after it without a bound (lifecycle.md:178 already says 'can wait', which is accurate)."
+  }
+ ]
+}

@@ -1,0 +1,27 @@
+{
+  "confirmed": ["P1-001", "P1-002", "P1-003", "P2-001"],
+  "rebutted": [],
+  "severity_changes": [],
+  "added": [
+    {
+      "finding_id": "S2-001",
+      "severity": "medium",
+      "claim": "The RUNNING shutdown sequence handles only Exception: a java.lang.Error from an onStop callback (LifecycleCallback.handle declares Exception, so NoClassDefFoundError/AssertionError/StackOverflowError escape) or from a shutdown participant (only RuntimeException is caught) leaves runShutdownSequence early. It then skips the owned-resource close, the logger flush and close, and adapter.release; only the finally moves the app to TERMINATED. Owned DB handles stay open, queued RotatingFileLogger records are lost (its writer is a daemon thread), and on the 'naruserve-shutdown' thread the Error ends as an uncaught exception. The failed-start path catches Throwable and still runs every cleanup step, so the two paths into TERMINATED disagree. Later waves add BEFORE_WAIT/AFTER_ON_STOP participants (WebSocket close, temp files) that run on this same path.",
+      "evidence": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:433-449 (catch Exception at :436, no Throwable guard before closeOwned :441, flushAndClose :444, release :446); NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ShutdownParticipants.java:52 (catch RuntimeException); compare DefaultRestApp.java:256 and :296-321 (failStart cleans up on Throwable)",
+      "suggested_fix": "In runShutdownSequence, run the cleanup steps (closeOwned, flushAndClose, release) in a finally block, or catch Throwable around each user step, keep the first Error and rethrow it after TERMINATED. Do the same in ShutdownParticipants.run. Add a test where onStop throws AssertionError and the owned resource and logger still close."
+    },
+    {
+      "finding_id": "S2-002",
+      "severity": "low",
+      "claim": "app.md says shutdown blocks the caller for at most the timeout. The code applies the deadline only to adapter.stop (FR-APP-011 AC-2). onStop callbacks, owned-resource closes and the logger flush (RotatingFileLogger.flush waits until the queue is written) run with no bound after that, so an Android caller that relies on the doc can block longer than the timeout.",
+      "evidence": "docs/api/app.md:163; NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:424 (only use of the deadline) vs :433-444; NaruServe-filelog/src/main/java/com/snoworca/naruserve/filelog/RotatingFileLogger.java:165-187",
+      "suggested_fix": "Change app.md:163 to say the timeout bounds waiting for in-flight requests, and that onStop, resource close and logger flush run after it without a bound (lifecycle.md:178 already says 'can wait', which is accurate)."
+    }
+  ],
+  "notes": {
+    "P1-001": "Confirmed: FR-APP-011 AC-1..8 (docs/spec/05.application.srs.md, FR-APP-011 block) and FR-APP-017 AC-1..7 do not state in-request shutdown or rotationFailureCount/backoff. Four ShutdownStatesTest methods (:200,:223,:250,:272) and two RotatingFileLoggerTest methods (:194,:213) cite AC-5/AC-2 for that behaviour.",
+    "P1-002": "Confirmed at src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:266-268. Same defect as P2-001; fix once.",
+    "P2-001": "Duplicate of P1-002 (same lines). Confirmed.",
+    "P1-003": "Confirmed: SDS lines 29/35 give the 4-arg run and 2-arg fallback; the code has run(..., ErrorPath, String requestId) at MiddlewarePipeline.java:66-67 and fallback(..., String requestId) at Dispatcher.java:247."
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "findings": [
+    {
+      "finding_id": "P2-001",
+      "severity": "LOW",
+      "severity_class": "traceability",
+      "claim": "BuildLayoutTest still cites the DISCARDED requirement OPS-HTTP-002 AC-1 (superseded by OPS-HTTP-004) and duplicates the assertions now owned by BuildChecksTest.ops_HTTP_004_AC1_*; later waves scanning test citations will see a test tied to a discarded REQ.",
+      "evidence": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:266-268; src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java:365-367; docs/spec/04.http-core.srs.md:2355",
+      "suggested_fix": "Drop the duplicate test from BuildLayoutTest, or re-cite it as 'SDS-AC-11' only (no discarded REQ-ID)."
+    }
+  ],
+  "regression": {
+    "command": "./gradlew build",
+    "exit_code": 0,
+    "failing_tests": []
+  },
+  "substantive_clean": true
+}

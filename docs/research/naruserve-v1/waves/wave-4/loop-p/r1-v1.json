@@ -1,0 +1,1656 @@
+{
+ "req_ac": [
+  {
+   "id": "IR-APP-001 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/RestAppBuilderTest.java:61 sdsAc1_IR_APP_001_AC1_twoBuildsGiveDistinctNewDefaultRestAppsSharingTheConfiguration (SRS docs/spec/05.application.srs.md:63; ./gradlew build pass)"
+  },
+  {
+   "id": "IR-APP-001 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/RestAppBuilderTest.java:102 sdsAc2_IR_APP_001_AC2_missingAdapterIsReportedFirstThenMissingCodec (SRS docs/spec/05.application.srs.md:64; ./gradlew build pass)"
+  },
+  {
+   "id": "IR-APP-001 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/RestAppBuilderTest.java:150 sdsAc3_IR_APP_001_AC3_withoutLoggerEachBuildGetsItsOwnNewConsoleLogger (SRS docs/spec/05.application.srs.md:65; ./gradlew build pass)"
+  },
+  {
+   "id": "IR-APP-001 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/AppEntryApiTest.java:87 sdsAc5_IR_APP_001_AC4_jsonCodecHasExactlyDecodeAndEncodeOverJavaTypes (SRS docs/spec/05.application.srs.md:66; ./gradlew build pass)"
+  },
+  {
+   "id": "IR-APP-001 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppEntryKotlinTest.kt:25 SDS-AC-4 IR-APP-001 AC-5 Kotlin object JsonCodec goes through the builder chain (SRS docs/spec/05.application.srs.md:67; ./gradlew build pass)"
+  },
+  {
+   "id": "IR-APP-002 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/AppEntryApiTest.java:54 sdsAc5_IR_APP_002_AC1_middlewareIsFunctionalAndNextHasExactlyRunAndError (SRS docs/spec/05.application.srs.md:129; ./gradlew build pass)"
+  },
+  {
+   "id": "IR-APP-002 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java:204 sdsAc6_IR_HTTP_005_AC1_AC2_AC3_AC5_IR_APP_002_AC2_restAppDeclaresExactlyTheWave4Methods (SRS docs/spec/05.application.srs.md:130; ./gradlew build pass)"
+  },
+  {
+   "id": "IR-APP-002 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/AppEntryApiTest.java:122 sdsAc6_IR_APP_002_AC3_routeBuilderUseAppliesOnlyEarlierMiddlewareInUseOrder (SRS docs/spec/05.application.srs.md:131; ./gradlew build pass)"
+  },
+  {
+   "id": "IR-APP-002 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/AppEntryApiTest.java:174 sdsAc7_IR_APP_002_AC4_nullArgumentsAndRelativePrefixAreRefused (SRS docs/spec/05.application.srs.md:132; ./gradlew build pass)"
+  },
+  {
+   "id": "IR-APP-002 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/AppEntryApiTest.java:103 sdsAc5_IR_APP_001_AC4_IR_APP_002_AC5_noGsonAndNoFutureTypeOnTheEntrySurface (SRS docs/spec/05.application.srs.md:133; ./gradlew build pass)"
+  },
+  {
+   "id": "IR-APP-002 AC-6",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppEntryKotlinTest.kt:38 SDS-AC-8 IR-APP-002 AC-6 IR-APP-003 AC-1 use, prefix use, route middleware and onError lambdas by SAM conversion (SRS docs/spec/05.application.srs.md:134; ./gradlew build pass)"
+  },
+  {
+   "id": "IR-APP-003 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/AppEntryApiTest.java:72 sdsAc5_IR_APP_003_AC1_errorHandlerIsFunctionalAndOnErrorReturnsTheApp (SRS docs/spec/05.application.srs.md:197; ./gradlew build pass)"
+  },
+  {
+   "id": "IR-APP-003 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpExceptionTest.java:15 sdsAc9_IR_APP_003_AC2_statusOutside400To599IsRefusedNamingTheStatus (SRS docs/spec/05.application.srs.md:198; ./gradlew build pass)"
+  },
+  {
+   "id": "IR-APP-003 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpExceptionTest.java:49 sdsAc10_IR_APP_003_AC3_codeIsTheStandardCodeOfTheStatus (SRS docs/spec/05.application.srs.md:199; ./gradlew build pass)"
+  },
+  {
+   "id": "IR-APP-003 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpExceptionTest.java:59 sdsAc10_IR_APP_003_AC4_unsupportedMediaTypeIs415 (SRS docs/spec/05.application.srs.md:200; ./gradlew build pass)"
+  },
+  {
+   "id": "IR-APP-003 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/AppEntryApiTest.java:232 sdsAc11_IR_APP_003_AC5_onErrorNullThrowsAndOnErrorIsRefusedAfterFreeze (SRS docs/spec/05.application.srs.md:201; ./gradlew build pass)"
+  },
+  {
+   "id": "IR-APP-004 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/AppLifecycleApiTest.java:90 sdsAc1_IR_APP_004_AC1_registryAndContextDeclareExactlyTheirMethods (SRS docs/spec/05.application.srs.md:261; ./gradlew build pass)"
+  },
+  {
+   "id": "IR-APP-004 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/AppLifecycleApiTest.java:106 sdsAc1_IR_APP_004_AC2_getMissThrowsNamingTheTypeWhileGetOrNullAndContainsReportAbsence (SRS docs/spec/05.application.srs.md:262; ./gradlew build pass)"
+  },
+  {
+   "id": "IR-APP-004 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java:130 sdsAc2_IR_APP_004_AC3_requestDeclaresApplicationAndGenericService (SRS docs/spec/05.application.srs.md:263; ./gradlew build pass)"
+  },
+  {
+   "id": "IR-APP-004 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/AppLifecycleApiTest.java:129 sdsAc3_IR_APP_004_AC4_typedNullRemovesNullArgumentsThrowAndWrongTypeIsClassCast (SRS docs/spec/05.application.srs.md:264; ./gradlew build pass)"
+  },
+  {
+   "id": "IR-APP-004 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/AppLifecycleApiTest.java:164 sdsAc4_IR_APP_004_AC5_onlyGetOrNullAndTheAttributeReadAndValueAreNullable (SRS docs/spec/05.application.srs.md:265; ./gradlew build pass)"
+  },
+  {
+   "id": "IR-APP-005 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/AppLifecycleApiTest.java:179 sdsAc5_IR_APP_005_AC1_AC2_appStateOrderAndLifecycleCallbackShape (SRS docs/spec/05.application.srs.md:328; ./gradlew build pass)"
+  },
+  {
+   "id": "IR-APP-005 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/AppLifecycleApiTest.java:179 sdsAc5_IR_APP_005_AC1_AC2_appStateOrderAndLifecycleCallbackShape (SRS docs/spec/05.application.srs.md:329; ./gradlew build pass)"
+  },
+  {
+   "id": "IR-APP-005 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/AppLifecycleApiTest.java:195 sdsAc5_IR_APP_005_AC3_serverHandleHasPortAddressStateReadingTheLiveState (SRS docs/spec/05.application.srs.md:330; ./gradlew build pass)"
+  },
+  {
+   "id": "IR-APP-005 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/AppLifecycleApiTest.java:211 sdsAc6_IR_APP_005_AC4_badPortTimeoutUnitAndNullCallbackThrowBeforeAnyStateChange (SRS docs/spec/05.application.srs.md:331; ./gradlew build pass)"
+  },
+  {
+   "id": "IR-APP-005 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/AppLifecycleApiTest.java:225 sdsAc7_IR_APP_005_AC5_appStartExceptionIsUncheckedAndCarriesTheCheckedCause (SRS docs/spec/05.application.srs.md:332; ./gradlew build pass)"
+  },
+  {
+   "id": "IR-APP-005 AC-6",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppLifecycleKotlinTest.kt:52 SDS-AC-8 IR-APP-005 AC-6 onStart, listen(0), port, state and shutdown without DSL (SRS docs/spec/05.application.srs.md:333; ./gradlew build pass)"
+  },
+  {
+   "id": "IR-APP-006 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/ConsoleLoggerTest.java:100 sdsAc9_IR_APP_006_AC1_loggerHasExactlySixMethodsAndLogLevelOrder (SRS docs/spec/05.application.srs.md:396; ./gradlew build pass)"
+  },
+  {
+   "id": "IR-APP-006 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/ConsoleLoggerTest.java:115 sdsAc9_IR_APP_006_AC2_defaultThresholdInfoWritesInfoToOutAndWarnErrorToErr (SRS docs/spec/05.application.srs.md:397; ./gradlew build pass)"
+  },
+  {
+   "id": "IR-APP-006 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/ConsoleLoggerTest.java:194 sdsAc10_IR_APP_006_AC3_closeAndFlushFlushBothStreamsAndLeaveThemOpen (SRS docs/spec/05.application.srs.md:398; ./gradlew build pass)"
+  },
+  {
+   "id": "IR-APP-006 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/AppLifecycleApiTest.java:248 sdsAc11_IR_APP_006_AC4_loggerSetterReturnsTheAppAndNullThrows (SRS docs/spec/05.application.srs.md:399; ./gradlew build pass)"
+  },
+  {
+   "id": "IR-APP-006 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/ConsoleLoggerTest.java:216 sdsAc10_IR_APP_006_AC5_consoleLoggerIsPublicFinalAndReferencesNoSlf4jOrAndroidType (SRS docs/spec/05.application.srs.md:400; ./gradlew build pass)"
+  },
+  {
+   "id": "IR-APP-007 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogOptionsTest.java:42 sdsAc12_IR_APP_007_AC1_optionChainReturnsTheSameOptionsAndAccessLogReturnsTheApp (SRS docs/spec/05.application.srs.md:464; ./gradlew build pass)"
+  },
+  {
+   "id": "IR-APP-007 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogOptionsTest.java:64 sdsAc12_IR_APP_007_AC2_defaultsAndTwoCallsAccumulateOnTheOneOptionsInOrder (SRS docs/spec/05.application.srs.md:465; ./gradlew build pass)"
+  },
+  {
+   "id": "IR-APP-007 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogOptionsTest.java:80 sdsAc13_IR_APP_007_AC3_nullConfigurerLevelAndExcludeThrowNullPointerException (SRS docs/spec/05.application.srs.md:466; ./gradlew build pass)"
+  },
+  {
+   "id": "IR-APP-007 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogOptionsTest.java:91 sdsAc14_IR_APP_007_AC4_configurerIsFunctionalWithOneConfigureMethod (SRS docs/spec/05.application.srs.md:467; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-001 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java:204 sdsAc6_IR_HTTP_005_AC1_AC2_AC3_AC5_IR_APP_002_AC2_restAppDeclaresExactlyTheWave4Methods (SRS docs/spec/05.application.srs.md:527; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-001 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AppFactoryLoaderTest.java:62 sdsAc12_FR_APP_001_AC2_oneProviderReturnsWhatItsCreateReturned (SRS docs/spec/05.application.srs.md:528; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-001 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AppFactoryLoaderTest.java:68 sdsAc13_FR_APP_001_AC3_noProviderNamesTheModuleAndTheBuilder (SRS docs/spec/05.application.srs.md:529; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-001 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AppFactoryLoaderTest.java:107 sdsAc14_FR_APP_001_AC4_twoProvidersAreBothNamed (SRS docs/spec/05.application.srs.md:530; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-001 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AppFactoryLoaderTest.java:119 sdsAc15_FR_APP_001_AC5_servicesFileExistsOnlyInTheTempDir (SRS docs/spec/05.application.srs.md:531; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-002 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AppIsolationTest.java:114 sdsAc1_FR_APP_002_AC1_twoAppsInOneJvmKeepRoutesMiddlewareLoggerServicesAndAttributesApart (SRS docs/spec/05.application.srs.md:594; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-002 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AppIsolationTest.java:184 sdsAc2_FR_APP_002_AC2_noMutableStaticStateInTheApiAndInternalPackages (SRS docs/spec/05.application.srs.md:595; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-002 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AppLifecycleGuardTest.java:99 sdsAc3_FR_APP_002_AC3_everyConfigurationMethodIsRefusedOutsideNewNamingMethodAndState (SRS docs/spec/05.application.srs.md:596; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-002 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AppLifecycleGuardTest.java:177 sdsAc4_FR_APP_002_AC4_reflectionFindsEveryRestAppAndRouteBuilderRegistrationRefusedInRunning (SRS docs/spec/05.application.srs.md:597; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-002 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java:302 sdsAc5_FR_APP_002_AC5_builderAndCreateAreTheOnlyPublicStaticRestAppFactoriesOfRestApp (SRS docs/spec/05.application.srs.md:598; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-003 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MiddlewarePipelineTest.java:49 sdsAc1_FR_APP_003_AC1_globalsThenPrefixesThenRouteMiddlewareThenHandler (SRS docs/spec/05.application.srs.md:660; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-003 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/PrefixMatcherTest.java:23 sdsAc3_FR_APP_003_AC2_prefixMatchesOnSegmentBoundaryOnly (SRS docs/spec/05.application.srs.md:661; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-003 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MiddlewarePipelineTest.java:79 sdsAc4_FR_APP_003_AC3_prefixFollowsTheCaseInsensitivePolicy (SRS docs/spec/05.application.srs.md:662; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-003 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MiddlewarePipelineTest.java:101 sdsAc5_FR_APP_003_AC4_prefixMiddlewareAndHandlerSeeTheFullPath (SRS docs/spec/05.application.srs.md:663; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-003 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MiddlewarePipelineTest.java:118 sdsAc6_FR_APP_003_AC5_noMatchRunsGlobalsAndPrefixThenThe404 (SRS docs/spec/05.application.srs.md:664; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-003 AC-6",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MiddlewarePipelineTest.java:205 sdsAc17_FR_HTTP_022_AC8_globalRunsOnceForEveryFallbackAnswerButNotTheUnknownToken (SRS docs/spec/05.application.srs.md:665; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-003 AC-7",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MiddlewarePipelineTest.java:160 sdsAc7_FR_APP_003_AC7_FR_HTTP_021_AC4_preRequestRejectionsRunNoMiddlewareHandlerOrOnError (SRS docs/spec/05.application.srs.md:666; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-003 AC-8",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MiddlewarePipelineTest.java:182 sdsAc8_FR_APP_003_AC8_everyStepRunsOnTheAdapterThread (SRS docs/spec/05.application.srs.md:667; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-004 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ChainNextTest.java:58 sdsAc9_FR_APP_004_AC1_secondRunThrowsAndDownstreamRanOnce (SRS docs/spec/05.application.srs.md:735; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-004 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ChainNextTest.java:91 sdsAc10_FR_APP_004_AC2_runAfterSendThrowsAndRunsNoDownstreamStep (SRS docs/spec/05.application.srs.md:736; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-004 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ChainNextTest.java:135 sdsAc11_FR_APP_004_AC3_AC6_markerAfterRunSeesTheHandlerAndACommittedResponse (SRS docs/spec/05.application.srs.md:737; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-004 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ChainNextTest.java:148 sdsAc11_FR_APP_004_AC4_middlewareThatAnswersWithoutNextStopsTheChain (SRS docs/spec/05.application.srs.md:738; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-004 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ChainNextTest.java:72 sdsAc9_FR_APP_004_AC5_runAfterErrorAndErrorAfterRunThrow (SRS docs/spec/05.application.srs.md:739; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-004 AC-6",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ChainNextTest.java:281 sdsAc8_FR_APP_004_AC6_nextCalledFromAnotherThreadDuringTheRequestThrows (SRS docs/spec/05.application.srs.md:740; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-005 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ErrorPathTest.java:118 sdsAc1_FR_APP_005_AC1_eachFailureReachesOnErrorOnceWithTheSameInstance (SRS docs/spec/05.application.srs.md:803; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-005 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ErrorPathTest.java:380 sdsAc10_FR_APP_006_AC3_AC4_FR_APP_005_AC2_httpExceptionsKeepTheirStatusAndAppMessage (SRS docs/spec/05.application.srs.md:804; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-005 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ErrorPathTest.java:174 sdsAc2_FR_APP_005_AC3_theSecondOnErrorRunsOnlyWhileTheResponseIsNew (SRS docs/spec/05.application.srs.md:805; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-005 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ErrorPathTest.java:200 sdsAc3_FR_APP_005_AC4_noOnErrorOrOnErrorLeavingNewGivesTheStandardBodyWithoutAppHeaders (SRS docs/spec/05.application.srs.md:806; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-005 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ErrorPathTest.java:216 sdsAc4_FR_APP_005_AC5_aThrowingOnErrorIsLoggedStopsTheChainAndGives500 (SRS docs/spec/05.application.srs.md:807; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-005 AC-6",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ErrorPathTest.java:234 sdsAc5_FR_APP_005_AC6_streamingIsAbortedAfterOnErrorAndCompletedStaysCompleted (SRS docs/spec/05.application.srs.md:808; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-005 AC-7",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MiddlewarePipelineTest.java:160 sdsAc7_FR_APP_003_AC7_FR_HTTP_021_AC4_preRequestRejectionsRunNoMiddlewareHandlerOrOnError (SRS docs/spec/05.application.srs.md:809; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-005 AC-8",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ErrorPathTest.java:327 sdsAc6_FR_APP_005_AC8_only500IsLoggedAtErrorWithItsThrowableWhateverTheState (SRS docs/spec/05.application.srs.md:810; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-005 AC-9",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ErrorPathTest.java:349 sdsAc7_FR_APP_005_AC9_anOnErrorThatSendsDecidesTheOutcomeWithNoSecondWrite (SRS docs/spec/05.application.srs.md:811; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-006 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ErrorPathTest.java:367 sdsAc8_FR_APP_006_AC1_a500BodyHidesTheMessageClassAndStack (SRS docs/spec/05.application.srs.md:879; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-006 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StandardErrorsTest.java:25 sdsAc9_FR_APP_006_AC2_everyListedStatusHasItsCodeAndOthersAreHttpStatus (SRS docs/spec/05.application.srs.md:880; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-006 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StandardErrorsTest.java:38 sdsAc10_FR_APP_006_AC3_AC4_statusAndMessageOfAnError (SRS docs/spec/05.application.srs.md:881; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-006 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ErrorPathTest.java:380 sdsAc10_FR_APP_006_AC3_AC4_FR_APP_005_AC2_httpExceptionsKeepTheirStatusAndAppMessage (SRS docs/spec/05.application.srs.md:882; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-006 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ErrorPathTest.java:447 FR_APP_006_AC5_AC9_automaticAnswersCarryTheStandardBodyAndAreNotReplaceable (SRS docs/spec/05.application.srs.md:883; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-006 AC-6",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ErrorPathTest.java:399 sdsAc11_FR_APP_006_AC6_headKeepsTheHeadersAndContentLengthWithNoBody (SRS docs/spec/05.application.srs.md:884; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-006 AC-7",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ErrorPathTest.java:414 sdsAc12_FR_APP_006_AC7_theBodyCarriesTheRequestIdHandedToTheErrorPath (SRS docs/spec/05.application.srs.md:885; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-006 AC-8",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StandardErrorsTest.java:52 sdsAc13_FR_APP_006_AC8_messageIsEscapedPerRfc8259AndNonAsciiStaysLiteral (SRS docs/spec/05.application.srs.md:886; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-006 AC-9",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ErrorPathTest.java:447 FR_APP_006_AC5_AC9_automaticAnswersCarryTheStandardBodyAndAreNotReplaceable (SRS docs/spec/05.application.srs.md:887; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-007 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/ServicesAcceptanceTest.java:84 sdsAc1_FR_APP_007_AC1_T41_serviceFromOnStartIsIdenticalViaServiceAndApplicationGet (SRS docs/spec/05.application.srs.md:953; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-007 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultApplicationContextTest.java:57 sdsAc2_FR_APP_007_AC2_registerRegisterExternalAndOwnFromOnStopThrowAndTheRegistryIsUnchanged (SRS docs/spec/05.application.srs.md:954; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-007 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/ServicesAcceptanceTest.java:100 sdsAc4_FR_APP_007_AC3_T42_duplicateInOnStartFailsListenAndTheCloseHookSeesTheFirst (SRS docs/spec/05.application.srs.md:955; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-007 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/ServicesAcceptanceTest.java:121 sdsAc5_FR_APP_007_AC4_sixteenThreadsGetTheServiceAndTheSnapshotIsPublishedBeforeRunning (SRS docs/spec/05.application.srs.md:956; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-007 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/ServicesAcceptanceTest.java:180 sdsAc6_FR_APP_007_AC5_T41_twoOnStartRunOnceInOrderAndShutdownRunsNone (SRS docs/spec/05.application.srs.md:957; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-007 AC-6",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultApplicationContextTest.java:159 sdsAc7_FR_APP_007_AC6_eightThreadsWritingDistinctKeysInRunningLoseNothing (SRS docs/spec/05.application.srs.md:958; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-007 AC-7",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/ServicesAcceptanceTest.java:194 sdsAc8_FR_APP_007_AC7_ctxLoggerIsTheAppLoggerAfterReplacement (SRS docs/spec/05.application.srs.md:959; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-007 AC-8",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/ServicesAcceptanceTest.java:212 sdsAc9_FR_APP_007_AC8_onStartOnStopAndEveryRequestShareOneContext (SRS docs/spec/05.application.srs.md:960; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-008 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/ServicesAcceptanceTest.java:250 sdsAc10_FR_APP_008_AC1_T45_ownDbThenRegisterUsersCloseUsersThenDbOnShutdown (SRS docs/spec/05.application.srs.md:1028; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-008 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/ServicesAcceptanceTest.java:264 sdsAc11_FR_APP_008_AC2_T45_oneObjectUnderTwoKeysAndOwnedClosesOnceAtItsFirstPosition (SRS docs/spec/05.application.srs.md:1029; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-008 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/ServicesAcceptanceTest.java:282 sdsAc12_FR_APP_008_AC3_closeFailureOnShutdownIsLoggedAtErrorAndTheOthersClose (SRS docs/spec/05.application.srs.md:1030; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-008 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/ServicesAcceptanceTest.java:333 sdsAc13_FR_APP_008_AC4_registerExternalIsNeverClosedOnShutdownAndOwnClosesItOnce (SRS docs/spec/05.application.srs.md:1031; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-008 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultApplicationContextTest.java:214 sdsAc14_FR_APP_008_AC5_plainServiceIsRegisteredReturnedAndNothingIsClosed (SRS docs/spec/05.application.srs.md:1032; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-009 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ListenStartupTest.java:78 sdsAc6_FR_APP_009_AC1_concurrentListenLetsOnlyTheCompareAndSetWinnerProceed (SRS docs/spec/05.application.srs.md:1099; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-009 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ListenStartupTest.java:124 sdsAc7_FR_APP_009_AC2_listenRunsStartingCallbacksFreezeOneBindRunningInOrder (SRS docs/spec/05.application.srs.md:1100; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-009 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ListenStartupTest.java:149 sdsAc8_FR_APP_009_AC3_duplicateRouteThrowsTheFreezeExceptionAfterOnStartAndBeforeBind (SRS docs/spec/05.application.srs.md:1101; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-009 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ListenStartupTest.java:167 sdsAc9_FR_APP_009_AC4_handlePortIsTheBoundPortAndListenReturnsAfterBind (SRS docs/spec/05.application.srs.md:1102; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-009 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StartGateTest.java:90 sdsAc10_FR_APP_009_AC5_requestDuringStartingIsHeldUntilRunningThenAnsweredNormally (SRS docs/spec/05.application.srs.md:1103; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-009 AC-6",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StartGateTest.java:104 sdsAc11_FR_APP_009_AC6_bindFailureAnswersTheHeldRequest503WithConnectionCloseAndNothingRuns (SRS docs/spec/05.application.srs.md:1104; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-009 AC-7",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java:265 sdsAc12_FR_APP_009_AC7_harnessRunsTheAppThroughListenSoHandlersSeeRunning (SRS docs/spec/05.application.srs.md:1105; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-009 AC-8",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java:524 sdsAc13_FR_APP_009_AC8_dispatcherBoundWithoutListenDispatchesUngatedInNew (SRS docs/spec/05.application.srs.md:1106; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-010 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StartFailureTest.java:49 sdsAc1_FR_APP_010_AC1_uncheckedOnStartFailureIsRethrownAsIsAndBindNeverRuns (SRS docs/spec/05.application.srs.md:1174; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-010 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StartFailureTest.java:61 sdsAc2_FR_APP_010_AC2_checkedOnStartFailureIsWrappedInAppStartException (SRS docs/spec/05.application.srs.md:1175; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-010 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StartFailureTest.java:74 sdsAc3_FR_APP_010_AC3_bindFailureStopsAndReleasesTheAdapterBeforeThrowing (SRS docs/spec/05.application.srs.md:1176; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-010 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StartFailureTest.java:87 sdsAc4_FR_APP_010_AC4_resourcesCloseInReverseSeeingFailedThenTheStateIsTerminated (SRS docs/spec/05.application.srs.md:1177; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-010 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StartFailureTest.java:102 sdsAc5_FR_APP_010_AC5_noOnStopRunsForAnOnStartOrBindFailure (SRS docs/spec/05.application.srs.md:1178; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-010 AC-6",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StartFailureTest.java:115 sdsAc6_FR_APP_010_AC6_ownedAppLoggerIsClosedOnceAsTheLastStepBeforeTerminated (SRS docs/spec/05.application.srs.md:1179; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-011 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownSequenceTest.java:163 sdsAc7_FR_APP_011_AC1_sequenceRunsTheFixedStepOrderThenTerminated (SRS docs/spec/05.application.srs.md:1242; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-011 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownSequenceTest.java:181 sdsAc8_FR_APP_011_AC2_adapterStopGetsTheTimeLeftUntilTheOneDeadline (SRS docs/spec/05.application.srs.md:1243; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-011 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownSequenceTest.java:200 sdsAc9_FR_APP_011_AC3_throwingParticipantIsLoggedAtErrorAndTheSequenceContinues (SRS docs/spec/05.application.srs.md:1244; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-011 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownSequenceTest.java:218 sdsAc10_FR_APP_011_AC4_onStopStillReadsServicesBeforeAnyResourceIsClosed (SRS docs/spec/05.application.srs.md:1245; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-011 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownSequenceTest.java:238 sdsAc11_FR_APP_011_AC5_concurrentShutdownRunsTheSequenceOnceAndTheLoserWaits (SRS docs/spec/05.application.srs.md:1246; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-011 AC-6",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownSequenceTest.java:273 sdsAc12_FR_APP_011_AC6_inFlightRequestCompletesWhileAdapterStopWaits (SRS docs/spec/05.application.srs.md:1247; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-011 AC-7",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownSequenceTest.java:308 sdsAc13_FR_APP_011_AC7_ownedAppLoggerIsSkippedAtItsOwnedPositionAndClosedOnce (SRS docs/spec/05.application.srs.md:1248; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-011 AC-8",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownSequenceTest.java:338 sdsAc14_FR_APP_011_AC8_throwingOnStopIsLoggedTheRestRunAndTheSequenceEnds (SRS docs/spec/05.application.srs.md:1249; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-012 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownStatesTest.java:63 sdsAc15_FR_APP_012_AC1_shutdownInNewTerminatesWithoutCallbacksOrBindAndClosesTheLoggerOnce (SRS docs/spec/05.application.srs.md:1319; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-012 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownStatesTest.java:74 sdsAc16_FR_APP_012_AC2_shutdownWhileStartingSkipsLaterCallbacksAndBindAndListenThrows (SRS docs/spec/05.application.srs.md:1320; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-012 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownStatesTest.java:121 sdsAc17_FR_APP_012_AC3_pendingStopDuringBindReleasesTheSocketAndHeldRequestsGet503 (SRS docs/spec/05.application.srs.md:1321; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-012 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownStatesTest.java:296 sdsAc18_FR_APP_012_AC4_shutdownTimeoutWhileStartingReturnsNormally (SRS docs/spec/05.application.srs.md:1322; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-012 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownStatesTest.java:325 sdsAc19_FR_APP_012_AC5_shutdownInFailedWaitsForTerminatedAndInTerminatedReturnsAtOnce (SRS docs/spec/05.application.srs.md:1323; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-012 AC-6",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownStatesTest.java:359 sdsAc20_FR_APP_012_AC6_listenOnATerminatedAppThrowsIllegalState (SRS docs/spec/05.application.srs.md:1324; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-013 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StoppingGateTest.java:60 sdsAc21_sdsAc22_FR_APP_013_AC1_AC2_requestFromABeforeWaitParticipantGets503AndNothingRuns (SRS docs/spec/05.application.srs.md:1386; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-013 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StoppingGateTest.java:60 sdsAc21_sdsAc22_FR_APP_013_AC1_AC2_requestFromABeforeWaitParticipantGets503AndNothingRuns (SRS docs/spec/05.application.srs.md:1387; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-013 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StoppingGateTest.java:77 sdsAc23_FR_APP_013_AC3_requestThatPassedTheGateBeforeStoppingCompletesWithItsHandler (SRS docs/spec/05.application.srs.md:1388; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-013 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StoppingGateTest.java:114 sdsAc24_FR_APP_013_AC4_gateRunsBeforePreRequestChecksDuringStopping (SRS docs/spec/05.application.srs.md:1389; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-014 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/LoggerIsolationTest.java:89 sdsAc1_FR_APP_014_AC1_AC3_throwingLoggerChangesNoResponse (SRS docs/spec/05.application.srs.md:1449; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-014 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/LoggerIsolationTest.java:117 sdsAc2_FR_APP_014_AC2_AC3_listenAndShutdownCompleteWithAThrowingLogger (SRS docs/spec/05.application.srs.md:1450; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-014 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AccessLogTest.java:24 sdsAc3_FR_APP_014_AC3_writeWithAThrowingLoggerReturnsNormally (SRS docs/spec/05.application.srs.md:1451; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-015 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogAcceptanceTest.java:104 sdsAc4_FR_APP_015_AC1_defaultLineForGetUsers7 (SRS docs/spec/05.application.srs.md:1510; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-015 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AccessLogTest.java:71 sdsAc5_FR_APP_015_AC2_partsOffDropEachPartWithItsLeadingSpace (SRS docs/spec/05.application.srs.md:1511; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-015 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogAcceptanceTest.java:113 sdsAc6_FR_APP_015_AC3_abortedAfterCommitLogsTheCommittedStatusAndAborted (SRS docs/spec/05.application.srs.md:1512; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-015 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogAcceptanceTest.java:188 sdsAc7_FR_APP_015_AC4_streamCountsCopiedBytesAndHeadCountsZero (SRS docs/spec/05.application.srs.md:1513; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-015 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java:538 sdsAc8_FR_APP_015_AC5_inCountsTheBodyBytesReadNotTheDeclaredLength (SRS docs/spec/05.application.srs.md:1514; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-015 AC-6",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogAcceptanceTest.java:201 sdsAc9_FR_APP_015_AC6_excludedRawPathWritesNoLine (SRS docs/spec/05.application.srs.md:1515; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-015 AC-7",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogAcceptanceTest.java:228 sdsAc10_FR_APP_015_AC7_lineRidEqualsTheErrorBodyRequestId (SRS docs/spec/05.application.srs.md:1516; ./gradlew build pass)"
+  },
+  {
+   "id": "SEC-APP-001 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogAcceptanceTest.java:239 sdsAc11_SEC_APP_001_AC1_noQueryHeaderOrBodySecretInTheLine (SRS docs/spec/05.application.srs.md:1584; ./gradlew build pass)"
+  },
+  {
+   "id": "SEC-APP-001 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AccessLogTest.java:122 sdsAc12_SEC_APP_001_AC2_escapeControlCharsAndBackslashKeepPercentEncodingRaw (SRS docs/spec/05.application.srs.md:1585; ./gradlew build pass)"
+  },
+  {
+   "id": "SEC-APP-001 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogAcceptanceTest.java:257 sdsAc13_SEC_APP_001_AC3_headerValuesAreAbsentFromTheLine (SRS docs/spec/05.application.srs.md:1586; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-016 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-logcat/src/test/java/com/snoworca/naruserve/logcat/LogcatLoggerTest.java:39 sdsAc1_FR_APP_016_AC1_sixMethodsCallVDIWEWithTagNaruServe (SRS docs/spec/05.application.srs.md:1643; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-016 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-logcat/src/test/java/com/snoworca/naruserve/logcat/LogcatLoggerTest.java:47 sdsAc2_FR_APP_016_AC2_customTagAndNullTagThrowsNpe (SRS docs/spec/05.application.srs.md:1644; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-016 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-logcat/src/test/java/com/snoworca/naruserve/logcat/LogcatLoggerTest.java:60 sdsAc3_FR_APP_016_AC3_throwingLogCallIsSwallowed (SRS docs/spec/05.application.srs.md:1645; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-016 AC-4",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java:318 sdsAc5_FR_APP_016_AC4_logcatMainHasNoAndroidReferenceAndTheFakeLivesInTests (SRS docs/spec/05.application.srs.md:1646; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-017 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-filelog/src/test/java/com/snoworca/naruserve/filelog/RotatingFileLoggerTest.java:55 sdsAc6_FR_APP_017_AC1_defaultsAndValuesBelowOneAreRefused (SRS docs/spec/05.application.srs.md:1706; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-017 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-filelog/src/test/java/com/snoworca/naruserve/filelog/RotatingFileLoggerTest.java:75 sdsAc7_FR_APP_017_AC2_rotationKeepsAtMostMaxFilesOfAtMostMaxFileBytes (SRS docs/spec/05.application.srs.md:1707; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-017 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-filelog/src/test/java/com/snoworca/naruserve/filelog/RotatingFileLoggerTest.java:121 sdsAc8_FR_APP_017_AC3_fullQueueDropsTheThirdAndLaterRecordsWithoutBlocking (SRS docs/spec/05.application.srs.md:1708; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-017 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-filelog/src/test/java/com/snoworca/naruserve/filelog/RotatingFileLoggerTest.java:144 sdsAc9_FR_APP_017_AC4_uncreatableDirectoryDropsAndCountsWithoutThrowing (SRS docs/spec/05.application.srs.md:1709; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-017 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-filelog/src/test/java/com/snoworca/naruserve/filelog/RotatingFileLoggerTest.java:157 sdsAc10_FR_APP_017_AC5_flushWritesAllAndCloseStopsTheWriterAndCountsLaterCalls (SRS docs/spec/05.application.srs.md:1710; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-017 AC-6",
+   "verdict": "match",
+   "pointer": "NaruServe-filelog/src/test/java/com/snoworca/naruserve/filelog/RotatingFileLoggerTest.java:338 fr_APP_017_AC6_mainClassesReferenceNoSlf4jOrAndroidType (SRS docs/spec/05.application.srs.md:1711; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-017 AC-7",
+   "verdict": "match",
+   "pointer": "NaruServe-filelog/src/test/java/com/snoworca/naruserve/filelog/FailedListenWriterThreadTest.java:25 sdsAc11_FR_APP_010_AC6_noWriterThreadRemainsAfterAFailedListen (SRS docs/spec/05.application.srs.md:1712; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-018 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-slf4j/src/test/java/com/snoworca/naruserve/slf4j/Slf4jLoggerTest.java:74 sdsAc12_FR_APP_018_AC1_AC4_sixMethodsForwardOnceWithTheSameMessageAndThrowable (SRS docs/spec/05.application.srs.md:1777; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-018 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-slf4j/src/test/java/com/snoworca/naruserve/slf4j/Slf4jLoggerTest.java:90 sdsAc13_FR_APP_018_AC2_defaultConstructorRequestsNaruServeAndNullDelegateThrowsNpe (SRS docs/spec/05.application.srs.md:1778; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-018 AC-3",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java:343 sdsAc15_CON_APP_001_AC2_FR_APP_018_AC3_loggerClassInTheApiJarFailsPlacement (SRS docs/spec/05.application.srs.md:1779; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-APP-018 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-slf4j/src/test/java/com/snoworca/naruserve/slf4j/Slf4jLoggerTest.java:74 sdsAc12_FR_APP_018_AC1_AC4_sixMethodsForwardOnceWithTheSameMessageAndThrowable (SRS docs/spec/05.application.srs.md:1780; ./gradlew build pass)"
+  },
+  {
+   "id": "CON-APP-001 AC-1",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java:327 sdsAc14_CON_APP_001_AC1_AC3_apiMainClassReferencingSlf4jFails (SRS docs/spec/05.application.srs.md:1838; ./gradlew build pass)"
+  },
+  {
+   "id": "CON-APP-001 AC-2",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java:343 sdsAc15_CON_APP_001_AC2_FR_APP_018_AC3_loggerClassInTheApiJarFailsPlacement (SRS docs/spec/05.application.srs.md:1839; ./gradlew build pass)"
+  },
+  {
+   "id": "CON-APP-001 AC-3",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java:327 sdsAc14_CON_APP_001_AC1_AC3_apiMainClassReferencingSlf4jFails (SRS docs/spec/05.application.srs.md:1840; ./gradlew build pass)"
+  },
+  {
+   "id": "OPS-APP-001 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/AppDocsTest.java:133 sdsAc1_OPS_APP_001_AC1_builderFactoryAndServerHandle (SRS docs/spec/05.application.srs.md:1898; ./gradlew build pass)"
+  },
+  {
+   "id": "OPS-APP-001 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/AppDocsTest.java:178 sdsAc3_OPS_APP_001_AC2_middlewareAndRoutingDecisions (SRS docs/spec/05.application.srs.md:1899; ./gradlew build pass)"
+  },
+  {
+   "id": "OPS-APP-001 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/AppDocsTest.java:239 sdsAc6_OPS_APP_001_AC3_lifecycleStartGateAndPendingStop (SRS docs/spec/05.application.srs.md:1900; ./gradlew build pass)"
+  },
+  {
+   "id": "OPS-APP-001 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/AppDocsTest.java:257 sdsAc7_OPS_APP_001_AC4_loggingFormatDefaultsAndClose (SRS docs/spec/05.application.srs.md:1901; ./gradlew build pass)"
+  },
+  {
+   "id": "OPS-APP-001 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/AppDocsTest.java:280 sdsAc8_OPS_APP_001_AC5_expressMigrationRows (SRS docs/spec/05.application.srs.md:1902; ./gradlew build pass)"
+  },
+  {
+   "id": "OPS-APP-001 AC-6",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/AppDocsTest.java:94 sdsAc5_OPS_APP_001_AC6_decidedMarkersAreGone (SRS docs/spec/05.application.srs.md:1903; ./gradlew build pass)"
+  },
+  {
+   "id": "OPS-APP-001 AC-7",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/AppDocsTest.java:213 sdsAc4_OPS_APP_001_AC7_decisionsCarryAReason (SRS docs/spec/05.application.srs.md:1904; ./gradlew build pass)"
+  },
+  {
+   "id": "OPS-APP-002 AC-1",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java:534 sdsAc13_OPS_APP_002_AC1_noSkipNamesAWave4Member (SRS docs/spec/05.application.srs.md:1970; ./gradlew build pass)"
+  },
+  {
+   "id": "OPS-APP-002 AC-2",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java:497 sdsAc14_OPS_APP_002_AC2_everySkippedBlockStillFailsToCompile (SRS docs/spec/05.application.srs.md:1971; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-HTTP-021 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java:138 sds3Ac14_FR_HTTP_021_AC1_AC5_matchedRequestReachesTheHandlerOnce (SRS docs/spec/04.http-core.srs.md:2878; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-HTTP-021 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java:110 sdsAc13_FR_HTTP_021_AC2_checksRunInOrderAsteriskSlashValidatorToken (SRS docs/spec/04.http-core.srs.md:2879; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-HTTP-021 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java:90 sdsAc13_FR_HTTP_021_AC2_AC3_validatorRejectionIs400WithTheStandardBodyBeforeAnyMatch (SRS docs/spec/04.http-core.srs.md:2880; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-HTTP-021 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java:99 sdsAc13_FR_HTTP_021_AC4_FR_HTTP_023_AC3_preRequestRejectionsNeverReachTheHandler (SRS docs/spec/04.http-core.srs.md:2881; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-HTTP-021 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java:138 sds3Ac14_FR_HTTP_021_AC1_AC5_matchedRequestReachesTheHandlerOnce (SRS docs/spec/04.http-core.srs.md:2882; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-HTTP-021 AC-6",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java:91 sdsAc15_T06_FR_HTTP_022_AC1_AC2_AC4_noPathNoMethodUnknownMethod (SRS docs/spec/04.http-core.srs.md:2883; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-HTTP-022 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java:225 sdsAc15_FR_HTTP_022_AC1_AC4_noMatchAndUnsupportedCarryTheStandardBody (SRS docs/spec/04.http-core.srs.md:2947; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-HTTP-022 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java:147 sdsAc15_FR_HTTP_022_AC2_methodMismatchListsAllowInDeclarationOrder (SRS docs/spec/04.http-core.srs.md:2948; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-HTTP-022 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java:276 sdsAc16_FR_HTTP_022_AC3_automaticOptionsIs204WithoutContentLength (SRS docs/spec/04.http-core.srs.md:2949; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-HTTP-022 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MiddlewarePipelineTest.java:231 sdsAc17_FR_HTTP_022_AC4_disabledTraceRequestSeesTheTraceMethod (SRS docs/spec/04.http-core.srs.md:2950; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-HTTP-022 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java:208 sdsAc18_FR_HTTP_022_AC5_AC6_webSocketOnlyRouteGives426ForPlainAndUpgradeGet (SRS docs/spec/04.http-core.srs.md:2951; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-HTTP-022 AC-6",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java:192 sdsAc18_FR_HTTP_022_AC5_AC6_splitUpgradeHeadersAreJoinedBeforeLookup (SRS docs/spec/04.http-core.srs.md:2952; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-HTTP-022 AC-7",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java:162 sdsAc15_FR_HTTP_022_AC7_anyExceptDeleteGives405WithAllow (SRS docs/spec/04.http-core.srs.md:2953; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-HTTP-022 AC-8",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MiddlewarePipelineTest.java:205 sdsAc17_FR_HTTP_022_AC8_globalRunsOnceForEveryFallbackAnswerButNotTheUnknownToken (SRS docs/spec/04.http-core.srs.md:2954; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-HTTP-023 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java:173 sdsAc19_FR_HTTP_023_AC1_optionsAsteriskAllowIsMethodAnyWithNoRoutes (SRS docs/spec/04.http-core.srs.md:3019; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-HTTP-023 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java:78 sdsAc19_FR_HTTP_021_AC2_FR_HTTP_023_AC2_optionsAsteriskIsAnswered204BeforePathValidation (SRS docs/spec/04.http-core.srs.md:3020; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-HTTP-023 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java:99 sdsAc13_FR_HTTP_021_AC4_FR_HTTP_023_AC3_preRequestRejectionsNeverReachTheHandler (SRS docs/spec/04.http-core.srs.md:3021; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-HTTP-023 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java:118 sdsAc19_FR_HTTP_023_AC1_AC2_AC3_AC4_asteriskAndNonSlashTargets (SRS docs/spec/04.http-core.srs.md:3022; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-HTTP-024 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java:339 sdsAc14_FR_HTTP_024_AC1_runtimeExceptionBeforeAnyWriteGivesTheStandard500 (SRS docs/spec/04.http-core.srs.md:3082; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-HTTP-024 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java:349 sdsAc14_FR_HTTP_024_AC2_checkedExceptionAfterStatusDropsStatusAndHeaders (SRS docs/spec/04.http-core.srs.md:3083; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-HTTP-024 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java:363 sdsAc5_FR_HTTP_024_AC3_throwWhileStreamingAborts (SRS docs/spec/04.http-core.srs.md:3084; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-HTTP-024 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java:400 sdsAc15_FR_HTTP_024_AC4_returnWithoutBodyEndsTheResponseWithOneWarn (SRS docs/spec/04.http-core.srs.md:3085; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-HTTP-025 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRequestTest.java:92 sdsAc17_FR_HTTP_025_AC1_repeatedNamesKeepRequestOrder (SRS docs/spec/04.http-core.srs.md:3147; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-HTTP-025 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRequestTest.java:103 sdsAc17_FR_HTTP_025_AC2_plusIsSpaceAndUtf8NamesAndValuesDecode (SRS docs/spec/04.http-core.srs.md:3148; ./gradlew build pass)"
+  },
+  {
+   "id": "FR-HTTP-025 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRequestTest.java:174 sdsAc16_FR_HTTP_025_AC3_malformedQueryIsTheStandard400AndHandlerNotCalled (SRS docs/spec/04.http-core.srs.md:3149; ./gradlew build pass)"
+  },
+  {
+   "id": "OPS-HTTP-003 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java:102 sdsAc9_OPS_HTTP_003_AC1_rawPathRowIsRawPathWithoutQuery (SRS docs/spec/04.http-core.srs.md:3209; ./gradlew build pass)"
+  },
+  {
+   "id": "OPS-HTTP-003 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java:114 sdsAc9_OPS_HTTP_003_AC2_attributeTypeMismatchAndNullRemoval (SRS docs/spec/04.http-core.srs.md:3210; ./gradlew build pass)"
+  },
+  {
+   "id": "OPS-HTTP-003 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java:145 sdsAc9_OPS_HTTP_003_AC3_octetStreamAndStreamClosing (SRS docs/spec/04.http-core.srs.md:3211; ./gradlew build pass)"
+  },
+  {
+   "id": "OPS-HTTP-003 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java:175 sdsAc9_OPS_HTTP_003_AC4_routerPolicyDocumented (SRS docs/spec/04.http-core.srs.md:3212; ./gradlew build pass)"
+  },
+  {
+   "id": "OPS-HTTP-003 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java:236 sdsAc9_OPS_HTTP_003_AC5_appListsRouterPolicy (SRS docs/spec/04.http-core.srs.md:3213; ./gradlew build pass)"
+  },
+  {
+   "id": "OPS-HTTP-003 AC-6",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java:253 sdsAc9_OPS_HTTP_003_AC6_defaultsNamesTraceConnectPolicy (SRS docs/spec/04.http-core.srs.md:3214; ./gradlew build pass)"
+  },
+  {
+   "id": "OPS-HTTP-003 AC-7",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java:200 sdsAc9_OPS_HTTP_003_AC7_expressRawPathAndRawTextMapping (SRS docs/spec/04.http-core.srs.md:3215; ./gradlew build pass)"
+  },
+  {
+   "id": "OPS-HTTP-003 AC-8",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java:135 sdsAc9_OPS_HTTP_003_AC8_requestKeepsOtherIssuesMarkers (SRS docs/spec/04.http-core.srs.md:3216; ./gradlew build pass)"
+  },
+  {
+   "id": "OPS-HTTP-004 AC-1",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java:367 ops_HTTP_004_AC1_apiMainOnRootTestClasspathWithWave1ConventionsKept (SRS docs/spec/04.http-core.srs.md:3293; ./gradlew build pass)"
+  },
+  {
+   "id": "OPS-HTTP-004 AC-2",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java:404 sdsAc11_OPS_HTTP_004_AC2_everyJavaFenceOfEveryDocIsExtracted (SRS docs/spec/04.http-core.srs.md:3294; ./gradlew build pass)"
+  },
+  {
+   "id": "OPS-HTTP-004 AC-3",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java:422 sdsAc11_OPS_HTTP_004_AC3_nonTypeBlocksAreWrappedInTheTemplate (SRS docs/spec/04.http-core.srs.md:3295; ./gradlew build pass)"
+  },
+  {
+   "id": "OPS-HTTP-004 AC-4",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java:484 sdsAc12_OPS_HTTP_004_AC4_everySkipNamesFileBlockAndReason (SRS docs/spec/04.http-core.srs.md:3296; ./gradlew build pass)"
+  },
+  {
+   "id": "OPS-HTTP-004 AC-5",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java:443 sdsAc11_OPS_HTTP_004_AC5_noJavaScriptInJavaFences (SRS docs/spec/04.http-core.srs.md:3297; ./gradlew build pass)"
+  },
+  {
+   "id": "OPS-HTTP-004 AC-6",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java:505 sdsAc12_OPS_HTTP_004_AC6_noStaleSkip (SRS docs/spec/04.http-core.srs.md:3298; ./gradlew build pass)"
+  },
+  {
+   "id": "OPS-HTTP-004 AC-7",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java:518 sdsAc11_OPS_HTTP_004_AC7_responseAndRoutingBlocksAreCompiled (SRS docs/spec/04.http-core.srs.md:3299; ./gradlew build pass)"
+  },
+  {
+   "id": "OPS-ROUTE-003 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/RoutingDocsTest.java:80 sdsAc10_OPS_ROUTE_003_AC1_routingRulesSectionPresent (SRS docs/spec/03.routing.srs.md:2047; ./gradlew build pass)"
+  },
+  {
+   "id": "OPS-ROUTE-003 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/RoutingDocsTest.java:56 sdsAc10_OPS_ROUTE_003_AC2_accessorsNamedWithJavaKotlinAndExpressNote (SRS docs/spec/03.routing.srs.md:2048; ./gradlew build pass)"
+  },
+  {
+   "id": "OPS-ROUTE-003 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/RoutingDocsTest.java:68 noMarkerRemains (SRS docs/spec/03.routing.srs.md:2049; ./gradlew build pass)"
+  }
+ ],
+ "design": [
+  {
+   "id": "D-110",
+   "verdict": "match",
+   "pointer": "FR-APP-001 AC-1 -> NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java:204 | declaration + ServiceLoader lookup matched; bootstrap factory carried to wave 5"
+  },
+  {
+   "id": "D-111",
+   "verdict": "match",
+   "pointer": "IR-APP-001 AC-1 -> NaruServe-api/src/test/java/com/snoworca/naruserve/RestAppBuilderTest.java:61; IR-APP-001 AC-2 -> NaruServe-api/src/test/java/com/snoworca/naruserve/RestAppBuilderTest.java:102; IR-APP-001 AC-5 -> NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppEntryKotlinTest.kt:25"
+  },
+  {
+   "id": "D-112",
+   "verdict": "match",
+   "pointer": "IR-APP-001 AC-4 -> NaruServe-api/src/test/java/com/snoworca/naruserve/AppEntryApiTest.java:87"
+  },
+  {
+   "id": "D-182",
+   "verdict": "match",
+   "pointer": "IR-APP-001 AC-4 -> NaruServe-api/src/test/java/com/snoworca/naruserve/AppEntryApiTest.java:87; IR-APP-001 AC-5 -> NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppEntryKotlinTest.kt:25"
+  },
+  {
+   "id": "D-113",
+   "verdict": "match",
+   "pointer": "FR-APP-002 AC-1 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AppIsolationTest.java:114; FR-APP-002 AC-2 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AppIsolationTest.java:184"
+  },
+  {
+   "id": "D-114",
+   "verdict": "match",
+   "pointer": "IR-APP-003 AC-5 -> NaruServe-api/src/test/java/com/snoworca/naruserve/AppEntryApiTest.java:232; IR-APP-006 AC-4 -> NaruServe-api/src/test/java/com/snoworca/naruserve/AppLifecycleApiTest.java:248; IR-APP-007 AC-3 -> NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogOptionsTest.java:80"
+  },
+  {
+   "id": "D-115",
+   "verdict": "match",
+   "pointer": "IR-APP-002 AC-1 -> NaruServe-api/src/test/java/com/snoworca/naruserve/AppEntryApiTest.java:54; IR-APP-002 AC-6 -> NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppEntryKotlinTest.kt:38"
+  },
+  {
+   "id": "D-116",
+   "verdict": "match",
+   "pointer": "IR-APP-002 AC-1 -> NaruServe-api/src/test/java/com/snoworca/naruserve/AppEntryApiTest.java:54; FR-APP-004 AC-5 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ChainNextTest.java:72"
+  },
+  {
+   "id": "D-117",
+   "verdict": "match",
+   "pointer": "FR-APP-003 AC-5 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MiddlewarePipelineTest.java:118; FR-APP-003 AC-6 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MiddlewarePipelineTest.java:205; FR-HTTP-022 AC-8 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MiddlewarePipelineTest.java:205 | wave-4 part (404/405/426/501/OPTIONS via dispatcher) matched; static-file and WS-upgrade cases carried to waves 6/7 per design"
+  },
+  {
+   "id": "D-118",
+   "verdict": "match",
+   "pointer": "IR-APP-002 AC-4 -> NaruServe-api/src/test/java/com/snoworca/naruserve/AppEntryApiTest.java:174; FR-APP-003 AC-2 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/PrefixMatcherTest.java:23; FR-APP-003 AC-3 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MiddlewarePipelineTest.java:79"
+  },
+  {
+   "id": "D-119",
+   "verdict": "match",
+   "pointer": "IR-APP-002 AC-2 -> NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java:204; IR-APP-002 AC-4 -> NaruServe-api/src/test/java/com/snoworca/naruserve/AppEntryApiTest.java:174; FR-APP-003 AC-1 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MiddlewarePipelineTest.java:49"
+  },
+  {
+   "id": "D-120",
+   "verdict": "match",
+   "pointer": "IR-APP-002 AC-3 -> NaruServe-api/src/test/java/com/snoworca/naruserve/AppEntryApiTest.java:122; FR-APP-003 AC-1 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MiddlewarePipelineTest.java:49"
+  },
+  {
+   "id": "D-121",
+   "verdict": "match",
+   "pointer": "FR-APP-003 AC-5 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MiddlewarePipelineTest.java:118"
+  },
+  {
+   "id": "D-122",
+   "verdict": "match",
+   "pointer": "FR-APP-004 AC-1 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ChainNextTest.java:58; FR-APP-004 AC-5 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ChainNextTest.java:72"
+  },
+  {
+   "id": "D-123",
+   "verdict": "match",
+   "pointer": "FR-APP-004 AC-2 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ChainNextTest.java:91"
+  },
+  {
+   "id": "D-124",
+   "verdict": "match",
+   "pointer": "FR-APP-004 AC-3 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ChainNextTest.java:135"
+  },
+  {
+   "id": "D-125",
+   "verdict": "match",
+   "pointer": "FR-APP-004 AC-4 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ChainNextTest.java:148"
+  },
+  {
+   "id": "D-126",
+   "verdict": "match",
+   "pointer": "FR-APP-004 (rationale); OPS-APP-001 AC-2 -> NaruServe-api/src/test/java/com/snoworca/naruserve/AppDocsTest.java:178; FR-HTTP-024 AC-4 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java:400"
+  },
+  {
+   "id": "D-127",
+   "verdict": "match",
+   "pointer": "FR-APP-005 AC-1 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ErrorPathTest.java:118; FR-HTTP-024 AC-1 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java:339; FR-HTTP-024 AC-2 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java:349"
+  },
+  {
+   "id": "D-128",
+   "verdict": "match",
+   "pointer": "IR-APP-002 AC-5 -> NaruServe-api/src/test/java/com/snoworca/naruserve/AppEntryApiTest.java:103; FR-APP-003 AC-8 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MiddlewarePipelineTest.java:182; FR-APP-004 AC-6 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ChainNextTest.java:281"
+  },
+  {
+   "id": "D-129",
+   "verdict": "match",
+   "pointer": "IR-APP-003 AC-1 -> NaruServe-api/src/test/java/com/snoworca/naruserve/AppEntryApiTest.java:72; IR-APP-003 AC-5 -> NaruServe-api/src/test/java/com/snoworca/naruserve/AppEntryApiTest.java:232; FR-APP-005 AC-1 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ErrorPathTest.java:118"
+  },
+  {
+   "id": "D-130",
+   "verdict": "match",
+   "pointer": "IR-APP-003 AC-2 -> NaruServe-api/src/test/java/com/snoworca/naruserve/HttpExceptionTest.java:15; IR-APP-003 AC-3 -> NaruServe-api/src/test/java/com/snoworca/naruserve/HttpExceptionTest.java:49; FR-APP-005 AC-2 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ErrorPathTest.java:380"
+  },
+  {
+   "id": "D-131",
+   "verdict": "match",
+   "pointer": "FR-APP-005 AC-6 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ErrorPathTest.java:234; FR-APP-005 AC-9 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ErrorPathTest.java:349; FR-HTTP-024 AC-3 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java:363"
+  },
+  {
+   "id": "D-132",
+   "verdict": "match",
+   "pointer": "FR-APP-005 AC-4 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ErrorPathTest.java:200; FR-APP-006 AC-1 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ErrorPathTest.java:367; FR-APP-006 AC-6 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ErrorPathTest.java:399"
+  },
+  {
+   "id": "D-133",
+   "verdict": "match",
+   "pointer": "FR-APP-005 AC-5 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ErrorPathTest.java:216; FR-APP-005 AC-8 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ErrorPathTest.java:327; FR-APP-006 AC-1 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ErrorPathTest.java:367"
+  },
+  {
+   "id": "D-134",
+   "verdict": "match",
+   "pointer": "IR-APP-003 AC-2 -> NaruServe-api/src/test/java/com/snoworca/naruserve/HttpExceptionTest.java:15; IR-APP-003 AC-4 -> NaruServe-api/src/test/java/com/snoworca/naruserve/HttpExceptionTest.java:59; FR-APP-006 AC-2 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StandardErrorsTest.java:25"
+  },
+  {
+   "id": "D-135",
+   "verdict": "match",
+   "pointer": "FR-APP-006 AC-7 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ErrorPathTest.java:414; FR-APP-015 AC-7 -> NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogAcceptanceTest.java:228"
+  },
+  {
+   "id": "D-136",
+   "verdict": "match",
+   "pointer": "FR-APP-005 AC-9 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ErrorPathTest.java:349 | error-path state rule matched; res.json case carried to wave 5"
+  },
+  {
+   "id": "D-137",
+   "verdict": "match",
+   "pointer": "IR-APP-001 AC-2 -> NaruServe-api/src/test/java/com/snoworca/naruserve/RestAppBuilderTest.java:102; IR-APP-002 AC-2 -> NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java:204; IR-APP-002 AC-3 -> NaruServe-api/src/test/java/com/snoworca/naruserve/AppEntryApiTest.java:122"
+  },
+  {
+   "id": "D-138",
+   "verdict": "match",
+   "pointer": "IR-APP-004 AC-1 -> NaruServe-api/src/test/java/com/snoworca/naruserve/AppLifecycleApiTest.java:90; IR-APP-004 AC-2 -> NaruServe-api/src/test/java/com/snoworca/naruserve/AppLifecycleApiTest.java:106; IR-APP-004 AC-4 -> NaruServe-api/src/test/java/com/snoworca/naruserve/AppLifecycleApiTest.java:129"
+  },
+  {
+   "id": "D-139",
+   "verdict": "match",
+   "pointer": "FR-APP-007 AC-2 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultApplicationContextTest.java:57"
+  },
+  {
+   "id": "D-140",
+   "verdict": "match",
+   "pointer": "FR-APP-007 AC-3 -> NaruServe-api/src/test/java/com/snoworca/naruserve/ServicesAcceptanceTest.java:100"
+  },
+  {
+   "id": "D-141",
+   "verdict": "match",
+   "pointer": "FR-APP-007 AC-2 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultApplicationContextTest.java:57; FR-APP-007 AC-4 -> NaruServe-api/src/test/java/com/snoworca/naruserve/ServicesAcceptanceTest.java:121"
+  },
+  {
+   "id": "D-142",
+   "verdict": "match",
+   "pointer": "IR-APP-004 AC-3 -> NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java:130; FR-APP-007 AC-1 -> NaruServe-api/src/test/java/com/snoworca/naruserve/ServicesAcceptanceTest.java:84 | HTTP handlers matched; WS/SSE carried to wave 7 (carried-into-wave-7.md)"
+  },
+  {
+   "id": "D-143",
+   "verdict": "match",
+   "pointer": "FR-APP-007 AC-5 -> NaruServe-api/src/test/java/com/snoworca/naruserve/ServicesAcceptanceTest.java:180"
+  },
+  {
+   "id": "D-144",
+   "verdict": "match",
+   "pointer": "IR-APP-004 AC-4 -> NaruServe-api/src/test/java/com/snoworca/naruserve/AppLifecycleApiTest.java:129; FR-APP-007 AC-6 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultApplicationContextTest.java:159"
+  },
+  {
+   "id": "D-145",
+   "verdict": "match",
+   "pointer": "IR-APP-004 (rationale); FR-APP-007 AC-7 -> NaruServe-api/src/test/java/com/snoworca/naruserve/ServicesAcceptanceTest.java:194"
+  },
+  {
+   "id": "D-146",
+   "verdict": "match",
+   "pointer": "IR-APP-004 (rationale); FR-APP-007 AC-8 -> NaruServe-api/src/test/java/com/snoworca/naruserve/ServicesAcceptanceTest.java:212"
+  },
+  {
+   "id": "D-147",
+   "verdict": "match",
+   "pointer": "FR-APP-008 AC-1 -> NaruServe-api/src/test/java/com/snoworca/naruserve/ServicesAcceptanceTest.java:250"
+  },
+  {
+   "id": "D-148",
+   "verdict": "match",
+   "pointer": "FR-APP-008 AC-2 -> NaruServe-api/src/test/java/com/snoworca/naruserve/ServicesAcceptanceTest.java:264; FR-APP-010 AC-6 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StartFailureTest.java:115; FR-APP-011 AC-7 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownSequenceTest.java:308"
+  },
+  {
+   "id": "D-149",
+   "verdict": "match",
+   "pointer": "FR-APP-008 AC-1 -> NaruServe-api/src/test/java/com/snoworca/naruserve/ServicesAcceptanceTest.java:250; FR-APP-008 AC-5 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultApplicationContextTest.java:214"
+  },
+  {
+   "id": "D-150",
+   "verdict": "match",
+   "pointer": "FR-APP-008 AC-3 -> NaruServe-api/src/test/java/com/snoworca/naruserve/ServicesAcceptanceTest.java:282"
+  },
+  {
+   "id": "D-151",
+   "verdict": "match",
+   "pointer": "IR-APP-004 AC-1 -> NaruServe-api/src/test/java/com/snoworca/naruserve/AppLifecycleApiTest.java:90; FR-APP-008 AC-4 -> NaruServe-api/src/test/java/com/snoworca/naruserve/ServicesAcceptanceTest.java:333; OPS-APP-001 AC-3 -> NaruServe-api/src/test/java/com/snoworca/naruserve/AppDocsTest.java:239"
+  },
+  {
+   "id": "D-152",
+   "verdict": "match",
+   "pointer": "IR-APP-005 AC-1 -> NaruServe-api/src/test/java/com/snoworca/naruserve/AppLifecycleApiTest.java:179; IR-APP-005 AC-6 -> NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppLifecycleKotlinTest.kt:52; FR-APP-002 (rationale)"
+  },
+  {
+   "id": "D-153",
+   "verdict": "match",
+   "pointer": "IR-APP-005 AC-4 -> NaruServe-api/src/test/java/com/snoworca/naruserve/AppLifecycleApiTest.java:211; FR-APP-009 AC-1 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ListenStartupTest.java:78"
+  },
+  {
+   "id": "D-154",
+   "verdict": "match",
+   "pointer": "FR-APP-007 AC-5 -> NaruServe-api/src/test/java/com/snoworca/naruserve/ServicesAcceptanceTest.java:180; FR-APP-009 AC-2 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ListenStartupTest.java:124; FR-APP-009 AC-3 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ListenStartupTest.java:149"
+  },
+  {
+   "id": "D-155",
+   "verdict": "match",
+   "pointer": "IR-APP-005 AC-3 -> NaruServe-api/src/test/java/com/snoworca/naruserve/AppLifecycleApiTest.java:195; IR-APP-005 AC-6 -> NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppLifecycleKotlinTest.kt:52; FR-APP-009 AC-4 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ListenStartupTest.java:167"
+  },
+  {
+   "id": "D-156",
+   "verdict": "match",
+   "pointer": "FR-APP-009 AC-5 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StartGateTest.java:90; FR-APP-009 AC-8 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java:524"
+  },
+  {
+   "id": "D-428",
+   "verdict": "match",
+   "pointer": "FR-APP-009 AC-5 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StartGateTest.java:90; FR-APP-009 AC-6 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StartGateTest.java:104; FR-APP-009 AC-8 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java:524"
+  },
+  {
+   "id": "D-157",
+   "verdict": "match",
+   "pointer": "FR-APP-009 AC-3 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ListenStartupTest.java:149; FR-APP-010 AC-1 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StartFailureTest.java:49; FR-APP-010 AC-3 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StartFailureTest.java:74"
+  },
+  {
+   "id": "D-158",
+   "verdict": "match",
+   "pointer": "FR-APP-008 AC-3 -> NaruServe-api/src/test/java/com/snoworca/naruserve/ServicesAcceptanceTest.java:282; FR-APP-010 AC-4 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StartFailureTest.java:87"
+  },
+  {
+   "id": "D-159",
+   "verdict": "match",
+   "pointer": "IR-APP-005 AC-5 -> NaruServe-api/src/test/java/com/snoworca/naruserve/AppLifecycleApiTest.java:225; FR-APP-010 AC-1 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StartFailureTest.java:49; FR-APP-010 AC-2 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StartFailureTest.java:61"
+  },
+  {
+   "id": "D-160",
+   "verdict": "match",
+   "pointer": "FR-APP-010 AC-5 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StartFailureTest.java:102"
+  },
+  {
+   "id": "D-161",
+   "verdict": "match",
+   "pointer": "IR-APP-005 AC-4 -> NaruServe-api/src/test/java/com/snoworca/naruserve/AppLifecycleApiTest.java:211; FR-APP-011 AC-5 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownSequenceTest.java:238"
+  },
+  {
+   "id": "D-162",
+   "verdict": "match",
+   "pointer": "FR-APP-011 AC-1 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownSequenceTest.java:163; FR-APP-011 AC-2 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownSequenceTest.java:181; FR-APP-011 AC-6 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownSequenceTest.java:273"
+  },
+  {
+   "id": "D-401",
+   "verdict": "match",
+   "pointer": "FR-APP-011 AC-1 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownSequenceTest.java:163; FR-APP-011 AC-3 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownSequenceTest.java:200"
+  },
+  {
+   "id": "D-163",
+   "verdict": "match",
+   "pointer": "FR-APP-011 AC-4 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownSequenceTest.java:218"
+  },
+  {
+   "id": "D-164",
+   "verdict": "match",
+   "pointer": "FR-APP-012 AC-1 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownStatesTest.java:63"
+  },
+  {
+   "id": "D-426",
+   "verdict": "match",
+   "pointer": "IR-APP-005 AC-5 -> NaruServe-api/src/test/java/com/snoworca/naruserve/AppLifecycleApiTest.java:225; FR-APP-012 AC-2 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownStatesTest.java:74; FR-APP-012 AC-3 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownStatesTest.java:121"
+  },
+  {
+   "id": "D-427",
+   "verdict": "match",
+   "pointer": "FR-APP-012 AC-5 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownStatesTest.java:325"
+  },
+  {
+   "id": "D-438",
+   "verdict": "match",
+   "pointer": "FR-APP-012 AC-4 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownStatesTest.java:296; OPS-APP-001 AC-3 -> NaruServe-api/src/test/java/com/snoworca/naruserve/AppDocsTest.java:239"
+  },
+  {
+   "id": "D-165",
+   "verdict": "match",
+   "pointer": "FR-APP-012 AC-6 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownStatesTest.java:359"
+  },
+  {
+   "id": "D-166",
+   "verdict": "match",
+   "pointer": "FR-APP-013 AC-1 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StoppingGateTest.java:60; FR-APP-013 AC-3 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StoppingGateTest.java:77 | in-memory adapter 503+Connection: close matched; TinyHttpd keep-alive T44 carried to wave 5"
+  },
+  {
+   "id": "D-167",
+   "verdict": "match",
+   "pointer": "OPS-APP-001 AC-1 -> NaruServe-api/src/test/java/com/snoworca/naruserve/AppDocsTest.java:133"
+  },
+  {
+   "id": "D-168",
+   "verdict": "match",
+   "pointer": "IR-APP-006 AC-1 -> NaruServe-api/src/test/java/com/snoworca/naruserve/ConsoleLoggerTest.java:100"
+  },
+  {
+   "id": "D-169",
+   "verdict": "match",
+   "pointer": "IR-APP-001 AC-3 -> NaruServe-api/src/test/java/com/snoworca/naruserve/RestAppBuilderTest.java:150; IR-APP-006 AC-2 -> NaruServe-api/src/test/java/com/snoworca/naruserve/ConsoleLoggerTest.java:115; IR-APP-006 AC-5 -> NaruServe-api/src/test/java/com/snoworca/naruserve/ConsoleLoggerTest.java:216 | console logger default of RestApp.builder() matched; create() half carried to wave 5"
+  },
+  {
+   "id": "D-403",
+   "verdict": "match",
+   "pointer": "FR-APP-016 AC-1 -> NaruServe-logcat/src/test/java/com/snoworca/naruserve/logcat/LogcatLoggerTest.java:39; FR-APP-016 AC-2 -> NaruServe-logcat/src/test/java/com/snoworca/naruserve/logcat/LogcatLoggerTest.java:47; FR-APP-016 AC-3 -> NaruServe-logcat/src/test/java/com/snoworca/naruserve/logcat/LogcatLoggerTest.java:60"
+  },
+  {
+   "id": "D-170",
+   "verdict": "match",
+   "pointer": "IR-APP-006 AC-4 -> NaruServe-api/src/test/java/com/snoworca/naruserve/AppLifecycleApiTest.java:248"
+  },
+  {
+   "id": "D-171",
+   "verdict": "match",
+   "pointer": "FR-APP-014 AC-1 -> NaruServe-api/src/test/java/com/snoworca/naruserve/LoggerIsolationTest.java:89; FR-APP-014 AC-2 -> NaruServe-api/src/test/java/com/snoworca/naruserve/LoggerIsolationTest.java:117; FR-APP-014 AC-3 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AccessLogTest.java:24"
+  },
+  {
+   "id": "D-172",
+   "verdict": "match",
+   "pointer": "IR-APP-007 AC-1 -> NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogOptionsTest.java:42; IR-APP-007 AC-2 -> NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogOptionsTest.java:64; IR-APP-007 AC-3 -> NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogOptionsTest.java:80"
+  },
+  {
+   "id": "D-173",
+   "verdict": "match",
+   "pointer": "FR-APP-013 AC-2 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StoppingGateTest.java:60; FR-APP-015 AC-1 -> NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogAcceptanceTest.java:104; FR-APP-015 AC-2 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AccessLogTest.java:71"
+  },
+  {
+   "id": "D-174",
+   "verdict": "match",
+   "pointer": "FR-APP-015 AC-6 -> NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogAcceptanceTest.java:201"
+  },
+  {
+   "id": "D-175",
+   "verdict": "match",
+   "pointer": "SEC-APP-001 AC-1 -> NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogAcceptanceTest.java:239; SEC-APP-001 AC-3 -> NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogAcceptanceTest.java:257"
+  },
+  {
+   "id": "D-176",
+   "verdict": "match",
+   "pointer": "SEC-APP-001 AC-2 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AccessLogTest.java:122"
+  },
+  {
+   "id": "D-177",
+   "verdict": "match",
+   "pointer": "FR-APP-015 AC-4 -> NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogAcceptanceTest.java:188; FR-APP-015 AC-5 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java:538; OPS-APP-001 AC-4 -> NaruServe-api/src/test/java/com/snoworca/naruserve/AppDocsTest.java:257"
+  },
+  {
+   "id": "D-178",
+   "verdict": "match",
+   "pointer": "IR-APP-006 AC-5 -> NaruServe-api/src/test/java/com/snoworca/naruserve/ConsoleLoggerTest.java:216; FR-APP-016 AC-4 -> src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java:318; CON-APP-001 AC-1 -> src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java:327"
+  },
+  {
+   "id": "D-179",
+   "verdict": "match",
+   "pointer": "FR-APP-017 AC-6 -> NaruServe-filelog/src/test/java/com/snoworca/naruserve/filelog/RotatingFileLoggerTest.java:338; FR-APP-018 AC-1 -> NaruServe-slf4j/src/test/java/com/snoworca/naruserve/slf4j/Slf4jLoggerTest.java:74; FR-APP-018 AC-2 -> NaruServe-slf4j/src/test/java/com/snoworca/naruserve/slf4j/Slf4jLoggerTest.java:90"
+  },
+  {
+   "id": "D-180",
+   "verdict": "match",
+   "pointer": "FR-APP-017 AC-1 -> NaruServe-filelog/src/test/java/com/snoworca/naruserve/filelog/RotatingFileLoggerTest.java:55; FR-APP-017 AC-2 -> NaruServe-filelog/src/test/java/com/snoworca/naruserve/filelog/RotatingFileLoggerTest.java:75; FR-APP-017 AC-3 -> NaruServe-filelog/src/test/java/com/snoworca/naruserve/filelog/RotatingFileLoggerTest.java:121"
+  },
+  {
+   "id": "D-181",
+   "verdict": "match",
+   "pointer": "IR-APP-006 AC-2 -> NaruServe-api/src/test/java/com/snoworca/naruserve/ConsoleLoggerTest.java:115; IR-APP-007 AC-2 -> NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogOptionsTest.java:64; FR-APP-015 AC-1 -> NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogAcceptanceTest.java:104"
+  }
+ ],
+ "constraints": [
+  {
+   "id": "C-01",
+   "verdict": "match",
+   "pointer": "gradle/wrapper/gradle-wrapper.properties:3 gradle-8.14.3; no other build files added in window; ./gradlew build exit 0"
+  },
+  {
+   "id": "C-02",
+   "verdict": "match",
+   "pointer": "build.gradle:35 options.release = 8, :40 jvmTarget 1.8, :193 android-api-level-21 animal-sniffer over api/filelog/logcat; BuildChecksTest.fr_APP_017_AC6_filelogPassesAndIsGuardedByTheApi21AnimalSniffer"
+  },
+  {
+   "id": "C-03",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppEntryKotlinTest.kt, AppLifecycleKotlinTest.kt (IR-APP-005 AC-6, pass); @FunctionalInterface Middleware/Next/ErrorHandler; @NullMarked package-info in api/spi/internal and class-level on RotatingFileLogger/LogcatLogger/Slf4jLogger"
+  },
+  {
+   "id": "C-04",
+   "verdict": "match",
+   "pointer": "Servlet-filter-like Middleware(req,res,next) + onError/lifecycle in NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java; Servlet API kept out of NaruServe-api (CON-APP-001 checkClassReferences)"
+  },
+  {
+   "id": "C-05",
+   "verdict": "match",
+   "pointer": "docs/api/middleware.md, app.md, lifecycle.md, logging.md, express-migration.md updated with Express equivalents; OPS-APP-001 AC-1..7 tests (ApplicationDocsTest) and OPS-APP-002 docs-compile pass"
+  },
+  {
+   "id": "C-06",
+   "verdict": "match",
+   "pointer": "settings.gradle:4-5 include NaruServe-api and NaruServe-servlet (plus wave-1 modules); wave 4 adds code only to api/filelog/logcat/slf4j"
+  },
+  {
+   "id": "C-07",
+   "verdict": "match",
+   "pointer": "wave-4-owned (미확정) markers removed from docs/api (git diff 2a39267..6289ee1 docs/api/README.md, express-migration.md, middleware.md, routing.md); RoutingDocsTest.noMarkerRemains (OPS-ROUTE-003 AC-3) and OPS-APP-001 marker tests pass; remaining markers belong to later waves (ws, LAN bind, redirect, cors)"
+  },
+  {
+   "id": "C-08",
+   "verdict": "match",
+   "pointer": "docs/analysis/2026-10-19.NaruServe.naruserve-v1/auto_decisions.json (+23 lines: stage-4 partition-review gate decided autonomously); run proceeded without user stop"
+  },
+  {
+   "id": "C-09",
+   "verdict": "match",
+   "pointer": "wave 4 covers object.md T35-T43,T45,T46 (dispatcher/HTTP parts) via FR-APP-003..015 tests; regression ./gradlew build exit 0"
+  }
+ ],
+ "preservation": [
+  {
+   "item": "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java",
+   "verdict": "intended-improvement",
+   "evidence": "adds service(Class)/application() accessors and updates the wave-3 javadoc (IR-APP-004 AC-3, FR-APP-007 AC-1); -2 lines are only the stale javadoc"
+  },
+  {
+   "item": "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java",
+   "verdict": "intended-improvement",
+   "evidence": "adds create(), builder(), use/onError/onStart/onStop/listen/shutdown/state/logger/accessLog (IR-APP-001..007, FR-APP-001 AC-1); only the class javadoc line removed"
+  },
+  {
+   "item": "NaruServe-api/src/main/java/com/snoworca/naruserve/RouteBuilder.java",
+   "verdict": "intended-improvement",
+   "evidence": "adds route-middleware overloads/use (IR-APP-002 AC-2, AC-4); additions only"
+  },
+  {
+   "item": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/BodyState.java",
+   "verdict": "intended-improvement",
+   "evidence": "adds body-byte accounting for access-log bytes (FR-APP-015 AC-4, AC-5; D-177); additions only"
+  },
+  {
+   "item": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java",
+   "verdict": "intended-improvement",
+   "evidence": "malformed query now raises HttpException 400 into the error path instead of IllegalArgumentException (FR-HTTP-025 AC-3); service/application accessors (FR-APP-007 AC-1)"
+  },
+  {
+   "item": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+   "verdict": "intended-improvement",
+   "evidence": "afterFailure replaced: empty-body 500 superseded by the standard error body and arrival-state rule (FR-APP-005 AC-6, AC-9; FR-HTTP-024 AC-1..3); the wave-3 'shortcut: error is not kept' debt is paid"
+  },
+  {
+   "item": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+   "verdict": "intended-improvement",
+   "evidence": "state machine, NEW guard, start gate, shutdown sequence, resource close (FR-APP-002, FR-APP-008..013); 35 removed lines are the wave-3 freeze/harness path replaced by listen() (FR-APP-009 AC-7)"
+  },
+  {
+   "item": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+   "verdict": "intended-improvement",
+   "evidence": "pipeline, fallback point, standard error bodies, access log, request id (FR-HTTP-021, FR-HTTP-022, FR-APP-003, FR-APP-006, FR-APP-015); removed lines are the wave-3 empty-body automatic responses superseded by FR-HTTP-022"
+  },
+  {
+   "item": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java",
+   "verdict": "intended-improvement",
+   "evidence": "assertEmpty(4xx/5xx) replaced by stricter assertError (status, JSON type, exact Content-Length, code, message, requestId) per FR-HTTP-022 AC-1..7/FR-HTTP-023; +TRACE 501 and Content-Length null checks; FR-APP-009 AC-7 test added; no assertion weakened"
+  },
+  {
+   "item": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java",
+   "verdict": "intended-improvement",
+   "evidence": "surface allowlist extended for wave-4 methods (FR-APP-001 AC-1, IR-APP-002 AC-2); no deleted assertions"
+  },
+  {
+   "item": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java",
+   "verdict": "intended-improvement",
+   "evidence": "re-pointed to successor OPS-HTTP-003 AC rows; no deleted assertions"
+  },
+  {
+   "item": "NaruServe-api/src/test/java/com/snoworca/naruserve/RoutingDocsTest.java",
+   "verdict": "intended-improvement",
+   "evidence": "marker count tightened from 1 to 0 (OPS-ROUTE-003 AC-3 successor of OPS-ROUTE-002 AC-3, use(middleware) decided by D-137); strengthened"
+  },
+  {
+   "item": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRequestTest.java",
+   "verdict": "intended-improvement",
+   "evidence": "IllegalArgumentException check replaced by HttpException 400 fresh-per-call + req.query path (FR-HTTP-025 AC-3); empty-400 check replaced by DispatcherTest.assertError which still asserts !abnormallyClosed; not weakened"
+  },
+  {
+   "item": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRestAppTest.java",
+   "verdict": "intended-improvement",
+   "evidence": "empty-offenders check re-pointed to exactly [RestApp.builder, RestApp.create] (FR-APP-001 AC-1, FR-APP-002 AC-5; exact list, not looser); FR-APP-002 AC-5 guard test added"
+  },
+  {
+   "item": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java",
+   "verdict": "intended-improvement",
+   "evidence": "20 removed assertEmpty/size lines all replaced by assertError (includes !abnormallyClosed) or exact-size checks (headers size 2, Content-Type/Length values) per FR-HTTP-021..024; doubleEncodedDots/errorAfterStream tests kept under renamed ids (lines 303, 469); not weakened"
+  },
+  {
+   "item": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/PercentDecoderTest.java",
+   "verdict": "intended-improvement",
+   "evidence": "comment/id re-point only (FR-HTTP-025 successor), 2/2 lines"
+  },
+  {
+   "item": "NaruServe-api/src/test/java/com/snoworca/naruserve/testing/InMemoryHttpAdapterTest.java",
+   "verdict": "intended-improvement",
+   "evidence": "Content-Length 0/empty body replaced by standard 405 body checks (FR-HTTP-022 AC-2); FR-APP-009 AC-7 harness tests added; stricter"
+  },
+  {
+   "item": "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/TestApp.java",
+   "verdict": "intended-improvement",
+   "evidence": "harness now builds via RestApp.builder() with StubJsonCodec and starts through listen() (FR-APP-009 AC-7); freeze-exception unwrapped semantics retained (InMemoryHttpAdapterTest RoutingConfigException check)"
+  },
+  {
+   "item": "build.gradle",
+   "verdict": "intended-improvement",
+   "evidence": "slf4j-api moved to api scope for the public Slf4jLogger(org.slf4j.Logger) ctor (FR-APP-018), org/slf4j forbidden prefix and checkLoggerPlacement (CON-APP-001 AC-1..3), filelog testFixtures dep (FR-APP-017 AC-7); additions only"
+  },
+  {
+   "item": "docs/analysis/2026-10-19.NaruServe.naruserve-v1/auto_decisions.json",
+   "verdict": "intended-improvement",
+   "evidence": "appends stage-4 autonomous gate decisions (C-08); additions only"
+  },
+  {
+   "item": "docs/api/README.md",
+   "verdict": "intended-improvement",
+   "evidence": "RestApp.builder() marker removed with decided method list (OPS-APP-001, IR-APP-001; D-137)"
+  },
+  {
+   "item": "docs/api/app.md",
+   "verdict": "intended-improvement",
+   "evidence": "builder/create/AppFactory/JVM-lifetime documented (OPS-APP-001 AC-1, FR-APP-001; D-167)"
+  },
+  {
+   "item": "docs/api/express-migration.md",
+   "verdict": "intended-improvement",
+   "evidence": "multi-middleware, req.path prefix, custom 404 markers settled (OPS-APP-001; D-137)"
+  },
+  {
+   "item": "docs/api/lifecycle.md",
+   "verdict": "intended-improvement",
+   "evidence": "registerExternal, STARTING shutdown timeout, start gate documented (OPS-APP-001 AC-3; D-151, D-438, D-428)"
+  },
+  {
+   "item": "docs/api/logging.md",
+   "verdict": "intended-improvement",
+   "evidence": "line format, defaults, Logcat tag, byte fields, logger close (OPS-APP-001 AC-4; D-177, D-181)"
+  },
+  {
+   "item": "docs/api/middleware.md",
+   "verdict": "intended-improvement",
+   "evidence": "error codes, onError chain, overload-503 row correction (OPS-APP-001 AC-2; D-134, D-137)"
+  },
+  {
+   "item": "docs/api/routing.md",
+   "verdict": "intended-improvement",
+   "evidence": "RouteBuilder.use marker settled (OPS-ROUTE-003 AC-3; D-137)"
+  },
+  {
+   "item": "src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java",
+   "verdict": "intended-improvement",
+   "evidence": "adds FR-APP-017 AC-6, CON-APP-001, OPS-HTTP-004 AC-1 build checks; additions only"
+  },
+  {
+   "item": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java",
+   "verdict": "intended-improvement",
+   "evidence": "skip list shrunk because wave-4 API now compiles those examples (OPS-HTTP-004, OPS-APP-002); removed @req OPS-HTTP-002 tags re-pointed to successor; gate tightened, not weakened"
+  }
+ ],
+ "unit": [
+  {
+   "id": "lane-2026-10-19.naruserve.naruserve-v1-wave-4",
+   "verdict": "match",
+   "pointer": "lane head e344a66 is ancestor of integration head 7d83773 via merge 6289ee1; 14 Orch-Lane trailer commits (d395227..e344a66) reachable; ./gradlew build exit 0, no failing tests"
+  }
+ ],
+ "findings": [
+  {
+   "finding_id": "P1-001",
+   "severity": "medium",
+   "claim": "Process gap: behaviour and public API added by commit 9b502e3 have no SRS acceptance criterion. shutdown() called from a request thread runs the sequence on a separate non-daemon 'naruserve-shutdown' thread and returns at once (inline fallback when the thread cannot start), and RotatingFileLogger gains public rotationFailureCount() with backoff-on-rename-failure semantics. FR-APP-011 (AC-5 is two-thread concurrency) and FR-APP-017 (AC-2 is rotation naming) do not state either, yet tests cite them (FR_APP_011_AC5_shutdownFromARouteHandler..., FR_APP_017_AC2_persistentRenameFailure...). CLAUDE.md forbids behaviour not covered by an SRS requirement.",
+   "evidence": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:375; NaruServe-filelog/src/main/java/com/snoworca/naruserve/filelog/RotatingFileLogger.java:158; docs/api/lifecycle.md:170; docs/api/logging.md:118; docs/spec/05.application.srs.md:1217,1681",
+   "suggested_fix": "Add ACs through kiwi-srs-sync/MCP: FR-APP-011 AC for in-request shutdown (non-blocking, response completes, TERMINATED reached, inline fallback) and FR-APP-017 AC for rotation-failure counting/backoff with rotationFailureCount(); re-point the two test ids to them."
+  },
+  {
+   "finding_id": "P1-002",
+   "severity": "low",
+   "claim": "BuildLayoutTest still names the discarded OPS-HTTP-002 AC-1 (superseded by OPS-HTTP-004) in its comment and method id, so traceability scans see a reference to a discarded requirement.",
+   "evidence": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:266-268",
+   "suggested_fix": "Rename to cite OPS-HTTP-004 AC-1 (or drop the citation since BuildChecksTest:365 now carries it)."
+  },
+  {
+   "finding_id": "P1-003",
+   "severity": "low",
+   "claim": "SDS wave-4-4 (status agreed) interface signatures drift from code: MiddlewarePipeline.run gains ErrorPath and requestId parameters and Dispatcher.fallback gains requestId; SDS-AC-11 says the Dispatcher hands exceptions to ErrorPath while run now receives ErrorPath. Behaviour matches the SRS; only the SDS text is stale.",
+   "evidence": "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-4.sds.md:29,35,63; NaruServe-api/src/main/java/com/snoworca/naruserve/internal/MiddlewarePipeline.java:67; NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:247",
+   "suggested_fix": "Update the SDS signatures at kiwi-sds --close (or before closing) so the closed record matches code."
+  }
+ ],
+ "roll_up": "GAPS"
+}
