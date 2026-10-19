@@ -28,6 +28,7 @@ public class MultipartDisconnectSocketTest {
     public final TemporaryFolder tmp = new TemporaryFolder();
 
     // FR-MULTIPART-006 AC-1
+    // SDS-AC-6
     @Test
     public void sdsAc6_FR_MULTIPART_006_AC1_halfSentSpooledPartLeavesNoTempFile() throws Exception {
         File dir = tmp.newFolder("spool");

@@ -94,6 +94,7 @@ public class DefaultUploadFileTest {
     }
 
     // FR-MULTIPART-005 AC-1, FR-MULTIPART-005 AC-5
+    // SDS-AC-3
     @Test
     public void sdsAc3_FR_MULTIPART_005_AC1_saveReplacesDestinationThenDeletesTempFile() throws Exception {
         byte[] c = content(5000);
@@ -156,6 +157,7 @@ public class DefaultUploadFileTest {
     }
 
     // FR-MULTIPART-005 AC-4
+    // SDS-AC-4
     @Test
     public void sdsAc4_FR_MULTIPART_005_AC4_releaseClosesHandedOutStreams() throws Exception {
         byte[] c = content(4000);
@@ -204,6 +206,7 @@ public class DefaultUploadFileTest {
     }
 
     // FR-MULTIPART-005 AC-5
+    // SDS-AC-5
     @Test
     public void sdsAc5_FR_MULTIPART_005_AC5_closeReleasesContentAndKeepsMetadata() throws Exception {
         for (int threshold : new int[] {100, 65536}) {

@@ -122,6 +122,7 @@ public class MultipartLimitsTest {
     }
 
     // FR-MULTIPART-001 AC-4
+    // SDS-AC-4
     @Test
     public void sdsAc4_FR_MULTIPART_001_AC4_headerLineOf8192IsAcceptedAnd8193Gives413() throws IOException {
         String prefix = "Content-Disposition: form-data; name=\"a\"; x=\"";
@@ -134,6 +135,7 @@ public class MultipartLimitsTest {
     }
 
     // FR-MULTIPART-001 AC-4
+    // SDS-AC-4
     @Test
     public void sdsAc4_FR_MULTIPART_001_AC4_headerTotalAbove16384Gives413AndCrlfIsNotCounted() throws IOException {
         String disposition = "Content-Disposition: form-data; name=\"a\"";
@@ -147,6 +149,7 @@ public class MultipartLimitsTest {
     }
 
     // FR-MULTIPART-002 AC-1
+    // SDS-AC-5
     @Test
     public void sdsAc5_FR_MULTIPART_002_AC1_twentyPartsAreAcceptedAndTheTwentyFirstGives413BeforeItsHeaders()
             throws IOException {
@@ -161,6 +164,7 @@ public class MultipartLimitsTest {
     }
 
     // FR-MULTIPART-002 AC-1
+    // SDS-AC-6
     @Test
     public void sdsAc6_FR_MULTIPART_002_AC1_fileOf1024IsAcceptedAnd1025Gives413OnTheFirstByteAbove()
             throws IOException {
@@ -178,6 +182,7 @@ public class MultipartLimitsTest {
     }
 
     // FR-MULTIPART-002 AC-1
+    // SDS-AC-6
     @Test
     public void sdsAc6_FR_MULTIPART_002_AC1_textPartsDoNotCountAgainstMaxFileSize() throws IOException {
         MultipartSettings s = settings();
@@ -198,6 +203,7 @@ public class MultipartLimitsTest {
     }
 
     // FR-MULTIPART-002 AC-2
+    // SDS-AC-7
     @Test
     public void sdsAc7_FR_MULTIPART_002_AC2_chunkedBodyOverMaxRequestSizeStopsWithinOneReadBuffer()
             throws IOException {
@@ -211,6 +217,7 @@ public class MultipartLimitsTest {
     }
 
     // FR-MULTIPART-002 AC-2
+    // SDS-AC-7
     @Test
     public void sdsAc7_FR_MULTIPART_002_AC2_contentLengthAboveMaxRequestSizeGives413BeforeAnyRead()
             throws IOException {
@@ -223,6 +230,7 @@ public class MultipartLimitsTest {
     }
 
     // FR-MULTIPART-002 AC-3
+    // SDS-AC-8
     @Test
     public void sdsAc8_FR_MULTIPART_002_AC3_urlencodedBodyOfOneMebibyteParsesAndOneByteMoreGives413()
             throws IOException {
@@ -242,6 +250,7 @@ public class MultipartLimitsTest {
     }
 
     // FR-MULTIPART-002 AC-3
+    // SDS-AC-8
     @Test
     public void sdsAc8_FR_MULTIPART_002_AC3_urlencodedPairsAreDecodedInOrder() throws IOException {
         Map<String, List<String>> form = FormBodyReader.read(in("name=Kim+Lee&name=x&&a&city=%EC%84%9C"), -1, 1048576L);

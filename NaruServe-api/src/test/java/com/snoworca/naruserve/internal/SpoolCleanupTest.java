@@ -67,6 +67,7 @@ public class SpoolCleanupTest {
     }
 
     // FR-MULTIPART-006 AC-1, FR-MULTIPART-006 AC-4
+    // SDS-AC-6
     @Test
     public void sdsAc6_FR_MULTIPART_006_AC1_requestEndDeletesTempFilesOnEveryPath() throws Exception {
         File dir = tmp.newFolder("spool");
@@ -149,6 +150,7 @@ public class SpoolCleanupTest {
     }
 
     // FR-MULTIPART-006 AC-2
+    // SDS-AC-8
     @Test
     public void sdsAc8_FR_MULTIPART_006_AC2_openUploadAtShutdownDeletedAfterOnStop() throws Exception {
         File dir = tmp.newFolder("spool");
@@ -181,6 +183,7 @@ public class SpoolCleanupTest {
     }
 
     // FR-MULTIPART-006 AC-3
+    // SDS-AC-7
     @Test
     public void sdsAc7_FR_MULTIPART_006_AC3_parseAfterCleanupParticipantGets500AndNoFile() throws Exception {
         File dir = tmp.newFolder("spool");

@@ -174,6 +174,7 @@ public class MultipartCrossAdapterTest {
     }
 
     // FR-MULTIPART-001 AC-4
+    // SDS-AC-4
     @Test
     public void sdsAc4_FR_MULTIPART_001_AC4_partHeaderLimitsGiveTheSameResultsOnBothAdapters() throws IOException {
         String[] bodies = {
@@ -224,6 +225,7 @@ public class MultipartCrossAdapterTest {
 
     // FR-MULTIPART-001 AC-5
     // FR-MULTIPART-002 AC-2
+    // SDS-AC-7
     @Test
     public void sdsAc7_FR_MULTIPART_001_AC5_sixtyFourMebibytesPassOverTinyHttpdAndOneByteMoreGives413()
             throws IOException {

@@ -73,6 +73,7 @@ public class MultipartSpoolingTest {
     }
 
     // FR-MULTIPART-004 AC-1
+    // SDS-AC-1
     @Test
     public void sdsAc1_FR_MULTIPART_004_AC1_partAboveThresholdSpoolsToOneTempFile() throws Exception {
         File dir = tmp.newFolder("t");
@@ -85,6 +86,7 @@ public class MultipartSpoolingTest {
     }
 
     // FR-MULTIPART-004 AC-3, FR-MULTIPART-004 AC-4
+    // SDS-AC-2
     @Test
     public void sdsAc2_FR_MULTIPART_004_AC3_tempNamesNeverDeriveFromClientValues() throws Exception {
         char[] longName = new char[300];

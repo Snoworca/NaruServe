@@ -60,6 +60,7 @@ public class MultipartParserTest {
     }
 
     // FR-MULTIPART-001 AC-2
+    // SDS-AC-1
     @Test
     public void sdsAc1_FR_MULTIPART_001_AC2_boundaryNameIsCaseInsensitiveAndQuotedValuesAreUnquoted() {
         assertEquals("abc", MultipartParser.boundary("multipart/form-data; BOUNDARY=abc"));
@@ -71,6 +72,7 @@ public class MultipartParserTest {
     }
 
     // FR-MULTIPART-001 AC-2
+    // SDS-AC-1
     @Test
     public void sdsAc1_FR_MULTIPART_001_AC2_missingEmptyLongBadCharOrTrailingSpaceBoundaryIsNull() {
         char[] long71 = new char[71];
@@ -86,6 +88,7 @@ public class MultipartParserTest {
     }
 
     // FR-MULTIPART-001 AC-2
+    // SDS-AC-2
     @Test
     public void sdsAc2_FR_MULTIPART_001_AC2_partWithoutNameOrFormDataDispositionGives400() throws IOException {
         assertStatus(400, "--XyZ\r\nContent-Disposition: form-data\r\n\r\nv\r\n--XyZ--\r\n", settings());
@@ -94,6 +97,7 @@ public class MultipartParserTest {
     }
 
     // FR-MULTIPART-001 AC-2
+    // SDS-AC-2
     @Test
     public void sdsAc2_FR_MULTIPART_001_AC2_missingFirstOrCloseDelimiterGives400() throws IOException {
         assertStatus(400, "no delimiter at all", settings());
@@ -102,6 +106,7 @@ public class MultipartParserTest {
     }
 
     // FR-MULTIPART-001 AC-2
+    // SDS-AC-2
     @Test
     public void sdsAc2_FR_MULTIPART_001_AC2_truncatedSpooledPartLeavesNoTempFile() throws IOException {
         MultipartSettings s = settings();
@@ -115,6 +120,7 @@ public class MultipartParserTest {
     }
 
     // FR-MULTIPART-001 AC-2
+    // SDS-AC-3
     @Test
     public void sdsAc3_FR_MULTIPART_001_AC2_preambleAndEpilogueAreIgnored() throws IOException {
         String body = "preamble line\r\nmore preamble -XyZ\r\n--XyZ\r\nContent-Disposition: form-data; name=\"a\"\r\n\r\n"
@@ -144,6 +150,7 @@ public class MultipartParserTest {
     }
 
     // FR-MULTIPART-001 AC-2
+    // SDS-AC-3
     @Test
     public void sdsAc3_FR_MULTIPART_001_AC2_spooledFileContentIsKeptAcrossReadBuffers() throws IOException {
         MultipartSettings s = settings();
