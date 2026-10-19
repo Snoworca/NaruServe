@@ -11,9 +11,6 @@ import com.snoworca.naruserve.Logger;
 import com.snoworca.naruserve.Method;
 import com.snoworca.naruserve.MethodSet;
 import com.snoworca.naruserve.Middleware;
-import com.snoworca.naruserve.Next;
-import com.snoworca.naruserve.Request;
-import com.snoworca.naruserve.Response;
 import com.snoworca.naruserve.RestApp;
 import com.snoworca.naruserve.RouteBuilder;
 import com.snoworca.naruserve.RouteHandler;
@@ -48,6 +45,7 @@ import org.jspecify.annotations.Nullable;
 // @req IR-APP-007
 // @req FR-APP-002
 // @req FR-APP-009
+// @req FR-APP-003
 public final class DefaultRestApp implements RestApp {
 
     /** One registration call as recorded; the router is built from these at freeze. */
@@ -322,6 +320,7 @@ public final class DefaultRestApp implements RestApp {
     }
 
     // @req IR-APP-002
+    // @req FR-APP-003
     @Override
     public synchronized RestApp use(Middleware mw) {
         lifecycle.requireConfigurable("use");
@@ -330,6 +329,7 @@ public final class DefaultRestApp implements RestApp {
     }
 
     // @req IR-APP-002
+    // @req FR-APP-003
     @Override
     public synchronized RestApp use(String prefix, Middleware mw) {
         lifecycle.requireConfigurable("use");
@@ -386,6 +386,7 @@ public final class DefaultRestApp implements RestApp {
     }
 
     // @req IR-APP-002
+    // @req FR-APP-003
     @Override
     public RestApp route(MethodSet methods, String path, Middleware mw, RouteHandler h) {
         return register("route", methods, path, mw, true, h);
@@ -441,55 +442,8 @@ public final class DefaultRestApp implements RestApp {
             throw new NullPointerException(methods == null ? "methods" : "h");
         }
         RoutePattern.parse(path);
-        registrations.add(new Registration(methods, path, route.isEmpty() ? h : new RouteChain(route, h), kind));
-    }
-
-    /**
-     * Route middleware then the handler, on the calling thread.
-     * shortcut: no once-only Next or error-handler dispatch; the FR-APP-003/FR-APP-004 pipeline replaces this.
-     */
-    // @req IR-APP-002
-    static final class RouteChain implements RouteHandler {
-        final List<Middleware> middleware;
-        final RouteHandler handler;
-
-        RouteChain(List<Middleware> middleware, RouteHandler handler) {
-            this.middleware = Collections.unmodifiableList(new ArrayList<>(middleware));
-            this.handler = handler;
-        }
-
-        @Override
-        public void handle(Request req, Response res) throws Exception {
-            step(0, req, res);
-        }
-
-        private void step(int i, Request req, Response res) throws Exception {
-            if (i == middleware.size()) {
-                handler.handle(req, res);
-                return;
-            }
-            middleware.get(i).handle(req, res, new Next() {
-                @Override
-                public void run() {
-                    try {
-                        step(i + 1, req, res);
-                    } catch (Exception e) {
-                        throw DefaultRestApp.<RuntimeException>sneaky(e);
-                    }
-                }
-
-                @Override
-                public void error(Throwable error) {
-                    throw DefaultRestApp.<RuntimeException>sneaky(error);
-                }
-            });
-        }
-    }
-
-    // Rethrows a checked exception unchanged through Next.run(), which declares none.
-    @SuppressWarnings("unchecked")
-    private static <E extends Throwable> E sneaky(Throwable t) throws E {
-        throw (E) t;
+        registrations.add(new Registration(methods, path,
+                route.isEmpty() ? h : new MiddlewarePipeline.RouteChain(route, h), kind));
     }
 
     /**
@@ -510,7 +464,14 @@ public final class DefaultRestApp implements RestApp {
             }
         }
         router.freeze();
-        dispatcher = new Dispatcher(router);
+        MiddlewarePipeline pipeline = new MiddlewarePipeline(policy);
+        for (Middleware mw : globalMiddleware) {
+            pipeline.addGlobal(mw);
+        }
+        for (PrefixMiddleware pm : prefixMiddleware) {
+            pipeline.addPrefix(pm.prefix, pm.middleware);
+        }
+        dispatcher = new Dispatcher(router, pipeline, new ErrorPath(errorHandlers), new AccessLog());
         lifecycle.markFrozen();
     }
 
@@ -555,6 +516,7 @@ public final class DefaultRestApp implements RestApp {
         }
 
         // @req IR-APP-002
+        // @req FR-APP-003
         @Override
         public RouteBuilder use(Middleware mw) {
             synchronized (DefaultRestApp.this) {

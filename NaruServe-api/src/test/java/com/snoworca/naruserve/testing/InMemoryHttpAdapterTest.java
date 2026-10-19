@@ -122,8 +122,12 @@ public class InMemoryHttpAdapterTest {
         ClientResponse viaHarness = t.send("GET", "/p");
         assertEquals(405, viaHarness.status());
         assertEquals("POST, OPTIONS", viaHarness.header("Allow"));
-        assertEquals("0", viaHarness.header("Content-Length"));
-        assertEquals(0, viaHarness.body().length);
+        // FR-HTTP-022 AC-2 (wave 4 successor of FR-HTTP-003): the 405 carries the standard error body.
+        assertEquals(String.valueOf(viaHarness.body().length), viaHarness.header("Content-Length"));
+        assertEquals("application/json; charset=UTF-8", viaHarness.header("Content-Type"));
+        String body = new String(viaHarness.body(), java.nio.charset.StandardCharsets.UTF_8);
+        assertTrue(body, body.matches("\\{\"error\":\\{\"code\":\"METHOD_NOT_ALLOWED\","
+                + "\"message\":\"Method Not Allowed\",\"requestId\":\"[0-9a-f]{16}\"}}"));
         // The adapter handed to create() is the one bound: it reaches the same dispatcher directly.
         ClientResponse direct = adapter.send(ClientRequest.of("GET", "/nothing"));
         assertEquals(404, direct.status());

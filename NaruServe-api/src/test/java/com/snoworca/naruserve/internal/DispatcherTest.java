@@ -25,7 +25,8 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.junit.Test;
 
 /**
- * Dispatcher checks and handler invocation. SDS-AC-n cites docs/sds/2026-10-19.naruserve.naruserve-v1-wave-3-3.sds.md.
+ * Dispatcher checks and handler invocation. A bare SDS-AC-n cites docs/sds/2026-10-19.naruserve.naruserve-v1-wave-3-3.sds.md;
+ * cases re-pointed to the wave 4 successors name their SDS.
  */
 public class DispatcherTest {
 
@@ -61,9 +62,20 @@ public class DispatcherTest {
         start();
     }
 
-    // SDS-AC-1; FR-HTTP-002 AC-2
+    /** The standard error body of FR-APP-006: JSON type, exact Content-Length, code and reason message. */
+    static void assertError(int status, String code, String message, ClientResponse r) {
+        assertEquals(status, r.status());
+        assertEquals("application/json; charset=UTF-8", r.header("Content-Type"));
+        assertEquals(String.valueOf(r.body().length), r.header("Content-Length"));
+        String body = new String(r.body(), StandardCharsets.UTF_8);
+        assertTrue(body, body.matches("\\{\"error\":\\{\"code\":\"" + code + "\",\"message\":\"" + message
+                + "\",\"requestId\":\"[0-9a-f]{16}\"}}"));
+        assertFalse(r.abnormallyClosed());
+    }
+
+    // SDS-AC-19, SDS-AC-13 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-4.sds.md; FR-HTTP-021 AC-2, FR-HTTP-023 AC-2
     @Test
-    public void sdsAc1_FR_HTTP_002_AC2_optionsAsteriskIsAnswered204BeforePathValidation() {
+    public void sdsAc19_FR_HTTP_021_AC2_FR_HTTP_023_AC2_optionsAsteriskIsAnswered204BeforePathValidation() {
         anyOnRootAndVariable();
         ClientResponse r = send("OPTIONS", "*");
         assertEquals(204, r.status());
@@ -73,116 +85,193 @@ public class DispatcherTest {
         assertEquals(0, calls.get());
     }
 
-    // SDS-AC-1; FR-HTTP-002 AC-2, FR-HTTP-002 AC-3
+    // SDS-AC-13, SDS-AC-14 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-4.sds.md; FR-HTTP-021 AC-2, FR-HTTP-021 AC-3
     @Test
-    public void sdsAc1_FR_HTTP_002_AC2_AC3_validatorRejectionIs400BeforeAnyMatch() {
+    public void sdsAc13_FR_HTTP_021_AC2_AC3_validatorRejectionIs400WithTheStandardBodyBeforeAnyMatch() {
         anyOnRootAndVariable();
-        assertEmpty(400, send("GET", "/%2e%2e"));
-        assertEmpty(400, send("GET", "/a%2Fb"));
+        assertError(400, "BAD_REQUEST", "Bad Request", send("GET", "/%2e%2e"));
+        assertError(400, "BAD_REQUEST", "Bad Request", send("GET", "/a%2Fb"));
         assertEquals(0, calls.get());
     }
 
-    // SDS-AC-2; FR-HTTP-002 AC-4, FR-HTTP-005 AC-3
+    // SDS-AC-13, SDS-AC-14 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-4.sds.md; FR-HTTP-021 AC-4, FR-HTTP-023 AC-3
     @Test
-    public void sdsAc2_FR_HTTP_002_AC4_FR_HTTP_005_AC3_preRequestRejectionsNeverReachTheHandler() {
+    public void sdsAc13_FR_HTTP_021_AC4_FR_HTTP_023_AC3_preRequestRejectionsNeverReachTheHandler() {
         anyOnRootAndVariable();
-        assertEmpty(501, send("FOO", "/x"));
-        assertEmpty(400, send("GET", "abc"));
-        assertEmpty(400, send("GET", "*"));
+        assertError(501, "NOT_IMPLEMENTED", "Not Implemented", send("FOO", "/x"));
+        assertError(501, "NOT_IMPLEMENTED", "Not Implemented", send("get", "/x"));
+        assertError(400, "BAD_REQUEST", "Bad Request", send("GET", "abc"));
+        assertError(400, "BAD_REQUEST", "Bad Request", send("GET", "*"));
         assertEquals(0, calls.get());
     }
 
-    // SDS-AC-3; FR-HTTP-003 AC-2
+    // SDS-AC-13 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-4.sds.md; FR-HTTP-021 AC-2
     @Test
-    public void sdsAc3_FR_HTTP_003_AC2_methodMismatchListsAllowInDeclarationOrder() {
+    public void sdsAc13_FR_HTTP_021_AC2_checksRunInOrderAsteriskSlashValidatorToken() {
+        anyOnRootAndVariable();
+        // A non-'/' path and a validator rejection both win over an unknown token: 400 before 501.
+        assertEquals(400, send("FOO", "abc").status());
+        assertEquals(400, send("FOO", "/%2e%2e").status());
+        assertEquals(400, send("POST", "*").status());
+        assertEquals(400, send("FOO", "*").status());
+        assertEquals(204, send("OPTIONS", "*").status());
+        assertEquals(0, calls.get());
+    }
+
+    // SDS-AC-13 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-4.sds.md; FR-HTTP-021 AC-2
+    @Test
+    public void sdsAc13_FR_HTTP_021_AC2_methodOfMatchesDeclarationNamesExactly() {
+        for (Method m : Method.values()) {
+            assertEquals(m, Dispatcher.methodOf(m.name()));
+        }
+        assertNull(Dispatcher.methodOf("get"));
+        assertNull(Dispatcher.methodOf("BREW"));
+        assertNull(Dispatcher.methodOf(""));
+    }
+
+    // SDS-AC-14 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-4.sds.md; FR-HTTP-021 AC-3
+    @Test
+    public void sdsAc14_FR_HTTP_021_AC3_headTokenRejectionKeepsTheLengthAndWritesNoBytes() {
+        anyOnRootAndVariable();
+        ClientResponse r = send("HEAD", "/%2e%2e");
+        assertEquals(400, r.status());
+        assertEquals("application/json; charset=UTF-8", r.header("Content-Type"));
+        int length = StandardErrors.json(400, "Bad Request", "0000000000000000").length;
+        assertEquals(String.valueOf(length), r.header("Content-Length"));
+        assertEquals(0, r.body().length);
+        assertFalse(r.abnormallyClosed());
+    }
+
+    // SDS-AC-15 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-4.sds.md; FR-HTTP-022 AC-2
+    @Test
+    public void sdsAc15_FR_HTTP_022_AC2_methodMismatchListsAllowInDeclarationOrder() {
         router.add(Method.POST, "/p", recording);
         router.add(Method.GET, "/r", recording);
         start();
         ClientResponse p = send("GET", "/p");
-        assertEmpty(405, p);
+        assertError(405, "METHOD_NOT_ALLOWED", "Method Not Allowed", p);
         assertEquals("POST, OPTIONS", p.header("Allow"));
         ClientResponse r = send("DELETE", "/r");
-        assertEmpty(405, r);
+        assertError(405, "METHOD_NOT_ALLOWED", "Method Not Allowed", r);
         assertEquals("GET, HEAD, OPTIONS", r.header("Allow"));
         assertEquals(0, calls.get());
     }
 
-    // SDS-AC-3; FR-HTTP-003 AC-7
+    // SDS-AC-15 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-4.sds.md; FR-HTTP-022 AC-7
     @Test
-    public void sdsAc3_FR_HTTP_003_AC7_anyExceptDeleteGives405WithAllow() {
+    public void sdsAc15_FR_HTTP_022_AC7_anyExceptDeleteGives405WithAllow() {
         router.add(Method.any().except(Method.DELETE), "/t", recording);
         start();
         ClientResponse r = send("DELETE", "/t");
-        assertEmpty(405, r);
+        assertError(405, "METHOD_NOT_ALLOWED", "Method Not Allowed", r);
         assertEquals("GET, HEAD, POST, PUT, PATCH, OPTIONS", r.header("Allow"));
         assertEquals(0, calls.get());
     }
 
-    // SDS-AC-3; FR-HTTP-005 AC-1
+    // SDS-AC-19 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-4.sds.md; FR-HTTP-023 AC-1
     @Test
-    public void sdsAc3_FR_HTTP_005_AC1_optionsAsteriskAllowIsMethodAnyWithNoRoutes() {
+    public void sdsAc19_FR_HTTP_023_AC1_optionsAsteriskAllowIsMethodAnyWithNoRoutes() {
         start();
         ClientResponse r = send("OPTIONS", "*");
         assertEquals(204, r.status());
         assertEquals(Dispatcher.allowHeader(Method.any()), r.header("Allow"));
         assertEquals("GET, HEAD, POST, PUT, PATCH, DELETE, OPTIONS", r.header("Allow"));
+        assertNull(r.header("Content-Length"));
         assertEquals(0, r.body().length);
     }
 
-    // SDS-AC-3; FR-HTTP-003 AC-2
+    // SDS-AC-19 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-4.sds.md; FR-HTTP-022 AC-2
     @Test
-    public void sdsAc3_FR_HTTP_003_AC2_allowHeaderJoinsInMethodOrder() {
+    public void sdsAc19_FR_HTTP_022_AC2_allowHeaderJoinsInMethodOrder() {
         assertEquals("GET, POST, OPTIONS", Dispatcher.allowHeader(MethodSet.of(Method.OPTIONS, Method.POST, Method.GET)));
         assertEquals("DELETE", Dispatcher.allowHeader(MethodSet.of(Method.DELETE)));
     }
 
-    // SDS-AC-4; FR-HTTP-003 AC-6
+    // SDS-AC-18 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-4.sds.md; FR-HTTP-022 AC-5, FR-HTTP-022 AC-6
     @Test
-    public void sdsAc4_FR_HTTP_003_AC6_splitUpgradeHeadersAreJoinedBeforeLookup() {
+    public void sdsAc18_FR_HTTP_022_AC5_AC6_splitUpgradeHeadersAreJoinedBeforeLookup() {
         // With both kinds on /ws only the upgrade flag selects the WebSocket route; the HTTP handler must not run.
         router.addWebSocket("/ws", recording);
         router.add(Method.GET, "/ws", recording);
         start();
         ClientResponse r = send("GET", "/ws", "Connection", "keep-alive", "Connection", "Upgrade",
                 "Upgrade", "websocket", "Upgrade", "h2c");
-        assertEmpty(426, r);
+        assertError(426, "UPGRADE_REQUIRED", "Upgrade Required", r);
         assertEquals("websocket", r.header("Upgrade"));
         assertEquals("Upgrade", r.header("Connection"));
         assertFalse(r.upgradeHandedOver());
         assertEquals(0, calls.get());
     }
 
-    // SDS-AC-5; FR-HTTP-003 AC-5, FR-HTTP-003 AC-6
+    // SDS-AC-18 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-4.sds.md; FR-HTTP-022 AC-5, FR-HTTP-022 AC-6
     @Test
-    public void sdsAc5_FR_HTTP_003_AC5_AC6_webSocketOnlyRouteGives426ForPlainAndUpgradeGet() {
+    public void sdsAc18_FR_HTTP_022_AC5_AC6_webSocketOnlyRouteGives426ForPlainAndUpgradeGet() {
         router.addWebSocket("/ws", recording);
         start();
         ClientResponse plain = send("GET", "/ws");
-        assertEmpty(426, plain);
+        assertError(426, "UPGRADE_REQUIRED", "Upgrade Required", plain);
         assertEquals("websocket", plain.header("Upgrade"));
         assertEquals("Upgrade", plain.header("Connection"));
         ClientResponse upgrade = send("GET", "/ws", "Connection", "Upgrade", "Upgrade", "websocket");
-        assertEmpty(426, upgrade);
+        assertError(426, "UPGRADE_REQUIRED", "Upgrade Required", upgrade);
         assertEquals("websocket", upgrade.header("Upgrade"));
         assertEquals("Upgrade", upgrade.header("Connection"));
         assertFalse(upgrade.upgradeHandedOver());
         assertEquals(0, calls.get());
     }
 
-    // SDS-AC-6; FR-HTTP-003 AC-1, FR-HTTP-003 AC-4
+    // SDS-AC-15, SDS-AC-17 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-4.sds.md; FR-HTTP-022 AC-1, FR-HTTP-022 AC-4
     @Test
-    public void sdsAc6_FR_HTTP_003_AC1_AC4_noMatchAndUnsupportedCarryContentLengthZero() {
+    public void sdsAc15_FR_HTTP_022_AC1_AC4_noMatchAndUnsupportedCarryTheStandardBody() {
         router.add(Method.GET, "/r", recording);
         start();
-        assertEmpty(404, send("GET", "/missing"));
-        assertEmpty(501, send("BREW", "/r"));
-        assertEmpty(501, send("TRACE", "/r"));
+        assertError(404, "NOT_FOUND", "Not Found", send("GET", "/missing"));
+        assertError(501, "NOT_IMPLEMENTED", "Not Implemented", send("BREW", "/r"));
+        assertError(501, "NOT_IMPLEMENTED", "Not Implemented", send("TRACE", "/r"));
+        assertError(501, "NOT_IMPLEMENTED", "Not Implemented", send("CONNECT", "/"));
         assertEquals(0, calls.get());
     }
 
-    // SDS-AC-6; FR-HTTP-003 AC-3
+    // SDS-AC-15 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-4.sds.md; FR-HTTP-022 AC-1
     @Test
-    public void sdsAc6_FR_HTTP_003_AC3_automaticOptionsIs204WithoutContentLength() {
+    public void sdsAc15_FR_HTTP_022_AC1_fallbackKeepsMiddlewareHeadersAndLeavesAnAnsweredResponse() {
+        router.freeze();
+        MiddlewarePipeline pipeline = new MiddlewarePipeline(RouterPolicy.strict());
+        pipeline.addGlobal((req, res, next) -> {
+            res.header("X-Mw", "1");
+            next.run();
+        });
+        pipeline.addPrefix("/done", (req, res, next) -> res.status(418).send("tea"));
+        adapter.bind("127.0.0.1", 0, new Dispatcher(router, pipeline,
+                new ErrorPath(java.util.Collections.emptyList()), new AccessLog()));
+        ClientResponse r = send("GET", "/missing");
+        assertError(404, "NOT_FOUND", "Not Found", r);
+        assertEquals("1", r.header("X-Mw"));
+        ClientResponse done = send("GET", "/done");
+        assertEquals(418, done.status());
+        assertEquals("tea", new String(done.body(), StandardCharsets.UTF_8));
+    }
+
+    // SDS-AC-15 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-4.sds.md; FR-HTTP-022 AC-1
+    @Test
+    public void sdsAc15_FR_HTTP_022_AC1_fallbackLeavesAResponseThatAlreadyLeftNew() {
+        router.freeze();
+        MiddlewarePipeline pipeline = new MiddlewarePipeline(RouterPolicy.strict());
+        pipeline.addGlobal((req, res, next) -> {
+            res.status(202).stream(new ByteArrayInputStream("abc".getBytes(StandardCharsets.UTF_8)), "text/plain");
+            next.run();
+        });
+        adapter.bind("127.0.0.1", 0, new Dispatcher(router, pipeline,
+                new ErrorPath(java.util.Collections.emptyList()), new AccessLog()));
+        ClientResponse r = send("GET", "/missing");
+        assertEquals(202, r.status());
+        assertEquals("abc", new String(r.body(), StandardCharsets.UTF_8));
+        assertFalse(r.abnormallyClosed());
+    }
+
+    // SDS-AC-16 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-4.sds.md; FR-HTTP-022 AC-3
+    @Test
+    public void sdsAc16_FR_HTTP_022_AC3_automaticOptionsIs204WithoutContentLength() {
         router.add(Method.GET, "/r", recording);
         router.add(Method.POST, "/r", recording);
         start();
@@ -190,7 +279,8 @@ public class DispatcherTest {
         assertEquals(204, r.status());
         assertEquals("GET, HEAD, POST, OPTIONS", r.header("Allow"));
         assertNull(r.header("Content-Length"));
-        assertEquals(0L, r.contentLength()); // SDS-AC-6: 204 commits with content length 0
+        assertNull(r.header("Content-Type"));
+        assertEquals(0L, r.contentLength());
         assertEquals(0, r.body().length);
         assertFalse(r.abnormallyClosed());
         assertEquals(0, calls.get());
@@ -206,9 +296,9 @@ public class DispatcherTest {
         };
     }
 
-    // SDS-AC-1; FR-HTTP-002 AC-3
+    // SDS-AC-13 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-4.sds.md; FR-HTTP-021 AC-3
     @Test
-    public void sdsAc1_FR_HTTP_002_AC3_doubleEncodedDotsReachVariableRouteOnceDecoded() {
+    public void sdsAc13_FR_HTTP_021_AC3_doubleEncodedDotsReachVariableRouteOnceDecoded() {
         List<String> params = new ArrayList<>();
         router.add(Method.GET, "/:x", (req, res) -> {
             params.add(req.param("x"));

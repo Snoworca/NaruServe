@@ -38,13 +38,23 @@ public class HttpAcceptanceTest {
         assertEquals(0, r.body().length);
     }
 
-    // SDS-AC-14; T02, FR-HTTP-003 AC-7
+    /** The standard error body of FR-APP-006: JSON type, exact Content-Length, code and reason message. */
+    private static void assertError(int status, String code, String message, ClientResponse r) {
+        assertEquals(status, r.status());
+        assertEquals("application/json; charset=UTF-8", r.header("Content-Type"));
+        assertEquals(String.valueOf(r.body().length), r.header("Content-Length"));
+        String body = new String(r.body(), StandardCharsets.UTF_8);
+        assertTrue(body, body.matches("\\{\"error\":\\{\"code\":\"" + code + "\",\"message\":\"" + message
+                + "\",\"requestId\":\"[0-9a-f]{16}\"}}"));
+    }
+
+    // SDS-AC-15 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-4.sds.md; T02, FR-HTTP-022 AC-7
     @Test
-    public void sdsAc14_T02_FR_HTTP_003_AC7_anyExceptDeleteAnswersDelete405() {
+    public void sdsAc15_T02_FR_HTTP_022_AC7_anyExceptDeleteAnswersDelete405() {
         TestApp t = TestApp.create();
         t.app().route(Method.any().except(Method.DELETE), "/t", recording);
         ClientResponse r = t.send("DELETE", "/t");
-        assertEmpty(405, r);
+        assertError(405, "METHOD_NOT_ALLOWED", "Method Not Allowed", r);
         assertEquals("GET, HEAD, POST, PUT, PATCH, OPTIONS", r.header("Allow"));
         assertEquals(0, calls.get());
     }
@@ -63,9 +73,9 @@ public class HttpAcceptanceTest {
         }
     }
 
-    // SDS-AC-14; T05, FR-HTTP-003 AC-3
+    // SDS-AC-16 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-4.sds.md; T05, FR-HTTP-022 AC-3
     @Test
-    public void sdsAc14_T05_FR_HTTP_003_AC3_automaticOptionsListsAllowWithoutBody() {
+    public void sdsAc16_T05_FR_HTTP_022_AC3_automaticOptionsListsAllowWithoutBody() {
         TestApp t = TestApp.create();
         t.app().get("/r", recording).post("/r", recording);
         ClientResponse r = t.send("OPTIONS", "/r");
@@ -76,43 +86,46 @@ public class HttpAcceptanceTest {
         assertEquals(0, calls.get());
     }
 
-    // SDS-AC-14; T06, FR-HTTP-003 AC-1, FR-HTTP-003 AC-2, FR-HTTP-003 AC-4
+    // SDS-AC-15 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-4.sds.md, SDS-AC-14; T06, FR-HTTP-022 AC-1, FR-HTTP-022 AC-2, FR-HTTP-022 AC-4, FR-HTTP-021 AC-4
     @Test
-    public void sdsAc14_T06_FR_HTTP_003_AC1_AC2_AC4_noPathNoMethodUnknownMethod() {
+    public void sdsAc15_T06_FR_HTTP_022_AC1_AC2_AC4_noPathNoMethodUnknownMethod() {
         TestApp t = TestApp.create();
         t.app().post("/p", recording);
-        assertEmpty(404, t.send("GET", "/nothing"));
+        assertError(404, "NOT_FOUND", "Not Found", t.send("GET", "/nothing"));
         ClientResponse mismatch = t.send("GET", "/p");
-        assertEmpty(405, mismatch);
+        assertError(405, "METHOD_NOT_ALLOWED", "Method Not Allowed", mismatch);
         assertEquals("POST, OPTIONS", mismatch.header("Allow"));
-        assertEmpty(501, t.send("FOO", "/p"));
+        assertError(501, "NOT_IMPLEMENTED", "Not Implemented", t.send("FOO", "/p"));
+        assertError(501, "NOT_IMPLEMENTED", "Not Implemented", t.send("TRACE", "/p"));
         assertEquals(0, calls.get());
     }
 
-    // SDS-AC-14; T06, FR-HTTP-003 AC-5, FR-HTTP-003 AC-6
+    // SDS-AC-18 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-4.sds.md; T06, FR-HTTP-022 AC-5, FR-HTTP-022 AC-6
     @Test
-    public void sdsAc14_T06_FR_HTTP_003_AC5_AC6_webSocketOnlyHookRouteGives426() {
+    public void sdsAc18_T06_FR_HTTP_022_AC5_AC6_webSocketOnlyHookRouteGives426() {
         TestApp t = TestApp.create().webSocketRoute("/ws");
         for (ClientResponse r : new ClientResponse[] {t.send("GET", "/ws"),
             t.send("GET", "/ws", "Connection", "Upgrade", "Upgrade", "websocket")}) {
-            assertEmpty(426, r);
+            assertError(426, "UPGRADE_REQUIRED", "Upgrade Required", r);
             assertEquals("websocket", r.header("Upgrade"));
             assertEquals("Upgrade", r.header("Connection"));
         }
     }
 
-    // SDS-AC-14; FR-HTTP-005 AC-1, FR-HTTP-005 AC-2, FR-HTTP-005 AC-3, FR-HTTP-005 AC-4
+    // SDS-AC-19 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-4.sds.md, SDS-AC-14; FR-HTTP-023 AC-1, FR-HTTP-023 AC-2, FR-HTTP-023 AC-3, FR-HTTP-023 AC-4,
+    // FR-HTTP-021 AC-3
     @Test
-    public void sdsAc14_FR_HTTP_005_AC1_AC2_AC3_AC4_asteriskAndNonSlashTargets() {
+    public void sdsAc19_FR_HTTP_023_AC1_AC2_AC3_AC4_asteriskAndNonSlashTargets() {
         TestApp t = TestApp.create();
         t.app().route(Method.any(), "/", recording).route(Method.any(), "/:x", recording);
         ClientResponse star = t.send("OPTIONS", "*");
         assertEquals(204, star.status());
         assertEquals("GET, HEAD, POST, PUT, PATCH, DELETE, OPTIONS", star.header("Allow"));
         assertEquals(0, star.body().length);
-        assertEmpty(400, t.send("GET", "abc"));
-        assertEmpty(400, t.send("GET", "*"));
-        assertEmpty(400, t.send("GET", "/%2e%2e"));
+        assertNull(star.header("Content-Length"));
+        assertError(400, "BAD_REQUEST", "Bad Request", t.send("GET", "abc"));
+        assertError(400, "BAD_REQUEST", "Bad Request", t.send("GET", "*"));
+        assertError(400, "BAD_REQUEST", "Bad Request", t.send("GET", "/%2e%2e"));
         assertEquals(0, calls.get());
     }
 
@@ -120,9 +133,9 @@ public class HttpAcceptanceTest {
         return new String(r.body(), StandardCharsets.UTF_8);
     }
 
-    // SDS-3-AC-14; FR-HTTP-002 AC-1, FR-HTTP-002 AC-5, FR-HTTP-002 AC-6
+    // SDS-3-AC-14; FR-HTTP-021 AC-1, FR-HTTP-021 AC-5, FR-HTTP-021 AC-6
     @Test
-    public void sds3Ac14_FR_HTTP_002_AC1_AC5_matchedRequestReachesTheHandlerOnce() {
+    public void sds3Ac14_FR_HTTP_021_AC1_AC5_matchedRequestReachesTheHandlerOnce() {
         List<Object> seen = Collections.synchronizedList(new ArrayList<>());
         TestApp t = TestApp.create();
         t.app().get("/users/:id", (req, res) -> {
@@ -156,7 +169,7 @@ public class HttpAcceptanceTest {
         assertEquals(200, head.status());
         assertEquals(0, head.body().length);
         assertEquals("4", head.header("Content-Length"));
-        assertEmpty(405, t.send("PUT", "/users/1"));
+        assertError(405, "METHOD_NOT_ALLOWED", "Method Not Allowed", t.send("PUT", "/users/1"));
         assertEquals(Arrays.asList(Method.GET, Method.POST, Method.DELETE, Method.HEAD), methods);
     }
 
