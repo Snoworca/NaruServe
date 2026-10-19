@@ -46,15 +46,9 @@ public class DefaultUploadFileTest {
     }
 
     private static byte[] read(File f) throws IOException {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
         try (InputStream in = new FileInputStream(f)) {
-            byte[] b = new byte[8192];
-            int n;
-            while ((n = in.read(b)) >= 0) {
-                out.write(b, 0, n);
-            }
+            return MultipartParserTest.readAll(in);
         }
-        return out.toByteArray();
     }
 
     private static int temps(File dir) {

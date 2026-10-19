@@ -138,7 +138,7 @@ public class MultipartCrossAdapterTest {
             }
             String response = RawTargetSocketTest.Http.readAll(s.getInputStream());
             int status = RawTargetSocketTest.Http.status(response);
-            String payload = response.substring(response.indexOf("\r\n\r\n") + 4);
+            String payload = RawTargetSocketTest.Http.body(response);
             return reply(status, payload);
         }
     }
