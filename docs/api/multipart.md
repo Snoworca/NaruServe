@@ -14,6 +14,8 @@ Express에서 `multer`로 하던 일을 내장 기능으로 합니다. 미들웨
 ## 예제
 
 ```java
+File uploadDir = new File("./uploads");
+
 app.post("/api/upload", (req, res) -> {
     String title = req.form("title");
     UploadFile file = req.file("file");
@@ -30,6 +32,8 @@ app.post("/api/upload", (req, res) -> {
 Kotlin:
 
 ```kotlin
+val uploadDir = File("./uploads")
+
 app.post("/api/upload") { req, res ->
     val file = req.file("file")
     if (file == null) {
@@ -53,29 +57,45 @@ app.multipart(config -> {
 });
 ```
 
-| 설정 | 기본값 | 넘으면 |
-|---|---|---|
-| `maxFileSize` | 32 MiB | `413` |
-| `maxRequestSize` | 64 MiB | `413` |
-| `maxParts` | 20 | `413` |
-| `memoryThreshold` | 64 KiB | 디스크 임시 파일로 전환 |
-| `tempDirectory` | **(미확정)** | |
+| 설정 | 기본값 | 허용 범위 | 넘으면 |
+|---|---|---|---|
+| `maxFileSize` | 32 MiB | 1 – 4294967296 (4 GiB) | `413` |
+| `maxRequestSize` | 64 MiB | 1 – 4294967296 (4 GiB) | `413` |
+| `maxParts` | 20 | 1 – 10000 | `413` |
+| `memoryThreshold` | 64 KiB | 1 – 16777216 (16 MiB) | 디스크 임시 파일로 전환 |
+| `tempDirectory` | `java.io.tmpdir` (Android에서는 앱 캐시 폴더) | `null`이면 `NullPointerException` | |
 
-기본값은 Android 5.0 저사양 기기를 기준으로 작게 잡은 초안입니다. 큰 파일을 받으려면 명시적으로 올리세요. 무제한을 기본으로 허용하지 않습니다(무제한 설정 허용 여부는 **(미확정)**).
+기본값은 Android 5.0 저사양 기기를 기준으로 작게 잡았습니다. 큰 파일을 받으려면 허용 범위 안에서 명시적으로 올리세요.
+무제한 설정 허용 여부: 허용하지 않습니다. 범위는 양 끝을 포함하며, `0`, 음수, 상한보다 큰 값은 설정 이름을 담은 `IllegalArgumentException`입니다. 무제한을 막은 이유는 설정 실수 하나로 저사양 기기의 메모리와 저장 공간이 바닥나지 않게 하려는 것입니다.
+`tempDirectory`의 기본값을 `java.io.tmpdir`로 정한 이유는 Android가 이 값을 앱 전용 캐시 폴더로 잡아 주어 따로 설정하지 않아도 쓸 수 있는 폴더이기 때문입니다.
 `Content-Length`가 없거나 chunked 전송이어도 받은 크기를 누적해서 검사합니다.
+
+### 텍스트 필드와 파트 헤더
+
+- 텍스트 필드(`filename`이 없는 파트)는 디스크로 옮기지 않고 메모리에 둡니다. 한 요청의 텍스트 필드 내용 합계는 `app.formLimit(bytes)`(기본 1 MiB)로 제한하며, 넘으면 `413`입니다. multer의 `fieldSize`와 비슷하지만 필드 하나가 아니라 요청 전체 합계입니다. 이렇게 정한 이유는 텍스트 필드가 차지하는 메모리를 urlencoded 본문과 같은 한도로 묶으려는 것입니다.
+- 텍스트 필드도 `maxRequestSize`와 `maxParts`에는 들어가지만 `maxFileSize`에는 들어가지 않습니다.
+- 파트 헤더는 한 줄 8192바이트, 파트 하나의 헤더 합계 16384바이트로 고정되어 있고, 넘으면 `413`입니다. 이 두 값을 설정으로 열지 않은 이유는 정상 업로드의 파트 헤더가 이 한도에 가까이 가지 않기 때문입니다.
+
+```java
+app.formLimit(2L * 1024 * 1024);   // urlencoded 본문과 multipart 텍스트 필드 합계 2 MiB
+```
 
 ## UploadFile
 
 ```java
+import org.jspecify.annotations.Nullable;
+
 public interface UploadFile extends AutoCloseable {
-    String name();          // form 필드 이름
-    String filename();      // 클라이언트가 보낸 파일 이름 — 믿지 마세요
-    String contentType();   // 클라이언트가 보낸 타입 — 믿지 마세요
+    String name();                     // form 필드 이름
+    @Nullable String filename();       // 클라이언트가 보낸 파일 이름 — 믿지 마세요. 없으면 null
+    @Nullable String contentType();    // 클라이언트가 보낸 타입 — 믿지 마세요. 없으면 null
     long size();
     InputStream inputStream() throws IOException;
     void save(File destination) throws IOException;
     void transferTo(OutputStream target) throws IOException;
-    byte[] bytes() throws IOException;   // 작은 파일만
+    byte[] bytes() throws IOException; // 8 MiB까지만
+    @Override
+    void close();                      // checked 예외 없음
 }
 ```
 
@@ -84,7 +104,10 @@ public interface UploadFile extends AutoCloseable {
 | `save(File)` | 파일로 저장. 성공하면 임시 파일은 정리됩니다. |
 | `transferTo(OutputStream)` | Android SAF(`ContentResolver.openOutputStream(uri)`), 클라우드 업로드 등 다른 곳으로 복사 |
 | `inputStream()` | 직접 읽기 |
-| `bytes()` | 작은 파일을 메모리로. 한도를 넘으면 예외 |
+| `bytes()` | 작은 파일을 메모리로. 8 MiB(8388608바이트)를 넘는 파트는 크기와 한도를 담은 `IllegalStateException` |
+
+`bytes()`의 한도를 8 MiB로 고정한 이유는 큰 파일을 실수로 힙에 통째로 올리지 않게 하려는 것입니다. 더 큰 파일은 `inputStream()`, `transferTo`, `save`로 다루세요.
+`req.parts()`는 텍스트 필드까지 포함한 모든 파트를 본문 순서대로 `List<UploadFile>`로 돌려줍니다. 텍스트 필드는 `filename()`이 `null`입니다.
 
 `java.nio.file.Path`는 Android 5.0에 없어서 받지 않습니다. `File`과 스트림을 씁니다.
 
@@ -96,5 +119,5 @@ public interface UploadFile extends AutoCloseable {
 ## 임시 파일 정리
 
 - 업로드 파일은 `memoryThreshold`를 넘으면 임시 폴더에 저장됩니다. 요청 전체를 메모리에 올리지 않습니다.
-- 임시 파일은 요청이 끝나거나 `save()`가 성공하면 지워집니다. 클라이언트가 중간에 끊어도 지워집니다.
+- 임시 파일은 요청이 끝날 때, `save()`가 성공한 뒤, 한도를 넘어 `413`으로 답한 뒤, 클라이언트가 중간에 끊었을 때, 앱을 `shutdown`할 때 지워집니다.
 - 그래서 **요청이 끝난 뒤에는 `UploadFile`을 쓸 수 없습니다.** `inputStream()`을 다른 스레드에 넘겨 나중에 읽지 마세요. 나중에 처리할 파일은 핸들러 안에서 `save()`하세요.

@@ -15,7 +15,7 @@ res.status(201).header("X-Request-ID", id).json(created);
 | `status(code)` | `Response` | `res.status(code)` | 상태 코드. 기본은 `200`. `100`–`999` 밖이면 `IllegalArgumentException` |
 | `header(name, value)` | `Response` | `res.set(name, value)` | 응답 헤더. 같은 이름(대소문자 무시)이 있으면 바꿔 씁니다. 이름이 HTTP 토큰이 아니거나(빈 이름, 공백·`:` 포함 등) 값에 CR/LF·NUL 같은 제어 문자(탭 제외)나 U+00FF를 넘는 문자(헤더는 ISO-8859-1, 한 글자 1바이트)가 있으면 `IllegalArgumentException` |
 | `addCookie(cookie)` | `Response` | `res.cookie(...)` | `Set-Cookie` 추가. [Cookie](cookie.md) |
-| `cache(policy)` | `Response` | `res.set('Cache-Control', ...)` | 캐시 정책. [캐시](static.md#캐시-정책) |
+| `cache(policy)` | `Response` | `res.set('Cache-Control', ...)` | `Cache-Control`을 정합니다. 보내기 전에 다시 부르면 마지막 값이 이깁니다. [캐시](static.md#캐시-정책) |
 | `isCommitted()` | `boolean` | `res.headersSent` | 상태·헤더를 이미 보냈는지 |
 
 ### 본문 보내기
@@ -27,7 +27,7 @@ res.status(201).header("X-Request-ID", id).json(created);
 | `html(String)` | `text/html; charset=UTF-8` | `res.send('<p>..</p>')` | HTML |
 | `send(byte[])` | 직접 지정. 없으면 `application/octet-stream` | `res.send(buffer)` | 바이트 |
 | `stream(InputStream, contentType)` | 인자 | `stream.pipe(res)` | 곧바로 반환하고, 핸들러가 반환한 뒤 같은 스레드에서 끝까지 복사합니다. 성공·실패·`abort` 어느 경우든 스트림을 한 번 닫습니다(호출자가 닫지 않습니다). |
-| `file(File)` | 확장자로 결정 | `res.sendFile(path)` | 파일. Range·조건부 요청 지원. `Content-Disposition` 정책(생략 또는 `inline`)은 **(미확정)** |
+| `file(File)` | 확장자로 결정 | `res.sendFile(path)` | 파일. Range·조건부 요청 지원. Express `res.sendFile`처럼 `Content-Disposition`을 보내지 않습니다 |
 | `download(File, filename)` | 확장자로 결정 | `res.download(path, name)` | `Content-Disposition: attachment` |
 | `end()` | — | `res.end()` | 본문 없이 끝냅니다. |
 | `sse()` | `text/event-stream` | — | SSE 스트림 시작. `SseClient` 반환. [SSE](sse.md) |
@@ -88,7 +88,25 @@ app.get("/export", (req, res) -> {
 - 큰 파일도 메모리에 올리지 않고 스트리밍합니다.
 - `Range` 요청에 `206`으로 답합니다. 범위를 충족할 수 없으면(시작 위치 ≥ 파일 크기) `416`, 잘못된 형식이거나 여러 범위면 `Range`를 무시하고 `200`입니다. `ETag`/`Last-Modified` 조건부 요청에 `304`로 답합니다. [정적 파일](static.md#range와-조건부-요청)
 - `file()`에 사용자 입력으로 만든 경로를 넘기지 마세요. 경로 이탈 검사는 `staticFiles`만 합니다.
+- `res.file`/`res.download`는 넘긴 파일 자체가 심볼릭 링크이거나 일반 파일이 아니면(폴더, 없는 파일) 보내지 않고 표준 오류 본문의 `404`로 답합니다.
+- `file()`이 `Content-Disposition`을 보내지 않는 이유는 Express `res.sendFile`과 같게 브라우저가 내용을 그대로 보여 주게 하려는 것입니다. 저장 대화상자가 필요하면 `download()`를 쓰세요.
 - `download()`의 `filename`은 헤더 인젝션 문자를 걸러서 씁니다.
+
+### 기본 캐시 정책
+
+`cache(policy)`를 부르지 않은 응답에 붙일 `Cache-Control`은 `app.defaultCache(policy)`로 정합니다. 기본값은 `null`이라 아무 헤더도 붙이지 않고, 응답이 이미 `Cache-Control`을 가지고 있으면 그 값을 둡니다. [서버 기본 정책](static.md#서버-기본-정책)
+
+```java
+app.defaultCache(CachePolicy.noCache());
+app.get("/me", (req, res) -> res.cache(CachePolicy.noStore()).json(Collections.singletonMap("id", 1)));
+```
+
+Kotlin:
+
+```kotlin
+app.defaultCache(CachePolicy.noCache())
+app.get("/report") { req, res -> res.file(File("/data/report.pdf")) }
+```
 
 ## 스트림
 

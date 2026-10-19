@@ -65,8 +65,8 @@ Express 코드의 구조(라우트·미들웨어·req/res)는 대부분 그대�
 | `res.set('X-A', 'b')` | `res.header("X-A", "b")` | |
 | `res.cookie('s', 'v', {httpOnly: true})` | `res.addCookie(cookie)` | [Cookie](cookie.md) |
 | `res.clearCookie('s')` | `maxAge 0` 쿠키를 `addCookie` | [Cookie](cookie.md#삭제) |
-| `res.sendFile(path)` | `res.file(file)` | `java.io.File` |
-| `res.download(path, name)` | `res.download(file, name)` | |
+| `res.sendFile(path)` | `res.file(file)` | `java.io.File`. Express처럼 `Content-Disposition`을 보내지 않습니다. 브라우저가 내용을 그대로 보여 주게 하려는 Express 동작을 그대로 따랐습니다. |
+| `res.download(path, name)` | `res.download(file, name)` | `Content-Disposition: attachment`. 넘긴 파일이 심볼릭 링크이거나 일반 파일이 아니면 `404`입니다. |
 | `stream.pipe(res)` | `res.stream(in, "video/mp4")` | |
 | `res.headersSent` | `res.isCommitted()` | |
 | `res.redirect(url)` | **(미확정)** | `res.status(302).header("Location", url).end()` |
@@ -83,11 +83,15 @@ Express 코드의 구조(라우트·미들웨어·req/res)는 대부분 그대�
 | `app.use((err, req, res, next) => ...)` | `app.onError((err, req, res) -> ...)` | 인자 3개(`next` 없음), 순서는 Express와 같음 |
 | 마지막 404 미들웨어 | 필요 없음 | 기본 404/405를 [표준 오류 형식](middleware.md#표준-오류-형식)으로 보냅니다. v1에서는 이 본문을 바꿀 수 없습니다. |
 | `express.json()`, `express.urlencoded()` | 필요 없음 | `req.body(...)`, `req.form(...)`이 읽습니다. `express.json({ limit })`의 한도는 `app.jsonLimit(bytes)`입니다. |
+| `express.urlencoded({ limit })` | `app.formLimit(bytes)` | 기본 1 MiB. 한 요청의 multipart 텍스트 필드 합계에도 같은 한도를 씁니다. 텍스트 필드는 메모리에 두므로 urlencoded 본문과 같은 한도로 묶었습니다. |
 | `express.raw()`, `express.text()` | 없음 | v1에는 원본·텍스트 본문을 읽는 API가 없습니다. 본문은 `req.body(...)`(JSON), `req.form(...)`, `req.file(...)`로 읽습니다. |
 | `cors()` | **(미확정)** | 전역 `app.use`에서 `Access-Control-Allow-*` 헤더를 설정합니다. preflight(`OPTIONS` + `Access-Control-Request-Method`)는 `res.status(204).end()`로 바로 끝내고 `next.run()`을 부르지 마세요. 그러지 않으면 `/api` 인증 미들웨어가 preflight를 401로 거부합니다. |
 | `cookie-parser` | 필요 없음 | 내장. v1은 서명 쿠키(`secret`)와 값 자동 인코딩을 제공하지 않습니다. 값은 그대로 쓰고 읽습니다. [Cookie](cookie.md#값-인코딩) |
-| `multer` | `app.multipart(config -> ...)` | 한도 설정만 합니다. |
-| `express.static('public')` | `app.staticFiles("/", new File("public"))` | |
+| `multer` | `app.multipart(config -> ...)` | 한도 설정만 합니다. 파일은 핸들러에서 `req.file(...)`로 꺼냅니다. 미들웨어 대신 앱 설정으로 둔 이유는 본문을 한 번만 파싱해 모든 라우트가 같은 한도를 쓰게 하려는 것입니다. |
+| `multer({ limits: { fileSize, files, parts } })` | `app.multipart(c -> c.maxFileSize(...).maxParts(...))` | `maxFileSize`, `maxRequestSize`, `maxParts`, `memoryThreshold`. 기본값(32 MiB, 64 MiB, 20, 64 KiB)은 저사양 기기를 기준으로 잡았고, 무제한 값은 받지 않습니다. 설정 실수로 저장 공간이 바닥나지 않게 하려는 것입니다. |
+| `multer({ dest })` | `c.tempDirectory(dir)` + `file.save(...)` | 기본 임시 폴더는 `java.io.tmpdir`(Android에서는 앱 캐시 폴더)입니다. 설정 없이도 쓸 수 있는 폴더라 기본값으로 골랐습니다. 임시 파일은 요청이 끝나면 지워집니다. |
+| `express.static('public')`, `serve-static` | `app.staticFiles("/", new File("public"))` | 명시 라우트 다음에 찾습니다. 슬래시 없는 폴더 요청은 Express처럼 `301`입니다. |
+| `serve-static`의 `setHeaders`로 `Cache-Control` 설정 | `options.cache(pattern, policy)` | 예: `options.cache("/assets/**", CachePolicy.publicFor(365, TimeUnit.DAYS).immutable())`. 패턴을 먼저 등록한 것이 이깁니다. 헤더 콜백 대신 패턴으로 둔 이유는 흔한 캐시 설정을 코드 없이 선언하게 하려는 것입니다. |
 | `morgan('combined')` | `app.accessLog(o -> o.enabled(true))` | |
 
 ### WebSocket·SSE

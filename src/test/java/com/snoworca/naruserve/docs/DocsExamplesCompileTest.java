@@ -39,6 +39,8 @@ import org.junit.rules.TemporaryFolder;
 // @req OPS-APP-002
 // @req OPS-JSON-001
 // @req OPS-COOKIE-001
+// @req OPS-MULTIPART-001
+// @req OPS-STATIC-001
 public final class DocsExamplesCompileTest {
 
     /** One skipped block: its file, a selector ({@code #n} ordinal or the block's first line) and one reason. */
@@ -72,15 +74,14 @@ public final class DocsExamplesCompileTest {
     static final List<Skip> SKIPS = Collections.unmodifiableList(Arrays.asList(
             skip("README.md", "RestApp app = RestApp.create();",
                     "app-defined type `User` (the block also calls the app's `userService`)"),
-            skip("app.md", "#10",
-                    "later-wave method `RestApp.staticFiles` and app-defined types `Database` and `UserService`"),
+            skip("app.md", "#10", "app-defined type `Database` and `UserService`"),
             skip("express-migration.md", "// Express: let count = 0; 은 안전하지만 Java에서는 아닙니다.",
                     "absent type `AtomicLong` (java.util.concurrent.atomic is not among the fixed imports)"),
             skip("express-migration.md", "User user = req.body(User.class);                         // 객체",
                     "app-defined type `User`"),
             skip("express-migration.md", "app.onStart(ctx -> ctx.register(UserService.class, new UserService()));",
                     "app-defined type `UserService`"),
-            skip("express-migration.md", "RestApp app = RestApp.create();", "later-wave method `RestApp.staticFiles`"),
+            skip("express-migration.md", "RestApp app = RestApp.create();", "app-defined type `TodoService` and `Todo`"),
             skip("json.md", "User user = req.body(User.class);                          // 요청 → 객체",
                     "later-wave method `WebSocketSession.sendJson` (the block calls `ws.sendJson`) and app-defined"
                             + " type `User`"),
@@ -102,7 +103,6 @@ public final class DocsExamplesCompileTest {
                     "app-defined type `User` (the block also calls the app's `auth.isAuthorized` and `admin`)"),
             skip("middleware.md", "app.get(\"/users/:id\", (req, res) -> {",
                     "app-defined type `User` and `NotFoundException` (the block calls the app's `users.find`)"),
-            skip("multipart.md", "app.post(\"/api/upload\", (req, res) -> {", "later-wave method `Request.form(String)`"),
             skip("request.md", "// GET /users/42/posts?page=2&tag=a&tag=b",
                     "app-defined variable `postService` (the block calls the app's `postService.find`)"),
             skip("request.md", "User user = req.body(User.class);", "app-defined type `User`"),
@@ -123,7 +123,6 @@ public final class DocsExamplesCompileTest {
             skip("sse.md", "app.get(\"/api/progress\", (req, res) -> {", "later-wave method `Response.sse()`"),
             skip("sse.md", "client.send(SseEvent.event(\"progress\")", "absent type `SseEvent`"),
             skip("sse.md", "#4", "later-wave method `Response.sse()`"),
-            skip("static.md", "res.cache(CachePolicy.noStore()).json(privateData);", "later-wave method `Response.cache`"),
             skip("websocket.md", "app.ws(\"/ws\", (req, ws) -> {", "later-wave method `RestApp.ws`"),
             skip("websocket.md", "app.ws(\"/chat\", (req, ws) -> {", "later-wave method `RestApp.ws`"),
             skip("websocket.md", "app.use(\"/ws\", (req, res, next) -> {",
@@ -560,6 +559,83 @@ public final class DocsExamplesCompileTest {
             }
             for (String m : WAVE_5_MEMBERS) {
                 assertFalse("wave 5 member as reason: " + s, s.reason.contains(m));
+            }
+        }
+    }
+
+    /** Wave 6 members: they exist now, so no skip may name one as a later-wave method. */
+    static final List<String> WAVE_SIX_MEMBERS = Collections.unmodifiableList(Arrays.asList("staticFiles", "multipart",
+            "form", "file", "files", "parts", "cache", "download", "mimeTypes", "defaultCache", "formLimit"));
+
+    private static final Pattern LATER_WAVE_NAMES = Pattern.compile("later-wave methods? `([^`]+)`((?: and `[^`]+`)*)");
+
+    /** Skips whose reason names a wave 6 member (last dotted segment, argument list dropped) as a later-wave method. */
+    static List<String> waveSixMemberReasons(List<Skip> skips) {
+        List<String> out = new ArrayList<>();
+        for (Skip s : skips) {
+            Matcher m = LATER_WAVE_NAMES.matcher(s.reason);
+            while (m.find()) {
+                Matcher names = Pattern.compile("`([^`]+)`").matcher(m.group(0));
+                while (names.find()) {
+                    String name = names.group(1);
+                    int paren = name.indexOf('(');
+                    name = paren < 0 ? name : name.substring(0, paren);
+                    name = name.substring(name.lastIndexOf('.') + 1);
+                    if (WAVE_SIX_MEMBERS.contains(name)) {
+                        out.add(s + ": `" + name + "`");
+                    }
+                }
+            }
+        }
+        return out;
+    }
+
+    // SDS-AC-3; OPS-STATIC-001 AC-6; OPS-MULTIPART-001 AC-5
+    @Test
+    public void sdsAc3_OPS_STATIC_001_AC6_noSkipNamesAWave6MemberAsLaterWave() {
+        List<String> fake = waveSixMemberReasons(Arrays.asList(
+                skip("a.md", "#1", "later-wave method `RestApp.staticFiles` and app-defined type `X`"),
+                skip("a.md", "#2", "later-wave method `Request.form(String)`"),
+                skip("a.md", "#3", "later-wave method `RestApp.ws`"),
+                skip("a.md", "#4", "app-defined type `UploadFile`")));
+        assertEquals(fake.toString(), 2, fake.size());
+        assertEquals(Collections.<String>emptyList(), waveSixMemberReasons(SKIPS));
+    }
+
+    // SDS-AC-3; OPS-MULTIPART-001 AC-5; OPS-STATIC-001 AC-6 — the multipart, form, static and cache blocks compile
+    @Test
+    public void sdsAc3_OPS_MULTIPART_001_AC5_waveSixBlocksAreCompiled() throws IOException {
+        for (Skip s : SKIPS) {
+            assertFalse("multipart.md skip: " + s, s.file.equals("multipart.md"));
+            assertFalse("static.md skip: " + s, s.file.equals("static.md"));
+        }
+        assertTrue(String.join("\n", docsDiagnostics()), docsDiagnostics().isEmpty());
+        String[] calls = {"req.form(", "req.file(", "req.files(", "req.parts(", "app.multipart(", "app.formLimit(",
+            "app.staticFiles(", "res.file(", ".download(", "app.mimeTypes(", "res.cache(", "app.defaultCache("};
+        for (String call : calls) {
+            int compiled = 0;
+            for (String f : new String[] {"multipart.md", "request.md", "static.md", "response.md"}) {
+                List<String> blocks = docs().get(f);
+                for (int i = 0; i < blocks.size(); i++) {
+                    if (blocks.get(i).contains(call) && skipFor(f, i + 1, blocks.get(i)) == null) {
+                        compiled++;
+                    }
+                }
+            }
+            assertTrue("a compiled block calls " + call, compiled > 0);
+        }
+        for (String f : new String[] {"multipart.md", "static.md"}) {
+            assertEquals(f, Integer.valueOf(docs().get(f).size()), compiledPerFile.get(f));
+        }
+    }
+
+    // SDS-AC-3; OPS-STATIC-001 AC-6 — app.md and express-migration.md keep only app-defined-type reasons
+    @Test
+    public void sdsAc3_OPS_STATIC_001_AC6_appAndExpressSkipsKeepOnlyAppDefinedTypes() {
+        for (Skip s : SKIPS) {
+            if (s.file.equals("app.md") || s.file.equals("express-migration.md")
+                    && s.block.equals("RestApp app = RestApp.create();")) {
+                assertTrue(s.toString(), s.reason.startsWith("app-defined type `"));
             }
         }
     }

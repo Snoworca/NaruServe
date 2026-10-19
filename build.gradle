@@ -326,6 +326,8 @@ tasks.named('check') { dependsOn checkLoggerPlacement }
 configureCompile(project)
 dependencies {
     testImplementation 'junit:junit:4.13.2'
+    // docs/api type blocks such as UploadFile carry @Nullable (OPS-MULTIPART-001 AC-1).
+    testImplementation 'org.jspecify:jspecify:1.0.0'
     testImplementation gradleTestKit()
     // @req OPS-HTTP-002
     testImplementation project(':NaruServe-api')

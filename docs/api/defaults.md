@@ -10,10 +10,14 @@ NaruServe는 저사양 Android 5.0 기기에서도 안전하게 돌도록 **모�
 |---|---:|---:|---|---|
 | JSON 요청 본문 | 1 MiB | 1 GiB | `413` | `app.jsonLimit(bytes)` |
 | JSON 중첩 깊이 | 64 | 255 | `400` | `new GsonJsonCodec(gson, maxDepth)` |
-| 업로드 파일 하나 | 32 MiB | — | `413` | `app.multipart(c -> c.maxFileSize(...))` |
-| 업로드 요청 전체 | 64 MiB | — | `413` | `c.maxRequestSize(...)` |
-| 업로드 파트 수 | 20 | — | `413` | `c.maxParts(...)` |
-| 업로드 메모리 임계값 | 64 KiB | — | 디스크로 전환 | `c.memoryThreshold(...)` |
+| 폼 본문 | 1 MiB | 1 GiB | `413` | `app.formLimit(bytes)`. urlencoded 본문의 크기이자 한 요청의 multipart 텍스트 필드 내용 합계입니다. |
+| 업로드 파일 하나 | 32 MiB | 4 GiB | `413` | `app.multipart(c -> c.maxFileSize(...))` |
+| 업로드 요청 전체 | 64 MiB | 4 GiB | `413` | `c.maxRequestSize(...)` |
+| 업로드 파트 수 | 20 | 10000 | `413` | `c.maxParts(...)` |
+| 업로드 메모리 임계값 | 64 KiB | 16 MiB | 디스크로 전환 | `c.memoryThreshold(...)` |
+| 파트 헤더 한 줄 | 8192 B | — | `413` | 따로 없습니다(고정). |
+| 파트 헤더 전체 | 16 KiB | — | `413` | 따로 없습니다(고정). 파트 하나의 헤더 줄 합계입니다. |
+| `UploadFile.bytes()` | 8 MiB | — | `IllegalStateException` | 따로 없습니다(고정). 더 큰 파트는 `inputStream()`, `transferTo`, `save`로 읽습니다. |
 | HTTP 헤더 전체 | 16 KiB | 1 MiB | `431` | `maxHeaderSize` |
 | 헤더 한 줄 | 8190 B | — | `431` | 따로 없습니다. TinyHttpd 입력 버퍼의 `inputBufferBytes - 2`이며, 어댑터가 버퍼를 `max(8192, maxRequestLineLength + 2)`로 잡으므로 `maxRequestLineLength`를 8190보다 크게 할 때만 함께 커집니다. `maxHeaderSize`로는 바뀌지 않습니다. |
 | 헤더 개수 | 100 | 10000 | `431` | `maxHeaderCount` |
@@ -22,6 +26,8 @@ NaruServe는 저사양 Android 5.0 기기에서도 안전하게 돌도록 **모�
 | WebSocket 송신 큐(연결당) | 1 MiB | — | 예외 또는 연결 종료 | **(미확정)** |
 | SSE 송신 큐(연결당) | 256 KiB | — | 연결 종료 (**(미확정)**) | **(미확정)** |
 | `shutdown` 대기 | 호출 인자(예: 10초) | — | 강제 종료 | `app.shutdown(timeout, unit)` |
+
+업로드 임시 폴더의 기본값은 `java.io.tmpdir`(Android에서는 앱 캐시 폴더)이며 `c.tempDirectory(dir)`로 바꿉니다. 업로드 한도는 모두 1 이상이고 최대값을 넘는 값은 받지 않습니다. [파일 업로드](multipart.md#한도-설정)
 
 요청 줄 길이는 URL만이 아니라 `GET /path?query HTTP/1.1` 한 줄 전체의 바이트 수입니다. URL 길이 대신 요청 줄을 재는 이유는 TinyHttpd가 그 줄을 한 번에 읽어 한도를 검사하기 때문입니다.
 
@@ -50,8 +56,11 @@ NaruServe는 저사양 Android 5.0 기기에서도 안전하게 돌도록 **모�
 |---|---|---|
 | 바인딩 주소 | `127.0.0.1`(IPv4 루프백) | `app.server(options -> ...)`의 `bindAddress("0.0.0.0")`. 루프백이 아닌 주소면 `listen()`이 인증 여부와 상관없이 항상 보안 경고 로그를 남기며, 인증은 앱이 미들웨어로 직접 붙여야 합니다. 프레임워크는 앱에 인증이 있는지 알 수 없어 경고를 끄지 않습니다. |
 | 정적 폴더 목록 | 꺼짐 | `options.directoryListing(true)` |
+| 정적 폴더 index 파일 | `index.html` | `options.index(name)` |
+| SPA fallback | 꺼짐 | `options.spaFallback(true)`. 켜도 `/api/`, `/ws/` 아래에는 동작하지 않습니다. |
 | 숨김 파일(`.env`, `.git`) | 차단 | — |
-| 심볼릭 링크 | 차단 | 명시 허용 (**(미확정)**) |
+| 심볼릭 링크 | 차단 | `options.allowSymlinks(true)`로 허용합니다. 허용해도 링크의 실제 대상이 마운트 루트 밖이면 `404`입니다. |
+| `Cache-Control` | 붙이지 않음 | `app.defaultCache(policy)`로 정하면 `Cache-Control`이 없는 응답에 붙습니다. `res.cache`, `res.header`, `options.cache`가 정한 값은 그대로 둡니다. |
 | `X-Content-Type-Options` | `nosniff` | — |
 | 오류 응답의 stack trace | 보내지 않음 | — |
 | 접근 로그의 민감 값 | 기록하지 않음 | 바꾸지 않는 것을 권장 |
