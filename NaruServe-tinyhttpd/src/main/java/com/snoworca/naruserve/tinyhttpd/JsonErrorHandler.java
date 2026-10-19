@@ -31,7 +31,7 @@ final class JsonErrorHandler implements ErrorHandler {
         byte[] body = renderer.render(status).getBytes(StandardCharsets.UTF_8);
         response.setStatus(status);
         if (body.length > 0) {
-            response.setContentType("application/json; charset=UTF-8");
+            response.setContentType(ErrorRenderer.JSON_TYPE);
         }
         response.setContentLengthLong(body.length);
         response.getOutputStream().write(body);

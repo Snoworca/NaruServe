@@ -5,6 +5,9 @@ package com.snoworca.naruserve.spi;
 @FunctionalInterface
 public interface ErrorRenderer {
 
-    /** The JSON text of the standard error body, sent as {@code application/json; charset=UTF-8}. */
+    /** The Content-Type of the standard error body: {@code application/json; charset=UTF-8}. */
+    String JSON_TYPE = "application/json; charset=UTF-8";
+
+    /** The JSON text of the standard error body, sent as {@link #JSON_TYPE}. */
     String render(int status);
 }

@@ -1,5 +1,6 @@
 package com.snoworca.naruserve;
 
+import com.snoworca.naruserve.internal.DefaultResponse;
 import java.util.Objects;
 import org.jspecify.annotations.Nullable;
 
@@ -46,17 +47,7 @@ public final class Cookie {
     /** RFC 7230 token: one or more tchar. */
     // @req IR-COOKIE-001
     static boolean isValidName(String name) {
-        if (name.isEmpty()) {
-            return false;
-        }
-        for (int i = 0; i < name.length(); i++) {
-            char c = name.charAt(i);
-            boolean alnum = c >= '0' && c <= '9' || c >= 'A' && c <= 'Z' || c >= 'a' && c <= 'z';
-            if (!alnum && "!#$%&'*+-.^_`|~".indexOf(c) < 0) {
-                return false;
-            }
-        }
-        return true;
+        return DefaultResponse.isToken(name);
     }
 
     /** RFC 6265 cookie-value: cookie-octets, optionally inside one pair of double quotes; empty is allowed. */

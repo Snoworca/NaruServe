@@ -8,8 +8,8 @@ import java.nio.charset.StandardCharsets;
 // @req FR-APP-006
 public final class StandardErrors {
 
-    /** The Content-Type of every standard error body. */
-    static final String JSON_TYPE = "application/json; charset=UTF-8";
+    /** The Content-Type of every standard error body and of {@code res.json}. */
+    static final String JSON_TYPE = ErrorRenderer.JSON_TYPE;
 
     private StandardErrors() {
     }

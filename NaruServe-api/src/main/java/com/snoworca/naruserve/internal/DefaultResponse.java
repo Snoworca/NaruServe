@@ -159,7 +159,7 @@ public final class DefaultResponse implements Response {
             // A buffer write never fails, so this is the codec's own failure: a server error.
             throw new HttpException(500, "JSON encoding failed", e);
         }
-        write(buf.toByteArray(), "application/json; charset=UTF-8");
+        write(buf.toByteArray(), StandardErrors.JSON_TYPE);
     }
 
     // @req FR-HTTP-014
@@ -517,8 +517,8 @@ public final class DefaultResponse implements Response {
         return false;
     }
 
-    /** RFC 9110 token: one or more tchar; the cookie parser shares it. */
-    static boolean isToken(String s) {
+    /** RFC 9110 token: one or more tchar; the cookie parser and {@code Cookie} share it. Not API. */
+    public static boolean isToken(String s) {
         if (s.isEmpty()) {
             return false;
         }
