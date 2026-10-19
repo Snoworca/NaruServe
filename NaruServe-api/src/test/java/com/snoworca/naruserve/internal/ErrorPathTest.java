@@ -1,5 +1,6 @@
 package com.snoworca.naruserve.internal;
 
+import com.snoworca.naruserve.testing.RecordingExchange;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -107,7 +108,7 @@ public class ErrorPathTest {
         router.freeze();
         Dispatcher d = new Dispatcher(router, new MiddlewarePipeline(RouterPolicy.strict()),
                 new ErrorPath(Collections.singletonList(recording), new SafeLogger(log)), new AccessLog());
-        ResponseStreamTest.RecordingExchange ex = new ResponseStreamTest.RecordingExchange("GET", "/e");
+        RecordingExchange ex = new RecordingExchange("GET", "/e");
         try {
             d.handle(ex);
             fail("expected the Error to propagate");
@@ -221,7 +222,7 @@ public class ErrorPathTest {
     // SDS-AC-5, SDS-AC-7; FR-APP-005 AC-9
     @Test
     public void sdsAc5_FR_APP_005_AC9_aResponseCommittedButNotCompletedIsAborted() throws Exception {
-        ResponseStreamTest.RecordingExchange ex = new ResponseStreamTest.RecordingExchange("GET", "/f");
+        RecordingExchange ex = new RecordingExchange("GET", "/f");
         java.util.concurrent.CountDownLatch inCommit = new java.util.concurrent.CountDownLatch(1);
         java.util.concurrent.CountDownLatch release = new java.util.concurrent.CountDownLatch(1);
         ex.onCommit = () -> {
@@ -257,7 +258,7 @@ public class ErrorPathTest {
                 throw fromLogger;
             }
         };
-        ResponseStreamTest.RecordingExchange ex = new ResponseStreamTest.RecordingExchange("GET", "/f");
+        RecordingExchange ex = new RecordingExchange("GET", "/f");
         DefaultResponse res = new DefaultResponse(ex, false);
         DefaultRequest req = new DefaultRequest(ex, Method.GET, Collections.<String, String>emptyMap());
         try {
@@ -303,7 +304,7 @@ public class ErrorPathTest {
         ErrorHandler answering = (error, req, res) -> res.status(418).send("tea");
         Dispatcher d = new Dispatcher(router, new MiddlewarePipeline(RouterPolicy.strict()),
                 new ErrorPath(Collections.singletonList(answering), new SafeLogger(log)), new AccessLog());
-        ResponseStreamTest.RecordingExchange ex = new ResponseStreamTest.RecordingExchange("GET", "/f");
+        RecordingExchange ex = new RecordingExchange("GET", "/f");
         d.handle(ex);
         assertEquals(418, ex.status);
         assertEquals(1, ex.commits.get());
@@ -362,7 +363,7 @@ public class ErrorPathTest {
     // SDS-AC-12; FR-APP-006 AC-7
     @Test
     public void sdsAc12_FR_APP_006_AC7_theBodyCarriesTheRequestIdHandedToTheErrorPath() {
-        ResponseStreamTest.RecordingExchange ex = new ResponseStreamTest.RecordingExchange("GET", "/f");
+        RecordingExchange ex = new RecordingExchange("GET", "/f");
         DefaultRequest req = new DefaultRequest(ex, Method.GET, Collections.<String, String>emptyMap());
         DefaultResponse res = new DefaultResponse(ex, false);
         new ErrorPath(Collections.<ErrorHandler>emptyList(), new SafeLogger(log))

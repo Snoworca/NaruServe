@@ -1,5 +1,6 @@
 package com.snoworca.naruserve.internal;
 
+import com.snoworca.naruserve.testing.RecordingExchange;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -414,7 +415,7 @@ public class DefaultResponseTest {
     // SDS-AC-8; FR-HTTP-015 AC-1, SDS-AC-9; FR-HTTP-015 AC-3
     @Test
     public void sdsAc8_sdsAc9_FR_HTTP_015_AC1_AC3_abortBeforeCommitAbortsTheExchangeOnceWithoutCommit() {
-        ResponseStreamTest.RecordingExchange ex = new ResponseStreamTest.RecordingExchange("GET", "/r");
+        RecordingExchange ex = new RecordingExchange("GET", "/r");
         DefaultResponse res = new DefaultResponse(ex, false);
         res.status(201).abort(new IllegalStateException("x"));
         res.abort(null);
@@ -427,7 +428,7 @@ public class DefaultResponseTest {
     // SDS-AC-10; FR-HTTP-016 AC-1, FR-HTTP-016 AC-2
     @Test
     public void sdsAc10_FR_HTTP_016_AC1_AC2_mutationWhileCommittedThrowsAndCommitIsSingle() {
-        ResponseStreamTest.RecordingExchange ex = new ResponseStreamTest.RecordingExchange("GET", "/r");
+        RecordingExchange ex = new RecordingExchange("GET", "/r");
         DefaultResponse res = new DefaultResponse(ex, false);
         List<Object> during = new ArrayList<>();
         ex.onWrite = () -> {

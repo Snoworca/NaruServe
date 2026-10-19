@@ -1,5 +1,6 @@
 package com.snoworca.naruserve.internal;
 
+import com.snoworca.naruserve.testing.RecordingExchange;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -228,7 +229,7 @@ public class ChainNextTest {
             next.error(e);
             throw e;
         });
-        ResponseStreamTest.RecordingExchange ex = new ResponseStreamTest.RecordingExchange("GET", "/x");
+        RecordingExchange ex = new RecordingExchange("GET", "/x");
         DefaultResponse res = new DefaultResponse(ex, false);
         // A recording onError handler that does not answer, so the standard 500 still applies.
         List<Throwable> seen = Collections.synchronizedList(new ArrayList<>());
@@ -255,7 +256,7 @@ public class ChainNextTest {
             next.error(routed);
             throw later;
         });
-        ResponseStreamTest.RecordingExchange ex = new ResponseStreamTest.RecordingExchange("GET", "/x");
+        RecordingExchange ex = new RecordingExchange("GET", "/x");
         DefaultResponse res = new DefaultResponse(ex, false);
         RecordingLogger log = new RecordingLogger();
         pipeline.run(new DefaultRequest(ex, com.snoworca.naruserve.Method.GET, Collections.<String, String>emptyMap()),

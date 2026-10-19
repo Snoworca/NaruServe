@@ -1,5 +1,6 @@
 package com.snoworca.naruserve.internal;
 
+import com.snoworca.naruserve.testing.RecordingExchange;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -457,7 +458,7 @@ public class DispatcherTest {
             throw new IOException("after stream");
         }));
         router.freeze();
-        ResponseStreamTest.RecordingExchange ex = new ResponseStreamTest.RecordingExchange("GET", "/s");
+        RecordingExchange ex = new RecordingExchange("GET", "/s");
         new Dispatcher(router).handle(ex);
         assertEquals(1, ex.commits.get());
         assertEquals(1, ex.aborts.get());
@@ -481,7 +482,7 @@ public class DispatcherTest {
             throw thrown;
         }));
         router.freeze();
-        ResponseStreamTest.RecordingExchange ex = new ResponseStreamTest.RecordingExchange("GET", "/s");
+        RecordingExchange ex = new RecordingExchange("GET", "/s");
         try {
             new Dispatcher(router).handle(ex);
             org.junit.Assert.fail("expected the Error to propagate");
@@ -501,7 +502,7 @@ public class DispatcherTest {
             throw new IOException("boom");
         }));
         router.freeze();
-        ResponseStreamTest.RecordingExchange ex = new ResponseStreamTest.RecordingExchange("GET", "/f");
+        RecordingExchange ex = new RecordingExchange("GET", "/f");
         new Dispatcher(router).handle(ex);
         assertEquals(500, ex.status);
         assertEquals(1, ex.commits.get());

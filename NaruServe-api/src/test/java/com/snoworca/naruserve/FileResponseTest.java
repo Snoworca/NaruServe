@@ -1,5 +1,6 @@
 package com.snoworca.naruserve;
 
+import com.snoworca.naruserve.testing.RecordingExchange;
 import static com.snoworca.naruserve.StaticConditionalTest.bytes;
 import static com.snoworca.naruserve.StaticTraversalTest.write;
 import static org.junit.Assert.assertEquals;
@@ -13,22 +14,14 @@ import com.snoworca.naruserve.internal.Dispatcher;
 import com.snoworca.naruserve.internal.ResponseState;
 import com.snoworca.naruserve.routing.Router;
 import com.snoworca.naruserve.routing.RouterPolicy;
-import com.snoworca.naruserve.spi.HttpExchange;
-import com.snoworca.naruserve.spi.StreamDrain;
-import com.snoworca.naruserve.spi.UpgradeHandler;
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientResponse;
 import com.snoworca.naruserve.testing.TestApp;
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.nio.file.Files;
-import java.util.AbstractMap.SimpleImmutableEntry;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 import org.junit.Rule;
 import org.junit.Test;
@@ -157,12 +150,12 @@ public class FileResponseTest {
         router.add(Method.GET, "/d", (req, res) -> res.download(f, "a.bin"));
         router.freeze();
         for (String p : new String[] {"/f", "/d"}) {
-            Recording full = new Recording(p);
+            RecordingExchange full = new RecordingExchange("GET", p);
             new Dispatcher(router).handle(full);
             assertEquals(p, 200, full.status);
             assertEquals(p, 1000, full.contentLength);
             assertEquals(p, 1000, full.body.size());
-            Recording part = new Recording(p, "Range", "bytes=100-199");
+            RecordingExchange part = new RecordingExchange("GET", p, "Range", "bytes=100-199");
             new Dispatcher(router).handle(part);
             assertEquals(p, 206, part.status);
             assertEquals(p, 100, part.contentLength);
@@ -170,7 +163,7 @@ public class FileResponseTest {
             assertEquals(p, 100, b.length);
             assertEquals(p, (byte) 100, b[0]);
             assertEquals(p, (byte) 199, b[99]);
-            assertEquals(p, 0, full.sendFiles + part.sendFiles);
+            assertEquals(p, 0, full.sendFiles.get() + part.sendFiles.get());
         }
         // The in-memory adapter reports -2 for a response started by sendFile instead of commit.
         TestApp t = TestApp.create();
@@ -189,7 +182,7 @@ public class FileResponseTest {
                 return 0;
             }
         };
-        Recording ok = new Recording("/x");
+        RecordingExchange ok = new RecordingExchange("GET", "/x");
         DefaultResponse res = new DefaultResponse(ok, false);
         res.sendBody(206, stubborn, 4, 3);
         res.runTransfer();
@@ -197,111 +190,19 @@ public class FileResponseTest {
         assertEquals("[4, 5, 6]", Arrays.toString(ok.body.toByteArray()));
         assertEquals(ResponseState.COMPLETED, res.state());
 
-        Recording shortSkip = new Recording("/x");
+        RecordingExchange shortSkip = new RecordingExchange("GET", "/x");
         try {
             new DefaultResponse(shortSkip, false).sendBody(206, new ByteArrayInputStream(new byte[5]), 10, 3);
             fail("expected IOException");
         } catch (IOException expected) {
-            assertEquals(0, shortSkip.commits);
+            assertEquals(0, shortSkip.commits.get());
         }
 
-        Recording shortRead = new Recording("/x");
+        RecordingExchange shortRead = new RecordingExchange("GET", "/x");
         DefaultResponse r3 = new DefaultResponse(shortRead, false);
         r3.sendBody(200, new ByteArrayInputStream(new byte[5]), 0, 30);
         r3.runTransfer();
         assertEquals(ResponseState.ABORTED, r3.state());
-        assertEquals(0, shortRead.finishes);
-    }
-
-    /** An exchange that records commit, body, finish and sendFile calls. */
-    static final class Recording implements HttpExchange {
-        final String path;
-        final List<Map.Entry<String, String>> requestHeaders = new ArrayList<>();
-        final ByteArrayOutputStream body = new ByteArrayOutputStream();
-        int status;
-        long contentLength = -2;
-        int commits;
-        int finishes;
-        int sendFiles;
-
-        Recording(String path, String... headerPairs) {
-            this.path = path;
-            for (int i = 0; i < headerPairs.length; i += 2) {
-                requestHeaders.add(new SimpleImmutableEntry<>(headerPairs[i], headerPairs[i + 1]));
-            }
-        }
-
-        @Override
-        public String methodToken() {
-            return "GET";
-        }
-
-        @Override
-        public String rawPath() {
-            return path;
-        }
-
-        @Override
-        public String rawQuery() {
-            return null;
-        }
-
-        @Override
-        public String httpVersion() {
-            return "HTTP/1.1";
-        }
-
-        @Override
-        public List<Map.Entry<String, String>> headers() {
-            return requestHeaders;
-        }
-
-        @Override
-        public InputStream requestBody() {
-            return new ByteArrayInputStream(new byte[0]);
-        }
-
-        @Override
-        public String remoteAddress() {
-            return "127.0.0.1";
-        }
-
-        @Override
-        public boolean isSecure() {
-            return false;
-        }
-
-        @Override
-        public OutputStream commit(int status, List<Map.Entry<String, String>> headers, long contentLength) {
-            commits++;
-            this.status = status;
-            this.contentLength = contentLength;
-            return body;
-        }
-
-        @Override
-        public void finish() {
-            finishes++;
-        }
-
-        @Override
-        public void abort() {
-        }
-
-        @Override
-        public void sendFile(int status, List<Map.Entry<String, String>> headers, File file, long offset,
-                long length) {
-            sendFiles++;
-        }
-
-        @Override
-        public void upgrade(List<Map.Entry<String, String>> headers, UpgradeHandler handler) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public void eventStream(int status, List<Map.Entry<String, String>> headers, StreamDrain drain) {
-            throw new UnsupportedOperationException();
-        }
+        assertEquals(0, shortRead.finishes.get());
     }
 }

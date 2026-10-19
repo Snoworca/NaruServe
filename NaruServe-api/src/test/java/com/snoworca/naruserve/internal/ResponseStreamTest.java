@@ -1,5 +1,6 @@
 package com.snoworca.naruserve.internal;
 
+import com.snoworca.naruserve.testing.RecordingExchange;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -10,15 +11,9 @@ import static org.junit.Assert.fail;
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientResponse;
 import com.snoworca.naruserve.testing.TestApp;
 import com.snoworca.naruserve.spi.HttpExchange;
-import com.snoworca.naruserve.spi.StreamDrain;
-import com.snoworca.naruserve.spi.UpgradeHandler;
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.Collections;
-import java.util.Map;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -268,133 +263,6 @@ public class ResponseStreamTest {
         t.send("GET", "/s");
         assertEquals(1, in.closes);
         assertEquals(0L, in.bytesRead);
-    }
-
-    /**
-     * Hand-written exchange that counts the calls the core makes, so a test can tell the response's own abort from
-     * the in-memory adapter's fallback abort of an unfinished exchange.
-     */
-    static final class RecordingExchange implements HttpExchange {
-        final String method;
-        final String path;
-        // Atomic and volatile: the core may call these from the handler thread and an abort-caller thread at once.
-        final AtomicInteger commits = new AtomicInteger();
-        final AtomicInteger finishes = new AtomicInteger();
-        final AtomicInteger aborts = new AtomicInteger();
-        volatile int status;
-        /** The length passed to commit; -2 before any commit. */
-        volatile long contentLength = -2;
-        long failWriteAfter = Long.MAX_VALUE;
-        Runnable onWrite = () -> { };
-        Runnable onCommit = () -> { };
-        volatile List<Map.Entry<String, String>> headers = Collections.emptyList();
-        final ByteArrayOutputStream body = new ByteArrayOutputStream();
-
-        /** Values of committed header {@code name}, case-insensitive. */
-        List<String> committed(String name) {
-            List<String> values = new ArrayList<>();
-            for (Map.Entry<String, String> h : headers) {
-                if (h.getKey().equalsIgnoreCase(name)) {
-                    values.add(h.getValue());
-                }
-            }
-            return values;
-        }
-
-        RecordingExchange(String method, String path) {
-            this.method = method;
-            this.path = path;
-        }
-
-        @Override
-        public String methodToken() {
-            return method;
-        }
-
-        @Override
-        public String rawPath() {
-            return path;
-        }
-
-        @Override
-        public String rawQuery() {
-            return null;
-        }
-
-        @Override
-        public String httpVersion() {
-            return "HTTP/1.1";
-        }
-
-        @Override
-        public List<Map.Entry<String, String>> headers() {
-            return Collections.emptyList();
-        }
-
-        @Override
-        public InputStream requestBody() {
-            return new ByteArrayInputStream(new byte[0]);
-        }
-
-        @Override
-        public String remoteAddress() {
-            return "127.0.0.1";
-        }
-
-        @Override
-        public boolean isSecure() {
-            return false;
-        }
-
-        @Override
-        public OutputStream commit(int status, List<Map.Entry<String, String>> headers, long contentLength) {
-            commits.incrementAndGet();
-            this.status = status;
-            this.contentLength = contentLength;
-            this.headers = headers;
-            onCommit.run();
-            return new OutputStream() {
-                @Override
-                public void write(int b) throws IOException {
-                    write(new byte[] {(byte) b}, 0, 1);
-                }
-
-                @Override
-                public void write(byte[] b, int off, int len) throws IOException {
-                    onWrite.run();
-                    if (body.size() >= failWriteAfter) {
-                        throw new IOException("peer gone");
-                    }
-                    body.write(b, off, len);
-                }
-            };
-        }
-
-        @Override
-        public void finish() {
-            finishes.incrementAndGet();
-        }
-
-        @Override
-        public void abort() {
-            aborts.incrementAndGet();
-        }
-
-        @Override
-        public void sendFile(int status, List<Map.Entry<String, String>> headers, File file, long offset,
-                long length) {
-            throw new AssertionError("not used");
-        }
-
-        @Override
-        public void upgrade(List<Map.Entry<String, String>> headers, UpgradeHandler handler) {
-            throw new AssertionError("not used");
-        }
-
-        @Override
-        public void eventStream(int status, List<Map.Entry<String, String>> headers, StreamDrain drain) {
-            throw new AssertionError("not used");
-        }
     }
 
     // SDS-AC-11; FR-HTTP-016 AC-4, SDS-AC-4; FR-HTTP-014 AC-5
