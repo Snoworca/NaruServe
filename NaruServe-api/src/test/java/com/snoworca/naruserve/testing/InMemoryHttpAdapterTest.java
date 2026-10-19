@@ -4,13 +4,19 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
+import com.snoworca.naruserve.internal.DefaultRestApp;
+import com.snoworca.naruserve.routing.RoutingConfigException;
 import com.snoworca.naruserve.spi.HttpAdapter;
 import com.snoworca.naruserve.spi.HttpExchange;
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientRequest;
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientResponse;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.ServerSocket;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -66,6 +72,76 @@ public class InMemoryHttpAdapterTest {
         assertTrue(HttpAdapter.class.isAssignableFrom(InMemoryHttpAdapter.class));
         String location = InMemoryHttpAdapter.class.getProtectionDomain().getCodeSource().getLocation().getPath();
         assertTrue(location, location.contains("testFixtures") || location.contains("test-fixtures"));
+    }
+
+    // SDS-AC-8; FR-HTTP-001 AC-3
+    @Test
+    public void sdsAc8_FR_HTTP_001_AC3_freezeErrorReachesTheCallerUnwrapped() {
+        TestApp t = TestApp.create();
+        t.app().get("/x", (req, res) -> { });
+        t.app().get("/x", (req, res) -> { });
+        try {
+            t.start();
+            fail("duplicate GET /x accepted");
+        } catch (RoutingConfigException e) {
+            assertEquals(RoutingConfigException.class, e.getClass());
+            assertNull(e.getCause());
+            assertTrue(e.getMessage(), e.getMessage().contains("GET /x conflicts with GET /x"));
+        }
+        TestApp lazy = TestApp.create();
+        lazy.app().get("/y", (req, res) -> { });
+        lazy.app().get("/y", (req, res) -> { });
+        try {
+            lazy.send("GET", "/y");
+            fail("send started a conflicting table");
+        } catch (RoutingConfigException e) {
+            assertEquals(RoutingConfigException.class, e.getClass());
+        }
+    }
+
+    // SDS-AC-8; FR-HTTP-001 AC-3
+    @Test
+    public void sdsAc8_FR_HTTP_001_AC3_startIsIdempotentAndThenRefusesRegistration() {
+        TestApp t = TestApp.create();
+        assertSame(t, t.start());
+        assertSame(t, t.start());
+        try {
+            t.app().get("/late", (req, res) -> { });
+            fail("registration after start");
+        } catch (IllegalStateException expected) {
+            // frozen by start
+        }
+    }
+
+    // SDS-AC-8; FR-HTTP-001 AC-2
+    @Test
+    public void sdsAc8_FR_HTTP_001_AC2_requestsRunThroughTheAppDispatcherOnTheInMemoryAdapter() throws IOException {
+        InMemoryHttpAdapter adapter = new InMemoryHttpAdapter();
+        TestApp t = TestApp.create(adapter);
+        t.app().post("/p", (req, res) -> { });
+        ClientResponse viaHarness = t.send("GET", "/p");
+        assertEquals(405, viaHarness.status());
+        assertEquals("POST, OPTIONS", viaHarness.header("Allow"));
+        assertEquals("0", viaHarness.header("Content-Length"));
+        assertEquals(0, viaHarness.body().length);
+        // The adapter handed to create() is the one bound: it reaches the same dispatcher directly.
+        ClientResponse direct = adapter.send(ClientRequest.of("GET", "/nothing"));
+        assertEquals(404, direct.status());
+        // No socket: an in-memory adapter binds and serves a port a real ServerSocket already holds.
+        try (ServerSocket held = new ServerSocket(0, 1, InetAddress.getLoopbackAddress())) {
+            DefaultRestApp other = new DefaultRestApp();
+            other.freeze();
+            InMemoryHttpAdapter onHeldPort = new InMemoryHttpAdapter();
+            onHeldPort.bind("127.0.0.1", held.getLocalPort(), other.dispatcher());
+            assertEquals(held.getLocalPort(), onHeldPort.boundPort());
+            assertEquals(404, onHeldPort.send(ClientRequest.of("GET", "/x")).status());
+        }
+        try {
+            t.send("GET", "/p", "odd");
+            fail("odd header pairs accepted");
+        } catch (IllegalArgumentException expected) {
+            // name without value
+        }
     }
 
     // SDS-AC-9; FR-HTTP-001 AC-5

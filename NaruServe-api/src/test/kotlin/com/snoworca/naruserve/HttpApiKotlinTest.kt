@@ -1,6 +1,7 @@
 package com.snoworca.naruserve
 
 import com.snoworca.naruserve.routing.RouterPolicy
+import com.snoworca.naruserve.testing.TestApp
 import java.io.ByteArrayInputStream
 import java.io.InputStream
 import java.lang.reflect.Proxy
@@ -104,5 +105,19 @@ class HttpApiKotlinTest {
         handler.handle(FixedRequest(), res)
         assertEquals(listOf("send ok"), res.calls)
         assertSame(app, app.routerPolicy(RouterPolicy.strict()))
+    }
+
+    @Test
+    fun `SDS-AC-4 IR-HTTP-005 AC-6 Kotlin trailing lambdas register on the real app and route through TestApp`() {
+        val t = TestApp.create()
+        val app: RestApp = t.app()
+        assertSame(app, app.get("/x") { _, res -> res.send("ok") })
+        app.route("/u/:id").post { _, res -> res.end() }
+        // Wave 3 part 3 has no DefaultRequest/DefaultResponse yet, so only automatic replies are routed here.
+        val mismatch = t.send("DELETE", "/x")
+        assertEquals(405, mismatch.status())
+        assertEquals("GET, HEAD, OPTIONS", mismatch.header("Allow"))
+        assertEquals(404, t.send("GET", "/none").status())
+        assertEquals("POST, OPTIONS", t.send("OPTIONS", "/u/1").header("Allow"))
     }
 }
