@@ -164,6 +164,10 @@ configure(naruModules.collect { project(it) }) { p ->
 // Test fixtures source set for the in-memory HttpAdapter of a later wave (CON-BUILD-006 AC-8).
 project(':NaruServe-api') {
     apply plugin: 'java-test-fixtures'
+    // @req FR-HTTP-001
+    dependencies {
+        testFixturesCompileOnly 'org.jspecify:jspecify:1.0.0'
+    }
 }
 
 // Android 5.0 (API 21) is the minimum runtime: fail the build on any API that API 21 lacks.
@@ -240,6 +244,8 @@ configureCompile(project)
 dependencies {
     testImplementation 'junit:junit:4.13.2'
     testImplementation gradleTestKit()
+    // @req OPS-HTTP-002
+    testImplementation project(':NaruServe-api')
 }
 test {
     useJUnit()

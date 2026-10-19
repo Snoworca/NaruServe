@@ -263,6 +263,23 @@ public class BuildLayoutTest {
         assertTrue(new File(ROOT, "NaruServe-api/build/libs/NaruServe-api-0.1.0-SNAPSHOT-test-fixtures.jar").isFile());
     }
 
+    // SDS-AC-11; OPS-HTTP-002 AC-1
+    @Test
+    public void sdsAc11_OPS_HTTP_002_AC1_apiMainOnRootTestClasspathWithWave1ConventionsKept() throws Exception {
+        for (String type : new String[] {"Request", "Response", "RestApp"}) {
+            Class<?> c = Class.forName("com.snoworca.naruserve." + type);
+            String location = c.getProtectionDomain().getCodeSource().getLocation().getPath();
+            assertTrue(type + " from " + location, location.contains("NaruServe-api"));
+        }
+        String build = read(new File(ROOT, "build.gradle"));
+        for (String part : new String[] {"testImplementation project(':NaruServe-api')",
+                "testImplementation 'junit:junit:4.13.2'", "testImplementation gradleTestKit()",
+                "dependsOn checkDependencyRules", "dependsOn ':NaruServe-api:testFixturesJar'",
+                "systemProperty 'naruserve.rootDir'", "systemProperty 'naruserve.testKitWorkDir'"}) {
+            assertTrue("root build.gradle holds " + part, build.contains(part));
+        }
+    }
+
     // CON-BUILD-007 AC-1, CON-BUILD-007 AC-2
     @Test
     public void con_BUILD_007_AC1_AC2_kotlinStdlibOnlyInKotlinModule() throws IOException {
