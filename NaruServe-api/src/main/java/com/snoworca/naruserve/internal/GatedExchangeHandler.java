@@ -3,8 +3,6 @@ package com.snoworca.naruserve.internal;
 import com.snoworca.naruserve.AppState;
 import com.snoworca.naruserve.spi.ExchangeHandler;
 import com.snoworca.naruserve.spi.HttpExchange;
-import java.io.IOException;
-import java.io.OutputStream;
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.ArrayList;
 import java.util.List;
@@ -58,26 +56,8 @@ final class GatedExchangeHandler implements ExchangeHandler {
 
     /** 503, Connection: close and the standard body; no pipeline runs. */
     private void unavailable(HttpExchange ex, long start) {
-        String rid = RequestIds.next();
-        byte[] body = StandardErrors.json(503, StandardErrors.reason(503), rid);
-        boolean head = "HEAD".equals(ex.methodToken());
-        List<Map.Entry<String, String>> headers = new ArrayList<>();
-        headers.add(new SimpleImmutableEntry<>("Content-Type", "application/json; charset=UTF-8"));
-        headers.add(new SimpleImmutableEntry<>("Content-Length", String.valueOf(body.length)));
+        List<Map.Entry<String, String>> headers = new ArrayList<>(3);
         headers.add(new SimpleImmutableEntry<>("Connection", "close"));
-        boolean aborted = false;
-        long written = 0;
-        try {
-            OutputStream out = ex.commit(503, headers, head ? 0 : body.length);
-            if (!head) {
-                out.write(body);
-                written = body.length;
-            }
-            ex.finish();
-        } catch (IOException | RuntimeException e) {
-            aborted = true;
-            ex.abort();
-        }
-        accessLog.write(ex.methodToken(), ex.rawPath(), 503, aborted, start, 0, written, rid);
+        Dispatcher.answerDirect(ex, 503, headers, RequestIds.next(), start, accessLog);
     }
 }

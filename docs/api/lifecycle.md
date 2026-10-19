@@ -62,6 +62,7 @@ app.get("/api/users/:id") { req, res ->
 - `onStart`에서 예외가 나면 포트를 열지 않고, 이미 `own`/`register`한 리소스를 역순으로 닫은 뒤 `listen()`이 그 예외를 던집니다. 정리 중에 난 예외는 던지는 예외의 `getSuppressed()`에 붙습니다.
 - unchecked 예외는 그대로, checked 예외는 `AppStartException`(unchecked)으로 감싸 던지고, 시작 도중 `shutdown()`으로 시작이 멈춘 경우도 `AppStartException`인데, 감싸는 이유는 `listen()`에 `throws Exception`을 두지 않아 Java·Kotlin 호출부를 단순하게 하려는 것입니다.
 - `onStop`은 `RUNNING`까지 정상으로 올라간 앱에서만 실행됩니다. 시작에 실패한 앱에서는 실행되지 않습니다.
+- `onStop`에서 예외가 나면 `ERROR`로 기록하고 남은 `onStop`과 정리 단계를 모두 실행해 `TERMINATED`까지 갑니다. `Error`(예: `AssertionError`, `NoClassDefFoundError`)도 똑같이 정리를 모두 마치지만, 시작 실패 때처럼 `TERMINATED`가 된 뒤 `shutdown()`이 처음 난 `Error`를 다시 던집니다(요청 안에서 불러 별도 종료 스레드에서 돌았다면 그 스레드의 uncaught 예외가 됩니다).
 
 ## ApplicationContext
 
@@ -175,7 +176,7 @@ NEW ──listen──> STARTING ──성공──> RUNNING ──shutdown─�
 ## Android
 
 - `RestApp`은 Android `Service` 안에서 만들고 관리하세요.
-- `listen()`과 `shutdown()`은 **메인 스레드에서 부르지 마세요.** 네트워크 작업이고, `shutdown`은 timeout만큼 기다릴 수 있습니다.
+- `listen()`과 `shutdown()`은 **메인 스레드에서 부르지 마세요.** 네트워크 작업이고, `shutdown`은 진행 중인 요청을 timeout까지 기다린 뒤 `onStop`, 리소스 닫기, 로거 flush를 시간 제한 없이 마저 실행하므로 timeout보다 오래 걸릴 수 있습니다.
 - 프로세스가 강제 종료되면 `onDestroy`도 `onStop`도 실행되지 않을 수 있습니다. 잃으면 안 되는 데이터는 요청 처리 중에 저장하세요.
 - 서비스를 다시 시작할 때는 새 `RestApp`을 만드세요.
 - 백그라운드 실행, Foreground Service 정책은 앱이 책임집니다. 프레임워크가 서버의 상시 실행을 보장하지 않습니다.

@@ -410,22 +410,24 @@ public final class DefaultRestApp implements RestApp {
      * The FR-APP-011 order: before-wait participants, adapter stop with the time left until the deadline,
      * force-close participants, onStop callbacks (services still registered), after-onStop participants, the owned
      * close in reverse (the app logger skipped), the logger flush and close, adapter release, TERMINATED. A failing
-     * step is logged at ERROR and the next step runs.
+     * step is logged at ERROR and the next step runs; as on the failed-start path, the first {@link Error} is
+     * rethrown once TERMINATED.
      */
     // @req FR-APP-011
     private void runShutdownSequence(long deadlineNanos) {
         SafeLogger log = new SafeLogger(logger);
         Thread self = Thread.currentThread();
         lifecycleThread.set(self);
+        Error error = null;
         try {
             HttpAdapter a = Objects.requireNonNull(adapter, "adapter");
-            shutdownParticipants.run(ShutdownParticipants.Phase.BEFORE_WAIT, log);
+            error = firstError(error, shutdownParticipants.run(ShutdownParticipants.Phase.BEFORE_WAIT, log));
             try {
                 a.stop(left(deadlineNanos), TimeUnit.NANOSECONDS);
             } catch (RuntimeException e) {
                 log.error("adapter stop failed", e);
             }
-            shutdownParticipants.run(ShutdownParticipants.Phase.FORCE_CLOSE, log);
+            error = firstError(error, shutdownParticipants.run(ShutdownParticipants.Phase.FORCE_CLOSE, log));
             List<LifecycleCallback> callbacks;
             synchronized (this) {
                 callbacks = new ArrayList<>(stopCallbacks);
@@ -433,11 +435,12 @@ public final class DefaultRestApp implements RestApp {
             for (LifecycleCallback cb : callbacks) {
                 try {
                     cb.handle(context);
-                } catch (Exception e) {
+                } catch (Throwable e) {
                     log.error("onStop callback failed", e);
+                    error = firstError(error, e);
                 }
             }
-            shutdownParticipants.run(ShutdownParticipants.Phase.AFTER_ON_STOP, log);
+            error = firstError(error, shutdownParticipants.run(ShutdownParticipants.Phase.AFTER_ON_STOP, log));
             for (Exception e : context.closeOwned(logger)) {
                 log.error("owned resource close failed", e);
             }
@@ -451,6 +454,15 @@ public final class DefaultRestApp implements RestApp {
             lifecycleThread.compareAndSet(self, null);
             lifecycle.terminate();
         }
+        if (error != null) {
+            throw error;
+        }
+    }
+
+    /** The first Error of a shutdown: {@code first} when set, else {@code failure} when it is an Error, else null. */
+    @Nullable
+    static Error firstError(@Nullable Error first, @Nullable Throwable failure) {
+        return first != null || !(failure instanceof Error) ? first : (Error) failure;
     }
 
     @Override

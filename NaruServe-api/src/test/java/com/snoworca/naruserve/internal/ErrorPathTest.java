@@ -19,6 +19,7 @@ import com.snoworca.naruserve.UnsupportedMediaTypeException;
 import com.snoworca.naruserve.routing.Router;
 import com.snoworca.naruserve.routing.RouterPolicy;
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientResponse;
+import com.snoworca.naruserve.testing.RecordingLogger;
 import com.snoworca.naruserve.testing.TestApp;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -31,53 +32,6 @@ import org.junit.Test;
 
 /** The one error path and its onError chain. SDS-AC-n cites docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-5.sds.md. */
 public class ErrorPathTest {
-
-    /** Records every log call as {@code LEVEL message} and the Throwables passed to error. */
-    static class RecordingLogger implements Logger {
-        final List<String> lines = Collections.synchronizedList(new ArrayList<>());
-        final List<Throwable> errors = Collections.synchronizedList(new ArrayList<>());
-
-        @Override
-        public void trace(String message) {
-            lines.add("TRACE " + message);
-        }
-
-        @Override
-        public void debug(String message) {
-            lines.add("DEBUG " + message);
-        }
-
-        @Override
-        public void info(String message) {
-            lines.add("INFO " + message);
-        }
-
-        @Override
-        public void warn(String message) {
-            lines.add("WARN " + message);
-        }
-
-        @Override
-        public void error(String message) {
-            lines.add("ERROR " + message);
-        }
-
-        @Override
-        public void error(String message, Throwable error) {
-            lines.add("ERROR " + message);
-            errors.add(error);
-        }
-
-        int count(String level) {
-            int n = 0;
-            for (String l : new ArrayList<>(lines)) {
-                if (l.startsWith(level + " ")) {
-                    n++;
-                }
-            }
-            return n;
-        }
-    }
 
     /** What one onError call saw. */
     private static final class Seen {

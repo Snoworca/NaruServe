@@ -11,6 +11,7 @@ import com.snoworca.naruserve.spi.HttpAdapter;
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter;
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientRequest;
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientResponse;
+import com.snoworca.naruserve.testing.RecordingLogger;
 import com.snoworca.naruserve.testing.StubJsonCodec;
 import com.snoworca.naruserve.testing.TestApp;
 import java.io.IOException;
@@ -33,40 +34,6 @@ public class ServicesAcceptanceTest {
     }
 
     static final class Other {
-    }
-
-    static final class RecordingLogger implements Logger {
-        final List<String> lines = Collections.synchronizedList(new ArrayList<String>());
-
-        @Override
-        public void trace(String message) {
-            lines.add("TRACE " + message);
-        }
-
-        @Override
-        public void debug(String message) {
-            lines.add("DEBUG " + message);
-        }
-
-        @Override
-        public void info(String message) {
-            lines.add("INFO " + message);
-        }
-
-        @Override
-        public void warn(String message) {
-            lines.add("WARN " + message);
-        }
-
-        @Override
-        public void error(String message) {
-            lines.add("ERROR " + message);
-        }
-
-        @Override
-        public void error(String message, Throwable error) {
-            lines.add("ERROR " + message + " " + error.getMessage());
-        }
     }
 
     private final List<String> closed = Collections.synchronizedList(new ArrayList<String>());

@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import com.snoworca.naruserve.AppState;
 import com.snoworca.naruserve.Logger;
@@ -347,6 +348,55 @@ public class ShutdownSequenceTest {
         assertTrue(events.toString(), events.contains("adapter.release"));
         assertEquals(1, logger.errors.size());
         assertTrue(logger.errors.toString(), logger.errors.get(0).contains("onStop broke"));
+        assertEquals(AppState.TERMINATED, app.state());
+    }
+
+    // FR-APP-011 AC-8: an Error from onStop is logged, every later step runs, and it is rethrown after TERMINATED.
+    @Test
+    public void FR_APP_011_AC8_onStopErrorStillRunsEveryLaterStepThenIsRethrown() {
+        DefaultRestApp app = app();
+        app.onStart(ctx -> ctx.own(new Closer(events, "owned", app)));
+        app.onStop(ctx -> {
+            throw new AssertionError("onStop error");
+        });
+        app.onStop(ctx -> events.add("second onStop"));
+        app.shutdownParticipants().add(ShutdownParticipants.Phase.AFTER_ON_STOP, () -> events.add("afterOnStop"));
+        listen(app);
+        try {
+            app.shutdown(1, TimeUnit.SECONDS);
+            fail("the Error must be rethrown after cleanup");
+        } catch (AssertionError e) {
+            assertEquals("onStop error", e.getMessage());
+        }
+        assertEquals(Arrays.asList("adapter.stop", "second onStop", "afterOnStop", "close owned STOPPING",
+                "logger.flush STOPPING", "logger.close STOPPING", "adapter.release"), events);
+        assertEquals(1, logger.errors.size());
+        assertTrue(logger.errors.toString(), logger.errors.get(0).contains("onStop error"));
+        assertEquals(AppState.TERMINATED, app.state());
+    }
+
+    // FR-APP-011 AC-3: an Error from a participant is logged, every later step runs, and it is rethrown after TERMINATED.
+    @Test
+    public void FR_APP_011_AC3_participantErrorStillRunsEveryLaterStepThenIsRethrown() {
+        DefaultRestApp app = app();
+        app.onStart(ctx -> ctx.own(new Closer(events, "owned", app)));
+        ShutdownParticipants p = app.shutdownParticipants();
+        p.add(ShutdownParticipants.Phase.BEFORE_WAIT, () -> {
+            throw new AssertionError("participant error");
+        });
+        p.add(ShutdownParticipants.Phase.BEFORE_WAIT, () -> events.add("second"));
+        app.onStop(ctx -> events.add("onStop"));
+        listen(app);
+        try {
+            app.shutdown(1, TimeUnit.SECONDS);
+            fail("the Error must be rethrown after cleanup");
+        } catch (AssertionError e) {
+            assertEquals("participant error", e.getMessage());
+        }
+        assertEquals(Arrays.asList("second", "adapter.stop", "onStop", "close owned STOPPING",
+                "logger.flush STOPPING", "logger.close STOPPING", "adapter.release"), events);
+        assertEquals(1, logger.errors.size());
+        assertTrue(logger.errors.toString(), logger.errors.get(0).contains("participant error"));
         assertEquals(AppState.TERMINATED, app.state());
     }
 }

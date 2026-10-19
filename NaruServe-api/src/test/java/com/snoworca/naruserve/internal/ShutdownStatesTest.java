@@ -195,9 +195,9 @@ public class ShutdownStatesTest {
         assertEquals(AppState.TERMINATED, app.state());
     }
 
-    // FR-APP-011 AC-5 — shutdown() from a route handler neither waits for its own request nor cuts its response
+    // FR-APP-011 AC-9 — shutdown() from a route handler neither waits for its own request nor cuts its response
     @Test
-    public void FR_APP_011_AC5_shutdownFromARouteHandlerReturnsPromptlyAndTheResponseIsDelivered() throws Exception {
+    public void FR_APP_011_AC9_shutdownFromARouteHandlerReturnsPromptlyAndTheResponseIsDelivered() throws Exception {
         RecordingAdapter adapter = new RecordingAdapter(events);
         DefaultRestApp app = app(adapter);
         long[] took = new long[1];
@@ -217,10 +217,10 @@ public class ShutdownStatesTest {
         assertTrue(events.toString(), events.contains("onStop"));
     }
 
-    // FR-APP-011 AC-5 — shutdown() from a route handler while another shutdown is already STOPPING does not wait for
+    // FR-APP-011 AC-9 — shutdown() from a route handler while another shutdown is already STOPPING does not wait for
     // its own request either
     @Test
-    public void FR_APP_011_AC5_shutdownFromARouteHandlerDuringAnotherStopDoesNotWaitForItself() throws Exception {
+    public void FR_APP_011_AC9_shutdownFromARouteHandlerDuringAnotherStopDoesNotWaitForItself() throws Exception {
         RecordingAdapter adapter = new RecordingAdapter(events);
         DefaultRestApp app = app(adapter);
         CountDownLatch inHandler = new CountDownLatch(1);
@@ -245,9 +245,9 @@ public class ShutdownStatesTest {
         assertEquals(AppState.TERMINATED, app.state());
     }
 
-    // FR-APP-011 AC-5 — when the naruserve-shutdown thread cannot be started, the sequence still runs to TERMINATED
+    // FR-APP-011 AC-9 — when the naruserve-shutdown thread cannot be started, the sequence still runs to TERMINATED
     @Test
-    public void FR_APP_011_AC5_shutdownThreadStartFailureStillReachesTerminated() throws Exception {
+    public void FR_APP_011_AC9_shutdownThreadStartFailureStillReachesTerminated() throws Exception {
         RecordingAdapter adapter = new RecordingAdapter(events);
         DefaultRestApp app = app(adapter);
         app.shutdownThreads = r -> new Thread(r) {

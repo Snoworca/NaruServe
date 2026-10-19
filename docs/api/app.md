@@ -160,7 +160,7 @@ app.shutdown(10, TimeUnit.SECONDS);
 6. 앱 로거를 flush하고 닫은 뒤 HTTP 어댑터를 놓습니다([로깅](logging.md#종료와-로거)).
 
 여러 번 불러도 안전합니다. 종료된 앱은 다시 `listen`할 수 없습니다.
-Android에서는 메인 스레드에서 호출하지 마세요(최대 timeout만큼 막힙니다).
+Android에서는 메인 스레드에서 호출하지 마세요. timeout은 2단계(진행 중인 요청을 기다리는 시간)에만 걸리고, 그 뒤의 `onStop`, 리소스 닫기, 로거 flush에는 시간 제한이 없어 timeout보다 오래 막힐 수 있습니다.
 
 ## 설정은 listen 전에
 

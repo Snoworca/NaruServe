@@ -189,9 +189,9 @@ public class RotatingFileLoggerTest {
         assertTrue(text, text.contains(" ERROR failed\njava.lang.IllegalStateException: boom\n"));
     }
 
-    // FR-APP-017 AC-2 — a rotation whose rename fails keeps the live file instead of truncating it
+    // FR-APP-017 AC-8 — a rotation whose rename fails keeps the live file instead of truncating it
     @Test
-    public void FR_APP_017_AC2_failedRotationRenameKeepsEarlierRecords() throws IOException {
+    public void FR_APP_017_AC8_failedRotationRenameKeepsEarlierRecords() throws IOException {
         File dir = tmp.newFolder("logs");
         File blocker = new File(dir, "naruserve.log.1");
         assertTrue(blocker.mkdir());
@@ -207,10 +207,10 @@ public class RotatingFileLoggerTest {
         assertTrue(text, text.contains("INFO second record"));
     }
 
-    // FR-APP-017 AC-2 — a live-file rename that keeps failing deletes no further backup, is retried only after another
+    // FR-APP-017 AC-8 — a live-file rename that keeps failing deletes no further backup, is retried only after another
     // maxFileBytes, and is counted
     @Test
-    public void FR_APP_017_AC2_persistentRenameFailureKeepsBackupsAndBacksOff() throws IOException {
+    public void FR_APP_017_AC8_persistentRenameFailureKeepsBackupsAndBacksOff() throws IOException {
         File dir = tmp.newFolder("logs");
         java.nio.file.Files.write(new File(dir, "naruserve.log.1").toPath(), "b1".getBytes(StandardCharsets.UTF_8));
         java.nio.file.Files.write(new File(dir, "naruserve.log.2").toPath(), "b2".getBytes(StandardCharsets.UTF_8));

@@ -191,11 +191,7 @@ public final class Dispatcher implements ExchangeHandler {
         return null;
     }
 
-    /**
-     * A pre-request answer written straight to the exchange: 204 with no body and no Content-Length, any other
-     * status with the standard error body carrying {@code rid} (a HEAD token keeps the Content-Length and writes no
-     * bytes). Writes its one access line.
-     */
+    /** A pre-request answer: {@link #answerDirect} with the Allow header or the Upgrade headers when asked. */
     // @req FR-HTTP-021
     // @req FR-HTTP-023
     // @req FR-APP-015
@@ -209,10 +205,23 @@ public final class Dispatcher implements ExchangeHandler {
             headers.add(new SimpleImmutableEntry<>("Upgrade", "websocket"));
             headers.add(new SimpleImmutableEntry<>("Connection", "Upgrade"));
         }
+        answerDirect(ex, status, headers, rid, start, accessLog);
+    }
+
+    /**
+     * Writes {@code status} straight to the exchange after {@code headers}: 204 with no body and no Content-Length,
+     * any other status with the standard error body carrying {@code rid} (a HEAD token keeps the Content-Length and
+     * writes no bytes). Writes its one access line.
+     */
+    // @req FR-HTTP-021
+    // @req FR-APP-013
+    // @req FR-APP-015
+    static void answerDirect(HttpExchange ex, int status, List<Map.Entry<String, String>> headers, String rid,
+            long start, AccessLog accessLog) {
         byte[] body = new byte[0];
         if (status != 204) {
             body = StandardErrors.json(status, StandardErrors.reason(status), rid);
-            headers.add(new SimpleImmutableEntry<>("Content-Type", "application/json; charset=UTF-8"));
+            headers.add(new SimpleImmutableEntry<>("Content-Type", StandardErrors.JSON_TYPE));
             headers.add(new SimpleImmutableEntry<>("Content-Length", String.valueOf(body.length)));
         }
         boolean head = "HEAD".equals(ex.methodToken());
@@ -271,7 +280,7 @@ public final class Dispatcher implements ExchangeHandler {
     }
 
     private static void error(DefaultResponse res, int status, String requestId) {
-        res.status(status).header("Content-Type", "application/json; charset=UTF-8");
+        res.status(status).header("Content-Type", StandardErrors.JSON_TYPE);
         res.send(StandardErrors.json(status, StandardErrors.reason(status), requestId));
     }
 

@@ -5,6 +5,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.snoworca.naruserve.LogLevel;
 import com.snoworca.naruserve.Logger;
+import com.snoworca.naruserve.testing.RecordingLogger;
 import java.util.Collections;
 import org.junit.Test;
 
@@ -13,7 +14,7 @@ public class AccessLogTest {
 
     private static final String RID = "0123456789abcdef";
 
-    private final ErrorPathTest.RecordingLogger log = new ErrorPathTest.RecordingLogger();
+    private final RecordingLogger log = new RecordingLogger();
 
     private AccessLog accessLog(DefaultAccessLogOptions options) {
         return new AccessLog(options, new SafeLogger(log));

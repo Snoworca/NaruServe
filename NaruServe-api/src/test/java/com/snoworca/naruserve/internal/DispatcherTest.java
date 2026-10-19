@@ -14,6 +14,7 @@ import com.snoworca.naruserve.routing.RouterPolicy;
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter;
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientRequest;
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientResponse;
+import com.snoworca.naruserve.testing.RecordingLogger;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -243,7 +244,7 @@ public class DispatcherTest {
         });
         pipeline.addPrefix("/done", (req, res, next) -> res.status(418).send("tea"));
         adapter.bind("127.0.0.1", 0, new Dispatcher(router, pipeline,
-                new ErrorPath(java.util.Collections.emptyList(), new SafeLogger(new ErrorPathTest.RecordingLogger())),
+                new ErrorPath(java.util.Collections.emptyList(), new SafeLogger(new RecordingLogger())),
                 new AccessLog()));
         ClientResponse r = send("GET", "/missing");
         assertError(404, "NOT_FOUND", "Not Found", r);
@@ -263,7 +264,7 @@ public class DispatcherTest {
             next.run();
         });
         adapter.bind("127.0.0.1", 0, new Dispatcher(router, pipeline,
-                new ErrorPath(java.util.Collections.emptyList(), new SafeLogger(new ErrorPathTest.RecordingLogger())),
+                new ErrorPath(java.util.Collections.emptyList(), new SafeLogger(new RecordingLogger())),
                 new AccessLog()));
         ClientResponse r = send("GET", "/missing");
         assertEquals(202, r.status());
@@ -398,7 +399,7 @@ public class DispatcherTest {
     // SDS-AC-15 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-5.sds.md; FR-HTTP-024 AC-4
     @Test
     public void sdsAc15_FR_HTTP_024_AC4_returnWithoutBodyEndsTheResponseWithOneWarn() {
-        ErrorPathTest.RecordingLogger log = new ErrorPathTest.RecordingLogger();
+        RecordingLogger log = new RecordingLogger();
         router.add(Method.GET, "/e", capturing((req, res) -> res.status(202).header("X-A", "1")));
         router.add(Method.GET, "/m", (req, res) -> res.send("never"));
         router.freeze();
@@ -421,7 +422,7 @@ public class DispatcherTest {
     // SDS-AC-15 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-5.sds.md; FR-HTTP-024 AC-4, FR-HTTP-014 AC-7
     @Test
     public void sdsAc15_FR_HTTP_024_AC4_pendingStreamCopiesOnTheHandlerThreadAfterReturnWithoutWarn() {
-        ErrorPathTest.RecordingLogger log = new ErrorPathTest.RecordingLogger();
+        RecordingLogger log = new RecordingLogger();
         List<Thread> threads = new ArrayList<>();
         InputStream in = new ByteArrayInputStream("abc".getBytes(StandardCharsets.UTF_8)) {
             @Override
@@ -536,7 +537,7 @@ public class DispatcherTest {
     // SDS-AC-8 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-8.sds.md; FR-APP-015 AC-5
     @Test
     public void sdsAc8_FR_APP_015_AC5_inCountsTheBodyBytesReadNotTheDeclaredLength() {
-        ErrorPathTest.RecordingLogger log = new ErrorPathTest.RecordingLogger();
+        RecordingLogger log = new RecordingLogger();
         AtomicReference<com.snoworca.naruserve.spi.HttpExchange> current = new AtomicReference<>();
         router.add(Method.POST, "/b", (req, res) -> {
             InputStream body = ((DefaultRequest) req).body().stream(current.get().requestBody());

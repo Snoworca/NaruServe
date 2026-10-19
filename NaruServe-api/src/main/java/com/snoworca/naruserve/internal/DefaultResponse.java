@@ -339,7 +339,7 @@ public final class DefaultResponse implements Response {
             } else if (state == ResponseState.NEW) {
                 this.status = status;
                 headers.clear();
-                put("Content-Type", "application/json; charset=UTF-8");
+                put("Content-Type", StandardErrors.JSON_TYPE);
                 c = prepare(body, null);
             } else {
                 return;

@@ -1,5 +1,6 @@
 package com.snoworca.naruserve.filelog;
 
+import com.snoworca.naruserve.ConsoleLogger;
 import com.snoworca.naruserve.LogLevel;
 import com.snoworca.naruserve.Logger;
 import java.io.File;
@@ -10,9 +11,6 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.charset.Charset;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -136,9 +134,7 @@ public final class RotatingFileLogger implements Logger, Flushable, AutoCloseabl
 
     /** The IR-APP-006 console line, with the stack trace on the following lines. */
     private static String format(LogLevel at, String message, @Nullable Throwable error) {
-        StringBuilder sb = new StringBuilder()
-                .append(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ", Locale.US).format(new Date()))
-                .append(' ').append(at.name()).append(' ').append(message).append('\n');
+        StringBuilder sb = new StringBuilder(ConsoleLogger.format(at, message)).append('\n');
         if (error != null) {
             StringWriter trace = new StringWriter();
             error.printStackTrace(new PrintWriter(trace, true));

@@ -9,12 +9,12 @@ import com.snoworca.naruserve.spi.HttpAdapter;
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter;
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientRequest;
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientResponse;
+import com.snoworca.naruserve.testing.RecordingLogger;
 import com.snoworca.naruserve.testing.StubJsonCodec;
 import com.snoworca.naruserve.testing.TestApp;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -27,54 +27,6 @@ public class AccessLogAcceptanceTest {
 
     private static final Pattern RID = Pattern.compile("rid=([0-9a-f]{16})$");
     private static final Pattern BODY_RID = Pattern.compile("\"requestId\":\"([0-9a-f]{16})\"");
-
-    /** Records "LEVEL message" for every call. */
-    static final class RecordingLogger implements Logger {
-        final List<String> lines = Collections.synchronizedList(new ArrayList<>());
-
-        @Override
-        public void trace(String message) {
-            lines.add("TRACE " + message);
-        }
-
-        @Override
-        public void debug(String message) {
-            lines.add("DEBUG " + message);
-        }
-
-        @Override
-        public void info(String message) {
-            lines.add("INFO " + message);
-        }
-
-        @Override
-        public void warn(String message) {
-            lines.add("WARN " + message);
-        }
-
-        @Override
-        public void error(String message) {
-            lines.add("ERROR " + message);
-        }
-
-        @Override
-        public void error(String message, Throwable error) {
-            lines.add("ERROR " + message);
-        }
-
-        /** The INFO lines, without the level prefix. */
-        List<String> info() {
-            List<String> out = new ArrayList<>();
-            synchronized (lines) {
-                for (String l : lines) {
-                    if (l.startsWith("INFO ")) {
-                        out.add(l.substring(5));
-                    }
-                }
-            }
-            return out;
-        }
-    }
 
     private final RecordingLogger log = new RecordingLogger();
     private final InMemoryHttpAdapter adapter = new InMemoryHttpAdapter();

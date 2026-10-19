@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Internal steps the shutdown sequence runs at three fixed points, per app. Later waves add temp-file cleanup
@@ -38,20 +39,27 @@ final class ShutdownParticipants {
         list.add(participant);
     }
 
-    /** Runs the participants of {@code phase} in order; one that throws is logged at ERROR and the rest run. */
+    /**
+     * Runs the participants of {@code phase} in order; one that throws is logged at ERROR and the rest run. Returns
+     * the first {@link Error} thrown, for the caller to rethrow once the sequence ended, or null.
+     */
     // @req FR-APP-011
-    void run(Phase phase, Logger logger) {
+    @Nullable
+    Error run(Phase phase, Logger logger) {
         List<Runnable> list;
         synchronized (this) {
             List<Runnable> registered = participants.get(phase);
             list = registered == null ? new ArrayList<Runnable>() : new ArrayList<>(registered);
         }
+        Error first = null;
         for (Runnable p : list) {
             try {
                 p.run();
-            } catch (RuntimeException e) {
+            } catch (Throwable e) {
                 logger.error("shutdown participant failed (" + phase + ")", e);
+                first = DefaultRestApp.firstError(first, e);
             }
         }
+        return first;
     }
 }

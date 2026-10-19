@@ -62,7 +62,7 @@ public final class ConsoleLogger implements Logger, Flushable, AutoCloseable {
             return;
         }
         PrintStream stream = level.compareTo(LogLevel.WARN) < 0 ? System.out : System.err;
-        String line = format(level.name(), message);
+        String line = format(level, message);
         // One lock so the stack trace stays right after its line.
         synchronized (stream) {
             stream.println(line);
@@ -72,11 +72,14 @@ public final class ConsoleLogger implements Logger, Flushable, AutoCloseable {
         }
     }
 
-    /** {@code <timestamp> <level> <message>}; a new format per record so the default time zone is read now. */
+    /**
+     * The IR-APP-006 line {@code <timestamp> <LEVEL> <message>} without a line end, shared by other loggers that
+     * write the same format; the default time zone is read at each call.
+     */
     // @req IR-APP-006
-    String format(String level, String message) {
+    public static String format(LogLevel level, String message) {
         // Locale.US keeps the digits ASCII under locales such as ar or fa.
-        return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ", Locale.US).format(new Date()) + " " + level + " "
+        return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ", Locale.US).format(new Date()) + " " + level.name() + " "
                 + message;
     }
 

@@ -166,13 +166,12 @@ public class ConsoleLoggerTest {
     // SDS-AC-9; IR-APP-006 AC-2
     @Test
     public void sdsAc9_IR_APP_006_AC2_timestampOffsetFollowsTheDefaultZoneAtWriteTime() {
-        ConsoleLogger logger = new ConsoleLogger();
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
-        String utc = logger.format("INFO", "m");
+        String utc = ConsoleLogger.format(LogLevel.INFO, "m");
         assertLine("INFO", "m", utc);
         assertTrue(utc, utc.contains("+0000 INFO m"));
         TimeZone.setDefault(TimeZone.getTimeZone("Asia/Seoul"));
-        String seoul = logger.format("WARN", "m");
+        String seoul = ConsoleLogger.format(LogLevel.WARN, "m");
         assertLine("WARN", "m", seoul);
         assertTrue(seoul, seoul.contains("+0900 WARN m"));
     }
@@ -183,7 +182,7 @@ public class ConsoleLoggerTest {
         java.util.Locale realLocale = java.util.Locale.getDefault();
         try {
             java.util.Locale.setDefault(new java.util.Locale("ar", "EG"));
-            assertLine("INFO", "m", new ConsoleLogger().format("INFO", "m"));
+            assertLine("INFO", "m", ConsoleLogger.format(LogLevel.INFO, "m"));
         } finally {
             java.util.Locale.setDefault(realLocale);
         }

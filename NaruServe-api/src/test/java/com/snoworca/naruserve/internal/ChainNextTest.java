@@ -9,6 +9,7 @@ import com.snoworca.naruserve.Middleware;
 import com.snoworca.naruserve.Next;
 import com.snoworca.naruserve.RouteHandler;
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientResponse;
+import com.snoworca.naruserve.testing.RecordingLogger;
 import com.snoworca.naruserve.testing.TestApp;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -241,7 +242,7 @@ public class ChainNextTest {
         pipeline.run(new DefaultRequest(ex, com.snoworca.naruserve.Method.GET, Collections.<String, String>emptyMap()),
                 res, Collections.<Middleware>emptyList(), h("h"),
                 new ErrorPath(Collections.singletonList(recording),
-                        new SafeLogger(new ErrorPathTest.RecordingLogger())),
+                        new SafeLogger(new RecordingLogger())),
                 "0000000000000000");
         assertEquals(500, ex.status);
         assertEquals(1, ex.commits.get());
@@ -261,7 +262,7 @@ public class ChainNextTest {
         });
         ResponseStreamTest.RecordingExchange ex = new ResponseStreamTest.RecordingExchange("GET", "/x");
         DefaultResponse res = new DefaultResponse(ex, false);
-        ErrorPathTest.RecordingLogger log = new ErrorPathTest.RecordingLogger();
+        RecordingLogger log = new RecordingLogger();
         pipeline.run(new DefaultRequest(ex, com.snoworca.naruserve.Method.GET, Collections.<String, String>emptyMap()),
                 res, Collections.<Middleware>emptyList(), h("h"),
                 new ErrorPath(Collections.emptyList(), new SafeLogger(log)), "0123456789abcdef");

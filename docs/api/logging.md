@@ -87,6 +87,16 @@ public interface Logger {
 
 `RestApp.builder()`에서 `logger(...)`를 부르지 않으면 `ConsoleLogger`를 씁니다. 형식은 `<timestamp> <LEVEL> <message>`(timestamp는 `yyyy-MM-dd'T'HH:mm:ss.SSSZ`)이고, 기본 레벨은 `INFO`이며, `TRACE`·`DEBUG`·`INFO`는 `System.out`, `WARN`·`ERROR`는 `System.err`로 씁니다. `new ConsoleLogger(LogLevel.DEBUG)`처럼 레벨을 정할 수 있습니다.
 
+같은 형식으로 쓰는 로거를 직접 만들 때는 `ConsoleLogger.format(level, message)`를 쓰세요. 줄 끝 없이 `<timestamp> <LEVEL> <message>` 한 줄을 돌려주고, 시간대는 부를 때마다 기본 시간대를 읽습니다. 파일 로테이션 로거도 이 메서드로 줄을 만들고 스택 트레이스를 뒤에 붙입니다. Express에는 대응 API가 없습니다(`morgan`의 사용자 형식 함수에 가깝습니다).
+
+```java
+String line = ConsoleLogger.format(LogLevel.WARN, "disk almost full");
+```
+
+```kotlin
+val line = ConsoleLogger.format(LogLevel.WARN, "disk almost full")
+```
+
 ### 로거 교체
 
 `Logger`를 구현해 `app.logger(customLogger)`로 바꿉니다.
