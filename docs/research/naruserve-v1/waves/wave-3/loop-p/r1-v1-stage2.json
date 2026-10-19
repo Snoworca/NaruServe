@@ -1,0 +1,9 @@
+{
+ "confirmed": ["P2-001", "P2-002"],
+ "rebutted": [],
+ "added": [],
+ "notes": {
+  "P2-001": "Holds: ExchangeHandler.java:3-9 and HttpExchange.java:65-71 say nothing about an exchange left open when handle() returns or about abort() racing a write; DefaultResponse.java:153-166 copies on the caller thread after handlerDone, and :217-226 calls ex.abort() outside the lock while runTransfer may be writing; InMemoryHttpAdapter.java:158-160 aborts every unfinished exchange after handle() returns. MEDIUM is fair as a cross-wave contract gap; no current wave-3 AC fails.",
+  "P2-002": "Holds: DefaultResponse.java:58-62 stores any int. No SRS AC, docs/api/response.md line or object.md rule sets a status range (grep found none), so it is hardening, not conformance. LOW is right."
+ }
+}

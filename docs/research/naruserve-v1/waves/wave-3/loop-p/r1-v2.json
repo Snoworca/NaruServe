@@ -1,0 +1,27 @@
+{
+  "findings": [
+    {
+      "finding_id": "P2-001",
+      "severity": "MEDIUM",
+      "severity_class": "spi-contract-ambiguity (cross-wave: wave 5 TinyHttpd adapter, wave 7/8 Servlet)",
+      "claim": "The HttpExchange/ExchangeHandler javadoc never says what an adapter must do with an exchange that is still open when handle() returns (outside eventStream), or whether abort() may be called from another thread while commit/write is running. The core and the reference adapter assume opposite things. DefaultResponse.stream() has a branch where a stream started on another thread is copied on that thread after the Dispatcher returned (handlerDone=true), and abort() calls ex.abort() outside the lock while another thread may be writing. InMemoryHttpAdapter aborts every unfinished exchange as soon as handle() returns (awaitDrain covers only eventStream). A wave 5 adapter written from the SPI javadoc alone could pick either behaviour.",
+      "evidence": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java:153-166, 217-227; NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/InMemoryHttpAdapter.java:158-165; NaruServe-api/src/main/java/com/snoworca/naruserve/spi/ExchangeHandler.java:3-9; NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpExchange.java:65-71",
+      "suggested_fix": "Write the rule into the SPI javadoc in one line each: (a) when handle() returns and no eventStream/upgrade is active, the adapter may close an unfinished exchange abnormally (as InMemoryHttpAdapter does); (b) abort() is thread-safe and may run concurrently with a body write. Then drop or document the post-return cross-thread copy branch in DefaultResponse.stream so the core does not rely on behaviour the adapter contract forbids."
+    },
+    {
+      "finding_id": "P2-002",
+      "severity": "LOW",
+      "severity_class": "input-validation (API shape)",
+      "claim": "Response.status(int) accepts any int (0, -1, 42, 1000, or 1xx like 101) and passes it to HttpExchange.commit unchanged, together with Content-Length. Express 5 res.status throws RangeError outside 100..999. A wave 5 adapter would write an invalid status line, or a 1xx with a body, which the client then misreads. No SRS AC covers the range, so this is a hardening gap, not a conformance gap.",
+      "evidence": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java:58-62",
+      "suggested_fix": "Throw IllegalArgumentException for a code outside 200..599 (or 100..999 minus 1xx), and add the rule to docs/api/response.md and to an SRS AC first, per the SpecKiwi workflow."
+    }
+  ],
+  "regression": {
+    "command": "./gradlew build",
+    "exit_code": 0,
+    "failing_tests": [],
+    "note": "First run exited 1 with 3 failures in BuildChecksTest/BuildLayoutTest (assertTinyHttpdClean, plus a vanished build/testkit-work file). Cause: uncommitted edits in the external TinyHttpd checkout at that moment and a concurrent build sharing build/testkit-work. Neither file is in the wave-3 window. The TinyHttpd checkout was clean again a few minutes later and the rerun exited 0 (root :test reran, 341 test results, 0 failures)."
+  },
+  "substantive_clean": true
+}

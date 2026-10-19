@@ -1,0 +1,43 @@
+{
+ "wave": 3,
+ "issues": [
+  {
+   "issueId": "w3-P2-001",
+   "wave": 3,
+   "class": "local-defect",
+   "source": "loop P r1 P2-001",
+   "resolutionKind": "commit-sha",
+   "resolutionRef": "c47335c85e5e9e13a19bf2aaf9c95beb7436de6f",
+   "userDecisionRef": null,
+   "designLockDigest": null,
+   "deferralReason": null
+  },
+  {
+   "issueId": "w3-P2-002",
+   "wave": 3,
+   "class": "local-defect",
+   "source": "loop P r1 P2-002",
+   "resolutionKind": "commit-sha",
+   "resolutionRef": "c47335c85e5e9e13a19bf2aaf9c95beb7436de6f",
+   "userDecisionRef": null,
+   "designLockDigest": null,
+   "deferralReason": null
+  },
+  {
+   "issueId": "w3-D-001",
+   "wave": 3,
+   "class": "local-defect",
+   "source": "stage 3 duplication audit",
+   "resolutionKind": "commit-sha",
+   "resolutionRef": "c47335c85e5e9e13a19bf2aaf9c95beb7436de6f",
+   "userDecisionRef": null,
+   "designLockDigest": null,
+   "deferralReason": null
+  }
+ ],
+ "counts": {
+  "local-defect": 3,
+  "open": 0,
+  "resolved": 3
+ }
+}

@@ -1,0 +1,1100 @@
+{
+ "req_ac": [
+  {
+   "id": "IR-HTTP-001 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java:84; NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java:100"
+  },
+  {
+   "id": "IR-HTTP-001 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java:115"
+  },
+  {
+   "id": "IR-HTTP-001 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java:127"
+  },
+  {
+   "id": "IR-HTTP-001 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java:137"
+  },
+  {
+   "id": "IR-HTTP-001 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/HttpApiKotlinTest.kt:53; NaruServe-api/src/test/kotlin/com/snoworca/naruserve/HttpApiKotlinTest.kt:126"
+  },
+  {
+   "id": "IR-HTTP-002 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java:152"
+  },
+  {
+   "id": "IR-HTTP-002 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java:170; NaruServe-api/src/test/kotlin/com/snoworca/naruserve/HttpApiKotlinTest.kt:85"
+  },
+  {
+   "id": "IR-HTTP-003 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/spi/HttpAdapterSpiTest.java:61"
+  },
+  {
+   "id": "IR-HTTP-003 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/spi/HttpAdapterSpiTest.java:93"
+  },
+  {
+   "id": "IR-HTTP-003 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/testing/InMemoryHttpAdapterTest.java:57"
+  },
+  {
+   "id": "IR-HTTP-004 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/spi/HttpAdapterSpiTest.java:168"
+  },
+  {
+   "id": "IR-HTTP-004 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/spi/HttpAdapterSpiTest.java:189"
+  },
+  {
+   "id": "IR-HTTP-004 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/spi/HttpAdapterSpiTest.java:120"
+  },
+  {
+   "id": "IR-HTTP-004 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/spi/HttpAdapterSpiTest.java:304"
+  },
+  {
+   "id": "IR-HTTP-004 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/spi/HttpAdapterSpiTest.java:216"
+  },
+  {
+   "id": "IR-HTTP-004 AC-6",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/spi/HttpAdapterSpiTest.java:239"
+  },
+  {
+   "id": "CON-HTTP-001 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/spi/HttpAdapterSpiTest.java:304"
+  },
+  {
+   "id": "CON-HTTP-001 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/spi/HttpAdapterSpiTest.java:335; src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:447"
+  },
+  {
+   "id": "CON-HTTP-001 AC-3",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:447"
+  },
+  {
+   "id": "FR-HTTP-001 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/testing/InMemoryHttpAdapterTest.java:69"
+  },
+  {
+   "id": "FR-HTTP-001 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/testing/InMemoryHttpAdapterTest.java:116"
+  },
+  {
+   "id": "FR-HTTP-001 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/testing/InMemoryHttpAdapterTest.java:77; NaruServe-api/src/test/java/com/snoworca/naruserve/testing/InMemoryHttpAdapterTest.java:102"
+  },
+  {
+   "id": "FR-HTTP-001 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java:189; NaruServe-api/src/test/java/com/snoworca/naruserve/testing/InMemoryHttpAdapterTest.java:57"
+  },
+  {
+   "id": "FR-HTTP-001 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/testing/InMemoryHttpAdapterTest.java:147"
+  },
+  {
+   "id": "FR-HTTP-001 AC-6",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/testing/InMemoryHttpAdapterTest.java:159"
+  },
+  {
+   "id": "FR-HTTP-001 AC-7",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/testing/InMemoryHttpAdapterTest.java:159"
+  },
+  {
+   "id": "FR-HTTP-002 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java:123"
+  },
+  {
+   "id": "FR-HTTP-002 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java:64; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java:76 (DispatcherTest registers through Router.add, which DefaultRestApp.route delegates to; app-level route(Method.any()) case in HttpAcceptanceTest.java:104)"
+  },
+  {
+   "id": "FR-HTTP-002 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java:76; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java:209"
+  },
+  {
+   "id": "FR-HTTP-002 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java:85"
+  },
+  {
+   "id": "FR-HTTP-002 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java:123"
+  },
+  {
+   "id": "FR-HTTP-002 AC-6",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java:123"
+  },
+  {
+   "id": "FR-HTTP-003 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java:79; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java:172"
+  },
+  {
+   "id": "FR-HTTP-003 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java:79; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java:95"
+  },
+  {
+   "id": "FR-HTTP-003 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java:66; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java:183"
+  },
+  {
+   "id": "FR-HTTP-003 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java:79; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java:172"
+  },
+  {
+   "id": "FR-HTTP-003 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java:92; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java:155 (426 over TinyHttpd deferred by design, carried-into-wave-7.md)"
+  },
+  {
+   "id": "FR-HTTP-003 AC-6",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java:92; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java:139 (426 over TinyHttpd deferred by design, carried-into-wave-7.md)"
+  },
+  {
+   "id": "FR-HTTP-003 AC-7",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java:41; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java:110"
+  },
+  {
+   "id": "FR-HTTP-004 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java:173; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java:223"
+  },
+  {
+   "id": "FR-HTTP-004 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java:173; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java:223"
+  },
+  {
+   "id": "FR-HTTP-005 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java:104; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java:121"
+  },
+  {
+   "id": "FR-HTTP-005 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java:104"
+  },
+  {
+   "id": "FR-HTTP-005 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java:104; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java:85"
+  },
+  {
+   "id": "FR-HTTP-005 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java:104 (TinyHttpd half deferred by design to wave 5, carried-into-wave-5.md)"
+  },
+  {
+   "id": "FR-HTTP-006 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java:245"
+  },
+  {
+   "id": "FR-HTTP-006 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java:255; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java:387"
+  },
+  {
+   "id": "FR-HTTP-006 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java:269; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java:291"
+  },
+  {
+   "id": "FR-HTTP-006 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java:306; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java:317"
+  },
+  {
+   "id": "IR-HTTP-005 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java:190"
+  },
+  {
+   "id": "IR-HTTP-005 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java:190"
+  },
+  {
+   "id": "IR-HTTP-005 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java:206"
+  },
+  {
+   "id": "IR-HTTP-005 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java:212"
+  },
+  {
+   "id": "IR-HTTP-005 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java:137"
+  },
+  {
+   "id": "IR-HTTP-005 AC-6",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/HttpApiKotlinTest.kt:93; NaruServe-api/src/test/kotlin/com/snoworca/naruserve/HttpApiKotlinTest.kt:112"
+  },
+  {
+   "id": "IR-HTTP-006 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java:220"
+  },
+  {
+   "id": "IR-HTTP-006 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java:231"
+  },
+  {
+   "id": "IR-HTTP-006 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java:52; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRestAppTest.java:67"
+  },
+  {
+   "id": "IR-HTTP-006 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRestAppTest.java:55"
+  },
+  {
+   "id": "FR-HTTP-007 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java:143; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRestAppTest.java:81"
+  },
+  {
+   "id": "FR-HTTP-007 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java:143"
+  },
+  {
+   "id": "FR-HTTP-007 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java:163"
+  },
+  {
+   "id": "FR-HTTP-007 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java:143; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java:223"
+  },
+  {
+   "id": "FR-HTTP-008 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRestAppTest.java:248"
+  },
+  {
+   "id": "FR-HTTP-008 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRestAppTest.java:115"
+  },
+  {
+   "id": "FR-HTTP-008 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRestAppTest.java:184"
+  },
+  {
+   "id": "FR-HTTP-008 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRestAppTest.java:136; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRestAppTest.java:166"
+  },
+  {
+   "id": "FR-HTTP-008 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRestAppTest.java:210"
+  },
+  {
+   "id": "FR-HTTP-008 AC-6",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRestAppTest.java:266"
+  },
+  {
+   "id": "FR-HTTP-008 AC-7",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRestAppTest.java:236"
+  },
+  {
+   "id": "FR-HTTP-009 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java:189; NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java:203"
+  },
+  {
+   "id": "FR-HTTP-009 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java:203; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRequestTest.java:49"
+  },
+  {
+   "id": "FR-HTTP-009 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java:203; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRequestTest.java:49"
+  },
+  {
+   "id": "FR-HTTP-009 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRequestTest.java:73"
+  },
+  {
+   "id": "FR-HTTP-010 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRequestTest.java:85; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRequestTest.java:116"
+  },
+  {
+   "id": "FR-HTTP-010 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRequestTest.java:96; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRequestTest.java:104"
+  },
+  {
+   "id": "FR-HTTP-010 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRequestTest.java:128; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRequestTest.java:141"
+  },
+  {
+   "id": "FR-HTTP-011 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRequestTest.java:177"
+  },
+  {
+   "id": "FR-HTTP-011 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRequestTest.java:200"
+  },
+  {
+   "id": "FR-HTTP-011 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRequestTest.java:213"
+  },
+  {
+   "id": "FR-HTTP-012 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRequestTest.java:221; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRequestTest.java:231"
+  },
+  {
+   "id": "FR-HTTP-012 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java:217; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRequestTest.java:250"
+  },
+  {
+   "id": "FR-HTTP-012 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRequestTest.java:281"
+  },
+  {
+   "id": "FR-HTTP-012 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRequestTest.java:313"
+  },
+  {
+   "id": "FR-HTTP-012 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRequestTest.java:337"
+  },
+  {
+   "id": "FR-HTTP-013 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultResponseTest.java:57; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultResponseTest.java:80"
+  },
+  {
+   "id": "FR-HTTP-013 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultResponseTest.java:71"
+  },
+  {
+   "id": "FR-HTTP-014 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultResponseTest.java:88; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultResponseTest.java:97"
+  },
+  {
+   "id": "FR-HTTP-014 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultResponseTest.java:105"
+  },
+  {
+   "id": "FR-HTTP-014 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultResponseTest.java:113"
+  },
+  {
+   "id": "FR-HTTP-014 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ResponseStreamTest.java:95"
+  },
+  {
+   "id": "FR-HTTP-014 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java:359; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ResponseStreamTest.java:110"
+  },
+  {
+   "id": "FR-HTTP-014 AC-6",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultResponseTest.java:125"
+  },
+  {
+   "id": "FR-HTTP-014 AC-7",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java:317; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ResponseStreamTest.java:152"
+  },
+  {
+   "id": "FR-HTTP-015 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultResponseTest.java:226; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultResponseTest.java:247"
+  },
+  {
+   "id": "FR-HTTP-015 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ResponseStreamTest.java:129; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ResponseStreamTest.java:421"
+  },
+  {
+   "id": "FR-HTTP-015 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultResponseTest.java:375; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultResponseTest.java:396"
+  },
+  {
+   "id": "FR-HTTP-015 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultResponseTest.java:138; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultResponseTest.java:159"
+  },
+  {
+   "id": "FR-HTTP-016 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultResponseTest.java:226; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultResponseTest.java:389"
+  },
+  {
+   "id": "FR-HTTP-016 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultResponseTest.java:216; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultResponseTest.java:259"
+  },
+  {
+   "id": "FR-HTTP-016 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultResponseTest.java:259"
+  },
+  {
+   "id": "FR-HTTP-016 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ResponseStreamTest.java:152; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ResponseStreamTest.java:214"
+  },
+  {
+   "id": "FR-HTTP-016 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ResponseStreamTest.java:175"
+  },
+  {
+   "id": "FR-HTTP-017 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultResponseTest.java:294; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ResponseStreamTest.java:559"
+  },
+  {
+   "id": "FR-HTTP-017 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultResponseTest.java:306"
+  },
+  {
+   "id": "FR-HTTP-017 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultResponseTest.java:326; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ResponseStreamTest.java:226"
+  },
+  {
+   "id": "FR-HTTP-017 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultResponseTest.java:316"
+  },
+  {
+   "id": "FR-HTTP-018 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultResponseTest.java:259"
+  },
+  {
+   "id": "FR-HTTP-018 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultResponseTest.java:348"
+  },
+  {
+   "id": "FR-HTTP-018 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultResponseTest.java:375; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ResponseStreamTest.java:203"
+  },
+  {
+   "id": "FR-HTTP-019 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/BodyStateTest.java:238"
+  },
+  {
+   "id": "FR-HTTP-019 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/BodyStateTest.java:141; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/BodyStateTest.java:171"
+  },
+  {
+   "id": "FR-HTTP-019 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/BodyStateTest.java:44; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/BodyStateTest.java:54"
+  },
+  {
+   "id": "FR-HTTP-019 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/BodyStateTest.java:62; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/BodyStateTest.java:80"
+  },
+  {
+   "id": "FR-HTTP-019 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/BodyStateTest.java:248"
+  },
+  {
+   "id": "FR-HTTP-020 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/LimitedInputStreamTest.java:41"
+  },
+  {
+   "id": "FR-HTTP-020 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/LimitedInputStreamTest.java:54; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/LimitedInputStreamTest.java:69"
+  },
+  {
+   "id": "FR-HTTP-020 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/LimitedInputStreamTest.java:79; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/LimitedInputStreamTest.java:99"
+  },
+  {
+   "id": "FR-HTTP-020 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/LimitedInputStreamTest.java:143"
+  },
+  {
+   "id": "OPS-HTTP-001 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java:100"
+  },
+  {
+   "id": "OPS-HTTP-001 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java:112"
+  },
+  {
+   "id": "OPS-HTTP-001 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java:143"
+  },
+  {
+   "id": "OPS-HTTP-001 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java:173"
+  },
+  {
+   "id": "OPS-HTTP-001 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java:234"
+  },
+  {
+   "id": "OPS-HTTP-001 AC-6",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java:251"
+  },
+  {
+   "id": "OPS-HTTP-001 AC-7",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java:198"
+  },
+  {
+   "id": "OPS-HTTP-001 AC-8",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java:133; NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java:164"
+  },
+  {
+   "id": "OPS-HTTP-002 AC-1",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:266"
+  },
+  {
+   "id": "OPS-HTTP-002 AC-2",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java:398"
+  },
+  {
+   "id": "OPS-HTTP-002 AC-3",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java:416; src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java:453"
+  },
+  {
+   "id": "OPS-HTTP-002 AC-4",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java:476; src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java:489"
+  },
+  {
+   "id": "OPS-HTTP-002 AC-5",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java:435"
+  },
+  {
+   "id": "OPS-HTTP-002 AC-6",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java:497"
+  },
+  {
+   "id": "OPS-HTTP-002 AC-7",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java:510"
+  },
+  {
+   "id": "OPS-ROUTE-002 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/RoutingDocsTest.java:78"
+  },
+  {
+   "id": "OPS-ROUTE-002 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/RoutingDocsTest.java:53"
+  },
+  {
+   "id": "OPS-ROUTE-002 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/RoutingDocsTest.java:65"
+  },
+  {
+   "id": "CON-ROUTE-006 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterRegistrationTest.java:58"
+  },
+  {
+   "id": "CON-ROUTE-006 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterRegistrationTest.java:34; NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterRegistrationTest.java:72"
+  },
+  {
+   "id": "CON-ROUTE-006 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterRegistrationTest.java:166"
+  },
+  {
+   "id": "CON-ROUTE-006 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterRegistrationTest.java:185"
+  }
+ ],
+ "design": [
+  {
+   "id": "D-071",
+   "verdict": "match",
+   "pointer": "IR-HTTP-001 AC-1/AC-2; NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java, NaruServe-api/src/main/java/com/snoworca/naruserve/Response.java; NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java:84,115"
+  },
+  {
+   "id": "D-072",
+   "verdict": "match",
+   "pointer": "IR-HTTP-001 AC-4/AC-5; NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java:137; NaruServe-api/src/test/kotlin/com/snoworca/naruserve/HttpApiKotlinTest.kt:53"
+  },
+  {
+   "id": "D-392",
+   "verdict": "match",
+   "pointer": "IR-HTTP-001 AC-3, FR-HTTP-019 AC-5; NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java:127"
+  },
+  {
+   "id": "D-040",
+   "verdict": "match",
+   "pointer": "IR-HTTP-005 AC-1/AC-6; NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java; NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java:190"
+  },
+  {
+   "id": "D-041",
+   "verdict": "match",
+   "pointer": "IR-HTTP-005 AC-2, FR-HTTP-007 AC-1/AC-3; NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java:143,163"
+  },
+  {
+   "id": "D-042",
+   "verdict": "match",
+   "pointer": "FR-HTTP-007 AC-2/AC-4, FR-HTTP-004 AC-2; NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java:143; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java:223"
+  },
+  {
+   "id": "D-043",
+   "verdict": "match",
+   "pointer": "IR-HTTP-006 AC-1/AC-2; NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java:220,231"
+  },
+  {
+   "id": "D-044",
+   "verdict": "match",
+   "pointer": "IR-HTTP-006 AC-3/AC-4, FR-HTTP-008 AC-4; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRestAppTest.java:55,67,136"
+  },
+  {
+   "id": "D-045",
+   "verdict": "match",
+   "pointer": "IR-HTTP-002 AC-1/AC-2; NaruServe-api/src/main/java/com/snoworca/naruserve/RouteHandler.java; NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java:152,170"
+  },
+  {
+   "id": "D-046",
+   "verdict": "match",
+   "pointer": "IR-HTTP-005 AC-4; NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java:212"
+  },
+  {
+   "id": "D-393",
+   "verdict": "match",
+   "pointer": "IR-HTTP-005 AC-5, FR-HTTP-008 AC-1; NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java:190; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRestAppTest.java:248"
+  },
+  {
+   "id": "D-394",
+   "verdict": "match",
+   "pointer": "FR-HTTP-002 AC-1, CON-HTTP-001 AC-2; NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:28; NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java:123"
+  },
+  {
+   "id": "D-395",
+   "verdict": "match",
+   "pointer": "FR-HTTP-003 AC-1..AC-7; NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:51-74; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java:95-183 (TinyHttpd 426 half deferred to wave 7 by design)"
+  },
+  {
+   "id": "D-396",
+   "verdict": "match",
+   "pointer": "FR-HTTP-004 AC-1; NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java:173; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java:223"
+  },
+  {
+   "id": "D-442",
+   "verdict": "match",
+   "pointer": "FR-HTTP-005 AC-1..AC-4, FR-HTTP-001 AC-7; NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:80-91; NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java:104 (TinyHttpd half deferred to wave 5 by design)"
+  },
+  {
+   "id": "D-397",
+   "verdict": "match",
+   "pointer": "FR-HTTP-002 AC-6; NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java:41-203 (T01,T02,T03,T05,T06 through TestApp over InMemoryHttpAdapter)"
+  },
+  {
+   "id": "D-073",
+   "verdict": "match",
+   "pointer": "FR-HTTP-009 AC-1; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRequestTest.java:49"
+  },
+  {
+   "id": "D-074",
+   "verdict": "match",
+   "pointer": "FR-HTTP-009 AC-2, OPS-HTTP-001 AC-1; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRequestTest.java:49"
+  },
+  {
+   "id": "D-075",
+   "verdict": "match",
+   "pointer": "FR-HTTP-009 AC-3/AC-4; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRequestTest.java:73"
+  },
+  {
+   "id": "D-076",
+   "verdict": "match",
+   "pointer": "FR-HTTP-010 AC-1; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRequestTest.java:85"
+  },
+  {
+   "id": "D-077",
+   "verdict": "match",
+   "pointer": "FR-HTTP-010 AC-2; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRequestTest.java:96"
+  },
+  {
+   "id": "D-078",
+   "verdict": "match",
+   "pointer": "FR-HTTP-010 AC-3; NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:124-129; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRequestTest.java:128"
+  },
+  {
+   "id": "D-079",
+   "verdict": "match",
+   "pointer": "FR-HTTP-011 AC-1; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRequestTest.java:177"
+  },
+  {
+   "id": "D-080",
+   "verdict": "match",
+   "pointer": "FR-HTTP-011 AC-2; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRequestTest.java:200"
+  },
+  {
+   "id": "D-081",
+   "verdict": "match",
+   "pointer": "FR-HTTP-011 AC-3; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRequestTest.java:213"
+  },
+  {
+   "id": "D-082",
+   "verdict": "match",
+   "pointer": "FR-HTTP-012 AC-1/AC-2/AC-4; NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java:217; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRequestTest.java:221"
+  },
+  {
+   "id": "D-083",
+   "verdict": "match",
+   "pointer": "FR-HTTP-012 AC-3; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRequestTest.java:281"
+  },
+  {
+   "id": "D-084",
+   "verdict": "match",
+   "pointer": "FR-HTTP-018 AC-1..AC-3; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultResponseTest.java:259,348,375 (addCookie/cache parts belong to waves 5/6)"
+  },
+  {
+   "id": "D-085",
+   "verdict": "match",
+   "pointer": "FR-HTTP-019 AC-2; NaruServe-api/src/main/java/com/snoworca/naruserve/internal/BodyState.java; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/BodyStateTest.java:141"
+  },
+  {
+   "id": "D-086",
+   "verdict": "match",
+   "pointer": "FR-HTTP-019 AC-1/AC-3; NaruServe-api/src/main/java/com/snoworca/naruserve/BodyAlreadyConsumedException.java; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/BodyStateTest.java:44,238"
+  },
+  {
+   "id": "D-087",
+   "verdict": "match",
+   "pointer": "FR-HTTP-019 AC-4; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/BodyStateTest.java:62"
+  },
+  {
+   "id": "D-088",
+   "verdict": "match",
+   "pointer": "FR-HTTP-020 AC-1..AC-4; NaruServe-api/src/main/java/com/snoworca/naruserve/internal/LimitedInputStream.java; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/LimitedInputStreamTest.java:41-143 (HTTP 413 lands with the body readers in waves 5/6 per wave decision)"
+  },
+  {
+   "id": "D-089",
+   "verdict": "match",
+   "pointer": "FR-HTTP-013 AC-1; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultResponseTest.java:57"
+  },
+  {
+   "id": "D-090",
+   "verdict": "match",
+   "pointer": "FR-HTTP-013 AC-2; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultResponseTest.java:71"
+  },
+  {
+   "id": "D-091",
+   "verdict": "match",
+   "pointer": "FR-HTTP-014 AC-1; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultResponseTest.java:88"
+  },
+  {
+   "id": "D-092",
+   "verdict": "match",
+   "pointer": "FR-HTTP-014 AC-2; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultResponseTest.java:105"
+  },
+  {
+   "id": "D-093",
+   "verdict": "match",
+   "pointer": "FR-HTTP-014 AC-3; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultResponseTest.java:113"
+  },
+  {
+   "id": "D-094",
+   "verdict": "match",
+   "pointer": "FR-HTTP-014 AC-4/AC-5/AC-7; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ResponseStreamTest.java:95 (max read 8192 < 1 MiB),110,152"
+  },
+  {
+   "id": "D-095",
+   "verdict": "match",
+   "pointer": "FR-HTTP-014 AC-6; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultResponseTest.java:125"
+  },
+  {
+   "id": "D-096",
+   "verdict": "match",
+   "pointer": "FR-HTTP-015 AC-1; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultResponseTest.java:226"
+  },
+  {
+   "id": "D-097",
+   "verdict": "match",
+   "pointer": "FR-HTTP-015 AC-2; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ResponseStreamTest.java:129"
+  },
+  {
+   "id": "D-098",
+   "verdict": "match",
+   "pointer": "FR-HTTP-015 AC-4; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultResponseTest.java:138"
+  },
+  {
+   "id": "D-099",
+   "verdict": "match",
+   "pointer": "FR-HTTP-016 AC-1; NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ResponseState.java; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultResponseTest.java:226"
+  },
+  {
+   "id": "D-100",
+   "verdict": "match",
+   "pointer": "FR-HTTP-016 AC-2/AC-5; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultResponseTest.java:259; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ResponseStreamTest.java:175"
+  },
+  {
+   "id": "D-101",
+   "verdict": "match",
+   "pointer": "FR-HTTP-016 AC-3; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultResponseTest.java:259"
+  },
+  {
+   "id": "D-102",
+   "verdict": "match",
+   "pointer": "FR-HTTP-017 AC-1..AC-4; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultResponseTest.java:294-326"
+  },
+  {
+   "id": "D-103",
+   "verdict": "match",
+   "pointer": "FR-HTTP-016 AC-4, FR-HTTP-014 AC-7; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ResponseStreamTest.java:152,214"
+  },
+  {
+   "id": "D-104",
+   "verdict": "match",
+   "pointer": "CON-HTTP-001 AC-1..AC-3; NaruServe-api/src/test/java/com/snoworca/naruserve/spi/HttpAdapterSpiTest.java:304,335; src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:447"
+  },
+  {
+   "id": "D-105",
+   "verdict": "match",
+   "pointer": "IR-HTTP-003 AC-1/AC-2; NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpExchange.java; NaruServe-api/src/test/java/com/snoworca/naruserve/spi/HttpAdapterSpiTest.java:61,93"
+  },
+  {
+   "id": "D-106",
+   "verdict": "match",
+   "pointer": "IR-HTTP-004 AC-1..AC-4; NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpExchange.java (sendFile/upgrade/eventStream), spi/StreamDrain.java, spi/UpgradeHandler.java; NaruServe-api/src/test/java/com/snoworca/naruserve/spi/HttpAdapterSpiTest.java:120,168,189"
+  },
+  {
+   "id": "D-107",
+   "verdict": "match",
+   "pointer": "IR-HTTP-004 AC-5/AC-6; NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpAdapter.java; NaruServe-api/src/test/java/com/snoworca/naruserve/spi/HttpAdapterSpiTest.java:216,239"
+  },
+  {
+   "id": "D-108",
+   "verdict": "match",
+   "pointer": "FR-HTTP-001 AC-1..AC-3; NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/InMemoryHttpAdapter.java; NaruServe-api/src/test/java/com/snoworca/naruserve/testing/InMemoryHttpAdapterTest.java:69,116"
+  },
+  {
+   "id": "D-399",
+   "verdict": "match",
+   "pointer": "IR-HTTP-003 AC-3, FR-HTTP-001 AC-4; NaruServe-api/src/test/java/com/snoworca/naruserve/testing/InMemoryHttpAdapterTest.java:57 (TinyHttpd getRequestURI/getQueryString half deferred to wave 5 by design)"
+  },
+  {
+   "id": "D-109",
+   "verdict": "match",
+   "pointer": "OPS-HTTP-001 AC-1..AC-3, AC-7, AC-8; docs/api/request.md, docs/api/response.md, docs/api/express-migration.md; NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java:100-224"
+  },
+  {
+   "id": "D-398",
+   "verdict": "match",
+   "pointer": "OPS-HTTP-001 AC-4..AC-6, OPS-ROUTE-002 AC-3, IR-HTTP-005 AC-3; docs/api/routing.md, docs/api/app.md, docs/api/defaults.md; NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java:173,234,251; NaruServe-api/src/test/java/com/snoworca/naruserve/RoutingDocsTest.java:65"
+  }
+ ],
+ "constraints": [
+  {
+   "id": "C-01",
+   "verdict": "match",
+   "pointer": "Gradle 8.14.3 wrapper build only; ./gradlew build EXIT=0 (scratchpad v1-build3.log); no other build files added in the window (git diff --stat 62eab3c..0447676)"
+  },
+  {
+   "id": "C-02",
+   "verdict": "match",
+   "pointer": "CON-HTTP-001 AC-3 / CON-ROUTE-006 AC-1: animal-sniffer android-api-level-21 over NaruServe-api main incl. spi and internal (src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:447); options.release 8 unchanged; docs examples compiled with --release 8 (src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java:277)"
+  },
+  {
+   "id": "C-03",
+   "verdict": "match",
+   "pointer": "IR-HTTP-001 AC-5, IR-HTTP-002 AC-2, IR-HTTP-005 AC-6: NaruServe-api/src/test/kotlin/com/snoworca/naruserve/HttpApiKotlinTest.kt; @NullMarked + @Nullable positions checked at NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java:137"
+  },
+  {
+   "id": "C-04",
+   "verdict": "match",
+   "pointer": "Servlet-like engine-free core: HttpAdapter/HttpExchange SPI (NaruServe-api/src/main/java/com/snoworca/naruserve/spi/) and Dispatcher (NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java) with no engine references (CON-HTTP-001 AC-2)"
+  },
+  {
+   "id": "C-05",
+   "verdict": "match",
+   "pointer": "Express-style names (req.param/query/header, res.status/send/html) and docs/api request/response/app/routing updated with Express counterparts and Java+Kotlin examples; HttpDocsTest + DocsExamplesCompileTest pass"
+  },
+  {
+   "id": "C-06",
+   "verdict": "match",
+   "pointer": "NaruServe-api and NaruServe-servlet modules still present; wave 3 code lives in NaruServe-api only (git diff --stat window)"
+  },
+  {
+   "id": "C-07",
+   "verdict": "match",
+   "pointer": "Wave-3 (미확정) markers for rawPath, send(byte[]) type, stream closing, attribute mismatch, routerPolicy, req.method() during auto HEAD decided and removed (docs/api diff; OPS-HTTP-001 AC-1..AC-7, OPS-ROUTE-002 AC-3)"
+  },
+  {
+   "id": "C-08",
+   "verdict": "match",
+   "pointer": "Committee record docs/analysis/2026-10-19.NaruServe.naruserve-v1/auto_decisions.json (host commit 5f5f4a2); no user stop in the window"
+  },
+  {
+   "id": "C-09",
+   "verdict": "match",
+   "pointer": "object.md wave-3 scope (request/response core, adapter SPI, dispatcher, T01/T02/T03/T05/T06/T07 in-memory) realised; 141/141 wave-3 ACs match"
+  }
+ ],
+ "preservation": [
+  {
+   "item": "NaruServe-api/src/test/java/com/snoworca/naruserve/RoutingDocsTest.java",
+   "verdict": "intended-improvement",
+   "evidence": "Re-cites OPS-ROUTE-002 (supersedes OPS-ROUTE-001, docs/spec/03.routing.srs.md:1893); marker count 4->1 is exactly OPS-ROUTE-002 AC-3 (only the use(middleware) marker remains), required by D-398/D-109; a requirement change recorded before the worker, not a weakened assertion"
+  },
+  {
+   "item": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterRegistrationTest.java",
+   "verdict": "intended-improvement",
+   "evidence": "Removed 'Request/Response/RouteHandler/RestApp must not exist in wave 2' check is superseded by CON-ROUTE-006 AC-2 (docs/spec/03.routing.srs.md:1954, CON-ROUTE-001 discarded at :395); replaced by a stronger constant-pool scan of the routing classes with a positive control (RouterRegistrationTest.java:72-90); other tests renamed to cite CON-ROUTE-006"
+  },
+  {
+   "item": "build.gradle",
+   "verdict": "intended-improvement",
+   "evidence": "Adds testFixturesCompileOnly jspecify (FR-HTTP-001 AC-1) and root testImplementation project(':NaruServe-api') (OPS-HTTP-002 AC-1); wave-1 conventions kept, checked by BuildLayoutTest.java:266"
+  },
+  {
+   "item": "docs/analysis/2026-10-19.NaruServe.naruserve-v1/auto_decisions.json",
+   "verdict": "intended-improvement",
+   "evidence": "Changed by host orchestrator commit 5f5f4a2 (stage 3 partition review committee record, C-08), not by the worker lane"
+  },
+  {
+   "item": "docs/api/app.md",
+   "verdict": "intended-improvement",
+   "evidence": "Adds routerPolicy(RouterPolicy) row and Java/Kotlin section, no marker (OPS-HTTP-001 AC-5; HttpDocsTest.java:234)"
+  },
+  {
+   "item": "docs/api/defaults.md",
+   "verdict": "intended-improvement",
+   "evidence": "TRACE/CONNECT row names app.routerPolicy enableTrace/enableConnect, marker removed (OPS-HTTP-001 AC-6; HttpDocsTest.java:251)"
+  },
+  {
+   "item": "docs/api/express-migration.md",
+   "verdict": "intended-improvement",
+   "evidence": "rawPath row -> req.path before decoding, originalUrl row -> rawPath()+query, express.raw/text -> none and undecided bullet removed (OPS-HTTP-001 AC-7; HttpDocsTest.java:198)"
+  },
+  {
+   "item": "docs/api/request.md",
+   "verdict": "intended-improvement",
+   "evidence": "rawPath without query, ClassCastException without marker, typed-null removal with Java/Kotlin example (OPS-HTTP-001 AC-1/AC-2; HttpDocsTest.java:100,112); proxy-trust/parts/jsonTree markers kept (AC-8)"
+  },
+  {
+   "item": "docs/api/response.md",
+   "verdict": "intended-improvement",
+   "evidence": "octet-stream default, stream ownership section without try-with-resources, abort no-op, IllegalStateException after completion (OPS-HTTP-001 AC-3; FR-HTTP-014 AC-5; FR-HTTP-015 AC-3); file/redirect markers kept (AC-8)"
+  },
+  {
+   "item": "docs/api/routing.md",
+   "verdict": "intended-improvement",
+   "evidence": "Router policy section, TRACE/CONNECT and path-policy markers replaced by app.routerPolicy pointers, req.method() = HEAD during auto HEAD (OPS-HTTP-001 AC-4; OPS-ROUTE-002 AC-1..AC-3); RoutingDocsTest + HttpDocsTest.java:173 pass"
+  },
+  {
+   "item": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java",
+   "verdict": "intended-improvement",
+   "evidence": "Additions only (no assertion removed or relaxed): OPS-HTTP-002 AC-1 test at :266 and CON-HTTP-001 AC-2/AC-3 test at :447"
+  }
+ ],
+ "unit": [
+  {
+   "id": "lane-2026-10-19.naruserve.naruserve-v1-wave-3",
+   "verdict": "match",
+   "pointer": "commits 06d70b4 5a9322d 4917e40 1ae79fe 8fb4835 45469d2 ef85d35 a4d3403 (manifest head a4d3403) all reachable from integration head 013de17 via merge 0447676; ./gradlew build EXIT=0, 0 failing tests (baseline [])"
+  }
+ ],
+ "findings": [],
+ "regression_note": "First ./gradlew build run exited 1 with 5 root-project failures (BuildChecksTest x4, BuildLayoutTest.sdsAc19_CON_BUILD_010_AC1_tinyHttpdCheckoutHasNoChanges) because the external TinyHttpd checkout had uncommitted edits from a concurrent session (committed as 3a20f23 at 11:47); after it became clean, ./gradlew :test --rerun-tasks and a full ./gradlew build both passed with 0 failures. Environmental, not caused by the wave-3 diff.",
+ "roll_up": "ALL_MATCH"
+}
