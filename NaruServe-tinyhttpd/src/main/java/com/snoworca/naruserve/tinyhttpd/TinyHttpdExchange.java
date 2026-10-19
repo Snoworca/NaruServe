@@ -100,7 +100,7 @@ final class TinyHttpdExchange implements HttpExchange {
     @Override
     public InputStream requestBody() {
         try {
-            return req.getInputStream();
+            return new TinyHttpdBodyStream(req.getInputStream());
         } catch (IOException e) {
             throw new IllegalStateException("request body unavailable", e);
         }
