@@ -1,0 +1,163 @@
+{
+  "immediate_fix": [
+    {
+      "id": "A-001",
+      "severity": "LOW",
+      "rationale": "Confirmed: CookieFactoryHook.java:21 uses Class.forName(\"com.snoworca.naruserve.Cookie\") although Cookie is imported in the same module. A class literal removes the dependency on shrinker string adaptation at no cost. Also resolves C-006 and B-009.",
+      "fix_hypothesis": "Replace Class.forName(...) with Cookie.class.getDeclaredMethod(\"unvalidated\", String.class, String.class); drop the 'Class.forName also initialises Cookie' comment (the static invoke initialises Cookie anyway). Keep the -keepclassmembers rule unchanged so ConsumerRulesTest stays green.",
+      "estimated_complexity": "trivial",
+      "is_behavioral": false,
+      "tags": ["r8", "android", "reflection"],
+      "files": ["NaruServe-api/src/main/java/com/snoworca/naruserve/internal/CookieFactoryHook.java"]
+    },
+    {
+      "id": "A-002",
+      "severity": "LOW",
+      "rationale": "Confirmed at CookieParser.java:24-31: only the pair is trimmed, so 'a = 1' gives name 'a ' and is dropped. FR-COOKIE-002 AC-4 does not forbid trimming name and value separately ('bad name=1' still fails isToken, quoted value \"x y\" keeps its quotes, nothing is decoded), and the Express cookie parser trims both. Cheap and Express-natural.",
+      "fix_hypothesis": "TDD: add a CookieParserTest case 'a = 1' -> a=1. Then use pair.substring(0, eq).trim() as name and pair.substring(eq + 1).trim() as value; the existing AC-4 cases must stay green.",
+      "estimated_complexity": "trivial",
+      "is_behavioral": true,
+      "tags": ["cookie", "interop", "express-parity"],
+      "files": ["NaruServe-api/src/main/java/com/snoworca/naruserve/internal/CookieParser.java", "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/CookieParserTest.java"]
+    },
+    {
+      "id": "B-001",
+      "severity": "MEDIUM",
+      "rationale": "Race confirmed: TinyHttpdExchange.abort() (lines 179-182) only sets a volatile flag and counts down 'ended'; run() then throws back to TinyHttpd (lines 56-61) while another thread may already be past the aborted check inside commit() (setStatus/addHeader/getOutputStream, lines 129-137) or inside the FilterOutputStream write (lines 140-147), mutating the non-thread-safe ExchangeResponse that TinyHttpd is finishing. This breaks the HttpExchange.abort() SPI contract ('thread-safe ... the other thread then fails with IOException'). Fixable inside the adapter without a TinyHttpd change.",
+      "fix_hypothesis": "Add one private lock object in TinyHttpdExchange. Run the body of commit() (re-checking aborted under the lock), each write/flush of the returned stream (check() + out.write under the lock) and finish() inside synchronized(lock). abort() stays lock-free (flag + countDown) so it never blocks. In run(), after ended.await(), when aborted, enter synchronized(lock) once before setCloseConnection/throw so the worker waits for any in-flight core write to leave the Response before handing it back to TinyHttpd (a write blocked in the socket bounds this wait by writeTimeout, the documented B-003 shortcut). Regression test: a handler streams a large body on a second thread while a third thread calls abort(); assert the writer gets IOException (no AIOOBE/NPE) and the worker returns.",
+      "estimated_complexity": "medium",
+      "is_behavioral": true,
+      "tags": ["concurrency", "race", "spi-contract"],
+      "files": ["NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdExchange.java", "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/"]
+    },
+    {
+      "id": "B-002",
+      "severity": "MEDIUM",
+      "rationale": "Confirmed: a pre-commit abort throws IOException from run(), which TinyHttpd answers with its plain 500 page, contradicting HttpExchange.abort() 'Closes the connection abnormally'. No SRS AC decides this wire behaviour. TinyHttpd's public API already offers a way: ExchangeResponse.finish() sets conn.mustClose when written < declared Content-Length (TinyHttpd ExchangeResponse.java:562-563), so a short body forces a close without any TinyHttpd change.",
+      "fix_hypothesis": "In run(), when aborted and the response was never started (check 'started' under the lock from B-001): mark it started, res.setStatus(500), res.setContentLengthLong(1), res.flushBuffer(), res.setCloseConnection(true) and return normally; TinyHttpd finishes with 0 of 1 body bytes and closes the connection, so the client sees a truncated (abnormal) response instead of a complete plain 500. Keep the current IOException path for an abort after commit. Update the shortcut comment. Test: handler calls res.abort() before sending; a raw-socket client reads to EOF and gets fewer body bytes than Content-Length and no TinyHttpd plain 500 page.",
+      "estimated_complexity": "small",
+      "is_behavioral": true,
+      "tags": ["contract", "shortcut", "abort"],
+      "files": ["NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdExchange.java", "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/"]
+    },
+    {
+      "id": "B-005",
+      "severity": "LOW",
+      "rationale": "Confirmed at GsonJsonCodec.java:82-88. FR-JSON-003 AC-6 / SDS wave-5-2 SDS-AC-6 decide JsonSyntaxException -> IOException and JsonIOException stays unchecked, but say nothing about a plain JsonParseException from a user JsonDeserializer (Gson's documented way to reject input); mapping it to IOException (400) is consistent with that decision. The IllegalStateException narrowing part is risky (Gson's own 'Expected X but was Y' errors are ISE) and is not part of this fix.",
+      "fix_hypothesis": "TDD: a Gson with a JsonDeserializer that throws new JsonParseException(\"bad\") makes decode throw IOException. Then add after the existing catch: 'catch (JsonIOException e) { throw e; } catch (JsonParseException e) { throw new IOException(e.getMessage(), e); }'. Leave the IllegalStateException branch as is; the no-ctor JsonIOException test (SDS-AC-3) must stay green.",
+      "estimated_complexity": "trivial",
+      "is_behavioral": true,
+      "tags": ["error-handling", "json"],
+      "files": ["NaruServe-gson/src/main/java/com/snoworca/naruserve/gson/GsonJsonCodec.java", "NaruServe-gson/src/test/java/com/snoworca/naruserve/gson/"]
+    },
+    {
+      "id": "B-006",
+      "severity": "LOW",
+      "rationale": "Confirmed: TinyHttpdAdapter.bind(host, port, handler) installs errorRenderer(status -> \"\") and JsonErrorHandler always sets Content-Type application/json, so a direct SPI caller gets a 0-byte body labelled JSON (invalid JSON). StandardErrors.renderer() is package-private in internal, so the cheapest correct fix is in the handler. IR-ENGINE-002 AC-5 / FR-ENGINE-005 AC-3 cover only the settings path, where the body is never empty, so this does not conflict.",
+      "fix_hypothesis": "In JsonErrorHandler.render, set the application/json Content-Type only when the rendered body is non-empty; update the comment in the plain bind overload. Test: a JsonErrorHandler with an empty renderer sets no JSON Content-Type and Content-Length 0.",
+      "estimated_complexity": "trivial",
+      "is_behavioral": true,
+      "tags": ["contract", "error-body"],
+      "files": ["NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/JsonErrorHandler.java", "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdAdapter.java"]
+    },
+    {
+      "id": "C-001",
+      "severity": "MEDIUM",
+      "rationale": "OPS-JSON-001 AC-5 asks for skip reasons that still apply; four reasons lead with an app-defined type (PostService, Created, User, UserRepository) the block never names, and no test ties a reason to its block. Test-only fix that strengthens checks.",
+      "fix_hypothesis": "Reword the four SKIPS reasons to the real cause (e.g. 'app-defined variable `postService`', 'app-defined variables `id` and `created`', 'app-defined variables `user`, `user1`, `user2`', 'app-defined methods `find`, `create` and `remove`'). Add a test that the last dotted segment of every backticked identifier in each skip reason occurs in its block body.",
+      "estimated_complexity": "small",
+      "is_behavioral": false,
+      "tags": ["test-quality", "docs", "skip-handling"],
+      "files": ["src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java"]
+    },
+    {
+      "id": "C-002",
+      "severity": "LOW",
+      "rationale": "skippedJsonBlocksNameTheReasonThatStillApplies is subsumed by noSkipNamesAWave5Member and cannot fail alone. Fixed together with C-001 by replacing it with the reason-to-block check (a stronger test, not a weakening).",
+      "fix_hypothesis": "Replace the body of skippedJsonBlocksNameTheReasonThatStillApplies with the C-001 reason-identifier-occurs-in-block check, keeping its OPS-JSON-001 AC-5 citation.",
+      "estimated_complexity": "trivial",
+      "is_behavioral": false,
+      "tags": ["test-quality", "vacuous"],
+      "files": ["src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java"]
+    },
+    {
+      "id": "C-003",
+      "severity": "MEDIUM",
+      "rationale": "Confirmed with javap on the compiled test class: the Kotlin object extends TypeRef<java.util.List<? extends java.lang.String>>, so as worded IR-JSON-001 AC-4 (Kotlin 'object : TypeRef<List<String>>() {}' type equal to the Java List<String> of AC-1) is not met, and the test compares Kotlin to Kotlin and accepts the wildcard. A fix exists inside the constraints (no signature change, no SRS edit): normalise the Kotlin covariant wildcard in TypeRef.",
+      "fix_hypothesis": "TDD first: change the Kotlin test to assertEquals(<Java helper returning new TypeRef<List<String>>(){}.getType()>, t.type); it fails today. Then in TypeRef's constructor, when the anonymous subclass carries the kotlin.Metadata annotation (checked by annotation type name, no Kotlin dependency in Core), replace every covariant wildcard '? extends X' (no lower bound) inside the captured type, recursively through ParameterizedType arguments, with X, using a small internal ParameterizedType implementation whose equals/hashCode follow the java.lang.reflect.ParameterizedType contract (the JDK ParameterizedTypeImpl.equals accepts any ParameterizedType, so equality holds both ways). Java-written TypeRefs are untouched; Gson resolves both forms the same. If the fixer finds the normalisation unsound, fall back to discussion (SRS AC-4 rewording to accept WildcardType(upper=String)).",
+      "estimated_complexity": "medium",
+      "is_behavioral": true,
+      "tags": ["kotlin", "srs-gap", "test-quality", "typeref"],
+      "files": ["NaruServe-api/src/main/java/com/snoworca/naruserve/TypeRef.java", "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/JsonKotlinTest.kt"]
+    },
+    {
+      "id": "C-004",
+      "severity": "LOW",
+      "rationale": "OPS-JSON-001 AC-3/AC-5 want the rewritten example run; the 201 success branch of the Kotlin CreateUserRequest docs test is only compiled. Cheap test strengthening.",
+      "fix_hypothesis": "Make DocsCodec return CreateUserRequest().apply { name = \"a\" } for a marker body (e.g. '{\"name\":\"a\"}') and add a request asserting 201.",
+      "estimated_complexity": "trivial",
+      "is_behavioral": false,
+      "tags": ["test-quality"],
+      "files": ["NaruServe-api/src/test/kotlin/com/snoworca/naruserve/JsonDocsKotlinTest.kt"]
+    },
+    {
+      "id": "C-005",
+      "severity": "LOW",
+      "rationale": "WaveFiveDocsTest copies the per-header-line formula of TinyHttpdAdapter instead of checking it; LimitsSocketTest covers the request line (8190 -> 200, 8191 -> 414) but not a header line, so OPS-ENGINE-001 AC-2/AC-6 ('inputBufferBytes - 2', 8190) is not tied to the code. Cheap socket test.",
+      "fix_hypothesis": "Add to LimitsSocketTest a default-settings case: one header line of exactly 8190 bytes is accepted (200) and 8191 bytes gets 431 (raise maxHeaderSize in the test if needed so only the per-line limit trips). Keep the docs test as is.",
+      "estimated_complexity": "small",
+      "is_behavioral": false,
+      "tags": ["test-quality", "tautology"],
+      "files": ["NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LimitsSocketTest.java"]
+    },
+    {
+      "id": "C-007",
+      "severity": "LOW",
+      "rationale": "Confirmed at StartFailureTest.java:136-138: the message is checked for the single digits '5', '4', '2' separately. The real format is 'maxConnections (5) must be at least maxWorkers (...' (DefaultServerOptions.java:153), so name/value pairs can be asserted exactly; this strengthens the test.",
+      "fix_hypothesis": "Assert e.getMessage() contains \"maxConnections (5)\", \"maxWorkers (4)\" and \"maxSseStreams (2)\" (matching the actual message format).",
+      "estimated_complexity": "trivial",
+      "is_behavioral": false,
+      "tags": ["test-quality", "weak-assertion"],
+      "files": ["NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StartFailureTest.java"]
+    }
+  ],
+  "discussion_needed": [],
+  "rejected": [
+    {
+      "id": "B-003",
+      "severity": "LOW",
+      "rationale": "Documented shortcut (TinyHttpdExchange.java:177). Waking a write blocked in the socket needs a connection-close hook that TinyHttpd's public API lacks, and TinyHttpd is read-only. Bounded by writeTimeout; shutdown force-closes. auto mode low-severity skip.",
+      "rejection_category": "infeasible_without_external_change"
+    },
+    {
+      "id": "B-004",
+      "severity": "LOW",
+      "rationale": "TinyHttpd's Request exposes only getHeaderNames()/getHeaders(name), with no ordered raw list, and TinyHttpd is read-only; per-name order is kept and the deviation is a documented shortcut (TinyHttpdExchange.java:87-88). auto mode low-severity skip.",
+      "rejection_category": "external_library_limitation"
+    },
+    {
+      "id": "B-007",
+      "severity": "LOW",
+      "rationale": "Intended per SDS wave-5-6 ('TinyLogBridge ... isLoggable always true'). The NaruServe Logger interface has no level query, so the bridge cannot ask the app logger, and filtering below INFO by default would drop the FINE/FINEST -> debug/trace mapping that FR-ENGINE-005 AC-6 requires.",
+      "rejection_category": "intended_per_sds"
+    },
+    {
+      "id": "B-008",
+      "severity": "LOW",
+      "rationale": "The upper bounds are the FR-ENGINE-006 AC-1 contract ('stop returns within the deadline plus 1500 ms'); widening them would weaken the test against the AC, which is forbidden. No flake observed; the handler sleeps are the scenario under test, not synchronisation.",
+      "rejection_category": "intended_per_srs"
+    },
+    {
+      "id": "B-009",
+      "severity": "LOW",
+      "rationale": "Duplicate of A-001: once CookieFactoryHook uses Cookie.class, no class name is looked up by string, so -keepnames is unnecessary.",
+      "rejection_category": "duplicate"
+    },
+    {
+      "id": "C-006",
+      "severity": "LOW",
+      "rationale": "Duplicate of A-001 (same fix: Cookie.class instead of Class.forName, keep -keepclassmembers). After that fix no class-name string remains, so checking the rule as text is enough.",
+      "rejection_category": "duplicate"
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+{"schema_version":"1.0.0","run_id":"2026-10-19.naruserve.naruserve-v1-wave-5-5","sds_path":"docs/sds/2026-10-19.naruserve.naruserve-v1-wave-5-5.sds.md","target":"wave-5","spawn_context":"pm-child","phase":"done","failed":false,"next_resume_hint":null,
+"red_evidence":{"command":"./gradlew :NaruServe-tinyhttpd:test","exit_code":1,"captured_failure":"cannot find symbol: TinyHttpdAdapter (main classes absent)","timestamp":"2026-10-19T14:20:00Z"},
+"green_evidence":{"command":"./gradlew build","exit_code":0,"timestamp":"2026-10-19T14:40:00Z"},
+"regression_baseline":{"command":"./gradlew build","exit_code":0,"head_sha":"5de90cd"},
+"prickly_review":{"HIGH":1,"MEDIUM":2,"LOW":6,"resolution":"HIGH/MEDIUM abort limits recorded as shortcut comments (no TinyHttpd abort hook; error path owned by SDS wave-5-6); async/double-commit/abort test added; LOW comment and interface-filter fixes applied"},
+"mcp_call_log":"deferred: 22 entries appended to the lane deferred-srs-queue.jsonl"}

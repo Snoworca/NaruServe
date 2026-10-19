@@ -1,0 +1,14 @@
+{
+ "implementability": "high",
+ "product_fit": "core",
+ "rationale": "Pure Java 8 engine-free code in NaruServe-api; no external module change; build checks from wave 1 apply.",
+ "code_evidence": [
+  "build.gradle:125-127",
+  "build.gradle:171-178"
+ ],
+ "blockers": [],
+ "conditions": [
+  "Avoid Java 9+ / java.nio.file / Optional-heavy APIs flagged by animal-sniffer API 21"
+ ],
+ "external_module_required": false
+}

@@ -1,0 +1,351 @@
+{
+ "IR-HTTP-001": {
+  "title": "Request and Response public surface of wave 3",
+  "d_ids": [
+   "D-071",
+   "D-072",
+   "D-392"
+  ],
+  "wave_decisions": [
+   "Request and response surface"
+  ],
+  "other_tags": []
+ },
+ "IR-HTTP-002": {
+  "title": "RouteHandler functional interface",
+  "d_ids": [
+   "D-045"
+  ],
+  "wave_decisions": [],
+  "other_tags": []
+ },
+ "IR-HTTP-003": {
+  "title": "HttpAdapter SPI exchange data contract",
+  "d_ids": [
+   "D-105",
+   "D-399"
+  ],
+  "wave_decisions": [
+   "Adapter halves"
+  ],
+  "other_tags": []
+ },
+ "IR-HTTP-004": {
+  "title": "HttpAdapter SPI extension points and bind/stop lifecycle",
+  "d_ids": [
+   "D-106",
+   "D-107"
+  ],
+  "wave_decisions": [],
+  "other_tags": []
+ },
+ "CON-HTTP-001": {
+  "title": "Engine-free placement of the HttpAdapter SPI and the dispatcher",
+  "d_ids": [
+   "D-104",
+   "D-394"
+  ],
+  "wave_decisions": [],
+  "other_tags": []
+ },
+ "FR-HTTP-001": {
+  "title": "In-memory HttpAdapter and test harness in the test fixtures",
+  "d_ids": [
+   "D-108",
+   "D-397",
+   "D-399",
+   "D-442"
+  ],
+  "wave_decisions": [
+   "Adapter halves",
+   "Working app in wave 3"
+  ],
+  "other_tags": [
+   "I-021",
+   "loop D: V1-006/V2-004",
+   "wave-3 carried: CONNECT authority-form",
+   "wave-3 carried: absolute-form target"
+  ]
+ },
+ "FR-HTTP-002": {
+  "title": "Dispatcher pipeline and pre-request checks before route lookup",
+  "d_ids": [
+   "D-052",
+   "D-394",
+   "D-397",
+   "D-422",
+   "D-442"
+  ],
+  "wave_decisions": [
+   "Order before lookup"
+  ],
+  "other_tags": [
+   "wave-3 carried: path validator before lookup",
+   "wave-3 residual: pre-request rejections"
+  ]
+ },
+ "FR-HTTP-003": {
+  "title": "Automatic responses for router lookup results",
+  "d_ids": [
+   "D-395"
+  ],
+  "wave_decisions": [
+   "426 over TinyHttpd",
+   "Automatic response bodies"
+  ],
+  "other_tags": []
+ },
+ "FR-HTTP-004": {
+  "title": "Automatic HEAD through the GET handler",
+  "d_ids": [
+   "D-042",
+   "D-396",
+   "D-398"
+  ],
+  "wave_decisions": [
+   "req.method() during automatic HEAD"
+  ],
+  "other_tags": []
+ },
+ "FR-HTTP-005": {
+  "title": "Asterisk-form OPTIONS and raw paths not starting with a slash",
+  "d_ids": [
+   "D-052",
+   "D-442"
+  ],
+  "wave_decisions": [
+   "Adapter halves",
+   "Automatic response bodies"
+  ],
+  "other_tags": [
+   "I-021",
+   "loop D: V1-006/V2-004"
+  ]
+ },
+ "FR-HTTP-006": {
+  "title": "Interim handler failure and unfinished-response handling",
+  "d_ids": [
+   "D-097",
+   "D-099"
+  ],
+  "wave_decisions": [
+   "Interim failure handling"
+  ],
+  "other_tags": []
+ },
+ "IR-HTTP-005": {
+  "title": "RestApp route registration and routing policy interface",
+  "d_ids": [
+   "D-040",
+   "D-041",
+   "D-043",
+   "D-046",
+   "D-393",
+   "D-398"
+  ],
+  "wave_decisions": [
+   "Remaining markers"
+  ],
+  "other_tags": [
+   "wave-3 carried: routing-policy API names"
+  ]
+ },
+ "IR-HTTP-006": {
+  "title": "RouteBuilder per-method registration and duplicate equivalence",
+  "d_ids": [
+   "D-043",
+   "D-044"
+  ],
+  "wave_decisions": [
+   "Working app in wave 3"
+  ],
+  "other_tags": []
+ },
+ "FR-HTTP-007": {
+  "title": "One handler for a Method or MethodSet reports the actual method",
+  "d_ids": [
+   "D-041",
+   "D-042"
+  ],
+  "wave_decisions": [
+   "req.method() during automatic HEAD"
+  ],
+  "other_tags": []
+ },
+ "FR-HTTP-008": {
+  "title": "Internal RestApp implementation with deferred router build and freeze",
+  "d_ids": [
+   "D-044",
+   "D-047",
+   "D-048",
+   "D-111",
+   "D-393"
+  ],
+  "wave_decisions": [
+   "Settings after the freeze",
+   "Working app in wave 3"
+  ],
+  "other_tags": []
+ },
+ "FR-HTTP-009": {
+  "title": "Request path, raw path and path parameter accessors",
+  "d_ids": [
+   "D-073",
+   "D-074",
+   "D-075"
+  ],
+  "wave_decisions": [
+   "Remaining markers"
+  ],
+  "other_tags": []
+ },
+ "FR-HTTP-010": {
+  "title": "Query accessors with form-urlencoded decoding and malformed-query 400",
+  "d_ids": [
+   "D-076",
+   "D-077",
+   "D-078",
+   "D-117",
+   "D-129"
+  ],
+  "wave_decisions": [
+   "Interim failure handling"
+  ],
+  "other_tags": [
+   "wave-3 residual: pre-request rejections"
+  ]
+ },
+ "FR-HTTP-011": {
+  "title": "Header, remote address, secure flag and Last-Event-ID accessors",
+  "d_ids": [
+   "D-079",
+   "D-080",
+   "D-081"
+  ],
+  "wave_decisions": [],
+  "other_tags": []
+ },
+ "FR-HTTP-012": {
+  "title": "Per-request concurrent attribute store",
+  "d_ids": [
+   "D-072",
+   "D-082",
+   "D-083"
+  ],
+  "wave_decisions": [
+   "Null attribute values",
+   "Remaining markers"
+  ],
+  "other_tags": []
+ },
+ "FR-HTTP-013": {
+  "title": "Response chaining and default status",
+  "d_ids": [
+   "D-089",
+   "D-090"
+  ],
+  "wave_decisions": [],
+  "other_tags": []
+ },
+ "FR-HTTP-014": {
+  "title": "Response body writers send, html, stream and end",
+  "d_ids": [
+   "D-091",
+   "D-092",
+   "D-093",
+   "D-094",
+   "D-095"
+  ],
+  "wave_decisions": [
+   "Remaining markers",
+   "stream() closing"
+  ],
+  "other_tags": []
+ },
+ "FR-HTTP-015": {
+  "title": "Response commit flag, abort and header CR/LF rejection",
+  "d_ids": [
+   "D-096",
+   "D-097",
+   "D-098"
+  ],
+  "wave_decisions": [
+   "abort() after completion"
+  ],
+  "other_tags": []
+ },
+ "FR-HTTP-016": {
+  "title": "Response state machine with single commit",
+  "d_ids": [
+   "D-099",
+   "D-100",
+   "D-101",
+   "D-103"
+  ],
+  "wave_decisions": [
+   "stream() closing"
+  ],
+  "other_tags": []
+ },
+ "FR-HTTP-017": {
+  "title": "Bodyless 204, 304 and HEAD responses",
+  "d_ids": [
+   "D-102"
+  ],
+  "wave_decisions": [
+   "Automatic response bodies"
+  ],
+  "other_tags": []
+ },
+ "FR-HTTP-018": {
+  "title": "Mutation after completion throws while read accessors stay usable",
+  "d_ids": [
+   "D-084"
+  ],
+  "wave_decisions": [
+   "abort() after completion"
+  ],
+  "other_tags": []
+ },
+ "FR-HTTP-019": {
+  "title": "Request body ownership with BodyState and BodyAlreadyConsumedException",
+  "d_ids": [
+   "D-085",
+   "D-086",
+   "D-087"
+  ],
+  "wave_decisions": [
+   "Body ownership"
+  ],
+  "other_tags": []
+ },
+ "FR-HTTP-020": {
+  "title": "Limit-enforcing request body input stream",
+  "d_ids": [
+   "D-088"
+  ],
+  "wave_decisions": [
+   "Body ownership"
+  ],
+  "other_tags": []
+ },
+ "OPS-HTTP-001": {
+  "title": "Wave 3 decisions recorded in docs/api and their markers removed",
+  "d_ids": [
+   "D-109",
+   "D-398"
+  ],
+  "wave_decisions": [
+   "Body ownership",
+   "Docs examples",
+   "Null attribute values",
+   "Remaining markers",
+   "req.method() during automatic HEAD",
+   "stream() closing"
+  ],
+  "other_tags": [
+   "I-009",
+   "wave-3 residual: marker test of wave 2"
+  ]
+ }
+}

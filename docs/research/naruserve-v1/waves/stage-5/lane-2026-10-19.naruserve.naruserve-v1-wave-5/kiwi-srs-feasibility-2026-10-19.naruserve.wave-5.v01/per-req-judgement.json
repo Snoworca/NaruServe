@@ -1,0 +1,1491 @@
+{
+ "run": "2026-10-19.naruserve.wave-5.v01",
+ "target": "wave-5",
+ "tinyhttpd_head": "38051b6",
+ "tinyhttpd_verified": "46b973e",
+ "judgements": [
+  {
+   "req_id": "IR-ENGINE-001",
+   "feasibility": "high",
+   "score": 94,
+   "axes": {
+    "implementability": {
+     "score": 28,
+     "rationale": "Additive: RestApp is an interface (RestApp.java:41-131) with Configurer pattern already used by accessLog (RestApp.java:131, Configurer.java); NEW-state guard exists. Ranges fit TinyHttpd int-millis setters (1 h = 3600000 ms).",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:131",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/Configurer.java",
+      "TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/TinyHttpd.java:469-700"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "Trace paths exist (RestApp.java, internal/DefaultRestApp.java). TinyHttpd builder has every mapped setter incl. writeTimeout (TinyHttpd.java:469-700).",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:216-270",
+      "TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/TinyHttpd.java:590"
+     ]
+    },
+    "dependency_health": {
+     "score": 14,
+     "rationale": "IR-HTTP-005 and IR-APP-007 verified/evolving; implicit coupling to IR-JSON-002 via AC-7 is unlinked.",
+     "evidence": [
+      "IR-HTTP-005 verified",
+      "IR-APP-007 verified"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "All ACs are reflection/unit/Kotlin compile checks.",
+     "evidence": [
+      "AC-1..AC-7"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Within ENGINE scope §2 (06.engine-adapter.srs.md:17-30).",
+     "evidence": [
+      "docs/spec/06.engine-adapter.srs.md:17-30"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "object.md §13 limits and Express app.set('trust proxy') mapping; needed for LAN use.",
+     "evidence": [
+      "object.md"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "AC-7 re-points the RestApp surface test to include jsonCodec and jsonLimit, which IR-JSON-002 adds; implement both in the same change or the surface test fails (no trace link to IR-JSON-002).",
+    "ServerOptions is an interface with an internal implementation; the frozen copy must be taken at freeze, not at each server(...) call.",
+    "TinyHttpd checkout HEAD is 38051b6, three commits after the verified 46b973e (adds UNLIMITED constants and overflow guards; no fact cited by the SRS changes); re-verify or pin before implementation (settings.gradle:25-36 only warns)."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "srs_file": "docs/spec/06.engine-adapter.srs.md"
+  },
+  {
+   "req_id": "IR-ENGINE-002",
+   "feasibility": "high",
+   "score": 93,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "HttpAdapter has exactly the four wave 3 methods (spi/HttpAdapter.java), so a default bind(ServerSettings, ExchangeHandler) is source compatible. listen currently calls a.bind(\"127.0.0.1\", port, ...) at DefaultRestApp.java:251, a single replacement site. SafeLogger and StandardErrors/RequestIds exist.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpAdapter.java",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:251",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/SafeLogger.java:11",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StandardErrors.java:49-52",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/RequestIds.java:13-16"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "Trace paths exist (spi/HttpAdapter.java, spi/package-info.java, internal/DefaultRestApp.java).",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/package-info.java"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "IR-ENGINE-001 is wave 5; IR-HTTP-004 verified.",
+     "evidence": [
+      "IR-ENGINE-001 wave-5",
+      "IR-HTTP-004 verified"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Recording adapter, reflection and throwing-logger tests are automatable.",
+     "evidence": [
+      "AC-1..AC-5"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Within ENGINE scope §2 (06.engine-adapter.srs.md:17-30).",
+     "evidence": [
+      "docs/spec/06.engine-adapter.srs.md:17-30"
+     ]
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "Needed so the TinyHttpd module renders bodies without calling internal classes.",
+     "evidence": [
+      "D-104, D-220"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "ServerSettings is a public final class in spi but is built by internal code in another package, so it needs a public constructor or factory; choose one and keep it engine-free (AC-3).",
+    "SafeLogger is package-private in internal (internal/SafeLogger.java:11); expose it to the settings only as Logger.",
+    "Renderer must reuse StandardErrors.json + RequestIds.next so the format equals the dispatcher body (AC-5)."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "srs_file": "docs/spec/06.engine-adapter.srs.md"
+  },
+  {
+   "req_id": "FR-ENGINE-001",
+   "feasibility": "high",
+   "score": 94,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "TinyHttpd Request exposes getRequestURI/getQueryString/getMethod/getProtocol/getRemoteAddr/getHeaders (http/Request.java:18-136); requestUri is the raw target before '?' and queryString null without '?' (RequestParser.java:89-94). Module is only package-info today, so all classes are new.",
+     "evidence": [
+      "TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/http/Request.java:18-136",
+      "TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/RequestParser.java:89-94",
+      "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/package-info.java"
+     ]
+    },
+    "evidence_strength": {
+     "score": 19,
+     "rationale": "Claims verified: getPath is decoded and drops empty segments (PercentCodec.decodePath, RequestParser.java:93); TlsConfig and tls(...) exist (TinyHttpd.java:315-397).",
+     "evidence": [
+      "TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/PercentCodec.java:31-54",
+      "TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/TinyHttpd.java:315-397"
+     ]
+    },
+    "dependency_health": {
+     "score": 14,
+     "rationale": "IR-ENGINE-002 wave 5; IR-HTTP-003 verified.",
+     "evidence": [
+      "IR-ENGINE-002 wave-5",
+      "IR-HTTP-003 verified"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Reflection signature scan, class-reference scan and socket test are automatable.",
+     "evidence": [
+      "AC-1..AC-5"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Within ENGINE scope §2 (06.engine-adapter.srs.md:17-30).",
+     "evidence": [
+      "docs/spec/06.engine-adapter.srs.md:17-30"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Core engine of v1.",
+     "evidence": [
+      "object.md §13"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Socket tests must send a Host header: TinyHttpd answers 400 for an HTTP/1.1 request without Host (RequestParser.java:25).",
+    "Use builder port()+bindAddress() (not listen(int, TlsConfig)) so no TlsConfig reference enters the constant pool (AC-3).",
+    "TinyHttpd checkout HEAD is 38051b6, three commits after the verified 46b973e (adds UNLIMITED constants and overflow guards; no fact cited by the SRS changes); re-verify or pin before implementation (settings.gradle:25-36 only warns)."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "srs_file": "docs/spec/06.engine-adapter.srs.md"
+  },
+  {
+   "req_id": "FR-ENGINE-002",
+   "feasibility": "high",
+   "score": 94,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "bindAddress(InetAddress) default null (TinyHttpd.java:251,344); HostAllowlistFilter auto-installed with allowedHosts (ServerConfig.java:97-98) and throws HttpException(421) (HostAllowlistFilter.java:31-35), which Connection.dispatch routes to sendErrorPage -> config.errorHandler (Connection.java:332, ExchangeResponse.java:366). Bind failure closes the socket and starts no threads (HttpServer.java:131-150). getPort() reports the bound port (TinyHttpd.java:87).",
+     "evidence": [
+      "TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/TinyHttpd.java:344-347",
+      "TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/ServerConfig.java:97-98",
+      "TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/http/filter/HostAllowlistFilter.java:25-40",
+      "TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/Connection.java:332",
+      "TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/ExchangeResponse.java:366",
+      "TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/HttpServer.java:105-150"
+     ]
+    },
+    "evidence_strength": {
+     "score": 19,
+     "rationale": "All measured facts in the rationale hold at HEAD.",
+     "evidence": [
+      "TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/TinyHttpd.java:251"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "FR-ENGINE-001, IR-ENGINE-001 wave 5; IR-APP-005 verified.",
+     "evidence": [
+      "FR-ENGINE-001",
+      "IR-ENGINE-001",
+      "IR-APP-005 verified"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "Socket tests; AC-2 environment-dependent; AC-6 port collision deterministic on loopback.",
+     "evidence": [
+      "AC-1..AC-6"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Within ENGINE scope §2 (06.engine-adapter.srs.md:17-30).",
+     "evidence": [
+      "docs/spec/06.engine-adapter.srs.md:17-30"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Security default (loopback, DNS rebinding) required by object.md.",
+     "evidence": [
+      "D-211..D-214"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "AC-6 relies on both apps binding the same address: TinyHttpd sets SO_REUSEADDR before bind (server/HttpServer.java:110), so a wildcard vs specific address pair could both bind on BSD/macOS; keep both on 127.0.0.1.",
+    "AC-2 LAN case is host-dependent and skips through Assume.",
+    "On bind failure the adapter stop/release is still called by failStart (DefaultRestApp.java:286-300); TinyHttpd.stop returns early when not started (HttpServer.java:456-461), and no keeper thread may be created before start() succeeds."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "srs_file": "docs/spec/06.engine-adapter.srs.md"
+  },
+  {
+   "req_id": "FR-ENGINE-003",
+   "feasibility": "high",
+   "score": 94,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "Defaults verified: maxHeaderBytes 16384, maxRequestLineBytes 8190, inputBufferBytes 8192, maxHeaderCount 100, headerTimeout 10000, bodyReadTimeout 30000, minRequestBodyRate 0, maxRequestBodyBytes -1, maxDrainBytes 65536 (TinyHttpd.java:264-280). Request line read with readLine(maxRequestLineBytes, 414) (RequestParser.java:17); header line cap buf.length-2 and total/count -> 431 (RequestParser.java:153-161); CL+TE -> 400 (RequestParser.java:204); header timeout -> raw 408 (Connection.java:179-181); body-rate guard with 5 s grace (Connection.java:94,277-285).",
+     "evidence": [
+      "TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/TinyHttpd.java:264-280",
+      "TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/RequestParser.java:17,153-161,197-216",
+      "TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/Connection.java:94,235-285,173-181",
+      "TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/InputBuffer.java:73-103"
+     ]
+    },
+    "evidence_strength": {
+     "score": 19,
+     "rationale": "Every rationale fact verified against code.",
+     "evidence": [
+      "TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/TinyHttpd.java:707-756"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "FR-ENGINE-001 wave 5.",
+     "evidence": [
+      "FR-ENGINE-001 wave-5"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "Socket tests with byte-exact request lines; timing-sensitive but deterministic.",
+     "evidence": [
+      "AC-1..AC-8"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Within ENGINE scope §2 (06.engine-adapter.srs.md:17-30).",
+     "evidence": [
+      "docs/spec/06.engine-adapter.srs.md:17-30"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "T48 slowloris guards for low-end Android.",
+     "evidence": [
+      "T48"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Timeout tests (AC-4, AC-5) take 1-6 s each and need generous assertion windows to stay non-flaky.",
+    "inputBufferBytes must be max(8192, n+2); TinyHttpd build() rejects inputBufferBytes - 2 < maxRequestLineBytes (TinyHttpd.java:746-747).",
+    "TinyHttpd checkout HEAD is 38051b6, three commits after the verified 46b973e (adds UNLIMITED constants and overflow guards; no fact cited by the SRS changes); re-verify or pin before implementation (settings.gradle:25-36 only warns)."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "srs_file": "docs/spec/06.engine-adapter.srs.md"
+  },
+  {
+   "req_id": "FR-ENGINE-004",
+   "feasibility": "high",
+   "score": 92,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "WorkerPool.submit queues while active+queue < maxConnections and otherwise rejects (WorkerPool.java:105-125); reject writes prebuilt 503 with Retry-After: 1 (HttpServer.java:266-283, ErrorResponses.java:23); per-address limit rejects the same way (HttpServer.java:224-226). TinyHttpd.getConfig() exposes ServerConfig getters for read-back (TinyHttpd.java:104-107, ServerConfig.java:200-215). build() requires maxConnections >= maxWorkers (TinyHttpd.java:749-750).",
+     "evidence": [
+      "TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/WorkerPool.java:105-125",
+      "TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/HttpServer.java:224-283",
+      "TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/ErrorResponses.java:11-23",
+      "TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/ServerConfig.java:200-215",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:659-683"
+     ]
+    },
+    "evidence_strength": {
+     "score": 19,
+     "rationale": "All measured facts hold.",
+     "evidence": [
+      "TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/TinyHttpd.java:749-750"
+     ]
+    },
+    "dependency_health": {
+     "score": 14,
+     "rationale": "FR-ENGINE-001 wave 5; FR-APP-009/FR-APP-010 verified.",
+     "evidence": [
+      "FR-ENGINE-001",
+      "FR-APP-009 verified",
+      "FR-APP-010 verified"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "Config read-back plus socket concurrency tests.",
+     "evidence": [
+      "AC-1..AC-4"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Within ENGINE scope §2 (06.engine-adapter.srs.md:17-30).",
+     "evidence": [
+      "docs/spec/06.engine-adapter.srs.md:17-30"
+     ]
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "Bounded resources required by object.md.",
+     "evidence": [
+      "D-404"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "The maxConnections check belongs in DefaultRestApp.freeze() (DefaultRestApp.java:659), which unit tests also call; it must throw an unchecked IllegalStateException so failStart returns it unwrapped (DefaultRestApp.java:286-289).",
+    "AC-3/AC-4 concurrency tests need blocking handlers that end on interrupt."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "srs_file": "docs/spec/06.engine-adapter.srs.md"
+  },
+  {
+   "req_id": "FR-ENGINE-005",
+   "feasibility": "high",
+   "score": 90,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "rationale": "Body exceptions extend IOException (http/*Exception.java:6); TinyLog has isLoggable/log (log/TinyLog.java); ErrorHandler.render(status,message,request,response) installed through builder.errorHandler (TinyHttpd.java:374, ExchangeResponse.java:355-376). Pre-dispatch ParseError answered by raw ErrorResponses (Connection.java:173-181). CONNECT origin-form passes the parser, authority-form gets 501 (RequestParser.java:63-85).",
+     "evidence": [
+      "TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/http/BodyTooLargeException.java:6",
+      "TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/log/TinyLog.java",
+      "TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/http/ErrorHandler.java",
+      "TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/Connection.java:173-181,328-394",
+      "TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/RequestParser.java:63-85",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/Logger.java:7-17"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "Facts verified; HttpException in NaruServe is RuntimeException (HttpException.java:8), so the body stream can throw it from read().",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StandardErrors.java:31-44",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/HttpException.java:8"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "FR-ENGINE-001 wave 5; FR-APP-006 verified.",
+     "evidence": [
+      "FR-ENGINE-001",
+      "FR-APP-006 verified"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 12,
+     "rationale": "Mostly socket/unit tests; AC-6 'a TinyHttpd warning appears' depends on finding a triggerable warning.",
+     "evidence": [
+      "AC-1..AC-6"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Within ENGINE scope §2 (06.engine-adapter.srs.md:17-30).",
+     "evidence": [
+      "docs/spec/06.engine-adapter.srs.md:17-30"
+     ]
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "Uniform error JSON and safe logging.",
+     "evidence": [
+      "D-219, D-405"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "NaruServe Logger has no warn(String, Throwable) (Logger.java:7-17): a WARNING with a throwable loses it unless the bridge appends it to the message.",
+    "AC-6 needs a reproducible real TinyHttpd warning (for example a worker left after stop, HttpServer.java:495-498); otherwise test the TinyLog bridge directly.",
+    "StandardErrors.reason has no 408/421 entries yet (StandardErrors.java:31-44); add Request Timeout / Misdirected Request; ErrorPath must add Connection: close to every 408 (AC-2)."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "srs_file": "docs/spec/06.engine-adapter.srs.md"
+  },
+  {
+   "req_id": "FR-ENGINE-006",
+   "feasibility": "high",
+   "score": 89,
+   "axes": {
+    "implementability": {
+     "score": 25,
+     "rationale": "stop(graceMillis) closes listeners, closes idle connections, waits, aborts, interrupts (HttpServer.java:456-503); awaitTermination exists (TinyHttpd.java:80-82); in-flight responses become non-persistent once stopping (Connection.java:400); acceptor named tinyhttpd-acceptor-<port> with daemon flag, watchdog daemon (HttpServer.java:155-172); workersLeftAfterStop exposed through getStats (ServerStats.java:33). Core shutdown runs on a non-daemon thread when called from a request (DefaultRestApp.java:376-380), so ending the keeper at stop begin does not truncate the sequence.",
+     "evidence": [
+      "TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/HttpServer.java:120,155-172,343-358,456-503,557-580",
+      "TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/Connection.java:397-403,508-521",
+      "TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/ServerStats.java:33",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:376-380"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "Rationale facts (daemon default true, watchdog daemon) verified.",
+     "evidence": [
+      "TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/TinyHttpd.java:56-82,259"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "FR-ENGINE-001 wave 5; FR-APP-011 verified.",
+     "evidence": [
+      "FR-ENGINE-001",
+      "FR-APP-011 verified"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 11,
+     "rationale": "Thread-enumeration and child-JVM tests are automatable but timing sensitive.",
+     "evidence": [
+      "AC-1..AC-5"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Within ENGINE scope §2 (06.engine-adapter.srs.md:17-30).",
+     "evidence": [
+      "docs/spec/06.engine-adapter.srs.md:17-30"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Express-like JVM lifetime (T44).",
+     "evidence": [
+      "T44, D-167"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "AC-1 margin is tight: after the grace deadline TinyHttpd.stop joins the acceptor up to 1000 ms and waits workers up to 500 ms (HttpServer.java:486-495), so 'deadline + 1500 ms' holds only because the listening socket closes first and test handlers end on interrupt.",
+    "AC-2: the watchdog thread exits only after state STOPPED is set and notified (HttpServer.java:343-358, 500-503); a test must join/poll briefly rather than assert immediately after release.",
+    "A custom ThreadFactory replaces DefaultThreadFactory (HttpServer.java:120,557-580), so the adapter must re-create daemon, 256 KiB stack and the uncaught handler itself.",
+    "AC-5 child-JVM test needs the NaruServe runtime class path (java.class.path) and a process timeout."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "srs_file": "docs/spec/06.engine-adapter.srs.md"
+  },
+  {
+   "req_id": "FR-ENGINE-007",
+   "feasibility": "high",
+   "score": 92,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "rationale": "Shared test body over both adapters; InMemoryHttpAdapter fixture exists (testFixtures/.../InMemoryHttpAdapter.java). OPTIONS * parsed into requestUri '*' (RequestParser.java:64-69); core answers it (Dispatcher.java:157-172).",
+     "evidence": [
+      "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/InMemoryHttpAdapter.java",
+      "build.gradle:177-182",
+      "TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/RequestParser.java:30-31,56-69"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "Claim that only mergeSlashes and encoded segments distinguish getPath from getRequestURI matches PercentCodec.decodePath.",
+     "evidence": [
+      "TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/PercentCodec.java:31-54"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "FR-ENGINE-001 wave 5; FR-HTTP-023 verified.",
+     "evidence": [
+      "FR-ENGINE-001",
+      "FR-HTTP-023 verified"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Status/value comparisons are deterministic.",
+     "evidence": [
+      "AC-1..AC-3"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Within ENGINE scope §2 (06.engine-adapter.srs.md:17-30).",
+     "evidence": [
+      "docs/spec/06.engine-adapter.srs.md:17-30"
+     ]
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "T07 over sockets.",
+     "evidence": [
+      "T07"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "NaruServe-tinyhttpd tests need testFixtures(project(':NaruServe-api')); today only NaruServe-filelog has it (build.gradle:177-182).",
+    "TinyHttpd itself rejects raw non-ASCII/NUL/space in the target and null-decoded paths (%2F, NUL, ./.., bad UTF-8) with a plain-text 400 before dispatch (RequestParser.java:30-31,56-60; PercentCodec.java:40); AC-2 compares status only, so this is equal, but the body differs (plain text vs JSON).",
+    "T07 socket client must percent-encode UTF-8 parameters (raw bytes >= 0x7f are 400 in TinyHttpd)."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "srs_file": "docs/spec/06.engine-adapter.srs.md"
+  },
+  {
+   "req_id": "FR-ENGINE-008",
+   "feasibility": "high",
+   "score": 96,
+   "axes": {
+    "implementability": {
+     "score": 29,
+     "rationale": "Small change in DefaultRequest; TinyHttpd installs no ForwardedHeadersFilter by default (ServerConfig.java:96-100), so no adapter-side forwarding interferes.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java:176-182",
+      "TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/ServerConfig.java:96-100"
+     ]
+    },
+    "evidence_strength": {
+     "score": 19,
+     "rationale": "Trace path exists; TinyHttpd isSecure reflects the connection only (Exchange.java:124-126).",
+     "evidence": [
+      "TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/Exchange.java:124-126"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "IR-ENGINE-001 wave 5; FR-HTTP-011 verified.",
+     "evidence": [
+      "IR-ENGINE-001",
+      "FR-HTTP-011 verified"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 15,
+     "rationale": "Header-driven unit tests on both adapters.",
+     "evidence": [
+      "AC-1..AC-4"
+     ]
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Proxy trust is a core concern; within scope.",
+     "evidence": [
+      "docs/spec/06.engine-adapter.srs.md:17-30"
+     ]
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "Express trust proxy parity.",
+     "evidence": [
+      "D-080"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "DefaultRequest reads ex.remoteAddress()/ex.isSecure() directly (DefaultRequest.java:176-182); the trust flag must be passed in from the app through the Dispatcher at freeze."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "srs_file": "docs/spec/06.engine-adapter.srs.md"
+  },
+  {
+   "req_id": "FR-ENGINE-009",
+   "feasibility": "high",
+   "score": 91,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "rationale": "Bootstrap module exists with only package-info; build already wires NaruServe -> tinyhttpd, gson, logcat (build.gradle:56-57). AppFactoryLoader does the ServiceLoader lookup (internal/AppFactoryLoader.java). DefaultRestApp exposes httpAdapter()/jsonCodec() accessors (DefaultRestApp.java:127-135). NaruServe-api forbids gson/tinyhttpd refs (build.gradle:124-131).",
+     "evidence": [
+      "NaruServe/src/main/java/com/snoworca/naruserve/bootstrap/package-info.java",
+      "build.gradle:56-57",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/AppFactoryLoader.java",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:127-135"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "Trace path exists; LogcatLogger is reflective (LogcatLogger.java:18-40).",
+     "evidence": [
+      "NaruServe-logcat/src/main/java/com/snoworca/naruserve/logcat/LogcatLogger.java:18-40",
+      "NaruServe-logcat/src/test/java/android/util/Log.java"
+     ]
+    },
+    "dependency_health": {
+     "score": 14,
+     "rationale": "FR-ENGINE-001 and FR-JSON-003 are wave 5; FR-APP-001/FR-APP-016 verified.",
+     "evidence": [
+      "FR-ENGINE-001",
+      "FR-JSON-003",
+      "FR-APP-001 verified",
+      "FR-APP-016 verified"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "ServiceLoader, socket echo, class-loader and jar tests are automatable.",
+     "evidence": [
+      "AC-1..AC-5"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Within ENGINE scope §2 (06.engine-adapter.srs.md:17-30).",
+     "evidence": [
+      "docs/spec/06.engine-adapter.srs.md:17-30"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "RestApp.create() is the headline entry point.",
+     "evidence": [
+      "D-226, D-228"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "The fake android.util.Log must stay off the default NaruServe test class path (only visible to the dedicated class loader), otherwise AC-3's JVM half fails; NaruServe-logcat's fake lives in its own test source set (NaruServe-logcat/src/test/java/android/util/Log.java).",
+    "LogcatLogger resolves android.util.Log with Class.forName from its own loader (LogcatLogger.java:40), so the dedicated loader must load LogcatLogger and the factory too.",
+    "'built from GsonJsonCodec.defaultGson()' (AC-2) needs an observable hook (behavioural check or package-private accessor).",
+    "Jar-reading tests (AC-1, AC-4) need test to depend on the jar task."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "srs_file": "docs/spec/06.engine-adapter.srs.md"
+  },
+  {
+   "req_id": "OPS-ENGINE-001",
+   "feasibility": "high",
+   "score": 90,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "rationale": "docs/api files exist with the markers to remove (defaults.md:3,17-18,26,32,39; request.md:17). Docs compile test with skip list exists (src/test/java/.../DocsExamplesCompileTest.java:72-85).",
+     "evidence": [
+      "docs/api/defaults.md:3-39",
+      "docs/api/app.md:143",
+      "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java:72-85",
+      "build.gradle:291-294"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "Trace paths exist.",
+     "evidence": [
+      "docs/api/request.md:17"
+     ]
+    },
+    "dependency_health": {
+     "score": 14,
+     "rationale": "IR-ENGINE-001 wave 5; OPS-HTTP-004 verified.",
+     "evidence": [
+      "IR-ENGINE-001",
+      "OPS-HTTP-004 verified"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "Docs tests are phrase/marker based; table parsing is automatable.",
+     "evidence": [
+      "AC-1..AC-7"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Within ENGINE scope §2 (06.engine-adapter.srs.md:17-30).",
+     "evidence": [
+      "docs/spec/06.engine-adapter.srs.md:17-30"
+     ]
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "Docs contract is a CLAUDE.md requirement.",
+     "evidence": [
+      "CLAUDE.md docs/api rules"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "AC-6 compares the GsonJsonCodec default depth, but the root test project depends only on NaruServe-api (build.gradle:291-294); add NaruServe-gson to that test classpath or put the check in NaruServe-gson.",
+    "AC-1 must also remove docs/api/app.md:143, which says the server threads are non-daemon.",
+    "Coordinate marker removals with OPS-APP-003 AC-6 and OPS-HTTP-005 AC-8 kept/removed lists."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "srs_file": "docs/spec/06.engine-adapter.srs.md"
+  },
+  {
+   "req_id": "IR-JSON-001",
+   "feasibility": "high",
+   "score": 97,
+   "axes": {
+    "implementability": {
+     "score": 29,
+     "rationale": "Plain reflection class (getGenericSuperclass); a type-variable argument is detectable via instanceof TypeVariable. Jar resource is a standard src/main/resources addition.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/package-info.java"
+     ]
+    },
+    "evidence_strength": {
+     "score": 19,
+     "rationale": "Trace path package-info.java exists.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/JsonCodec.java"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "IR-APP-001 verified.",
+     "evidence": [
+      "IR-APP-001 verified"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Reflection, jar and Kotlin tests.",
+     "evidence": [
+      "AC-1..AC-4"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Within JSON scope §2 (07.json.srs.md:17-28).",
+     "evidence": [
+      "docs/spec/07.json.srs.md:17-28"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "T08 generic decoding on Android.",
+     "evidence": [
+      "D-183, D-421"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "The rules file must also keep the Cookie factory method by name (IR-COOKIE-001 AC-6); write both in one file.",
+    "AC-3 checks the rules' presence in the jar, not R8 behaviour itself."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "srs_file": "docs/spec/07.json.srs.md"
+  },
+  {
+   "req_id": "IR-JSON-002",
+   "feasibility": "high",
+   "score": 94,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "Additive methods on interfaces; JsonCodec decode currently '<T> T decode(Reader, Type)' (spi/JsonCodec.java) so adding a type-use @Nullable keeps erasure. LATER_WAVE_NAMES list holds body/json/cookie names to move.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:87,115,123,133-135",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/JsonCodec.java",
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java:28-29,160-161"
+     ]
+    },
+    "evidence_strength": {
+     "score": 19,
+     "rationale": "Trace paths exist.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/Response.java"
+     ]
+    },
+    "dependency_health": {
+     "score": 14,
+     "rationale": "IR-JSON-001 wave 5; IR-APP-001 and FR-APP-002 verified.",
+     "evidence": [
+      "IR-JSON-001",
+      "IR-APP-001 verified",
+      "FR-APP-002 verified"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Reflection, behaviour and Kotlin tests.",
+     "evidence": [
+      "AC-1..AC-8"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Within JSON scope §2 (07.json.srs.md:17-28).",
+     "evidence": [
+      "docs/spec/07.json.srs.md:17-28"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Core JSON API of object.md.",
+     "evidence": [
+      "D-185"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "DefaultRestApp.codec is final and nullable (DefaultRestApp.java:87,115,123); it must become a guarded mutable field, and the no-arg test constructor has no codec (req.body must fail clearly there).",
+    "DefaultRestApp already has public jsonCodec() returning the codec (DefaultRestApp.java:133-135); the new RestApp.jsonCodec(JsonCodec) overload coexists but naming must stay clear.",
+    "AC-8 edits the same HttpApiSurfaceTest sets as FR-COOKIE-002 AC-8 (HttpApiSurfaceTest.java:28-29,160-161); land them together."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "srs_file": "docs/spec/07.json.srs.md"
+  },
+  {
+   "req_id": "FR-JSON-001",
+   "feasibility": "high",
+   "score": 94,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "rationale": "LimitedInputStream caps reads at limit and probes one extra byte (LimitedInputStream.java:50-66,96-105); BodyTooLargeException is an IOException (internal/BodyTooLargeException.java:7); UnsupportedMediaTypeException exists; BodyState handles single consumption.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/LimitedInputStream.java:14-115",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/BodyTooLargeException.java:7",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/UnsupportedMediaTypeException.java",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/BodyState.java"
+     ]
+    },
+    "evidence_strength": {
+     "score": 19,
+     "rationale": "Trace paths exist; Gson empty-input null fact holds for fromJson(JsonReader).",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java:28,101-104"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "IR-JSON-002 wave 5; FR-HTTP-019/FR-HTTP-020 verified.",
+     "evidence": [
+      "IR-JSON-002",
+      "FR-HTTP-019 verified",
+      "FR-HTTP-020 verified"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Byte-level body tests through the in-memory adapter.",
+     "evidence": [
+      "AC-1..AC-9"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Within JSON scope §2 (07.json.srs.md:17-28).",
+     "evidence": [
+      "docs/spec/07.json.srs.md:17-28"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "T09 security checks.",
+     "evidence": [
+      "T09"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "LimitedInputStream has no public overrun-state accessor (LimitedInputStream.java:14-115); add a package-private one for AC-9.",
+    "Gson wraps reader IOExceptions (including the core BodyTooLargeException and a UTF-8 MalformedInputException) into JsonSyntaxException; the codec turns them into IOException, so the core must decide 413 from stream state and 400 otherwise."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "srs_file": "docs/spec/07.json.srs.md"
+  },
+  {
+   "req_id": "FR-JSON-002",
+   "feasibility": "high",
+   "score": 96,
+   "axes": {
+    "implementability": {
+     "score": 28,
+     "rationale": "DefaultResponse already has send(byte[]) with commit state (Response.java:17-41); res.json is encode-to-buffer + send with JSON content type.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/Response.java:17-41",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java"
+     ]
+    },
+    "evidence_strength": {
+     "score": 19,
+     "rationale": "Trace paths exist.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ErrorPath.java"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "IR-JSON-002 wave 5; FR-APP-005 verified.",
+     "evidence": [
+      "IR-JSON-002",
+      "FR-APP-005 verified"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Round-trip and failing-codec tests.",
+     "evidence": [
+      "AC-1..AC-6"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Within JSON scope §2 (07.json.srs.md:17-28).",
+     "evidence": [
+      "docs/spec/07.json.srs.md:17-28"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "T08 echo.",
+     "evidence": [
+      "T08"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Encode into a byte buffer before commit so AC-4's partial output never reaches the adapter."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "srs_file": "docs/spec/07.json.srs.md"
+  },
+  {
+   "req_id": "FR-JSON-003",
+   "feasibility": "high",
+   "score": 96,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "Verified in gson-2.14.0.jar: GsonBuilder.setStrictness(Strictness), disableJdkUnsafe(), Strictness.STRICT, JsonReader.setNestingLimit(int)/getNestingLimit(), Gson.newJsonReader(Reader), Gson.fromJson(JsonReader, Type). JsonReader push rejects depth > limit, so 64 passes and 65 fails.",
+     "evidence": [
+      "~/.gradle/caches/modules-2/files-2.1/com.google.code.gson/gson/2.14.0/.../gson-2.14.0.jar (javap)",
+      "build.gradle:55"
+     ]
+    },
+    "evidence_strength": {
+     "score": 19,
+     "rationale": "Gson API facts verified against the cached 2.14.0 jar; trace path NaruServe-gson package-info exists; gson pinned api 2.14.0 (build.gradle:55).",
+     "evidence": [
+      "NaruServe-gson/src/main/java/com/snoworca/naruserve/gson/package-info.java"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "IR-JSON-002 wave 5.",
+     "evidence": [
+      "IR-JSON-002"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 15,
+     "rationale": "Pure codec unit tests.",
+     "evidence": [
+      "AC-1..AC-8"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Within JSON scope §2 (07.json.srs.md:17-28).",
+     "evidence": [
+      "docs/spec/07.json.srs.md:17-28"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Secure default codec.",
+     "evidence": [
+      "D-196..D-199"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Gson.fromJson(JsonReader, Type) temporarily switches a LEGACY_STRICT reader to LENIENT when the Gson has no explicit strictness, so a caller-built Gson parses leniently; only the nesting limit is guaranteed for it (AC-4 asks only that).",
+    "Map JsonSyntaxException/MalformedJsonException to IOException but keep JsonIOException (missing no-arg constructor under disableJdkUnsafe) unchecked for AC-3's 500.",
+    "Set reader.setNestingLimit(maxDepth) after gson.newJsonReader(...) and check reader.peek()==END_DOCUMENT after decoding."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "srs_file": "docs/spec/07.json.srs.md"
+  },
+  {
+   "req_id": "OPS-JSON-001",
+   "feasibility": "high",
+   "score": 92,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "docs/api/json.md:61, request.md:62, kotlin.md markers exist; skip list mechanism exists.",
+     "evidence": [
+      "docs/api/json.md:61",
+      "docs/api/request.md:62",
+      "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java:72-85"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "Trace paths exist.",
+     "evidence": [
+      "docs/api/kotlin.md"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "FR-JSON-001/FR-JSON-003 wave 5; OPS-HTTP-004 verified.",
+     "evidence": [
+      "FR-JSON-001",
+      "FR-JSON-003",
+      "OPS-HTTP-004 verified"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "Docs marker tests and Kotlin compile tests.",
+     "evidence": [
+      "AC-1..AC-5"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Within JSON scope §2 (07.json.srs.md:17-28).",
+     "evidence": [
+      "docs/spec/07.json.srs.md:17-28"
+     ]
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "Docs contract.",
+     "evidence": [
+      "I-008, I-013"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "AC-5 must update skip entries in DocsExamplesCompileTest.SKIPS (DocsExamplesCompileTest.java:72-85) whose reasons are BODY/JSON/absent Cookie; OPS-APP-002 AC-2 fails on a skip whose block now compiles."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "srs_file": "docs/spec/07.json.srs.md"
+  },
+  {
+   "req_id": "IR-COOKIE-001",
+   "feasibility": "high",
+   "score": 92,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "Plain value class; Kotlin property syntax works for getSecure/setSecure and isHttpOnly/setHttpOnly. Reflective package-private factory is simple.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/package-info.java",
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AppIsolationTest.java"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "Trace path exists; FR-APP-002 AC-2 rule verified in AppIsolationTest.",
+     "evidence": [
+      "docs/spec/05.application.srs.md:756"
+     ]
+    },
+    "dependency_health": {
+     "score": 13,
+     "rationale": "IR-HTTP-001 verified; unlinked coupling to IR-JSON-001.",
+     "evidence": [
+      "IR-HTTP-001 verified",
+      "IR-JSON-001 (unlinked)"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 15,
+     "rationale": "Reflection, validation and Kotlin tests.",
+     "evidence": [
+      "AC-1..AC-7"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Within COOKIE scope §2 (08.cookie.srs.md:12-26).",
+     "evidence": [
+      "docs/spec/08.cookie.srs.md:12-26"
+     ]
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "Servlet-style Cookie per CLAUDE.md.",
+     "evidence": [
+      "D-200..D-202"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "AC-6 requires the NaruServe-api consumer rules of IR-JSON-001 AC-3 to keep the factory by name, but IR-COOKIE-001 has no trace link to IR-JSON-001; add depends_on or implement together.",
+    "A private static final Method field passes the no-mutable-static scan, which only flags non-final or mutable-collection statics (05.application.srs.md:756)."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "srs_file": "docs/spec/08.cookie.srs.md"
+  },
+  {
+   "req_id": "FR-COOKIE-001",
+   "feasibility": "high",
+   "score": 97,
+   "axes": {
+    "implementability": {
+     "score": 28,
+     "rationale": "Additive Response method over the existing header/commit rules (Response.java:20).",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/Response.java:20",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java"
+     ]
+    },
+    "evidence_strength": {
+     "score": 19,
+     "rationale": "Trace paths exist.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ResponseState.java"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "IR-COOKIE-001 wave 5; FR-HTTP-015 verified.",
+     "evidence": [
+      "IR-COOKIE-001",
+      "FR-HTTP-015 verified"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 15,
+     "rationale": "Exact-string header tests.",
+     "evidence": [
+      "AC-1..AC-7"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Within COOKIE scope §2 (08.cookie.srs.md:12-26).",
+     "evidence": [
+      "docs/spec/08.cookie.srs.md:12-26"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "T33.",
+     "evidence": [
+      "T33"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Re-validate at send time (request-built cookies bypass validation)."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "srs_file": "docs/spec/08.cookie.srs.md"
+  },
+  {
+   "req_id": "FR-COOKIE-002",
+   "feasibility": "high",
+   "score": 96,
+   "axes": {
+    "implementability": {
+     "score": 28,
+     "rationale": "Parser over req.headers(\"Cookie\") (Request.java:35) in internal; no engine dependence.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java:35",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java"
+     ]
+    },
+    "evidence_strength": {
+     "score": 19,
+     "rationale": "Trace paths exist.",
+     "evidence": [
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java:28-29"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "IR-COOKIE-001 wave 5; FR-HTTP-011 verified.",
+     "evidence": [
+      "IR-COOKIE-001",
+      "FR-HTTP-011 verified"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Parser unit tests and Kotlin compile test.",
+     "evidence": [
+      "AC-1..AC-8"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Within COOKIE scope §2 (08.cookie.srs.md:12-26).",
+     "evidence": [
+      "docs/spec/08.cookie.srs.md:12-26"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "T34.",
+     "evidence": [
+      "T34"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "AC-8 shares the HttpApiSurfaceTest edits with IR-JSON-002 AC-8 (HttpApiSurfaceTest.java:28-29,160-161)."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "srs_file": "docs/spec/08.cookie.srs.md"
+  },
+  {
+   "req_id": "OPS-COOKIE-001",
+   "feasibility": "high",
+   "score": 94,
+   "axes": {
+    "implementability": {
+     "score": 28,
+     "rationale": "cookie.md markers at lines 46 and 52; skip entries name absent type Cookie.",
+     "evidence": [
+      "docs/api/cookie.md:46,52",
+      "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java:76-78"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "Trace paths exist.",
+     "evidence": [
+      "docs/api/express-migration.md"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "FR-COOKIE-001/002 wave 5; OPS-HTTP-004 verified.",
+     "evidence": [
+      "FR-COOKIE-001",
+      "FR-COOKIE-002",
+      "OPS-HTTP-004 verified"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Marker and compile tests.",
+     "evidence": [
+      "AC-1..AC-5"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Within COOKIE scope §2 (08.cookie.srs.md:12-26).",
+     "evidence": [
+      "docs/spec/08.cookie.srs.md:12-26"
+     ]
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "Docs contract.",
+     "evidence": [
+      "I-008"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Remove the three cookie.md skip entries (DocsExamplesCompileTest.java:76-78) once Cookie exists."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "srs_file": "docs/spec/08.cookie.srs.md"
+  },
+  {
+   "req_id": "OPS-APP-003",
+   "feasibility": "high",
+   "score": 91,
+   "axes": {
+    "implementability": {
+     "score": 28,
+     "rationale": "Docs + re-pointed AppDocsTest (exists: NaruServe-api/src/test/java/com/snoworca/naruserve/AppDocsTest.java).",
+     "evidence": [
+      "docs/api/app.md:143",
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/AppDocsTest.java"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "Trace path docs/api/app.md exists; supersedes OPS-APP-001 (discarded).",
+     "evidence": [
+      "docs/spec/04.http-core.srs.md (OPS-APP-001 discarded)"
+     ]
+    },
+    "dependency_health": {
+     "score": 14,
+     "rationale": "Supersedes discarded OPS-APP-001; implicit dependency on FR-ENGINE-006/OPS-ENGINE-001 unlinked.",
+     "evidence": [
+      "OPS-APP-001 discarded/superseded"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "Marker phrase tests.",
+     "evidence": [
+      "AC-1..AC-7"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Wave 5 re-statement of wave 4 docs; fits.",
+     "evidence": [
+      "docs/spec/05.application.srs.md"
+     ]
+    },
+    "product_fit": {
+     "score": 8,
+     "rationale": "Docs maintenance.",
+     "evidence": [
+      "I-013"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "AC-1 rewrites docs/api/app.md:143 (currently 'server threads are not daemon') to the keeper-thread wording; this depends on FR-ENGINE-006 behaviour without a trace link.",
+    "AC-6 kept/removed lists of AppDocsTest must agree with OPS-ENGINE-001 and OPS-COOKIE-001 removals."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "srs_file": "docs/spec/05.application.srs.md"
+  },
+  {
+   "req_id": "OPS-HTTP-005",
+   "feasibility": "high",
+   "score": 92,
+   "axes": {
+    "implementability": {
+     "score": 28,
+     "rationale": "Re-point HttpDocsTest (exists) and keep wave 3 docs text.",
+     "evidence": [
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java",
+      "docs/api/request.md:17,62,80"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "Trace path docs/api/request.md exists; markers at request.md:17,62,80.",
+     "evidence": [
+      "docs/spec/04.http-core.srs.md:3284"
+     ]
+    },
+    "dependency_health": {
+     "score": 14,
+     "rationale": "Supersedes discarded OPS-HTTP-003; implicit dependency on OPS-ENGINE-001/OPS-JSON-001.",
+     "evidence": [
+      "OPS-HTTP-003 discarded/superseded"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Marker phrase tests.",
+     "evidence": [
+      "AC-1..AC-8"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Fits wave 5 docs housekeeping.",
+     "evidence": [
+      "docs/spec/04.http-core.srs.md"
+     ]
+    },
+    "product_fit": {
+     "score": 8,
+     "rationale": "Docs maintenance.",
+     "evidence": [
+      "I-013"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "AC-8 expects the proxy-trust and jsonTree()/jsonMap() markers of request.md gone, which OPS-ENGINE-001 AC-4 and OPS-JSON-001 AC-2 deliver; HttpDocsTest flips must land with them."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "srs_file": "docs/spec/04.http-core.srs.md"
+  }
+ ]
+}

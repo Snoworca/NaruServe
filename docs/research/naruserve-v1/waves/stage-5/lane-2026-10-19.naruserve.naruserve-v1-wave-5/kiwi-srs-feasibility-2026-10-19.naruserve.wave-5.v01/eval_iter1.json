@@ -1,0 +1,106 @@
+{
+  "findings": [
+    {
+      "severity": "MEDIUM",
+      "axis": "9",
+      "req_id": "IR-ENGINE-001",
+      "evidence_path": "docs/spec/06.engine-adapter.srs.md:84",
+      "description": "Stale judgement. dependency_health (14) and condition 1 say the AC-7 coupling to IR-JSON-002 is unlinked ('no trace link to IR-JSON-002'), but the SRS now has '| Requirement | IR-JSON-002 | depends_on |'. per-req-judgement.json (mtime 22:02:14) predates the SRS edits (06/08/05 mtimes 22:02:50-53). Re-score or reword the dependency rationale and condition against the current SRS."
+    },
+    {
+      "severity": "MEDIUM",
+      "axis": "9",
+      "req_id": "IR-COOKIE-001",
+      "evidence_path": "docs/spec/08.cookie.srs.md:79",
+      "description": "Stale judgement. dependency_health (13, evidence 'IR-JSON-001 (unlinked)') and condition 1 ('IR-COOKIE-001 has no trace link to IR-JSON-001; add depends_on') are contradicted by the existing depends_on link to IR-JSON-001. Taking back the penalty gives 15, so the score would be 94, not 92."
+    },
+    {
+      "severity": "MEDIUM",
+      "axis": "9",
+      "req_id": "OPS-APP-003",
+      "evidence_path": "docs/spec/05.application.srs.md:3067",
+      "description": "Stale judgement. dependency_health says the 'implicit dependency on FR-ENGINE-006 ... unlinked', and condition 1 says 'without a trace link', but the SRS declares 'FR-ENGINE-006 | depends_on'. Only the OPS-ENGINE-001 coupling is really unlinked."
+    },
+    {
+      "severity": "MEDIUM",
+      "axis": "5",
+      "req_id": "FR-ENGINE-007",
+      "evidence_path": "/Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/PercentCodec.java:40",
+      "description": "Missed SRS gap: one D-052 rule works differently depending on the adapter. TinyHttpd's decodePath returns null for an encoded '/', NUL, '.' or '..' segments, bad percent-encoding and invalid UTF-8. RequestParser.java:30-31 and :58-60 (raw bytes) then answer a plain-text 400 before dispatch. So on the default adapter every D-052 rejection bypasses the core: there is no standard JSON body, no access-log line and no requestId. That conflicts with the in-memory behaviour of verified FR-APP-006 AC-5 and AC-7 (05.application.srs.md: 'the pre-request 400s ... carry the standard body'; the requestId equals the access log 'also for the pre-request rejections'). FR-ENGINE-007 AC-2 passes because it compares status only, but its rationale ('never reach a handler') understates this: these requests never reach the core at all. OPS-ENGINE-001 AC-3 lists 400 among the D-400 transport rejections but does not say that the D-052 path rejections are among them. The judgement mentions this only as a body-difference condition and scores FR-ENGINE-007 92 with no SRS action. Recommend an AC or docs line stating that, on TinyHttpd, D-052 rejections are TinyHttpd transport-level plain-text answers, or else scoping FR-APP-006 AC-5/AC-7 to dispatcher-level rejections."
+    },
+    {
+      "severity": "MEDIUM",
+      "axis": "3",
+      "req_id": "FR-ENGINE-002",
+      "evidence_path": "docs/spec/06.engine-adapter.srs.md:235",
+      "description": "AC-2 and the requirement statement contradict each other. The requirement (line 235) and OPS-ENGINE-001 AC-1 (line 712) say ServerHandle.address() reports 'the address actually bound'. AC-2's Decision (line 244) says it 'returns the configured bind address'. AC-4 (line 246) explicitly allows a host-name bind address, and there the two differ (a host name vs its resolved IP). The tests of AC-2 and OPS-ENGINE-001 AC-1 cannot both be written unambiguously. Today the value is hard-coded '127.0.0.1' (NaruServe-api/.../internal/DefaultRestApp.java:266-267). The judgement scores ac_verifiability 13 without noting this."
+    },
+    {
+      "severity": "MEDIUM",
+      "axis": "4",
+      "req_id": "FR-ENGINE-003",
+      "evidence_path": "docs/spec/06.engine-adapter.srs.md:310",
+      "description": "Missing dependency links, yet dependency_health is the maximum 15. AC-7 needs the JSON limit and the core 413 (IR-JSON-002 jsonLimit, FR-JSON-001 AC-4). AC-4 and AC-5 need a route that reads the body, and in wave 5 the only Request body readers are req.body(Class/TypeRef) (IR-JSON-002 AC-8, BodyStateTest). The only declared link is depends_on FR-ENGINE-001 (line 323). Ordering risk: FR-ENGINE-003 cannot be closed before FR-JSON-001."
+    },
+    {
+      "severity": "MEDIUM",
+      "axis": "4",
+      "req_id": "FR-ENGINE-002",
+      "evidence_path": "docs/spec/06.engine-adapter.srs.md:246",
+      "description": "AC-4 requires the 421 body 'rendered by the ErrorHandler of FR-ENGINE-005' through ServerSettings.errorRenderer() (IR-ENGINE-002 AC-5). The trace links (lines 261-263) name only FR-ENGINE-001, IR-APP-005 and IR-ENGINE-001; FR-ENGINE-005 is missing. The judgement still gives dependency_health 15 (the maximum)."
+    },
+    {
+      "severity": "LOW",
+      "axis": "4",
+      "req_id": "FR-ENGINE-001",
+      "evidence_path": "docs/spec/06.engine-adapter.srs.md:186",
+      "description": "Semantic back-reference: AC-2 requires the core class to set 'every TinyHttpd builder limit of FR-ENGINE-003 and FR-ENGINE-004', while both of those depend_on FR-ENGINE-001. The depends_on graph has no cycle (verified over all 24 wave-5 requirements), but FR-ENGINE-001 cannot be verified before FR-ENGINE-003 and FR-ENGINE-004 land. The same mutual pattern exists between IR-JSON-002 AC-8 (07.json.srs.md:125) and FR-COOKIE-002 AC-8 (08.cookie.srs.md:188), with no link in either direction. The judgement notes the pair as a condition."
+    },
+    {
+      "severity": "LOW",
+      "axis": "5",
+      "req_id": "FR-ENGINE-006",
+      "evidence_path": "/Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/HttpServer.java:510-520",
+      "description": "Implementation condition not captured. After a failed bind, TinyHttpd stays NEW: start() rolls back the sockets but does not change state, and stop() returns early (lines 456-461). The core's failStart still calls the adapter's stop and release (FR-APP-010 AC-3). If release calls awaitTermination(1000), it waits the full second for STOPPED, returns false, and would log a false 'workers left' warning. The adapter must skip awaitTermination when start() never succeeded (FR-ENGINE-002 AC-6, FR-ENGINE-006 AC-1/AC-2)."
+    },
+    {
+      "severity": "LOW",
+      "axis": "5",
+      "req_id": "IR-COOKIE-001",
+      "evidence_path": "docs/spec/08.cookie.srs.md:65",
+      "description": "AC-6 resolves the factory with Class.forName(\"com.snoworca.naruserve.Cookie\") and keeps only the factory method by name in the consumer rules. If a consumer's minifier renames the Cookie class (ProGuard without -adaptclassstrings, or R8 not recognising the string), the lookup fails at class initialisation. Neither the SRS nor the judgement conditions require keeping Cookie's class name (for example -keepnames class com.snoworca.naruserve.Cookie)."
+    },
+    {
+      "severity": "LOW",
+      "axis": "3",
+      "req_id": "FR-ENGINE-004",
+      "evidence_path": "/Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/HttpServer.java:245-246",
+      "description": "AC-4 says a third connection 'is refused by TinyHttpd' without naming what is observed. TinyHttpd calls reject(s, listener, false), which differs from the 503 path of AC-3. The AC should name the outcome (closed without a response, or 503) so the test can assert it. ac_verifiability 13 does not mention this."
+    },
+    {
+      "severity": "LOW",
+      "axis": "3",
+      "req_id": "IR-JSON-001",
+      "evidence_path": "docs/spec/07.json.srs.md:54",
+      "description": "The requirement promises that rules 'keep the generic signature ... in a minified Android build', but AC-3 only checks that the rules file is in the jar, and no AC exercises R8. The judgement acknowledges this in a condition but scores ac_verifiability 14 of 15. Either scope the statement to shipping the rules or defer an R8 check to wave 8."
+    },
+    {
+      "severity": "LOW",
+      "axis": "2",
+      "req_id": "FR-JSON-001",
+      "evidence_path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/LimitedInputStream.java",
+      "description": "The cited range LimitedInputStream.java:14-115 goes past the end of the file (114 lines). The other 101 distinct evidence citations resolve to existing files with in-range lines. Sample-read citations matched the code: TinyHttpd.java:746-747, RequestParser.java:25, HttpServer.java:110/486-495, SafeLogger.java:11, DefaultRestApp.java:87/133-135, Logger.java:7-17, DefaultRequest.java:176-182, build.gradle:291-294, DocsExamplesCompileTest.java:72-85, HttpApiSurfaceTest.java:28-29/160-161, LogcatLogger.java:40, settings.gradle:25."
+    }
+  ],
+  "summary": {
+    "requirements_checked": 24,
+    "axis1_score_label_consistency": "pass: all 24 axis sums equal the score; all labels 'high' with scores 89-97 (>=80); axis maxima 30/20/15/15/10/10",
+    "axis2_evidence_paths": "pass with 1 LOW: 102 distinct citations, all files exist, 1 line range past EOF",
+    "axis3_ac_verifiability": "3 issues (1 MEDIUM, 2 LOW)",
+    "axis4_dependency_cycles": "no cycle in depends_on (graph: ENGINE chain on IR-ENGINE-001 -> IR-JSON-002 -> IR-JSON-001; COOKIE on IR-JSON-001); 2 MEDIUM missing links, 1 LOW semantic back-reference",
+    "axis5_missed_blockers": "no CRITICAL/HIGH blocker: TinyHttpd at 38051b6 has every builder setter, ThreadFactory, ErrorHandler, TinyLog, HostAllowlist, stop(grace)/awaitTermination and getRequestURI/getQueryString the SRS relies on, and the HEAD diff from 46b973e changes no cited fact; no wave 5 AC contradicts a verified wave 1-4 AC except the FR-APP-006 AC-5/AC-7 adapter divergence (MEDIUM)",
+    "axis9_internal_coherence": "3 MEDIUM: the judgement is older than the current SRS and reports existing depends_on links as missing",
+    "counts": {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 7, "LOW": 6},
+    "gate_normal_pass": true
+  }
+}

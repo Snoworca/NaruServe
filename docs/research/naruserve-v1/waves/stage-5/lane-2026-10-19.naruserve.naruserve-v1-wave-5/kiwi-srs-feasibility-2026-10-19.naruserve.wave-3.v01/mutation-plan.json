@@ -1,0 +1,283 @@
+{
+ "run": "2026-10-19.naruserve.wave-3.v01",
+ "plan": [
+  {
+   "req_id": "IR-HTTP-001",
+   "current_stability": "draft",
+   "proposed_stability": "evolving",
+   "matched_rule_index": 1,
+   "requires_user_confirm": false,
+   "reason": "Feasibility=high (score 88). Blockers: none. Run: 2026-10-19.naruserve.wave-3.v01",
+   "dryrun_guard_verdict": "ok (written:false, 0 diagnostics)"
+  },
+  {
+   "req_id": "IR-HTTP-002",
+   "current_stability": "draft",
+   "proposed_stability": "evolving",
+   "matched_rule_index": 1,
+   "requires_user_confirm": false,
+   "reason": "Feasibility=high (score 93). Blockers: none. Run: 2026-10-19.naruserve.wave-3.v01",
+   "dryrun_guard_verdict": "ok (written:false, 0 diagnostics)"
+  },
+  {
+   "req_id": "IR-HTTP-003",
+   "current_stability": "draft",
+   "proposed_stability": "evolving",
+   "matched_rule_index": 1,
+   "requires_user_confirm": false,
+   "reason": "Feasibility=high (score 86). Blockers: none. Run: 2026-10-19.naruserve.wave-3.v01",
+   "dryrun_guard_verdict": "ok (written:false, 0 diagnostics)"
+  },
+  {
+   "req_id": "IR-HTTP-004",
+   "current_stability": "draft",
+   "proposed_stability": "draft",
+   "matched_rule_index": 2,
+   "requires_user_confirm": false,
+   "reason": "Feasibility=medium (score 76): keep draft; fix AC quality first",
+   "dryrun_guard_verdict": "not called (keep)"
+  },
+  {
+   "req_id": "CON-HTTP-001",
+   "current_stability": "draft",
+   "proposed_stability": "evolving",
+   "matched_rule_index": 1,
+   "requires_user_confirm": false,
+   "reason": "Feasibility=high (score 88). Blockers: none. Run: 2026-10-19.naruserve.wave-3.v01",
+   "dryrun_guard_verdict": "ok (written:false, 0 diagnostics)"
+  },
+  {
+   "req_id": "FR-HTTP-001",
+   "current_stability": "draft",
+   "proposed_stability": "evolving",
+   "matched_rule_index": 1,
+   "requires_user_confirm": false,
+   "reason": "Feasibility=high (score 84). Blockers: none. Run: 2026-10-19.naruserve.wave-3.v01",
+   "dryrun_guard_verdict": "ok (written:false, 0 diagnostics)"
+  },
+  {
+   "req_id": "FR-HTTP-002",
+   "current_stability": "draft",
+   "proposed_stability": "evolving",
+   "matched_rule_index": 1,
+   "requires_user_confirm": false,
+   "reason": "Feasibility=high (score 84). Blockers: none. Run: 2026-10-19.naruserve.wave-3.v01",
+   "dryrun_guard_verdict": "ok (written:false, 0 diagnostics)"
+  },
+  {
+   "req_id": "FR-HTTP-003",
+   "current_stability": "draft",
+   "proposed_stability": "evolving",
+   "matched_rule_index": 1,
+   "requires_user_confirm": false,
+   "reason": "Feasibility=high (score 89). Blockers: none. Run: 2026-10-19.naruserve.wave-3.v01",
+   "dryrun_guard_verdict": "ok (written:false, 0 diagnostics)"
+  },
+  {
+   "req_id": "FR-HTTP-004",
+   "current_stability": "draft",
+   "proposed_stability": "evolving",
+   "matched_rule_index": 1,
+   "requires_user_confirm": false,
+   "reason": "Feasibility=high (score 91). Blockers: none. Run: 2026-10-19.naruserve.wave-3.v01",
+   "dryrun_guard_verdict": "ok (written:false, 0 diagnostics)"
+  },
+  {
+   "req_id": "FR-HTTP-005",
+   "current_stability": "draft",
+   "proposed_stability": "evolving",
+   "matched_rule_index": 1,
+   "requires_user_confirm": false,
+   "reason": "Feasibility=high (score 89). Blockers: none. Run: 2026-10-19.naruserve.wave-3.v01",
+   "dryrun_guard_verdict": "ok (written:false, 0 diagnostics)"
+  },
+  {
+   "req_id": "FR-HTTP-006",
+   "current_stability": "draft",
+   "proposed_stability": "evolving",
+   "matched_rule_index": 1,
+   "requires_user_confirm": false,
+   "reason": "Feasibility=high (score 84). Blockers: none. Run: 2026-10-19.naruserve.wave-3.v01",
+   "dryrun_guard_verdict": "ok (written:false, 0 diagnostics)"
+  },
+  {
+   "req_id": "IR-HTTP-005",
+   "current_stability": "draft",
+   "proposed_stability": "evolving",
+   "matched_rule_index": 1,
+   "requires_user_confirm": false,
+   "reason": "Feasibility=high (score 90). Blockers: none. Run: 2026-10-19.naruserve.wave-3.v01",
+   "dryrun_guard_verdict": "ok (written:false, 0 diagnostics)"
+  },
+  {
+   "req_id": "IR-HTTP-006",
+   "current_stability": "draft",
+   "proposed_stability": "evolving",
+   "matched_rule_index": 1,
+   "requires_user_confirm": false,
+   "reason": "Feasibility=high (score 90). Blockers: none. Run: 2026-10-19.naruserve.wave-3.v01",
+   "dryrun_guard_verdict": "ok (written:false, 0 diagnostics)"
+  },
+  {
+   "req_id": "FR-HTTP-007",
+   "current_stability": "draft",
+   "proposed_stability": "evolving",
+   "matched_rule_index": 1,
+   "requires_user_confirm": false,
+   "reason": "Feasibility=high (score 91). Blockers: none. Run: 2026-10-19.naruserve.wave-3.v01",
+   "dryrun_guard_verdict": "ok (written:false, 0 diagnostics)"
+  },
+  {
+   "req_id": "FR-HTTP-008",
+   "current_stability": "draft",
+   "proposed_stability": "evolving",
+   "matched_rule_index": 1,
+   "requires_user_confirm": false,
+   "reason": "Feasibility=high (score 86). Blockers: none. Run: 2026-10-19.naruserve.wave-3.v01",
+   "dryrun_guard_verdict": "ok (written:false, 0 diagnostics)"
+  },
+  {
+   "req_id": "FR-HTTP-009",
+   "current_stability": "draft",
+   "proposed_stability": "evolving",
+   "matched_rule_index": 1,
+   "requires_user_confirm": false,
+   "reason": "Feasibility=high (score 92). Blockers: none. Run: 2026-10-19.naruserve.wave-3.v01",
+   "dryrun_guard_verdict": "ok (written:false, 0 diagnostics)"
+  },
+  {
+   "req_id": "FR-HTTP-010",
+   "current_stability": "draft",
+   "proposed_stability": "evolving",
+   "matched_rule_index": 1,
+   "requires_user_confirm": false,
+   "reason": "Feasibility=high (score 90). Blockers: none. Run: 2026-10-19.naruserve.wave-3.v01",
+   "dryrun_guard_verdict": "ok (written:false, 0 diagnostics)"
+  },
+  {
+   "req_id": "FR-HTTP-011",
+   "current_stability": "draft",
+   "proposed_stability": "evolving",
+   "matched_rule_index": 1,
+   "requires_user_confirm": false,
+   "reason": "Feasibility=high (score 92). Blockers: none. Run: 2026-10-19.naruserve.wave-3.v01",
+   "dryrun_guard_verdict": "ok (written:false, 0 diagnostics)"
+  },
+  {
+   "req_id": "FR-HTTP-012",
+   "current_stability": "draft",
+   "proposed_stability": "evolving",
+   "matched_rule_index": 1,
+   "requires_user_confirm": false,
+   "reason": "Feasibility=high (score 89). Blockers: none. Run: 2026-10-19.naruserve.wave-3.v01",
+   "dryrun_guard_verdict": "ok (written:false, 0 diagnostics)"
+  },
+  {
+   "req_id": "FR-HTTP-013",
+   "current_stability": "draft",
+   "proposed_stability": "evolving",
+   "matched_rule_index": 1,
+   "requires_user_confirm": false,
+   "reason": "Feasibility=high (score 93). Blockers: none. Run: 2026-10-19.naruserve.wave-3.v01",
+   "dryrun_guard_verdict": "ok (written:false, 0 diagnostics)"
+  },
+  {
+   "req_id": "FR-HTTP-014",
+   "current_stability": "draft",
+   "proposed_stability": "evolving",
+   "matched_rule_index": 1,
+   "requires_user_confirm": false,
+   "reason": "Feasibility=high (score 84). Blockers: none. Run: 2026-10-19.naruserve.wave-3.v01",
+   "dryrun_guard_verdict": "ok (written:false, 0 diagnostics)"
+  },
+  {
+   "req_id": "FR-HTTP-015",
+   "current_stability": "draft",
+   "proposed_stability": "evolving",
+   "matched_rule_index": 1,
+   "requires_user_confirm": false,
+   "reason": "Feasibility=high (score 87). Blockers: none. Run: 2026-10-19.naruserve.wave-3.v01",
+   "dryrun_guard_verdict": "ok (written:false, 0 diagnostics)"
+  },
+  {
+   "req_id": "FR-HTTP-016",
+   "current_stability": "draft",
+   "proposed_stability": "evolving",
+   "matched_rule_index": 1,
+   "requires_user_confirm": false,
+   "reason": "Feasibility=high (score 82). Blockers: none. Run: 2026-10-19.naruserve.wave-3.v01",
+   "dryrun_guard_verdict": "ok (written:false, 0 diagnostics)"
+  },
+  {
+   "req_id": "FR-HTTP-017",
+   "current_stability": "draft",
+   "proposed_stability": "evolving",
+   "matched_rule_index": 1,
+   "requires_user_confirm": false,
+   "reason": "Feasibility=high (score 89). Blockers: none. Run: 2026-10-19.naruserve.wave-3.v01",
+   "dryrun_guard_verdict": "ok (written:false, 0 diagnostics)"
+  },
+  {
+   "req_id": "FR-HTTP-018",
+   "current_stability": "draft",
+   "proposed_stability": "evolving",
+   "matched_rule_index": 1,
+   "requires_user_confirm": false,
+   "reason": "Feasibility=high (score 89). Blockers: none. Run: 2026-10-19.naruserve.wave-3.v01",
+   "dryrun_guard_verdict": "ok (written:false, 0 diagnostics)"
+  },
+  {
+   "req_id": "FR-HTTP-019",
+   "current_stability": "draft",
+   "proposed_stability": "evolving",
+   "matched_rule_index": 1,
+   "requires_user_confirm": false,
+   "reason": "Feasibility=high (score 81). Blockers: none. Run: 2026-10-19.naruserve.wave-3.v01",
+   "dryrun_guard_verdict": "ok (written:false, 0 diagnostics)"
+  },
+  {
+   "req_id": "FR-HTTP-020",
+   "current_stability": "draft",
+   "proposed_stability": "evolving",
+   "matched_rule_index": 1,
+   "requires_user_confirm": false,
+   "reason": "Feasibility=high (score 87). Blockers: none. Run: 2026-10-19.naruserve.wave-3.v01",
+   "dryrun_guard_verdict": "ok (written:false, 0 diagnostics)"
+  },
+  {
+   "req_id": "OPS-HTTP-001",
+   "current_stability": "draft",
+   "proposed_stability": "draft",
+   "matched_rule_index": 2,
+   "requires_user_confirm": false,
+   "reason": "Feasibility=medium (score 75): keep draft; fix AC quality first",
+   "dryrun_guard_verdict": "not called (keep)"
+  },
+  {
+   "req_id": "OPS-ROUTE-002",
+   "current_stability": "draft",
+   "proposed_stability": "evolving",
+   "matched_rule_index": 1,
+   "requires_user_confirm": false,
+   "reason": "Feasibility=high (score 90). Blockers: none. Run: 2026-10-19.naruserve.wave-3.v01",
+   "dryrun_guard_verdict": "ok (written:false, 0 diagnostics)"
+  },
+  {
+   "req_id": "CON-ROUTE-006",
+   "current_stability": "draft",
+   "proposed_stability": "evolving",
+   "matched_rule_index": 1,
+   "requires_user_confirm": false,
+   "reason": "Feasibility=high (score 92). Blockers: none. Run: 2026-10-19.naruserve.wave-3.v01",
+   "dryrun_guard_verdict": "ok (written:false, 0 diagnostics)"
+  }
+ ],
+ "summary": {
+  "evolving_auto": 28,
+  "keep": 2,
+  "draft": 0,
+  "deprecated_confirm": 0,
+  "dryrun_ok": 28,
+  "dryrun_refused": 0
+ }
+}

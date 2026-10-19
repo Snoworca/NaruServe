@@ -1,0 +1,5 @@
+{"schema_version":"1.0.0","run_id":"2026-10-19.naruserve.naruserve-v1-wave-5-4","sds_path":"docs/sds/2026-10-19.naruserve.naruserve-v1-wave-5-4.sds.md","target":"wave-5","spawn_context":"pm-child","phase":"done","failed":false,"next_resume_hint":null,
+"red_evidence":{"command":"./gradlew :NaruServe-api:compileTestJava","exit_code":1,"captured_failure":"cannot find symbol: ServerOptions, ServerSettings, ErrorRenderer, StandardErrors.renderer, RestApp.server/trustProxy","timestamp":"2026-10-19T17:30:00Z"},
+"green_evidence":{"command":"./gradlew build","exit_code":0,"timestamp":"2026-10-19T18:00:00Z"},
+"regression_baseline":{"command":"./gradlew build","exit_code":0,"head_sha":"8689bf6"},
+"mcp_call_log":"deferred: 29 entries appended to the lane deferred-srs-queue.jsonl"}

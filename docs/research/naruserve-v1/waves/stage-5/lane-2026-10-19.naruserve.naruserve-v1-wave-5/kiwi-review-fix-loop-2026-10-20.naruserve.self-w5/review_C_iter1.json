@@ -1,0 +1,449 @@
+{
+ "findings": [
+  {
+   "id": "C-001",
+   "axis": "P6",
+   "severity": "MEDIUM",
+   "title": "Docs skip reasons are checked only for shape; four lead with an app-defined type the block never mentions",
+   "location": {
+    "file": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java",
+    "line_range": "101-125"
+   },
+   "description": "OPS-JSON-001 AC-5 requires each former res.json/req.body skip to be re-pointed to 'the reason that still applies'. Checking every backticked name in SKIPS against its block finds four reasons whose leading type is not in the block: request.md '// GET /users/42/posts...' -> `PostService` (the block uses an undeclared variable postService), response.md 'res.status(201)...json(created)' -> `Created` (undeclared id/created), response.md 'res.json(user);' -> `User` (undeclared user/user1/user2, no User type), routing.md 'app.route(Method.get()...' -> `UserRepository` (undeclared find/create/remove). The text in parentheses names the real cause, but the leading type is made up. REASON only checks the sentence shape, and everySkippedBlockStillFailsToCompile only checks that the block fails for some reason. So no test ties a reason to its block, and a real API mistake in a skipped block stays hidden behind any reason.",
+   "suggested_fix": "Reword these four reasons to what really fails (e.g. \"app-defined variable `postService`\", \"app-defined methods `find`, `create` and `remove`\"). Add a test that the last segment of every backticked identifier in a skip reason occurs in its block body.",
+   "is_behavioral": false,
+   "tags": [
+    "test-quality",
+    "docs",
+    "skip-handling"
+   ]
+  },
+  {
+   "id": "C-002",
+   "axis": "P6",
+   "severity": "LOW",
+   "title": "skippedJsonBlocksNameTheReasonThatStillApplies cannot fail on its own",
+   "location": {
+    "file": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java",
+    "line_range": "573-590"
+   },
+   "description": "This test flags a skip only when its reason contains 'Response.json' or 'Request.body'. noSkipNamesAWave5Member, just above it, already rejects every non-illustrative reason that contains `Response.json or `Request.body, and the illustrative entries call neither json nor body. So the test is redundant. It replaced the wave 4 check (the reason must lead with a later-wave member) without checking that the new reason still applies, which is how C-001 got through.",
+   "suggested_fix": "Delete it, or replace it with the reason-to-block check from C-001.",
+   "is_behavioral": false,
+   "tags": [
+    "test-quality",
+    "vacuous"
+   ]
+  },
+  {
+   "id": "C-003",
+   "axis": "P6",
+   "severity": "MEDIUM",
+   "title": "Kotlin TypeRef test compares Kotlin to Kotlin and accepts a wildcard; the IR-JSON-001 AC-4 equality is never checked",
+   "location": {
+    "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/JsonKotlinTest.kt",
+    "line_range": "42-52"
+   },
+   "description": "IR-JSON-001 AC-4 says t.type must equal the List<String> type of AC-1, the Java capture: ParameterizedType List<String>. The test checks that object : TypeRef<List<String>>(){}.type equals a second Kotlin object of the same shape, which is true by construction. It then accepts either String or `? extends String` as the type argument. Its own comment says Kotlin emits List<? extends String>, which is not equal to Java's List<String>. So the AC as written is not met, and the test hides that. Gson resolves the wildcard, so users are not broken, but the AC and docs promise equality.",
+   "suggested_fix": "Either use object : TypeRef<List<@JvmSuppressWildcards String>>() {} (or MutableList<String>) and assert equality with the Java new TypeRef<List<String>>(){}.getType(), or change AC-4 through the SRS to accept the wildcard form and assert exactly WildcardType(upper=String).",
+   "is_behavioral": false,
+   "tags": [
+    "test-quality",
+    "kotlin",
+    "srs-gap"
+   ]
+  },
+  {
+   "id": "C-004",
+   "axis": "P6",
+   "severity": "LOW",
+   "title": "CreateUserRequest Kotlin docs test never runs the success branch",
+   "location": {
+    "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/JsonDocsKotlinTest.kt",
+    "line_range": "137-156"
+   },
+   "description": "DocsCodec builds CreateUserRequest with its no-arg constructor, so name is always null, and both requests ('null' and '{}') take the 400 branch. OPS-JSON-001 AC-3/AC-5 want the rewritten example compiled and run, but the line res.status(201).json(users.create(name, body?.email)) is only compiled, never run.",
+   "suggested_fix": "Make DocsCodec fill name for one body (e.g. return CreateUserRequest().apply { name = \"a\" } for a marker body) and assert 201.",
+   "is_behavioral": false,
+   "tags": [
+    "test-quality"
+   ]
+  },
+  {
+   "id": "C-005",
+   "axis": "P6",
+   "severity": "LOW",
+   "title": "defaultsMatchCode copies the TinyHttpd adapter's per-line formula instead of checking it",
+   "location": {
+    "file": "src/test/java/com/snoworca/naruserve/docs/WaveFiveDocsTest.java",
+    "line_range": "316-317"
+   },
+   "description": "The test compares the '헤더 한 줄' row with Math.max(8192, maxRequestLineLength + 2) - 2, a formula written out in the test. The real value is computed at TinyHttpdAdapter.java:104. If the adapter changes, this docs test still passes, so OPS-ENGINE-001 AC-2/AC-6 ('inputBufferBytes - 2', 8190 by default) is not tied to the code.",
+   "suggested_fix": "Check the per-line limit in a NaruServe-tinyhttpd test: a header line of 8190 bytes is accepted and 8191 gets 431. Or get the value from the adapter instead of copying the formula.",
+   "is_behavioral": false,
+   "tags": [
+    "test-quality",
+    "tautology"
+   ]
+  },
+  {
+   "id": "C-006",
+   "axis": "P4",
+   "severity": "LOW",
+   "title": "Known item (a): the Cookie reflection keep rule is checked only as text; the R8 risk is real but small",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/ConsumerRulesTest.java",
+    "line_range": "38-53"
+   },
+   "description": "CookieFactoryHook calls Class.forName(\"com.snoworca.naruserve.Cookie\").getDeclaredMethod(\"unvalidated\", ...). The consumer rule -keepclassmembers keeps the member name but not the class name. R8 and ProGuard both rewrite constant Class.forName strings when they rename a class, so this works in the usual case, and the member stays by name. ConsumerRulesTest only greps the .pro text, so a broken minified build would not show up. The string lookup is also unnecessary: the hook is in the same module, and Cookie.class.getDeclaredMethod(...) removes the dependency on the class name. Invoking the static method initialises Cookie anyway.",
+   "suggested_fix": "Use Cookie.class instead of Class.forName in CookieFactoryHook and keep the -keepclassmembers rule.",
+   "is_behavioral": false,
+   "tags": [
+    "r8",
+    "known-item-a"
+   ]
+  },
+  {
+   "id": "C-007",
+   "axis": "P6",
+   "severity": "LOW",
+   "title": "StartFailureTest checks the message with one-digit substrings",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StartFailureTest.java",
+    "line_range": "131-142"
+   },
+   "description": "The test checks that the IllegalStateException message contains \"5\", \"4\" and \"2\". Any message that holds those digits anywhere passes, including one that swaps the maxWorkers and maxSseStreams values. FR-ENGINE-004 AC-2 wants the message to name the values.",
+   "suggested_fix": "Assert name/value pairs (e.g. a regex like maxConnections\\D{0,3}5) that match the real message format.",
+   "is_behavioral": false,
+   "tags": [
+    "test-quality",
+    "weak-assertion"
+   ]
+  }
+ ],
+ "coverage_rows": [
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/AppDocsTest.java",
+   "hunks_total": 28,
+   "anchors": [
+    "/** Wave 4 decisions recorded in docs/api (OPS-APP-001): decided markers gone, later-wave markers kept. */",
+    "/** Per file, phrases decided in wave 4: each appears, and no line holding it carries the marker. */",
+    "\"`LifecycleCallback`\", \"`ErrorHandler`\", \"daemon\", \"`ServerHandle`은\"));",
+    "\"| 마지막 404 미들웨어\"));",
+    "k.put(\"app.md\", Arrays.asList(\"`ws`의 반환 타입\", \"`ws`에 넘기는 콜백\", \"LAN 바인딩 설정 API\"));",
+    "k.put(\"cookie.md\", Arrays.asList(\"`Expires` 속성\"));",
+    "k.put(\"defaults.md\", Arrays.asList(\"| 바인딩 주소\", \"| 프록시 헤더\"));",
+    "// SDS-AC-7; OPS-APP-003 AC-6",
+    "public void sdsAc5_OPS_APP_001_AC6_decidedMarkersAreGone() throws IOException {",
+    "// SDS-AC-5; OPS-APP-001 AC-6",
+    "public void sdsAc5_OPS_APP_001_AC6_laterWaveMarkersAreKept() throws IOException {",
+    "// SDS-AC-5; OPS-APP-001 AC-6",
+    "public void sdsAc5_OPS_APP_001_AC6_wave4PagesKeepNoMarker() throws IOException {",
+    "// SDS-AC-1; OPS-APP-001 AC-1",
+    "public void sdsAc1_OPS_APP_001_AC1_builderFactoryAndServerHandle() throws IOException {",
+    "assertTrue(jvm, jvm.contains(\"keeper\"));",
+    "// SDS-AC-2; OPS-APP-001 AC-6",
+    "public void sdsAc2_OPS_APP_001_AC6_wsMarkersSitOnTheirOwnLines() throws IOException {",
+    "// SDS-AC-3; OPS-APP-001 AC-2",
+    "public void sdsAc3_OPS_APP_001_AC2_middlewareAndRoutingDecisions() throws IOException {",
+    "// SDS-AC-4; OPS-APP-001 AC-7",
+    "public void sdsAc4_OPS_APP_001_AC7_decisionsCarryAReason() throws IOException {",
+    "// SDS-AC-6; OPS-APP-001 AC-3",
+    "public void sdsAc6_OPS_APP_001_AC3_lifecycleStartGateAndPendingStop() throws IOException {",
+    "// SDS-AC-7; OPS-APP-001 AC-4",
+    "public void sdsAc7_OPS_APP_001_AC4_loggingFormatDefaultsAndClose() throws IOException {",
+    "// SDS-AC-8; OPS-APP-001 AC-5",
+    "public void sdsAc8_OPS_APP_001_AC5_expressMigrationRows() throws IOException {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/ConsumerRulesTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve;"
+   ],
+   "findings": [
+    "C-006"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/CookieAcceptanceTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/CookieTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java",
+   "hunks_total": 11,
+   "anchors": [
+    "private static final List<String> LATER_WAVE_NAMES = Arrays.asList(\"body\", \"form\", \"file\", \"files\", \"parts\", \"json\",",
+    "// SDS-AC-1; IR-HTTP-001 AC-1; IR-APP-004 AC-3 adds application and service from wave 4",
+    "\"application()->ApplicationContext\", \"service(Class)->Object\"), signatures(Request.class));",
+    "// SDS-AC-2; IR-HTTP-001 AC-2",
+    "\"isCommitted()->boolean\", \"abort(Throwable)->void\"), signatures(Response.class));",
+    "// SDS-AC-2; IR-HTTP-001 AC-3, re-pointed by IR-APP-004 AC-3: service and application are expected from wave 4",
+    "// SDS-AC-3; IR-HTTP-001 AC-4; IR-HTTP-005 AC-5",
+    "\"Response.abort[class java.lang.Throwable]#p0\"),",
+    "// SDS-AC-11 (wave 5-3); FR-COOKIE-002 AC-8",
+    "// SDS-AC-6; IR-HTTP-005 AC-1, AC-2, AC-3, AC-5; IR-APP-002 AC-2 (wave 4 SDS-AC-5: re-pointed to the wave 4 set)",
+    "\"accessLog(Configurer)->RestApp\"), signatures(RestApp.class));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java",
+   "hunks_total": 26,
+   "anchors": [
+    "/** Wave 3 decisions recorded in docs/api (OPS-HTTP-003); routing.md keeps no marker, checked by RoutingDocsTest. */",
+    "/** The first line holding {@code phrase}; fails when none does. */",
+    "// SDS-AC-9; OPS-HTTP-003 AC-1",
+    "public void sdsAc9_OPS_HTTP_003_AC1_rawPathRowIsRawPathWithoutQuery() throws IOException {",
+    "// SDS-AC-9; OPS-HTTP-003 AC-2",
+    "public void sdsAc9_OPS_HTTP_003_AC2_attributeTypeMismatchAndNullRemoval() throws IOException {",
+    "// SDS-AC-8; OPS-HTTP-005 AC-8",
+    "public void sdsAc9_OPS_HTTP_003_AC8_requestKeepsOtherIssuesMarkers() throws IOException {",
+    "// SDS-AC-9; OPS-HTTP-003 AC-3",
+    "public void sdsAc9_OPS_HTTP_003_AC3_octetStreamAndStreamClosing() throws IOException {",
+    "// SDS-AC-9; OPS-HTTP-003 AC-8",
+    "public void sdsAc9_OPS_HTTP_003_AC8_responseKeepsFileAndRedirectMarkers() throws IOException {",
+    "// SDS-AC-9; OPS-HTTP-003 AC-4",
+    "public void sdsAc9_OPS_HTTP_003_AC4_routerPolicyDocumented() throws IOException {",
+    "// SDS-AC-9; OPS-HTTP-003 AC-7",
+    "public void sdsAc9_OPS_HTTP_003_AC7_expressRawPathAndRawTextMapping() throws IOException {",
+    "// SDS-AC-9; OPS-HTTP-003 AC-8",
+    "public void sdsAc9_OPS_HTTP_003_AC8_expressKeepsOtherIssuesMarkers() throws IOException {",
+    "for (String prefix : new String[] {\"| `app.set('trust proxy', ...)`\", \"| `express.Router()`\",",
+    "String trust = line(d, \"| `app.set('trust proxy', ...)`\");",
+    "// SDS-AC-9; OPS-HTTP-003 AC-5",
+    "public void sdsAc9_OPS_HTTP_003_AC5_appListsRouterPolicy() throws IOException {",
+    "// SDS-AC-9; OPS-HTTP-003 AC-6",
+    "public void sdsAc9_OPS_HTTP_003_AC6_defaultsNamesTraceConnectPolicy() throws IOException {",
+    "// SDS-AC-9; OPS-HTTP-003 AC-8",
+    "public void sdsAc9_OPS_HTTP_003_AC8_routingKeepsNoMarker() throws IOException {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/JsonApiTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/JsonBodyAcceptanceTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/JsonResponseTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/ProxyTrustAcceptanceTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/ServerOptionsTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/TypeRefTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AppIsolationTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "// SDS-AC-3 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-5-3.sds.md; IR-COOKIE-001 AC-6"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AppLifecycleGuardTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "// wave 5: IR-JSON-002 AC-1, AC-2 put jsonCodec and jsonLimit under the same guard"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/BodyStateTest.java",
+   "hunks_total": 5,
+   "anchors": [
+    "// SDS-AC-11; FR-HTTP-019 AC-5",
+    "List<String> bodyNames = Arrays.asList(\"body\", \"json\", \"form\", \"file\", \"files\", \"parts\", \"text\", \"bytes\",",
+    "List<String> bodyReaders = new java.util.ArrayList<>();",
+    "if (m.getName().equals(\"body\")) {",
+    "java.util.Collections.sort(bodyReaders);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/CookieParserTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.internal;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ErrorPathTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "// SDS-AC-12 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-5-4.sds.md; FR-ENGINE-005 AC-2"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/JsonBodyReaderTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.internal;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ListenStartupTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "/** Records every bind(ServerSettings, ...) call; warns through settings.logger() when asked. */"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StandardErrorsTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "// SDS-AC-7 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-5-4.sds.md; IR-ENGINE-002 AC-5, FR-ENGINE-005 AC-2"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StartFailureTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "// SDS-AC-11 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-5-4.sds.md; FR-ENGINE-004 AC-2"
+   ],
+   "findings": [
+    "C-007"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/spi/HttpAdapterSpiTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "/** Implements only the four wave 3 methods. */"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/CookieKotlinTest.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/JsonDocsKotlinTest.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "// Own package: the docs example types (User, Todo, UserService ...) must not clash with other test classes."
+   ],
+   "findings": [
+    "C-004"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/JsonKotlinTest.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve"
+   ],
+   "findings": [
+    "C-003"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/ServerOptionsKotlinTest.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve"
+   ],
+   "findings": []
+  },
+  {
+   "file": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java",
+   "hunks_total": 14,
+   "anchors": [
+    "import static org.junit.Assert.assertNull;",
+    "// @req OPS-JSON-001",
+    "private static final String JSON = \"later-wave method `Response.json(Object)`\";",
+    "\"later-wave method `Request.body(Class)`, `Response.json(Object)` and app-defined type `User`\"),",
+    "JSON + \" and app-defined type `UserService`\"),",
+    "skip(\"json.md\", \"User user = req.body(User.class);                          // 요청 → 객체\", BODY),",
+    "skip(\"middleware.md\", \"#3\", JSON),",
+    "skip(\"request.md\", \"// GET /users/42/posts?page=2&tag=a&tag=b\", JSON),",
+    "skip(\"routing.md\", \"app.route(Method.get().post().delete(), \\\"/users/:id\\\", (req, res) -> {\", JSON),",
+    "// OPS-APP-002 AC-2 — a skipped block that calls a later-wave member names that member, not only an app type",
+    "public void OPS_APP_002_AC2_skippedBlocksCallingJsonOrBodyNameTheLaterWaveMember() throws IOException {",
+    "// The reason must lead with a later-wave member, so the block is traced to the wave that unskips it.",
+    "if (body.contains(\".json(\")) {",
+    "assertEquals(Collections.<String>emptyList(), missing);"
+   ],
+   "findings": [
+    "C-001",
+    "C-002"
+   ]
+  },
+  {
+   "file": "src/test/java/com/snoworca/naruserve/docs/WaveFiveDocsTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.docs;"
+   ],
+   "findings": [
+    "C-005"
+   ]
+  }
+ ],
+ "summary": {
+  "total": 7,
+  "by_severity": {
+   "MEDIUM": 2,
+   "LOW": 5
+  }
+ }
+}

@@ -1,0 +1,9 @@
+{"candidate_matches":[
+{"id":"CON-BUILD-013","scope":"BUILD","title":"Core isolation, servlet-free Android modules and single Gson version build checks","relation_hint":"depends_on","similarity_score":0.6},
+{"id":"CON-BUILD-012","scope":"BUILD","title":"animal-sniffer API 21 check on Android-bound modules","relation_hint":"depends_on","similarity_score":0.55},
+{"id":"CON-BUILD-011","scope":"BUILD","title":"compileOnly nullability annotations recognised by Kotlin","relation_hint":"depends_on","similarity_score":0.5},
+{"id":"CON-BUILD-004","scope":"BUILD","title":"Java 8 bytecode target for Java and Kotlin compilation","relation_hint":"depends_on","similarity_score":0.4},
+{"id":"OPS-BUILD-003","scope":"BUILD","title":"Module names and coordinates in docs/api and CLAUDE.md","relation_hint":"potential-update","similarity_score":0.3},
+{"id":"CON-BUILD-015","scope":"BUILD","title":"NaruServe-api main classes stay free of platform and adapter types [DRAFT]","relation_hint":"potential-conflict","similarity_score":0.45}],
+"relevant_scopes":["BUILD","ROUTE"],
+"no_match_reason":"ARCH scope is empty (template only). No existing requirement covers routing behavior; BUILD only supplies build-level constraints. CON-BUILD-014..016 are planned/draft duplicates of 003/013/009 (overlap, not routing conflicts); do not depend on them until stable."}

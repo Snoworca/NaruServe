@@ -1,0 +1,160 @@
+{
+ "base": "f61b5f18bb61a63aef0a5932eef3826e33fce5f0",
+ "candidates": 19,
+ "files": [
+  {
+   "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/TypeRef.java",
+   "hunks_total": 5
+  },
+  {
+   "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/CookieFactoryHook.java",
+   "hunks_total": 1
+  },
+  {
+   "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/CookieParser.java",
+   "hunks_total": 2
+  },
+  {
+   "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/TypeRefTest.java",
+   "hunks_total": 1
+  },
+  {
+   "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/CookieParserTest.java",
+   "hunks_total": 1
+  },
+  {
+   "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StartFailureTest.java",
+   "hunks_total": 1
+  },
+  {
+   "path": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/JsonDocsKotlinTest.kt",
+   "hunks_total": 3
+  },
+  {
+   "path": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/JsonKotlinTest.kt",
+   "hunks_total": 1
+  },
+  {
+   "path": "NaruServe-gson/src/main/java/com/snoworca/naruserve/gson/GsonJsonCodec.java",
+   "hunks_total": 2
+  },
+  {
+   "path": "NaruServe-gson/src/test/java/com/snoworca/naruserve/gson/GsonJsonCodecTest.java",
+   "hunks_total": 1
+  },
+  {
+   "path": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/JsonErrorHandler.java",
+   "hunks_total": 2
+  },
+  {
+   "path": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdAdapter.java",
+   "hunks_total": 1
+  },
+  {
+   "path": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdExchange.java",
+   "hunks_total": 11
+  },
+  {
+   "path": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/AbortSocketTest.java",
+   "hunks_total": 1
+  },
+  {
+   "path": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LimitsSocketTest.java",
+   "hunks_total": 1
+  },
+  {
+   "path": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/TransportRejectionTest.java",
+   "hunks_total": 1
+  },
+  {
+   "path": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java",
+   "hunks_total": 6
+  }
+ ],
+ "excluded_prose": [
+  "docs/api/cookie.md",
+  "docs/api/json.md"
+ ],
+ "refused_artifacts": [],
+ "unclassified_files": [],
+ "groups": {
+  "api-main": [
+   {
+    "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/TypeRef.java",
+    "hunks_total": 5
+   },
+   {
+    "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/CookieFactoryHook.java",
+    "hunks_total": 1
+   },
+   {
+    "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/CookieParser.java",
+    "hunks_total": 2
+   }
+  ],
+  "api-test": [
+   {
+    "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/TypeRefTest.java",
+    "hunks_total": 1
+   },
+   {
+    "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/CookieParserTest.java",
+    "hunks_total": 1
+   },
+   {
+    "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StartFailureTest.java",
+    "hunks_total": 1
+   },
+   {
+    "path": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/JsonDocsKotlinTest.kt",
+    "hunks_total": 3
+   },
+   {
+    "path": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/JsonKotlinTest.kt",
+    "hunks_total": 1
+   }
+  ],
+  "NaruServe-gson": [
+   {
+    "path": "NaruServe-gson/src/main/java/com/snoworca/naruserve/gson/GsonJsonCodec.java",
+    "hunks_total": 2
+   },
+   {
+    "path": "NaruServe-gson/src/test/java/com/snoworca/naruserve/gson/GsonJsonCodecTest.java",
+    "hunks_total": 1
+   }
+  ],
+  "NaruServe-tinyhttpd": [
+   {
+    "path": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/JsonErrorHandler.java",
+    "hunks_total": 2
+   },
+   {
+    "path": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdAdapter.java",
+    "hunks_total": 1
+   },
+   {
+    "path": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdExchange.java",
+    "hunks_total": 11
+   },
+   {
+    "path": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/AbortSocketTest.java",
+    "hunks_total": 1
+   },
+   {
+    "path": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LimitsSocketTest.java",
+    "hunks_total": 1
+   },
+   {
+    "path": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/TransportRejectionTest.java",
+    "hunks_total": 1
+   }
+  ],
+  "src": [
+   {
+    "path": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java",
+    "hunks_total": 6
+   }
+  ]
+ }
+}

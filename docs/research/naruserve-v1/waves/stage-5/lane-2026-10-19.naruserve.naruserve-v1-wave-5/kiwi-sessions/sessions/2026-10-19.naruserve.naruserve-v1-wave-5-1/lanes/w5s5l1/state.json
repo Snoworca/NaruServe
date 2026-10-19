@@ -1,0 +1,16 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "2026-10-19.naruserve.naruserve-v1-wave-5-1",
+  "sds_path": "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-5-1.sds.md",
+  "target": "wave-5",
+  "req_ids": ["IR-JSON-001", "IR-JSON-002", "FR-JSON-001", "FR-JSON-002"],
+  "spawn_context": "pm-child",
+  "phase": "done",
+  "next_resume_hint": null,
+  "failed": false,
+  "regression_baseline": {"command": "./gradlew build", "exit_code": 0, "head_sha": "f198d86"},
+  "red_evidence": {"command": "./gradlew :NaruServe-api:compileTestJava", "exit_code": 1, "captured_failure": "compileTestKotlin: Unresolved reference 'TypeRef', 'jsonCodec', 'body', 'json' (JsonKotlinTest.kt); Java tests reference the same missing symbols", "timestamp": "2026-10-19"},
+  "green_evidence": {"command": "./gradlew build", "exit_code": 0, "timestamp": "2026-10-19"},
+  "prickly_review": {"iter": 1, "CRITICAL": 0, "HIGH": 0, "MEDIUM": 3, "LOW": 6, "fixed": ["M1 swallowed overrun", "M2 unchecked-wrapped UTF-8 test", "L5 subtype check", "L7 rules comment", "L8 non-ASCII length"], "open": ["M3 IR-JSON-001 AC-4 Kotlin wildcard", "L4 415 consumes body (SDS order)", "L6 BodyState shortcut comment (outside lease)"]},
+  "mcp_call_log_deferred_to": "/Users/beom/work/git/NaruServe/kiwi/orchestrator/2026-10-19.NaruServe.naruserve-v1/lanes/lane-2026-10-19.naruserve.naruserve-v1-wave-5/deferred-srs-queue.jsonl"
+}

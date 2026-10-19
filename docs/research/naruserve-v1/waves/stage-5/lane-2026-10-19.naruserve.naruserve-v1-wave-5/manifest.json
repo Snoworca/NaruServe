@@ -1,0 +1,196 @@
+{
+ "branch": "kiwi/orch/2026-10-19.NaruServe.naruserve-v1/lane-2026-10-19.naruserve.naruserve-v1-wave-5",
+ "worktree_path": "/Users/beom/work/git/NaruServe/.claude/worktrees/agent-a82c13e419880e468",
+ "head_sha": "2155938e376f927812f9b17929dd6065a103b382",
+ "commits": [
+  "5cc61f8d408fb4b0d40087042b82ffc40e56ee92",
+  "4f8693f8ab4c356c78849f6680da847cc044473b",
+  "8689bf6236c1bab08d79fb91cf3fec686239dd97",
+  "5de90cdb58e0af6e265cc4913c79f5cfae7e19d4",
+  "d7d296201a4bd6e91a79879511e204d2f7187c54",
+  "afc0723e133adfc571d273ffc50bf660efb18c3b",
+  "f0b9a13155de7d7f6c627e5aba17af844a938c67",
+  "f61b5f18bb61a63aef0a5932eef3826e33fce5f0",
+  "df9120e01ff3e9cc02d8473d9f2ff361bc6296e4",
+  "2155938e376f927812f9b17929dd6065a103b382"
+ ],
+ "deferred_queue": "/Users/beom/work/git/NaruServe/kiwi/orchestrator/2026-10-19.NaruServe.naruserve-v1/lanes/lane-2026-10-19.naruserve.naruserve-v1-wave-5/deferred-srs-queue.jsonl",
+ "reports": [
+  "/Users/beom/work/git/NaruServe/.claude/worktrees/agent-a82c13e419880e468/docs/analysis/kiwi-review-fix-loop-2026-10-20.naruserve.self-w5/mode_decision.json",
+  "/Users/beom/work/git/NaruServe/.claude/worktrees/agent-a82c13e419880e468/docs/analysis/kiwi-review-fix-loop-2026-10-20.naruserve.self-w5/review_A_iter1.json",
+  "/Users/beom/work/git/NaruServe/.claude/worktrees/agent-a82c13e419880e468/docs/analysis/kiwi-review-fix-loop-2026-10-20.naruserve.self-w5/review_B_iter1.json",
+  "/Users/beom/work/git/NaruServe/.claude/worktrees/agent-a82c13e419880e468/docs/analysis/kiwi-review-fix-loop-2026-10-20.naruserve.self-w5/review_C_iter1.json",
+  "/Users/beom/work/git/NaruServe/.claude/worktrees/agent-a82c13e419880e468/docs/analysis/kiwi-review-fix-loop-2026-10-20.naruserve.self-w5/classified_findings.json",
+  "/Users/beom/work/git/NaruServe/.claude/worktrees/agent-a82c13e419880e468/docs/analysis/kiwi-review-fix-loop-2026-10-20.naruserve.self-w5/fix_iter1.json",
+  "/Users/beom/work/git/NaruServe/.claude/worktrees/agent-a82c13e419880e468/docs/analysis/kiwi-review-fix-loop-2026-10-20.naruserve.self-w5/mode_decision_iter2.json",
+  "/Users/beom/work/git/NaruServe/.claude/worktrees/agent-a82c13e419880e468/docs/analysis/kiwi-review-fix-loop-2026-10-20.naruserve.self-w5/recheck_iter1.json",
+  "/Users/beom/work/git/NaruServe/.claude/worktrees/agent-a82c13e419880e468/docs/analysis/kiwi-review-fix-loop-2026-10-20.naruserve.self-w5/coverage-frag1.json",
+  "/Users/beom/work/git/NaruServe/.claude/worktrees/agent-a82c13e419880e468/docs/analysis/kiwi-review-fix-loop-2026-10-20.naruserve.self-w5/coverage-frag2.json",
+  "/Users/beom/work/git/NaruServe/.claude/worktrees/agent-a82c13e419880e468/docs/analysis/kiwi-review-fix-loop-2026-10-20.naruserve.self-w5/coverage-frag3.json",
+  "/Users/beom/work/git/NaruServe/.claude/worktrees/agent-a82c13e419880e468/docs/analysis/kiwi-review-fix-loop-2026-10-20.naruserve.self-w5/coverage-frag4.json",
+  "/Users/beom/work/git/NaruServe/.claude/worktrees/agent-a82c13e419880e468/docs/analysis/kiwi-review-fix-loop-2026-10-20.naruserve.self-w5/coverage-frag5.json",
+  "/Users/beom/work/git/NaruServe/.claude/worktrees/agent-a82c13e419880e468/docs/analysis/kiwi-review-fix-loop-2026-10-20.naruserve.self-w5/coverage-frag6.json",
+  "/Users/beom/work/git/NaruServe/.claude/worktrees/agent-a82c13e419880e468/docs/analysis/kiwi-review-fix-loop-2026-10-20.naruserve.self-w5/coverage-frag7.json",
+  "/Users/beom/work/git/NaruServe/.claude/worktrees/agent-a82c13e419880e468/docs/analysis/kiwi-review-fix-loop-2026-10-20.naruserve.self-w5/coverage-frag8.json",
+  "/Users/beom/work/git/NaruServe/.claude/worktrees/agent-a82c13e419880e468/.kiwi/sessions/2026-10-19.naruserve.naruserve-v1-wave-5-1/lanes/w5s5l1/",
+  "/Users/beom/work/git/NaruServe/.claude/worktrees/agent-a82c13e419880e468/.kiwi/sessions/2026-10-19.naruserve.naruserve-v1-wave-5-2/lanes/w5s5l1/",
+  "/Users/beom/work/git/NaruServe/.claude/worktrees/agent-a82c13e419880e468/.kiwi/sessions/2026-10-19.naruserve.naruserve-v1-wave-5-3/lanes/w5s5l1/",
+  "/Users/beom/work/git/NaruServe/.claude/worktrees/agent-a82c13e419880e468/.kiwi/sessions/2026-10-19.naruserve.naruserve-v1-wave-5-4/lanes/w5s5l1/",
+  "/Users/beom/work/git/NaruServe/.claude/worktrees/agent-a82c13e419880e468/.kiwi/sessions/2026-10-19.naruserve.naruserve-v1-wave-5-5/lanes/w5s5l1/",
+  "/Users/beom/work/git/NaruServe/.claude/worktrees/agent-a82c13e419880e468/.kiwi/sessions/2026-10-19.naruserve.naruserve-v1-wave-5-6/lanes/w5s5l1/",
+  "/Users/beom/work/git/NaruServe/.claude/worktrees/agent-a82c13e419880e468/.kiwi/sessions/2026-10-19.naruserve.naruserve-v1-wave-5-7/lanes/w5s5l1/",
+  "/Users/beom/work/git/NaruServe/.claude/worktrees/agent-a82c13e419880e468/.kiwi/sessions/2026-10-19.naruserve.naruserve-v1-wave-5-8/lanes/w5s5l1/"
+ ],
+ "red_evidence": [
+  {
+   "test_id": "NaruServe-api compileTestKotlin/compileTestJava (TypeRefTest, JsonApiTest, JsonBodyAcceptanceTest, JsonResponseTest, JsonBodyReaderTest, ConsumerRulesTest, JsonKotlinTest)",
+   "failure": "Unresolved reference TypeRef/jsonCodec/body/json; JsonCodec.decode not @Nullable (fragment 1, exit 1)"
+  },
+  {
+   "test_id": "NaruServe-gson GsonJsonCodecTest + GsonCodecKotlinTest",
+   "failure": "Unresolved reference GsonJsonCodec; later 4 review-driven tests failed (NumberFormatException -> 500, missing Gson cause, JsonIOException from encode) before fix"
+  },
+  {
+   "test_id": "CookieTest, CookieAcceptanceTest, CookieParserTest, CookieKotlinTest, HttpApiSurfaceTest",
+   "failure": "Unresolved reference Cookie/SameSite/cookie/getCookies/addCookie (fragment 3)"
+  },
+  {
+   "test_id": "ServerOptionsTest, ProxyTrustAcceptanceTest, ListenStartupTest, StartFailureTest, StandardErrorsTest, ErrorPathTest, HttpAdapterSpiTest",
+   "failure": "cannot find symbol ServerOptions/ServerSettings/ErrorRenderer/RestApp.server/trustProxy (fragment 4)"
+  },
+  {
+   "test_id": "NaruServe-tinyhttpd AdapterSurfaceTest, RawTargetSocketTest, BindingSocketTest, LimitsSocketTest, ConnectionLimitsTest",
+   "failure": "cannot find symbol TinyHttpdAdapter (fragment 5)"
+  },
+  {
+   "test_id": "NaruServe/src/test/java/com/snoworca/naruserve/bootstrap/JvmLifetimeTest.java#sdsAc11_FR_ENGINE_006_AC5_childJvmServesAfterMainReturnsAndExitsAfterTheShutdownRoute",
+   "failure": "AssertionError 'child exited after main returned' (no keeper thread)"
+  },
+  {
+   "test_id": "DefaultAppFactoryTest, DefaultLoggerTest",
+   "failure": "cannot find symbol DefaultAppFactory (fragment 7)"
+  },
+  {
+   "test_id": "src/test/java/com/snoworca/naruserve/docs/WaveFiveDocsTest.java, DocsExamplesCompileTest, AppDocsTest, HttpDocsTest, JsonDocsKotlinTest",
+   "failure": "10/23 root and 9/26 api docs tests failed on remaining (미확정) markers and missing rows (fragment 8)"
+  },
+  {
+   "test_id": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/AbortSocketTest.java",
+   "failure": "streaming writer hit NullPointerException after abort(); abort before commit returned complete plain 500 (review fix B-001/B-002)"
+  }
+ ],
+ "review_outcome": {
+  "status": "TASK_DONE",
+  "residual_critical": 0,
+  "residual_high": 0,
+  "residual_medium": 0,
+  "residual_low": [
+   "B-003 blocked socket write not woken by abort (TinyHttpd has no hook)",
+   "B-004 header order across names",
+   "B-007",
+   "B-008 wall-clock test bounds",
+   "B-009",
+   "C-006",
+   "R-001 Kotlin * / out projections collapsed by TypeRef normalisation",
+   "R-002 Parameterized.hashCode vs Android Type impl unverified",
+   "R-003 HEAD abort-before-commit still sends full 500",
+   "R-004 stop() may lag by writeTimeout while a write is blocked",
+   "R-005 skip-name check matches by substring"
+  ],
+  "coverage_note": "review C round had forced duplicate anchors in AppDocsTest/HttpDocsTest (byte-identical hunks); all other anchors matched; recheck round VALID"
+ },
+ "intentionally_empty": null,
+ "design_refuted": [],
+ "out_of_lease_paths": [
+  {
+   "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+   "reason": "SDS '<- Dispatcher' caller link: new constructors carry frozen codec/jsonLimit and trustProxy into DefaultRequest/DefaultResponse"
+  },
+  {
+   "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AppFactoryLoaderTest.java",
+   "reason": "test-sufficiency fill: citation comment for FR-ENGINE-009 AC-5 only"
+  },
+  {
+   "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AppLifecycleGuardTest.java",
+   "reason": "reflective guard test needed argument values for new jsonCodec/jsonLimit/trustProxy setters; nothing removed"
+  },
+  {
+   "path": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/JsonKotlinTest.kt",
+   "reason": "new Kotlin test (CLAUDE.md T11) for IR-JSON-001 AC-4, IR-JSON-002 AC-7, FR-JSON-002 AC-6"
+  },
+  {
+   "path": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/ServerOptionsKotlinTest.kt",
+   "reason": "new Kotlin test (T11) for IR-ENGINE-001 AC-6"
+  },
+  {
+   "path": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/AbortSocketTest.java",
+   "reason": "new regression test for self-review finding B-001/B-002 (abort race / abort before commit)"
+  }
+ ],
+ "test_sufficiency": {
+  "command": "speckiwi coverage --tests --ids <fragment Requirements> --sds <fragment> --json",
+  "initial_gaps": {
+   "wave-5-1": {
+    "FR-JSON-001": [
+     "AC-3",
+     "AC-5"
+    ]
+   },
+   "wave-5-2": {
+    "FR-JSON-003": [
+     "AC-1",
+     "AC-2",
+     "AC-3",
+     "AC-4",
+     "AC-5",
+     "AC-6",
+     "AC-7"
+    ]
+   },
+   "wave-5-4": {
+    "FR-ENGINE-008": [
+     "AC-4"
+    ],
+    "IR-ENGINE-001": [
+     "AC-4"
+    ]
+   },
+   "wave-5-5": {
+    "FR-ENGINE-003": [
+     "AC-3",
+     "AC-4",
+     "AC-5",
+     "AC-6"
+    ]
+   },
+   "wave-5-7": {
+    "FR-ENGINE-009": [
+     "AC-5"
+    ]
+   }
+  },
+  "fill": "commit 2155938: citation comments on existing verifying tests + new tests for FR-ENGINE-003 AC-3..6 and FR-ENGINE-008 AC-4",
+  "final_gaps": {
+   "wave-5-1": [],
+   "wave-5-2": [],
+   "wave-5-3": [],
+   "wave-5-4": [],
+   "wave-5-5": [],
+   "wave-5-6": [],
+   "wave-5-7": [],
+   "wave-5-8": []
+  },
+  "verdict": "pass",
+  "note": "FR-ENGINE-009 AC-5 first half (no TinyHttpd/Gson refs in NaruServe-api) is enforced by the checkClassReferences build task, not a test"
+ },
+ "notes": [
+  "IR-JSON-001 AC-4 initially unmet (Kotlin emits List<? extends String>); fixed in review (TypeRef normalises Kotlin declaration-site wildcards, relies on kotlin.Metadata); evidence appended to queue",
+  "DocsExamplesCompileTest REASON regex gained 'app-defined variable(s)/methods' categories while adding a stricter named-item-in-block check",
+  "TinyHttpd HEAD 38051b6 != verified 46b973e; settings.gradle warns only",
+  "deferred queue: every allocation id has update_status implemented + >=1 evidence before its first add_completed_work"
+ ],
+ "verification": {
+  "command": "./gradlew build",
+  "exit_code": 0
+ }
+}

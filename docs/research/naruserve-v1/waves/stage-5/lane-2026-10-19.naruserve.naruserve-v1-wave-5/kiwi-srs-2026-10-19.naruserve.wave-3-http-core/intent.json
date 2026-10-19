@@ -1,0 +1,40 @@
+{
+ "summary": "Wave 3 new scope: Request/Response core, route registration API, engine-free dispatcher with automatic responses, body ownership, response state machine and HttpAdapter SPI with in-memory adapter (T01,T02,T03,T05,T06,T07 in-memory).",
+ "intent_type_hint": "new-scope",
+ "key_entities": ["Request","Response","RestApp","RouteBuilder","RouteHandler","RouterPolicy","Router","Dispatcher","HttpAdapter SPI","In-memory HttpAdapter","BodyState","BodyAlreadyConsumedException","limit-enforcing InputStream","Response state machine","Method/MethodSet","docs/api (request, response, routing, app, defaults, express-migration)","OPS-ROUTE-001"],
+ "ambiguities": [
+  "Exact internal package name of the RestApp implementation and test-fixtures harness API is not named by any decision (only 'internal package of NaruServe-api').",
+  "Whether the dispatcher's interim 500/abort/auto-finish behavior needs its own requirement or is folded into the dispatcher requirement (wave 4 replaces it).",
+  "Concrete SPI field/method names for raw path, raw query, extension points and two-call stop are unnamed; SRS must state them as behavior-level contract or leave to SDS.",
+  "Supersede of OPS-ROUTE-001 (verified) is a guarded mutation in the same wave; ordering relative to the new routing-docs requirement must be fixed during authoring."
+ ],
+ "implied_requirements": [
+  {"surface":"Request/Response public surface ownership and nullability","d_ids":["D-071","D-072","D-392"],"wave_decisions_applied":["Request and response surface (D-392 overrides D-071)"]},
+  {"surface":"RestApp method registration (get/post/.../route Method/MethodSet), actual req.method, no serve()","d_ids":["D-040","D-041","D-042","D-046"],"wave_decisions_applied":["Working app in wave 3","req.method() during automatic HEAD"]},
+  {"surface":"RouteBuilder and duplicate registration equivalence","d_ids":["D-043","D-044"],"wave_decisions_applied":["Working app in wave 3 (duplicate raised at freeze)"]},
+  {"surface":"RouteHandler functional interface","d_ids":["D-045"],"wave_decisions_applied":[]},
+  {"surface":"RestApp interface and internal working implementation with freeze and settings-after-freeze rule","d_ids":["D-393"],"wave_decisions_applied":["Working app in wave 3","Settings after the freeze","Remaining markers (routerPolicy API)"]},
+  {"surface":"Engine-free dispatcher and in-memory-adapter test execution","d_ids":["D-394","D-397"],"wave_decisions_applied":["Order before lookup","Interim failure handling","Pre-request rejections"]},
+  {"surface":"Automatic responses 404/405/204 OPTIONS/501/426 and automatic HEAD","d_ids":["D-395","D-396"],"wave_decisions_applied":["Automatic response bodies","426 over TinyHttpd","req.method() during automatic HEAD"]},
+  {"surface":"Asterisk-form OPTIONS * and non-slash raw path 400","d_ids":["D-442"],"wave_decisions_applied":["Order before lookup","Pre-request rejections","Adapter halves"]},
+  {"surface":"Path accessors and param","d_ids":["D-073","D-074","D-075"],"wave_decisions_applied":["Remaining markers (rawPath without query)"]},
+  {"surface":"Query accessors, form-urlencoded decoding, malformed 400","d_ids":["D-076","D-077","D-078"],"wave_decisions_applied":["Interim failure handling","Pre-request rejections"]},
+  {"surface":"Header accessors, remote address/secure, Last-Event-ID","d_ids":["D-079","D-080","D-081"],"wave_decisions_applied":[]},
+  {"surface":"Per-request attribute store","d_ids":["D-082","D-083"],"wave_decisions_applied":["Null attribute values","Remaining markers (ClassCastException)"]},
+  {"surface":"Mutation-after-completion rule with usable read accessors","d_ids":["D-084"],"wave_decisions_applied":["Request and response surface","abort() after completion"]},
+  {"surface":"BodyState and single-read BodyAlreadyConsumedException with shared parse","d_ids":["D-085","D-086","D-087"],"wave_decisions_applied":["Body ownership"]},
+  {"surface":"Body size limit enforcement on the byte stream","d_ids":["D-088"],"wave_decisions_applied":["Body ownership (positive limit, no unlimited default; HTTP 413 checks deferred to waves 5/6)"]},
+  {"surface":"Response chaining and default status","d_ids":["D-089","D-090"],"wave_decisions_applied":["Request and response surface"]},
+  {"surface":"Response body writers send/html/bytes/stream/end","d_ids":["D-091","D-092","D-093","D-094","D-095"],"wave_decisions_applied":["stream() closing","Remaining markers (octet-stream default)"]},
+  {"surface":"isCommitted, abort, CR/LF header rejection","d_ids":["D-096","D-097","D-098"],"wave_decisions_applied":["abort() after completion"]},
+  {"surface":"Response state machine and commit-once rules","d_ids":["D-099","D-100","D-101","D-103"],"wave_decisions_applied":["stream() closing","Interim failure handling"]},
+  {"surface":"Bodyless responses (204, 304, HEAD)","d_ids":["D-102"],"wave_decisions_applied":["Automatic response bodies"]},
+  {"surface":"HttpAdapter SPI placement and data contract","d_ids":["D-104","D-105"],"wave_decisions_applied":["Adapter halves"]},
+  {"surface":"SPI extension points and bind/stop lifecycle","d_ids":["D-106","D-107"],"wave_decisions_applied":[]},
+  {"surface":"In-memory HttpAdapter in test fixtures","d_ids":["D-108"],"wave_decisions_applied":["Working app in wave 3 (harness)","Adapter halves"]},
+  {"surface":"Raw request-target path and raw query through the SPI","d_ids":["D-399"],"wave_decisions_applied":["Adapter halves (TinyHttpd half in wave 5)","Adapter value comparison"]},
+  {"surface":"docs/api open-item resolution and marker removal (incl. OPS-ROUTE-001 supersede)","d_ids":["D-109","D-398"],"wave_decisions_applied":["Remaining markers","req.method() during automatic HEAD","Docs examples","Marker test of wave 2"]}
+ ],
+ "semantic_equivalences": [],
+ "constraints_applied": ["C-02 Java 8/API 21 (no nio.file, CompletableFuture in core)","C-03 Kotlin-friendly (@FunctionalInterface, @Nullable/@NonNull)","C-04 Servlet-like API","C-05 Express adaptation via docs/api","C-06 NaruServe-api module owns dispatcher and SPI","C-07 (미확정) settled in wave and docs updated","C-09 object.md goals"]
+}

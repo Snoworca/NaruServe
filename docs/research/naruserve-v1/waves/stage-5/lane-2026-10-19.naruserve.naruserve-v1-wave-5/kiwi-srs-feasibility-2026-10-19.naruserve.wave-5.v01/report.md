@@ -1,0 +1,3 @@
+# kiwi-srs-feasibility wave-5 2026-10-19.naruserve.wave-5.v01
+
+24 REQs evaluated: high 24 (scores 89-97). Target verdict: release-ready for SDS. All 24 draft -> evolving (default mapping, no stable promotion). Verifier: CRITICAL 0 HIGH 0 MEDIUM 7 LOW 6 (eval_iter1.json). Follow-ups applied: depends_on links IR-ENGINE-001->IR-JSON-002, IR-COOKIE-001->IR-JSON-001, OPS-APP-003->FR-ENGINE-006, FR-ENGINE-003->FR-JSON-001, FR-ENGINE-002->FR-ENGINE-005. Residual MEDIUM: ServerHandle.address() wording (bound vs configured) for host-name binds; TinyHttpd answers D-052 path rejections with plain-text 400 (no standard body) on the TinyHttpd adapter.

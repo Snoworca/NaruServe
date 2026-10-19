@@ -1,0 +1,435 @@
+{
+ "findings": [
+  {
+   "id": "B-001",
+   "axis": "P3",
+   "severity": "MEDIUM",
+   "title": "abort() from another thread races an in-flight commit/body write against TinyHttpd finishing the same Response",
+   "location": {
+    "file": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdExchange.java",
+    "line_range": "46-62,126-182"
+   },
+   "description": "abort() only sets a volatile flag and counts down `ended`; the worker then returns from run() (setCloseConnection + throw) and TinyHttpd completes/flushes the ExchangeResponse, while a core thread already inside commit() (past the aborted check: setStatus/addHeader/getOutputStream) or inside the FilterOutputStream write (past check()) keeps mutating the same non-thread-safe ExchangeResponse buffer. DefaultResponse.abort(error) is public API documented as safe from any thread (e.g. a timer during a stream copy), so this is reachable. Result: unsynchronized concurrent access to TinyHttpd internals (corrupt bytes before close, AIOOBE/NPE in the copy thread) instead of the SPI contract that the concurrent commit/write fails with IOException.",
+   "suggested_fix": "Serialize response access with the abort: guard commit/write/flush/finish and the worker post-await path with one lock (or an in-flight counter the worker drains before returning when aborted), so the worker does not hand the Response back to TinyHttpd while a core write is inside it; add a test that aborts from a second thread during a large body write.",
+   "is_behavioral": true,
+   "tags": [
+    "concurrency",
+    "race"
+   ]
+  },
+  {
+   "id": "B-002",
+   "axis": "P4",
+   "severity": "MEDIUM",
+   "title": "abort() before commit sends TinyHttpd plain-text 500 instead of closing the connection",
+   "location": {
+    "file": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdExchange.java",
+    "line_range": "56-61"
+   },
+   "description": "Confirms known shortcut (b). HttpExchange.abort() is specified as \"Closes the connection abnormally\", but with nothing committed run() throws IOException and TinyHttpd answers with its built-in plain 500 page (not the standard error JSON, no request id, not an abrupt close). The client sees a well-formed 500 for an aborted exchange and the access log (aborted=true) disagrees with the wire. Reachable when a user calls res.abort() before sending anything.",
+   "suggested_fix": "Make the pre-commit abort path end the connection without a complete response, e.g. commit with setContentLengthLong(1) and flush zero body bytes so TinyHttpd closes on the short body, or track it as explicit debt in the wave-5-6 SDS and pin the current wire behaviour with a test.",
+   "is_behavioral": true,
+   "tags": [
+    "contract",
+    "shortcut"
+   ]
+  },
+  {
+   "id": "B-003",
+   "axis": "P3",
+   "severity": "LOW",
+   "title": "abort() does not wake a body write blocked in the socket; the worker is held until writeTimeout",
+   "location": {
+    "file": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdExchange.java",
+    "line_range": "177-182"
+   },
+   "description": "Confirms known shortcut (b). A per-request abort (user res.abort from a timer against a slow-reading client) leaves the writing thread blocked until TinyHttpd writeTimeout, holding a worker and a connection slot; many slow readers exhaust maxWorkers sooner than expected. Shutdown is unaffected because TinyHttpd.stop force-closes at the deadline.",
+   "suggested_fix": "Keep the documented shortcut but state the writeTimeout bound in docs/api and the SDS; upgrade when TinyHttpd exposes a connection-close hook.",
+   "is_behavioral": true,
+   "tags": [
+    "shortcut",
+    "resource"
+   ]
+  },
+  {
+   "id": "B-004",
+   "axis": "P4",
+   "severity": "LOW",
+   "title": "headers() is grouped by name, not received order, contrary to the SPI \"in received order\" contract",
+   "location": {
+    "file": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdExchange.java",
+    "line_range": "87-98"
+   },
+   "description": "Confirms known shortcut (b). HttpExchange.headers() promises received order with duplicates kept; TinyHttpd exposes only per-name value lists, so \"A:1, B:2, A:3\" becomes A:1, A:3, B:2. Per-name order is kept, so header semantics are unaffected; only a raw-headers view and cross-adapter parity differ.",
+   "suggested_fix": "Keep the shortcut comment; document the deviation for the TinyHttpd adapter in docs/api or on the SPI.",
+   "is_behavioral": false,
+   "tags": [
+    "contract",
+    "shortcut"
+   ]
+  },
+  {
+   "id": "B-005",
+   "axis": "P5",
+   "severity": "LOW",
+   "title": "GsonJsonCodec maps JsonSyntaxException but not plain JsonParseException from custom deserializers, and treats every IllegalStateException as bad input",
+   "location": {
+    "file": "NaruServe-gson/src/main/java/com/snoworca/naruserve/gson/GsonJsonCodec.java",
+    "line_range": "82-88"
+   },
+   "description": "A user JsonDeserializer signalling bad client data with `throw new JsonParseException(..)` (Gson documented way) escapes decode() unchecked and becomes a 500, while Gson own type errors become 400. Conversely the broad IllegalStateException catch turns a programming error inside a custom TypeAdapter into a 400 that hides the bug.",
+   "suggested_fix": "Rethrow JsonIOException (no-ctor/unsafe errors) first, then catch JsonParseException as malformed input; narrow the IllegalStateException branch to JsonReader \"Expected ...\" failures.",
+   "is_behavioral": true,
+   "tags": [
+    "error-handling"
+   ]
+  },
+  {
+   "id": "B-006",
+   "axis": "P4",
+   "severity": "LOW",
+   "title": "bind(host, port, handler) answers TinyHttpd errors with an empty body labelled application/json",
+   "location": {
+    "file": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdAdapter.java",
+    "line_range": "49-53"
+   },
+   "description": "The plain overload installs errorRenderer(status -> \"\"), so JsonErrorHandler sends Content-Type application/json with Content-Length 0 (an invalid JSON document) for e.g. the 421 Host rejection, and logs to a fresh ConsoleLogger. The core uses the settings overload, so only direct SPI callers hit it.",
+   "suggested_fix": "Use the default ServerSettings error renderer, or skip the Content-Type when the rendered body is empty.",
+   "is_behavioral": true,
+   "tags": [
+    "contract"
+   ]
+  },
+  {
+   "id": "B-007",
+   "axis": "P7",
+   "severity": "LOW",
+   "title": "TinyLogBridge.isLoggable always true forces TinyHttpd to build every FINE/FINEST message",
+   "location": {
+    "file": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyLogBridge.java",
+    "line_range": "18-21"
+   },
+   "description": "TinyHttpd guards message construction with isLoggable; returning true unconditionally makes it format per-connection/per-request trace strings on the hot path that the app logger then discards.",
+   "suggested_fix": "Delegate to a level check on the app Logger if one exists; otherwise filter below INFO by default.",
+   "is_behavioral": false,
+   "tags": [
+    "performance"
+   ]
+  },
+  {
+   "id": "B-008",
+   "axis": "P6",
+   "severity": "LOW",
+   "title": "Wall-clock bounds in shutdown and JVM-lifetime tests are CI-flaky",
+   "location": {
+    "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/ShutdownSocketTest.java",
+    "line_range": "58-102"
+   },
+   "description": "Assertions such as took >= 900 && took < 2500 ms against a fixed Thread.sleep(1500) handler race the scheduler; JvmLifetimeTest also relies on Thread.sleep(1000) before child.isAlive(). On a loaded CI runner these can fail without a product bug.",
+   "suggested_fix": "Keep the lower bounds, widen upper margins (deadline + 3 s), and replace sleeps with latches where possible.",
+   "is_behavioral": false,
+   "tags": [
+    "test",
+    "flaky"
+   ]
+  },
+  {
+   "id": "B-009",
+   "axis": "P4",
+   "severity": "LOW",
+   "title": "Known item (a): Cookie reflection survives R8 but not classic ProGuard class renaming",
+   "location": {
+    "file": "NaruServe-api/src/main/resources/META-INF/proguard/naruserve-api.pro",
+    "line_range": "6-7"
+   },
+   "description": "Mostly refuted for R8: CookieFactoryHook uses Class.forName with a constant string and getDeclaredMethod with constant names; R8 rewrites constant Class.forName strings when it renames the class, and -keepclassmembers keeps the method name. Under classic ProGuard without -adaptclassstrings the name is not adapted and the hook fails at runtime. Outside this group files; noted for the A reviewer.",
+   "suggested_fix": "Add `-keepnames class com.snoworca.naruserve.Cookie` (or fold it into a -keep,allowshrinking rule with the member).",
+   "is_behavioral": false,
+   "tags": [
+    "r8",
+    "android"
+   ]
+  }
+ ],
+ "coverage_rows": [
+  {
+   "file": "NaruServe-gson/src/main/java/com/snoworca/naruserve/gson/GsonJsonCodec.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.gson;"
+   ],
+   "findings": [
+    "B-005"
+   ]
+  },
+  {
+   "file": "NaruServe-gson/src/main/java/com/snoworca/naruserve/gson/package-info.java",
+   "hunks_total": 1,
+   "anchors": [
+    "// @req FR-JSON-003"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-gson/src/test/java/com/snoworca/naruserve/gson/GsonJsonCodecTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.gson;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-gson/src/test/kotlin/com/snoworca/naruserve/gson/GsonCodecKotlinTest.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.gson"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/JsonErrorHandler.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.tinyhttpd;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/KeeperThread.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.tinyhttpd;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdAdapter.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.tinyhttpd;"
+   ],
+   "findings": [
+    "B-006"
+   ]
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdBodyStream.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.tinyhttpd;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdExchange.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.tinyhttpd;"
+   ],
+   "findings": [
+    "B-001",
+    "B-002",
+    "B-003",
+    "B-004"
+   ]
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdFeatures.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.tinyhttpd;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyLogBridge.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.tinyhttpd;"
+   ],
+   "findings": [
+    "B-007"
+   ]
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/WorkerThreadFactory.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.tinyhttpd;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/package-info.java",
+   "hunks_total": 2,
+   "anchors": [
+    " * <p>Module boundary: TinyHttpd ({@code com.snoworca.tinyhttpd}) types stay inside this module and out of every",
+    "// @req FR-ENGINE-001"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/AdapterSurfaceTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.tinyhttpd;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/BindingSocketTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.tinyhttpd;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/BothAdaptersCases.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.tinyhttpd;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/ConnectionLimitsTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.tinyhttpd;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/CrossAdapterTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.tinyhttpd;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/KeeperThreadTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.tinyhttpd;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LimitsSocketTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.tinyhttpd;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/RawTargetSocketTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.tinyhttpd;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/ShutdownSocketTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.tinyhttpd;"
+   ],
+   "findings": [
+    "B-008"
+   ]
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdBodyStreamTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.tinyhttpd;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/TinyLogBridgeTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.tinyhttpd;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/TransportRejectionTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.tinyhttpd;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe/src/main/java/com/snoworca/naruserve/bootstrap/DefaultAppFactory.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.bootstrap;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe/src/main/java/com/snoworca/naruserve/bootstrap/package-info.java",
+   "hunks_total": 3,
+   "anchors": [
+    " * Logcat logger.",
+    "// @req FR-ENGINE-009",
+    "import org.jspecify.annotations.NullMarked;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe/src/main/resources/META-INF/proguard/naruserve-bootstrap.pro",
+   "hunks_total": 1,
+   "anchors": [
+    "# Consumer R8/ProGuard rules of the NaruServe bootstrap module."
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe/src/main/resources/META-INF/services/com.snoworca.naruserve.spi.AppFactory",
+   "hunks_total": 1,
+   "anchors": [
+    "com.snoworca.naruserve.bootstrap.DefaultAppFactory"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe/src/test/java/com/snoworca/naruserve/bootstrap/DefaultAppFactoryTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.bootstrap;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe/src/test/java/com/snoworca/naruserve/bootstrap/DefaultLoggerTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.bootstrap;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe/src/test/java/com/snoworca/naruserve/bootstrap/JvmLifetimeTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.bootstrap;"
+   ],
+   "findings": []
+  }
+ ],
+ "summary": {
+  "total": 9,
+  "by_severity": {
+   "MEDIUM": 2,
+   "LOW": 7
+  }
+ }
+}

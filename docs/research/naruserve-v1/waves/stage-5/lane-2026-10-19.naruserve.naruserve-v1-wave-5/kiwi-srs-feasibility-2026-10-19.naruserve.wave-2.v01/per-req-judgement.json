@@ -1,0 +1,1467 @@
+{
+  "judgements": [
+    {
+      "req_id": "IR-ROUTE-001",
+      "feasibility": "high",
+      "score": 98,
+      "axes": {
+        "implementability": {
+          "score": 29,
+          "rationale": "Plain Java enum plus three static factories; no API 21 risk.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:42",
+            "NaruServe-api/src/main/java exists and is empty (addition_site traces expected)",
+            "build.gradle:35 options.release=8; build.gradle:40 jvmTarget 1.8"
+          ]
+        },
+        "evidence_strength": {
+          "score": 19,
+          "rationale": "addition_site trace under NaruServe-api/src/main/java/com/snoworca/naruserve[/routing]; fits module package rule and build setup.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:42",
+            "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:98,111-121 api main sources must be in com.snoworca.naruserve or a subpackage",
+            "build.gradle:124-133 api forbids android/, jakarta/servlet/, com/google/gson/, com/snoworca/tinyhttpd/, kotlin/ (+javax/servlet/ via :125); build.gradle:147-160 checkClassReferences wired into check"
+          ]
+        },
+        "dependency_health": {
+          "score": 15,
+          "rationale": "No depends_on; root of the Method chain.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:42",
+            "docs/spec/02.build.srs.md CON-BUILD-004/011/012/013 Status verified, Stability evolving"
+          ]
+        },
+        "ac_verifiability": {
+          "score": 15,
+          "rationale": "Reflection test for constants, order and method names; AC-3 non-compile shown by reflection.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:42",
+            "build.gradle:80 testImplementation junit:junit:4.13.2; build.gradle:142 useJUnit()"
+          ]
+        },
+        "scope_fit": {
+          "score": 10,
+          "rationale": "Inside wave-2 routing scope; HTTP-level parts deferred to wave 3.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:42",
+            "docs/spec/03.routing.srs.md:19-37"
+          ]
+        },
+        "product_fit": {
+          "score": 10,
+          "rationale": "Express-aligned routing semantics per object.md and design D-items.",
+          "evidence": [
+            "docs/research/naruserve-v1/waves/wave-2/design.md"
+          ]
+        }
+      },
+      "blockers": [],
+      "conditions": [],
+      "has_verification": false,
+      "current_stability": "draft",
+      "current_status": "planned",
+      "external_module_impact": null
+    },
+    {
+      "req_id": "IR-ROUTE-002",
+      "feasibility": "high",
+      "score": 97,
+      "axes": {
+        "implementability": {
+          "score": 28,
+          "rationale": "Immutable wrapper over EnumSet copy; combinators trivial.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:96",
+            "NaruServe-api/src/main/java exists and is empty (addition_site traces expected)",
+            "build.gradle:35 options.release=8; build.gradle:40 jvmTarget 1.8"
+          ]
+        },
+        "evidence_strength": {
+          "score": 19,
+          "rationale": "addition_site trace under NaruServe-api/src/main/java/com/snoworca/naruserve[/routing]; fits module package rule and build setup.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:96",
+            "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:98,111-121 api main sources must be in com.snoworca.naruserve or a subpackage",
+            "build.gradle:124-133 api forbids android/, jakarta/servlet/, com/google/gson/, com/snoworca/tinyhttpd/, kotlin/ (+javax/servlet/ via :125); build.gradle:147-160 checkClassReferences wired into check"
+          ]
+        },
+        "dependency_health": {
+          "score": 15,
+          "rationale": "depends_on IR-ROUTE-001 (same wave, root).",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:96",
+            "docs/spec/02.build.srs.md CON-BUILD-004/011/012/013 Status verified, Stability evolving"
+          ]
+        },
+        "ac_verifiability": {
+          "score": 15,
+          "rationale": "Each AC is a direct JUnit assertion; AC-4 via reflection (final fields, no public ctor) plus UnsupportedOperationException check.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:96",
+            "build.gradle:80 testImplementation junit:junit:4.13.2; build.gradle:142 useJUnit()"
+          ]
+        },
+        "scope_fit": {
+          "score": 10,
+          "rationale": "Inside wave-2 routing scope; HTTP-level parts deferred to wave 3.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:96",
+            "docs/spec/03.routing.srs.md:19-37"
+          ]
+        },
+        "product_fit": {
+          "score": 10,
+          "rationale": "Express-aligned routing semantics per object.md and design D-items.",
+          "evidence": [
+            "docs/research/naruserve-v1/waves/wave-2/design.md"
+          ]
+        }
+      },
+      "blockers": [],
+      "conditions": [
+        "Use EnumSet/Collections.unmodifiable*; no java.util.function/Stream (API 24) under animal-sniffer API 21."
+      ],
+      "has_verification": false,
+      "current_stability": "draft",
+      "current_status": "planned",
+      "external_module_impact": null
+    },
+    {
+      "req_id": "FR-ROUTE-001",
+      "feasibility": "high",
+      "score": 98,
+      "axes": {
+        "implementability": {
+          "score": 29,
+          "rationale": "Fixed membership constant.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:152",
+            "NaruServe-api/src/main/java exists and is empty (addition_site traces expected)",
+            "build.gradle:35 options.release=8; build.gradle:40 jvmTarget 1.8"
+          ]
+        },
+        "evidence_strength": {
+          "score": 19,
+          "rationale": "addition_site trace under NaruServe-api/src/main/java/com/snoworca/naruserve[/routing]; fits module package rule and build setup.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:152",
+            "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:98,111-121 api main sources must be in com.snoworca.naruserve or a subpackage",
+            "build.gradle:124-133 api forbids android/, jakarta/servlet/, com/google/gson/, com/snoworca/tinyhttpd/, kotlin/ (+javax/servlet/ via :125); build.gradle:147-160 checkClassReferences wired into check"
+          ]
+        },
+        "dependency_health": {
+          "score": 15,
+          "rationale": "depends_on IR-ROUTE-001; AC-3 implicitly needs RouterPolicy (FR-ROUTE-014) not linked.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:152",
+            "docs/spec/02.build.srs.md CON-BUILD-004/011/012/013 Status verified, Stability evolving"
+          ]
+        },
+        "ac_verifiability": {
+          "score": 15,
+          "rationale": "AC-1/2 equality asserts; AC-3 needs a router built with TRACE/CONNECT enabled, testable once FR-ROUTE-014 exists.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:152",
+            "build.gradle:80 testImplementation junit:junit:4.13.2; build.gradle:142 useJUnit()"
+          ]
+        },
+        "scope_fit": {
+          "score": 10,
+          "rationale": "Inside wave-2 routing scope; HTTP-level parts deferred to wave 3.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:152",
+            "docs/spec/03.routing.srs.md:19-37"
+          ]
+        },
+        "product_fit": {
+          "score": 10,
+          "rationale": "Express-aligned routing semantics per object.md and design D-items.",
+          "evidence": [
+            "docs/research/naruserve-v1/waves/wave-2/design.md"
+          ]
+        }
+      },
+      "blockers": [],
+      "conditions": [
+        "AC-3 test runs after RouterPolicy exists (FR-ROUTE-014)."
+      ],
+      "has_verification": false,
+      "current_stability": "draft",
+      "current_status": "planned",
+      "external_module_impact": null
+    },
+    {
+      "req_id": "IR-ROUTE-003",
+      "feasibility": "high",
+      "score": 95,
+      "axes": {
+        "implementability": {
+          "score": 27,
+          "rationale": "Accessor names left to implementer (C-07); equals/hashCode on EnumSet.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:208",
+            "NaruServe-api/src/main/java exists and is empty (addition_site traces expected)",
+            "build.gradle:35 options.release=8; build.gradle:40 jvmTarget 1.8"
+          ]
+        },
+        "evidence_strength": {
+          "score": 19,
+          "rationale": "addition_site trace under NaruServe-api/src/main/java/com/snoworca/naruserve[/routing]; fits module package rule and build setup.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:208",
+            "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:98,111-121 api main sources must be in com.snoworca.naruserve or a subpackage",
+            "build.gradle:124-133 api forbids android/, jakarta/servlet/, com/google/gson/, com/snoworca/tinyhttpd/, kotlin/ (+javax/servlet/ via :125); build.gradle:147-160 checkClassReferences wired into check",
+            "build.gradle:137 kotlin.jvm applied to every module; build.gradle:82 kotlin-stdlib test scope only; NaruServe-api/src/test/kotlin/com/snoworca/naruserve/NullabilityKotlinTest.kt:9-10 existing Kotlin JUnit test"
+          ]
+        },
+        "dependency_health": {
+          "score": 15,
+          "rationale": "depends_on IR-ROUTE-001.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:208",
+            "docs/spec/02.build.srs.md CON-BUILD-004/011/012/013 Status verified, Stability evolving"
+          ]
+        },
+        "ac_verifiability": {
+          "score": 14,
+          "rationale": "Java asserts plus Kotlin test in existing src/test/kotlin; keyword check by reflection against a fixed hard-keyword list.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:208",
+            "build.gradle:80 testImplementation junit:junit:4.13.2; build.gradle:142 useJUnit()",
+            "build.gradle:137 kotlin.jvm applied to every module; build.gradle:82 kotlin-stdlib test scope only; NaruServe-api/src/test/kotlin/com/snoworca/naruserve/NullabilityKotlinTest.kt:9-10 existing Kotlin JUnit test"
+          ]
+        },
+        "scope_fit": {
+          "score": 10,
+          "rationale": "Inside wave-2 routing scope; HTTP-level parts deferred to wave 3.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:208",
+            "docs/spec/03.routing.srs.md:19-37"
+          ]
+        },
+        "product_fit": {
+          "score": 10,
+          "rationale": "Express-aligned routing semantics per object.md and design D-items.",
+          "evidence": [
+            "docs/research/naruserve-v1/waves/wave-2/design.md"
+          ]
+        }
+      },
+      "blockers": [],
+      "conditions": [
+        "Pick accessor names before OPS-ROUTE-001 docs (e.g. contains/iterator, not 'in'/'is')."
+      ],
+      "has_verification": false,
+      "current_stability": "draft",
+      "current_status": "planned",
+      "external_module_impact": null
+    },
+    {
+      "req_id": "CON-ROUTE-001",
+      "feasibility": "high",
+      "score": 94,
+      "axes": {
+        "implementability": {
+          "score": 27,
+          "rationale": "Generic Router<H>; build checks already exist and verified.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:263",
+            "NaruServe-api/src/main/java exists and is empty (addition_site traces expected)",
+            "build.gradle:35 options.release=8; build.gradle:40 jvmTarget 1.8"
+          ]
+        },
+        "evidence_strength": {
+          "score": 19,
+          "rationale": "addition_site trace under NaruServe-api/src/main/java/com/snoworca/naruserve[/routing]; fits module package rule and build setup.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:263",
+            "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:98,111-121 api main sources must be in com.snoworca.naruserve or a subpackage",
+            "build.gradle:124-133 api forbids android/, jakarta/servlet/, com/google/gson/, com/snoworca/tinyhttpd/, kotlin/ (+javax/servlet/ via :125); build.gradle:147-160 checkClassReferences wired into check",
+            "build.gradle:124-133 api forbids android/, jakarta/servlet/, com/google/gson/, com/snoworca/tinyhttpd/, kotlin/ (+javax/servlet/ via :125); build.gradle:147-160 checkClassReferences wired into check",
+            "build.gradle:170-179 animal-sniffer android-api-level-21 on api main; src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java:301-303 negative probe shows java.util.Optional is rejected",
+            "build.gradle:76 compileOnly org.jspecify:jspecify:1.0.0; build.gradle:42 -Xjspecify-annotations=strict"
+          ]
+        },
+        "dependency_health": {
+          "score": 15,
+          "rationale": "depends_on CON-BUILD-004/011/012/013, all Status verified (docs/spec/02.build.srs.md). Missing link to IR-ROUTE-001/002 although router consumes Method/MethodSet.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:263",
+            "docs/spec/02.build.srs.md CON-BUILD-004/011/012/013 Status verified, Stability evolving"
+          ]
+        },
+        "ac_verifiability": {
+          "score": 13,
+          "rationale": "AC-1 by ./gradlew build gates; AC-2 by String-handler test plus source scan; AC-3 by reflection on type-use annotations; AC-4 a negative property, verified by inspection/test that an authority-form token is not parsed.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:263",
+            "build.gradle:80 testImplementation junit:junit:4.13.2; build.gradle:142 useJUnit()"
+          ]
+        },
+        "scope_fit": {
+          "score": 10,
+          "rationale": "Inside wave-2 routing scope; HTTP-level parts deferred to wave 3.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:263",
+            "docs/spec/03.routing.srs.md:19-37"
+          ]
+        },
+        "product_fit": {
+          "score": 10,
+          "rationale": "Express-aligned routing semantics per object.md and design D-items.",
+          "evidence": [
+            "docs/research/naruserve-v1/waves/wave-2/design.md"
+          ]
+        }
+      },
+      "blockers": [],
+      "conditions": [
+        "Add implicit depends_on IR-ROUTE-001/IR-ROUTE-002 or order work so Method/MethodSet land first.",
+        "Consider package-info @NullMarked so every public signature is covered (no package-info yet)."
+      ],
+      "has_verification": false,
+      "current_stability": "draft",
+      "current_status": "planned",
+      "external_module_impact": null
+    },
+    {
+      "req_id": "FR-ROUTE-002",
+      "feasibility": "high",
+      "score": 95,
+      "axes": {
+        "implementability": {
+          "score": 27,
+          "rationale": "Registration by Method/MethodSet and separate ws hook.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:322",
+            "NaruServe-api/src/main/java exists and is empty (addition_site traces expected)",
+            "build.gradle:35 options.release=8; build.gradle:40 jvmTarget 1.8"
+          ]
+        },
+        "evidence_strength": {
+          "score": 19,
+          "rationale": "addition_site trace under NaruServe-api/src/main/java/com/snoworca/naruserve[/routing]; fits module package rule and build setup.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:322",
+            "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:98,111-121 api main sources must be in com.snoworca.naruserve or a subpackage",
+            "build.gradle:124-133 api forbids android/, jakarta/servlet/, com/google/gson/, com/snoworca/tinyhttpd/, kotlin/ (+javax/servlet/ via :125); build.gradle:147-160 checkClassReferences wired into check"
+          ]
+        },
+        "dependency_health": {
+          "score": 14,
+          "rationale": "depends_on CON-ROUTE-001; uses MethodSet without a link to IR-ROUTE-002.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:322",
+            "docs/spec/02.build.srs.md CON-BUILD-004/011/012/013 Status verified, Stability evolving"
+          ]
+        },
+        "ac_verifiability": {
+          "score": 15,
+          "rationale": "Lookup-based JUnit asserts.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:322",
+            "build.gradle:80 testImplementation junit:junit:4.13.2; build.gradle:142 useJUnit()"
+          ]
+        },
+        "scope_fit": {
+          "score": 10,
+          "rationale": "Inside wave-2 routing scope; HTTP-level parts deferred to wave 3.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:322",
+            "docs/spec/03.routing.srs.md:19-37"
+          ]
+        },
+        "product_fit": {
+          "score": 10,
+          "rationale": "Express-aligned routing semantics per object.md and design D-items.",
+          "evidence": [
+            "docs/research/naruserve-v1/waves/wave-2/design.md"
+          ]
+        }
+      },
+      "blockers": [],
+      "conditions": [],
+      "has_verification": false,
+      "current_stability": "draft",
+      "current_status": "planned",
+      "external_module_impact": null
+    },
+    {
+      "req_id": "FR-ROUTE-003",
+      "feasibility": "high",
+      "score": 95,
+      "axes": {
+        "implementability": {
+          "score": 27,
+          "rationale": "Segment parser with explicit rejection list.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:378",
+            "NaruServe-api/src/main/java exists and is empty (addition_site traces expected)",
+            "build.gradle:35 options.release=8; build.gradle:40 jvmTarget 1.8"
+          ]
+        },
+        "evidence_strength": {
+          "score": 19,
+          "rationale": "addition_site trace under NaruServe-api/src/main/java/com/snoworca/naruserve[/routing]; fits module package rule and build setup.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:378",
+            "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:98,111-121 api main sources must be in com.snoworca.naruserve or a subpackage",
+            "build.gradle:124-133 api forbids android/, jakarta/servlet/, com/google/gson/, com/snoworca/tinyhttpd/, kotlin/ (+javax/servlet/ via :125); build.gradle:147-160 checkClassReferences wired into check"
+          ]
+        },
+        "dependency_health": {
+          "score": 14,
+          "rationale": "depends_on CON-ROUTE-001.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:378",
+            "docs/spec/02.build.srs.md CON-BUILD-004/011/012/013 Status verified, Stability evolving"
+          ]
+        },
+        "ac_verifiability": {
+          "score": 15,
+          "rationale": "Each AC is a concrete positive/negative case.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:378",
+            "build.gradle:80 testImplementation junit:junit:4.13.2; build.gradle:142 useJUnit()"
+          ]
+        },
+        "scope_fit": {
+          "score": 10,
+          "rationale": "Inside wave-2 routing scope; HTTP-level parts deferred to wave 3.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:378",
+            "docs/spec/03.routing.srs.md:19-37"
+          ]
+        },
+        "product_fit": {
+          "score": 10,
+          "rationale": "Express-aligned routing semantics per object.md and design D-items.",
+          "evidence": [
+            "docs/research/naruserve-v1/waves/wave-2/design.md"
+          ]
+        }
+      },
+      "blockers": [],
+      "conditions": [
+        "Configuration error type shared with IR-ROUTE-004 AC-5 (name under C-07)."
+      ],
+      "has_verification": false,
+      "current_stability": "draft",
+      "current_status": "planned",
+      "external_module_impact": null
+    },
+    {
+      "req_id": "FR-ROUTE-004",
+      "feasibility": "high",
+      "score": 92,
+      "axes": {
+        "implementability": {
+          "score": 25,
+          "rationale": "Byte-level percent/UTF-8 validation without decoding; security-critical (Priority critical, Risk high).",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:434",
+            "NaruServe-api/src/main/java exists and is empty (addition_site traces expected)",
+            "build.gradle:35 options.release=8; build.gradle:40 jvmTarget 1.8"
+          ]
+        },
+        "evidence_strength": {
+          "score": 18,
+          "rationale": "addition_site trace under NaruServe-api/src/main/java/com/snoworca/naruserve[/routing]; fits module package rule and build setup.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:434",
+            "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:98,111-121 api main sources must be in com.snoworca.naruserve or a subpackage",
+            "build.gradle:124-133 api forbids android/, jakarta/servlet/, com/google/gson/, com/snoworca/tinyhttpd/, kotlin/ (+javax/servlet/ via :125); build.gradle:147-160 checkClassReferences wired into check",
+            "/Users/beom/work/git/TinyHttpd (read-only reference, no change)"
+          ]
+        },
+        "dependency_health": {
+          "score": 14,
+          "rationale": "depends_on CON-ROUTE-001. Parity with TinyHttpd's parser is a read-only reference only; ACs are self-contained.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:434",
+            "docs/spec/02.build.srs.md CON-BUILD-004/011/012/013 Status verified, Stability evolving"
+          ]
+        },
+        "ac_verifiability": {
+          "score": 15,
+          "rationale": "AC-1..AC-3 enumerate exact inputs; AC-4 by API shape (boolean result, no reject variant).",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:434",
+            "build.gradle:80 testImplementation junit:junit:4.13.2; build.gradle:142 useJUnit()"
+          ]
+        },
+        "scope_fit": {
+          "score": 10,
+          "rationale": "Inside wave-2 routing scope; HTTP-level parts deferred to wave 3.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:434",
+            "docs/spec/03.routing.srs.md:19-37"
+          ]
+        },
+        "product_fit": {
+          "score": 10,
+          "rationale": "Express-aligned routing semantics per object.md and design D-items.",
+          "evidence": [
+            "docs/research/naruserve-v1/waves/wave-2/design.md"
+          ]
+        }
+      },
+      "blockers": [],
+      "conditions": [
+        "Cross-check TinyHttpd request-target rules (read-only) so the 'matching TinyHttpd' clause holds; ACs alone are self-contained.",
+        "Use CharsetDecoder with REPORT (API 1) for UTF-8 validity; avoid newer APIs."
+      ],
+      "has_verification": false,
+      "current_stability": "draft",
+      "current_status": "planned",
+      "external_module_impact": null
+    },
+    {
+      "req_id": "FR-ROUTE-005",
+      "feasibility": "high",
+      "score": 94,
+      "axes": {
+        "implementability": {
+          "score": 26,
+          "rationale": "Single decode per segment, strict compare.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:490",
+            "NaruServe-api/src/main/java exists and is empty (addition_site traces expected)",
+            "build.gradle:35 options.release=8; build.gradle:40 jvmTarget 1.8"
+          ]
+        },
+        "evidence_strength": {
+          "score": 19,
+          "rationale": "addition_site trace under NaruServe-api/src/main/java/com/snoworca/naruserve[/routing]; fits module package rule and build setup.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:490",
+            "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:98,111-121 api main sources must be in com.snoworca.naruserve or a subpackage",
+            "build.gradle:124-133 api forbids android/, jakarta/servlet/, com/google/gson/, com/snoworca/tinyhttpd/, kotlin/ (+javax/servlet/ via :125); build.gradle:147-160 checkClassReferences wired into check"
+          ]
+        },
+        "dependency_health": {
+          "score": 14,
+          "rationale": "depends_on CON-ROUTE-001; relies on FR-ROUTE-004 validator (not linked).",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:490",
+            "docs/spec/02.build.srs.md CON-BUILD-004/011/012/013 Status verified, Stability evolving"
+          ]
+        },
+        "ac_verifiability": {
+          "score": 15,
+          "rationale": "Concrete match/no-match cases.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:490",
+            "build.gradle:80 testImplementation junit:junit:4.13.2; build.gradle:142 useJUnit()"
+          ]
+        },
+        "scope_fit": {
+          "score": 10,
+          "rationale": "Inside wave-2 routing scope; HTTP-level parts deferred to wave 3.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:490",
+            "docs/spec/03.routing.srs.md:19-37"
+          ]
+        },
+        "product_fit": {
+          "score": 10,
+          "rationale": "Express-aligned routing semantics per object.md and design D-items.",
+          "evidence": [
+            "docs/research/naruserve-v1/waves/wave-2/design.md"
+          ]
+        }
+      },
+      "blockers": [],
+      "conditions": [
+        "Literal pattern '/café' is compared against decoded segment; keep pattern non-ASCII allowed (FR-ROUTE-003 does not forbid it)."
+      ],
+      "has_verification": false,
+      "current_stability": "draft",
+      "current_status": "planned",
+      "external_module_impact": null
+    },
+    {
+      "req_id": "FR-ROUTE-006",
+      "feasibility": "high",
+      "score": 93,
+      "axes": {
+        "implementability": {
+          "score": 26,
+          "rationale": "Three boolean switches fixed at build time.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:547",
+            "NaruServe-api/src/main/java exists and is empty (addition_site traces expected)",
+            "build.gradle:35 options.release=8; build.gradle:40 jvmTarget 1.8"
+          ]
+        },
+        "evidence_strength": {
+          "score": 19,
+          "rationale": "addition_site trace under NaruServe-api/src/main/java/com/snoworca/naruserve[/routing]; fits module package rule and build setup.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:547",
+            "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:98,111-121 api main sources must be in com.snoworca.naruserve or a subpackage",
+            "build.gradle:124-133 api forbids android/, jakarta/servlet/, com/google/gson/, com/snoworca/tinyhttpd/, kotlin/ (+javax/servlet/ via :125); build.gradle:147-160 checkClassReferences wired into check"
+          ]
+        },
+        "dependency_health": {
+          "score": 14,
+          "rationale": "depends_on CON-ROUTE-001.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:547",
+            "docs/spec/02.build.srs.md CON-BUILD-004/011/012/013 Status verified, Stability evolving"
+          ]
+        },
+        "ac_verifiability": {
+          "score": 15,
+          "rationale": "Deterministic; AC-3 Turkish locale via Locale.setDefault in test with restore.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:547",
+            "build.gradle:80 testImplementation junit:junit:4.13.2; build.gradle:142 useJUnit()"
+          ]
+        },
+        "scope_fit": {
+          "score": 9,
+          "rationale": "In scope; slight coupling to wave 3 RestApp config naming, kept out.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:547",
+            "docs/spec/03.routing.srs.md:19-37"
+          ]
+        },
+        "product_fit": {
+          "score": 10,
+          "rationale": "Express-aligned routing semantics per object.md and design D-items.",
+          "evidence": [
+            "docs/research/naruserve-v1/waves/wave-2/design.md"
+          ]
+        }
+      },
+      "blockers": [],
+      "conditions": [
+        "Use toLowerCase(Locale.ROOT)/equalsIgnoreCase-style locale-free comparison."
+      ],
+      "has_verification": false,
+      "current_stability": "draft",
+      "current_status": "planned",
+      "external_module_impact": null
+    },
+    {
+      "req_id": "FR-ROUTE-007",
+      "feasibility": "high",
+      "score": 94,
+      "axes": {
+        "implementability": {
+          "score": 26,
+          "rationale": "Segment-wise specificity comparator per method.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:603",
+            "NaruServe-api/src/main/java exists and is empty (addition_site traces expected)",
+            "build.gradle:35 options.release=8; build.gradle:40 jvmTarget 1.8"
+          ]
+        },
+        "evidence_strength": {
+          "score": 19,
+          "rationale": "addition_site trace under NaruServe-api/src/main/java/com/snoworca/naruserve[/routing]; fits module package rule and build setup.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:603",
+            "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:98,111-121 api main sources must be in com.snoworca.naruserve or a subpackage",
+            "build.gradle:124-133 api forbids android/, jakarta/servlet/, com/google/gson/, com/snoworca/tinyhttpd/, kotlin/ (+javax/servlet/ via :125); build.gradle:147-160 checkClassReferences wired into check"
+          ]
+        },
+        "dependency_health": {
+          "score": 14,
+          "rationale": "depends_on CON-ROUTE-001.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:603",
+            "docs/spec/02.build.srs.md CON-BUILD-004/011/012/013 Status verified, Stability evolving"
+          ]
+        },
+        "ac_verifiability": {
+          "score": 15,
+          "rationale": "Order-independence tested by registering both orders.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:603",
+            "build.gradle:80 testImplementation junit:junit:4.13.2; build.gradle:142 useJUnit()"
+          ]
+        },
+        "scope_fit": {
+          "score": 10,
+          "rationale": "Inside wave-2 routing scope; HTTP-level parts deferred to wave 3.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:603",
+            "docs/spec/03.routing.srs.md:19-37"
+          ]
+        },
+        "product_fit": {
+          "score": 10,
+          "rationale": "Express-aligned routing semantics per object.md and design D-items.",
+          "evidence": [
+            "docs/research/naruserve-v1/waves/wave-2/design.md"
+          ]
+        }
+      },
+      "blockers": [],
+      "conditions": [],
+      "has_verification": false,
+      "current_stability": "draft",
+      "current_status": "planned",
+      "external_module_impact": null
+    },
+    {
+      "req_id": "FR-ROUTE-008",
+      "feasibility": "high",
+      "score": 93,
+      "axes": {
+        "implementability": {
+          "score": 25,
+          "rationale": "Freeze-time conflict scan over normalised patterns; wave 4 call site out of scope.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:658",
+            "NaruServe-api/src/main/java exists and is empty (addition_site traces expected)",
+            "build.gradle:35 options.release=8; build.gradle:40 jvmTarget 1.8"
+          ]
+        },
+        "evidence_strength": {
+          "score": 19,
+          "rationale": "addition_site trace under NaruServe-api/src/main/java/com/snoworca/naruserve[/routing]; fits module package rule and build setup.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:658",
+            "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:98,111-121 api main sources must be in com.snoworca.naruserve or a subpackage",
+            "build.gradle:124-133 api forbids android/, jakarta/servlet/, com/google/gson/, com/snoworca/tinyhttpd/, kotlin/ (+javax/servlet/ via :125); build.gradle:147-160 checkClassReferences wired into check"
+          ]
+        },
+        "dependency_health": {
+          "score": 14,
+          "rationale": "depends_on CON-ROUTE-001; AC-4/5 also need FR-ROUTE-006/014 policies (not linked).",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:658",
+            "docs/spec/02.build.srs.md CON-BUILD-004/011/012/013 Status verified, Stability evolving"
+          ]
+        },
+        "ac_verifiability": {
+          "score": 15,
+          "rationale": "All five ACs are freeze() exception/no-exception asserts plus message content.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:658",
+            "build.gradle:80 testImplementation junit:junit:4.13.2; build.gradle:142 useJUnit()"
+          ]
+        },
+        "scope_fit": {
+          "score": 10,
+          "rationale": "Inside wave-2 routing scope; HTTP-level parts deferred to wave 3.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:658",
+            "docs/spec/03.routing.srs.md:19-37"
+          ]
+        },
+        "product_fit": {
+          "score": 10,
+          "rationale": "Express-aligned routing semantics per object.md and design D-items.",
+          "evidence": [
+            "docs/research/naruserve-v1/waves/wave-2/design.md"
+          ]
+        }
+      },
+      "blockers": [],
+      "conditions": [
+        "Message format must name method+pattern of both registrations; assert by substring."
+      ],
+      "has_verification": false,
+      "current_stability": "draft",
+      "current_status": "planned",
+      "external_module_impact": null
+    },
+    {
+      "req_id": "IR-ROUTE-004",
+      "feasibility": "high",
+      "score": 91,
+      "axes": {
+        "implementability": {
+          "score": 24,
+          "rationale": "Six-kind sealed-style result with strict precedence and state errors; the most coupled contract.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:715",
+            "NaruServe-api/src/main/java exists and is empty (addition_site traces expected)",
+            "build.gradle:35 options.release=8; build.gradle:40 jvmTarget 1.8"
+          ]
+        },
+        "evidence_strength": {
+          "score": 19,
+          "rationale": "addition_site trace under NaruServe-api/src/main/java/com/snoworca/naruserve[/routing]; fits module package rule and build setup.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:715",
+            "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:98,111-121 api main sources must be in com.snoworca.naruserve or a subpackage",
+            "build.gradle:124-133 api forbids android/, jakarta/servlet/, com/google/gson/, com/snoworca/tinyhttpd/, kotlin/ (+javax/servlet/ via :125); build.gradle:147-160 checkClassReferences wired into check"
+          ]
+        },
+        "dependency_health": {
+          "score": 14,
+          "rationale": "depends_on CON-ROUTE-001; consumes FR-ROUTE-004 validator and MethodSet (not linked).",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:715",
+            "docs/spec/02.build.srs.md CON-BUILD-004/011/012/013 Status verified, Stability evolving"
+          ]
+        },
+        "ac_verifiability": {
+          "score": 14,
+          "rationale": "Each AC is a lookup/exception assert; AC-1 'exactly six kinds' by reflection/enum of kinds.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:715",
+            "build.gradle:80 testImplementation junit:junit:4.13.2; build.gradle:142 useJUnit()"
+          ]
+        },
+        "scope_fit": {
+          "score": 10,
+          "rationale": "Inside wave-2 routing scope; HTTP-level parts deferred to wave 3.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:715",
+            "docs/spec/03.routing.srs.md:19-37"
+          ]
+        },
+        "product_fit": {
+          "score": 10,
+          "rationale": "Express-aligned routing semantics per object.md and design D-items.",
+          "evidence": [
+            "docs/research/naruserve-v1/waves/wave-2/design.md"
+          ]
+        }
+      },
+      "blockers": [],
+      "conditions": [
+        "Result type and config exception names decided under C-07; record them in docs (OPS-ROUTE-001).",
+        "Avoid java.util.Optional in result accessors (API 24; BuildChecksTest.java:301-303)."
+      ],
+      "has_verification": false,
+      "current_stability": "draft",
+      "current_status": "planned",
+      "external_module_impact": null
+    },
+    {
+      "req_id": "FR-ROUTE-009",
+      "feasibility": "high",
+      "score": 96,
+      "axes": {
+        "implementability": {
+          "score": 28,
+          "rationale": "Falls out of the lookup order.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:773",
+            "NaruServe-api/src/main/java exists and is empty (addition_site traces expected)",
+            "build.gradle:35 options.release=8; build.gradle:40 jvmTarget 1.8"
+          ]
+        },
+        "evidence_strength": {
+          "score": 19,
+          "rationale": "addition_site trace under NaruServe-api/src/main/java/com/snoworca/naruserve[/routing]; fits module package rule and build setup.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:773",
+            "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:98,111-121 api main sources must be in com.snoworca.naruserve or a subpackage",
+            "build.gradle:124-133 api forbids android/, jakarta/servlet/, com/google/gson/, com/snoworca/tinyhttpd/, kotlin/ (+javax/servlet/ via :125); build.gradle:147-160 checkClassReferences wired into check"
+          ]
+        },
+        "dependency_health": {
+          "score": 14,
+          "rationale": "depends_on CON-ROUTE-001.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:773",
+            "docs/spec/02.build.srs.md CON-BUILD-004/011/012/013 Status verified, Stability evolving"
+          ]
+        },
+        "ac_verifiability": {
+          "score": 15,
+          "rationale": "Three concrete lookups.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:773",
+            "build.gradle:80 testImplementation junit:junit:4.13.2; build.gradle:142 useJUnit()"
+          ]
+        },
+        "scope_fit": {
+          "score": 10,
+          "rationale": "Inside wave-2 routing scope; HTTP-level parts deferred to wave 3.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:773",
+            "docs/spec/03.routing.srs.md:19-37"
+          ]
+        },
+        "product_fit": {
+          "score": 10,
+          "rationale": "Express-aligned routing semantics per object.md and design D-items.",
+          "evidence": [
+            "docs/research/naruserve-v1/waves/wave-2/design.md"
+          ]
+        }
+      },
+      "blockers": [],
+      "conditions": [],
+      "has_verification": false,
+      "current_stability": "draft",
+      "current_status": "planned",
+      "external_module_impact": null
+    },
+    {
+      "req_id": "FR-ROUTE-010",
+      "feasibility": "high",
+      "score": 94,
+      "axes": {
+        "implementability": {
+          "score": 26,
+          "rationale": "Allow union over matching patterns with HEAD/OPTIONS rule.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:828",
+            "NaruServe-api/src/main/java exists and is empty (addition_site traces expected)",
+            "build.gradle:35 options.release=8; build.gradle:40 jvmTarget 1.8"
+          ]
+        },
+        "evidence_strength": {
+          "score": 19,
+          "rationale": "addition_site trace under NaruServe-api/src/main/java/com/snoworca/naruserve[/routing]; fits module package rule and build setup.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:828",
+            "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:98,111-121 api main sources must be in com.snoworca.naruserve or a subpackage",
+            "build.gradle:124-133 api forbids android/, jakarta/servlet/, com/google/gson/, com/snoworca/tinyhttpd/, kotlin/ (+javax/servlet/ via :125); build.gradle:147-160 checkClassReferences wired into check"
+          ]
+        },
+        "dependency_health": {
+          "score": 14,
+          "rationale": "depends_on CON-ROUTE-001.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:828",
+            "docs/spec/02.build.srs.md CON-BUILD-004/011/012/013 Status verified, Stability evolving"
+          ]
+        },
+        "ac_verifiability": {
+          "score": 15,
+          "rationale": "Exact Allow sets asserted via MethodSet equality.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:828",
+            "build.gradle:80 testImplementation junit:junit:4.13.2; build.gradle:142 useJUnit()"
+          ]
+        },
+        "scope_fit": {
+          "score": 10,
+          "rationale": "Inside wave-2 routing scope; HTTP-level parts deferred to wave 3.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:828",
+            "docs/spec/03.routing.srs.md:19-37"
+          ]
+        },
+        "product_fit": {
+          "score": 10,
+          "rationale": "Express-aligned routing semantics per object.md and design D-items.",
+          "evidence": [
+            "docs/research/naruserve-v1/waves/wave-2/design.md"
+          ]
+        }
+      },
+      "blockers": [],
+      "conditions": [],
+      "has_verification": false,
+      "current_stability": "draft",
+      "current_status": "planned",
+      "external_module_impact": null
+    },
+    {
+      "req_id": "FR-ROUTE-011",
+      "feasibility": "high",
+      "score": 95,
+      "axes": {
+        "implementability": {
+          "score": 27,
+          "rationale": "HEAD fallback to most specific GET.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:884",
+            "NaruServe-api/src/main/java exists and is empty (addition_site traces expected)",
+            "build.gradle:35 options.release=8; build.gradle:40 jvmTarget 1.8"
+          ]
+        },
+        "evidence_strength": {
+          "score": 19,
+          "rationale": "addition_site trace under NaruServe-api/src/main/java/com/snoworca/naruserve[/routing]; fits module package rule and build setup.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:884",
+            "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:98,111-121 api main sources must be in com.snoworca.naruserve or a subpackage",
+            "build.gradle:124-133 api forbids android/, jakarta/servlet/, com/google/gson/, com/snoworca/tinyhttpd/, kotlin/ (+javax/servlet/ via :125); build.gradle:147-160 checkClassReferences wired into check"
+          ]
+        },
+        "dependency_health": {
+          "score": 14,
+          "rationale": "depends_on CON-ROUTE-001.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:884",
+            "docs/spec/02.build.srs.md CON-BUILD-004/011/012/013 Status verified, Stability evolving"
+          ]
+        },
+        "ac_verifiability": {
+          "score": 15,
+          "rationale": "Concrete flag/handler asserts.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:884",
+            "build.gradle:80 testImplementation junit:junit:4.13.2; build.gradle:142 useJUnit()"
+          ]
+        },
+        "scope_fit": {
+          "score": 10,
+          "rationale": "Inside wave-2 routing scope; HTTP-level parts deferred to wave 3.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:884",
+            "docs/spec/03.routing.srs.md:19-37"
+          ]
+        },
+        "product_fit": {
+          "score": 10,
+          "rationale": "Express-aligned routing semantics per object.md and design D-items.",
+          "evidence": [
+            "docs/research/naruserve-v1/waves/wave-2/design.md"
+          ]
+        }
+      },
+      "blockers": [],
+      "conditions": [],
+      "has_verification": false,
+      "current_stability": "draft",
+      "current_status": "planned",
+      "external_module_impact": null
+    },
+    {
+      "req_id": "FR-ROUTE-012",
+      "feasibility": "high",
+      "score": 95,
+      "axes": {
+        "implementability": {
+          "score": 27,
+          "rationale": "Auto OPTIONS reuses Allow computation.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:939",
+            "NaruServe-api/src/main/java exists and is empty (addition_site traces expected)",
+            "build.gradle:35 options.release=8; build.gradle:40 jvmTarget 1.8"
+          ]
+        },
+        "evidence_strength": {
+          "score": 19,
+          "rationale": "addition_site trace under NaruServe-api/src/main/java/com/snoworca/naruserve[/routing]; fits module package rule and build setup.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:939",
+            "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:98,111-121 api main sources must be in com.snoworca.naruserve or a subpackage",
+            "build.gradle:124-133 api forbids android/, jakarta/servlet/, com/google/gson/, com/snoworca/tinyhttpd/, kotlin/ (+javax/servlet/ via :125); build.gradle:147-160 checkClassReferences wired into check"
+          ]
+        },
+        "dependency_health": {
+          "score": 14,
+          "rationale": "depends_on CON-ROUTE-001.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:939",
+            "docs/spec/02.build.srs.md CON-BUILD-004/011/012/013 Status verified, Stability evolving"
+          ]
+        },
+        "ac_verifiability": {
+          "score": 15,
+          "rationale": "Concrete asserts.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:939",
+            "build.gradle:80 testImplementation junit:junit:4.13.2; build.gradle:142 useJUnit()"
+          ]
+        },
+        "scope_fit": {
+          "score": 10,
+          "rationale": "Inside wave-2 routing scope; HTTP-level parts deferred to wave 3.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:939",
+            "docs/spec/03.routing.srs.md:19-37"
+          ]
+        },
+        "product_fit": {
+          "score": 10,
+          "rationale": "Express-aligned routing semantics per object.md and design D-items.",
+          "evidence": [
+            "docs/research/naruserve-v1/waves/wave-2/design.md"
+          ]
+        }
+      },
+      "blockers": [],
+      "conditions": [],
+      "has_verification": false,
+      "current_stability": "draft",
+      "current_status": "planned",
+      "external_module_impact": null
+    },
+    {
+      "req_id": "FR-ROUTE-013",
+      "feasibility": "high",
+      "score": 96,
+      "axes": {
+        "implementability": {
+          "score": 28,
+          "rationale": "Exact case-sensitive name lookup.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:994",
+            "NaruServe-api/src/main/java exists and is empty (addition_site traces expected)",
+            "build.gradle:35 options.release=8; build.gradle:40 jvmTarget 1.8"
+          ]
+        },
+        "evidence_strength": {
+          "score": 19,
+          "rationale": "addition_site trace under NaruServe-api/src/main/java/com/snoworca/naruserve[/routing]; fits module package rule and build setup.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:994",
+            "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:98,111-121 api main sources must be in com.snoworca.naruserve or a subpackage",
+            "build.gradle:124-133 api forbids android/, jakarta/servlet/, com/google/gson/, com/snoworca/tinyhttpd/, kotlin/ (+javax/servlet/ via :125); build.gradle:147-160 checkClassReferences wired into check"
+          ]
+        },
+        "dependency_health": {
+          "score": 14,
+          "rationale": "depends_on CON-ROUTE-001.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:994",
+            "docs/spec/02.build.srs.md CON-BUILD-004/011/012/013 Status verified, Stability evolving"
+          ]
+        },
+        "ac_verifiability": {
+          "score": 15,
+          "rationale": "Token cases enumerated.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:994",
+            "build.gradle:80 testImplementation junit:junit:4.13.2; build.gradle:142 useJUnit()"
+          ]
+        },
+        "scope_fit": {
+          "score": 10,
+          "rationale": "Inside wave-2 routing scope; HTTP-level parts deferred to wave 3.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:994",
+            "docs/spec/03.routing.srs.md:19-37"
+          ]
+        },
+        "product_fit": {
+          "score": 10,
+          "rationale": "Express-aligned routing semantics per object.md and design D-items.",
+          "evidence": [
+            "docs/research/naruserve-v1/waves/wave-2/design.md"
+          ]
+        }
+      },
+      "blockers": [],
+      "conditions": [
+        "Do not use Method.valueOf with exception-as-control-flow on hot path, or catch IllegalArgumentException locally; either is fine."
+      ],
+      "has_verification": false,
+      "current_stability": "draft",
+      "current_status": "planned",
+      "external_module_impact": null
+    },
+    {
+      "req_id": "FR-ROUTE-014",
+      "feasibility": "high",
+      "score": 94,
+      "axes": {
+        "implementability": {
+          "score": 26,
+          "rationale": "Two per-method enable switches.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:1048",
+            "NaruServe-api/src/main/java exists and is empty (addition_site traces expected)",
+            "build.gradle:35 options.release=8; build.gradle:40 jvmTarget 1.8"
+          ]
+        },
+        "evidence_strength": {
+          "score": 19,
+          "rationale": "addition_site trace under NaruServe-api/src/main/java/com/snoworca/naruserve[/routing]; fits module package rule and build setup.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:1048",
+            "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:98,111-121 api main sources must be in com.snoworca.naruserve or a subpackage",
+            "build.gradle:124-133 api forbids android/, jakarta/servlet/, com/google/gson/, com/snoworca/tinyhttpd/, kotlin/ (+javax/servlet/ via :125); build.gradle:147-160 checkClassReferences wired into check"
+          ]
+        },
+        "dependency_health": {
+          "score": 14,
+          "rationale": "depends_on CON-ROUTE-001.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:1048",
+            "docs/spec/02.build.srs.md CON-BUILD-004/011/012/013 Status verified, Stability evolving"
+          ]
+        },
+        "ac_verifiability": {
+          "score": 15,
+          "rationale": "Concrete matrix of enabled/disabled lookups.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:1048",
+            "build.gradle:80 testImplementation junit:junit:4.13.2; build.gradle:142 useJUnit()"
+          ]
+        },
+        "scope_fit": {
+          "score": 10,
+          "rationale": "Inside wave-2 routing scope; HTTP-level parts deferred to wave 3.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:1048",
+            "docs/spec/03.routing.srs.md:19-37"
+          ]
+        },
+        "product_fit": {
+          "score": 10,
+          "rationale": "Express-aligned routing semantics per object.md and design D-items.",
+          "evidence": [
+            "docs/research/naruserve-v1/waves/wave-2/design.md"
+          ]
+        }
+      },
+      "blockers": [],
+      "conditions": [],
+      "has_verification": false,
+      "current_stability": "draft",
+      "current_status": "planned",
+      "external_module_impact": null
+    },
+    {
+      "req_id": "FR-ROUTE-015",
+      "feasibility": "high",
+      "score": 93,
+      "axes": {
+        "implementability": {
+          "score": 25,
+          "rationale": "Two route tables by kind plus a header-token helper.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:1104",
+            "NaruServe-api/src/main/java exists and is empty (addition_site traces expected)",
+            "build.gradle:35 options.release=8; build.gradle:40 jvmTarget 1.8"
+          ]
+        },
+        "evidence_strength": {
+          "score": 19,
+          "rationale": "addition_site trace under NaruServe-api/src/main/java/com/snoworca/naruserve[/routing]; fits module package rule and build setup.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:1104",
+            "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:98,111-121 api main sources must be in com.snoworca.naruserve or a subpackage",
+            "build.gradle:124-133 api forbids android/, jakarta/servlet/, com/google/gson/, com/snoworca/tinyhttpd/, kotlin/ (+javax/servlet/ via :125); build.gradle:147-160 checkClassReferences wired into check"
+          ]
+        },
+        "dependency_health": {
+          "score": 14,
+          "rationale": "depends_on CON-ROUTE-001.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:1104",
+            "docs/spec/02.build.srs.md CON-BUILD-004/011/012/013 Status verified, Stability evolving"
+          ]
+        },
+        "ac_verifiability": {
+          "score": 15,
+          "rationale": "AC-2 header cases enumerated; helper is pure.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:1104",
+            "build.gradle:80 testImplementation junit:junit:4.13.2; build.gradle:142 useJUnit()"
+          ]
+        },
+        "scope_fit": {
+          "score": 10,
+          "rationale": "Inside wave-2 routing scope; HTTP-level parts deferred to wave 3.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:1104",
+            "docs/spec/03.routing.srs.md:19-37"
+          ]
+        },
+        "product_fit": {
+          "score": 10,
+          "rationale": "Express-aligned routing semantics per object.md and design D-items.",
+          "evidence": [
+            "docs/research/naruserve-v1/waves/wave-2/design.md"
+          ]
+        }
+      },
+      "blockers": [],
+      "conditions": [
+        "Helper signature takes plain strings (no engine header type) to stay engine-free."
+      ],
+      "has_verification": false,
+      "current_stability": "draft",
+      "current_status": "planned",
+      "external_module_impact": null
+    },
+    {
+      "req_id": "FR-ROUTE-016",
+      "feasibility": "high",
+      "score": 93,
+      "axes": {
+        "implementability": {
+          "score": 25,
+          "rationale": "WebSocket-only selection rule per method.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:1160",
+            "NaruServe-api/src/main/java exists and is empty (addition_site traces expected)",
+            "build.gradle:35 options.release=8; build.gradle:40 jvmTarget 1.8"
+          ]
+        },
+        "evidence_strength": {
+          "score": 19,
+          "rationale": "addition_site trace under NaruServe-api/src/main/java/com/snoworca/naruserve[/routing]; fits module package rule and build setup.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:1160",
+            "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:98,111-121 api main sources must be in com.snoworca.naruserve or a subpackage",
+            "build.gradle:124-133 api forbids android/, jakarta/servlet/, com/google/gson/, com/snoworca/tinyhttpd/, kotlin/ (+javax/servlet/ via :125); build.gradle:147-160 checkClassReferences wired into check"
+          ]
+        },
+        "dependency_health": {
+          "score": 14,
+          "rationale": "depends_on CON-ROUTE-001.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:1160",
+            "docs/spec/02.build.srs.md CON-BUILD-004/011/012/013 Status verified, Stability evolving"
+          ]
+        },
+        "ac_verifiability": {
+          "score": 15,
+          "rationale": "Concrete lookups; consistent with FR-ROUTE-010 AC-4 and FR-ROUTE-012 AC-3 (checked).",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:1160",
+            "build.gradle:80 testImplementation junit:junit:4.13.2; build.gradle:142 useJUnit()"
+          ]
+        },
+        "scope_fit": {
+          "score": 10,
+          "rationale": "Inside wave-2 routing scope; HTTP-level parts deferred to wave 3.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:1160",
+            "docs/spec/03.routing.srs.md:19-37"
+          ]
+        },
+        "product_fit": {
+          "score": 10,
+          "rationale": "Express-aligned routing semantics per object.md and design D-items.",
+          "evidence": [
+            "docs/research/naruserve-v1/waves/wave-2/design.md"
+          ]
+        }
+      },
+      "blockers": [],
+      "conditions": [],
+      "has_verification": false,
+      "current_stability": "draft",
+      "current_status": "planned",
+      "external_module_impact": null
+    },
+    {
+      "req_id": "FR-ROUTE-017",
+      "feasibility": "high",
+      "score": 96,
+      "axes": {
+        "implementability": {
+          "score": 28,
+          "rationale": "Fallback when no ws pattern matches.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:1215",
+            "NaruServe-api/src/main/java exists and is empty (addition_site traces expected)",
+            "build.gradle:35 options.release=8; build.gradle:40 jvmTarget 1.8"
+          ]
+        },
+        "evidence_strength": {
+          "score": 19,
+          "rationale": "addition_site trace under NaruServe-api/src/main/java/com/snoworca/naruserve[/routing]; fits module package rule and build setup.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:1215",
+            "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:98,111-121 api main sources must be in com.snoworca.naruserve or a subpackage",
+            "build.gradle:124-133 api forbids android/, jakarta/servlet/, com/google/gson/, com/snoworca/tinyhttpd/, kotlin/ (+javax/servlet/ via :125); build.gradle:147-160 checkClassReferences wired into check"
+          ]
+        },
+        "dependency_health": {
+          "score": 14,
+          "rationale": "depends_on CON-ROUTE-001.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:1215",
+            "docs/spec/02.build.srs.md CON-BUILD-004/011/012/013 Status verified, Stability evolving"
+          ]
+        },
+        "ac_verifiability": {
+          "score": 15,
+          "rationale": "Three lookups.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:1215",
+            "build.gradle:80 testImplementation junit:junit:4.13.2; build.gradle:142 useJUnit()"
+          ]
+        },
+        "scope_fit": {
+          "score": 10,
+          "rationale": "Inside wave-2 routing scope; HTTP-level parts deferred to wave 3.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:1215",
+            "docs/spec/03.routing.srs.md:19-37"
+          ]
+        },
+        "product_fit": {
+          "score": 10,
+          "rationale": "Express-aligned routing semantics per object.md and design D-items.",
+          "evidence": [
+            "docs/research/naruserve-v1/waves/wave-2/design.md"
+          ]
+        }
+      },
+      "blockers": [],
+      "conditions": [],
+      "has_verification": false,
+      "current_stability": "draft",
+      "current_status": "planned",
+      "external_module_impact": null
+    },
+    {
+      "req_id": "OPS-ROUTE-001",
+      "feasibility": "high",
+      "score": 86,
+      "axes": {
+        "implementability": {
+          "score": 27,
+          "rationale": "Edit existing Korean doc; no code.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:1270",
+            "NaruServe-api/src/main/java exists and is empty (addition_site traces expected)",
+            "build.gradle:35 options.release=8; build.gradle:40 jvmTarget 1.8"
+          ]
+        },
+        "evidence_strength": {
+          "score": 18,
+          "rationale": "Trace docs/api/routing.md exists already (update, not addition).",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:1270",
+            "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:98,111-121 api main sources must be in com.snoworca.naruserve or a subpackage",
+            "build.gradle:124-133 api forbids android/, jakarta/servlet/, com/google/gson/, com/snoworca/tinyhttpd/, kotlin/ (+javax/servlet/ via :125); build.gradle:147-160 checkClassReferences wired into check",
+            "docs/api/routing.md:21,71,91,119 existing (미확정) markers"
+          ]
+        },
+        "dependency_health": {
+          "score": 11,
+          "rationale": "No depends_on links, but accessor names come from IR-ROUTE-003 and semantics from every FR; must land last.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:1270",
+            "docs/spec/02.build.srs.md CON-BUILD-004/011/012/013 Status verified, Stability evolving"
+          ]
+        },
+        "ac_verifiability": {
+          "score": 11,
+          "rationale": "Deterministic inspection (grep for each listed topic, accessor names matching code, markers at docs/api/routing.md:71,91,119 retained); AC-1 is a long checklist, partly judgement-based.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:1270",
+            "build.gradle:80 testImplementation junit:junit:4.13.2; build.gradle:142 useJUnit()"
+          ]
+        },
+        "scope_fit": {
+          "score": 9,
+          "rationale": "In scope; slight coupling to wave 3 RestApp config naming, kept out.",
+          "evidence": [
+            "docs/spec/03.routing.srs.md:1270",
+            "docs/spec/03.routing.srs.md:19-37"
+          ]
+        },
+        "product_fit": {
+          "score": 10,
+          "rationale": "Express-aligned routing semantics per object.md and design D-items.",
+          "evidence": [
+            "docs/research/naruserve-v1/waves/wave-2/design.md"
+          ]
+        }
+      },
+      "blockers": [],
+      "conditions": [
+        "Write after IR-ROUTE-003 names accessors; add a root/doc test or checklist inspection as evidence.",
+        "D-070 says 'removing those markers' while the wave decision keeps config-API markers; AC-3 follows the wave decision, state that in the doc change note."
+      ],
+      "has_verification": false,
+      "current_stability": "draft",
+      "current_status": "planned",
+      "external_module_impact": null
+    }
+  ]
+}

@@ -1,0 +1,323 @@
+{
+ "findings": [
+  {
+   "id": "A-001",
+   "axis": "P4",
+   "severity": "LOW",
+   "title": "CookieFactoryHook resolves Cookie by a class-name string instead of a class literal",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/CookieFactoryHook.java",
+    "line_range": "19-27"
+   },
+   "description": "Known item (a), mostly refuted: ProGuard and R8 recognise Class.forName with a constant string and adapt the string when they rename the class, and the -keepclassmembers rule keeps the name of Cookie.unvalidated, so a standard minified build keeps working. The remaining risk is reliance on that string-adaptation heuristic (a tool or rule set without it); if it fails, the static initializer throws ExceptionInInitializerError and every req.cookie()/req.getCookies() call answers 500. Cookie is already imported and only the method needs reflection, so the string lookup buys nothing; the comment 'Class.forName also initialises Cookie' gives a reason nobody needs.",
+   "suggested_fix": "Use Cookie.class.getDeclaredMethod(\"unvalidated\", String.class, String.class) and drop the Class.forName comment; every shrinker rewrites the class literal and the existing -keepclassmembers rule then fully covers the reflective use.",
+   "is_behavioral": false,
+   "tags": [
+    "r8",
+    "android",
+    "reflection"
+   ]
+  },
+  {
+   "id": "A-002",
+   "axis": "P1",
+   "severity": "LOW",
+   "title": "Cookie parser drops a pair with whitespace around '=' instead of trimming name and value",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/CookieParser.java",
+    "line_range": "22-33"
+   },
+   "description": "Only the whole pair is trimmed, so 'a = 1' yields the name 'a ' which fails isToken and the cookie is dropped silently. RFC 6265 section 5.2 and the Express 'cookie' parser trim name and value separately. FR-COOKIE-002 AC-4 only requires trimming around each pair, so this matches the spec; browsers do not send spaces around '=', so impact is limited to hand-written clients.",
+   "suggested_fix": "Optional: trim name and value separately (pair.substring(0, eq).trim(), pair.substring(eq + 1).trim()) with one CookieParserTest case; otherwise keep and record the choice in docs/api.",
+   "is_behavioral": true,
+   "tags": [
+    "cookie",
+    "interop"
+   ]
+  }
+ ],
+ "coverage_rows": [
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/Cookie.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java",
+   "hunks_total": 3,
+   "anchors": [
+    "* Read-only view of one HTTP request plus a per-request attribute store and the app context. No body, form, file",
+    "// @req IR-JSON-002",
+    "/**"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/Response.java",
+   "hunks_total": 3,
+   "anchors": [
+    "* Writer for one HTTP response. Wave 3 holds no json, file, download, cache, sse or cookie method; later waves add",
+    "// @req IR-JSON-002",
+    "/**"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java",
+   "hunks_total": 2,
+   "anchors": [
+    "* Starts the app on {@code 127.0.0.1:port} ({@code 0} picks a free port) and returns once it serves.",
+    "/** Replaces the JSON codec that {@code req.body} and {@code res.json} use. */"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/SameSite.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/ServerOptions.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/TypeRef.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/CookieFactoryHook.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.internal;"
+   ],
+   "findings": [
+    "A-001"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/CookieParser.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.internal;"
+   ],
+   "findings": [
+    "A-002"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/CookieSerializer.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.internal;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java",
+   "hunks_total": 14,
+   "anchors": [
+    "import com.snoworca.naruserve.Cookie;",
+    "import com.snoworca.naruserve.TypeRef;",
+    "import com.snoworca.naruserve.spi.JsonCodec;",
+    "import java.util.Objects;",
+    "// @req FR-JSON-001",
+    "private volatile Cookie @Nullable [] cookies;",
+    "private final @Nullable JsonCodec codec;",
+    "this(ex, method, params, context, null, JsonBodyReader.DEFAULT_LIMIT);",
+    "/** The exchange body counted by {@link #body()}; only a reader that took the body calls this. */",
+    "/** The adapter's value; X-Forwarded-* and Forwarded are not consulted. */",
+    "return ex.remoteAddress();",
+    "// @req FR-ENGINE-008",
+    "return ex.isSecure();",
+    "/** The Cookie header lines parsed once; a race parses twice to equal results, which is harmless. */"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+   "hunks_total": 12,
+   "anchors": [
+    "import com.snoworca.naruserve.Cookie;",
+    "import com.snoworca.naruserve.spi.JsonCodec;",
+    "import java.io.OutputStreamWriter;",
+    "import java.util.Objects;",
+    "// @req FR-JSON-002",
+    "private final @Nullable JsonCodec codec;",
+    "this(ex, headRequest, null);",
+    "this.codec = codec;",
+    "/** Appends one Set-Cookie line, never replacing an earlier one; nothing is added when validation throws. */",
+    "/**",
+    "if (status == 408) {",
+    "/** RFC 9110 token: one or more tchar. */"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+   "hunks_total": 16,
+   "anchors": [
+    "import com.snoworca.naruserve.ServerOptions;",
+    "import com.snoworca.naruserve.spi.ServerSettings;",
+    "// @req IR-ENGINE-001",
+    "// @req IR-JSON-002",
+    "private final @Nullable JsonCodec codec;",
+    "private final DefaultServerOptions serverOptions = new DefaultServerOptions();",
+    "/** The codec given to the builder; null for the no-arg test constructor. */",
+    "@Override",
+    "public synchronized RestApp server(Configurer<ServerOptions> configurer) {",
+    "* freeze, one bind of the gated handler on {@code 127.0.0.1:port}, then RUNNING. A stop requested meanwhile is",
+    "ServerSettings settings;",
+    "ServerSettings frozen = serverOptions.freeze(port, logger, StandardErrors.renderer());",
+    "if (!isLoopback(frozen.bindAddress())) {",
+    "a.bind(\"127.0.0.1\", port, new GatedExchangeHandler(lifecycle, d, d.accessLog()));",
+    "return \"127.0.0.1\";",
+    "new AccessLog(accessLogOptions, safe), context);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultServerOptions.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.internal;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+   "hunks_total": 5,
+   "anchors": [
+    "import com.snoworca.naruserve.spi.JsonCodec;",
+    "// @req IR-JSON-002",
+    "private final @Nullable JsonCodec codec;",
+    "this(router, pipeline, errors, accessLog, context, null, JsonBodyReader.DEFAULT_LIMIT);",
+    "routed ? m.params() : Collections.<String, String>emptyMap(), context);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ErrorPath.java",
+   "hunks_total": 2,
+   "anchors": [
+    "* NEW; then {@link DefaultResponse#afterFailure} decides the outcome by the state the chain left.",
+    "// @req FR-ENGINE-005"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/JsonBodyReader.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.internal;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/LimitedInputStream.java",
+   "hunks_total": 5,
+   "anchors": [
+    "// @req FR-JSON-001",
+    "private volatile boolean overrun;",
+    "throw new BodyTooLargeException(limit);",
+    "throw tooLarge();",
+    "private BodyTooLargeException tooLarge() {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ProxyTrust.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.internal;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StandardErrors.java",
+   "hunks_total": 5,
+   "anchors": [
+    "import com.snoworca.naruserve.spi.ErrorRenderer;",
+    "// @req FR-ENGINE-005",
+    "case 408: return \"Request Timeout\";",
+    "case 421: return \"Misdirected Request\";",
+    "/** The renderer adapters get: the standard body of a status with its reason and a fresh request id. */"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/ErrorRenderer.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.spi;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpAdapter.java",
+   "hunks_total": 1,
+   "anchors": [
+    "/**"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/JsonCodec.java",
+   "hunks_total": 2,
+   "anchors": [
+    "// @req IR-JSON-002",
+    "/** Reads one JSON value of {@code type} from {@code reader}. */"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/ServerSettings.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.spi;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/resources/META-INF/proguard/naruserve-api.pro",
+   "hunks_total": 1,
+   "anchors": [
+    "# Consumer R8/ProGuard rules of NaruServe-api."
+   ],
+   "findings": []
+  },
+  {
+   "file": "build.gradle",
+   "hunks_total": 3,
+   "anchors": [
+    "// ConsumerRulesTest reads META-INF/proguard/naruserve-api.pro from the built jar (IR-JSON-001 AC-3).",
+    "// GsonJsonCodec tests drive req.body and res.json over the in-memory adapter (FR-JSON-003 AC-2, AC-3, AC-8).",
+    "// @req OPS-ENGINE-001"
+   ],
+   "findings": []
+  }
+ ],
+ "summary": {
+  "total": 2,
+  "by_severity": {
+   "CRITICAL": 0,
+   "HIGH": 0,
+   "MEDIUM": 0,
+   "LOW": 2
+  },
+  "notes": "Known item (b) (TinyHttpd adapter shortcuts) is outside groups api-main/build.gradle and was not evaluated here. Checked without issues: JSON 415/413/400 mapping and overrun detection, json() encode-before-commit, Set-Cookie re-validation plus header-value check, 408 Connection: close, ProxyTrust left-most XFF / first XFP, ServerOptions range checks incl. nanos overflow, settings freeze and loopback warning, build.gradle jar/system-property wiring."
+ }
+}

@@ -1,0 +1,139 @@
+{
+  "resolved_findings": ["A-001", "A-002", "B-001", "B-002", "B-005", "B-006", "C-001", "C-002", "C-003", "C-004", "C-005", "C-007"],
+  "unresolved_findings": [],
+  "findings": [
+    {
+      "id": "R-001",
+      "axis": "P4",
+      "severity": "LOW",
+      "title": "Kotlin star projection is rewritten to Object, so List<*> no longer equals Java List<?>",
+      "location": {"file": "NaruServe-api/src/main/java/com/snoworca/naruserve/TypeRef.java", "line_range": "50-58"},
+      "description": "dropCovariantWildcards replaces every wildcard with no lower bound and one upper bound by that bound. An unbounded wildcard has upper bound [Object], so Kotlin `object : TypeRef<List<*>>() {}` (signature List<*>) becomes List<Object>. Before the fix it equalled Java `new TypeRef<List<?>>() {}` (the JDK WildcardType equality); now it does not. Use-site projections the user wrote on purpose (`TypeRef<MutableList<out Number>>`, Java List<? extends Number>) collapse to List<Number> the same way. Gson decodes both forms the same, so only Type equality (and any cache keyed by Type) is affected.",
+      "suggested_fix": "Leave a wildcard alone when its only upper bound is Object (keeps `*` as `?`). Add a Kotlin test that List<*> equals the Java List<?>.",
+      "is_behavioral": true,
+      "tags": ["kotlin-interop", "regression"]
+    },
+    {
+      "id": "R-002",
+      "axis": "P4",
+      "severity": "LOW",
+      "title": "Parameterized.hashCode follows the OpenJDK formula only; on Android it differs from the platform type",
+      "location": {"file": "NaruServe-api/src/main/java/com/snoworca/naruserve/TypeRef.java", "line_range": "103-115"},
+      "description": "The Javadoc says equals and hashCode follow the JDK, so equality holds both ways. That is OpenJDK's sun.reflect ParameterizedTypeImpl (args ^ owner ^ raw). Android's libcore ParameterizedTypeImpl uses a different hash formula (and older releases do not override equals at all, as far as I know). On the API 21 runtime this library targets, Parameterized can equal a platform type while having a different hash, or equal it in one direction only. This only matters on the Kotlin path, when someone compares or hashes TypeRef types. Not verified on a device.",
+      "suggested_fix": "Narrow the Javadoc claim to the JVM, or add an Android note. Gson's own $Gson$Types canonicalisation is unaffected.",
+      "is_behavioral": false,
+      "tags": ["api21", "kotlin-interop"]
+    },
+    {
+      "id": "R-003",
+      "axis": "P1",
+      "severity": "LOW",
+      "title": "Abort before commit on a HEAD request still sends a complete 500",
+      "location": {"file": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdExchange.java", "line_range": "60-66"},
+      "description": "The truncation trick declares Content-Length 1 and sends no byte. TinyHttpd ExchangeResponse.finish() checks for a short body only when `!discard` (ExchangeResponse.java:562), and HEAD is a discard response. So a HEAD request aborted before commit gets a complete, valid `500, Content-Length: 1` response, not an abnormal close. The connection still closes because setCloseConnection(true) is set. AbortSocketTest covers GET only.",
+      "suggested_fix": "Accept it and note it in the comment (HEAD has no body to truncate). Or, for HEAD, throw the IOException as the post-commit path does.",
+      "is_behavioral": true,
+      "tags": ["abort", "edge-case"]
+    },
+    {
+      "id": "R-004",
+      "axis": "P3",
+      "severity": "LOW",
+      "title": "Worker interrupted at the stop deadline can now wait up to writeTimeout on the exchange monitor",
+      "location": {"file": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdExchange.java", "line_range": "51-68"},
+      "description": "When TinyHttpd interrupts the worker at its stop deadline, run() calls abort() and then enters synchronized(ex). A core writer blocked in a socket write holds that monitor until the watchdog aborts the socket at writeTimeout (default 30 s). Before the fix the worker returned at once, so stop(timeout) can now overrun its deadline by up to writeTimeout. There is no deadlock (one lock, and the watchdog bounds the wait), and the comment on line 57 already states the bound for the normal path. The stop path has no test.",
+      "suggested_fix": "Document it next to the stop path. Or skip the monitor wait when the thread was interrupted, since TinyHttpd is tearing the connection down anyway.",
+      "is_behavioral": true,
+      "tags": ["concurrency", "shutdown"]
+    },
+    {
+      "id": "R-005",
+      "axis": "P6",
+      "severity": "LOW",
+      "title": "The new reason-name check is a raw substring test, so short names pass trivially",
+      "location": {"file": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java", "line_range": "587-597"},
+      "description": "`body.contains(name)` matches anywhere in the block. Names such as `id`, `file`, `find` or `User` (a substring of `UserService`) match almost any block, so for those reasons the C-001 guard proves little. It is still stricter than before, and no assertion was removed.",
+      "suggested_fix": "Match on a word boundary: Pattern.compile(\"\\\\b\" + Pattern.quote(name) + \"\\\\b\").matcher(body).find().",
+      "is_behavioral": false,
+      "tags": ["test-quality"]
+    }
+  ],
+  "coverage_rows": [
+    {"file": "NaruServe-api/src/main/java/com/snoworca/naruserve/TypeRef.java", "hunks_total": 5, "anchors": [
+      "import java.lang.annotation.Annotation;",
+      "import java.lang.reflect.WildcardType;",
+      "* A Kotlin {@code object : TypeRef<List<String>>() {}} captures the same {@code List<String>} as Java: the covariant",
+      "this.type = isKotlin(getClass()) ? dropCovariantWildcards(arg) : arg;",
+      "private static boolean isKotlin(Class<?> c) {"
+    ], "findings": ["R-001", "R-002"]},
+    {"file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/CookieFactoryHook.java", "hunks_total": 1, "anchors": [
+      "Method m = Cookie.class.getDeclaredMethod(\"unvalidated\", String.class, String.class);"
+    ], "findings": []},
+    {"file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/CookieParser.java", "hunks_total": 2, "anchors": [
+      "String name = pair.substring(0, eq).trim();",
+      "out.add(CookieFactoryHook.create(name, pair.substring(eq + 1).trim()));"
+    ], "findings": []},
+    {"file": "NaruServe-api/src/test/java/com/snoworca/naruserve/TypeRefTest.java", "hunks_total": 1, "anchors": [
+      "static Type javaListOfString() {"
+    ], "findings": []},
+    {"file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/CookieParserTest.java", "hunks_total": 1, "anchors": [
+      "public void FR_COOKIE_002_AC4_whitespaceAroundTheEqualsSignIsTrimmed() {"
+    ], "findings": []},
+    {"file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StartFailureTest.java", "hunks_total": 1, "anchors": [
+      "for (String part : new String[] {\"maxConnections (5)\", \"maxWorkers (4)\", \"maxSseStreams (2)\"}) {"
+    ], "findings": []},
+    {"file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/JsonDocsKotlinTest.kt", "hunks_total": 3, "anchors": [
+      "val text = reader.readText().trim()",
+      "raw == List::class.java -> listOf(User(\"l\")) as T",
+      "assertEquals(201, post(adapter, \"/users\", \"{\\\"name\\\":\\\"a\\\"}\"))"
+    ], "findings": []},
+    {"file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/JsonKotlinTest.kt", "hunks_total": 1, "anchors": [
+      "assertEquals(t.type, TypeRefTest.javaListOfString())"
+    ], "findings": []},
+    {"file": "NaruServe-gson/src/main/java/com/snoworca/naruserve/gson/GsonJsonCodec.java", "hunks_total": 2, "anchors": [
+      "import com.google.gson.JsonParseException;",
+      "} catch (JsonParseException e) {"
+    ], "findings": []},
+    {"file": "NaruServe-gson/src/test/java/com/snoworca/naruserve/gson/GsonJsonCodecTest.java", "hunks_total": 1, "anchors": [
+      "public void FR_JSON_003_deserializerJsonParseExceptionBecomesIOException() {"
+    ], "findings": []},
+    {"file": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/JsonErrorHandler.java", "hunks_total": 2, "anchors": [
+      "/** Writes the status, the JSON type and the renderer body, which carries a fresh request id. */",
+      "if (body.length > 0) {"
+    ], "findings": []},
+    {"file": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdAdapter.java", "hunks_total": 1, "anchors": [
+      "// This overload answers TinyHttpd's own errors with a zero-byte body and no content type."
+    ], "findings": []},
+    {"file": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdExchange.java", "hunks_total": 11, "anchors": [
+      "// Guarded by this, which also serialises every touch of res by the core so abort() can hand res back safely.",
+      "synchronized (ex) {",
+      "private synchronized void start() {",
+      "public synchronized OutputStream commit(int status, List<Map.Entry<String, String>> headers, long contentLength)",
+      "start();",
+      "final TinyHttpdExchange lock = this;",
+      "out.write(b);",
+      "out.write(b, off, len);",
+      "out.flush();",
+      "public synchronized void finish() throws IOException {",
+      "// Lock-free on purpose so abort() never waits for a writer."
+    ], "findings": ["R-003", "R-004"]},
+    {"file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/AbortSocketTest.java", "hunks_total": 1, "anchors": [
+      "public class AbortSocketTest {"
+    ], "findings": []},
+    {"file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LimitsSocketTest.java", "hunks_total": 1, "anchors": [
+      "public void OPS_ENGINE_001_AC2_AC6_defaultHeaderLineLimitIs8190Bytes() throws Exception {"
+    ], "findings": []},
+    {"file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/TransportRejectionTest.java", "hunks_total": 1, "anchors": [
+      "public void FR_ENGINE_005_emptyErrorBodyCarriesNoJsonContentType() throws Exception {"
+    ], "findings": []},
+    {"file": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java", "hunks_total": 6, "anchors": [
+      "\"app-defined variable `postService` (the block calls the app's `postService.find`)\"),",
+      "\"app-defined variables `id` and `created` (the block sends the app's `created` value)\"),",
+      "\"app-defined variables `user`, `user1` and `user2` (the block sends the app's values)\"),",
+      "\"app-defined methods `find`, `create` and `remove` (the block calls them on the app)\"),",
+      "+ \"|app-defined variables?|app-defined methods) `[^`]+`.*\");",
+      "String name = named.group(1);"
+    ], "findings": ["R-005"]}
+  ],
+  "summary": {"total": 5, "by_severity": {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 0, "LOW": 5}}
+}

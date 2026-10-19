@@ -1,0 +1,65 @@
+{
+ "run": "2026-10-19.naruserve.wave-4.v01",
+ "total": 37,
+ "distribution": {
+  "high": 36,
+  "medium": 1,
+  "low": 0,
+  "blocked": 0
+ },
+ "mean_score": 92.4,
+ "target_verdict": "GO: wave-4 is implementable in NaruServe-api/logcat/filelog/slf4j with no TinyHttpd change; 36 of 37 high. Fix the OPS-APP-001 trace cycle and its non-testable AC-7 before promoting it.",
+ "critical_blockers": [],
+ "dependency_cycles": [],
+ "depends_on_only_cycles": [],
+ "dependency_chains": [
+  [
+   "FR-HTTP-023",
+   "FR-APP-015",
+   "IR-APP-007",
+   "IR-APP-006"
+  ],
+  [
+   "SEC-APP-001",
+   "FR-APP-015",
+   "FR-APP-006",
+   "FR-APP-005",
+   "FR-APP-004",
+   "FR-APP-003",
+   "IR-APP-002"
+  ],
+  [
+   "FR-APP-012",
+   "FR-APP-010",
+   "FR-APP-009",
+   "IR-APP-005"
+  ],
+  [
+   "FR-APP-013",
+   "FR-APP-011",
+   "FR-APP-008",
+   "IR-APP-004"
+  ],
+  [
+   "OPS-APP-002",
+   "OPS-APP-001"
+  ],
+  [
+   "FR-APP-001",
+   "IR-APP-001"
+  ]
+ ],
+ "cross_cutting_conditions": [
+  "FR-APP-009 AC-7: TestApp moves to RestApp.builder()+listen(0); wave 3 tests citing superseded FR-HTTP-002/003/005/006/010 re-pointed in the same change.",
+  "Trace gaps (non-blocking): IR-APP-001->IR-APP-006, FR-APP-010->FR-APP-017, FR-APP-014 call sites, FR-APP-015 in-byte counter site, FR-APP-017 build.gradle.",
+  "FR-APP-002 AC-2 array ambiguity (MethodSet.METHODS, DefaultResponse.EMPTY)."
+ ],
+ "external_module_impact": "none (TinyHttpd keep-alive, non-daemon thread and bootstrap are wave 5)",
+ "feasibility_distribution": {
+  "high": 37,
+  "medium": 0,
+  "low": 0,
+  "blocked": 0
+ },
+ "revision_note": "OPS-APP-001 re-scored 87 (high) after the kiwi-srs improvement pass removed the extends cycle and rewrote AC-1/AC-7 (eval_iter1.json); no dependency cycle remains."
+}

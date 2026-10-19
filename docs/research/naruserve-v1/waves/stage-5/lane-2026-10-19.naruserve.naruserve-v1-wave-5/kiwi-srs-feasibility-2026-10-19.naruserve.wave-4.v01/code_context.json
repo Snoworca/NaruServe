@@ -1,0 +1,1812 @@
+{
+ "run": "2026-10-19.naruserve.wave-4.v01",
+ "repo": "/Users/beom/work/git/NaruServe",
+ "requirements": [
+  {
+   "req_id": "CON-APP-001",
+   "file": "docs/spec/05.application.srs.md",
+   "trace_links": [
+    {
+     "type": "Code",
+     "ref": "build.gradle",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site",
+     "exists": true,
+     "target_status": null,
+     "target_stability": null
+    },
+    {
+     "type": "Requirement",
+     "ref": "CON-BUILD-013",
+     "relation": "extends",
+     "notes": "core isolation build checks",
+     "exists": true,
+     "target_status": "verified",
+     "target_stability": "evolving"
+    },
+    {
+     "type": "Requirement",
+     "ref": "CON-BUILD-006",
+     "relation": "extends",
+     "notes": "module dependencies declared in wave 1",
+     "exists": true,
+     "target_status": "verified",
+     "target_stability": "evolving"
+    }
+   ],
+   "all_code_paths_exist": true,
+   "implementability_evidence": [
+    "build.gradle:124-132",
+    "build.gradle:248-255"
+   ]
+  },
+  {
+   "req_id": "FR-APP-001",
+   "file": "docs/spec/05.application.srs.md",
+   "trace_links": [
+    {
+     "type": "Code",
+     "ref": "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site",
+     "exists": true,
+     "target_status": null,
+     "target_stability": null
+    },
+    {
+     "type": "Code",
+     "ref": "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/package-info.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site",
+     "exists": true,
+     "target_status": null,
+     "target_stability": null
+    },
+    {
+     "type": "Code",
+     "ref": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/package-info.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site",
+     "exists": true,
+     "target_status": null,
+     "target_stability": null
+    },
+    {
+     "type": "Requirement",
+     "ref": "IR-APP-001",
+     "relation": "depends_on",
+     "notes": "the explicit entry point that a factory provider uses",
+     "exists": true,
+     "target_status": "planned",
+     "target_stability": "draft"
+    },
+    {
+     "type": "Requirement",
+     "ref": "CON-HTTP-001",
+     "relation": "extends",
+     "notes": "engine-free placement of the SPI",
+     "exists": true,
+     "target_status": "verified",
+     "target_stability": "evolving"
+    }
+   ],
+   "all_code_paths_exist": true,
+   "implementability_evidence": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:7-33",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/package-info.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/package-info.java"
+   ]
+  },
+  {
+   "req_id": "FR-APP-002",
+   "file": "docs/spec/05.application.srs.md",
+   "trace_links": [
+    {
+     "type": "Code",
+     "ref": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site",
+     "exists": true,
+     "target_status": null,
+     "target_stability": null
+    },
+    {
+     "type": "Requirement",
+     "ref": "FR-HTTP-008",
+     "relation": "extends",
+     "notes": "replaces the after-freeze rejection with the NEW-state guard",
+     "exists": true,
+     "target_status": "verified",
+     "target_stability": "evolving"
+    },
+    {
+     "type": "Requirement",
+     "ref": "IR-APP-005",
+     "relation": "depends_on",
+     "notes": "AppState",
+     "exists": true,
+     "target_status": "planned",
+     "target_stability": "draft"
+    }
+   ],
+   "all_code_paths_exist": true,
+   "implementability_evidence": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:126-139",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:108-117",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:179-189"
+   ]
+  },
+  {
+   "req_id": "FR-APP-003",
+   "file": "docs/spec/05.application.srs.md",
+   "trace_links": [
+    {
+     "type": "Code",
+     "ref": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site",
+     "exists": true,
+     "target_status": null,
+     "target_stability": null
+    },
+    {
+     "type": "Code",
+     "ref": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site",
+     "exists": true,
+     "target_status": null,
+     "target_stability": null
+    },
+    {
+     "type": "Requirement",
+     "ref": "IR-APP-002",
+     "relation": "depends_on",
+     "notes": "middleware types and registration",
+     "exists": true,
+     "target_status": "planned",
+     "target_stability": "draft"
+    },
+    {
+     "type": "Requirement",
+     "ref": "FR-ROUTE-006",
+     "relation": "extends",
+     "notes": "prefix comparison follows the path-form policies",
+     "exists": true,
+     "target_status": "verified",
+     "target_stability": "evolving"
+    },
+    {
+     "type": "Requirement",
+     "ref": "FR-HTTP-001",
+     "relation": "extends",
+     "notes": "tests run through the in-memory adapter",
+     "exists": true,
+     "target_status": "verified",
+     "target_stability": "evolving"
+    }
+   ],
+   "all_code_paths_exist": true,
+   "implementability_evidence": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:44-75",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:124-144",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:296"
+   ]
+  },
+  {
+   "req_id": "FR-APP-004",
+   "file": "docs/spec/05.application.srs.md",
+   "trace_links": [
+    {
+     "type": "Code",
+     "ref": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site",
+     "exists": true,
+     "target_status": null,
+     "target_stability": null
+    },
+    {
+     "type": "Requirement",
+     "ref": "FR-APP-003",
+     "relation": "depends_on",
+     "notes": "pipeline order",
+     "exists": true,
+     "target_status": "planned",
+     "target_stability": "draft"
+    },
+    {
+     "type": "Requirement",
+     "ref": "FR-HTTP-016",
+     "relation": "extends",
+     "notes": "response completion state",
+     "exists": true,
+     "target_status": "verified",
+     "target_stability": "evolving"
+    }
+   ],
+   "all_code_paths_exist": true,
+   "implementability_evidence": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java:40,216-246",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:124-144"
+   ]
+  },
+  {
+   "req_id": "FR-APP-005",
+   "file": "docs/spec/05.application.srs.md",
+   "trace_links": [
+    {
+     "type": "Code",
+     "ref": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site",
+     "exists": true,
+     "target_status": null,
+     "target_stability": null
+    },
+    {
+     "type": "Code",
+     "ref": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+     "relation": "uses",
+     "notes": "trace_intent=verifies",
+     "exists": true,
+     "target_status": null,
+     "target_stability": null
+    },
+    {
+     "type": "Requirement",
+     "ref": "IR-APP-003",
+     "relation": "depends_on",
+     "notes": "ErrorHandler and HttpException",
+     "exists": true,
+     "target_status": "planned",
+     "target_stability": "draft"
+    },
+    {
+     "type": "Requirement",
+     "ref": "FR-APP-004",
+     "relation": "depends_on",
+     "notes": "next.error continuation rules",
+     "exists": true,
+     "target_status": "planned",
+     "target_stability": "draft"
+    },
+    {
+     "type": "Requirement",
+     "ref": "FR-HTTP-015",
+     "relation": "extends",
+     "notes": "abort after commit",
+     "exists": true,
+     "target_status": "verified",
+     "target_stability": "evolving"
+    }
+   ],
+   "all_code_paths_exist": true,
+   "implementability_evidence": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java:227-246",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java:283-306",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:133-143"
+   ]
+  },
+  {
+   "req_id": "FR-APP-006",
+   "file": "docs/spec/05.application.srs.md",
+   "trace_links": [
+    {
+     "type": "Code",
+     "ref": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site",
+     "exists": true,
+     "target_status": null,
+     "target_stability": null
+    },
+    {
+     "type": "Code",
+     "ref": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+     "relation": "uses",
+     "notes": "trace_intent=verifies",
+     "exists": true,
+     "target_status": null,
+     "target_stability": null
+    },
+    {
+     "type": "Requirement",
+     "ref": "IR-APP-003",
+     "relation": "depends_on",
+     "notes": "HttpException status and code",
+     "exists": true,
+     "target_status": "planned",
+     "target_stability": "draft"
+    },
+    {
+     "type": "Requirement",
+     "ref": "FR-APP-005",
+     "relation": "depends_on",
+     "notes": "error path",
+     "exists": true,
+     "target_status": "planned",
+     "target_stability": "draft"
+    },
+    {
+     "type": "Requirement",
+     "ref": "FR-HTTP-017",
+     "relation": "extends",
+     "notes": "bodyless HEAD rule",
+     "exists": true,
+     "target_status": "verified",
+     "target_stability": "evolving"
+    }
+   ],
+   "all_code_paths_exist": true,
+   "implementability_evidence": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:95-113",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java:308-334"
+   ]
+  },
+  {
+   "req_id": "FR-APP-007",
+   "file": "docs/spec/05.application.srs.md",
+   "trace_links": [
+    {
+     "type": "Code",
+     "ref": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site",
+     "exists": true,
+     "target_status": null,
+     "target_stability": null
+    },
+    {
+     "type": "Code",
+     "ref": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site",
+     "exists": true,
+     "target_status": null,
+     "target_stability": null
+    },
+    {
+     "type": "Requirement",
+     "ref": "IR-APP-004",
+     "relation": "depends_on",
+     "notes": "registry and context types",
+     "exists": true,
+     "target_status": "planned",
+     "target_stability": "draft"
+    },
+    {
+     "type": "Requirement",
+     "ref": "IR-APP-005",
+     "relation": "depends_on",
+     "notes": "lifecycle states",
+     "exists": true,
+     "target_status": "planned",
+     "target_stability": "draft"
+    }
+   ],
+   "all_code_paths_exist": true,
+   "implementability_evidence": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:25-51",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java:25"
+   ]
+  },
+  {
+   "req_id": "FR-APP-008",
+   "file": "docs/spec/05.application.srs.md",
+   "trace_links": [
+    {
+     "type": "Code",
+     "ref": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site",
+     "exists": true,
+     "target_status": null,
+     "target_stability": null
+    },
+    {
+     "type": "Code",
+     "ref": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/package-info.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site",
+     "exists": true,
+     "target_status": null,
+     "target_stability": null
+    },
+    {
+     "type": "Requirement",
+     "ref": "IR-APP-004",
+     "relation": "depends_on",
+     "notes": "own, register and registerExternal",
+     "exists": true,
+     "target_status": "planned",
+     "target_stability": "draft"
+    }
+   ],
+   "all_code_paths_exist": true,
+   "implementability_evidence": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:25-51"
+   ]
+  },
+  {
+   "req_id": "FR-APP-009",
+   "file": "docs/spec/05.application.srs.md",
+   "trace_links": [
+    {
+     "type": "Code",
+     "ref": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site",
+     "exists": true,
+     "target_status": null,
+     "target_stability": null
+    },
+    {
+     "type": "Code",
+     "ref": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site",
+     "exists": true,
+     "target_status": null,
+     "target_stability": null
+    },
+    {
+     "type": "Requirement",
+     "ref": "IR-APP-005",
+     "relation": "depends_on",
+     "notes": "listen and ServerHandle",
+     "exists": true,
+     "target_status": "planned",
+     "target_stability": "draft"
+    },
+    {
+     "type": "Requirement",
+     "ref": "FR-HTTP-008",
+     "relation": "extends",
+     "notes": "the route-table freeze listen runs",
+     "exists": true,
+     "target_status": "verified",
+     "target_stability": "evolving"
+    },
+    {
+     "type": "Requirement",
+     "ref": "IR-HTTP-004",
+     "relation": "extends",
+     "notes": "adapter bind",
+     "exists": true,
+     "target_status": "verified",
+     "target_stability": "evolving"
+    },
+    {
+     "type": "Requirement",
+     "ref": "FR-ROUTE-008",
+     "relation": "extends",
+     "notes": "conflict detection at the freeze",
+     "exists": true,
+     "target_status": "verified",
+     "target_stability": "evolving"
+    }
+   ],
+   "all_code_paths_exist": true,
+   "implementability_evidence": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:146-169",
+    "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/TestApp.java:17,54-60",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpAdapter.java:13"
+   ]
+  },
+  {
+   "req_id": "FR-APP-010",
+   "file": "docs/spec/05.application.srs.md",
+   "trace_links": [
+    {
+     "type": "Code",
+     "ref": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site",
+     "exists": true,
+     "target_status": null,
+     "target_stability": null
+    },
+    {
+     "type": "Requirement",
+     "ref": "FR-APP-009",
+     "relation": "depends_on",
+     "notes": "startup sequence",
+     "exists": true,
+     "target_status": "planned",
+     "target_stability": "draft"
+    },
+    {
+     "type": "Requirement",
+     "ref": "FR-APP-008",
+     "relation": "depends_on",
+     "notes": "resource closing order",
+     "exists": true,
+     "target_status": "planned",
+     "target_stability": "draft"
+    }
+   ],
+   "all_code_paths_exist": true,
+   "implementability_evidence": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:146-160",
+    "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/InMemoryHttpAdapter.java:97-136"
+   ]
+  },
+  {
+   "req_id": "FR-APP-011",
+   "file": "docs/spec/05.application.srs.md",
+   "trace_links": [
+    {
+     "type": "Code",
+     "ref": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site",
+     "exists": true,
+     "target_status": null,
+     "target_stability": null
+    },
+    {
+     "type": "Code",
+     "ref": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/package-info.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site",
+     "exists": true,
+     "target_status": null,
+     "target_stability": null
+    },
+    {
+     "type": "Requirement",
+     "ref": "FR-APP-008",
+     "relation": "depends_on",
+     "notes": "resource closing",
+     "exists": true,
+     "target_status": "planned",
+     "target_stability": "draft"
+    },
+    {
+     "type": "Requirement",
+     "ref": "IR-APP-005",
+     "relation": "depends_on",
+     "notes": "shutdown API",
+     "exists": true,
+     "target_status": "planned",
+     "target_stability": "draft"
+    },
+    {
+     "type": "Requirement",
+     "ref": "IR-HTTP-004",
+     "relation": "extends",
+     "notes": "adapter stop and release",
+     "exists": true,
+     "target_status": "verified",
+     "target_stability": "evolving"
+    },
+    {
+     "type": "Requirement",
+     "ref": "IR-HTTP-003",
+     "relation": "extends",
+     "notes": "exchange outlives handle until finish or abort; force-close at the deadline",
+     "exists": true,
+     "target_status": "verified",
+     "target_stability": "evolving"
+    }
+   ],
+   "all_code_paths_exist": true,
+   "implementability_evidence": [
+    "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/InMemoryHttpAdapter.java:97-121",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:25-51"
+   ]
+  },
+  {
+   "req_id": "FR-APP-012",
+   "file": "docs/spec/05.application.srs.md",
+   "trace_links": [
+    {
+     "type": "Code",
+     "ref": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site",
+     "exists": true,
+     "target_status": null,
+     "target_stability": null
+    },
+    {
+     "type": "Requirement",
+     "ref": "FR-APP-010",
+     "relation": "depends_on",
+     "notes": "start failure path",
+     "exists": true,
+     "target_status": "planned",
+     "target_stability": "draft"
+    },
+    {
+     "type": "Requirement",
+     "ref": "FR-APP-011",
+     "relation": "depends_on",
+     "notes": "shutdown sequence",
+     "exists": true,
+     "target_status": "planned",
+     "target_stability": "draft"
+    }
+   ],
+   "all_code_paths_exist": true,
+   "implementability_evidence": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:146-160",
+    "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/InMemoryHttpAdapter.java:75-84"
+   ]
+  },
+  {
+   "req_id": "FR-APP-013",
+   "file": "docs/spec/05.application.srs.md",
+   "trace_links": [
+    {
+     "type": "Code",
+     "ref": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site",
+     "exists": true,
+     "target_status": null,
+     "target_stability": null
+    },
+    {
+     "type": "Code",
+     "ref": "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/InMemoryHttpAdapter.java",
+     "relation": "uses",
+     "notes": "trace_intent=verifies",
+     "exists": true,
+     "target_status": null,
+     "target_stability": null
+    },
+    {
+     "type": "Requirement",
+     "ref": "FR-APP-011",
+     "relation": "depends_on",
+     "notes": "STOPPING state and participants",
+     "exists": true,
+     "target_status": "planned",
+     "target_stability": "draft"
+    },
+    {
+     "type": "Requirement",
+     "ref": "FR-APP-006",
+     "relation": "depends_on",
+     "notes": "standard error body",
+     "exists": true,
+     "target_status": "planned",
+     "target_stability": "draft"
+    }
+   ],
+   "all_code_paths_exist": true,
+   "implementability_evidence": [
+    "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/InMemoryHttpAdapter.java:142-152",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:44-47"
+   ]
+  },
+  {
+   "req_id": "FR-APP-014",
+   "file": "docs/spec/05.application.srs.md",
+   "trace_links": [
+    {
+     "type": "Code",
+     "ref": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/package-info.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site",
+     "exists": true,
+     "target_status": null,
+     "target_stability": null
+    },
+    {
+     "type": "Requirement",
+     "ref": "IR-APP-006",
+     "relation": "depends_on",
+     "notes": "Logger",
+     "exists": true,
+     "target_status": "planned",
+     "target_stability": "draft"
+    }
+   ],
+   "all_code_paths_exist": true,
+   "implementability_evidence": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:124-144",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:146-160"
+   ]
+  },
+  {
+   "req_id": "FR-APP-015",
+   "file": "docs/spec/05.application.srs.md",
+   "trace_links": [
+    {
+     "type": "Code",
+     "ref": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site",
+     "exists": true,
+     "target_status": null,
+     "target_stability": null
+    },
+    {
+     "type": "Code",
+     "ref": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site",
+     "exists": true,
+     "target_status": null,
+     "target_stability": null
+    },
+    {
+     "type": "Requirement",
+     "ref": "IR-APP-007",
+     "relation": "depends_on",
+     "notes": "access log options",
+     "exists": true,
+     "target_status": "planned",
+     "target_stability": "draft"
+    },
+    {
+     "type": "Requirement",
+     "ref": "FR-APP-006",
+     "relation": "depends_on",
+     "notes": "requestId shared with the error body",
+     "exists": true,
+     "target_status": "planned",
+     "target_stability": "draft"
+    }
+   ],
+   "all_code_paths_exist": true,
+   "implementability_evidence": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java:177-214,339-360",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java:26,82-85"
+   ]
+  },
+  {
+   "req_id": "FR-APP-016",
+   "file": "docs/spec/05.application.srs.md",
+   "trace_links": [
+    {
+     "type": "Code",
+     "ref": "NaruServe-logcat/src/main/java/com/snoworca/naruserve/logcat/package-info.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site",
+     "exists": true,
+     "target_status": null,
+     "target_stability": null
+    },
+    {
+     "type": "Requirement",
+     "ref": "IR-APP-006",
+     "relation": "depends_on",
+     "notes": "Logger",
+     "exists": true,
+     "target_status": "planned",
+     "target_stability": "draft"
+    },
+    {
+     "type": "Requirement",
+     "ref": "CON-BUILD-008",
+     "relation": "extends",
+     "notes": "builds without an Android SDK",
+     "exists": true,
+     "target_status": "verified",
+     "target_stability": "evolving"
+    }
+   ],
+   "all_code_paths_exist": true,
+   "implementability_evidence": [
+    "build.gradle:129-131",
+    "build.gradle:177-179",
+    "NaruServe-logcat/src/main/java/com/snoworca/naruserve/logcat/package-info.java"
+   ]
+  },
+  {
+   "req_id": "FR-APP-017",
+   "file": "docs/spec/05.application.srs.md",
+   "trace_links": [
+    {
+     "type": "Code",
+     "ref": "NaruServe-filelog/src/main/java/com/snoworca/naruserve/filelog/package-info.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site",
+     "exists": true,
+     "target_status": null,
+     "target_stability": null
+    },
+    {
+     "type": "Requirement",
+     "ref": "IR-APP-006",
+     "relation": "depends_on",
+     "notes": "Logger and LogLevel",
+     "exists": true,
+     "target_status": "planned",
+     "target_stability": "draft"
+    },
+    {
+     "type": "Requirement",
+     "ref": "CON-BUILD-012",
+     "relation": "extends",
+     "notes": "API 21 animal-sniffer check",
+     "exists": true,
+     "target_status": "verified",
+     "target_stability": "evolving"
+    }
+   ],
+   "all_code_paths_exist": true,
+   "implementability_evidence": [
+    "NaruServe-filelog/src/main/java/com/snoworca/naruserve/filelog/package-info.java",
+    "build.gradle:60"
+   ]
+  },
+  {
+   "req_id": "FR-APP-018",
+   "file": "docs/spec/05.application.srs.md",
+   "trace_links": [
+    {
+     "type": "Code",
+     "ref": "NaruServe-slf4j/src/main/java/com/snoworca/naruserve/slf4j/package-info.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site",
+     "exists": true,
+     "target_status": null,
+     "target_stability": null
+    },
+    {
+     "type": "Requirement",
+     "ref": "IR-APP-006",
+     "relation": "depends_on",
+     "notes": "Logger",
+     "exists": true,
+     "target_status": "planned",
+     "target_stability": "draft"
+    }
+   ],
+   "all_code_paths_exist": true,
+   "implementability_evidence": [
+    "build.gradle:59",
+    "NaruServe-slf4j/src/main/java/com/snoworca/naruserve/slf4j/package-info.java"
+   ]
+  },
+  {
+   "req_id": "FR-HTTP-021",
+   "file": "docs/spec/04.http-core.srs.md",
+   "trace_links": [
+    {
+     "type": "Requirement",
+     "ref": "FR-HTTP-002",
+     "relation": "supersedes",
+     "notes": "-",
+     "exists": false,
+     "target_status": "discarded",
+     "target_stability": "discarded"
+    },
+    {
+     "type": "Code",
+     "ref": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site",
+     "exists": true,
+     "target_status": null,
+     "target_stability": null
+    },
+    {
+     "type": "Requirement",
+     "ref": "FR-APP-006",
+     "relation": "depends_on",
+     "notes": "standard error body",
+     "exists": true,
+     "target_status": "planned",
+     "target_stability": "draft"
+    },
+    {
+     "type": "Requirement",
+     "ref": "FR-APP-003",
+     "relation": "depends_on",
+     "notes": "middleware pipeline",
+     "exists": true,
+     "target_status": "planned",
+     "target_stability": "draft"
+    },
+    {
+     "type": "Requirement",
+     "ref": "FR-ROUTE-004",
+     "relation": "extends",
+     "notes": "path validator",
+     "exists": true,
+     "target_status": "verified",
+     "target_stability": "evolving"
+    }
+   ],
+   "all_code_paths_exist": true,
+   "implementability_evidence": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:80-91",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:44-50"
+   ]
+  },
+  {
+   "req_id": "FR-HTTP-022",
+   "file": "docs/spec/04.http-core.srs.md",
+   "trace_links": [
+    {
+     "type": "Requirement",
+     "ref": "FR-HTTP-003",
+     "relation": "supersedes",
+     "notes": "-",
+     "exists": false,
+     "target_status": "discarded",
+     "target_stability": "discarded"
+    },
+    {
+     "type": "Code",
+     "ref": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site",
+     "exists": true,
+     "target_status": null,
+     "target_stability": null
+    },
+    {
+     "type": "Requirement",
+     "ref": "FR-APP-006",
+     "relation": "depends_on",
+     "notes": "standard error body",
+     "exists": true,
+     "target_status": "planned",
+     "target_stability": "draft"
+    },
+    {
+     "type": "Requirement",
+     "ref": "FR-APP-003",
+     "relation": "depends_on",
+     "notes": "middleware before automatic responses",
+     "exists": true,
+     "target_status": "planned",
+     "target_stability": "draft"
+    },
+    {
+     "type": "Requirement",
+     "ref": "IR-ROUTE-004",
+     "relation": "extends",
+     "notes": "lookup result contract",
+     "exists": true,
+     "target_status": "verified",
+     "target_stability": "evolving"
+    }
+   ],
+   "all_code_paths_exist": true,
+   "implementability_evidence": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:51-74",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:95-113"
+   ]
+  },
+  {
+   "req_id": "FR-HTTP-023",
+   "file": "docs/spec/04.http-core.srs.md",
+   "trace_links": [
+    {
+     "type": "Requirement",
+     "ref": "FR-HTTP-005",
+     "relation": "supersedes",
+     "notes": "-",
+     "exists": false,
+     "target_status": "discarded",
+     "target_stability": "discarded"
+    },
+    {
+     "type": "Code",
+     "ref": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site",
+     "exists": true,
+     "target_status": null,
+     "target_stability": null
+    },
+    {
+     "type": "Requirement",
+     "ref": "FR-APP-006",
+     "relation": "depends_on",
+     "notes": "standard error body",
+     "exists": true,
+     "target_status": "planned",
+     "target_stability": "draft"
+    },
+    {
+     "type": "Requirement",
+     "ref": "FR-APP-015",
+     "relation": "depends_on",
+     "notes": "access log line",
+     "exists": true,
+     "target_status": "planned",
+     "target_stability": "draft"
+    }
+   ],
+   "all_code_paths_exist": true,
+   "implementability_evidence": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:80-91"
+   ]
+  },
+  {
+   "req_id": "FR-HTTP-024",
+   "file": "docs/spec/04.http-core.srs.md",
+   "trace_links": [
+    {
+     "type": "Requirement",
+     "ref": "FR-HTTP-006",
+     "relation": "supersedes",
+     "notes": "-",
+     "exists": false,
+     "target_status": "discarded",
+     "target_stability": "discarded"
+    },
+    {
+     "type": "Code",
+     "ref": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site",
+     "exists": true,
+     "target_status": null,
+     "target_stability": null
+    },
+    {
+     "type": "Requirement",
+     "ref": "FR-APP-005",
+     "relation": "depends_on",
+     "notes": "error path",
+     "exists": true,
+     "target_status": "planned",
+     "target_stability": "draft"
+    },
+    {
+     "type": "Requirement",
+     "ref": "FR-APP-006",
+     "relation": "depends_on",
+     "notes": "standard error body",
+     "exists": true,
+     "target_status": "planned",
+     "target_stability": "draft"
+    },
+    {
+     "type": "Requirement",
+     "ref": "FR-HTTP-016",
+     "relation": "extends",
+     "notes": "response state machine",
+     "exists": true,
+     "target_status": "verified",
+     "target_stability": "evolving"
+    }
+   ],
+   "all_code_paths_exist": true,
+   "implementability_evidence": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java:259-306",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:133-143"
+   ]
+  },
+  {
+   "req_id": "FR-HTTP-025",
+   "file": "docs/spec/04.http-core.srs.md",
+   "trace_links": [
+    {
+     "type": "Requirement",
+     "ref": "FR-HTTP-010",
+     "relation": "supersedes",
+     "notes": "-",
+     "exists": false,
+     "target_status": "discarded",
+     "target_stability": "discarded"
+    },
+    {
+     "type": "Code",
+     "ref": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site",
+     "exists": true,
+     "target_status": null,
+     "target_stability": null
+    },
+    {
+     "type": "Requirement",
+     "ref": "FR-APP-005",
+     "relation": "depends_on",
+     "notes": "error path",
+     "exists": true,
+     "target_status": "planned",
+     "target_stability": "draft"
+    },
+    {
+     "type": "Requirement",
+     "ref": "FR-APP-006",
+     "relation": "depends_on",
+     "notes": "standard error body",
+     "exists": true,
+     "target_status": "planned",
+     "target_stability": "draft"
+    }
+   ],
+   "all_code_paths_exist": true,
+   "implementability_evidence": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java:44-46,213-217",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:127-132"
+   ]
+  },
+  {
+   "req_id": "IR-APP-001",
+   "file": "docs/spec/05.application.srs.md",
+   "trace_links": [
+    {
+     "type": "Code",
+     "ref": "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site",
+     "exists": true,
+     "target_status": null,
+     "target_stability": null
+    },
+    {
+     "type": "Code",
+     "ref": "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/package-info.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site",
+     "exists": true,
+     "target_status": null,
+     "target_stability": null
+    },
+    {
+     "type": "Code",
+     "ref": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+     "relation": "uses",
+     "notes": "trace_intent=addition_site",
+     "exists": true,
+     "target_status": null,
+     "target_stability": null
+    }
+   ],
+   "all_code_paths_exist": true,
+   "implementability_evidence": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:7-33",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:50-51",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/package-info.java"
+   ]
+  },
+  {
+   "req_id": "IR-APP-002",
+   "file": "docs/spec/05.application.srs.md",
+   "trace_links": [
+    {
+     "type": "Code",
+     "ref": "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site",
+     "exists": true,
+     "target_status": null,
+     "target_stability": null
+    },
+    {
+     "type": "Code",
+     "ref": "NaruServe-api/src/main/java/com/snoworca/naruserve/RouteBuilder.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site",
+     "exists": true,
+     "target_status": null,
+     "target_stability": null
+    },
+    {
+     "type": "Code",
+     "ref": "NaruServe-api/src/main/java/com/snoworca/naruserve/package-info.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site",
+     "exists": true,
+     "target_status": null,
+     "target_stability": null
+    },
+    {
+     "type": "Requirement",
+     "ref": "IR-HTTP-005",
+     "relation": "extends",
+     "notes": "adds methods to the wave 3 RestApp surface",
+     "exists": true,
+     "target_status": "verified",
+     "target_stability": "evolving"
+    },
+    {
+     "type": "Requirement",
+     "ref": "IR-HTTP-006",
+     "relation": "extends",
+     "notes": "adds RouteBuilder.use",
+     "exists": true,
+     "target_status": "verified",
+     "target_stability": "evolving"
+    }
+   ],
+   "all_code_paths_exist": true,
+   "implementability_evidence": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:9-32",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/RouteBuilder.java:8-23",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:179-225"
+   ]
+  },
+  {
+   "req_id": "IR-APP-003",
+   "file": "docs/spec/05.application.srs.md",
+   "trace_links": [
+    {
+     "type": "Code",
+     "ref": "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site",
+     "exists": true,
+     "target_status": null,
+     "target_stability": null
+    },
+    {
+     "type": "Code",
+     "ref": "NaruServe-api/src/main/java/com/snoworca/naruserve/package-info.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site",
+     "exists": true,
+     "target_status": null,
+     "target_stability": null
+    },
+    {
+     "type": "Requirement",
+     "ref": "IR-HTTP-005",
+     "relation": "extends",
+     "notes": "adds onError to RestApp",
+     "exists": true,
+     "target_status": "verified",
+     "target_stability": "evolving"
+    }
+   ],
+   "all_code_paths_exist": true,
+   "implementability_evidence": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:7-33",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/package-info.java"
+   ]
+  },
+  {
+   "req_id": "IR-APP-004",
+   "file": "docs/spec/05.application.srs.md",
+   "trace_links": [
+    {
+     "type": "Code",
+     "ref": "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site",
+     "exists": true,
+     "target_status": null,
+     "target_stability": null
+    },
+    {
+     "type": "Code",
+     "ref": "NaruServe-api/src/main/java/com/snoworca/naruserve/package-info.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site",
+     "exists": true,
+     "target_status": null,
+     "target_stability": null
+    },
+    {
+     "type": "Requirement",
+     "ref": "IR-HTTP-001",
+     "relation": "extends",
+     "notes": "adds service and application to Request",
+     "exists": true,
+     "target_status": "verified",
+     "target_stability": "evolving"
+    },
+    {
+     "type": "Requirement",
+     "ref": "FR-HTTP-012",
+     "relation": "extends",
+     "notes": "same attribute semantics as the request attribute store",
+     "exists": true,
+     "target_status": "verified",
+     "target_stability": "evolving"
+    }
+   ],
+   "all_code_paths_exist": true,
+   "implementability_evidence": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java:11-54",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java:25,173-186"
+   ]
+  },
+  {
+   "req_id": "IR-APP-005",
+   "file": "docs/spec/05.application.srs.md",
+   "trace_links": [
+    {
+     "type": "Code",
+     "ref": "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site",
+     "exists": true,
+     "target_status": null,
+     "target_stability": null
+    },
+    {
+     "type": "Code",
+     "ref": "NaruServe-api/src/main/java/com/snoworca/naruserve/package-info.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site",
+     "exists": true,
+     "target_status": null,
+     "target_stability": null
+    },
+    {
+     "type": "Requirement",
+     "ref": "IR-HTTP-005",
+     "relation": "extends",
+     "notes": "adds lifecycle methods to RestApp",
+     "exists": true,
+     "target_status": "verified",
+     "target_stability": "evolving"
+    },
+    {
+     "type": "Requirement",
+     "ref": "IR-HTTP-004",
+     "relation": "extends",
+     "notes": "listen and shutdown drive the adapter bind, stop and release",
+     "exists": true,
+     "target_status": "verified",
+     "target_stability": "evolving"
+    }
+   ],
+   "all_code_paths_exist": true,
+   "implementability_evidence": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpAdapter.java:13-29",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:7-33",
+    "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/InMemoryHttpAdapter.java:75-136"
+   ]
+  },
+  {
+   "req_id": "IR-APP-006",
+   "file": "docs/spec/05.application.srs.md",
+   "trace_links": [
+    {
+     "type": "Code",
+     "ref": "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site",
+     "exists": true,
+     "target_status": null,
+     "target_stability": null
+    },
+    {
+     "type": "Code",
+     "ref": "NaruServe-api/src/main/java/com/snoworca/naruserve/package-info.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site",
+     "exists": true,
+     "target_status": null,
+     "target_stability": null
+    },
+    {
+     "type": "Requirement",
+     "ref": "IR-HTTP-005",
+     "relation": "extends",
+     "notes": "adds logger methods to RestApp",
+     "exists": true,
+     "target_status": "verified",
+     "target_stability": "evolving"
+    }
+   ],
+   "all_code_paths_exist": true,
+   "implementability_evidence": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:7-33",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/package-info.java"
+   ]
+  },
+  {
+   "req_id": "IR-APP-007",
+   "file": "docs/spec/05.application.srs.md",
+   "trace_links": [
+    {
+     "type": "Code",
+     "ref": "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site",
+     "exists": true,
+     "target_status": null,
+     "target_stability": null
+    },
+    {
+     "type": "Code",
+     "ref": "NaruServe-api/src/main/java/com/snoworca/naruserve/package-info.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site",
+     "exists": true,
+     "target_status": null,
+     "target_stability": null
+    },
+    {
+     "type": "Requirement",
+     "ref": "IR-APP-006",
+     "relation": "depends_on",
+     "notes": "LogLevel",
+     "exists": true,
+     "target_status": "planned",
+     "target_stability": "draft"
+    }
+   ],
+   "all_code_paths_exist": true,
+   "implementability_evidence": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:7-33"
+   ]
+  },
+  {
+   "req_id": "OPS-APP-001",
+   "file": "docs/spec/05.application.srs.md",
+   "trace_links": [
+    {
+     "type": "Code",
+     "ref": "docs/api/app.md",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site",
+     "exists": true,
+     "target_status": null,
+     "target_stability": null
+    },
+    {
+     "type": "Code",
+     "ref": "docs/api/middleware.md",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site",
+     "exists": true,
+     "target_status": null,
+     "target_stability": null
+    },
+    {
+     "type": "Code",
+     "ref": "docs/api/lifecycle.md",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site",
+     "exists": true,
+     "target_status": null,
+     "target_stability": null
+    },
+    {
+     "type": "Code",
+     "ref": "docs/api/logging.md",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site",
+     "exists": true,
+     "target_status": null,
+     "target_stability": null
+    },
+    {
+     "type": "Requirement",
+     "ref": "OPS-HTTP-001",
+     "relation": "extends",
+     "notes": "the wave 3 docs decisions this builds on",
+     "exists": false,
+     "target_status": "discarded",
+     "target_stability": "discarded"
+    },
+    {
+     "type": "Requirement",
+     "ref": "OPS-HTTP-003",
+     "relation": "extends",
+     "notes": "wave 3 docs decisions (wave 4 successor)",
+     "exists": true,
+     "target_status": "planned",
+     "target_stability": "draft"
+    }
+   ],
+   "all_code_paths_exist": true,
+   "implementability_evidence": [
+    "docs/api/app.md:27",
+    "docs/api/middleware.md:25",
+    "docs/api/lifecycle.md:110",
+    "docs/api/logging.md:33"
+   ]
+  },
+  {
+   "req_id": "OPS-APP-002",
+   "file": "docs/spec/05.application.srs.md",
+   "trace_links": [
+    {
+     "type": "Code",
+     "ref": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site",
+     "exists": true,
+     "target_status": null,
+     "target_stability": null
+    },
+    {
+     "type": "Requirement",
+     "ref": "OPS-HTTP-002",
+     "relation": "extends",
+     "notes": "the docs compile gate of wave 3",
+     "exists": false,
+     "target_status": "discarded",
+     "target_stability": "discarded"
+    },
+    {
+     "type": "Requirement",
+     "ref": "OPS-APP-001",
+     "relation": "depends_on",
+     "notes": "docs content",
+     "exists": true,
+     "target_status": "planned",
+     "target_stability": "draft"
+    },
+    {
+     "type": "Requirement",
+     "ref": "OPS-HTTP-004",
+     "relation": "extends",
+     "notes": "docs compile gate (wave 4 successor)",
+     "exists": true,
+     "target_status": "planned",
+     "target_stability": "draft"
+    }
+   ],
+   "all_code_paths_exist": true,
+   "implementability_evidence": [
+    "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java:66-130",
+    "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java:147"
+   ]
+  },
+  {
+   "req_id": "OPS-HTTP-003",
+   "file": "docs/spec/04.http-core.srs.md",
+   "trace_links": [
+    {
+     "type": "Requirement",
+     "ref": "OPS-HTTP-001",
+     "relation": "supersedes",
+     "notes": "-",
+     "exists": false,
+     "target_status": "discarded",
+     "target_stability": "discarded"
+    },
+    {
+     "type": "Requirement",
+     "ref": "OPS-APP-001",
+     "relation": "depends_on",
+     "notes": "-",
+     "exists": true,
+     "target_status": "planned",
+     "target_stability": "draft"
+    },
+    {
+     "type": "Requirement",
+     "ref": "OPS-ROUTE-003",
+     "relation": "depends_on",
+     "notes": "-",
+     "exists": true,
+     "target_status": "planned",
+     "target_stability": "draft"
+    },
+    {
+     "type": "Code",
+     "ref": "docs/api/request.md",
+     "relation": "implements",
+     "notes": "trace_intent=verifies",
+     "exists": true,
+     "target_status": null,
+     "target_stability": null
+    },
+    {
+     "type": "Code",
+     "ref": "docs/api/response.md",
+     "relation": "implements",
+     "notes": "trace_intent=verifies",
+     "exists": true,
+     "target_status": null,
+     "target_stability": null
+    },
+    {
+     "type": "Code",
+     "ref": "docs/api/routing.md",
+     "relation": "implements",
+     "notes": "trace_intent=verifies",
+     "exists": true,
+     "target_status": null,
+     "target_stability": null
+    },
+    {
+     "type": "Code",
+     "ref": "docs/api/app.md",
+     "relation": "implements",
+     "notes": "trace_intent=verifies",
+     "exists": true,
+     "target_status": null,
+     "target_stability": null
+    },
+    {
+     "type": "Code",
+     "ref": "docs/api/defaults.md",
+     "relation": "implements",
+     "notes": "trace_intent=verifies",
+     "exists": true,
+     "target_status": null,
+     "target_stability": null
+    },
+    {
+     "type": "Code",
+     "ref": "docs/api/express-migration.md",
+     "relation": "implements",
+     "notes": "trace_intent=verifies",
+     "exists": true,
+     "target_status": null,
+     "target_stability": null
+    },
+    {
+     "type": "Code",
+     "ref": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java",
+     "relation": "verifies",
+     "notes": "trace_intent=verifies",
+     "exists": true,
+     "target_status": null,
+     "target_stability": null
+    },
+    {
+     "type": "Requirement",
+     "ref": "IR-HTTP-005",
+     "relation": "depends_on",
+     "notes": "documented API",
+     "exists": true,
+     "target_status": "verified",
+     "target_stability": "evolving"
+    },
+    {
+     "type": "Requirement",
+     "ref": "FR-HTTP-014",
+     "relation": "depends_on",
+     "notes": "documented API",
+     "exists": true,
+     "target_status": "verified",
+     "target_stability": "evolving"
+    },
+    {
+     "type": "Requirement",
+     "ref": "FR-HTTP-012",
+     "relation": "depends_on",
+     "notes": "documented API",
+     "exists": true,
+     "target_status": "verified",
+     "target_stability": "evolving"
+    },
+    {
+     "type": "Requirement",
+     "ref": "FR-HTTP-009",
+     "relation": "depends_on",
+     "notes": "documented API",
+     "exists": true,
+     "target_status": "verified",
+     "target_stability": "evolving"
+    }
+   ],
+   "all_code_paths_exist": true,
+   "implementability_evidence": [
+    "docs/api/routing.md:21",
+    "docs/api/express-migration.md:85",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java"
+   ]
+  },
+  {
+   "req_id": "OPS-HTTP-004",
+   "file": "docs/spec/04.http-core.srs.md",
+   "trace_links": [
+    {
+     "type": "Requirement",
+     "ref": "OPS-HTTP-002",
+     "relation": "supersedes",
+     "notes": "-",
+     "exists": false,
+     "target_status": "discarded",
+     "target_stability": "discarded"
+    },
+    {
+     "type": "Code",
+     "ref": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site",
+     "exists": true,
+     "target_status": null,
+     "target_stability": null
+    },
+    {
+     "type": "Requirement",
+     "ref": "IR-HTTP-005",
+     "relation": "extends",
+     "notes": "compiles against the RestApp surface",
+     "exists": true,
+     "target_status": "verified",
+     "target_stability": "evolving"
+    },
+    {
+     "type": "Code",
+     "ref": "build.gradle",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site",
+     "exists": true,
+     "target_status": null,
+     "target_stability": null
+    },
+    {
+     "type": "Requirement",
+     "ref": "IR-HTTP-001",
+     "relation": "depends_on",
+     "notes": "wave 3 API surface",
+     "exists": true,
+     "target_status": "verified",
+     "target_stability": "evolving"
+    }
+   ],
+   "all_code_paths_exist": true,
+   "implementability_evidence": [
+    "build.gradle:248",
+    "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java:36-147"
+   ]
+  },
+  {
+   "req_id": "OPS-ROUTE-003",
+   "file": "docs/spec/03.routing.srs.md",
+   "trace_links": [
+    {
+     "type": "Requirement",
+     "ref": "OPS-ROUTE-002",
+     "relation": "supersedes",
+     "notes": "-",
+     "exists": false,
+     "target_status": "discarded",
+     "target_stability": "discarded"
+    },
+    {
+     "type": "Requirement",
+     "ref": "OPS-APP-001",
+     "relation": "depends_on",
+     "notes": "wave 4 docs decisions",
+     "exists": true,
+     "target_status": "planned",
+     "target_stability": "draft"
+    },
+    {
+     "type": "Code",
+     "ref": "docs/api/routing.md",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site",
+     "exists": true,
+     "target_status": null,
+     "target_stability": null
+    }
+   ],
+   "all_code_paths_exist": true,
+   "implementability_evidence": [
+    "docs/api/routing.md:21",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/RoutingDocsTest.java"
+   ]
+  },
+  {
+   "req_id": "SEC-APP-001",
+   "file": "docs/spec/05.application.srs.md",
+   "trace_links": [
+    {
+     "type": "Code",
+     "ref": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site",
+     "exists": true,
+     "target_status": null,
+     "target_stability": null
+    },
+    {
+     "type": "Requirement",
+     "ref": "FR-APP-015",
+     "relation": "depends_on",
+     "notes": "the access log line",
+     "exists": true,
+     "target_status": "planned",
+     "target_stability": "draft"
+    }
+   ],
+   "all_code_paths_exist": true,
+   "implementability_evidence": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:154-163"
+   ]
+  }
+ ],
+ "notes": [
+  "Every Code trace path exists.",
+  "Supersedes targets FR-HTTP-002/003/005/006/010, OPS-HTTP-001/002, OPS-ROUTE-002 are discarded blocks; supersedes is not a dependency.",
+  "Outside this wave: verified blocks at docs/spec/04.http-core.srs.md:676 and :750 still depends_on discarded FR-HTTP-002."
+ ]
+}

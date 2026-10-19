@@ -1,0 +1,126 @@
+{
+  "iter": 1,
+  "fixes": [
+    {
+      "finding_id": "A-001",
+      "files_changed": [
+        {"path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/CookieFactoryHook.java", "line_range": "18-26"}
+      ],
+      "tdd": "exempt: non-behavioral refactor (class literal instead of Class.forName); ConsumerRulesTest, CookieParserTest and CookieTest stay green",
+      "red_failure": "",
+      "rationale_full": "Replaced Class.forName(\"com.snoworca.naruserve.Cookie\") with Cookie.class.getDeclaredMethod(\"unvalidated\", String.class, String.class), so no class name is looked up by string and R8 shrinker string adaptation is no longer needed. Dropped the stale 'Class.forName also initialises Cookie' comment (the static invoke initialises Cookie anyway). The -keepclassmembers rule is unchanged, so ConsumerRulesTest stays green. This also resolves the duplicates B-009 and C-006."
+    },
+    {
+      "finding_id": "A-002",
+      "files_changed": [
+        {"path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/CookieParser.java", "line_range": "29-32"},
+        {"path": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/CookieParserTest.java", "line_range": "45-51"},
+        {"path": "docs/api/cookie.md", "line_range": "75"}
+      ],
+      "tdd": "red-green",
+      "red_failure": "CookieParserTest > FR_COOKIE_002_AC4_whitespaceAroundTheEqualsSignIsTrimmed FAILED java.lang.AssertionError at CookieParserTest.java:48 (input 'a = 1; b =\\t\"x y\" ' gave [b=\"x y\"] instead of [a=1, b=\"x y\"]: name 'a ' failed isToken and was dropped)",
+      "rationale_full": "The parser trimmed only the whole pair, so whitespace around '=' stayed in the name (making it a non-token, so the cookie was dropped) and at the start of the value. The name and the value are now trimmed separately, as Express's cookie parser does. FR-COOKIE-002 AC-4 still holds: 'bad name=1' still fails isToken, a quoted value keeps its quotes and nothing is decoded; all existing AC-4 cases stay green. Updated docs/api/cookie.md to say whitespace around '=' is trimmed."
+    },
+    {
+      "finding_id": "B-001",
+      "files_changed": [
+        {"path": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdExchange.java", "line_range": "32-70, 127-190"},
+        {"path": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/AbortSocketTest.java", "line_range": "44-78"}
+      ],
+      "tdd": "red-green",
+      "red_failure": "AbortSocketTest > FR_ENGINE_001_AC2_abortDuringAConcurrentWriteOnlyFailsTheWriterWithIOException FAILED java.lang.AssertionError: java.lang.NullPointerException (the streaming writer thread hit an NPE inside TinyHttpd's ExchangeResponse after abort() let run() hand the response back and TinyHttpd released its buffer)",
+      "rationale_full": "TinyHttpdExchange now serialises every core touch of the non-thread-safe TinyHttpd Response on the exchange monitor. commit() is synchronized (the aborted and started checks plus setStatus/addHeader/getOutputStream), each write/flush of the returned stream runs check()+out.write under the same lock, and finish() is synchronized. abort() stays lock-free (volatile flag plus countDown), so it never blocks. After ended.await(), run() takes the lock once when aborted, so the worker waits until any in-flight core write has left the Response before TinyHttpd takes it back. A write blocked in the socket bounds that wait by writeTimeout, which is the documented B-003 shortcut. The private start() helper was folded into commit(); no public or SPI signature changed. Regression test: a handler streams 64 KiB chunks on its own thread while a third thread calls abort(), 30 rounds over a real 127.0.0.1 socket; the writer must fail only with IOException and its thread must end."
+    },
+    {
+      "finding_id": "B-002",
+      "files_changed": [
+        {"path": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdExchange.java", "line_range": "56-70"},
+        {"path": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/AbortSocketTest.java", "line_range": "29-42"}
+      ],
+      "tdd": "red-green",
+      "red_failure": "AbortSocketTest > FR_ENGINE_001_AC2_abortBeforeCommitGivesATruncatedResponse FAILED java.lang.AssertionError: 'HTTP/1.1 500 Internal Server Error ... Content-Length: 2 ... {}' (a pre-commit abort produced a complete error response, not an abnormal close)",
+      "rationale_full": "When the exchange was aborted and the response was never started (and TinyHttpd has not committed), run() now marks it started, sets status 500, declares Content-Length 1, sets close-connection and returns normally. TinyHttpd's ExchangeResponse.finish() then sees 0 of 1 declared body bytes, sets mustClose and closes the connection, so the client sees a truncated (abnormal) response, as the HttpExchange.abort() contract and docs/api/response.md ('연결 끊기') describe. This uses only TinyHttpd's public API. An abort after commit keeps the old path (close-connection plus IOException). The old shortcut comment was replaced with the explanation of this mechanism. The test uses a raw socket and checks that the body is shorter than the declared Content-Length."
+    },
+    {
+      "finding_id": "B-005",
+      "files_changed": [
+        {"path": "NaruServe-gson/src/main/java/com/snoworca/naruserve/gson/GsonJsonCodec.java", "line_range": "6, 85-90"},
+        {"path": "NaruServe-gson/src/test/java/com/snoworca/naruserve/gson/GsonJsonCodecTest.java", "line_range": "473-487"},
+        {"path": "docs/api/json.md", "line_range": "69"}
+      ],
+      "tdd": "red-green",
+      "red_failure": "GsonJsonCodecTest > FR_JSON_003_deserializerJsonParseExceptionBecomesIOException FAILED com.google.gson.JsonParseException at GsonJsonCodecTest.java:479 (the user deserializer's unchecked exception escaped decode)",
+      "rationale_full": "decode() now has 'catch (JsonIOException e) { throw e; }' followed by 'catch (JsonParseException e) { throw new IOException(e.getMessage(), e); }' after the existing MalformedJsonException/JsonSyntaxException catch. A user JsonDeserializer rejecting input (Gson's documented way to do it) becomes bad input (400), in line with the FR-JSON-003 AC-6 decision for JsonSyntaxException. JsonIOException (e.g. a class with no usable constructor, SDS-AC-3) stays unchecked. The IllegalStateException branch is untouched. Documented in docs/api/json.md."
+    },
+    {
+      "finding_id": "B-006",
+      "files_changed": [
+        {"path": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/JsonErrorHandler.java", "line_range": "24-36"},
+        {"path": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdAdapter.java", "line_range": "50"},
+        {"path": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/TransportRejectionTest.java", "line_range": "143-158"}
+      ],
+      "tdd": "red-green",
+      "red_failure": "TransportRejectionTest > FR_ENGINE_005_emptyErrorBodyCarriesNoJsonContentType FAILED java.lang.AssertionError: 'HTTP/1.1 421 ... Content-Type: application/json; charset=UTF-8 / Content-Length: 0' expected:<null> but was:<application/json; charset=UTF-8>",
+      "rationale_full": "JsonErrorHandler.render sets the application/json Content-Type only when the rendered body is non-empty. A zero-byte body is not JSON, and the plain bind(host, port, handler) overload uses an empty renderer. On the settings path the standard renderer never returns an empty body, so IR-ENGINE-002 AC-5 / FR-ENGINE-005 AC-3 behaviour is unchanged (sdsAc3 test still asserts application/json). Updated the comment in the plain bind overload. Test: a real-socket Host-allowlist 421 with an empty renderer has Content-Length 0 and no Content-Type."
+    },
+    {
+      "finding_id": "C-001",
+      "files_changed": [
+        {"path": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java", "line_range": "108, 116, 118, 122, 140-141, 587-597"}
+      ],
+      "tdd": "exempt: test-quality only. The new reason-identifier check was run first and failed on exactly the 4 stale reasons ('`PostService` is not in the block', '`Created` ...', '`User` ...', '`UserRepository` ...'); it is green after the rewording",
+      "red_failure": "sdsAc4_OPS_JSON_001_AC5_skippedJsonBlocksNameTheReasonThatStillApplies: expected:<[]> but was:<[request.md ... `PostService` is not in the block, response.md ... `Created` is not in the block, response.md ... `User` is not in the block, routing.md ... `UserRepository` is not in the block]>",
+      "rationale_full": "Reworded the four skip reasons to the real compile cause: \"app-defined variable `postService`\", \"app-defined variables `id` and `created`\", \"app-defined variables `user`, `user1` and `user2`\" and \"app-defined methods `find`, `create` and `remove`\". The REASON category regex gained the alternatives 'app-defined variables?' and 'app-defined methods', which these truthful reasons need. Every skip must still match a named category followed by a backticked name. Flag for the reviewer: this widens the accepted vocabulary of sdsAc12_OPS_HTTP_004_AC4 by two categories, although no assertion was removed. The overall gate is stricter, because each backticked name must now appear in its block. Added the check that the last dotted segment of every backticked name in a skip reason (argument list removed) occurs in that skip's block body."
+    },
+    {
+      "finding_id": "C-002",
+      "files_changed": [
+        {"path": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java", "line_range": "587-597"}
+      ],
+      "tdd": "exempt: test-quality only (vacuous test made meaningful)",
+      "red_failure": "",
+      "rationale_full": "skippedJsonBlocksNameTheReasonThatStillApplies keeps its original check and its OPS-JSON-001 AC-5 citation, so nothing was removed. It now also runs the C-001 check that every named identifier occurs in the block, applied to every skipped block, so the test can fail on its own and is no longer subsumed by noSkipNamesAWave5Member."
+    },
+    {
+      "finding_id": "C-003",
+      "files_changed": [
+        {"path": "NaruServe-api/src/main/java/com/snoworca/naruserve/TypeRef.java", "line_range": "1-129"},
+        {"path": "NaruServe-api/src/test/java/com/snoworca/naruserve/TypeRefTest.java", "line_range": "19-24"},
+        {"path": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/JsonKotlinTest.kt", "line_range": "46-51"},
+        {"path": "docs/api/json.md", "line_range": "16"}
+      ],
+      "tdd": "red-green",
+      "red_failure": "JsonKotlinTest > IR-JSON-001 AC-4 Kotlin object TypeRef captures List of String FAILED java.lang.AssertionError: expected:<java.util.List<java.lang.String>> but was:<java.util.List<? extends java.lang.String>>",
+      "rationale_full": "The normalisation is sound and kept all tests green, so it was implemented. When the anonymous subclass carries kotlin.Metadata (matched by annotation type name, so Core takes no Kotlin dependency), TypeRef replaces every wildcard that has no lower bound and a single upper bound X with X, recursing through ParameterizedType arguments. It rebuilds changed types with a private nested ParameterizedType whose equals and hashCode follow the JDK contract (equals accepts any ParameterizedType; hash = Arrays.hashCode(args) ^ hash(owner) ^ hash(raw)), so equality holds both ways. Its toString avoids Type.getTypeName() (API 26). Java-written TypeRefs and contravariant wildcards are untouched, and Gson resolves both forms the same way. No public signature changed and animal-sniffer API 21 passes. Two known limits carry shortcut comments: R8 may strip kotlin.Metadata, which leaves the wildcard (still decoded the same), and GenericArrayType is not walked. The Kotlin test now asserts equality and hashCode with the Java new TypeRef<List<String>>(){} type in both directions, via the TypeRefTest.javaListOfString() helper. The existing assertions are kept. docs/api/json.md now says the Kotlin type equals the Java one."
+    },
+    {
+      "finding_id": "C-004",
+      "files_changed": [
+        {"path": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/JsonDocsKotlinTest.kt", "line_range": "46-55, 159"}
+      ],
+      "tdd": "exempt: test-quality only (adds coverage of the 201 branch)",
+      "red_failure": "",
+      "rationale_full": "DocsCodec returns CreateUserRequest().apply { name = \"a\" } for the marker body {\"name\":\"a\"}. The CreateUserRequest docs example test now also asserts 201 for it, so the success branch of the kotlin.md example runs instead of only compiling."
+    },
+    {
+      "finding_id": "C-005",
+      "files_changed": [
+        {"path": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LimitsSocketTest.java", "line_range": "104-111"}
+      ],
+      "tdd": "exempt: test-quality only (ties OPS-ENGINE-001 AC-2/AC-6 to the code); passes against current code",
+      "red_failure": "",
+      "rationale_full": "Added OPS_ENGINE_001_AC2_AC6_defaultHeaderLineLimitIs8190Bytes. With default settings over a real socket, one header line of exactly 8190 bytes gets 200 and 8191 bytes gets 431. The default maxHeaderSize of 16384 is large enough that only the per-line limit (inputBufferBytes - 2) trips. WaveFiveDocsTest is unchanged."
+    },
+    {
+      "finding_id": "C-007",
+      "files_changed": [
+        {"path": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StartFailureTest.java", "line_range": "138"}
+      ],
+      "tdd": "exempt: test-quality only (strengthened assertion)",
+      "red_failure": "",
+      "rationale_full": "The message is now checked for the exact name/value pairs 'maxConnections (5)', 'maxWorkers (4)' and 'maxSseStreams (2)', matching DefaultServerOptions' format. Each new substring contains the old single-token parts, so the check is strictly stronger."
+    }
+  ],
+  "unfixable": [],
+  "build_exit": 0
+}

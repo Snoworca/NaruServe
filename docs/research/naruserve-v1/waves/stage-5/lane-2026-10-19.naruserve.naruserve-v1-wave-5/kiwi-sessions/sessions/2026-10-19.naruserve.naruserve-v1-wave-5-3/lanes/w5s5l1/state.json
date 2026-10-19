@@ -1,0 +1,32 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "2026-10-19.naruserve.naruserve-v1-wave-5-3",
+  "sds_path": "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-5-3.sds.md",
+  "target": "wave-5",
+  "req_ids": [
+    "IR-COOKIE-001",
+    "FR-COOKIE-001",
+    "FR-COOKIE-002"
+  ],
+  "spawn_context": "pm-child",
+  "phase": "done",
+  "next_resume_hint": null,
+  "failed": false,
+  "red_evidence": {
+    "command": "./gradlew :NaruServe-api:compileTestJava",
+    "exit_code": 1,
+    "captured_failure": "compileTestKotlin: Unresolved reference 'Cookie', 'SameSite', 'cookie', 'getCookies', 'addCookie'",
+    "timestamp": "2026-10-19T15:40:00Z"
+  },
+  "green_evidence": {
+    "command": "./gradlew build",
+    "exit_code": 0,
+    "timestamp": "2026-10-19T16:00:00Z"
+  },
+  "regression_baseline": {
+    "command": "./gradlew build",
+    "exit_code": 0,
+    "head_sha": "4f8693f"
+  },
+  "deferred_queue": "/Users/beom/work/git/NaruServe/kiwi/orchestrator/2026-10-19.NaruServe.naruserve-v1/lanes/lane-2026-10-19.naruserve.naruserve-v1-wave-5/deferred-srs-queue.jsonl"
+}

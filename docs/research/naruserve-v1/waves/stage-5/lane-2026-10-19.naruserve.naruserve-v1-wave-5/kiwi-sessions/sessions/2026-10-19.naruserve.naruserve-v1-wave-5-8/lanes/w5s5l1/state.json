@@ -1,0 +1,24 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "2026-10-19.naruserve.naruserve-v1-wave-5-8",
+  "sds_path": "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-5-8.sds.md",
+  "sds_sha256": "007b23d798c535391ea2c0f5204cb132972b0ca1f7be441628f54c7b926d43e5",
+  "target": "wave-5",
+  "req_ids": ["OPS-ENGINE-001", "OPS-JSON-001", "OPS-COOKIE-001", "OPS-APP-003", "OPS-HTTP-005"],
+  "mode": "normal",
+  "flags": ["--auto", "--auto-cost-warning", "--auto-integration", "--defer-srs-mutation"],
+  "spawn_context": "pm-child",
+  "phase": "done",
+  "next_resume_hint": null,
+  "failed": false,
+  "regression_baseline": {"command": "./gradlew build", "head_sha": "f0b9a13", "exit_code": 0, "source": "pinned by parent"},
+  "red_evidence": {
+    "command": "./gradlew :test --tests '*WaveFiveDocsTest' --tests '*DocsExamplesCompileTest'; ./gradlew :NaruServe-api:test --tests '*AppDocsTest' --tests '*HttpDocsTest' --tests '*JsonDocsKotlinTest'",
+    "exit_code": 1,
+    "captured_failure": "root: 23 tests, 10 failed (WaveFiveDocsTest settled markers/defaults rows/coordinates/cookie markers; DocsExamplesCompileTest wave-5 member skip reasons, no server-setting block); NaruServe-api: 26 tests, 9 failed (AppDocsTest keeper wording + LAN marker; HttpDocsTest proxy/jsonTree markers; JsonDocsKotlinTest doc snippets absent)",
+    "timestamp": "2026-10-20T00:00:00Z"
+  },
+  "green_evidence": {"command": "./gradlew build", "exit_code": 0, "timestamp": "2026-10-20T00:00:00Z"},
+  "review": {"prickly": "0 CRITICAL, 0 HIGH, 2 MEDIUM fixed (maxConnections ISE at listen, body-read 408 path), LOW address() wording and HttpDocsTest javadoc fixed; LOW per-line header formula self-referential left"},
+  "mcp_call_log_ref": "deferred-srs-queue.jsonl (43 entries, run_id 2026-10-19.naruserve.naruserve-v1-wave-5-8)"
+}
