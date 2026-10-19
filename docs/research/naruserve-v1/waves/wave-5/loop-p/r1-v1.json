@@ -1,0 +1,1322 @@
+{
+ "req_ac": [
+  {
+   "id": "IR-ENGINE-001 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/ServerOptionsTest.java:212 IR_ENGINE_001_AC1_serverAndTrustProxyAreGuardedAndServerCallsApplyInOrder (SRS docs/spec/06.engine-adapter.srs.md:63; ./gradlew build exit 0)"
+  },
+  {
+   "id": "IR-ENGINE-001 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/ServerOptionsTest.java:91 sdsAc1_IR_ENGINE_001_AC2_AC5_withoutServerTheFrozenSettingsAreTheDocumentedDefaults (SRS docs/spec/06.engine-adapter.srs.md:64; ./gradlew build exit 0)"
+  },
+  {
+   "id": "IR-ENGINE-001 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/ServerOptionsTest.java:145 sdsAc2_IR_ENGINE_001_AC3_intSettersRejectZeroNegativeAndAboveTheMaximumNamingTheRange (SRS docs/spec/06.engine-adapter.srs.md:65; ./gradlew build exit 0)"
+  },
+  {
+   "id": "IR-ENGINE-001 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LimitsSocketTest.java:221 FR_ENGINE_003_AC3_headerLineLimitFollowsTheRequestLineLimitNotTheHeaderTotal (SRS docs/spec/06.engine-adapter.srs.md:66; ./gradlew build exit 0)"
+  },
+  {
+   "id": "IR-ENGINE-001 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/ServerOptionsTest.java:91 sdsAc1_IR_ENGINE_001_AC2_AC5_withoutServerTheFrozenSettingsAreTheDocumentedDefaults (SRS docs/spec/06.engine-adapter.srs.md:67; ./gradlew build exit 0)"
+  },
+  {
+   "id": "IR-ENGINE-001 AC-6",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/ServerOptionsKotlinTest.kt:30 IR-ENGINE-001 AC-6 Kotlin configures the server and proxy trust with lambdas (SRS docs/spec/06.engine-adapter.srs.md:68; ./gradlew build exit 0)"
+  },
+  {
+   "id": "IR-ENGINE-001 AC-7",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java:236 sdsAc6_IR_HTTP_005_AC1_AC2_AC3_AC5_IR_APP_002_AC2_restAppDeclaresExactlyTheWave4Methods (SRS docs/spec/06.engine-adapter.srs.md:69; ./gradlew build exit 0)"
+  },
+  {
+   "id": "IR-ENGINE-002 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/spi/HttpAdapterSpiTest.java:396 sdsAc4_IR_ENGINE_002_AC1_aWave3OnlyAdapterBindsOnceThroughTheDefaultMethod (SRS docs/spec/06.engine-adapter.srs.md:136; ./gradlew build exit 0)"
+  },
+  {
+   "id": "IR-ENGINE-002 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ListenStartupTest.java:219 sdsAc5_IR_ENGINE_002_AC2_listenBindsOnceWithTheFrozenSettings (SRS docs/spec/06.engine-adapter.srs.md:137; ./gradlew build exit 0)"
+  },
+  {
+   "id": "IR-ENGINE-002 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/spi/HttpAdapterSpiTest.java:411 IR_ENGINE_002_AC3_settingsIsAFinalGetterOnlyValueOfAllowedTypes (SRS docs/spec/06.engine-adapter.srs.md:138; ./gradlew build exit 0)"
+  },
+  {
+   "id": "IR-ENGINE-002 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ListenStartupTest.java:243 sdsAc6_IR_ENGINE_002_AC4_aThrowingAppLoggerNeverReachesTheAdapterThroughSettingsLogger (SRS docs/spec/06.engine-adapter.srs.md:139; ./gradlew build exit 0)"
+  },
+  {
+   "id": "IR-ENGINE-002 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StandardErrorsTest.java:61 sdsAc7_IR_ENGINE_002_AC5_rendererGives421And408BodiesWithFreshRequestIds (SRS docs/spec/06.engine-adapter.srs.md:140; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-ENGINE-001 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/AdapterSurfaceTest.java:71 sdsAc1_FR_ENGINE_001_AC1_noEngineTypeInAnyPublicSignature (SRS docs/spec/06.engine-adapter.srs.md:202; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-ENGINE-001 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/AbortSocketTest.java:32 FR_ENGINE_001_AC2_abortBeforeCommitGivesATruncatedResponse (SRS docs/spec/06.engine-adapter.srs.md:203; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-ENGINE-001 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/AdapterSurfaceTest.java:153 sdsAc3_FR_ENGINE_001_AC3_noClassReferencesTlsConfig (SRS docs/spec/06.engine-adapter.srs.md:204; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-ENGINE-001 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/RawTargetSocketTest.java:44 sdsAc4_FR_ENGINE_001_AC4_rawPathAndRawQueryReachTheCoreUndecoded (SRS docs/spec/06.engine-adapter.srs.md:205; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-ENGINE-001 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/RawTargetSocketTest.java:61 FR_ENGINE_001_AC5_requestLineHeadersAndRemoteAddressReachTheCoreUnchanged (SRS docs/spec/06.engine-adapter.srs.md:206; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-ENGINE-002 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/BindingSocketTest.java:80 sdsAc5_FR_ENGINE_002_AC1_defaultBindIsTheExplicitIpv4Loopback (SRS docs/spec/06.engine-adapter.srs.md:267; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-ENGINE-002 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/BindingSocketTest.java:97 sdsAc5_FR_ENGINE_002_AC2_lanAddressIsRefusedByDefaultAndServedAfterAWildcardBind (SRS docs/spec/06.engine-adapter.srs.md:268; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-ENGINE-002 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ListenStartupTest.java:301 sdsAc10_FR_ENGINE_002_AC3_oneWarningForANonLoopbackBindAndNoneForLoopback (SRS docs/spec/06.engine-adapter.srs.md:269; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-ENGINE-002 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/BindingSocketTest.java:130 sdsAc6_FR_ENGINE_002_AC4_hostAllowlistAcceptsBindAddressAndAllowedNamesOnly (SRS docs/spec/06.engine-adapter.srs.md:270; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-ENGINE-002 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/BindingSocketTest.java:197 sdsAc7_FR_ENGINE_002_AC5_listenZeroReportsTheEphemeralPort (SRS docs/spec/06.engine-adapter.srs.md:271; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-ENGINE-002 AC-6",
+   "verdict": "match",
+   "pointer": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/BindingSocketTest.java:169 sdsAc7_FR_ENGINE_002_AC6_aTakenPortFailsTheSecondAppAndLeavesTheFirstServing (SRS docs/spec/06.engine-adapter.srs.md:272; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-ENGINE-003 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LimitsSocketTest.java:102 sdsAc8_FR_ENGINE_003_AC1_defaultLimitsAnswer431And414 (SRS docs/spec/06.engine-adapter.srs.md:338; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-ENGINE-003 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LimitsSocketTest.java:89 sdsAc8_FR_ENGINE_003_AC2_requestLineLimitSizesTheInputBuffer (SRS docs/spec/06.engine-adapter.srs.md:339; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-ENGINE-003 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LimitsSocketTest.java:221 FR_ENGINE_003_AC3_headerLineLimitFollowsTheRequestLineLimitNotTheHeaderTotal (SRS docs/spec/06.engine-adapter.srs.md:340; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-ENGINE-003 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LimitsSocketTest.java:245 FR_ENGINE_003_AC4_headerCountHeaderTimeoutAndBodyReadTimeout (SRS docs/spec/06.engine-adapter.srs.md:341; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-ENGINE-003 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LimitsSocketTest.java:275 FR_ENGINE_003_AC5_dripFedBodyIsAnswered408AfterTheGraceAndClosed (SRS docs/spec/06.engine-adapter.srs.md:342; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-ENGINE-003 AC-6",
+   "verdict": "match",
+   "pointer": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LimitsSocketTest.java:307 FR_ENGINE_003_AC6_contentLengthWithChunkedIsRejectedBeforeDispatch (SRS docs/spec/06.engine-adapter.srs.md:343; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-ENGINE-003 AC-7",
+   "verdict": "match",
+   "pointer": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LimitsSocketTest.java:119 sdsAc9_FR_ENGINE_003_AC7_bodyLimitsStayWithTheCoreAndUnreadBodiesAreDrained (SRS docs/spec/06.engine-adapter.srs.md:344; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-ENGINE-003 AC-8",
+   "verdict": "match",
+   "pointer": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LimitsSocketTest.java:157 sdsAc10_FR_ENGINE_003_AC8_nonDefaultLimitsAndTimeoutsReadBackUnchanged (SRS docs/spec/06.engine-adapter.srs.md:345; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-ENGINE-004 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/ConnectionLimitsTest.java:93 sdsAc11_FR_ENGINE_004_AC1_defaultConnectionLimitsReachTheBuilder (SRS docs/spec/06.engine-adapter.srs.md:408; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-ENGINE-004 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StartFailureTest.java:132 sdsAc11_FR_ENGINE_004_AC2_tooFewConnectionsFailTheFreezeAfterOnStartAndBeforeBind (SRS docs/spec/06.engine-adapter.srs.md:409; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-ENGINE-004 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/ConnectionLimitsTest.java:105 sdsAc12_FR_ENGINE_004_AC3_fullWorkersAndZeroQueueAnswerThePlain503 (SRS docs/spec/06.engine-adapter.srs.md:410; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-ENGINE-004 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/ConnectionLimitsTest.java:117 sdsAc12_FR_ENGINE_004_AC4_aThirdConnectionFromOneAddressIsRefused (SRS docs/spec/06.engine-adapter.srs.md:411; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-ENGINE-005 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdBodyStreamTest.java:47 sdsAc1_FR_ENGINE_005_AC1_constructedBodyExceptionsMapToStatusesKeepingTheCause (SRS docs/spec/06.engine-adapter.srs.md:470; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-ENGINE-005 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ErrorPathTest.java:449 sdsAc12_FR_ENGINE_005_AC2_every408CarriesConnectionCloseAndRequestTimeout (SRS docs/spec/06.engine-adapter.srs.md:471; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-ENGINE-005 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/TransportRejectionTest.java:84 sdsAc3_FR_ENGINE_005_AC3_hostRejectionWritesTheStandardJsonBodyWithFreshIds (SRS docs/spec/06.engine-adapter.srs.md:472; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-ENGINE-005 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/TransportRejectionTest.java:97 sdsAc4_FR_ENGINE_005_AC4_preDispatchRejectionsStayPlainAndUnrecorded (SRS docs/spec/06.engine-adapter.srs.md:473; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-ENGINE-005 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/TransportRejectionTest.java:128 sdsAc5_FR_ENGINE_005_AC5_originFormConnectIsDispatchedAuthorityFormIsNot (SRS docs/spec/06.engine-adapter.srs.md:474; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-ENGINE-005 AC-6",
+   "verdict": "match",
+   "pointer": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/TinyLogBridgeTest.java:23 sdsAc6_FR_ENGINE_005_AC6_levelsMapToTheAppLoggerAndEveryLevelIsLoggable (SRS docs/spec/06.engine-adapter.srs.md:475; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-ENGINE-006 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/ShutdownSocketTest.java:58 sdsAc7_FR_ENGINE_006_AC1_anInFlightRequestGetsTheFullTimeLeftAsGrace (SRS docs/spec/06.engine-adapter.srs.md:543; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-ENGINE-006 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/KeeperThreadTest.java:66 sdsAc12_FR_ENGINE_006_AC2_workersAreNamedWithTheBoundPortDaemonAndLogUncaught (SRS docs/spec/06.engine-adapter.srs.md:544; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-ENGINE-006 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/ShutdownSocketTest.java:133 sdsAc9_FR_ENGINE_006_AC3_keepAliveRaceGets503OrCloseAndInFlightGetsConnectionClose (SRS docs/spec/06.engine-adapter.srs.md:545; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-ENGINE-006 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/KeeperThreadTest.java:25 sdsAc10_FR_ENGINE_006_AC4_oneNonDaemonKeeperWhileTinyHttpdThreadsStayDaemon (SRS docs/spec/06.engine-adapter.srs.md:546; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-ENGINE-006 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe/src/test/java/com/snoworca/naruserve/bootstrap/JvmLifetimeTest.java:48 sdsAc11_FR_ENGINE_006_AC5_childJvmServesAfterMainReturnsAndExitsAfterTheShutdownRoute (SRS docs/spec/06.engine-adapter.srs.md:547; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-ENGINE-007 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/CrossAdapterTest.java:171 sdsAc1_FR_ENGINE_007_AC1_t07RunsOnBothAdaptersWithTheSameResults (SRS docs/spec/06.engine-adapter.srs.md:611; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-ENGINE-007 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/CrossAdapterTest.java:177 sdsAc2_FR_ENGINE_007_AC2_pathRejectionsAndOptionsStarGiveTheSameStatusOnBoth (SRS docs/spec/06.engine-adapter.srs.md:612; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-ENGINE-007 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/CrossAdapterTest.java:183 sdsAc3_FR_ENGINE_007_AC3_handlerReachingPathsGiveTheSameRawPathAndDecodedValuesOnBoth (SRS docs/spec/06.engine-adapter.srs.md:613; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-ENGINE-008 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/ProxyTrustAcceptanceTest.java:26 FR_ENGINE_008_AC1_withoutTrustProxyForwardedHeadersAreIgnored (SRS docs/spec/06.engine-adapter.srs.md:671; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-ENGINE-008 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/ProxyTrustAcceptanceTest.java:34 sdsAc8_FR_ENGINE_008_AC2_trustedModeUsesTheLeftMostForAndTheFirstProto (SRS docs/spec/06.engine-adapter.srs.md:672; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-ENGINE-008 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/ProxyTrustAcceptanceTest.java:51 sdsAc9_FR_ENGINE_008_AC3_forwardedAloneAndBlankEntriesKeepTheExchangeValues (SRS docs/spec/06.engine-adapter.srs.md:673; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-ENGINE-008 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/CrossAdapterTest.java:190 FR_ENGINE_008_AC4_proxyTrustGivesTheSameRemoteAddressAndIsSecureOnBoth (SRS docs/spec/06.engine-adapter.srs.md:674; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-ENGINE-009 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe/src/test/java/com/snoworca/naruserve/bootstrap/DefaultAppFactoryTest.java:45 sdsAc4_FR_ENGINE_009_AC1_serviceLoaderFindsExactlyDefaultAppFactoryAndCreateGivesNewApps (SRS docs/spec/06.engine-adapter.srs.md:734; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-ENGINE-009 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe/src/test/java/com/snoworca/naruserve/bootstrap/DefaultAppFactoryTest.java:65 sdsAc5_FR_ENGINE_009_AC2_createdAppEchoesJsonOverASocketThroughTinyHttpdAndGson (SRS docs/spec/06.engine-adapter.srs.md:735; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-ENGINE-009 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe/src/test/java/com/snoworca/naruserve/bootstrap/DefaultLoggerTest.java:41 sdsAc6_FR_ENGINE_009_AC3_withoutAndroidLogTheAppLoggerIsConsole (SRS docs/spec/06.engine-adapter.srs.md:736; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-ENGINE-009 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe/src/test/java/com/snoworca/naruserve/bootstrap/DefaultAppFactoryTest.java:88 sdsAc7_FR_ENGINE_009_AC4_jarHoldsTheConsumerRulesAndTheServicesFile (SRS docs/spec/06.engine-adapter.srs.md:737; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-ENGINE-009 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AppFactoryLoaderTest.java:81 sdsAc13_FR_APP_001_AC3_restAppCreateThrowsInTheApiTestRun (SRS docs/spec/06.engine-adapter.srs.md:738; ./gradlew build exit 0)"
+  },
+  {
+   "id": "OPS-ENGINE-001 AC-1",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/WaveFiveDocsTest.java:489 appAndRequestNameServerTrustProxyAndKeeper (SRS docs/spec/06.engine-adapter.srs.md:801; ./gradlew build exit 0)"
+  },
+  {
+   "id": "OPS-ENGINE-001 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LimitsSocketTest.java:111 OPS_ENGINE_001_AC2_AC6_defaultHeaderLineLimitIs8190Bytes (SRS docs/spec/06.engine-adapter.srs.md:802; ./gradlew build exit 0)"
+  },
+  {
+   "id": "OPS-ENGINE-001 AC-3",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/WaveFiveDocsTest.java:458 defaultsStatesNoUnlimitedBindProxyRejectionsAndTls (SRS docs/spec/06.engine-adapter.srs.md:803; ./gradlew build exit 0)"
+  },
+  {
+   "id": "OPS-ENGINE-001 AC-4",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/WaveFiveDocsTest.java:489 appAndRequestNameServerTrustProxyAndKeeper; NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java:145 sdsAc8_OPS_HTTP_005_AC8_requestKeepsOtherIssuesMarkers (SRS docs/spec/06.engine-adapter.srs.md:804; ./gradlew build exit 0)"
+  },
+  {
+   "id": "OPS-ENGINE-001 AC-5",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/WaveFiveDocsTest.java:477 moduleCoordinates (SRS docs/spec/06.engine-adapter.srs.md:805; ./gradlew build exit 0)"
+  },
+  {
+   "id": "OPS-ENGINE-001 AC-6",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java:617 OPS_ENGINE_001_AC6_serverSettingBlocksAreCompiled (SRS docs/spec/06.engine-adapter.srs.md:806; ./gradlew build exit 0)"
+  },
+  {
+   "id": "OPS-ENGINE-001 AC-7",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/WaveFiveDocsTest.java:425 settledMarkerLinesAreGoneAndLaterMarkersKept (SRS docs/spec/06.engine-adapter.srs.md:807; ./gradlew build exit 0)"
+  },
+  {
+   "id": "IR-JSON-001 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/TypeRefTest.java:32 IR_JSON_001_AC1_listOfUserIsCapturedAsAParameterizedType (SRS docs/spec/07.json.srs.md:62; ./gradlew build exit 0)"
+  },
+  {
+   "id": "IR-JSON-001 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/TypeRefTest.java:64 sdsAc1_IR_JSON_001_AC2_rawSubclassThrowsIllegalStateException (SRS docs/spec/07.json.srs.md:63; ./gradlew build exit 0)"
+  },
+  {
+   "id": "IR-JSON-001 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/ConsumerRulesTest.java:40 sdsAc2_IR_JSON_001_AC3_builtJarShipsTheTypeRefAndCookieKeepRules (SRS docs/spec/07.json.srs.md:64; ./gradlew build exit 0)"
+  },
+  {
+   "id": "IR-JSON-001 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/JsonKotlinTest.kt:43 IR-JSON-001 AC-4 Kotlin object TypeRef captures List of String (SRS docs/spec/07.json.srs.md:65; ./gradlew build exit 0)"
+  },
+  {
+   "id": "IR-JSON-002 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/JsonApiTest.java:40 sdsAc3_IR_JSON_002_AC1_jsonCodecReplacesTheBuilderCodecForBodyAndJson (SRS docs/spec/07.json.srs.md:126; ./gradlew build exit 0)"
+  },
+  {
+   "id": "IR-JSON-002 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/JsonApiTest.java:92 sdsAc4_IR_JSON_002_AC2_jsonLimitBoundsAndDefault (SRS docs/spec/07.json.srs.md:127; ./gradlew build exit 0)"
+  },
+  {
+   "id": "IR-JSON-002 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/JsonApiTest.java:127 IR_JSON_002_AC3_bodyReturnsAndJsonParameterAreNullable (SRS docs/spec/07.json.srs.md:128; ./gradlew build exit 0)"
+  },
+  {
+   "id": "IR-JSON-002 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/JsonApiTest.java:113 sdsAc5_IR_JSON_002_AC4_decodeReturnIsNullableWithTheErasedSignatureKept (SRS docs/spec/07.json.srs.md:129; ./gradlew build exit 0)"
+  },
+  {
+   "id": "IR-JSON-002 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/JsonApiTest.java:143 IR_JSON_002_AC5_noJsonTreeOrJsonMap (SRS docs/spec/07.json.srs.md:130; ./gradlew build exit 0)"
+  },
+  {
+   "id": "IR-JSON-002 AC-6",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/JsonApiTest.java:151 IR_JSON_002_AC6_secondBodyCallThrowsBodyAlreadyConsumed (SRS docs/spec/07.json.srs.md:131; ./gradlew build exit 0)"
+  },
+  {
+   "id": "IR-JSON-002 AC-7",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/JsonKotlinTest.kt:59 IR-JSON-002 AC-7 FR-JSON-002 AC-6 Kotlin reads nullable bodies and writes json (SRS docs/spec/07.json.srs.md:132; ./gradlew build exit 0)"
+  },
+  {
+   "id": "IR-JSON-002 AC-8",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java:97,130,171 exact Request/Response method and @Nullable sets gain body/json; :28 LATER_WAVE_NAMES drops body/json; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/BodyStateTest.java:248 re-pointed FR-HTTP-019 AC-5 (SRS docs/spec/07.json.srs.md:133; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-JSON-001 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/JsonBodyAcceptanceTest.java:170 sdsAc7_FR_JSON_001_AC1_jsonMediaTypesAreDecoded (SRS docs/spec/07.json.srs.md:206; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-JSON-001 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/JsonBodyAcceptanceTest.java:191 sdsAc8_FR_JSON_001_AC2_emptyAndWhitespaceBodiesGive400WithoutCallingTheCodec (SRS docs/spec/07.json.srs.md:207; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-JSON-001 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-gson/src/test/java/com/snoworca/naruserve/gson/GsonJsonCodecTest.java:346 FR_JSON_001_AC3_defaultCodecThroughReqBodyRejectsTrailingData (SRS docs/spec/07.json.srs.md:208; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-JSON-001 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/JsonBodyAcceptanceTest.java:217 sdsAc9_FR_JSON_001_AC4_contentLengthOverTheDefaultLimitGives413BeforeTheCodec (SRS docs/spec/07.json.srs.md:209; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-JSON-001 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-gson/src/test/java/com/snoworca/naruserve/gson/GsonJsonCodecTest.java:303 FR_JSON_001_AC5_defaultCodecThroughReqBodyRejects65AndDecodes64 (SRS docs/spec/07.json.srs.md:210; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-JSON-001 AC-6",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/JsonBodyAcceptanceTest.java:257 sdsAc10_FR_JSON_001_AC6_invalidUtf8Gives400 (SRS docs/spec/07.json.srs.md:211; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-JSON-001 AC-7",
+   "verdict": "match",
+   "pointer": "NaruServe-gson/src/test/java/com/snoworca/naruserve/gson/GsonJsonCodecTest.java:466 FR_JSON_001_AC7_polymorphicTypeKeysNeverLoadTheNamedClass (SRS docs/spec/07.json.srs.md:212; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-JSON-001 AC-8",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/JsonBodyAcceptanceTest.java:269 FR_JSON_001_AC8_jsonNullBodyReturnsNullForClassAndTypeRef (SRS docs/spec/07.json.srs.md:213; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-JSON-001 AC-9",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/JsonBodyReaderTest.java:86 sdsAc11_FR_JSON_001_AC9_httpExceptionInTheCauseChainIsRethrownUnchanged (SRS docs/spec/07.json.srs.md:214; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-JSON-002 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/JsonResponseTest.java:47 FR_JSON_002_AC1_AC3_jsonSendsTheEncodedBytesWithJsonTypeAndLength (SRS docs/spec/07.json.srs.md:291; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-JSON-002 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-gson/src/test/java/com/snoworca/naruserve/gson/GsonJsonCodecTest.java:478 FR_JSON_002_AC2_echoRoundTripsValuesThroughTheDefaultCodec (SRS docs/spec/07.json.srs.md:292; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-JSON-002 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/JsonResponseTest.java:47 FR_JSON_002_AC1_AC3_jsonSendsTheEncodedBytesWithJsonTypeAndLength (SRS docs/spec/07.json.srs.md:293; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-JSON-002 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/JsonResponseTest.java:75 sdsAc12_FR_JSON_002_AC4_partialEncodeFailureGivesTheStandard500AndNoPartialBytes (SRS docs/spec/07.json.srs.md:294; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-JSON-002 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/JsonResponseTest.java:94 sdsAc13_FR_JSON_002_AC5_jsonOnACommittedResponseThrowsBeforeEncodeAndIsAborted (SRS docs/spec/07.json.srs.md:295; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-JSON-002 AC-6",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/JsonKotlinTest.kt:59 IR-JSON-002 AC-7 FR-JSON-002 AC-6 Kotlin reads nullable bodies and writes json (SRS docs/spec/07.json.srs.md:296; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-JSON-003 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-gson/src/test/java/com/snoworca/naruserve/gson/GsonJsonCodecTest.java:147 sdsAc1_FR_JSON_003_AC1_classShapeAndConstructors (SRS docs/spec/07.json.srs.md:359; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-JSON-003 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-gson/src/test/java/com/snoworca/naruserve/gson/GsonJsonCodecTest.java:208 sdsAc2_FR_JSON_003_AC2_defaultRefusesUnquotedNamesSingleQuotesAndComments (SRS docs/spec/07.json.srs.md:360; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-JSON-003 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-gson/src/test/java/com/snoworca/naruserve/gson/GsonJsonCodecTest.java:252 sdsAc3_FR_JSON_003_AC3_argsOnlyClassFailsUncheckedAndCreatesNoInstance (SRS docs/spec/07.json.srs.md:361; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-JSON-003 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-gson/src/test/java/com/snoworca/naruserve/gson/GsonJsonCodecTest.java:276 sdsAc4_FR_JSON_003_AC4_default64DecodesAnd65Fails (SRS docs/spec/07.json.srs.md:362; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-JSON-003 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-gson/src/test/java/com/snoworca/naruserve/gson/GsonJsonCodecTest.java:317 sdsAc5_FR_JSON_003_AC5_trailingDataThrowsIOException (SRS docs/spec/07.json.srs.md:363; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-JSON-003 AC-6",
+   "verdict": "match",
+   "pointer": "NaruServe-gson/src/test/java/com/snoworca/naruserve/gson/GsonJsonCodecTest.java:359 sdsAc6_FR_JSON_003_AC6_wrongJsonTypeGivesIOExceptionWithGsonCause (SRS docs/spec/07.json.srs.md:364; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-JSON-003 AC-7",
+   "verdict": "match",
+   "pointer": "NaruServe-gson/src/test/java/com/snoworca/naruserve/gson/GsonJsonCodecTest.java:426 sdsAc7_FR_JSON_003_AC7_encodeNullStringAndList (SRS docs/spec/07.json.srs.md:365; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-JSON-003 AC-8",
+   "verdict": "match",
+   "pointer": "NaruServe-gson/src/test/kotlin/com/snoworca/naruserve/gson/GsonCodecKotlinTest.kt:11 SDS-AC-8 FR-JSON-003 AC-8 Kotlin sets a GsonJsonCodec with depth 32 on the app (SRS docs/spec/07.json.srs.md:366; ./gradlew build exit 0)"
+  },
+  {
+   "id": "OPS-JSON-001 AC-1",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/WaveFiveDocsTest.java:507 jsonAndRequestNameLimitsAndNullBody (SRS docs/spec/07.json.srs.md:442; ./gradlew build exit 0)"
+  },
+  {
+   "id": "OPS-JSON-001 AC-2",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/WaveFiveDocsTest.java:507 jsonAndRequestNameLimitsAndNullBody; NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java:145 sdsAc8_OPS_HTTP_005_AC8_requestKeepsOtherIssuesMarkers (SRS docs/spec/07.json.srs.md:443; ./gradlew build exit 0)"
+  },
+  {
+   "id": "OPS-JSON-001 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/JsonDocsKotlinTest.kt:100 SDS-AC-5 OPS-JSON-001 AC-3 kotlin nullable type argument examples run (SRS docs/spec/07.json.srs.md:444; ./gradlew build exit 0)"
+  },
+  {
+   "id": "OPS-JSON-001 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/JsonDocsKotlinTest.kt:85 SDS-AC-5 OPS-JSON-001 AC-5 README post users example runs (SRS docs/spec/07.json.srs.md:445; ./gradlew build exit 0)"
+  },
+  {
+   "id": "OPS-JSON-001 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/JsonDocsKotlinTest.kt:85 SDS-AC-5 OPS-JSON-001 AC-5 README post users example runs (SRS docs/spec/07.json.srs.md:446; ./gradlew build exit 0)"
+  },
+  {
+   "id": "IR-COOKIE-001 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/CookieTest.java:33 IR_COOKIE_001_AC1_publicFinalWithOneConstructorAndAFixedName (SRS docs/spec/08.cookie.srs.md:60; ./gradlew build exit 0)"
+  },
+  {
+   "id": "IR-COOKIE-001 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/CookieTest.java:62 sdsAc1_IR_COOKIE_001_AC2_AC4_newCookieDefaultsAndAccessorsRoundTrip (SRS docs/spec/08.cookie.srs.md:61; ./gradlew build exit 0)"
+  },
+  {
+   "id": "IR-COOKIE-001 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/CookieTest.java:129 sdsAc1_IR_COOKIE_001_AC3_sameSiteValuesInOrder (SRS docs/spec/08.cookie.srs.md:62; ./gradlew build exit 0)"
+  },
+  {
+   "id": "IR-COOKIE-001 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/CookieTest.java:62 sdsAc1_IR_COOKIE_001_AC2_AC4_newCookieDefaultsAndAccessorsRoundTrip (SRS docs/spec/08.cookie.srs.md:63; ./gradlew build exit 0)"
+  },
+  {
+   "id": "IR-COOKIE-001 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/CookieTest.java:137 sdsAc2_IR_COOKIE_001_AC5_namesOutsideTheTokenGrammarAreRejected (SRS docs/spec/08.cookie.srs.md:64; ./gradlew build exit 0)"
+  },
+  {
+   "id": "IR-COOKIE-001 AC-6",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/CookieTest.java:174 IR_COOKIE_001_AC6_noExtraPublicOrProtectedMembers (SRS docs/spec/08.cookie.srs.md:65; ./gradlew build exit 0)"
+  },
+  {
+   "id": "IR-COOKIE-001 AC-7",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/CookieKotlinTest.kt:11 SDS-AC-12 IR-COOKIE-001 AC-7 Kotlin property syntax without platform types (SRS docs/spec/08.cookie.srs.md:66; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-COOKIE-001 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/CookieAcceptanceTest.java:38 FR_COOKIE_001_AC1_addCookieReturnsTheResponseAndAppendsOneLinePerCall (SRS docs/spec/08.cookie.srs.md:132; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-COOKIE-001 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/CookieAcceptanceTest.java:58 sdsAc4_FR_COOKIE_001_AC2_fullAttributeLineAndSameSiteValues (SRS docs/spec/08.cookie.srs.md:133; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-COOKIE-001 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/CookieAcceptanceTest.java:86 sdsAc5_FR_COOKIE_001_AC3_AC4_negativeMaxAgeOmitsMaxAgeAndZeroDeletes (SRS docs/spec/08.cookie.srs.md:134; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-COOKIE-001 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/CookieAcceptanceTest.java:86 sdsAc5_FR_COOKIE_001_AC3_AC4_negativeMaxAgeOmitsMaxAgeAndZeroDeletes (SRS docs/spec/08.cookie.srs.md:135; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-COOKIE-001 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/CookieAcceptanceTest.java:109 sdsAc6_FR_COOKIE_001_AC5_echoingAnInvalidRequestCookieThrowsAndAddsNoHeader (SRS docs/spec/08.cookie.srs.md:136; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-COOKIE-001 AC-6",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/CookieAcceptanceTest.java:133 sdsAc7_FR_COOKIE_001_AC6_addCookieAfterSendThrowsIllegalStateException (SRS docs/spec/08.cookie.srs.md:137; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-COOKIE-001 AC-7",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/CookieKotlinTest.kt:26 FR-COOKIE-001 AC-7 FR-COOKIE-002 AC-7 Kotlin reads and writes cookies in a route lambda (SRS docs/spec/08.cookie.srs.md:138; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-COOKIE-002 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/CookieAcceptanceTest.java:151 sdsAc10_FR_COOKIE_002_AC1_AC2_AC3_readersReturnFreshArraysAndTheFirstMatch (SRS docs/spec/08.cookie.srs.md:203; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-COOKIE-002 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/CookieAcceptanceTest.java:151 sdsAc10_FR_COOKIE_002_AC1_AC2_AC3_readersReturnFreshArraysAndTheFirstMatch (SRS docs/spec/08.cookie.srs.md:204; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-COOKIE-002 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/CookieAcceptanceTest.java:201 FR_COOKIE_002_AC3_returnedCookiesAreCopies (SRS docs/spec/08.cookie.srs.md:205; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-COOKIE-002 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/CookieParserTest.java:37 sdsAc9_FR_COOKIE_002_AC4_badPairsAreSkippedAndValuesKeptVerbatim (SRS docs/spec/08.cookie.srs.md:206; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-COOKIE-002 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/CookieAcceptanceTest.java:236 FR_COOKIE_002_AC5_percentValueRoundTripsUnchanged (SRS docs/spec/08.cookie.srs.md:207; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-COOKIE-002 AC-6",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/CookieAcceptanceTest.java:218 FR_COOKIE_002_AC6_cookieOfNullThrowsAndOddValuesAreReturned (SRS docs/spec/08.cookie.srs.md:208; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-COOKIE-002 AC-7",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/CookieKotlinTest.kt:26 FR-COOKIE-001 AC-7 FR-COOKIE-002 AC-7 Kotlin reads and writes cookies in a route lambda (SRS docs/spec/08.cookie.srs.md:209; ./gradlew build exit 0)"
+  },
+  {
+   "id": "FR-COOKIE-002 AC-8",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java:183 sdsAc11_FR_COOKIE_002_AC8_cookieMethodsAreDeclaredAndOnlyCookieReturnIsNullable (SRS docs/spec/08.cookie.srs.md:210; ./gradlew build exit 0)"
+  },
+  {
+   "id": "OPS-COOKIE-001 AC-1",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/WaveFiveDocsTest.java:523 cookieDocsHaveNoMarker (SRS docs/spec/08.cookie.srs.md:277; ./gradlew build exit 0)"
+  },
+  {
+   "id": "OPS-COOKIE-001 AC-2",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/WaveFiveDocsTest.java:523 cookieDocsHaveNoMarker (SRS docs/spec/08.cookie.srs.md:278; ./gradlew build exit 0)"
+  },
+  {
+   "id": "OPS-COOKIE-001 AC-3",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/WaveFiveDocsTest.java:523 cookieDocsHaveNoMarker (SRS docs/spec/08.cookie.srs.md:279; ./gradlew build exit 0)"
+  },
+  {
+   "id": "OPS-COOKIE-001 AC-4",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/WaveFiveDocsTest.java:523 cookieDocsHaveNoMarker (SRS docs/spec/08.cookie.srs.md:280; ./gradlew build exit 0)"
+  },
+  {
+   "id": "OPS-COOKIE-001 AC-5",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java:605 sdsAc6_OPS_COOKIE_001_AC5_cookieBlocksCompileWithoutSkips (SRS docs/spec/08.cookie.srs.md:281; ./gradlew build exit 0)"
+  },
+  {
+   "id": "OPS-APP-003 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/AppDocsTest.java:132 OPS_APP_003_AC1_builderFactoryServerHandleAndKeeperThread (SRS docs/spec/05.application.srs.md:3048; ./gradlew build exit 0)"
+  },
+  {
+   "id": "OPS-APP-003 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/AppDocsTest.java:180 OPS_APP_003_AC2_middlewareAndRoutingDecisions (SRS docs/spec/05.application.srs.md:3049; ./gradlew build exit 0)"
+  },
+  {
+   "id": "OPS-APP-003 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/AppDocsTest.java:241 OPS_APP_003_AC3_lifecycleStartGateAndPendingStop (SRS docs/spec/05.application.srs.md:3050; ./gradlew build exit 0)"
+  },
+  {
+   "id": "OPS-APP-003 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/AppDocsTest.java:259 OPS_APP_003_AC4_loggingFormatDefaultsAndClose (SRS docs/spec/05.application.srs.md:3051; ./gradlew build exit 0)"
+  },
+  {
+   "id": "OPS-APP-003 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/AppDocsTest.java:282 OPS_APP_003_AC5_expressMigrationRows (SRS docs/spec/05.application.srs.md:3052; ./gradlew build exit 0)"
+  },
+  {
+   "id": "OPS-APP-003 AC-6",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/AppDocsTest.java:93 sdsAc7_OPS_APP_003_AC6_decidedMarkersAreGone (SRS docs/spec/05.application.srs.md:3053; ./gradlew build exit 0)"
+  },
+  {
+   "id": "OPS-APP-003 AC-7",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/AppDocsTest.java:215 OPS_APP_003_AC7_decisionsCarryAReason (SRS docs/spec/05.application.srs.md:3054; ./gradlew build exit 0)"
+  },
+  {
+   "id": "OPS-HTTP-005 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java:112 OPS_HTTP_005_AC1_rawPathRowIsRawPathWithoutQuery (SRS docs/spec/04.http-core.srs.md:3563; ./gradlew build exit 0)"
+  },
+  {
+   "id": "OPS-HTTP-005 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java:124 OPS_HTTP_005_AC2_attributeTypeMismatchAndNullRemoval (SRS docs/spec/04.http-core.srs.md:3564; ./gradlew build exit 0)"
+  },
+  {
+   "id": "OPS-HTTP-005 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java:160 OPS_HTTP_005_AC3_octetStreamAndStreamClosing (SRS docs/spec/04.http-core.srs.md:3565; ./gradlew build exit 0)"
+  },
+  {
+   "id": "OPS-HTTP-005 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java:190 OPS_HTTP_005_AC4_routerPolicyDocumented (SRS docs/spec/04.http-core.srs.md:3566; ./gradlew build exit 0)"
+  },
+  {
+   "id": "OPS-HTTP-005 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java:253 OPS_HTTP_005_AC5_appListsRouterPolicy (SRS docs/spec/04.http-core.srs.md:3567; ./gradlew build exit 0)"
+  },
+  {
+   "id": "OPS-HTTP-005 AC-6",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java:270 OPS_HTTP_005_AC6_defaultsNamesTraceConnectPolicy (SRS docs/spec/04.http-core.srs.md:3568; ./gradlew build exit 0)"
+  },
+  {
+   "id": "OPS-HTTP-005 AC-7",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java:215 OPS_HTTP_005_AC7_expressRawPathAndRawTextMapping (SRS docs/spec/04.http-core.srs.md:3569; ./gradlew build exit 0)"
+  },
+  {
+   "id": "OPS-HTTP-005 AC-8",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java:145 sdsAc8_OPS_HTTP_005_AC8_requestKeepsOtherIssuesMarkers (SRS docs/spec/04.http-core.srs.md:3570; ./gradlew build exit 0)"
+  }
+ ],
+ "design": [
+  {
+   "id": "D-183",
+   "verdict": "match",
+   "pointer": "IR-JSON-001 AC-1 -> NaruServe-api/src/test/java/com/snoworca/naruserve/TypeRefTest.java:32; IR-JSON-001 AC-4 -> NaruServe-api/src/test/kotlin/com/snoworca/naruserve/JsonKotlinTest.kt:43"
+  },
+  {
+   "id": "D-184",
+   "verdict": "match",
+   "pointer": "IR-JSON-001 AC-2 -> NaruServe-api/src/test/java/com/snoworca/naruserve/TypeRefTest.java:64"
+  },
+  {
+   "id": "D-421",
+   "verdict": "match",
+   "pointer": "IR-JSON-001 AC-3 -> NaruServe-api/src/test/java/com/snoworca/naruserve/ConsumerRulesTest.java:40"
+  },
+  {
+   "id": "D-185",
+   "verdict": "match",
+   "pointer": "IR-ENGINE-001 AC-7 -> NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java:236; IR-JSON-002 AC-1 -> NaruServe-api/src/test/java/com/snoworca/naruserve/JsonApiTest.java:40"
+  },
+  {
+   "id": "D-186",
+   "verdict": "match",
+   "pointer": "FR-JSON-001 AC-1 -> NaruServe-api/src/test/java/com/snoworca/naruserve/JsonBodyAcceptanceTest.java:170; FR-JSON-001 AC-9 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/JsonBodyReaderTest.java:86"
+  },
+  {
+   "id": "D-187",
+   "verdict": "match",
+   "pointer": "FR-JSON-001 AC-2 -> NaruServe-api/src/test/java/com/snoworca/naruserve/JsonBodyAcceptanceTest.java:191; FR-JSON-001 AC-3 -> NaruServe-gson/src/test/java/com/snoworca/naruserve/gson/GsonJsonCodecTest.java:346; FR-JSON-001 AC-9 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/JsonBodyReaderTest.java:86"
+  },
+  {
+   "id": "D-188",
+   "verdict": "match",
+   "pointer": "FR-ENGINE-003 AC-7 -> NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LimitsSocketTest.java:119; IR-JSON-002 AC-2 -> NaruServe-api/src/test/java/com/snoworca/naruserve/JsonApiTest.java:92; FR-JSON-001 AC-4 -> NaruServe-api/src/test/java/com/snoworca/naruserve/JsonBodyAcceptanceTest.java:217"
+  },
+  {
+   "id": "D-189",
+   "verdict": "match",
+   "pointer": "FR-JSON-001 AC-5 -> NaruServe-gson/src/test/java/com/snoworca/naruserve/gson/GsonJsonCodecTest.java:303; FR-JSON-003 AC-4 -> NaruServe-gson/src/test/java/com/snoworca/naruserve/gson/GsonJsonCodecTest.java:276"
+  },
+  {
+   "id": "D-190",
+   "verdict": "match",
+   "pointer": "FR-JSON-001 AC-6 -> NaruServe-api/src/test/java/com/snoworca/naruserve/JsonBodyAcceptanceTest.java:257"
+  },
+  {
+   "id": "D-191",
+   "verdict": "match",
+   "pointer": "FR-JSON-001 AC-7 -> NaruServe-gson/src/test/java/com/snoworca/naruserve/gson/GsonJsonCodecTest.java:466"
+  },
+  {
+   "id": "D-431",
+   "verdict": "match",
+   "pointer": "IR-JSON-002 AC-3 -> NaruServe-api/src/test/java/com/snoworca/naruserve/JsonApiTest.java:127; IR-JSON-002 AC-6 -> NaruServe-api/src/test/java/com/snoworca/naruserve/JsonApiTest.java:151; IR-JSON-002 AC-7 -> NaruServe-api/src/test/kotlin/com/snoworca/naruserve/JsonKotlinTest.kt:59"
+  },
+  {
+   "id": "D-440",
+   "verdict": "match",
+   "pointer": "IR-JSON-002 AC-7 -> NaruServe-api/src/test/kotlin/com/snoworca/naruserve/JsonKotlinTest.kt:59; OPS-JSON-001 AC-3 -> NaruServe-api/src/test/kotlin/com/snoworca/naruserve/JsonDocsKotlinTest.kt:100; OPS-JSON-001 AC-4 -> NaruServe-api/src/test/kotlin/com/snoworca/naruserve/JsonDocsKotlinTest.kt:85"
+  },
+  {
+   "id": "D-192",
+   "verdict": "match",
+   "pointer": "IR-JSON-002 AC-2 -> NaruServe-api/src/test/java/com/snoworca/naruserve/JsonApiTest.java:92; IR-JSON-002 AC-5 -> NaruServe-api/src/test/java/com/snoworca/naruserve/JsonApiTest.java:143; OPS-JSON-001 AC-1 -> src/test/java/com/snoworca/naruserve/docs/WaveFiveDocsTest.java:507"
+  },
+  {
+   "id": "D-193",
+   "verdict": "match",
+   "pointer": "IR-JSON-002 AC-3 -> NaruServe-api/src/test/java/com/snoworca/naruserve/JsonApiTest.java:127; FR-JSON-002 AC-1 -> NaruServe-api/src/test/java/com/snoworca/naruserve/JsonResponseTest.java:47; FR-JSON-002 AC-6 -> NaruServe-api/src/test/kotlin/com/snoworca/naruserve/JsonKotlinTest.kt:59"
+  },
+  {
+   "id": "D-194",
+   "verdict": "match",
+   "pointer": "FR-JSON-002 AC-2 -> NaruServe-gson/src/test/java/com/snoworca/naruserve/gson/GsonJsonCodecTest.java:478"
+  },
+  {
+   "id": "D-195",
+   "verdict": "match",
+   "pointer": "FR-JSON-002 AC-3 -> NaruServe-api/src/test/java/com/snoworca/naruserve/JsonResponseTest.java:47; FR-JSON-003 AC-7 -> NaruServe-gson/src/test/java/com/snoworca/naruserve/gson/GsonJsonCodecTest.java:426"
+  },
+  {
+   "id": "D-196",
+   "verdict": "match",
+   "pointer": "FR-JSON-003 AC-1 -> NaruServe-gson/src/test/java/com/snoworca/naruserve/gson/GsonJsonCodecTest.java:147; FR-JSON-003 AC-6 -> NaruServe-gson/src/test/java/com/snoworca/naruserve/gson/GsonJsonCodecTest.java:359"
+  },
+  {
+   "id": "D-197",
+   "verdict": "match",
+   "pointer": "FR-JSON-003 AC-2 -> NaruServe-gson/src/test/java/com/snoworca/naruserve/gson/GsonJsonCodecTest.java:208"
+  },
+  {
+   "id": "D-198",
+   "verdict": "match",
+   "pointer": "FR-JSON-003 AC-2 -> NaruServe-gson/src/test/java/com/snoworca/naruserve/gson/GsonJsonCodecTest.java:208"
+  },
+  {
+   "id": "D-199",
+   "verdict": "match",
+   "pointer": "FR-JSON-003 AC-3 -> NaruServe-gson/src/test/java/com/snoworca/naruserve/gson/GsonJsonCodecTest.java:252"
+  },
+  {
+   "id": "D-200",
+   "verdict": "match",
+   "pointer": "IR-COOKIE-001 AC-1 -> NaruServe-api/src/test/java/com/snoworca/naruserve/CookieTest.java:33"
+  },
+  {
+   "id": "D-201",
+   "verdict": "match",
+   "pointer": "IR-COOKIE-001 AC-2 -> NaruServe-api/src/test/java/com/snoworca/naruserve/CookieTest.java:62; IR-COOKIE-001 AC-7 -> NaruServe-api/src/test/kotlin/com/snoworca/naruserve/CookieKotlinTest.kt:11"
+  },
+  {
+   "id": "D-202",
+   "verdict": "match",
+   "pointer": "IR-COOKIE-001 AC-3 -> NaruServe-api/src/test/java/com/snoworca/naruserve/CookieTest.java:129"
+  },
+  {
+   "id": "D-203",
+   "verdict": "match",
+   "pointer": "FR-COOKIE-001 AC-1 -> NaruServe-api/src/test/java/com/snoworca/naruserve/CookieAcceptanceTest.java:38; FR-COOKIE-001 AC-2 -> NaruServe-api/src/test/java/com/snoworca/naruserve/CookieAcceptanceTest.java:58; FR-COOKIE-001 AC-6 -> NaruServe-api/src/test/java/com/snoworca/naruserve/CookieAcceptanceTest.java:133"
+  },
+  {
+   "id": "D-204",
+   "verdict": "match",
+   "pointer": "FR-COOKIE-001 AC-3 -> NaruServe-api/src/test/java/com/snoworca/naruserve/CookieAcceptanceTest.java:86; FR-COOKIE-001 AC-7 -> NaruServe-api/src/test/kotlin/com/snoworca/naruserve/CookieKotlinTest.kt:26"
+  },
+  {
+   "id": "D-205",
+   "verdict": "match",
+   "pointer": "IR-COOKIE-001 AC-5 -> NaruServe-api/src/test/java/com/snoworca/naruserve/CookieTest.java:137; FR-COOKIE-001 AC-5 -> NaruServe-api/src/test/java/com/snoworca/naruserve/CookieAcceptanceTest.java:109; OPS-COOKIE-001 AC-3 -> src/test/java/com/snoworca/naruserve/docs/WaveFiveDocsTest.java:523"
+  },
+  {
+   "id": "D-206",
+   "verdict": "match",
+   "pointer": "FR-COOKIE-002 AC-1 -> NaruServe-api/src/test/java/com/snoworca/naruserve/CookieAcceptanceTest.java:151; FR-COOKIE-002 AC-2 -> NaruServe-api/src/test/java/com/snoworca/naruserve/CookieAcceptanceTest.java:151; FR-COOKIE-002 AC-6 -> NaruServe-api/src/test/java/com/snoworca/naruserve/CookieAcceptanceTest.java:218"
+  },
+  {
+   "id": "D-207",
+   "verdict": "match",
+   "pointer": "FR-COOKIE-002 AC-3 -> NaruServe-api/src/test/java/com/snoworca/naruserve/CookieAcceptanceTest.java:201"
+  },
+  {
+   "id": "D-208",
+   "verdict": "match",
+   "pointer": "IR-COOKIE-001 AC-2 -> NaruServe-api/src/test/java/com/snoworca/naruserve/CookieTest.java:62; IR-COOKIE-001 AC-4 -> NaruServe-api/src/test/java/com/snoworca/naruserve/CookieTest.java:62; FR-COOKIE-001 AC-4 -> NaruServe-api/src/test/java/com/snoworca/naruserve/CookieAcceptanceTest.java:86"
+  },
+  {
+   "id": "D-209",
+   "verdict": "match",
+   "pointer": "FR-ENGINE-001 AC-1 -> NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/AdapterSurfaceTest.java:71; FR-ENGINE-001 AC-5 -> NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/RawTargetSocketTest.java:61"
+  },
+  {
+   "id": "D-210",
+   "verdict": "match",
+   "pointer": "FR-ENGINE-001 AC-2 -> NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/AbortSocketTest.java:32; FR-ENGINE-004 AC-1 -> NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/ConnectionLimitsTest.java:93"
+  },
+  {
+   "id": "D-211",
+   "verdict": "match",
+   "pointer": "IR-ENGINE-001 AC-5 -> NaruServe-api/src/test/java/com/snoworca/naruserve/ServerOptionsTest.java:91; FR-ENGINE-002 AC-1 -> NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/BindingSocketTest.java:80 | applied as explicit IPv4 127.0.0.1 per wave decision 'The default bind address is IPv4 127.0.0.1' (TinyHttpdAdapter.java:97)"
+  },
+  {
+   "id": "D-212",
+   "verdict": "match",
+   "pointer": "FR-ENGINE-002 AC-2 -> NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/BindingSocketTest.java:97; OPS-ENGINE-001 AC-1 -> src/test/java/com/snoworca/naruserve/docs/WaveFiveDocsTest.java:489"
+  },
+  {
+   "id": "D-213",
+   "verdict": "match",
+   "pointer": "FR-ENGINE-002 AC-3 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ListenStartupTest.java:301; OPS-ENGINE-001 AC-3 -> src/test/java/com/snoworca/naruserve/docs/WaveFiveDocsTest.java:458"
+  },
+  {
+   "id": "D-214",
+   "verdict": "match",
+   "pointer": "FR-ENGINE-002 AC-4 -> NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/BindingSocketTest.java:130 | TinyHttpdAdapter.java:115-119 allowlist = allowedHosts + host-name bind address; IP literals pass TinyHttpd HostAllowlistFilter"
+  },
+  {
+   "id": "D-433",
+   "verdict": "match",
+   "pointer": "FR-ENGINE-001 AC-3 -> NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/AdapterSurfaceTest.java:153; OPS-ENGINE-001 AC-3 -> src/test/java/com/snoworca/naruserve/docs/WaveFiveDocsTest.java:458"
+  },
+  {
+   "id": "D-215",
+   "verdict": "match",
+   "pointer": "IR-ENGINE-001 AC-2 -> NaruServe-api/src/test/java/com/snoworca/naruserve/ServerOptionsTest.java:91; IR-ENGINE-001 AC-4 -> NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LimitsSocketTest.java:221; FR-ENGINE-003 AC-1 -> NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LimitsSocketTest.java:102"
+  },
+  {
+   "id": "D-414",
+   "verdict": "match",
+   "pointer": "IR-ENGINE-001 AC-2 -> NaruServe-api/src/test/java/com/snoworca/naruserve/ServerOptionsTest.java:91; IR-ENGINE-001 AC-4 -> NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LimitsSocketTest.java:221; FR-ENGINE-003 AC-2 -> NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LimitsSocketTest.java:89"
+  },
+  {
+   "id": "D-437",
+   "verdict": "match",
+   "pointer": "IR-ENGINE-001 AC-4 -> NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LimitsSocketTest.java:221; FR-ENGINE-003 AC-3 -> NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LimitsSocketTest.java:221; OPS-ENGINE-001 AC-2 -> NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LimitsSocketTest.java:111"
+  },
+  {
+   "id": "D-216",
+   "verdict": "match",
+   "pointer": "IR-ENGINE-001 AC-2 -> NaruServe-api/src/test/java/com/snoworca/naruserve/ServerOptionsTest.java:91; FR-ENGINE-003 AC-4 -> NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LimitsSocketTest.java:245; FR-ENGINE-003 AC-8 -> NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LimitsSocketTest.java:157"
+  },
+  {
+   "id": "D-413",
+   "verdict": "match",
+   "pointer": "IR-ENGINE-001 AC-2 -> NaruServe-api/src/test/java/com/snoworca/naruserve/ServerOptionsTest.java:91; FR-ENGINE-003 AC-5 -> NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LimitsSocketTest.java:275; FR-ENGINE-003 AC-8 -> NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LimitsSocketTest.java:157"
+  },
+  {
+   "id": "D-217",
+   "verdict": "match",
+   "pointer": "FR-ENGINE-003 AC-6 -> NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LimitsSocketTest.java:307"
+  },
+  {
+   "id": "D-218",
+   "verdict": "match",
+   "pointer": "FR-ENGINE-004 AC-3 -> NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/ConnectionLimitsTest.java:105"
+  },
+  {
+   "id": "D-219",
+   "verdict": "match",
+   "pointer": "FR-ENGINE-003 AC-5 -> NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LimitsSocketTest.java:275; FR-ENGINE-005 AC-1 -> NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdBodyStreamTest.java:47; FR-ENGINE-005 AC-2 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ErrorPathTest.java:449 | 413 branch is the defensive guard of wave decision W2-004, unit-tested on a constructed exception"
+  },
+  {
+   "id": "D-443",
+   "verdict": "match",
+   "pointer": "FR-ENGINE-003 AC-7 -> NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LimitsSocketTest.java:119"
+  },
+  {
+   "id": "D-220",
+   "verdict": "match",
+   "pointer": "IR-ENGINE-002 AC-4 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ListenStartupTest.java:243; FR-ENGINE-005 AC-6 -> NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/TinyLogBridgeTest.java:23"
+  },
+  {
+   "id": "D-400",
+   "verdict": "match",
+   "pointer": "FR-ENGINE-003 AC-3 -> NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LimitsSocketTest.java:221; FR-ENGINE-003 AC-6 -> NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LimitsSocketTest.java:307; FR-ENGINE-004 AC-3 -> NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/ConnectionLimitsTest.java:105"
+  },
+  {
+   "id": "D-422",
+   "verdict": "match",
+   "pointer": "FR-ENGINE-005 AC-5 -> NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/TransportRejectionTest.java:128"
+  },
+  {
+   "id": "D-405",
+   "verdict": "match",
+   "pointer": "IR-ENGINE-002 AC-5 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StandardErrorsTest.java:61; FR-ENGINE-002 AC-4 -> NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/BindingSocketTest.java:130; FR-ENGINE-005 AC-3 -> NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/TransportRejectionTest.java:84"
+  },
+  {
+   "id": "D-418",
+   "verdict": "match",
+   "pointer": "FR-ENGINE-002 AC-4 -> NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/BindingSocketTest.java:130; FR-ENGINE-005 AC-3 -> NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/TransportRejectionTest.java:84; OPS-ENGINE-001 AC-3 -> src/test/java/com/snoworca/naruserve/docs/WaveFiveDocsTest.java:458"
+  },
+  {
+   "id": "D-404",
+   "verdict": "match",
+   "pointer": "IR-ENGINE-001 AC-2 -> NaruServe-api/src/test/java/com/snoworca/naruserve/ServerOptionsTest.java:91; FR-ENGINE-001 AC-2 -> NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/AbortSocketTest.java:32; FR-ENGINE-004 AC-1 -> NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/ConnectionLimitsTest.java:93"
+  },
+  {
+   "id": "D-415",
+   "verdict": "match",
+   "pointer": "FR-ENGINE-004 AC-2 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StartFailureTest.java:132"
+  },
+  {
+   "id": "D-221",
+   "verdict": "match",
+   "pointer": "FR-ENGINE-002 AC-5 -> NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/BindingSocketTest.java:197"
+  },
+  {
+   "id": "D-222",
+   "verdict": "match",
+   "pointer": "FR-ENGINE-002 AC-6 -> NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/BindingSocketTest.java:169"
+  },
+  {
+   "id": "D-223",
+   "verdict": "match",
+   "pointer": "FR-ENGINE-006 AC-1 -> NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/ShutdownSocketTest.java:58; FR-ENGINE-006 AC-2 -> NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/KeeperThreadTest.java:66 | TinyHttpdAdapter.java:164 stop(timeout)->TinyHttpd.stop(grace), :186 release awaitTermination bounded by RELEASE_MARGIN_MS"
+  },
+  {
+   "id": "D-224",
+   "verdict": "match",
+   "pointer": "FR-ENGINE-007 AC-1 -> NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/CrossAdapterTest.java:171"
+  },
+  {
+   "id": "D-225",
+   "verdict": "match",
+   "pointer": "IR-ENGINE-001 AC-1 -> NaruServe-api/src/test/java/com/snoworca/naruserve/ServerOptionsTest.java:212; IR-ENGINE-001 AC-2 -> NaruServe-api/src/test/java/com/snoworca/naruserve/ServerOptionsTest.java:91; IR-ENGINE-001 AC-6 -> NaruServe-api/src/test/kotlin/com/snoworca/naruserve/ServerOptionsKotlinTest.kt:30"
+  },
+  {
+   "id": "D-226",
+   "verdict": "match",
+   "pointer": "FR-ENGINE-009 AC-1 -> NaruServe/src/test/java/com/snoworca/naruserve/bootstrap/DefaultAppFactoryTest.java:45; FR-ENGINE-009 AC-5 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AppFactoryLoaderTest.java:81"
+  },
+  {
+   "id": "D-227",
+   "verdict": "match",
+   "pointer": "FR-ENGINE-009 AC-5 -> NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AppFactoryLoaderTest.java:81"
+  },
+  {
+   "id": "D-228",
+   "verdict": "match",
+   "pointer": "FR-ENGINE-009 AC-2 -> NaruServe/src/test/java/com/snoworca/naruserve/bootstrap/DefaultAppFactoryTest.java:65"
+  },
+  {
+   "id": "D-229",
+   "verdict": "match",
+   "pointer": "FR-ENGINE-009 AC-4 -> NaruServe/src/test/java/com/snoworca/naruserve/bootstrap/DefaultAppFactoryTest.java:88"
+  },
+  {
+   "id": "D-402",
+   "verdict": "match",
+   "pointer": "FR-ENGINE-009 AC-3 -> NaruServe/src/test/java/com/snoworca/naruserve/bootstrap/DefaultLoggerTest.java:41"
+  },
+  {
+   "id": "D-230",
+   "verdict": "match",
+   "pointer": "OPS-ENGINE-001 AC-5 -> src/test/java/com/snoworca/naruserve/docs/WaveFiveDocsTest.java:477"
+  }
+ ],
+ "constraints": [
+  {
+   "id": "C-01",
+   "verdict": "match",
+   "pointer": "gradle/wrapper/gradle-wrapper.properties gradle-8.14.3; window adds no other build tool, only build.gradle test wiring (build.gradle:174,192); ./gradlew build exit 0"
+  },
+  {
+   "id": "C-02",
+   "verdict": "match",
+   "pointer": "build.gradle options.release 8 / jvmTarget 1.8 unchanged; animal-sniffer android-api-level-21 (build.gradle:228) passes over api/tinyhttpd/gson/bootstrap; FR-JSON-003 AC-8 GsonCodecKotlinTest; CookieFactoryHook avoids java.util.function"
+  },
+  {
+   "id": "C-03",
+   "verdict": "match",
+   "pointer": "Kotlin tests ServerOptionsKotlinTest.kt, JsonKotlinTest.kt, GsonCodecKotlinTest.kt, CookieKotlinTest.kt, JsonDocsKotlinTest.kt pass; Cookie getX/setX/isHttpOnly property syntax (IR-COOKIE-001 AC-7); @Nullable on body/cookie returns (IR-JSON-002 AC-3, FR-COOKIE-002 AC-8)"
+  },
+  {
+   "id": "C-04",
+   "verdict": "match",
+   "pointer": "Servlet-style Cookie value object NaruServe-api/src/main/java/com/snoworca/naruserve/Cookie.java; HttpAdapter SPI keeps engines in adapter modules (FR-ENGINE-001 AC-1 AdapterSurfaceTest)"
+  },
+  {
+   "id": "C-05",
+   "verdict": "match",
+   "pointer": "docs/api app.md/defaults.md/json.md/cookie.md/request.md/kotlin.md/express-migration.md updated with Express equivalents (app.set('trust proxy'), express.json({limit}), cookie-parser rows); WaveFiveDocsTest, DocsExamplesCompileTest, JsonDocsKotlinTest pass"
+  },
+  {
+   "id": "C-06",
+   "verdict": "match",
+   "pointer": "settings.gradle still includes NaruServe-api and NaruServe-servlet; wave 5 code lands in api/tinyhttpd/gson/NaruServe only"
+  },
+  {
+   "id": "C-07",
+   "verdict": "match",
+   "pointer": "wave 5 (미확정) markers settled and removed (OPS-ENGINE-001 AC-7, OPS-JSON-001, OPS-COOKIE-001; AppDocsTest sdsAc7_OPS_APP_003_AC6_decidedMarkersAreGone, HttpDocsTest sdsAc8_OPS_HTTP_005_AC8_*); later-wave markers kept"
+  },
+  {
+   "id": "C-08",
+   "verdict": "match",
+   "pointer": "docs/analysis/2026-10-19.NaruServe.naruserve-v1/auto_decisions.json gains one decision, none of the 15 prior decisions lost; lane ran to TASK_DONE without a user stop (manifest review_outcome)"
+  },
+  {
+   "id": "C-09",
+   "verdict": "match",
+   "pointer": "object.md T07 (CrossAdapterTest), T08/T09 (JsonBodyAcceptanceTest, GsonJsonCodecTest), T33/T34 (CookieAcceptanceTest), T48 (LimitsSocketTest), T49 (BindingSocketTest), T44 (ShutdownSocketTest) pass in ./gradlew build"
+  }
+ ],
+ "preservation": [
+  {
+   "item": "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java",
+   "verdict": "intended-improvement",
+   "evidence": "adds body(Class)/body(TypeRef) @Nullable, cookie(String), getCookies() (IR-JSON-002 AC-3, FR-COOKIE-002 AC-8); only the stale 'no body/cookie yet' javadoc removed"
+  },
+  {
+   "item": "NaruServe-api/src/main/java/com/snoworca/naruserve/Response.java",
+   "verdict": "intended-improvement",
+   "evidence": "adds json(@Nullable Object), addCookie(Cookie) (IR-JSON-002 AC-3, FR-COOKIE-001 AC-1); only the stale wave-3 javadoc removed"
+  },
+  {
+   "item": "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java",
+   "verdict": "intended-improvement",
+   "evidence": "adds server, trustProxy, jsonCodec, jsonLimit (IR-ENGINE-001 AC-1/AC-7, IR-JSON-002 AC-1/AC-2); listen javadoc reworded for the configurable bind (IR-ENGINE-001 AC-5)"
+  },
+  {
+   "item": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java",
+   "verdict": "intended-improvement",
+   "evidence": "body readers, cookie parsing and proxy trust replace the raw remoteAddress/isSecure returns (FR-JSON-001, FR-COOKIE-002, FR-ENGINE-008 AC-1..4); untrusted default keeps the exchange values"
+  },
+  {
+   "item": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+   "verdict": "intended-improvement",
+   "evidence": "json/addCookie (FR-JSON-002, FR-COOKIE-001); isToken widened from private to package static for CookieSerializer, same logic"
+  },
+  {
+   "item": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+   "verdict": "intended-improvement",
+   "evidence": "codec becomes volatile settable (IR-JSON-002 AC-1); fixed bind(\"127.0.0.1\",...) replaced by bind(ServerSettings,...) with frozen ServerOptions (IR-ENGINE-002 AC-2), safe logger in settings (IR-ENGINE-002 AC-4), freeze check (FR-ENGINE-004 AC-2)"
+  },
+  {
+   "item": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+   "verdict": "intended-improvement",
+   "evidence": "carries frozen codec/jsonLimit/trustProxy into DefaultRequest/DefaultResponse (FR-ENGINE-008 AC-4, IR-JSON-002); declared out-of-lease in the manifest with this reason"
+  },
+  {
+   "item": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ErrorPath.java",
+   "verdict": "intended-improvement",
+   "evidence": "javadoc and @req tag only, documenting the Connection: close that DefaultResponse adds to every 408 (FR-ENGINE-005 AC-2)"
+  },
+  {
+   "item": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/LimitedInputStream.java",
+   "verdict": "intended-improvement",
+   "evidence": "records overrun() when the limit trips so a codec-wrapped BodyTooLargeException still gives 413 (FR-JSON-001 AC-9); throw sites unchanged in behaviour"
+  },
+  {
+   "item": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StandardErrors.java",
+   "verdict": "intended-improvement",
+   "evidence": "additions only: renderer for ServerSettings.errorRenderer (IR-ENGINE-002 AC-5)"
+  },
+  {
+   "item": "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpAdapter.java",
+   "verdict": "intended-improvement",
+   "evidence": "additions only: default bind(ServerSettings, ExchangeHandler) delegating to the kept bind(String,int,...) (IR-ENGINE-002 AC-1)"
+  },
+  {
+   "item": "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/JsonCodec.java",
+   "verdict": "intended-improvement",
+   "evidence": "decode return gains @Nullable, erased signature kept (IR-JSON-002 AC-4; wave decision JSON null decodes to null)"
+  },
+  {
+   "item": "NaruServe-api/src/test/java/com/snoworca/naruserve/AppDocsTest.java",
+   "verdict": "intended-improvement",
+   "evidence": "re-pointed to OPS-APP-003 AC-6 (successor of OPS-APP-001); phrases decided in wave 5 (LAN, trust proxy, 0.0.0.0, cookie-parser, Expires, bind/proxy rows) moved from the kept-marker list to the removed-marker list, which still asserts them; keeper-thread asserts added (OPS-APP-003 AC-1)"
+  },
+  {
+   "item": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java",
+   "verdict": "intended-improvement",
+   "evidence": "exact method sets extended with body/json/cookie/getCookies/addCookie and server/trustProxy/jsonCodec/jsonLimit; LATER_WAVE_NAMES drops only the names wave 5 adds (IR-JSON-002 AC-8, FR-COOKIE-002 AC-8, IR-ENGINE-001 AC-7); new nullability assertions"
+  },
+  {
+   "item": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java",
+   "verdict": "intended-improvement",
+   "evidence": "re-pointed OPS-HTTP-003 -> OPS-HTTP-005; request.md marker count 3->1 because proxy and jsonTree markers are settled, and the test now asserts those lines are marker-free and name app.trustProxy (OPS-HTTP-005 AC-8, OPS-ENGINE-001 AC-4, OPS-JSON-001 AC-2); trust-proxy dropped from the express kept-marker list for the same reason"
+  },
+  {
+   "item": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AppFactoryLoaderTest.java",
+   "verdict": "intended-improvement",
+   "evidence": "one comment line naming FR-ENGINE-009 AC-5"
+  },
+  {
+   "item": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AppIsolationTest.java",
+   "verdict": "intended-improvement",
+   "evidence": "additions only: CookieFactoryHook holds only a private static final Method (IR-COOKIE-001 AC-6, FR-APP-002 AC-2)"
+  },
+  {
+   "item": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AppLifecycleGuardTest.java",
+   "verdict": "intended-improvement",
+   "evidence": "additions only: server/trustProxy/jsonCodec/jsonLimit NEW-state guard (IR-ENGINE-001 AC-1, IR-JSON-002 AC-1/AC-2)"
+  },
+  {
+   "item": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/BodyStateTest.java",
+   "verdict": "intended-improvement",
+   "evidence": "FR-HTTP-019 AC-5 re-pointed by IR-JSON-002 AC-8: 'body' leaves the absent-name list and a stronger assert pins exactly body(Class) and body(TypeRef)"
+  },
+  {
+   "item": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ErrorPathTest.java",
+   "verdict": "intended-improvement",
+   "evidence": "additions only (FR-ENGINE-005 AC-2)"
+  },
+  {
+   "item": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ListenStartupTest.java",
+   "verdict": "intended-improvement",
+   "evidence": "additions only (IR-ENGINE-002 AC-2/AC-4, FR-ENGINE-002 AC-3)"
+  },
+  {
+   "item": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StandardErrorsTest.java",
+   "verdict": "intended-improvement",
+   "evidence": "additions only (IR-ENGINE-002 AC-5)"
+  },
+  {
+   "item": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StartFailureTest.java",
+   "verdict": "intended-improvement",
+   "evidence": "additions only (FR-ENGINE-004 AC-2)"
+  },
+  {
+   "item": "NaruServe-api/src/test/java/com/snoworca/naruserve/spi/HttpAdapterSpiTest.java",
+   "verdict": "intended-improvement",
+   "evidence": "additions only (IR-ENGINE-002 AC-1, AC-3)"
+  },
+  {
+   "item": "NaruServe-gson/src/main/java/com/snoworca/naruserve/gson/package-info.java",
+   "verdict": "intended-improvement",
+   "evidence": "additions only (@req FR-JSON-003 tag)"
+  },
+  {
+   "item": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/package-info.java",
+   "verdict": "intended-improvement",
+   "evidence": "additions only (@req FR-ENGINE-001 tag/doc)"
+  },
+  {
+   "item": "NaruServe/src/main/java/com/snoworca/naruserve/bootstrap/package-info.java",
+   "verdict": "intended-improvement",
+   "evidence": "doc now describes the shipped DefaultAppFactory and Logcat/console default (FR-ENGINE-009 AC-1, AC-3)"
+  },
+  {
+   "item": "build.gradle",
+   "verdict": "intended-improvement",
+   "evidence": "additions only: jar-path system properties for ConsumerRulesTest/DefaultAppFactoryTest (IR-JSON-001 AC-3, FR-ENGINE-009 AC-4), testFixtures for gson/tinyhttpd tests, root test dep on NaruServe-gson (OPS-ENGINE-001 AC-6)"
+  },
+  {
+   "item": "docs/analysis/2026-10-19.NaruServe.naruserve-v1/auto_decisions.json",
+   "verdict": "intended-improvement",
+   "evidence": "re-serialised; all 15 prior decisions kept verbatim, 1 decision added (C-08 committee record)"
+  },
+  {
+   "item": "docs/api/README.md",
+   "verdict": "intended-improvement",
+   "evidence": "Kotlin req.body example made null-safe (OPS-JSON-001 AC-4, D-440)"
+  },
+  {
+   "item": "docs/api/app.md",
+   "verdict": "intended-improvement",
+   "evidence": "server settings, trustProxy, keeper thread wording, ServerHandle.address (OPS-ENGINE-001 AC-1, OPS-APP-003 AC-1)"
+  },
+  {
+   "item": "docs/api/cookie.md",
+   "verdict": "intended-improvement",
+   "evidence": "maxAge/Expires/signed/encoding decisions, markers removed (OPS-COOKIE-001 AC-1..4)"
+  },
+  {
+   "item": "docs/api/defaults.md",
+   "verdict": "intended-improvement",
+   "evidence": "limits/bind/proxy/transport-rejection rows, request-line rename, markers settled (OPS-ENGINE-001 AC-2, AC-3, AC-7)"
+  },
+  {
+   "item": "docs/api/express-migration.md",
+   "verdict": "intended-improvement",
+   "evidence": "trust proxy, 0.0.0.0, express.json limit, cookie-parser rows and null-safe Kotlin todo (OPS-ENGINE-001 AC-4, OPS-COOKIE-001 AC-4, OPS-JSON-001 AC-4)"
+  },
+  {
+   "item": "docs/api/json.md",
+   "verdict": "intended-improvement",
+   "evidence": "jsonLimit, maxDepth, trailing data, module coordinates (OPS-JSON-001 AC-1, OPS-ENGINE-001 AC-5)"
+  },
+  {
+   "item": "docs/api/kotlin.md",
+   "verdict": "intended-improvement",
+   "evidence": "req.body row T?, nullable examples, reified extension throws 400 on JSON null (OPS-JSON-001 AC-3, D-440, D-192)"
+  },
+  {
+   "item": "docs/api/request.md",
+   "verdict": "intended-improvement",
+   "evidence": "req.body null/415/400/413, no jsonTree/jsonMap, app.trustProxy (OPS-JSON-001 AC-2, OPS-ENGINE-001 AC-4)"
+  },
+  {
+   "item": "docs/api/sse.md",
+   "verdict": "intended-improvement",
+   "evidence": "SSE stream limit row settled via maxSseStreams (OPS-ENGINE-001 AC-7)"
+  },
+  {
+   "item": "docs/api/websocket.md",
+   "verdict": "intended-improvement",
+   "evidence": "max connections row settled via maxUpgradedConnections; idle/ping/handshake marker kept for wave 7 (OPS-ENGINE-001 AC-7)"
+  },
+  {
+   "item": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java",
+   "verdict": "intended-improvement",
+   "evidence": "skips for now-existing Cookie/json/body members removed so those blocks compile (OPS-COOKIE-001 AC-5, OPS-JSON-001 AC-5); OPS_APP_002_AC2 'reason leads with later-wave method' test replaced by sdsAc4_OPS_JSON_001_AC5_noSkipNamesAWave5Member and skippedJsonBlocksNameTheReasonThatStillApplies (SDS-AC-4 of wave-5-8 SDS) since the member is no longer missing; reason regex gains app-defined variable/method categories, still guarded by sdsAc14_OPS_APP_002_AC2_everySkippedBlockStillFailsToCompile"
+  }
+ ],
+ "unit": [
+  {
+   "id": "lane-2026-10-19.naruserve.naruserve-v1-wave-5",
+   "verdict": "match",
+   "pointer": "lane head 2155938 (manifest head_sha) is ancestor of integration head de888b0 via merge 4fc24a0; 10 Orch-Lane trailer commits 5cc61f8..2155938 reachable; ./gradlew build exit 0, no failing tests (baseline [])"
+  }
+ ],
+ "findings": [
+  {
+   "finding_id": "P1-001",
+   "severity": "low",
+   "claim": "IR-COOKIE-001 AC-6 states that CookieFactoryHook resolves its Method with Class.forName(\"com.snoworca.naruserve.Cookie\") (which also initialises Cookie); the code uses the class literal Cookie.class.getDeclaredMethod. Behaviour is equivalent (invoking the static factory initialises Cookie), but the AC text and the code disagree, so a literal trace check of the AC fails.",
+   "evidence": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/CookieFactoryHook.java:20; docs/spec/08.cookie.srs.md (IR-COOKIE-001 AC-6)",
+   "suggested_fix": "Either switch to Class.forName(\"com.snoworca.naruserve.Cookie\").getDeclaredMethod(...) or clarify the AC through a guarded MCP AC edit to say 'resolved once from the Cookie class'."
+  }
+ ],
+ "roll_up": "ALL_MATCH"
+}

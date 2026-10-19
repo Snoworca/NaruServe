@@ -1,0 +1,48 @@
+{
+ "findings": [
+  {
+   "finding_id": "P1-001",
+   "severity": "low",
+   "claim": "IR-COOKIE-001 AC-6 states that CookieFactoryHook resolves its Method with Class.forName(\"com.snoworca.naruserve.Cookie\") (which also initialises Cookie); the code uses the class literal Cookie.class.getDeclaredMethod. Behaviour is equivalent (invoking the static factory initialises Cookie), but the AC text and the code disagree, so a literal trace check of the AC fails.",
+   "evidence": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/CookieFactoryHook.java:20; docs/spec/08.cookie.srs.md (IR-COOKIE-001 AC-6)",
+   "suggested_fix": "Either switch to Class.forName(\"com.snoworca.naruserve.Cookie\").getDeclaredMethod(...) or clarify the AC through a guarded MCP AC edit to say 'resolved once from the Cookie class'."
+  },
+  {
+   "finding_id": "P2-001",
+   "severity": "LOW",
+   "severity_class": "docs-api-correctness",
+   "claim": "docs/api presents maxWorkers as the HTTP worker-thread count (default 64, 1..1024), but the adapter passes maxWorkers + maxSseStreams to TinyHttpd's maxWorkers (D-404), so with no SSE streams open, ordinary requests can run on up to 192 threads by default (maxWorkers(16) still allows 144). The behaviour is the approved design; only the user-facing wording is off. An Android user who lowers maxWorkers to save memory gets far more threads than the docs say.",
+   "evidence": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdAdapter.java:110; docs/api/defaults.md:38; docs/api/app.md:122; NaruServe-api/src/main/java/com/snoworca/naruserve/ServerOptions.java:40",
+   "suggested_fix": "In defaults.md, app.md and the ServerOptions.maxWorkers Javadoc, say that the engine's thread pool is maxWorkers + maxSseStreams and that maxWorkers is the HTTP budget inside that pool, not a hard cap on threads that serve ordinary requests."
+  },
+  {
+   "finding_id": "P2-002",
+   "severity": "LOW",
+   "severity_class": "cross-wave-regression-risk",
+   "claim": "TinyHttpdFeatures is meant to let waves 6 and 7 fill sendFile, eventStream and upgrade 'without editing the adapter core'. But TinyHttpdExchange.sendFile/eventStream/upgrade are not synchronized and never set the exchange's started flag or check aborted, while run()'s abort hand-back relies on started (and on res.isCommitted()). If a later wave fills only the feature bodies, a concurrent abort can race a file or stream write on res, or skip the started guard against a double commit.",
+   "evidence": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdExchange.java:197-210 (unguarded delegations) vs :56-68 and :129-137 (started/aborted guards); TinyHttpdFeatures.java:10-13",
+   "suggested_fix": "Before wave 6/7 fill TinyHttpdFeatures, make the three exchange methods synchronized with the same aborted check and started=true transition as commit(), or record in the wave-6 SDS that the exchange must change too."
+  },
+  {
+   "finding_id": "S2-001",
+   "severity": "low",
+   "items": [
+    "FR-JSON-001",
+    "docs/api/request.md"
+   ],
+   "claim": "JsonBodyReader.isJsonType returns false (so req.body gives 415) for a JSON media type whose charset parameter is anything other than utf-8 (e.g. application/json; charset=iso-8859-1). The 415 itself matches Express body-parser, but docs/api/request.md only says 415 happens when the Content-Type is not JSON, and never mentions that only UTF-8 is accepted. A client sending a declared non-UTF-8 charset gets a 415 the docs do not explain.",
+   "evidence": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/JsonBodyReader.java (isJsonType charset loop, !charset.equalsIgnoreCase(\"utf-8\") -> false); docs/api/request.md:61,70",
+   "suggested_fix": "In docs/api/request.md's JSON section, say that the body is read as UTF-8 only, that a charset parameter other than utf-8 gives 415 (as in Express body-parser), and spell out which +json types are accepted (application/<x>+json)."
+  },
+  {
+   "finding_id": "S2-002",
+   "severity": "low",
+   "items": [
+    "FR-JSON-001"
+   ],
+   "claim": "A JSON body that starts with a UTF-8 BOM (EF BB BF) is rejected with 400. The reader skips only space, tab, CR and LF before handing off to the strict Gson reader, which then sees U+FEFF. Express body-parser decodes through iconv-lite, which strips the BOM, so it accepts these bodies. Neither the spec nor docs/api settles this, so it is an undocumented Express-compat gap rather than a contract breach.",
+   "evidence": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/JsonBodyReader.java (whitespace skip loop before codec.decode); no BOM rule in docs/spec or docs/api (grep BOM/FEFF: none)",
+   "suggested_fix": "Either skip one leading U+FEFF in the pre-read loop (one condition, with a test), or state in docs/api/request.md that a BOM-prefixed body gets 400."
+  }
+ ]
+}

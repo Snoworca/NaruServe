@@ -1,0 +1,14 @@
+{"confirmed":["P2-001","P2-002"],
+ "rebutted":[],
+ "added":[
+  {"finding_id":"S2-001","severity":"low",
+   "items":["FR-JSON-001","docs/api/request.md"],
+   "claim":"JsonBodyReader.isJsonType returns false (so req.body gives 415) for a JSON media type whose charset parameter is anything other than utf-8 (e.g. application/json; charset=iso-8859-1). The 415 itself matches Express body-parser, but docs/api/request.md only says 415 happens when the Content-Type is not JSON, and never mentions that only UTF-8 is accepted. A client sending a declared non-UTF-8 charset gets a 415 the docs do not explain.",
+   "evidence":"NaruServe-api/src/main/java/com/snoworca/naruserve/internal/JsonBodyReader.java (isJsonType charset loop, !charset.equalsIgnoreCase(\"utf-8\") -> false); docs/api/request.md:61,70",
+   "suggested_fix":"In docs/api/request.md's JSON section, say that the body is read as UTF-8 only, that a charset parameter other than utf-8 gives 415 (as in Express body-parser), and spell out which +json types are accepted (application/<x>+json)."},
+  {"finding_id":"S2-002","severity":"low",
+   "items":["FR-JSON-001"],
+   "claim":"A JSON body that starts with a UTF-8 BOM (EF BB BF) is rejected with 400. The reader skips only space, tab, CR and LF before handing off to the strict Gson reader, which then sees U+FEFF. Express body-parser decodes through iconv-lite, which strips the BOM, so it accepts these bodies. Neither the spec nor docs/api settles this, so it is an undocumented Express-compat gap rather than a contract breach.",
+   "evidence":"NaruServe-api/src/main/java/com/snoworca/naruserve/internal/JsonBodyReader.java (whitespace skip loop before codec.decode); no BOM rule in docs/spec or docs/api (grep BOM/FEFF: none)",
+   "suggested_fix":"Either skip one leading U+FEFF in the pre-read loop (one condition, with a test), or state in docs/api/request.md that a BOM-prefixed body gets 400."}
+ ]}

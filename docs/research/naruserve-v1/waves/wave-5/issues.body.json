@@ -1,0 +1,106 @@
+{
+ "wave": 5,
+ "issues": [
+  {
+   "issueId": "w5-P1-001",
+   "wave": 5,
+   "class": "local-defect",
+   "source": "loop P r1 P1-001",
+   "resolutionKind": "commit-sha",
+   "resolutionRef": "d4a95b60f8d6719397a1cd2bbdd1b8fab06fa5d5"
+  },
+  {
+   "issueId": "w5-P2-001",
+   "wave": 5,
+   "class": "local-defect",
+   "source": "loop P r1 P2-001",
+   "resolutionKind": "commit-sha",
+   "resolutionRef": "055bf7d7a247dbf98be35bfd7c48e3223fc5791d"
+  },
+  {
+   "issueId": "w5-P2-002",
+   "wave": 5,
+   "class": "local-defect",
+   "source": "loop P r1 P2-002",
+   "resolutionKind": "commit-sha",
+   "resolutionRef": "387db8c2655e9d9b122f3523fcb0af6653434973"
+  },
+  {
+   "issueId": "w5-S2-001",
+   "wave": 5,
+   "class": "local-defect",
+   "source": "loop P r1 stage2 S2-001",
+   "resolutionKind": "commit-sha",
+   "resolutionRef": "055bf7d7a247dbf98be35bfd7c48e3223fc5791d"
+  },
+  {
+   "issueId": "w5-S2-002",
+   "wave": 5,
+   "class": "local-defect",
+   "source": "loop P r1 stage2 S2-002",
+   "resolutionKind": "commit-sha",
+   "resolutionRef": "055bf7d7a247dbf98be35bfd7c48e3223fc5791d"
+  },
+  {
+   "issueId": "w5-D-001",
+   "wave": 5,
+   "class": "local-defect",
+   "source": "duplication audit w5-D-001",
+   "resolutionKind": "commit-sha",
+   "resolutionRef": "821488ed1363a8aea91dbcbe033c36e895af7494"
+  },
+  {
+   "issueId": "w5-D-002",
+   "wave": 5,
+   "class": "local-defect",
+   "source": "duplication audit w5-D-002",
+   "resolutionKind": "commit-sha",
+   "resolutionRef": "821488ed1363a8aea91dbcbe033c36e895af7494"
+  },
+  {
+   "issueId": "w5-D-003",
+   "wave": 5,
+   "class": "local-defect",
+   "source": "duplication audit w5-D-003",
+   "resolutionKind": "commit-sha",
+   "resolutionRef": "8d6fd5fb47915810ae9219bbb5e846c1f230cb4d"
+  },
+  {
+   "issueId": "w5-D-004",
+   "wave": 5,
+   "class": "local-defect",
+   "source": "duplication audit w5-D-004",
+   "resolutionKind": "commit-sha",
+   "resolutionRef": "8d6fd5fb47915810ae9219bbb5e846c1f230cb4d"
+  },
+  {
+   "issueId": "w5-D-005",
+   "wave": 5,
+   "class": "local-defect",
+   "source": "duplication audit w5-D-005",
+   "resolutionKind": "commit-sha",
+   "resolutionRef": "4d958e7e6125f6aefaf6917b847f4eb61f82eb0f"
+  },
+  {
+   "issueId": "w5-D-006",
+   "wave": 5,
+   "class": "local-defect",
+   "source": "duplication audit w5-D-006",
+   "resolutionKind": "commit-sha",
+   "resolutionRef": "228783a5e62b30af7952d274f883ec8809289140"
+  },
+  {
+   "issueId": "w5-D-007",
+   "wave": 5,
+   "class": "local-defect",
+   "source": "duplication audit w5-D-007",
+   "resolutionKind": "commit-sha",
+   "resolutionRef": "228783a5e62b30af7952d274f883ec8809289140"
+  }
+ ],
+ "counts": {
+  "local-defect": 12,
+  "open": 0,
+  "resolved": 12
+ }
+}

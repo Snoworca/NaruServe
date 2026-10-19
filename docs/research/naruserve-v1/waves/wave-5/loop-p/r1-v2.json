@@ -1,0 +1,31 @@
+{
+  "verifier": "VERIFIER 2",
+  "round": 1,
+  "wave": 5,
+  "window": "f198d86..4fc24a0",
+  "findings": [
+    {
+      "finding_id": "P2-001",
+      "severity": "LOW",
+      "severity_class": "docs-api-correctness",
+      "claim": "docs/api presents maxWorkers as the HTTP worker-thread count (default 64, 1..1024), but the adapter passes maxWorkers + maxSseStreams to TinyHttpd's maxWorkers (D-404), so with no SSE streams open, ordinary requests can run on up to 192 threads by default (maxWorkers(16) still allows 144). The behaviour is the approved design; only the user-facing wording is off. An Android user who lowers maxWorkers to save memory gets far more threads than the docs say.",
+      "evidence": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdAdapter.java:110; docs/api/defaults.md:38; docs/api/app.md:122; NaruServe-api/src/main/java/com/snoworca/naruserve/ServerOptions.java:40",
+      "suggested_fix": "In defaults.md, app.md and the ServerOptions.maxWorkers Javadoc, say that the engine's thread pool is maxWorkers + maxSseStreams and that maxWorkers is the HTTP budget inside that pool, not a hard cap on threads that serve ordinary requests."
+    },
+    {
+      "finding_id": "P2-002",
+      "severity": "LOW",
+      "severity_class": "cross-wave-regression-risk",
+      "claim": "TinyHttpdFeatures is meant to let waves 6 and 7 fill sendFile, eventStream and upgrade 'without editing the adapter core'. But TinyHttpdExchange.sendFile/eventStream/upgrade are not synchronized and never set the exchange's started flag or check aborted, while run()'s abort hand-back relies on started (and on res.isCommitted()). If a later wave fills only the feature bodies, a concurrent abort can race a file or stream write on res, or skip the started guard against a double commit.",
+      "evidence": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdExchange.java:197-210 (unguarded delegations) vs :56-68 and :129-137 (started/aborted guards); TinyHttpdFeatures.java:10-13",
+      "suggested_fix": "Before wave 6/7 fill TinyHttpdFeatures, make the three exchange methods synchronized with the same aborted check and started=true transition as commit(), or record in the wave-6 SDS that the exchange must change too."
+    }
+  ],
+  "regression": {
+    "command": "./gradlew build",
+    "exit_code": 0,
+    "failing_tests": []
+  },
+  "substantive_clean": true,
+  "notes": "Checked the core API diff (Request/Response/RestApp/DefaultRequest/DefaultResponse/DefaultRestApp/Dispatcher/StandardErrors/LimitedInputStream/SPI), Cookie/CookieParser/CookieSerializer/CookieFactoryHook, JsonBodyReader, TypeRef, ServerOptions/DefaultServerOptions/ServerSettings, ProxyTrust, GsonJsonCodec, every TinyHttpd adapter main class and DefaultAppFactory, plus docs/api cookie.md, json.md, app.md and defaults.md against the code. Found no CRITICAL/HIGH/MEDIUM defects. Thread safety holds: settings are written only in NEW under the app lock and read once at freeze, the cookie cache is benign-racy over immutable copies, and json() encodes outside the lock and then commits once. Build: BUILD SUCCESSFUL, but Gradle reported 53 tasks up-to-date, so some test results came from cache. w5-D-001..007 and the TinyHttpd 38051b6 drift were not re-reported."
+}
