@@ -211,6 +211,22 @@ public class AppIsolationTest {
         assertNull(staticField(DefaultRestApp.class));
     }
 
+    // SDS-AC-3 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-5-3.sds.md; IR-COOKIE-001 AC-6
+    @Test
+    public void sdsAc3_IR_COOKIE_001_AC6_cookieFactoryHookHoldsOnlyAPrivateStaticFinalMethod() {
+        List<String> fields = new ArrayList<>();
+        for (Field f : CookieFactoryHook.class.getDeclaredFields()) {
+            if (f.isSynthetic()) {
+                continue;
+            }
+            int mods = f.getModifiers();
+            assertTrue(f.getName(), Modifier.isPrivate(mods) && Modifier.isStatic(mods) && Modifier.isFinal(mods));
+            assertEquals(java.lang.reflect.Method.class, f.getType());
+            fields.add(f.getName());
+        }
+        assertEquals(1, fields.size());
+    }
+
     private static Field staticField(Class<?> c) {
         for (Field f : c.getDeclaredFields()) {
             if (Modifier.isStatic(f.getModifiers()) && !f.isSynthetic()) {

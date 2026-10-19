@@ -93,7 +93,7 @@ app.get("/api/events", (req, res) -> {
 ## 한도와 종료
 
 - 연결별 송신 큐 기본값은 256 KiB입니다. 클라이언트가 느려서 큐가 가득 차면 연결을 닫습니다(**(미확정)**).
-- 최대 동시 SSE 연결 수를 설정할 수 있습니다(설정 API **(미확정)**).
+- 최대 동시 SSE 연결 수는 `app.server(options -> options.maxSseStreams(256))`처럼 `maxSseStreams`로 정합니다(기본 128, 최대 1024). 넘치면 `503`으로 답합니다. [서버 설정](app.md#서버-설정)
 - `app.shutdown(...)` 때 열린 SSE 연결을 닫고 `onClose`를 실행합니다.
 
 ## WebSocket과 비교

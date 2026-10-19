@@ -41,7 +41,7 @@ app.get("/users/:id") { req, res ->
 }
 
 app.post("/users") { req, res ->
-    val user = req.body(User::class.java)
+    val user = req.body(User::class.java) ?: throw HttpException(400, "JSON body is null")
     res.status(201).json(userService.create(user))
 }
 
@@ -60,6 +60,7 @@ app.listen(3000);
 ```
 
 Java에서는 `express.json()` 같은 본문 파서를 따로 등록하지 않습니다. `req.body(User.class)`를 호출할 때 읽습니다.
+`req.body(...)`는 본문이 JSON `null`이면 `null`을 돌려주므로 Kotlin에서는 `?:`로 처리합니다([Kotlin](kotlin.md#null-처리)).
 
 ## 문서 목록
 

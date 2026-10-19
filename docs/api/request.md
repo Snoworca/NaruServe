@@ -14,7 +14,7 @@
 | `remoteAddress()` | `String` | `req.ip` | 접속한 상대 주소 |
 | `isSecure()` | `boolean` | `req.secure` | TLS 연결이면 `true` |
 
-`remoteAddress()`와 `isSecure()`는 기본으로 `X-Forwarded-For` 같은 프록시 헤더를 보지 않습니다. 프록시를 신뢰하도록 명시 설정할 때만 반영합니다(설정 API **(미확정)**).
+`remoteAddress()`와 `isSecure()`는 기본으로 `X-Forwarded-For` 같은 프록시 헤더를 보지 않습니다. 리버스 프록시 뒤에서 `app.trustProxy(true)`를 켜면 첫 `X-Forwarded-For` 헤더의 맨 왼쪽 값과 첫 `X-Forwarded-Proto` 값(`https`이면 `true`)을 씁니다. Express의 `app.set('trust proxy', true)`에 해당하며, 값은 검증하지 않으므로 그 헤더를 덮어쓰는 프록시 뒤에서만 켜세요. `Forwarded` 헤더는 읽지 않습니다. [서버 설정](app.md#서버-설정)
 
 ## 경로 변수·쿼리·헤더
 
@@ -59,14 +59,17 @@ List<User> users = req.body(new TypeRef<List<User>>() {});
 ```
 
 - `Content-Type`이 `application/json`(또는 허용된 `+json` 타입)일 때만 읽습니다.
-- Express의 `req.body`처럼 타입 없이 아무 Map으로 바꾸지 않습니다. 필요하면 `req.body(Map.class)`를 쓰세요. 기본 Gson에서는 숫자가 `Double`(`42` → `42.0`)로, 중첩 객체가 `Map`으로 들어옵니다. `req.jsonTree()`/`req.jsonMap()`은 선택 기능으로 검토 중입니다(**(미확정)**).
+- 본문이 JSON `null`이면 `null`을 돌려줍니다(`@Nullable`). 빈 본문은 `null`이 아니라 `400`입니다.
+- Express의 `req.body`처럼 타입 없이 아무 Map으로 바꾸지 않습니다. 필요하면 `req.body(Map.class)`를 쓰세요. 기본 Gson에서는 숫자가 `Double`(`42` → `42.0`)로, 중첩 객체가 `Map`으로 들어옵니다.
+- v1에는 `jsonTree()`/`jsonMap()`이 없습니다. 타입 없는 값은 `req.body(Map.class)`로 읽습니다. 이렇게 정한 이유는 JSON 트리 타입을 공개 API에 두면 Gson 같은 특정 JSON 라이브러리의 타입이 드러나거나 별도 트리 모델을 하나 더 만들어야 하기 때문입니다.
 - JSON 엔진과 설정은 [JSON](json.md).
+- `req.body(...)`, `req.cookie(...)`, `req.getCookies()`와 `res.json(...)`, `res.addCookie(...)`는 인터페이스의 default 메서드입니다. 테스트용으로 `Request`/`Response`를 직접 구현하고 이 메서드를 재정의하지 않으면 `UnsupportedOperationException`을 던집니다. 이전 버전에 맞춰 만든 구현이 그대로 컴파일되게 하려는 것입니다.
 
 | 상황 | 결과 |
 |---|---|
 | `Content-Type`이 JSON이 아님 | `415` |
-| JSON 문법 오류 | `400` (`BAD_REQUEST`) |
-| 본문이 한도(기본 1 MiB)를 넘음 | `413` |
+| JSON 문법 오류, 값 뒤의 다른 데이터, 빈 본문 | `400` (`BAD_REQUEST`) |
+| 본문이 한도(기본 1 MiB, `app.jsonLimit(bytes)`)를 넘음 | `413` |
 | 중첩 깊이가 한도(기본 64)를 넘음 | `400` |
 | 본문을 이미 읽음 | `BodyAlreadyConsumedException` |
 

@@ -4,10 +4,12 @@ import java.io.InputStream;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Writer for one HTTP response. Wave 3 holds no json, file, download, cache, sse or cookie method; later waves add
- * them.
+ * Writer for one HTTP response, with {@link #json} and {@link #addCookie} since wave 5. No file, download, cache or
+ * sse method yet; later waves add them.
  */
 // @req IR-HTTP-001
+// @req IR-JSON-002
+// @req FR-COOKIE-001
 public interface Response {
 
     /**
@@ -39,4 +41,27 @@ public interface Response {
 
     /** Aborts the exchange, optionally recording {@code error} as the cause. */
     void abort(@Nullable Throwable error);
+
+    /**
+     * Sends {@code value} encoded by the app codec ({@code null} as JSON {@code null}) with
+     * {@code application/json; charset=UTF-8}, like Express {@code res.json}. The value is encoded before anything
+     * is sent, so an encoding failure leaves the response uncommitted. The default throws
+     * {@link UnsupportedOperationException}.
+     */
+    // @req IR-JSON-002
+    // @req FR-JSON-002
+    default void json(@Nullable Object value) {
+        throw new UnsupportedOperationException(getClass().getName() + " has no JSON writer");
+    }
+
+    /**
+     * Appends one {@code Set-Cookie} header for {@code cookie}, like Express {@code res.cookie}; returns this response.
+     * The name, value, path and domain are validated again ({@link IllegalArgumentException}), and a committed
+     * response throws {@link IllegalStateException} as {@link #header} does. The default throws
+     * {@link UnsupportedOperationException}.
+     */
+    // @req FR-COOKIE-001
+    default Response addCookie(Cookie cookie) {
+        throw new UnsupportedOperationException(getClass().getName() + " has no cookie writer");
+    }
 }

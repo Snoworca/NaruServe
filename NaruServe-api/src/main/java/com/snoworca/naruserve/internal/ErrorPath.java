@@ -8,9 +8,11 @@ import java.util.List;
 /**
  * The one place a failed request goes: a step's Exception (from the Dispatcher) or {@code next.error(e)} (from
  * {@link ChainNext}). The onError handlers run in registration order, each next one only while the response is still
- * NEW; then {@link DefaultResponse#afterFailure} decides the outcome by the state the chain left.
+ * NEW; then {@link DefaultResponse#afterFailure} decides the outcome by the state the chain left, adding
+ * {@code Connection: close} to every 408 it writes.
  */
 // @req FR-APP-005
+// @req FR-ENGINE-005
 // @req FR-HTTP-024
 final class ErrorPath {
 

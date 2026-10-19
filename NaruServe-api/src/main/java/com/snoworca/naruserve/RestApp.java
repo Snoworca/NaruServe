@@ -104,7 +104,8 @@ public interface RestApp {
     RestApp onStop(LifecycleCallback cb);
 
     /**
-     * Starts the app on {@code 127.0.0.1:port} ({@code 0} picks a free port) and returns once it serves.
+     * Starts the app on the bind address ({@code 127.0.0.1} unless {@link #server} changed it) and {@code port}
+     * ({@code 0} picks a free port) and returns once it serves.
      * {@link IllegalArgumentException} for a port outside {@code 0..65535}, before any state change.
      */
     // @req IR-APP-005
@@ -129,6 +130,32 @@ public interface RestApp {
     /** Runs {@code configurer} at once on the app's one access log options; calls accumulate in order. */
     // @req IR-APP-007
     RestApp accessLog(Configurer<AccessLogOptions> configurer);
+
+    /** Replaces the JSON codec that {@code req.body} and {@code res.json} use. */
+    // @req IR-JSON-002
+    RestApp jsonCodec(JsonCodec codec);
+
+    /**
+     * The largest JSON request body in bytes, {@code 1..1073741824}; default 1048576 (1 MiB), as Express
+     * {@code express.json({ limit })}. A larger body is answered 413.
+     */
+    // @req IR-JSON-002
+    RestApp jsonLimit(long bytes);
+
+    /**
+     * Runs {@code configurer} at once on the app's one server options, as {@code app.server(o ->
+     * o.bindAddress("0.0.0.0"))}; calls apply in order. Out-of-range values throw {@link IllegalArgumentException}.
+     */
+    // @req IR-ENGINE-001
+    RestApp server(Configurer<ServerOptions> configurer);
+
+    /**
+     * Trusts X-Forwarded-For and X-Forwarded-Proto for {@code req.remoteAddress()} and {@code req.isSecure()}, as
+     * Express {@code app.set('trust proxy', true)}; default false. Forwarded is never read.
+     */
+    // @req IR-ENGINE-001
+    // @req FR-ENGINE-008
+    RestApp trustProxy(boolean trust);
 
     /** Explicit app assembly; each setter returns this builder and each {@link #build()} returns a new app. */
     // @req IR-APP-001

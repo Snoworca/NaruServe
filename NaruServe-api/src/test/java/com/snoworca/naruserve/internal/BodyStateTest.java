@@ -245,16 +245,22 @@ public class BodyStateTest {
         assertEquals("m", new BodyAlreadyConsumedException("m").getMessage());
     }
 
-    // SDS-AC-11; FR-HTTP-019 AC-5
+    // SDS-AC-11; FR-HTTP-019 AC-5, re-pointed by IR-JSON-002 AC-8: body(Class) and body(TypeRef) are the only readers
     @Test
     public void sdsAc11_FR_HTTP_019_AC5_requestHasNoPublicBodyReadingMethod() {
-        List<String> bodyNames = Arrays.asList("body", "json", "form", "file", "files", "parts", "text", "bytes",
+        List<String> bodyNames = Arrays.asList("json", "form", "file", "files", "parts", "text", "bytes",
                 "stream", "inputStream", "raw");
+        List<String> bodyReaders = new java.util.ArrayList<>();
         for (Method m : Request.class.getMethods()) {
+            if (m.getName().equals("body")) {
+                bodyReaders.add(Arrays.toString(m.getParameterTypes()));
+            }
             assertFalse(m.getName(), bodyNames.contains(m.getName()));
             assertFalse(m.getName(), java.io.InputStream.class.isAssignableFrom(m.getReturnType()));
             assertFalse(m.getName(), m.getReturnType() == byte[].class);
         }
+        java.util.Collections.sort(bodyReaders);
+        assertEquals(Arrays.asList("[class com.snoworca.naruserve.TypeRef]", "[class java.lang.Class]"), bodyReaders);
         Method body;
         try {
             body = DefaultRequest.class.getDeclaredMethod("body");

@@ -126,4 +126,27 @@ public class StartFailureTest {
                 "logger.close FAILED"), events);
         assertEquals(AppState.TERMINATED, app.state());
     }
+
+    // SDS-AC-11 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-5-4.sds.md; FR-ENGINE-004 AC-2
+    @Test
+    public void sdsAc11_FR_ENGINE_004_AC2_tooFewConnectionsFailTheFreezeAfterOnStartAndBeforeBind() {
+        DefaultRestApp app = app();
+        app.onStart(ctx -> events.add("onStart"));
+        app.server(o -> o.maxWorkers(4).maxSseStreams(2).maxConnections(5));
+        Throwable e = listenFails(app);
+        assertEquals(IllegalStateException.class, e.getClass());
+        for (String part : new String[] {"maxConnections (5)", "maxWorkers (4)", "maxSseStreams (2)"}) {
+            org.junit.Assert.assertTrue(e.getMessage(), e.getMessage().contains(part));
+        }
+        assertEquals(Arrays.asList("onStart", "logger.flush FAILED", "logger.close FAILED"), events);
+        assertEquals(AppState.TERMINATED, app.state());
+
+        events.clear();
+        DefaultRestApp ok = app();
+        ok.server(o -> o.maxWorkers(4).maxSseStreams(2).maxConnections(6));
+        ok.listen(0);
+        assertEquals(AppState.RUNNING, ok.state());
+        org.junit.Assert.assertTrue(events.toString(), events.contains("bind"));
+        ok.shutdown(1, java.util.concurrent.TimeUnit.SECONDS);
+    }
 }

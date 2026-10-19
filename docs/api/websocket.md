@@ -113,7 +113,8 @@ app.use("/ws", (req, res, next) -> {
 |---|---|
 | 메시지 크기(텍스트·바이너리) | 1 MiB |
 | 연결별 송신 큐 | 1 MiB |
-| 최대 연결 수, idle timeout, Ping 주기, handshake timeout | **(미확정)** |
+| 최대 연결 수 | 128. `app.server(options -> options.maxUpgradedConnections(256))`처럼 `maxUpgradedConnections`로 바꿉니다(최대 65536). 넘치면 `503`. |
+| idle timeout, Ping 주기, handshake timeout | **(미확정)** |
 
 프로토콜 위반(마스킹 안 된 클라이언트 프레임, 잘못된 UTF-8, 한도 초과 프레임)은 연결을 닫습니다.
 대용량 바이너리 스트리밍은 v1에서 지원하지 않습니다.

@@ -15,6 +15,7 @@ import com.snoworca.naruserve.RestApp;
 import com.snoworca.naruserve.RouteBuilder;
 import com.snoworca.naruserve.RouteHandler;
 import com.snoworca.naruserve.ServerHandle;
+import com.snoworca.naruserve.ServerOptions;
 import com.snoworca.naruserve.routing.RouteKind;
 import com.snoworca.naruserve.routing.RoutePattern;
 import com.snoworca.naruserve.routing.Router;
@@ -22,6 +23,7 @@ import com.snoworca.naruserve.routing.RouterPolicy;
 import com.snoworca.naruserve.spi.ExchangeHandler;
 import com.snoworca.naruserve.spi.HttpAdapter;
 import com.snoworca.naruserve.spi.JsonCodec;
+import com.snoworca.naruserve.spi.ServerSettings;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -40,6 +42,10 @@ import org.jspecify.annotations.Nullable;
 // @req FR-HTTP-008
 // @req FR-HTTP-007
 // @req IR-APP-001
+// @req IR-ENGINE-001
+// @req IR-ENGINE-002
+// @req FR-ENGINE-002
+// @req FR-ENGINE-004
 // @req IR-APP-002
 // @req IR-APP-003
 // @req IR-APP-005
@@ -53,6 +59,7 @@ import org.jspecify.annotations.Nullable;
 // @req FR-APP-010
 // @req FR-APP-011
 // @req FR-APP-012
+// @req IR-JSON-002
 public final class DefaultRestApp implements RestApp {
 
     /** One registration call as recorded; the router is built from these at freeze. */
@@ -84,11 +91,16 @@ public final class DefaultRestApp implements RestApp {
     }
 
     private final @Nullable HttpAdapter adapter;
-    private final @Nullable JsonCodec codec;
+    // Written only in NEW under this; the Dispatcher reads both once at freeze.
+    private volatile @Nullable JsonCodec codec;
+    private volatile long jsonLimit = JsonBodyReader.DEFAULT_LIMIT;
     private volatile Logger logger;
     private final AppLifecycle lifecycle = new AppLifecycle();
     private final DefaultApplicationContext context = new DefaultApplicationContext(lifecycle, this);
     private final DefaultAccessLogOptions accessLogOptions = new DefaultAccessLogOptions();
+    private final DefaultServerOptions serverOptions = new DefaultServerOptions();
+    // Written only in NEW; the Dispatcher reads it once at freeze.
+    private volatile boolean trustProxy;
     private final ShutdownParticipants shutdownParticipants = new ShutdownParticipants();
     // Set by the one listen() that won beginStart.
     private volatile boolean bindAttempted;
@@ -129,9 +141,38 @@ public final class DefaultRestApp implements RestApp {
         return adapter;
     }
 
-    /** The codec given to the builder; null for the no-arg test constructor. */
+    /**
+     * The app's one codec: the builder's, or the last {@link #jsonCodec(JsonCodec)}; null for the no-arg test
+     * constructor. Every JSON feature reads it here.
+     */
+    // @req IR-JSON-002
     public @Nullable JsonCodec jsonCodec() {
         return codec;
+    }
+
+    // @req IR-JSON-002
+    @Override
+    public synchronized RestApp jsonCodec(JsonCodec codec) {
+        lifecycle.requireConfigurable("jsonCodec");
+        this.codec = Objects.requireNonNull(codec, "codec");
+        return this;
+    }
+
+    /** The JSON body limit in bytes; 1048576 unless {@link #jsonLimit(long)} changed it. */
+    // @req IR-JSON-002
+    public long jsonLimit() {
+        return jsonLimit;
+    }
+
+    // @req IR-JSON-002
+    @Override
+    public synchronized RestApp jsonLimit(long bytes) {
+        lifecycle.requireConfigurable("jsonLimit");
+        if (bytes < 1 || bytes > JsonBodyReader.MAX_LIMIT) {
+            throw new IllegalArgumentException("jsonLimit must be in 1..1073741824 bytes: " + bytes);
+        }
+        this.jsonLimit = bytes;
+        return this;
     }
 
     // @req IR-APP-006
@@ -158,6 +199,33 @@ public final class DefaultRestApp implements RestApp {
             configurer.configure(accessLogOptions);
         }
         return this;
+    }
+
+    // @req IR-ENGINE-001
+    @Override
+    public synchronized RestApp server(Configurer<ServerOptions> configurer) {
+        lifecycle.requireConfigurable("server");
+        Objects.requireNonNull(configurer, "configurer");
+        configurer.configure(serverOptions);
+        return this;
+    }
+
+    // @req IR-ENGINE-001
+    // @req FR-ENGINE-008
+    @Override
+    public synchronized RestApp trustProxy(boolean trust) {
+        lifecycle.requireConfigurable("trustProxy");
+        this.trustProxy = trust;
+        return this;
+    }
+
+    /** True for 127.0.0.0/8, ::1 and localhost, the binds that need no LAN warning. */
+    // @req FR-ENGINE-002
+    static boolean isLoopback(String address) {
+        String a = address.startsWith("[") && address.endsWith("]") ? address.substring(1, address.length() - 1)
+                : address;
+        return a.equalsIgnoreCase("localhost") || a.equals("::1") || a.equals("0:0:0:0:0:0:0:1")
+                || a.matches("127\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}");
     }
 
     /** The app's internal shutdown participant registry; later waves add their steps here. */
@@ -202,7 +270,8 @@ public final class DefaultRestApp implements RestApp {
 
     /**
      * STARTING by compareAndSet, the onStart callbacks in order (each once), the context freeze, the route-table
-     * freeze, one bind of the gated handler on {@code 127.0.0.1:port}, then RUNNING. A stop requested meanwhile is
+     * freeze, the server-settings freeze (its connection check throws {@link IllegalStateException}), one warning
+     * for a non-loopback bind address, one settings bind of the gated handler, then RUNNING. A stop requested meanwhile is
      * checked before each callback, before bind and at the move to RUNNING, and ends the start like a failure. Not
      * synchronized: requests held on the start gate and onStart callbacks must not wait for this call.
      */
@@ -234,6 +303,7 @@ public final class DefaultRestApp implements RestApp {
 
     private ServerHandle start(HttpAdapter a, int port) {
         int bound;
+        ServerSettings settings;
         try {
             List<LifecycleCallback> callbacks;
             synchronized (this) {
@@ -245,10 +315,16 @@ public final class DefaultRestApp implements RestApp {
             }
             context.freeze();
             freeze();
+            ServerSettings frozen = serverOptions.freeze(port, logger, StandardErrors.renderer());
+            settings = frozen;
             throwIfStopPending();
+            if (!isLoopback(frozen.bindAddress())) {
+                frozen.logger().warn("listening on " + frozen.bindAddress() + ", reachable beyond this device:"
+                        + " the app must add its own authentication");
+            }
             bindAttempted = true;
             Dispatcher d = frozenDispatcher();
-            a.bind("127.0.0.1", port, new GatedExchangeHandler(lifecycle, d, d.accessLog()));
+            a.bind(frozen, new GatedExchangeHandler(lifecycle, d, d.accessLog()));
             bound = a.boundPort();
             if (!lifecycle.markRunning()) {
                 throw stopWhileStarting();
@@ -264,7 +340,7 @@ public final class DefaultRestApp implements RestApp {
 
             @Override
             public String address() {
-                return "127.0.0.1";
+                return settings.bindAddress();
             }
 
             @Override
@@ -678,7 +754,7 @@ public final class DefaultRestApp implements RestApp {
         }
         SafeLogger safe = new SafeLogger(logger); // the logger is fixed from here: logger(...) needs an unfrozen app
         dispatcher = new Dispatcher(router, pipeline, new ErrorPath(errorHandlers, safe),
-                new AccessLog(accessLogOptions, safe), context);
+                new AccessLog(accessLogOptions, safe), context, jsonCodec(), jsonLimit(), trustProxy);
         lifecycle.markFrozen();
     }
 

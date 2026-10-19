@@ -14,6 +14,7 @@ import com.snoworca.naruserve.routing.Router;
 import com.snoworca.naruserve.routing.RouterPolicy;
 import com.snoworca.naruserve.spi.ExchangeHandler;
 import com.snoworca.naruserve.spi.HttpExchange;
+import com.snoworca.naruserve.spi.JsonCodec;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.AbstractMap.SimpleImmutableEntry;
@@ -37,6 +38,7 @@ import org.jspecify.annotations.Nullable;
 // @req FR-HTTP-024
 // @req FR-HTTP-025
 // @req FR-APP-003
+// @req IR-JSON-002
 public final class Dispatcher implements ExchangeHandler {
 
     private static final Method[] METHODS = Method.values();
@@ -46,6 +48,9 @@ public final class Dispatcher implements ExchangeHandler {
     private final ErrorPath errors;
     private final AccessLog accessLog;
     private final @Nullable ApplicationContext context;
+    private final @Nullable JsonCodec codec;
+    private final long jsonLimit;
+    private final boolean trustProxy;
 
     /**
      * Wave 3 shape: no middleware, no onError handler, access log off, a {@link ConsoleLogger}. {@code router} must
@@ -72,6 +77,23 @@ public final class Dispatcher implements ExchangeHandler {
     // @req FR-APP-007
     Dispatcher(Router<RouteHandler> router, MiddlewarePipeline pipeline, ErrorPath errors, AccessLog accessLog,
             @Nullable ApplicationContext context) {
+        this(router, pipeline, errors, accessLog, context, null, JsonBodyReader.DEFAULT_LIMIT);
+    }
+
+    /** As above, with the app codec and JSON limit that {@code DefaultRestApp.freeze} read; each request gets them. */
+    // @req IR-JSON-002
+    Dispatcher(Router<RouteHandler> router, MiddlewarePipeline pipeline, ErrorPath errors, AccessLog accessLog,
+            @Nullable ApplicationContext context, @Nullable JsonCodec codec, long jsonLimit) {
+        this(router, pipeline, errors, accessLog, context, codec, jsonLimit, false);
+    }
+
+    /** As above, with the app.trustProxy setting that {@code DefaultRestApp.freeze} read. */
+    // @req FR-ENGINE-008
+    Dispatcher(Router<RouteHandler> router, MiddlewarePipeline pipeline, ErrorPath errors, AccessLog accessLog,
+            @Nullable ApplicationContext context, @Nullable JsonCodec codec, long jsonLimit, boolean trustProxy) {
+        this.trustProxy = trustProxy;
+        this.codec = codec;
+        this.jsonLimit = jsonLimit;
         this.context = context;
         this.router = Objects.requireNonNull(router, "router");
         this.pipeline = Objects.requireNonNull(pipeline, "pipeline");
@@ -99,8 +121,8 @@ public final class Dispatcher implements ExchangeHandler {
                 ? (m.autoHead() ? Method.HEAD : Objects.requireNonNull(m.method()))
                 : Objects.requireNonNull(methodOf(token)); // preCheck answered every unrecognised token
         DefaultRequest req = new DefaultRequest(ex, method,
-                routed ? m.params() : Collections.<String, String>emptyMap(), context);
-        DefaultResponse res = new DefaultResponse(ex, method == Method.HEAD);
+                routed ? m.params() : Collections.<String, String>emptyMap(), context, codec, jsonLimit, trustProxy);
+        DefaultResponse res = new DefaultResponse(ex, method == Method.HEAD, codec);
         res.onDone(() -> accessLog.write(token, rawPath, res.statusCode(),
                 res.state() == ResponseState.ABORTED, start, req.body().bytesRead(), res.bytesWritten(), rid));
         List<Middleware> route = Collections.emptyList();

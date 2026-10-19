@@ -362,4 +362,87 @@ public class HttpAdapterSpiTest {
         // The scan bites: the same pattern finds kotlin/ in a Kotlin-compiled test class.
         assertTrue(forbidden.matcher("Lkotlin/jvm/internal/Intrinsics;").find());
     }
+
+    /** Implements only the four wave 3 methods. */
+    private static final class Wave3Adapter implements HttpAdapter {
+        final List<String> binds = new ArrayList<>();
+
+        @Override
+        public void bind(String host, int port, ExchangeHandler handler) {
+            binds.add(host + ":" + port);
+        }
+
+        @Override
+        public int boundPort() {
+            return 0;
+        }
+
+        @Override
+        public void stop(long timeout, TimeUnit unit) {
+        }
+
+        @Override
+        public void release() {
+        }
+    }
+
+    private static ServerSettings settings(String address, int port) {
+        return ServerSettings.builder().bindAddress(address).port(port)
+                .logger(new com.snoworca.naruserve.testing.RecordingLogger()).errorRenderer(status -> "{}").build();
+    }
+
+    // SDS-AC-4 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-5-4.sds.md; IR-ENGINE-002 AC-1
+    @Test
+    public void sdsAc4_IR_ENGINE_002_AC1_aWave3OnlyAdapterBindsOnceThroughTheDefaultMethod() throws Exception {
+        Wave3Adapter adapter = new Wave3Adapter();
+        adapter.bind(settings("0.0.0.0", 8123), exchange -> { });
+        assertEquals(Collections.singletonList("0.0.0.0:8123"), adapter.binds);
+        assertTrue(HttpAdapter.class.getMethod("bind", ServerSettings.class, ExchangeHandler.class).isDefault());
+        assertFalse(HttpAdapter.class.getMethod("bind", String.class, int.class, ExchangeHandler.class)
+                .isDefault());
+
+        InMemoryHttpAdapter inMemory = new InMemoryHttpAdapter();
+        inMemory.bind(settings("127.0.0.1", 8124), exchange -> { });
+        assertEquals(8124, inMemory.boundPort());
+    }
+
+    // IR-ENGINE-002 AC-3, IR-ENGINE-002 AC-5
+    @Test
+    public void IR_ENGINE_002_AC3_settingsIsAFinalGetterOnlyValueOfAllowedTypes() throws Exception {
+        assertTrue(java.lang.reflect.Modifier.isFinal(ServerSettings.class.getModifiers()));
+        assertTrue(java.lang.reflect.Modifier.isPublic(ServerSettings.class.getModifiers()));
+        assertTrue(ErrorRenderer.class.isAnnotationPresent(FunctionalInterface.class));
+        assertEquals(String.class, ErrorRenderer.class.getMethod("render", int.class).getReturnType());
+        for (Class<?> type : new Class<?>[] {ServerSettings.class, ErrorRenderer.class}) {
+            for (java.lang.reflect.Method m : type.getDeclaredMethods()) {
+                if (m.isSynthetic() || !java.lang.reflect.Modifier.isPublic(m.getModifiers())) {
+                    continue;
+                }
+                boolean isStatic = java.lang.reflect.Modifier.isStatic(m.getModifiers());
+                assertTrue(type.getSimpleName() + "." + m.getName() + " is a setter",
+                        isStatic || type == ErrorRenderer.class || m.getParameterCount() == 0);
+                List<String> refs = new ArrayList<>();
+                collect(m.getGenericReturnType(), refs);
+                for (Type p : m.getGenericParameterTypes()) {
+                    collect(p, refs);
+                }
+                for (String ref : refs) {
+                    assertTrue(type.getSimpleName() + "." + m.getName() + " references " + ref, allowed(ref));
+                }
+            }
+            for (java.lang.reflect.Field f : type.getDeclaredFields()) {
+                List<String> refs = new ArrayList<>();
+                collect(f.getGenericType(), refs);
+                for (String ref : refs) {
+                    assertTrue(type.getSimpleName() + "." + f.getName() + " references " + ref, allowed(ref));
+                }
+            }
+        }
+        try {
+            settings("127.0.0.1", 1).allowedHosts().add("x");
+            fail("allowedHosts() is modifiable");
+        } catch (UnsupportedOperationException expected) {
+            // unmodifiable
+        }
+    }
 }

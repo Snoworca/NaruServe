@@ -171,6 +171,14 @@ project(':NaruServe-api') {
     dependencies {
         testFixturesCompileOnly 'org.jspecify:jspecify:1.0.0'
     }
+    // ConsumerRulesTest reads META-INF/proguard/naruserve-api.pro from the built jar (IR-JSON-001 AC-3).
+    // @req IR-JSON-001
+    def apiJar = tasks.named('jar').flatMap { it.archiveFile }
+    tasks.named('test') {
+        dependsOn tasks.named('jar')
+        inputs.file(apiJar)
+        doFirst { systemProperty 'naruserve.apiJar', apiJar.get().asFile.absolutePath }
+    }
 }
 
 // The rotating file logger's failed-listen test drives an app over the in-memory adapter (FR-APP-017 AC-7).
@@ -178,6 +186,33 @@ project(':NaruServe-filelog') {
     // @req FR-APP-017
     dependencies {
         testImplementation testFixtures(project(':NaruServe-api'))
+    }
+}
+
+// GsonJsonCodec tests drive req.body and res.json over the in-memory adapter (FR-JSON-003 AC-2, AC-3, AC-8).
+project(':NaruServe-gson') {
+    // @req FR-JSON-003
+    dependencies {
+        testImplementation testFixtures(project(':NaruServe-api'))
+    }
+}
+
+// TinyHttpd adapter socket tests drive a real app over the adapter with the fixture codec and logger (FR-ENGINE-001).
+project(':NaruServe-tinyhttpd') {
+    // @req FR-ENGINE-001
+    dependencies {
+        testImplementation testFixtures(project(':NaruServe-api'))
+    }
+}
+
+// DefaultAppFactoryTest reads the services file and naruserve-bootstrap.pro from the built jar (FR-ENGINE-009 AC-4).
+project(':NaruServe') {
+    // @req FR-ENGINE-009
+    def bootstrapJar = tasks.named('jar').flatMap { it.archiveFile }
+    tasks.named('test') {
+        dependsOn tasks.named('jar')
+        inputs.file(bootstrapJar)
+        doFirst { systemProperty 'naruserve.bootstrapJar', bootstrapJar.get().asFile.absolutePath }
     }
 }
 
@@ -291,6 +326,8 @@ dependencies {
     testImplementation gradleTestKit()
     // @req OPS-HTTP-002
     testImplementation project(':NaruServe-api')
+    // @req OPS-ENGINE-001
+    testImplementation project(':NaruServe-gson')
 }
 test {
     useJUnit()

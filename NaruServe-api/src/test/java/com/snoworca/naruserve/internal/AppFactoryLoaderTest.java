@@ -75,6 +75,7 @@ public class AppFactoryLoaderTest {
         }
     }
 
+    // FR-ENGINE-009 AC-5: its no-TinyHttpd/Gson-reference half is the checkClassReferences build task
     // SDS-AC-13; FR-APP-001 AC-3
     @Test
     public void sdsAc13_FR_APP_001_AC3_restAppCreateThrowsInTheApiTestRun() {

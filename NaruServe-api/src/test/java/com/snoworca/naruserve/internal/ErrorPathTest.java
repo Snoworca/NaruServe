@@ -443,4 +443,22 @@ public class ErrorPathTest {
         assertEquals(400, got.get(0));
         assertTrue(got.get(1) instanceof HttpException);
     }
+
+    // SDS-AC-12 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-5-4.sds.md; FR-ENGINE-005 AC-2
+    @Test
+    public void sdsAc12_FR_ENGINE_005_AC2_every408CarriesConnectionCloseAndRequestTimeout() {
+        TestApp t = app();
+        t.app().get("/slow", throwing(new HttpException(408)));
+        t.app().get("/slow-set", (req, res) -> {
+            res.header("Connection", "keep-alive");
+            throw new HttpException(408);
+        });
+        t.app().get("/bad", throwing(new HttpException(400)));
+        for (String path : new String[] {"/slow", "/slow-set"}) {
+            ClientResponse r = t.send("GET", path);
+            DispatcherTest.assertError(408, "HTTP_408", "Request Timeout", r);
+            assertEquals("close", r.header("Connection"));
+        }
+        assertNull(t.send("GET", "/bad").header("Connection"));
+    }
 }
