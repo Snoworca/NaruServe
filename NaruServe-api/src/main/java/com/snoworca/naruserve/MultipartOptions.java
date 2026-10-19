@@ -4,8 +4,9 @@ import java.io.File;
 
 /**
  * Multipart settings, configured through {@code app.multipart(o -> o.maxFileSize(1024 * 1024))}. Each setter returns
- * these options; a value outside its range throws {@link IllegalArgumentException} naming the setting and the range,
- * and no value means unlimited.
+ * these options; a value outside its range throws {@link IllegalArgumentException} naming the setting and the range.
+ * There is no unlimited value; each setting has the default and range shown on its setter. The dispatcher uses a copy
+ * taken at {@code listen}, so changing a retained options object afterwards has no effect.
  */
 // @req IR-MULTIPART-001
 public interface MultipartOptions {

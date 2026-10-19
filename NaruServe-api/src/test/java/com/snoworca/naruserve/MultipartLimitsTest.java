@@ -341,4 +341,24 @@ public class MultipartLimitsTest {
         assertAnswered(400, "BAD_REQUEST", none, mp, "no delimiter here");
         assertAnswered(400, "BAD_REQUEST", none, mp, text("a", "v"));
     }
+    // IR-MULTIPART-001: the dispatcher keeps the settings taken at listen; a retained configurer argument changes nothing
+    @Test
+    public void IR_MULTIPART_001_retainedOptionsChangedAfterListenHaveNoEffect() {
+        InMemoryHttpAdapter adapter = new InMemoryHttpAdapter();
+        RestApp app = RestApp.builder().httpAdapter(adapter).jsonCodec(new StubJsonCodec()).build();
+        MultipartOptions[] saved = new MultipartOptions[1];
+        app.multipart(o -> saved[0] = o.tempDirectory(tmp.getRoot()));
+        app.post("/up", (req, res) -> res.send(String.valueOf(req.parts().size())));
+        app.listen(0);
+        try {
+            saved[0].maxParts(1);
+            byte[] b = (text("a", "1") + text("b", "2") + close()).getBytes(StandardCharsets.ISO_8859_1);
+            ClientResponse r = adapter.send(ClientRequest.of("POST", "/up")
+                    .header("Content-Type", "multipart/form-data; boundary=" + B)
+                    .header("Content-Length", String.valueOf(b.length)).body(b));
+            assertEquals(new String(r.body(), StandardCharsets.UTF_8), 200, r.status());
+        } finally {
+            app.shutdown(5, TimeUnit.SECONDS);
+        }
+    }
 }
