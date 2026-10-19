@@ -444,6 +444,28 @@
       "rule": "majority (stopped after 2 agreeing votes)",
       "confidence": 0.85,
       "ts": "2026-10-19T17:05:37.101304Z"
+    },
+    {
+      "gate_id": "partition-review-unrecorded",
+      "question": "Stage 6 partition review",
+      "options": [
+        "pass",
+        "revise",
+        "abort"
+      ],
+      "votes": [
+        "pass",
+        "pass"
+      ],
+      "confidences": [
+        0.9,
+        0.88
+      ],
+      "decision": "pass",
+      "rule": "majority (stopped after 2 agreeing votes)",
+      "confidence": 0.89,
+      "lane_plan_digest": "sha256:996f005ffec8acdbc28eba79885b69114712fa73fd51e97d4895dd49ea5ba38f",
+      "ts": "2026-10-19T18:21:01.764423Z"
     }
   ]
 }
