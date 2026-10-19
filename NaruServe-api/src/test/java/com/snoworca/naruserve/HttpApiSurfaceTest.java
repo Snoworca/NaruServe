@@ -187,9 +187,9 @@ public class HttpApiSurfaceTest {
         h.handle(null, null);
     }
 
-    // SDS-AC-6; IR-HTTP-005 AC-1, AC-2, AC-3, AC-5
+    // SDS-AC-6; IR-HTTP-005 AC-1, AC-2, AC-3, AC-5; IR-APP-002 AC-2 (wave 4 SDS-AC-5: re-pointed to the wave 4 set)
     @Test
-    public void sdsAc6_IR_HTTP_005_AC1_AC2_AC3_AC5_restAppDeclaresExactlyTheRegistrationAndPolicyMethods() {
+    public void sdsAc6_IR_HTTP_005_AC1_AC2_AC3_AC5_IR_APP_002_AC2_restAppDeclaresExactlyTheWave4Methods() {
         assertTrue(RestApp.class.isInterface());
         assertTrue(Modifier.isPublic(RestApp.class.getModifiers()));
         assertEquals(setOf(
@@ -199,8 +199,28 @@ public class HttpApiSurfaceTest {
                 "options(String,RouteHandler)->RestApp",
                 "route(Method,String,RouteHandler)->RestApp", "route(MethodSet,String,RouteHandler)->RestApp",
                 "route(String)->RouteBuilder",
-                "routerPolicy(RouterPolicy)->RestApp"), signatures(RestApp.class));
+                "routerPolicy(RouterPolicy)->RestApp",
+                // wave 4: IR-APP-001, FR-APP-001
+                "builder()->Builder", "create()->RestApp",
+                // wave 4: IR-APP-002
+                "use(Middleware)->RestApp", "use(String,Middleware)->RestApp",
+                "get(String,Middleware,RouteHandler)->RestApp", "post(String,Middleware,RouteHandler)->RestApp",
+                "put(String,Middleware,RouteHandler)->RestApp", "patch(String,Middleware,RouteHandler)->RestApp",
+                "delete(String,Middleware,RouteHandler)->RestApp", "head(String,Middleware,RouteHandler)->RestApp",
+                "options(String,Middleware,RouteHandler)->RestApp",
+                "route(Method,String,Middleware,RouteHandler)->RestApp",
+                "route(MethodSet,String,Middleware,RouteHandler)->RestApp",
+                // wave 4: IR-APP-003
+                "onError(ErrorHandler)->RestApp"), signatures(RestApp.class));
         assertEquals(0, RestApp.class.getInterfaces().length);
+        List<String> statics = new java.util.ArrayList<>();
+        for (java.lang.reflect.Method m : RestApp.class.getDeclaredMethods()) {
+            if (Modifier.isStatic(m.getModifiers()) && !m.isSynthetic()) {
+                statics.add(m.getName());
+            }
+        }
+        java.util.Collections.sort(statics);
+        assertEquals(Arrays.asList("builder", "create"), statics);
     }
 
     // SDS-AC-6; IR-HTTP-005 AC-3
@@ -217,7 +237,7 @@ public class HttpApiSurfaceTest {
         }
     }
 
-    // SDS-AC-7; IR-HTTP-006 AC-1
+    // SDS-AC-7; IR-HTTP-006 AC-1; IR-APP-002 AC-3
     @Test
     public void sdsAc7_IR_HTTP_006_AC1_routeBuilderMethodsTakeAHandlerAndReturnTheBuilder() {
         assertTrue(RouteBuilder.class.isInterface());
@@ -225,7 +245,9 @@ public class HttpApiSurfaceTest {
         assertEquals(setOf("get(RouteHandler)->RouteBuilder", "post(RouteHandler)->RouteBuilder",
                 "put(RouteHandler)->RouteBuilder", "patch(RouteHandler)->RouteBuilder",
                 "delete(RouteHandler)->RouteBuilder", "head(RouteHandler)->RouteBuilder",
-                "options(RouteHandler)->RouteBuilder"), signatures(RouteBuilder.class));
+                "options(RouteHandler)->RouteBuilder",
+                // wave 4: IR-APP-002 AC-3
+                "use(Middleware)->RouteBuilder"), signatures(RouteBuilder.class));
     }
 
     // IR-HTTP-006 AC-2

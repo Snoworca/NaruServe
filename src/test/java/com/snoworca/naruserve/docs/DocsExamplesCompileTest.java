@@ -71,7 +71,6 @@ public final class DocsExamplesCompileTest {
     // @req OPS-HTTP-002
     static final List<Skip> SKIPS = Collections.unmodifiableList(Arrays.asList(
             skip("README.md", "RestApp app = RestApp.create();", CREATE),
-            skip("app.md", "#1", CREATE),
             skip("app.md", "RestApp app = RestApp.builder()", "later-wave method `RestApp.builder()`"),
             skip("app.md", "ServerHandle server = app.listen(8080);", "later-wave method `RestApp.listen(int)`"),
             skip("app.md", "app.shutdown(10, TimeUnit.SECONDS);", "later-wave method `RestApp.shutdown(long, TimeUnit)`"),
