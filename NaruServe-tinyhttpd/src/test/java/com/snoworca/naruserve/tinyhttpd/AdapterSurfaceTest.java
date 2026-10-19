@@ -113,6 +113,68 @@ public class AdapterSurfaceTest {
         assertEquals(Collections.emptyList(), leaks);
     }
 
+    /** Calls every feature hook on {@code ex}, recording the simple name of what each one threw. */
+    private static String featureFailures(com.snoworca.naruserve.spi.HttpExchange ex) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < 3; i++) {
+            try {
+                if (i == 0) {
+                    ex.sendFile(200, Collections.emptyList(), new File("missing"), 0, 0);
+                } else if (i == 1) {
+                    ex.eventStream(200, Collections.emptyList(), out -> { });
+                } else {
+                    ex.upgrade(Collections.emptyList(), (in, out) -> { });
+                }
+                sb.append("none,");
+            } catch (Exception e) {
+                sb.append(e.getClass().getSimpleName()).append(',');
+            }
+        }
+        return sb.toString();
+    }
+
+    // FR-ENGINE-001 AC-2: the feature hooks share commit()'s lock, abort check and single-start rule, so later waves
+    // fill TinyHttpdFeatures without racing an abort or starting the response twice
+    @Test(timeout = 20000)
+    public void FR_ENGINE_001_AC2_featureHooksShareTheCommitLockAbortCheckAndSingleStart() throws Exception {
+        for (String name : new String[] {"commit", "sendFile", "eventStream", "upgrade"}) {
+            for (Method m : TinyHttpdExchange.class.getDeclaredMethods()) {
+                if (m.getName().equals(name)) {
+                    assertTrue(name, Modifier.isSynchronized(m.getModifiers()));
+                }
+            }
+        }
+        AtomicReference<String> afterCommit = new AtomicReference<>();
+        adapter.bind(RawTargetSocketTest.Http.settings().build(), ex -> {
+            try {
+                java.io.OutputStream out = ex.commit(200, Collections.emptyList(), 0);
+                afterCommit.set(featureFailures(ex));
+                out.flush();
+                ex.finish();
+            } catch (IOException e) {
+                afterCommit.set(String.valueOf(e));
+                ex.abort();
+            }
+        });
+        assertEquals(200, RawTargetSocketTest.Http.status(
+                RawTargetSocketTest.Http.send(adapter.boundPort(), RawTargetSocketTest.Http.get("/c"))));
+        assertEquals("IllegalStateException,IllegalStateException,IllegalStateException,", afterCommit.get());
+        RawTargetSocketTest.Http.stopQuietly(adapter);
+
+        TinyHttpdAdapter second = new TinyHttpdAdapter();
+        AtomicReference<String> afterAbort = new AtomicReference<>();
+        try {
+            second.bind(RawTargetSocketTest.Http.settings().build(), ex -> {
+                ex.abort();
+                afterAbort.set(featureFailures(ex));
+            });
+            RawTargetSocketTest.Http.send(second.boundPort(), RawTargetSocketTest.Http.get("/a"));
+        } finally {
+            RawTargetSocketTest.Http.stopQuietly(second);
+        }
+        assertEquals("IOException,IOException,IOException,", afterAbort.get());
+    }
+
     // SDS-AC-2; FR-ENGINE-001 AC-2
     @Test(timeout = 20000)
     public void sdsAc2_FR_ENGINE_001_AC2_featureHooksThrowNamingTheirWave() throws Exception {

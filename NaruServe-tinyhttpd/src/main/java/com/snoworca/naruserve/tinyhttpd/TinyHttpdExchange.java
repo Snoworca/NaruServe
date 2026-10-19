@@ -128,13 +128,7 @@ final class TinyHttpdExchange implements HttpExchange {
     @Override
     public synchronized OutputStream commit(int status, List<Map.Entry<String, String>> headers, long contentLength)
             throws IOException {
-        if (aborted) {
-            throw new IOException("exchange aborted");
-        }
-        if (started) {
-            throw new IllegalStateException("the response was already started");
-        }
-        started = true;
+        start();
         res.setStatus(status);
         for (Map.Entry<String, String> h : headers) {
             res.addHeader(h.getKey(), h.getValue());
@@ -194,18 +188,54 @@ final class TinyHttpdExchange implements HttpExchange {
         ended.countDown();
     }
 
+    /** The abort check and single-start rule shared by every way to start the response; caller holds this. */
+    private void start() throws IOException {
+        if (aborted) {
+            throw new IOException("exchange aborted");
+        }
+        if (started) {
+            throw new IllegalStateException("the response was already started");
+        }
+        started = true;
+    }
+
+    // A feature not yet available never touched res, so the response stays unstarted and the core can still commit.
+    private void unsupported(UnsupportedOperationException e) {
+        started = false;
+        throw e;
+    }
+
+    // Writes that later waves make from another thread (an event-stream drain) must also synchronize on this.
     @Override
-    public void sendFile(int status, List<Map.Entry<String, String>> headers, File file, long offset, long length) {
-        TinyHttpdFeatures.sendFile(res, status, headers, file, offset, length);
+    public synchronized void sendFile(int status, List<Map.Entry<String, String>> headers, File file, long offset,
+            long length) throws IOException {
+        start();
+        try {
+            TinyHttpdFeatures.sendFile(res, status, headers, file, offset, length);
+        } catch (UnsupportedOperationException e) {
+            unsupported(e);
+        }
     }
 
     @Override
-    public void upgrade(List<Map.Entry<String, String>> headers, UpgradeHandler handler) {
-        TinyHttpdFeatures.upgrade(res, headers, handler);
+    public synchronized void upgrade(List<Map.Entry<String, String>> headers, UpgradeHandler handler)
+            throws IOException {
+        start();
+        try {
+            TinyHttpdFeatures.upgrade(res, headers, handler);
+        } catch (UnsupportedOperationException e) {
+            unsupported(e);
+        }
     }
 
     @Override
-    public void eventStream(int status, List<Map.Entry<String, String>> headers, StreamDrain drain) {
-        TinyHttpdFeatures.eventStream(res, status, headers, drain);
+    public synchronized void eventStream(int status, List<Map.Entry<String, String>> headers, StreamDrain drain)
+            throws IOException {
+        start();
+        try {
+            TinyHttpdFeatures.eventStream(res, status, headers, drain);
+        } catch (UnsupportedOperationException e) {
+            unsupported(e);
+        }
     }
 }
