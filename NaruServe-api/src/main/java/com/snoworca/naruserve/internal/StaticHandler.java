@@ -23,10 +23,18 @@ import org.jspecify.annotations.Nullable;
 final class StaticHandler {
 
     private final List<StaticMount> mounts;
+    private final DefaultMimeTypes mimeTypes;
 
-    /** Freezes each mount, taking its canonical root now. */
-    // @req FR-STATIC-001
+    /** As below, with an empty MIME registry: the built-in table only. */
     StaticHandler(List<StaticMount> registered) {
+        this(registered, new DefaultMimeTypes(new AppLifecycle()));
+    }
+
+    /** Freezes each mount, taking its canonical root now; {@code mimeTypes} is the app's registry. */
+    // @req FR-STATIC-001
+    // @req FR-STATIC-007
+    StaticHandler(List<StaticMount> registered, DefaultMimeTypes mimeTypes) {
+        this.mimeTypes = mimeTypes;
         List<StaticMount> frozen = new ArrayList<>(registered.size());
         for (StaticMount m : registered) {
             frozen.add(m.freeze());
@@ -184,8 +192,14 @@ final class StaticHandler {
         return false;
     }
 
-    /** Streams the resolver's file at {@code path}; false when it is missing. */
-    private static boolean send(StaticMount m, String path, DefaultResponse res) throws IOException {
+    /** The app's MIME registry, also used by {@code res.file}. */
+    DefaultMimeTypes mimeTypes() {
+        return mimeTypes;
+    }
+
+    /** Streams the resolver's file at {@code path} with its MIME type; false when it is missing or refused. */
+    // @req FR-STATIC-007
+    private boolean send(StaticMount m, String path, DefaultResponse res) throws IOException {
         FileResourceResolver r = m.resolver();
         if (r == null) {
             return false;
@@ -196,8 +210,9 @@ final class StaticHandler {
         } catch (FileNotFoundException e) {
             return false;
         }
-        // shortcut: no MIME lookup or cache headers yet; FR-STATIC-003 and the MIME fragment replace this body
-        res.status(200).stream(in, "application/octet-stream");
+        // shortcut: no cache headers yet; FR-STATIC-003 replaces this body
+        String name = path.substring(path.lastIndexOf('/') + 1);
+        res.status(200).stream(in, mimeTypes.lookup(name, m.options().mimes()));
         return true;
     }
 

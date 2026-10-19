@@ -160,6 +160,7 @@ public final class Dispatcher implements ExchangeHandler {
                 multipart, formLimit, spool);
         req.requestId(rid);
         DefaultResponse res = new DefaultResponse(ex, method == Method.HEAD, codec);
+        res.mimeTypes(statics.mimeTypes());
         res.onDone(() -> {
             req.releaseUploads(); // complete or abort: the request ended
             accessLog.write(token, rawPath, res.statusCode(), res.state() == ResponseState.ABORTED, start,

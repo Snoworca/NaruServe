@@ -23,6 +23,9 @@ allprojects {
     repositories {
         mavenCentral()
     }
+
+    // @req FR-STATIC-006 — Java 8 caches canonical paths for up to 30 s; the T29 symlink-swap test needs them live
+    tasks.withType(Test).configureEach { systemProperty 'sun.io.useCanonCaches', 'false' }
 }
 
 // @req CON-BUILD-004

@@ -6,6 +6,8 @@ import com.snoworca.naruserve.Response;
 import com.snoworca.naruserve.spi.HttpExchange;
 import com.snoworca.naruserve.spi.JsonCodec;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -14,6 +16,7 @@ import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -60,6 +63,7 @@ public final class DefaultResponse implements Response {
     private @Nullable Throwable handlerFailure;
     private @Nullable Runnable onDone;
     private boolean doneFired;
+    private @Nullable DefaultMimeTypes mimeTypes;
 
     /** Status 200, no headers, state NEW; {@code headRequest} makes every body bodyless. */
     // @req FR-HTTP-013
@@ -73,6 +77,32 @@ public final class DefaultResponse implements Response {
         this.ex = ex;
         this.headRequest = headRequest;
         this.codec = codec;
+    }
+
+    /** The app's MIME registry for {@link #file}; unset means the built-in table only. */
+    void mimeTypes(DefaultMimeTypes mimeTypes) {
+        this.mimeTypes = mimeTypes;
+    }
+
+    /**
+     * Streams {@code file} through {@link FileResourceResolver#forFile}; a symbolic link, directory or missing file
+     * throws {@link HttpException} 404 for the error path.
+     */
+    // shortcut: whole body only, no cache or conditional headers and no download; FileResponder replaces this
+    // @req FR-STATIC-006
+    @Override
+    public void file(File file) {
+        Objects.requireNonNull(file, "file");
+        InputStream in;
+        try {
+            in = FileResourceResolver.forFile(file).open(file.getName());
+        } catch (FileNotFoundException e) {
+            throw new HttpException(404, null, e);
+        } catch (IOException e) {
+            throw new HttpException(500, null, e);
+        }
+        DefaultMimeTypes m = mimeTypes != null ? mimeTypes : new DefaultMimeTypes(new AppLifecycle());
+        stream(in, m.lookup(file.getName(), Collections.<String, String>emptyMap()));
     }
 
     // @req FR-HTTP-013

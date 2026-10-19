@@ -106,6 +106,11 @@ final class DefaultStaticOptions implements StaticOptions {
         return mimes.get(ext.toLowerCase(Locale.ROOT));
     }
 
+    /** The mount's own MIME mappings, keyed by lower-case extension without the dot. */
+    Map<String, String> mimes() {
+        return Collections.unmodifiableMap(mimes);
+    }
+
     boolean allowSymlinksOn() {
         return allowSymlinks;
     }
