@@ -168,14 +168,10 @@ public class DefaultRequestTest {
             assertFalse(r.abnormallyClosed());
         }
         assertEquals(0, calls.get());
-        // Control: a well-formed query passes the check and reaches the handler call, which until wave-3 part 5
-        // is the UnsupportedOperationException stub.
-        try {
-            adapter.send(ClientRequest.of("GET", "/x?x=%41"));
-            fail("expected the handler-call stub to be reached");
-        } catch (UnsupportedOperationException expected) {
-            // reached invoke past the query check
-        }
+        // Control: a well-formed query passes the check and reaches the handler.
+        ClientResponse ok = adapter.send(ClientRequest.of("GET", "/x?x=%41"));
+        assertEquals(200, ok.status());
+        assertEquals(1, calls.get());
     }
 
     // SDS-AC-5; FR-HTTP-011 AC-1

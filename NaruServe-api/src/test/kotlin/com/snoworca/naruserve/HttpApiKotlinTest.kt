@@ -5,6 +5,7 @@ import com.snoworca.naruserve.testing.TestApp
 import java.io.ByteArrayInputStream
 import java.io.InputStream
 import java.lang.reflect.Proxy
+import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
@@ -113,11 +114,48 @@ class HttpApiKotlinTest {
         val app: RestApp = t.app()
         assertSame(app, app.get("/x") { _, res -> res.send("ok") })
         app.route("/u/:id").post { _, res -> res.end() }
-        // Wave 3 part 3 has no DefaultRequest/DefaultResponse yet, so only automatic replies are routed here.
+        // Automatic replies only; the next test routes requests into the Kotlin handlers.
         val mismatch = t.send("DELETE", "/x")
         assertEquals(405, mismatch.status())
         assertEquals("GET, HEAD, OPTIONS", mismatch.header("Allow"))
         assertEquals(404, t.send("GET", "/none").status())
         assertEquals("POST, OPTIONS", t.send("OPTIONS", "/u/1").header("Allow"))
+    }
+
+    @Test
+    fun `SDS-AC-4 IR-HTTP-001 AC-5 Kotlin trailing lambdas handle real requests through TestApp`() {
+        val t = TestApp.create()
+        val seen = ArrayList<Any?>()
+        t.app().get("/u/:id") { req, res ->
+            val q: String? = req.query("q")
+            val p: String = req.path()
+            seen.addAll(listOf(req.method(), p, req.rawPath(), req.param("id"), q, req.query("none"),
+                req.queries("q"), req.header("host"), req.headers("HOST"), req.remoteAddress(), req.isSecure(),
+                req.lastEventId()))
+            req.attribute("user", "kim")
+            seen += req.attribute("user", String::class.java)
+            req.attribute("user", null)
+            seen += req.attribute("user", String::class.java)
+            seen += res.isCommitted()
+            res.status(201).header("X-A", "1").send("ok")
+            seen += res.isCommitted()
+        }
+        t.app().get("/bytes") { _, res -> res.send(byteArrayOf(1, 2)) }
+        t.app().get("/html") { _, res -> res.html("<p/>") }
+        t.app().get("/stream") { _, res -> res.stream(ByteArrayInputStream(byteArrayOf(1, 2, 3)), "text/plain") }
+        t.app().get("/end") { _, res -> res.status(202).end() }
+        t.app().get("/abort") { _, res -> res.abort(IllegalStateException("x")) }
+
+        val r = t.send("GET", "/u/7?q=x&q=y", "Host", "h")
+        assertEquals(201, r.status())
+        assertEquals("1", r.header("X-A"))
+        assertEquals("ok", String(r.body(), Charsets.UTF_8))
+        assertEquals(listOf(Method.GET, "/u/7", "/u/7", "7", "x", null, listOf("x", "y"), "h", listOf("h"),
+            "127.0.0.1", false, null, "kim", null, false, true), seen)
+        assertArrayEquals(byteArrayOf(1, 2), t.send("GET", "/bytes").body())
+        assertEquals("text/html; charset=UTF-8", t.send("GET", "/html").header("Content-Type"))
+        assertArrayEquals(byteArrayOf(1, 2, 3), t.send("GET", "/stream").body())
+        assertEquals(202, t.send("GET", "/end").status())
+        assertTrue(t.send("GET", "/abort").abnormallyClosed())
     }
 }

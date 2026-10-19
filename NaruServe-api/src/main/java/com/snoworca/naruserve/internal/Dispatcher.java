@@ -113,12 +113,10 @@ public final class Dispatcher implements ExchangeHandler {
     }
 
     /**
-     * Runs the matched HTTP handler.
-     *
-     * <p>shortcut: DefaultRequest and DefaultResponse arrive with wave-3 parts 4 and 5; until then a matched HTTP
-     * route cannot run, so this throws and the adapter closes the exchange abnormally. Replace with the handler
-     * call and the interim failure rules (FR-HTTP-004, FR-HTTP-006) when those classes land. A malformed query is
-     * already answered 400 before the handler (FR-HTTP-010).
+     * Runs the matched HTTP handler, then applies the interim failure rules: an Exception while NEW is answered 500
+     * with only Content-Length: 0, while STREAMING aborts, and after completion changes nothing. A handler that
+     * returns with the response NEW ends it; a pending stream is copied here, on the adapter thread. A malformed
+     * query is answered 400 before the handler (FR-HTTP-010).
      */
     // @req FR-HTTP-004
     // @req FR-HTTP-006
@@ -132,8 +130,17 @@ public final class Dispatcher implements ExchangeHandler {
             automatic(ex, 400, null, false);
             return;
         }
-        throw new UnsupportedOperationException(
-                "handler invocation needs DefaultRequest and DefaultResponse (wave-3 parts 4 and 5)");
+        DefaultResponse res = new DefaultResponse(ex, method == Method.HEAD);
+        try {
+            Objects.requireNonNull(m.handler()).handle(req, res);
+        } catch (Exception e) {
+            res.afterFailure(e);
+            return;
+        } catch (Error e) {
+            res.abort(e); // closes a pending stream before the Error reaches the adapter
+            throw e;
+        }
+        res.afterHandler();
     }
 
     /** {@code ", "}-joined members in {@link Method} declaration order. */
