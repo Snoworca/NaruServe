@@ -15,6 +15,7 @@ import java.util.Map;
  * {@link Dispatcher}. The state is read once at entry; a request held in STARTING re-reads it when released.
  */
 // @req FR-APP-009
+// @req FR-APP-013
 final class GatedExchangeHandler implements ExchangeHandler {
 
     private final AppLifecycle lifecycle;
@@ -28,12 +29,18 @@ final class GatedExchangeHandler implements ExchangeHandler {
         this.accessLog = accessLog;
     }
 
+    /**
+     * The first check of every exchange, before the dispatcher's pre-request checks: RUNNING dispatches; STARTING
+     * waits on the start gate unless a stop is pending; FAILED, STOPPING, TERMINATED or a pending stop get 503.
+     */
     // @req FR-APP-009
+    // @req FR-APP-012
+    // @req FR-APP-013
     @Override
     public void handle(HttpExchange ex) {
         long start = System.nanoTime();
         AppState s = lifecycle.state();
-        if (s == AppState.STARTING) {
+        if (s == AppState.STARTING && !lifecycle.pendingStop()) {
             lifecycle.awaitStartGate();
             s = lifecycle.state();
         }

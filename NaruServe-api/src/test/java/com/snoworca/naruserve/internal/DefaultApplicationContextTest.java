@@ -118,8 +118,8 @@ public class DefaultApplicationContextTest {
             // the start failure itself
         }
         DefaultApplicationContext ctx = app.context();
-        assertRefused(() -> ctx.register(UserService.class, new UserService()), "register", AppState.FAILED);
-        assertRefused(() -> ctx.own(new Closer(closed, "x")), "own", AppState.FAILED);
+        assertRefused(() -> ctx.register(UserService.class, new UserService()), "register", AppState.TERMINATED);
+        assertRefused(() -> ctx.own(new Closer(closed, "x")), "own", AppState.TERMINATED);
         assertFalse(ctx.contains(UserService.class));
     }
 

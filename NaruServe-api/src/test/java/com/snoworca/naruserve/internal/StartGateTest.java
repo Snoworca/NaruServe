@@ -111,7 +111,7 @@ public class StartGateTest {
         } catch (AppStartException e) {
             assertTrue(e.getCause() instanceof IOException);
         }
-        assertEquals(AppState.FAILED, app.state());
+        assertEquals(AppState.TERMINATED, app.state());
         ClientResponse r = adapter.early.get(5, TimeUnit.SECONDS);
         assertEquals(503, r.status());
         assertEquals("close", r.header("Connection"));

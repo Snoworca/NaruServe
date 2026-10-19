@@ -48,6 +48,9 @@ import org.jspecify.annotations.Nullable;
 // @req FR-APP-003
 // @req FR-APP-007
 // @req FR-APP-008
+// @req FR-APP-010
+// @req FR-APP-011
+// @req FR-APP-012
 public final class DefaultRestApp implements RestApp {
 
     /** One registration call as recorded; the router is built from these at freeze. */
@@ -84,6 +87,11 @@ public final class DefaultRestApp implements RestApp {
     private final AppLifecycle lifecycle = new AppLifecycle();
     private final DefaultApplicationContext context = new DefaultApplicationContext(lifecycle, this);
     private final DefaultAccessLogOptions accessLogOptions = new DefaultAccessLogOptions();
+    private final ShutdownParticipants shutdownParticipants = new ShutdownParticipants();
+    // Set by the one listen() that won beginStart.
+    private volatile boolean bindAttempted;
+    // The thread inside listen() or the shutdown sequence; a shutdown() from it must not wait for itself.
+    private volatile @Nullable Thread lifecycleThread;
 
     // Guarded by this.
     private final List<Registration> registrations = new ArrayList<>();
@@ -147,6 +155,12 @@ public final class DefaultRestApp implements RestApp {
         return this;
     }
 
+    /** The app's internal shutdown participant registry; later waves add their steps here. */
+    // @req FR-APP-011
+    ShutdownParticipants shutdownParticipants() {
+        return shutdownParticipants;
+    }
+
     /** The app's state machine, for same-package tests. */
     AppLifecycle lifecycle() {
         return lifecycle;
@@ -183,15 +197,16 @@ public final class DefaultRestApp implements RestApp {
 
     /**
      * STARTING by compareAndSet, the onStart callbacks in order (each once), the context freeze, the route-table
-     * freeze, one bind of the gated handler on {@code 127.0.0.1:port}, then RUNNING. On failure: FAILED, then the
-     * owned resources close in reverse order and each close failure is suppressed on the thrown exception. Not
+     * freeze, one bind of the gated handler on {@code 127.0.0.1:port}, then RUNNING. A stop requested meanwhile is
+     * checked before each callback, before bind and at the move to RUNNING, and ends the start like a failure. Not
      * synchronized: requests held on the start gate and onStart callbacks must not wait for this call.
-     * shortcut: no pending stop, adapter cleanup or logger close on failure; the FR-APP-010/012 SDS adds them.
      */
     // @req IR-APP-005
     // @req FR-APP-009
     // @req FR-APP-007
     // @req FR-APP-008
+    // @req FR-APP-010
+    // @req FR-APP-012
     @Override
     public ServerHandle listen(int port) {
         if (port < 0 || port > 65535) {
@@ -202,6 +217,15 @@ public final class DefaultRestApp implements RestApp {
             throw new IllegalStateException("this app has no HttpAdapter; build it with RestApp.builder()");
         }
         lifecycle.beginStart();
+        lifecycleThread = Thread.currentThread();
+        try {
+            return start(a, port);
+        } finally {
+            lifecycleThread = null;
+        }
+    }
+
+    private ServerHandle start(HttpAdapter a, int port) {
         int bound;
         try {
             List<LifecycleCallback> callbacks;
@@ -209,20 +233,21 @@ public final class DefaultRestApp implements RestApp {
                 callbacks = new ArrayList<>(startCallbacks);
             }
             for (LifecycleCallback cb : callbacks) {
+                throwIfStopPending();
                 cb.handle(context);
             }
             context.freeze();
             freeze();
+            throwIfStopPending();
+            bindAttempted = true;
             a.bind("127.0.0.1", port, new GatedExchangeHandler(lifecycle, frozenDispatcher(), new AccessLog()));
             bound = a.boundPort();
-        } catch (RuntimeException e) {
+            if (!lifecycle.markRunning()) {
+                throw stopWhileStarting();
+            }
+        } catch (Throwable e) {
             throw failStart(e);
-        } catch (Error e) {
-            throw failStart(e);
-        } catch (Exception e) {
-            throw failStart(new AppStartException("app start failed: " + e, e));
         }
-        lifecycle.markRunning();
         return new ServerHandle() {
             @Override
             public int port() {
@@ -241,52 +266,163 @@ public final class DefaultRestApp implements RestApp {
         };
     }
 
-    /** FAILED, then the owned close; each close failure is added as suppressed to {@code e}, which is returned. */
-    // @req FR-APP-008
-    private <X extends Throwable> X failStart(X e) {
-        lifecycle.fail();
-        for (Exception closeFailure : context.closeOwned(logger)) {
-            e.addSuppressed(closeFailure);
+    private void throwIfStopPending() {
+        if (lifecycle.pendingStop()) {
+            throw stopWhileStarting();
         }
-        return e;
+    }
+
+    private static AppStartException stopWhileStarting() {
+        return new AppStartException("shutdown was requested while starting");
     }
 
     /**
-     * RUNNING: adapter stop and release, the onStop callbacks, the owned close (each failure logged at ERROR),
-     * then TERMINATED. NEW goes straight to TERMINATED; other states do nothing.
-     * shortcut: no shutdown participants or logger close; the FR-APP-011/FR-APP-012 SDS replaces
-     * this with the fixed shutdown sequence.
+     * The failed-start path: FAILED (held requests get 503), adapter stop and release if bind was attempted, the
+     * owned close in reverse, the logger flush and close, TERMINATED. Each cleanup failure is suppressed on the
+     * result. Returns an unchecked cause as is and wraps a checked one in {@link AppStartException}; an
+     * {@link Error} is rethrown from here after the cleanup.
+     */
+    // @req FR-APP-008
+    // @req FR-APP-010
+    // @req FR-APP-012
+    RuntimeException failStart(Throwable cause) {
+        Throwable result = cause instanceof RuntimeException || cause instanceof Error ? cause
+                : new AppStartException("app start failed: " + cause, cause);
+        try {
+            lifecycle.fail();
+            HttpAdapter a = adapter;
+            if (bindAttempted && a != null) {
+                try {
+                    // 1 s grace so requests released from the start gate can send their 503.
+                    a.stop(1, TimeUnit.SECONDS);
+                } catch (RuntimeException e) {
+                    suppress(result, e);
+                }
+                try {
+                    a.release();
+                } catch (RuntimeException e) {
+                    suppress(result, e);
+                }
+            }
+            for (Exception closeFailure : context.closeOwned(logger)) {
+                suppress(result, closeFailure);
+            }
+            SafeLogger.flushAndClose(logger);
+        } finally {
+            lifecycle.terminate();
+        }
+        if (result instanceof Error) {
+            throw (Error) result;
+        }
+        return (RuntimeException) result;
+    }
+
+    /** addSuppressed refuses the throwable itself, which a close() rethrowing the cause would pass. */
+    private static void suppress(Throwable result, Throwable failure) {
+        if (failure != result) {
+            result.addSuppressed(failure);
+        }
+    }
+
+    /**
+     * Dispatch on the state: NEW terminates at once; STARTING records a pending stop and waits for listen to end;
+     * RUNNING runs the sequence in the one beginStop winner; STOPPING and FAILED wait for TERMINATED; TERMINATED
+     * returns. A wait that times out returns normally. Not synchronized, so a loser waits only its own timeout.
      */
     // @req IR-APP-005
     // @req FR-APP-008
+    // @req FR-APP-011
+    // @req FR-APP-012
     @Override
-    public synchronized void shutdown(long timeout, TimeUnit unit) {
+    public void shutdown(long timeout, TimeUnit unit) {
         if (timeout < 0) {
             throw new IllegalArgumentException("timeout must not be negative: " + timeout);
         }
         Objects.requireNonNull(unit, "unit");
-        if (lifecycle.terminateIfNew()) {
-            return;
+        long deadline = System.nanoTime() + unit.toNanos(timeout);
+        boolean ownThread = Thread.currentThread() == lifecycleThread;
+        for (;;) {
+            switch (lifecycle.state()) {
+                case NEW:
+                    if (lifecycle.terminateIfNew()) {
+                        SafeLogger.flushAndClose(logger);
+                        return;
+                    }
+                    break;
+                case STARTING:
+                    lifecycle.requestPendingStop();
+                    // RUNNING now means markRunning won the race before the stop was recorded: stop normally.
+                    if (lifecycle.state() != AppState.RUNNING) {
+                        if (!ownThread) {
+                            lifecycle.awaitTerminated(left(deadline), TimeUnit.NANOSECONDS);
+                        }
+                        return;
+                    }
+                    break;
+                case RUNNING:
+                    if (lifecycle.beginStop()) {
+                        runShutdownSequence(deadline);
+                        return;
+                    }
+                    break;
+                case TERMINATED:
+                    return;
+                default:
+                    // STOPPING or FAILED: a thread is on its way to TERMINATED; when it is this one, don't wait.
+                    if (!ownThread) {
+                        lifecycle.awaitTerminated(left(deadline), TimeUnit.NANOSECONDS);
+                    }
+                    return;
+            }
         }
-        HttpAdapter a = adapter;
-        if (a == null || !lifecycle.beginStop()) {
-            return;
-        }
+    }
+
+    private static long left(long deadlineNanos) {
+        return Math.max(0, deadlineNanos - System.nanoTime());
+    }
+
+    /**
+     * The FR-APP-011 order: before-wait participants, adapter stop with the time left until the deadline,
+     * force-close participants, onStop callbacks (services still registered), after-onStop participants, the owned
+     * close in reverse (the app logger skipped), the logger flush and close, adapter release, TERMINATED. A failing
+     * step is logged at ERROR and the next step runs.
+     */
+    // @req FR-APP-011
+    private void runShutdownSequence(long deadlineNanos) {
+        SafeLogger log = new SafeLogger(logger);
+        lifecycleThread = Thread.currentThread();
         try {
-            a.stop(timeout, unit);
-            a.release();
-            for (LifecycleCallback cb : new ArrayList<>(stopCallbacks)) {
+            HttpAdapter a = Objects.requireNonNull(adapter, "adapter");
+            shutdownParticipants.run(ShutdownParticipants.Phase.BEFORE_WAIT, log);
+            try {
+                a.stop(left(deadlineNanos), TimeUnit.NANOSECONDS);
+            } catch (RuntimeException e) {
+                log.error("adapter stop failed", e);
+            }
+            shutdownParticipants.run(ShutdownParticipants.Phase.FORCE_CLOSE, log);
+            List<LifecycleCallback> callbacks;
+            synchronized (this) {
+                callbacks = new ArrayList<>(stopCallbacks);
+            }
+            for (LifecycleCallback cb : callbacks) {
                 try {
                     cb.handle(context);
                 } catch (Exception e) {
-                    logger.error("onStop callback failed", e);
+                    log.error("onStop callback failed", e);
                 }
             }
-            SafeLogger log = new SafeLogger(logger);
+            shutdownParticipants.run(ShutdownParticipants.Phase.AFTER_ON_STOP, log);
             for (Exception e : context.closeOwned(logger)) {
                 log.error("owned resource close failed", e);
             }
+            SafeLogger.flushAndClose(logger);
+            try {
+                a.release();
+            } catch (RuntimeException e) {
+                log.error("adapter release failed", e);
+            }
         } finally {
+            lifecycleThread = null;
             lifecycle.terminate();
         }
     }

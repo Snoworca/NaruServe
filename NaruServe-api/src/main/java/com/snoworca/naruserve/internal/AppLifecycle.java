@@ -2,22 +2,31 @@ package com.snoworca.naruserve.internal;
 
 import com.snoworca.naruserve.AppState;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * The one state machine of an app and its one configuration guard. Per app instance, no static state. The start
- * gate latch is released by {@link #markRunning()} or {@link #fail()}; requests held on it re-read the state.
- * shortcut: no pending stop or termination wait; the FR-APP-010..FR-APP-012 SDS adds them.
+ * gate latch is released by {@link #markRunning()}, {@link #fail()} or a move to TERMINATED; requests held on it
+ * re-read the state. A
+ * second latch is released on TERMINATED for {@link #awaitTerminated}. The pending stop and the move to RUNNING
+ * share this object's lock, so a stop recorded during STARTING is never lost to a concurrent markRunning.
  */
 // @req FR-APP-002
 // @req FR-APP-009
+// @req FR-APP-010
+// @req FR-APP-011
+// @req FR-APP-012
 final class AppLifecycle {
 
     private final AtomicReference<AppState> state = new AtomicReference<>(AppState.NEW);
     private final CountDownLatch startGate = new CountDownLatch(1);
+    private final CountDownLatch terminated = new CountDownLatch(1);
     private final AtomicInteger held = new AtomicInteger();
     private volatile boolean frozen;
+    // Written under this; read without it by the gate and by listen.
+    private volatile boolean pendingStop;
 
     /** Throws {@code "<method> not allowed in state <state>"} unless NEW with the route table not frozen. */
     // @req FR-APP-002
@@ -51,15 +60,50 @@ final class AppLifecycle {
         return state.get();
     }
 
-    /** Enters RUNNING and releases requests held on the start gate. */
+    /**
+     * Enters RUNNING and releases requests held on the start gate, unless a stop is pending: then returns false and
+     * the state stays STARTING for listen's failure path.
+     */
     // @req FR-APP-009
-    void markRunning() {
+    // @req FR-APP-012
+    synchronized boolean markRunning() {
+        if (pendingStop) {
+            return false;
+        }
         state.set(AppState.RUNNING);
         startGate.countDown();
+        return true;
+    }
+
+    /**
+     * Records a stop requested during STARTING; listen checks it between onStart callbacks, before bind and at the
+     * move to RUNNING. A caller that finds RUNNING afterwards lost the race to markRunning and stops normally.
+     */
+    // @req FR-APP-012
+    synchronized void requestPendingStop() {
+        pendingStop = true;
+    }
+
+    /** True once {@link #requestPendingStop()} ran. */
+    // @req FR-APP-012
+    boolean pendingStop() {
+        return pendingStop;
+    }
+
+    /** Waits for TERMINATED; false on timeout. An interrupt keeps the flag and returns false. */
+    // @req FR-APP-012
+    boolean awaitTerminated(long timeout, TimeUnit unit) {
+        try {
+            return terminated.await(timeout, unit);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return false;
+        }
     }
 
     /** Enters FAILED and releases the start gate as failed. */
     // @req FR-APP-009
+    // @req FR-APP-010
     void fail() {
         state.set(AppState.FAILED);
         startGate.countDown();
@@ -67,25 +111,30 @@ final class AppLifecycle {
 
     /** RUNNING to STOPPING; true only for the caller that runs the stop. */
     // @req FR-APP-002
+    // @req FR-APP-011
     boolean beginStop() {
         return state.compareAndSet(AppState.RUNNING, AppState.STOPPING);
     }
 
     /** NEW to TERMINATED by compareAndSet, so a concurrent listen either wins first or is refused. */
     // @req FR-APP-002
+    // @req FR-APP-012
     boolean terminateIfNew() {
         if (!state.compareAndSet(AppState.NEW, AppState.TERMINATED)) {
             return false;
         }
         startGate.countDown();
+        terminated.countDown();
         return true;
     }
 
-    /** Enters TERMINATED and releases the start gate. */
+    /** Enters TERMINATED and releases the start gate and every {@link #awaitTerminated} waiter. */
     // @req FR-APP-002
+    // @req FR-APP-012
     void terminate() {
         state.set(AppState.TERMINATED);
         startGate.countDown();
+        terminated.countDown();
     }
 
     /** Requests currently held on the start gate. */
