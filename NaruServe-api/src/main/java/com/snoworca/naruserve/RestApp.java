@@ -130,6 +130,17 @@ public interface RestApp {
     // @req IR-APP-007
     RestApp accessLog(Configurer<AccessLogOptions> configurer);
 
+    /** Replaces the JSON codec that {@code req.body} and {@code res.json} use. */
+    // @req IR-JSON-002
+    RestApp jsonCodec(JsonCodec codec);
+
+    /**
+     * The largest JSON request body in bytes, {@code 1..1073741824}; default 1048576 (1 MiB), as Express
+     * {@code express.json({ limit })}. A larger body is answered 413.
+     */
+    // @req IR-JSON-002
+    RestApp jsonLimit(long bytes);
+
     /** Explicit app assembly; each setter returns this builder and each {@link #build()} returns a new app. */
     // @req IR-APP-001
     final class Builder {

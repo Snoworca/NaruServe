@@ -171,6 +171,14 @@ project(':NaruServe-api') {
     dependencies {
         testFixturesCompileOnly 'org.jspecify:jspecify:1.0.0'
     }
+    // ConsumerRulesTest reads META-INF/proguard/naruserve-api.pro from the built jar (IR-JSON-001 AC-3).
+    // @req IR-JSON-001
+    def apiJar = tasks.named('jar').flatMap { it.archiveFile }
+    tasks.named('test') {
+        dependsOn tasks.named('jar')
+        inputs.file(apiJar)
+        doFirst { systemProperty 'naruserve.apiJar', apiJar.get().asFile.absolutePath }
+    }
 }
 
 // The rotating file logger's failed-listen test drives an app over the in-memory adapter (FR-APP-017 AC-7).

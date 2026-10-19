@@ -25,7 +25,8 @@ import org.junit.Test;
 
 public class HttpApiSurfaceTest {
 
-    private static final List<String> LATER_WAVE_NAMES = Arrays.asList("body", "form", "file", "files", "parts", "json",
+    // IR-JSON-002 AC-8: body and json left this list in wave 5.
+    private static final List<String> LATER_WAVE_NAMES = Arrays.asList("form", "file", "files", "parts",
             "download", "cache", "sse", "cookie", "getCookies", "addCookie");
 
     /** "name(paramSimpleNames)->returnSimpleName" for every public method a type declares. */
@@ -91,7 +92,9 @@ public class HttpApiSurfaceTest {
                 "query(String)->String", "queries(String)->List", "header(String)->String", "headers(String)->List",
                 "remoteAddress()->String", "isSecure()->boolean", "lastEventId()->String",
                 "attribute(String,Object)->void", "attribute(String,Class)->Object",
-                "application()->ApplicationContext", "service(Class)->Object"), signatures(Request.class));
+                "application()->ApplicationContext", "service(Class)->Object",
+                // wave 5: IR-JSON-002 AC-8
+                "body(Class)->Object", "body(TypeRef)->Object"), signatures(Request.class));
         for (String name : new String[] {"queries", "headers"}) {
             assertEquals(name, "java.util.List<java.lang.String>",
                     Request.class.getMethod(name, String.class).getGenericReturnType().getTypeName());
@@ -120,7 +123,9 @@ public class HttpApiSurfaceTest {
         assertTrue(Modifier.isPublic(Response.class.getModifiers()));
         assertEquals(setOf("status(int)->Response", "header(String,String)->Response", "send(String)->void",
                 "send(byte[])->void", "html(String)->void", "stream(InputStream,String)->void", "end()->void",
-                "isCommitted()->boolean", "abort(Throwable)->void"), signatures(Response.class));
+                "isCommitted()->boolean", "abort(Throwable)->void",
+                // wave 5: IR-JSON-002 AC-8
+                "json(Object)->void"), signatures(Response.class));
         assertEquals(InputStream.class, Response.class.getMethod("stream", InputStream.class, String.class)
                 .getParameterTypes()[0]);
     }
@@ -156,7 +161,11 @@ public class HttpApiSurfaceTest {
                 "Request.lastEventId[]#return",
                 "Request.attribute[class java.lang.String, class java.lang.Class]#return",
                 "Request.attribute[class java.lang.String, class java.lang.Object]#p1",
-                "Response.abort[class java.lang.Throwable]#p0"),
+                "Response.abort[class java.lang.Throwable]#p0",
+                // wave 5: IR-JSON-002 AC-8
+                "Request.body[class java.lang.Class]#return",
+                "Request.body[class com.snoworca.naruserve.TypeRef]#return",
+                "Response.json[class java.lang.Object]#p0"),
                 nullablePositions(Request.class, Response.class));
         assertEquals(setOf(), nullablePositions(RestApp.class, RouteBuilder.class, RouteHandler.class));
     }
@@ -230,7 +239,9 @@ public class HttpApiSurfaceTest {
                 // wave 4: IR-APP-006
                 "logger()->Logger", "logger(Logger)->RestApp",
                 // wave 4: IR-APP-007
-                "accessLog(Configurer)->RestApp"), signatures(RestApp.class));
+                "accessLog(Configurer)->RestApp",
+                // wave 5: IR-JSON-002 AC-1, AC-2
+                "jsonCodec(JsonCodec)->RestApp", "jsonLimit(long)->RestApp"), signatures(RestApp.class));
         assertEquals(0, RestApp.class.getInterfaces().length);
         List<String> statics = new java.util.ArrayList<>();
         for (java.lang.reflect.Method m : RestApp.class.getDeclaredMethods()) {

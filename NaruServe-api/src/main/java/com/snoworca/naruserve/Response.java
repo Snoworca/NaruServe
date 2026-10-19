@@ -4,10 +4,11 @@ import java.io.InputStream;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Writer for one HTTP response. Wave 3 holds no json, file, download, cache, sse or cookie method; later waves add
- * them.
+ * Writer for one HTTP response, with {@link #json} since wave 5. No file, download, cache, sse or cookie method yet;
+ * later waves add them.
  */
 // @req IR-HTTP-001
+// @req IR-JSON-002
 public interface Response {
 
     /**
@@ -39,4 +40,16 @@ public interface Response {
 
     /** Aborts the exchange, optionally recording {@code error} as the cause. */
     void abort(@Nullable Throwable error);
+
+    /**
+     * Sends {@code value} encoded by the app codec ({@code null} as JSON {@code null}) with
+     * {@code application/json; charset=UTF-8}, like Express {@code res.json}. The value is encoded before anything
+     * is sent, so an encoding failure leaves the response uncommitted. The default throws
+     * {@link UnsupportedOperationException}.
+     */
+    // @req IR-JSON-002
+    // @req FR-JSON-002
+    default void json(@Nullable Object value) {
+        throw new UnsupportedOperationException(getClass().getName() + " has no JSON writer");
+    }
 }

@@ -4,12 +4,17 @@ import com.snoworca.naruserve.ApplicationContext;
 import com.snoworca.naruserve.HttpException;
 import com.snoworca.naruserve.Method;
 import com.snoworca.naruserve.Request;
+import com.snoworca.naruserve.TypeRef;
 import com.snoworca.naruserve.spi.HttpExchange;
+import com.snoworca.naruserve.spi.JsonCodec;
+import java.io.InputStream;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import org.jspecify.annotations.Nullable;
 
@@ -18,6 +23,7 @@ import org.jspecify.annotations.Nullable;
 // @req FR-HTTP-010
 // @req FR-HTTP-011
 // @req FR-HTTP-012
+// @req FR-JSON-001
 public final class DefaultRequest implements Request {
 
     private final HttpExchange ex;
@@ -28,6 +34,8 @@ public final class DefaultRequest implements Request {
     private final BodyState body = new BodyState();
     private volatile @Nullable Map<String, List<String>> query;
     private final @Nullable ApplicationContext context;
+    private final @Nullable JsonCodec codec;
+    private final long jsonLimit;
 
     /** {@code params} are the decoded variables of the RouteMatch; no application context. */
     // @req FR-HTTP-009
@@ -39,6 +47,15 @@ public final class DefaultRequest implements Request {
     // @req FR-APP-007
     public DefaultRequest(HttpExchange ex, Method method, Map<String, String> params,
             @Nullable ApplicationContext context) {
+        this(ex, method, params, context, null, JsonBodyReader.DEFAULT_LIMIT);
+    }
+
+    /** As above, with the app codec and JSON limit that {@link #body(Class)} uses; no codec refuses body reads. */
+    // @req FR-JSON-001
+    public DefaultRequest(HttpExchange ex, Method method, Map<String, String> params,
+            @Nullable ApplicationContext context, @Nullable JsonCodec codec, long jsonLimit) {
+        this.codec = codec;
+        this.jsonLimit = jsonLimit;
         this.context = context;
         this.ex = ex;
         this.method = method;
@@ -102,6 +119,38 @@ public final class DefaultRequest implements Request {
     // @req FR-HTTP-019
     BodyState body() {
         return body;
+    }
+
+    /** The exchange body counted by {@link #body()}; only a reader that took the body calls this. */
+    // @req FR-JSON-001
+    InputStream bodyStream() {
+        return body.stream(ex.requestBody());
+    }
+
+    // @req FR-JSON-001
+    @Override
+    public <T> @Nullable T body(Class<T> type) {
+        return readJson(Objects.requireNonNull(type, "type"));
+    }
+
+    // @req FR-JSON-001
+    @Override
+    public <T> @Nullable T body(TypeRef<T> type) {
+        return readJson(Objects.requireNonNull(type, "type").getType());
+    }
+
+    /** BodyState.begin(JSON), then {@link JsonBodyReader#read}; the body ends CONSUMED whatever the outcome. */
+    private <T> @Nullable T readJson(Type type) {
+        JsonCodec c = codec;
+        if (c == null) {
+            throw new IllegalStateException("this request has no JsonCodec; build the app with RestApp.builder()");
+        }
+        body.begin(BodyState.Kind.JSON);
+        try {
+            return JsonBodyReader.read(this, type, c, jsonLimit);
+        } finally {
+            body.complete();
+        }
     }
 
     @Override

@@ -53,6 +53,7 @@ import org.jspecify.annotations.Nullable;
 // @req FR-APP-010
 // @req FR-APP-011
 // @req FR-APP-012
+// @req IR-JSON-002
 public final class DefaultRestApp implements RestApp {
 
     /** One registration call as recorded; the router is built from these at freeze. */
@@ -84,7 +85,9 @@ public final class DefaultRestApp implements RestApp {
     }
 
     private final @Nullable HttpAdapter adapter;
-    private final @Nullable JsonCodec codec;
+    // Written only in NEW under this; the Dispatcher reads both once at freeze.
+    private volatile @Nullable JsonCodec codec;
+    private volatile long jsonLimit = JsonBodyReader.DEFAULT_LIMIT;
     private volatile Logger logger;
     private final AppLifecycle lifecycle = new AppLifecycle();
     private final DefaultApplicationContext context = new DefaultApplicationContext(lifecycle, this);
@@ -129,9 +132,38 @@ public final class DefaultRestApp implements RestApp {
         return adapter;
     }
 
-    /** The codec given to the builder; null for the no-arg test constructor. */
+    /**
+     * The app's one codec: the builder's, or the last {@link #jsonCodec(JsonCodec)}; null for the no-arg test
+     * constructor. Every JSON feature reads it here.
+     */
+    // @req IR-JSON-002
     public @Nullable JsonCodec jsonCodec() {
         return codec;
+    }
+
+    // @req IR-JSON-002
+    @Override
+    public synchronized RestApp jsonCodec(JsonCodec codec) {
+        lifecycle.requireConfigurable("jsonCodec");
+        this.codec = Objects.requireNonNull(codec, "codec");
+        return this;
+    }
+
+    /** The JSON body limit in bytes; 1048576 unless {@link #jsonLimit(long)} changed it. */
+    // @req IR-JSON-002
+    public long jsonLimit() {
+        return jsonLimit;
+    }
+
+    // @req IR-JSON-002
+    @Override
+    public synchronized RestApp jsonLimit(long bytes) {
+        lifecycle.requireConfigurable("jsonLimit");
+        if (bytes < 1 || bytes > JsonBodyReader.MAX_LIMIT) {
+            throw new IllegalArgumentException("jsonLimit must be in 1..1073741824 bytes: " + bytes);
+        }
+        this.jsonLimit = bytes;
+        return this;
     }
 
     // @req IR-APP-006
@@ -678,7 +710,7 @@ public final class DefaultRestApp implements RestApp {
         }
         SafeLogger safe = new SafeLogger(logger); // the logger is fixed from here: logger(...) needs an unfrozen app
         dispatcher = new Dispatcher(router, pipeline, new ErrorPath(errorHandlers, safe),
-                new AccessLog(accessLogOptions, safe), context);
+                new AccessLog(accessLogOptions, safe), context, jsonCodec(), jsonLimit());
         lifecycle.markFrozen();
     }
 

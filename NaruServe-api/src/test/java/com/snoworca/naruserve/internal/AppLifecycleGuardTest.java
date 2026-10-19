@@ -160,6 +160,13 @@ public class AppLifecycleGuardTest {
         if (type == RouterPolicy.class) {
             return RouterPolicy.strict();
         }
+        // wave 5: IR-JSON-002 AC-1, AC-2 put jsonCodec and jsonLimit under the same guard
+        if (type == com.snoworca.naruserve.spi.JsonCodec.class) {
+            return new StubJsonCodec();
+        }
+        if (type == long.class) {
+            return 5L;
+        }
         throw new AssertionError("no test argument for " + type);
     }
 

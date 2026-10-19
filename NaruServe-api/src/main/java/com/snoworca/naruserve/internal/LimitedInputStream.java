@@ -11,6 +11,7 @@ import java.io.InputStream;
  * read.
  */
 // @req FR-HTTP-020
+// @req FR-JSON-001
 public final class LimitedInputStream extends FilterInputStream {
 
     private final long limit;
@@ -18,6 +19,7 @@ public final class LimitedInputStream extends FilterInputStream {
     /** Bytes the body may hold: the declared length when known and within the limit, else the limit. */
     private final long cap;
     private long count;
+    private volatile boolean overrun;
 
     /** {@code declaredLength} is the request Content-Length, or -1 when absent. */
     // @req FR-HTTP-020
@@ -102,13 +104,24 @@ public final class LimitedInputStream extends FilterInputStream {
             return -1;
         }
         count++;
-        throw new BodyTooLargeException(limit);
+        throw tooLarge();
     }
 
     /** A declared length over the limit fails before the source is touched; so does any read after a failure. */
     private void checkLimit() throws BodyTooLargeException {
         if (declaredLength > limit || count > limit) {
-            throw new BodyTooLargeException(limit);
+            throw tooLarge();
         }
+    }
+
+    private BodyTooLargeException tooLarge() {
+        overrun = true;
+        return new BodyTooLargeException(limit);
+    }
+
+    /** True once a read failed for the limit, also when a codec wrapped or swallowed that failure. */
+    // @req FR-JSON-001
+    public boolean overrun() {
+        return overrun;
     }
 }

@@ -1,10 +1,15 @@
 package com.snoworca.naruserve.internal;
 
+import com.snoworca.naruserve.HttpException;
 import com.snoworca.naruserve.Response;
 import com.snoworca.naruserve.spi.HttpExchange;
+import com.snoworca.naruserve.spi.JsonCodec;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.ArrayList;
@@ -28,6 +33,7 @@ import org.jspecify.annotations.Nullable;
 // @req FR-HTTP-016
 // @req FR-HTTP-017
 // @req FR-HTTP-018
+// @req FR-JSON-002
 public final class DefaultResponse implements Response {
 
     private static final int CHUNK = 8192;
@@ -35,6 +41,7 @@ public final class DefaultResponse implements Response {
 
     private final HttpExchange ex;
     private final boolean headRequest;
+    private final @Nullable JsonCodec codec;
     private final AtomicBoolean inputClosed = new AtomicBoolean();
     private final AtomicLong bytesWritten = new AtomicLong();
 
@@ -54,8 +61,15 @@ public final class DefaultResponse implements Response {
     /** Status 200, no headers, state NEW; {@code headRequest} makes every body bodyless. */
     // @req FR-HTTP-013
     public DefaultResponse(HttpExchange ex, boolean headRequest) {
+        this(ex, headRequest, null);
+    }
+
+    /** As above, with the app codec {@link #json} uses; no codec refuses json. */
+    // @req FR-JSON-002
+    public DefaultResponse(HttpExchange ex, boolean headRequest, @Nullable JsonCodec codec) {
         this.ex = ex;
         this.headRequest = headRequest;
+        this.codec = codec;
     }
 
     // @req FR-HTTP-013
@@ -102,6 +116,33 @@ public final class DefaultResponse implements Response {
     @Override
     public void send(byte[] body) {
         write(body, "application/octet-stream");
+    }
+
+    /**
+     * Refuses a response that left NEW before calling the codec, then encodes {@code value} into a buffer and sends it
+     * in one commit: a codec failure throws with the response still NEW, so the error path answers 500 and no partial
+     * output is sent.
+     */
+    // @req FR-JSON-002
+    @Override
+    public void json(@Nullable Object value) {
+        JsonCodec c = codec;
+        if (c == null) {
+            throw new IllegalStateException("this response has no JsonCodec; build the app with RestApp.builder()");
+        }
+        synchronized (this) {
+            requireNew();
+        }
+        ByteArrayOutputStream buf = new ByteArrayOutputStream();
+        try {
+            Writer w = new OutputStreamWriter(buf, StandardCharsets.UTF_8);
+            c.encode(value, w);
+            w.flush();
+        } catch (IOException e) {
+            // A buffer write never fails, so this is the codec's own failure: a server error.
+            throw new HttpException(500, "JSON encoding failed", e);
+        }
+        write(buf.toByteArray(), "application/json; charset=UTF-8");
     }
 
     // @req FR-HTTP-014

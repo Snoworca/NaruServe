@@ -4,10 +4,11 @@ import java.util.List;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Read-only view of one HTTP request plus a per-request attribute store and the app context. No body, form, file
- * or cookie access yet; later waves add them.
+ * Read-only view of one HTTP request plus a per-request attribute store, the app context and the JSON body reader.
+ * No form, file or cookie access yet; later waves add them.
  */
 // @req IR-HTTP-001
+// @req IR-JSON-002
 public interface Request {
 
     /** The actual request method. */
@@ -65,5 +66,24 @@ public interface Request {
     // @req IR-APP-004
     default <T> T service(Class<T> type) {
         return application().get(type);
+    }
+
+    /**
+     * The JSON body decoded into {@code type} by the app codec; null for a JSON {@code null} body. Answers 415 for a
+     * body that is not {@code application/json} or {@code application/*+json} in UTF-8, 413 over the JSON limit and
+     * 400 for an empty or malformed body. The body is read once: a second read throws
+     * {@link BodyAlreadyConsumedException}. The default throws {@link UnsupportedOperationException}.
+     */
+    // @req IR-JSON-002
+    // @req FR-JSON-001
+    default <T> @Nullable T body(Class<T> type) {
+        throw new UnsupportedOperationException(getClass().getName() + " has no JSON body reader");
+    }
+
+    /** As {@link #body(Class)} for a generic type: {@code req.body(new TypeRef<List<User>>() {})}. */
+    // @req IR-JSON-002
+    // @req FR-JSON-001
+    default <T> @Nullable T body(TypeRef<T> type) {
+        throw new UnsupportedOperationException(getClass().getName() + " has no JSON body reader");
     }
 }
