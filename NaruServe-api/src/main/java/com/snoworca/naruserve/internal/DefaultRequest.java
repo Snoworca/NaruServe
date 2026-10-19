@@ -236,13 +236,13 @@ public final class DefaultRequest implements Request {
     // @req FR-ENGINE-008
     @Override
     public String remoteAddress() {
-        return ProxyTrust.remoteAddress(ex, trustProxy);
+        return ProxyTrust.remoteAddress(trustProxy ? header("X-Forwarded-For") : null, ex.remoteAddress());
     }
 
     // @req FR-ENGINE-008
     @Override
     public boolean isSecure() {
-        return ProxyTrust.isSecure(ex, trustProxy);
+        return ProxyTrust.isSecure(trustProxy ? header("X-Forwarded-Proto") : null, ex.isSecure());
     }
 
     @Override

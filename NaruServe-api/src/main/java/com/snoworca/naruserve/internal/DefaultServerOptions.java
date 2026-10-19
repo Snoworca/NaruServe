@@ -16,9 +16,6 @@ final class DefaultServerOptions implements ServerOptions {
     private static final long MAX_TIMEOUT_MILLIS = TimeUnit.HOURS.toMillis(1);
 
     private final ServerSettings.Builder values = ServerSettings.builder();
-    private int maxWorkers = 64;
-    private int maxSseStreams = 128;
-    private int maxConnections = 512;
 
     // @req IR-ENGINE-001
     private static int range(String name, int value, int max) {
@@ -110,22 +107,19 @@ final class DefaultServerOptions implements ServerOptions {
 
     @Override
     public synchronized ServerOptions maxWorkers(int workers) {
-        maxWorkers = range("maxWorkers", workers, 1024);
-        values.maxWorkers(maxWorkers);
+        values.maxWorkers(range("maxWorkers", workers, 1024));
         return this;
     }
 
     @Override
     public synchronized ServerOptions maxSseStreams(int streams) {
-        maxSseStreams = range("maxSseStreams", streams, 1024);
-        values.maxSseStreams(maxSseStreams);
+        values.maxSseStreams(range("maxSseStreams", streams, 1024));
         return this;
     }
 
     @Override
     public synchronized ServerOptions maxConnections(int connections) {
-        maxConnections = range("maxConnections", connections, 65536);
-        values.maxConnections(maxConnections);
+        values.maxConnections(range("maxConnections", connections, 65536));
         return this;
     }
 
@@ -149,10 +143,11 @@ final class DefaultServerOptions implements ServerOptions {
     // @req IR-ENGINE-002
     // @req FR-ENGINE-004
     synchronized ServerSettings freeze(int port, Logger log, ErrorRenderer r) {
-        if (maxConnections < maxWorkers + maxSseStreams) {
-            throw new IllegalStateException("maxConnections (" + maxConnections + ") must be at least maxWorkers ("
-                    + maxWorkers + ") + maxSseStreams (" + maxSseStreams + ")");
+        ServerSettings s = values.port(port).logger(new SafeLogger(log)).errorRenderer(r).build();
+        if (s.maxConnections() < s.maxWorkers() + s.maxSseStreams()) {
+            throw new IllegalStateException("maxConnections (" + s.maxConnections() + ") must be at least maxWorkers ("
+                    + s.maxWorkers() + ") + maxSseStreams (" + s.maxSseStreams() + ")");
         }
-        return values.port(port).logger(new SafeLogger(log)).errorRenderer(r).build();
+        return s;
     }
 }

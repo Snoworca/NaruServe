@@ -1,7 +1,5 @@
 package com.snoworca.naruserve.internal;
 
-import com.snoworca.naruserve.spi.HttpExchange;
-import java.util.Map;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -14,28 +12,27 @@ final class ProxyTrust {
     private ProxyTrust() {
     }
 
+    /** {@code forwardedFor} is the first X-Forwarded-For header when trusted, otherwise null. */
     // @req FR-ENGINE-008
-    static String remoteAddress(HttpExchange ex, boolean trust) {
-        String forwarded = trust ? firstEntry(ex, "X-Forwarded-For") : null;
-        return forwarded != null ? forwarded : ex.remoteAddress();
+    static String remoteAddress(@Nullable String forwardedFor, String exchangeAddress) {
+        String forwarded = firstEntry(forwardedFor);
+        return forwarded != null ? forwarded : exchangeAddress;
     }
 
+    /** {@code forwardedProto} is the first X-Forwarded-Proto header when trusted, otherwise null. */
     // @req FR-ENGINE-008
-    static boolean isSecure(HttpExchange ex, boolean trust) {
-        String proto = trust ? firstEntry(ex, "X-Forwarded-Proto") : null;
-        return proto != null ? proto.equalsIgnoreCase("https") : ex.isSecure();
+    static boolean isSecure(@Nullable String forwardedProto, boolean exchangeSecure) {
+        String proto = firstEntry(forwardedProto);
+        return proto != null ? proto.equalsIgnoreCase("https") : exchangeSecure;
     }
 
-    /** The trimmed first comma-separated entry of the first {@code name} header; null when absent or blank. */
-    private static @Nullable String firstEntry(HttpExchange ex, String name) {
-        for (Map.Entry<String, String> h : ex.headers()) {
-            if (h.getKey().equalsIgnoreCase(name)) {
-                String v = h.getValue();
-                int comma = v.indexOf(',');
-                String entry = (comma < 0 ? v : v.substring(0, comma)).trim();
-                return entry.isEmpty() ? null : entry;
-            }
+    /** The trimmed first comma-separated entry of {@code v}; null when absent or blank. */
+    private static @Nullable String firstEntry(@Nullable String v) {
+        if (v == null) {
+            return null;
         }
-        return null;
+        int comma = v.indexOf(',');
+        String entry = (comma < 0 ? v : v.substring(0, comma)).trim();
+        return entry.isEmpty() ? null : entry;
     }
 }
