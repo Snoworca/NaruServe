@@ -33,6 +33,24 @@ public class StandardErrorsTest {
         assertEquals("Error", StandardErrors.reason(418));
     }
 
+    // FR-APP-006 AC-3: the message is the status reason phrase, also for a status that has no named error code
+    @Test
+    public void fr_APP_006_AC3_everyStandardErrorStatusHasItsReasonPhrase() {
+        int[] statuses = {401, 402, 403, 406, 407, 409, 410, 411, 412, 414, 416, 417, 423, 424, 428, 429, 431, 451,
+            502, 504, 505, 507};
+        String[] phrases = {"Unauthorized", "Payment Required", "Forbidden", "Not Acceptable",
+            "Proxy Authentication Required", "Conflict", "Gone", "Length Required", "Precondition Failed",
+            "URI Too Long", "Range Not Satisfiable", "Expectation Failed", "Locked", "Failed Dependency",
+            "Precondition Required", "Too Many Requests", "Request Header Fields Too Large",
+            "Unavailable For Legal Reasons", "Bad Gateway", "Gateway Timeout", "HTTP Version Not Supported",
+            "Insufficient Storage"};
+        for (int i = 0; i < statuses.length; i++) {
+            assertEquals(String.valueOf(statuses[i]), phrases[i], StandardErrors.reason(statuses[i]));
+        }
+        assertEquals("Forbidden", StandardErrors.messageOf(new HttpException(403), 403));
+        assertEquals("Error", StandardErrors.reason(599));
+    }
+
     // SDS-AC-10; FR-APP-006 AC-3, FR-APP-006 AC-4
     @Test
     public void sdsAc10_FR_APP_006_AC3_AC4_statusAndMessageOfAnError() {

@@ -40,7 +40,7 @@ public class WebSocketOriginTest {
     /** An upgrade with {@code headerPairs} answered 403 with the standard body; the handler never ran. */
     private void refused(String... headerPairs) {
         int before = handled.get();
-        assertError(403, "HTTP_403", "Error", adapter.send(ClientRequest.upgrade("/ws", headerPairs)));
+        assertError(403, "HTTP_403", "Forbidden", adapter.send(ClientRequest.upgrade("/ws", headerPairs)));
         assertEquals(before, handled.get());
     }
 
