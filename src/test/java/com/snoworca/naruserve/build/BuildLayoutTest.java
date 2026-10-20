@@ -295,6 +295,20 @@ public class BuildLayoutTest {
         }
     }
 
+    // SDS-AC-12; CON-KT-001 AC-4 — the coroutine ban is its own task, the wave 1 prefix lists stay as pinned
+    @Test
+    public void con_KT_001_AC4_checkNoCoroutinesLeavesTheClassReferencePrefixesUnchanged() throws IOException {
+        String build = read(new File(ROOT, "build.gradle"));
+        assertTrue(build.contains("prefixes += ['android/', 'jakarta/servlet/', 'com/google/gson/', "
+                + "'com/snoworca/tinyhttpd/', 'kotlin/']"));
+        assertTrue(build.contains("def prefixes = path in androidModules ? ['javax/servlet/'] : []"));
+        assertTrue(build.contains("tasks.register('checkNoCoroutines')"));
+        assertTrue(build.contains("tasks.named('check') { dependsOn checkNoCoroutines }"));
+        int prefixes = build.indexOf("def classRefPrefixes");
+        String prefixFunction = build.substring(prefixes, build.indexOf("\n}\n", prefixes));
+        assertFalse(prefixFunction, prefixFunction.contains("kotlinx/"));
+    }
+
     // OPS-BUILD-003 AC-5
     @Test
     public void ops_BUILD_003_AC5_servletDocKeepsJakartaMarker() throws IOException {

@@ -302,6 +302,34 @@ def checkDependencyRules = tasks.register('checkDependencyRules') {
 }
 tasks.named('check') { dependsOn checkDependencyRules }
 
+// @req CON-KT-001
+// Separate from checkClassReferences, whose pinned prefix lists stay as wave 1 fixed them; 'kotlin/' misses 'kotlinx/'.
+def checkNoCoroutines = tasks.register('checkNoCoroutines') {
+    description = 'Fails when a published module references kotlinx.coroutines or resolves a kotlinx-coroutines artifact.'
+    group = 'verification'
+    def modules = naruModules.collect { project(it) }
+    def classesDirs = modules.collectEntries { Project p -> [p.path, p.sourceSets.main.output.classesDirs] }
+    dependsOn modules.collect { it.tasks.named('classes') }
+    doLast {
+        def violations = []
+        classesDirs.each { String path, FileCollection dirs -> violations.addAll(scanClassRefs(dirs, ['kotlinx/coroutines/'])) }
+        modules.each { Project p ->
+            ['compileClasspath', 'runtimeClasspath'].each { String cn ->
+                p.configurations.getByName(cn).incoming.resolutionResult.allComponents.each { c ->
+                    def mv = c.moduleVersion
+                    if (mv.group == 'org.jetbrains.kotlinx' && mv.name.startsWith('kotlinx-coroutines')) {
+                        violations << "${p.path} ${cn} -> ${mv.group}:${mv.name}".toString()
+                    }
+                }
+            }
+        }
+        if (!violations.isEmpty()) {
+            throw new GradleException("checkNoCoroutines:\n  " + violations.unique().join('\n  '))
+        }
+    }
+}
+tasks.named('check') { dependsOn checkNoCoroutines }
+
 // @req CON-APP-001
 // Each logger class sits in its own module jar and no class of a logger package sits in the api jar.
 def loggerClasses = [
