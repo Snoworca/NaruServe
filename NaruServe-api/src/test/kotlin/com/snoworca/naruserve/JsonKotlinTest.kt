@@ -36,8 +36,7 @@ data class JsonKUser(val name: String)
 class JsonKotlinTest {
 
     private fun post(adapter: InMemoryHttpAdapter, path: String, body: String) =
-        adapter.send(InMemoryHttpAdapter.ClientRequest.of("POST", path).header("Content-Type", "application/json")
-            .body(body.toByteArray()))
+        adapter.send(InMemoryHttpAdapter.ClientRequest.json("POST", path, body))
 
     @Test
     fun `IR-JSON-001 AC-4 Kotlin object TypeRef captures List of String`() {

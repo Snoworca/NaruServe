@@ -14,9 +14,7 @@ class GsonCodecKotlinTest {
         t.app().jsonCodec(GsonJsonCodec(GsonJsonCodec.defaultGson(), 32))
         t.app().post("/echo") { req, res -> res.json(req.body(Any::class.java)) }
         t.start()
-        fun post(body: String) = adapter.send(
-            InMemoryHttpAdapter.ClientRequest.of("POST", "/echo").header("Content-Type", "application/json")
-                .body(body.toByteArray()))
+        fun post(body: String) = adapter.send(InMemoryHttpAdapter.ClientRequest.json("POST", "/echo", body))
         val ok = post("[".repeat(32) + "]".repeat(32))
         assertEquals(200, ok.status())
         assertEquals("[".repeat(32) + "]".repeat(32), String(ok.body()))

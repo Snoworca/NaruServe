@@ -77,8 +77,7 @@ class JsonDocsKotlinTest {
     }
 
     private fun post(adapter: InMemoryHttpAdapter, path: String, body: String) =
-        adapter.send(InMemoryHttpAdapter.ClientRequest.of("POST", path).header("Content-Type", "application/json")
-            .body(body.toByteArray())).status()
+        adapter.send(InMemoryHttpAdapter.ClientRequest.json("POST", path, body)).status()
 
     // docs-example: README.md#1
     // adapted: only the JSON post route runs here; RestApp.create(), the get routes and listen are the opening

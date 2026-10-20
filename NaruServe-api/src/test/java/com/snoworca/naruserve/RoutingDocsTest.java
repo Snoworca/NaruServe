@@ -1,13 +1,10 @@
 package com.snoworca.naruserve;
 
+import static com.snoworca.naruserve.HttpDocsTest.doc;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.Test;
@@ -16,19 +13,6 @@ import org.junit.Test;
 public class RoutingDocsTest {
 
     private static final String MARKER = "(미확정)";
-
-    private static String doc() throws IOException {
-        // Module tests run in NaruServe-api; the docs live at the repository root.
-        File f = new File(System.getProperty("user.dir"), "../docs/api/routing.md");
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        try (InputStream in = new FileInputStream(f)) {
-            byte[] buf = new byte[8192];
-            for (int n = in.read(buf); n > 0; n = in.read(buf)) {
-                out.write(buf, 0, n);
-            }
-        }
-        return new String(out.toByteArray(), "UTF-8");
-    }
 
     /** Text from the heading line up to the next heading of the same or a higher level. */
     private static String section(String doc, String heading) {
@@ -54,7 +38,7 @@ public class RoutingDocsTest {
     // SDS-AC-10; OPS-ROUTE-003 AC-2
     @Test
     public void sdsAc10_OPS_ROUTE_003_AC2_accessorsNamedWithJavaKotlinAndExpressNote() throws IOException {
-        String s = section(doc(), "### MethodSet 조회");
+        String s = section(doc("routing.md"), "### MethodSet 조회");
         for (String name : new String[] {"contains(Method)", "iterator()", "size()"}) {
             assertTrue("accessor " + name, s.contains("`" + name + "`"));
         }
@@ -67,7 +51,7 @@ public class RoutingDocsTest {
     @Test
     public void noMarkerRemains() throws IOException {
         List<String> markerLines = new ArrayList<>();
-        for (String line : doc().split("\n")) {
+        for (String line : doc("routing.md").split("\n")) {
             if (line.contains(MARKER)) {
                 markerLines.add(line);
             }
@@ -78,7 +62,7 @@ public class RoutingDocsTest {
     // SDS-AC-10; OPS-ROUTE-003 AC-1
     @Test
     public void sdsAc10_OPS_ROUTE_003_AC1_routingRulesSectionPresent() throws IOException {
-        String s = section(doc(), "## 라우팅 규칙 (wave 2 결정)");
+        String s = section(doc("routing.md"), "## 라우팅 규칙 (wave 2 결정)");
         String[] required = {
             "엄격", "TRACE", "CONNECT", "Allow", "HEAD", "OPTIONS", "WebSocket", "426",
             "DELETE /users/me", "/a/:", "/a/:id/:id", "/a//b", "`get`", "Connection", "Upgrade",

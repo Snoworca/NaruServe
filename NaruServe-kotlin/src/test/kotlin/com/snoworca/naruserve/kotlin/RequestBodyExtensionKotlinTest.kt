@@ -46,8 +46,7 @@ class RequestBodyExtensionKotlinTest {
         t.start()
     }
 
-    private fun post(path: String, body: String) = adapter.send(InMemoryHttpAdapter.ClientRequest.of("POST", path)
-        .header("Content-Type", "application/json").body(body.toByteArray()))
+    private fun post(path: String, body: String) = adapter.send(InMemoryHttpAdapter.ClientRequest.json("POST", path, body))
 
     private fun userRoute() = start { app ->
         app.post("/users") { req, res ->

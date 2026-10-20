@@ -1,5 +1,6 @@
 package com.snoworca.naruserve.spi;
 
+import static com.snoworca.naruserve.testing.TestSupport.headers;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -10,6 +11,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter;
+import com.snoworca.naruserve.testing.TestSupport;
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientRequest;
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientResponse;
 import java.io.File;
@@ -22,7 +24,6 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.WildcardType;
 import java.nio.charset.StandardCharsets;
-import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -40,14 +41,6 @@ public class HttpAdapterSpiTest {
     private static final List<Class<?>> SPI_TYPES = Arrays.<Class<?>>asList(HttpAdapter.class, ExchangeHandler.class,
             HttpExchange.class, UpgradeHandler.class, StreamDrain.class, WebSocketEndpoint.class,
             WebSocketChannel.class);
-
-    private static List<Map.Entry<String, String>> headers(String... pairs) {
-        List<Map.Entry<String, String>> out = new ArrayList<>();
-        for (int i = 0; i < pairs.length; i += 2) {
-            out.add(new SimpleEntry<>(pairs[i], pairs[i + 1]));
-        }
-        return out;
-    }
 
     private static InMemoryHttpAdapter bound(ExchangeHandler handler) throws IOException {
         InMemoryHttpAdapter adapter = new InMemoryHttpAdapter();
@@ -388,8 +381,7 @@ public class HttpAdapterSpiTest {
     }
 
     private static ServerSettings settings(String address, int port) {
-        return ServerSettings.builder().bindAddress(address).port(port)
-                .logger(new com.snoworca.naruserve.testing.RecordingLogger()).errorRenderer(status -> "{}").build();
+        return TestSupport.settings().bindAddress(address).port(port).build();
     }
 
     // SDS-AC-4 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-5-4.sds.md; IR-ENGINE-002 AC-1

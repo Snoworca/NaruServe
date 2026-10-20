@@ -1,14 +1,11 @@
 package com.snoworca.naruserve;
 
+import static com.snoworca.naruserve.HttpDocsTest.doc;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -78,19 +75,6 @@ public class AppDocsTest {
         List<String> out = new ArrayList<>(head);
         out.addAll(Arrays.asList(tail));
         return out;
-    }
-
-    private static String doc(String name) throws IOException {
-        // Module tests run in NaruServe-api; the docs live at the repository root.
-        File f = new File(System.getProperty("user.dir"), "../docs/api/" + name);
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        try (InputStream in = new FileInputStream(f)) {
-            byte[] buf = new byte[8192];
-            for (int n = in.read(buf); n > 0; n = in.read(buf)) {
-                out.write(buf, 0, n);
-            }
-        }
-        return new String(out.toByteArray(), "UTF-8");
     }
 
     private static List<String> linesWith(String doc, String phrase) {

@@ -42,12 +42,7 @@ final class KotlinContractChecks {
     static List<String> nullMarkedFailures(ClassLoader loader, Collection<String> packages) {
         Set<String> failures = new TreeSet<>();
         for (String pkg : packages) {
-            Class<?> info;
-            try {
-                info = Class.forName(pkg + ".package-info", false, loader);
-            } catch (ClassNotFoundException e) {
-                info = null;
-            }
+            Class<?> info = ApiJarClasses.packageInfo(loader, pkg);
             if (info == null || !has(info.getAnnotations(), NULL_MARKED)) {
                 failures.add("package " + pkg + " lacks @NullMarked");
             }

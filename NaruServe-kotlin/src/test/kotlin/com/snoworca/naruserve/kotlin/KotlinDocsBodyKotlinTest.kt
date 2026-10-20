@@ -29,9 +29,8 @@ class KotlinDocsBodyKotlinTest {
         }
     }
 
-    private fun post(adapter: InMemoryHttpAdapter, body: String) = adapter.send(
-        InMemoryHttpAdapter.ClientRequest.of("POST", "/r").header("Content-Type", "application/json")
-            .body(body.toByteArray()))
+    private fun post(adapter: InMemoryHttpAdapter, body: String) =
+        adapter.send(InMemoryHttpAdapter.ClientRequest.json("POST", "/r", body))
 
     // docs-example: kotlin.md#8
     // adapted: the extension definition is the module code of RequestExtensions.kt and its import heads this file

@@ -25,7 +25,6 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -114,8 +113,7 @@ public class GsonJsonCodecTest {
     }
 
     private static ClientResponse post(InMemoryHttpAdapter adapter, String path, String body) {
-        return adapter.send(ClientRequest.of("POST", path).header("Content-Type", "application/json")
-                .body(body.getBytes(StandardCharsets.UTF_8)));
+        return adapter.send(ClientRequest.json("POST", path, body));
     }
 
     /** An app over the in-memory adapter using {@code codec}, echoing req.body(type) through res.json. */

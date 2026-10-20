@@ -42,8 +42,7 @@ class GsonDataClassLimitKotlinTest {
             res.status(201).json(user?.name)
         }
         t.start()
-        val response = adapter.send(InMemoryHttpAdapter.ClientRequest.of("POST", "/users")
-            .header("Content-Type", "application/json").body("{\"name\":\"a\"}".toByteArray()))
+        val response = adapter.send(InMemoryHttpAdapter.ClientRequest.json("POST", "/users", "{\"name\":\"a\"}"))
         assertEquals(500, response.status())
         assertTrue(response.text(), response.text().contains("\"code\":\"INTERNAL_ERROR\""))
     }

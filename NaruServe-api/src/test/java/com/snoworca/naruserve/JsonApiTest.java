@@ -30,9 +30,8 @@ public class JsonApiTest {
     }
 
     private static ClientResponse post(InMemoryHttpAdapter adapter, String path, String body) {
-        return adapter.send(ClientRequest.of("POST", path).header("Content-Type", "application/json")
-                .header("Content-Length", String.valueOf(body.length()))
-                .body(body.getBytes(StandardCharsets.UTF_8)));
+        return adapter.send(ClientRequest.json("POST", path, body)
+                .header("Content-Length", String.valueOf(body.length())));
     }
 
     // SDS-AC-3; IR-JSON-002 AC-1

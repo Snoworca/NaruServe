@@ -22,7 +22,7 @@ public class HttpDocsTest {
     /** The response.md statement that res.redirect is a post-v1 item (OPS-HTTP-008 AC-8). */
     static final String REDIRECT_POST_V1_PHRASE = "`res.redirect`는 v1에 포함되지 않습니다";
 
-    private static String doc(String name) throws IOException {
+    static String doc(String name) throws IOException {
         // Module tests run in NaruServe-api; the docs live at the repository root.
         File f = new File(System.getProperty("user.dir"), "../docs/api/" + name);
         ByteArrayOutputStream out = new ByteArrayOutputStream();

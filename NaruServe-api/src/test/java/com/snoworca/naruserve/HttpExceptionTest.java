@@ -1,5 +1,6 @@
 package com.snoworca.naruserve;
 
+import static com.snoworca.naruserve.testing.TestSupport.headers;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
@@ -74,14 +75,6 @@ public class HttpExceptionTest {
         assertEquals("m", new UnsupportedMediaTypeException("m").getMessage());
     }
 
-    private static List<Map.Entry<String, String>> entries(String... nameValue) {
-        List<Map.Entry<String, String>> out = new java.util.ArrayList<>();
-        for (int i = 0; i < nameValue.length; i += 2) {
-            out.add(new SimpleImmutableEntry<>(nameValue[i], nameValue[i + 1]));
-        }
-        return out;
-    }
-
     // IR-HTTP-008 AC-1
     @Test
     public void IR_HTTP_008_AC1_withHeaderAndHeadersAreDeclaredAndTheOldSignaturesKept() throws Exception {
@@ -105,7 +98,7 @@ public class HttpExceptionTest {
     public void sdsAc8_IR_HTTP_008_AC2_headersKeepOrderAndDuplicatesAndAreUnmodifiable() {
         HttpException e = new HttpException(503).withHeader("Retry-After", "1").withHeader("Connection", "close")
                 .withHeader("Retry-After", "2");
-        assertEquals(entries("Retry-After", "1", "Connection", "close", "Retry-After", "2"), e.headers());
+        assertEquals(headers("Retry-After", "1", "Connection", "close", "Retry-After", "2"), e.headers());
         try {
             e.headers().add(new SimpleImmutableEntry<>("X", "y"));
             fail("add accepted");
@@ -135,7 +128,7 @@ public class HttpExceptionTest {
         }
         assertEquals(426, back.status());
         assertEquals("upgrade", back.getMessage());
-        assertEquals(entries("Sec-WebSocket-Version", "13"), back.headers());
+        assertEquals(headers("Sec-WebSocket-Version", "13"), back.headers());
     }
 
     // SDS-AC-7; IR-HTTP-008 AC-3
@@ -162,7 +155,7 @@ public class HttpExceptionTest {
                 // expected
             }
         }
-        assertEquals(entries("Retry-After", "1"), e.headers());
+        assertEquals(headers("Retry-After", "1"), e.headers());
         e.withHeader("X-Tab", "a\tb\u00ff");
         assertEquals(2, e.headers().size());
     }

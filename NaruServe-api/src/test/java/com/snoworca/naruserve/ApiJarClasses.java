@@ -109,8 +109,14 @@ final class ApiJarClasses {
     /** The package-info class of {@code pkg} in the jar, or null when the package has none. */
     // @req FR-KT-001
     static Class<?> packageInfo(String pkg) {
+        return packageInfo(loader(), pkg);
+    }
+
+    /** The package-info class of {@code pkg} in {@code from}, or null when the package has none. */
+    // @req FR-KT-001
+    static Class<?> packageInfo(ClassLoader from, String pkg) {
         try {
-            return Class.forName(pkg + ".package-info", false, loader());
+            return Class.forName(pkg + ".package-info", false, from);
         } catch (ClassNotFoundException e) {
             return null;
         }
