@@ -80,6 +80,9 @@ class JsonDocsKotlinTest {
         adapter.send(InMemoryHttpAdapter.ClientRequest.of("POST", path).header("Content-Type", "application/json")
             .body(body.toByteArray())).status()
 
+    // docs-example: README.md#1
+    // adapted: only the JSON post route runs here; RestApp.create(), the get routes and listen are the opening
+    // example that KotlinDocsExamplesKotlinTest runs for kotlin.md#1
     // SDS-AC-5; OPS-JSON-001 AC-4, AC-5 — README.md Kotlin example
     @Test
     fun `SDS-AC-5 OPS-JSON-001 AC-5 README post users example runs`() {
@@ -95,6 +98,7 @@ class JsonDocsKotlinTest {
         assertEquals(400, post(adapter, "/users", "null"))
     }
 
+    // docs-example: kotlin.md#6
     // SDS-AC-5; OPS-JSON-001 AC-3, AC-5 — kotlin.md type-argument examples
     @Test
     fun `SDS-AC-5 OPS-JSON-001 AC-3 kotlin nullable type argument examples run`() {
@@ -137,6 +141,8 @@ class JsonDocsKotlinTest {
         assertEquals(400, post(adapter, "/r", "null"))
     }
 
+    // docs-example: kotlin.md#10
+    // adapted: CreateUserRequest is declared at the top of this file, and users is the UserStore property
     // SDS-AC-5; OPS-JSON-001 AC-3, AC-5 — kotlin.md JSON section
     @Test
     fun `SDS-AC-5 OPS-JSON-001 AC-3 kotlin CreateUserRequest example uses safe calls`() {
@@ -159,6 +165,9 @@ class JsonDocsKotlinTest {
         assertEquals(201, post(adapter, "/users", "{\"name\":\"a\"}"))
     }
 
+    // docs-example: express-migration.md#1
+    // adapted: only the onStart registration and the JSON post route run here; the other routes, staticFiles and
+    // listen are the same calls the kotlin.md examples run
     // SDS-AC-5; OPS-JSON-001 AC-4, AC-5 — express-migration.md Kotlin todo example
     @Test
     fun `SDS-AC-5 OPS-JSON-001 AC-5 express migration todo example runs`() {

@@ -187,6 +187,8 @@ SSE `onClose` 리스너 안에서 부른 `app.shutdown`도 요청 핸들러에�
 - 서비스를 다시 시작할 때는 새 `RestApp`을 만드세요.
 - 백그라운드 실행, Foreground Service 정책은 앱이 책임집니다. 프레임워크가 서버의 상시 실행을 보장하지 않습니다.
 
+아래 `ServerService` 예제는 문서로만 제공하는 Android 예제이며, Android 샘플 빌드가 v1 범위 밖이므로(2026-10-20 사용자 결정) v1 빌드는 이 예제를 컴파일하지 않습니다.
+
 ```java
 public class ServerService extends Service {
     private RestApp app;

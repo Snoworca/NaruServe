@@ -56,7 +56,7 @@ app.get("/users/:id") { req, res ->
 
 ## null 처리
 
-공개 API에는 `@Nullable` / `@NonNull`이 붙어 있어 Kotlin이 타입을 정확히 압니다.
+공개 API는 `@NullMarked`(기본 non-null)이고 null일 수 있는 값에만 `@Nullable`이 붙어 있어 Kotlin이 타입을 정확히 압니다.
 
 | Java | Kotlin 타입 | 없을 때 |
 |---|---|---|
@@ -102,13 +102,15 @@ val user = req.body(User::class.java) ?: throw HttpException(400, "JSON body is 
 
 ### NaruServe-kotlin 선택 확장
 
-`reified`를 쓰는 Kotlin 확장 함수를 선택 모듈 `NaruServe-kotlin`으로 제공합니다. `kotlin-stdlib`에 의존하는 모듈은 이것 하나뿐입니다.
+`reified`를 쓰는 Kotlin 확장 함수를 선택 모듈 `NaruServe-kotlin`으로 제공합니다. `kotlin-stdlib`은 이 모듈만 사용하며 이 모듈은 `NaruServe-api`에만 의존합니다.
 
 ```groovy
 implementation 'com.snoworca.naruserve:NaruServe-kotlin:0.1.0-SNAPSHOT'
 ```
 
 ```kotlin
+import com.snoworca.naruserve.kotlin.body
+
 inline fun <reified T : Any> Request.body(): T = body(T::class.java) ?: throw HttpException(400, "JSON body is null")
 
 val user = req.body<User>()
@@ -160,4 +162,4 @@ app.post("/users") { req, res ->
 
 ## Coroutine
 
-`suspend` 핸들러는 v1에서 지원하지 않습니다. v1 핸들러는 동기이므로 suspend 함수를 부르려면 `runBlocking`이 필요합니다. 그동안 요청 스레드를 점유하니 오래 걸리는 작업은 피하세요. 프레임워크는 `runBlocking`을 기본 비동기 어댑터로 쓰지 않으며, Coroutine 지원은 별도 모듈로 검토 중입니다.
+`suspend` 핸들러는 v1에서 지원하지 않습니다. v1 핸들러는 동기이므로 suspend 함수를 부르려면 `runBlocking`이 필요합니다. 그동안 요청 스레드를 점유하니 오래 걸리는 작업은 피하세요. 프레임워크는 `runBlocking`을 기본 비동기 어댑터로 쓰지 않습니다. Coroutine 지원은 v1 이후 항목입니다. 논블로킹 coroutine 어댑터는 별도 설계가 필요하고 v1 핸들러는 동기이기 때문입니다.

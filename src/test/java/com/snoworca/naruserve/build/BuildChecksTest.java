@@ -253,6 +253,19 @@ public class BuildChecksTest {
         assertTrue(out, out.contains("com/snoworca/naruserve/gson/probe/UsesServlet -> javax/servlet/Servlet"));
     }
 
+    // SDS-AC-7; IR-SVL-001 AC-7 — a source stub stands in for the jakarta API, so no artifact is resolved
+    @Test
+    public void sdsAc7_IR_SVL_001_AC7_servletMainReferencingJakartaFails() throws IOException {
+        assertFalse(BuildLayoutTest.read(new File(root, "settings.gradle")).contains("jakarta"));
+        addSource("NaruServe-servlet/src/main/java/jakarta/servlet/Servlet.java",
+                "package jakarta.servlet;\npublic interface Servlet { }\n");
+        addSource("NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/probe/UsesJakarta.java",
+                "package com.snoworca.naruserve.servlet.probe;\n"
+                        + "public class UsesJakarta { public jakarta.servlet.Servlet servlet; }\n");
+        String out = runner(":NaruServe-servlet:checkClassReferences").buildAndFail().getOutput();
+        assertTrue(out, out.contains("com/snoworca/naruserve/servlet/probe/UsesJakarta -> jakarta/servlet/Servlet"));
+    }
+
     // SDS-AC-14; CON-BUILD-008 AC-1
     @Test
     public void sdsAc14_CON_BUILD_008_AC1_logcatMainReferencingAndroidFails() throws IOException {
@@ -360,6 +373,52 @@ public class BuildChecksTest {
         BuildResult sniffed = runner(":NaruServe-filelog:animalsnifferMain").buildAndFail();
         assertEquals(TaskOutcome.FAILED, sniffed.task(":NaruServe-filelog:animalsnifferMain").getOutcome());
         assertTrue(sniffed.getOutput(), sniffed.getOutput().contains("java.util.Optional"));
+    }
+
+    // SDS-AC-9, SDS-AC-10, SDS-AC-11; CON-KT-001 AC-1, CON-KT-001 AC-2, CON-KT-001 AC-3
+    @Test
+    public void checkNoCoroutinesFailsOnClassAndOnArtifact() throws IOException {
+        addSource("NaruServe-gson/src/main/java/kotlinx/coroutines/BuildersKt.java",
+                "package kotlinx.coroutines;\n"
+                        + "public final class BuildersKt { public static Object runBlocking(Object c) { return c; } }\n");
+        addSource("NaruServe-gson/src/main/java/com/snoworca/naruserve/gson/probe/UsesCoroutines.java",
+                "package com.snoworca.naruserve.gson.probe;\n"
+                        + "public class UsesCoroutines { public Object run() { return kotlinx.coroutines.BuildersKt.runBlocking(null); } }\n");
+        // A packaging-pom module has no jar, so the file repository needs nothing from the network.
+        File repo = new File(work, "coroutines-repo");
+        addSource("coroutines-repo/org/jetbrains/kotlinx/kotlinx-coroutines-core/1.8.1/kotlinx-coroutines-core-1.8.1.pom",
+                "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+                        + "<project xmlns=\"http://maven.apache.org/POM/4.0.0\">\n"
+                        + "  <modelVersion>4.0.0</modelVersion>\n"
+                        + "  <groupId>org.jetbrains.kotlinx</groupId>\n"
+                        + "  <artifactId>kotlinx-coroutines-core</artifactId>\n"
+                        + "  <version>1.8.1</version>\n"
+                        + "  <packaging>pom</packaging>\n"
+                        + "</project>\n");
+        appendBuild("project(':NaruServe-slf4j') {\n"
+                + "    repositories {\n"
+                + "        exclusiveContent {\n"
+                + "            forRepository { maven { url = uri('" + repo.toURI() + "') } }\n"
+                // Only this module: the Kotlin compiler classpath needs the real kotlinx-coroutines-core-jvm.
+                + "            filter { includeModule 'org.jetbrains.kotlinx', 'kotlinx-coroutines-core' }\n"
+                + "        }\n"
+                + "    }\n"
+                + "    dependencies { implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1' }\n"
+                + "}");
+        String out = runner(":checkNoCoroutines").buildAndFail().getOutput();
+        assertTrue(out, out.contains("com/snoworca/naruserve/gson/probe/UsesCoroutines -> kotlinx/coroutines/BuildersKt"));
+        assertTrue(out, out.contains(":NaruServe-slf4j runtimeClasspath -> org.jetbrains.kotlinx:kotlinx-coroutines-core"));
+        assertTrue(out, out.contains(":NaruServe-slf4j compileClasspath -> org.jetbrains.kotlinx:kotlinx-coroutines-core"));
+    }
+
+    // SDS-AC-12, SDS-AC-9; CON-KT-001 AC-4, CON-KT-001 AC-1
+    @Test
+    public void con_KT_001_AC4_pristineCopyPassesCheckNoCoroutinesAndBuildRunsIt() {
+        BuildResult result = runner(":checkNoCoroutines").build();
+        assertEquals(TaskOutcome.SUCCESS, result.task(":checkNoCoroutines").getOutcome());
+        String dry = runner("-m", "build").build().getOutput();
+        assertTrue(dry, dry.contains(":checkNoCoroutines"));
+        assertTrue(dry, dry.contains(":checkDependencyRules"));
     }
 
     // OPS-HTTP-004 AC-1 — successor of OPS-HTTP-002 AC-1, same assertions plus useJUnit()

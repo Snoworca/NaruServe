@@ -428,6 +428,7 @@ public final class WaveFiveDocsTest {
         kept("express-migration.md", "| `cors()`");
     }
 
+    // SDS-AC-9 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-8-12.sds.md; OPS-REL-006 AC-3: TLS 리스너 line
     // SDS-AC-2; OPS-ENGINE-002 AC-2, AC-3
     @Test
     public void defaultsStatesNoUnlimitedBindProxyRejectionsAndTls() throws IOException {

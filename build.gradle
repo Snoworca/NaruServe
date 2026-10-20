@@ -1,4 +1,5 @@
-// The only build file: every module is configured here (CON-BUILD-003).
+// The only build file: every module is configured here; the one exception is the release-only script applied at
+// the end under -Prelease (CON-BUILD-017).
 plugins {
     id 'java'
     id 'ru.vyarus.animalsniffer' version '2.0.1' apply false
@@ -135,7 +136,34 @@ def classRefPrefixes = { String path ->
     if (path == ':NaruServe-logcat') {
         prefixes += ['android/']
     }
+    // @req IR-SVL-001
+    // v1 is javax.servlet 3.1 only; a jakarta.servlet module is a later decision.
+    if (path == ':NaruServe-servlet') {
+        prefixes += ['jakarta/servlet/']
+    }
     prefixes
+}
+
+// @req FR-REL-005
+// mavenLocal only: the publishing block declares no repository. The POM takes each dependency's resolved version, so the
+// versionless TinyHttpd declarations publish as the included build's 0.1.0-SNAPSHOT.
+def configurePublishing = { Project p ->
+    p.apply plugin: 'maven-publish'
+    p.publishing {
+        publications {
+            maven(MavenPublication) {
+                // p., or the closure owner (the root project, which applies 'java') would be used.
+                from p.components.java
+                versionMapping { allVariants { fromResolutionResult() } }
+            }
+        }
+    }
+    // The in-memory adapter test fixtures of NaruServe-api are for this build's tests, not for consumers.
+    p.plugins.withId('java-test-fixtures') {
+        ['testFixturesApiElements', 'testFixturesRuntimeElements'].each { cn ->
+            p.components.java.withVariantsFromConfiguration(p.configurations.getByName(cn)) { skip() }
+        }
+    }
 }
 
 configure(naruModules.collect { project(it) }) { p ->
@@ -143,6 +171,7 @@ configure(naruModules.collect { project(it) }) { p ->
     apply plugin: 'org.jetbrains.kotlin.jvm'
     configureCompile(p)
     configureDependencies(p)
+    configurePublishing(p)
 
     test {
         useJUnit()
@@ -200,6 +229,14 @@ project(':NaruServe-gson') {
     }
 }
 
+// The reified Request.body extension tests drive an app over the in-memory adapter (IR-KT-002 AC-1).
+project(':NaruServe-kotlin') {
+    // @req IR-KT-002
+    dependencies {
+        testImplementation testFixtures(project(':NaruServe-api'))
+    }
+}
+
 // TinyHttpd adapter socket tests drive a real app over the adapter with the fixture codec and logger (FR-ENGINE-001).
 project(':NaruServe-tinyhttpd') {
     // @req FR-ENGINE-001
@@ -230,6 +267,27 @@ project(':NaruServe') {
         dependsOn tasks.named('jar')
         inputs.file(bootstrapJar)
         doFirst { systemProperty 'naruserve.bootstrapJar', bootstrapJar.get().asFile.absolutePath }
+    }
+}
+
+// @req CON-SVL-001
+// The embedded javax Servlet 3.1 container runs the Servlet adapter tests; it never reaches a main classpath.
+def servletTestDependencies = ['jetty-servlet', 'jetty-webapp', 'jetty-annotations'].collect {
+    "org.eclipse.jetty:${it}:9.4.58.v20250814".toString()
+}
+// ServletServicesFileTest reads the services file from the built jar (IR-SVL-001 AC-2).
+project(':NaruServe-servlet') {
+    // @req IR-SVL-001
+    dependencies {
+        servletTestDependencies.each { testImplementation it }
+        testImplementation project(':NaruServe-gson')
+        testImplementation testFixtures(project(':NaruServe-api'))
+    }
+    def servletJar = tasks.named('jar').flatMap { it.archiveFile }
+    tasks.named('test') {
+        dependsOn tasks.named('jar')
+        inputs.file(servletJar)
+        doFirst { systemProperty 'naruserve.servletJar', servletJar.get().asFile.absolutePath }
     }
 }
 
@@ -290,6 +348,17 @@ def checkDependencyRules = tasks.register('checkDependencyRules') {
                             && cn in ['compileClasspath', 'testCompileClasspath']) {
                         violations << "${mv.group}:${mv.name} on ${cn} of ${path} (TinyHttpd stays implementation-scope)"
                     }
+                    // @req CON-SVL-001
+                    boolean jetty = mv.group.startsWith('org.eclipse.jetty')
+                    if ((jetty || mv.group == 'javax.servlet') && path != ':NaruServe-servlet') {
+                        violations << "${coordinate} on ${cn} of ${path} (Jetty and javax.servlet stay in :NaruServe-servlet)"
+                    }
+                    if (jetty && path == ':NaruServe-servlet' && cn in ['compileClasspath', 'runtimeClasspath']) {
+                        violations << "${coordinate} on ${cn} of ${path} (the embedded container is test scope only)"
+                    }
+                    if (mv.group == 'jakarta.servlet') {
+                        violations << "${coordinate} on ${cn} of ${path} (no jakarta.servlet in v1)"
+                    }
                 }
             }
         }
@@ -301,6 +370,34 @@ def checkDependencyRules = tasks.register('checkDependencyRules') {
     }
 }
 tasks.named('check') { dependsOn checkDependencyRules }
+
+// @req CON-KT-001
+// Separate from checkClassReferences, whose pinned prefix lists stay as wave 1 fixed them; 'kotlin/' misses 'kotlinx/'.
+def checkNoCoroutines = tasks.register('checkNoCoroutines') {
+    description = 'Fails when a published module references kotlinx.coroutines or resolves a kotlinx-coroutines artifact.'
+    group = 'verification'
+    def modules = naruModules.collect { project(it) }
+    def classesDirs = modules.collectEntries { Project p -> [p.path, p.sourceSets.main.output.classesDirs] }
+    dependsOn modules.collect { it.tasks.named('classes') }
+    doLast {
+        def violations = []
+        classesDirs.each { String path, FileCollection dirs -> violations.addAll(scanClassRefs(dirs, ['kotlinx/coroutines/'])) }
+        modules.each { Project p ->
+            ['compileClasspath', 'runtimeClasspath'].each { String cn ->
+                p.configurations.getByName(cn).incoming.resolutionResult.allComponents.each { c ->
+                    def mv = c.moduleVersion
+                    if (mv.group == 'org.jetbrains.kotlinx' && mv.name.startsWith('kotlinx-coroutines')) {
+                        violations << "${p.path} ${cn} -> ${mv.group}:${mv.name}".toString()
+                    }
+                }
+            }
+        }
+        if (!violations.isEmpty()) {
+            throw new GradleException("checkNoCoroutines:\n  " + violations.unique().join('\n  '))
+        }
+    }
+}
+tasks.named('check') { dependsOn checkNoCoroutines }
 
 // @req CON-APP-001
 // Each logger class sits in its own module jar and no class of a logger package sits in the api jar.
@@ -338,6 +435,14 @@ tasks.named('check') { dependsOn checkLoggerPlacement }
 
 // Root tests inspect the module outputs and run TestKit negative cases (OPS-BUILD-002 AC-4).
 configureCompile(project)
+// @req OPS-SVL-001
+// The servlet.md ServletConfigurer blocks compile in DocsExamplesCompileTest; the classes they load (ServletConfigurer,
+// RestApp) reference no Servlet API type, so the root test classpath needs no javax.servlet artifact.
+def rootServletTestDependency = project(':NaruServe-servlet')
+// @req FR-REL-002
+// @req FR-REL-003
+// The plain-Java release tools compile and run their unit tests in the default build; release.gradle runs them.
+sourceSets.test.java.srcDir 'gradle/release-tools'
 dependencies {
     testImplementation 'junit:junit:4.13.2'
     // docs/api type blocks such as UploadFile carry @Nullable (OPS-MULTIPART-001 AC-1).
@@ -348,6 +453,8 @@ dependencies {
     testImplementation testFixtures(project(':NaruServe-api'))
     // @req OPS-ENGINE-001
     testImplementation project(':NaruServe-gson')
+    // @req OPS-SVL-001
+    testImplementation rootServletTestDependency
 }
 test {
     useJUnit()
@@ -365,4 +472,15 @@ test {
     systemProperty 'naruserve.gradleUserHome', gradle.gradleUserHomeDir.absolutePath
     systemProperty 'naruserve.offline', gradle.startParameter.offline
     systemProperty 'naruserve.testKitWorkDir', layout.buildDirectory.dir('testkit-work').get().asFile.absolutePath
+    // @req FR-REL-005
+    // PublishedPomTest reads the generated POMs; no nested Gradle build runs inside the test.
+    def pomFilesProperty = naruModules.collect { project(it).layout.buildDirectory
+            .file('publications/maven/pom-default.xml').get().asFile.absolutePath }.join(',')
+    dependsOn naruModules.collect { "${it}:generatePomFileForMavenPublication" }
+    systemProperty 'naruserve.pomFiles', pomFilesProperty
 }
+
+// @req FR-REL-001
+// @req CON-BUILD-017
+// Release-only tasks (SBOM, vulnerability scan, licenses); a default build never applies or resolves them.
+if (project.hasProperty('release')) { apply from: 'gradle/release.gradle' }

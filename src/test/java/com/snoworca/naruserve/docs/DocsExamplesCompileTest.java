@@ -42,6 +42,7 @@ import org.junit.rules.TemporaryFolder;
 // @req OPS-MULTIPART-001
 // @req OPS-STATIC-001
 // @req OPS-WS-001
+// @req OPS-SVL-001
 public final class DocsExamplesCompileTest {
 
     /** One skipped block: its file, a selector ({@code #n} ordinal or the block's first line) and one reason. */
@@ -648,10 +649,11 @@ public final class DocsExamplesCompileTest {
         assertEquals(Integer.valueOf(docs().get("sse.md").size() - sseSkips), compiledPerFile.get("sse.md"));
     }
 
-    // SDS-AC-13 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-13.sds.md; OPS-HTTP-007 AC-9: the middleware.md
+    // SDS-AC-18 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-8-12.sds.md; OPS-HTTP-008 AC-9
+    // SDS-AC-13 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-13.sds.md; OPS-HTTP-008 AC-9: the middleware.md
     // block throwing HttpException(503).withHeader("Retry-After", "1") is compiled, not skipped
     @Test
-    public void wave7s13SdsAc13_OPS_HTTP_007_AC9_theWithHeaderBlockIsCompiled() throws IOException {
+    public void wave7s13SdsAc13_OPS_HTTP_008_AC9_theWithHeaderBlockIsCompiled() throws IOException {
         int found = 0;
         List<String> blocks = docs().get("middleware.md");
         for (int i = 0; i < blocks.size(); i++) {
@@ -798,6 +800,27 @@ public final class DocsExamplesCompileTest {
         }
         assertTrue("docs/api has Java blocks calling server or trustProxy", found > 0);
         assertTrue(String.join("\n", docsDiagnostics()), docsDiagnostics().isEmpty());
+    }
+
+    // SDS-AC-9 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-8-8.sds.md; OPS-SVL-001 AC-4: the servlet.md
+    // blocks naming ServletConfigurer compile against project(':NaruServe-servlet'), and its skips are app-defined
+    @Test
+    public void wave8s8SdsAc9_OPS_SVL_001_AC4_servletConfigurerBlocksCompile() throws IOException {
+        int configurers = 0;
+        List<String> blocks = docs().get("servlet.md");
+        for (int i = 0; i < blocks.size(); i++) {
+            Skip s = skipFor("servlet.md", i + 1, blocks.get(i));
+            if (blocks.get(i).contains("ServletConfigurer")) {
+                configurers++;
+                assertNull("skipped ServletConfigurer block #" + (i + 1), s);
+            }
+            if (s != null) {
+                assertTrue(s.toString(), s.reason.startsWith("app-defined type `"));
+            }
+        }
+        assertTrue("servlet.md has a Java ServletConfigurer block", configurers > 0);
+        assertTrue(String.join("\n", docsDiagnostics()), docsDiagnostics().isEmpty());
+        assertEquals(Collections.emptyList(), staleSkips(SKIPS, docs()));
     }
 
     // SDS-AC-12; OPS-HTTP-004 AC-4

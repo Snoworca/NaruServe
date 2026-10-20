@@ -14,10 +14,13 @@ import java.util.ArrayList;
 import java.util.List;
 import org.junit.Test;
 
-/** Wave 3 decisions recorded in docs/api (OPS-HTTP-007, successor of OPS-HTTP-006); routing.md keeps no marker, checked by RoutingDocsTest. */
+/** Wave 3 decisions recorded in docs/api (OPS-HTTP-008); routing.md keeps no marker, checked by RoutingDocsTest. */
 public class HttpDocsTest {
 
     private static final String MARKER = "(미확정)";
+
+    /** The response.md statement that res.redirect is a post-v1 item (OPS-HTTP-008 AC-8). */
+    static final String REDIRECT_POST_V1_PHRASE = "`res.redirect`는 v1에 포함되지 않습니다";
 
     private static String doc(String name) throws IOException {
         // Module tests run in NaruServe-api; the docs live at the repository root.
@@ -107,9 +110,10 @@ public class HttpDocsTest {
         return out;
     }
 
-    // OPS-HTTP-007 AC-1
+    // SDS-AC-10 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-8-12.sds.md
+    // OPS-HTTP-008 AC-1
     @Test
-    public void OPS_HTTP_007_AC1_rawPathRowIsRawPathWithoutQuery() throws IOException {
+    public void OPS_HTTP_008_AC1_rawPathRowIsRawPathWithoutQuery() throws IOException {
         String row = line(doc("request.md"), "| `rawPath()`");
         assertFalse(row, row.contains(MARKER));
         assertTrue(row, row.contains("`req.path`"));
@@ -119,9 +123,10 @@ public class HttpDocsTest {
         assertFalse(row, row.contains("originalUrl"));
     }
 
-    // OPS-HTTP-007 AC-2
+    // SDS-AC-11 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-8-12.sds.md
+    // OPS-HTTP-008 AC-2
     @Test
-    public void OPS_HTTP_007_AC2_attributeTypeMismatchAndNullRemoval() throws IOException {
+    public void OPS_HTTP_008_AC2_attributeTypeMismatchAndNullRemoval() throws IOException {
         String s = section(doc("request.md"), "## 요청 속성");
         assertTrue(s, s.contains("`ClassCastException`"));
         for (String l : s.split("\n")) {
@@ -140,9 +145,9 @@ public class HttpDocsTest {
         assertFalse("kotlin block", blocks(s, "kotlin").isEmpty());
     }
 
-    // SDS-AC-6; OPS-HTTP-007 AC-8
+    // SDS-AC-6; OPS-HTTP-008 AC-8
     @Test
-    public void sdsAc6_OPS_HTTP_007_AC8_requestKeepsNoMarker() throws IOException {
+    public void sdsAc6_OPS_HTTP_008_AC8_requestKeepsNoMarker() throws IOException {
         String d = doc("request.md");
         List<String> m = markerLines(d);
         assertTrue(m.toString(), m.isEmpty());
@@ -158,9 +163,9 @@ public class HttpDocsTest {
         assertFalse(tree, tree.contains(MARKER));
     }
 
-    // OPS-HTTP-007 AC-3
+    // OPS-HTTP-008 AC-3
     @Test
-    public void OPS_HTTP_007_AC3_octetStreamAndStreamClosing() throws IOException {
+    public void OPS_HTTP_008_AC3_octetStreamAndStreamClosing() throws IOException {
         String d = doc("response.md");
         String note = line(d, "`send(byte[])`에 `Content-Type`이 없으면");
         assertFalse(note, note.contains(MARKER));
@@ -179,22 +184,24 @@ public class HttpDocsTest {
         assertFalse("no use {}", kotlin.get(0).contains(".use"));
     }
 
-    // SDS-AC-6; OPS-HTTP-007 AC-8
+    // SDS-AC-6, SDS-AC-17 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-8-12.sds.md; OPS-HTTP-008 AC-8:
+    // response.md keeps no marker, its res.redirect line is a post-v1 item showing the 302 replacement
     @Test
-    public void sdsAc6_OPS_HTTP_007_AC8_responseKeepsOnlyRedirectMarker() throws IOException {
+    public void sdsAc6_OPS_HTTP_008_AC8_responseKeepsNoMarker() throws IOException {
         String d = doc("response.md");
         List<String> m = markerLines(d);
-        assertEquals(m.toString(), 1, m.size());
-        assertTrue(m.get(0), m.get(0).contains("`res.redirect`"));
+        assertTrue(m.toString(), m.isEmpty());
+        String redirect = lineContaining(d, REDIRECT_POST_V1_PHRASE);
+        assertTrue(redirect, redirect.contains("`res.status(302).header(\"Location\", url).end()`"));
         // Wave 6 decides that res.file sends no Content-Disposition (D-293).
         String file = line(d, "| `file(File)`");
         assertTrue(file, file.contains("`Content-Disposition`을 보내지 않습니다"));
         assertTrue(file, file.contains("`res.sendFile"));
     }
 
-    // OPS-HTTP-007 AC-4
+    // OPS-HTTP-008 AC-4
     @Test
-    public void OPS_HTTP_007_AC4_routerPolicyDocumented() throws IOException {
+    public void OPS_HTTP_008_AC4_routerPolicyDocumented() throws IOException {
         String d = doc("routing.md");
         String s = section(d, "## 라우터 정책");
         boolean java = false;
@@ -217,9 +224,10 @@ public class HttpDocsTest {
         assertTrue(head, head.contains("`HEAD`를 돌려줍니다"));
     }
 
-    // OPS-HTTP-007 AC-7
+    // SDS-AC-16 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-8-12.sds.md
+    // OPS-HTTP-008 AC-7
     @Test
-    public void OPS_HTTP_007_AC7_expressRawPathAndRawTextMapping() throws IOException {
+    public void OPS_HTTP_008_AC7_expressRawPathAndRawTextMapping() throws IOException {
         String d = doc("express-migration.md");
         String original = line(d, "| `req.originalUrl`");
         assertFalse(original, original.contains(MARKER));
@@ -243,9 +251,9 @@ public class HttpDocsTest {
         assertFalse(undecided, undecided.contains("express.raw"));
     }
 
-    // SDS-AC-6; OPS-HTTP-007 AC-8
+    // SDS-AC-6; OPS-HTTP-008 AC-8
     @Test
-    public void sdsAc6_OPS_HTTP_007_AC8_expressKeepsOtherIssuesMarkers() throws IOException {
+    public void sdsAc6_OPS_HTTP_008_AC8_expressKeepsOtherIssuesMarkers() throws IOException {
         String d = doc("express-migration.md");
         for (String prefix : new String[] {"| `express.Router()`", "| `res.redirect(url)`", "| `cors()`"}) {
             assertTrue(prefix, line(d, prefix).contains(MARKER));
@@ -255,9 +263,10 @@ public class HttpDocsTest {
         assertTrue(trust, trust.contains("`app.trustProxy(true)`"));
     }
 
-    // OPS-HTTP-007 AC-5
+    // SDS-AC-14 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-8-12.sds.md
+    // OPS-HTTP-008 AC-5
     @Test
-    public void OPS_HTTP_007_AC5_appListsRouterPolicy() throws IOException {
+    public void OPS_HTTP_008_AC5_appListsRouterPolicy() throws IOException {
         String d = doc("app.md");
         String row = line(d, "| `routerPolicy(RouterPolicy)`");
         assertFalse(row, row.contains(MARKER));
@@ -272,9 +281,10 @@ public class HttpDocsTest {
         assertTrue(kotlin.get(0), kotlin.get(0).contains("app.routerPolicy("));
     }
 
-    // OPS-HTTP-007 AC-6
+    // SDS-AC-15 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-8-12.sds.md
+    // OPS-HTTP-008 AC-6
     @Test
-    public void OPS_HTTP_007_AC6_defaultsNamesTraceConnectPolicy() throws IOException {
+    public void OPS_HTTP_008_AC6_defaultsNamesTraceConnectPolicy() throws IOException {
         String row = line(doc("defaults.md"), "| `TRACE`, `CONNECT` 메서드");
         assertFalse(row, row.contains(MARKER));
         assertTrue(row, row.contains("`app.routerPolicy(...)`"));
@@ -282,17 +292,17 @@ public class HttpDocsTest {
         assertTrue(row, row.contains("`enableConnect`"));
     }
 
-    // SDS-AC-6; OPS-HTTP-007 AC-8
+    // SDS-AC-6; OPS-HTTP-008 AC-8
     @Test
-    public void sdsAc6_OPS_HTTP_007_AC8_routingKeepsNoMarker() throws IOException {
+    public void sdsAc6_OPS_HTTP_008_AC8_routingKeepsNoMarker() throws IOException {
         List<String> m = markerLines(doc("routing.md"));
         assertTrue(m.toString(), m.isEmpty());
     }
 
-    // SDS-AC-12 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-13.sds.md; OPS-HTTP-007 AC-8: wave 7 settles
+    // SDS-AC-12 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-13.sds.md; OPS-HTTP-008 AC-8: wave 7 settles
     // the WebSocket and SSE rows of defaults.md and the WebSocket authentication line, so none keeps a marker
     @Test
-    public void OPS_HTTP_007_AC8_defaultsWaveSevenRowsKeepNoMarker() throws IOException {
+    public void OPS_HTTP_008_AC8_defaultsWaveSevenRowsKeepNoMarker() throws IOException {
         String d = doc("defaults.md");
         for (String prefix : new String[] {"| WebSocket 메시지 |", "| WebSocket 송신 큐(연결당) |",
                 "| SSE 송신 큐(연결당) |", "- **WebSocket 인증**"}) {
@@ -301,11 +311,12 @@ public class HttpDocsTest {
         }
     }
 
-    // SDS-AC-13 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-13.sds.md; OPS-HTTP-007 AC-9: middleware.md
+    // SDS-AC-18 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-8-12.sds.md; OPS-HTTP-008 AC-9
+    // SDS-AC-13 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-13.sds.md; OPS-HTTP-008 AC-9: middleware.md
     // documents HttpException.withHeader and headers() beside status()/code() with Express err.headers, a Java
     // block throwing HttpException(503).withHeader("Retry-After", "1") next to a Kotlin block, without a marker
     @Test
-    public void OPS_HTTP_007_AC9_middlewareDocumentsWithHeader() throws IOException {
+    public void OPS_HTTP_008_AC9_middlewareDocumentsWithHeader() throws IOException {
         String s = section(doc("middleware.md"), "### 거부 응답 헤더");
         assertTrue(s, markerLines(s).isEmpty());
         String api = lineContaining(s, "`withHeader(name, value)`");
