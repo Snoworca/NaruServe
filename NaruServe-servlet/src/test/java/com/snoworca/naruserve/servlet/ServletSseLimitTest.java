@@ -8,7 +8,6 @@ import static org.junit.Assert.assertTrue;
 import com.snoworca.naruserve.HttpException;
 import com.snoworca.naruserve.RestApp;
 import com.snoworca.naruserve.SseClient;
-import com.snoworca.naruserve.spi.ExchangeHandler;
 import com.snoworca.naruserve.testing.LiveThreads;
 import com.snoworca.naruserve.testing.RecordingLogger;
 import java.io.IOException;
@@ -20,9 +19,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
@@ -133,26 +129,14 @@ public class ServletSseLimitTest {
     public void sdsAc5_FR_SVL_005_AC1_abortOnAnSseExchangeFreesItsSlot() throws Exception {
         BlockingQueue<ServletExchange> exchanges = new LinkedBlockingQueue<>();
         ServletAdapter adapter = new ServletAdapter();
-        app = RestApp.builder().httpAdapter(adapter).jsonCodec(SharedApp.CODEC).logger(log).build();
-        app.server(o -> o.maxSseStreams(1));
-        // after the abort the drain's next write, at the latest the heartbeat, fails at once and ends it
-        app.sse(o -> o.heartbeatInterval(1, TimeUnit.SECONDS));
-        app.get("/events", (req, res) -> opened.add(res.sse()));
-        app.listen(0);
+        app = SharedApp.listen(adapter, log, a -> {
+            a.server(o -> o.maxSseStreams(1));
+            // after the abort the drain's next write, at the latest the heartbeat, fails at once and ends it
+            a.sse(o -> o.heartbeatInterval(1, TimeUnit.SECONDS));
+            a.get("/events", (req, res) -> opened.add(res.sse()));
+        });
         // NaruServeServlet's own sequence, keeping each exchange so the test can abort it.
-        container.servlet(new HttpServlet() {
-            @Override
-            protected void service(HttpServletRequest req, HttpServletResponse res) {
-                ExchangeHandler h = adapter.handler();
-                ServletExchange ex = new ServletExchange(req, res, req.getRequestURI(), adapter);
-                exchanges.add(ex);
-                try {
-                    h.handle(ex);
-                } finally {
-                    ex.afterHandler();
-                }
-            }
-        }, "/*");
+        container.servlet(SharedApp.capturing(adapter, exchanges), "/*");
         int port = container.port();
         assertEquals(200, open(port).status());
         next();

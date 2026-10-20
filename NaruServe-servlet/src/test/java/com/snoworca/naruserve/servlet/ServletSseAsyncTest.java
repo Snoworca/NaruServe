@@ -8,7 +8,6 @@ import static org.junit.Assert.fail;
 
 import com.snoworca.naruserve.RestApp;
 import com.snoworca.naruserve.SseClient;
-import com.snoworca.naruserve.spi.ExchangeHandler;
 import com.snoworca.naruserve.testing.RecordingLogger;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -24,10 +23,8 @@ import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
-import javax.servlet.http.HttpServletResponse;
 import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
@@ -207,23 +204,11 @@ public class ServletSseAsyncTest {
         container.filter(probe);
         BlockingQueue<ServletExchange> exchanges = new LinkedBlockingQueue<>();
         ServletAdapter adapter = new ServletAdapter();
-        app = RestApp.builder().httpAdapter(adapter).jsonCodec(SharedApp.CODEC).logger(log).build();
-        app.sse(o -> o.heartbeatInterval(1, TimeUnit.SECONDS));
-        app.get("/events", (req, res) -> opened.add(res.sse()));
-        app.listen(0);
-        container.servlet(new HttpServlet() {
-            @Override
-            protected void service(HttpServletRequest req, HttpServletResponse res) {
-                ExchangeHandler h = adapter.handler();
-                ServletExchange ex = new ServletExchange(req, res, req.getRequestURI(), adapter);
-                exchanges.add(ex);
-                try {
-                    h.handle(ex);
-                } finally {
-                    ex.afterHandler();
-                }
-            }
-        }, "/*");
+        app = SharedApp.listen(adapter, log, a -> {
+            a.sse(o -> o.heartbeatInterval(1, TimeUnit.SECONDS));
+            a.get("/events", (req, res) -> opened.add(res.sse()));
+        });
+        container.servlet(SharedApp.capturing(adapter, exchanges), "/*");
         SseProbe p = SseProbe.open(container.port(), "/events");
         probes.add(p);
         SseClient c = next();

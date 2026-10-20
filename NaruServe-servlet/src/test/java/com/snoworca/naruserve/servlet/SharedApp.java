@@ -4,6 +4,7 @@ import com.snoworca.naruserve.Cookie;
 import com.snoworca.naruserve.HttpException;
 import com.snoworca.naruserve.Logger;
 import com.snoworca.naruserve.RestApp;
+import com.snoworca.naruserve.spi.ExchangeHandler;
 import com.snoworca.naruserve.spi.JsonCodec;
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter;
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientRequest;
@@ -23,9 +24,13 @@ import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -309,6 +314,26 @@ final class SharedApp {
             return i;
         }
         return -1;
+    }
+
+    /**
+     * NaruServeServlet's own sequence, keeping each exchange in {@code exchanges} so a test can abort it: handle,
+     * then {@code afterHandler()}.
+     */
+    static HttpServlet capturing(ServletAdapter adapter, BlockingQueue<ServletExchange> exchanges) {
+        return new HttpServlet() {
+            @Override
+            protected void service(HttpServletRequest req, HttpServletResponse res) {
+                ExchangeHandler h = adapter.handler();
+                ServletExchange ex = new ServletExchange(req, res, req.getRequestURI(), adapter);
+                exchanges.add(ex);
+                try {
+                    h.handle(ex);
+                } finally {
+                    ex.afterHandler();
+                }
+            }
+        };
     }
 
     /**
