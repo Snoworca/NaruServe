@@ -1,10 +1,13 @@
 package com.snoworca.naruserve.testing;
 
+import com.snoworca.naruserve.HttpException;
 import com.snoworca.naruserve.spi.ExchangeHandler;
 import com.snoworca.naruserve.spi.HttpAdapter;
 import com.snoworca.naruserve.spi.HttpExchange;
 import com.snoworca.naruserve.spi.StreamDrain;
 import com.snoworca.naruserve.spi.UpgradeHandler;
+import com.snoworca.naruserve.spi.WebSocketEndpoint;
+import com.snoworca.naruserve.spi.WebSocketSettings;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -23,6 +26,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.jspecify.annotations.NullMarked;
@@ -56,6 +60,9 @@ public final class InMemoryHttpAdapter implements HttpAdapter {
     private @Nullable ExchangeHandler handler;
     private int port;
     private boolean stopped;
+    private @Nullable HttpException webSocketRefusal;
+
+    private final LinkedBlockingQueue<InMemoryWebSocketChannel> openedChannels = new LinkedBlockingQueue<>();
 
     /** Remote address {@code 127.0.0.1}, not secure. */
     // @req FR-HTTP-001
@@ -70,7 +77,7 @@ public final class InMemoryHttpAdapter implements HttpAdapter {
     }
 
     /** Port 0 takes the next in-memory port from a counter starting at 49152. */
-    // @req IR-HTTP-004
+    // @req IR-HTTP-007
     @Override
     public synchronized void bind(String host, int port, ExchangeHandler handler) {
         if (this.handler != null) {
@@ -83,7 +90,7 @@ public final class InMemoryHttpAdapter implements HttpAdapter {
         this.handler = handler;
     }
 
-    // @req IR-HTTP-004
+    // @req IR-HTTP-007
     @Override
     public synchronized int boundPort() {
         if (handler == null) {
@@ -92,7 +99,7 @@ public final class InMemoryHttpAdapter implements HttpAdapter {
         return port;
     }
 
-    // @req IR-HTTP-004
+    // @req IR-HTTP-007
     @Override
     public void stop(long timeout, TimeUnit unit) {
         List<Exchange> rest;
@@ -123,7 +130,7 @@ public final class InMemoryHttpAdapter implements HttpAdapter {
     }
 
     /** Shuts the worker pool, waiting at most 1 second for its threads. */
-    // @req IR-HTTP-004
+    // @req IR-HTTP-007
     @Override
     public void release() {
         workers.shutdown();
@@ -178,9 +185,35 @@ public final class InMemoryHttpAdapter implements HttpAdapter {
 
     /** Runs one exchange on an adapter worker thread. */
     // @req FR-HTTP-001
-    // @req IR-HTTP-004
+    // @req IR-HTTP-007
     public Future<ClientResponse> submit(ClientRequest request) {
         return workers.submit(() -> send(request));
+    }
+
+    /** Every later {@code webSocket} call throws {@code e} before 101; null accepts handshakes again. */
+    // @req IR-WS-002
+    public synchronized void refuseWebSocket(@Nullable HttpException e) {
+        webSocketRefusal = e;
+    }
+
+    /**
+     * The next WebSocket channel opened by {@code webSocket}, in opening order.
+     *
+     * @throws AssertionError when none opened within the timeout
+     */
+    // @req IR-WS-002
+    public InMemoryWebSocketChannel nextChannel(long timeout, TimeUnit unit) {
+        InMemoryWebSocketChannel channel;
+        try {
+            channel = openedChannels.poll(timeout, unit);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new AssertionError("interrupted waiting for a WebSocket channel", e);
+        }
+        if (channel == null) {
+            throw new AssertionError("no WebSocket channel opened within " + timeout + " " + unit);
+        }
+        return channel;
     }
 
     /** Splits a request target into raw path and raw query (null without '?'), dropping an absolute-form prefix. */
@@ -317,6 +350,7 @@ public final class InMemoryHttpAdapter implements HttpAdapter {
         private boolean upgradeHandedOver;
         private long contentLength = -2;
         private @Nullable Future<?> drain;
+        private @Nullable InMemoryWebSocketChannel webSocket;
 
         Exchange(ClientRequest request) {
             this.request = request;
@@ -438,11 +472,19 @@ public final class InMemoryHttpAdapter implements HttpAdapter {
         }
 
         @Override
-        public synchronized void abort() {
-            if (!ended) {
-                ended = true;
-                aborted = true;
-                notifyAll();
+        public void abort() {
+            InMemoryWebSocketChannel ws = null;
+            synchronized (this) {
+                if (!ended) {
+                    ended = true;
+                    aborted = true;
+                    notifyAll();
+                    ws = webSocket;
+                }
+            }
+            // The adapter's stop deadline or a failing handler also loses an open WebSocket.
+            if (ws != null) {
+                ws.abort();
             }
         }
 
@@ -490,6 +532,12 @@ public final class InMemoryHttpAdapter implements HttpAdapter {
                 throws IOException {
             start(status, headers);
             OutputStream out = bodyStream();
+            try {
+                drain.attach(out);
+            } catch (RuntimeException e) {
+                abort();
+                throw e;
+            }
             Future<?> f = workers.submit(() -> {
                 try {
                     drain.drain(out);
@@ -500,6 +548,52 @@ public final class InMemoryHttpAdapter implements HttpAdapter {
             });
             synchronized (this) {
                 this.drain = f;
+            }
+        }
+
+        /** Records 101, opens a channel and runs its read loop on this thread until the connection closed. */
+        // @req IR-WS-002
+        @Override
+        public void webSocket(WebSocketSettings settings, WebSocketEndpoint endpoint) throws IOException {
+            synchronized (this) {
+                if (started) {
+                    throw new IllegalStateException("response already started");
+                }
+            }
+            HttpException refusal;
+            synchronized (InMemoryHttpAdapter.this) {
+                refusal = webSocketRefusal;
+            }
+            if (refusal != null) {
+                throw refusal;
+            }
+            start(101, Collections.<Map.Entry<String, String>>emptyList());
+            InMemoryWebSocketChannel channel = new InMemoryWebSocketChannel(settings);
+            boolean abortedBeforeOpen;
+            synchronized (this) {
+                webSocket = channel;
+                abortedBeforeOpen = aborted;
+            }
+            if (abortedBeforeOpen) {
+                channel.abort();
+            }
+            openedChannels.add(channel);
+            try {
+                channel.run(endpoint);
+            } catch (RuntimeException | Error e) {
+                abort();
+                throw e;
+            }
+            if (channel.aborted()) {
+                abort();
+                return;
+            }
+            // Like finish(), but a stop deadline that aborted the exchange after onClose is not an error here.
+            synchronized (this) {
+                if (!ended) {
+                    ended = true;
+                    notifyAll();
+                }
             }
         }
 

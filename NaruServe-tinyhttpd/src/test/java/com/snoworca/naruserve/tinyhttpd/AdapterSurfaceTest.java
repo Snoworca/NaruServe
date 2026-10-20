@@ -232,4 +232,42 @@ public class AdapterSurfaceTest {
         }
         assertEquals(Collections.emptyList(), hits);
     }
+
+    private static void javaSources(File dir, List<File> out) {
+        File[] files = dir.listFiles();
+        if (files == null) {
+            return;
+        }
+        for (File f : files) {
+            if (f.isDirectory()) {
+                javaSources(f, out);
+            } else if (f.getName().endsWith(".java")) {
+                out.add(f);
+            }
+        }
+    }
+
+    // SDS-AC-10 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-1.sds.md; IR-WS-002 AC-7
+    @Test
+    public void sdsAc10_IR_WS_002_AC7_noMainSourceOfApiOrTinyHttpdHandlesFrameOpcodesOrMasking() throws Exception {
+        File dir = new File(System.getProperty("user.dir")).getAbsoluteFile();
+        // The test JVM runs in the module directory or, from an IDE, in the checkout root.
+        File root = new File(dir, "settings.gradle").isFile() ? dir : dir.getParentFile();
+        java.util.regex.Pattern codec = java.util.regex.Pattern.compile("opcode|masking",
+                java.util.regex.Pattern.CASE_INSENSITIVE);
+        assertTrue("the scan bites", codec.matcher("int OPCODE_TEXT = 1; byte[] maskingKey;").find());
+        List<String> hits = new ArrayList<>();
+        for (String tree : new String[] {"NaruServe-api/src/main", "NaruServe-tinyhttpd/src/main"}) {
+            List<File> files = new ArrayList<>();
+            javaSources(new File(root, tree), files);
+            assertFalse(tree + " has no sources", files.isEmpty());
+            for (File f : files) {
+                String text = new String(java.nio.file.Files.readAllBytes(f.toPath()), StandardCharsets.UTF_8);
+                if (codec.matcher(text).find()) {
+                    hits.add(tree + ": " + f.getName());
+                }
+            }
+        }
+        assertEquals(Collections.emptyList(), hits);
+    }
 }
