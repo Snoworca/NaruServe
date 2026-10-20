@@ -33,7 +33,7 @@ app.ws("/ws") { req, ws ->
 
 `app.ws(path, handler)`는 다른 라우트 메서드처럼 `RestApp`을 돌려주므로 이어서 호출할 수 있습니다. 핸들러는 `WebSocketHandler`(`void handle(Request req, WebSocketSession ws) throws Exception`)이며 `@FunctionalInterface`라 Java·Kotlin 람다로 씁니다.
 핸들러는 `101` 응답을 보낸 뒤 연결마다 한 번 실행됩니다(서버 종료 중에 열린 연결에서는 실행되지 않습니다). 그래서 핸들러가 실행될 때는 이미 연결이 열려 있고, 핸들러에서 응답 코드를 바꿀 수 없습니다. 여기서 리스너를 등록하고 반환합니다. 연결은 반환한 뒤에도 유지됩니다.
-연결 거부는 핸들러가 아니라 `app.use` 미들웨어에서 하세요. 미들웨어는 `101` 전에 실행됩니다.
+연결 거부는 핸들러가 아니라 `app.use` 미들웨어에서 하세요. 미들웨어는 `101` 전에 실행되고, 핸들러는 `101` 응답 뒤에 실행됩니다.
 Express(express-ws)의 `app.ws('/ws', (ws, req) => ...)`에 대응합니다.
 
 - `req`는 Upgrade 요청입니다. `req.param`, `req.query`, `req.header`, `req.cookie`, `req.service`, `req.attribute`를 쓸 수 있습니다.

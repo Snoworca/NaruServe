@@ -164,6 +164,11 @@ NEW ──listen──> STARTING ──성공──> RUNNING ──shutdown─�
 
 `STARTING`에서 기다리게 한 이유는 `listen()`이 반환하기 직전에 들어온 요청을 거절하지 않으려는 것입니다.
 
+### 종료 순서
+
+단계는 [shutdown](app.md#shutdown)에 있습니다. WebSocket·SSE 작별 인사는 연결을 아직 받는 동안 최대 1초 동안 진행됩니다. 이 순서는 object.md §11.4와 다릅니다. 사양서는 2단계에서 새 연결과 Upgrade 받기를 먼저 멈춘 뒤 3단계에서 작별 인사를 하지만, NaruServe는 작별 인사 동안에도 연결을 받고 그 연결의 요청과 Upgrade를 `STOPPING`의 `503`과 `Connection: close`로 답하며, 받기는 작별 인사가 끝난 뒤 멈춥니다.
+`shutdown(timeout, unit)`은 timeout에 3초를 더한 시간 안에 반환합니다(`onStop` 콜백과 리소스가 바로 반환할 때). 3초는 TinyHttpd 중지가 timeout을 넘기는 최대 1.5초, HTTP 어댑터를 놓는 최대 1초, 여유 0.5초를 더한 값이며, `onStop`, 리소스 닫기, 로거 flush는 그대로 시간 제한 없이 실행되므로 이들이 오래 걸리면 그만큼 늦게 반환합니다.
+
 ### 시작 중 shutdown
 
 `STARTING` 중에 `shutdown(timeout, unit)`을 부르면 멈춤 요청을 기록하고 `listen()`이 끝나기를 기다리며(`onStart` 콜백 안에서 부르면 기다리지 않고 바로 반환), timeout이 지나면 예외 없이 반환하지만 멈춤 요청은 그대로 남아 `listen()`은 다음 검사 지점(다음 `onStart` 콜백 전, 바인딩 전, `RUNNING`으로 바뀔 때)에서 시작을 멈추고 `AppStartException`을 던지는데, 멈춤 요청을 유지하는 이유는 timeout이 지났다고 멈춤을 취소하면 앱이 아무도 모르게 `RUNNING`으로 올라가기 때문입니다.
@@ -172,6 +177,7 @@ NEW ──listen──> STARTING ──성공──> RUNNING ──shutdown─�
 
 라우트 핸들러나 미들웨어 안에서 `shutdown(timeout, unit)`을 부르면 종료 순서는 별도 스레드에서 돌고 호출은 기다리지 않고 바로 반환하며, 그 요청의 응답은 평소대로 끝까지 전송되는데, 종료 순서가 처리 중인 요청이 끝나기를 기다리므로 같은 스레드에서 기다리면 자기 자신을 timeout까지 기다린 뒤 응답을 강제로 끊게 되기 때문입니다(Express에서 `res.send()` 뒤 `server.close()`를 부르는 것과 같은 결과). `TERMINATED`가 되는 것을 확인하려면 다른 스레드에서 `app.state()`를 보세요.
 다른 곳(신호 처리, 다른 요청, `Service.onDestroy`)에서 이미 시작한 종료가 진행 중(`STOPPING`)일 때 요청 핸들러에서 `shutdown(...)`을 불러도 기다리지 않고 바로 반환합니다. 종료 스레드를 만들 수 없으면(메모리 부족 등) 종료 순서는 호출한 요청 스레드에서 바로 돌며, 이때는 그 요청을 timeout까지 기다릴 수 있지만 앱은 반드시 `TERMINATED`가 됩니다.
+SSE `onClose` 리스너 안에서 부른 `app.shutdown`도 요청 핸들러에서 부른 것처럼 바로 반환합니다. 종료 순서가 그 스트림이 끝나기를 기다리므로, 같은 이유로 별도 스레드에서 돕니다.
 
 ## Android
 

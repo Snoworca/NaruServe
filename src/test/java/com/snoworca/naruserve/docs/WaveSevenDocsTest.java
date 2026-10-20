@@ -43,6 +43,27 @@ public final class WaveSevenDocsTest {
     static final String HANDSHAKE_PHRASE =
             "handshake는 `headerTimeout`과 `bodyReadTimeout`으로만 제한되고 전용 upgrade 기한은 지원하지 않습니다";
 
+    static final String HEARTBEAT_PHRASE = "아무것도 쓰지 않은 채 heartbeat 주기가 지나면 `: ping` 주석을 보냅니다";
+    static final String SSE_OVERFLOW_PHRASE =
+            "다른 스레드의 `send`가 송신 큐를 넘치게 하면 스트림을 끝내고 `false`를 돌려줍니다";
+    static final String NOTICE_PHRASE = "종료할 때 `event: shutdown`과 `data: shutdown`으로 된 종료 알림을 보냅니다";
+    static final String LATE_ONCLOSE_PHRASE = "이미 끝난 뒤 등록한 `onClose`는 즉시 실행됩니다";
+    static final String HEAD_SSE_PHRASE = "`HEAD` 요청에는 헤더만 보내고 본문 없이 이미 끝난 클라이언트를 돌려줍니다";
+    static final String HANDLER_WRITE_PHRASE =
+            "핸들러 스레드가 반환 전에 보낸 이벤트는 소켓에 바로 쓰며 송신 큐 한도를 받지 않습니다";
+    static final String HANDLER_ORDER_PHRASE = "그 전에 다른 스레드가 큐에 넣은 이벤트를 먼저 씁니다";
+
+    /** The sse.md decisions of OPS-SSE-001 AC-3, each found verbatim. */
+    static final List<String> SSE_PHRASES = Collections.unmodifiableList(Arrays.asList(HEARTBEAT_PHRASE,
+            SSE_OVERFLOW_PHRASE, NOTICE_PHRASE, LATE_ONCLOSE_PHRASE, HEAD_SSE_PHRASE, HANDLER_WRITE_PHRASE,
+            HANDLER_ORDER_PHRASE));
+
+    /** The SSE API sections of sse.md, each with an Express counterpart and Java and Kotlin examples. */
+    static final List<String> SSE_SECTIONS = Collections.unmodifiableList(Arrays.asList(
+            "## res.sse()", "## SseClient", "## SseEvent", "## 설정", "## 재접속과 Last-Event-ID"));
+
+    static final String LOW_END_HEADING = "## 저사양 Android 튜닝(수동 후속 작업)";
+
     /** The WebSocket API sections of websocket.md, each with an Express counterpart and Java and Kotlin examples. */
     static final List<String> API_SECTIONS = Collections.unmodifiableList(Arrays.asList(
             "## 핸들러", "### 보내기", "### 받기", "### 연결 관리", "## 인증과 Origin", "## 설정"));
@@ -59,6 +80,25 @@ public final class WaveSevenDocsTest {
             if (line.startsWith("```")) {
                 fence = !fence;
             } else if (!fence && line.startsWith("#")) {
+                break;
+            }
+            sb.append(line).append('\n');
+        }
+        return sb.toString();
+    }
+
+    /** The text from {@code heading} up to the next level-2 heading ({@code "## "}), skipping fenced code. */
+    static String h2Section(String doc, String heading) {
+        int start = doc.indexOf("\n" + heading + "\n");
+        assertTrue("missing heading " + heading, start >= 0);
+        String[] lines = doc.substring(start + 1).split("\n", -1);
+        StringBuilder sb = new StringBuilder(lines[0]).append('\n');
+        boolean fence = false;
+        for (int i = 1; i < lines.length; i++) {
+            String line = lines[i];
+            if (line.startsWith("```")) {
+                fence = !fence;
+            } else if (!fence && line.startsWith("## ")) {
                 break;
             }
             sb.append(line).append('\n');
@@ -203,5 +243,97 @@ public final class WaveSevenDocsTest {
     public void sdsAc4_OPS_WS_001_AC5_sectionStopsAtTheNextHeading() {
         String d = "x\n## A\na\n```java\n# not a heading\n```\n### B\nb\n";
         assertEquals("## A\na\n```java\n# not a heading\n```\n", section(d, "## A"));
+    }
+
+    // Wave 7 part 13: SDS-AC-n below cites docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-13.sds.md.
+
+    // SDS-AC-4; PERF-APP-001 AC-3, AC-4: defaults.md states the thread total and the stack of the request-path
+    // threads, and the low-end Android section names the three settings as a manual follow-up
+    @Test
+    public void wave7s13SdsAc4_PERF_APP_001_AC3_AC4_defaultsStatesThreadsStackAndTheLowEndFollowUp()
+            throws IOException {
+        String d = doc("defaults.md");
+        String[] total = row(d, "앱 하나의 스레드 합계");
+        assertEquals("452", total[1]);
+        String stack = lineWith(d, "| 요청 경로 스레드 stack |");
+        contains("defaults.md", stack, "256 KiB", "449", "112.25 MiB", "API 21");
+        String low = h2Section(d, LOW_END_HEADING);
+        contains("defaults.md", low, "`maxSseStreams`", "`maxUpgradedConnections`", "`sendQueueSize`",
+                "수동 후속 작업", "자동");
+    }
+
+    // SDS-AC-4: the level-2 section reader keeps ### subsections and fenced ## lines
+    @Test
+    public void wave7s13SdsAc4_h2SectionStopsOnlyAtTheNextLevel2Heading() {
+        String d = "x\n## A\na\n### B\nb\n```java\n## not a heading\n```\n## C\nc\n";
+        assertEquals("## A\na\n### B\nb\n```java\n## not a heading\n```\n", h2Section(d, "## A"));
+    }
+
+    // SDS-AC-5; OPS-SSE-001 AC-1: no marker on any sse.md line or on the defaults.md SSE send-queue row
+    @Test
+    public void wave7s13SdsAc5_OPS_SSE_001_AC1_noMarkerInSseMdOrTheSseRow() throws IOException {
+        assertEquals(Collections.<String>emptyList(), linesWith(doc("sse.md"), MARKER));
+        assertEquals(Collections.<String>emptyList(), markerLines(doc("defaults.md"), "| SSE 송신 큐(연결당) |",
+                "| SSE heartbeat 주기 |"));
+    }
+
+    // SDS-AC-5; OPS-SSE-001 AC-2: the SseClient table lists every method with the send result, the settings section
+    // the two options with their defaults and ranges, and defaults.md the send-queue and heartbeat rows
+    @Test
+    public void wave7s13SdsAc5_OPS_SSE_001_AC2_clientTableSettingsAndDefaultsRows() throws IOException {
+        String sse = doc("sse.md");
+        for (String m : new String[] {"send(event, data)", "send(data)", "send(SseEvent)", "close()", "isOpen()",
+                "onClose(listener)"}) {
+            assertTrue("sse.md lists " + m, sse.contains("| `" + m + "` |"));
+        }
+        Set<String> methods = new TreeSet<>();
+        for (Method m : com.snoworca.naruserve.SseClient.class.getMethods()) {
+            methods.add(m.getName());
+        }
+        for (String name : methods) {
+            assertTrue("sse.md lists " + name, sse.contains("| `" + name + "("));
+        }
+        String client = h2Section(sse, "## SseClient");
+        contains("sse.md", client, "`true`", "`false`");
+        String settings = h2Section(sse, "## 설정");
+        contains("sse.md", settings, "app.sse(o -> o.heartbeatInterval(", ".sendQueueSize(", "| `heartbeatInterval` |",
+                "| `sendQueueSize` |", "15초", "1초~1시간", "256 KiB", "1바이트~16 MiB");
+        String d = doc("defaults.md");
+        String[] queue = row(d, "SSE 송신 큐(연결당)");
+        assertEquals("256 KiB", queue[1]);
+        assertEquals("16 MiB", queue[2]);
+        assertEquals("스트림 종료", queue[3]);
+        String[] heartbeat = row(d, "SSE heartbeat 주기");
+        assertEquals("15초", heartbeat[1]);
+        assertEquals("1시간", heartbeat[2]);
+        assertTrue(Arrays.toString(heartbeat), heartbeat[4].contains("heartbeatInterval"));
+    }
+
+    // SDS-AC-5; OPS-SSE-001 AC-3: sse.md states each decision by its fixed phrase
+    @Test
+    public void wave7s13SdsAc5_OPS_SSE_001_AC3_sseMdStatesEachDecisionByItsPhrase() throws IOException {
+        String sse = doc("sse.md");
+        for (String p : SSE_PHRASES) {
+            contains("sse.md", sse, p);
+        }
+    }
+
+    // SDS-AC-6; OPS-SSE-001 AC-4: each SSE API section has an Express counterpart, a java and a kotlin block
+    @Test
+    public void wave7s13SdsAc6_OPS_SSE_001_AC4_eachSseSectionHasExpressJavaAndKotlin() throws IOException {
+        String sse = doc("sse.md");
+        for (String heading : SSE_SECTIONS) {
+            String s = h2Section(sse, heading);
+            assertTrue(heading + " names Express", s.contains("Express"));
+            assertTrue(heading + " has a java block", s.contains("\n```java\n"));
+            assertTrue(heading + " has a kotlin block", s.contains("\n```kotlin\n"));
+        }
+    }
+
+    // SDS-AC-8; OPS-SSE-001 AC-5: the Kotlin progress example that SseDocsKotlinTest runs is the one in sse.md
+    @Test
+    public void wave7s13SdsAc8_OPS_SSE_001_AC5_sseMdHoldsTheKotlinProgressExample() throws IOException {
+        contains("sse.md", h2Section(doc("sse.md"), "## res.sse()"), "```kotlin\napp.get(\"/api/events\") { req, res ->\n"
+                + "    val c = res.sse()\n    c.send(\"connected\", \"ready\")\n    c.onClose { }\n}\n```");
     }
 }

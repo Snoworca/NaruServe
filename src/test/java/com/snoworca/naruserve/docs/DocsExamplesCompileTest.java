@@ -119,9 +119,9 @@ public final class DocsExamplesCompileTest {
                     "app-defined methods `find`, `create` and `remove` (the block calls them on the app)"),
             skip("servlet.md", "// 앱 구성: 내장 엔진과 같은 코드",
                     "app-defined type `UserService` (the block is a method declaration, not statements)"),
-            skip("sse.md", "app.get(\"/api/progress\", (req, res) -> {", "later-wave method `Response.sse()`"),
-            skip("sse.md", "client.send(SseEvent.event(\"progress\")", "absent type `SseEvent`"),
-            skip("sse.md", "#4", "later-wave method `Response.sse()`"),
+            skip("sse.md", "app.get(\"/api/progress\", (req, res) -> {", "app-defined type `ProgressService`"),
+            skip("sse.md", "client.send(SseEvent.event(\"progress\")", "app-defined variable `client`"),
+            skip("sse.md", "#6", "app-defined type `Event` and app-defined variable `eventStore`"),
             skip("websocket.md", "app.ws(\"/chat\", (req, ws) -> {", "app-defined type `ChatService` and `ChatMessage`"),
             skip("websocket.md", "app.use(\"/ws\", (req, res, next) -> {",
                     "app-defined type `Auth` (the block calls `auth.isAuthorized(req)`)")));
@@ -620,17 +620,48 @@ public final class DocsExamplesCompileTest {
                 skip("a.md", "#4", "app-defined type `WebSocketSession`"),
                 skip("a.md", "#5", "absent types `Gson` and `WebSocketOptions`")));
         assertEquals(fake.toString(), 3, fake.size());
-        // shortcut: these sse.md skips wait for OPS-SSE-001 (wave 7 part 13), which drops them; drop this
-        // exclusion there
-        List<String> sseBlocks = Arrays.asList("app.get(\"/api/progress\", (req, res) -> {",
-                "client.send(SseEvent.event(\"progress\")", "#4");
-        List<Skip> others = new ArrayList<>();
+        // SDS-AC-7 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-13.sds.md: no sse.md exclusion is left
+        assertEquals(Collections.<String>emptyList(), waveSevenMemberReasons(SKIPS));
+    }
+
+    // SDS-AC-7 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-13.sds.md; OPS-SSE-001 AC-4: the sse.md skips
+    // keep only singular app-defined reasons, the client block names its undeclared `client`, and every other
+    // sse.md block is compiled
+    @Test
+    public void wave7s13SdsAc7_OPS_SSE_001_AC4_sseSkipsKeepOnlyAppDefinedReasonsAndTheRestCompile()
+            throws IOException {
+        List<String> reasons = new ArrayList<>();
+        int sseSkips = 0;
         for (Skip s : SKIPS) {
-            if (!(s.file.equals("sse.md") && sseBlocks.contains(s.block))) {
-                others.add(s);
+            if (s.file.equals("sse.md")) {
+                sseSkips++;
+                reasons.add(s.reason);
+                assertTrue(s.toString(), s.reason.startsWith("app-defined type `")
+                        || s.reason.startsWith("app-defined variable `")
+                        || s.reason.startsWith("illustrative copy of `"));
+                assertTrue(s.toString(), REASON.matcher(s.reason).matches());
             }
         }
-        assertEquals(Collections.<String>emptyList(), waveSevenMemberReasons(others));
+        assertTrue(reasons.toString(), reasons.contains("app-defined variable `client`"));
+        assertTrue(reasons.toString(), reasons.contains("app-defined type `ProgressService`"));
+        assertTrue(String.join("\n", docsDiagnostics()), docsDiagnostics().isEmpty());
+        assertEquals(Integer.valueOf(docs().get("sse.md").size() - sseSkips), compiledPerFile.get("sse.md"));
+    }
+
+    // SDS-AC-13 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-13.sds.md; OPS-HTTP-007 AC-9: the middleware.md
+    // block throwing HttpException(503).withHeader("Retry-After", "1") is compiled, not skipped
+    @Test
+    public void wave7s13SdsAc13_OPS_HTTP_007_AC9_theWithHeaderBlockIsCompiled() throws IOException {
+        int found = 0;
+        List<String> blocks = docs().get("middleware.md");
+        for (int i = 0; i < blocks.size(); i++) {
+            if (blocks.get(i).contains("throw new HttpException(503).withHeader(\"Retry-After\", \"1\");")) {
+                found++;
+                assertNull("skipped withHeader block #" + (i + 1), skipFor("middleware.md", i + 1, blocks.get(i)));
+            }
+        }
+        assertEquals(1, found);
+        assertTrue(String.join("\n", docsDiagnostics()), docsDiagnostics().isEmpty());
     }
 
     // SDS-AC-5 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-8.sds.md; OPS-WS-001 AC-6: the websocket.md,

@@ -167,4 +167,21 @@ public class WebSocketIdleSchedulerTest {
         assertNull("aborted though the close returned", chi.started.poll(1500, TimeUnit.MILLISECONDS));
         assertNull("a closed session was still checked", chc.started.poll(10, TimeUnit.MILLISECONDS));
     }
+
+    // SDS-AC-3 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-13.sds.md; PERF-APP-001 AC-3: the idle scheduler
+    // thread, made on the first schedule, is made with a requested stack of 262144 bytes
+    @Test(timeout = 20000)
+    public void wave7s13SdsAc3_PERF_APP_001_AC3_theIdleThreadRequestsA256KiBStack() throws Exception {
+        WebSocketIdleScheduler idle = new WebSocketIdleScheduler(() -> 5013, LOG);
+        WebSocketUpgrade up = new WebSocketUpgrade(new DefaultWebSocketOptions(), null, LOG,
+                new WebSocketSender(128, () -> 5013, LOG), idle);
+        assertEquals("no thread made yet", 0L, idle.requestedStack());
+        DefaultWebSocketSession s = session(up);
+        s.onOpen(new HoldingChannel());
+        try {
+            assertEquals(262144L, idle.requestedStack());
+        } finally {
+            s.onClose(1000, "");
+        }
+    }
 }

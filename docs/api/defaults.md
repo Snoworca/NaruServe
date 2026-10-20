@@ -50,14 +50,28 @@ NaruServe는 저사양 Android 5.0 기기에서도 안전하게 돌도록 **모�
 
 시간 설정의 최소값은 1 ms, 나머지 설정의 최소값은 1입니다.
 
-WebSocket 시간 한도는 `ServerOptions`가 아니라 `app.webSocket(o -> ...)`로 정합니다([WebSocket](websocket.md#설정)).
+WebSocket 시간 한도는 `ServerOptions`가 아니라 `app.webSocket(o -> ...)`로, SSE heartbeat는 `app.sse(o -> ...)`로 정합니다([WebSocket](websocket.md#설정), [SSE](sse.md#설정)).
 
 | 항목 | 기본값 | 최대값 | 넘으면 | 설정 |
 |---|---:|---:|---|---|
 | WebSocket Ping 주기 | 30초 | 1시간 | 한 주기 동안 받은 프레임이 없으면 Ping을 보내고, 다음 주기에도 없으면 연결 종료(1001) | `pingInterval(time, unit)`. 최소 1초 |
 | WebSocket idle timeout | 5분 | 24시간 | 연결 종료(1001) | `idleTimeout(time, unit)`. 최소 1초. 텍스트·바이너리 메시지만 셉니다. |
+| SSE heartbeat 주기 | 15초 | 1시간 | 한 주기 동안 쓴 것이 없으면 `: ping` 주석을 보냄 | `heartbeatInterval(time, unit)`. 최소 1초 |
 
 Pong timeout은 Ping 주기와 같습니다. TinyHttpd의 `WebSocketListener`에 Pong 콜백이 없어 별도 Pong timeout은 지원하지 않습니다. WebSocket handshake는 `headerTimeout`과 `bodyReadTimeout`으로만 제한되고 전용 upgrade 기한은 지원하지 않습니다.
+
+### 스레드 수와 stack
+
+기본 한도에서 앱 하나가 띄울 수 있는 스레드 수입니다. 어느 설정도 무제한이 아니므로 스레드 수도 위 한도에서 정해집니다.
+
+| 항목 | 기본값 | 최대값 | 넘으면 | 설정 |
+|---|---:|---:|---|---|
+| 앱 하나의 스레드 합계 | 452 | — | — | 따로 없습니다. 엔진 스레드 풀 `maxWorkers + maxSseStreams`(192) + 업그레이드 연결 읽기 스레드 `maxUpgradedConnections`(128) + WebSocket 송신 스레드 `maxUpgradedConnections`(128) + WebSocket idle 스케줄러 1 + TinyHttpd acceptor·watchdog 2 + `naruserve-keeper` 1입니다. 설계에서 정한 451에 `listen()`부터 `shutdown`까지 도는 daemon이 아닌 `naruserve-keeper` 하나를 더한 값입니다. |
+| 요청 경로 스레드 stack | 256 KiB | — | — | 따로 없습니다. 위 스레드 중 acceptor·watchdog·keeper를 뺀 요청 경로의 449개(엔진 풀 192, 업그레이드 연결 읽기 128, WebSocket 송신 128, idle 스케줄러 1)가 스레드마다 256 KiB stack을 요청하므로, API 21 기기에서 모두 띄우면 112.25 MiB입니다. |
+
+## 저사양 Android 튜닝(수동 후속 작업)
+
+위 기본값은 JVM 부하 테스트(WebSocket 60개와 SSE 60개를 함께 연 T26)로 확인한 값입니다. 저사양 Android 5.0 기기에 맞춘 `maxSseStreams`, `maxUpgradedConnections`, WebSocket과 SSE의 `sendQueueSize` 조정은 릴리스 테스트의 수동 후속 작업이며, 자동 테스트가 낸 결과가 아닙니다. 기기의 메모리가 작으면 실제 기기에서 연결을 열어 보며 이 값들을 낮추세요.
 
 ## 기본 보안 정책
 

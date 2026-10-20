@@ -20,6 +20,7 @@ final class WebSocketIdleScheduler {
     private final ScheduledThreadPoolExecutor exec;
     private final SafeLogger log;
     private final Map<DefaultWebSocketSession, Watch> watches = new HashMap<>(); // guarded by this
+    private volatile long requestedStack;
 
     /** Guarded by the scheduler. */
     private static final class Watch {
@@ -39,11 +40,19 @@ final class WebSocketIdleScheduler {
         Objects.requireNonNull(port, "port");
         this.log = Objects.requireNonNull(log, "log");
         exec = new ScheduledThreadPoolExecutor(1, r -> {
-            Thread t = new Thread(null, r, "naruserve-" + port.getAsInt() + "-ws-idle", WebSocketSender.STACK_BYTES);
+            long stack = WebSocketSender.STACK_BYTES;
+            requestedStack = stack;
+            Thread t = new Thread(null, r, "naruserve-" + port.getAsInt() + "-ws-idle", stack);
             t.setDaemon(true);
             return t;
         });
         exec.setRemoveOnCancelPolicy(true);
+    }
+
+    /** Internal test hook: the stackSize last passed to the Thread constructor; 0 before the first thread. */
+    // @req PERF-APP-001
+    long requestedStack() {
+        return requestedStack;
     }
 
     /** Schedules the session's first idle check {@code idleMillis} from now; called from onOpen. */

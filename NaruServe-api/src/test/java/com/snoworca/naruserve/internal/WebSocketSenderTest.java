@@ -580,4 +580,16 @@ public class WebSocketSenderTest {
         assertEquals(0, s.queuedBytes(ses));
         assertTrue(s.idle(ses));
     }
+
+    // SDS-AC-3 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-13.sds.md; PERF-APP-001 AC-3: a sender thread is
+    // made with a requested stack of 262144 bytes, read through the thread factory's hook
+    @Test(timeout = 20000)
+    public void wave7s13SdsAc3_PERF_APP_001_AC3_senderThreadsRequestA256KiBStack() throws Exception {
+        WebSocketSender s = new WebSocketSender(128, () -> 1, LOG);
+        assertEquals("no thread made yet", 0L, s.requestedStack());
+        CountDownLatch ran = new CountDownLatch(1);
+        assertTrue(s.queue(session(), ran::countDown, 0, 1));
+        assertTrue(ran.await(10, TimeUnit.SECONDS));
+        assertEquals(262144L, s.requestedStack());
+    }
 }

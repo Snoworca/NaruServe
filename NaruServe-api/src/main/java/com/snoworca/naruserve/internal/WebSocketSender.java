@@ -30,6 +30,7 @@ final class WebSocketSender {
     private static final long KEEP_ALIVE_MILLIS = 60000;
 
     private final ThreadPoolExecutor pool;
+    private final SenderThreads threads;
     private final SafeLogger log;
     private final Map<DefaultWebSocketSession, Slot> slots = new HashMap<>(); // guarded by this
 
@@ -68,8 +69,9 @@ final class WebSocketSender {
     // @req FR-WS-007
     WebSocketSender(int maxThreads, IntSupplier port, SafeLogger log) {
         this.log = Objects.requireNonNull(log, "log");
+        threads = new SenderThreads(Objects.requireNonNull(port, "port"));
         pool = new ThreadPoolExecutor(maxThreads, maxThreads, KEEP_ALIVE_MILLIS, TimeUnit.MILLISECONDS,
-                new LinkedBlockingQueue<Runnable>(), new SenderThreads(Objects.requireNonNull(port, "port")));
+                new LinkedBlockingQueue<Runnable>(), threads);
         pool.allowCoreThreadTimeOut(true);
     }
 
@@ -233,6 +235,12 @@ final class WebSocketSender {
         return pool;
     }
 
+    /** Internal test hook: the stackSize last passed to the Thread constructor; 0 before the first thread. */
+    // @req PERF-APP-001
+    long requestedStack() {
+        return threads.requested;
+    }
+
     SafeLogger log() {
         return log;
     }
@@ -314,6 +322,7 @@ final class WebSocketSender {
     private static final class SenderThreads implements ThreadFactory {
         private final AtomicInteger n = new AtomicInteger();
         private final IntSupplier port;
+        volatile long requested;
 
         SenderThreads(IntSupplier port) {
             this.port = port;
@@ -321,8 +330,10 @@ final class WebSocketSender {
 
         @Override
         public Thread newThread(Runnable r) {
+            long stack = STACK_BYTES;
+            requested = stack;
             Thread t = new Thread(null, r, "naruserve-" + port.getAsInt() + "-ws-sender-" + n.incrementAndGet(),
-                    STACK_BYTES);
+                    stack);
             t.setDaemon(true);
             return t;
         }

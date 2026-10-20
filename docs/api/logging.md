@@ -52,7 +52,11 @@ POST /upload 413 aborted 12ms in=1048576 out=0 rid=5f2c9a1f
 |---|---|
 | 일반 HTTP 요청 | 응답이 끝나거나 중단될 때 |
 | WebSocket | Upgrade(`101`)할 때 한 줄, 연결이 끝날 때 close 코드·연결 시간을 한 줄 |
-| SSE | 연결이 끝나거나 오류로 끊길 때 한 줄(시작부터 종료까지의 정보 포함) |
+| SSE | 연결이 끝나거나 오류로 끊길 때 한 줄(시작부터 종료까지의 정보 포함). 시작할 때는 쓰지 않습니다 |
+
+WebSocket은 `101`을 보낸 뒤 첫 프레임을 읽기 전에 요청과 같은 형식의 handshake 줄(`GET /ws 101 2ms in=0 out=0 rid=5f2c9a20`)을 쓰고, 연결이 끝나면 `WS <path> <closeCode>[ <n>ms][ rid=<id>]` 형식의 close 줄을 한 번 씁니다. close 줄은 HTTP 메서드 대신 `WS`로 시작해 요청 줄과 구분되고, `rid`는 handshake 줄과 같으며, 시간은 연결이 열린 뒤부터 닫힐 때까지입니다. close 코드는 `ws.close()`면 `1000`, 종료 때 `1001`, 송신 큐가 넘치면 `1008`, 클라이언트가 닫으면 그 코드, close 프레임 없이 끊기면 `1006`입니다. `101` 전에 거부된 Upgrade(`403`, `426`, `503`)는 그 상태의 일반 줄만 남습니다.
+
+SSE는 스트림이 끝날 때 요청 줄 뒤에 ` sse start=<epochMillis> cause=<client|app|overflow|shutdown|error>`를 붙인 한 줄을 씁니다(`GET /events 200 30512ms in=0 out=812 rid=5f2c9a21 sse start=1760918400000 cause=client`). 시간은 스트림 전체, `out`은 스트림에 쓴 바이트, `start`는 시작 시각(epoch 밀리초)이고, `cause`는 처음 기록된 종료 이유입니다: `close()`면 `app`, 송신 큐가 넘치면 `overflow`, 종료면 `shutdown`, 클라이언트가 끊으면(쓰기 실패) `client`, 그 밖의 오류면 `error`. `HEAD` 요청은 `sse` 부분이 없는 일반 줄입니다. `exclude(path)`, `enabled(false)`, `level(...)`은 이 줄들에도 똑같이 걸립니다.
 
 ### 기록하지 않는 것
 

@@ -209,15 +209,16 @@ ServerHandle server = app.listen(8080);
 app.shutdown(10, TimeUnit.SECONDS);
 ```
 
-1. 새 연결·요청·WebSocket Upgrade를 받지 않습니다.
-2. 진행 중인 요청이 끝나기를 기다립니다. SSE·WebSocket에는 종료를 알립니다(WebSocket close 코드 `1001`).
-3. 시간 안에 안 끝나면 연결을 강제로 끊습니다.
-4. `onStop` 콜백을 실행합니다.
-5. `own`/`register`한 `AutoCloseable`을 생성·등록 역순으로 닫습니다.
-6. 앱 로거를 flush하고 닫은 뒤 HTTP 어댑터를 놓습니다([로깅](logging.md#종료와-로거)).
+1. `STOPPING`이 시작됩니다. 앱에 닿는 새 요청과 WebSocket Upgrade는 모두 `503`과 `Connection: close`로 답합니다.
+2. 연결을 아직 받는 동안 최대 1초, 열린 SSE 스트림에는 종료 알림을 보내고 열린 WebSocket 세션에는 close `1001`을 보냅니다.
+3. 연결 받기를 멈추고 진행 중인 요청이 끝나기를 timeout까지 기다립니다.
+4. timeout까지 열려 있는 연결은 강제로 끊습니다.
+5. `onStop` 콜백을 실행합니다.
+6. `own`/`register`한 `AutoCloseable`을 생성·등록 역순으로 닫습니다.
+7. 앱 로거를 flush하고 닫은 뒤 HTTP 어댑터를 놓습니다([로깅](logging.md#종료와-로거)).
 
 여러 번 불러도 안전합니다. 종료된 앱은 다시 `listen`할 수 없습니다.
-Android에서는 메인 스레드에서 호출하지 마세요. timeout은 2단계(진행 중인 요청을 기다리는 시간)에만 걸리고, 그 뒤의 `onStop`, 리소스 닫기, 로거 flush에는 시간 제한이 없어 timeout보다 오래 막힐 수 있습니다.
+Android에서는 메인 스레드에서 호출하지 마세요. timeout은 2~4단계(최대 1초 또는 남은 시간까지 걸리는 작별 인사, 진행 중인 요청 대기, timeout 때의 강제 종료)가 함께 나눠 쓰는 하나의 시간이고, 그 뒤의 `onStop`, 리소스 닫기, 로거 flush에는 시간 제한이 없어 timeout보다 오래 막힐 수 있습니다. 작별 인사를 연결을 받는 동안 하는 이유와 반환 시간의 3초 여유는 [수명주기](lifecycle.md#종료-순서)에 있습니다.
 
 ## 설정은 listen 전에
 

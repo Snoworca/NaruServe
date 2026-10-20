@@ -175,6 +175,27 @@ app.onError((error, req, res) -> {
 - 여러 번 등록하면 등록 순서대로 하나의 체인이 되며, 첫 핸들러는 항상 실행되고 다음 핸들러는 앞 핸들러가 응답을 시작하지 않았을 때만 실행되는데, 이 규칙을 고른 이유는 Express의 `next(err)` 없이도 "응답했으면 끝"이라는 규칙 하나로 체인을 읽게 하려는 것입니다.
 - 체인이 끝나도 응답이 시작되지 않았으면 표준 오류 형식으로 답합니다. 핸들러가 예외를 던지면 체인을 멈추고 `500` 표준 오류로 답합니다. 응답이 처음 상태로 도착했고 핸들러가 `stream(...)`을 시작했다면 그 스트림이 답이며 끝까지 보냅니다(중단하지 않습니다). 이미 보내기 시작한 응답에 오류가 나면 연결을 끊습니다(`abort`).
 
+### 거부 응답 헤더
+
+`HttpException`에는 `status()`/`code()` 옆에 `withHeader(name, value)`와 `headers()`가 있습니다. `withHeader(name, value)`는 오류 응답에 실을 헤더를 더하고 같은 예외를 돌려주며, `headers()`는 더한 순서대로의 읽기 전용 목록입니다(없으면 빈 목록).
+Express에서 `err.headers`를 붙여 `next(err)`하면 `finalhandler`가 그 헤더를 오류 응답에 붙이는 것과 같습니다.
+
+```java
+app.get("/api/busy", (req, res) -> {
+    throw new HttpException(503).withHeader("Retry-After", "1");
+});
+```
+
+```kotlin
+app.get("/api/busy") { req, res ->
+    throw HttpException(503).withHeader("Retry-After", "1")
+}
+```
+
+- 오류 응답은 앱이 그 전에 정한 헤더를 지우고 예외의 헤더를 붙입니다. `onError`가 응답을 시작하지 않으면 표준 오류 응답이 예외의 헤더를 싣고, `onError`가 직접 답하면 그 핸들러가 정한 헤더만 갑니다.
+- 이름이나 값에 CR/LF가 있으면 `res.header`처럼 `IllegalArgumentException`입니다. `Content-Length`, `Transfer-Encoding`은 본문을 쓰는 쪽이 정하므로 쓰지 않습니다.
+- 같은 이름을 두 번 더하면 둘 다 보냅니다. 예외 객체는 던질 때마다 새로 만드세요.
+
 ### 표준 오류 형식
 
 ```json
