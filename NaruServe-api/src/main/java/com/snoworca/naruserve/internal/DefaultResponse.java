@@ -78,6 +78,7 @@ public final class DefaultResponse implements Response {
     private long pendingLimit = -1;
     private @Nullable SseRegistry sseRegistry;
     private @Nullable DefaultSseClient sseClient;
+    private boolean upgraded101;
 
     /** Status 200, no headers, state NEW; {@code headRequest} makes every body bodyless. */
     // @req FR-HTTP-013
@@ -113,10 +114,12 @@ public final class DefaultResponse implements Response {
      * Commits 200 with the event-stream headers, replacing an app-set Content-Type and Cache-Control and dropping
      * Content-Length and Transfer-Encoding, and enters STREAMING. A HEAD request gets the headers with no body and an
      * ended client. A RuntimeException from the exchange (a 503 from a stream limit) leaves the response NEW and is
-     * rethrown for the error path; an IOException aborts the response and returns an ended client.
+     * rethrown for the error path; an IOException aborts the response and returns an ended client. After the
+     * registry's shutdown flag the client is ended at once with the closing notice queued.
      */
     // @req IR-SSE-001
     // @req FR-SSE-001
+    // @req FR-APP-020
     @Override
     public SseClient sse() {
         SseRegistry reg;
@@ -155,7 +158,10 @@ public final class DefaultResponse implements Response {
             deliver(Objects.requireNonNull(head));
             return DefaultSseClient.ended(rid, reg.log());
         }
-        reg.register(client);
+        if (!reg.register(client)) {
+            // Past the shutdown flag: the stream still starts, carrying only the closing notice, and then ends.
+            client.closing();
+        }
         try {
             ex.eventStream(200, hs, client);
         } catch (RuntimeException e) {
@@ -627,13 +633,13 @@ public final class DefaultResponse implements Response {
     }
 
     /** Body bytes handed to the exchange OutputStream; 0 for HEAD and bodyless responses. */
-    // @req FR-APP-015
+    // @req FR-APP-019
     long bytesWritten() {
         return bytesWritten.get();
     }
 
     /** The committed status, or the current status when never committed. */
-    // @req FR-APP-015
+    // @req FR-APP-019
     synchronized int statusCode() {
         return status;
     }
@@ -642,7 +648,7 @@ public final class DefaultResponse implements Response {
      * Runs {@code callback} once, on the first entry to COMPLETED or ABORTED and only after a running copy ended;
      * at once when that already happened.
      */
-    // @req FR-APP-015
+    // @req FR-APP-019
     void onDone(Runnable callback) {
         synchronized (this) {
             onDone = callback;
@@ -751,6 +757,7 @@ public final class DefaultResponse implements Response {
             status = 101;
             committed = true;
             state = ResponseState.COMPLETED;
+            upgraded101 = true;
         }
         try {
             ex.finish();
@@ -761,6 +768,12 @@ public final class DefaultResponse implements Response {
             ex.abort();
         }
         fireDone();
+    }
+
+    /** True once {@link #upgraded} ended this response: the session writes its own access lines. */
+    // @req FR-APP-019
+    synchronized boolean upgraded101() {
+        return upgraded101;
     }
 
     /**

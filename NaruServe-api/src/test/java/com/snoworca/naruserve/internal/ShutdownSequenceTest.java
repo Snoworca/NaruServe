@@ -399,4 +399,55 @@ public class ShutdownSequenceTest {
         assertTrue(logger.errors.toString(), logger.errors.get(0).contains("participant error"));
         assertEquals(AppState.TERMINATED, app.state());
     }
+
+    // SDS-AC-7 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-12.sds.md; FR-APP-020 AC-1: every phase passes
+    // the deadline shutdown(timeout, unit) computed at entry; at the before-wait entry deadline - nanoTime lies
+    // within [timeout - 100 ms, timeout]
+    @Test
+    public void wave7SdsAc7_FR_APP_020_AC1_everyPhaseGetsTheDeadlineComputedAtShutdownEntry() {
+        DefaultRestApp app = app();
+        List<Long> left = Collections.synchronizedList(new ArrayList<Long>());
+        List<Long> deadlines = Collections.synchronizedList(new ArrayList<Long>());
+        ShutdownParticipants p = app.shutdownParticipants();
+        p.add(ShutdownParticipants.Phase.BEFORE_WAIT, (ShutdownParticipants.DeadlineParticipant) d -> {
+            left.add(d - System.nanoTime());
+            deadlines.add(d);
+        });
+        p.add(ShutdownParticipants.Phase.FORCE_CLOSE, (ShutdownParticipants.DeadlineParticipant) deadlines::add);
+        p.add(ShutdownParticipants.Phase.AFTER_ON_STOP, (ShutdownParticipants.DeadlineParticipant) deadlines::add);
+        listen(app);
+        app.shutdown(5, TimeUnit.SECONDS);
+        long timeout = TimeUnit.SECONDS.toNanos(5);
+        assertEquals(1, left.size());
+        assertTrue("left " + left.get(0), left.get(0) <= timeout);
+        assertTrue("left " + left.get(0), left.get(0) >= timeout - TimeUnit.MILLISECONDS.toNanos(100));
+        assertEquals(deadlines.toString(), 3, deadlines.size());
+        assertEquals(deadlines.get(0), deadlines.get(1));
+        assertEquals(deadlines.get(0), deadlines.get(2));
+    }
+
+    // SDS-AC-7 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-12.sds.md; FR-APP-020 AC-5: a 300 ms request
+    // that started before shutdown(5, SECONDS) completes with 200 and its full body before onStop runs (T44)
+    @Test
+    public void wave7SdsAc7_FR_APP_020_AC5_inFlight300MsRequestCompletesBeforeOnStop() throws Exception {
+        DefaultRestApp app = app();
+        List<String> order = Collections.synchronizedList(new ArrayList<String>());
+        CountDownLatch inHandler = new CountDownLatch(1);
+        app.get("/short", (req, res) -> {
+            inHandler.countDown();
+            Thread.sleep(300);
+            res.send("complete body");
+            order.add("response completed");
+        });
+        app.onStop(ctx -> order.add("onStop"));
+        listen(app);
+        Future<ClientResponse> r = adapter.delegate.submit(ClientRequest.of("GET", "/short"));
+        assertTrue(inHandler.await(5, TimeUnit.SECONDS));
+        app.shutdown(5, TimeUnit.SECONDS);
+        ClientResponse resp = r.get(5, TimeUnit.SECONDS);
+        assertEquals(200, resp.status());
+        assertEquals("complete body", new String(resp.body(), StandardCharsets.UTF_8));
+        assertFalse(resp.abnormallyClosed());
+        assertEquals(Arrays.asList("response completed", "onStop"), order);
+    }
 }

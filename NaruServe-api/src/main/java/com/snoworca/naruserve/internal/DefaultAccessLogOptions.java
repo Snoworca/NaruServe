@@ -10,7 +10,7 @@ import java.util.Set;
 
 /** The app's one mutable access log options: enabled, INFO, every include on, no exclude. */
 // @req IR-APP-007
-// @req FR-APP-015
+// @req FR-APP-019
 final class DefaultAccessLogOptions implements AccessLogOptions {
 
     // Guarded by this.
@@ -60,7 +60,7 @@ final class DefaultAccessLogOptions implements AccessLogOptions {
     }
 
     /** Exact, case-sensitive match of the raw path (no query) against an exclude entry. */
-    // @req FR-APP-015
+    // @req FR-APP-019
     synchronized boolean excluded(String rawPath) {
         return exclude.contains(rawPath);
     }

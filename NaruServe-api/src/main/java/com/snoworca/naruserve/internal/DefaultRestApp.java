@@ -136,8 +136,6 @@ public final class DefaultRestApp implements RestApp {
     private @Nullable WebSocketRegistry webSocketRegistry;
     /** The SSE stream registry; null before freeze. Guarded by this. */
     private @Nullable SseRegistry sseRegistry;
-    /** The deadline of the running shutdown sequence, for the before-wait participants; set as the sequence starts. */
-    private volatile long shutdownDeadlineNanos;
     // The thread inside listen() or the shutdown sequence; a shutdown() from it must not wait for itself. Each owner
     // clears only its own entry, so listen() returning never wipes the identity a racing shutdown thread just set.
     private final AtomicReference<@Nullable Thread> lifecycleThread = new AtomicReference<>();
@@ -666,24 +664,24 @@ public final class DefaultRestApp implements RestApp {
      * force-close participants, onStop callbacks (services still registered), after-onStop participants, the owned
      * close in reverse (the app logger skipped), the logger flush and close, adapter release, TERMINATED. A failing
      * step is logged at ERROR and the next step runs; as on the failed-start path, the first {@link Error} is
-     * rethrown once TERMINATED.
+     * rethrown once TERMINATED. Every phase hands its participants {@code deadlineNanos}, computed at shutdown entry.
      */
     // @req FR-APP-011
+    // @req FR-APP-020
     private void runShutdownSequence(long deadlineNanos) {
         SafeLogger log = new SafeLogger(logger);
         Thread self = Thread.currentThread();
         lifecycleThread.set(self);
-        shutdownDeadlineNanos = deadlineNanos;
         Error error = null;
         try {
             HttpAdapter a = Objects.requireNonNull(adapter, "adapter");
-            error = firstError(error, shutdownParticipants.run(ShutdownParticipants.Phase.BEFORE_WAIT, log));
+            error = firstError(error, shutdownParticipants.run(ShutdownParticipants.Phase.BEFORE_WAIT, log, deadlineNanos));
             try {
                 a.stop(left(deadlineNanos), TimeUnit.NANOSECONDS);
             } catch (RuntimeException e) {
                 log.error("adapter stop failed", e);
             }
-            error = firstError(error, shutdownParticipants.run(ShutdownParticipants.Phase.FORCE_CLOSE, log));
+            error = firstError(error, shutdownParticipants.run(ShutdownParticipants.Phase.FORCE_CLOSE, log, deadlineNanos));
             List<LifecycleCallback> callbacks;
             synchronized (this) {
                 callbacks = new ArrayList<>(stopCallbacks);
@@ -696,7 +694,7 @@ public final class DefaultRestApp implements RestApp {
                     error = firstError(error, e);
                 }
             }
-            error = firstError(error, shutdownParticipants.run(ShutdownParticipants.Phase.AFTER_ON_STOP, log));
+            error = firstError(error, shutdownParticipants.run(ShutdownParticipants.Phase.AFTER_ON_STOP, log, deadlineNanos));
             for (Exception e : context.closeOwned(logger)) {
                 log.error("owned resource close failed", e);
             }
@@ -911,12 +909,13 @@ public final class DefaultRestApp implements RestApp {
      */
     // @req FR-HTTP-008
     // @req FR-APP-014
-    // @req FR-APP-015
+    // @req FR-APP-019
     // @req FR-WS-001
     // @req FR-WS-007
     // @req FR-WS-008
     // @req FR-WS-010
     // @req FR-SSE-005
+    // @req FR-APP-020
     public synchronized void freeze() {
         if (dispatcher != null) {
             return;
@@ -947,19 +946,19 @@ public final class DefaultRestApp implements RestApp {
         WebSocketIdleScheduler idle = new WebSocketIdleScheduler(port, safe);
         WebSocketRegistry registry = new WebSocketRegistry(sender, idle);
         SseRegistry streams = new SseRegistry(sse, lifecycle, safe);
+        AccessLog accessLog = new AccessLog(accessLogOptions, safe); // shared with the sessions for their lines
         dispatcher = new Dispatcher(router, pipeline, new ErrorPath(errorHandlers, safe),
-                new AccessLog(accessLogOptions, safe), context, jsonCodec(), jsonLimit(), trustProxy,
+                accessLog, context, jsonCodec(), jsonLimit(), trustProxy,
                 multipartSettings().copy(), formLimit(), spool(), new StaticHandler(staticMounts, mimeTypes, defaultCache),
-                new WebSocketUpgrade(ws, jsonCodec(), safe, sender, idle, registry),
+                new WebSocketUpgrade(ws, jsonCodec(), safe, sender, idle, registry, accessLog),
                 streams);
         webSocketRegistry = registry;
         sseRegistry = streams;
         // SSE first: its closeAll returns at once, while the WebSocket one waits for the closes.
         shutdownParticipants.add(ShutdownParticipants.Phase.BEFORE_WAIT,
-                () -> streams.closeAll(shutdownDeadlineNanos));
-        // shortcut: reads the deadline field until the FR-APP-020 deadline overload of ShutdownParticipants lands
+                (ShutdownParticipants.DeadlineParticipant) streams::closeAll);
         shutdownParticipants.add(ShutdownParticipants.Phase.BEFORE_WAIT,
-                () -> registry.closeAll(shutdownDeadlineNanos));
+                (ShutdownParticipants.DeadlineParticipant) registry::closeAll);
         shutdownParticipants.add(ShutdownParticipants.Phase.FORCE_CLOSE, registry::terminate);
         shutdownParticipants.add(ShutdownParticipants.Phase.FORCE_CLOSE, streams::terminate);
         lifecycle.markFrozen();

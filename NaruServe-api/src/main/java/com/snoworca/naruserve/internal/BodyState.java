@@ -36,7 +36,7 @@ public final class BodyState {
      * Wraps the adapter's body stream; every byte returned by read and skip is added to {@link #bytesRead}.
      * shortcut: no core body reader exists yet, so in= stays 0 in real traffic; the body readers must read through this.
      */
-    // @req FR-APP-015
+    // @req FR-APP-019
     public InputStream stream(InputStream source) {
         return new FilterInputStream(source) {
             @Override
@@ -74,7 +74,7 @@ public final class BodyState {
     }
 
     /** Body bytes the core read so far; 0 when never read. */
-    // @req FR-APP-015
+    // @req FR-APP-019
     public long bytesRead() {
         return bytesRead.get();
     }

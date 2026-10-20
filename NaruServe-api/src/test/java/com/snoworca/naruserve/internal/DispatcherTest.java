@@ -549,9 +549,9 @@ public class DispatcherTest {
         assertEquals(1, calls.get());
     }
 
-    // SDS-AC-8 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-8.sds.md; FR-APP-015 AC-5
+    // SDS-AC-8 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-8.sds.md; FR-APP-019 AC-5
     @Test
-    public void sdsAc8_FR_APP_015_AC5_inCountsTheBodyBytesReadNotTheDeclaredLength() {
+    public void sdsAc8_FR_APP_019_AC5_inCountsTheBodyBytesReadNotTheDeclaredLength() {
         RecordingLogger log = new RecordingLogger();
         AtomicReference<com.snoworca.naruserve.spi.HttpExchange> current = new AtomicReference<>();
         router.add(Method.POST, "/b", (req, res) -> {
@@ -577,5 +577,71 @@ public class DispatcherTest {
         adapter.send(ClientRequest.of("POST", "/n").header("Content-Length", "10").body(ten));
         assertEquals(1, log.lines.size());
         assertTrue(log.lines.get(0), log.lines.get(0).matches("INFO POST /n 200 \\d+ms in=0 out=2 rid=[0-9a-f]{16}"));
+    }
+
+    // SDS-AC-2 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-12.sds.md; FR-APP-019 AC-8: an accepted upgrade
+    // gets one 101 line and its close line, and onDone adds none; a refusal before onOpen (a refused Origin 403, and
+    // the adapter's 426 version and 503 limit refusals, injected here through refuseWebSocket) gets one line with its
+    // status and no 101 line (T38)
+    @Test(timeout = 20000)
+    public void wave7SdsAc2_FR_APP_019_AC8_oneHandshakeLinePerSessionAndRefusalsLogTheirStatusOnly()
+            throws Exception {
+        RecordingLogger log = new RecordingLogger();
+        InMemoryHttpAdapter a = new InMemoryHttpAdapter();
+        com.snoworca.naruserve.RestApp app = com.snoworca.naruserve.RestApp.builder().httpAdapter(a)
+                .jsonCodec(new com.snoworca.naruserve.testing.StubJsonCodec()).logger(log).build();
+        app.ws("/ws", (req, ws) -> { });
+        app.ws("/guarded", (req, ws) -> { });
+        app.webSocket(o -> o.allowedOrigins("https://good.example"));
+        app.listen(0);
+        try {
+            Future<ClientResponse> f = a.submit(upgrade("/ws", "Origin", "https://good.example"));
+            a.nextChannel(5, TimeUnit.SECONDS).clientClose(1000, "");
+            assertEquals(101, f.get(5, TimeUnit.SECONDS).status());
+            long end = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
+            while (log.info().size() < 2 && System.nanoTime() < end) {
+                Thread.sleep(5);
+            }
+            Thread.sleep(50); // a line from onDone would follow the close line at once
+            assertEquals(log.info().toString(), 2, log.info().size());
+            assertTrue(log.info().get(0), log.info().get(0).matches("GET /ws 101 \\d+ms in=0 out=0 rid=[0-9a-f]{16}"));
+            assertTrue(log.info().get(1), log.info().get(1).matches("WS /ws 1000 \\d+ms rid=[0-9a-f]{16}"));
+            log.lines.clear();
+            assertEquals(403, a.send(upgrade("/guarded", "Origin", "https://evil.example")).status());
+            a.refuseWebSocket(new com.snoworca.naruserve.HttpException(426).withHeader("Sec-WebSocket-Version", "13"));
+            assertEquals(426, a.send(upgrade("/ws", "Sec-WebSocket-Version", "12")).status());
+            a.refuseWebSocket(new com.snoworca.naruserve.HttpException(503).withHeader("Connection", "close"));
+            assertEquals(503, a.send(upgrade("/ws", "Origin", "https://good.example")).status());
+            List<String> lines = log.info();
+            assertEquals(lines.toString(), 3, lines.size());
+            assertTrue(lines.get(0), lines.get(0).matches("GET /guarded 403 \\d+ms in=0 out=\\d+ rid=[0-9a-f]{16}"));
+            assertTrue(lines.get(1), lines.get(1).matches("GET /ws 426 \\d+ms in=0 out=\\d+ rid=[0-9a-f]{16}"));
+            assertTrue(lines.get(2), lines.get(2).matches("GET /ws 503 \\d+ms in=0 out=\\d+ rid=[0-9a-f]{16}"));
+        } finally {
+            app.shutdown(2, TimeUnit.SECONDS);
+        }
+    }
+
+    private static ClientRequest upgrade(String target, String... headerPairs) {
+        ClientRequest r = ClientRequest.of("GET", target).header("Connection", "Upgrade").header("Upgrade", "websocket");
+        for (int i = 0; i < headerPairs.length; i += 2) {
+            r.header(headerPairs[i], headerPairs[i + 1]);
+        }
+        return r;
+    }
+
+    // SDS-AC-2 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-12.sds.md; FR-APP-019 AC-8: upgraded101() turns
+    // true only when upgraded() ended the response
+    @Test
+    public void wave7SdsAc2_FR_APP_019_AC8_upgraded101IsTrueOnlyAfterUpgraded() {
+        DefaultResponse res = new DefaultResponse(new RecordingExchange("GET", "/ws"), false);
+        assertFalse(res.upgraded101());
+        res.upgraded();
+        assertTrue(res.upgraded101());
+        assertEquals(101, res.statusCode());
+        DefaultResponse sent = new DefaultResponse(new RecordingExchange("GET", "/ws"), false);
+        sent.status(426).send("no");
+        sent.upgraded();
+        assertFalse(sent.upgraded101());
     }
 }

@@ -23,10 +23,10 @@ public class ShutdownParticipantsTest {
         p.add(ShutdownParticipants.Phase.AFTER_ON_STOP, () -> ran.add("after"));
         p.add(ShutdownParticipants.Phase.BEFORE_WAIT, () -> ran.add("b2"));
         RecordingLogger log = new RecordingLogger(ran);
-        p.run(ShutdownParticipants.Phase.BEFORE_WAIT, log);
+        p.run(ShutdownParticipants.Phase.BEFORE_WAIT, log, System.nanoTime());
         assertEquals(Arrays.asList("b1", "b2"), ran);
-        p.run(ShutdownParticipants.Phase.FORCE_CLOSE, log);
-        p.run(ShutdownParticipants.Phase.AFTER_ON_STOP, log);
+        p.run(ShutdownParticipants.Phase.FORCE_CLOSE, log, System.nanoTime());
+        p.run(ShutdownParticipants.Phase.AFTER_ON_STOP, log, System.nanoTime());
         assertEquals(Arrays.asList("b1", "b2", "force", "after"), ran);
     }
 
@@ -40,9 +40,25 @@ public class ShutdownParticipantsTest {
         });
         p.add(ShutdownParticipants.Phase.AFTER_ON_STOP, () -> ran.add("next"));
         RecordingLogger log = new RecordingLogger(new ArrayList<>());
-        p.run(ShutdownParticipants.Phase.AFTER_ON_STOP, log);
+        p.run(ShutdownParticipants.Phase.AFTER_ON_STOP, log, System.nanoTime());
         assertEquals(Arrays.asList("next"), ran);
         assertEquals(1, log.errors.size());
         assertTrue(log.errors.toString(), log.errors.get(0).contains("boom"));
+    }
+
+    // SDS-AC-6 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-12.sds.md; FR-APP-020 AC-1: Runnable and deadline
+    // participants of one phase share one list and run in add order; a deadline participant gets the run's deadline
+    @Test
+    public void wave7SdsAc6_FR_APP_020_AC1_runnableAndDeadlineParticipantsRunInAddOrderWithTheDeadline() {
+        List<String> ran = Collections.synchronizedList(new ArrayList<>());
+        ShutdownParticipants p = new ShutdownParticipants();
+        p.add(ShutdownParticipants.Phase.BEFORE_WAIT, () -> ran.add("r1"));
+        p.add(ShutdownParticipants.Phase.BEFORE_WAIT, (ShutdownParticipants.DeadlineParticipant) d -> ran.add("d " + d));
+        p.add(ShutdownParticipants.Phase.BEFORE_WAIT, () -> ran.add("r2"));
+        p.add(ShutdownParticipants.Phase.FORCE_CLOSE, (ShutdownParticipants.DeadlineParticipant) d -> ran.add("f " + d));
+        p.run(ShutdownParticipants.Phase.BEFORE_WAIT, new RecordingLogger(new ArrayList<>()), 42L);
+        assertEquals(Arrays.asList("r1", "d 42", "r2"), ran);
+        p.run(ShutdownParticipants.Phase.FORCE_CLOSE, new RecordingLogger(new ArrayList<>()), 7L);
+        assertEquals(Arrays.asList("r1", "d 42", "r2", "f 7"), ran);
     }
 }

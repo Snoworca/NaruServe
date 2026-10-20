@@ -32,6 +32,7 @@ public final class DefaultRequest implements Request {
 
     private final HttpExchange ex;
     private volatile String requestId = "";
+    private volatile long startNanos = System.nanoTime();
     private final Method method;
     private final Map<String, String> params;
     private final String path;
@@ -314,6 +315,16 @@ public final class DefaultRequest implements Request {
 
     void requestId(String id) {
         this.requestId = id;
+    }
+
+    /** The System.nanoTime() the Dispatcher took when the request arrived; the WebSocket handshake line reads it. */
+    // @req FR-APP-019
+    void startNanos(long nanos) {
+        this.startNanos = nanos;
+    }
+
+    long startNanos() {
+        return startNanos;
     }
 
     // @req FR-HTTP-009

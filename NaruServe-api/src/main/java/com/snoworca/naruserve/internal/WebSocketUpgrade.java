@@ -30,6 +30,7 @@ final class WebSocketUpgrade {
     private final WebSocketSender sender;
     private final WebSocketIdleScheduler idle;
     private final WebSocketRegistry registry;
+    private final AccessLog accessLog;
 
     /**
      * For an app without server options (the Dispatcher's test constructors): the default limit of 128 sender threads
@@ -42,20 +43,23 @@ final class WebSocketUpgrade {
     /** With a registry of its own over {@code sender} and {@code idle}. */
     WebSocketUpgrade(DefaultWebSocketOptions options, @Nullable JsonCodec codec, SafeLogger log,
             WebSocketSender sender, WebSocketIdleScheduler idle) {
-        this(options, codec, log, sender, idle, new WebSocketRegistry(sender, idle));
+        this(options, codec, log, sender, idle, new WebSocketRegistry(sender, idle), new AccessLog());
     }
 
     /**
      * {@code options} must be the frozen copy; {@code sender}, {@code idle} and {@code registry} are the app's, built
-     * at freeze. An allowlist entry that is not {@code *} or {@code scheme://host[:port]} never matches, so it gets one
-     * warning here.
+     * at freeze, and {@code accessLog} is the Dispatcher's, which every session writes its handshake and close lines to.
+     * An allowlist entry that is not {@code *} or {@code scheme://host[:port]} never matches, so it gets one warning
+     * here.
      */
     // @req FR-WS-001
     // @req FR-WS-003
     // @req FR-WS-007
     // @req FR-WS-009
+    // @req FR-APP-019
     WebSocketUpgrade(DefaultWebSocketOptions options, @Nullable JsonCodec codec, SafeLogger log,
-            WebSocketSender sender, WebSocketIdleScheduler idle, WebSocketRegistry registry) {
+            WebSocketSender sender, WebSocketIdleScheduler idle, WebSocketRegistry registry, AccessLog accessLog) {
+        this.accessLog = Objects.requireNonNull(accessLog, "accessLog");
         this.codec = codec;
         this.registry = Objects.requireNonNull(registry, "registry");
         this.log = Objects.requireNonNull(log, "log");
@@ -140,6 +144,10 @@ final class WebSocketUpgrade {
 
     WebSocketRegistry registry() {
         return registry;
+    }
+
+    AccessLog accessLog() {
+        return accessLog;
     }
 
     int sendQueueSize() {

@@ -60,16 +60,16 @@ public class AccessLogTest {
         accessLog(new DefaultAccessLogOptions()).write(null, "/users/7", 200, false, System.nanoTime(), 0, 5, RID);
     }
 
-    // SDS-AC-4; FR-APP-015 AC-1
+    // SDS-AC-4; FR-APP-019 AC-1
     @Test
-    public void sdsAc4_FR_APP_015_AC1_defaultFormatHasEveryPart() {
+    public void sdsAc4_FR_APP_019_AC1_defaultFormatHasEveryPart() {
         assertEquals("GET /users/7 200 12ms in=0 out=5 rid=" + RID,
                 accessLog(new DefaultAccessLogOptions()).format("GET", "/users/7", 200, false, 12, 0, 5, RID));
     }
 
-    // SDS-AC-5; FR-APP-015 AC-2
+    // SDS-AC-5; FR-APP-019 AC-2
     @Test
-    public void sdsAc5_FR_APP_015_AC2_partsOffDropEachPartWithItsLeadingSpace() {
+    public void sdsAc5_FR_APP_019_AC2_partsOffDropEachPartWithItsLeadingSpace() {
         DefaultAccessLogOptions o = new DefaultAccessLogOptions();
         o.includeDuration(false).includeBytes(false).includeRequestId(false);
         assertEquals("GET /users/7 200", accessLog(o).format("GET", "/users/7", 200, false, 12, 0, 5, RID));
@@ -78,9 +78,9 @@ public class AccessLogTest {
                 accessLog(o).format("GET", "/users/7", 200, true, 12, 3, 4, RID));
     }
 
-    // SDS-AC-5; FR-APP-015 AC-2
+    // SDS-AC-5; FR-APP-019 AC-2
     @Test
-    public void sdsAc5_FR_APP_015_AC2_levelSelectsTheLoggerMethod() {
+    public void sdsAc5_FR_APP_019_AC2_levelSelectsTheLoggerMethod() {
         for (LogLevel level : LogLevel.values()) {
             log.lines.clear();
             DefaultAccessLogOptions o = new DefaultAccessLogOptions();
@@ -90,9 +90,9 @@ public class AccessLogTest {
         }
     }
 
-    // SDS-AC-9; FR-APP-015 AC-6
+    // SDS-AC-9; FR-APP-019 AC-6
     @Test
-    public void sdsAc9_FR_APP_015_AC6_excludedPathAndDisabledLogWriteNothing() {
+    public void sdsAc9_FR_APP_019_AC6_excludedPathAndDisabledLogWriteNothing() {
         DefaultAccessLogOptions o = new DefaultAccessLogOptions();
         o.exclude("/health");
         assertTrue(o.excluded("/health"));
@@ -105,7 +105,7 @@ public class AccessLogTest {
         assertEquals(Collections.emptyList(), log.lines);
     }
 
-    // IR-APP-007 AC-3, FR-APP-015 AC-6 — the exclude set is fixed when the log is built at listen()
+    // IR-APP-007 AC-3, FR-APP-019 AC-6 — the exclude set is fixed when the log is built at listen()
     @Test
     public void IR_APP_007_AC3_excludeAddedAfterTheLogIsBuiltHasNoEffect() {
         DefaultAccessLogOptions o = new DefaultAccessLogOptions();
@@ -116,6 +116,66 @@ public class AccessLogTest {
         assertEquals(Collections.emptyList(), log.lines);
         accessLog.write("GET", "/late", 200, false, System.nanoTime(), 0, 0, RID);
         assertEquals(log.lines.toString(), 1, log.lines.size());
+    }
+
+    // SDS-AC-3 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-12.sds.md; FR-APP-019 AC-9: the close line is
+    // WS <path> <code>[ <n>ms][ rid=<id>], with no bytes part, for every close code
+    @Test
+    public void wave7SdsAc3_FR_APP_019_AC9_closeLineHasTheTokenWsTheCodeTheDurationAndTheRid() {
+        for (int code : new int[] {1000, 1001, 1008, 4000, 1006}) {
+            log.lines.clear();
+            accessLog(new DefaultAccessLogOptions()).writeClose("/ws", code, System.nanoTime(), RID);
+            assertEquals(log.lines.toString(), 1, log.lines.size());
+            assertTrue(log.lines.get(0), log.lines.get(0).matches("INFO WS /ws " + code + " \\d+ms rid=" + RID));
+        }
+        log.lines.clear();
+        DefaultAccessLogOptions o = new DefaultAccessLogOptions();
+        o.includeDuration(false).includeRequestId(false);
+        accessLog(o).writeClose("/a\nb", 1000, System.nanoTime(), RID);
+        assertEquals(Collections.singletonList("INFO WS /a\\nb 1000"), log.lines);
+    }
+
+    // SDS-AC-4 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-12.sds.md; FR-APP-019 AC-10: the SSE line is
+    // the D-173 line, never aborted, followed by sse start=<epochMillis> cause=<cause>
+    @Test
+    public void wave7SdsAc4_FR_APP_019_AC10_sseLineAppendsStartAndCauseToTheRequestLine() {
+        accessLog(new DefaultAccessLogOptions()).writeSse("GET", "/events", 200, System.nanoTime(), 0, 18, RID,
+                1700000000123L, "client");
+        assertEquals(log.lines.toString(), 1, log.lines.size());
+        assertTrue(log.lines.get(0), log.lines.get(0).matches(
+                "INFO GET /events 200 \\d+ms in=0 out=18 rid=" + RID + " sse start=1700000000123 cause=client"));
+        log.lines.clear();
+        DefaultAccessLogOptions o = new DefaultAccessLogOptions();
+        o.includeDuration(false).includeBytes(false).includeRequestId(false);
+        accessLog(o).writeSse("GET", "/events", 200, System.nanoTime(), 0, 18, RID, 5L, "shutdown");
+        assertEquals(Collections.singletonList("INFO GET /events 200 sse start=5 cause=shutdown"), log.lines);
+    }
+
+    // SDS-AC-5 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-12.sds.md; FR-APP-019 AC-11: exclude("/ws") and
+    // exclude("/events") drop those lines, enabled(false) drops all, level(DEBUG) writes them through debug
+    @Test
+    public void wave7SdsAc5_FR_APP_019_AC11_closeAndSseLinesFollowExcludeEnabledAndLevel() {
+        DefaultAccessLogOptions ex = new DefaultAccessLogOptions();
+        ex.exclude("/ws").exclude("/events");
+        AccessLog excluded = accessLog(ex);
+        excluded.writeClose("/ws", 1000, System.nanoTime(), RID);
+        excluded.writeSse("GET", "/events", 200, System.nanoTime(), 0, 0, RID, 1L, "app");
+        excluded.write("GET", "/ws", 101, false, System.nanoTime(), 0, 0, RID);
+        assertEquals(Collections.emptyList(), log.lines);
+        excluded.writeClose("/ws2", 1000, System.nanoTime(), RID);
+        assertEquals(log.lines.toString(), 1, log.lines.size());
+        log.lines.clear();
+        DefaultAccessLogOptions off = new DefaultAccessLogOptions();
+        off.enabled(false);
+        accessLog(off).writeClose("/ws", 1000, System.nanoTime(), RID);
+        accessLog(off).writeSse("GET", "/events", 200, System.nanoTime(), 0, 0, RID, 1L, "app");
+        assertEquals(Collections.emptyList(), log.lines);
+        DefaultAccessLogOptions debug = new DefaultAccessLogOptions();
+        debug.level(LogLevel.DEBUG).includeDuration(false).includeBytes(false).includeRequestId(false);
+        accessLog(debug).writeClose("/ws", 1001, System.nanoTime(), RID);
+        accessLog(debug).writeSse("GET", "/events", 200, System.nanoTime(), 0, 0, RID, 1L, "app");
+        assertEquals(java.util.Arrays.asList("DEBUG WS /ws 1001", "DEBUG GET /events 200 sse start=1 cause=app"),
+                log.lines);
     }
 
     // SDS-AC-12; SEC-APP-001 AC-2

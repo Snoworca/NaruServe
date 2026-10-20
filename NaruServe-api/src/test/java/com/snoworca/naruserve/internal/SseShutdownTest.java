@@ -282,10 +282,49 @@ public class SseShutdownTest {
             throws Exception {
         Field f = ShutdownParticipants.class.getDeclaredField("participants");
         f.setAccessible(true);
-        Map<ShutdownParticipants.Phase, List<Runnable>> map =
-                (Map<ShutdownParticipants.Phase, List<Runnable>>) f.get(app.shutdownParticipants());
-        List<Runnable> list = map.get(phase);
-        return list == null ? new ArrayList<Runnable>() : list;
+        Map<ShutdownParticipants.Phase, List<ShutdownParticipants.DeadlineParticipant>> map =
+                (Map<ShutdownParticipants.Phase, List<ShutdownParticipants.DeadlineParticipant>>)
+                        f.get(app.shutdownParticipants());
+        List<Runnable> out = new ArrayList<>();
+        List<ShutdownParticipants.DeadlineParticipant> list = map.get(phase);
+        if (list != null) {
+            for (ShutdownParticipants.DeadlineParticipant p : list) {
+                out.add(() -> p.run(System.nanoTime())); // FR-APP-020 AC-1: the list holds deadline participants
+            }
+        }
+        return out;
+    }
+
+    // SDS-AC-8 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-12.sds.md; FR-APP-020 AC-3: with the flag set
+    // between two registrations the first stream is in the snapshot, and res.sse() after the flag still starts the
+    // event stream: the client gets the headers, the closing notice and the end of the body, onClose runs once and
+    // send returns false
+    @Test(timeout = 20000)
+    public void wave7SdsAc8_FR_APP_020_AC3_sseAfterTheFlagGetsTheNoticeAndEndsAtOnce() throws Exception {
+        SseRegistry registry = registry(262144);
+        RecordingExchange first = new RecordingExchange("GET", "/events");
+        DefaultSseClient before = open(first, registry);
+        registry.closeAll(System.nanoTime());
+        assertEquals("shutdown", before.cause());
+        RecordingExchange ex = new RecordingExchange("GET", "/events");
+        DefaultSseClient late = open(ex, registry);
+        AtomicInteger closes = new AtomicInteger();
+        late.onClose(closes::incrementAndGet);
+        assertFalse(late.isOpen());
+        assertEquals("shutdown", late.cause());
+        assertFalse(late.send("after"));
+        assertFalse(sendFromAnotherThread(late, "after"));
+        assertEquals(200, ex.status);
+        assertNotNull(ex.drain());
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        Thread d = drainAsync(ex.drain(), out);
+        d.join(5000);
+        assertFalse(d.isAlive());
+        assertEquals(NOTICE, new String(out.toByteArray(), StandardCharsets.UTF_8));
+        assertEquals(1, ex.finishes.get());
+        assertEquals(0, ex.aborts.get());
+        assertEquals(1, closes.get());
+        assertEquals(1, registry.size()); // only the stream registered before the flag; its drain never ran here
     }
 
     // SDS-AC-13; FR-SSE-005 AC-1: freeze twice registers the SSE participants once; the SSE closeAll is the first

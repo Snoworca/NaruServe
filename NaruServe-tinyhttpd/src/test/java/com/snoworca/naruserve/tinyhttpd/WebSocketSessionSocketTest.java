@@ -140,4 +140,39 @@ public class WebSocketSessionSocketTest {
         // Nothing escaped into TinyHttpd: its own failure line would name the exception a second time.
         assertEquals(logger.lines.toString(), 2, logger.errors.size());
     }
+
+    /** Waits up to 5 s for a logger line matching {@code regex} and returns it. */
+    private String awaitLine(String regex) throws InterruptedException {
+        long end = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
+        while (System.nanoTime() < end) {
+            for (String line : new ArrayList<>(logger.lines)) {
+                if (line.matches(regex)) {
+                    return line;
+                }
+            }
+            Thread.sleep(5);
+        }
+        throw new AssertionError("no line matching " + regex + " in " + logger.lines);
+    }
+
+    // SDS-AC-1 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-12.sds.md; FR-APP-019 AC-8, AC-9: over TinyHttpd
+    // the 101 line is in the log before the client sent any frame, and the close line carries the client's code and
+    // the handshake's rid (T38)
+    @Test(timeout = 20000)
+    public void wave7SdsAc1_FR_APP_019_AC8_AC9_handshakeLineBeforeTheFirstFrameThenTheCloseLine() throws Exception {
+        try (RawWebSocketClient c = RawWebSocketClient.open(listen(), "/ws")) {
+            assertEquals(c.handshake, 101, c.status());
+            String open = awaitLine("INFO GET /ws 101 \\d+ms in=0 out=0 rid=[0-9a-f]{16}");
+            String rid = open.substring(open.length() - 16);
+            c.frame(true, CLOSE, new byte[] {0x03, (byte) 0xE8}, true);
+            assertEquals(1000, c.readFrame(CLOSE).closeCode());
+            awaitLine("INFO WS /ws 1000 \\d+ms rid=" + rid);
+        }
+        assertEquals("close 1000 ", event());
+        int lines = 0;
+        for (String line : new ArrayList<>(logger.lines)) {
+            lines += line.startsWith("INFO GET /ws ") || line.startsWith("INFO WS /ws ") ? 1 : 0;
+        }
+        assertEquals(logger.lines.toString(), 2, lines);
+    }
 }

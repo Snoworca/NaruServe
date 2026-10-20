@@ -1,7 +1,6 @@
 package com.snoworca.naruserve.internal;
 
 import com.snoworca.naruserve.HttpException;
-import com.snoworca.naruserve.Request;
 import com.snoworca.naruserve.WebSocketHandler;
 import com.snoworca.naruserve.WebSocketSession;
 import com.snoworca.naruserve.spi.JsonCodec;
@@ -33,7 +32,10 @@ final class DefaultWebSocketSession implements WebSocketSession, WebSocketEndpoi
 
     private final String id;
     private final String rid;
-    private final Request req;
+    private final DefaultRequest req;
+    private final AccessLog accessLog;
+    /** System.nanoTime() of onOpen, where the close line's duration starts. */
+    private volatile long openNanos = System.nanoTime();
     private final @Nullable WebSocketHandler handler;
     private final @Nullable JsonCodec codec;
     private final SafeLogger log;
@@ -74,6 +76,7 @@ final class DefaultWebSocketSession implements WebSocketSession, WebSocketEndpoi
         this.sender = upgrade.sender();
         this.idle = upgrade.idle();
         this.registry = upgrade.registry();
+        this.accessLog = upgrade.accessLog();
         this.sendQueueSize = upgrade.sendQueueSize();
         this.idleTimeoutMillis = upgrade.idleTimeoutMillis();
     }
@@ -142,11 +145,16 @@ final class DefaultWebSocketSession implements WebSocketSession, WebSocketEndpoi
         }
     }
 
+    /** Stores the channel and writes the 101 access line before anything else runs, the handler included. */
     // @req FR-WS-001
     // @req FR-WS-006
     // @req FR-WS-008
+    // @req FR-APP-019
     @Override
     public void onOpen(WebSocketChannel channel) {
+        this.channel = channel;
+        openNanos = System.nanoTime();
+        accessLog.write(req.method().name(), req.rawPath(), 101, false, req.startNanos(), 0, 0, rid);
         opening(channel);
     }
 
@@ -221,13 +229,14 @@ final class DefaultWebSocketSession implements WebSocketSession, WebSocketEndpoi
     }
 
     /**
-     * Runs the CloseListeners once, with the first pair the core sent when there is one, else the adapter's; then
-     * releases the attributes, the idle watch and the sender slot.
+     * Writes the close line and runs the CloseListeners once, with the first pair the core sent when there is one,
+     * else the adapter's; then releases the attributes, the idle watch and the sender slot.
      */
     // @req FR-WS-001
     // @req FR-WS-005
     // @req FR-WS-006
     // @req FR-WS-007
+    // @req FR-APP-019
     @Override
     public void onClose(int code, String reason) {
         if (!closed.compareAndSet(false, true)) {
@@ -239,6 +248,7 @@ final class DefaultWebSocketSession implements WebSocketSession, WebSocketEndpoi
                 reason = sentReason;
             }
         }
+        accessLog.writeClose(req.rawPath(), code, openNanos, rid);
         for (CloseListener l : closeListeners) {
             try {
                 l.onClose(code, reason);

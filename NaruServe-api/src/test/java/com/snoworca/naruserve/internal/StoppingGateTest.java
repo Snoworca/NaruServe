@@ -29,10 +29,11 @@ public class StoppingGateTest {
     private final List<String> events = Collections.synchronizedList(new ArrayList<>());
     private final List<String> calls = Collections.synchronizedList(new ArrayList<>());
     private final List<ClientResponse> answered = Collections.synchronizedList(new ArrayList<>());
+    private final com.snoworca.naruserve.testing.RecordingLogger log = new com.snoworca.naruserve.testing.RecordingLogger();
 
     private DefaultRestApp app(RecordingAdapter adapter) {
         DefaultRestApp app = (DefaultRestApp) RestApp.builder().httpAdapter(adapter).jsonCodec(new StubJsonCodec())
-                .build();
+                .logger(log).build();
         app.use((req, res, next) -> {
             calls.add("middleware " + req.path());
             next.run();
@@ -67,8 +68,11 @@ public class StoppingGateTest {
         assertEquals(1, answered.size());
         assert503(answered.get(0));
         assertEquals(new ArrayList<String>(), calls);
-        // The one access-log line per gate answer is asserted by AccessLogAcceptanceTest (wave-4-8), where
-        // AccessLog starts writing lines; GatedExchangeHandler calls AccessLog.write once per answer.
+        // FR-APP-019 AC-3 (SDS-AC-5 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-12.sds.md): the gate's 503
+        // during the before-wait phase writes exactly one access line, as every other dispatched answer does.
+        List<String> lines = log.info();
+        assertEquals(lines.toString(), 1, lines.size());
+        assertTrue(lines.get(0), lines.get(0).matches("GET /x 503 \\d+ms in=0 out=\\d+ rid=[0-9a-f]{16}"));
         assertEquals(AppState.TERMINATED, app.state());
     }
 

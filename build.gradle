@@ -206,6 +206,20 @@ project(':NaruServe-tinyhttpd') {
     dependencies {
         testImplementation testFixtures(project(':NaruServe-api'))
     }
+    // Tests that count the app's threads by name run one JVM per class, so no other app's threads are alive
+    // (FR-APP-020 AC-9, PERF-APP-001 AC-1); the ordinary test task leaves them out.
+    // @req FR-APP-020
+    def isolatedTest = tasks.register('isolatedTest', Test) {
+        description = 'Runs the *IsolatedSocketTest classes, one test JVM per class.'
+        group = 'verification'
+        testClassesDirs = sourceSets.test.output.classesDirs
+        classpath = sourceSets.test.runtimeClasspath
+        useJUnit()
+        include '**/*IsolatedSocketTest*'
+        forkEvery = 1
+    }
+    tasks.named('test') { exclude '**/*IsolatedSocketTest*' }
+    tasks.named('check') { dependsOn isolatedTest }
 }
 
 // DefaultAppFactoryTest reads the services file and naruserve-bootstrap.pro from the built jar (FR-ENGINE-009 AC-4).

@@ -169,7 +169,7 @@ public final class Dispatcher implements ExchangeHandler {
     // @req FR-HTTP-022
     // @req FR-APP-003
     @Override
-    // @req FR-APP-015
+    // @req FR-APP-019
     // @req FR-WS-001
     // @req FR-WS-003
     public void handle(HttpExchange ex) {
@@ -192,6 +192,7 @@ public final class Dispatcher implements ExchangeHandler {
                 matched ? m.params() : Collections.<String, String>emptyMap(), context, codec, jsonLimit, trustProxy,
                 multipart, formLimit, spool);
         req.requestId(rid);
+        req.startNanos(start);
         DefaultResponse res = new DefaultResponse(ex, method == Method.HEAD, codec);
         res.mimeTypes(statics.mimeTypes());
         res.resolverTap(statics.resolverTap());
@@ -206,10 +207,19 @@ public final class Dispatcher implements ExchangeHandler {
                 req.releaseUploads();
             }
         };
+        // One line when the response ends: an SSE stream's line with its cause, none for an upgraded 101 (the
+        // session wrote its handshake line in onOpen and writes its close line), else the request line.
         res.onDone(() -> {
             endOne.run();
-            accessLog.write(token, rawPath, res.statusCode(), res.state() == ResponseState.ABORTED, start,
-                    req.body().bytesRead(), res.bytesWritten(), rid);
+            DefaultSseClient stream = res.sseClient();
+            if (stream != null) {
+                String cause = stream.cause();
+                accessLog.writeSse(token, rawPath, 200, start, req.body().bytesRead(), res.bytesWritten(), rid,
+                        stream.startMillis(), cause != null ? cause : "error");
+            } else if (!res.upgraded101()) {
+                accessLog.write(token, rawPath, res.statusCode(), res.state() == ResponseState.ABORTED, start,
+                        req.body().bytesRead(), res.bytesWritten(), rid);
+            }
         });
         List<Middleware> route = Collections.emptyList();
         AtomicBoolean reached = new AtomicBoolean();
@@ -280,7 +290,7 @@ public final class Dispatcher implements ExchangeHandler {
     // @req FR-HTTP-021
     // @req FR-HTTP-023
     // @req FR-APP-003
-    // @req FR-APP-015
+    // @req FR-APP-019
     boolean preCheck(HttpExchange ex, String rid, long start) {
         String rawPath = ex.rawPath();
         String token = ex.methodToken();
@@ -314,7 +324,7 @@ public final class Dispatcher implements ExchangeHandler {
     /** A pre-request answer: {@link #answerDirect} with the Allow header or the Upgrade headers when asked. */
     // @req FR-HTTP-021
     // @req FR-HTTP-023
-    // @req FR-APP-015
+    // @req FR-APP-019
     void automatic(HttpExchange ex, int status, @Nullable MethodSet allow, boolean upgradeHeaders, String rid,
             long start) {
         List<Map.Entry<String, String>> headers = new ArrayList<>(5);
@@ -335,7 +345,7 @@ public final class Dispatcher implements ExchangeHandler {
      */
     // @req FR-HTTP-021
     // @req FR-APP-013
-    // @req FR-APP-015
+    // @req FR-APP-019
     static void answerDirect(HttpExchange ex, int status, List<Map.Entry<String, String>> headers, String rid,
             long start, AccessLog accessLog) {
         byte[] body = new byte[0];
