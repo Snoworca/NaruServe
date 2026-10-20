@@ -4,6 +4,8 @@ import com.snoworca.naruserve.spi.ExchangeHandler;
 import com.snoworca.naruserve.spi.HttpExchange;
 import com.snoworca.naruserve.spi.StreamDrain;
 import com.snoworca.naruserve.spi.UpgradeHandler;
+import com.snoworca.naruserve.spi.WebSocketEndpoint;
+import com.snoworca.naruserve.spi.WebSocketSettings;
 import com.snoworca.tinyhttpd.http.Request;
 import com.snoworca.tinyhttpd.http.Response;
 import java.io.File;
@@ -32,6 +34,8 @@ final class TinyHttpdExchange implements HttpExchange {
     private final CountDownLatch ended = new CountDownLatch(1);
     // Guarded by this, which also serialises every touch of res by the core so abort() can hand res back safely.
     private boolean started;
+    // Guarded by this: the worker runs a WebSocket handshake on res without the lock, so no other start may touch it.
+    private boolean upgrading;
     private volatile boolean aborted;
 
     private TinyHttpdExchange(Request req, Response res) {
@@ -203,6 +207,9 @@ final class TinyHttpdExchange implements HttpExchange {
         if (started) {
             throw new IllegalStateException("the response was already started");
         }
+        if (upgrading) {
+            throw new IllegalStateException("a WebSocket handshake is using the response");
+        }
     }
 
     // A feature not yet available never touched res, so the response stays unstarted and the core can still commit.
@@ -234,6 +241,33 @@ final class TinyHttpdExchange implements HttpExchange {
         } catch (UnsupportedOperationException e) {
             unsupported(e);
         }
+    }
+
+    /**
+     * Holds this lock only to check the start rule and, through {@link #markUpgraded}, to record the 101: the read
+     * loop runs on this worker without it, so abort and the other exchange calls never wait for the connection.
+     */
+    // @req FR-WS-002
+    @Override
+    public void webSocket(WebSocketSettings settings, WebSocketEndpoint endpoint) throws IOException {
+        synchronized (this) {
+            requireStartable();
+            upgrading = true;
+        }
+        try {
+            new TinyHttpdWebSocket(req, res, settings, endpoint, this::markUpgraded).run();
+        } finally {
+            synchronized (this) {
+                upgrading = false; // a refusal before 101 leaves the exchange startable for the error path
+            }
+        }
+    }
+
+    /** The 101 was written: the response is started, so the core can no longer commit an error answer. */
+    // @req FR-WS-002
+    synchronized void markUpgraded() {
+        started = true;
+        upgrading = false;
     }
 
     @Override

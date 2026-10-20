@@ -21,9 +21,11 @@ final class WebSocketUpgrade {
     private final SafeLogger log;
     private final OriginCheck origins;
     private final WebSocketSettings settings;
+    // shortcut: built here until FR-WS-007 builds it at freeze with the thread limit and FR-WS-010 shuts it down
+    private final WebSocketSender sender = new WebSocketSender();
 
     /**
-     * {@code options} must be the frozen copy; the sender slot joins with FR-WS-005. An allowlist entry that is not
+     * {@code options} must be the frozen copy. An allowlist entry that is not
      * {@code *} or {@code scheme://host[:port]} never matches, so it gets one warning here.
      */
     // @req FR-WS-001
@@ -53,7 +55,7 @@ final class WebSocketUpgrade {
         if (!origins.admits(req.header("Origin"), req.header("Host"), req.isSecure())) {
             throw new HttpException(403);
         }
-        DefaultWebSocketSession session = new DefaultWebSocketSession(req, handler, log, rid);
+        DefaultWebSocketSession session = new DefaultWebSocketSession(req, handler, log, rid, sender);
         try {
             ex.webSocket(settings, session);
         } catch (IOException | RuntimeException e) {
