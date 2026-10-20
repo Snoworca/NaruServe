@@ -60,32 +60,9 @@ public class SseSocketTest {
         Http.stopQuietly(adapter);
     }
 
-    private static int count(String response, String name) {
-        int n = 0;
-        for (String line : response.substring(0, response.indexOf("\r\n\r\n")).split("\r\n")) {
-            int c = line.indexOf(':');
-            if (c > 0 && line.substring(0, c).equalsIgnoreCase(name)) {
-                n++;
-            }
-        }
-        return n;
-    }
-
     /** The payload of a chunked body: hex size line, that many bytes, CRLF, until the 0 chunk. */
     private static String dechunk(String body) {
-        StringBuilder out = new StringBuilder();
-        int at = 0;
-        while (true) {
-            int eol = body.indexOf("\r\n", at);
-            String size = body.substring(at, eol);
-            int semi = size.indexOf(';');
-            int n = Integer.parseInt((semi < 0 ? size : size.substring(0, semi)).trim(), 16);
-            if (n == 0) {
-                return out.toString();
-            }
-            out.append(body, eol + 2, eol + 2 + n);
-            at = eol + 2 + n + 2;
-        }
+        return String.join("", chunks(body));
     }
 
     // SDS-AC-6; FR-SSE-001 AC-1, AC-3 (T24)
@@ -105,8 +82,8 @@ public class SseSocketTest {
         assertEquals(200, Http.status(response));
         assertEquals("text/event-stream; charset=UTF-8", Http.header(response, "Content-Type"));
         assertEquals("no-cache, no-transform", Http.header(response, "Cache-Control"));
-        assertEquals(1, count(response, "Content-Type"));
-        assertEquals(1, count(response, "Cache-Control"));
+        assertEquals(1, Http.headers(response, "Content-Type").size());
+        assertEquals(1, Http.headers(response, "Cache-Control").size());
         assertNull(Http.header(response, "Content-Length"));
         assertEquals("chunked", Http.header(response, "Transfer-Encoding"));
         assertEquals("event: connected\ndata: ready\n\n", dechunk(Http.body(response)));
@@ -122,6 +99,18 @@ public class SseSocketTest {
         private final Socket socket = new Socket();
         private final InputStream in;
         private final ByteArrayOutputStream raw = new ByteArrayOutputStream();
+
+        /** Connects, sends {@code request} and reads the status line and headers; closes the stream when that fails. */
+        static Stream open(int port, String request) throws IOException {
+            Stream s = new Stream(port, request);
+            try {
+                s.readHeaders();
+            } catch (Throwable t) {
+                s.close();
+                throw t;
+            }
+            return s;
+        }
 
         Stream(int port, String request) throws IOException {
             socket.connect(new InetSocketAddress("127.0.0.1", port), 5000);
@@ -353,15 +342,8 @@ public class SseSocketTest {
         assertFalse(c.isOpen());
         assertFalse(c.send("late"));
         String regex = "INFO GET /events 200 \\d+ms in=0 out=\\d+ rid=[0-9a-f]{16} sse start=\\d+ cause=client";
-        long end = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
-        int lines = 0;
-        while (lines == 0 && System.nanoTime() < end) {
-            for (String line : new ArrayList<>(log.lines)) {
-                lines += line.matches(regex) ? 1 : 0;
-            }
-            Thread.sleep(lines == 0 ? 5 : 0);
-        }
-        assertEquals(log.lines.toString(), 1, lines);
+        RecordingLogger.awaitMatching(() -> log.lines, regex, 1);
+        assertEquals(log.lines.toString(), 1, RecordingLogger.countMatching(log.lines, regex));
         assertEquals(1, runs.get());
     }
 
@@ -454,7 +436,7 @@ public class SseSocketTest {
         String response = Http.send(port, Http.get("/events"));
         assertEquals(200, Http.status(response));
         assertEquals("chunked", Http.header(response, "Transfer-Encoding"));
-        assertEquals(1, count(response, "Cache-Control"));
+        assertEquals(1, Http.headers(response, "Cache-Control").size());
         assertEquals("no-cache, no-transform", Http.header(response, "Cache-Control"));
         assertNull(Http.header(response, "Content-Length"));
         assertEquals(Collections.singletonList("event: tick\nid: 7\nretry: 3000\ndata: a\ndata: b\n\n"),

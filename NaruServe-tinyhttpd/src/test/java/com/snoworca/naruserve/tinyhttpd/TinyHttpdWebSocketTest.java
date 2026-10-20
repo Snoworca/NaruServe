@@ -17,8 +17,8 @@ import com.snoworca.tinyhttpd.http.Handler;
 import com.snoworca.tinyhttpd.http.ResponseWrapper;
 import com.snoworca.tinyhttpd.http.UpgradedConnection;
 import com.snoworca.tinyhttpd.websocket.WebSocketHandler;
-import java.util.ArrayList;
 import java.util.AbstractMap.SimpleImmutableEntry;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -39,11 +39,9 @@ import org.junit.Test;
 public class TinyHttpdWebSocketTest {
 
     private static final WebSocketSettings SETTINGS = new WebSocketSettings(4096, 15000);
-    private static final String NO_KEY = "GET /ws HTTP/1.1\r\nHost: 127.0.0.1\r\nUpgrade: websocket\r\n"
-            + "Connection: Upgrade\r\nSec-WebSocket-Version: 13\r\n\r\n";
-    private static final String VERSION_12 = "GET /ws HTTP/1.1\r\nHost: 127.0.0.1\r\nUpgrade: websocket\r\n"
-            + "Connection: Upgrade\r\nSec-WebSocket-Key: " + RawWebSocketClient.KEY
-            + "\r\nSec-WebSocket-Version: 12\r\n\r\n";
+    private static final String NO_KEY = RawWebSocketClient.request("/ws", "Upgrade", "Sec-WebSocket-Version: 13");
+    private static final String VERSION_12 = RawWebSocketClient.request("/ws", "Upgrade",
+            "Sec-WebSocket-Key: " + RawWebSocketClient.KEY, "Sec-WebSocket-Version: 12");
 
     private TinyHttpd server;
     private final TinyHttpdAdapter adapter = new TinyHttpdAdapter();
@@ -236,10 +234,8 @@ public class TinyHttpdWebSocketTest {
                 // Every thread this app started: TinyHttpd's acceptor, watchdog, workers and keeper, and NaruServe's
                 // idle scheduler. The session sent nothing, so no sender thread exists and no timer or pool ran.
                 List<String> started = new ArrayList<>();
-                for (Thread t : Thread.getAllStackTraces().keySet()) {
-                    if (t.isAlive() && !before.contains(t)) {
-                        started.add(t.getName());
-                    }
+                for (Thread t : Http.startedSince(before)) {
+                    started.add(t.getName());
                 }
                 assertTrue(started.toString(), started.contains("naruserve-" + port + "-ws-idle"));
                 for (String name : started) {

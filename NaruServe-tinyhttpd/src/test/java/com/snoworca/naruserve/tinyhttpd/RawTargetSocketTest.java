@@ -9,21 +9,28 @@ import com.snoworca.naruserve.RestApp;
 import com.snoworca.naruserve.spi.ExchangeHandler;
 import com.snoworca.naruserve.spi.HttpExchange;
 import com.snoworca.naruserve.spi.ServerSettings;
+import com.snoworca.naruserve.testing.LiveThreads;
 import com.snoworca.naruserve.testing.RecordingLogger;
 import com.snoworca.naruserve.testing.StubJsonCodec;
 import java.io.ByteArrayOutputStream;
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketException;
 import java.nio.charset.StandardCharsets;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.After;
@@ -233,15 +240,22 @@ public class RawTargetSocketTest {
             return Integer.parseInt(response.substring(9, 12));
         }
 
-        /** The first {@code name} header value of a raw response, trimmed; null when absent. */
-        static String header(String response, String name) {
+        /** Every {@code name} header value of a raw response, trimmed, in order. */
+        static List<String> headers(String response, String name) {
+            List<String> out = new ArrayList<>();
             for (String line : response.substring(0, Math.max(0, response.indexOf("\r\n\r\n"))).split("\r\n")) {
                 int c = line.indexOf(':');
                 if (c > 0 && line.substring(0, c).equalsIgnoreCase(name)) {
-                    return line.substring(c + 1).trim();
+                    out.add(line.substring(c + 1).trim());
                 }
             }
-            return null;
+            return out;
+        }
+
+        /** The first {@code name} header value of a raw response, trimmed; null when absent. */
+        static String header(String response, String name) {
+            List<String> values = headers(response, name);
+            return values.isEmpty() ? null : values.get(0);
         }
 
         /**
@@ -249,14 +263,81 @@ public class RawTargetSocketTest {
          * matching port 8080.
          */
         static List<Thread> threads(String name) {
+            if (name.endsWith("-")) {
+                return LiveThreads.withPrefix(name);
+            }
             List<Thread> out = new ArrayList<>();
             for (Thread t : Thread.getAllStackTraces().keySet()) {
-                String n = t.getName();
-                if (t.isAlive() && (name.endsWith("-") ? n.startsWith(name) : n.equals(name))) {
+                if (t.isAlive() && t.getName().equals(name)) {
                     out.add(t);
                 }
             }
             return out;
+        }
+
+        /** Sender threads of {@code port} now inside a socket write, which a client that stopped reading keeps blocked. */
+        static Set<Thread> blockedThreads(int port) {
+            Set<Thread> out = new HashSet<>();
+            for (Thread t : threads("naruserve-" + port + "-ws-sender-")) {
+                for (StackTraceElement e : t.getStackTrace()) {
+                    String c = e.getClassName();
+                    if ((c.startsWith("sun.nio.ch.") || c.startsWith("java.net."))
+                            && e.getMethodName().toLowerCase(Locale.ROOT).contains("write")) {
+                        out.add(t);
+                        break;
+                    }
+                }
+            }
+            return out;
+        }
+
+        /** Names of the live threads of the app on {@code port}: naruserve-*, tinyhttpd-acceptor-port, tinyhttpd-watchdog. */
+        static List<String> appThreads(int port) {
+            List<String> out = new ArrayList<>();
+            for (Thread t : Thread.getAllStackTraces().keySet()) {
+                String n = t.getName();
+                if (t.isAlive() && (n.startsWith("naruserve-") || n.equals("tinyhttpd-acceptor-" + port)
+                        || n.equals("tinyhttpd-watchdog"))) {
+                    out.add(n);
+                }
+            }
+            return out;
+        }
+
+        /** The live threads that are not in {@code before}. */
+        static List<Thread> startedSince(Set<Thread> before) {
+            List<Thread> out = new ArrayList<>();
+            for (Thread t : Thread.getAllStackTraces().keySet()) {
+                if (t.isAlive() && !before.contains(t)) {
+                    out.add(t);
+                }
+            }
+            return out;
+        }
+
+        /** The result of the no-argument method {@code method} of {@code target}, which may be package-private. */
+        static Object invoke(Object target, String method) throws Exception {
+            Method m = target.getClass().getDeclaredMethod(method);
+            m.setAccessible(true);
+            return m.invoke(target);
+        }
+
+        /** A string of {@code n} times {@code c}. */
+        static String repeat(char c, int n) {
+            char[] a = new char[n];
+            Arrays.fill(a, c);
+            return new String(a);
+        }
+
+        /** Closes every entry, ignoring the IOException of one the server already closed. */
+        static void closeAll(List<? extends Closeable> open) {
+            for (Closeable c : open) {
+                try {
+                    c.close();
+                } catch (IOException ignored) {
+                    // the server may have closed it first
+                }
+            }
         }
 
         static String body(String response) {

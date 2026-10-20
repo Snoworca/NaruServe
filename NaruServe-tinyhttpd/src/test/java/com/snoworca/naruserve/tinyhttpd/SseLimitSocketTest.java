@@ -11,7 +11,6 @@ import com.snoworca.naruserve.testing.RecordingLogger;
 import com.snoworca.naruserve.tinyhttpd.RawTargetSocketTest.Http;
 import com.snoworca.naruserve.tinyhttpd.SseSocketTest.Stream;
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
@@ -49,14 +48,12 @@ public class SseLimitSocketTest {
 
     /** The end reason the core recorded for {@code c}, read reflectively since the client class is internal. */
     static String cause(SseClient c) throws Exception {
-        Method m = c.getClass().getDeclaredMethod("cause");
-        m.setAccessible(true);
-        return (String) m.invoke(c);
+        return (String) Http.invoke(c, "cause");
     }
 
     /** Opens a stream to /events and returns its status line and headers. */
     private String open(int port) throws IOException {
-        Stream s = new Stream(port, Http.get("/events"));
+        Stream s = Stream.open(port, Http.get("/events"));
         streams.add(s);
         return s.readHeaders();
     }

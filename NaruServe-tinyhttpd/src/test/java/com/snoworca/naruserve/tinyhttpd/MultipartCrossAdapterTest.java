@@ -75,17 +75,11 @@ public class MultipartCrossAdapterTest {
         return app;
     }
 
-    private static String repeat(char c, int n) {
-        char[] a = new char[n];
-        Arrays.fill(a, c);
-        return new String(a);
-    }
-
     /** One part whose Content-Disposition line is {@code lineLength} bytes, plus {@code extra} header lines. */
     private static String bodyWithHeaderLine(int lineLength, String... extra) {
         String prefix = "Content-Disposition: form-data; name=\"a\"; x=\"";
         StringBuilder sb = new StringBuilder("--" + B + "\r\n")
-                .append(prefix).append(repeat('h', lineLength - prefix.length() - 1)).append("\"\r\n");
+                .append(prefix).append(RawTargetSocketTest.Http.repeat('h', lineLength - prefix.length() - 1)).append("\"\r\n");
         for (String e : extra) {
             sb.append(e).append("\r\n");
         }
@@ -180,7 +174,7 @@ public class MultipartCrossAdapterTest {
         String[] bodies = {
             bodyWithHeaderLine(8192),
             bodyWithHeaderLine(8193),
-            bodyWithHeaderLine(8000, "X-A: " + repeat('a', 8187), "X-B: " + repeat('b', 200)),
+            bodyWithHeaderLine(8000, "X-A: " + RawTargetSocketTest.Http.repeat('a', 8187), "X-B: " + RawTargetSocketTest.Http.repeat('b', 200)),
         };
         List<String> memory = new ArrayList<>();
         List<String> socket = new ArrayList<>();
@@ -271,14 +265,14 @@ public class MultipartCrossAdapterTest {
                 + part("photos", "b.png", "B") + close();
         assertEquals("200 t=5;photos=1;f=1;photos=1;form t=Hello;file f=d.txt/1 spooled=0;",
                 both(MP, mixed, DEFAULTS));
-        String spooled = part("f", "big.bin", repeat('x', 2000)) + close();
+        String spooled = part("f", "big.bin", RawTargetSocketTest.Http.repeat('x', 2000)) + close();
         assertEquals("200 f=2000;file f=big.bin/2000 spooled=1;", both(MP, spooled, o -> o.memoryThreshold(1024)));
     }
 
     // FR-MULTIPART-001 AC-1 (T15), FR-MULTIPART-002 AC-1: limits answer 413 with the standard body on both adapters
     @Test
     public void FR_MULTIPART_001_AC1_limitsGiveTheSame413OnBothAdapters() throws IOException {
-        String big = part("f", "a.bin", repeat('a', 1025)) + close();
+        String big = part("f", "a.bin", RawTargetSocketTest.Http.repeat('a', 1025)) + close();
         String r = both(MP, big, o -> o.maxFileSize(1024).memoryThreshold(100));
         assertTrue(r, r.startsWith(E413));
         StringBuilder parts = new StringBuilder();

@@ -64,12 +64,7 @@ public class WebSocketSocketTest {
     /** A handshake for {@code path} with {@code extra} header lines; Connection also carries close, so a refusal
      * ends the connection and the whole answer can be read. */
     private static String handshake(String path, String... extra) {
-        StringBuilder sb = new StringBuilder("GET ").append(path).append(" HTTP/1.1\r\nHost: 127.0.0.1\r\n")
-                .append("Upgrade: websocket\r\nConnection: Upgrade, close\r\n");
-        for (String h : extra) {
-            sb.append(h).append("\r\n");
-        }
-        return sb.append("\r\n").toString();
+        return RawWebSocketClient.request(path, "Upgrade, close", extra);
     }
 
     private static final String KEY = "Sec-WebSocket-Key: " + RawWebSocketClient.KEY;
@@ -81,7 +76,7 @@ public class WebSocketSocketTest {
         int port = echoApp(texts);
         try (RawWebSocketClient c = RawWebSocketClient.open(port, "/ws")) {
             assertEquals(c.handshake, 101, c.status());
-            assertEquals("s3pPLMBiTxaQ9kYGzzhZRbK+xOo=", c.header("Sec-WebSocket-Accept"));
+            assertEquals(RawWebSocketClient.ACCEPT, c.header("Sec-WebSocket-Accept"));
             c.text("hello");
             assertEquals("hello", texts.poll(5, TimeUnit.SECONDS));
         }

@@ -1,5 +1,7 @@
 package com.snoworca.naruserve.tinyhttpd;
 
+import static org.junit.Assert.fail;
+
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.EOFException;
@@ -10,6 +12,9 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Loopback WebSocket client that writes every frame by hand, so tests can send what no real client would: unmasked
@@ -67,13 +72,36 @@ final class RawWebSocketClient implements Closeable {
 
     /** Opens {@code path} with the RFC 6455 sample key and version 13, plus {@code extraHeaders} lines. */
     static RawWebSocketClient open(int port, String path, String... extraHeaders) throws IOException {
+        List<String> lines = new ArrayList<>(Arrays.asList("Sec-WebSocket-Key: " + KEY, "Sec-WebSocket-Version: 13"));
+        lines.addAll(Arrays.asList(extraHeaders));
+        return raw(port, request(path, "Upgrade", lines.toArray(new String[0])));
+    }
+
+    /**
+     * A GET upgrade request for {@code path} whose Connection header is {@code connection}, followed by
+     * {@code headerLines} (the key and version lines are the caller's, so a refusal case can leave them out).
+     */
+    static String request(String path, String connection, String... headerLines) {
         StringBuilder sb = new StringBuilder("GET ").append(path).append(" HTTP/1.1\r\nHost: 127.0.0.1\r\n")
-                .append("Upgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Key: ").append(KEY)
-                .append("\r\nSec-WebSocket-Version: 13\r\n");
-        for (String h : extraHeaders) {
+                .append("Upgrade: websocket\r\nConnection: ").append(connection).append("\r\n");
+        for (String h : headerLines) {
             sb.append(h).append("\r\n");
         }
-        return raw(port, sb.append("\r\n").toString());
+        return sb.append("\r\n").toString();
+    }
+
+    /** Reads until end of stream or a reset; fails when the socket stays open for {@code millis}. */
+    void readToEnd(long millis) throws IOException {
+        setReadTimeout((int) Math.max(200, millis));
+        try {
+            while (true) {
+                readFrame();
+            }
+        } catch (SocketTimeoutException e) {
+            fail("the WebSocket client socket is still open");
+        } catch (IOException endOrReset) {
+            // end of stream or reset: the server closed the connection
+        }
     }
 
     /** Writes {@code request} as ISO-8859-1 and reads the answer head; no check of its status. */

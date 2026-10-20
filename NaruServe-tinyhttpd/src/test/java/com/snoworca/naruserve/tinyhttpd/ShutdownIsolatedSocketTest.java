@@ -12,13 +12,11 @@ import com.snoworca.naruserve.tinyhttpd.RawTargetSocketTest.Http;
 import com.snoworca.naruserve.tinyhttpd.SseSocketTest.Stream;
 import java.io.File;
 import java.io.OutputStream;
-import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -35,27 +33,9 @@ public class ShutdownIsolatedSocketTest {
     @Rule
     public final TemporaryFolder tmp = new TemporaryFolder();
 
-    /** Live threads of the app on {@code port}: naruserve-*, tinyhttpd-acceptor-<port> and tinyhttpd-watchdog. */
-    static List<String> appThreads(int port) {
-        List<String> out = new ArrayList<>();
-        for (Thread t : Thread.getAllStackTraces().keySet()) {
-            String n = t.getName();
-            if (t.isAlive() && (n.startsWith("naruserve-") || n.equals("tinyhttpd-acceptor-" + port)
-                    || n.equals("tinyhttpd-watchdog"))) {
-                out.add(n);
-            }
-        }
-        return out;
-    }
-
     /** The size of the package-private registry {@code accessor} of {@code app}. */
     private static int registrySize(RestApp app, String accessor) throws Exception {
-        Method m = app.getClass().getDeclaredMethod(accessor);
-        m.setAccessible(true);
-        Object registry = m.invoke(app);
-        Method size = registry.getClass().getDeclaredMethod("size");
-        size.setAccessible(true);
-        return (Integer) size.invoke(registry);
+        return (Integer) Http.invoke(Http.invoke(app, accessor), "size");
     }
 
     // SDS-AC-9; FR-APP-020 AC-9: after a run with an open WebSocket session, an open SSE stream and an upload whose
@@ -70,7 +50,7 @@ public class ShutdownIsolatedSocketTest {
         app.get("/events", (req, res) -> streams.add(res.sse()));
         app.post("/up", (req, res) -> res.send(String.valueOf(req.file("f").filename())));
         int port = app.listen(0).port();
-        assertTrue("no app thread while running", !appThreads(port).isEmpty());
+        assertTrue("no app thread while running", !Http.appThreads(port).isEmpty());
         try (RawWebSocketClient ws = RawWebSocketClient.open(port, "/ok");
                 Stream sse = new Stream(port, Http.get("/events"));
                 Socket upload = new Socket()) {
@@ -102,10 +82,10 @@ public class ShutdownIsolatedSocketTest {
         }
         // a thread whose pool reports terminated may still be leaving its run method
         long end = System.nanoTime() + TimeUnit.SECONDS.toNanos(1);
-        while (!appThreads(port).isEmpty() && System.nanoTime() < end) {
+        while (!Http.appThreads(port).isEmpty() && System.nanoTime() < end) {
             Thread.sleep(5);
         }
-        assertEquals(new ArrayList<String>(), appThreads(port));
+        assertEquals(new ArrayList<String>(), Http.appThreads(port));
         assertEquals(0, registrySize(app, "webSocketRegistry"));
         assertEquals(0, registrySize(app, "sseRegistry"));
         assertEquals(new ArrayList<String>(), Arrays.asList(dir.list()));

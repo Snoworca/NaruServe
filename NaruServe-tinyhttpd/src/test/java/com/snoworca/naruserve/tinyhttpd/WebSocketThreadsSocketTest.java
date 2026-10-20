@@ -49,14 +49,12 @@ public class WebSocketThreadsSocketTest {
             // only threads made since the apps were built, so a leftover thread of a reused port cannot count
             List<String> senders = new ArrayList<>();
             List<String> idle = new ArrayList<>();
-            for (Thread t : Thread.getAllStackTraces().keySet()) {
-                if (t.isAlive() && !before.contains(t)) {
-                    if (t.getName().contains("-ws-sender-")) {
-                        assertTrue(t.getName(), t.isDaemon());
-                        senders.add(t.getName().replaceAll("-[0-9]+$", ""));
-                    } else if (t.getName().endsWith("-ws-idle")) {
-                        idle.add(t.getName());
-                    }
+            for (Thread t : Http.startedSince(before)) {
+                if (t.getName().contains("-ws-sender-")) {
+                    assertTrue(t.getName(), t.isDaemon());
+                    senders.add(t.getName().replaceAll("-[0-9]+$", ""));
+                } else if (t.getName().endsWith("-ws-idle")) {
+                    idle.add(t.getName());
                 }
             }
             Collections.sort(senders);

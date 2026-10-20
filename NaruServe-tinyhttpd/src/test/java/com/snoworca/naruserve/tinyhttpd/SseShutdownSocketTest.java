@@ -12,7 +12,6 @@ import com.snoworca.naruserve.testing.RecordingLogger;
 import com.snoworca.naruserve.tinyhttpd.RawTargetSocketTest.Http;
 import com.snoworca.naruserve.tinyhttpd.SseSocketTest.Stream;
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.net.SocketTimeoutException;
 import java.util.Arrays;
 import java.util.List;
@@ -30,13 +29,7 @@ public class SseShutdownSocketTest {
 
     private static final String NOTICE = "event: shutdown\ndata: shutdown\n\n";
     /** One stalled-stream event: 64 KiB of data. */
-    private static final String BIG;
-
-    static {
-        char[] a = new char[64 * 1024];
-        Arrays.fill(a, 's');
-        BIG = new String(a);
-    }
+    private static final String BIG = Http.repeat('s', 64 * 1024);
 
     private final TinyHttpdAdapter adapter = new TinyHttpdAdapter();
     private final RestApp app = Http.app(adapter, new RecordingLogger());
@@ -54,18 +47,11 @@ public class SseShutdownSocketTest {
 
     /** The internal SSE registry size of {@code app}, read reflectively since it is package-private in the core. */
     private static int registrySize(RestApp app) throws Exception {
-        Method m = app.getClass().getDeclaredMethod("sseRegistry");
-        m.setAccessible(true);
-        Object registry = m.invoke(app);
-        Method size = registry.getClass().getDeclaredMethod("size");
-        size.setAccessible(true);
-        return (Integer) size.invoke(registry);
+        return (Integer) Http.invoke(Http.invoke(app, "sseRegistry"), "size");
     }
 
     private static int queuedBytes(SseClient c) throws Exception {
-        Method m = c.getClass().getDeclaredMethod("queuedBytes");
-        m.setAccessible(true);
-        return (Integer) m.invoke(c);
+        return (Integer) Http.invoke(c, "queuedBytes");
     }
 
     private int listen() {
@@ -92,11 +78,9 @@ public class SseShutdownSocketTest {
     public void sdsAc12_FR_SSE_005_AC2_AC5_AC6_noticeThenEndForAReaderStalledClientForceClosedRegistryEmpty()
             throws Exception {
         int port = listen();
-        try (Stream reader = new Stream(port, Http.get("/events"))) {
-            reader.readHeaders();
+        try (Stream reader = Stream.open(port, Http.get("/events"))) {
             SseClient a = next();
-            try (Stream stalled = new Stream(port, Http.get("/events"))) {
-                stalled.readHeaders(); // and never reads again
+            try (Stream stalled = Stream.open(port, Http.get("/events"))) { // and never reads again
                 stalledCase(reader, a, stalled);
             }
         }

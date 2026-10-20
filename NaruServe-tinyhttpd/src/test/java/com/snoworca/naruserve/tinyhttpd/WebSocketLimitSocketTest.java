@@ -40,9 +40,8 @@ public class WebSocketLimitSocketTest {
             assertEquals(b.handshake, 101, b.status());
             assertEquals("hi", a.readFrame(TEXT).text());
             assertEquals("hi", b.readFrame(TEXT).text());
-            String third = Http.send(port, "GET /ws HTTP/1.1\r\nHost: 127.0.0.1\r\nUpgrade: websocket\r\n"
-                    + "Connection: Upgrade, close\r\nSec-WebSocket-Key: " + RawWebSocketClient.KEY
-                    + "\r\nSec-WebSocket-Version: 13\r\n\r\n");
+            String third = Http.send(port, RawWebSocketClient.request("/ws", "Upgrade, close",
+                    "Sec-WebSocket-Key: " + RawWebSocketClient.KEY, "Sec-WebSocket-Version: 13"));
             assertEquals(third, 503, Http.status(third));
             assertNotNull(third, Http.header(third, "Retry-After"));
             assertTrue(third, Http.body(third).matches("\\{\"error\":\\{\"code\":\"SERVICE_UNAVAILABLE\","

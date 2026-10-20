@@ -13,7 +13,6 @@ import com.snoworca.naruserve.testing.RecordingLogger;
 import com.snoworca.naruserve.tinyhttpd.RawTargetSocketTest.Http;
 import com.snoworca.naruserve.tinyhttpd.SseSocketTest.Stream;
 import java.io.Closeable;
-import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,19 +33,6 @@ public class LoadIsolatedSocketTest {
     private static final int CONNECTIONS = 60;
     private static final long HEAP_BOUND = 64L * 1024 * 1024;
 
-    /** Live threads of the app on {@code port}: naruserve-*, tinyhttpd-acceptor-<port> and tinyhttpd-watchdog. */
-    static int appThreads(int port) {
-        int n = 0;
-        for (Thread t : Thread.getAllStackTraces().keySet()) {
-            String name = t.getName();
-            if (t.isAlive() && (name.startsWith("naruserve-") || name.equals("tinyhttpd-acceptor-" + port)
-                    || name.equals("tinyhttpd-watchdog"))) {
-                n++;
-            }
-        }
-        return n;
-    }
-
     private static long usedHeapAfterGc() throws InterruptedException {
         Runtime rt = Runtime.getRuntime();
         for (int i = 0; i < 3; i++) {
@@ -59,16 +45,6 @@ public class LoadIsolatedSocketTest {
     private static void assertWithin5s(String what, long startNanos) {
         long ms = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNanos);
         assertTrue(what + " got its message after " + ms + " ms", ms <= 5000);
-    }
-
-    private static void closeAll(List<Closeable> open) {
-        for (Closeable c : open) {
-            try {
-                c.close();
-            } catch (IOException ignored) {
-                // the server may have closed it first
-            }
-        }
     }
 
     // SDS-AC-1; PERF-APP-001 AC-1: 60 WebSocket sessions and 60 SSE streams from 127.0.0.1 under the default limits
@@ -99,7 +75,7 @@ public class LoadIsolatedSocketTest {
                 sse.readUntil("data: one\n\n");
                 assertWithin5s("SSE stream " + i, sseStart);
             }
-            int threads = appThreads(port);
+            int threads = Http.appThreads(port).size();
             long grown = usedHeapAfterGc() - before;
             // each SSE stream holds a worker and each session a read thread, so a name filter that missed the
             // app's threads would count fewer than 2 * CONNECTIONS
@@ -107,7 +83,7 @@ public class LoadIsolatedSocketTest {
                     threads >= 2 * CONNECTIONS && threads <= THREAD_BOUND);
             assertTrue("used heap grew by " + grown + " bytes", grown < HEAP_BOUND);
         } finally {
-            closeAll(open);
+            Http.closeAll(open);
             app.shutdown(2, TimeUnit.SECONDS);
         }
     }

@@ -6,18 +6,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import com.snoworca.naruserve.RestApp;
 import com.snoworca.naruserve.testing.RecordingLogger;
 import com.snoworca.naruserve.tinyhttpd.RawTargetSocketTest.Http;
 import java.io.IOException;
-import java.lang.reflect.Method;
-import java.net.SocketTimeoutException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Locale;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -31,13 +26,7 @@ import org.junit.Test;
 public class WebSocketShutdownSocketTest {
 
     /** One stalled-session message: 512 KiB. */
-    private static final String BIG;
-
-    static {
-        char[] a = new char[512 * 1024];
-        Arrays.fill(a, 's');
-        BIG = new String(a);
-    }
+    private static final String BIG = Http.repeat('s', 512 * 1024);
 
     private final RestApp app = Http.app(new TinyHttpdAdapter(), new RecordingLogger());
     private final List<RawWebSocketClient> clients = new ArrayList<>();
@@ -48,23 +37,12 @@ public class WebSocketShutdownSocketTest {
     @After
     public void stop() {
         app.shutdown(2, TimeUnit.SECONDS);
-        for (RawWebSocketClient c : clients) {
-            try {
-                c.close();
-            } catch (IOException e) {
-                // already gone
-            }
-        }
+        Http.closeAll(clients);
     }
 
     /** The internal registry size of {@code app}, read reflectively since it is package-private in the core. */
     static int registrySize(RestApp app) throws Exception {
-        Method m = app.getClass().getDeclaredMethod("webSocketRegistry");
-        m.setAccessible(true);
-        Object registry = m.invoke(app);
-        Method size = registry.getClass().getDeclaredMethod("size");
-        size.setAccessible(true);
-        return (Integer) size.invoke(registry);
+        return (Integer) Http.invoke(Http.invoke(app, "webSocketRegistry"), "size");
     }
 
     /** /stall queues 16 x 512 KiB on "stall"; /ok answers "hello" to any text. */
@@ -92,36 +70,6 @@ public class WebSocketShutdownSocketTest {
         return c;
     }
 
-    /** Sender threads of {@code port} now inside a socket write, which a client that stopped reading keeps blocked. */
-    private static int blockedWriters(int port) {
-        int n = 0;
-        for (Thread t : Http.threads("naruserve-" + port + "-ws-sender-")) {
-            for (StackTraceElement e : t.getStackTrace()) {
-                String c = e.getClassName();
-                if ((c.startsWith("sun.nio.ch.") || c.startsWith("java.net."))
-                        && e.getMethodName().toLowerCase(Locale.ROOT).contains("write")) {
-                    n++;
-                    break;
-                }
-            }
-        }
-        return n;
-    }
-
-    /** Reads what the server sent until end of stream or a reset; fails when the socket stays open for 5 s. */
-    private static void readToEnd(RawWebSocketClient c) throws IOException {
-        c.setReadTimeout(5000);
-        try {
-            while (true) {
-                c.readFrame();
-            }
-        } catch (SocketTimeoutException e) {
-            fail("the client socket is still open");
-        } catch (IOException endOrReset) {
-            // end of stream or reset: the server aborted the connection
-        }
-    }
-
     // SDS-AC-9; FR-WS-010 AC-4, AC-2: with two sessions whose writes blocked on clients that stopped reading, both
     // are aborted within 1 s plus 200 ms of the participant starting and their sockets end; a healthy session
     // receives close 1001 and its onClose runs once with 1001, though its client never answers the close (T21, T44)
@@ -136,10 +84,10 @@ public class WebSocketShutdownSocketTest {
         healthy.text("hi");
         assertEquals("hello", healthy.readFrame(TEXT).text());
         long end = System.nanoTime() + TimeUnit.SECONDS.toNanos(10);
-        while (blockedWriters(port) < 2 && System.nanoTime() < end) {
+        while (Http.blockedThreads(port).size() < 2 && System.nanoTime() < end) {
             Thread.sleep(5);
         }
-        assertEquals("sender threads blocked in a write", 2, blockedWriters(port));
+        assertEquals("sender threads blocked in a write", 2, Http.blockedThreads(port).size());
         Thread stopper = new Thread(() -> app.shutdown(5, TimeUnit.SECONDS));
         long start = System.nanoTime();
         stopper.start();
@@ -152,8 +100,8 @@ public class WebSocketShutdownSocketTest {
         RawWebSocketClient.Frame close = healthy.readFrame(CLOSE);
         assertEquals(1001, close.closeCode());
         assertEquals("server shutdown", close.closeReason());
-        readToEnd(s1);
-        readToEnd(s2);
+        s1.readToEnd(5000);
+        s2.readToEnd(5000);
         long ended = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
         assertTrue("stalled client sockets ended " + ended + " ms after shutdown began", ended <= 1200);
         stopper.join(10000);

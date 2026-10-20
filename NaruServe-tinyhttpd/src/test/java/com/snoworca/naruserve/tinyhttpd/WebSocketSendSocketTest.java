@@ -10,9 +10,7 @@ import com.snoworca.naruserve.tinyhttpd.RawTargetSocketTest.Http;
 import com.snoworca.naruserve.tinyhttpd.RawWebSocketClient.Frame;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -33,9 +31,9 @@ import org.junit.Test;
 public class WebSocketSendSocketTest {
 
     private static final Pattern TAGGED = Pattern.compile("t([0-7])-([0-9]+)-(x+)");
-    private static final String PAD = repeat('x', 200);
+    private static final String PAD = Http.repeat('x', 200);
     /** One stalled-session message: 512 KiB, shared, so 20 sessions queueing 16 each hold no more than one copy. */
-    private static final String BIG = repeat('s', 512 * 1024);
+    private static final String BIG = Http.repeat('s', 512 * 1024);
 
     private final RestApp app = Http.app(new TinyHttpdAdapter(), new RecordingLogger());
     private final BlockingQueue<String> closes = new LinkedBlockingQueue<>();
@@ -47,12 +45,6 @@ public class WebSocketSendSocketTest {
     @After
     public void stop() {
         app.shutdown(2, TimeUnit.SECONDS);
-    }
-
-    private static String repeat(char c, int n) {
-        char[] a = new char[n];
-        Arrays.fill(a, c);
-        return new String(a);
     }
 
     // SDS-AC-5; FR-WS-007 AC-4: 8 threads x 500 tagged messages to one session reach the client whole, each
@@ -126,22 +118,7 @@ public class WebSocketSendSocketTest {
 
     /** Sender threads of {@code port} now inside a socket write, which a client that stopped reading keeps blocked. */
     private static int blockedWriters(int port) {
-        return blockedThreads(port).size();
-    }
-
-    private static Set<Thread> blockedThreads(int port) {
-        Set<Thread> out = new HashSet<>();
-        for (Thread t : Http.threads("naruserve-" + port + "-ws-sender-")) {
-            for (StackTraceElement e : t.getStackTrace()) {
-                String c = e.getClassName();
-                if ((c.startsWith("sun.nio.ch.") || c.startsWith("java.net."))
-                        && e.getMethodName().toLowerCase(java.util.Locale.ROOT).contains("write")) {
-                    out.add(t);
-                    break;
-                }
-            }
-        }
-        return out;
+        return Http.blockedThreads(port).size();
     }
 
     /**
@@ -150,7 +127,7 @@ public class WebSocketSendSocketTest {
      */
     private static long sampleWriters(int port, Map<Thread, Long> blockedSince) {
         long now = System.nanoTime();
-        Set<Thread> blocked = blockedThreads(port);
+        Set<Thread> blocked = Http.blockedThreads(port);
         for (Thread t : blocked) {
             if (!blockedSince.containsKey(t)) {
                 blockedSince.put(t, now);
@@ -176,16 +153,6 @@ public class WebSocketSendSocketTest {
         assertEquals("sender threads blocked in a write", n, blockedWriters(port));
     }
 
-    private static void closeAll(List<RawWebSocketClient> clients) {
-        for (RawWebSocketClient c : clients) {
-            try {
-                c.close();
-            } catch (IOException e) {
-                // already gone
-            }
-        }
-    }
-
     // SDS-AC-5; FR-WS-007 AC-5: with 20 sessions whose clients stopped reading while the server writes to them, a
     // sendText to a healthy session reaches its client within 1 s (T23)
     @Test(timeout = 60000)
@@ -204,7 +171,7 @@ public class WebSocketSendSocketTest {
                 assertTrue("healthy reply after " + ms + " ms", ms <= 1000);
             }
         } finally {
-            closeAll(stalled);
+            Http.closeAll(stalled);
         }
     }
 
@@ -243,7 +210,7 @@ public class WebSocketSendSocketTest {
                 assertEquals("hello", healthy.readFrame(TEXT).text());
             }
         } finally {
-            closeAll(stalled);
+            Http.closeAll(stalled);
         }
     }
 }

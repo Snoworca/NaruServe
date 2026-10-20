@@ -13,12 +13,11 @@ import com.snoworca.naruserve.SseClient;
 import com.snoworca.naruserve.testing.RecordingLogger;
 import com.snoworca.naruserve.tinyhttpd.RawTargetSocketTest.Http;
 import com.snoworca.naruserve.tinyhttpd.SseSocketTest.Stream;
+import java.io.Closeable;
 import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Locale;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -35,37 +34,20 @@ public class LongConnectionShutdownSocketTest {
     /** The D-344 margin over the shutdown timeout. */
     private static final long MARGIN_MS = 3000;
     /** One stalled-session message: 512 KiB; one stalled-stream event: 64 KiB. */
-    private static final String BIG_WS;
-    private static final String BIG_SSE;
-
-    static {
-        char[] a = new char[512 * 1024];
-        Arrays.fill(a, 's');
-        BIG_WS = new String(a);
-        BIG_SSE = new String(a, 0, 64 * 1024);
-    }
+    private static final String BIG_WS = Http.repeat('s', 512 * 1024);
+    private static final String BIG_SSE = Http.repeat('s', 64 * 1024);
 
     private final TinyHttpdAdapter adapter = new TinyHttpdAdapter();
     private final RecordingLogger log = new RecordingLogger();
     private final RestApp app = Http.app(adapter, log);
-    private final List<AutoCloseableSocket> sockets = new ArrayList<>();
+    private final List<Closeable> sockets = new ArrayList<>();
     private final BlockingQueue<Long> stalledClosed = new LinkedBlockingQueue<>();
     private final BlockingQueue<SseClient> opened = new LinkedBlockingQueue<>();
-
-    private interface AutoCloseableSocket {
-        void close() throws IOException;
-    }
 
     @After
     public void stop() {
         app.shutdown(2, TimeUnit.SECONDS);
-        for (AutoCloseableSocket s : sockets) {
-            try {
-                s.close();
-            } catch (IOException e) {
-                // already gone
-            }
-        }
+        Http.closeAll(sockets);
         Http.stopQuietly(adapter);
     }
 
@@ -89,15 +71,14 @@ public class LongConnectionShutdownSocketTest {
 
     private RawWebSocketClient ws(int port, String path) throws IOException {
         RawWebSocketClient c = RawWebSocketClient.open(port, path);
-        sockets.add(c::close);
+        sockets.add(c);
         assertEquals(c.handshake, 101, c.status());
         return c;
     }
 
     private Stream stream(int port) throws IOException {
-        Stream s = new Stream(port, Http.get("/events"));
-        sockets.add(s::close);
-        s.readHeaders();
+        Stream s = Stream.open(port, Http.get("/events"));
+        sockets.add(s);
         return s;
     }
 
@@ -116,58 +97,11 @@ public class LongConnectionShutdownSocketTest {
         long end = System.nanoTime() + TimeUnit.SECONDS.toNanos(10);
         int stable = 0;
         while (stable < 20 && System.nanoTime() < end) {
-            stable = blockedWriters(port) > blockedBefore ? stable + 1 : 0;
+            stable = Http.blockedThreads(port).size() > blockedBefore ? stable + 1 : 0;
             Thread.sleep(10);
         }
-        assertEquals("sender threads blocked in a write", blockedBefore + 1, blockedWriters(port));
+        assertEquals("sender threads blocked in a write", blockedBefore + 1, Http.blockedThreads(port).size());
         return c;
-    }
-
-    /** Sender threads of {@code port} now inside a socket write. */
-    private static int blockedWriters(int port) {
-        int n = 0;
-        for (Thread t : Http.threads("naruserve-" + port + "-ws-sender-")) {
-            for (StackTraceElement e : t.getStackTrace()) {
-                String c = e.getClassName();
-                if ((c.startsWith("sun.nio.ch.") || c.startsWith("java.net."))
-                        && e.getMethodName().toLowerCase(Locale.ROOT).contains("write")) {
-                    n++;
-                    break;
-                }
-            }
-        }
-        return n;
-    }
-
-    /** Reads until end of stream or a reset; fails when the socket stays open for {@code millis}. */
-    private static void readToEnd(RawWebSocketClient c, long millis) throws IOException {
-        c.setReadTimeout((int) Math.max(200, millis));
-        try {
-            while (true) {
-                c.readFrame();
-            }
-        } catch (SocketTimeoutException e) {
-            fail("the stalled WebSocket client socket is still open");
-        } catch (IOException endOrReset) {
-            // end of stream or reset: the server closed the connection
-        }
-    }
-
-    /** Waits up to 5 s until {@code n} logger lines match {@code regex}. */
-    private void awaitLines(String regex, int n) throws InterruptedException {
-        long end = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
-        int seen = 0;
-        while (System.nanoTime() < end) {
-            seen = 0;
-            for (String line : new ArrayList<>(log.lines)) {
-                seen += line.matches(regex) ? 1 : 0;
-            }
-            if (seen >= n) {
-                return;
-            }
-            Thread.sleep(5);
-        }
-        throw new AssertionError(seen + " lines matching " + regex + ", expected " + n + ": " + log.lines);
     }
 
     // SDS-AC-9; FR-APP-020 AC-8, AC-6, AC-7, FR-APP-019 AC-9, AC-10: two stalled WebSocket sessions, a healthy one,
@@ -200,8 +134,8 @@ public class LongConnectionShutdownSocketTest {
         reader.readAll();
         assertTrue(reader.payload(), reader.payload().endsWith(NOTICE));
         long left = 1000 + MARGIN_MS - TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
-        readToEnd(s1, left);
-        readToEnd(s2, left);
+        s1.readToEnd(left);
+        s2.readToEnd(left);
         stalled.setReadTimeout((int) Math.max(200, left));
         try {
             stalled.readAll();
@@ -212,9 +146,9 @@ public class LongConnectionShutdownSocketTest {
         }
         assertTrue("the stalled stream was not cut before its notice", !stalled.payload().endsWith(NOTICE));
         assertEquals(AppState.TERMINATED, app.state());
-        awaitLines("INFO WS /ok 1001 \\d+ms rid=[0-9a-f]{16}", 1);
-        awaitLines("INFO WS /stall 1001 \\d+ms rid=[0-9a-f]{16}", 2);
-        awaitLines("INFO GET /events 200 \\d+ms in=0 out=\\d+ rid=[0-9a-f]{16} sse start=\\d+ cause=shutdown", 2);
+        RecordingLogger.awaitMatching(() -> log.lines, "INFO WS /ok 1001 \\d+ms rid=[0-9a-f]{16}", 1);
+        RecordingLogger.awaitMatching(() -> log.lines, "INFO WS /stall 1001 \\d+ms rid=[0-9a-f]{16}", 2);
+        RecordingLogger.awaitMatching(() -> log.lines, "INFO GET /events 200 \\d+ms in=0 out=\\d+ rid=[0-9a-f]{16} sse start=\\d+ cause=shutdown", 2);
     }
 
     // SDS-AC-9; FR-APP-020 AC-2: with a 500 ms timeout and one stalled session, the WebSocket close wait ends within
@@ -231,7 +165,7 @@ public class LongConnectionShutdownSocketTest {
         assertNotNull("the stalled session never ended", closed);
         long waitMs = TimeUnit.NANOSECONDS.toMillis(closed - start);
         assertTrue("the close wait ended " + waitMs + " ms after shutdown began", waitMs <= 500 + 200);
-        readToEnd(s, 500 + MARGIN_MS - TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start));
+        s.readToEnd(500 + MARGIN_MS - TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start));
     }
 
     // SDS-AC-9; FR-APP-020 AC-4: while a stalled session holds the WebSocket close wait the adapter still accepts:
