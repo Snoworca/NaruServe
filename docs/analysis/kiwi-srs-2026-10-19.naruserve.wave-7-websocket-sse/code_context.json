@@ -1,0 +1,42 @@
+{
+ "source": "code-context analyst (Explore/sonnet) 2026-10-20",
+ "relevant_files": [
+  "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java (add ws, webSocket, sse configurers)",
+  "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:114-127,342-345,539-636,826-830 (shutdownParticipants, shutdown deadline, runShutdownSequence, webSocketRoute hook)",
+  "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ShutdownParticipants.java:10-50 (Phase enum, add(Phase,Runnable), no deadline)",
+  "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java:47 (lastEventId exists)",
+  "NaruServe-api/src/main/java/com/snoworca/naruserve/Response.java:9-95 (no sse; default methods throw UOE)",
+  "NaruServe-api/src/main/java/com/snoworca/naruserve/HttpException.java:1-50 (no withHeader/headers)",
+  "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:145-218,357-358 (WEBSOCKET route reaches 426 fallback)",
+  "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StandardErrors.java:60-92",
+  "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ErrorPath.java",
+  "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/AccessLog.java:51-86",
+  "NaruServe-api/src/main/java/com/snoworca/naruserve/ServerOptions.java:41-54 (maxSseStreams, maxUpgradedConnections exist)",
+  "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpExchange.java (upgrade, eventStream, sendFile)",
+  "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/UpgradeHandler.java, spi/StreamDrain.java, spi/JsonCodec.java",
+  "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdExchange.java:137-250",
+  "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdFeatures.java:20-58 (eventStream/upgrade throw UOE naming wave 7)",
+  "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdAdapter.java:105-116 (maxEventStreams, maxUpgradedConnections mapping)",
+  "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/KeeperThread.java:11-35",
+  "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/ (InMemoryHttpAdapter, RecordingExchange, TestApp)"
+ ],
+ "tinyhttpd_api": {
+  "WebSocketHandler": "/Users/beom/work/git/TinyHttpd/websocket/src/main/java/com/snoworca/tinyhttpd/websocket/WebSocketHandler.java: ctor(Factory), allowAnyOrigin(), maxFramePayloadBytes(int), maxMessageBytes(int), pingInterval(int millis), handle(Request,Response)",
+  "WebSocketListener": "onOpen/onText/onBinary/onClose (no onError)",
+  "WebSocket": "sendText, sendBinary, ping(byte[]<=125), close(code,reason), isOpen",
+  "UpgradedConnection": "core/.../http/UpgradedConnection.java close(), onServerStop",
+  "ResponseWrapper": "core/.../http/ResponseWrapper.java",
+  "ExchangeResponse": "core/.../server/ExchangeResponse.java:172-177 ignores Connection other than close; :466-470"
+ },
+ "missing_evidence": [
+  "RestApp.ws",
+  "Response.sse/SseClient/SseEvent",
+  "WebSocketSession",
+  "spi WebSocketEndpoint/Channel/Settings",
+  "HttpExchange.webSocket",
+  "HttpException.withHeader/headers",
+  "ShutdownParticipants deadline",
+  "sender executor, idle scheduler"
+ ],
+ "external_paths_detected": []
+}

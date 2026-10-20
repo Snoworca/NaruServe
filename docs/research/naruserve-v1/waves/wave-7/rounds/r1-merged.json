@@ -1,0 +1,134 @@
+{
+ "round": 1,
+ "findings": [
+  {
+   "finding_id": "W1-001",
+   "severity": "low",
+   "items": [
+    "D-408"
+   ],
+   "claim": "D-408 is carried verbatim, but its TinyHttpd end-to-end half cannot be met: TinyHttpd drops any Connection value other than close on a non-101 response, so Connection: Upgrade never reaches the client. The wave design handles this in Carried from earlier waves (deferred D-020 gap, both headers asserted in-memory, D-408 not verified on the TinyHttpd test alone). So D-408 cannot reach verified in this wave. This is a known, tracked residual, not a design gap.",
+   "evidence": "/Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/ExchangeResponse.java:172-177; docs/research/naruserve-v1/waves/wave-7/design.md:117",
+   "suggested_fix": "None to the design. At wave close, keep D-408 below verified and open the D-020 TinyHttpd-gap issue in the wave 7 ledger as the carried note says."
+  },
+  {
+   "finding_id": "W2-001",
+   "severity": "high",
+   "items": [
+    "D-302",
+    "D-429",
+    "D-435",
+    "D-444",
+    "D-419",
+    "D-423",
+    "D-106"
+   ],
+   "claim": "The upgrade extension point that waves 1-6 actually ship cannot host TinyHttpd's WebSocketHandler. HttpExchange.upgrade(headers, UpgradeHandler) has the adapter write the 101 from headers the core supplies, then hands the core raw InputStream/OutputStream. D-302/D-429 instead need TinyHttpd's WebSocketHandler.handle(Request, Response) to validate, write the 101 and run the framing read loop inside NaruServe-tinyhttpd. The core cannot do it itself, because I-002 bans tinyhttpd types in NaruServe-api, and with raw streams it would need its own frame codec, which D-302 forbids. The SPI also has no channel for the session events (open/text/binary/close), the sends and the close to the TinyHttpd WebSocket, the per-route limits and ping interval (D-419/D-423; ServerSettings holds none of them), the UpgradedConnection abort handle (D-435/D-425), or a pre-101 rejection with its status and headers (D-444). The wave design never names the SPI addition this needs, and D-106 says waves 6-8 'add adapter classes without changing the SPI'.",
+   "evidence": "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpExchange.java:83-85; NaruServe-api/src/main/java/com/snoworca/naruserve/spi/UpgradeHandler.java:10; NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdFeatures.java:55-57; TinyHttpd 46b973e websocket/.../WebSocketHandler.java:108-134; docs/research/naruserve-v1/design/00.design.md:203",
+   "suggested_fix": "State in the wave design an add-only SPI point (I-014), for example a Java 8 default method HttpExchange.webSocket(settings, endpoint). It needs SPI-neutral endpoint and connection interfaces that carry: the message limit, the ping interval and the origin policy; open/text/binary/close callbacks; a thread-safe send/ping/close handle; an abort() handle backed by UpgradedConnection.close(); and a pre-101 rejection reported as status plus headers. Also state that the raw-stream UpgradeHandler path is not used for WebSocket, and that this counts as an addition, not a change, under D-106."
+  },
+  {
+   "finding_id": "W2-002",
+   "severity": "medium",
+   "items": [
+    "D-444",
+    "D-445",
+    "D-324"
+   ],
+   "claim": "D-444 requires the pre-101 rejection to go through the dispatcher's error handling 'with the exception's status and its headers set on the response': Sec-WebSocket-Version: 13 on 426 and Retry-After on 503. D-445 also needs Connection: close on its 503. NaruServe's public HttpException has only status, message and code, with no headers, and docs/api/middleware.md documents only status()/code(). The header carrier is not decided anywhere, so a straightforward implementation drops the headers that the T19 version-12 test asserts.",
+   "evidence": "NaruServe-api/src/main/java/com/snoworca/naruserve/HttpException.java:8-37; docs/api/middleware.md:173",
+   "suggested_fix": "Decide the carrier in the wave design. Either add an add-only public header API to HttpException (and document it in docs/api/middleware.md), or use an internal rejection type that the dispatcher's error path recognises and whose headers it copies after the D-132 body is built."
+  },
+  {
+   "finding_id": "W2-003",
+   "severity": "medium",
+   "items": [
+    "D-335",
+    "D-406",
+    "D-436",
+    "D-429",
+    "D-210"
+   ],
+   "claim": "The wave-5 feature stubs cannot be filled 'without editing the adapter core'. TinyHttpdFeatures.upgrade/eventStream receive only the TinyHttpd Response. WebSocketHandler.handle needs the Request as well. The SSE drain must run on the worker after ExchangeHandler.handle returns, because the SPI says eventStream 'returns at once' and res.sse() must return to the user handler. TinyHttpdExchange.run currently just blocks on ended.await() after handle, so the drain has nowhere to run. In addition, TinyHttpdExchange.upgrade is synchronized, so running the WS read loop inside it (D-429, same thread) holds the exchange monitor for the whole connection.",
+   "evidence": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdFeatures.java:51-57; NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdExchange.java:45-50,228-247; NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpExchange.java:87-89; docs/research/naruserve-v1/design/00.design.md:365",
+   "suggested_fix": "Have the wave design allow package-private edits to TinyHttpdExchange and TinyHttpdFeatures: pass the Request/exchange into the feature classes; let eventStream store the drain and have run() execute it after handler.handle returns, writing under the exchange lock; and run the WebSocket read loop outside the exchange monitor. No public SPI signature changes."
+  },
+  {
+   "finding_id": "W2-004",
+   "severity": "medium",
+   "items": [
+    "D-303",
+    "D-295",
+    "D-444",
+    "D-324"
+   ],
+   "claim": "Not every option for the handler-timing decision of D-303 is compatible with D-295 ('runs once per accepted upgrade'). TinyHttpd calls Factory.create(req) before res.upgrade, and res.upgrade can still reject with 413 (body over maxDrainBytes) or 503 (maxUpgradedConnections), both before the 101. If wave 7 runs the user's (req, ws) handler in Factory.create, before the 101, the handler runs for upgrades that are then rejected, and any listeners or sends it registered are wasted.",
+   "evidence": "TinyHttpd 46b973e websocket/.../WebSocketHandler.java:124,133; core/.../server/Upgraded.java:78,82",
+   "suggested_fix": "Constrain D-303: run the handler after the 101, in WebSocketListener.onOpen on the read thread, before the first frame is read (the D-430 hook), so only accepted upgrades run it and no message can arrive before its listeners are registered. Record this in docs/api/websocket.md."
+  },
+  {
+   "finding_id": "W2-005",
+   "severity": "medium",
+   "items": [
+    "D-300",
+    "D-303",
+    "D-444"
+   ],
+   "claim": "TinyHttpd's own Origin check cannot express a NaruServe allowlist. WebSocketHandler.originAllowed always accepts a request with no Origin, and always accepts a same-origin request, whatever allowedOrigins holds. So 'not on the configured allowlist -> 403' (D-300), and a default of 'deny' if D-303 chooses one, cannot be enforced through allowedOrigins(). D-444 still lists the Origin 403 as a TinyHttpd-thrown rejection.",
+   "evidence": "TinyHttpd 46b973e websocket/.../WebSocketHandler.java:155-185",
+   "suggested_fix": "Do the Origin check in NaruServe before the upgrade extension point (after middleware, answered 403 through the standard error path), and configure WebSocketHandler.allowAnyOrigin(). Decide explicitly whether a request without Origin (a non-browser client) passes, and record that in docs/api/websocket.md and docs/api/defaults.md."
+  },
+  {
+   "finding_id": "W2-006",
+   "severity": "medium",
+   "items": [
+    "D-416",
+    "D-346"
+   ],
+   "claim": "The D-416 per-app thread total of 451 leaves out the non-daemon naruserve-keeper thread that the wave-5 adapter starts at bind and keeps until stop. The real default bound is 452: 449 threads at 256 KiB plus the acceptor, the watchdog and the keeper at the platform default stack. The design wants that wrong total recorded in docs/api/defaults.md and used as the T26 thread bound.",
+   "evidence": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/KeeperThread.java:1-30; NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdAdapter.java:56-70",
+   "suggested_fix": "Count the keeper thread: 452 threads in total, 449 of them requesting 256 KiB (112.25 MiB unchanged), and use that total in defaults.md and T26."
+  },
+  {
+   "finding_id": "W2-007",
+   "severity": "low",
+   "items": [
+    "D-417",
+    "D-324"
+   ],
+   "claim": "With the sender thread limit equal to maxUpgradedConnections, the limit can be briefly short. TinyHttpd frees an upgraded slot (Upgraded.ended) once WebSocketHandler.handle returns, and that can happen while the closed session's last sender task is still on its thread. A new session admitted in that window needs a 129th sender task, which then either queues behind another session's task, against 'never queueing', or is rejected.",
+   "evidence": "TinyHttpd 46b973e core/.../server/Upgraded.java ended(); websocket/.../WebSocket.java run() finally",
+   "suggested_fix": "In the TinyHttpd onClose bridge, abort the socket and wait for the session's in-flight sender task before returning, so the TinyHttpd slot is freed only after the sender slot is."
+  },
+  {
+   "finding_id": "W2-008",
+   "severity": "low",
+   "items": [
+    "D-444"
+   ],
+   "claim": "WebSocketHandler sets Sec-WebSocket-Accept (and Sec-WebSocket-Protocol) on the Response before res.upgrade, and res.upgrade can still throw 413 or 503. When the dispatcher then answers that rejection on the same TinyHttpd Response, the error response carries a Sec-WebSocket-Accept header.",
+   "evidence": "TinyHttpd 46b973e websocket/.../WebSocketHandler.java:129-133",
+   "suggested_fix": "Have the D-435 ResponseWrapper hold handshake headers until upgrade() succeeds, or reset() the TinyHttpd Response before the error commit."
+  },
+  {
+   "finding_id": "W2-009",
+   "severity": "low",
+   "items": [
+    "D-336"
+   ],
+   "claim": "D-336 says the SSE count uses 'never TinyHttpd's maxEventStreams', but the wave-5 adapter core still sets maxEventStreams(maxSseStreams). It is harmless because startEventStream is never called, but the statement does not match the code, and the setting also sizes TinyHttpd's output BufferPool to maxWorkers+maxEventStreams+maxUpgraded.",
+   "evidence": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdAdapter.java:111; TinyHttpd 46b973e core/.../server/HttpServer.java:122-123",
+   "suggested_fix": "Either note that the setting is a deliberately unused cap, or leave it. Do not let wave 7 rely on TinyHttpd's eventStreams counter."
+  },
+  {
+   "finding_id": "W2-010",
+   "severity": "low",
+   "items": [
+    "D-344"
+   ],
+   "claim": "docs/api/lifecycle.md currently says shutdown can take longer than its timeout, because onStop, resource close and log flush are unbounded. D-344 says it returns within timeout plus a fixed margin, a guarantee that holds only when callbacks return at once. The doc update could end up contradicting the existing text.",
+   "evidence": "docs/api/lifecycle.md:179",
+   "suggested_fix": "Word the D-344 margin in lifecycle.md as covering the engine and long-connection waits, with onStop and owned-resource time added on top."
+  }
+ ]
+}

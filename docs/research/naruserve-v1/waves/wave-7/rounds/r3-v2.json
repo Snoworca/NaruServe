@@ -1,0 +1,29 @@
+{
+ "rows": [],
+ "findings": [
+  {
+   "finding_id": "W2-001",
+   "severity": "medium",
+   "items": ["D-336", "D-326", "D-106"],
+   "claim": "D-336 puts the SSE stream counter, and the 503 when the limit is reached, inside the TinyHttpd event-stream adapter class, so the 503 is thrown from inside HttpExchange.eventStream. The wave-5 TinyHttpdExchange.eventStream calls start() (started=true) before it calls the feature method, and only an UnsupportedOperationException resets started. The r2 W2-002 decision fixes the start state only for webSocket. Nothing says that a 503 from eventStream leaves the exchange unstarted. Built on the existing pattern, the dispatcher's error commit of that 503 throws IllegalStateException('the response was already started'), so the 503 that D-336 requires never reaches the client.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-7/design.md:79; docs/research/naruserve-v1/waves/wave-7/design.md:129; docs/research/naruserve-v1/waves/wave-7/design.md:152; NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdExchange.java:193-196,208-212,239-248; NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpExchange.java:13-14",
+   "suggested_fix": "Extend the r2 W2-002 start-state decision to eventStream. The event-stream class checks and reserves the SSE counter under the exchange lock before anything is committed, and marks the response started only when the headers are committed. A 503 from the limit leaves the exchange unstarted, so the dispatcher's error path commits it. Add a test that opens maxSseStreams+1 streams over TinyHttpd and expects a 503 with the standard error body."
+  },
+  {
+   "finding_id": "W2-002",
+   "severity": "medium",
+   "items": ["D-335", "D-336", "D-327", "D-334", "D-406"],
+   "claim": "A HEAD request to an SSE route never ends, and it holds a TinyHttpd worker and an SSE slot until shutdown. The router runs GET handlers for HEAD (automatic HEAD), so res.sse() runs. Under D-335 the drain writes through Response.getOutputStream(). On HEAD, TinyHttpd sets discard=true and drops every body byte without touching the socket. So no heartbeat write ever fails, the client's disconnect is never seen, and onClose never runs. TinyHttpd's own startEventStream returns a stream that is 'already closed for HEAD', but D-335 forbids that path, and neither the frozen SSE items nor the wave decisions say what HEAD does. About 128 HEAD requests (maxSseStreams) use up the SSE limit, and from then on every SSE request gets a 503.",
+   "evidence": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:220; docs/api/routing.md:151; TinyHttpd 46b973e core/src/main/java/com/snoworca/tinyhttpd/server/ExchangeResponse.java:439-441,482-483; TinyHttpd 46b973e core/src/main/java/com/snoworca/tinyhttpd/http/Response.java:170; docs/research/naruserve-v1/waves/wave-7/design.md:77,129",
+   "suggested_fix": "Add a wave decision for HEAD: res.sse() on a HEAD request commits the D-326 status and headers with no body, registers no drain, takes no SSE slot, and returns an SseClient that is already ended (send is a no-op or throws, as SRS decides, and onClose runs once), as TinyHttpd's startEventStream does for HEAD. Record this in docs/api/sse.md and add a TinyHttpd test asserting that HEAD on an SSE route returns at once and leaves the SSE count unchanged."
+  },
+  {
+   "finding_id": "W2-003",
+   "severity": "low",
+   "items": ["D-445", "D-435", "D-340"],
+   "claim": "Two bullets of the r2 W2-003 session-registration decision disagree about a reserved session whose 101 completes after the closed flag is set. One says onOpen sends close 1001 at once and skips the user handler. The other says the closing participant aborts the reserved session's connection as soon as its channel is set. Both act on the same session at the same moment, so the client may see an aborted socket instead of the 1001 Going Away that D-340 requires. The 1001 is also written from the read thread outside the session's D-417 sender slot.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-7/design.md:155-156",
+   "suggested_fix": "Choose one path. Either (a) onOpen hands close 1001 to the session's sender slot, and the closing participant treats that session like an open one (it waits for the close task up to the D-435 bound, then aborts), or (b) state that a session reserved before the flag is aborted without a close frame, and record this as an exception to D-340."
+  }
+ ]
+}

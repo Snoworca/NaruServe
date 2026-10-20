@@ -1,0 +1,21 @@
+{
+ "rows": [],
+ "findings": [
+  {
+   "finding_id": "W2-001",
+   "severity": "medium",
+   "items": ["D-406", "D-106", "D-335", "D-337", "D-339"],
+   "claim": "On TinyHttpd the SSE drain runs on the request worker only after the handler returns (wave decision W2-003; TinyHttpdExchange.run calls handler.handle, then waits). Every SseClient.send made inside the handler, before it returns, can only fill the 256 KiB queue of D-406, because nothing writes to the socket yet. A handler that replays missed events in a loop, as the Last-Event-ID example in docs/api/sse.md does, overflows the queue once the replay passes 256 KiB, whatever the client's speed. The overflow policy then closes the stream or throws (sse.md:95 leans toward close). A healthy, fast client gets a closed stream, and D-406's overflow is meant only for a slow consumer. Nothing in the design says what a send on the worker thread does before the drain starts.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-7/design.md:78,129; NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdExchange.java:47-51; NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpExchange.java:87-89; docs/api/sse.md:83-88,95",
+   "suggested_fix": "Add a wave decision. While the drain has not started, an SseClient.send called on the stream's own worker thread (the handler's thread) writes the queued events and the new event straight to the stream under the exchange lock instead of waiting for the queue. The queue limit and the overflow policy apply only to sends from other threads, or once the drain runs. Record in docs/api/sse.md that in-handler sends never overflow. Add a TinyHttpd test whose handler sends more than 256 KiB before returning, and assert that the client receives every event and the stream stays open."
+  },
+  {
+   "finding_id": "W2-002",
+   "severity": "low",
+   "items": ["D-445", "D-435", "D-344"],
+   "claim": "The r3 W2-003 decision says a reserved session that opens after the closed flag was set hands close 1001 to its sender slot, and that the closing participant waits for that task within its 1 s close wait. It does not cover a reserved session whose 101 is written after the close wait ended. Upgraded.start first drains the upgrade request body, so a slow body can cause this. Such a session is not aborted by the participant. When TinyHttpd's stop later runs, its stop callback calls close(1001) on the stopping thread while the session's sender thread may hold the write lock on a stalled client. This is the write-timeout wait on the stopping thread that D-435 exists to prevent, and it can push shutdown past the D-344 bound.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-7/design.md:154-157,165; TinyHttpd 46b973e core/src/main/java/com/snoworca/tinyhttpd/server/Upgraded.java:75-106; TinyHttpd 46b973e core/src/main/java/com/snoworca/tinyhttpd/server/HttpServer.java:467-470; TinyHttpd 46b973e websocket/src/main/java/com/snoworca/tinyhttpd/websocket/WebSocket.java:260-269",
+   "suggested_fix": "State that a session whose onOpen comes after the participant's close wait ended is aborted at once through its captured UpgradedConnection, with no close frame. Record this as a narrow exception to D-340 for that race."
+  }
+ ]
+}

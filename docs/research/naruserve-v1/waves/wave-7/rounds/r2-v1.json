@@ -1,0 +1,323 @@
+{
+  "rows": [
+    {
+      "id": "D-294",
+      "verdict": "covered"
+    },
+    {
+      "id": "D-295",
+      "verdict": "covered"
+    },
+    {
+      "id": "D-296",
+      "verdict": "covered"
+    },
+    {
+      "id": "D-429",
+      "verdict": "covered"
+    },
+    {
+      "id": "D-430",
+      "verdict": "covered"
+    },
+    {
+      "id": "D-444",
+      "verdict": "covered"
+    },
+    {
+      "id": "D-297",
+      "verdict": "covered"
+    },
+    {
+      "id": "D-298",
+      "verdict": "covered"
+    },
+    {
+      "id": "D-299",
+      "verdict": "covered"
+    },
+    {
+      "id": "D-300",
+      "verdict": "covered"
+    },
+    {
+      "id": "D-301",
+      "verdict": "covered"
+    },
+    {
+      "id": "D-302",
+      "verdict": "covered"
+    },
+    {
+      "id": "D-408",
+      "verdict": "altered"
+    },
+    {
+      "id": "D-303",
+      "verdict": "covered"
+    },
+    {
+      "id": "D-304",
+      "verdict": "covered"
+    },
+    {
+      "id": "D-305",
+      "verdict": "covered"
+    },
+    {
+      "id": "D-306",
+      "verdict": "covered"
+    },
+    {
+      "id": "D-307",
+      "verdict": "covered"
+    },
+    {
+      "id": "D-308",
+      "verdict": "covered"
+    },
+    {
+      "id": "D-309",
+      "verdict": "covered"
+    },
+    {
+      "id": "D-310",
+      "verdict": "covered"
+    },
+    {
+      "id": "D-311",
+      "verdict": "covered"
+    },
+    {
+      "id": "D-312",
+      "verdict": "covered"
+    },
+    {
+      "id": "D-313",
+      "verdict": "covered"
+    },
+    {
+      "id": "D-314",
+      "verdict": "covered"
+    },
+    {
+      "id": "D-315",
+      "verdict": "covered"
+    },
+    {
+      "id": "D-316",
+      "verdict": "covered"
+    },
+    {
+      "id": "D-317",
+      "verdict": "covered"
+    },
+    {
+      "id": "D-318",
+      "verdict": "covered"
+    },
+    {
+      "id": "D-417",
+      "verdict": "covered"
+    },
+    {
+      "id": "D-319",
+      "verdict": "covered"
+    },
+    {
+      "id": "D-320",
+      "verdict": "covered"
+    },
+    {
+      "id": "D-321",
+      "verdict": "covered"
+    },
+    {
+      "id": "D-322",
+      "verdict": "covered"
+    },
+    {
+      "id": "D-323",
+      "verdict": "covered"
+    },
+    {
+      "id": "D-419",
+      "verdict": "covered"
+    },
+    {
+      "id": "D-423",
+      "verdict": "covered"
+    },
+    {
+      "id": "D-424",
+      "verdict": "covered"
+    },
+    {
+      "id": "D-425",
+      "verdict": "covered"
+    },
+    {
+      "id": "D-324",
+      "verdict": "covered"
+    },
+    {
+      "id": "D-325",
+      "verdict": "covered"
+    },
+    {
+      "id": "D-326",
+      "verdict": "covered"
+    },
+    {
+      "id": "D-327",
+      "verdict": "covered"
+    },
+    {
+      "id": "D-328",
+      "verdict": "covered"
+    },
+    {
+      "id": "D-329",
+      "verdict": "covered"
+    },
+    {
+      "id": "D-330",
+      "verdict": "covered"
+    },
+    {
+      "id": "D-331",
+      "verdict": "covered"
+    },
+    {
+      "id": "D-332",
+      "verdict": "covered"
+    },
+    {
+      "id": "D-333",
+      "verdict": "covered"
+    },
+    {
+      "id": "D-334",
+      "verdict": "covered"
+    },
+    {
+      "id": "D-335",
+      "verdict": "covered"
+    },
+    {
+      "id": "D-406",
+      "verdict": "covered"
+    },
+    {
+      "id": "D-336",
+      "verdict": "covered"
+    },
+    {
+      "id": "D-337",
+      "verdict": "covered"
+    },
+    {
+      "id": "D-338",
+      "verdict": "covered"
+    },
+    {
+      "id": "D-339",
+      "verdict": "covered"
+    },
+    {
+      "id": "D-340",
+      "verdict": "covered"
+    },
+    {
+      "id": "D-341",
+      "verdict": "covered"
+    },
+    {
+      "id": "D-342",
+      "verdict": "covered"
+    },
+    {
+      "id": "D-343",
+      "verdict": "covered"
+    },
+    {
+      "id": "D-435",
+      "verdict": "covered"
+    },
+    {
+      "id": "D-436",
+      "verdict": "covered"
+    },
+    {
+      "id": "D-445",
+      "verdict": "covered"
+    },
+    {
+      "id": "D-446",
+      "verdict": "covered"
+    },
+    {
+      "id": "D-344",
+      "verdict": "covered"
+    },
+    {
+      "id": "D-439",
+      "verdict": "covered"
+    },
+    {
+      "id": "D-345",
+      "verdict": "covered"
+    },
+    {
+      "id": "D-346",
+      "verdict": "covered"
+    },
+    {
+      "id": "D-416",
+      "verdict": "altered"
+    },
+    {
+      "id": "D-347",
+      "verdict": "covered"
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "W1-001",
+      "severity": "medium",
+      "items": [
+        "D-416",
+        "D-346"
+      ],
+      "claim": "The D-416 item is copied verbatim with a thread total of 451, but wave decision W2-006 sets the total to 452 (it adds the non-daemon naruserve-keeper thread) for docs/api/defaults.md and the T26 bound. So the wave states D-416 differently from the frozen lock, and the item text and the decision disagree inside design.md. The decision also leaves the stack figure open: D-416's '449 threads request 112.25 MiB' does not say whether the keeper thread (started in KeeperThread.java with the platform default stack, like the acceptor and watchdog) changes it.",
+      "evidence": "docs/research/naruserve-v1/waves/wave-7/design.md:101; docs/research/naruserve-v1/waves/wave-7/design.md:133; docs/research/naruserve-v1/design/00.design.md:604; NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/KeeperThread.java:26",
+      "suggested_fix": "Record W2-006 as an explicit deviation of D-416 (frozen 451 -> 452 because of naruserve-keeper) that SRS authoring must carry into the D-416 requirement text, the T26 bound and defaults.md. State that the stack figure stays 449 threads / 112.25 MiB at 256 KiB, because the keeper uses the platform default stack like the acceptor and watchdog."
+    },
+    {
+      "finding_id": "W1-002",
+      "severity": "low",
+      "items": [
+        "D-408"
+      ],
+      "claim": "The wave cannot meet D-408 as frozen over the TinyHttpd adapter. TinyHttpd drops Connection: Upgrade on a non-101 response, so the wave asserts both headers only in-memory and asserts only 426 + Upgrade: websocket over TinyHttpd. This is a tracked residual that carries over from round 1 W1-001; it is listed here only because the row verdict is 'altered'.",
+      "evidence": "docs/research/naruserve-v1/waves/wave-7/design.md:24; docs/research/naruserve-v1/waves/wave-7/design.md:117",
+      "suggested_fix": "No design change. At wave close, open the D-020 TinyHttpd-gap issue and keep D-408 below verified."
+    },
+    {
+      "finding_id": "W1-003",
+      "severity": "low",
+      "items": [
+        "D-317",
+        "D-321",
+        "D-323",
+        "D-332",
+        "D-339",
+        "D-419",
+        "D-436"
+      ],
+      "claim": "The Wave decisions section settles the D-303 choices (handler timing, Origin default) and says 'SRS authoring names the API' for Origin. It does not settle or assign the other choices that the frozen items leave to this wave: the onJson parse-failure reporting (D-317), the WS overflow policy (D-321), the idle/handshake timeout defaults (D-323), the SSE heartbeat interval, data-only send/close APIs and overflow policy (D-332/D-339), the config API names (D-419), and the SSE closing-notice form (D-436). Under CLAUDE.md these are settled during implementation, so this is not a blocker, but nothing in the design says which step owns them.",
+      "evidence": "docs/research/naruserve-v1/waves/wave-7/design.md:45,53,58,74,82,59,91,132",
+      "suggested_fix": "Add one line to Wave decisions: the remaining 'decided in #13/#14 / wave 7 decides' choices are settled at SRS authoring (Express/ws-natural, per CLAUDE.md) and recorded in docs/api/websocket.md, sse.md and defaults.md before the SDS is written."
+    }
+  ]
+}

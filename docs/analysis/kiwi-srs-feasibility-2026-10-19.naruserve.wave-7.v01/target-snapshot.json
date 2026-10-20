@@ -1,0 +1,253 @@
+{
+ "target": "wave-7",
+ "total": 29,
+ "evaluated": [
+  "FR-APP-019",
+  "FR-APP-020",
+  "FR-ENGINE-011",
+  "FR-SSE-001",
+  "FR-SSE-002",
+  "FR-SSE-003",
+  "FR-SSE-004",
+  "FR-SSE-005",
+  "FR-WS-001",
+  "FR-WS-002",
+  "FR-WS-003",
+  "FR-WS-004",
+  "FR-WS-005",
+  "FR-WS-006",
+  "FR-WS-007",
+  "FR-WS-008",
+  "FR-WS-009",
+  "FR-WS-010",
+  "IR-HTTP-007",
+  "IR-HTTP-008",
+  "IR-SSE-001",
+  "IR-WS-001",
+  "IR-WS-002",
+  "OPS-APP-005",
+  "OPS-ENGINE-002",
+  "OPS-HTTP-007",
+  "OPS-SSE-001",
+  "OPS-WS-001",
+  "PERF-APP-001"
+ ],
+ "status": {
+  "planned": 29
+ },
+ "stability": {
+  "draft": 29
+ },
+ "scope": {
+  "APP": 4,
+  "ENGINE": 2,
+  "SSE": 7,
+  "WS": 13,
+  "HTTP": 3
+ },
+ "records": [
+  {
+   "id": "FR-APP-019",
+   "scope": "APP",
+   "status": "planned",
+   "stability": "draft",
+   "type": "functional"
+  },
+  {
+   "id": "FR-APP-020",
+   "scope": "APP",
+   "status": "planned",
+   "stability": "draft",
+   "type": "functional"
+  },
+  {
+   "id": "FR-ENGINE-011",
+   "scope": "ENGINE",
+   "status": "planned",
+   "stability": "draft",
+   "type": "functional"
+  },
+  {
+   "id": "FR-SSE-001",
+   "scope": "SSE",
+   "status": "planned",
+   "stability": "draft",
+   "type": "functional"
+  },
+  {
+   "id": "FR-SSE-002",
+   "scope": "SSE",
+   "status": "planned",
+   "stability": "draft",
+   "type": "functional"
+  },
+  {
+   "id": "FR-SSE-003",
+   "scope": "SSE",
+   "status": "planned",
+   "stability": "draft",
+   "type": "functional"
+  },
+  {
+   "id": "FR-SSE-004",
+   "scope": "SSE",
+   "status": "planned",
+   "stability": "draft",
+   "type": "functional"
+  },
+  {
+   "id": "FR-SSE-005",
+   "scope": "SSE",
+   "status": "planned",
+   "stability": "draft",
+   "type": "functional"
+  },
+  {
+   "id": "FR-WS-001",
+   "scope": "WS",
+   "status": "planned",
+   "stability": "draft",
+   "type": "functional"
+  },
+  {
+   "id": "FR-WS-002",
+   "scope": "WS",
+   "status": "planned",
+   "stability": "draft",
+   "type": "functional"
+  },
+  {
+   "id": "FR-WS-003",
+   "scope": "WS",
+   "status": "planned",
+   "stability": "draft",
+   "type": "functional"
+  },
+  {
+   "id": "FR-WS-004",
+   "scope": "WS",
+   "status": "planned",
+   "stability": "draft",
+   "type": "functional"
+  },
+  {
+   "id": "FR-WS-005",
+   "scope": "WS",
+   "status": "planned",
+   "stability": "draft",
+   "type": "functional"
+  },
+  {
+   "id": "FR-WS-006",
+   "scope": "WS",
+   "status": "planned",
+   "stability": "draft",
+   "type": "functional"
+  },
+  {
+   "id": "FR-WS-007",
+   "scope": "WS",
+   "status": "planned",
+   "stability": "draft",
+   "type": "functional"
+  },
+  {
+   "id": "FR-WS-008",
+   "scope": "WS",
+   "status": "planned",
+   "stability": "draft",
+   "type": "functional"
+  },
+  {
+   "id": "FR-WS-009",
+   "scope": "WS",
+   "status": "planned",
+   "stability": "draft",
+   "type": "functional"
+  },
+  {
+   "id": "FR-WS-010",
+   "scope": "WS",
+   "status": "planned",
+   "stability": "draft",
+   "type": "functional"
+  },
+  {
+   "id": "IR-HTTP-007",
+   "scope": "HTTP",
+   "status": "planned",
+   "stability": "draft",
+   "type": "interface"
+  },
+  {
+   "id": "IR-HTTP-008",
+   "scope": "HTTP",
+   "status": "planned",
+   "stability": "draft",
+   "type": "interface"
+  },
+  {
+   "id": "IR-SSE-001",
+   "scope": "SSE",
+   "status": "planned",
+   "stability": "draft",
+   "type": "interface"
+  },
+  {
+   "id": "IR-WS-001",
+   "scope": "WS",
+   "status": "planned",
+   "stability": "draft",
+   "type": "interface"
+  },
+  {
+   "id": "IR-WS-002",
+   "scope": "WS",
+   "status": "planned",
+   "stability": "draft",
+   "type": "interface"
+  },
+  {
+   "id": "OPS-APP-005",
+   "scope": "APP",
+   "status": "planned",
+   "stability": "draft",
+   "type": "operational"
+  },
+  {
+   "id": "OPS-ENGINE-002",
+   "scope": "ENGINE",
+   "status": "planned",
+   "stability": "draft",
+   "type": "operational"
+  },
+  {
+   "id": "OPS-HTTP-007",
+   "scope": "HTTP",
+   "status": "planned",
+   "stability": "draft",
+   "type": "operational"
+  },
+  {
+   "id": "OPS-SSE-001",
+   "scope": "SSE",
+   "status": "planned",
+   "stability": "draft",
+   "type": "operational"
+  },
+  {
+   "id": "OPS-WS-001",
+   "scope": "WS",
+   "status": "planned",
+   "stability": "draft",
+   "type": "operational"
+  },
+  {
+   "id": "PERF-APP-001",
+   "scope": "APP",
+   "status": "planned",
+   "stability": "draft",
+   "type": "performance"
+  }
+ ]
+}

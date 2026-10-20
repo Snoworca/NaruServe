@@ -1,0 +1,37 @@
+{
+  "rows": [],
+  "findings": [
+    {
+      "finding_id": "W2-001",
+      "severity": "medium",
+      "items": ["D-333", "D-406", "D-319"],
+      "claim": "The round-4 SSE decision ('Sends inside the SSE handler') lets an SseClient.send on the handler's own thread write straight to the stream before the drain starts, while sends from other threads made in the same window go into the outbound queue. A handler-thread send therefore overtakes events that another thread queued earlier, and those events reach the client only after the handler returns. This breaks D-333 ('writing whole events in call order'). It also departs from the frozen D-406 ('SseClient.send from any thread fills' the queue), and design.md does not record that as a deviation the way the r4 W1-001 rule requires. The r4 suggested fix had the direct-write path flush the already-queued events first. The adopted wording dropped that.",
+      "evidence": "docs/research/naruserve-v1/waves/wave-7/design.md:170 (\"It does not use the outbound queue ... Sends from other threads queue as usual\"); design.md:75 (D-333 call order); design.md:78 (D-406 any thread fills the queue); rounds/r4-merged.json W2-001 suggested_fix (\"writes the queued events and the new event straight to the stream\")",
+      "suggested_fix": "Amend the r4 decision. Before the drain starts, a send on the handler's own thread first writes every event already in the queue, in queue order, and then its own event, all under the exchange lock that other-thread enqueues also take. Ordering then holds across threads. Record in the SRS, as a note beside D-406, that queue-bypass writes on the handler thread are a deviation. Extend the r4 test so a second thread queues one event before the handler's replay loop, and assert the order in which the client receives them."
+    },
+    {
+      "finding_id": "W2-002",
+      "severity": "medium",
+      "items": ["D-323", "D-303"],
+      "claim": "D-323 requires a configurable WebSocket handshake timeout. Unlike the ping interval (D-423) and the idle timeout (D-425), the design never says what enforces it. TinyHttpd at 46b973e has no upgrade-specific deadline. The header phase is bounded by the server-wide headerTimeout. The body drain inside Upgraded.start is bounded only by TinyHttpd's own body-read limits. Pre-101 work runs on a worker that NaruServe cannot interrupt: middleware, then WebSocketHandler.handle. TinyHttpdExchange.abort() only sets a flag and counts down the latch. A blocked read or a running middleware is not woken. A dedicated handshake timeout therefore cannot be enforced on the TinyHttpd adapter. A worker would either add a setting that does nothing or invent a scheduler-driven abort that does not work before 101. Neither choice is consistent with I-011/I-012.",
+      "evidence": "design.md:58 (D-323 maps only ping interval and idle timeout); TinyHttpd 46b973e core/.../server/Upgraded.java start() (body drain, no deadline hook); NaruServe-tinyhttpd/.../TinyHttpdExchange.java abort() (flag only, comment 'a body write already blocked in the socket is not woken'); docs/api/defaults.md:40 (headerTimeout 10 s, server-wide)",
+      "suggested_fix": "Add a wave decision on what the handshake timeout means and where it is enforced. Example: the WebSocket handshake timeout is the time allowed to receive the upgrade request's headers and body, and on TinyHttpd it is bounded by the existing headerTimeout and bodyReadTimeout. docs/api/websocket.md and docs/api/defaults.md then point to those settings instead of adding a separate, unenforced one. Record a dedicated upgrade deadline as a deferred TinyHttpd gap under D-020 in the wave issue ledger. Otherwise, name a mechanism that actually bounds the pre-101 phase."
+    },
+    {
+      "finding_id": "W2-003",
+      "severity": "low",
+      "items": ["D-435", "D-344", "D-162"],
+      "claim": "D-435's close wait must end at '1 s or the time left to the D-162 deadline, whichever comes first'. The existing before-wait hook is a plain Runnable, registered with ShutdownParticipants.add(Phase, Runnable) and run with no arguments. The deadline is a local of shutdown()/runShutdownSequence and is not reachable from a participant. The wave must change this internal hook, and design.md does not say so. A worker that keeps the Runnable shape can only wait a fixed 1 s, which overruns a shutdown timeout below 1 s, the short-timeout case of T44/D-439.",
+      "evidence": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ShutdownParticipants.java:33,48 (Runnable, no deadline); NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:610-617 (deadlineNanos local, run(BEFORE_WAIT, log)); design.md:90 (D-435 wait bound)",
+      "suggested_fix": "State in the wave decisions that ShutdownParticipants passes the D-162 deadline (nanoTime) to each participant, for example through a LongConsumer or a small participant interface. This is internal, so no SPI or public change is involved. The WebSocket and SSE participants compute min(1 s, time left) from it."
+    },
+    {
+      "finding_id": "W2-004",
+      "severity": "low",
+      "items": ["D-334", "D-436", "D-344"],
+      "claim": "On TinyHttpd the SSE drain loop, which also runs the D-334 onClose listeners, runs inside TinyHttpdExchange.run after handler.handle returns. That is outside GatedExchangeHandler's enterRequest/exitRequest scope. An app.shutdown() called from an SSE onClose listener, such as 'stop when the last client leaves', is not seen as a request-thread call. It runs the shutdown sequence inline on that drain worker, and the adapter stop then waits for the worker's own exchange until the deadline. TinyHttpd's stop also interrupts that worker, and awaitWorkers waits on it. Shutdown therefore takes the full timeout instead of returning at once as docs/api/lifecycle.md promises for in-request calls, and onStop runs with the interrupt flag set. WebSocket listeners run on the read thread inside dispatcher.handle and do not have this problem.",
+      "evidence": "NaruServe-api/.../internal/GatedExchangeHandler.java:46-50 (enterRequest scope only around dispatcher.handle); NaruServe-tinyhttpd/.../TinyHttpdExchange.java:49-51 (drain will run after handler.handle, per wave decision W2-003 at design.md:129); DefaultRestApp.java:568 (onRequestThread check); docs/api/lifecycle.md:171-173",
+      "suggested_fix": "Have the core mark the drain thread as a request thread while it runs the drain and the SSE onClose listeners, for example by wrapping the StreamDrain the core passes in enterRequest/exitRequest. Alternatively, record that shutdown from an SSE listener behaves like a call from a non-request thread. Add a test that calls shutdown from an SSE onClose listener and asserts that it returns promptly."
+    }
+  ]
+}

@@ -1,0 +1,103 @@
+{
+ "round": 2,
+ "findings": [
+  {
+   "finding_id": "W1-001",
+   "severity": "medium",
+   "items": [
+    "D-416",
+    "D-346"
+   ],
+   "claim": "The D-416 item is copied verbatim with a thread total of 451, but wave decision W2-006 sets the total to 452 (it adds the non-daemon naruserve-keeper thread) for docs/api/defaults.md and the T26 bound. So the wave states D-416 differently from the frozen lock, and the item text and the decision disagree inside design.md. The decision also leaves the stack figure open: D-416's '449 threads request 112.25 MiB' does not say whether the keeper thread (started in KeeperThread.java with the platform default stack, like the acceptor and watchdog) changes it.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-7/design.md:101; docs/research/naruserve-v1/waves/wave-7/design.md:133; docs/research/naruserve-v1/design/00.design.md:604; NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/KeeperThread.java:26",
+   "suggested_fix": "Record W2-006 as an explicit deviation of D-416 (frozen 451 -> 452 because of naruserve-keeper) that SRS authoring must carry into the D-416 requirement text, the T26 bound and defaults.md. State that the stack figure stays 449 threads / 112.25 MiB at 256 KiB, because the keeper uses the platform default stack like the acceptor and watchdog."
+  },
+  {
+   "finding_id": "W1-002",
+   "severity": "low",
+   "items": [
+    "D-408"
+   ],
+   "claim": "The wave cannot meet D-408 as frozen over the TinyHttpd adapter. TinyHttpd drops Connection: Upgrade on a non-101 response, so the wave asserts both headers only in-memory and asserts only 426 + Upgrade: websocket over TinyHttpd. This is a tracked residual that carries over from round 1 W1-001; it is listed here only because the row verdict is 'altered'.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-7/design.md:24; docs/research/naruserve-v1/waves/wave-7/design.md:117",
+   "suggested_fix": "No design change. At wave close, open the D-020 TinyHttpd-gap issue and keep D-408 below verified."
+  },
+  {
+   "finding_id": "W1-003",
+   "severity": "low",
+   "items": [
+    "D-317",
+    "D-321",
+    "D-323",
+    "D-332",
+    "D-339",
+    "D-419",
+    "D-436"
+   ],
+   "claim": "The Wave decisions section settles the D-303 choices (handler timing, Origin default) and says 'SRS authoring names the API' for Origin. It does not settle or assign the other choices that the frozen items leave to this wave: the onJson parse-failure reporting (D-317), the WS overflow policy (D-321), the idle/handshake timeout defaults (D-323), the SSE heartbeat interval, data-only send/close APIs and overflow policy (D-332/D-339), the config API names (D-419), and the SSE closing-notice form (D-436). Under CLAUDE.md these are settled during implementation, so this is not a blocker, but nothing in the design says which step owns them.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-7/design.md:45,53,58,74,82,59,91,132",
+   "suggested_fix": "Add one line to Wave decisions: the remaining 'decided in #13/#14 / wave 7 decides' choices are settled at SRS authoring (Express/ws-natural, per CLAUDE.md) and recorded in docs/api/websocket.md, sse.md and defaults.md before the SDS is written."
+  },
+  {
+   "finding_id": "W2-001",
+   "severity": "high",
+   "items": [
+    "D-309",
+    "D-311",
+    "D-417",
+    "D-106"
+   ],
+   "claim": "The binding SPI decision gives WebSocketChannel only sendText, sendBinary, close(code, reason), abort() and isOpen. It has no ping. D-309 requires ws.ping() to send a Ping, and D-311 lists ping on WebSocketSession, which object.md 7.2 also requires. NaruServe-api cannot reach TinyHttpd's WebSocket.ping(byte[]) itself, because I-002 bans tinyhttpd types in the core, and D-302 forbids a NaruServe frame codec. So ws.ping() cannot be built on the SPI as decided. The sender task of D-417 also needs a channel call that writes the Ping in queue order.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-7/design.md:125; object.md:416; TinyHttpd 46b973e websocket/src/main/java/com/snoworca/tinyhttpd/websocket/WebSocket.java:168",
+   "suggested_fix": "Add ping() to WebSocketChannel in the W2-001 decision (the TinyHttpd class calls WebSocket.ping(new byte[0])). ws.ping() goes through the session's sender slot like the other sends."
+  },
+  {
+   "finding_id": "W2-002",
+   "severity": "medium",
+   "items": [
+    "D-444",
+    "D-445",
+    "D-106"
+   ],
+   "claim": "HttpExchange's existing contract says the response is started exactly once, by commit, sendFile, upgrade or eventStream, and a second start throws IllegalStateException. TinyHttpdExchange enforces this with started=true in start(). The decision makes webSocket(...) a new way to start, and marks the response started under the exchange lock before WebSocketHandler.handle runs. It then requires that every pre-101 rejection (400, 426, 413, 503, and the D-445 503) reach the core 'with nothing committed', so the dispatcher's error path can commit the error response through the same exchange. The design never says that a rejected webSocket call leaves the exchange unstarted. Built on the existing start() pattern, the error commit throws IllegalStateException, and the 426 that T19 asserts is never sent.",
+   "evidence": "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpExchange.java:13-14; NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdExchange.java:184-200,211-215; docs/research/naruserve-v1/waves/wave-7/design.md:125,128",
+   "suggested_fix": "State in the SPI decision, and in the webSocket javadoc, that when webSocket throws an HttpException before the 101 it leaves the exchange unstarted (TinyHttpd: reset started, as unsupported() does today), so exactly one later commit is allowed. List webSocket among the start methods in the HttpExchange class javadoc."
+  },
+  {
+   "finding_id": "W2-003",
+   "severity": "medium",
+   "items": [
+    "D-445",
+    "D-435",
+    "D-295",
+    "D-303"
+   ],
+   "claim": "With the handler-timing decision (the handler and the channel arrive in onOpen, after the 101), the design does not say when a session joins the registry that D-445 snapshots. D-445 requires two things: every upgrade that reaches the extension point after the flag is refused with 503 before any 101, and every session registered before the flag is in the snapshot. Both can hold only if the flag check and the registration are one atomic step under the registry lock, taken before webSocket(...) is called and so before the 101. Then the snapshot can hold a session whose channel does not exist yet. D-435 cannot hand its close 1001 to a sender slot that has no channel, and it cannot abort a socket whose UpgradedConnection was not captured yet. The 101 and onOpen (with the user handler) then run after the goodbye phase, and the session is closed only later, by TinyHttpd's own stop callback on the stopping thread. If the session registers only in onOpen instead, an upgrade that passed the check just before the flag is in no snapshot and is not refused either.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-7/design.md:92,88,131; TinyHttpd 46b973e websocket/.../WebSocket.java:262-272 (onServerStop registered, then onOpen)",
+   "suggested_fix": "Decide: register the session pending under the registry lock before calling webSocket. When a closing participant snapshots a pending session, it marks it closing and counts its close task as returned. When onOpen sees the mark, it does not run the handler and hands close 1001 to the new channel as its first sender task. Removal on any pre-101 rejection releases the reservation."
+  },
+  {
+   "finding_id": "W2-004",
+   "severity": "low",
+   "items": [
+    "D-417",
+    "D-322"
+   ],
+   "claim": "The W2-007 decision has 'the upgrade class' (NaruServe-tinyhttpd) wait for the session's in-flight sender task after WebSocketHandler.handle returns. The sender executor is core-owned (D-417), and the decided SPI gives the adapter no handle on it. Doing the wait inside the endpoint's onClose instead would break the decision's premise: TinyHttpd calls listener.onClose before conn.close(), so the socket is still open and a stalled write blocks up to the 30 s write timeout. The wait works only in the core, after webSocket(...) returns (the socket is closed by then) and before it calls finish(). TinyHttpd frees the slot only when TinyHttpdExchange.run returns.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-7/design.md:134; TinyHttpd 46b973e websocket/.../WebSocket.java:403-408; NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdExchange.java:46-50",
+   "suggested_fix": "Restate the decision: the core waits for the session's in-flight sender task after webSocket(...) returns and before finish(). onClose must not wait on the sender."
+  },
+  {
+   "finding_id": "W2-005",
+   "severity": "low",
+   "items": [
+    "D-295",
+    "D-311",
+    "D-444"
+   ],
+   "claim": "The user handler now runs inside the endpoint's onOpen, and the listeners run inside onText/onBinary. If any of these lets a RuntimeException escape to TinyHttpd, TinyHttpd sends close 1011 and rethrows it out of WebSocketHandler.handle, so webSocket(...) throws after the 101. The decision says only that every pre-101 rejection reaches the core as an HttpException. It does not say that endpoint callbacks never throw (errors go to onError), or that the core does not run its HTTP error path on a post-101 throw. That error path would try to commit an error response on an upgraded exchange.",
+   "evidence": "TinyHttpd 46b973e websocket/.../WebSocket.java:398-401; docs/research/naruserve-v1/waves/wave-7/design.md:125,131",
+   "suggested_fix": "Add to the SPI decision: core endpoint callbacks catch every Throwable from user code and report it through the session's onError (or close 1011 through the sender slot). Any exception from webSocket after onOpen is logged and the exchange is finished or aborted, never rendered as an HTTP error."
+  }
+ ]
+}

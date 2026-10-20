@@ -1,0 +1,15 @@
+{
+ "implementability": "high",
+ "product_fit": "core",
+ "rationale": "TinyHttpd 46b973e ships the websocket module (WebSocketHandler, WebSocketListener, WebSocket, UpgradedConnection, ResponseWrapper) and Response.setHeader/flushBuffer/getOutputStream; SPI change is add-only; ShutdownParticipants is package-private. Known TinyHttpd gaps (426 Connection: Upgrade, pong timeout, upgrade deadline) are recorded deviations under D-020, not blockers.",
+ "code_evidence": [
+  "/Users/beom/work/git/TinyHttpd/websocket/src/main/java/com/snoworca/tinyhttpd/websocket/WebSocketHandler.java (read-only)",
+  "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdFeatures.java",
+  "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java"
+ ],
+ "blockers": [],
+ "conditions": [
+  "TinyHttpd stays read-only; gaps become deferred D-020 issues"
+ ],
+ "external_module_required": false
+}

@@ -1,0 +1,1 @@
+{"source":"default (§0.G6); no .kiwi/feasibility-policy.yaml in project or home","rules":[{"if":"high","then":"evolving","confirm":false},{"if":"high+has_verification","then":"stable","confirm":true},{"if":"medium","then":"keep"},{"if":"low","then":"draft"},{"if":"blocked","then":"deprecated","confirm":true}],"gates":{"status_conflict_policy":"warn"}}

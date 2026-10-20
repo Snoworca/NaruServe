@@ -1,0 +1,297 @@
+{
+ "rows": [
+  {
+   "id": "D-294",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-295",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-296",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-429",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-430",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-444",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-297",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-298",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-299",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-300",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-301",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-302",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-408",
+   "verdict": "altered"
+  },
+  {
+   "id": "D-303",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-304",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-305",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-306",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-307",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-308",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-309",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-310",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-311",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-312",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-313",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-314",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-315",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-316",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-317",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-318",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-417",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-319",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-320",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-321",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-322",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-323",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-419",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-423",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-424",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-425",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-324",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-325",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-326",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-327",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-328",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-329",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-330",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-331",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-332",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-333",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-334",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-335",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-406",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-336",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-337",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-338",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-339",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-340",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-341",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-342",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-343",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-435",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-436",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-445",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-446",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-344",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-439",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-345",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-346",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-416",
+   "verdict": "altered"
+  },
+  {
+   "id": "D-347",
+   "verdict": "covered"
+  }
+ ],
+ "findings": [
+  {
+   "finding_id": "W1-001",
+   "severity": "low",
+   "items": [
+    "D-408",
+    "D-416"
+   ],
+   "claim": "All 70 frozen items are present verbatim and the Carried from loop D list matches the four r5-fixes.json entries with owning_section 7 (V1-004, V2-001, V2-002, V2-003). Two items are still stated differently by the wave text, both as recorded deviations: D-416 thread total 452 instead of 451 (naruserve-keeper, stack figure unchanged), and D-408 Connection: Upgrade asserted only in-memory because TinyHttpd drops it on a non-101 response (D-020 gap issue, D-408 kept below verified). No new gap; listed only because the rows are altered.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-7/design.md:117,133,142,143; docs/research/naruserve-v1/design/00.design.md:604",
+   "suggested_fix": "No design change. SRS authoring carries the D-416 deviation (452, 449 threads / 112.25 MiB) into the requirement text, defaults.md and the T26 bound, and the triage opens the D-020 issue for D-408."
+  }
+ ]
+}
