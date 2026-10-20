@@ -24,6 +24,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Test;
 
 /** The WebSocket closing participant. SDS-AC-n cites docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-7.sds.md. */
@@ -73,7 +74,13 @@ public class WebSocketShutdownTest {
         assertTrue(entered.await(5, TimeUnit.SECONDS));
         adapter.beforeOpen(null);
         assertEquals(2, registry.size());
-        Thread closer = closeAllAsync(registry, 5000);
+        long started = System.nanoTime();
+        AtomicLong ended = new AtomicLong();
+        Thread closer = new Thread(() -> {
+            registry.closeAll(started + TimeUnit.SECONDS.toNanos(5));
+            ended.set(System.nanoTime());
+        }, "test-close-all");
+        closer.start();
         boolean aliveAtRelease;
         long released;
         try {
@@ -82,23 +89,35 @@ public class WebSocketShutdownTest {
             assertTrue("opened session got no close", eventually(() -> a.closeCode() == 1001));
             assertEquals("server shutdown", a.closeReason());
             WebSocketRegistryTest.assert503Close(adapter.send(upgradeRequest()));
-            Thread.sleep(200); // time for a wait that skipped the reserved session to end
+            // release 250 ms into the 1 s close wait: late enough for a wait that skipped the reserved session to
+            // have ended, early enough to tell a wake on its close from the 1 s timeout
+            long left = started + TimeUnit.MILLISECONDS.toNanos(250) - System.nanoTime();
+            if (left > 0) {
+                TimeUnit.NANOSECONDS.sleep(left);
+            }
         } finally {
             aliveAtRelease = closer.isAlive();
             released = System.nanoTime();
             release.countDown();
         }
         closer.join(5000);
-        long ms = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - released);
         assertFalse(closer.isAlive());
-        assertTrue("the close wait did not wait for the reserved session", aliveAtRelease);
-        assertTrue("the wait did not end on the reserved session's close: " + ms + " ms after release", ms < 900);
+        fa.get(5, TimeUnit.SECONDS);
+        fb.get(5, TimeUnit.SECONDS);
         // b opened while the wait still ran (CLOSING: close 1001, no abort); an ended wait would have aborted it
         assertEquals(1001, b.closeCode());
         assertFalse("the reserved session was aborted", b.aborted());
-        fa.get(5, TimeUnit.SECONDS);
-        fb.get(5, TimeUnit.SECONDS);
         assertNull("the late session's handler ran", handled.poll(100, TimeUnit.MILLISECONDS));
+        long releaseMs = TimeUnit.NANOSECONDS.toMillis(released - started);
+        // only a release well before the 1 s timeout tells a wake on the reserved session's close from the timeout;
+        // on a normal host the release comes at 250 ms, so this never skips there
+        Assume.assumeTrue("slow host: released " + releaseMs + " ms after closeAll started", releaseMs <= 600);
+        assertTrue("the close wait did not wait for the reserved session", aliveAtRelease);
+        long afterRelease = TimeUnit.NANOSECONDS.toMillis(ended.get() - released);
+        long total = TimeUnit.NANOSECONDS.toMillis(ended.get() - started);
+        assertTrue("the wait did not end on the reserved session's close: " + afterRelease + " ms after release",
+                afterRelease < 300);
+        assertTrue("the wait ran into the 1 s timeout: ended " + total + " ms after closeAll started", total < 900);
     }
 
     // SDS-AC-7; FR-WS-010 AC-3: 50 messages queued behind a blocked write are never sent once the participant

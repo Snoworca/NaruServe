@@ -5,7 +5,9 @@ import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -43,6 +45,8 @@ public final class InMemoryEventStream {
     // Guarded by this.
     private final ByteArrayOutputStream written = new ByteArrayOutputStream();
     private final Set<Thread> writers = new LinkedHashSet<>();
+    // {body length in bytes after the write, System.nanoTime() of the write}
+    private final List<long[]> writeTimes = new ArrayList<>();
     private @Nullable CountDownLatch hold;
     private int writes;
     private int failAt;
@@ -103,6 +107,7 @@ public final class InMemoryEventStream {
         sink.write(b, off, len);
         synchronized (this) {
             written.write(b, off, len);
+            writeTimes.add(new long[] {written.size(), System.nanoTime()});
             notifyAll();
         }
     }
@@ -133,6 +138,27 @@ public final class InMemoryEventStream {
             Thread.currentThread().interrupt();
             throw new AssertionError("interrupted waiting for " + part, e);
         }
+    }
+
+    /**
+     * The {@link System#nanoTime()} of the write after which the body first contained {@code part}.
+     *
+     * @throws AssertionError when the body does not contain it
+     */
+    // @req FR-SSE-002
+    public synchronized long writtenAt(String part) {
+        String text = text();
+        int i = text.indexOf(part);
+        if (i < 0) {
+            throw new AssertionError("no " + part + " in: " + text);
+        }
+        int end = text.substring(0, i + part.length()).getBytes(StandardCharsets.UTF_8).length;
+        for (long[] w : writeTimes) {
+            if (w[0] >= end) {
+                return w[1];
+            }
+        }
+        throw new AssertionError("unreachable: " + part + " found but no write reached it");
     }
 
     /** The threads that wrote to the stream, in first-write order. */

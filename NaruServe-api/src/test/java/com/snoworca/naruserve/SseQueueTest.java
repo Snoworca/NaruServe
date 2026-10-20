@@ -18,6 +18,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.After;
 import org.junit.Test;
@@ -76,17 +77,28 @@ public class SseQueueTest {
     @Test(timeout = 20000)
     public void sdsAc2_FR_SSE_002_AC3_anIdleStreamGetsAPingAfterEachHeartbeatInterval() throws Exception {
         t.app().sse(o -> o.heartbeatInterval(1, TimeUnit.SECONDS));
-        openingRoute();
+        AtomicLong openedAt = new AtomicLong();
+        t.app().get("/events", (req, res) -> {
+            client.set(res.sse());
+            openedAt.set(System.nanoTime());
+            opened.countDown();
+        });
         Future<ClientResponse> f = open();
         InMemoryEventStream es = adapter.nextEventStream(5, TimeUnit.SECONDS);
-        es.awaitText(": ping\n\n", 5000);
-        long first = System.nanoTime();
-        es.awaitText(": ping\n\n: ping\n\n", 5000);
-        long gap = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - first);
-        assertTrue("second ping only " + gap + " ms after the first", gap >= 900);
+        // timed by the write instants, not by when the waits wake, so a slow test thread cannot skew them
+        es.awaitText(": ping\n\n: ping\n\n: ping\n\n", 5000);
+        long first = TimeUnit.NANOSECONDS.toMillis(es.writtenAt(": ping\n\n") - openedAt.get());
+        long gap1 = TimeUnit.NANOSECONDS.toMillis(es.writtenAt(": ping\n\n: ping\n\n") - es.writtenAt(": ping\n\n"));
+        long gap2 = TimeUnit.NANOSECONDS.toMillis(es.writtenAt(": ping\n\n: ping\n\n: ping\n\n")
+                - es.writtenAt(": ping\n\n: ping\n\n"));
+        // FR-SSE-002 AC-3: the first ping within 1 s + 500 ms of the stream opening (nothing written since), each
+        // later one after the next interval
+        assertTrue("first ping " + first + " ms after the open", first <= 1500);
+        assertTrue("ping gap " + gap1 + " ms", gap1 >= 900 && gap1 <= 1500);
+        assertTrue("ping gap " + gap2 + " ms", gap2 >= 900 && gap2 <= 1500);
         client.get().close();
         ClientResponse r = f.get(5, TimeUnit.SECONDS);
-        assertTrue(r.text(), r.text().startsWith(": ping\n\n: ping\n\n"));
+        assertTrue(r.text(), r.text().startsWith(": ping\n\n: ping\n\n: ping\n\n"));
         assertFalse(r.abnormallyClosed());
     }
 

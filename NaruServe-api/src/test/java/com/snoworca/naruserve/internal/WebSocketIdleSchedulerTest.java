@@ -77,7 +77,7 @@ public class WebSocketIdleSchedulerTest {
             }
         }
         assertTrue("no idle close though only pings were sent", closedAt != 0);
-        assertTrue("closed after " + ms(closedAt - opened) + " ms", ms(closedAt - opened) < 2500);
+        assertTrue("closed after " + ms(closedAt - opened) + " ms", ms(closedAt - opened) <= 2000);
     }
 
     // SDS-AC-11; FR-WS-008 AC-4: check closes once nanoTime - lastActivityNanos reaches the timeout and reschedules
@@ -98,9 +98,9 @@ public class WebSocketIdleSchedulerTest {
         assertEquals(IDLE_CLOSE, call);
         assertTrue("closed " + ms(at - touched) + " ms after the last activity", at - touched
                 >= TimeUnit.MILLISECONDS.toNanos(1000));
-        // FR-WS-008 AC-4 allows 2 s from the last activity; 500 ms more for a loaded host
+        // FR-WS-008 AC-4: close 1001 within 2 s of the last activity (1 s of slack over the 1 s idle timeout)
         assertTrue("rescheduled late: closed " + ms(at - touched) + " ms after the last activity",
-                ms(at - touched) <= 2500);
+                ms(at - touched) <= 2000);
         up.idle().check(s);
         assertNull("a second close was handed over", ch.started.poll(300, TimeUnit.MILLISECONDS));
     }
