@@ -2,13 +2,13 @@ package com.snoworca.naruserve.internal;
 
 import static com.snoworca.naruserve.internal.WebSocketSenderTest.LOG;
 import static com.snoworca.naruserve.internal.WebSocketSenderTest.session;
-import static com.snoworca.naruserve.internal.WebSocketSenderTest.threadsNamed;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import com.snoworca.naruserve.internal.WebSocketSenderTest.HoldingChannel;
+import com.snoworca.naruserve.testing.LiveThreads;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import org.junit.Test;
@@ -111,21 +111,21 @@ public class WebSocketIdleSchedulerTest {
     @Test(timeout = 30000)
     public void sdsAc12_FR_WS_008_AC5_aHeldCloseNeverDelaysOtherChecksAndIsAbortedAfterOneSecond()
             throws Exception {
-        assertTrue(threadsNamed("naruserve-5004-ws-idle").isEmpty());
+        assertTrue(LiveThreads.withPrefix("naruserve-5004-ws-idle").isEmpty());
         int[] port = {5104};
         DefaultWebSocketOptions o = new DefaultWebSocketOptions();
         o.idleTimeout(1, TimeUnit.SECONDS);
         WebSocketUpgrade up = new WebSocketUpgrade(o, null, LOG, new WebSocketSender(128, () -> port[0], LOG),
                 new WebSocketIdleScheduler(() -> port[0], LOG));
         port[0] = 5004; // the port is read when the thread is made, not when the scheduler is built
-        assertTrue("the thread is made on the first schedule", threadsNamed("naruserve-5004-ws-idle").isEmpty());
+        assertTrue("the thread is made on the first schedule", LiveThreads.withPrefix("naruserve-5004-ws-idle").isEmpty());
         DefaultWebSocketSession held = session(up);
         DefaultWebSocketSession other = session(up);
         HoldingChannel chh = new HoldingChannel();
         HoldingChannel cho = new HoldingChannel();
         CountDownLatch release = chh.hold("close");
         held.onOpen(chh);
-        assertEquals(1, threadsNamed("naruserve-5004-ws-idle").size());
+        assertEquals(1, LiveThreads.withPrefix("naruserve-5004-ws-idle").size());
         Thread.sleep(300);
         other.onOpen(cho);
         long otherDue = other.lastActivityNanos() + TimeUnit.SECONDS.toNanos(1);
@@ -147,7 +147,7 @@ public class WebSocketIdleSchedulerTest {
             for (Thread t : cho.threads) {
                 assertNotEquals("the scheduler thread wrote to a channel", idle, t);
             }
-            assertEquals(1, threadsNamed("naruserve-5004-ws-idle").size());
+            assertEquals(1, LiveThreads.withPrefix("naruserve-5004-ws-idle").size());
         } finally {
             release.countDown();
         }

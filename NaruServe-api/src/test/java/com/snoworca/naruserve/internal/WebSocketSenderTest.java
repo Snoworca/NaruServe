@@ -8,12 +8,13 @@ import static org.junit.Assert.assertTrue;
 
 import com.snoworca.naruserve.Method;
 import com.snoworca.naruserve.WebSocketHandler;
-import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientRequest;
-import com.snoworca.naruserve.testing.RecordingExchange;
 import com.snoworca.naruserve.spi.WebSocketChannel;
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter;
+import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientRequest;
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientResponse;
 import com.snoworca.naruserve.testing.InMemoryWebSocketChannel;
+import com.snoworca.naruserve.testing.LiveThreads;
+import com.snoworca.naruserve.testing.RecordingExchange;
 import com.snoworca.naruserve.testing.RecordingLogger;
 import com.snoworca.naruserve.testing.TestApp;
 import java.util.ArrayList;
@@ -254,17 +255,6 @@ public class WebSocketSenderTest {
         return check.ok();
     }
 
-    /** Live threads whose name starts with {@code prefix}. */
-    static List<Thread> threadsNamed(String prefix) {
-        List<Thread> out = new ArrayList<>();
-        for (Thread t : Thread.getAllStackTraces().keySet()) {
-            if (t.isAlive() && t.getName().startsWith(prefix)) {
-                out.add(t);
-            }
-        }
-        return out;
-    }
-
     /**
      * A channel open until abort. Each call is recorded in {@code started} when it starts and in {@code calls} when it
      * returns, with the thread and time of the first call of each method; {@link #hold} holds the next call of one
@@ -417,7 +407,7 @@ public class WebSocketSenderTest {
             DefaultWebSocketSession s = opened.poll(5, TimeUnit.SECONDS);
             assertEquals(7, s.sender().executor().getMaximumPoolSize());
             assertTrue(eventually(() -> ch.sent().size() == 1));
-            assertFalse(threadsNamed("naruserve-" + adapter.boundPort() + "-ws-sender-").isEmpty());
+            assertFalse(LiveThreads.withPrefix("naruserve-" + adapter.boundPort() + "-ws-sender-").isEmpty());
             ch.clientClose(1000, "");
             f.get(10, TimeUnit.SECONDS);
         } finally {

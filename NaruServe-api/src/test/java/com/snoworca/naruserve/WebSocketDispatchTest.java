@@ -15,6 +15,7 @@ import com.snoworca.naruserve.testing.InMemoryHttpAdapter;
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientRequest;
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientResponse;
 import com.snoworca.naruserve.testing.InMemoryWebSocketChannel;
+import com.snoworca.naruserve.testing.RecordingExchange;
 import com.snoworca.naruserve.testing.RecordingLogger;
 import com.snoworca.naruserve.testing.TestApp;
 import java.io.ByteArrayInputStream;
@@ -107,7 +108,7 @@ public class WebSocketDispatchTest {
             log.add("101 " + ex.wrote101 + " open " + ex.channel.isOpen());
         });
         app.freeze();
-        app.dispatcher().handle(ex);
+        app.dispatcher().handle(ex.exchange);
         assertEquals(1, handled.get());
         assertEquals(Collections.singletonList("101 true open true"), log);
 
@@ -127,7 +128,7 @@ public class WebSocketDispatchTest {
         app.logger(logger);
         app.ws("/ws", (req, ws) -> handled.incrementAndGet());
         app.freeze();
-        app.dispatcher().handle(ex);
+        app.dispatcher().handle(ex.exchange);
         assertEquals(1, handled.get());
         assertEquals(0, ex.finishesWhenWebSocketReturned);
         assertEquals(1, ex.finishes.get());
@@ -152,7 +153,7 @@ public class WebSocketDispatchTest {
         app.logger(logger);
         app.ws("/ws", (req, ws) -> handled.incrementAndGet());
         app.freeze();
-        app.dispatcher().handle(ex);
+        app.dispatcher().handle(ex.exchange);
         assertEquals(1, handled.get());
         boolean found = false;
         for (String line : new ArrayList<>(logger.lines)) {
@@ -170,12 +171,12 @@ public class WebSocketDispatchTest {
         RecordingLogger logger = new RecordingLogger();
         UpgradeExchange ex = new UpgradeExchange();
         ex.afterOpen = new java.io.IOException("reset");
-        ex.finishFails = true;
+        ex.exchange.finishFailure = new IOException("connection gone");
         DefaultRestApp app = new DefaultRestApp();
         app.logger(logger);
         app.ws("/ws", (req, ws) -> handled.incrementAndGet());
         app.freeze();
-        app.dispatcher().handle(ex);
+        app.dispatcher().handle(ex.exchange);
         assertEquals(1, handled.get());
         boolean found = false;
         for (String line : new ArrayList<>(logger.lines)) {
@@ -231,7 +232,7 @@ public class WebSocketDispatchTest {
         app.freeze();
         Thread exchange = new Thread(() -> {
             try {
-                app.dispatcher().handle(ex);
+                app.dispatcher().handle(ex.exchange);
             } catch (Exception e) {
                 throw new AssertionError(e);
             }
@@ -323,112 +324,38 @@ public class WebSocketDispatchTest {
         assertSame(clock, seen.get());
     }
 
-    /** Hand-written exchange: webSocket marks 101, opens {@link #channel}, then the peer closes it at once. */
-    static final class UpgradeExchange implements HttpExchange {
-        final AtomicInteger commits = new AtomicInteger();
-        final AtomicInteger finishes = new AtomicInteger();
-        final AtomicInteger aborts = new AtomicInteger();
+    /** A {@link RecordingExchange} whose webSocket marks 101, opens {@link #channel}, then the peer closes it at once. */
+    static final class UpgradeExchange {
+        final RecordingExchange exchange = new RecordingExchange("GET", "/ws", "Connection", "Upgrade", "Upgrade",
+                "websocket");
+        final AtomicInteger commits = exchange.commits;
+        final AtomicInteger finishes = exchange.finishes;
+        final AtomicInteger aborts = exchange.aborts;
         final PeerChannel channel = new PeerChannel();
         volatile boolean wrote101;
         volatile int finishesWhenWebSocketReturned = -1;
         /** An IOException or RuntimeException webSocket throws after onOpen; null closes normally. */
         volatile Exception afterOpen;
-        volatile boolean finishFails;
 
-        @Override
-        public String methodToken() {
-            return "GET";
-        }
-
-        @Override
-        public String rawPath() {
-            return "/ws";
-        }
-
-        @Override
-        public String rawQuery() {
-            return null;
-        }
-
-        @Override
-        public String httpVersion() {
-            return "HTTP/1.1";
-        }
-
-        @Override
-        public List<Map.Entry<String, String>> headers() {
-            return Arrays.<Map.Entry<String, String>>asList(new SimpleImmutableEntry<>("Connection", "Upgrade"),
-                    new SimpleImmutableEntry<>("Upgrade", "websocket"));
-        }
-
-        @Override
-        public InputStream requestBody() {
-            return new ByteArrayInputStream(new byte[0]);
-        }
-
-        @Override
-        public String remoteAddress() {
-            return "127.0.0.1";
-        }
-
-        @Override
-        public boolean isSecure() {
-            return false;
-        }
-
-        @Override
-        public OutputStream commit(int status, List<Map.Entry<String, String>> headers, long contentLength) {
-            commits.incrementAndGet();
-            return new ByteArrayOutputStream();
-        }
-
-        @Override
-        public void finish() throws IOException {
-            finishes.incrementAndGet();
-            if (finishFails) {
-                throw new IOException("connection gone");
-            }
-        }
-
-        @Override
-        public void abort() {
-            aborts.incrementAndGet();
-        }
-
-        @Override
-        public void sendFile(int status, List<Map.Entry<String, String>> headers, File file, long offset,
-                long length) {
-            throw new AssertionError("sendFile");
-        }
-
-        @Override
-        public void upgrade(List<Map.Entry<String, String>> headers, UpgradeHandler handler) {
-            throw new AssertionError("upgrade");
-        }
-
-        @Override
-        public void eventStream(int status, List<Map.Entry<String, String>> headers, StreamDrain drain) {
-            throw new AssertionError("eventStream");
-        }
-
-        @Override
-        public void webSocket(WebSocketSettings settings, WebSocketEndpoint endpoint) throws IOException {
-            wrote101 = true;
-            channel.open = true;
-            try {
-                endpoint.onOpen(channel);
-                Exception e = afterOpen;
-                if (e instanceof IOException) {
-                    throw (IOException) e;
+        UpgradeExchange() {
+            exchange.webSocketScript = (settings, endpoint) -> {
+                wrote101 = true;
+                channel.open = true;
+                try {
+                    endpoint.onOpen(channel);
+                    Exception e = afterOpen;
+                    if (e instanceof IOException) {
+                        throw (IOException) e;
+                    }
+                    if (e != null) {
+                        throw (RuntimeException) e;
+                    }
+                    channel.open = false;
+                    endpoint.onClose(1000, "");
+                } finally {
+                    finishesWhenWebSocketReturned = finishes.get();
                 }
-                if (e != null) {
-                    throw (RuntimeException) e;
-                }
-                channel.open = false;
-                endpoint.onClose(1000, "");
-            } finally {
-                finishesWhenWebSocketReturned = finishes.get();
-            }
+            };
         }
     }
 

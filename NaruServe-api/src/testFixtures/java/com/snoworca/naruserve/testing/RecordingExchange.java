@@ -3,6 +3,8 @@ package com.snoworca.naruserve.testing;
 import com.snoworca.naruserve.spi.HttpExchange;
 import com.snoworca.naruserve.spi.StreamDrain;
 import com.snoworca.naruserve.spi.UpgradeHandler;
+import com.snoworca.naruserve.spi.WebSocketEndpoint;
+import com.snoworca.naruserve.spi.WebSocketSettings;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -43,7 +45,16 @@ public final class RecordingExchange implements HttpExchange {
     public final ByteArrayOutputStream body = new ByteArrayOutputStream();
     /** Thrown by {@link #eventStream} when set (an IOException or a RuntimeException). */
     public volatile @Nullable Exception eventStreamFailure;
+    /** Thrown by {@link #finish} after it is counted, when set. */
+    public volatile @Nullable IOException finishFailure;
+    /** Replaces {@link #webSocket} when set; without it {@code webSocket} is unsupported. */
+    public volatile @Nullable WebSocketScript webSocketScript;
     private volatile @Nullable StreamDrain drain;
+
+    /** What {@link #webSocket} does when a test scripts it. */
+    public interface WebSocketScript {
+        void run(WebSocketSettings settings, WebSocketEndpoint endpoint) throws IOException;
+    }
 
     /** {@code headerPairs} are request header name, value, name, value, ... */
     public RecordingExchange(String method, String path, String... headerPairs) {
@@ -130,8 +141,12 @@ public final class RecordingExchange implements HttpExchange {
     }
 
     @Override
-    public void finish() {
+    public void finish() throws IOException {
         finishes.incrementAndGet();
+        IOException failure = finishFailure;
+        if (failure != null) {
+            throw failure;
+        }
     }
 
     @Override
@@ -147,6 +162,16 @@ public final class RecordingExchange implements HttpExchange {
     @Override
     public void upgrade(List<Map.Entry<String, String>> headers, UpgradeHandler handler) {
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void webSocket(WebSocketSettings settings, WebSocketEndpoint endpoint) throws IOException {
+        WebSocketScript script = webSocketScript;
+        if (script == null) {
+            HttpExchange.super.webSocket(settings, endpoint);
+            return;
+        }
+        script.run(settings, endpoint);
     }
 
     @Override
