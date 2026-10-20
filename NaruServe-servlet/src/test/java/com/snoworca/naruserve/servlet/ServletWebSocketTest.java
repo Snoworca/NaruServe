@@ -20,7 +20,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
-import javax.servlet.http.HttpServletRequest;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -56,8 +55,7 @@ public class ServletWebSocketTest {
         SharedApp.onJetty(container, "/*", this::routes);
         SharedApp.Reply r = SharedApp.http(container.port(), "GET", "/chat", null, UPGRADE);
         assertEquals(r.text(), 501, r.status);
-        assertTrue(r.text(), r.text().matches("\\{\"error\":\\{\"code\":\"[A-Z_]+\",\"message\":\"[^\"]*\","
-                + "\"requestId\":\"[0-9a-f]{16}\"}}"));
+        assertTrue(r.text(), r.isStandardError("[A-Z_]+"));
         assertEquals(0, sessions.get());
         // with an admitted Origin as well
         SharedApp.Reply admitted = SharedApp.http(container.port(), "GET", "/chat", null,
@@ -91,10 +89,7 @@ public class ServletWebSocketTest {
     }
 
     private static ServletExchange exchange(ServletAbortTest.FakeResponse res) {
-        HttpServletRequest req = (HttpServletRequest) Proxy.newProxyInstance(
-                ServletWebSocketTest.class.getClassLoader(), new Class<?>[] {HttpServletRequest.class},
-                (p, m, args) -> null);
-        return new ServletExchange(req, res.proxy, "/chat");
+        return new ServletExchange(ServletAbortTest.request(), res.proxy, "/chat");
     }
 
     // SDS-AC-13; FR-SVL-007 AC-3

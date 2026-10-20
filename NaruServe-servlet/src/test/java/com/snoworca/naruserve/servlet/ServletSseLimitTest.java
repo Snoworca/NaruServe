@@ -128,8 +128,7 @@ public class ServletSseLimitTest {
         next();
         SharedApp.Reply third = SharedApp.http(port, "GET", "/events", null);
         assertEquals(503, third.status);
-        assertTrue(third.text(), third.text().matches("\\{\"error\":\\{\"code\":\"SERVICE_UNAVAILABLE\","
-                + "\"message\":\"[^\"]*\",\"requestId\":\"[0-9a-f]{16}\"}}"));
+        assertTrue(third.text(), third.isStandardError("SERVICE_UNAVAILABLE"));
         assertEquals("503 false", refused.get());
 
         // the end of a stream by close()

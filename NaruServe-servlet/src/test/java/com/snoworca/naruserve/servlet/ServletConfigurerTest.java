@@ -7,6 +7,7 @@ import static org.junit.Assert.fail;
 
 import java.lang.reflect.Field;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 import javax.servlet.ServletException;
@@ -73,6 +74,15 @@ public class ServletConfigurerTest {
         return Collections.singletonMap(CONFIGURER, c.getName());
     }
 
+    /** The context init-parameters of {@link #configurer} plus the given key and value pairs. */
+    static Map<String, String> params(Class<?> configurer, String... keyValues) {
+        Map<String, String> m = new HashMap<>(configurer(configurer));
+        for (int i = 0; i < keyValues.length; i += 2) {
+            m.put(keyValues[i], keyValues[i + 1]);
+        }
+        return m;
+    }
+
     /** Starts a web application that must fail and returns the ServletException that failed it. */
     static ServletException startupFailure(ContainerRule container, Map<String, String> params) {
         try {
@@ -86,7 +96,7 @@ public class ServletConfigurerTest {
         throw new AssertionError();
     }
 
-    private static @Nullable ServletException find(@Nullable Throwable t) {
+    static @Nullable ServletException find(@Nullable Throwable t) {
         for (; t != null; t = t.getCause()) {
             if (t instanceof ServletException) {
                 return (ServletException) t;

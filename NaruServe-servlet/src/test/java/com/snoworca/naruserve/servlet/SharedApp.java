@@ -140,12 +140,8 @@ final class SharedApp {
         }
 
         @Nullable String header(String name) {
-            for (Map.Entry<String, String> h : headers) {
-                if (h.getKey().equalsIgnoreCase(name)) {
-                    return h.getValue();
-                }
-            }
-            return null;
+            List<String> values = headers(name);
+            return values.isEmpty() ? null : values.get(0);
         }
 
         List<String> headers(String name) {
@@ -160,6 +156,12 @@ final class SharedApp {
 
         String text() {
             return new String(body, StandardCharsets.UTF_8);
+        }
+
+        /** True when the body is the standard error body with a code matching {@code codeRegex} and a 16 hex request id. */
+        boolean isStandardError(String codeRegex) {
+            return text().matches("\\{\"error\":\\{\"code\":\"" + codeRegex + "\",\"message\":\"[^\"]*\","
+                    + "\"requestId\":\"[0-9a-f]{16}\"}}");
         }
     }
 

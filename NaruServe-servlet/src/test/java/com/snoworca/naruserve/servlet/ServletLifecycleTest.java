@@ -1,5 +1,6 @@
 package com.snoworca.naruserve.servlet;
 
+import static com.snoworca.naruserve.servlet.ServletConfigurerTest.params;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -13,8 +14,6 @@ import com.snoworca.naruserve.ServerHandle;
 import com.snoworca.naruserve.testing.RecordingLogger;
 import java.lang.reflect.Field;
 import java.util.EventListener;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.servlet.ServletContextEvent;
@@ -72,14 +71,6 @@ public class ServletLifecycleTest {
         STOPS.set(0);
         app = null;
         adapter = null;
-    }
-
-    private static Map<String, String> params(Class<?> configurer, String... keyValues) {
-        Map<String, String> m = new HashMap<>(ServletConfigurerTest.configurer(configurer));
-        for (int i = 0; i < keyValues.length; i += 2) {
-            m.put(keyValues[i], keyValues[i + 1]);
-        }
-        return m;
     }
 
     private static RestApp started() {

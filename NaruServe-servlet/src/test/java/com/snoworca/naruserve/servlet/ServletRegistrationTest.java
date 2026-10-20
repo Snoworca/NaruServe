@@ -9,7 +9,6 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,7 +19,6 @@ import javax.servlet.ServletRegistration;
 import javax.servlet.http.HttpServlet;
 
 import org.eclipse.jetty.servlet.ServletHolder;
-import org.eclipse.jetty.util.MultiException;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.junit.Rule;
 import org.junit.Test;
@@ -32,11 +30,7 @@ public class ServletRegistrationTest {
     public final ContainerRule container = new ContainerRule();
 
     private static Map<String, String> params(String... keyValues) {
-        Map<String, String> m = new HashMap<>(ServletConfigurerTest.configurer(ServletConfigurerTest.Good.class));
-        for (int i = 0; i < keyValues.length; i += 2) {
-            m.put(keyValues[i], keyValues[i + 1]);
-        }
-        return m;
+        return ServletConfigurerTest.params(ServletConfigurerTest.Good.class, keyValues);
     }
 
     private static List<ServletHolder> naruserveHolders(WebAppContext ctx) {
@@ -131,14 +125,7 @@ public class ServletRegistrationTest {
                     ctx -> ctx.addServlet(new ServletHolder("other", new HttpServlet() {
                     }), "/api/*"));
         } catch (Exception thrown) {
-            for (Throwable t = thrown; t != null && e == null; t = t.getCause()) {
-                for (Throwable s : t instanceof MultiException ? ((MultiException) t).getThrowables()
-                        : Collections.singletonList(t)) {
-                    if (s instanceof ServletException) {
-                        e = (ServletException) s;
-                    }
-                }
-            }
+            e = ServletConfigurerTest.find(thrown);
         }
         assertNotNull("startup did not fail with a ServletException", e);
         String message = String.valueOf(e.getMessage());
