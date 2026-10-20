@@ -1,0 +1,21 @@
+{
+  "issue": 42,
+  "title": "빈 WebSocket 메시지와 Ping으로 송신 큐가 무제한 증가하는 문제 방지",
+  "requirements": {
+    "FR-WS-007": [
+      "AC-1"
+    ]
+  },
+  "testReference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/WebSocketTaskBoundTest.java",
+  "logs": {
+    "red": "docs/release/audit-2026-10-21/42/red.log",
+    "green17": "docs/release/audit-2026-10-21/42/green17.log",
+    "green8": "docs/release/audit-2026-10-21/42/green8.log"
+  },
+  "runtimeVerification": [
+    "JDK17",
+    "OpenJDK1.8.0_504"
+  ],
+  "review": "no remaining HIGH/MEDIUM findings",
+  "integrationRegression": "epic #36 final integration gate"
+}

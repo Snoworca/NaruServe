@@ -1,0 +1,55 @@
+tinyHttpdDir: TinyHttpd HEAD is '38051b6', but NaruServe was verified against 46b973e
+> Task :NaruServe-api:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :NaruServe-api:compileKotlin NO-SOURCE
+> Task :NaruServe-api:compileJava
+> Task :NaruServe-api:processResources UP-TO-DATE
+> Task :NaruServe-api:classes
+> Task :NaruServe-api:jar
+> Task :NaruServe-api:compileTestFixturesKotlin NO-SOURCE
+> Task :NaruServe-api:compileTestFixturesJava UP-TO-DATE
+> Task :NaruServe-api:processTestFixturesResources NO-SOURCE
+> Task :NaruServe-api:testFixturesClasses UP-TO-DATE
+> Task :NaruServe-api:testFixturesJar UP-TO-DATE
+> Task :NaruServe-api:processTestResources NO-SOURCE
+> Task :NaruServe-api:compileTestKotlin
+> Task :NaruServe-api:compileTestJava UP-TO-DATE
+> Task :NaruServe-api:testClasses UP-TO-DATE
+> Task :NaruServe-api:test
+
+BUILD SUCCESSFUL in 1s
+8 actionable tasks: 4 executed, 4 up-to-date
+
+tinyHttpdDir: TinyHttpd HEAD is '38051b6', but NaruServe was verified against 46b973e
+> Task :NaruServe-api:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :TinyHttpd:tinyhttpd-core:compileJava UP-TO-DATE
+> Task :NaruServe-api:compileKotlin NO-SOURCE
+> Task :TinyHttpd:tinyhttpd-websocket:compileJava UP-TO-DATE
+> Task :NaruServe-api:compileJava UP-TO-DATE
+> Task :TinyHttpd:tinyhttpd-core:processResources NO-SOURCE
+> Task :NaruServe-tinyhttpd:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :TinyHttpd:tinyhttpd-core:classes UP-TO-DATE
+> Task :NaruServe-tinyhttpd:compileKotlin NO-SOURCE
+> Task :TinyHttpd:tinyhttpd-core:jar UP-TO-DATE
+> Task :TinyHttpd:tinyhttpd-websocket:processResources NO-SOURCE
+> Task :TinyHttpd:tinyhttpd-websocket:classes UP-TO-DATE
+> Task :TinyHttpd:tinyhttpd-websocket:jar UP-TO-DATE
+> Task :NaruServe-tinyhttpd:compileJava UP-TO-DATE
+> Task :NaruServe-tinyhttpd:processResources NO-SOURCE
+> Task :NaruServe-tinyhttpd:classes UP-TO-DATE
+> Task :NaruServe-tinyhttpd:jar UP-TO-DATE
+> Task :NaruServe-api:processResources UP-TO-DATE
+> Task :NaruServe-api:classes UP-TO-DATE
+> Task :NaruServe-api:jar UP-TO-DATE
+> Task :NaruServe-api:compileTestFixturesKotlin NO-SOURCE
+> Task :NaruServe-api:compileTestFixturesJava UP-TO-DATE
+> Task :NaruServe-api:processTestFixturesResources NO-SOURCE
+> Task :NaruServe-api:testFixturesClasses UP-TO-DATE
+> Task :NaruServe-api:testFixturesJar UP-TO-DATE
+> Task :NaruServe-tinyhttpd:compileTestKotlin NO-SOURCE
+> Task :NaruServe-tinyhttpd:compileTestJava
+> Task :NaruServe-tinyhttpd:processTestResources NO-SOURCE
+> Task :NaruServe-tinyhttpd:testClasses
+> Task :NaruServe-tinyhttpd:test
+
+BUILD SUCCESSFUL in 1s
+13 actionable tasks: 2 executed, 11 up-to-date

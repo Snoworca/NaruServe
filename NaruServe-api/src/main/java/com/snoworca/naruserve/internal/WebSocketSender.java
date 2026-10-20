@@ -28,6 +28,8 @@ final class WebSocketSender {
 
     static final long STACK_BYTES = 256 * 1024;
     private static final long KEEP_ALIVE_MILLIS = 60000;
+    /** Payload bytes alone cannot bound empty frames or Ping tasks. Includes the write in flight. */
+    private static final int MAX_PENDING_TASKS = 1024;
 
     private final ThreadPoolExecutor pool;
     private final SenderThreads threads;
@@ -50,6 +52,7 @@ final class WebSocketSender {
         final ArrayDeque<Write> queued = new ArrayDeque<>();
         /** Bytes queued plus the bytes of the write in flight. */
         long bytes;
+        int pending;
         /** A drain task is submitted or running; the write it holds is in flight, not in {@link #queued}. */
         boolean running;
         /** last() or release() ran: later writes are refused. */
@@ -60,6 +63,7 @@ final class WebSocketSender {
         void discard() {
             for (Write w : queued) {
                 bytes -= w.bytes;
+                pending--;
             }
             queued.clear();
         }
@@ -95,11 +99,12 @@ final class WebSocketSender {
             if (s.closed) {
                 return false;
             }
-            if (s.bytes + bytes > limit) {
+            if (s.bytes + bytes > limit || s.pending >= MAX_PENDING_TASKS) {
                 s.discard();
                 return false;
             }
             s.bytes += bytes;
+            s.pending++;
             if (s.running) {
                 s.queued.add(w);
                 return true;
@@ -122,6 +127,7 @@ final class WebSocketSender {
             }
             s.discard();
             s.closed = true;
+            s.pending++; // the final close replaces the queue and must always be deliverable
             if (s.running) {
                 s.queued.add(w);
                 return;
@@ -266,6 +272,7 @@ final class WebSocketSender {
             synchronized (this) {
                 // no drain will run: drop what queued up behind first too, or it would run out of order later
                 s.bytes -= first.bytes;
+                s.pending--;
                 s.discard();
                 idled(session, s);
             }
@@ -292,6 +299,7 @@ final class WebSocketSender {
                 }
                 synchronized (this) {
                     s.bytes -= next.bytes;
+                    s.pending--;
                     next = s.queued.poll();
                     if (next == null) {
                         idled(session, s);
@@ -302,6 +310,7 @@ final class WebSocketSender {
             if (next != null) {
                 synchronized (this) {
                     s.bytes -= next.bytes;
+                    s.pending--;
                     s.discard();
                     idled(session, s);
                 }

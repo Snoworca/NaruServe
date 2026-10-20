@@ -57,12 +57,20 @@ public class WebSocketSendSocketTest {
     // thread's messages in its send order (T23)
     @Test(timeout = 60000)
     public void sdsAc5_FR_WS_007_AC4_eightThreadsOf500MessagesArriveWholeAndInSendOrder() throws Exception {
+        // FR-WS-007 AC-1 caps pending tasks at 1024; keep this ordering test within a 512-message window.
+        java.util.concurrent.Semaphore outstanding = new java.util.concurrent.Semaphore(512);
         app.webSocket(o -> o.sendQueueSize(16 * 1024 * 1024));
         app.ws("/ws", (req, ws) -> ws.onText(text -> {
             for (int i = 0; i < 8; i++) {
                 int n = i;
                 Thread t = new Thread(() -> {
                     for (int seq = 0; seq < 500; seq++) {
+                        try {
+                            if (!outstanding.tryAcquire(10, TimeUnit.SECONDS)) return;
+                        } catch (InterruptedException interrupted) {
+                            Thread.currentThread().interrupt();
+                            return;
+                        }
                         ws.sendText("t" + n + "-" + seq + "-" + PAD);
                     }
                 });
@@ -83,6 +91,7 @@ public class WebSocketSendSocketTest {
                 assertEquals("thread " + thread + " out of order", next[thread], Integer.parseInt(m.group(2)));
                 assertEquals(PAD, m.group(3));
                 next[thread]++;
+                outstanding.release();
             }
             for (int n : next) {
                 assertEquals(500, n);
@@ -219,4 +228,39 @@ public class WebSocketSendSocketTest {
             Http.closeAll(stalled);
         }
     }
+    // FR-WS-007 AC-1 AC-5 AC-6: empty-message overload on a stalled real peer cannot delay a healthy peer.
+    @Test(timeout = 60000)
+    public void pendingTaskOverflowClosesStalledPeerAndKeepsHealthyPeerResponsive() throws Exception {
+        java.util.concurrent.atomic.AtomicReference<com.snoworca.naruserve.WebSocketSession> stalledSession =
+                new java.util.concurrent.atomic.AtomicReference<>();
+        app.webSocket(o -> o.sendQueueSize(64 * 1024 * 1024));
+        app.ws("/bounded", (req, ws) -> ws.onText(text -> {
+            if (text.equals("stall")) {
+                stalledSession.set(ws);
+                for (int i = 0; i < 16; i++) ws.sendText(BIG);
+            } else ws.sendText("healthy");
+        }));
+        int port = app.listen(0).port();
+        try (RawWebSocketClient stalled = RawWebSocketClient.open(port, "/bounded");
+                RawWebSocketClient healthy = RawWebSocketClient.open(port, "/bounded")) {
+            stalled.text("stall");
+            awaitBlockedWriters(port, 1);
+            com.snoworca.naruserve.WebSocketSession session = stalledSession.get();
+            for (int i = 0; i < 1024 && session.isOpen(); i++) session.sendText("");
+            assertTrue("task overflow did not close session", !session.isOpen());
+            long start = System.nanoTime();
+            healthy.text("hello");
+            assertEquals("healthy", healthy.readFrame(TEXT).text());
+            assertTrue("healthy peer waited for overloaded peer", System.nanoTime() - start < TimeUnit.SECONDS.toNanos(1));
+            stalled.setReadTimeout(10000);
+            Frame close;
+            do {
+                close = stalled.readFrame();
+                assertTrue("unexpected frame before close", close.opcode == TEXT || close.opcode == RawWebSocketClient.CLOSE);
+            } while (close.opcode != RawWebSocketClient.CLOSE);
+            assertEquals(1008, close.closeCode());
+            assertEquals("send queue overflow", close.closeReason());
+        }
+    }
+
 }
