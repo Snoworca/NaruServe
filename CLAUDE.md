@@ -19,6 +19,7 @@
 - **Gradle 8.14.3 wrapper**만 사용한다(`./gradlew build`). Maven 등 다른 빌드 도구는 쓰지 않는다.
 - 이 버전을 고른 이유: TinyHttpd와 같은 버전이라 `includeBuild`/버전 정렬이 쉽고, 로컬 JDK 17에서 돌고, Kotlin Gradle Plugin 2.x와 AGP 8.x(Android 샘플 앱)를 지원한다.
 - 모듈: `NaruServe-api`(Core), `NaruServe`(`RestApp.create()` bootstrap), `NaruServe-tinyhttpd`, `NaruServe-gson`, `NaruServe-kotlin`, `NaruServe-logcat`, `NaruServe-filelog` — 이 일곱은 API 21 검사 대상(animal-sniffer). `NaruServe-servlet`(JVM 전용, `javax.servlet-api:3.1.0` compileOnly), `NaruServe-slf4j`(JVM 전용). 루트 프로젝트 이름은 `NaruServe-build`이고 TinyHttpd 체크아웃을 `includeBuild`하며 커밋 `46b973e`에서 검증했다(HEAD가 다르면 `settings.gradle`이 경고만 낸다). 루트 `build.gradle`이 모든 모듈을 설정하고 모듈별 build 파일은 두지 않는다.
+- 루트 `build.gradle` 밖의 빌드 설정은 릴리스 전용 `gradle/release.gradle`(CycloneDX SBOM, 취약점 스캔, 라이선스 보고) 하나뿐이며, 루트 `build.gradle`이 `-Prelease`일 때만 `apply from:`으로 적용하므로 기본 `./gradlew build`는 릴리스 플러그인을 해석하지 않는다.
 - 컴파일은 `options.release = 8`, Kotlin은 `jvmTarget = 1.8`. API 21 검사는 TinyHttpd처럼 animal-sniffer(`android-api-level-21` signature)로 한다.
 
 ## API 문서

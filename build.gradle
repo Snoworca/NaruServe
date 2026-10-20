@@ -1,4 +1,5 @@
-// The only build file: every module is configured here (CON-BUILD-003).
+// The only build file: every module is configured here; the one exception is the release-only script applied at
+// the end under -Prelease (CON-BUILD-017).
 plugins {
     id 'java'
     id 'ru.vyarus.animalsniffer' version '2.0.1' apply false
@@ -445,3 +446,8 @@ test {
     systemProperty 'naruserve.offline', gradle.startParameter.offline
     systemProperty 'naruserve.testKitWorkDir', layout.buildDirectory.dir('testkit-work').get().asFile.absolutePath
 }
+
+// @req FR-REL-001
+// @req CON-BUILD-017
+// Release-only tasks (SBOM, vulnerability scan, licenses); a default build never applies or resolves them.
+if (project.hasProperty('release')) { apply from: 'gradle/release.gradle' }

@@ -285,9 +285,9 @@ public class BuildLayoutTest {
         }
     }
 
-    // CON-BUILD-003 AC-1
+    // SDS-AC-5, SDS-AC-6; CON-BUILD-017 AC-1, FR-REL-001 AC-5 (re-pointed from CON-BUILD-003 AC-1, body unchanged)
     @Test
-    public void con_BUILD_003_AC1_rootBuildFileHoldsPluginsCompileDependenciesAndChecks() throws IOException {
+    public void con_BUILD_017_AC1_rootBuildFileHoldsPluginsCompileDependenciesAndChecks() throws IOException {
         String build = read(new File(ROOT, "build.gradle"));
         for (String part : new String[] {"'java-library'", "'org.jetbrains.kotlin.jvm'", "'ru.vyarus.animalsniffer'",
                 "options.release = 8", "checkClassReferences", "checkDependencyRules", "configureDependencies"}) {
@@ -326,14 +326,44 @@ public class BuildLayoutTest {
         }
     }
 
-    // SDS-AC-7; CON-BUILD-003 AC-2
+    // SDS-AC-5, SDS-AC-7; CON-BUILD-017 AC-2, FR-REL-001 AC-5 (re-pointed from CON-BUILD-003 AC-2, body unchanged)
     @Test
-    public void con_BUILD_003_AC2_noModuleBuildFile() {
+    public void con_BUILD_017_AC2_noModuleBuildFile() {
         for (String module : MODULES) {
             for (String name : new String[] {"build.gradle", "build.gradle.kts", "pom.xml"}) {
                 assertFalse(module + "/" + name, new File(ROOT, module + "/" + name).exists());
             }
         }
+    }
+
+    // SDS-AC-5, SDS-AC-6; CON-BUILD-017 AC-1, FR-REL-001 AC-5
+    @Test
+    public void con_BUILD_017_AC1_onlyReferenceToAnotherScriptIsTheGuardedReleaseApply() throws IOException {
+        String build = read(new File(ROOT, "build.gradle"));
+        Matcher applies = Pattern.compile("apply\\s+from\\s*:").matcher(build);
+        int count = 0;
+        while (applies.find()) {
+            count++;
+        }
+        assertEquals("one apply from: in build.gradle", 1, count);
+        assertTrue("the apply from: is guarded by project.hasProperty('release')",
+                ReleaseScriptTextTest.GUARDED_APPLY.matcher(build).find());
+        assertFalse("no buildscript block in build.gradle", build.contains("buildscript"));
+        assertTrue("the release script sits outside the module directories",
+                new File(ROOT, "gradle/release.gradle").isFile());
+    }
+
+    // SDS-AC-8; CON-BUILD-017 AC-3
+    @Test
+    public void con_BUILD_017_AC3_claudeMdStatesReleaseScriptException() throws IOException {
+        String exception = null;
+        for (String line : read(new File(ROOT, "CLAUDE.md")).split("\n")) {
+            if (line.contains("`gradle/release.gradle`") && line.contains("`-Prelease`")) {
+                exception = line;
+            }
+        }
+        assertNotNull("CLAUDE.md names gradle/release.gradle and -Prelease on one line", exception);
+        assertTrue(exception, exception.contains("build.gradle"));
     }
 
     // SDS-AC-19; CON-BUILD-010 AC-1
