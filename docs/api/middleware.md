@@ -85,11 +85,44 @@ app.use("/api") { req, res, next ->
 }
 ```
 
+### HTTP CORS
+
+브라우저에서 다른 출처의 API를 호출하도록 허용하려면 인증 미들웨어보다 먼저 CORS를 등록합니다.
+
+```java
+app.cors(cors -> cors
+    .allowedOrigins("https://app.example")
+    .allowedMethods(Method.GET, Method.POST)
+    .allowedHeaders("Content-Type", "Authorization")
+    .credentials(true)
+    .maxAge(600));
+app.use(auth);
+```
+
+- `allowedOrigins`는 정확한 HTTP(S) 출처 문자열을 지정합니다. 경로와 끝 슬래시 없이 `https://app.example`처럼 작성합니다. 기본값은 허용 출처 없음입니다. `*`는 모든 출처, 문자열 `null`은 opaque 출처를 지정합니다.
+- 기본 메서드는 GET·HEAD·POST이며 `allowedMethods`가 목록을 교체합니다. `allowedHeaders`도 목록을 교체하며 이름의 대소문자를 구분하지 않습니다. 기본 허용 요청 헤더는 없습니다.
+- `credentials(true)`와 와일드카드 출처 `*`를 함께 설정하면 등록 시 예외가 납니다. 기본 credentials는 false입니다. `maxAge`는 0 이상의 초이며 기본 0은 캐시 헤더를 생략합니다.
+- Origin이 있는 허용 요청은 `Access-Control-Allow-Origin`을 받고 기존 `Vary`에 `Origin`을 합칩니다. 허용되지 않은 일반 요청은 CORS 허용 헤더 없이 다음 미들웨어로 진행합니다. CORS는 서버 인증을 대신하지 않습니다.
+- `OPTIONS` + `Origin` + `Access-Control-Request-Method` 요청은 preflight입니다. 출처·메서드·요청 헤더가 모두 허용되면 인증 전에 빈 본문 204로 끝나고, 잘못되거나 허용되지 않으면 403으로 끝납니다. 기존 `Vary`와 `*`를 보존하며 preflight의 메서드·헤더 차원도 추가합니다.
+- Origin이 없는 요청도 캐시 구분을 위해 `Vary: Origin`을 추가하며, CORS 허용 헤더와 본문·라우팅은 바꾸지 않습니다. preflight가 아닌 OPTIONS도 그대로 진행합니다. 허용 출처의 표준 400·401·500 오류 응답에도 프레임워크 CORS 허용 헤더와 Vary가 유지됩니다. 옵션은 등록 시 복사하므로 보관한 설정 객체를 나중에 바꿔도 서버 정책은 바뀌지 않습니다. `app.cors`는 `listen()` 전에 등록합니다.
+- WebSocket Upgrade는 이 미들웨어가 처리하지 않습니다. WebSocket 출처는 `app.webSocket(o -> o.allowedOrigins(...))`로 별도 설정합니다.
+
 ### 라우트 그룹
 
 반복되는 경로 prefix는 `group(prefix, configurer)`로 묶습니다. 그룹은 별도 서버가 아니며 `listen()` 같은 수명주기 메서드를 갖지 않습니다.
 
 ```java
+Middleware adminOnly = (req, res, next) -> {
+    if (!"admin".equals(req.header("X-Role"))) {
+        res.status(403).end();
+        return;
+    }
+    next.run();
+};
+Middleware audit = (req, res, next) -> {
+    req.application().logger().info("audit " + req.path());
+    next.run();
+};
 app.group("/api", api -> {
     api.use(auth);
     api.get("/users", (req, res) -> res.send("users"));

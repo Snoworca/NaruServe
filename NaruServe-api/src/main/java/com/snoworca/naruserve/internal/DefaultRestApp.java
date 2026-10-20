@@ -5,6 +5,7 @@ import com.snoworca.naruserve.AppStartException;
 import com.snoworca.naruserve.AppState;
 import com.snoworca.naruserve.CachePolicy;
 import com.snoworca.naruserve.Configurer;
+import com.snoworca.naruserve.CorsOptions;
 import com.snoworca.naruserve.ConsoleLogger;
 import com.snoworca.naruserve.ErrorHandler;
 import com.snoworca.naruserve.LifecycleCallback;
@@ -803,6 +804,15 @@ public final class DefaultRestApp implements RestApp {
     @Override
     public RestApp route(MethodSet methods, String path, RouteHandler h) {
         return register("route", methods, path, null, false, h);
+    }
+
+    // @req FR-DX-010
+    @Override
+    public synchronized RestApp cors(Configurer<CorsOptions> configurer) {
+        lifecycle.requireConfigurable("cors");
+        DefaultCorsOptions options = new DefaultCorsOptions();
+        Objects.requireNonNull(configurer, "configurer").configure(options);
+        return use(options.middleware());
     }
 
     // @req FR-DX-009

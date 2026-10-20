@@ -63,6 +63,7 @@ public final class DefaultResponse implements Response {
     private boolean committed;
     private int status = 200;
     private final List<Map.Entry<String, String>> headers = new ArrayList<>();
+    private final List<Map.Entry<String, String>> corsHeaders = new ArrayList<>();
     private @Nullable InputStream pendingIn;
     private @Nullable OutputStream pendingOut;
     private boolean copying;
@@ -383,6 +384,53 @@ public final class DefaultResponse implements Response {
         checkHeader(name, value);
         put(name, value);
         return this;
+    }
+
+    /** Records only framework CORS grants, which the standard error response must keep. */
+    // @req FR-DX-010
+    synchronized void corsHeader(String name, String value) {
+        header(name, value);
+        for (Iterator<Map.Entry<String, String>> it = corsHeaders.iterator(); it.hasNext();) {
+            if (it.next().getKey().equalsIgnoreCase(name)) it.remove();
+        }
+        corsHeaders.add(new SimpleImmutableEntry<>(name, value));
+    }
+
+    /** A framework cache dimension, also restored if normal error handling clears application headers. */
+    // @req FR-DX-010
+    synchronized void corsVary(String field) {
+        vary(field);
+        String dimensions = null;
+        for (Map.Entry<String, String> header : corsHeaders) {
+            if (header.getKey().equalsIgnoreCase("Vary")) dimensions = header.getValue();
+        }
+        // Only framework dimensions survive; unrelated application Vary fields are dropped on error.
+        if (dimensions != null) {
+            for (String token : dimensions.split(",")) {
+                if (field.equalsIgnoreCase(token.trim())) return;
+            }
+        }
+        String value = dimensions == null ? field : dimensions + ", " + field;
+        for (Iterator<Map.Entry<String, String>> it = corsHeaders.iterator(); it.hasNext();) {
+            if (it.next().getKey().equalsIgnoreCase("Vary")) it.remove();
+        }
+        corsHeaders.add(new SimpleImmutableEntry<>("Vary", value));
+    }
+
+    /** Adds a Vary field without replacing existing cache dimensions or Vary: *. */
+    // @req FR-DX-010
+    synchronized void vary(String field) {
+        requireNew();
+        checkHeader(field, "");
+        String existing = null;
+        for (Map.Entry<String, String> header : headers) {
+            if (!header.getKey().equalsIgnoreCase("Vary")) continue;
+            existing = header.getValue();
+            for (String token : existing.split(",")) {
+                if ("*".equals(token.trim()) || field.equalsIgnoreCase(token.trim())) return;
+            }
+        }
+        put("Vary", existing == null || existing.isEmpty() ? field : existing + ", " + field);
     }
 
     /**
@@ -810,6 +858,8 @@ public final class DefaultResponse implements Response {
                     }
                     headers.addAll(extra);
                 }
+                // HTTP exceptions and ordinary application headers cannot replace framework CORS decisions.
+                for (Map.Entry<String, String> header : corsHeaders) put(header.getKey(), header.getValue());
                 c = prepare(body, null);
             } else {
                 return;

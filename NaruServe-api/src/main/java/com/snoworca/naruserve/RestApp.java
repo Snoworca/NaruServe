@@ -71,6 +71,10 @@ public interface RestApp {
     // @req FR-DX-009
     RestApp group(String prefix, Configurer<RouteGroup> configurer);
 
+    /** Registers validated HTTP CORS middleware at this position, before downstream authentication. */
+    // @req FR-DX-010
+    RestApp cors(Configurer<CorsOptions> configurer);
+
     /** Sets the router policy, built with {@link RouterPolicy#builder()}. */
     RestApp routerPolicy(RouterPolicy policy);
 
