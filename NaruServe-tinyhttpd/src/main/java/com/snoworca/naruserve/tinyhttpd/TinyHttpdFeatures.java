@@ -49,21 +49,14 @@ final class TinyHttpdFeatures {
     }
 
     /**
-     * Commits the headers with no length, so TinyHttpd frames the body chunked, sends them at once and hands the
-     * exchange-synchronized body stream to {@code drain.attach}; {@link TinyHttpdExchange#run} runs the drain on this
-     * worker after the handler returned. Never TinyHttpd's {@code startEventStream()}, which adds its own headers.
+     * The chunked event stream of {@link TinyHttpdEventStream#start}; {@link TinyHttpdExchange#run} runs the drain on
+     * this worker after the handler returned.
      */
     // @req FR-ENGINE-011
+    // @req FR-SSE-003
     static void eventStream(TinyHttpdExchange ex, int status, List<Map.Entry<String, String>> headers,
             StreamDrain drain) throws IOException {
-        if (ex.handlerReturned()) {
-            // Refused before the start; drainAfterHandler checks again for a handler returning meanwhile.
-            throw new IllegalStateException(TinyHttpdExchange.LATE_EVENT_STREAM);
-        }
-        OutputStream out = ex.commit(status, headers, -1); // the lock is held only inside commit
-        out.flush();
-        drain.attach(out);
-        ex.drainAfterHandler(drain, out);
+        TinyHttpdEventStream.start(ex, ex.res, status, headers, drain);
     }
 
     /**

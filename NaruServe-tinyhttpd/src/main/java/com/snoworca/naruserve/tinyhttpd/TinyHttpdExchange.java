@@ -31,7 +31,10 @@ final class TinyHttpdExchange implements HttpExchange {
     final Request req;
     final Response res;
     private final CountDownLatch ended = new CountDownLatch(1);
-    // Guarded by this, which also serialises every touch of res by the core so abort() can hand res back safely.
+    // Guarded by this, which also serialises every touch of res by the core so abort() can hand res back safely;
+    // TinyHttpdEventStream.start sets the event-stream headers after the start mark without it.
+    // shortcut: an eventStream from a thread other than the worker races a handler return plus abort only in that
+    // header window; take the lock there if such a caller appears.
     private boolean started;
     // Guarded by this: the worker runs a WebSocket handshake on res without the lock, so no other start may touch it.
     private boolean upgrading;
@@ -44,18 +47,44 @@ final class TinyHttpdExchange implements HttpExchange {
 
     static final String LATE_EVENT_STREAM = "eventStream must be called before the handler returns";
 
-    private TinyHttpdExchange(Request req, Response res) {
+    private final TinyHttpdEventStream.Slots slots;
+    // Guarded by this: register recorded a slot for this exchange, which run() releases when it leaves.
+    private boolean slotHeld;
+
+    private TinyHttpdExchange(Request req, Response res, TinyHttpdEventStream.Slots slots) {
         this.req = req;
         this.res = res;
+        this.slots = slots;
     }
 
     /**
      * Runs {@code handler} on the TinyHttpd worker, then holds the worker until the core finishes or aborts the
-     * exchange, which may happen on another thread; TinyHttpd completes the response once this returns.
+     * exchange, which may happen on another thread; TinyHttpd completes the response once this returns. A drain
+     * registered by the handler runs on this worker in between, and the SSE slot it holds is released on the way out.
      */
     // @req FR-ENGINE-011
-    static void run(Request req, Response res, ExchangeHandler handler) throws IOException {
-        TinyHttpdExchange ex = new TinyHttpdExchange(req, res);
+    // @req FR-SSE-003
+    static void run(Request req, Response res, ExchangeHandler handler, TinyHttpdEventStream.Slots slots)
+            throws IOException {
+        TinyHttpdExchange ex = new TinyHttpdExchange(req, res, slots);
+        try {
+            run(ex, handler);
+        } finally {
+            boolean held;
+            synchronized (ex) {
+                ex.handlerReturned = true; // also after a throwing handler, so no later stream takes a slot
+                held = ex.slotHeld;
+                ex.slotHeld = false;
+            }
+            if (held) {
+                slots.release();
+            }
+        }
+    }
+
+    // @req FR-SSE-003
+    private static void run(TinyHttpdExchange ex, ExchangeHandler handler) throws IOException {
+        Response res = ex.res;
         handler.handle(ex);
         StreamDrain d;
         OutputStream out;
@@ -64,7 +93,7 @@ final class TinyHttpdExchange implements HttpExchange {
             d = ex.drain;
             out = ex.drainOut;
         }
-        if (d != null && out != null) {
+        if (d != null && out != null && !ex.aborted) {
             try {
                 // On this worker, outside the lock; its writes synchronize on ex and fail at once after an abort.
                 d.drain(out);
@@ -234,7 +263,8 @@ final class TinyHttpdExchange implements HttpExchange {
         }
     }
 
-    // Writes through the committed stream (the event-stream drain, the core's attached sends) also synchronize on this.
+    // Writes through commit()'s stream and TinyHttpdEventStream.Body (the event-stream drain, the core's attached
+    // sends) also synchronize on this.
     @Override
     public synchronized void sendFile(int status, List<Map.Entry<String, String>> headers, File file, long offset,
             long length) throws IOException {
@@ -276,8 +306,8 @@ final class TinyHttpdExchange implements HttpExchange {
     }
 
     /**
-     * Not synchronized: the hook takes this lock only for {@link #commit}, the first flush and recording the drain,
-     * and the drain runs without it.
+     * Not synchronized: the hook takes this lock only for the start checks, the SSE slot and the start mark, and the
+     * headers, the first flush and the drain run without it.
      */
     // @req FR-ENGINE-011
     @Override
@@ -287,16 +317,33 @@ final class TinyHttpdExchange implements HttpExchange {
     }
 
     /**
-     * Records the drain {@link #run} starts on the worker once the handler returned; after that nothing would run it,
-     * so a call from another thread past that point throws instead of leaving the stream silent.
+     * Records the drain {@link #run} starts on the worker once the handler returned, and whether it holds an SSE slot
+     * for run() to release; after that nothing would run it, so a call from another thread past that point throws
+     * instead of leaving the stream silent.
      */
     // @req FR-ENGINE-011
-    synchronized void drainAfterHandler(StreamDrain d, OutputStream out) {
+    // @req FR-SSE-003
+    synchronized void register(StreamDrain d, OutputStream out, boolean slot) {
         if (handlerReturned) {
             throw new IllegalStateException(LATE_EVENT_STREAM);
         }
         drain = d;
         drainOut = out;
+        slotHeld = slot;
+    }
+
+    /** The SSE slots of the server this exchange runs on. */
+    // @req FR-SSE-003
+    TinyHttpdEventStream.Slots slots() {
+        return slots;
+    }
+
+    /** The abort check of the body streams. */
+    // @req FR-SSE-003
+    void checkNotAborted() throws IOException {
+        if (aborted) {
+            throw new IOException("exchange aborted");
+        }
     }
 
     /** Whether run() has taken the drain, so an event stream started now would never be drained. */

@@ -25,9 +25,16 @@ import org.jspecify.annotations.Nullable;
 // @req FR-SSE-001
 // @req FR-SSE-002
 // @req FR-SSE-004
+// @req FR-SSE-005
 final class DefaultSseClient implements SseClient, StreamDrain {
 
     private static final byte[] PING = ": ping\n\n".getBytes(StandardCharsets.US_ASCII);
+    /**
+     * The closing notice queued at shutdown; non-empty data, since EventSource drops events whose data is empty.
+     * Private: FR-APP-002 allows no shared static array outside its class.
+     */
+    // @req FR-SSE-005
+    private static final byte[] NOTICE = "event: shutdown\ndata: shutdown\n\n".getBytes(StandardCharsets.UTF_8);
 
     private final @Nullable DefaultResponse res;
     private final @Nullable SseRegistry registry;
@@ -221,6 +228,27 @@ final class DefaultSseClient implements SseClient, StreamDrain {
         cause = why;
         notifyAll();
         return true;
+    }
+
+    /**
+     * The shutdown end: when not yet ended, queues {@link #NOTICE} past the send-queue limit and ends the stream with
+     * cause shutdown, which wakes the drain to write the queue and the notice.
+     */
+    // @req FR-SSE-005
+    synchronized void closing() {
+        if (ended) {
+            return;
+        }
+        queue.add(NOTICE);
+        queuedBytes += NOTICE.length;
+        endBy("shutdown");
+    }
+
+    /** Drops every queued event; the force close after the adapter stop. */
+    // @req FR-SSE-005
+    synchronized void clearQueue() {
+        queue.clear();
+        queuedBytes = 0;
     }
 
     synchronized @Nullable String cause() {

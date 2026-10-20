@@ -5,6 +5,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.snoworca.naruserve.RestApp;
 import com.snoworca.naruserve.ServerOptions;
+import com.snoworca.naruserve.spi.ServerSettings;
 import com.snoworca.naruserve.testing.RecordingLogger;
 import com.snoworca.naruserve.tinyhttpd.RawTargetSocketTest.Http;
 import com.snoworca.tinyhttpd.ServerConfig;
@@ -13,7 +14,9 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -98,6 +101,50 @@ public class ConnectionLimitsTest {
         assertEquals(128, c.getMaxUpgradedConnections());
         assertEquals(256, c.maxConnectionsPerAddress);
         assertEquals(320, c.getMaxConnections() - c.getMaxWorkers());
+    }
+
+    // SDS-AC-8 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-11.sds.md; FR-SSE-003 AC-5: the limit mapping
+    // still sets maxEventStreams to maxSseStreams, and the SSE slots every exchange of a bound adapter shares take
+    // exactly maxSseStreams streams
+    @Test(timeout = 20000)
+    public void sdsAc8_FR_SSE_003_AC5_maxEventStreamsStillMapsAndTheSseSlotsHoldMaxSseStreams() throws Exception {
+        ServerSettings s = Http.settings().maxSseStreams(7).build();
+        assertEquals(7, TinyHttpdAdapter.configure(s, (q, r) -> { }).build().getConfig().getMaxEventStreams());
+        TinyHttpdAdapter a = new TinyHttpdAdapter();
+        List<TinyHttpdEventStream.Slots> seen = new ArrayList<>();
+        AtomicInteger taken = new AtomicInteger();
+        try {
+            a.bind(s, ex -> {
+                TinyHttpdEventStream.Slots slots = ((TinyHttpdExchange) ex).slots();
+                synchronized (seen) {
+                    seen.add(slots);
+                }
+                if (seen.size() == 1) {
+                    int n = 0;
+                    while (slots.tryAcquire()) {
+                        n++;
+                    }
+                    taken.set(n);
+                    for (int i = 0; i < n; i++) {
+                        slots.release();
+                    }
+                }
+                try {
+                    ex.commit(200, Collections.<Map.Entry<String, String>>emptyList(), 0).flush();
+                    ex.finish();
+                } catch (IOException e) {
+                    ex.abort();
+                }
+            });
+            assertEquals(200, Http.status(Http.send(a.boundPort(), Http.get("/a"))));
+            assertEquals(200, Http.status(Http.send(a.boundPort(), Http.get("/b"))));
+        } finally {
+            Http.stopQuietly(a);
+        }
+        assertEquals(7, taken.get());
+        assertEquals(2, seen.size());
+        assertTrue("one Slots per bind", seen.get(0) == seen.get(1));
+        assertEquals(0, seen.get(0).open());
     }
 
     // SDS-AC-12; FR-ENGINE-004 AC-3

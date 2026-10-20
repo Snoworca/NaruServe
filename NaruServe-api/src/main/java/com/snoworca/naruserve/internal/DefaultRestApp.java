@@ -134,6 +134,8 @@ public final class DefaultRestApp implements RestApp {
     private volatile int boundPort;
     /** The WebSocket session registry; null before freeze. Guarded by this. */
     private @Nullable WebSocketRegistry webSocketRegistry;
+    /** The SSE stream registry; null before freeze. Guarded by this. */
+    private @Nullable SseRegistry sseRegistry;
     /** The deadline of the running shutdown sequence, for the before-wait participants; set as the sequence starts. */
     private volatile long shutdownDeadlineNanos;
     // The thread inside listen() or the shutdown sequence; a shutdown() from it must not wait for itself. Each owner
@@ -914,6 +916,7 @@ public final class DefaultRestApp implements RestApp {
     // @req FR-WS-007
     // @req FR-WS-008
     // @req FR-WS-010
+    // @req FR-SSE-005
     public synchronized void freeze() {
         if (dispatcher != null) {
             return;
@@ -943,16 +946,22 @@ public final class DefaultRestApp implements RestApp {
         WebSocketSender sender = new WebSocketSender(serverOptions.maxUpgradedConnections(), port, safe);
         WebSocketIdleScheduler idle = new WebSocketIdleScheduler(port, safe);
         WebSocketRegistry registry = new WebSocketRegistry(sender, idle);
+        SseRegistry streams = new SseRegistry(sse, lifecycle, safe);
         dispatcher = new Dispatcher(router, pipeline, new ErrorPath(errorHandlers, safe),
                 new AccessLog(accessLogOptions, safe), context, jsonCodec(), jsonLimit(), trustProxy,
                 multipartSettings().copy(), formLimit(), spool(), new StaticHandler(staticMounts, mimeTypes, defaultCache),
                 new WebSocketUpgrade(ws, jsonCodec(), safe, sender, idle, registry),
-                new SseRegistry(sse, lifecycle, safe));
+                streams);
         webSocketRegistry = registry;
+        sseRegistry = streams;
+        // SSE first: its closeAll returns at once, while the WebSocket one waits for the closes.
+        shutdownParticipants.add(ShutdownParticipants.Phase.BEFORE_WAIT,
+                () -> streams.closeAll(shutdownDeadlineNanos));
         // shortcut: reads the deadline field until the FR-APP-020 deadline overload of ShutdownParticipants lands
         shutdownParticipants.add(ShutdownParticipants.Phase.BEFORE_WAIT,
                 () -> registry.closeAll(shutdownDeadlineNanos));
         shutdownParticipants.add(ShutdownParticipants.Phase.FORCE_CLOSE, registry::terminate);
+        shutdownParticipants.add(ShutdownParticipants.Phase.FORCE_CLOSE, streams::terminate);
         lifecycle.markFrozen();
     }
 
@@ -960,6 +969,16 @@ public final class DefaultRestApp implements RestApp {
     // @req FR-WS-010
     synchronized WebSocketRegistry webSocketRegistry() {
         WebSocketRegistry r = webSocketRegistry;
+        if (r == null) {
+            throw new IllegalStateException("RestApp is not frozen; call freeze() first");
+        }
+        return r;
+    }
+
+    /** The SSE stream registry built by a successful {@link #freeze()}; for internal tests. */
+    // @req FR-SSE-005
+    synchronized SseRegistry sseRegistry() {
+        SseRegistry r = sseRegistry;
         if (r == null) {
             throw new IllegalStateException("RestApp is not frozen; call freeze() first");
         }

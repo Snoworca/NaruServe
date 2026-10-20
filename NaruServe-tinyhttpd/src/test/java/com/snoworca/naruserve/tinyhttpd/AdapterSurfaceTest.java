@@ -7,6 +7,7 @@ import static org.junit.Assert.assertTrue;
 import com.snoworca.naruserve.HttpException;
 import com.snoworca.naruserve.spi.HttpAdapter;
 import com.snoworca.naruserve.spi.HttpExchange;
+import com.snoworca.naruserve.spi.StreamDrain;
 import com.snoworca.naruserve.spi.WebSocketSettings;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -386,6 +387,77 @@ public class AdapterSurfaceTest {
             } finally {
                 release.countDown();
             }
+        }
+    }
+
+    // SDS-AC-1 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-11.sds.md; FR-SSE-003 AC-6: the start checks,
+    // the slot and the start mark share one synchronized (exchange) and nothing else holds it: the lock is free
+    // within 100 ms while the drain waits, the open stream holds one slot until run() released it, and after the
+    // start a commit or a second eventStream throws IllegalStateException without taking a slot
+    @Test(timeout = 30000)
+    public void sdsAc1_FR_SSE_003_AC6_eventStreamHoldsTheLockOnlyForTheChecksTheSlotAndTheStart() throws Exception {
+        AtomicReference<HttpExchange> exchange = new AtomicReference<>();
+        AtomicReference<String> after = new AtomicReference<>();
+        CountDownLatch draining = new CountDownLatch(1);
+        CountDownLatch release = new CountDownLatch(1);
+        List<Map.Entry<String, String>> none = Collections.<Map.Entry<String, String>>emptyList();
+        adapter.bind(RawTargetSocketTest.Http.settings().build(), ex -> {
+            exchange.set(ex);
+            AtomicReference<Boolean> lockedInAttach = new AtomicReference<>();
+            try {
+                ex.eventStream(200, none, new StreamDrain() {
+                    @Override
+                    public void attach(java.io.OutputStream out) {
+                        lockedInAttach.set(Thread.holdsLock(ex)); // the headers, flush and attach run without it
+                    }
+
+                    @Override
+                    public void drain(java.io.OutputStream out) throws IOException {
+                        draining.countDown();
+                        try {
+                            release.await();
+                        } catch (InterruptedException e) {
+                            Thread.currentThread().interrupt();
+                        }
+                        ex.finish();
+                    }
+                });
+            } catch (IOException e) {
+                ex.abort();
+                return;
+            }
+            StringBuilder b = new StringBuilder("attach locked " + lockedInAttach.get() + ",");
+            try {
+                ex.commit(200, none, 0);
+                b.append("committed,");
+            } catch (IllegalStateException | IOException e) {
+                b.append(e.getClass().getSimpleName()).append(',');
+            }
+            try {
+                ex.eventStream(200, none, out -> { });
+                b.append("started,");
+            } catch (IllegalStateException | IOException e) {
+                b.append(e.getClass().getSimpleName()).append(',');
+            }
+            b.append(((TinyHttpdExchange) ex).slots().open());
+            after.set(b.toString());
+        });
+        try (Socket s = new Socket("127.0.0.1", adapter.boundPort())) {
+            try {
+                s.getOutputStream().write(RawTargetSocketTest.Http.get("/sse").getBytes(StandardCharsets.ISO_8859_1));
+                s.getOutputStream().flush();
+                assertTrue(draining.await(5, TimeUnit.SECONDS));
+                assertTrue("synchronized (exchange) while the drain waits", lockFree(exchange.get()));
+                assertEquals("attach locked false,IllegalStateException,IllegalStateException,1", after.get());
+            } finally {
+                release.countDown();
+            }
+            TinyHttpdEventStream.Slots slots = ((TinyHttpdExchange) exchange.get()).slots();
+            long end = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
+            while (slots.open() != 0 && System.nanoTime() < end) {
+                Thread.sleep(5);
+            }
+            assertEquals("slot released after the stream ended", 0, slots.open());
         }
     }
 
