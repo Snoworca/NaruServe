@@ -1,6 +1,7 @@
 package com.snoworca.naruserve;
 
 import java.util.List;
+import com.snoworca.naruserve.common.InputValues;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -36,6 +37,32 @@ public interface Request {
 
     /** Every value of header {@code name} (case-insensitive) as an unmodifiable list, empty when absent. */
     List<String> headers(String name);
+
+    /** Required nonblank query value, otherwise HTTP 400. */
+    // @req FR-DX-003
+    default String requireQuery(String name) { return InputValues.required(query(name), name); }
+
+    /** Required nonblank header value, otherwise HTTP 400. */
+    default String requireHeader(String name) { return InputValues.required(header(name), name); }
+
+    /** Required nonblank form value, otherwise HTTP 400. */
+    default String requireForm(String name) { return InputValues.required(form(name), name); }
+
+    /** Required nonempty uploaded file, otherwise HTTP 400. */
+    default UploadFile requireFile(String name) {
+        UploadFile value = file(name);
+        if (value == null || value.size() == 0) throw new HttpException(400, name + " is required");
+        return value;
+    }
+
+    /** Integer query value; default only when missing, HTTP 400 when malformed or overflowing. */
+    default int queryInt(String name, int defaultValue) { return InputValues.integer(query(name), name, defaultValue); }
+
+    /** Integer form value; default only when missing, HTTP 400 when malformed or overflowing. */
+    default int formInt(String name, int defaultValue) { return InputValues.integer(form(name), name, defaultValue); }
+
+    /** Integer path variable, otherwise HTTP 400; an undeclared variable name remains a programming error. */
+    default int paramInt(String name) { return InputValues.integer(param(name), name, 0); }
 
     /** The client address the adapter reports. */
     String remoteAddress();
@@ -82,8 +109,8 @@ public interface Request {
     /**
      * The JSON body decoded into {@code type} by the app codec; null for a JSON {@code null} body. Answers 415 for a
      * body that is not {@code application/json} or {@code application/*+json} in UTF-8, 413 over the JSON limit and
-     * 400 for an empty or malformed body. The body is read once: a second read throws
-     * {@link BodyAlreadyConsumedException}. The default throws {@link UnsupportedOperationException}.
+     * 400 for an empty or malformed body. The stream is read once; a successful result is cached for the same type, including null.
+     * Different types, mixed form/JSON readers and retries after failed parsing throw {@link BodyAlreadyConsumedException}. The default throws {@link UnsupportedOperationException}.
      */
     // @req IR-JSON-002
     // @req FR-JSON-001

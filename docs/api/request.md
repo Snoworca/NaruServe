@@ -44,6 +44,20 @@ app.get("/users/:id/posts", (req, res) -> {
 
 잘못된 숫자로 `Integer.parseInt`가 실패하면 `NumberFormatException`이 오류 처리로 가서 `500`이 됩니다. 사용자 입력 오류는 직접 검사해 `400`으로 답하세요.
 
+## 입력 검증 편의 함수
+
+| 호출 | 동작 |
+|---|---|
+| `req.requireQuery("name")` | 쿼리 필수값. 누락·빈 문자열·공백뿐이면 `400` |
+| `req.requireHeader("Authorization")` | 헤더 필수값. 누락·빈 값이면 `400` |
+| `req.requireForm("name")` | 폼 필수값. 누락·빈 값이면 `400` |
+| `req.requireFile("file")` | 필수 업로드. 파일이 없거나 0바이트이면 `400` |
+| `req.queryInt("page", 1)` | 쿼리가 없으면 1, 숫자 형식 오류·32비트 범위 초과이면 `400` |
+| `req.formInt("count", 1)` | 폼 필드가 없으면 1, 잘못된 숫자는 `400` |
+| `req.paramInt("id")` | 경로 변수를 정수로 읽고 잘못된 숫자는 `400` |
+
+숫자 기본값은 누락된 값에만 적용합니다. 빈 문자열, 소수, 공백이 붙은 숫자는 오류입니다. 음수는 유효한 정수이며, 양수만 허용하는 등 업무상 범위는 앱에서 검사합니다. 선언하지 않은 경로 변수 이름은 프로그래밍 오류입니다. 필수 문자열은 검사 후 원래 값을 그대로 반환합니다.
+
 ## 본문
 
 ### JSON
@@ -73,7 +87,7 @@ List<User> users = req.body(new TypeRef<List<User>>() {});
 | JSON 문법 오류, 값 뒤의 다른 데이터, 빈 본문, 잘못된 UTF-8 | `400` (`BAD_REQUEST`) |
 | 본문이 한도(기본 1 MiB, `app.jsonLimit(bytes)`)를 넘음 | `413` |
 | 중첩 깊이가 한도(기본 64)를 넘음 | `400` |
-| 본문을 이미 읽음 | `BodyAlreadyConsumedException` |
+| 다른 타입으로 읽거나 JSON·폼을 혼용함 | `BodyAlreadyConsumedException` |
 
 ### 폼과 파일
 
@@ -125,9 +139,9 @@ app.post("/profile") { req, res ->
 
 [파일 업로드](multipart.md)
 
-### 본문은 한 번만 읽습니다
+### JSON 본문은 같은 타입으로 재사용합니다
 
-요청 본문은 한 가지 방식으로 한 번만 읽습니다. `body(...)`로 읽은 뒤 다시 `body(...)`나 `form(...)`으로 읽으면 `BodyAlreadyConsumedException`입니다.
+요청 본문 스트림은 한 번 읽습니다. 성공한 `body(...)` 결과는 같은 타입이면 null을 포함해 다시 조회할 수 있습니다. 다른 타입으로 읽거나 `form(...)`과 혼용하면 `BodyAlreadyConsumedException`입니다.
 같은 방식의 `form`/`file`/`files`/`parts`는 처음 호출할 때 한 번 파싱하고 그 결과를 함께 씁니다.
 
 ```java

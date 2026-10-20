@@ -96,6 +96,8 @@ public class HttpApiSurfaceTest {
         assertEquals(setOf("method()->Method", "path()->String", "rawPath()->String", "param(String)->String",
                 "query(String)->String", "queries(String)->List", "header(String)->String", "headers(String)->List",
                 "remoteAddress()->String", "isSecure()->boolean", "lastEventId()->String",
+                "requireQuery(String)->String", "requireHeader(String)->String", "requireForm(String)->String",
+                "requireFile(String)->UploadFile", "queryInt(String,int)->int", "formInt(String,int)->int", "paramInt(String)->int",
                 "removeAttribute(String)->void", "attribute(String,Object)->void", "attributeAs(String,Class)->Object",
                 "application()->ApplicationContext", "service(Class)->Object",
                 // wave 5: IR-JSON-002 AC-8
@@ -144,7 +146,10 @@ public class HttpApiSurfaceTest {
                 "sse()->SseClient",
                 // FR-DX-004 AC-1 AC-2 AC-3 AC-4
                 "location(String)->Response", "type(String)->Response", "redirect(String)->void",
-                "redirect(int,String)->void", "sendStatus(int)->void"),
+                "redirect(int,String)->void", "sendStatus(int)->void",
+                // FR-DX-005 AC-1 AC-2 AC-3
+                "cookie(String,String)->Response", "cookie(String,String,Configurer)->Response",
+                "clearCookie(String)->Response", "clearCookie(String,Configurer)->Response"),
                 signatures(Response.class));
         assertEquals(InputStream.class, Response.class.getMethod("stream", InputStream.class, String.class)
                 .getParameterTypes()[0]);
@@ -327,6 +332,7 @@ public class HttpApiSurfaceTest {
                 "route(Method,String,RouteHandler)->RestApp", "route(MethodSet,String,RouteHandler)->RestApp",
                 "route(String)->RouteBuilder",
                 "group(String,Configurer)->RestApp", // FR-DX-009 AC-1
+                "cors(Configurer)->RestApp", // FR-DX-010 AC-1
                 "routerPolicy(RouterPolicy)->RestApp",
                 // wave 4: IR-APP-001, FR-APP-001
                 "builder()->Builder", "create()->RestApp",
