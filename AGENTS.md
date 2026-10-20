@@ -79,3 +79,9 @@ Merge-time duplicate Requirement ID repair workflow:
 The Completed Work Log — inline in `docs/spec/00.index.md` §7 and its split history file `docs/spec/91.completed-work-log.md` — is a read-only summary for agents. Requirement Block status, Acceptance Criteria, Verification Evidence, and Change Notes remain the source of truth for completion.
 
 <!-- /SpecKiwi SRS workflow -->
+
+## Shared code and reuse
+
+- Do not duplicate code. Reuse existing utilities before adding another implementation of the same behavior.
+- When multiple classes need the same behavior, create or extend a focused utility class in `com.snoworca.naruserve.common` and reuse its methods. Keep shared utilities in the lowest suitable module to avoid dependency cycles.
+- Share input validation, type conversion and HTTP syntax helpers instead of copying them into request, response, application or session implementations. Keep feature-specific behavior in its owning class.

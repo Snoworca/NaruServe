@@ -1,6 +1,6 @@
 # Step State
 
-Mode: wait
+Mode: sdd
 
 | Step | Status | DependsOn | TouchesScope | TouchesReq | Created | Updated |
 | --- | --- | --- | --- | --- | --- | --- |
