@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.jspecify.annotations.Nullable;
 
@@ -186,7 +187,12 @@ final class DefaultWebSocketSession implements WebSocketSession, WebSocketEndpoi
             return;
         }
         touch();
-        idle.watch(this, idleTimeoutMillis);
+        try {
+            idle.watch(this, idleTimeoutMillis);
+        } catch (RejectedExecutionException e) {
+            abort(); // terminate ran after the state read above and stopped the scheduler: end as an ENDED opening does
+            return;
+        }
         WebSocketHandler h = handler;
         if (h == null) {
             return;

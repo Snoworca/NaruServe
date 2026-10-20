@@ -4,7 +4,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import com.snoworca.naruserve.testing.InMemoryEventStream;
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter;
@@ -67,6 +66,21 @@ public class SseLifetimeTest {
         Future<ClientResponse> f = adapter.submit(ClientRequest.of("GET", "/events"));
         assertTrue("the handler did not open the stream", opened.await(5, TimeUnit.SECONDS));
         return f;
+    }
+
+    /** The rid of the first INFO access line starting with {@code prefix}, waiting up to 5 s for it. */
+    private String accessLineRid(String prefix) throws InterruptedException {
+        long end = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
+        do {
+            for (String l : log.info()) {
+                int at = l.lastIndexOf(" rid=");
+                if (l.startsWith(prefix) && at >= 0) {
+                    return l.substring(at + 5).split(" ", 2)[0];
+                }
+            }
+            Thread.sleep(5);
+        } while (System.nanoTime() < end);
+        throw new AssertionError("no access line starting with " + prefix + " in " + log.info());
     }
 
     // SDS-AC-8; FR-SSE-004 AC-3
@@ -159,7 +173,9 @@ public class SseLifetimeTest {
             }
         }
         assertEquals(errors.toString(), 1, errors.size());
-        assertTrue(errors.get(0), errors.get(0).matches("ERROR sse \\S+ onClose listener failed boom"));
+        assertTrue(errors.get(0), errors.get(0).matches("ERROR sse [0-9a-f]{16} onClose listener failed boom"));
+        assertEquals("the rid is not the stream's access-line rid", "ERROR sse " + accessLineRid("GET /events ")
+                + " onClose listener failed boom", errors.get(0));
         Thread caller = Thread.currentThread();
         AtomicReference<Thread> ranOn = new AtomicReference<>();
         c.onClose(() -> {
@@ -192,12 +208,13 @@ public class SseLifetimeTest {
         assertFalse(r.abnormallyClosed());
         assertEquals(Arrays.asList("send false", "open false", "closes 1"), seen);
         assertEquals(1, closes.get());
+        boolean started = true;
         try {
             adapter.nextEventStream(100, TimeUnit.MILLISECONDS);
-            fail("HEAD started an event stream");
         } catch (AssertionError expected) {
-            // no eventStream call
+            started = false; // no eventStream call
         }
+        assertFalse("HEAD started an event stream", started);
     }
 
     // SDS-AC-12; FR-SSE-004 AC-7, AC-8 (T41)

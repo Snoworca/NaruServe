@@ -79,8 +79,11 @@ public class SseQueueTest {
         openingRoute();
         Future<ClientResponse> f = open();
         InMemoryEventStream es = adapter.nextEventStream(5, TimeUnit.SECONDS);
-        es.awaitText(": ping\n\n", 1500);
-        es.awaitText(": ping\n\n: ping\n\n", 1500);
+        es.awaitText(": ping\n\n", 5000);
+        long first = System.nanoTime();
+        es.awaitText(": ping\n\n: ping\n\n", 5000);
+        long gap = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - first);
+        assertTrue("second ping only " + gap + " ms after the first", gap >= 900);
         client.get().close();
         ClientResponse r = f.get(5, TimeUnit.SECONDS);
         assertTrue(r.text(), r.text().startsWith(": ping\n\n: ping\n\n"));

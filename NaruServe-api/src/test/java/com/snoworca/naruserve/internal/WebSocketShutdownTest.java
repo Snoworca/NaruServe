@@ -73,24 +73,29 @@ public class WebSocketShutdownTest {
         assertTrue(entered.await(5, TimeUnit.SECONDS));
         adapter.beforeOpen(null);
         assertEquals(2, registry.size());
-        long started = System.nanoTime();
         Thread closer = closeAllAsync(registry, 5000);
+        boolean aliveAtRelease;
+        long released;
         try {
             assertTrue(eventually(() -> registry.state() == WebSocketRegistry.State.CLOSING));
+            assertTrue("the close wait ended at once", closer.isAlive());
             assertTrue("opened session got no close", eventually(() -> a.closeCode() == 1001));
             assertEquals("server shutdown", a.closeReason());
             WebSocketRegistryTest.assert503Close(adapter.send(upgradeRequest()));
-            Thread.sleep(200);
-            // the wait gives up after 1 s, so only a check well inside that second proves it waited
-            if (TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - started) < 800) {
-                assertTrue("the close wait did not wait for the reserved session", closer.isAlive());
-            }
+            Thread.sleep(200); // time for a wait that skipped the reserved session to end
         } finally {
+            aliveAtRelease = closer.isAlive();
+            released = System.nanoTime();
             release.countDown();
         }
         closer.join(5000);
+        long ms = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - released);
         assertFalse(closer.isAlive());
+        assertTrue("the close wait did not wait for the reserved session", aliveAtRelease);
+        assertTrue("the wait did not end on the reserved session's close: " + ms + " ms after release", ms < 900);
+        // b opened while the wait still ran (CLOSING: close 1001, no abort); an ended wait would have aborted it
         assertEquals(1001, b.closeCode());
+        assertFalse("the reserved session was aborted", b.aborted());
         fa.get(5, TimeUnit.SECONDS);
         fb.get(5, TimeUnit.SECONDS);
         assertNull("the late session's handler ran", handled.poll(100, TimeUnit.MILLISECONDS));

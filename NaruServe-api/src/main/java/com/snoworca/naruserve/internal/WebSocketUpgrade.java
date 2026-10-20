@@ -96,7 +96,7 @@ final class WebSocketUpgrade {
     /**
      * Reserves the session (503 with Connection: close once the closed flag is set), then hands the exchange to the
      * adapter. A failure before onOpen propagates to the error path; after onOpen the connection is upgraded, so it is
-     * logged and the exchange still ends, but only once the session's write in flight returned, so the adapter never
+     * logged, the session is closed with 1006 unless onClose already ran, and the exchange still ends, but only once the session's write in flight returned, so the adapter never
      * frees the connection slot while a sender thread still writes to it. The reservation ends with the exchange.
      */
     // @req FR-WS-007
@@ -113,6 +113,8 @@ final class WebSocketUpgrade {
                     throw e;
                 }
                 log.error("websocket " + session.requestId() + " failed", e);
+                // the adapter may never deliver onClose now; onClose runs once, so a later one changes nothing
+                session.onClose(1006, "");
             }
             sender.awaitIdle(session);
         } finally {

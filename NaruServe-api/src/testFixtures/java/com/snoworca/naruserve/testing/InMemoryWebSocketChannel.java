@@ -29,12 +29,20 @@ public final class InMemoryWebSocketChannel implements WebSocketChannel {
         final byte @Nullable [] data;
         final int code;
         final String reason;
+        /** Thrown by the read loop instead of a delivery: the connection broke after onOpen. */
+        final @Nullable RuntimeException failure;
 
         Event(@Nullable String text, byte @Nullable [] data, int code, String reason) {
+            this(text, data, code, reason, null);
+        }
+
+        Event(@Nullable String text, byte @Nullable [] data, int code, String reason,
+                @Nullable RuntimeException failure) {
             this.text = text;
             this.data = data;
             this.code = code;
             this.reason = reason;
+            this.failure = failure;
         }
     }
 
@@ -99,6 +107,15 @@ public final class InMemoryWebSocketChannel implements WebSocketChannel {
     // @req IR-WS-002
     public synchronized void clientBinary(byte[] data) {
         events.add(new Event(null, data.clone(), 0, ""));
+    }
+
+    /**
+     * Makes the read loop end by throwing {@code failure} out of {@code webSocket} without calling onClose, like an
+     * adapter whose connection broke after onOpen.
+     */
+    // @req FR-WS-006
+    public synchronized void readLoopFails(RuntimeException failure) {
+        events.add(new Event(null, null, 0, "", failure));
     }
 
     /** Queues a close from the peer; the read loop ends after delivering it. */
@@ -231,6 +248,12 @@ public final class InMemoryWebSocketChannel implements WebSocketChannel {
                 Thread.currentThread().interrupt();
                 endpoint.onClose(1006, "");
                 return;
+            }
+            if (e.failure != null) {
+                synchronized (this) {
+                    open = false;
+                }
+                throw e.failure;
             }
             if (e.text != null) {
                 endpoint.onText(e.text);
