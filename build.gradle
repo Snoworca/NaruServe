@@ -135,6 +135,11 @@ def classRefPrefixes = { String path ->
     if (path == ':NaruServe-logcat') {
         prefixes += ['android/']
     }
+    // @req IR-SVL-001
+    // v1 is javax.servlet 3.1 only; a jakarta.servlet module is a later decision.
+    if (path == ':NaruServe-servlet') {
+        prefixes += ['jakarta/servlet/']
+    }
     prefixes
 }
 
@@ -241,6 +246,27 @@ project(':NaruServe') {
     }
 }
 
+// @req CON-SVL-001
+// The embedded javax Servlet 3.1 container runs the Servlet adapter tests; it never reaches a main classpath.
+def servletTestDependencies = ['jetty-servlet', 'jetty-webapp', 'jetty-annotations'].collect {
+    "org.eclipse.jetty:${it}:9.4.58.v20250814".toString()
+}
+// ServletServicesFileTest reads the services file from the built jar (IR-SVL-001 AC-2).
+project(':NaruServe-servlet') {
+    // @req IR-SVL-001
+    dependencies {
+        servletTestDependencies.each { testImplementation it }
+        testImplementation project(':NaruServe-gson')
+        testImplementation testFixtures(project(':NaruServe-api'))
+    }
+    def servletJar = tasks.named('jar').flatMap { it.archiveFile }
+    tasks.named('test') {
+        dependsOn tasks.named('jar')
+        inputs.file(servletJar)
+        doFirst { systemProperty 'naruserve.servletJar', servletJar.get().asFile.absolutePath }
+    }
+}
+
 // Android 5.0 (API 21) is the minimum runtime: fail the build on any API that API 21 lacks.
 configure(androidModules.collect { project(it) }) {
     apply plugin: 'ru.vyarus.animalsniffer'
@@ -297,6 +323,17 @@ def checkDependencyRules = tasks.register('checkDependencyRules') {
                     if (mv.group == 'com.snoworca.tinyhttpd' && path != ':NaruServe-tinyhttpd'
                             && cn in ['compileClasspath', 'testCompileClasspath']) {
                         violations << "${mv.group}:${mv.name} on ${cn} of ${path} (TinyHttpd stays implementation-scope)"
+                    }
+                    // @req CON-SVL-001
+                    boolean jetty = mv.group.startsWith('org.eclipse.jetty')
+                    if ((jetty || mv.group == 'javax.servlet') && path != ':NaruServe-servlet') {
+                        violations << "${coordinate} on ${cn} of ${path} (Jetty and javax.servlet stay in :NaruServe-servlet)"
+                    }
+                    if (jetty && path == ':NaruServe-servlet' && cn in ['compileClasspath', 'runtimeClasspath']) {
+                        violations << "${coordinate} on ${cn} of ${path} (the embedded container is test scope only)"
+                    }
+                    if (mv.group == 'jakarta.servlet') {
+                        violations << "${coordinate} on ${cn} of ${path} (no jakarta.servlet in v1)"
                     }
                 }
             }

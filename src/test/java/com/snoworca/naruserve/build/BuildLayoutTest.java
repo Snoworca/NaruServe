@@ -202,7 +202,7 @@ public class BuildLayoutTest {
     }
 
     /** Resolved {@code group:name} of one module's configuration, without the module itself. */
-    private static Set<String> components(String module, String configuration) throws IOException {
+    static Set<String> components(String module, String configuration) throws IOException {
         Set<String> found = new TreeSet<>();
         for (String[] row : dependencyReport()) {
             if (row[0].equals(":" + module) && row[1].equals(configuration)) {

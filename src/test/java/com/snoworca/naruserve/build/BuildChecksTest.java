@@ -253,6 +253,19 @@ public class BuildChecksTest {
         assertTrue(out, out.contains("com/snoworca/naruserve/gson/probe/UsesServlet -> javax/servlet/Servlet"));
     }
 
+    // SDS-AC-7; IR-SVL-001 AC-7 — a source stub stands in for the jakarta API, so no artifact is resolved
+    @Test
+    public void sdsAc7_IR_SVL_001_AC7_servletMainReferencingJakartaFails() throws IOException {
+        assertFalse(BuildLayoutTest.read(new File(root, "settings.gradle")).contains("jakarta"));
+        addSource("NaruServe-servlet/src/main/java/jakarta/servlet/Servlet.java",
+                "package jakarta.servlet;\npublic interface Servlet { }\n");
+        addSource("NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/probe/UsesJakarta.java",
+                "package com.snoworca.naruserve.servlet.probe;\n"
+                        + "public class UsesJakarta { public jakarta.servlet.Servlet servlet; }\n");
+        String out = runner(":NaruServe-servlet:checkClassReferences").buildAndFail().getOutput();
+        assertTrue(out, out.contains("com/snoworca/naruserve/servlet/probe/UsesJakarta -> jakarta/servlet/Servlet"));
+    }
+
     // SDS-AC-14; CON-BUILD-008 AC-1
     @Test
     public void sdsAc14_CON_BUILD_008_AC1_logcatMainReferencingAndroidFails() throws IOException {
