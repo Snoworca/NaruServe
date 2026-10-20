@@ -1,9 +1,11 @@
 package com.snoworca.naruserve.servlet;
 
+import com.snoworca.naruserve.spi.ErrorRenderer;
 import com.snoworca.naruserve.spi.ExchangeHandler;
 import com.snoworca.naruserve.spi.HttpAdapter;
 import com.snoworca.naruserve.spi.ServerSettings;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import org.jspecify.annotations.Nullable;
 
@@ -57,8 +59,21 @@ public final class ServletAdapter implements HttpAdapter {
 
     /** The core's handler once bound, else {@code null}. */
     // @req IR-SVL-001
+    // @req FR-SVL-002
     @Nullable ExchangeHandler handler() {
         return handler;
+    }
+
+    /**
+     * The renderer of the bound settings; before that, or when only {@code bind(host, port, handler)} ran, a plain
+     * JSON body in the standard shape naming the status, with a fresh request id and no request text.
+     */
+    // @req FR-SVL-002
+    ErrorRenderer errorRenderer() {
+        ServerSettings s = settings;
+        return s != null ? s.errorRenderer()
+                : status -> "{\"error\":{\"code\":\"HTTP_" + status + "\",\"message\":\"HTTP " + status
+                        + "\",\"requestId\":\"" + UUID.randomUUID() + "\"}}";
     }
 
     /** The frozen settings once bound through them, else {@code null}. */

@@ -1,9 +1,20 @@
 package com.snoworca.naruserve.servlet;
 
+import com.snoworca.naruserve.spi.ErrorRenderer;
+import com.snoworca.naruserve.spi.ExchangeHandler;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
-/** The servlet {@link NaruServeInitializer} registers; later parts serve requests through the adapter. */
+/**
+ * The servlet {@link NaruServeInitializer} registers. Every method token goes to the core through a
+ * {@link ServletExchange} whose path is {@link ServletPath#remainder} of the raw request URI.
+ */
 // @req IR-SVL-001
+// @req FR-SVL-002
+// @req FR-SVL-003
 final class NaruServeServlet extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
@@ -19,5 +30,35 @@ final class NaruServeServlet extends HttpServlet {
     NaruServeServlet(ServletAdapter adapter, String prefix) {
         this.adapter = adapter;
         this.prefix = prefix;
+    }
+
+    /** Overrides without super, so HttpServlet refuses no method token; unbound is 503, a prefix miss 404. */
+    // @req FR-SVL-002
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse res) throws IOException {
+        ExchangeHandler handler = adapter.handler();
+        if (handler == null) {
+            reject(res, 503, true);
+            return;
+        }
+        String path = ServletPath.remainder(req.getRequestURI(), req.getContextPath(), prefix);
+        if (path == null) {
+            reject(res, 404, false);
+            return;
+        }
+        handler.handle(new ServletExchange(req, res, path));
+    }
+
+    /** The adapter's own answer: fixed header values and the standard body, never sendError, nothing logged. */
+    // @req FR-SVL-002
+    void reject(HttpServletResponse res, int status, boolean close) throws IOException {
+        byte[] body = adapter.errorRenderer().render(status).getBytes(StandardCharsets.UTF_8);
+        res.setStatus(status);
+        res.setHeader("Content-Type", ErrorRenderer.JSON_TYPE);
+        if (close) {
+            res.setHeader("Connection", "close");
+        }
+        res.setHeader("Content-Length", Integer.toString(body.length));
+        res.getOutputStream().write(body);
     }
 }
