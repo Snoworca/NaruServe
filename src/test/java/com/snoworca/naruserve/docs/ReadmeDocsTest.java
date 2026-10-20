@@ -144,7 +144,7 @@ public final class ReadmeDocsTest {
         assertTrue(readme.contains(NOT_PUBLISHED_PHRASE));
     }
 
-    // SDS-AC-13; OPS-REL-005 AC-1
+    // SDS-AC-13; OPS-REL-005 AC-1; OPS-DX-001 AC-5
     @Test
     public void ops_REL_005_AC1_readmeAndReleaseNotesHoldTheTinyHttpdInstruction() throws IOException {
         for (String path : new String[] {"README.md", "docs/release/release-notes.md"}) {

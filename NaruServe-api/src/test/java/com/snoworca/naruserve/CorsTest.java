@@ -130,7 +130,7 @@ public class CorsTest {
     }
 
     // FR-DX-010 AC-1 — responses without Origin still vary to protect shared caches.
-    @Test public void absentOriginChangesNoRoutingOrGrantButStillVariesOnOrigin() {
+    @Test public void absentOriginChangesNoRoutingOrGrantButStillVariesOnOrigin() { // FR-DX-010 AC-6
         TestApp t = TestApp.create();
         t.app().cors(o -> o.allowedOrigins(ORIGIN));
         t.app().get("/x", (req, res) -> res.send("ok"));
@@ -141,7 +141,7 @@ public class CorsTest {
     }
 
     // FR-DX-010 AC-1, AC-2 — only framework CORS metadata survives standard error reset.
-    @Test public void standardErrorsPreserveCorsMetadataWithoutPreservingApplicationHeaders() {
+    @Test public void standardErrorsPreserveCorsMetadataWithoutPreservingApplicationHeaders() { // FR-DX-010 AC-6
         TestApp t = TestApp.create();
         t.app().cors(o -> o.allowedOrigins(ORIGIN).credentials(true));
         t.app().get("/400", (req, res) -> {

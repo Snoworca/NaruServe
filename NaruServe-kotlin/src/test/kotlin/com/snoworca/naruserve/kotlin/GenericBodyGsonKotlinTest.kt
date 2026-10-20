@@ -13,6 +13,7 @@ class GenericBodyGsonKotlinTest {
         var name: String? = null
     }
 
+    // IR-KT-002 AC-3: actual Gson preserves the requested DTO element types.
     @Test
     fun `FR-DX-006 AC-1 List User decodes actual DTO elements`() {
         val adapter = InMemoryHttpAdapter()
@@ -35,6 +36,7 @@ class GenericBodyGsonKotlinTest {
         }
     }
 
+    // IR-KT-002 AC-3: actual Gson preserves the requested DTO element types.
     @Test
     fun `FR-DX-006 AC-1 nested Map String List User decodes actual DTO elements`() {
         val adapter = InMemoryHttpAdapter()
@@ -57,6 +59,7 @@ class GenericBodyGsonKotlinTest {
         }
     }
 
+    // IR-KT-002 AC-3: actual Gson preserves the requested DTO element types.
     @Test
     fun `FR-DX-006 AC-2 generic JSON null remains BAD_REQUEST`() {
         val adapter = InMemoryHttpAdapter()

@@ -52,7 +52,7 @@ public class ChainNextTest {
 
     // SDS-AC-9; FR-APP-004 AC-1, T35
     @Test
-    public void sdsAc9_FR_APP_004_AC1_secondRunThrowsAndDownstreamRanOnce() {
+    public void sdsAc9_FR_APP_004_AC1_secondRunThrowsAndDownstreamRanOnce() { // FR-DX-008 AC-4
         TestApp t = TestApp.create();
         t.app().use((req, res, next) -> {
             next.run();
@@ -129,7 +129,7 @@ public class ChainNextTest {
 
     // SDS-AC-11; FR-APP-004 AC-3, FR-APP-004 AC-6
     @Test
-    public void sdsAc11_FR_APP_004_AC3_AC6_markerAfterRunSeesTheHandlerAndACommittedResponse() {
+    public void sdsAc11_FR_APP_004_AC3_AC6_markerAfterRunSeesTheHandlerAndACommittedResponse() { // FR-DX-008 AC-4
         TestApp t = TestApp.create();
         t.app().use((req, res, next) -> {
             next.run();

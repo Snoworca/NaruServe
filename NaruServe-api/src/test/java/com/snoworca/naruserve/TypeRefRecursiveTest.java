@@ -46,30 +46,30 @@ public class TypeRefRecursiveTest {
     }
 
     @Test
-    public void FR_DX_011_AC1_unresolvedNestedCollectionsAreRejectedAtConstruction() {
+    public void FR_DX_011_AC1_unresolvedNestedCollectionsAreRejectedAtConstruction() { // FR-DX-011 AC-1
         assertConcreteRequired(TypeRefRecursiveTest::listVariable);
         assertConcreteRequired(TypeRefRecursiveTest::nestedVariable);
     }
 
     @Test
-    public void FR_DX_011_AC1_unresolvedGenericArrayComponentsAreRejectedAtConstruction() {
+    public void FR_DX_011_AC1_unresolvedGenericArrayComponentsAreRejectedAtConstruction() { // FR-DX-011 AC-1
         assertConcreteRequired(TypeRefRecursiveTest::arrayVariable);
         assertConcreteRequired(TypeRefRecursiveTest::collectionArrayVariable);
     }
 
     @Test
-    public void FR_DX_011_AC1_unresolvedWildcardBoundsAreRejectedAtConstruction() {
+    public void FR_DX_011_AC1_unresolvedWildcardBoundsAreRejectedAtConstruction() { // FR-DX-011 AC-1
         assertConcreteRequired(TypeRefRecursiveTest::upperVariable);
         assertConcreteRequired(TypeRefRecursiveTest::lowerVariable);
     }
 
     @Test
-    public void FR_DX_011_AC1_unresolvedEnclosingOwnerIsRejectedAtConstruction() {
+    public void FR_DX_011_AC1_unresolvedEnclosingOwnerIsRejectedAtConstruction() { // FR-DX-011 AC-1
         assertConcreteRequired(TypeRefRecursiveTest::ownerVariable);
     }
 
     @Test
-    public void FR_DX_011_AC2_concreteNestedCollectionsArraysOwnersAndWildcardsAreAccepted() {
+    public void FR_DX_011_AC2_concreteNestedCollectionsArraysOwnersAndWildcardsAreAccepted() { // FR-DX-011 AC-2
         assertTrue(new TypeRef<Map<String, List<Integer>>>() {}.getType() instanceof ParameterizedType);
         assertTrue(new TypeRef<List<String>[]>() {}.getType() instanceof GenericArrayType);
         assertTrue(new TypeRef<Owner<String>.Member>() {}.getType() instanceof ParameterizedType);

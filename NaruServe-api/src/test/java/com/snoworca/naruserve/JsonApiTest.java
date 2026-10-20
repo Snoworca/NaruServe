@@ -145,7 +145,7 @@ public class JsonApiTest {
         }
     }
 
-    // FR-DX-007 AC-1 replaces the former same-type reread rejection.
+    // FR-DX-007 AC-1; IR-JSON-002 AC-6: equal-type rereads reuse the value under the current contract.
     @Test
     public void FR_DX_007_AC1_equivalentBodyClassAndTypeRefReuseValue() {
         InMemoryHttpAdapter adapter = new InMemoryHttpAdapter();

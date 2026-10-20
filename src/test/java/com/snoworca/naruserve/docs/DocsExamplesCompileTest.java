@@ -460,7 +460,7 @@ public final class DocsExamplesCompileTest {
 
     // SDS-AC-11; OPS-HTTP-004 AC-3; CON-HTTP-009 AC-1
     @Test
-    public void sdsAc11_OPS_HTTP_004_AC3_everyNonSkippedDocsBlockCompiles() throws IOException {
+    public void sdsAc11_OPS_HTTP_004_AC3_everyNonSkippedDocsBlockCompiles() throws IOException { // OPS-DX-002 AC-4
         List<String> errors = docsDiagnostics();
         assertTrue("docs/api java blocks do not compile:\n" + String.join("\n", errors), errors.isEmpty());
     }

@@ -50,7 +50,7 @@ public class JsonBodyCacheTest {
     }
 
     @Test
-    public void FR_DX_007_AC1_middlewareAndHandlerShareClassAndEquivalentTypeRefWithoutReread() {
+    public void FR_DX_007_AC1_middlewareAndHandlerShareClassAndEquivalentTypeRefWithoutReread() { // FR-DX-007 AC-1
         InMemoryHttpAdapter adapter = new InMemoryHttpAdapter();
         CountingCodec codec = new CountingCodec();
         RestApp app = RestApp.builder().httpAdapter(adapter).jsonCodec(codec).build();
@@ -75,7 +75,7 @@ public class JsonBodyCacheTest {
     }
 
     @Test
-    public void FR_DX_007_AC1_equivalentGenericTypesShareTheSameDecodedInstance() {
+    public void FR_DX_007_AC1_equivalentGenericTypesShareTheSameDecodedInstance() { // FR-DX-007 AC-1
         InMemoryHttpAdapter adapter = new InMemoryHttpAdapter();
         CountingCodec codec = new CountingCodec();
         RestApp app = RestApp.builder().httpAdapter(adapter).jsonCodec(codec).build();
@@ -100,7 +100,7 @@ public class JsonBodyCacheTest {
     }
 
     @Test
-    public void FR_DX_007_AC1_nullIsCachedWithoutDecodingAgain() {
+    public void FR_DX_007_AC1_nullIsCachedWithoutDecodingAgain() { // FR-DX-007 AC-1
         InMemoryHttpAdapter adapter = new InMemoryHttpAdapter();
         CountingCodec codec = new CountingCodec();
         RestApp app = RestApp.builder().httpAdapter(adapter).jsonCodec(codec).build();
@@ -123,7 +123,7 @@ public class JsonBodyCacheTest {
     }
 
     @Test
-    public void FR_DX_007_AC2_incompatibleTypeAndFormAfterJsonAreRejected() {
+    public void FR_DX_007_AC2_incompatibleTypeAndFormAfterJsonAreRejected() { // FR-DX-007 AC-2
         InMemoryHttpAdapter adapter = new InMemoryHttpAdapter();
         CountingCodec codec = new CountingCodec();
         RestApp app = RestApp.builder().httpAdapter(adapter).jsonCodec(codec).build();
@@ -143,7 +143,7 @@ public class JsonBodyCacheTest {
     }
 
     @Test
-    public void FR_DX_007_AC2_AC3_failedDecodeIsNeverCachedOrRetried() {
+    public void FR_DX_007_AC2_AC3_failedDecodeIsNeverCachedOrRetried() { // FR-DX-007 AC-2
         InMemoryHttpAdapter adapter = new InMemoryHttpAdapter();
         CountingCodec codec = new CountingCodec();
         RestApp app = RestApp.builder().httpAdapter(adapter).jsonCodec(codec).build();
@@ -163,7 +163,7 @@ public class JsonBodyCacheTest {
     }
 
     @Test
-    public void FR_DX_007_AC3_overLimitBodyRemains413AndIsNotCached() {
+    public void FR_DX_007_AC3_overLimitBodyRemains413AndIsNotCached() { // FR-DX-007 AC-3
         InMemoryHttpAdapter adapter = new InMemoryHttpAdapter();
         CountingCodec codec = new CountingCodec();
         RestApp app = RestApp.builder().httpAdapter(adapter).jsonCodec(codec).build();

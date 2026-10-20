@@ -11,6 +11,7 @@ public class UsabilityDocsTest {
     private String doc(String name) throws Exception {
         return new String(Files.readAllBytes(Paths.get("docs/api", name)), StandardCharsets.UTF_8);
     }
+    // OPS-DX-002 AC-2; OPS-DX-002 AC-3
     @Test public void errorAndOriginGuidesDescribeSeparateMechanisms() throws Exception {
         assertFalse("Unhandled errors have standard JSON",doc("response.md").contains("빈 본문 `500`"));
         assertFalse("HTTP CORS does not configure WebSocket Origin",doc("websocket.md").contains("Express에서 `cors({ origin: [...] })`"));
