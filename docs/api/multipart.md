@@ -19,7 +19,7 @@ File uploadDir = new File("./uploads");
 app.post("/api/upload", (req, res) -> {
     String title = req.form("title");
     UploadFile file = req.file("file");
-    if (file == null) {
+    if (file == null || file.size() == 0) {  // 브라우저의 빈 파일 입력은 크기 0인 파일로 옵니다
         res.status(400).json("Missing file");
         return;
     }
@@ -36,7 +36,7 @@ val uploadDir = File("./uploads")
 
 app.post("/api/upload") { req, res ->
     val file = req.file("file")
-    if (file == null) {
+    if (file == null || file.size() == 0L) {  // 브라우저의 빈 파일 입력은 크기 0인 파일로 옵니다
         res.status(400).json("Missing file")
         return@post
     }
@@ -110,6 +110,8 @@ public interface UploadFile extends AutoCloseable {
 
 `bytes()`의 한도를 8 MiB로 고정한 이유는 큰 파일을 실수로 힙에 통째로 올리지 않게 하려는 것입니다. 더 큰 파일은 `inputStream()`, `transferTo`, `save`로 다루세요.
 `req.parts()`는 텍스트 필드까지 포함한 모든 파트를 본문 순서대로 `List<UploadFile>`로 돌려줍니다. 텍스트 필드는 `filename()`이 `null`입니다.
+
+브라우저의 비어 있는 파일 입력은 `filename=""`인 파트를 보냅니다. `filename` 파라미터가 있는 파트는 모두 파일이므로, `req.file(name)`은 `null`이 아니라 `filename()`이 빈 문자열이고 `size()`가 0인 `UploadFile`을 돌려줍니다. 파일이 실제로 왔는지는 `file == null || file.size() == 0`으로 확인하세요.
 
 `java.nio.file.Path`는 Android 5.0에 없어서 받지 않습니다. `File`과 스트림을 씁니다.
 

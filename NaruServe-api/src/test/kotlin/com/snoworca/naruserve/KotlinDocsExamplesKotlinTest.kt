@@ -476,7 +476,7 @@ class KotlinDocsExamplesKotlinTest {
 
         app.post("/api/upload") { req, res ->
             val file = req.file("file")
-            if (file == null) {
+            if (file == null || file.size() == 0L) {  // 브라우저의 빈 파일 입력은 크기 0인 파일로 옵니다
                 res.status(400).json("Missing file")
                 return@post
             }
@@ -487,6 +487,9 @@ class KotlinDocsExamplesKotlinTest {
         val missing = multipart("/api/upload", Triple("note", null, "x"))
         assertEquals(400, missing.status())
         assertEquals("Missing file", missing.text())
+        val empty = multipart("/api/upload", Triple("file", "", ""))
+        assertEquals(400, empty.status())
+        assertEquals("Missing file", empty.text())
         val saved = multipart("/api/upload", Triple("file", "a.bin", "abc"))
         assertEquals(201, saved.status())
         assertEquals("{size=3}", saved.text())

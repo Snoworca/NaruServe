@@ -122,6 +122,8 @@ public final class WaveSixDocsTest {
                 "1 MiB", "`413`", "이유");
         contains("multipart.md", lineWith(m, "| `bytes()`"), "8 MiB", "`IllegalStateException`");
         contains("multipart.md", lineWith(m, "`req.parts()`는"), "`List<UploadFile>`", "텍스트 필드");
+        contains("multipart.md", lineWith(m, "비어 있는 파일 입력"), "`filename=\"\"`", "`null`이 아니라", "빈 문자열",
+                "`size()`가 0인 `UploadFile`", "`file == null || file.size() == 0`");
         contains("multipart.md", lineWith(m, "임시 파일은 요청이 끝날 때"), "`save()`", "`413`", "끊었을 때", "`shutdown`");
         String block = m.substring(m.indexOf("public interface UploadFile"));
         block = block.substring(0, block.indexOf("```"));
