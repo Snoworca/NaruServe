@@ -1,0 +1,125 @@
+{
+ "findings": [
+  {
+   "finding_id": "P1-001",
+   "severity": "medium",
+   "items": [
+    "I-015"
+   ],
+   "claim": "Integration invariant I-015 (every test that starts a server asserts after shutdown that no server thread and no temporary upload file of that app remains) is realised only for the Servlet module (shared ContainerRule, FR-SVL-006 AC-5), the isolated TinyHttpd JVM tests (FR-APP-020 AC-9) and a few classes. 20 of the 28 NaruServe-tinyhttpd test classes that call listen( (WebSocketSocketTest, SseSocketTest, LimitsSocketTest, ConnectionLimitsTest, ErrorHeadersSocketTest, TransportRejectionTest, WebSocket*SocketTest, ...) only call app.shutdown in @After and assert nothing about leftover threads or temp files; no recorded decision or deviation relaxes I-015. The ACs carrying the I-015 tag cover narrower statements.",
+   "evidence": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/WebSocketSocketTest.java:35-41 (@After stop() only shuts down); docs/research/naruserve-v1/design/00.design.md:~690 [I-015]; docs/spec/14.servlet-adapter.srs.md FR-SVL-006 AC-5 (servlet-only rule)",
+   "suggested_fix": "Add a shared JUnit rule in the NaruServe-tinyhttpd test sources (and NaruServe-api tests that listen) that after shutdown asserts no naruserve-<port>-* / tinyhttpd-* thread and an empty tempDirectory, applied to the listed classes, or record I-015 as a deviation limited to the Servlet module and the isolated tests."
+  },
+  {
+   "finding_id": "P1-002",
+   "severity": "low",
+   "items": [
+    "I-003"
+   ],
+   "claim": "Integration item I-003 (public API of NaruServe-api must not expose java.nio.file, CompletableFuture or java.net.http types) has no AC tag or recorded decision. The code complies (no use in any main source set), but the automated checks are partial: CON-HTTP-001 AC-1 covers the HttpAdapter SPI for all three families, CON-HTTP-002 AC-1 covers only the com.snoworca.naruserve package and only java.nio.file (plus Optional/function/stream); CompletableFuture and java.net.http are not checked for the rest of the public API.",
+   "evidence": "src/test/java/com/snoworca/naruserve/build/ClassConstraintsTest.java:93 (forbidden list lacks CompletableFuture and java.net.http); grep of all main sources finds none",
+   "suggested_fix": "Tag I-003 on CON-HTTP-002 AC-1 and extend the forbidden list in ClassConstraintsTest to java.util.concurrent.CompletableFuture and java.net.http. over every public package of NaruServe-api."
+  },
+  {
+   "finding_id": "P1-003",
+   "severity": "low",
+   "items": [
+    "CON-BUILD-010 AC-2",
+    "FR-ROUTE-002 AC-1",
+    "CON-ROUTE-006 AC-3",
+    "CON-ROUTE-006 AC-4",
+    "IR-HTTP-003 AC-1",
+    "IR-HTTP-003 AC-2",
+    "IR-HTTP-003 AC-3",
+    "CON-HTTP-001 AC-1",
+    "CON-HTTP-001 AC-2",
+    "CON-HTTP-001 AC-3",
+    "FR-HTTP-001 AC-1",
+    "FR-HTTP-001 AC-5",
+    "FR-HTTP-001 AC-6",
+    "FR-HTTP-001 AC-7",
+    "IR-HTTP-005 AC-1",
+    "IR-HTTP-005 AC-2",
+    "IR-HTTP-005 AC-5",
+    "IR-HTTP-006 AC-2"
+   ],
+   "claim": "18 acceptance criteria of verified requirements have no evidence row that resolves to an existing test method. Their rows are file-level (method-less) rows whose cited line numbers are stale (InMemoryHttpAdapterTest :147/:159/:69 now point at other code; the AC-6 and AC-7 rows cite the same line), or they name test methods that were renamed in later waves (FR-ROUTE-002 VE-1, IR-HTTP-005 VE-1/2/5) or build-task labels (CON-HTTP-001 VE-1/2). Tests that assert each AC do exist and pass (named in the pointers), so this is a traceability defect, not a behaviour gap. Eight further live rows (FR-HTTP-004 VE-1/2, FR-HTTP-007 VE-3, FR-HTTP-012 VE-2, FR-HTTP-014 VE-18/19, FR-APP-017 VE-6) also name nonexistent methods but are backed by other rows.",
+   "evidence": "docs/spec/04.http-core.srs.md FR-HTTP-001, IR-HTTP-003, IR-HTTP-005, CON-HTTP-001 evidence tables; docs/spec/03.routing.srs.md FR-ROUTE-002 VE-1; docs/spec/04.http-core.srs.md FR-HTTP-004 VE-1 (sds3Ac7_... vs DispatcherTest sdsAc7_...)",
+   "suggested_fix": "Replace the stale/method-less test rows with the method ids listed in the pointers of r1-v1.json (add_verification_evidence) and drop the renamed ones."
+  },
+  {
+   "finding_id": "P1-004",
+   "severity": "low",
+   "items": [
+    "FR-HTTP-022",
+    "CON-ROUTE-001",
+    "FR-ENGINE-001",
+    "FR-HTTP-010",
+    "OPS-ENGINE-001",
+    "OPS-HTTP-002"
+   ],
+   "claim": "Source and build files still carry @req markers for six discarded (superseded) requirements, including FR-HTTP-022, which the last commit superseded by FR-HTTP-026; the Dispatcher code under those markers is now owned by FR-HTTP-026/FR-HTTP-021. The FR-HTTP-004 trace link also points to a nonexistent anchor Dispatcher.java#invoke.",
+   "evidence": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:38,169,314,384 (@req FR-HTTP-022); routing/Router.java:18 (@req CON-ROUTE-001); tinyhttpd/TinyHttpdAdapter.java:25,47,139 (@req FR-ENGINE-001); internal/PercentDecoder.java:13,25,59 (@req FR-HTTP-010); build.gradle:249,459,462",
+   "suggested_fix": "Re-point the markers to the successor requirements (FR-HTTP-026, CON-ROUTE-006, FR-ENGINE-011, FR-HTTP-025, OPS-ENGINE-002, OPS-HTTP-004) and fix the trace-link anchor."
+  },
+  {
+   "finding_id": "P1-005",
+   "severity": "low",
+   "items": [
+    "docs/spec/00.index.md"
+   ],
+   "claim": "Target statuses in the SRS index do not reflect the run: wave-1 to wave-4, wave-6 and wave-7 are still 'planned' and wave-8 is 'active' although every requirement of them is verified (or implemented by design); only wave-5 is 'completed'. Active Target is still wave-8.",
+   "evidence": "docs/spec/00.index.md:40-47",
+   "suggested_fix": "Set the eight targets to completed (set_active_target / index sync) at close-out."
+  },
+  {
+   "finding_id": "P1-006",
+   "severity": "low",
+   "items": [
+    ".gitignore",
+    "docs/spec/00.index.md",
+    "docs/release/test-results.md"
+   ],
+   "claim": "Preservation denominator is incomplete: besides the 21 frozen files, two more pre-existing files changed in the run window (.gitignore anchoring build/ and out/, intended improvement so source packages named build are tracked; docs/spec/00.index.md, tool-managed). Separately, the T44 row of docs/release/test-results.md cites only the in-memory 300 ms in-flight test, not the WebSocket/SSE shutdown test that FR-APP-020 AC-8 calls the T44 test (LongConnectionShutdownSocketTest#wave7SdsAc9_FR_APP_020_AC8_AC6_AC7_...), although object.md T44 includes WS/SSE shutdown.",
+   "evidence": "git diff 3a2717b..HEAD --numstat (.gitignore 6/2); docs/release/test-results.md:70",
+   "suggested_fix": "Note the two extra files in the preservation record; add the LongConnectionShutdownSocketTest method to the T44 row."
+  },
+  {
+   "finding_id": "P2-001",
+   "severity": "low",
+   "items": [
+    "OPS-REL-003",
+    "docs/release/test-results.md",
+    "docs/release/release-notes.md"
+   ],
+   "claim": "The recorded full-suite run no longer describes the merged head. test-results.md records run full-suite as commit=5a03978 'working tree with the wave-8 SRS evidence rows', tests=1534; the API 21 check lines of release-notes.md cite the same commit. The head 3806d59 runs 1561 tests (27 more, added by the terminal-review fix commits) and a 'working tree' reference cannot be reproduced. ReleaseResultsDocsTest.ops_REL_003_AC4 only asserts tests > 0 and exit=0, so it cannot detect that the record has gone stale.",
+   "evidence": "docs/release/test-results.md:98; docs/release/release-notes.md (API 21 checks); src/test/java/com/snoworca/naruserve/docs/ReleaseResultsDocsTest.java:185-190. Regression at 3806d59: 1561 tests, 0 failures, 0 errors, 0 skipped.",
+   "suggested_fix": "Re-run ./gradlew build --rerun-tasks on the final committed head and rewrite the full-suite line and the three API 21 check lines with that commit hash and tests=1561 (no 'working tree' wording). Optionally have the docs test compare the recorded commit with git rev-parse HEAD~N ancestry or drop the exact figure, so the record cannot silently drift."
+  },
+  {
+   "finding_id": "P2-002",
+   "severity": "low",
+   "items": [
+    "IR-WS-001",
+    "IR-APP-004",
+    "FR-WS-006",
+    "docs/api/websocket.md"
+   ],
+   "claim": "Java null-literal trap of the overloaded attribute accessor is documented for req and ctx but not for the WebSocket session, and not in any Javadoc. WebSocketSession.attribute(String, Object) and attribute(String, Class<T>) are overloads; ws.attribute(\"user\", null) in Java binds to the Class<T> read overload, whose implementation dereferences the null type and throws NullPointerException instead of removing the key. websocket.md states 'attribute(key, value): null is cleared' with no caveat, while request.md and lifecycle.md carry the warning. The Javadoc of the three interfaces says 'a null value removes the key' with no caveat either.",
+   "evidence": "docs/api/websocket.md:130-131; NaruServe-api/src/main/java/com/snoworca/naruserve/WebSocketSession.java:43-47; NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultWebSocketSession.java:516-518 (DefaultRequest.wrapper(type) -> type.isPrimitive() NPE); docs/api/request.md:181 and docs/api/lifecycle.md (attribute section) for the documented counterpart.",
+   "suggested_fix": "Add the same sentence as request.md to the websocket.md attribute table (and to the Javadoc of the three attribute(key, Object) declarations): pass a typed null variable or (Object) null. A Java user hits this at runtime only; no compile-time signal exists."
+  },
+  {
+   "finding_id": "P2-003",
+   "severity": "low",
+   "items": [
+    "IR-ENGINE-001",
+    "IR-APP-007",
+    "FR-APP-002"
+   ],
+   "claim": "Failure atomicity of the configurer methods is inconsistent. multipart, webSocket and sse run the configurer on a copy and keep it only when it returns (their Javadoc says so), but server(...) and accessLog(...) run the configurer on the live options object. A configurer that throws part-way (for example app.server(o -> o.maxWorkers(10).maxSseStreams(0)) which throws IllegalArgumentException from the second call) leaves maxWorkers already changed, so a caller that catches the IllegalArgumentException and continues starts the app with a half-applied server configuration.",
+   "evidence": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:229-258 (reconfigure on a copy) versus :367-383 (accessLog and server mutate accessLogOptions / serverOptions in place); RestApp.java Javadoc of multipart/webSocket/sse ('keeps the copy only when it returns') versus server/accessLog ('Runs configurer at once ... calls apply in order').",
+   "suggested_fix": "Either give DefaultServerOptions and DefaultAccessLogOptions a copy() and reuse reconfigure(...), or state in the server/accessLog Javadoc and docs/api/app.md that a throwing configurer leaves the options partly applied. The first is small: both classes are plain field holders."
+  }
+ ]
+}

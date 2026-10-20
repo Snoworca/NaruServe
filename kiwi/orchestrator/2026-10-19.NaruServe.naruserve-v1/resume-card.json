@@ -1,0 +1,154 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "2026-10-19.NaruServe.naruserve-v1",
+  "run_contract": "docs/research/naruserve-v1/00.run-contract.md@sha256:03157105e8ba0219b1aec3566c6813dc48575e91de91dc797bdff0be055d722f",
+  "position": {
+    "wave": 0,
+    "stage": 0,
+    "phase": "done"
+  },
+  "next_action": {
+    "verb": "halt",
+    "args": {},
+    "preconditions": []
+  },
+  "frozen": {
+    "engine": "kiwi-orchestrator",
+    "work_root": "docs/research/naruserve-v1/",
+    "journal": "kiwi/waves.jsonl",
+    "run_root": {
+      "git_toplevel": "/Users/beom/work/git/NaruServe",
+      "mcp_workspace_root": "/Users/beom/work/git/NaruServe"
+    },
+    "isolation_profile": "worktree-parallel",
+    "proof_strength": "strong",
+    "base_branch": "naruserve-v1",
+    "integration_branch": "kiwi/orch/2026-10-19.NaruServe.naruserve-v1/integration",
+    "integration_base_sha": "3a2717bbadfde9e626b3568bb2ee9455ad1030ac",
+    "regression_baseline": {
+      "command": "./gradlew build",
+      "head_sha": "3a2717bbadfde9e626b3568bb2ee9455ad1030ac",
+      "failing_tests": []
+    },
+    "route": {
+      "rung": "R-ORCH",
+      "lock": "docs/research/naruserve-v1/routing/route.lock.json@sha256:5cfdc0804f9db892aa346520d959b9763697ba549f36870e3f5b052c9005a680",
+      "probe_digest": "sha256:d6addd712bbbab50be2e2d682f3a6a8c458c8444cfe52ad04a056cb0bf187060"
+    },
+    "design_lock": "docs/research/naruserve-v1/design/00.design.lock.json@sha256:d4f97264dc0c66ec3ae22719230f54cb26876f1428082fc7db1d271339f586d6",
+    "constraints": "docs/research/naruserve-v1/design/constraints.json@sha256:e497014baec09444822daaf1d1ad8efd9edc715153bc9cc124fcbb93ef953e32",
+    "counts": {
+      "design_items": 448,
+      "integration_items": 21,
+      "constraints": 9,
+      "waves": 8
+    },
+    "waves_lock": "docs/research/naruserve-v1/waves/waves.lock.json@sha256:09d0130d49b47125d54140aef77aa37b738b1f1796a516e9c2fa01caed84637e",
+    "convergence": "docs/research/naruserve-v1/design/convergence-registry.json@sha256:c5c4729cedc099a997552467eddef72bd87f4ce66e8cc93627f2a691ef511a68"
+  },
+  "done": [
+    {
+      "key": "wave-1",
+      "proof": {
+        "kind": "journal",
+        "ref": "waves.jsonl wave-1 status=complete"
+      },
+      "witness": {
+        "kind": "git-trailer",
+        "ref": "d6be8e3 Orch-Wave=1"
+      }
+    },
+    {
+      "key": "wave-2",
+      "proof": {
+        "kind": "journal",
+        "ref": "waves.jsonl wave-2 status=complete"
+      },
+      "witness": {
+        "kind": "git-ref",
+        "ref": "integration@3e54610"
+      }
+    },
+    {
+      "key": "wave-3",
+      "proof": {
+        "kind": "journal",
+        "ref": "waves.jsonl wave-3 status=complete"
+      },
+      "witness": {
+        "kind": "git-ref",
+        "ref": "integration@fb4e488"
+      }
+    },
+    {
+      "key": "wave-4",
+      "proof": {
+        "kind": "journal",
+        "ref": "waves.jsonl wave-4 status=complete"
+      },
+      "witness": {
+        "kind": "git-ref",
+        "ref": "integration@212412c"
+      }
+    },
+    {
+      "key": "wave-5",
+      "proof": {
+        "kind": "journal",
+        "ref": "waves.jsonl wave-5 status=complete"
+      },
+      "witness": {
+        "kind": "git-ref",
+        "ref": "integration@f0ee81b"
+      }
+    },
+    {
+      "key": "wave-6",
+      "proof": {
+        "kind": "journal",
+        "ref": "waves.jsonl wave-6 status=complete"
+      },
+      "witness": {
+        "kind": "git-ref",
+        "ref": "integration@9ce5cc4"
+      }
+    },
+    {
+      "key": "wave-7",
+      "proof": {
+        "kind": "journal",
+        "ref": "waves.jsonl wave-7 status=complete"
+      },
+      "witness": {
+        "kind": "git-ref",
+        "ref": "integration@f7da71d"
+      }
+    },
+    {
+      "key": "wave-8",
+      "proof": {
+        "kind": "journal",
+        "ref": "waves.jsonl wave-8 status=complete"
+      },
+      "witness": {
+        "kind": "git-ref",
+        "ref": "integration@da2358d"
+      }
+    },
+    {
+      "key": "final-verify",
+      "proof": {
+        "kind": "journal",
+        "ref": "waves.jsonl wave=all status=complete phase=final-verify"
+      },
+      "witness": {
+        "kind": "git-ref",
+        "ref": "integration@39365dd"
+      }
+    }
+  ],
+  "open": [],
+  "blocked_on": null,
+  "invariant_digest": "sha256:6ff561a79ef7970aafda7b5f23892a31a88b171ba7410739e97dbf6d364a76ed",
+  "written_at": "2026-10-20T19:56:44.000Z"
+}

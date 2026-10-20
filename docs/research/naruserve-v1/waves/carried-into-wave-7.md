@@ -1,0 +1,5 @@
+# Carried into wave 7 (from wave 3 loop W)
+
+- D-408 over TinyHttpd: TinyHttpd at `46b973e` keeps only `Connection: close`/`keep-alive` on a non-`101` response (`ExchangeResponse.java:172-177`, `:466-470`), so the `426` answer's `Connection: Upgrade` cannot pass through the TinyHttpd adapter. Record it as a deferred TinyHttpd-gap issue (D-020) without patching TinyHttpd; assert both headers of D-408 through the in-memory adapter and `426` with `Upgrade: websocket` over TinyHttpd; open the D-020 issue in the wave 7 issue ledger; D-408 is not promoted to `verified` on the TinyHttpd test alone.
+- From wave 4: the WebSocket and SSE cases of D-142 (T41): `req.service(T)` returns the instance registered in `onStart` inside WebSocket and SSE handlers.
+- From wave 5 (w5-P2-002, commit 387db8c): TinyHttpdExchange.eventStream/sendFile/upgrade now take the exchange lock, abort check and single-start bookkeeping of commit(); writes the event-stream drain makes later from another thread must also synchronize on the exchange (code comment in TinyHttpdExchange).

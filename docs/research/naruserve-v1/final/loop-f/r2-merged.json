@@ -1,0 +1,94 @@
+{
+ "findings": [
+  {
+   "finding_id": "P2-001",
+   "severity": "low",
+   "items": [
+    "I-003"
+   ],
+   "claim": "I-003 (public API of NaruServe-api must not expose java.nio.file, CompletableFuture or java.net.http types) is still mapped by no AC tag and no recorded decision. Round 1 fixed the checks (forbidden list extended, new class-reference test i003_...), and the code complies, but the design row stays unmapped under the frozen rule (the I-003 comments sit in a test only).",
+   "evidence": "src/test/java/com/snoworca/naruserve/build/ClassConstraintsTest.java:93-95,144-152; grep I-003 docs/spec/*.md finds nothing",
+   "suggested_fix": "Record I-003 as a wave decision pointing at ClassConstraintsTest#i003_noMainClassOfTheApiModuleReferencesNioFileCompletableFutureOrJavaNetHttp and CON-HTTP-002 AC-1 (the verified ACs cannot take a new tag), or add an unverified successor AC tagged [I-003]."
+  },
+  {
+   "finding_id": "P2-002",
+   "severity": "low",
+   "items": [
+    "I-015"
+   ],
+   "claim": "The NoLeftoverThreads rule added for I-015 is narrower than the invariant: it waits only for naruserve-* threads, so tinyhttpd-acceptor-<port> and tinyhttpd-watchdog (counted as app threads by FR-APP-020 AC-9 and PERF-APP-001) and the upload temp files are not checked by it in the socket tests. TinyHttpdWebSocketTest and WebSocketThreadsSocketTest, which call listen(0), do not carry the rule either.",
+   "evidence": "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/NoLeftoverThreads.java:21-24,48-52; NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdWebSocketTest.java:216; WebSocketThreadsSocketTest.java:33-35",
+   "suggested_fix": "Let the rule also match tinyhttpd-acceptor-/tinyhttpd-watchdog threads started during the test (or state the narrower scope in I-015's realisation), and add the rule to the two classes."
+  },
+  {
+   "finding_id": "P2-003",
+   "severity": "low",
+   "items": [
+    "FR-ROUTE-002",
+    "CON-HTTP-001",
+    "FR-HTTP-004",
+    "IR-HTTP-005",
+    "FR-HTTP-007",
+    "FR-HTTP-012",
+    "FR-HTTP-014",
+    "FR-APP-017"
+   ],
+   "claim": "13 test evidence rows of verified requirements still name methods or anchors that do not exist (renamed in later waves or build-task labels): FR-ROUTE-002 VE-1, CON-HTTP-001 VE-1 and VE-2, FR-HTTP-004 VE-1 and VE-2, IR-HTTP-005 VE-1, VE-2 and VE-5, FR-HTTP-007 VE-3, FR-HTTP-012 VE-2, FR-HTTP-014 VE-18 and VE-19, FR-APP-017 VE-6. Every AC is still backed by another valid row, so no behaviour is unverified; the dead rows are traceability noise that round 1 listed but did not remove.",
+   "evidence": "docs/spec/03.routing.srs.md FR-ROUTE-002 VE-1; docs/spec/04.http-core.srs.md FR-HTTP-004 VE-1/VE-2 (sds3Ac7_... vs DispatcherTest sdsAc7_...), IR-HTTP-005 VE-1/2/5, CON-HTTP-001 VE-1/2, FR-HTTP-014 VE-18/19; docs/spec/05.application.srs.md FR-APP-017 VE-6",
+   "suggested_fix": "Drop or re-point the 13 rows (they are not the sole row of any AC)."
+  },
+  {
+   "finding_id": "P2-004",
+   "severity": "low",
+   "items": [
+    "docs/release/test-results.md",
+    "docs/release/release-notes.md"
+   ],
+   "claim": "The full-suite record says commit=3806d59 tests=1566, but 3806d59 holds 1561 @Test methods; 1566 is the count of the f357caf tree (the fix added NoLeftoverThreadsTest and the I-003 test). The three release-notes check records also cite commit=3806d59 although build.gradle changed in f357caf. The records cannot be reproduced at the commit they name.",
+   "evidence": "docs/release/test-results.md:98; docs/release/release-notes.md:41-43; git grep -c '@Test' 3806d59 = 1561, f357caf = 1566",
+   "suggested_fix": "Re-run on the final head and cite that commit, or word the record as 'on top of 3806d59' with the count of that tree."
+  },
+  {
+   "finding_id": "P2-001",
+   "severity": "low",
+   "items": [
+    "FR-HTTP-021",
+    "FR-ENGINE-007",
+    "D-052"
+   ],
+   "claim": "On the default TinyHttpd adapter every D-052 path rejection (/a%2Fb, /a%zz, /a%C3%28, /%2e%2e, /a/./b, /a%00b, /a/../b) is answered by TinyHttpd itself with a plain-text 'HTTP/1.1 400 Bad Request' (Content-Type text/plain, body '400 Bad Request', Connection: close), never reaching the Dispatcher: no standard error JSON, no onError, no access-log line. Verified live with a raw socket against RestApp.create(). The SRS (04.http-core FR-HTTP-021 AC-3, verified) states the standard error body for a PathValidator rejection, and docs/api/routing.md 'Path rejection and decoding' says only that the request is rejected. The plain-text deviation is recorded only as an SDS decision in 06.engine-adapter FR-ENGINE-007 AC-2 ('TinyHttpd may reject them with its own plain-text 400') and the CrossAdapterTest compares status only. docs/api/defaults.md:103 lists the plain-text TinyHttpd 400 cases as 'malformed request format' and never names path rejections, while docs/api/servlet.md:150-161 documents the body source per case for the Servlet adapter. A user of the default adapter who reads routing.md/middleware.md expects the JSON body and an access-log line for these requests.",
+   "evidence": "docs/api/routing.md:271-282 (path rejection section, no response format); docs/api/defaults.md:103 (plain-text list without path rejections); docs/spec/04.http-core.srs.md:2927 (FR-HTTP-021 AC-3 standard body) vs docs/spec/06.engine-adapter.srs.md:803 (plain-text 400 allowed); NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/BothAdaptersCases.java:77-92 (status-only comparison)",
+   "suggested_fix": "Add one sentence to docs/api/routing.md (path rejection section) and to the plain-text list in docs/api/defaults.md: on the TinyHttpd adapter a rejected path gets TinyHttpd's short text/plain 400 without onError, standard JSON or access-log line, while the Servlet adapter follows the table in servlet.md. No code change needed."
+  },
+  {
+   "finding_id": "P2-002",
+   "severity": "low",
+   "items": [
+    "I-015"
+   ],
+   "claim": "The round-1 fix for I-015 is incomplete in what it watches. The NoLeftoverThreads rule only looks at threads whose name starts with 'naruserve-', but the TinyHttpd adapter also starts 'tinyhttpd-acceptor-<port>' and 'tinyhttpd-watchdog' (observed live while an app runs; both vanish after shutdown). They are server threads of the app (docs/api/defaults.md counts them in the 452 thread total, and TinyHttpdAdapter.release() waits for them), so a test class that carries the rule still passes if the engine acceptor or watchdog is left behind. The round-1 suggested fix named 'naruserve-<port>-* / tinyhttpd-*', and RawTargetSocketTest.java:294-300 already treats these two names as the app's live threads, so the shared rule is inconsistent with the existing isolated test.",
+   "evidence": "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/NoLeftoverThreads.java:21 (PREFIX = \"naruserve-\") and :40,:61; NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/RawTargetSocketTest.java:294-300",
+   "suggested_fix": "Let the rule take a list of prefixes (or add a second LiveThreads.withPrefix('tinyhttpd-') pass) so the TinyHttpd socket tests also fail on a leftover tinyhttpd-acceptor-*/tinyhttpd-watchdog; keep the 'before' snapshot so other apps' threads stay ignored."
+  },
+  {
+   "finding_id": "P2-003",
+   "severity": "low",
+   "items": [
+    "OPS-REL-003"
+   ],
+   "claim": "The recorded full-suite run in the release records is attributed to the wrong commit. docs/release/test-results.md says 'commit=3806d59; tests=1566', but the message of 3806d59 says 'build at 1561 tests'; 1566 is the count of the f357caf tree (five tests added by NoLeftoverThreads and the I-003 checks). Re-running ./gradlew build --rerun-tasks at f357caf gives exit 0 and 1566 tests, so the figure is right and the commit field is not: a reader who checks out the named commit gets 1561.",
+   "evidence": "docs/release/test-results.md:98; git show -s 3806d59 (message: 'build at 1561 tests, 0 failures')",
+   "suggested_fix": "Record the run against the commit that contains the 1566-test tree (or write 'working tree on 3806d59 with the round-1 fixes' as the earlier record did) instead of 3806d59."
+  },
+  {
+   "finding_id": "P2-004",
+   "severity": "low",
+   "items": [
+    "FR-HTTP-025"
+   ],
+   "claim": "The marker rename of f357caf left the same line twice: DefaultRequest.decodeQuery carries '// @req FR-HTTP-025' on two consecutive lines (the old FR-HTTP-010 marker was rewritten onto an existing FR-HTTP-025 marker). Harmless to the trace scan, but it is leftover noise in a public-package class that a maintainer will read.",
+   "evidence": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java:111-112",
+   "suggested_fix": "Delete one of the two lines."
+  }
+ ]
+}

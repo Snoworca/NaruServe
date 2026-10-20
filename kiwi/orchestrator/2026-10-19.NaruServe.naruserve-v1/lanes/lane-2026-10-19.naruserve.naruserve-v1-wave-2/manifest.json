@@ -1,0 +1,53 @@
+{
+  "branch": "kiwi/orch/2026-10-19.NaruServe.naruserve-v1/lane-2026-10-19.naruserve.naruserve-v1-wave-2",
+  "worktree_path": "/Users/beom/work/git/NaruServe/.claude/worktrees/agent-a1acc9072da5e6d77",
+  "head_sha": "b5677c379ee65d1a61f3ff5c5b318d470e15e5e7",
+  "commits": [
+    "f80370bfc9ff4bcd98279601a7872a625a3ef6c2",
+    "8a4b565a1db9de4dbe6ede95ddb789382ca1036e",
+    "7b7b6b76214f4aeeac3db650e31623623f520d91",
+    "b5677c379ee65d1a61f3ff5c5b318d470e15e5e7"
+  ],
+  "deferred_queue": "/Users/beom/work/git/NaruServe/kiwi/orchestrator/2026-10-19.NaruServe.naruserve-v1/lanes/lane-2026-10-19.naruserve.naruserve-v1-wave-2/deferred-srs-queue.jsonl",
+  "deferred_queue_entries": 168,
+  "deferred_queue_note": "Fragment wave-2-1 queued FR-ROUTE-001 AC-3 evidence marked partial (RouterPolicy missing at that time); fragment wave-2-2 queued full FR-ROUTE-001 AC-3 evidence via RouterPolicyTest.",
+  "manifest_location_note": "The lane sandbox refused writes to the host card path; this manifest is written at the same relative path inside the worktree. Copy it to /Users/beom/work/git/NaruServe/kiwi/orchestrator/2026-10-19.NaruServe.naruserve-v1/lanes/lane-2026-10-19.naruserve.naruserve-v1-wave-2/manifest.json.",
+  "reports": [
+    "/Users/beom/work/git/NaruServe/.claude/worktrees/agent-a1acc9072da5e6d77/docs/analysis/kiwi-review-fix-loop-2026-10-19.naruserve.self-w2s2l1/mode_decision.json",
+    "/Users/beom/work/git/NaruServe/.claude/worktrees/agent-a1acc9072da5e6d77/docs/analysis/kiwi-review-fix-loop-2026-10-19.naruserve.self-w2s2l1/review_inventory.json",
+    "/Users/beom/work/git/NaruServe/.claude/worktrees/agent-a1acc9072da5e6d77/docs/analysis/kiwi-review-fix-loop-2026-10-19.naruserve.self-w2s2l1/classified_findings.json",
+    "/Users/beom/work/git/NaruServe/.claude/worktrees/agent-a1acc9072da5e6d77/docs/analysis/kiwi-review-fix-loop-2026-10-19.naruserve.self-w2s2l1/rejected_findings.log",
+    "/Users/beom/work/git/NaruServe/.claude/worktrees/agent-a1acc9072da5e6d77/docs/analysis/kiwi-review-fix-loop-2026-10-19.naruserve.self-w2s2l1/fix_iter1.json",
+    "/Users/beom/work/git/NaruServe/.claude/worktrees/agent-a1acc9072da5e6d77/docs/analysis/kiwi-review-fix-loop-2026-10-19.naruserve.self-w2s2l1/prickly_recheck_iter1.json",
+    "/Users/beom/work/git/NaruServe/.claude/worktrees/agent-a1acc9072da5e6d77/docs/analysis/kiwi-review-fix-loop-2026-10-19.naruserve.self-w2s2l1/test_sufficiency.wave-2-1.json",
+    "/Users/beom/work/git/NaruServe/.claude/worktrees/agent-a1acc9072da5e6d77/docs/analysis/kiwi-review-fix-loop-2026-10-19.naruserve.self-w2s2l1/test_sufficiency.wave-2-2.json",
+    "/Users/beom/work/git/NaruServe/.claude/worktrees/agent-a1acc9072da5e6d77/docs/analysis/kiwi-review-fix-loop-2026-10-19.naruserve.self-w2s2l1/test_sufficiency.wave-2-3.json",
+    "/Users/beom/work/git/NaruServe/.claude/worktrees/agent-a1acc9072da5e6d77/.kiwi/sessions/2026-10-19.naruserve.naruserve-v1-wave-2-1/lanes/w2s2l1/state.json",
+    "/Users/beom/work/git/NaruServe/.claude/worktrees/agent-a1acc9072da5e6d77/.kiwi/sessions/2026-10-19.naruserve.naruserve-v1-wave-2-2/lanes/w2s2l1/reports/coder-2026-10-19.naruserve.naruserve-v1-wave-2-2.md"
+  ],
+  "red_evidence": [
+    {"test_id": "wave-2-1 NaruServe-api:compileTestKotlin (MethodKotlinTest, SDS-AC-8 IR-ROUTE-003 AC-3)", "failure": "MethodKotlinTest.kt:18:18 Unresolved reference 'MethodSet' / 'Method' - compileTestKotlin FAILED"},
+    {"test_id": "wave-2-1 RoutingDocsTest.sdsAc9_OPS_ROUTE_001_AC2_accessorsNamedWithJavaKotlinAndExpressNote", "failure": "AssertionError at RoutingDocsTest.java:35 (missing heading ### MethodSet 조회)"},
+    {"test_id": "wave-2-1 RoutingDocsTest.sdsAc10_OPS_ROUTE_001_AC1_routingRulesSectionPresent", "failure": "AssertionError at RoutingDocsTest.java:35 (missing heading ## 라우팅 규칙 (wave 2 결정))"},
+    {"test_id": "wave-2-2 NaruServe-api:compileTestKotlin (RouterKotlinTest and routing tests)", "failure": "RouterKotlinTest.kt:15:21 Unresolved reference 'RouterPolicy'"},
+    {"test_id": "wave-2-2 PathValidatorTest.sdsAc6_FR_ROUTE_004_AC1_rejectList", "failure": "AssertionError at PathValidatorTest.java:17 - \"\" and \"users\" accepted"},
+    {"test_id": "wave-2-2 RouterFreezeTest.sdsAc13_FR_ROUTE_008_AC4_conflictKeyFoldsCaseLikeMatching", "failure": "AssertionError: freeze passed - case-insensitive GET /ſ and GET /s gave no conflict"},
+    {"test_id": "wave-2-2 RouterFreezeTest.FR_ROUTE_008_AC1_registrationAfterFreezeCannotBypassConflictDetection", "failure": "AssertionError: add after freeze - no IllegalStateException"},
+    {"test_id": "wave-2-3 NaruServe-api:compileTestJava (RouteMatchTest, RouterLookupTest, RouterAutoResponseTest, RouterTraceConnectTest, RouterWebSocketTest)", "failure": "cannot find symbol class RouteMatch; cannot find symbol method lookup(String,String,boolean) / allowFor / isWebSocketUpgrade"},
+    {"test_id": "review FND-001 publication tests (now in RouterFreezeTest)", "failure": "frozen route table accepted a new route; frozen must be volatile; Router.add not synchronized"},
+    {"test_id": "review FND-002 RouterLookupTest.matchesAgreesWithMatch", "failure": "compile failure: RoutePattern.matches() did not exist"}
+  ],
+  "review_outcome": {"status": "TASK_DONE", "residual_critical": 0, "residual_high": 0, "residual_medium": 0, "residual_low": 12},
+  "review_summary": "Round 1: 13 findings (0 C / 0 H / 4 M / 9 L, coverage anchors 28/28 valid). --auto: 4 MEDIUM fixed, 9 LOW rejected. Recheck 1: all 4 resolved, 3 new LOW, anchors 5/5 rows valid. No test deleted or weakened; only public-signature change is adding synchronized to Router.add/addWebSocket/freeze. docs/api/routing.md excluded from review as prose.",
+  "review_residual_low": ["FND-005..FND-013 (auto-rejected LOW, round 1)", "FND-101 allowFor() not frozen-guarded; class Javadoc implies thread safety", "FND-102 new concurrency tests cite FR-ROUTE-008 AC-1, which does not cover concurrency (no SRS requirement covers the concurrency promise)", "FND-103 request path validated and decoded twice (shortcut comment in Router.java)"],
+  "intentionally_empty": null,
+  "design_refuted": [],
+  "out_of_lease_paths": [],
+  "test_sufficiency": {
+    "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-2-1.sds.md": {"ids": ["FR-ROUTE-001", "IR-ROUTE-001", "IR-ROUTE-002", "IR-ROUTE-003", "OPS-ROUTE-001"], "acs": 16, "gaps": [], "sds_ac_uncited": 0, "verdict": "pass"},
+    "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-2-2.sds.md": {"ids": ["CON-ROUTE-001", "FR-ROUTE-002", "FR-ROUTE-003", "FR-ROUTE-004", "FR-ROUTE-005", "FR-ROUTE-006", "FR-ROUTE-007", "FR-ROUTE-008"], "acs": 31, "gaps": [], "sds_ac_uncited": 0, "verdict": "pass"},
+    "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-2-3.sds.md": {"ids": ["FR-ROUTE-009", "FR-ROUTE-010", "FR-ROUTE-011", "FR-ROUTE-012", "FR-ROUTE-013", "FR-ROUTE-014", "FR-ROUTE-015", "FR-ROUTE-016", "FR-ROUTE-017", "IR-ROUTE-004"], "acs": 32, "gaps": [], "sds_ac_uncited": 0, "verdict": "pass"},
+    "fill_round_used": false
+  },
+  "verification": {"command": "./gradlew build", "exit_code": 0, "note": "run with --rerun-tasks on the tree committed as b5677c3"}
+}

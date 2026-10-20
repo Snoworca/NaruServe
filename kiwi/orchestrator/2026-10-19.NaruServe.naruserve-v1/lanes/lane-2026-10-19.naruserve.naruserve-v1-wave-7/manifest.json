@@ -1,0 +1,252 @@
+{
+  "branch": "kiwi/orch/2026-10-19.NaruServe.naruserve-v1/lane-2026-10-19.naruserve.naruserve-v1-wave-7",
+  "worktree_path": "/Users/beom/work/git/NaruServe/.claude/worktrees/agent-ad8ccde7e4d46a664",
+  "head_sha": "9513a1df1dbf834849d28c7fae108ecff6cdbc3d",
+  "commits": [
+    "3021f38de62535bdf14a473074373c85003376aa",
+    "19b221dec3f49af7db5b6e90c6740514ef6d7919",
+    "4022f6efe7cd0ae4bf9c27d2ffb52e613cb7afe0",
+    "27d24d6fe6c9e47bfb6d71127e654e240a07c954",
+    "923548e6108f4cc29212f09e5ddf60c3d5c725d1",
+    "58e89c1346edd2157acdc34c4ac384889c009797",
+    "3e5ae1dfb47efeea1667a7081279320395678475",
+    "c9cb060b41c06328529d79ebf1eb2eab71ef9729",
+    "4c368bb169368759b5938d5767f3cadbcbfa91b1",
+    "404466417b8d5c4feda526d828a7c5017649e585",
+    "cab4cb5c109fa3e29b3c9193e8107e93935944fe",
+    "b90b382bcb16b57b7d98aa0e3a95334475ce22e2",
+    "4c773396d7fd9593e38b3e586ee04f5d7d1ad680",
+    "1e1e42fcfceef81bc0e01d5d2f3a085ef9803294",
+    "d61b4fa96800096579e010634cc76ac5d10f4433",
+    "9513a1df1dbf834849d28c7fae108ecff6cdbc3d"
+  ],
+  "deferred_queue": "/Users/beom/work/git/NaruServe/kiwi/orchestrator/2026-10-19.NaruServe.naruserve-v1/lanes/lane-2026-10-19.naruserve.naruserve-v1-wave-7/deferred-srs-queue.jsonl",
+  "reports": [
+    "/Users/beom/work/git/NaruServe/.claude/worktrees/agent-ad8ccde7e4d46a664/.kiwi/sessions/2026-10-19.naruserve.naruserve-v1-wave-7-10/lanes/w7s7l1",
+    "/Users/beom/work/git/NaruServe/.claude/worktrees/agent-ad8ccde7e4d46a664/.kiwi/sessions/2026-10-19.naruserve.naruserve-v1-wave-7-11/lanes/w7s7l1"
+  ],
+  "red_evidence": [
+    {
+      "test_id": "HttpAdapterSpiTest SDS-AC-1..6 / InMemoryHttpAdapterTest SDS-AC-7..9 (part 1)",
+      "failure": "compileTestJava: cannot find symbol WebSocketEndpoint, WebSocketChannel, WebSocketSettings, HttpExchange.webSocket, StreamDrain.attach"
+    },
+    {
+      "test_id": "WebSocketApiTest/HttpExceptionTest/ErrorPathTest/WebSocketKotlinTest (part 2)",
+      "failure": "compileTestJava exit 1: unresolved webSocket, withHeader, headers, WebSocketOptions"
+    },
+    {
+      "test_id": "WebSocketDispatchTest#sdsAc1_FR_WS_001_AC1 / WebSocketOriginTest#sdsAc6_FR_WS_003_AC2 (part 3)",
+      "failure": "no WebSocket channel opened (426 fallback); expected 403 but got 426"
+    },
+    {
+      "test_id": "WebSocketSocketTest#sdsAc7_FR_WS_002_AC1 / WebSocketProtocolSocketTest#sdsAc9_FR_WS_005_AC8 (part 4)",
+      "failure": "handshake was not 101 (SPI default webSocket)"
+    },
+    {
+      "test_id": "WebSocketSessionTest (part 5)",
+      "failure": "7 of 9 failed: id, attribute, sendText, sendJson, onJson stubs threw UnsupportedOperationException"
+    },
+    {
+      "test_id": "WebSocketSessionSocketTest#sdsAc2_FR_WS_007_AC6 / WebSocketThreadsSocketTest#sdsAc3_FR_WS_007_AC2 (part 6)",
+      "failure": "expected close opcode 8 but got text frame; no sender thread of port"
+    },
+    {
+      "test_id": "WebSocketRegistryTest / WebSocketShutdownTest (part 7)",
+      "failure": "compileTestJava: cannot find symbol WebSocketRegistry, beforeOpen"
+    },
+    {
+      "test_id": "WaveSevenDocsTest#sdsAc2_OPS_WS_001_AC3 / AdapterSurfaceTest#FR_ENGINE_011_AC2 (part 8)",
+      "failure": "HANDLER_PHRASE absent from websocket.md; eventStream still synchronized, threw UnsupportedOperationException naming wave 7"
+    },
+    {
+      "test_id": "SseKotlinTest / SseApiTest / SseStreamTest (part 9)",
+      "failure": "compileTestKotlin: unresolved reference SseClient, sse, SseOptions, SseEvent"
+    },
+    {
+      "test_id": "SseQueueTest#sdsAc3_FR_SSE_002_AC4 / SseLifetimeTest#sdsAc12_FR_SSE_004_AC7_AC8 (part 10)",
+      "failure": "11th send returned true, expected false; shutdown took 6020 ms"
+    },
+    {
+      "test_id": "SseSocketTest / AdapterSurfaceTest / ConnectionLimitsTest (part 11)",
+      "failure": "compileTestJava: package TinyHttpdEventStream does not exist"
+    },
+    {
+      "test_id": "WebSocketSessionSocketTest#wave7SdsAc1_FR_APP_019_AC8_AC9 / LongConnectionShutdownSocketTest#wave7SdsAc9_FR_APP_020 (part 12)",
+      "failure": "no INFO GET /ws 101 line before the first frame; 0 lines matching INFO WS /ok 1001"
+    },
+    {
+      "test_id": "WebSocketSenderTest#wave7s13SdsAc3_PERF_APP_001_AC3 / WaveSevenDocsTest#wave7s13SdsAc5_OPS_SSE_001_AC1 (part 13)",
+      "failure": "cannot find symbol requestedStack; sse.md still carried 3 marker lines"
+    },
+    {
+      "test_id": "WebSocketUpgradeFailureTest#FR_WS_006_AC3_aThrowAfterOpenWithoutOnCloseStillEndsTheSessionOnce (review fix)",
+      "failure": "expected 1 close listener run but was 0"
+    },
+    {
+      "test_id": "SdsAc10 sdsAc10_IR_WS_002_AC7 frame-codec scan (part 1)",
+      "failure": "not red: guard test that passed from the start (no main source contains opcode or masking); self-check shows the pattern matches such text"
+    }
+  ],
+  "review_outcome": {
+    "status": "TASK_DONE",
+    "residual_critical": 0,
+    "residual_high": 0,
+    "residual_medium": 0,
+    "notes": "Round 1: 4 partition reviewers, 0 CRITICAL, 1 HIGH, 6 MEDIUM, 21 LOW; HIGH and fixable MEDIUM fixed (P3-001, P1-001, P2-002, P4-001, P4-003, P3-002, P3-003, P7-001). Recheck: 0 CRITICAL, 0 HIGH, 3 MEDIUM (tests relaxed past SRS bounds) fixed in commit 9513a1d, not re-reviewed. Rejected as auto: all LOW. P4-002 left (SDS-defined AC mapping: wave-7-4 SDS-AC-10 cites FR-WS-005 AC-5 for sender-slot tests). Open LOW: R2-005 stale watch entry after refused idle.watch, R2-006 no channel abort before awaitIdle after adapter throw, R2-004 3000 ms vs 2 s bound in WebSocketSendSocketTest, TinyHttpd path of adapter-throw-after-onOpen untested."
+  },
+  "intentionally_empty": null,
+  "design_refuted": [],
+  "out_of_lease_paths": [
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AppLifecycleGuardTest.java",
+    "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java",
+    "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/WebSocketOnlySocketTest.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/WebSocketUpgrade.java (part 4)",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/WebSocketSenderTest.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java (parts 6, 10)",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultServerOptions.java",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/WebSocketSessionTest.java",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/AppDocsTest.java",
+    "docs/api/sse.md (part 8, settled early for SDS-AC-10)",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultSseClient.java and SseRegistry.java (part 9 placeholders, completed in parts 10 and 11)",
+    "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/RecordingExchange.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/BodyState.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultAccessLogOptions.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/RequestIds.java",
+    "docs/api/websocket.md (part 13 add-only clause)",
+    "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/ErrorHeadersSocketTest.java (gap fill)",
+    "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/InMemoryEventStream.java (writtenAt)"
+  ],
+  "test_sufficiency": {
+    "per_fragment": {
+      "1": {
+        "passed": true,
+        "gaps": {
+          "requirements": [],
+          "sdsContracts": []
+        }
+      },
+      "2": {
+        "passed": false,
+        "gaps": {
+          "requirements": [
+            {
+              "requirementId": "IR-HTTP-008",
+              "acIds": [
+                "AC-6"
+              ]
+            }
+          ],
+          "sdsContracts": []
+        }
+      },
+      "3": {
+        "passed": true,
+        "gaps": {
+          "requirements": [],
+          "sdsContracts": []
+        }
+      },
+      "4": {
+        "passed": true,
+        "gaps": {
+          "requirements": [],
+          "sdsContracts": []
+        }
+      },
+      "5": {
+        "passed": true,
+        "gaps": {
+          "requirements": [],
+          "sdsContracts": []
+        }
+      },
+      "6": {
+        "passed": true,
+        "gaps": {
+          "requirements": [],
+          "sdsContracts": []
+        }
+      },
+      "7": {
+        "passed": true,
+        "gaps": {
+          "requirements": [],
+          "sdsContracts": []
+        }
+      },
+      "8": {
+        "passed": true,
+        "gaps": {
+          "requirements": [],
+          "sdsContracts": []
+        }
+      },
+      "9": {
+        "passed": true,
+        "gaps": {
+          "requirements": [],
+          "sdsContracts": []
+        }
+      },
+      "10": {
+        "passed": false,
+        "gaps": {
+          "requirements": [
+            {
+              "requirementId": "FR-SSE-004",
+              "acIds": [
+                "AC-2"
+              ]
+            }
+          ],
+          "sdsContracts": []
+        }
+      },
+      "11": {
+        "passed": true,
+        "gaps": {
+          "requirements": [],
+          "sdsContracts": []
+        }
+      },
+      "12": {
+        "passed": true,
+        "gaps": {
+          "requirements": [],
+          "sdsContracts": []
+        }
+      },
+      "13": {
+        "passed": true,
+        "gaps": {
+          "requirements": [],
+          "sdsContracts": []
+        }
+      }
+    },
+    "initial_gaps": {
+      "wave-7-2": "IR-HTTP-008 AC-6",
+      "wave-7-10": "FR-SSE-004 AC-2"
+    },
+    "filled_by": [
+      "ErrorHeadersSocketTest#sdsAc9_IR_HTTP_008_AC6_a503WithRetryAfterAndConnectionCloseClosesTheConnection",
+      "SseSocketTest#sdsAc9_FR_SSE_004_AC2_aClientCloseRunsOnCloseOnceWithin3sAndLogsCauseClient"
+    ],
+    "after_fill_passed": true,
+    "note": "cov-N.json per-fragment results were taken before the fill; wave-7-2 and wave-7-10 were re-run after the fill and returned passed=true"
+  },
+  "known_gaps": [
+    "FR-WS-004: D-408 (Connection: Upgrade on 426) cannot pass TinyHttpd; both headers asserted via the in-memory adapter, over TinyHttpd only 426 plus Upgrade. FR-WS-004 is queued as implemented on that evidence, host should treat the Connection header over TinyHttpd as the recorded gap.",
+    "FR-ENGINE-011 AC-2 eventStream minimal in part 8, SSE counter and flushBuffer Body completed by part 11",
+    "sendJson codec IOException rethrown as HttpException(500, JSON encoding failed) because UncheckedIOException needs API 24 (part 5): kiwi-sds --close should carry this into SDS-AC-5 and FR-WS-006 AC-4",
+    "Order of SDS fragments run: numeric 1..13 (the card lists 1,10,11,12,13,2..9 lexicographically; fragments depend on numeric order)",
+    "No add_completed_work entries queued (--no-final); queue holds only update_status implemented and add_verification_evidence",
+    "Timing-based tests: heartbeat (900-1500 ms gaps), idle close (<= 2000 ms), shutdown wait are wall-clock sensitive on loaded hosts"
+  ],
+  "verification": {
+    "command": "./gradlew build",
+    "exit_code": 0,
+    "note": "run with --rerun-tasks at the head commit, 64 tasks executed, BUILD SUCCESSFUL"
+  }
+}

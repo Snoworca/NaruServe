@@ -1,0 +1,72 @@
+{
+  "branch": "kiwi/orch/2026-10-19.NaruServe.naruserve-v1/lane-2026-10-19.naruserve.naruserve-v1-wave-3",
+  "worktree_path": "/Users/beom/work/git/NaruServe/.claude/worktrees/agent-ac4620d314efc9cb6",
+  "head_sha": "a4d3403a786e0ee895c72c3ea53fe4c28a3477f4",
+  "commits": [
+    "06d70b4c4771c90888edda5d6b95fca6feaa6af7",
+    "5a9322dedaf1229c0ab34349c05bae6802b5ada5",
+    "4917e408d4708724c76e963c279a4aa55a4d107c",
+    "1ae79fe445e09375b270e2d78e1316dc0ce4aaa7",
+    "8fb4835bf65967f266ad84b15aeda66274dbe5eb",
+    "45469d2e1a7c931dc16bc9bc5ae907d4cd28c4cc",
+    "ef85d35a7bbc8ee25d27e60262d1b727913f0a28",
+    "a4d3403a786e0ee895c72c3ea53fe4c28a3477f4"
+  ],
+  "deferred_queue": "/Users/beom/work/git/NaruServe/kiwi/orchestrator/2026-10-19.NaruServe.naruserve-v1/lanes/lane-2026-10-19.naruserve.naruserve-v1-wave-3/deferred-srs-queue.jsonl",
+  "deferred_queue_notes": "271 lines from the six kiwi-coder runs. 4 are update_status=implemented entries queued by fragment 3 (FR-HTTP-003/005/008, CON-HTTP-001); later fragments were told not to queue implemented, so promotion stays with the orchestrator. The self-review fixes (ef85d35, a4d3403) queued nothing.",
+  "reports": [
+    "docs/analysis/kiwi-review-fix-loop-2026-10-19.naruserve.self-w3l1/mode_decision.json",
+    "docs/analysis/kiwi-review-fix-loop-2026-10-19.naruserve.self-w3l1/review_A_iter1.json",
+    "docs/analysis/kiwi-review-fix-loop-2026-10-19.naruserve.self-w3l1/review_B_iter1.json",
+    "docs/analysis/kiwi-review-fix-loop-2026-10-19.naruserve.self-w3l1/review_C_iter1.json",
+    "docs/analysis/kiwi-review-fix-loop-2026-10-19.naruserve.self-w3l1/fix_iter1.json",
+    "docs/analysis/kiwi-review-fix-loop-2026-10-19.naruserve.self-w3l1/recheck_A_iter1.json",
+    "docs/analysis/kiwi-review-fix-loop-2026-10-19.naruserve.self-w3l1/recheck_B_iter1.json",
+    "docs/analysis/kiwi-review-fix-loop-2026-10-19.naruserve.self-w3l1/fix_iter2.json",
+    "docs/analysis/kiwi-review-fix-loop-2026-10-19.naruserve.self-w3l1/recheck_iter2.json",
+    "docs/analysis/kiwi-coder-2026-10-19.naruserve.naruserve-v1-wave-3-1/",
+    "docs/analysis/kiwi-coder-2026-10-19.naruserve.naruserve-v1-wave-3-3/",
+    "docs/analysis/kiwi-coder-2026-10-19.naruserve.naruserve-v1-wave-3-4/",
+    "docs/analysis/kiwi-coder-2026-10-19.naruserve.naruserve-v1-wave-3-5/",
+    "docs/analysis/kiwi-coder-2026-10-19.naruserve.naruserve-v1-wave-3-6/",
+    ".kiwi/sessions/"
+  ],
+  "reports_note": "Paths are relative to worktree_path; they are untracked, not committed.",
+  "red_evidence": [
+    {"test_id": "HttpApiSurfaceTest, HttpApiKotlinTest, RouterRegistrationTest (fragment 1)", "failure": "compileTestKotlin: HttpApiKotlinTest.kt:14:30 Unresolved reference 'Request'"},
+    {"test_id": "HttpAdapterSpiTest, InMemoryHttpAdapterTest (fragment 2)", "failure": "compileTestJava: cannot find symbol com.snoworca.naruserve.spi.* / testing.InMemoryHttpAdapter"},
+    {"test_id": "BuildLayoutTest.sdsAc11_OPS_HTTP_002_AC1 (fragment 2)", "failure": "root test task failed before the build.gradle change"},
+    {"test_id": "DispatcherTest, DefaultRestAppTest, HttpAcceptanceTest, InMemoryHttpAdapterTest, HttpApiKotlinTest TestApp case (fragment 3)", "failure": "Unresolved reference 'TestApp'; :NaruServe-api:test exit 1"},
+    {"test_id": "DefaultRequestTest, BodyStateTest, LimitedInputStreamTest (fragment 4)", "failure": "compileTestJava: cannot find symbol BodyAlreadyConsumedException, BodyState, DefaultRequest, LimitedInputStream, BodyTooLargeException"},
+    {"test_id": "DefaultResponseTest, ResponseStreamTest, DispatcherTest (fragment 5)", "failure": "compileTestJava: cannot find symbol DefaultResponse / ResponseState; Dispatcher.invoke stub"},
+    {"test_id": "HttpDocsTest, RoutingDocsTest OPS-ROUTE-002 AC-3, DocsExamplesCompileTest (fragment 6)", "failure": "markers still present / expected 1 marker line found 4 / skip entry matched no block"},
+    {"test_id": "LimitedInputStreamTest, DefaultRequestTest + HttpApiKotlinTest primitive attribute, DefaultResponseTest header validation (review round 1)", "failure": "A-001/A-002/A-003 regression tests failed before the fix"},
+    {"test_id": "DefaultResponseTest.sdsAc7_FR_HTTP_015_AC4_charsAboveLatin1AreRefused (review round 2)", "failure": "expected 3 rejections, got 0"}
+  ],
+  "review_outcome": {"status": "TASK_DONE", "residual_critical": 0, "residual_high": 0, "residual_medium": 0, "residual_low": 30,
+    "detail": "Round 1: 3 reviewers over 41 code files (6 docs/api prose files excluded), 0 CRITICAL / 0 HIGH / 9 MEDIUM / 30 LOW. --auto: MEDIUM fixed, LOW auto-rejected. Round 1 fixes ef85d35: re-review resolved all and found 1 new MEDIUM (RA-001, header chars above U+00FF). Round 2 fix a4d3403: re-review 0/0/0, 2 LOW. recheck_B_iter1 repeats anchors where hunks are byte-identical one-line edits (no distinct anchor exists); the gate rests on round 2, whose coverage check is valid."},
+  "intentionally_empty": null,
+  "design_refuted": [],
+  "decisions": [
+    "Fragment 2's TestApp needs DefaultRestApp (fragment 3). Auto decision, ordering only: TestApp and its FR-HTTP-001 AC-2/AC-3 tests were built in the fragment 3 run, inside the lane write set.",
+    "Fragments 4/5 were allowed to edit Dispatcher.java and DispatcherTest.java (lane write set) to finish Dispatcher.invoke; the stub is gone.",
+    "RouterRegistrationTest now follows CON-ROUTE-006 and RoutingDocsTest follows OPS-ROUTE-002; the only assertions removed are the ones the successors drop (reviewer C checked this)."
+  ],
+  "spec_followups": [
+    "FR-HTTP-015 AC-4 and wave-3-5 SDS-AC-7 mention only CR/LF refusal; the code also refuses invalid header names, control chars and chars above U+00FF.",
+    "IR-HTTP-003: the HttpExchange.commit javadoc now fixes the Content-Length and ISO-8859-1 header contract (HEAD carries the GET length; commit length 0 for 204/304/HEAD, -1 when unknown). The TinyHttpd adapter must follow it.",
+    "Additions not in the SDS Interfaces: LimitedInputStream skip/mark overrides, BodyTooLargeException.limit(), DefaultResponse.afterHandler/afterFailure (package-private). HEAD commit-length and abort(error) retention are marked shortcut comments for later waves."
+  ],
+  "out_of_lease_paths": [],
+  "test_sufficiency": {
+    "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-3-1.sds.md": {"ids": ["CON-ROUTE-006","IR-HTTP-001","IR-HTTP-002","IR-HTTP-005","IR-HTTP-006"], "first": "gap: CON-ROUTE-006 AC-3, AC-4; IR-HTTP-006 AC-2", "final": "passed"},
+    "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-3-2.sds.md": {"ids": ["CON-HTTP-001","FR-HTTP-001","IR-HTTP-003","IR-HTTP-004","OPS-HTTP-002"], "first": "gap: CON-HTTP-001 AC-2, AC-3", "final": "passed"},
+    "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-3-3.sds.md": {"ids": ["CON-HTTP-001","FR-HTTP-002","FR-HTTP-003","FR-HTTP-004","FR-HTTP-005","FR-HTTP-006","FR-HTTP-007","FR-HTTP-008"], "first": "gap: CON-HTTP-001 AC-2, AC-3; SDS-AC-7..10 not cited in DispatcherTest", "final": "passed"},
+    "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-3-4.sds.md": {"ids": ["FR-HTTP-009","FR-HTTP-010","FR-HTTP-011","FR-HTTP-012","FR-HTTP-019","FR-HTTP-020"], "first": "passed", "final": "passed"},
+    "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-3-5.sds.md": {"ids": ["FR-HTTP-013","FR-HTTP-014","FR-HTTP-015","FR-HTTP-016","FR-HTTP-017","FR-HTTP-018"], "first": "passed", "final": "passed"},
+    "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-3-6.sds.md": {"ids": ["OPS-HTTP-001","OPS-HTTP-002","OPS-ROUTE-002"], "first": "passed", "final": "passed"},
+    "fill_rounds": 1,
+    "tool": "speckiwi coverage --tests --ids <ids> --sds <fragment> --json, run in the worktree"
+  },
+  "verification": {"command": "./gradlew build", "exit_code": 0, "head_sha": "a4d3403a786e0ee895c72c3ea53fe4c28a3477f4"}
+}

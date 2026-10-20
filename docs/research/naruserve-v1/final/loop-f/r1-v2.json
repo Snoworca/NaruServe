@@ -1,0 +1,35 @@
+{
+  "findings": [
+    {
+      "finding_id": "P2-001",
+      "severity": "low",
+      "items": ["OPS-REL-003", "docs/release/test-results.md", "docs/release/release-notes.md"],
+      "claim": "The recorded full-suite run no longer describes the merged head. test-results.md records run full-suite as commit=5a03978 'working tree with the wave-8 SRS evidence rows', tests=1534; the API 21 check lines of release-notes.md cite the same commit. The head 3806d59 runs 1561 tests (27 more, added by the terminal-review fix commits) and a 'working tree' reference cannot be reproduced. ReleaseResultsDocsTest.ops_REL_003_AC4 only asserts tests > 0 and exit=0, so it cannot detect that the record has gone stale.",
+      "evidence": "docs/release/test-results.md:98; docs/release/release-notes.md (API 21 checks); src/test/java/com/snoworca/naruserve/docs/ReleaseResultsDocsTest.java:185-190. Regression at 3806d59: 1561 tests, 0 failures, 0 errors, 0 skipped.",
+      "suggested_fix": "Re-run ./gradlew build --rerun-tasks on the final committed head and rewrite the full-suite line and the three API 21 check lines with that commit hash and tests=1561 (no 'working tree' wording). Optionally have the docs test compare the recorded commit with git rev-parse HEAD~N ancestry or drop the exact figure, so the record cannot silently drift."
+    },
+    {
+      "finding_id": "P2-002",
+      "severity": "low",
+      "items": ["IR-WS-001", "IR-APP-004", "FR-WS-006", "docs/api/websocket.md"],
+      "claim": "Java null-literal trap of the overloaded attribute accessor is documented for req and ctx but not for the WebSocket session, and not in any Javadoc. WebSocketSession.attribute(String, Object) and attribute(String, Class<T>) are overloads; ws.attribute(\"user\", null) in Java binds to the Class<T> read overload, whose implementation dereferences the null type and throws NullPointerException instead of removing the key. websocket.md states 'attribute(key, value): null is cleared' with no caveat, while request.md and lifecycle.md carry the warning. The Javadoc of the three interfaces says 'a null value removes the key' with no caveat either.",
+      "evidence": "docs/api/websocket.md:130-131; NaruServe-api/src/main/java/com/snoworca/naruserve/WebSocketSession.java:43-47; NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultWebSocketSession.java:516-518 (DefaultRequest.wrapper(type) -> type.isPrimitive() NPE); docs/api/request.md:181 and docs/api/lifecycle.md (attribute section) for the documented counterpart.",
+      "suggested_fix": "Add the same sentence as request.md to the websocket.md attribute table (and to the Javadoc of the three attribute(key, Object) declarations): pass a typed null variable or (Object) null. A Java user hits this at runtime only; no compile-time signal exists."
+    },
+    {
+      "finding_id": "P2-003",
+      "severity": "low",
+      "items": ["IR-ENGINE-001", "IR-APP-007", "FR-APP-002"],
+      "claim": "Failure atomicity of the configurer methods is inconsistent. multipart, webSocket and sse run the configurer on a copy and keep it only when it returns (their Javadoc says so), but server(...) and accessLog(...) run the configurer on the live options object. A configurer that throws part-way (for example app.server(o -> o.maxWorkers(10).maxSseStreams(0)) which throws IllegalArgumentException from the second call) leaves maxWorkers already changed, so a caller that catches the IllegalArgumentException and continues starts the app with a half-applied server configuration.",
+      "evidence": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:229-258 (reconfigure on a copy) versus :367-383 (accessLog and server mutate accessLogOptions / serverOptions in place); RestApp.java Javadoc of multipart/webSocket/sse ('keeps the copy only when it returns') versus server/accessLog ('Runs configurer at once ... calls apply in order').",
+      "suggested_fix": "Either give DefaultServerOptions and DefaultAccessLogOptions a copy() and reuse reconfigure(...), or state in the server/accessLog Javadoc and docs/api/app.md that a throwing configurer leaves the options partly applied. The first is small: both classes are plain field holders."
+    }
+  ],
+  "regression": {
+    "command": "./gradlew build --rerun-tasks",
+    "exit_code": 0,
+    "failing_tests": [],
+    "tests_total": 1561
+  },
+  "substantive_clean": true
+}

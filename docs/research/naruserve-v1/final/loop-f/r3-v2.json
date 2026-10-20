@@ -1,0 +1,34 @@
+{
+ "findings": [
+  {
+   "finding_id": "P2-001",
+   "severity": "medium",
+   "items": [
+    "FR-APP-006",
+    "D-133",
+    "D-137"
+   ],
+   "claim": "The standard error body gives message \"Error\" for every status outside a 12-entry reason table, although FR-APP-006 AC-3 (verified) and docs/api/middleware.md say the message is the status reason phrase when the HttpException has no message. Live against RestApp.create(): `throw new HttpException(403)` answers {\"error\":{\"code\":\"HTTP_403\",\"message\":\"Error\",...}}, and 401, 429 (and by the same table 409, 410, 416, 414, 431, ...) give the same \"Error\". The static handler's 416 and the WebSocket Origin 403 also carry \"Error\". These are the statuses an Express user throws most often (auth and rate-limit), and Express's res.sendStatus would give Forbidden/Unauthorized. The behaviour is pinned by StandardErrorsTest (reason(418) == \"Error\") and WebSocketOriginTest, so no test notices the mismatch with AC-3 and the docs; middleware.md documents the HTTP_<status> code of unlisted statuses but never the \"Error\" message.",
+   "evidence": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StandardErrors.java:31-47 (default: return \"Error\"); docs/spec/05.application.srs.md:1130 (FR-APP-006 AC-3); docs/api/middleware.md:205 and :220; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StandardErrorsTest.java:33; NaruServe-api/src/test/java/com/snoworca/naruserve/WebSocketOriginTest.java:43",
+   "suggested_fix": "Extend StandardErrors.reason() to the full IANA 4xx/5xx reason-phrase set (401 Unauthorized, 403 Forbidden, 409 Conflict, 410 Gone, 414, 416, 417, 429, 431, 502, 504 ...) and keep \"Error\" only for numbers that have no registered phrase; update the two pinned tests (418 becomes \"I'm a teapot\" or use a truly unassigned status such as 499) and add one line to middleware.md naming the fallback."
+  },
+  {
+   "finding_id": "P2-002",
+   "severity": "low",
+   "items": [
+    "FR-APP-011",
+    "IR-APP-005"
+   ],
+   "claim": "A shutdown() issued from inside a request handler (the usual POST /shutdown endpoint) over a keep-alive client leaves the app in STOPPING for about 2 s although nothing is pending: in about half of the live runs (HttpURLConnection client, handler calls res.send then app.shutdown(3, SECONDS)) the state reached TERMINATED after 2015-2051 ms, in the others after 17-512 ms. A thread dump during the wait shows naruserve-shutdown in TinyHttpd HttpServer.stop's sleepQuietly(10) loop and the request worker parked in InputBuffer.fill, i.e. the connection that carried the stopping request is still reading the next request and is only aborted by TinyHttpd's per-connection close grace. The same shutdown from outside while a request is in flight finishes as soon as the request does (about 210 ms for a 300 ms request), so only the handler-initiated race is slow. The delay is bounded by the timeout, but awaitTermination/state polling and tests that stop the app from a handler see an unexplained 2 s, and docs/api/lifecycle.md does not mention it.",
+   "evidence": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:652-667 (handler-thread shutdown starts naruserve-shutdown while the request is still in flight); /Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/HttpServer.java:466-481 and Connection.java:501-506 (closeIfGraceOver); NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdAdapter.java:167-180",
+   "suggested_fix": "Cheapest: when the response of the request that triggered shutdown is not yet committed, or in TinyHttpdExchange when the app state is STOPPING at response end, add Connection: close so TinyHttpd ends the connection with the response; otherwise state the up-to-2 s drain of the triggering connection in docs/api/lifecycle.md (TinyHttpd stays read-only, so no upstream change)."
+  }
+ ],
+ "regression": {
+  "command": "./gradlew build --rerun-tasks",
+  "exit_code": 0,
+  "failing_tests": [],
+  "tests_total": 1567
+ },
+ "substantive_clean": false
+}
