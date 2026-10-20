@@ -41,6 +41,8 @@ public final class RecordingExchange implements HttpExchange {
     public Runnable onCommit = () -> { };
     public volatile List<Map.Entry<String, String>> headers = Collections.emptyList();
     public final ByteArrayOutputStream body = new ByteArrayOutputStream();
+    /** Thrown by {@link #eventStream} when set (an IOException or a RuntimeException). */
+    public volatile @Nullable Exception eventStreamFailure;
 
     /** {@code headerPairs} are request header name, value, name, value, ... */
     public RecordingExchange(String method, String path, String... headerPairs) {
@@ -147,7 +149,15 @@ public final class RecordingExchange implements HttpExchange {
     }
 
     @Override
-    public void eventStream(int status, List<Map.Entry<String, String>> headers, StreamDrain drain) {
+    public void eventStream(int status, List<Map.Entry<String, String>> headers, StreamDrain drain)
+            throws IOException {
+        Exception e = eventStreamFailure;
+        if (e instanceof IOException) {
+            throw (IOException) e;
+        }
+        if (e instanceof RuntimeException) {
+            throw (RuntimeException) e;
+        }
         throw new UnsupportedOperationException();
     }
 }

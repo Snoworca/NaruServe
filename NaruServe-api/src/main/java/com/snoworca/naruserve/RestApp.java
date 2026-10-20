@@ -214,6 +214,13 @@ public interface RestApp {
     // @req IR-WS-001
     RestApp webSocket(Configurer<WebSocketOptions> configurer);
 
+    /**
+     * Runs {@code configurer} at once on a copy of the app's SSE options, as {@code app.sse(o ->
+     * o.heartbeatInterval(30, TimeUnit.SECONDS))}, and keeps the copy only when it returns; calls apply in order.
+     */
+    // @req IR-SSE-001
+    RestApp sse(Configurer<SseOptions> configurer);
+
     /** Explicit app assembly; each setter returns this builder and each {@link #build()} returns a new app. */
     // @req IR-APP-001
     final class Builder {

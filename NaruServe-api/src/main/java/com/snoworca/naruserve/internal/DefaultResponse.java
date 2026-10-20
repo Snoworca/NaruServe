@@ -1,11 +1,13 @@
 package com.snoworca.naruserve.internal;
 
 import com.snoworca.naruserve.CachePolicy;
+import com.snoworca.naruserve.ConsoleLogger;
 import com.snoworca.naruserve.Cookie;
 import com.snoworca.naruserve.HttpException;
 import com.snoworca.naruserve.Method;
 import com.snoworca.naruserve.ResourceResolver;
 import com.snoworca.naruserve.Response;
+import com.snoworca.naruserve.SseClient;
 import com.snoworca.naruserve.spi.HttpExchange;
 import com.snoworca.naruserve.spi.JsonCodec;
 import java.io.ByteArrayOutputStream;
@@ -43,6 +45,8 @@ import org.jspecify.annotations.Nullable;
 // @req FR-HTTP-018
 // @req FR-JSON-002
 // @req FR-COOKIE-001
+// @req IR-SSE-001
+// @req FR-SSE-001
 public final class DefaultResponse implements Response {
 
     private static final int CHUNK = 8192;
@@ -72,6 +76,8 @@ public final class DefaultResponse implements Response {
     private @Nullable CachePolicy defaultCache;
     /** Bytes the pending copy must deliver; -1 copies to the end of the input. */
     private long pendingLimit = -1;
+    private @Nullable SseRegistry sseRegistry;
+    private @Nullable DefaultSseClient sseClient;
 
     /** Status 200, no headers, state NEW; {@code headRequest} makes every body bodyless. */
     // @req FR-HTTP-013
@@ -95,6 +101,121 @@ public final class DefaultResponse implements Response {
     /** The app's test hook for the resolver {@link #file} and {@link #download} read through. */
     void resolverTap(FileResponder.@Nullable ResolverTap tap) {
         this.tap = tap;
+    }
+
+    /** The app's SSE registry for {@link #sse}; unset means a registry of the default options. */
+    // @req IR-SSE-001
+    void sseRegistry(SseRegistry registry) {
+        this.sseRegistry = registry;
+    }
+
+    /**
+     * Commits 200 with the event-stream headers, replacing an app-set Content-Type and Cache-Control and dropping
+     * Content-Length and Transfer-Encoding, and enters STREAMING. A HEAD request gets the headers with no body and an
+     * ended client. A RuntimeException from the exchange (a 503 from a stream limit) leaves the response NEW and is
+     * rethrown for the error path; an IOException aborts the response and returns an ended client.
+     */
+    // @req IR-SSE-001
+    // @req FR-SSE-001
+    @Override
+    public SseClient sse() {
+        SseRegistry reg;
+        Commit head = null;
+        List<Map.Entry<String, String>> hs;
+        DefaultSseClient client = null;
+        int oldStatus;
+        List<Map.Entry<String, String>> oldHeaders;
+        DefaultRequest req = request;
+        String rid = req != null ? req.requestId() : "";
+        synchronized (this) {
+            requireNew();
+            oldStatus = status;
+            oldHeaders = new ArrayList<>(headers);
+            status = 200;
+            put("Content-Type", "text/event-stream; charset=UTF-8");
+            put("Cache-Control", "no-cache, no-transform");
+            remove("Content-Length");
+            remove("Transfer-Encoding");
+            hs = new ArrayList<>(headers);
+            if (sseRegistry == null) {
+                sseRegistry = new SseRegistry(new DefaultSseOptions(), null, new SafeLogger(new ConsoleLogger()));
+            }
+            reg = sseRegistry;
+            if (headRequest) {
+                head = begin(0, EMPTY);
+            } else {
+                committed = true;
+                state = ResponseState.STREAMING;
+                // Set under the same lock, so an abort from another thread from here on ends this client.
+                client = new DefaultSseClient(this, reg, Thread.currentThread(), rid);
+                sseClient = client;
+            }
+        }
+        if (client == null) {
+            deliver(Objects.requireNonNull(head));
+            return DefaultSseClient.ended(rid, reg.log());
+        }
+        reg.register(client);
+        try {
+            ex.eventStream(200, hs, client);
+        } catch (RuntimeException e) {
+            reg.remove(client);
+            boolean reopened = false;
+            synchronized (this) {
+                if (state == ResponseState.STREAMING && !handlerDone) {
+                    sseClient = null;
+                    state = ResponseState.NEW;
+                    committed = false;
+                    status = oldStatus; // an app that catches the refusal answers with its own status and headers
+                    headers.clear();
+                    headers.addAll(oldHeaders);
+                    reopened = true;
+                }
+            }
+            if (!reopened) {
+                abort(e); // the Dispatcher already passed, so nothing else would end this response
+            }
+            throw e;
+        } catch (IOException e) {
+            reg.remove(client);
+            client.endBy("client");
+            abort(e);
+            client.runListeners();
+        } catch (Error e) {
+            reg.remove(client);
+            abort(e);
+            throw e;
+        }
+        return client;
+    }
+
+    /**
+     * The end of an SSE stream, called by its drain: STREAMING becomes COMPLETED through {@code ex.finish()}, or
+     * ABORTED for a {@code failure}.
+     */
+    // @req IR-SSE-001
+    void sseEnded(@Nullable Throwable failure) {
+        if (failure != null) {
+            abort(failure);
+            return;
+        }
+        synchronized (this) {
+            if (state != ResponseState.STREAMING) {
+                return;
+            }
+        }
+        try {
+            ex.finish();
+        } catch (IOException | RuntimeException e) {
+            abort(e);
+            return;
+        }
+        synchronized (this) {
+            if (state == ResponseState.STREAMING) {
+                state = ResponseState.COMPLETED;
+            }
+        }
+        fireDone();
     }
 
     /** The request whose method and conditional headers {@link #file} and {@link #download} evaluate. */
@@ -544,12 +665,17 @@ public final class DefaultResponse implements Response {
     @Override
     public void abort(@Nullable Throwable error) {
         boolean copyRunning;
+        DefaultSseClient sse;
         synchronized (this) {
             if (state == ResponseState.COMPLETED || state == ResponseState.ABORTED) {
                 return;
             }
             state = ResponseState.ABORTED;
             copyRunning = copying;
+            sse = sseClient;
+        }
+        if (sse != null) {
+            sse.endBy("error"); // wakes a waiting drain, which writes what is queued and ends
         }
         ex.abort();
         if (!copyRunning) {

@@ -16,6 +16,7 @@ import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.TypeVariable;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -26,8 +27,9 @@ import org.junit.Test;
 public class HttpApiSurfaceTest {
 
     // IR-JSON-002 AC-8: body and json left this list in wave 5; FR-COOKIE-002 AC-8: so did the cookie methods;
-    // IR-MULTIPART-002 AC-6: form, file, files and parts left it in wave 6; IR-STATIC-002 AC-5: so did cache and download.
-    private static final List<String> LATER_WAVE_NAMES = Arrays.asList("sse");
+    // IR-MULTIPART-002 AC-6: form, file, files and parts left it in wave 6; IR-STATIC-002 AC-5: so did cache and download;
+    // IR-SSE-001 AC-1: sse left it in wave 7, so no later-wave name is left.
+    private static final List<String> LATER_WAVE_NAMES = Collections.<String>emptyList();
 
     /** "name(paramSimpleNames)->returnSimpleName" for every public method a type declares. */
     private static Set<String> signatures(Class<?> type) {
@@ -137,10 +139,73 @@ public class HttpApiSurfaceTest {
                 // wave 5: FR-COOKIE-002 AC-8
                 "addCookie(Cookie)->Response",
                 // wave 6: IR-STATIC-002 AC-5
-                "cache(CachePolicy)->Response", "file(File)->void", "download(File,String)->void"),
+                "cache(CachePolicy)->Response", "file(File)->void", "download(File,String)->void",
+                // wave 7: IR-SSE-001 AC-1
+                "sse()->SseClient"),
                 signatures(Response.class));
         assertEquals(InputStream.class, Response.class.getMethod("stream", InputStream.class, String.class)
                 .getParameterTypes()[0]);
+    }
+
+    // SDS-AC-1 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-9.sds.md; IR-SSE-001 AC-1
+    @Test
+    public void sdsAc1_IR_SSE_001_AC1_sseIsADefaultMethodThatDefaultResponseOverrides() throws Exception {
+        java.lang.reflect.Method sse = Response.class.getMethod("sse");
+        assertTrue(sse.isDefault());
+        assertEquals(SseClient.class, sse.getReturnType());
+        assertFalse(sse.getAnnotatedReturnType().isAnnotationPresent(Nullable.class));
+        java.lang.reflect.Method override = com.snoworca.naruserve.internal.DefaultResponse.class
+                .getDeclaredMethod("sse");
+        assertEquals(SseClient.class, override.getReturnType());
+        assertTrue(Modifier.isPublic(override.getModifiers()));
+        try {
+            new BareResponse().sse();
+            fail("the default sse() returned");
+        } catch (UnsupportedOperationException e) {
+            assertEquals(BareResponse.class.getName() + " has no SSE writer", e.getMessage());
+        }
+    }
+
+    /** A Response that overrides no default method. */
+    private static final class BareResponse implements Response {
+        @Override
+        public Response status(int code) {
+            return this;
+        }
+
+        @Override
+        public Response header(String name, String value) {
+            return this;
+        }
+
+        @Override
+        public void send(String body) {
+        }
+
+        @Override
+        public void send(byte[] body) {
+        }
+
+        @Override
+        public void html(String body) {
+        }
+
+        @Override
+        public void stream(InputStream in, String contentType) {
+        }
+
+        @Override
+        public void end() {
+        }
+
+        @Override
+        public boolean isCommitted() {
+            return false;
+        }
+
+        @Override
+        public void abort(@Nullable Throwable error) {
+        }
     }
 
     // SDS-AC-2 (wave 4-2); IR-APP-004 AC-3: the IR-HTTP-001 AC-3 surface test is re-pointed to expect these
@@ -291,7 +356,9 @@ public class HttpApiSurfaceTest {
                 "staticFiles(String,File)->RestApp", "staticFiles(String,File,Configurer)->RestApp",
                 "mimeTypes()->MimeTypes", "defaultCache(CachePolicy)->RestApp",
                 // wave 7: IR-WS-001 AC-1, AC-6
-                "ws(String,WebSocketHandler)->RestApp", "webSocket(Configurer)->RestApp"), signatures(RestApp.class));
+                "ws(String,WebSocketHandler)->RestApp", "webSocket(Configurer)->RestApp",
+                // wave 7: IR-SSE-001 AC-4
+                "sse(Configurer)->RestApp"), signatures(RestApp.class));
         assertEquals(0, RestApp.class.getInterfaces().length);
         List<String> statics = new java.util.ArrayList<>();
         for (java.lang.reflect.Method m : RestApp.class.getDeclaredMethods()) {

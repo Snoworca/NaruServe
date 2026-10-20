@@ -21,6 +21,7 @@ import com.snoworca.naruserve.ServerHandle;
 import com.snoworca.naruserve.ServerOptions;
 import com.snoworca.naruserve.StaticOptions;
 import com.snoworca.naruserve.WebSocketHandler;
+import com.snoworca.naruserve.SseOptions;
 import com.snoworca.naruserve.WebSocketOptions;
 import com.snoworca.naruserve.routing.RouteKind;
 import com.snoworca.naruserve.routing.RoutePattern;
@@ -107,6 +108,9 @@ public final class DefaultRestApp implements RestApp {
     private volatile DefaultWebSocketOptions webSocketOptions = new DefaultWebSocketOptions();
     /** The copy freeze took for the upgrade step; null before freeze. */
     volatile @Nullable DefaultWebSocketOptions frozenWebSocketOptions;
+    private volatile DefaultSseOptions sseOptions = new DefaultSseOptions();
+    /** The copy freeze took for the SSE streams; null before freeze. */
+    volatile @Nullable DefaultSseOptions frozenSseOptions;
     private final List<StaticMount> staticMounts = new ArrayList<>();
     private volatile @Nullable CachePolicy defaultCache;
     private volatile Logger logger;
@@ -231,6 +235,23 @@ public final class DefaultRestApp implements RestApp {
         DefaultWebSocketOptions next = webSocketOptions.copy();
         configurer.configure(next);
         this.webSocketOptions = next;
+        return this;
+    }
+
+    /** The current SSE options; the defaults unless {@link #sse(Configurer)} changed them. */
+    // @req IR-SSE-001
+    public DefaultSseOptions sseOptions() {
+        return sseOptions;
+    }
+
+    // @req IR-SSE-001
+    @Override
+    public synchronized RestApp sse(Configurer<SseOptions> configurer) {
+        lifecycle.requireConfigurable("sse");
+        Objects.requireNonNull(configurer, "configurer");
+        DefaultSseOptions next = sseOptions.copy();
+        configurer.configure(next);
+        this.sseOptions = next;
         return this;
     }
 
@@ -915,6 +936,7 @@ public final class DefaultRestApp implements RestApp {
         }
         DefaultWebSocketOptions ws = webSocketOptions().copy();
         frozenWebSocketOptions = ws;
+        frozenSseOptions = sseOptions().copy();
         SafeLogger safe = new SafeLogger(logger); // the logger is fixed from here: logger(...) needs an unfrozen app
         WebSocketSender.IntSupplier port = () -> boundPort; // threads are made after bind, so they see the real port
         WebSocketSender sender = new WebSocketSender(serverOptions.maxUpgradedConnections(), port, safe);

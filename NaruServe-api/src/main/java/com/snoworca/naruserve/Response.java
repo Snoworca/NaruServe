@@ -5,13 +5,14 @@ import java.io.InputStream;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Writer for one HTTP response, with {@link #json} and {@link #addCookie} since wave 5 and {@link #cache},
- * {@link #file} and {@link #download} since wave 6. No sse method yet; a later wave adds it.
+ * Writer for one HTTP response, with {@link #json} and {@link #addCookie} since wave 5, {@link #cache},
+ * {@link #file} and {@link #download} since wave 6 and {@link #sse} since wave 7.
  */
 // @req IR-HTTP-001
 // @req IR-JSON-002
 // @req FR-COOKIE-001
 // @req IR-STATIC-002
+// @req IR-SSE-001
 public interface Response {
 
     /**
@@ -93,5 +94,16 @@ public interface Response {
     // @req IR-STATIC-002
     default void download(File file, String filename) {
         throw new UnsupportedOperationException(getClass().getName() + " has no file writer");
+    }
+
+    /**
+     * Starts a Server-Sent Events stream: commits status {@code 200} with {@code Content-Type: text/event-stream;
+     * charset=UTF-8} and {@code Cache-Control: no-cache, no-transform} and returns the stream, which stays open after
+     * the handler returns. A committed response throws {@link IllegalStateException}. The default throws
+     * {@link UnsupportedOperationException}.
+     */
+    // @req IR-SSE-001
+    default SseClient sse() {
+        throw new UnsupportedOperationException(getClass().getName() + " has no SSE writer");
     }
 }

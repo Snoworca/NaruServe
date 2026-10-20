@@ -119,7 +119,6 @@ public final class DocsExamplesCompileTest {
                     "app-defined methods `find`, `create` and `remove` (the block calls them on the app)"),
             skip("servlet.md", "// 앱 구성: 내장 엔진과 같은 코드",
                     "app-defined type `UserService` (the block is a method declaration, not statements)"),
-            skip("sse.md", "#1", "later-wave method `Response.sse()`"),
             skip("sse.md", "app.get(\"/api/progress\", (req, res) -> {", "later-wave method `Response.sse()`"),
             skip("sse.md", "client.send(SseEvent.event(\"progress\")", "absent type `SseEvent`"),
             skip("sse.md", "#4", "later-wave method `Response.sse()`"),
@@ -621,9 +620,9 @@ public final class DocsExamplesCompileTest {
                 skip("a.md", "#4", "app-defined type `WebSocketSession`"),
                 skip("a.md", "#5", "absent types `Gson` and `WebSocketOptions`")));
         assertEquals(fake.toString(), 3, fake.size());
-        // shortcut: these four sse.md skips wait for OPS-SSE-001 (wave 7 part 13), which drops them; drop this
+        // shortcut: these sse.md skips wait for OPS-SSE-001 (wave 7 part 13), which drops them; drop this
         // exclusion there
-        List<String> sseBlocks = Arrays.asList("#1", "app.get(\"/api/progress\", (req, res) -> {",
+        List<String> sseBlocks = Arrays.asList("app.get(\"/api/progress\", (req, res) -> {",
                 "client.send(SseEvent.event(\"progress\")", "#4");
         List<Skip> others = new ArrayList<>();
         for (Skip s : SKIPS) {

@@ -365,6 +365,38 @@ public class DefaultRestAppTest {
         assertEquals(4096, frozen.settings().maxMessageBytes());
     }
 
+    // SDS-AC-5 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-9.sds.md; IR-SSE-001 AC-5
+    @Test
+    public void sdsAc5_IR_SSE_001_AC5_anAppThatNeverCallsSseFreezesTheDefaultHeartbeatAndQueueSize() {
+        DefaultRestApp app = new DefaultRestApp();
+        assertEquals(15000L, app.sseOptions().heartbeatMillis());
+        assertEquals(262144, app.sseOptions().sendQueueSize());
+        app.freeze();
+        DefaultSseOptions frozen = app.frozenSseOptions;
+        assertTrue(frozen != null && frozen != app.sseOptions());
+        assertEquals(15000L, frozen.heartbeatMillis());
+        assertEquals(262144, frozen.sendQueueSize());
+    }
+
+    // SDS-AC-5; IR-SSE-001 AC-4, AC-5
+    @Test
+    public void sdsAc5_IR_SSE_001_AC4_AC5_freezeKeepsACopyOfTheConfiguredSseOptions() {
+        DefaultRestApp app = new DefaultRestApp();
+        app.sse(o -> o.heartbeatInterval(3, java.util.concurrent.TimeUnit.SECONDS).sendQueueSize(2048));
+        DefaultSseOptions current = app.sseOptions();
+        app.freeze();
+        DefaultSseOptions frozen = app.frozenSseOptions;
+        assertTrue(frozen != null && frozen != current);
+        assertEquals(3000L, frozen.heartbeatMillis());
+        assertEquals(2048, frozen.sendQueueSize());
+        current.sendQueueSize(1); // a retained options object changed after freeze does not reach the copy
+        assertEquals(2048, frozen.sendQueueSize());
+        DefaultSseOptions copy = frozen.copy();
+        assertTrue(copy != frozen);
+        assertEquals(3000L, copy.heartbeatMillis());
+        assertEquals(2048, copy.sendQueueSize());
+    }
+
     // SDS-AC-1 (wave-7-2); IR-WS-001 AC-2
     @Test
     public void sdsAc1_IR_WS_001_AC2_wsRecordsAWebSocketRouteCarryingTheHandler() {
