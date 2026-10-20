@@ -12,6 +12,7 @@ import org.junit.Test
 /** The docs/api/websocket.md Kotlin examples, compiled and run over the in-memory adapter (T11). */
 class WebSocketDocsKotlinTest {
 
+    // docs-example: websocket.md#2
     // SDS-AC-6 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-8.sds.md; OPS-WS-001 AC-7
     @Test(timeout = 20000)
     fun `OPS-WS-001 AC-7 the echo and options examples compile and run and echo hi`() {

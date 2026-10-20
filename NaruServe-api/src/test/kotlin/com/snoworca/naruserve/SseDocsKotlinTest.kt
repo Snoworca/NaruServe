@@ -12,6 +12,7 @@ import org.junit.Test
 /** The docs/api/sse.md Kotlin progress example, compiled and run over the in-memory adapter (T11). */
 class SseDocsKotlinTest {
 
+    // docs-example: sse.md#1
     // SDS-AC-8 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-13.sds.md; OPS-SSE-001 AC-5
     @Test(timeout = 20000)
     fun `OPS-SSE-001 AC-5 the progress example compiles and runs and sends connected ready`() {

@@ -200,6 +200,14 @@ project(':NaruServe-gson') {
     }
 }
 
+// The reified Request.body extension tests drive an app over the in-memory adapter (IR-KT-002 AC-1).
+project(':NaruServe-kotlin') {
+    // @req IR-KT-002
+    dependencies {
+        testImplementation testFixtures(project(':NaruServe-api'))
+    }
+}
+
 // TinyHttpd adapter socket tests drive a real app over the adapter with the fixture codec and logger (FR-ENGINE-001).
 project(':NaruServe-tinyhttpd') {
     // @req FR-ENGINE-001
