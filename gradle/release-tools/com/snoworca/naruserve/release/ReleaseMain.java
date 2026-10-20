@@ -1,5 +1,6 @@
 package com.snoworca.naruserve.release;
 
+import com.snoworca.naruserve.release.LicenseCheck.License;
 import com.snoworca.naruserve.release.ScanReport.Finding;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -15,8 +16,14 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.SortedMap;
+import java.util.SortedSet;
+import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -31,10 +38,13 @@ public final class ReleaseMain {
 
     /**
      * {@code scan-report <exit> <child csv> <graph report> <out> <child log> <scanner>} writes the scan report;
-     * {@code gate <report> <exceptions>} prints the release decision and exits 1 when it blocks.
+     * {@code gate <report> <exceptions>} prints the release decision and exits 1 when it blocks;
+     * {@code licenses <graph report> <pom dir> <out> [<group:name>=<license>|<url> ...]} writes
+     * THIRD-PARTY-LICENSES.md, or exits 1 naming each shipped dependency whose license is GPL-family or unknown.
      */
     // @req FR-REL-002
     // @req FR-REL-003
+    // @req FR-REL-004
     public static void main(String[] args) throws IOException {
         String command = args.length > 0 ? args[0] : "";
         if (command.equals("scan-report") && args.length == 7) {
@@ -59,10 +69,81 @@ public final class ReleaseMain {
             if (!decision.pass) {
                 System.exit(1);
             }
+        } else if (command.equals("licenses") && args.length >= 4) {
+            licenses(args);
         } else {
-            System.err.println("usage: scan-report <exit> <csv> <graph> <out> <log> <scanner> | gate <report> <exceptions>");
+            System.err.println("usage: scan-report <exit> <csv> <graph> <out> <log> <scanner> | gate <report> <exceptions>"
+                    + " | licenses <graph> <pom dir> <out> [<group:name>=<license>|<url> ...]");
             System.exit(2);
         }
+    }
+
+    /** The {@code licenses} command: shipped rows must pass {@link LicenseCheck#verdict}; provided rows are listed. */
+    // @req FR-REL-004
+    private static void licenses(String[] args) throws IOException {
+        List<String> graph = Arrays.asList(read(new File(args[1])).split("\r?\n"));
+        File pomDir = new File(args[2]);
+        Map<String, License> overrides = new HashMap<>();
+        for (String o : Arrays.asList(args).subList(4, args.length)) {
+            int eq = o.indexOf('=');
+            int bar = eq < 0 ? -1 : o.indexOf('|', eq);
+            if (bar < 0) {
+                throw new IllegalArgumentException("override must be <group:name>=<license>|<url>: " + o);
+            }
+            overrides.put(o.substring(0, eq), new License(o.substring(eq + 1, bar), o.substring(bar + 1)));
+        }
+        SortedSet<String> shipped = DependencyList.runtime(graph);
+        SortedMap<String, License> rows = new TreeMap<>();
+        List<String> failures = new ArrayList<>();
+        for (String dep : shipped) {
+            License override = overrides.get(dep.substring(0, dep.lastIndexOf(':')));
+            List<License> found = override != null ? Arrays.asList(override)
+                    : LicenseCheck.licensesOf(pomChain(pomDir, dep));
+            LicenseCheck.Verdict verdict = LicenseCheck.verdict(found);
+            if (override == null && !new File(pomDir, dep.replace(':', '/') + "/0.pom").isFile()) {
+                failures.add(dep + ": POM not resolved (offline, or no repository serves it)");
+            } else if (!verdict.pass) {
+                failures.add(dep + ": " + verdict.message);
+            }
+            rows.put(dep, joined(found));
+        }
+        List<String> provided = new ArrayList<>();
+        for (String dep : ThirdPartyLicenses.provided(graph)) {
+            License l = joined(LicenseCheck.licensesOf(pomChain(pomDir, dep)));
+            provided.add(dep + " | " + (l.name.isEmpty() ? "unknown" : l.name) + " | "
+                    + (l.url.isEmpty() ? "-" : l.url));
+        }
+        if (!failures.isEmpty()) {
+            for (String f : failures) {
+                System.err.println("releaseLicenses: " + f);
+            }
+            System.exit(1);
+        }
+        write(new File(args[3]), ThirdPartyLicenses.render(rows, provided));
+        System.out.println("THIRD-PARTY-LICENSES.md: " + rows.size() + " shipped, " + provided.size() + " provided");
+    }
+
+    /** The POMs releaseLicenses stored as {@code <pom dir>/<group>/<name>/<version>/<n>.pom}, child first. */
+    private static List<String> pomChain(File pomDir, String dep) throws IOException {
+        File dir = new File(pomDir, dep.replace(':', '/'));
+        List<String> chain = new ArrayList<>();
+        for (int i = 0; new File(dir, i + ".pom").isFile(); i++) {
+            chain.add(read(new File(dir, i + ".pom")));
+        }
+        return chain;
+    }
+
+    /** A dual license as one row: names joined with {@code OR}, URLs with a space. */
+    private static License joined(List<License> licenses) {
+        StringBuilder names = new StringBuilder();
+        StringBuilder urls = new StringBuilder();
+        for (License l : licenses) {
+            names.append(names.length() > 0 ? " OR " : "").append(l.name);
+            if (!l.url.isEmpty()) {
+                urls.append(urls.length() > 0 ? " " : "").append(l.url);
+            }
+        }
+        return new License(names.toString(), urls.toString());
     }
 
     /** One finding per data row of a Dependency-Check CSV report; CVSS v3, else v4, else v2, else NaN. */

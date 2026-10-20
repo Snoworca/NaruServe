@@ -144,11 +144,34 @@ def classRefPrefixes = { String path ->
     prefixes
 }
 
+// @req FR-REL-005
+// mavenLocal only: the publishing block declares no repository. The POM takes each dependency's resolved version, so the
+// versionless TinyHttpd declarations publish as the included build's 0.1.0-SNAPSHOT.
+def configurePublishing = { Project p ->
+    p.apply plugin: 'maven-publish'
+    p.publishing {
+        publications {
+            maven(MavenPublication) {
+                // p., or the closure owner (the root project, which applies 'java') would be used.
+                from p.components.java
+                versionMapping { allVariants { fromResolutionResult() } }
+            }
+        }
+    }
+    // The in-memory adapter test fixtures of NaruServe-api are for this build's tests, not for consumers.
+    p.plugins.withId('java-test-fixtures') {
+        ['testFixturesApiElements', 'testFixturesRuntimeElements'].each { cn ->
+            p.components.java.withVariantsFromConfiguration(p.configurations.getByName(cn)) { skip() }
+        }
+    }
+}
+
 configure(naruModules.collect { project(it) }) { p ->
     apply plugin: 'java-library'
     apply plugin: 'org.jetbrains.kotlin.jvm'
     configureCompile(p)
     configureDependencies(p)
+    configurePublishing(p)
 
     test {
         useJUnit()
@@ -449,6 +472,12 @@ test {
     systemProperty 'naruserve.gradleUserHome', gradle.gradleUserHomeDir.absolutePath
     systemProperty 'naruserve.offline', gradle.startParameter.offline
     systemProperty 'naruserve.testKitWorkDir', layout.buildDirectory.dir('testkit-work').get().asFile.absolutePath
+    // @req FR-REL-005
+    // PublishedPomTest reads the generated POMs; no nested Gradle build runs inside the test.
+    def pomFilesProperty = naruModules.collect { project(it).layout.buildDirectory
+            .file('publications/maven/pom-default.xml').get().asFile.absolutePath }.join(',')
+    dependsOn naruModules.collect { "${it}:generatePomFileForMavenPublication" }
+    systemProperty 'naruserve.pomFiles', pomFilesProperty
 }
 
 // @req FR-REL-001

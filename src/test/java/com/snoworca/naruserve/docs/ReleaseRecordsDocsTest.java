@@ -166,6 +166,29 @@ public final class ReleaseRecordsDocsTest {
         assertTrue("either 'no exceptions' or data rows, not both", none != (rows > 0));
     }
 
+    // SDS-AC-4 (wave-8-11); FR-REL-004 AC-4
+    @Test
+    public void fr_REL_004_AC4_licensesRunLineRecordsTheReleaseLicensesCommandAndResult() throws IOException {
+        String[] licenses = run("licenses");
+        assertTrue(licenses[0], licenses[0].contains("-Prelease") && licenses[0].contains("releaseLicenses"));
+        // ReleaseMain licenses prints "THIRD-PARTY-LICENSES.md: <n> shipped, <m> provided" only on success.
+        assertTrue("licenses result is the success line: " + licenses[2],
+                Pattern.compile("\\d+ shipped, \\d+ provided").matcher(licenses[2]).find());
+    }
+
+    // SDS-AC-5 (wave-8-11); FR-REL-005 AC-1
+    @Test
+    public void fr_REL_005_AC1_publishLocalRunLineNamesTheNineMavenLocalDirectories() throws IOException {
+        String[] publish = run("publish-local");
+        assertTrue(publish[0], publish[0].contains("publishToMavenLocal"));
+        assertFalse("publishToMavenLocal runs without -Prelease: " + publish[0], publish[0].contains("-Prelease"));
+        for (String module : MODULES) {
+            assertTrue("publish-local result names com/snoworca/naruserve/" + module + "/0.1.0-SNAPSHOT/: " + publish[2],
+                    Pattern.compile("(?<![\\w-])" + Pattern.quote("com/snoworca/naruserve/" + module + "/0.1.0-SNAPSHOT/"))
+                            .matcher(publish[2]).find());
+        }
+    }
+
     // SDS-AC-4; FR-REL-001 AC-4
     @Test
     public void fr_REL_001_AC4_offlineBuildRunExitedZero() throws IOException {

@@ -109,6 +109,64 @@ tasks.register('releaseScan', JavaExec) {
     }
 }
 
+// ---- License report (FR-REL-004) ----
+def pomDir = layout.buildDirectory.dir('reports/naruserve/poms')
+// The included TinyHttpd build has no POM; its checkout LICENSE opens "BSD 3-Clause License".
+def tinyHttpdLicenses = ['tinyhttpd-core', 'tinyhttpd-websocket'].collect {
+    "com.snoworca.tinyhttpd:${it}=BSD-3-Clause|TinyHttpd/LICENSE".toString()
+}
+
+// @req FR-REL-004
+tasks.register('releaseLicenses', JavaExec) {
+    description = 'Writes THIRD-PARTY-LICENSES.md; fails on a GPL-family or unknown license of a shipped dependency.'
+    group = 'release'
+    dependsOn 'compileReleaseTools', 'checkDependencyRules'
+    classpath = files(releaseToolsClasses)
+    mainClass = 'com.snoworca.naruserve.release.ReleaseMain'
+    def graphFile = graphReport.get().asFile
+    def outDir = pomDir.get().asFile
+    def overridden = tinyHttpdLicenses.collect { it.substring(0, it.indexOf('=')) } as Set
+    doFirst {
+        project.delete(outDir)
+        // The POM of a module version, or null when no repository serves one.
+        def resolvePom = { String g, String n, String v ->
+            def result = project.dependencies.createArtifactResolutionQuery().forModule(g, n, v)
+                    .withArtifacts(org.gradle.maven.MavenModule, org.gradle.maven.MavenPomArtifact).execute()
+            def poms = result.resolvedComponents.collectMany {
+                it.getArtifacts(org.gradle.maven.MavenPomArtifact)
+                        .findAll { a -> a instanceof org.gradle.api.artifacts.result.ResolvedArtifactResult }
+            }
+            poms ? poms[0].file : null
+        }
+        def coordinates = graphFile.readLines().collect { it.trim().split('\\|') }
+                .findAll { it.length == 3 && it[1] in ['compileClasspath', 'runtimeClasspath'] }
+                .collect { it[2] }
+                .findAll { !it.startsWith('com.snoworca.naruserve:') && !(it.substring(0, it.lastIndexOf(':')) in overridden) }
+                .unique()
+        coordinates.each { String coordinate ->
+            def (g, n, v) = coordinate.split(':') as List
+            int i = 0
+            // Child first, then each <parent>: a license declared only in a parent POM (slf4j-api) still counts.
+            while (g && i < 20) {
+                File pom = resolvePom(g, n, v)
+                if (pom == null) {
+                    break
+                }
+                project.copy {
+                    from pom
+                    into new File(outDir, coordinate.replace(':', '/'))
+                    rename { "${i}.pom" }
+                }
+                def parent = new groovy.xml.XmlSlurper().parse(pom).parent
+                (g, n, v) = [parent.groupId.text(), parent.artifactId.text(), parent.version.text()]
+                i++
+            }
+        }
+        args(['licenses', graphFile.absolutePath, outDir.absolutePath, file('THIRD-PARTY-LICENSES.md').absolutePath]
+                + tinyHttpdLicenses)
+    }
+}
+
 // @req FR-REL-003
 tasks.register('releaseCheck', JavaExec) {
     description = 'Fails while the scan report shows an unexcepted High or Critical finding; pending passes as pending.'
