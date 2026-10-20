@@ -22,11 +22,36 @@ compileOnly 'javax.servlet:javax.servlet-api:3.1.0'
 | 항목 | 내장 엔진 (`app.listen`) | Servlet 모듈 |
 |---|---|---|
 | 포트·TLS·스레드 풀 | NaruServe 설정 | 컨테이너 설정 |
-| 시작·종료 | `app.listen()` / `app.shutdown()` | 컨테이너가 앱을 올리고 내릴 때 (연결 방식 **(미확정)**) |
+| 시작·종료 | `app.listen()` / `app.shutdown()` | 컨테이너가 웹 애플리케이션을 올릴 때 `app.listen(0)`, 내릴 때 `app.shutdown(timeout, SECONDS)` |
 | 경로 | 요청 경로 그대로 | `getRequestURI()`에서 컨텍스트 경로와 url-pattern 접두사를 뺀 나머지 (퍼센트 인코딩 유지) |
-| 파일 업로드 | NaruServe 파서 | Servlet 3.1 multipart 사용 여부와 `app.multipart` 한도 적용 방식 **(미확정)** |
+| 파일 업로드 | NaruServe 파서 | Servlet 3.1 multipart 사용 여부 **(미확정)**. `app.multipart` 한도는 코어가 적용 |
 | SSE | 내장 스트리밍 | `AsyncContext` 또는 비차단 쓰기 |
 | WebSocket | 내장 | 컨테이너의 WebSocket API. 컨테이너마다 지원 여부를 확인하고 연결 (**(미확정)**) |
+
+## 포트와 시작·종료
+
+- 포트는 컨테이너가 정합니다. `ServletAdapter.bind`는 핸들러만 받아 두고 소켓도 스레드도 열지 않으며, `ServerHandle.port()`는 항상 `0`입니다. 실제 포트는 컨테이너 설정에서 확인하세요.
+- 컨테이너가 웹 애플리케이션을 올리면 configurer로 앱을 만든 뒤 첫 요청 전에 `app.listen(0)`을 부릅니다. `onStart`가 한 번 돌고 `app.state()`는 `RUNNING`이 됩니다. 앱 코드가 직접 `app.listen(8080)`을 불러도 같은 경로를 타며 아무것도 열지 않습니다. Express에서 `app.listen` 대신 서버에 `app`을 넘기는 것과 같습니다.
+- `onStart`가 실패하면 그 예외(`AppStartException`)를 원인으로 담은 `ServletException`으로 컨텍스트 시작이 실패하고, 앱 스레드는 남지 않습니다.
+- 컨테이너가 웹 애플리케이션을 내리면 `ServletContextListener`가 `app.shutdown(timeout, SECONDS)`를 한 번 부릅니다. `timeout`은 `naruserve.shutdownTimeoutSeconds`(기본 10초)입니다. `onStop`이 돌고 상태는 `TERMINATED`가 되며, 두 번째 종료 알림은 아무 일도 하지 않습니다.
+- 로거는 configurer가 `Builder.logger(...)`로 정한 것을 쓰고, 정하지 않으면 `RestApp.Builder` 기본값인 `ConsoleLogger`입니다.
+
+## JSON 코덱
+
+웹 애플리케이션 클래스 경로에 `com.snoworca.naruserve.gson.GsonJsonCodec`(`NaruServe-gson`)이 있으면 웹 애플리케이션의 클래스 로더로 리플렉션해 찾아 configure 전에 코덱으로 넣어 둡니다. configurer는 `Builder.jsonCodec(...)`으로 바꿀 수 있습니다. 둘 다 없으면 메시지에 `com.snoworca.naruserve.gson.GsonJsonCodec`과 `jsonCodec`을 담은 `ServletException`으로 시작이 실패합니다. 이 모듈 자체는 `NaruServe-api`에만 의존합니다.
+
+## 설정
+
+컨테이너가 연결·스레드·가상 호스트를 맡으므로 내장 엔진을 설정하는 `ServerOptions` 값은 이 어댑터에서 효과가 없습니다. `listen`의 포트 인자도 무시합니다.
+
+- 무시하는 `ServerOptions` 설정: `bindAddress`, `allowedHosts`, `maxHeaderSize`, `maxHeaderCount`, `maxRequestLineLength`, `headerTimeout`, `bodyReadTimeout`, `writeTimeout`, `minBodyRate`, `maxWorkers`, `maxConnections`, `maxUpgradedConnections`, `maxConnectionsPerAddress`
+- 적용하는 설정: `jsonLimit`, `formLimit`, `app.multipart`, `maxSseStreams`, `app.sse`, `trustProxy`
+
+본문 한도는 코어가 검사합니다. 어댑터는 컨테이너 쪽 한도를 걸지 않으므로 `jsonLimit`, `formLimit`, `app.multipart` 한도를 넘는 본문은 표준 오류 본문과 함께 `413`입니다. `allowedHosts`가 동작하지 않으므로 Host 제한은 컨테이너의 가상 호스트 설정으로 거세요. LAN 경고와 `ServerHandle.address()`는 설정한 `bindAddress` 값을 말할 뿐 컨테이너 커넥터의 주소가 아닙니다. 기본 설정(`127.0.0.1`)이면 LAN 경고는 나오지 않습니다.
+
+## 스레드
+
+내장 엔진의 스레드 총량 451개(D-416)는 Servlet 어댑터에 적용되지 않습니다. 이 어댑터의 스레드는 컨테이너의 스레드에 SSE 스레드 최대 `maxSseStreams`개를 더한 것입니다.
 
 ## 경로 처리
 

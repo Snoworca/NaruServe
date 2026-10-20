@@ -19,42 +19,74 @@ public final class ServletAdapter implements HttpAdapter {
 
     private volatile @Nullable ExchangeHandler handler;
     private volatile @Nullable ServerSettings settings;
+    private volatile boolean bound;
+    private volatile boolean stopping;
 
     // @req IR-SVL-001
     public ServletAdapter() {
     }
 
+    /** Keeps the handler only: the container owns the socket and the threads, so host and port are ignored. */
     // @req IR-SVL-001
+    // @req FR-SVL-001
     @Override
     public void bind(String host, int port, ExchangeHandler handler) {
-        this.handler = Objects.requireNonNull(handler, "handler");
+        keep(null, handler);
     }
 
-    // @req IR-SVL-001
+    /**
+     * Keeps the handler and the frozen settings, whose maxSseStreams, error renderer and logger the adapter uses;
+     * no other option is read and no container-side body limit is set, so the core limits answer 413.
+     */
+    // @req FR-SVL-001
+    // @req FR-SVL-008
     @Override
     public void bind(ServerSettings settings, ExchangeHandler handler) {
-        this.settings = Objects.requireNonNull(settings, "settings");
-        bind(settings.bindAddress(), settings.port(), handler);
+        keep(Objects.requireNonNull(settings, "settings"), handler);
+    }
+
+    /** The settings go in before the handler, so a request that sees the handler also sees the renderer. */
+    // @req FR-SVL-001
+    private synchronized void keep(@Nullable ServerSettings s, ExchangeHandler h) {
+        Objects.requireNonNull(h, "handler");
+        if (bound) {
+            throw new IllegalStateException("ServletAdapter is already bound; one adapter serves one app");
+        }
+        bound = true;
+        settings = s;
+        handler = h;
     }
 
     /** {@code 0}: the container, not the adapter, owns the listening socket. */
     // @req IR-SVL-001
+    // @req FR-SVL-001
     @Override
     public int boundPort() {
-        if (handler == null) {
+        if (!bound) {
             throw new IllegalStateException("ServletAdapter is not bound");
         }
         return 0;
     }
 
     // @req IR-SVL-001
+    // @req FR-SVL-001
     @Override
     public void stop(long timeout, TimeUnit unit) {
+        stopping = true;
     }
 
+    /** Detaches the handler, so the servlet answers 503 from then on. */
     // @req IR-SVL-001
+    // @req FR-SVL-001
     @Override
     public void release() {
+        handler = null;
+    }
+
+    /** True once {@link #stop} ran. */
+    // @req FR-SVL-001
+    boolean stopping() {
+        return stopping;
     }
 
     /** The core's handler once bound, else {@code null}. */
