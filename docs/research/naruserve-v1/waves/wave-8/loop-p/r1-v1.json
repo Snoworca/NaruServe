@@ -1,0 +1,1201 @@
+{
+ "req_ac": [
+  {
+   "id": "FR-KT-001 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/KotlinNullabilityTest.java#sdsAc1_FR_KT_001_AC1_publicPackagesAreNullMarkedAndInternalKeepsIt"
+  },
+  {
+   "id": "FR-KT-001 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/KotlinNullabilityTest.java#sdsAc2_FR_KT_001_AC2_accessorTableMatchesRequestReturnAnnotations"
+  },
+  {
+   "id": "FR-KT-001 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/KotlinNullabilityTest.java#sdsAc3_FR_KT_001_AC3_jarTypesCarryNoNonNullAndTheTestPathIsNotScanned"
+  },
+  {
+   "id": "FR-KT-001 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/KotlinNullabilityTest.java#sdsAc4_FR_KT_001_AC4_eachFixtureFailsByName"
+  },
+  {
+   "id": "FR-KT-001 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/KotlinNullabilityTest.java#sdsAc5_FR_KT_001_AC5_publicTypesIncludeNestedTypesAndExcludeInternal"
+  },
+  {
+   "id": "FR-KT-002 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/KotlinKeywordsTest.java#sdsAc6_FR_KT_002_AC1_AC3_realJarHasNoKeywordNamedMethod"
+  },
+  {
+   "id": "FR-KT-002 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/KotlinKeywordsTest.java#sdsAc7_FR_KT_002_AC2_keywordsFixtureFailsOncePerWordAndSoftNamesPass"
+  },
+  {
+   "id": "FR-KT-002 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/KotlinSurfaceKotlinTest.kt#FR-KT-002 AC-3 RestApp Request Response RouteBuilder and WebSocketSession need no backtick"
+  },
+  {
+   "id": "FR-KT-003 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/CallbackInventoryTest.java#sdsAc1_FR_KT_003_AC1_realJarCallbacksAllCarryFunctionalInterface ; NaruServe-api/src/test/java/com/snoworca/naruserve/CallbackInventoryTest.java#sdsAc1_FR_KT_003_AC1_nestedUnannotatedSingleMethodInterfaceIsNamed"
+  },
+  {
+   "id": "FR-KT-003 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/CallbackInventoryTest.java#sdsAc2_FR_KT_003_AC2_declaredZeroAndTwoAbstractInterfacesAreNamed"
+  },
+  {
+   "id": "FR-KT-003 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/CallbackMatrixKotlinTest.kt#FR-KT-003 AC-3 z every CALLBACK_TYPES interface was exercised"
+  },
+  {
+   "id": "FR-KT-003 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/CallbackInventoryTest.java#sdsAc4_FR_KT_003_AC4_inventoryEqualsCallbackTypes ; NaruServe-api/src/test/java/com/snoworca/naruserve/CallbackInventoryTest.java#sdsAc4_FR_KT_003_AC4_removedEntryShowsAsDifference"
+  },
+  {
+   "id": "FR-KT-004 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/KotlinDocsMarkersTest.java#sdsAc1_FR_KT_004_AC_1_real_docs_and_three_source_dirs_give_no_failure"
+  },
+  {
+   "id": "FR-KT-004 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/KotlinDocsExamplesKotlinTest.kt#SDS-AC-2 FR-KT-004 AC-2 this file with a kotlin md block line removed fails naming the block"
+  },
+  {
+   "id": "FR-KT-004 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/KotlinDocsExamplesKotlinTest.kt#SDS-AC-3 FR-KT-004 AC-3 kotlin md return at get gives 404 and return at use gives 401 ; NaruServe-api/src/test/kotlin/com/snoworca/naruserve/KotlinDocsExamplesKotlinTest.kt#SDS-AC-3 FR-KT-004 AC-3 kotlin md if else form gives the same 404 and 401 without return at"
+  },
+  {
+   "id": "FR-KT-004 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/KotlinDocsMarkersTest.java#sdsAc4_FR_KT_004_AC_4_an_inserted_block_without_its_marker_is_named ; NaruServe-api/src/test/java/com/snoworca/naruserve/KotlinDocsMarkersTest.java#sdsAc4_FR_KT_004_AC_4_a_stale_marker_is_named"
+  },
+  {
+   "id": "FR-KT-004 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-kotlin/src/test/kotlin/com/snoworca/naruserve/kotlin/KotlinDocsBodyKotlinTest.kt#SDS-AC-5 FR-KT-004 AC-5 kotlin md reified extension block runs against the module extension"
+  },
+  {
+   "id": "FR-KT-005 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/NullableAccessorKotlinTest.kt#FR-KT-005 AC-1 accessor_query is String? and the elvis default applies when absent ; NaruServe-api/src/test/kotlin/com/snoworca/naruserve/NullableAccessorKotlinTest.kt#FR-KT-005 AC-1 accessor_cookie is Cookie? and the safe call gives null when absent (+1 more evidence rows)"
+  },
+  {
+   "id": "FR-KT-005 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/NullableAccessorKotlinTest.kt#FR-KT-005 AC-2 accessor_param is String and throws IllegalArgumentException for a name the pattern lacks ; NaruServe-api/src/test/kotlin/com/snoworca/naruserve/NullableAccessorKotlinTest.kt#FR-KT-005 AC-2 accessor_service is T and throws for an unregistered type"
+  },
+  {
+   "id": "FR-KT-005 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/NullableAccessorKotlinTest.kt#FR-KT-005 AC-3 accessor_body is T? and null for a JSON null body through both overloads"
+  },
+  {
+   "id": "FR-KT-005 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/NullableAccessorDocsTest.java#everyTableRowHasAFunction ; NaruServe-api/src/test/java/com/snoworca/naruserve/NullableAccessorDocsTest.java#sdsAc8_FR_KT_005_AC4_syntheticMissingRowIsNamed"
+  },
+  {
+   "id": "FR-KT-006 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-gson/src/test/kotlin/com/snoworca/naruserve/gson/GsonDataClassLimitKotlinTest.kt#SDS-AC-15 FR-KT-006 AC-1 decoding a data class throws JsonIOException"
+  },
+  {
+   "id": "FR-KT-006 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-gson/src/test/kotlin/com/snoworca/naruserve/gson/GsonDataClassLimitKotlinTest.kt#SDS-AC-16 FR-KT-006 AC-2 req body of a data class answers 500 INTERNAL_ERROR"
+  },
+  {
+   "id": "FR-KT-006 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-gson/src/test/kotlin/com/snoworca/naruserve/gson/GsonDataClassLimitKotlinTest.kt#SDS-AC-17 FR-KT-006 AC-3 a nullable var DTO decodes a name and an empty object"
+  },
+  {
+   "id": "FR-KT-006 AC-4",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/WaveEightKotlinDocsTest.java#sdsAc18_FR_KT_006_AC_4_json_md_and_kotlin_md_name_the_gson_limit"
+  },
+  {
+   "id": "IR-KT-001 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/CookiePropertiesTest.java#sdsAc9_IR_KT_001_AC1_everyCookieSetterHasAGetterOfTheSameType ; NaruServe-api/src/test/java/com/snoworca/naruserve/CookiePropertiesTest.java#sdsAc9_IR_KT_001_AC1_mismatchedOrNonBooleanIsGetterNamesTheProperty"
+  },
+  {
+   "id": "IR-KT-001 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/PropertySyntaxKotlinTest.kt#IR-KT-001 AC-2 six cookie properties assign, read back and reach Set-Cookie"
+  },
+  {
+   "id": "IR-KT-001 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/PropertySyntaxKotlinTest.kt#IR-KT-001 AC-3 isCommitted and isSecure read as properties while method and path stay calls"
+  },
+  {
+   "id": "IR-KT-001 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/CookiePropertiesTest.java#sdsAc12_IR_KT_001_AC4_cookiePropertiesAreExactlyTheListedEight"
+  },
+  {
+   "id": "IR-KT-002 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-kotlin/src/test/kotlin/com/snoworca/naruserve/kotlin/RequestBodyExtensionKotlinTest.kt#SDS-AC-6 IR-KT-002 AC-1 val user User = req body compiles non-null inside app post"
+  },
+  {
+   "id": "IR-KT-002 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-kotlin/src/test/kotlin/com/snoworca/naruserve/kotlin/RequestBodyExtensionKotlinTest.kt#SDS-AC-7 IR-KT-002 AC-2 the body decodes to the instance and JSON null answers 400"
+  },
+  {
+   "id": "IR-KT-002 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-kotlin/src/test/kotlin/com/snoworca/naruserve/kotlin/RequestBodyExtensionKotlinTest.kt#SDS-AC-8 IR-KT-002 AC-3 req body of List of User passes the raw java util List"
+  },
+  {
+   "id": "IR-KT-002 AC-4",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/WaveEightKotlinDocsTest.java#sdsAc9_IR_KT_002_AC_4_the_JsonDocsKotlinTest_body_copy_line_is_unchanged"
+  },
+  {
+   "id": "CON-KT-001 AC-1",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java#checkNoCoroutinesFailsOnClassAndOnArtifact"
+  },
+  {
+   "id": "CON-KT-001 AC-2",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java#checkNoCoroutinesFailsOnClassAndOnArtifact"
+  },
+  {
+   "id": "CON-KT-001 AC-3",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java#checkNoCoroutinesFailsOnClassAndOnArtifact"
+  },
+  {
+   "id": "CON-KT-001 AC-4",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java#con_KT_001_AC4_pristineCopyPassesCheckNoCoroutinesAndBuildRunsIt ; src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java#con_KT_001_AC4_checkNoCoroutinesLeavesTheClassReferencePrefixesUnchanged"
+  },
+  {
+   "id": "OPS-KT-001 AC-1",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/WaveEightKotlinDocsTest.java#sdsAc10_OPS_KT_001_AC_1_kotlin_md_names_the_module_and_settings_include_it"
+  },
+  {
+   "id": "OPS-KT-001 AC-2",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/WaveEightKotlinDocsTest.java#sdsAc11_OPS_KT_001_AC_2_the_null_paragraph_names_NullMarked_and_no_NonNull"
+  },
+  {
+   "id": "OPS-KT-001 AC-3",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/WaveEightKotlinDocsTest.java#sdsAc12_OPS_KT_001_AC_3_the_extension_section_shows_the_import_above_the_pinned_lines"
+  },
+  {
+   "id": "OPS-KT-001 AC-4",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/WaveEightKotlinDocsTest.java#sdsAc13_OPS_KT_001_AC_4_the_coroutine_section_states_the_post_v1_item"
+  },
+  {
+   "id": "OPS-KT-001 AC-5",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/WaveEightKotlinDocsTest.java#sdsAc14_OPS_KT_001_AC_5_the_nullable_accessor_table_keeps_its_twelve_rows"
+  },
+  {
+   "id": "IR-SVL-001 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletSurfaceTest.java#sdsAc1_IR_SVL_001_AC1_servletAdapterIsPublicFinalHttpAdapterWithNoArgConstructor ; NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletSurfaceTest.java#sdsAc1_IR_SVL_001_AC1_servletConfigurerIsFunctionalWithOneThrowingConfigure (+1 more evidence rows)"
+  },
+  {
+   "id": "IR-SVL-001 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletServicesFileTest.java#sdsAc2_IR_SVL_001_AC2_jarServicesFileNamesOnlyTheInitializer"
+  },
+  {
+   "id": "IR-SVL-001 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRegistrationTest.java#sdsAc3_IR_SVL_001_AC3_configurerParameterRegistersOneAsyncServletAtSlashStar ; NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRegistrationTest.java#sdsAc3_IR_SVL_001_AC3_withoutConfigurerNothingIsRegisteredAndRequestsGet404"
+  },
+  {
+   "id": "IR-SVL-001 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRegistrationTest.java#sdsAc4_IR_SVL_001_AC4_acceptedUrlPatternsMapTheServlet ; NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRegistrationTest.java#sdsAc4_IR_SVL_001_AC4_otherUrlPatternsFailStartupNamingParameterAndValue"
+  },
+  {
+   "id": "IR-SVL-001 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRegistrationTest.java#sdsAc5_IR_SVL_001_AC5_shutdownTimeoutInRangeOrDefaultIsReturned ; NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRegistrationTest.java#sdsAc5_IR_SVL_001_AC5_otherShutdownTimeoutsFailStartupNamingParameterAndValue"
+  },
+  {
+   "id": "IR-SVL-001 AC-6",
+   "verdict": "match",
+   "pointer": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletConfigurerTest.java#sdsAc6_IR_SVL_001_AC6_missingClassFailsStartupNamingIt ; NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletConfigurerTest.java#sdsAc6_IR_SVL_001_AC6_classNotImplementingServletConfigurerFails (+4 more evidence rows)"
+  },
+  {
+   "id": "IR-SVL-001 AC-7",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java#sdsAc7_IR_SVL_001_AC7_servletMainReferencingJakartaFails"
+  },
+  {
+   "id": "FR-SVL-001 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletLifecycleTest.java#sdsAc1_FR_SVL_001_AC1_startupListensBeforeTheFirstRequest"
+  },
+  {
+   "id": "FR-SVL-001 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletLifecycleTest.java#sdsAc2_FR_SVL_001_AC2_destructionShutsTheAppDown ; NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletLifecycleTest.java#sdsAc2_FR_SVL_001_AC2_defaultTimeoutIsTenSeconds (+1 more evidence rows)"
+  },
+  {
+   "id": "FR-SVL-001 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletAdapterTest.java#sdsAc3_FR_SVL_001_AC3_hostPortBindStoresTheHandlerOnly ; NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletAdapterTest.java#sdsAc3_FR_SVL_001_AC3_settingsBindStoresTheHandlerOnly (+2 more evidence rows)"
+  },
+  {
+   "id": "FR-SVL-001 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletLifecycleTest.java#sdsAc4_FR_SVL_001_AC4_userListen8080BindsNothing"
+  },
+  {
+   "id": "FR-SVL-001 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletCodecTest.java#sdsAc5_FR_SVL_001_AC5_gsonOnTheClassPathIsPreset ; NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletCodecTest.java#sdsAc5_FR_SVL_001_AC5_configurerMayReplaceThePresetCodec (+1 more evidence rows)"
+  },
+  {
+   "id": "FR-SVL-001 AC-6",
+   "verdict": "match",
+   "pointer": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletLifecycleTest.java#sdsAc6_FR_SVL_001_AC6_defaultLoggerIsConsoleLogger ; NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletLifecycleTest.java#sdsAc6_FR_SVL_001_AC6_configuredLoggerIsKept"
+  },
+  {
+   "id": "FR-SVL-001 AC-7",
+   "verdict": "match",
+   "pointer": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletStartFailureTest.java#sdsAc7_FR_SVL_001_AC7_failingOnStartFailsContextStartup"
+  },
+  {
+   "id": "FR-SVL-001 AC-8",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/ServletDocsTest.java#threadTotalDeviation"
+  },
+  {
+   "id": "FR-SVL-002 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletPathTest.java#sdsAc1_FR_SVL_002_AC1_remainderStripsContextAndPrefixAtASegmentBoundary ; NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletPathTest.java#sdsAc1_FR_SVL_002_AC1_remainderNeverDecodesOrNormalises (+2 more evidence rows)"
+  },
+  {
+   "id": "FR-SVL-002 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRequestTest.java#sdsAc2_FR_SVL_002_AC2_encodedPrefixMissIs404WithStandardBodyAndNoForbiddenGetter"
+  },
+  {
+   "id": "FR-SVL-002 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRequestTest.java#sdsAc3_FR_SVL_002_AC3_repeatedHeadersCookieAndRemoteValuesReachTheCore ; NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRequestTest.java#sdsAc3_FR_SVL_002_AC3_trustProxyTakesEffectInTheCore"
+  },
+  {
+   "id": "FR-SVL-002 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletCasesTest.java#sdsAc4_FR_SVL_002_AC4_sharedCasesGiveEqualStatusesAndBodiesOnBothAdapters"
+  },
+  {
+   "id": "FR-SVL-002 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRawTargetTest.java#sdsAc5_FR_SVL_002_AC5_rejectedTargetsAre400Or404AndMatchServletMd ; src/test/java/com/snoworca/naruserve/docs/ServletDocsTest.java#sdsAc5_FR_SVL_002_AC5_observedStatuses"
+  },
+  {
+   "id": "FR-SVL-002 AC-6",
+   "verdict": "match",
+   "pointer": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRejectTest.java#sdsAc6_FR_SVL_002_AC6_unboundAnswer503CarriesOnlyFixedHeaderValues ; NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRejectTest.java#sdsAc6_FR_SVL_002_AC6_prefixMiss404LogsNoTokenSessionOrPath (+1 more evidence rows)"
+  },
+  {
+   "id": "FR-SVL-003 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletAbortTest.java#sdsAc7_FR_SVL_003_AC1_commitWritesStatusAndHeadersAsGiven ; NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletResponseTest.java#sdsAc7_FR_SVL_003_AC1_statusHeaderAndBodyPassWithTheCoreContentLength (+2 more evidence rows)"
+  },
+  {
+   "id": "FR-SVL-003 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletResponseTest.java#sdsAc8_FR_SVL_003_AC2_headKeepsTheGetLengthAndSendsNoBody ; NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletResponseTest.java#sdsAc8_FR_SVL_003_AC2_204And304CarryNoBody"
+  },
+  {
+   "id": "FR-SVL-003 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletAbortTest.java#sdsAc9_FR_SVL_003_AC3_afterAbortWriteAndFinishThrowIOException ; NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletAbortTest.java#sdsAc9_FR_SVL_003_AC3_abortBeforeCommitMakesCommitThrowIOException (+2 more evidence rows)"
+  },
+  {
+   "id": "FR-SVL-003 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletSendFileTest.java#sdsAc10_FR_SVL_003_AC4_sendFileCopiesExactlyLengthInChunksOfAtMost64KiB ; NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletSendFileTest.java#sdsAc10_FR_SVL_003_AC4_abortStopsSendFileBeforeTheNextChunk (+2 more evidence rows)"
+  },
+  {
+   "id": "FR-SVL-003 AC-5",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/ServletDocsTest.java#sdsAc11_FR_SVL_003_AC5_headerOrderSentence"
+  },
+  {
+   "id": "FR-SVL-004 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletMultipartTest.java#sdsAc1_FR_SVL_004_AC1_multipartAndFormBodiesGiveTheSameAccessorsOnJettyAndInMemory"
+  },
+  {
+   "id": "FR-SVL-004 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletMultipartTest.java#sdsAc2_FR_SVL_004_AC2_theAdapterReadsGetInputStreamOnlyAndHoldsNoMultipartConfig"
+  },
+  {
+   "id": "FR-SVL-004 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletMultipartTest.java#sdsAc3_FR_SVL_004_AC3_bodiesAboveTheCoreLimitsAnswer413AndLeaveNoUploadFile"
+  },
+  {
+   "id": "FR-SVL-004 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletMultipartDisconnectTest.java#sdsAc4_FR_SVL_004_AC4_aClientCutMidUploadLeavesNoUploadFileAfterTheRequestThreadReturned"
+  },
+  {
+   "id": "FR-SVL-005 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletSseLimitTest.java#sdsAc5_FR_SVL_005_AC1_aThirdStreamGets503UnstartedAndTheSlotIsFreedOnEndIoExceptionAndAbort ; NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletSseLimitTest.java#sdsAc5_FR_SVL_005_AC1_abortOnAnSseExchangeFreesItsSlot"
+  },
+  {
+   "id": "FR-SVL-005 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletSseLimitTest.java#sdsAc6_FR_SVL_005_AC2_theDrainRunsOnABoundedDaemonExecutorAfterServiceReturned"
+  },
+  {
+   "id": "FR-SVL-005 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletSseAsyncTest.java#sdsAc7_FR_SVL_005_AC3_everyStreamHasTimeout0AndOutlivesA1sContainerDefault"
+  },
+  {
+   "id": "FR-SVL-005 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletSseDeliveryTest.java#sdsAc8_FR_SVL_005_AC4_sendsAndHeartbeatsReachTheClientWithin500ms"
+  },
+  {
+   "id": "FR-SVL-005 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletSseAsyncTest.java#sdsAc9_FR_SVL_005_AC5_eachDrainEndCompletesOnceAndRunsOnCloseOnce ; NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletSseAsyncTest.java#sdsAc9_FR_SVL_005_AC5_abortOnAnSseExchangeCompletesOnce"
+  },
+  {
+   "id": "FR-SVL-005 AC-6",
+   "verdict": "match",
+   "pointer": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletSseDeliveryTest.java#sdsAc10_FR_SVL_005_AC6_aClosedClientEndsWithCauseClientAndFreesItsThreadWithin3s"
+  },
+  {
+   "id": "FR-SVL-006 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletStopTest.java#sdsAc1_FR_SVL_006_AC1_refusesAtOnceAndReturnsWhenTheSlowRequestEnds ; NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletStopTest.java#sdsAc1_FR_SVL_006_AC1_stopReturnsByTheDeadlinePlusOneSecond"
+  },
+  {
+   "id": "FR-SVL-006 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletStopSseTest.java#sdsAc2_FR_SVL_006_AC2_shutdownEndsEveryOpenStream"
+  },
+  {
+   "id": "FR-SVL-006 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletStopSseTest.java#sdsAc3_FR_SVL_006_AC3_nonReadingClientIsCutAtTheDeadline ; src/test/java/com/snoworca/naruserve/docs/ServletDocsTest.java#cutAtTimeoutDeviation"
+  },
+  {
+   "id": "FR-SVL-006 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletStopTest.java#sdsAc4_FR_SVL_006_AC4_releaseDetachesTheHandler ; NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletStopTest.java#sdsAc4_FR_SVL_006_AC4_stopAndReleaseAreIdempotent (+2 more evidence rows)"
+  },
+  {
+   "id": "FR-SVL-006 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRuleTest.java#sdsAc5_FR_SVL_006_AC5_aCleanTestPasses ; NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRuleTest.java#sdsAc5_FR_SVL_006_AC5_ruleFailsOnALeakedSseThread (+1 more evidence rows)"
+  },
+  {
+   "id": "FR-SVL-007 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletWebSocketTest.java#sdsAc11_FR_SVL_007_AC1_aValidUpgradeToAnAppWsRouteAnswers501WithTheStandardBody"
+  },
+  {
+   "id": "FR-SVL-007 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletWebSocketTest.java#sdsAc12_FR_SVL_007_AC2_noUpgradeGives426ARejectedOriginGives403AndPostKeepsTheCoreAnswer"
+  },
+  {
+   "id": "FR-SVL-007 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletWebSocketTest.java#sdsAc13_FR_SVL_007_AC3_webSocketAndUpgradeThrow501AndLeaveTheExchangeUnstarted"
+  },
+  {
+   "id": "FR-SVL-007 AC-4",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/ServletDocsTest.java#websocketNotSupportedSentence"
+  },
+  {
+   "id": "FR-SVL-008 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletSettingsTest.java#sdsAc9_FR_SVL_008_AC1_adapterDeclaresItsOwnSettingsBind ; NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletSettingsTest.java#sdsAc9_FR_SVL_008_AC1_settingsKeepMaxSseStreams (+1 more evidence rows)"
+  },
+  {
+   "id": "FR-SVL-008 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletSettingsTest.java#sdsAc10_FR_SVL_008_AC2_engineOptionsHaveNoEffect"
+  },
+  {
+   "id": "FR-SVL-008 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletSettingsTest.java#sdsAc11_FR_SVL_008_AC3_coreBodyLimitsAnswer413"
+  },
+  {
+   "id": "FR-SVL-008 AC-4",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/ServletDocsTest.java#ignoredAndAppliedOptions"
+  },
+  {
+   "id": "FR-SVL-008 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletSettingsTest.java#sdsAc13_FR_SVL_008_AC5_defaultAppLogsNoLanWarning ; src/test/java/com/snoworca/naruserve/docs/ServletDocsTest.java#lanWarningSentence"
+  },
+  {
+   "id": "CON-SVL-001 AC-1",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/build/ServletBuildTest.java#sdsAc8_CON_SVL_001_AC1_servletClasspaths"
+  },
+  {
+   "id": "CON-SVL-001 AC-2",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/build/ServletBuildTest.java#sdsAc9_CON_SVL_001_AC2_testScopeOnlyDependencies"
+  },
+  {
+   "id": "CON-SVL-001 AC-3",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/build/ServletBuildTest.java#sdsAc10_CON_SVL_001_AC3_classReferencesAndGson"
+  },
+  {
+   "id": "CON-SVL-001 AC-4",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/build/ServletBuildTest.java#sdsAc11_CON_SVL_001_AC4_spiAndTinyHttpdUntouched"
+  },
+  {
+   "id": "OPS-SVL-001 AC-1",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/ServletDocsTest.java#noMarkerAndJakartaSentence ; src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java#ops_BUILD_003_AC5_servletDocKeepsJakartaMarker"
+  },
+  {
+   "id": "OPS-SVL-001 AC-2",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/ServletDocsTest.java#registrationSection"
+  },
+  {
+   "id": "OPS-SVL-001 AC-3",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/ServletDocsTest.java#sectionKeywords"
+  },
+  {
+   "id": "OPS-SVL-001 AC-4",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java#wave8s8SdsAc9_OPS_SVL_001_AC4_servletConfigurerBlocksCompile ; src/test/java/com/snoworca/naruserve/docs/ServletDocsTest.java#ignoredAndAppliedOptions"
+  },
+  {
+   "id": "OPS-SVL-001 AC-5",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/ServletDocsTest.java#sseDocOnlyGainsPointer ; NaruServe-servlet/src/test/kotlin/com/snoworca/naruserve/servlet/ServletDocsKotlinTest.kt#OPS-SVL-001 AC-5 servlet md Kotlin configurer builds an app that serves its route"
+  },
+  {
+   "id": "FR-REL-001 AC-1",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/build/ReleaseScriptTextTest.java#fr_REL_001_AC1_releaseSbomWritesOneCycloneDxJsonPerModuleFromRuntimeClasspath"
+  },
+  {
+   "id": "FR-REL-001 AC-2",
+   "verdict": "match",
+   "pointer": "docs/release/test-results.md:101 (run sbom: command, date, file list, component counts) and T50 sbom row docs/release/test-results.md:77"
+  },
+  {
+   "id": "FR-REL-001 AC-3",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/build/ReleaseScriptTextTest.java#fr_REL_001_AC3_buildGradleAppliesReleaseScriptOnlyUnderTheReleaseProperty ; src/test/java/com/snoworca/naruserve/build/ReleaseScriptTextTest.java#fr_REL_001_AC3_releasePluginNamesOccurOnlyInReleaseScript (+2 more evidence rows)"
+  },
+  {
+   "id": "FR-REL-001 AC-4",
+   "verdict": "match",
+   "pointer": "docs/release/test-results.md:104 (run offline-build: ./gradlew build --offline, 2026-10-20, exit=0)"
+  },
+  {
+   "id": "FR-REL-001 AC-5",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java#con_BUILD_017_AC1_rootBuildFileHoldsPluginsCompileDependenciesAndChecks ; src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java#con_BUILD_017_AC2_noModuleBuildFile (+1 more evidence rows)"
+  },
+  {
+   "id": "FR-REL-002 AC-1",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/build/ScanReportTest.java#fr_REL_002_AC1_eachFailureCauseWritesPendingWithReasonAndSortedRuntimeList ; src/test/java/com/snoworca/naruserve/build/ScanReportTest.java#fr_REL_002_AC1_realGraphReportGivesTheShippedRuntimeDependencies"
+  },
+  {
+   "id": "FR-REL-002 AC-2",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/build/ScanReportTest.java#fr_REL_002_AC2_finishedScanWritesCompletedWithScannerTimestampAndFindingsTable ; src/test/java/com/snoworca/naruserve/build/ScanReportTest.java#fr_REL_002_AC2_finishedScanWithoutFindingsWritesNoFindings"
+  },
+  {
+   "id": "FR-REL-002 AC-3",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/ReleaseRecordsDocsTest.java#fr_REL_002_AC3_vulnerabilityScanRecordHasStatusAndReasonWhenPending"
+  },
+  {
+   "id": "FR-REL-002 AC-4",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/build/ScanReportTest.java#fr_REL_002_AC4_compileOnlyAndTestRowsAreLeftOutAndTinyHttpdKept"
+  },
+  {
+   "id": "FR-REL-002 AC-5",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/build/ScanReportTest.java#fr_REL_002_AC5_nonZeroExitOrMissingFindingsGivesPending ; src/test/java/com/snoworca/naruserve/build/ScanReportTest.java#fr_REL_002_AC5_failureCauseIsClassifiedFromTheChildLog (+3 more evidence rows)"
+  },
+  {
+   "id": "FR-REL-003 AC-1",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/build/ReleaseGateTest.java#fr_REL_003_AC1_highFindingWithoutExceptionFailsNamingIdAndDependency ; src/test/java/com/snoworca/naruserve/build/ReleaseGateTest.java#fr_REL_003_AC1_highFindingWithCompleteExceptionPasses (+5 more evidence rows)"
+  },
+  {
+   "id": "FR-REL-003 AC-2",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/build/ReleaseGateTest.java#fr_REL_003_AC2_pendingReportPassesAndPrintsPending ; src/test/java/com/snoworca/naruserve/build/ReleaseGateTest.java#fr_REL_003_AC2_reportWithoutStatusFails"
+  },
+  {
+   "id": "FR-REL-003 AC-3",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/ReleaseRecordsDocsTest.java#fr_REL_003_AC3_exceptionsFileHasHeaderAndNoExceptionsOrRows"
+  },
+  {
+   "id": "FR-REL-003 AC-4",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/build/ReleaseGateTest.java#fr_REL_003_AC4_highFindingOfTestScopeArtifactPasses"
+  },
+  {
+   "id": "FR-REL-003 AC-5",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/build/ReleaseScriptTextTest.java#fr_REL_003_AC5_releaseCheckDependsOnScanAndLicensesAndReadsTheScanReport"
+  },
+  {
+   "id": "FR-REL-004 AC-1",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/build/ThirdPartyLicensesTest.java#fr_REL_004_AC1_renderWritesOneRowPerShippedDependencyAndTheProvidedSection ; src/test/java/com/snoworca/naruserve/build/ThirdPartyLicensesTest.java#fr_REL_004_AC1_committedFileNamesTheShippedDependenciesWithLicenseAndUrl"
+  },
+  {
+   "id": "FR-REL-004 AC-2",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/build/LicenseCheckTest.java#fr_REL_004_AC2_gplFamilyAndUnknownFail ; src/test/java/com/snoworca/naruserve/build/LicenseCheckTest.java#fr_REL_004_AC2_permissiveAndDualLicensesPass (+2 more evidence rows)"
+  },
+  {
+   "id": "FR-REL-004 AC-3",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/build/ThirdPartyLicensesTest.java#fr_REL_004_AC3_committedFileListsExactlyTheRuntimeDependenciesOfTheGraph ; src/test/java/com/snoworca/naruserve/build/ThirdPartyLicensesTest.java#fr_REL_004_AC3_missingAndExtraRowsAreNamed (+1 more evidence rows)"
+  },
+  {
+   "id": "FR-REL-004 AC-4",
+   "verdict": "match",
+   "pointer": "docs/release/test-results.md:110 (run licenses: ./gradlew -Prelease releaseLicenses, exit=0) and T50 license row docs/release/test-results.md:79"
+  },
+  {
+   "id": "FR-REL-005 AC-1",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/build/PublishedPomTest.java#fr_REL_005_AC1_nineGeneratedPomsWithTheModuleCoordinates"
+  },
+  {
+   "id": "FR-REL-005 AC-2",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/build/PublishedPomTest.java#fr_REL_005_AC2_dependenciesCarryResolvedVersionsAndScopes"
+  },
+  {
+   "id": "FR-REL-005 AC-3",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/build/PublishedPomTest.java#fr_REL_005_AC3_noPublishingRepositoryAndVersionlessTinyHttpd"
+  },
+  {
+   "id": "FR-REL-005 AC-4",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/build/PublishedPomTest.java#fr_REL_005_AC4_mavenPublishAppliedInBuildGradleNotInReleaseGradle"
+  },
+  {
+   "id": "OPS-REL-001 AC-1",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/ReadmeDocsTest.java#ops_REL_001_AC1_readmeListsTheNineCoordinatesOfTheApiModuleTableAndTheInstallLines"
+  },
+  {
+   "id": "OPS-REL-001 AC-2",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/ReadmeDocsTest.java#ops_REL_001_AC2_quickStartBlocksEqualTheApiReadmeBlocks"
+  },
+  {
+   "id": "OPS-REL-001 AC-3",
+   "verdict": "match",
+   "pointer": "README.md:88-96 (Android scope statement, --release 8 and animal-sniffer basis, links to docs/api/README.md, release-notes.md, test-results.md, THIRD-PARTY-LICENSES.md; all four exist)"
+  },
+  {
+   "id": "OPS-REL-001 AC-4",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/ReadmeDocsTest.java#ops_REL_001_AC4_readmeHasNoMarkerAndTheTinyHttpdSection"
+  },
+  {
+   "id": "OPS-REL-002 AC-1",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/ApiMarkersDocsTest.java#exactlyThreeMarkerLines"
+  },
+  {
+   "id": "OPS-REL-002 AC-2",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/ApiMarkersDocsTest.java#sdsAc2_OPS_REL_002_AC2_apiReadmeBanner"
+  },
+  {
+   "id": "OPS-REL-002 AC-3",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/ApiMarkersDocsTest.java#sdsAc3_OPS_REL_002_AC3_responseRedirectLineAndExpressExclusions"
+  },
+  {
+   "id": "OPS-REL-002 AC-4",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/ApiMarkersDocsTest.java#sdsAc4_OPS_REL_002_AC4_lowEndSection ; src/test/java/com/snoworca/naruserve/docs/WaveSevenDocsTest.java#wave7s13SdsAc4_PERF_APP_001_AC3_AC4_defaultsStatesThreadsStackAndTheLowEndFollowUp"
+  },
+  {
+   "id": "OPS-REL-002 AC-5",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/ApiMarkersDocsTest.java#sdsAc5_OPS_REL_002_AC5_postV1Items"
+  },
+  {
+   "id": "OPS-REL-002 AC-6",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/ApiMarkersDocsTest.java#noTestCitesOps007 ; NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java#sdsAc6_OPS_HTTP_008_AC8_responseKeepsNoMarker"
+  },
+  {
+   "id": "OPS-REL-003 AC-1",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/ReleaseResultsDocsTest.java#ops_REL_003_AC1_fiftyFourRowsWhoseIdsEqualTheObjectTable"
+  },
+  {
+   "id": "OPS-REL-003 AC-2",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/ReleaseResultsDocsTest.java#ops_REL_003_AC2_eachRowHasOneLiteralAndOnlyTheFiveAndroidRowsAreOutOfScope"
+  },
+  {
+   "id": "OPS-REL-003 AC-3",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/ReleaseResultsDocsTest.java#ops_REL_003_AC3_everyEvidenceLinkResolves ; src/test/java/com/snoworca/naruserve/docs/ReleaseResultsDocsTest.java#ops_REL_003_AC3_t50RowsMatchTheirRecords"
+  },
+  {
+   "id": "OPS-REL-003 AC-4",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/ReleaseResultsDocsTest.java#ops_REL_003_AC4_postV1LowEndRowOutsideTheTableAndAFullSuiteLine"
+  },
+  {
+   "id": "OPS-REL-003 AC-5",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/ReleaseResultsDocsTest.java#ops_REL_003_AC5_scopeStatementAndApi21Basis"
+  },
+  {
+   "id": "OPS-REL-004 AC-1",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/ReleaseNotesDocsTest.java#ops_REL_004_AC1_fiveRowsAndTheJava8RowPending"
+  },
+  {
+   "id": "OPS-REL-004 AC-2",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/ReleaseNotesDocsTest.java#ops_REL_004_AC2_androidRowsOutOfScopeAndTheServletRowAutomated"
+  },
+  {
+   "id": "OPS-REL-004 AC-3",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/ReleaseNotesDocsTest.java#ops_REL_004_AC3_matrixRulesRejectTheNegativeFixtures"
+  },
+  {
+   "id": "OPS-REL-005 AC-1",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/ReadmeDocsTest.java#ops_REL_005_AC1_readmeAndReleaseNotesHoldTheTinyHttpdInstruction"
+  },
+  {
+   "id": "OPS-REL-005 AC-2",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/ReadmeDocsTest.java#ops_REL_005_AC2_releaseNotesRecordTheConsumerRun"
+  },
+  {
+   "id": "OPS-REL-005 AC-3",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/ReadmeDocsTest.java#ops_REL_005_AC3_noDocumentSaysToPublishTinyHttpdToMavenLocal"
+  },
+  {
+   "id": "OPS-REL-006 AC-1",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/ApiMarkersDocsTest.java#sdsAc7_OPS_REL_006_AC1_tlsLine"
+  },
+  {
+   "id": "OPS-REL-006 AC-2",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/ApiMarkersDocsTest.java#tlsReasonsInBothDocuments"
+  },
+  {
+   "id": "OPS-REL-006 AC-3",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/WaveFiveDocsTest.java#defaultsStatesNoUnlimitedBindProxyRejectionsAndTls"
+  },
+  {
+   "id": "OPS-REL-007 AC-1",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/ReleaseNotesDocsTest.java#ops_REL_007_AC1_threeDocumentsStateTheAndroidScopeDecision"
+  },
+  {
+   "id": "OPS-REL-007 AC-2",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/ReleaseNotesDocsTest.java#ops_REL_007_AC2_serverServiceNoteAndTheSkipEntry"
+  },
+  {
+   "id": "OPS-REL-007 AC-3",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/ReleaseNotesDocsTest.java#ops_REL_007_AC3_eightDeviationEntriesResolveToSrsHeadings"
+  },
+  {
+   "id": "OPS-REL-007 AC-4",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/ReleaseNotesDocsTest.java#ops_REL_007_AC4_androidItemsAreOutOfScopeAndNeverManualPending"
+  },
+  {
+   "id": "OPS-REL-007 AC-5",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/ReleaseNotesDocsTest.java#ops_REL_007_AC5_api21ChecksRecordCommandCommitAndResult"
+  },
+  {
+   "id": "OPS-HTTP-008 AC-1",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java#OPS_HTTP_008_AC1_rawPathRowIsRawPathWithoutQuery"
+  },
+  {
+   "id": "OPS-HTTP-008 AC-2",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java#OPS_HTTP_008_AC2_attributeTypeMismatchAndNullRemoval"
+  },
+  {
+   "id": "OPS-HTTP-008 AC-3",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java#OPS_HTTP_008_AC3_octetStreamAndStreamClosing"
+  },
+  {
+   "id": "OPS-HTTP-008 AC-4",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java#OPS_HTTP_008_AC4_routerPolicyDocumented"
+  },
+  {
+   "id": "OPS-HTTP-008 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java#OPS_HTTP_008_AC5_appListsRouterPolicy"
+  },
+  {
+   "id": "OPS-HTTP-008 AC-6",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java#OPS_HTTP_008_AC6_defaultsNamesTraceConnectPolicy"
+  },
+  {
+   "id": "OPS-HTTP-008 AC-7",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java#OPS_HTTP_008_AC7_expressRawPathAndRawTextMapping"
+  },
+  {
+   "id": "OPS-HTTP-008 AC-8",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java#sdsAc6_OPS_HTTP_008_AC8_responseKeepsNoMarker ; NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java#sdsAc6_OPS_HTTP_008_AC8_requestKeepsNoMarker (+3 more evidence rows)"
+  },
+  {
+   "id": "OPS-HTTP-008 AC-9",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java#OPS_HTTP_008_AC9_middlewareDocumentsWithHeader ; src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java#wave7s13SdsAc13_OPS_HTTP_008_AC9_theWithHeaderBlockIsCompiled"
+  },
+  {
+   "id": "CON-BUILD-017 AC-1",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java#con_BUILD_017_AC1_rootBuildFileHoldsPluginsCompileDependenciesAndChecks ; src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java#con_BUILD_017_AC1_onlyReferenceToAnotherScriptIsTheGuardedReleaseApply"
+  },
+  {
+   "id": "CON-BUILD-017 AC-2",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java#con_BUILD_017_AC2_noModuleBuildFile"
+  },
+  {
+   "id": "CON-BUILD-017 AC-3",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java#con_BUILD_017_AC3_claudeMdStatesReleaseScriptException ; src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java#ops_BUILD_003_AC3_AC4_claudeMdModuleLineAndNoRestKotlin"
+  }
+ ],
+ "design": [
+  {
+   "id": "D-348",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/KotlinNullabilityTest.java:27-84 (sdsAc1..sdsAc5; FR-KT-001 AC-1..5), check in KotlinContractChecks.java; packages @NullMarked incl. NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/package-info.java:5"
+  },
+  {
+   "id": "D-349",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/KotlinDocsMarkersTest.java:86 (every ```kotlin block of docs/api has a marker; 46 blocks, 46 markers) and NaruServe-api/src/test/kotlin/com/snoworca/naruserve/KotlinDocsExamplesKotlinTest.kt (FR-KT-004)"
+  },
+  {
+   "id": "D-350",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/CallbackInventoryTest.java:83 (all SAM callbacks carry @FunctionalInterface) and NaruServe-api/src/test/kotlin/com/snoworca/naruserve/CallbackMatrixKotlinTest.kt, NaruServe-api/src/test/kotlin/com/snoworca/naruserve/CallbackMatrix.kt (16 types)"
+  },
+  {
+   "id": "D-351",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/NullableAccessorKotlinTest.kt (FR-KT-005 AC-1..4) and NaruServe-api/src/test/java/com/snoworca/naruserve/NullableAccessorDocsTest.java:42"
+  },
+  {
+   "id": "D-352",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/KotlinKeywordsTest.java:15,21 (FR-KT-002) and NaruServe-api/src/test/kotlin/com/snoworca/naruserve/KotlinSurfaceKotlinTest.kt"
+  },
+  {
+   "id": "D-353",
+   "verdict": "match",
+   "pointer": "NaruServe-api/src/test/java/com/snoworca/naruserve/CookiePropertiesTest.java:130,143 and NaruServe-api/src/test/kotlin/com/snoworca/naruserve/PropertySyntaxKotlinTest.kt:13,42 (IR-KT-001 AC-1..4)"
+  },
+  {
+   "id": "D-354",
+   "verdict": "match",
+   "pointer": "NaruServe-kotlin/src/main/kotlin/com/snoworca/naruserve/kotlin/RequestExtensions.kt:11 (exact signature) and NaruServe-kotlin/src/test/kotlin/com/snoworca/naruserve/kotlin/RequestBodyExtensionKotlinTest.kt (IR-KT-002)"
+  },
+  {
+   "id": "D-355",
+   "verdict": "match",
+   "pointer": "NaruServe-gson/src/test/kotlin/com/snoworca/naruserve/gson/GsonDataClassLimitKotlinTest.kt:21,28,40 (FR-KT-006 AC-1..3)"
+  },
+  {
+   "id": "D-356",
+   "verdict": "match",
+   "pointer": "build.gradle:376-400 (checkNoCoroutines wired into check) and src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java checkNoCoroutinesFailsOnClassAndOnArtifact (CON-KT-001)"
+  },
+  {
+   "id": "D-357",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/WaveEightKotlinDocsTest.java:57 (kotlin.md names NaruServe-kotlin; settings.gradle includes it; OPS-KT-001 AC-1)"
+  },
+  {
+   "id": "D-358",
+   "verdict": "match",
+   "pointer": "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/ServletAdapter.java:21 (public final HttpAdapter on javax.servlet 3.1); build.gradle:139-142 (jakarta/servlet/ prefix for :NaruServe-servlet); src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java sdsAc7_IR_SVL_001_AC7"
+  },
+  {
+   "id": "D-359",
+   "verdict": "match",
+   "pointer": "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/NaruServeInitializer.java:28-45 (app.listen(0) at container init) and ShutdownListener.java:32-41 (app.shutdown at destroy); ServletLifecycleTest.java (FR-SVL-001)"
+  },
+  {
+   "id": "D-360",
+   "verdict": "match",
+   "pointer": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletCasesTest.java:77 sdsAc4_FR_SVL_002_AC4 (shared case suite, SharedApp.java, identical statuses and bodies on both adapters)"
+  },
+  {
+   "id": "D-361",
+   "verdict": "match",
+   "pointer": "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/ServletEventStream.java:40-74 (startAsync, setTimeout(0), pool-owned drain) and ServletSseAsyncTest.java (FR-SVL-005)"
+  },
+  {
+   "id": "D-362",
+   "verdict": "match",
+   "pointer": "build.gradle:275-292 (Jetty 9.4.58 testImplementation of :NaruServe-servlet only), build.gradle checkDependencyRules Jetty rule, NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ContainerRule.java:41 (CON-SVL-001)"
+  },
+  {
+   "id": "D-363",
+   "verdict": "match",
+   "pointer": "docs/api/servlet.md (registration, path, multipart, WebSocket 501, ignored options) and src/test/java/com/snoworca/naruserve/docs/ServletDocsTest.java (OPS-SVL-001 AC-1..5)"
+  },
+  {
+   "id": "D-364",
+   "verdict": "match",
+   "pointer": "out of v1 scope by user decision 2026-10-20: satisfied by the out-of-scope statement in OPS-REL-007 AC-4 (docs/spec/15.release.srs.md) and the list at docs/release/release-notes.md:5-24; no requirement authored, none marked manual-pending"
+  },
+  {
+   "id": "D-365",
+   "verdict": "match",
+   "pointer": "out of v1 scope by user decision 2026-10-20: satisfied by the out-of-scope statement in OPS-REL-007 AC-4 (docs/spec/15.release.srs.md) and the list at docs/release/release-notes.md:5-24; no requirement authored, none marked manual-pending"
+  },
+  {
+   "id": "D-366",
+   "verdict": "match",
+   "pointer": "out of v1 scope by user decision 2026-10-20: satisfied by the out-of-scope statement in OPS-REL-007 AC-4 (docs/spec/15.release.srs.md) and the list at docs/release/release-notes.md:5-24; no requirement authored, none marked manual-pending"
+  },
+  {
+   "id": "D-367",
+   "verdict": "match",
+   "pointer": "out of v1 scope by user decision 2026-10-20: satisfied by the out-of-scope statement in OPS-REL-007 AC-4 (docs/spec/15.release.srs.md) and the list at docs/release/release-notes.md:5-24; no requirement authored, none marked manual-pending"
+  },
+  {
+   "id": "D-368",
+   "verdict": "match",
+   "pointer": "out of v1 scope by user decision 2026-10-20: satisfied by the out-of-scope statement in OPS-REL-007 AC-4 (docs/spec/15.release.srs.md) and the list at docs/release/release-notes.md:5-24; no requirement authored, none marked manual-pending"
+  },
+  {
+   "id": "D-369",
+   "verdict": "match",
+   "pointer": "out of v1 scope by user decision 2026-10-20: satisfied by the out-of-scope statement in OPS-REL-007 AC-4 (docs/spec/15.release.srs.md) and the list at docs/release/release-notes.md:5-24; no requirement authored, none marked manual-pending"
+  },
+  {
+   "id": "D-370",
+   "verdict": "match",
+   "pointer": "out of v1 scope by user decision 2026-10-20: satisfied by the out-of-scope statement in OPS-REL-007 AC-4 (docs/spec/15.release.srs.md) and the list at docs/release/release-notes.md:5-24; no requirement authored, none marked manual-pending"
+  },
+  {
+   "id": "D-371",
+   "verdict": "match",
+   "pointer": "out of v1 scope by user decision 2026-10-20: satisfied by the out-of-scope statement in OPS-REL-007 AC-4 (docs/spec/15.release.srs.md) and the list at docs/release/release-notes.md:5-24; no requirement authored, none marked manual-pending"
+  },
+  {
+   "id": "D-372",
+   "verdict": "match",
+   "pointer": "out of v1 scope by user decision 2026-10-20: satisfied by the out-of-scope statement in OPS-REL-007 AC-4 (docs/spec/15.release.srs.md) and the list at docs/release/release-notes.md:5-24; no requirement authored, none marked manual-pending"
+  },
+  {
+   "id": "D-373",
+   "verdict": "match",
+   "pointer": "out of v1 scope by user decision 2026-10-20: satisfied by the out-of-scope statement in OPS-REL-007 AC-4 (docs/spec/15.release.srs.md) and the list at docs/release/release-notes.md:5-24; no requirement authored, none marked manual-pending"
+  },
+  {
+   "id": "D-374",
+   "verdict": "match",
+   "pointer": "out of v1 scope by user decision 2026-10-20: satisfied by the out-of-scope statement in OPS-REL-007 AC-4 (docs/spec/15.release.srs.md) and the list at docs/release/release-notes.md:5-24; no requirement authored, none marked manual-pending"
+  },
+  {
+   "id": "D-412",
+   "verdict": "match",
+   "pointer": "out of v1 scope by user decision 2026-10-20: satisfied by the out-of-scope statement in OPS-REL-007 AC-4 (docs/spec/15.release.srs.md) and the list at docs/release/release-notes.md:5-24; no requirement authored, none marked manual-pending"
+  },
+  {
+   "id": "D-375",
+   "verdict": "match",
+   "pointer": "gradle/release.gradle:17-35 (releaseSbom, one CycloneDX JSON per module, runtimeClasspath only) and src/test/java/com/snoworca/naruserve/build/ReleaseScriptTextTest.java (FR-REL-001); run recorded at docs/release/test-results.md run sbom"
+  },
+  {
+   "id": "D-376",
+   "verdict": "match",
+   "pointer": "gradle/release-tools/com/snoworca/naruserve/release/ScanReport.java:62-100 (pending with cause and full dependency list) and docs/release/vulnerability-scan.md (Status: pending, MISSING_API_KEY, 7 dependencies); ScanReportTest.java (FR-REL-002)"
+  },
+  {
+   "id": "D-377",
+   "verdict": "match",
+   "pointer": "gradle/release-tools/com/snoworca/naruserve/release/ReleaseGate.java:40-98 (blocks unexcepted High/Critical, fails closed), docs/release/vulnerability-exceptions.md, gradle/release.gradle:171-178 releaseCheck; ReleaseGateTest.java (FR-REL-003)"
+  },
+  {
+   "id": "D-378",
+   "verdict": "match",
+   "pointer": "gradle/release-tools/com/snoworca/naruserve/release/LicenseCheck.java, ThirdPartyLicenses.java; THIRD-PARTY-LICENSES.md (7 shipped, 3 provided); LicenseCheckTest.java, ThirdPartyLicensesTest.java (FR-REL-004)"
+  },
+  {
+   "id": "D-379",
+   "verdict": "match",
+   "pointer": "README.md (coordinates, publishToMavenLocal, mavenLocal(), quick start) and src/test/java/com/snoworca/naruserve/docs/ReadmeDocsTest.java (OPS-REL-001)"
+  },
+  {
+   "id": "D-380",
+   "verdict": "match",
+   "pointer": "src/test/java/com/snoworca/naruserve/docs/ApiMarkersDocsTest.java:76 exactlyThreeMarkerLines (OPS-REL-002 AC-1); grep of docs/api finds (미확정) only on express-migration.md lines 28, 72, 88; exception recorded in docs/release/release-notes.md Recorded deviations"
+  },
+  {
+   "id": "D-381",
+   "verdict": "match",
+   "pointer": "docs/release/test-results.md (54 rows T01-T50 with four status literals) and src/test/java/com/snoworca/naruserve/docs/ReleaseResultsDocsTest.java (OPS-REL-003)"
+  },
+  {
+   "id": "D-382",
+   "verdict": "match",
+   "pointer": "docs/release/release-notes.md:45-60 (platform matrix, Java 8 row pending, --release 8 and animal-sniffer cited) and ReleaseNotesDocsTest.java (OPS-REL-004)"
+  },
+  {
+   "id": "D-383",
+   "verdict": "match",
+   "pointer": "docs/release/release-notes.md:84-120 and README.md TinyHttpd section (includeBuild, commit 46b973e, recorded consumer run) and ReadmeDocsTest/ReleaseNotesDocsTest (OPS-REL-005)"
+  },
+  {
+   "id": "D-434",
+   "verdict": "match",
+   "pointer": "docs/api/defaults.md:114 (TLS line with both reasons, no Q-3), docs/release/release-notes.md:62-83 post-v1 TLS/WSS entry (OPS-REL-006 AC-1..3)"
+  }
+ ],
+ "constraints": [
+  {
+   "id": "C-01",
+   "verdict": "match",
+   "pointer": "gradle/wrapper/gradle-wrapper.properties (gradle-8.14.3-bin.zip); no pom.xml in the tree; gradle/release.gradle is a Gradle script applied from build.gradle, CLAUDE.md names the exception (CON-BUILD-017 AC-3)"
+  },
+  {
+   "id": "C-02",
+   "verdict": "match",
+   "pointer": "build.gradle:39 options.release = 8 and :44 jvmTarget 1.8; animal-sniffer android-api-level-21 on the seven API 21 modules passes in ./gradlew build; docs/release/release-notes.md API 21 checks"
+  },
+  {
+   "id": "C-03",
+   "verdict": "match",
+   "pointer": "wave-8 Kotlin tests FR-KT-001..006, IR-KT-001/002 (SAM lambdas, nullability, property syntax, reified body) all pass; NaruServe-kotlin/.../RequestExtensions.kt:11"
+  },
+  {
+   "id": "C-04",
+   "verdict": "match",
+   "pointer": "NaruServe-servlet module: ServletAdapter, NaruServeInitializer, NaruServeServlet host a NaruServe app in a javax.servlet 3.1 container (FR-SVL-001..008)"
+  },
+  {
+   "id": "C-05",
+   "verdict": "match",
+   "pointer": "docs/api/express-migration.md and docs/api/servlet.md carry Express counterparts; docs/api updated with every API change (OPS-REL-002, OPS-SVL-001, OPS-KT-001)"
+  },
+  {
+   "id": "C-06",
+   "verdict": "match",
+   "pointer": "settings.gradle:4-5 includes :NaruServe-api and :NaruServe-servlet"
+  },
+  {
+   "id": "C-07",
+   "verdict": "match",
+   "pointer": "docs/api markers resolved or rewritten as post-v1 items without asking (OPS-REL-002); three recorded exceptions in express-migration.md are a settled wave decision"
+  },
+  {
+   "id": "C-08",
+   "verdict": "match",
+   "pointer": "docs/analysis/2026-10-19.NaruServe.naruserve-v1/auto_decisions.json: committee gate partition-review-unrecorded appended (2 votes, pass); run completed without stopping"
+  },
+  {
+   "id": "C-09",
+   "verdict": "match",
+   "pointer": "docs/release/test-results.md lists T01-T50; ./gradlew build exit 0 with 1529 tests, 0 failures, 0 skipped (this verification)"
+  }
+ ],
+ "preservation": [
+  {
+   "item": "CLAUDE.md",
+   "verdict": "intended-improvement",
+   "evidence": "+1 line only: names gradle/release.gradle and -Prelease as the single build-config exception; required by CON-BUILD-017 AC-3 and asserted by BuildLayoutTest.con_BUILD_017_AC3_claudeMdStatesReleaseScriptException"
+  },
+  {
+   "item": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java",
+   "verdict": "intended-improvement",
+   "evidence": "OPS-HTTP-008 (successor of OPS-HTTP-007) and SDS-AC-10..18 of wave-8-12: methods renamed OPS_HTTP_007->008 with bodies unchanged; the one changed expectation is sdsAc6_..._responseKeepsNoMarker (was: exactly one marker line for res.redirect; now: zero marker lines plus the post-v1 sentence with the 302 replacement), required by OPS-HTTP-008 AC-8 and OPS-REL-002 AC-3/AC-6; the expressKeepsOtherIssuesMarkers, requestKeepsNoMarker and routingKeepsNoMarker assertions are untouched; no assertion is weakened (the new one is strictly stronger on markers)"
+  },
+  {
+   "item": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/JsonDocsKotlinTest.kt",
+   "verdict": "intended-improvement",
+   "evidence": "+9 comment-only lines (// docs-example and // adapted markers) required by FR-KT-004 AC-1/AC-5; no executable line or assertion changed"
+  },
+  {
+   "item": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/SseDocsKotlinTest.kt",
+   "verdict": "intended-improvement",
+   "evidence": "+1 comment line (// docs-example: sse.md#1) required by FR-KT-004 AC-1/AC-5; no assertion changed"
+  },
+  {
+   "item": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/WebSocketDocsKotlinTest.kt",
+   "verdict": "intended-improvement",
+   "evidence": "+1 comment line (// docs-example: websocket.md#2) required by FR-KT-004 AC-1/AC-5; no assertion changed"
+  },
+  {
+   "item": "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/package-info.java",
+   "verdict": "intended-improvement",
+   "evidence": "adds @NullMarked and an @req IR-SVL-001 tag, required by IR-SVL-001 AC-1 (package annotated @NullMarked); existing javadoc kept"
+  },
+  {
+   "item": "build.gradle",
+   "verdict": "intended-improvement",
+   "evidence": "additive: maven-publish (FR-REL-005), jakarta/servlet/ prefix for :NaruServe-servlet (IR-SVL-001 AC-7), Jetty and javax rules in checkDependencyRules (CON-SVL-001), checkNoCoroutines (CON-KT-001), servlet test dependencies, release-tools source dir, guarded apply from gradle/release.gradle (FR-REL-001, CON-BUILD-017 AC-1); wave-1 prefix lists and pinned strings of BuildLayoutTest unchanged"
+  },
+  {
+   "item": "docs/analysis/2026-10-19.NaruServe.naruserve-v1/auto_decisions.json",
+   "verdict": "intended-improvement",
+   "evidence": "append-only: one new committee gate record (partition-review-unrecorded, stage 8 lane plan, 2 pass votes); no earlier entry altered; run-process record under constraint C-08, no REQ owns it"
+  },
+  {
+   "item": "docs/api/README.md",
+   "verdict": "intended-improvement",
+   "evidence": "status banner rewritten from \"not implemented yet\" to the v1 description naming the three open Express rows; required by OPS-REL-002 AC-2 (ApiMarkersDocsTest.sdsAc2_OPS_REL_002_AC2_apiReadmeBanner)"
+  },
+  {
+   "item": "docs/api/defaults.md",
+   "verdict": "intended-improvement",
+   "evidence": "low-end Android tuning paragraph rewritten as a post-v1 item under the unchanged heading (OPS-REL-002 AC-4) and the TLS line carries the two D-434 reasons without Q-3 (OPS-REL-006 AC-1); WaveFiveDocsTest and WaveSevenDocsTest pinned tokens kept"
+  },
+  {
+   "item": "docs/api/express-migration.md",
+   "verdict": "intended-improvement",
+   "evidence": "res.type and res.render rows and the undecided-features sentence rewritten as v1 exclusions with reasons (OPS-REL-002 AC-3); the three pinned (미확정) rows and the section heading kept byte-identical; coroutine bullet aligned with kotlin.md (OPS-KT-001 AC-4)"
+  },
+  {
+   "item": "docs/api/kotlin.md",
+   "verdict": "intended-improvement",
+   "evidence": "null paragraph names @NullMarked and @Nullable (OPS-KT-001 AC-2), import line and stdlib sentence added (AC-3), Coroutine section states the post-v1 item with reason (AC-4); the 12-row nullable table untouched (AC-5)"
+  },
+  {
+   "item": "docs/api/lifecycle.md",
+   "verdict": "intended-improvement",
+   "evidence": "+2 lines stating the Android ServerService example is documented but not compiled by the v1 build; required by OPS-REL-007 AC-2"
+  },
+  {
+   "item": "docs/api/response.md",
+   "verdict": "intended-improvement",
+   "evidence": "res.redirect section rewritten from a (미확정) marker to a post-v1 statement with the 302 replacement; required by OPS-HTTP-008 AC-8 and OPS-REL-002 AC-3"
+  },
+  {
+   "item": "docs/api/servlet.md",
+   "verdict": "intended-improvement",
+   "evidence": "rewritten from the planned-API sketch to the implemented adapter contract (registration, init-parameters, path, lifecycle, SSE, WebSocket 501, ignored options, path-rejection table); required by OPS-SVL-001 AC-1..5 and D-363"
+  },
+  {
+   "item": "docs/api/sse.md",
+   "verdict": "intended-improvement",
+   "evidence": "+1 bullet pointing to the Servlet shutdown deviation; required by FR-SVL-006 AC-3 and OPS-SVL-001 AC-5; no pinned wave-7 line changed"
+  },
+  {
+   "item": "src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java",
+   "verdict": "intended-improvement",
+   "evidence": "additive only (+59, 0 deleted): sdsAc7_IR_SVL_001_AC7 jakarta fixture and the two CON-KT-001 checkNoCoroutines tests; no existing assertion touched"
+  },
+  {
+   "item": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java",
+   "verdict": "intended-improvement",
+   "evidence": "con_BUILD_003_AC1/AC2 renamed con_BUILD_017_AC1/AC2 with bodies byte-identical (CON-BUILD-017 AC-1/AC-2, FR-REL-001 AC-5); new tests added for the guarded apply, the CLAUDE.md exception and checkNoCoroutines; components() widened from private to package-private for ServletBuildTest; no assertion weakened"
+  },
+  {
+   "item": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java",
+   "verdict": "intended-improvement",
+   "evidence": "OPS-HTTP-007 citations re-pointed to OPS-HTTP-008 (OPS-REL-002 AC-6), @req OPS-SVL-001 added and wave8s8SdsAc9_OPS_SVL_001_AC4 added (+27, 0 weakened); SKIPS list unchanged"
+  },
+  {
+   "item": "src/test/java/com/snoworca/naruserve/docs/WaveFiveDocsTest.java",
+   "verdict": "intended-improvement",
+   "evidence": "+1 comment line citing SDS-AC-9 of wave-8-12 and OPS-REL-006 AC-3; the TLS line assertion is unchanged and passes"
+  }
+ ],
+ "unit": [
+  {
+   "id": "lane-2026-10-19.naruserve.naruserve-v1-wave-8",
+   "verdict": "match",
+   "pointer": "15 lane commits 9a35c50..c88825d (manifest.json commits[]) are all ancestors of the integration head 3e75520 via merge 9a2cfd0, each carrying Orch-Lane: lane-2026-10-19.naruserve.naruserve-v1-wave-8; ./gradlew build exit 0 (BUILD SUCCESSFUL, 1529 tests, 0 failures, 0 skipped)"
+  }
+ ],
+ "findings": [
+  {
+   "finding_id": "P1-001",
+   "severity": "low",
+   "claim": "The recorded full-suite run predates the review-fix and citation commits: it names commit ae44f5a and tests=1527, while the merged head 9a2cfd0 (after 4320bb2, 9087a45, c88825d) runs 1529 tests. I-019 asks for the full suite to pass at the end of the run; it does (re-run during this verification, exit 0), but the committed record and the API 21 check records (same commit ae44f5a) do not describe the merged head.",
+   "evidence": "docs/release/test-results.md:98; docs/release/release-notes.md:41-43 (API 21 checks, commit=ae44f5a)",
+   "suggested_fix": "Re-run ./gradlew build --rerun-tasks at the final head and update the run full-suite line (commit, tests=1529) and the three API 21 check lines."
+  },
+  {
+   "finding_id": "P1-002",
+   "severity": "low",
+   "claim": "Four acceptance criteria of requirements at Status implemented have no row in their Verification Evidence table although their proof exists in docs: FR-REL-001 AC-2 and AC-4 (recorded sbom and offline-build runs), FR-REL-004 AC-4 (recorded licenses run) and OPS-REL-001 AC-3 (README statement). A later promotion to verified would have to add the rows first.",
+   "evidence": "docs/spec/15.release.srs.md FR-REL-001 evidence rows VE-1..VE-8 (no AC-2, AC-4), FR-REL-004 VE-1..VE-9 (no AC-4), OPS-REL-001 VE-1..VE-3 (no AC-3); proofs at docs/release/test-results.md:98-110 and README.md:88-96",
+   "suggested_fix": "Add inspection-type evidence rows pointing to the recorded run lines of docs/release/test-results.md and to README.md for these four ACs when the requirements are promoted."
+  },
+  {
+   "finding_id": "P1-003",
+   "severity": "low",
+   "claim": "FR-REL-004 AC-1 asks for license name and URL per shipped dependency, but the two TinyHttpd rows of THIRD-PARTY-LICENSES.md carry the repository-relative path TinyHttpd/LICENSE in the url column, which is not a URL and does not resolve inside this repository.",
+   "evidence": "THIRD-PARTY-LICENSES.md:9-10; gradle/release.gradle:115-117",
+   "suggested_fix": "Use the TinyHttpd repository LICENSE URL (or state the BSD 3-Clause text location in words) in the url column; keep the ThirdPartyLicensesTest row check."
+  }
+ ],
+ "roll_up": "ALL_MATCH"
+}

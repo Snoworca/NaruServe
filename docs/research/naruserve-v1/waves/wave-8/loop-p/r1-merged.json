@@ -1,0 +1,56 @@
+{
+ "findings": [
+  {
+   "finding_id": "P1-001",
+   "severity": "low",
+   "claim": "The recorded full-suite run predates the review-fix and citation commits: it names commit ae44f5a and tests=1527, while the merged head 9a2cfd0 (after 4320bb2, 9087a45, c88825d) runs 1529 tests. I-019 asks for the full suite to pass at the end of the run; it does (re-run during this verification, exit 0), but the committed record and the API 21 check records (same commit ae44f5a) do not describe the merged head.",
+   "evidence": "docs/release/test-results.md:98; docs/release/release-notes.md:41-43 (API 21 checks, commit=ae44f5a)",
+   "suggested_fix": "Re-run ./gradlew build --rerun-tasks at the final head and update the run full-suite line (commit, tests=1529) and the three API 21 check lines."
+  },
+  {
+   "finding_id": "P1-002",
+   "severity": "low",
+   "claim": "Four acceptance criteria of requirements at Status implemented have no row in their Verification Evidence table although their proof exists in docs: FR-REL-001 AC-2 and AC-4 (recorded sbom and offline-build runs), FR-REL-004 AC-4 (recorded licenses run) and OPS-REL-001 AC-3 (README statement). A later promotion to verified would have to add the rows first.",
+   "evidence": "docs/spec/15.release.srs.md FR-REL-001 evidence rows VE-1..VE-8 (no AC-2, AC-4), FR-REL-004 VE-1..VE-9 (no AC-4), OPS-REL-001 VE-1..VE-3 (no AC-3); proofs at docs/release/test-results.md:98-110 and README.md:88-96",
+   "suggested_fix": "Add inspection-type evidence rows pointing to the recorded run lines of docs/release/test-results.md and to README.md for these four ACs when the requirements are promoted."
+  },
+  {
+   "finding_id": "P1-003",
+   "severity": "low",
+   "claim": "FR-REL-004 AC-1 asks for license name and URL per shipped dependency, but the two TinyHttpd rows of THIRD-PARTY-LICENSES.md carry the repository-relative path TinyHttpd/LICENSE in the url column, which is not a URL and does not resolve inside this repository.",
+   "evidence": "THIRD-PARTY-LICENSES.md:9-10; gradle/release.gradle:115-117",
+   "suggested_fix": "Use the TinyHttpd repository LICENSE URL (or state the BSD 3-Clause text location in words) in the url column; keep the ThirdPartyLicensesTest row check."
+  },
+  {
+   "finding_id": "P2-001",
+   "severity": "low",
+   "severity_class": "hardening",
+   "claim": "ServletExchange.abort() is deliberately lock-free and calls AsyncContext.complete() from stop()/completeAll() or an AsyncListener thread while an SSE drain thread may be inside FlushingStream.write/flush on the same response. The Servlet spec leaves a response write that races complete() undefined; a container that recycles request/response objects on complete (Tomcat-style) could see the drain write on a recycled response. The 'aborted before complete' ordering guards only later writes, not one already in progress. Only Jetty 9.4 is verified and docs/api/servlet.md says so, so no defect is observed today; later waves that add a container (Tomcat/WildFly) will hit it.",
+   "evidence": "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/ServletExchange.java:196-201 (abort -> complete), NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/ServletEventStream.java:171-180 (completeAll) and 215-231 (writes under synchronized(ex) that abort() does not take)",
+   "suggested_fix": "If a non-Jetty container is ever verified, complete the AsyncContext from the drain thread (it already completes in drainTask's finally) and let completeAll only set aborted plus a write timeout, or take the exchange lock with a bounded tryLock before complete(). Until then keep the Jetty-only statement in docs/api/servlet.md."
+  },
+  {
+   "finding_id": "S2-001",
+   "severity": "medium",
+   "items": [
+    "FR-MULTIPART-003",
+    "OPS-MULTIPART docs/api/multipart.md"
+   ],
+   "claim": "A file input left empty in a browser form arrives as a part with filename=\"\" and an empty body. MultipartParser.params() keeps the empty quoted value, so p.get(\"filename\") is \"\" (not null), the part is spooled as a file part, and FormData.firstFile/files treat it as a file because they test only filename() != null. req.file(\"avatar\") therefore returns a zero-byte UploadFile with filename \"\" instead of null, so the documented guard in the multipart.md example (if file == null -> 400 Missing file) never fires for a browser form, and file.save(dest) writes an empty file. multer (the Express counterpart the doc maps to) drops such a part. The behaviour is neither documented nor pinned by a test (no test or doc mentions an empty filename).",
+   "evidence": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/MultipartParser.java:96 (filename != null branch) and params() keeps v=\"\" for filename=\"\"; NaruServe-api/src/main/java/com/snoworca/naruserve/internal/FormData.java:91 and :103 (filename() != null); docs/api/multipart.md:21 (file == null guard in the example)",
+   "suggested_fix": "Either treat an empty filename with an empty body as an absent file (skip the part, still count it in maxParts) so req.file returns null, or state in docs/api/multipart.md that a browser sends filename=\"\" for an empty file input and that handlers must check file.filename().isEmpty() / file.size() == 0; add a test with filename=\"\" in either case."
+  },
+  {
+   "finding_id": "S2-002",
+   "severity": "low",
+   "items": [
+    "IR-HTTP-007",
+    "FR-ENGINE-011",
+    "FR-SVL-003"
+   ],
+   "claim": "HttpExchange.sendFile has two different check orders in the two shipped adapters and the SPI Javadoc fixes neither. TinyHttpdExchange.sendFile validates the range first (IllegalArgumentException) and then the abort/single-start rule, while ServletExchange.sendFile runs requireStartable() first and the range after. On an already started or aborted exchange with a bad range, Tiny throws IllegalArgumentException and Servlet throws IllegalStateException/IOException. The Tiny inline comment ('the abort check and single-start rule win over a failed open') also contradicts its own order for the range check. The core never calls sendFile (DefaultResponse.sendBody streams through commit), so no user path is affected today; the SPI contract test only covers the happy range.",
+   "evidence": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdExchange.java:267-276; NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/ServletExchange.java:206-214; NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpExchange.java:79-81",
+   "suggested_fix": "Pick one order (start/abort rule first, as the Servlet adapter and the Tiny comment say), apply it in TinyHttpdExchange.sendFile, state it in the HttpExchange.sendFile Javadoc and add a shared SPI contract case for a bad range on a started exchange."
+  }
+ ]
+}

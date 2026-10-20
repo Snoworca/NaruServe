@@ -1,0 +1,51 @@
+# Wave 8 issues (3.m triage)
+
+| issue | class | resolution |
+|---|---|---|
+| w8-P1-001 | local-defect | commit-sha b0cd6f8effd1a8dac770ad7cc40fc59ef670ffe9 |
+| w8-P1-002 | local-defect | commit-sha de35ca2940b126b57392cfdcd9e40e56e4bff2ef |
+| w8-D-001 | local-defect | commit-sha de35ca2940b126b57392cfdcd9e40e56e4bff2ef |
+| w8-P1-003 | local-defect | commit-sha 5a03978d03bdfb270d70c5c5e750270d9a45faaa |
+| w8-D-006 | local-defect | commit-sha 5a03978d03bdfb270d70c5c5e750270d9a45faaa |
+| w8-D-007 | local-defect | commit-sha 5a03978d03bdfb270d70c5c5e750270d9a45faaa |
+| w8-D-008 | local-defect | commit-sha 5a03978d03bdfb270d70c5c5e750270d9a45faaa |
+| w8-D-009 | local-defect | commit-sha 5a03978d03bdfb270d70c5c5e750270d9a45faaa |
+| w8-D-010 | local-defect | commit-sha 5a03978d03bdfb270d70c5c5e750270d9a45faaa |
+| w8-P2-001 | local-defect | commit-sha f7cfac2b825ff4acedf23aa427dcbb10e0ba79ab |
+| w8-S2-002 | local-defect | commit-sha f7cfac2b825ff4acedf23aa427dcbb10e0ba79ab |
+| w8-D-002 | local-defect | commit-sha f7cfac2b825ff4acedf23aa427dcbb10e0ba79ab |
+| w8-D-003 | local-defect | commit-sha f7cfac2b825ff4acedf23aa427dcbb10e0ba79ab |
+| w8-D-004 | local-defect | commit-sha f7cfac2b825ff4acedf23aa427dcbb10e0ba79ab |
+| w8-D-005 | local-defect | commit-sha f7cfac2b825ff4acedf23aa427dcbb10e0ba79ab |
+| w8-S2-001 | local-defect | commit-sha 173e22c39b13c1527ec3cdfb1a38773ba06c7ca7 |
+| w8-D-011 | local-defect | commit-sha 69809b971001b87af17240bddfcc06cb3bd950b4 |
+| w8-D-012 | local-defect | commit-sha 69809b971001b87af17240bddfcc06cb3bd950b4 |
+| w8-D-013 | local-defect | commit-sha 69809b971001b87af17240bddfcc06cb3bd950b4 |
+| w8-D-014 | local-defect | commit-sha 69809b971001b87af17240bddfcc06cb3bd950b4 |
+| w8-D-015 | local-defect | commit-sha 69809b971001b87af17240bddfcc06cb3bd950b4 |
+| w8-D-016 | local-defect | commit-sha 69809b971001b87af17240bddfcc06cb3bd950b4 |
+| w8-D-017 | local-defect | commit-sha 69809b971001b87af17240bddfcc06cb3bd950b4 |
+| w8-D-018 | local-defect | commit-sha 69809b971001b87af17240bddfcc06cb3bd950b4 |
+| w8-D-019 | local-defect | commit-sha 69809b971001b87af17240bddfcc06cb3bd950b4 |
+| w8-D-020 | local-defect | commit-sha 69809b971001b87af17240bddfcc06cb3bd950b4 |
+| w8-D-021 | local-defect | commit-sha 69809b971001b87af17240bddfcc06cb3bd950b4 |
+| w8-D-022 | local-defect | commit-sha cc9d318ea1b384589f59b692a3f8b5e0a303cb75 |
+| w8-D-023 | local-defect | commit-sha cc9d318ea1b384589f59b692a3f8b5e0a303cb75 |
+| w8-D-025 | local-defect | commit-sha cc9d318ea1b384589f59b692a3f8b5e0a303cb75 |
+| w8-D-026 | local-defect | commit-sha cc9d318ea1b384589f59b692a3f8b5e0a303cb75 |
+| w8-D-027 | local-defect | commit-sha cc9d318ea1b384589f59b692a3f8b5e0a303cb75 |
+| w8-D-028 | local-defect | commit-sha cc9d318ea1b384589f59b692a3f8b5e0a303cb75 |
+| w8-D-024 | local-defect | commit-sha 20b0a98d185959882e225af4c62315d4f697347e |
+| w8-D-029 | local-defect | commit-sha a26b2875a827902c054376d7b5501081e9f429ef |
+| w8-D-030 | local-defect | commit-sha 9d21cda7d24c3c1f0df36b5c81963737464b6ab6 |
+| w8-D-031 | local-defect | commit-sha aa4126bacb6bcc2da533811cc2555b43ce5fca2f |
+| w8-D-032 | local-defect | commit-sha d57af39a5a48b55ce9d12b56cc15f4fe8cf21239 |
+| w8-D-033 | local-defect | commit-sha f202f2428b6a89fdc494a8ff7d378105a538a6ea |
+| w8-D-038 | local-defect | commit-sha f202f2428b6a89fdc494a8ff7d378105a538a6ea |
+| w8-D-034 | local-defect | commit-sha e2c5097b5e9d47d7159f4857875813daa02358a3 |
+| w8-D-035 | local-defect | commit-sha 89b371549d8f35ae6d3f2536d066232da2a69bf5 |
+| w8-D-036 | local-defect | commit-sha 89b371549d8f35ae6d3f2536d066232da2a69bf5 |
+| w8-D-037 | local-defect | commit-sha 89b371549d8f35ae6d3f2536d066232da2a69bf5 |
+| w8-D-039 | local-defect | commit-sha 89b371549d8f35ae6d3f2536d066232da2a69bf5 |
+| w8-D-040 | local-defect | commit-sha 89b371549d8f35ae6d3f2536d066232da2a69bf5 |
+| w8-D-041 | local-defect | commit-sha 93106928f1fd8308dc447b8ec5845eb3a66e8143 |
