@@ -1,5 +1,7 @@
 package com.snoworca.naruserve.release;
 
+import com.snoworca.naruserve.common.CvssScores;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -42,7 +44,12 @@ public final class ReleaseGate {
         if (!status.find()) {
             return new Decision(false, "release blocked: the vulnerability report has no 'Status:' line");
         }
-        if (status.group(1).equals("pending")) {
+        String state = status.group(1);
+        Matcher statusLines = Pattern.compile("(?m)^Status:.*$").matcher(report);
+        int statusCount = 0;
+        while (statusLines.find()) statusCount++;
+        if (statusCount != 1) return new Decision(false, "release blocked: ambiguous vulnerability report status");
+        if (state.equals("pending")) {
             return new Decision(true, PENDING_MESSAGE);
         }
         Set<String> deps = new HashSet<>();
@@ -67,10 +74,28 @@ public final class ReleaseGate {
             return new Decision(false, "release blocked: the completed vulnerability report has no '## Findings'");
         }
         List<String> blocked = new ArrayList<>();
-        for (List<String> row : rows(section(report, "## Findings"))) {
-            if (row.size() != 4 || row.get(0).equals("dependency")) {
+        List<String> findingLines = section(report, "## Findings");
+        boolean noFindings = false;
+        for (String line : findingLines) {
+            String text = line.trim();
+            if (text.equals("no findings")) noFindings = true;
+            else if (!text.isEmpty() && !(text.startsWith("|") && text.endsWith("|"))) {
+                return new Decision(false, "release blocked: malformed vulnerability finding line");
+            }
+        }
+        int findingCount = 0;
+        for (List<String> row : rows(findingLines)) {
+            if (row.get(0).equals("dependency")) {
+                if (row.size() != 4 || !row.get(1).equals("identifier") || !row.get(2).equals("CVSS")
+                        || !row.get(3).equals("severity")) {
+                    return new Decision(false, "release blocked: malformed findings header");
+                }
                 continue;
             }
+            if (row.size() != 4 || row.get(0).isEmpty() || row.get(1).isEmpty()) {
+                return new Decision(false, "release blocked: malformed vulnerability finding");
+            }
+            findingCount++;
             String dependency = row.get(0);
             boolean coordinate = COORDINATE.matcher(dependency).matches();
             if (coordinate && !shippedModules.contains(DependencyList.module(dependency))) {
@@ -84,12 +109,18 @@ public final class ReleaseGate {
             }
             // Fail closed: an unscored finding blocks, and so does a High one whose dependency is a jar name, not a
             // coordinate that could be checked against the shipped list.
+            if (!Double.isNaN(cvss) && !CvssScores.isValid(cvss)) {
+                return new Decision(false, "release blocked: invalid CVSS score in vulnerability finding");
+            }
             boolean blocking = Double.isNaN(cvss) || cvss >= 7.0;
             if (blocking && !excepted.contains(row.get(1) + " " + dependency)) {
                 blocked.add("release blocked: " + ScanReport.severityOf(cvss) + " " + row.get(1) + " in " + dependency
                         + " (CVSS " + row.get(2) + ") has no complete exception in"
                         + " docs/release/vulnerability-exceptions.md");
             }
+        }
+        if ((findingCount == 0 && !noFindings) || (findingCount > 0 && noFindings)) {
+            return new Decision(false, "release blocked: incomplete or contradictory findings section");
         }
         if (!blocked.isEmpty()) {
             return new Decision(false, String.join("\n", blocked));

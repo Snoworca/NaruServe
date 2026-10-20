@@ -127,4 +127,30 @@ public class ReleaseGateTest {
         assertFalse(normalised.message, normalised.pass);
         assertTrue(normalised.message, normalised.message.contains("com.google.code.gson:gson:2.14"));
     }
+    // FR-REL-003 AC-1: malformed completed evidence must fail closed.
+    @Test
+    public void malformedCompletedReportsAndInvalidScoresCannotClearRelease() {
+        String valid = report(GSON, 9.8);
+        String blank = valid.substring(0, valid.indexOf("| dependency"))
+                + "\n## Dependencies\n" + GSON + "\n";
+        assertFalse(ReleaseGate.decide(blank, NO_EXCEPTIONS).pass);
+        assertFalse(ReleaseGate.decide(valid.replace("Status: completed", "Status: pending\nStatus: completed"), NO_EXCEPTIONS).pass);
+        assertFalse(ReleaseGate.decide(valid.replace("| " + GSON + " | CVE-2099-0001 | 9.8 | Critical |",
+                "| " + GSON + " | CVE-2099-0001 | 9.8 |"), NO_EXCEPTIONS).pass);
+        for (String score : new String[] {"-1", "11", "Infinity", "-Infinity", "NaN"}) {
+            assertFalse(score, ReleaseGate.decide(valid.replace("| 9.8 |", "| " + score + " |"), NO_EXCEPTIONS).pass);
+        }
+    }
+
+    // FR-REL-003 AC-1: one valid low-risk row cannot hide a truncated dangerous row.
+    @Test
+    public void malformedLinesBesideValidFindingsStillBlock() {
+        String valid = report(GSON, 6.4);
+        for (String line : new String[] {"| " + GSON + " | CVE-CRITICAL | 9.8 | Critical",
+                GSON + " | CVE-CRITICAL | 9.8 | Critical |", "truncated finding", "| dependency |"}) {
+            assertFalse(line, ReleaseGate.decide(valid.replace("## Findings\n", "## Findings\n" + line + "\n"), NO_EXCEPTIONS).pass);
+        }
+        assertFalse(ReleaseGate.decide(valid.replace("Status: completed", "Status: completed\nStatus: unknown"), NO_EXCEPTIONS).pass);
+    }
+
 }

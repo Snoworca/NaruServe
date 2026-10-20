@@ -1,0 +1,24 @@
+{
+  "issue": 37,
+  "title": "불완전한 취약점 보고서와 잘못된 CVSS 점수의 릴리스 통과 방지",
+  "requirements": {
+    "FR-REL-002": [
+      "AC-2"
+    ],
+    "FR-REL-003": [
+      "AC-1"
+    ]
+  },
+  "testReference": "src/test/java/com/snoworca/naruserve/build/ReleaseGateTest.java",
+  "logs": {
+    "red": "docs/release/audit-2026-10-21/37/red.log",
+    "green17": "docs/release/audit-2026-10-21/37/green17.log",
+    "green8": "docs/release/audit-2026-10-21/37/green8.log"
+  },
+  "runtimeVerification": [
+    "JDK17",
+    "OpenJDK1.8.0_504"
+  ],
+  "review": "no remaining HIGH/MEDIUM findings",
+  "integrationRegression": "epic #36 final integration gate"
+}

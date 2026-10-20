@@ -1,5 +1,7 @@
 package com.snoworca.naruserve.release;
 
+import com.snoworca.naruserve.common.CvssScores;
+
 import com.snoworca.naruserve.release.LicenseCheck.License;
 import com.snoworca.naruserve.release.ScanReport.Finding;
 import java.io.ByteArrayOutputStream;
@@ -17,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -153,29 +156,38 @@ public final class ReleaseMain {
     // @req FR-REL-002
     public static List<Finding> findingsFromCsv(String csv) {
         List<List<String>> rows = parseCsv(csv);
-        if (rows.isEmpty() || !rows.get(0).contains("CVE") || !rows.get(0).contains("Identifiers")) {
+        if (rows == null || rows.isEmpty() || !rows.get(0).contains("CVE") || !rows.get(0).contains("Identifiers")
+                || new HashSet<String>(rows.get(0)).size() != rows.get(0).size()) {
             return null; // an empty or truncated report is not a scan without findings
         }
         List<Finding> findings = new ArrayList<>();
         List<String> header = rows.get(0);
         for (List<String> row : rows.subList(1, rows.size())) {
+            if (row.size() != header.size() || cell(header, row, "CVE").isEmpty()) return null;
             Matcher purl = PURL.matcher(cell(header, row, "Identifiers"));
             // Without a purl the jar name stays, which ReleaseGate cannot match and so blocks on.
             String dependency = purl.find() ? purl.group(1) + ":" + purl.group(2) + ":" + decode(purl.group(3))
                     : cell(header, row, "DependencyName");
+            if (dependency.isEmpty()) return null;
             double cvss = Double.NaN;
+            boolean invalidScore = false;
             for (String column : new String[] {"CVSSv3_BaseScore", "CVSSv4_BaseScore", "CVSSv2_Score"}) {
                 String score = cell(header, row, column);
                 if (Double.isNaN(cvss) && !score.isEmpty()) {
                     try {
                         cvss = Double.parseDouble(score);
+                        if (!CvssScores.isValid(cvss)) {
+                            invalidScore = true;
+                            cvss = Double.NaN;
+                            break;
+                        }
                     } catch (NumberFormatException ignored) {
                         // a non-numeric score counts as no score
                     }
                 }
             }
             for (String column : new String[] {"CVSSv3_BaseSeverity", "CVSSv4_BaseSeverity", "CVSSv2_Severity"}) {
-                if (Double.isNaN(cvss)) {
+                if (!invalidScore && Double.isNaN(cvss)) {
                     cvss = bandFloor(cell(header, row, column));
                 }
             }
@@ -187,7 +199,7 @@ public final class ReleaseMain {
     /** The ScanDate of the first data row, or null when the report has no rows. */
     public static String scanDateFromCsv(String csv) {
         List<List<String>> rows = parseCsv(csv);
-        return rows.size() > 1 ? cell(rows.get(0), rows.get(1), "ScanDate") : null;
+        return rows != null && rows.size() > 1 ? cell(rows.get(0), rows.get(1), "ScanDate") : null;
     }
 
     /** The lowest score of a named severity band, so a severity without a score still lands in its band. */
@@ -220,6 +232,7 @@ public final class ReleaseMain {
         List<String> row = new ArrayList<>();
         StringBuilder field = new StringBuilder();
         boolean quoted = false;
+        boolean closed = false;
         for (int i = 0; i < csv.length(); i++) {
             char c = csv.charAt(i);
             if (quoted) {
@@ -228,12 +241,15 @@ public final class ReleaseMain {
                     i++;
                 } else if (c == '"') {
                     quoted = false;
+                    closed = true;
                 } else {
                     field.append(c);
                 }
             } else if (c == '"') {
+                if (closed || field.length() != 0) return null;
                 quoted = true;
             } else if (c == ',') {
+                closed = false;
                 row.add(field.toString());
                 field.setLength(0);
             } else if (c == '\n' || c == '\r') {
@@ -242,10 +258,13 @@ public final class ReleaseMain {
                 }
                 endRow(rows, row, field);
                 row = new ArrayList<>();
+                closed = false;
             } else {
+                if (closed) return null;
                 field.append(c);
             }
         }
+        if (quoted) return null;
         endRow(rows, row, field);
         return rows;
     }
