@@ -123,13 +123,18 @@ public final class WaveFiveDocsTest {
 
     /** The cells of the defaults.md table row whose first cell is {@code label}. */
     static String[] row(String defaults, String label) {
-        String line = lineWith(defaults, "| " + label + " |");
+        String[] cells = cells(lineWith(defaults, "| " + label + " |"));
+        assertEquals(label, cells[0]);
+        return cells;
+    }
+
+    /** The trimmed cells between the outer pipes of one markdown table line. */
+    static String[] cells(String line) {
         String[] raw = line.split("\\|", -1);
         String[] cells = new String[raw.length - 2];
         for (int i = 1; i < raw.length - 1; i++) {
             cells[i - 1] = raw[i].trim();
         }
-        assertEquals(label, cells[0]);
         return cells;
     }
 

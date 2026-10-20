@@ -70,25 +70,16 @@ public final class WaveSevenDocsTest {
 
     /** The text from {@code heading} up to the next heading of any level, skipping fenced code. */
     static String section(String doc, String heading) {
-        int start = doc.indexOf("\n" + heading + "\n");
-        assertTrue("missing heading " + heading, start >= 0);
-        String[] lines = doc.substring(start + 1).split("\n", -1);
-        StringBuilder sb = new StringBuilder(lines[0]).append('\n');
-        boolean fence = false;
-        for (int i = 1; i < lines.length; i++) {
-            String line = lines[i];
-            if (line.startsWith("```")) {
-                fence = !fence;
-            } else if (!fence && line.startsWith("#")) {
-                break;
-            }
-            sb.append(line).append('\n');
-        }
-        return sb.toString();
+        return section(doc, heading, "#");
     }
 
     /** The text from {@code heading} up to the next level-2 heading ({@code "## "}), skipping fenced code. */
     static String h2Section(String doc, String heading) {
+        return section(doc, heading, "## ");
+    }
+
+    /** The text from {@code heading} up to the next line that starts with {@code stopPrefix}, skipping fenced code. */
+    private static String section(String doc, String heading, String stopPrefix) {
         int start = doc.indexOf("\n" + heading + "\n");
         assertTrue("missing heading " + heading, start >= 0);
         String[] lines = doc.substring(start + 1).split("\n", -1);
@@ -98,7 +89,7 @@ public final class WaveSevenDocsTest {
             String line = lines[i];
             if (line.startsWith("```")) {
                 fence = !fence;
-            } else if (!fence && line.startsWith("## ")) {
+            } else if (!fence && line.startsWith(stopPrefix)) {
                 break;
             }
             sb.append(line).append('\n');
@@ -166,13 +157,7 @@ public final class WaveSevenDocsTest {
 
     /** The websocket.md settings row of {@code setting}, as cells. */
     private static String[] wsRow(String ws, String setting) {
-        String line = lineWith(ws, "| `" + setting + "` |");
-        String[] raw = line.split("\\|", -1);
-        String[] cells = new String[raw.length - 2];
-        for (int i = 1; i < raw.length - 1; i++) {
-            cells[i - 1] = raw[i].trim();
-        }
-        return cells;
+        return WaveFiveDocsTest.cells(lineWith(ws, "| `" + setting + "` |"));
     }
 
     // SDS-AC-3 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-8.sds.md; OPS-WS-001 AC-4
