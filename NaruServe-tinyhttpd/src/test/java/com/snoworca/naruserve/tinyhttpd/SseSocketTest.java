@@ -320,6 +320,51 @@ public class SseSocketTest {
         }
     }
 
+    // SDS-AC-9; FR-SSE-004 AC-2 (T25): the client closes its socket; with heartbeat 1 s the onClose listeners run
+    // once within 3 s, isOpen() turns false, a later send returns false and the access-log line carries cause=client
+    @Test(timeout = 30000)
+    public void sdsAc9_FR_SSE_004_AC2_aClientCloseRunsOnCloseOnceWithin3sAndLogsCauseClient() throws Exception {
+        AtomicReference<SseClient> client = new AtomicReference<>();
+        CountDownLatch opened = new CountDownLatch(1);
+        CountDownLatch closed = new CountDownLatch(1);
+        java.util.concurrent.atomic.AtomicInteger runs = new java.util.concurrent.atomic.AtomicInteger();
+        app = Http.app(adapter, log);
+        app.sse(o -> o.heartbeatInterval(1, TimeUnit.SECONDS));
+        app.get("/events", (req, res) -> {
+            SseClient c = res.sse();
+            c.onClose(() -> {
+                runs.incrementAndGet();
+                closed.countDown();
+            });
+            client.set(c);
+            opened.countDown();
+        });
+        int port = app.listen(0).port();
+        Stream s = new Stream(port, Http.get("/events"));
+        s.readHeaders();
+        assertTrue(opened.await(5, TimeUnit.SECONDS));
+        assertTrue(client.get().isOpen());
+        long t0 = System.nanoTime();
+        s.close();
+        assertTrue("onClose did not run", closed.await(10, TimeUnit.SECONDS));
+        long ms = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - t0);
+        assertTrue("onClose ran " + ms + " ms after the client closed", ms <= 3000);
+        SseClient c = client.get();
+        assertFalse(c.isOpen());
+        assertFalse(c.send("late"));
+        String regex = "INFO GET /events 200 \\d+ms in=0 out=\\d+ rid=[0-9a-f]{16} sse start=\\d+ cause=client";
+        long end = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
+        int lines = 0;
+        while (lines == 0 && System.nanoTime() < end) {
+            for (String line : new ArrayList<>(log.lines)) {
+                lines += line.matches(regex) ? 1 : 0;
+            }
+            Thread.sleep(lines == 0 ? 5 : 0);
+        }
+        assertEquals(log.lines.toString(), 1, lines);
+        assertEquals(1, runs.get());
+    }
+
     // SDS-AC-11; FR-SSE-004 AC-6
     @Test(timeout = 30000)
     public void sdsAc11_FR_SSE_004_AC6_headTakesNoSseSlotSoThreeHeadsThenAGetAllSucceed() throws Exception {
