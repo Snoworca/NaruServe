@@ -1,0 +1,130 @@
+tinyHttpdDir: TinyHttpd HEAD is '38051b6', but NaruServe was verified against 46b973e
+> Task :TinyHttpd:tinyhttpd-core:compileJava UP-TO-DATE
+> Task :TinyHttpd:tinyhttpd-websocket:compileJava UP-TO-DATE
+> Task :TinyHttpd:tinyhttpd-core:processResources NO-SOURCE
+> Task :TinyHttpd:tinyhttpd-core:classes UP-TO-DATE
+> Task :TinyHttpd:tinyhttpd-core:jar UP-TO-DATE
+> Task :TinyHttpd:tinyhttpd-websocket:processResources NO-SOURCE
+> Task :checkDependencyRules
+> Task :TinyHttpd:tinyhttpd-websocket:classes UP-TO-DATE
+> Task :TinyHttpd:tinyhttpd-websocket:jar UP-TO-DATE
+> Task :compileJava NO-SOURCE
+> Task :processResources NO-SOURCE
+> Task :classes UP-TO-DATE
+> Task :NaruServe-api:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :NaruServe-api:compileKotlin NO-SOURCE
+> Task :NaruServe-api:compileJava UP-TO-DATE
+> Task :NaruServe-api:processResources UP-TO-DATE
+> Task :NaruServe-api:classes UP-TO-DATE
+> Task :NaruServe-api:jar UP-TO-DATE
+> Task :NaruServe-api:compileTestFixturesKotlin NO-SOURCE
+> Task :NaruServe-api:compileTestFixturesJava UP-TO-DATE
+> Task :NaruServe-gson:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :NaruServe-gson:compileKotlin NO-SOURCE
+> Task :NaruServe-gson:compileJava UP-TO-DATE
+> Task :NaruServe-servlet:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :NaruServe-servlet:compileKotlin NO-SOURCE
+> Task :NaruServe-servlet:compileJava UP-TO-DATE
+
+> Task :compileTestJava FAILED
+/Users/beom/work/git/NaruServe/src/test/java/com/snoworca/naruserve/docs/ReleaseNotesDocsTest.java:262: error: method java8RunVerified in class ReleaseNotesDocsTest cannot be applied to given types;
+            assertTrue(java8RunVerified(run, evidence));
+                       ^
+  required: String[]
+  found:    String[],File
+  reason: actual and formal argument lists differ in length
+/Users/beom/work/git/NaruServe/src/test/java/com/snoworca/naruserve/docs/ReleaseNotesDocsTest.java:263: error: method java8RunVerified in class ReleaseNotesDocsTest cannot be applied to given types;
+            assertFalse(java8RunVerified(null, evidence));
+                        ^
+  required: String[]
+  found:    <null>,File
+  reason: actual and formal argument lists differ in length
+/Users/beom/work/git/NaruServe/src/test/java/com/snoworca/naruserve/docs/ReleaseNotesDocsTest.java:268: error: method java8RunVerified in class ReleaseNotesDocsTest cannot be applied to given types;
+                assertFalse(badCommand, java8RunVerified(new String[] {badCommand, run[1], result}, evidence));
+                                        ^
+  required: String[]
+  found:    String[],File
+  reason: actual and formal argument lists differ in length
+/Users/beom/work/git/NaruServe/src/test/java/com/snoworca/naruserve/docs/ReleaseNotesDocsTest.java:274: error: method java8RunVerified in class ReleaseNotesDocsTest cannot be applied to given types;
+                assertFalse(badResult, java8RunVerified(new String[] {command, run[1], badResult}, evidence));
+                                       ^
+  required: String[]
+  found:    String[],File
+  reason: actual and formal argument lists differ in length
+/Users/beom/work/git/NaruServe/src/test/java/com/snoworca/naruserve/docs/ReleaseNotesDocsTest.java:276: error: method java8RunVerified in class ReleaseNotesDocsTest cannot be applied to given types;
+            assertFalse(java8RunVerified(new String[] {command, "2026-10-22", result}, evidence));
+                        ^
+  required: String[]
+  found:    String[],File
+  reason: actual and formal argument lists differ in length
+/Users/beom/work/git/NaruServe/src/test/java/com/snoworca/naruserve/docs/ReleaseNotesDocsTest.java:284: error: method java8RunVerified in class ReleaseNotesDocsTest cannot be applied to given types;
+                assertFalse(invalid, java8RunVerified(run, evidence));
+                                     ^
+  required: String[]
+  found:    String[],File
+  reason: actual and formal argument lists differ in length
+/Users/beom/work/git/NaruServe/src/test/java/com/snoworca/naruserve/docs/ReleaseNotesDocsTest.java:287: error: method java8RunVerified in class ReleaseNotesDocsTest cannot be applied to given types;
+        assertFalse(java8RunVerified(new String[] {"./gradlew build", "2026-10-21", "exit=0"}, evidence));
+                    ^
+  required: String[]
+  found:    String[],File
+  reason: actual and formal argument lists differ in length
+7 errors
+
+[Incubating] Problems report is available at: file:///Users/beom/work/git/NaruServe/build/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':compileTestJava'.
+> Compilation failed; see the compiler output below.
+  /Users/beom/work/git/NaruServe/src/test/java/com/snoworca/naruserve/docs/ReleaseNotesDocsTest.java:262: error: method java8RunVerified in class ReleaseNotesDocsTest cannot be applied to given types;
+              assertTrue(java8RunVerified(run, evidence));
+                         ^
+    required: String[]
+    found:    String[],File
+    reason: actual and formal argument lists differ in length
+  /Users/beom/work/git/NaruServe/src/test/java/com/snoworca/naruserve/docs/ReleaseNotesDocsTest.java:263: error: method java8RunVerified in class ReleaseNotesDocsTest cannot be applied to given types;
+              assertFalse(java8RunVerified(null, evidence));
+                          ^
+    required: String[]
+    found:    <null>,File
+    reason: actual and formal argument lists differ in length
+  /Users/beom/work/git/NaruServe/src/test/java/com/snoworca/naruserve/docs/ReleaseNotesDocsTest.java:268: error: method java8RunVerified in class ReleaseNotesDocsTest cannot be applied to given types;
+                  assertFalse(badCommand, java8RunVerified(new String[] {badCommand, run[1], result}, evidence));
+                                          ^
+    required: String[]
+    found:    String[],File
+    reason: actual and formal argument lists differ in length
+  /Users/beom/work/git/NaruServe/src/test/java/com/snoworca/naruserve/docs/ReleaseNotesDocsTest.java:274: error: method java8RunVerified in class ReleaseNotesDocsTest cannot be applied to given types;
+                  assertFalse(badResult, java8RunVerified(new String[] {command, run[1], badResult}, evidence));
+                                         ^
+    required: String[]
+    found:    String[],File
+    reason: actual and formal argument lists differ in length
+  /Users/beom/work/git/NaruServe/src/test/java/com/snoworca/naruserve/docs/ReleaseNotesDocsTest.java:276: error: method java8RunVerified in class ReleaseNotesDocsTest cannot be applied to given types;
+              assertFalse(java8RunVerified(new String[] {command, "2026-10-22", result}, evidence));
+                          ^
+    required: String[]
+    found:    String[],File
+    reason: actual and formal argument lists differ in length
+  /Users/beom/work/git/NaruServe/src/test/java/com/snoworca/naruserve/docs/ReleaseNotesDocsTest.java:284: error: method java8RunVerified in class ReleaseNotesDocsTest cannot be applied to given types;
+                  assertFalse(invalid, java8RunVerified(run, evidence));
+                                       ^
+    required: String[]
+    found:    String[],File
+    reason: actual and formal argument lists differ in length
+  /Users/beom/work/git/NaruServe/src/test/java/com/snoworca/naruserve/docs/ReleaseNotesDocsTest.java:287: error: method java8RunVerified in class ReleaseNotesDocsTest cannot be applied to given types;
+          assertFalse(java8RunVerified(new String[] {"./gradlew build", "2026-10-21", "exit=0"}, evidence));
+                      ^
+    required: String[]
+    found:    String[],File
+    reason: actual and formal argument lists differ in length
+  7 errors
+
+* Try:
+> Check your code and dependencies to fix the compilation error(s)
+> Run with --scan to get full insights.
+
+BUILD FAILED in 549ms
+12 actionable tasks: 2 executed, 10 up-to-date

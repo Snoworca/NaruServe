@@ -53,6 +53,13 @@ if (project.hasProperty('releaseScanChild')) {
         formats = ['CSV']
         scanConfigurations = ['runtimeClasspath']
         outputDirectory = scanDir.get().asFile
+        // FR-REL-002 AC-4: one exact artifact/version+CVE false positive; genuine findings remain visible.
+        suppressionFiles = [rootProject.file('gradle/dependency-check-suppressions.xml').absolutePath]
+        // The parent forwards project properties to releaseScanChild, so the selected mirror is reproducible.
+        def mirror = providers.gradleProperty('nvdDatafeedUrl').getOrNull()
+        if (mirror) {
+            nvd.datafeedUrl = mirror
+        }
         def apiKey = System.getenv('NVD_API_KEY')
         if (apiKey) {
             nvd.apiKey = apiKey

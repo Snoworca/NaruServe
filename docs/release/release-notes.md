@@ -50,7 +50,7 @@ The five targets of `object.md` §17.1.
 
 | target | status | notes |
 |---|---|---|
-| JVM Java 8 | pending | no Java 8 runtime ran the suite: the build machine has only JDK 17 (OpenJDK 17.0.20), which ran it; compile-time evidence is `--release 8` and the animal-sniffer `android-api-level-21` check (see API 21 checks); they prove the API surface and the bytecode level, not runtime behaviour on a Java 8 JVM (for example its canonical path cache) |
+| JVM Java 8 | verified | Zulu OpenJDK 1.8.0_504 macOS aarch64 ran all 1,649 tests with failures/errors/skipped=0: [run](test-results.md#run-java8). The default/build JDK 17 remains unchanged. Compile-time checks: `--release 8` and animal-sniffer `android-api-level-21`; actual Java 8 runtime evidence is separate. |
 | Android 5.0 API 21 | out-of-v1-scope | user decision 2026-10-20: no device or emulator run in v1 |
 | Latest Android API | out-of-v1-scope | user decision 2026-10-20: no regression run in v1 |
 | Kotlin Android project | out-of-v1-scope | user decision 2026-10-20: no Android sample in v1; Kotlin compile and run on the JVM are covered by T11 |
@@ -58,8 +58,7 @@ The five targets of `object.md` §17.1.
 
 ## Open items
 
-- The vulnerability scan is pending: [vulnerability-scan.md](vulnerability-scan.md) records `Status: pending`, so the
-  vulnerability part of T50 is not cleared.
+- The vulnerability scan completed on 2026-10-21: [vulnerability-scan.md](vulnerability-scan.md) records `Status: completed`; High/Critical and unscored findings are zero. `releaseCheck` passed without risk-acceptance exceptions. Three Medium TinyHttpd associations remain visible. The exact Kotlin standard-library false positive and build tooling scope are documented in [security review](security-review.md).
 
 ## API usability update — epic #21
 

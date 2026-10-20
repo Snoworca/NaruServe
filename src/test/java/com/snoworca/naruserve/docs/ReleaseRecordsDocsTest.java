@@ -132,13 +132,20 @@ public final class ReleaseRecordsDocsTest {
         String root = System.getProperty("naruserve.rootDir");
         assumeTrue("docs/release/release-notes.md is written by the OPS-REL-007 fragment",
                 new File(root, "docs/release/release-notes.md").isFile());
-        assumeTrue("only a pending scan is an open item", "pending".equals(scanStatus()));
+        boolean pending = "pending".equals(scanStatus());
         boolean listed = false;
+        boolean completed = false;
         for (String line : doc("../release/release-notes.md").split("\n")) {
             String lower = line.toLowerCase(java.util.Locale.ROOT);
             listed |= lower.contains("vulnerability scan") && lower.contains("pending");
+            completed |= lower.contains("vulnerability scan") && lower.contains("completed");
         }
-        assertTrue("release-notes.md has a line naming the vulnerability scan as pending", listed);
+        if (pending) {
+            assertTrue("release-notes.md has a line naming the vulnerability scan as pending", listed);
+        } else {
+            assertFalse("completed scan must not remain a pending open item", listed);
+            assertTrue("release-notes.md records the completed vulnerability scan", completed);
+        }
     }
 
     // SDS-AC-8; FR-REL-003 AC-3

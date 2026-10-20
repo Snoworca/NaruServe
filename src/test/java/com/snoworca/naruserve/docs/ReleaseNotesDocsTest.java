@@ -6,6 +6,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -228,10 +230,106 @@ public final class ReleaseNotesDocsTest {
             assertNotNull("a verified Java 8 row needs a recorded 'run java8' line",
                     ReleaseRecordsDocsTest.runs().get("java8"));
         }
-        assertEquals("pending", java8[1]);
-        for (String part : new String[] {"--release 8", "android-api-level-21", "JDK 17", "no Java 8 runtime"}) {
+        if ("verified".equals(java8[1])) {
+            assertTrue("Java 8 verification requires successful runtime evidence", java8RunVerified(
+                    ReleaseRecordsDocsTest.runs().get("java8")));
+        } else {
+            assertEquals("pending", java8[1]);
+            assertTrue(java8[2], java8[2].contains("no Java 8 runtime"));
+        }
+        for (String part : new String[] {"--release 8", "android-api-level-21", "JDK 17"}) {
             assertTrue("Java 8 row names " + part + ": " + java8[2], java8[2].contains(part));
         }
+    }
+
+    private static final String JAVA8_EVIDENCE = "docs/release/verification/java8-suite.json";
+
+    private static boolean java8RunVerified(String[] run) {
+        return java8RunVerified(run, new File(System.getProperty("naruserve.rootDir"), JAVA8_EVIDENCE));
+    }
+
+    private static boolean java8RunVerified(String[] run, File evidence) {
+        if (run == null || run.length != 3 || !evidence.isFile()
+                || !run[0].matches("(?:^|.*\\s)\\./gradlew\\s+.*")
+                || !run[0].matches(".*(?:^|\\s)(?:build|test|:[\\w:-]+:test)(?:\\s|$).*")
+                || !run[0].matches(".*(?:^|\\s)-I\\s+gradle/java8-tests\\.gradle(?:\\s|$).*")
+                || !run[0].matches(".*(?:^|\\s)-Dnaruserve\\.java8\\.home=\\S+(?:\\s|$).*")
+                || !run[1].matches("\\d{4}-\\d{2}-\\d{2}")) return false;
+        Map<String, String> result = new LinkedHashMap<>();
+        for (String part : run[2].split(";", -1)) {
+            int equals = part.indexOf('=');
+            if (equals < 1 || result.put(part.substring(0, equals).trim(), part.substring(equals + 1).trim()) != null) {
+                return false;
+            }
+        }
+        String runtime = result.get("runtime");
+        String tests = result.get("tests");
+        if (!"0".equals(result.get("exit")) || !JAVA8_EVIDENCE.equals(result.get("evidence"))
+                || runtime == null || !runtime.matches("1\\.8\\.[^; ]+")
+                || tests == null || !tests.matches("[1-9][0-9]*")) return false;
+        try {
+            String text = new String(java.nio.file.Files.readAllBytes(evidence.toPath()),
+                    java.nio.charset.StandardCharsets.UTF_8);
+            JsonObject report = JsonParser.parseString(text).getAsJsonObject();
+            for (String name : Arrays.asList("command", "date", "runtime")) {
+                if (!report.has(name) || !report.get(name).isJsonPrimitive()
+                        || !report.getAsJsonPrimitive(name).isString()) return false;
+            }
+            for (String name : Arrays.asList("exit", "tests", "failures", "errors", "skipped")) {
+                if (!report.has(name) || !report.get(name).isJsonPrimitive()
+                        || !report.getAsJsonPrimitive(name).isNumber()
+                        || !report.get(name).getAsString().matches("[0-9]+")) return false;
+            }
+            return run[0].equals(report.get("command").getAsString())
+                    && run[1].equals(report.get("date").getAsString())
+                    && runtime.equals(report.get("runtime").getAsString())
+                    && tests.equals(report.get("tests").getAsString())
+                    && "0".equals(report.get("exit").getAsString())
+                    && "0".equals(report.get("failures").getAsString())
+                    && "0".equals(report.get("errors").getAsString())
+                    && "0".equals(report.get("skipped").getAsString());
+        } catch (IOException | RuntimeException invalidEvidence) {
+            return false;
+        }
+    }
+
+    // OPS-REL-004 AC-1; OPS-REL-004 AC-3: reject textual success claims without actual Java 8 suite evidence.
+    @Test
+    public void ops_REL_004_AC1_verifiedRuntimeRecordRejectsMissingFailedAndWrongRuntime() throws IOException {
+        File evidence = File.createTempFile("java8-evidence-", ".json");
+        try {
+            String command = "./gradlew build --rerun-tasks -I gradle/java8-tests.gradle -Dnaruserve.java8.home=/opt/jdk8";
+            String result = "exit=0; tests=1643; runtime=1.8.0_504; evidence=docs/release/verification/java8-suite.json";
+            String[] run = {command, "2026-10-21", result};
+            String valid = "{\"command\":\"" + command + "\",\"date\":\"2026-10-21\",\"runtime\":\"1.8.0_504\","
+                    + "\"exit\":0,\"tests\":1643,\"failures\":0,\"errors\":0,\"skipped\":0}";
+            java.nio.file.Files.write(evidence.toPath(), valid.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            assertTrue(java8RunVerified(run, evidence));
+            assertFalse(java8RunVerified(null, evidence));
+            for (String badCommand : new String[] {"./gradlew help", "./gradlew build",
+                    "./gradlew build -I gradle/java8-tests.gradle",
+                    "./gradlew build -Dnaruserve.java8.home=/opt/jdk8",
+                    "./gradlew help -I gradle/java8-tests.gradle -Dnaruserve.java8.home=/opt/jdk8"}) {
+                assertFalse(badCommand, java8RunVerified(new String[] {badCommand, run[1], result}, evidence));
+            }
+            for (String badResult : new String[] {result.replace("exit=0", "exit=1"),
+                    result.replace("tests=1643", "tests=0"), result.replace("runtime=1.8.0_504", "runtime=17"),
+                    result.substring(0, result.indexOf("; evidence=")),
+                    result.replace("java8-suite.json", "missing.json")}) {
+                assertFalse(badResult, java8RunVerified(new String[] {command, run[1], badResult}, evidence));
+            }
+            assertFalse(java8RunVerified(new String[] {command, "2026-10-22", result}, evidence));
+            for (String invalid : new String[] {"not JSON", "{}", valid.replace("1.8.0_504", "17.0.20"),
+                    valid.replace("\"exit\":0", "\"exit\":1"), valid.replace("\"tests\":1643", "\"tests\":0"),
+                    valid.replace("\"tests\":1643", "\"tests\":1642"), valid.replace("\"failures\":0", "\"failures\":1"),
+                    valid.replace("\"errors\":0", "\"errors\":1"), valid.replace("\"skipped\":0", "\"skipped\":1"),
+                    valid.replace("\"failures\":0,", ""), valid.replace("\"command\":", "\"wrong\":"),
+                    valid.replace("2026-10-21", "2026-10-22")}) {
+                java.nio.file.Files.write(evidence.toPath(), invalid.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                assertFalse(invalid, java8RunVerified(run, evidence));
+            }
+        } finally { evidence.delete(); }
+        assertFalse(java8RunVerified(new String[] {"./gradlew build", "2026-10-21", "exit=0"}, evidence));
     }
 
     // SDS-AC-12; OPS-REL-004 AC-2

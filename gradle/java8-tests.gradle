@@ -1,0 +1,20 @@
+// OPS-REL-004 AC-1: keep Gradle/compilers on the default JDK and fork every test on Java 8.
+// Usage: ./gradlew build --rerun-tasks -I gradle/java8-tests.gradle -Dnaruserve.java8.home=/path/to/jdk8
+// An init script also sees included builds: configure only this repository's projects.
+gradle.afterProject { p ->
+    if (p.rootProject.name == 'NaruServe-build') {
+        p.tasks.withType(Test).configureEach {
+            systemProperty 'naruserve.buildJavaHome', System.getProperty('java.home')
+            def home = System.getProperty('naruserve.java8.home')
+            if (!home) {
+                throw new GradleException('Set -Dnaruserve.java8.home to the Java 8 JDK home')
+            }
+            def release = new File(home, 'release')
+            if (!release.isFile() || !release.text.contains('JAVA_VERSION="1.8.')) {
+                throw new GradleException('naruserve.java8.home must identify a Java 8 JDK')
+            }
+            executable = new File(home, 'bin/java').absolutePath
+            doFirst { println "JAVA8_TEST_RUNTIME ${path} ${executable}" }
+        }
+    }
+}

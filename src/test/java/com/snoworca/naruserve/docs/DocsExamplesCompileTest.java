@@ -235,7 +235,7 @@ public final class DocsExamplesCompileTest {
     }
 
     /**
-     * Compiles the units (label to source) in process with {@code --release 8} against the test JVM's
+     * Compiles the units in process with Java 8 language/platform rules against the test JVM's
      * {@code java.class.path}; returns one entry per error, prefixed by the unit's label. Fails with no compiler.
      */
     // @req OPS-HTTP-004
@@ -263,8 +263,9 @@ public final class DocsExamplesCompileTest {
             DiagnosticCollector<JavaFileObject> diags = new DiagnosticCollector<>();
             List<String> errors = new ArrayList<>();
             try (StandardJavaFileManager fm = javac.getStandardFileManager(diags, Locale.ROOT, StandardCharsets.UTF_8)) {
-                List<String> options = Arrays.asList("--release", "8", "-proc:none", "-encoding", "UTF-8",
-                        "-classpath", System.getProperty("java.class.path"), "-d", out.getAbsolutePath());
+                List<String> options = new ArrayList<>(languageOptions(javac));
+                options.addAll(Arrays.asList("-proc:none", "-encoding", "UTF-8",
+                        "-classpath", System.getProperty("java.class.path"), "-d", out.getAbsolutePath()));
                 Boolean ok = javac.getTask(null, fm, diags, options, null, fm.getJavaFileObjectsFromFiles(files)).call();
                 for (Diagnostic<? extends JavaFileObject> d : diags.getDiagnostics()) {
                     if (d.getKind() != Diagnostic.Kind.ERROR) {
@@ -282,6 +283,17 @@ public final class DocsExamplesCompileTest {
         } finally {
             delete(dir);
         }
+    }
+
+    // @req OPS-HTTP-004 AC-3
+    static List<String> languageOptions(JavaCompiler compiler) {
+        if (compiler.isSupportedOption("--release") >= 0) {
+            return Arrays.asList("--release", "8");
+        }
+        if (!"1.8".equals(System.getProperty("java.specification.version"))) {
+            throw new IllegalStateException("Java 8 compilation requires --release support or a Java 8 JDK");
+        }
+        return Arrays.asList("-source", "8", "-target", "8");
     }
 
     private static void delete(File f) {
@@ -440,6 +452,27 @@ public final class DocsExamplesCompileTest {
             }
         }
         assertTrue("relabel these fences ```js: " + js, js.isEmpty());
+    }
+
+    // SDS-AC-11; OPS-HTTP-004 AC-3
+    @Test
+    @SuppressWarnings("unchecked")
+    public void OPS_HTTP_004_AC3_languageFlagsAreSupportedByTheActualRuntimeCompiler() throws Exception {
+        JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+        assertNotNull("a JDK compiler is required", compiler);
+        java.lang.reflect.Method selection = DocsExamplesCompileTest.class.getDeclaredMethod(
+                "languageOptions", JavaCompiler.class);
+        List<String> flags = (List<String>) selection.invoke(null, compiler);
+        if (compiler.isSupportedOption("--release") >= 0) {
+            assertEquals(Arrays.asList("--release", "8"), flags);
+        } else {
+            assertEquals("fallback is only valid against a real Java 8 platform", "1.8",
+                    System.getProperty("java.specification.version"));
+            assertEquals(Arrays.asList("-source", "8", "-target", "8"), flags);
+        }
+        for (int i = 0; i < flags.size(); i += 2) {
+            assertEquals(flags.get(i), 1, compiler.isSupportedOption(flags.get(i)));
+        }
     }
 
     // SDS-AC-11; OPS-HTTP-004 AC-3

@@ -1,0 +1,367 @@
+{
+  "scope": {
+    "target": null,
+    "ids": [
+      "OPS-BUILD-002",
+      "OPS-HTTP-004",
+      "FR-REL-002",
+      "OPS-REL-004"
+    ],
+    "sds": null,
+    "testGlobs": [
+      "**/src/test/**/*.java",
+      "**/src/test/**/*.kt"
+    ]
+  },
+  "testFileCount": 278,
+  "requirements": [
+    {
+      "requirementId": "FR-REL-002",
+      "acs": [
+        {
+          "acId": "AC-1",
+          "cited": true,
+          "citations": [
+            {
+              "file": "src/test/java/com/snoworca/naruserve/build/ScanReportTest.java",
+              "line": 62
+            },
+            {
+              "file": "src/test/java/com/snoworca/naruserve/build/ScanReportTest.java",
+              "line": 77
+            },
+            {
+              "file": "src/test/java/com/snoworca/naruserve/build/ScanReportTest.java",
+              "line": 151
+            }
+          ]
+        },
+        {
+          "acId": "AC-2",
+          "cited": true,
+          "citations": [
+            {
+              "file": "src/test/java/com/snoworca/naruserve/build/ScanReportTest.java",
+              "line": 110
+            },
+            {
+              "file": "src/test/java/com/snoworca/naruserve/build/ScanReportTest.java",
+              "line": 126
+            },
+            {
+              "file": "src/test/java/com/snoworca/naruserve/build/ScanReportTest.java",
+              "line": 173
+            },
+            {
+              "file": "src/test/java/com/snoworca/naruserve/build/ScanReportTest.java",
+              "line": 191
+            }
+          ]
+        },
+        {
+          "acId": "AC-3",
+          "cited": true,
+          "citations": [
+            {
+              "file": "src/test/java/com/snoworca/naruserve/docs/ReleaseRecordsDocsTest.java",
+              "line": 96
+            },
+            {
+              "file": "src/test/java/com/snoworca/naruserve/docs/ReleaseRecordsDocsTest.java",
+              "line": 111
+            }
+          ]
+        },
+        {
+          "acId": "AC-4",
+          "cited": true,
+          "citations": [
+            {
+              "file": "src/test/java/com/snoworca/naruserve/build/DependencySuppressionTest.java",
+              "line": 15
+            },
+            {
+              "file": "src/test/java/com/snoworca/naruserve/build/DependencySuppressionTest.java",
+              "line": 76
+            },
+            {
+              "file": "src/test/java/com/snoworca/naruserve/build/DependencySuppressionTest.java",
+              "line": 89
+            },
+            {
+              "file": "src/test/java/com/snoworca/naruserve/build/DependencySuppressionTest.java",
+              "line": 105
+            },
+            {
+              "file": "src/test/java/com/snoworca/naruserve/build/ScanReportTest.java",
+              "line": 97
+            }
+          ]
+        },
+        {
+          "acId": "AC-5",
+          "cited": true,
+          "citations": [
+            {
+              "file": "src/test/java/com/snoworca/naruserve/build/ReleaseScriptTextTest.java",
+              "line": 99
+            },
+            {
+              "file": "src/test/java/com/snoworca/naruserve/build/ReleaseScriptTextTest.java",
+              "line": 120
+            },
+            {
+              "file": "src/test/java/com/snoworca/naruserve/build/ScanReportTest.java",
+              "line": 136
+            },
+            {
+              "file": "src/test/java/com/snoworca/naruserve/build/ScanReportTest.java",
+              "line": 151
+            },
+            {
+              "file": "src/test/java/com/snoworca/naruserve/build/ScanReportTest.java",
+              "line": 173
+            },
+            {
+              "file": "src/test/java/com/snoworca/naruserve/build/ScanReportTest.java",
+              "line": 191
+            },
+            {
+              "file": "src/test/java/com/snoworca/naruserve/build/ScanReportTest.java",
+              "line": 209
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "requirementId": "OPS-BUILD-002",
+      "acs": [
+        {
+          "acId": "AC-1",
+          "cited": true,
+          "citations": [
+            {
+              "file": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java",
+              "line": 287
+            }
+          ]
+        },
+        {
+          "acId": "AC-2",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-kotlin/src/test/kotlin/com/snoworca/naruserve/kotlin/KotlinSmokeTest.kt",
+              "line": 9
+            }
+          ]
+        },
+        {
+          "acId": "AC-3",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/SmokeTest.java",
+              "line": 10
+            },
+            {
+              "file": "NaruServe-kotlin/src/test/kotlin/com/snoworca/naruserve/kotlin/KotlinSmokeTest.kt",
+              "line": 9
+            },
+            {
+              "file": "src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java",
+              "line": 230
+            }
+          ]
+        },
+        {
+          "acId": "AC-4",
+          "cited": true,
+          "citations": [
+            {
+              "file": "src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java",
+              "line": 218
+            }
+          ]
+        },
+        {
+          "acId": "AC-5",
+          "cited": true,
+          "citations": [
+            {
+              "file": "src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java",
+              "line": 241
+            },
+            {
+              "file": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java",
+              "line": 287
+            }
+          ]
+        },
+        {
+          "acId": "AC-6",
+          "cited": true,
+          "citations": [
+            {
+              "file": "src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java",
+              "line": 124
+            },
+            {
+              "file": "src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java",
+              "line": 146
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "requirementId": "OPS-HTTP-004",
+      "acs": [
+        {
+          "acId": "AC-1",
+          "cited": true,
+          "citations": [
+            {
+              "file": "src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java",
+              "line": 444
+            }
+          ]
+        },
+        {
+          "acId": "AC-2",
+          "cited": true,
+          "citations": [
+            {
+              "file": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java",
+              "line": 400
+            }
+          ]
+        },
+        {
+          "acId": "AC-3",
+          "cited": true,
+          "citations": [
+            {
+              "file": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java",
+              "line": 288
+            },
+            {
+              "file": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java",
+              "line": 418
+            },
+            {
+              "file": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java",
+              "line": 457
+            },
+            {
+              "file": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java",
+              "line": 478
+            },
+            {
+              "file": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java",
+              "line": 494
+            }
+          ]
+        },
+        {
+          "acId": "AC-4",
+          "cited": true,
+          "citations": [
+            {
+              "file": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java",
+              "line": 501
+            },
+            {
+              "file": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java",
+              "line": 843
+            }
+          ]
+        },
+        {
+          "acId": "AC-5",
+          "cited": true,
+          "citations": [
+            {
+              "file": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java",
+              "line": 439
+            }
+          ]
+        },
+        {
+          "acId": "AC-6",
+          "cited": true,
+          "citations": [
+            {
+              "file": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java",
+              "line": 522
+            }
+          ]
+        },
+        {
+          "acId": "AC-7",
+          "cited": true,
+          "citations": [
+            {
+              "file": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java",
+              "line": 535
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "requirementId": "OPS-REL-004",
+      "acs": [
+        {
+          "acId": "AC-1",
+          "cited": true,
+          "citations": [
+            {
+              "file": "src/test/java/com/snoworca/naruserve/docs/ReleaseNotesDocsTest.java",
+              "line": 223
+            },
+            {
+              "file": "src/test/java/com/snoworca/naruserve/docs/ReleaseNotesDocsTest.java",
+              "line": 296
+            }
+          ]
+        },
+        {
+          "acId": "AC-2",
+          "cited": true,
+          "citations": [
+            {
+              "file": "src/test/java/com/snoworca/naruserve/docs/ReleaseNotesDocsTest.java",
+              "line": 335
+            }
+          ]
+        },
+        {
+          "acId": "AC-3",
+          "cited": true,
+          "citations": [
+            {
+              "file": "src/test/java/com/snoworca/naruserve/docs/ReleaseNotesDocsTest.java",
+              "line": 90
+            },
+            {
+              "file": "src/test/java/com/snoworca/naruserve/docs/ReleaseNotesDocsTest.java",
+              "line": 296
+            },
+            {
+              "file": "src/test/java/com/snoworca/naruserve/docs/ReleaseNotesDocsTest.java",
+              "line": 352
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "sdsContracts": [],
+  "gaps": {
+    "requirements": [],
+    "sdsContracts": []
+  },
+  "passed": true
+}

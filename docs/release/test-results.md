@@ -75,15 +75,12 @@ No requirement is `verified` on the strength of a `manual-pending` line.
 | T49 | jvm | automated | NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/BindingSocketTest.java#sdsAc5_FR_ENGINE_002_AC2_lanAddressIsRefusedByDefaultAndServedAfterAWildcardBind |
 | T49 | device | out-of-v1-scope | user decision 2026-10-20 |
 | T50 | sbom | verified | [SBOM run](#run-sbom) |
-| T50 | vulnerability | manual-pending | [checklist item 1](#checklist-1) |
+| T50 | vulnerability | verified | [vulnerability scan run](#run-vulnerability-scan) |
 | T50 | license | verified | [license run](#run-licenses) |
 
 ## Checklist
 
-- <a id="checklist-1"></a>Checklist item 1, the vulnerability scan: run `NVD_API_KEY=<key> ./gradlew -Prelease releaseScan`
-  with network access, copy `build/reports/naruserve/vulnerability-scan.md` to `docs/release/vulnerability-scan.md`,
-  and set the T50 vulnerability line to `verified` with a link to the new `vulnerability-scan` run line once the
-  record reads `Status: completed`.
+- <a id="checklist-1"></a>Checklist item 1 completed on 2026-10-21: the real mirror-backed scan completed and `releaseCheck` passed. See [security review](security-review.md) for the exact artifact/CVE false-positive rule and [scan report](vulnerability-scan.md). No risk-acceptance exception was added.
 
 ## Post-v1 items
 
@@ -95,10 +92,10 @@ No requirement is `verified` on the strength of a `manual-pending` line.
 Each line records one run on the build machine (macOS, OpenJDK 17.0.20, Gradle 8.14.3).
 
 <a id="run-full-suite"></a>
-- run full-suite: command=./gradlew build --rerun-tasks; date=2026-10-21; result=exit=0; commit=f357caf; tests=1566; failures=0; skipped=0
+- run full-suite: command=./gradlew build --rerun-tasks --console=plain; date=2026-10-21; result=exit=0; commit=19c366b plus requirement-backed release verification changes; tests=1649; failures=0; errors=0; skipped=0; evidence=verification/java17-suite.json
 
 <a id="run-sbom"></a>
-- run sbom: command=./gradlew -Prelease releaseSbom; date=2026-10-20; result=exit=0; commit=ae44f5a; build/reports/naruserve/sbom: NaruServe-api.cdx.json=0, NaruServe-servlet.cdx.json=1, NaruServe-tinyhttpd.cdx.json=3, NaruServe-gson.cdx.json=3, NaruServe.cdx.json=8, NaruServe-kotlin.cdx.json=3, NaruServe-slf4j.cdx.json=2, NaruServe-filelog.cdx.json=1, NaruServe-logcat.cdx.json=1 (components per file)
+- run sbom: command=./gradlew -Prelease '-PnvdDatafeedUrl=https://dependency-check.github.io/DependencyCheck_Builder/nvd_cache/nvdcve-{0}.json.gz' releaseSbom releaseScan releaseLicenses releaseCheck --console=plain; date=2026-10-21; result=exit=0; NaruServe-api.cdx.json=0, NaruServe-filelog.cdx.json=1, NaruServe-gson.cdx.json=3, NaruServe-kotlin.cdx.json=3, NaruServe-logcat.cdx.json=1, NaruServe-servlet.cdx.json=1, NaruServe-slf4j.cdx.json=2, NaruServe-tinyhttpd.cdx.json=3, NaruServe.cdx.json=8
 
 <a id="run-offline-build"></a>
 - run offline-build: command=./gradlew build --offline; date=2026-10-20; result=exit=0; commit=ae44f5a
@@ -107,7 +104,10 @@ Each line records one run on the build machine (macOS, OpenJDK 17.0.20, Gradle 8
 - run publish-local: command=./gradlew publishToMavenLocal --offline; date=2026-10-20; result=exit=0; commit=ae44f5a; ~/.m2/repository: com/snoworca/naruserve/NaruServe-api/0.1.0-SNAPSHOT/, com/snoworca/naruserve/NaruServe-servlet/0.1.0-SNAPSHOT/, com/snoworca/naruserve/NaruServe-tinyhttpd/0.1.0-SNAPSHOT/, com/snoworca/naruserve/NaruServe-gson/0.1.0-SNAPSHOT/, com/snoworca/naruserve/NaruServe/0.1.0-SNAPSHOT/, com/snoworca/naruserve/NaruServe-kotlin/0.1.0-SNAPSHOT/, com/snoworca/naruserve/NaruServe-slf4j/0.1.0-SNAPSHOT/, com/snoworca/naruserve/NaruServe-filelog/0.1.0-SNAPSHOT/, com/snoworca/naruserve/NaruServe-logcat/0.1.0-SNAPSHOT/
 
 <a id="run-licenses"></a>
-- run licenses: command=./gradlew -Prelease releaseLicenses --offline; date=2026-10-21; result=exit=0; commit=5a03978; THIRD-PARTY-LICENSES.md: 7 shipped, 3 provided (the file was unchanged since the TinyHttpd url rows)
+- run licenses: command=./gradlew -Prelease '-PnvdDatafeedUrl=https://dependency-check.github.io/DependencyCheck_Builder/nvd_cache/nvdcve-{0}.json.gz' releaseSbom releaseScan releaseLicenses releaseCheck --console=plain; date=2026-10-21; result=exit=0; THIRD-PARTY-LICENSES.md: 7 shipped, 3 provided; non-GPL check passed; evidence=verification/release-check.log
 
 <a id="run-vulnerability-scan"></a>
-- run vulnerability-scan: command=./gradlew -Prelease releaseScan; date=2026-10-20; result=exit=0; commit=ae44f5a; Status: pending, Reason: MISSING_API_KEY (no NVD_API_KEY on the build machine; see checklist item 1)
+- run vulnerability-scan: command=./gradlew -Prelease '-PnvdDatafeedUrl=https://dependency-check.github.io/DependencyCheck_Builder/nvd_cache/nvdcve-{0}.json.gz' releaseSbom releaseScan releaseLicenses releaseCheck --console=plain; date=2026-10-21; result=exit=0; Status: completed; High=0; Critical=0; unscored=0; Medium=3; evidence=verification/scan.csv, verification/release-check.log; NVD mirror lastModifiedDate=2026-10-20T15:35:25Z
+
+<a id="run-java8"></a>
+- run java8: command=./gradlew build --rerun-tasks --console=plain -I gradle/java8-tests.gradle -Dnaruserve.java8.home=/Users/beom/Library/Java/JavaVirtualMachines/zulu8.96.0.205-ca-jdk8.0.504-macosx_aarch64/Contents/Home; date=2026-10-21; result=exit=0; tests=1649; runtime=1.8.0_504; evidence=docs/release/verification/java8-suite.json

@@ -121,6 +121,9 @@ public class BuildChecksTest {
         arguments.add("--no-configuration-cache");
         arguments.add("--no-build-cache");
         arguments.add("--no-configure-on-demand");
+        // OPS-BUILD-002 AC-6: the test worker may be Java 8 while the build/compiler stays on JDK 17.
+        arguments.add("-Dorg.gradle.java.home=" + System.getProperty(
+                "naruserve.buildJavaHome", System.getProperty("java.home")));
         // The copied settings.gradle must resolve the same TinyHttpd checkout as the outer build (OPS-BUILD-001).
         boolean overridden = false;
         for (String a : args) {
@@ -138,6 +141,23 @@ public class BuildChecksTest {
                 .withTestKitDir(new File(BuildLayoutTest.property("naruserve.gradleUserHome")))
                 .withProjectDir(work)
                 .withArguments(arguments);
+    }
+
+    // OPS-BUILD-002 AC-6
+    @Test
+    public void OPS_BUILD_002_AC6_nestedBuildUsesExplicitCompilerHomeAndCurrentJvmFallback() {
+        String original = System.getProperty("naruserve.buildJavaHome");
+        try {
+            String selected = new File("/explicit/compiler-jdk17").getAbsolutePath();
+            System.setProperty("naruserve.buildJavaHome", selected);
+            assertTrue(runner("help").getArguments().contains("-Dorg.gradle.java.home=" + selected));
+            System.clearProperty("naruserve.buildJavaHome");
+            assertTrue(runner("help").getArguments().contains(
+                    "-Dorg.gradle.java.home=" + System.getProperty("java.home")));
+        } finally {
+            if (original == null) System.clearProperty("naruserve.buildJavaHome");
+            else System.setProperty("naruserve.buildJavaHome", original);
+        }
     }
 
     // SDS-AC-3; OPS-BUILD-001 AC-1, OPS-BUILD-001 AC-2, CON-BUILD-009 AC-1
