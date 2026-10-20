@@ -22,6 +22,8 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.Test;
@@ -189,35 +191,47 @@ public class DispatcherTest {
         assertEquals("DELETE", Dispatcher.allowHeader(MethodSet.of(Method.DELETE)));
     }
 
-    // SDS-AC-18 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-4.sds.md; FR-HTTP-022 AC-5, FR-HTTP-022 AC-6
-    @Test
-    public void sdsAc18_FR_HTTP_022_AC5_AC6_splitUpgradeHeadersAreJoinedBeforeLookup() {
+    // SDS-AC-18 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-4.sds.md; FR-HTTP-022 AC-5; the upgrade is
+    // re-pointed to SDS-AC-3 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-3.sds.md, FR-WS-001 AC-7
+    @Test(timeout = 20000)
+    public void sdsAc18_FR_HTTP_022_AC5_AC6_splitUpgradeHeadersAreJoinedBeforeLookup() throws Exception {
         // With both kinds on /ws only the upgrade flag selects the WebSocket route; the HTTP handler must not run.
         router.addWebSocket("/ws", recording);
         router.add(Method.GET, "/ws", recording);
         start();
-        ClientResponse r = send("GET", "/ws", "Connection", "keep-alive", "Connection", "Upgrade",
+        ClientResponse r = handshake("GET", "/ws", "Connection", "keep-alive", "Connection", "Upgrade",
                 "Upgrade", "websocket", "Upgrade", "h2c");
-        assertError(426, "UPGRADE_REQUIRED", "Upgrade Required", r);
-        assertEquals("websocket", r.header("Upgrade"));
-        assertEquals("Upgrade", r.header("Connection"));
+        assertEquals(101, r.status());
+        assertFalse(r.abnormallyClosed());
         assertFalse(r.upgradeHandedOver());
         assertEquals(0, calls.get());
     }
 
-    // SDS-AC-18 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-4.sds.md; FR-HTTP-022 AC-5, FR-HTTP-022 AC-6
-    @Test
-    public void sdsAc18_FR_HTTP_022_AC5_AC6_webSocketOnlyRouteGives426ForPlainAndUpgradeGet() {
+    /** Submits an upgrade, closes its channel from the peer and returns the response. */
+    private ClientResponse handshake(String method, String target, String... headerPairs) throws Exception {
+        ClientRequest request = ClientRequest.of(method, target);
+        for (int i = 0; i < headerPairs.length; i += 2) {
+            request.header(headerPairs[i], headerPairs[i + 1]);
+        }
+        Future<ClientResponse> f = adapter.submit(request);
+        adapter.nextChannel(5, TimeUnit.SECONDS).clientClose(1000, "");
+        return f.get(10, TimeUnit.SECONDS);
+    }
+
+    // SDS-AC-18 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-4.sds.md; FR-HTTP-022 AC-5; the plain case is
+    // re-pointed to FR-WS-004 AC-1 and the upgrade case to SDS-AC-3 of
+    // docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-3.sds.md, FR-WS-001 AC-7 (the handshake from wave 7)
+    @Test(timeout = 20000)
+    public void sdsAc18_FR_HTTP_022_AC5_AC6_webSocketOnlyRouteGives426ForPlainAndUpgradeGet() throws Exception {
         router.addWebSocket("/ws", recording);
         start();
         ClientResponse plain = send("GET", "/ws");
         assertError(426, "UPGRADE_REQUIRED", "Upgrade Required", plain);
         assertEquals("websocket", plain.header("Upgrade"));
         assertEquals("Upgrade", plain.header("Connection"));
-        ClientResponse upgrade = send("GET", "/ws", "Connection", "Upgrade", "Upgrade", "websocket");
-        assertError(426, "UPGRADE_REQUIRED", "Upgrade Required", upgrade);
-        assertEquals("websocket", upgrade.header("Upgrade"));
-        assertEquals("Upgrade", upgrade.header("Connection"));
+        ClientResponse upgrade = handshake("GET", "/ws", "Connection", "Upgrade", "Upgrade", "websocket");
+        assertEquals(101, upgrade.status());
+        assertFalse(upgrade.abnormallyClosed());
         assertFalse(upgrade.upgradeHandedOver());
         assertEquals(0, calls.get());
     }

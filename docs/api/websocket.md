@@ -38,6 +38,8 @@ app.ws("/ws") { req, ws ->
 - `req`는 핸들러 본문에서만 쓰세요. `onText` 같은 리스너는 핸드셰이크가 끝난 뒤에 실행됩니다. 리스너에서 필요한 값(서비스, 파라미터)은 핸들러에서 미리 변수로 꺼내 두거나 `ws.attribute`에 저장하세요.
 - 경로 패턴은 HTTP 라우트와 같습니다(`/ws/rooms/:room`).
 - 같은 경로에 일반 `app.get`을 함께 둘 수 있습니다. `Upgrade: websocket` 요청만 `app.ws`로 갑니다.
+- `app.ws` 라우트만 있는 경로에 `Upgrade` 없는 요청이 오면 `426 Upgrade Required`로 답합니다. 코어는 `Upgrade: websocket`과 `Connection: Upgrade` 헤더, 표준 JSON 오류 본문을 씁니다.
+  TinyHttpd 한계: over the TinyHttpd adapter the `426` answer carries `Upgrade: websocket` but not `Connection: Upgrade`, because TinyHttpd's `ExchangeResponse` replaces the `Connection` header on non-`101` responses; this is a deferred TinyHttpd limitation (TinyHttpd가 고칠 때까지 남습니다).
 
 ## WebSocketSession
 

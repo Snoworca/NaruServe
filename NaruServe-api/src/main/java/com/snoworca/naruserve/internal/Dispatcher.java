@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.jspecify.annotations.Nullable;
 
@@ -40,6 +41,9 @@ import org.jspecify.annotations.Nullable;
 // @req FR-HTTP-025
 // @req FR-APP-003
 // @req IR-JSON-002
+// @req FR-WS-001
+// @req FR-WS-003
+// @req FR-WS-004
 public final class Dispatcher implements ExchangeHandler {
 
     private static final Method[] METHODS = Method.values();
@@ -56,6 +60,7 @@ public final class Dispatcher implements ExchangeHandler {
     private final long formLimit;
     private final SpoolRegistry spool;
     private final StaticHandler statics;
+    private final WebSocketUpgrade upgrades;
 
     /**
      * Wave 3 shape: no middleware, no onError handler, access log off, a {@link ConsoleLogger}. {@code router} must
@@ -123,6 +128,17 @@ public final class Dispatcher implements ExchangeHandler {
     Dispatcher(Router<RouteHandler> router, MiddlewarePipeline pipeline, ErrorPath errors, AccessLog accessLog,
             @Nullable ApplicationContext context, @Nullable JsonCodec codec, long jsonLimit, boolean trustProxy,
             MultipartSettings multipart, long formLimit, SpoolRegistry spool, StaticHandler statics) {
+        this(router, pipeline, errors, accessLog, context, codec, jsonLimit, trustProxy, multipart, formLimit, spool,
+                statics, new WebSocketUpgrade(new DefaultWebSocketOptions(), codec, errors.logger));
+    }
+
+    /** As above, with the app's upgrade step, which runs after the chain for a matched app.ws route. */
+    // @req FR-WS-001
+    Dispatcher(Router<RouteHandler> router, MiddlewarePipeline pipeline, ErrorPath errors, AccessLog accessLog,
+            @Nullable ApplicationContext context, @Nullable JsonCodec codec, long jsonLimit, boolean trustProxy,
+            MultipartSettings multipart, long formLimit, SpoolRegistry spool, StaticHandler statics,
+            WebSocketUpgrade upgrades) {
+        this.upgrades = Objects.requireNonNull(upgrades, "upgrades");
         this.statics = Objects.requireNonNull(statics, "statics");
         this.spool = Objects.requireNonNull(spool, "spool");
         this.multipart = Objects.requireNonNull(multipart, "multipart");
@@ -142,6 +158,8 @@ public final class Dispatcher implements ExchangeHandler {
     // @req FR-APP-003
     @Override
     // @req FR-APP-015
+    // @req FR-WS-001
+    // @req FR-WS-003
     public void handle(HttpExchange ex) {
         String rid = RequestIds.next();
         long start = System.nanoTime();
@@ -152,12 +170,14 @@ public final class Dispatcher implements ExchangeHandler {
         String rawPath = ex.rawPath();
         boolean upgrade = Router.isWebSocketUpgrade(token, joined(ex, "Connection"), joined(ex, "Upgrade"));
         RouteMatch<RouteHandler> m = router.lookup(token, rawPath, upgrade);
-        boolean routed = m.kind() == RouteMatch.Kind.MATCHED && m.routeKind() == RouteKind.HTTP;
+        boolean matched = m.kind() == RouteMatch.Kind.MATCHED;
+        boolean routed = matched && m.routeKind() == RouteKind.HTTP;
+        boolean webSocket = matched && m.routeKind() == RouteKind.WEBSOCKET;
         Method method = m.kind() == RouteMatch.Kind.MATCHED
                 ? (m.autoHead() ? Method.HEAD : Objects.requireNonNull(m.method()))
                 : Objects.requireNonNull(methodOf(token)); // preCheck answered every unrecognised token
         DefaultRequest req = new DefaultRequest(ex, method,
-                routed ? m.params() : Collections.<String, String>emptyMap(), context, codec, jsonLimit, trustProxy,
+                matched ? m.params() : Collections.<String, String>emptyMap(), context, codec, jsonLimit, trustProxy,
                 multipart, formLimit, spool);
         req.requestId(rid);
         DefaultResponse res = new DefaultResponse(ex, method == Method.HEAD, codec);
@@ -179,6 +199,7 @@ public final class Dispatcher implements ExchangeHandler {
                     req.body().bytesRead(), res.bytesWritten(), rid);
         });
         List<Middleware> route = Collections.emptyList();
+        AtomicBoolean reached = new AtomicBoolean();
         RouteHandler terminal;
         if (routed) {
             RouteHandler h = Objects.requireNonNull(m.handler());
@@ -188,11 +209,18 @@ public final class Dispatcher implements ExchangeHandler {
             }
             RouteHandler handler = h;
             terminal = (rq, rs) -> invokeRoute(req, res, handler);
+        } else if (webSocket) {
+            // Only record that the chain reached its end; the upgrade runs once pipeline.run returned.
+            terminal = (rq, rs) -> reached.set(true);
         } else {
             terminal = (rq, rs) -> fallback(m, req, res, rid);
         }
         try {
             pipeline.run(req, res, route, terminal, errors, rid);
+            if (reached.get() && res.state() == ResponseState.NEW) {
+                RouteHandler h = m.handler();
+                upgrades.run(ex, req, res, h instanceof WebSocketRoute ? ((WebSocketRoute) h).handler() : null, rid);
+            }
         } catch (Exception e) {
             errors.handle(e, req, res, rid);
             req.releaseUploads();
@@ -326,15 +354,15 @@ public final class Dispatcher implements ExchangeHandler {
     }
 
     /**
-     * Terminal step for every non-MATCHED lookup and for a MATCHED WebSocket route (no handshake until app.ws
-     * exists). Answers through {@code res}, keeping headers middleware set; a response already left NEW is not
-     * touched. NOT_FOUND, and METHOD_MISMATCH for GET and HEAD, try the static mounts first; WebSocket kinds and 501
-     * never do.
+     * Terminal step for every non-MATCHED lookup (a matched app.ws route upgrades instead). Answers through
+     * {@code res}, keeping headers middleware set; a response already left NEW is not touched. NOT_FOUND, and
+     * METHOD_MISMATCH for GET and HEAD, try the static mounts first; WEBSOCKET_ONLY and 501 never do.
      */
     // @req FR-HTTP-022
     // @req FR-APP-003
     // @req FR-STATIC-001
     // @req FR-STATIC-002
+    // @req FR-WS-004
     void fallback(RouteMatch<RouteHandler> m, DefaultRequest req, DefaultResponse res, String requestId)
             throws IOException {
         if (res.state() != ResponseState.NEW) {
@@ -354,7 +382,6 @@ public final class Dispatcher implements ExchangeHandler {
                 res.header("Allow", allowHeader(Objects.requireNonNull(m.allow())));
                 error(res, 405, requestId);
                 return;
-            case MATCHED: // only a WEBSOCKET route reaches the fallback
             case WEBSOCKET_ONLY:
                 res.header("Upgrade", "websocket").header("Connection", "Upgrade");
                 error(res, 426, requestId);

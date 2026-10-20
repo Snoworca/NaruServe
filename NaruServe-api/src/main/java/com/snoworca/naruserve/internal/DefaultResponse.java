@@ -594,6 +594,33 @@ public final class DefaultResponse implements Response {
     }
 
     /**
+     * End state of an upgraded exchange, after {@code HttpExchange.webSocket} returned: NEW becomes COMPLETED with
+     * status 101 and the exchange is finished once, without a commit (the adapter wrote the 101). A finish that fails
+     * because the connection is already gone aborts instead. No-op when the response already left NEW.
+     */
+    // @req FR-WS-001
+    void upgraded() {
+        synchronized (this) {
+            if (state != ResponseState.NEW) {
+                return;
+            }
+            handlerDone = true;
+            status = 101;
+            committed = true;
+            state = ResponseState.COMPLETED;
+        }
+        try {
+            ex.finish();
+        } catch (IOException | RuntimeException e) {
+            synchronized (this) {
+                state = ResponseState.ABORTED;
+            }
+            ex.abort();
+        }
+        fireDone();
+    }
+
+    /**
      * The error path's outcome, decided by the state read once under the lock after the onError chain: NEW drops the
      * status and headers set so far and sends {@code status} with the JSON {@code body} (bodyless for HEAD),
      * STREAMING and COMMITTED abort, COMPLETED and ABORTED stay unchanged.

@@ -881,6 +881,7 @@ public final class DefaultRestApp implements RestApp {
     // @req FR-HTTP-008
     // @req FR-APP-014
     // @req FR-APP-015
+    // @req FR-WS-001
     public synchronized void freeze() {
         if (dispatcher != null) {
             return;
@@ -901,11 +902,13 @@ public final class DefaultRestApp implements RestApp {
         for (PrefixMiddleware pm : prefixMiddleware) {
             pipeline.addPrefix(pm.prefix, pm.middleware);
         }
-        frozenWebSocketOptions = webSocketOptions().copy();
+        DefaultWebSocketOptions ws = webSocketOptions().copy();
+        frozenWebSocketOptions = ws;
         SafeLogger safe = new SafeLogger(logger); // the logger is fixed from here: logger(...) needs an unfrozen app
         dispatcher = new Dispatcher(router, pipeline, new ErrorPath(errorHandlers, safe),
                 new AccessLog(accessLogOptions, safe), context, jsonCodec(), jsonLimit(), trustProxy,
-                multipartSettings().copy(), formLimit(), spool(), new StaticHandler(staticMounts, mimeTypes, defaultCache));
+                multipartSettings().copy(), formLimit(), spool(), new StaticHandler(staticMounts, mimeTypes, defaultCache),
+                new WebSocketUpgrade(ws, jsonCodec(), safe));
         lifecycle.markFrozen();
     }
 
