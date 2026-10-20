@@ -21,6 +21,7 @@ import org.junit.Test;
 // @req FR-SVL-003
 // @req FR-SVL-001
 // @req FR-SVL-008
+// @req FR-SVL-007
 public final class ServletDocsTest {
 
     /** The raw request-line labels of FR-SVL-002 AC-5; ServletRawTargetTest keeps the same labels in its CASES. */
@@ -127,5 +128,14 @@ public final class ServletDocsTest {
     @Test
     public void lanWarningSentence() throws IOException {
         assertTrue(doc("servlet.md").contains(LAN_PHRASE));
+    }
+
+    static final String WEBSOCKET_PHRASE = "Servlet 어댑터는 v1에서 WebSocket을 지원하지 않습니다. `app.ws` 라우트는 이 어댑터에서"
+            + " `501`을 답하며, WebSocket은 내장 엔진(`app.listen`)이 제공합니다";
+
+    // SDS-AC-14; FR-SVL-007 AC-4
+    @Test
+    public void websocketNotSupportedSentence() throws IOException {
+        assertTrue(doc("servlet.md").contains(WEBSOCKET_PHRASE));
     }
 }

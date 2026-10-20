@@ -1,8 +1,11 @@
 package com.snoworca.naruserve.servlet;
 
+import com.snoworca.naruserve.HttpException;
 import com.snoworca.naruserve.spi.HttpExchange;
 import com.snoworca.naruserve.spi.StreamDrain;
 import com.snoworca.naruserve.spi.UpgradeHandler;
+import com.snoworca.naruserve.spi.WebSocketEndpoint;
+import com.snoworca.naruserve.spi.WebSocketSettings;
 import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
@@ -17,6 +20,9 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.atomic.AtomicBoolean;
+import javax.servlet.AsyncContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.jspecify.annotations.Nullable;
@@ -25,10 +31,15 @@ import org.jspecify.annotations.Nullable;
  * {@link HttpExchange} over one container request and response. Request values come from the plain Servlet getters
  * (never {@code getServletPath}, {@code getPathInfo} or {@code getParameter*}); the response is written with
  * {@code setStatus}, {@code addHeader} and {@code setHeader("Content-Length")}, never {@code sendError} or
- * {@code setContentLength}, so the core owns the error body and the length.
+ * {@code setContentLength}, so the core owns the error body and the length. The body is read only through
+ * {@code getInputStream()}, so the core parser handles multipart, urlencoded and JSON bodies; an event stream runs
+ * under an {@link AsyncContext}; WebSocket and upgrade answer 501.
  */
 // @req FR-SVL-002
 // @req FR-SVL-003
+// @req FR-SVL-004
+// @req FR-SVL-005
+// @req FR-SVL-007
 final class ServletExchange implements HttpExchange {
 
     /** The largest chunk {@link #sendFile} reads and writes at once. */
@@ -37,16 +48,33 @@ final class ServletExchange implements HttpExchange {
     private final HttpServletRequest req;
     private final HttpServletResponse res;
     private final String path;
+    private final @Nullable ServletAdapter adapter;
     // Guarded by this.
     private boolean started;
+    // Guarded by this: the event-stream drain afterHandler() submits, its stream, and whether that already ran.
+    private @Nullable StreamDrain drain;
+    private @Nullable OutputStream drainOut;
+    private boolean handlerReturned;
     // Lock-free so abort() never waits for a writer.
     private volatile boolean aborted;
+    // Set once an event stream started async processing.
+    private volatile @Nullable AsyncContext async;
+    private final AtomicBoolean completed = new AtomicBoolean();
 
+    /** An exchange without an adapter: no event stream can start on it. */
     // @req FR-SVL-002
     ServletExchange(HttpServletRequest req, HttpServletResponse res, String path) {
+        this(req, res, path, null);
+    }
+
+    /** An exchange of {@code adapter}, whose {@link ServletAdapter#pool} counts and runs its event stream. */
+    // @req FR-SVL-002
+    // @req FR-SVL-005
+    ServletExchange(HttpServletRequest req, HttpServletResponse res, String path, @Nullable ServletAdapter adapter) {
         this.req = req;
         this.res = res;
         this.path = path;
+        this.adapter = adapter;
     }
 
     // @req FR-SVL-002
@@ -90,7 +118,12 @@ final class ServletExchange implements HttpExchange {
         return Collections.unmodifiableList(out);
     }
 
+    /**
+     * The container's input stream only: the core parser reads multipart, urlencoded and JSON bodies from it, so
+     * {@code getParts}, {@code getPart} and {@code getParameter*} are never called and the core limits apply.
+     */
     // @req FR-SVL-002
+    // @req FR-SVL-004
     @Override
     public InputStream requestBody() {
         try {
@@ -119,14 +152,7 @@ final class ServletExchange implements HttpExchange {
             throws IOException {
         requireStartable();
         started = true;
-        res.setStatus(status);
-        for (Map.Entry<String, String> h : headers) {
-            if (h.getKey().equalsIgnoreCase("Content-Length")) {
-                res.setHeader(h.getKey(), h.getValue());
-            } else {
-                res.addHeader(h.getKey(), h.getValue());
-            }
-        }
+        head(status, headers);
         return new FilterOutputStream(res.getOutputStream()) {
             @Override
             public void write(int b) throws IOException {
@@ -160,11 +186,18 @@ final class ServletExchange implements HttpExchange {
         res.flushBuffer();
     }
 
-    /** Marks the exchange aborted; the container owns the socket, so nothing is called on it. */
+    /**
+     * Marks the exchange aborted; the container owns the socket, so nothing is called on it, except that an event
+     * stream's AsyncContext is completed (once) so the container ends the response.
+     */
     // @req FR-SVL-003
+    // @req FR-SVL-005
     @Override
     public void abort() {
         aborted = true;
+        if (async != null) {
+            complete();
+        }
     }
 
     /** Commits, then copies {@code length} bytes from {@code offset} through java.io in chunks of {@link #CHUNK}. */
@@ -203,16 +236,143 @@ final class ServletExchange implements HttpExchange {
         out.flush();
     }
 
+    /** Servlet 3.1 offers no upgrade the core can use here: 501, the exchange left unstarted. */
     // @req FR-SVL-003
+    // @req FR-SVL-007
     @Override
     public void upgrade(List<Map.Entry<String, String>> headers, UpgradeHandler handler) {
-        throw new UnsupportedOperationException("upgrade is not supported by the Servlet adapter");
+        throw new HttpException(501, "upgrade is not supported by the Servlet adapter");
+    }
+
+    /**
+     * WebSocket is not supported on the Servlet adapter in v1: 501 instead of the SPI default, which the core would
+     * answer with 500; the exchange stays unstarted, so the core commits the error.
+     */
+    // @req FR-SVL-007
+    @Override
+    public void webSocket(WebSocketSettings settings, WebSocketEndpoint endpoint) {
+        throw new HttpException(501, "WebSocket is not supported by the Servlet adapter");
     }
 
     // @req FR-SVL-003
+    // @req FR-SVL-005
     @Override
-    public void eventStream(int status, List<Map.Entry<String, String>> headers, StreamDrain drain) {
-        throw new UnsupportedOperationException("eventStream is not supported by the Servlet adapter yet");
+    public void eventStream(int status, List<Map.Entry<String, String>> headers, StreamDrain drain)
+            throws IOException {
+        ServletEventStream.start(this, status, headers, drain);
+    }
+
+    /**
+     * Called once by the servlet after the core's handler returned: submits the registered drain to the pool, so
+     * the container's request thread returns while the stream stays open. An event stream started later throws
+     * IllegalStateException. For an aborted stream, or once the pool was shut down, it only gives the slot back.
+     */
+    // @req FR-SVL-005
+    void afterHandler() {
+        StreamDrain d;
+        OutputStream out;
+        synchronized (this) {
+            if (handlerReturned) {
+                return;
+            }
+            handlerReturned = true;
+            d = drain;
+            out = drainOut;
+            drain = null;
+            drainOut = null;
+        }
+        if (d == null || out == null) {
+            return;
+        }
+        ServletEventStream.Pool pool = pool();
+        if (!aborted) {
+            try {
+                pool.submit(ServletEventStream.drainTask(this, d, out));
+                return;
+            } catch (RejectedExecutionException e) {
+                abort();
+            }
+        }
+        pool.release();
+        complete();
+    }
+
+    /** The pool of the adapter; IllegalStateException for an exchange without one. */
+    // @req FR-SVL-005
+    ServletEventStream.Pool pool() {
+        ServletEventStream.Pool p = adapter != null ? adapter.pool() : null;
+        if (p == null) {
+            throw new IllegalStateException("no SSE pool: the exchange has no bound ServletAdapter");
+        }
+        return p;
+    }
+
+    HttpServletRequest request() {
+        return req;
+    }
+
+    HttpServletResponse response() {
+        return res;
+    }
+
+    /** An event stream must start before the handler returns, or no drain would run it. */
+    // @req FR-SVL-005
+    synchronized void requireDrainable() {
+        if (handlerReturned) {
+            throw new IllegalStateException("eventStream must be called before the handler returns");
+        }
+    }
+
+    /** The single start mark, set by the event stream once it holds a slot. */
+    // @req FR-SVL-005
+    synchronized void markStarted() {
+        started = true;
+    }
+
+    // @req FR-SVL-005
+    void async(AsyncContext ac) {
+        async = ac;
+    }
+
+    /** Records the drain {@link #afterHandler} submits and the stream it writes to. */
+    // @req FR-SVL-005
+    synchronized void register(StreamDrain d, OutputStream out) {
+        if (handlerReturned) {
+            // afterHandler already ran, so this drain would never be submitted
+            throw new IllegalStateException("eventStream must be called before the handler returns");
+        }
+        drain = d;
+        drainOut = out;
+    }
+
+    /** Completes the event stream's AsyncContext once; later calls, or one the container refuses, do nothing. */
+    // @req FR-SVL-005
+    void complete() {
+        AsyncContext ac = async;
+        if (ac != null && completed.compareAndSet(false, true)) {
+            try {
+                ac.complete();
+            } catch (IllegalStateException e) {
+                // the container already ended the request
+            }
+        }
+    }
+
+    /** Status and headers: Content-Length through setHeader, every other header through addHeader, in order. */
+    // @req FR-SVL-003
+    void head(int status, List<Map.Entry<String, String>> headers) {
+        res.setStatus(status);
+        for (Map.Entry<String, String> h : headers) {
+            if (h.getKey().equalsIgnoreCase("Content-Length")) {
+                res.setHeader(h.getKey(), h.getValue());
+            } else {
+                res.addHeader(h.getKey(), h.getValue());
+            }
+        }
+    }
+
+    void checkNotAborted() throws IOException {
+        check();
     }
 
     /** A second start of one exchange throws IllegalStateException; an aborted one throws IOException. */

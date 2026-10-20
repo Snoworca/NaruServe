@@ -19,6 +19,7 @@ public final class ServletAdapter implements HttpAdapter {
 
     private volatile @Nullable ExchangeHandler handler;
     private volatile @Nullable ServerSettings settings;
+    private volatile ServletEventStream.@Nullable Pool pool;
     private volatile boolean bound;
     private volatile boolean stopping;
 
@@ -45,8 +46,15 @@ public final class ServletAdapter implements HttpAdapter {
         keep(Objects.requireNonNull(settings, "settings"), handler);
     }
 
-    /** The settings go in before the handler, so a request that sees the handler also sees the renderer. */
+    /** The {@code maxSseStreams} default of {@link ServerSettings}, for a bind without settings. */
+    static final int DEFAULT_SSE_STREAMS = 128;
+
+    /**
+     * The settings and the SSE pool go in before the handler, so a request that sees the handler also sees the
+     * renderer and the pool.
+     */
     // @req FR-SVL-001
+    // @req FR-SVL-005
     private synchronized void keep(@Nullable ServerSettings s, ExchangeHandler h) {
         Objects.requireNonNull(h, "handler");
         if (bound) {
@@ -54,6 +62,7 @@ public final class ServletAdapter implements HttpAdapter {
         }
         bound = true;
         settings = s;
+        pool = new ServletEventStream.Pool(s != null ? s.maxSseStreams() : DEFAULT_SSE_STREAMS);
         handler = h;
     }
 
@@ -75,12 +84,23 @@ public final class ServletAdapter implements HttpAdapter {
         stopping = true;
     }
 
-    /** Detaches the handler, so the servlet answers 503 from then on. */
+    /** Detaches the handler, so the servlet answers 503 from then on, and lets the SSE pool threads end. */
     // @req IR-SVL-001
     // @req FR-SVL-001
+    // @req FR-SVL-005
     @Override
     public void release() {
         handler = null;
+        ServletEventStream.Pool p = pool;
+        if (p != null) {
+            p.shutdown();
+        }
+    }
+
+    /** The SSE slots and drain executor built at bind from {@code maxSseStreams}; {@code null} before bind. */
+    // @req FR-SVL-005
+    ServletEventStream.@Nullable Pool pool() {
+        return pool;
     }
 
     /** True once {@link #stop} ran. */

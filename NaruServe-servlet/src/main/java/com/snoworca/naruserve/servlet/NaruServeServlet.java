@@ -32,8 +32,13 @@ final class NaruServeServlet extends HttpServlet {
         this.prefix = prefix;
     }
 
-    /** Overrides without super, so HttpServlet refuses no method token; unbound is 503, a prefix miss 404. */
+    /**
+     * Overrides without super, so HttpServlet refuses no method token; unbound is 503, a prefix miss 404. Once the
+     * handler returned, the exchange's afterHandler runs, so this request thread is released while an SSE stream
+     * stays open.
+     */
     // @req FR-SVL-002
+    // @req FR-SVL-005
     @Override
     protected void service(HttpServletRequest req, HttpServletResponse res) throws IOException {
         ExchangeHandler handler = adapter.handler();
@@ -46,7 +51,12 @@ final class NaruServeServlet extends HttpServlet {
             reject(res, 404, false);
             return;
         }
-        handler.handle(new ServletExchange(req, res, path));
+        ServletExchange ex = new ServletExchange(req, res, path, adapter);
+        try {
+            handler.handle(ex);
+        } finally {
+            ex.afterHandler(); // starts a registered event-stream drain on the adapter's pool
+        }
     }
 
     /** The adapter's own answer: fixed header values and the standard body, never sendError, nothing logged. */

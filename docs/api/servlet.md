@@ -24,9 +24,9 @@ compileOnly 'javax.servlet:javax.servlet-api:3.1.0'
 | 포트·TLS·스레드 풀 | NaruServe 설정 | 컨테이너 설정 |
 | 시작·종료 | `app.listen()` / `app.shutdown()` | 컨테이너가 웹 애플리케이션을 올릴 때 `app.listen(0)`, 내릴 때 `app.shutdown(timeout, SECONDS)` |
 | 경로 | 요청 경로 그대로 | `getRequestURI()`에서 컨텍스트 경로와 url-pattern 접두사를 뺀 나머지 (퍼센트 인코딩 유지) |
-| 파일 업로드 | NaruServe 파서 | Servlet 3.1 multipart 사용 여부 **(미확정)**. `app.multipart` 한도는 코어가 적용 |
-| SSE | 내장 스트리밍 | `AsyncContext` 또는 비차단 쓰기 |
-| WebSocket | 내장 | 컨테이너의 WebSocket API. 컨테이너마다 지원 여부를 확인하고 연결 (**(미확정)**) |
+| 파일 업로드 | NaruServe 파서 | 같은 NaruServe 파서가 `getInputStream()`을 읽음. Servlet `Part` API와 `MultipartConfig`는 쓰지 않음 |
+| SSE | 내장 스트리밍 | `AsyncContext`(제한 시간 0) 위에서 어댑터 전용 스레드가 스트림을 씀 |
+| WebSocket | 내장 | v1에서는 지원하지 않음. `app.ws` 라우트는 `501` |
 
 ## 포트와 시작·종료
 
@@ -91,6 +91,27 @@ Jetty 9.4에서 잘못된 요청 경로를 원본 요청 줄로 보내 관찰한
 - 연결을 끊는 일은 컨테이너 몫입니다. 비정상 종료(`abort`) 뒤의 쓰기는 `IOException`으로 실패하고, 이미 소켓에 막힌 쓰기는 컨테이너의 쓰기 제한 시간이 지나야 끝납니다.
 
 앱 코드는 `javax.servlet` 타입을 보지 않습니다. `Cookie`도 NaruServe `Cookie`이고 `javax.servlet.http.Cookie`가 아닙니다.
+
+## 파일 업로드와 폼 본문
+
+- multipart, urlencoded, JSON 본문은 모두 내장 엔진과 같은 NaruServe 파서가 `getInputStream()`에서 읽습니다. `req.file`, `req.files`, `req.form`, `req.parts` 값은 내장 엔진·인메모리 어댑터와 같습니다.
+- 어댑터는 `getParts()`, `getPart()`, `getParameter*`를 부르지 않고 서블릿을 `MultipartConfig` 없이 등록합니다. 컨테이너가 본문을 먼저 읽거나 임시 파일을 만들지 않습니다.
+- `app.multipart`의 파일 크기·파트 수·전체 크기 한도, `formLimit`, `jsonLimit`을 넘는 본문은 표준 오류 본문과 함께 `413`이고, 응답 뒤 `tempDirectory`에 업로드 임시 파일이 남지 않습니다. 업로드 중에 클라이언트가 연결을 끊어도 컨테이너의 요청 스레드가 돌아온 뒤 임시 파일은 없습니다.
+
+## SSE
+
+- `res.sse()`는 `startAsync()`로 비동기 처리를 시작하고 `AsyncContext.setTimeout(0)`을 겁니다. 컨테이너 기본 비동기 제한 시간(Jetty 9.4는 30초)이 긴 스트림을 끊지 않습니다. 서블릿은 `asyncSupported=true`로 등록됩니다.
+- 열린 스트림 수는 어댑터가 `maxSseStreams`(기본 128)로 셉니다. 한도에 닿으면 응답을 시작하기 전에 표준 오류 본문과 요청 ID로 `503`을 답합니다. 스트림이 끝나면(클라이언트 종료, `close()`, 쓰기 실패, `abort`) 자리가 돌아옵니다.
+- 스트림 루프는 컨테이너 스레드가 아니라 어댑터가 가진 데몬 스레드 `naruserve-servlet-sse-<n>`(최대 `maxSseStreams`개)에서 돕니다. 핸들러가 돌아오면 컨테이너의 요청 스레드는 바로 풀립니다.
+- 이벤트와 `: ping` 하트비트는 쓸 때마다 flush하므로 컨테이너 버퍼에 머물지 않습니다. 핸들러 스레드가 루프 시작 전에 보낸 이벤트도 바로 갑니다.
+- 스트림이 끝나면 `AsyncContext.complete()`를 한 번 부르고 `onClose` 리스너가 한 번 돕니다. 클라이언트가 소켓을 닫으면 다음 쓰기나 하트비트에서 알아채고 접근 로그에 `cause=client`를 남깁니다.
+
+## WebSocket
+
+Servlet 어댑터는 v1에서 WebSocket을 지원하지 않습니다. `app.ws` 라우트는 이 어댑터에서 `501`을 답하며, WebSocket은 내장 엔진(`app.listen`)이 제공합니다.
+
+- 올바른 업그레이드 요청(`Upgrade: websocket`, `Connection: Upgrade`, `Sec-WebSocket-Version: 13`, 키)은 `101`도 `500`도 아닌 표준 오류 본문과 요청 ID의 `501`을 받고, 세션은 만들어지지 않습니다.
+- 코어가 먼저 답하는 경우는 그대로입니다. `Upgrade` 없는 요청은 `Upgrade: websocket`과 함께 `426`, 허용하지 않은 `Origin`은 `403`, GET이 아닌 메서드는 내장 엔진과 같은 답입니다.
 
 ## 쓰는 모습
 
