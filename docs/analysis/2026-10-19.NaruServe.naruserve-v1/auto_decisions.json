@@ -568,6 +568,27 @@
    "rule": "majority (stopped after 2 agreeing votes)",
    "confidence": 0.865,
    "ts": "2026-10-20T10:04:01.760542Z"
+  },
+  {
+   "gate_id": "partition-review-unrecorded",
+   "question": "Stage 8 lane plan review (1 lane, wave 8)",
+   "options": [
+    "pass",
+    "revise",
+    "abort"
+   ],
+   "votes": [
+    "pass",
+    "pass"
+   ],
+   "confidences": [
+    0.9,
+    0.9
+   ],
+   "decision": "pass",
+   "rule": "majority (stopped after 2 agreeing votes)",
+   "confidence": 0.9,
+   "ts": "2026-10-20T12:11:09.304748Z"
   }
  ]
 }
