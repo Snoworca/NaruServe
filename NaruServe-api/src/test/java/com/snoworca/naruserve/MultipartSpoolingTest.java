@@ -85,6 +85,33 @@ public class MultipartSpoolingTest {
         assertEquals("the temp file is gone once the request ended", 0, dir.list().length);
     }
 
+    // FR-MULTIPART-004 AC-1
+    // A spool failure is the server's fault (500); a malformed body stays the client's (400).
+    @Test
+    public void FR_MULTIPART_004_AC1_unusableTempDirectoryAnswers500AndMalformedBodyStays400() throws Exception {
+        File missing = new File(tmp.getRoot(), "no-such-dir");
+        InMemoryHttpAdapter adapter = new InMemoryHttpAdapter();
+        RestApp app = RestApp.builder().httpAdapter(adapter).jsonCodec(new StubJsonCodec()).build();
+        app.multipart(o -> o.memoryThreshold(1024).tempDirectory(missing));
+        app.post("/up", (req, res) -> {
+            req.file("f");
+            res.send("ok");
+        });
+        app.listen(0);
+        try {
+            byte[] big = filePart("a.bin", 2000);
+            assertEquals(500, adapter.send(ClientRequest.of("POST", "/up")
+                    .header("Content-Type", "multipart/form-data; boundary=" + B)
+                    .header("Content-Length", String.valueOf(big.length)).body(big)).status());
+            byte[] bad = "--spool\r\nno headers end".getBytes(StandardCharsets.UTF_8);
+            assertEquals(400, adapter.send(ClientRequest.of("POST", "/up")
+                    .header("Content-Type", "multipart/form-data; boundary=" + B)
+                    .header("Content-Length", String.valueOf(bad.length)).body(bad)).status());
+        } finally {
+            app.shutdown(5, TimeUnit.SECONDS);
+        }
+    }
+
     // FR-MULTIPART-004 AC-3, FR-MULTIPART-004 AC-4
     // SDS-AC-2
     @Test

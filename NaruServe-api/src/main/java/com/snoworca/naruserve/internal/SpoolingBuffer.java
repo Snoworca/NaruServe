@@ -1,5 +1,6 @@
 package com.snoworca.naruserve.internal;
 
+import com.snoworca.naruserve.HttpException;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -35,25 +36,34 @@ final class SpoolingBuffer extends OutputStream {
     // @req FR-MULTIPART-004
     @Override
     public void write(byte[] b, int off, int len) throws IOException {
-        ByteArrayOutputStream m = memory;
-        if (m != null && size + len > threshold) {
-            File f = spool.createTemp(dir);
-            file = f;
-            OutputStream out = new FileOutputStream(f);
-            fileOut = out;
-            m.writeTo(out);
-            memory = null;
-        }
-        ByteArrayOutputStream mem = memory;
-        if (mem != null) {
-            mem.write(b, off, len);
-        } else {
-            OutputStream out = fileOut;
-            if (out != null) {
-                out.write(b, off, len);
+        try {
+            ByteArrayOutputStream m = memory;
+            if (m != null && size + len > threshold) {
+                File f = spool.createTemp(dir);
+                file = f;
+                OutputStream out = new FileOutputStream(f);
+                fileOut = out;
+                m.writeTo(out);
+                memory = null;
             }
+            ByteArrayOutputStream mem = memory;
+            if (mem != null) {
+                mem.write(b, off, len);
+            } else {
+                OutputStream out = fileOut;
+                if (out != null) {
+                    out.write(b, off, len);
+                }
+            }
+        } catch (IOException e) {
+            throw spoolFailed(e);
         }
         size += len;
+    }
+
+    /** The spool, not the request body, failed: a missing or unwritable tempDirectory, a full disk. */
+    private static HttpException spoolFailed(IOException e) {
+        return new HttpException(500, "upload spool failed", e);
     }
 
     // @req FR-MULTIPART-004
@@ -61,7 +71,11 @@ final class SpoolingBuffer extends OutputStream {
             throws IOException {
         OutputStream out = fileOut;
         if (out != null) {
-            out.close();
+            try {
+                out.close();
+            } catch (IOException e) {
+                throw spoolFailed(e);
+            }
         }
         ByteArrayOutputStream m = memory;
         return new DefaultUploadFile(name, filename, contentType, size, m == null ? null : m.toByteArray(), file,
