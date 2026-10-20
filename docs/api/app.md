@@ -107,7 +107,7 @@ public interface RouteHandler {
 
 ### 서버 설정
 
-`server(options -> ...)`는 `ServerOptions`를 받는 람다를 바로 실행하고 `RestApp`을 돌려줍니다. 여러 번 부르면 차례로 적용됩니다. Express에서 `app.listen(port, host)`와 `http.Server`의 `headersTimeout` 같은 속성으로 흩어져 있던 설정을 한곳에 모은 것입니다. 각 설정 메서드는 `ServerOptions`를 돌려주므로 이어서 부릅니다.
+`server(options -> ...)`는 `ServerOptions`를 받는 람다를 바로 실행하고 `RestApp`을 돌려줍니다. 여러 번 부르면 차례로 적용됩니다. Express에서 `app.listen(port, host)`와 `http.Server`의 `headersTimeout` 같은 속성으로 흩어져 있던 설정을 한곳에 모은 것입니다. 각 설정 메서드는 `ServerOptions`를 돌려주므로 이어서 부릅니다. 람다가 중간에 예외를 던지면 그 전까지 부른 설정은 이미 적용된 채 남습니다. `server`와 `accessLog`는 `multipart`·`webSocket`·`sse`와 달리 복사본이 아니라 앱의 옵션 객체 하나에 바로 적용하기 때문입니다(`accessLog`도 같습니다). 값 범위를 먼저 확인한 뒤 부르세요.
 
 | 설정 | 기본값 | 범위 |
 |---|---|---|

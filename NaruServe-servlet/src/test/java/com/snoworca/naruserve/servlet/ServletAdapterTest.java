@@ -43,6 +43,34 @@ public class ServletAdapterTest {
         }
     }
 
+    private interface Bind {
+        void run(ServletAdapter adapter, int port) throws IOException;
+    }
+
+    /**
+     * Binds a fresh adapter on a free port and asserts that it starts no thread, reports port 0 and opens no
+     * socket. Another process or test may take the port between {@code freePort} and {@code portFree}, which looks
+     * like an adapter socket, so a lost race is retried on a new port; three losses in a row fail the test.
+     */
+    private static void assertBindOpensNoSocket(Bind bind) throws IOException {
+        int port = 0;
+        for (int attempt = 0; attempt < 3; attempt++) {
+            ServletAdapter adapter = new ServletAdapter();
+            assertNotBound(adapter);
+            port = freePort();
+            Set<Thread> before = threads();
+            bind.run(adapter, port);
+            Set<Thread> started = threads();
+            started.removeAll(before);
+            assertTrue("no thread started: " + started, started.isEmpty());
+            assertEquals(0, adapter.boundPort());
+            if (portFree(port)) {
+                return;
+            }
+        }
+        fail("no socket on " + port + " expected, but it was held in 3 attempts");
+    }
+
     /** The app-named threads only, so container threads of earlier tests cannot interfere. */
     private static Set<Thread> threads() {
         return new HashSet<>(LiveThreads.withPrefix("naruserve-"));
@@ -60,31 +88,13 @@ public class ServletAdapterTest {
     // SDS-AC-3; FR-SVL-001 AC-3, CON-SVL-006 AC-1
     @Test
     public void sdsAc3_FR_SVL_001_AC3_hostPortBindStoresTheHandlerOnly() throws IOException {
-        ServletAdapter adapter = new ServletAdapter();
-        assertNotBound(adapter);
-        int port = freePort();
-        Set<Thread> before = threads();
-        adapter.bind("127.0.0.1", port, HANDLER);
-        Set<Thread> started = threads();
-        started.removeAll(before);
-        assertTrue("no thread started: " + started, started.isEmpty());
-        assertEquals(0, adapter.boundPort());
-        assertTrue("no socket on " + port, portFree(port));
+        assertBindOpensNoSocket((adapter, port) -> adapter.bind("127.0.0.1", port, HANDLER));
     }
 
     // SDS-AC-3; FR-SVL-001 AC-3, CON-SVL-006 AC-1
     @Test
     public void sdsAc3_FR_SVL_001_AC3_settingsBindStoresTheHandlerOnly() throws IOException {
-        ServletAdapter adapter = new ServletAdapter();
-        assertNotBound(adapter);
-        int port = freePort();
-        Set<Thread> before = threads();
-        adapter.bind(settings(port), HANDLER);
-        Set<Thread> started = threads();
-        started.removeAll(before);
-        assertTrue("no thread started: " + started, started.isEmpty());
-        assertEquals(0, adapter.boundPort());
-        assertTrue("no socket on " + port, portFree(port));
+        assertBindOpensNoSocket((adapter, port) -> adapter.bind(settings(port), HANDLER));
     }
 
     // SDS-AC-3; FR-SVL-001 AC-3

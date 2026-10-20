@@ -5,6 +5,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.snoworca.naruserve.RestApp;
+import com.snoworca.naruserve.testing.NoLeftoverThreads;
 import com.snoworca.naruserve.testing.RecordingLogger;
 import com.snoworca.naruserve.tinyhttpd.RawTargetSocketTest.Http;
 import com.snoworca.naruserve.tinyhttpd.RawWebSocketClient.Frame;
@@ -22,6 +23,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.junit.After;
+import org.junit.Rule;
 import org.junit.Test;
 
 /**
@@ -29,6 +31,10 @@ import org.junit.Test;
  * healthy one. SDS-AC-n cites docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-6.sds.md.
  */
 public class WebSocketSendSocketTest {
+
+    // I-015: no naruserve-* thread outlives the test
+    @Rule
+    public final NoLeftoverThreads noLeftoverThreads = new NoLeftoverThreads();
 
     private static final Pattern TAGGED = Pattern.compile("t([0-7])-([0-9]+)-(x+)");
     private static final String PAD = Http.repeat('x', 200);

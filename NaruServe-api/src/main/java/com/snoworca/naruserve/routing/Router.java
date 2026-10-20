@@ -15,7 +15,7 @@ import org.jspecify.annotations.Nullable;
  * Registration and freeze are serialised by the router's lock; after freeze the table is read-only and published
  * through a volatile write, so {@link #lookup} is safe from any number of threads.
  */
-// @req CON-ROUTE-001
+// @req CON-ROUTE-006
 // @req FR-ROUTE-002
 public final class Router<H> {
 

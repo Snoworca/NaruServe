@@ -6,6 +6,7 @@ import static org.junit.Assert.fail;
 
 import com.snoworca.naruserve.HttpException;
 import com.snoworca.naruserve.RestApp;
+import com.snoworca.naruserve.testing.NoLeftoverThreads;
 import com.snoworca.naruserve.testing.RecordingLogger;
 import com.snoworca.naruserve.tinyhttpd.RawTargetSocketTest.Http;
 import java.io.OutputStream;
@@ -15,6 +16,7 @@ import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
 import org.junit.After;
+import org.junit.Rule;
 import org.junit.Test;
 
 /**
@@ -22,6 +24,10 @@ import org.junit.Test;
  * docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-2.sds.md.
  */
 public class ErrorHeadersSocketTest {
+
+    // I-015: no naruserve-* thread outlives the test
+    @Rule
+    public final NoLeftoverThreads noLeftoverThreads = new NoLeftoverThreads();
 
     private final RecordingLogger log = new RecordingLogger();
     private final TinyHttpdAdapter adapter = new TinyHttpdAdapter();

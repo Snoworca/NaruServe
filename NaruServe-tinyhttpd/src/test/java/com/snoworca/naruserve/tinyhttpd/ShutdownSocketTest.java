@@ -6,6 +6,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.snoworca.naruserve.AppState;
 import com.snoworca.naruserve.RestApp;
+import com.snoworca.naruserve.testing.NoLeftoverThreads;
 import com.snoworca.naruserve.testing.RecordingLogger;
 import com.snoworca.naruserve.tinyhttpd.RawTargetSocketTest.Http;
 import java.io.ByteArrayOutputStream;
@@ -21,10 +22,15 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import org.junit.Rule;
 import org.junit.Test;
 
 /** Adapter stop and release. SDS-AC-n cites docs/sds/2026-10-19.naruserve.naruserve-v1-wave-5-6.sds.md. */
 public class ShutdownSocketTest {
+
+    // I-015: no naruserve-* thread outlives the test
+    @Rule
+    public final NoLeftoverThreads noLeftoverThreads = new NoLeftoverThreads();
 
     private static RestApp app() {
         return Http.app(new TinyHttpdAdapter(), new RecordingLogger());

@@ -22,7 +22,7 @@ import org.jspecify.annotations.Nullable;
  * get the standard error JSON, its log goes to the app logger, and a non-daemon keeper thread holds the JVM from a
  * successful bind until the stop.
  */
-// @req FR-ENGINE-001
+// @req FR-ENGINE-011
 // @req FR-ENGINE-002
 // @req FR-ENGINE-003
 // @req FR-ENGINE-004
@@ -44,7 +44,7 @@ public final class TinyHttpdAdapter implements HttpAdapter {
     }
 
     /** Binds with the default settings and {@code host}/{@code port}; the core calls the settings overload. */
-    // @req FR-ENGINE-001
+    // @req FR-ENGINE-011
     @Override
     public void bind(String host, int port, ExchangeHandler handler) throws IOException {
         // This overload answers TinyHttpd's own errors with a zero-byte body and no content type.
@@ -136,7 +136,7 @@ public final class TinyHttpdAdapter implements HttpAdapter {
      *
      * @throws IllegalStateException before bind
      */
-    // @req FR-ENGINE-001
+    // @req FR-ENGINE-011
     @Override
     public synchronized int boundPort() {
         return bound().getPort();
@@ -161,7 +161,7 @@ public final class TinyHttpdAdapter implements HttpAdapter {
      * Ends the keeper thread, then stops TinyHttpd once with {@code timeout} (the time left until the shutdown
      * deadline) as its grace; does nothing before bind or on a later call.
      */
-    // @req FR-ENGINE-001
+    // @req FR-ENGINE-011
     // @req FR-ENGINE-006
     @Override
     public void stop(long timeout, TimeUnit unit) {
@@ -183,7 +183,7 @@ public final class TinyHttpdAdapter implements HttpAdapter {
      * Waits at most {@link #RELEASE_MARGIN_MS} for TinyHttpd and its worker threads to end and warns when workers
      * remain.
      */
-    // @req FR-ENGINE-001
+    // @req FR-ENGINE-011
     // @req FR-ENGINE-006
     @Override
     public void release() {

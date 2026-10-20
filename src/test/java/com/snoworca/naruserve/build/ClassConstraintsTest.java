@@ -90,7 +90,9 @@ public class ClassConstraintsTest {
     @Test
     public void con_HTTP_002_AC1_publicTypesOfTheCorePackageHaveNoOptionalFunctionStreamOrNioFileSignature()
             throws Exception {
-        String[] forbidden = {"java.util.Optional", "java.util.function.", "java.util.stream.", "java.nio.file."};
+        // I-003: no java.nio.file, CompletableFuture or java.net.http type in the public API
+        String[] forbidden = {"java.util.Optional", "java.util.function.", "java.util.stream.", "java.nio.file.",
+            "java.util.concurrent.CompletableFuture", "java.net.http."};
         List<String> hits = new ArrayList<>();
         int types = 0;
         File dir = new File(API_MAIN, PKG);
@@ -137,6 +139,16 @@ public class ClassConstraintsTest {
         // The build side of the rule: NaruServe-api is sniffed at API 21 under check.
         assertTrue(BuildLayoutTest.read(new File(ROOT, "build.gradle"))
                 .contains("p.tasks.named('check') { dependsOn checkClassReferences }"));
+    }
+
+    // I-003: java.nio.file, CompletableFuture and java.net.http stay out of every NaruServe-api main class, the spi and
+    // routing packages (CON-HTTP-001 AC-1, CON-ROUTE-004 AC-1) included
+    @Test
+    public void i003_noMainClassOfTheApiModuleReferencesNioFileCompletableFutureOrJavaNetHttp() throws IOException {
+        String[] forbidden = {"java/nio/file/", "java/util/concurrent/CompletableFuture", "java/net/http/"};
+        assertEquals(Arrays.asList(), references(classes(API_MAIN, PKG), forbidden));
+        assertEquals(Arrays.asList(), references(classes(API_MAIN, PKG + "spi/"), forbidden));
+        assertEquals(Arrays.asList(), references(classes(API_MAIN, PKG + "routing/"), forbidden));
     }
 
     // CON-HTTP-004 AC-1; CON-BUILD-015 AC-1 for every main class of NaruServe-api

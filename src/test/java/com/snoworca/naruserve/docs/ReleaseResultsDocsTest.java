@@ -184,7 +184,10 @@ public final class ReleaseResultsDocsTest {
                 Pattern.compile("commit=[0-9a-f]{7,40}").matcher(full[2]).find());
         Matcher tests = Pattern.compile("tests=(\\d+)").matcher(full[2]);
         assertTrue("full-suite result names the test count: " + full[2], tests.find());
-        assertTrue(Integer.parseInt(tests.group(1)) > 0);
+        // OPS-REL-003 AC-4: the record cannot go stale; 1561 is the count after the run-final terminal review,
+        // and the suite only grows.
+        assertTrue(full[2], Integer.parseInt(tests.group(1)) >= 1561);
+        assertFalse("a working-tree reference cannot be reproduced: " + full[2], full[2].contains("working tree"));
         assertTrue(full[2], full[2].contains("exit=0"));
     }
 

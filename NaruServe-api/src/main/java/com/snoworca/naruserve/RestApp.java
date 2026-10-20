@@ -131,7 +131,7 @@ public interface RestApp {
     // @req IR-APP-006
     RestApp logger(Logger logger);
 
-    /** Runs {@code configurer} at once on the app's one access log options; calls accumulate in order. */
+    /** Runs {@code configurer} at once on the app's one access log options; calls accumulate in order. A configurer that throws part-way leaves the options it already set applied, unlike {@code multipart}, {@code webSocket} and {@code sse}, which apply a copy. */
     // @req IR-APP-007
     RestApp accessLog(Configurer<AccessLogOptions> configurer);
 
@@ -186,7 +186,7 @@ public interface RestApp {
 
     /**
      * Runs {@code configurer} at once on the app's one server options, as {@code app.server(o ->
-     * o.bindAddress("0.0.0.0"))}; calls apply in order. Out-of-range values throw {@link IllegalArgumentException}.
+     * o.bindAddress("0.0.0.0"))}; calls apply in order. Out-of-range values throw {@link IllegalArgumentException}. A configurer that throws part-way leaves the options it already set applied, unlike {@code multipart}, {@code webSocket} and {@code sse}, which apply a copy.
      */
     // @req IR-ENGINE-001
     RestApp server(Configurer<ServerOptions> configurer);

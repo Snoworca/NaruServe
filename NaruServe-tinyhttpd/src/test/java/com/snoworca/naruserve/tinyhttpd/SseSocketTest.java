@@ -13,6 +13,7 @@ import com.snoworca.naruserve.SseEvent;
 import com.snoworca.naruserve.internal.DefaultResponse;
 import com.snoworca.naruserve.spi.HttpExchange;
 import com.snoworca.naruserve.spi.StreamDrain;
+import com.snoworca.naruserve.testing.NoLeftoverThreads;
 import com.snoworca.naruserve.testing.RecordingLogger;
 import com.snoworca.naruserve.tinyhttpd.RawTargetSocketTest.Http;
 import java.io.ByteArrayOutputStream;
@@ -39,6 +40,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.After;
+import org.junit.Rule;
 import org.junit.Test;
 
 /**
@@ -47,6 +49,10 @@ import org.junit.Test;
  * docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-11.sds.md from the event-stream class cases on.
  */
 public class SseSocketTest {
+
+    // I-015: no naruserve-* thread outlives the test
+    @Rule
+    public final NoLeftoverThreads noLeftoverThreads = new NoLeftoverThreads();
 
     private final RecordingLogger log = new RecordingLogger();
     private final TinyHttpdAdapter adapter = new TinyHttpdAdapter();

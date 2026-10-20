@@ -10,7 +10,7 @@ import org.jspecify.annotations.Nullable;
 /** The one strict UTF-8 percent decoder of the core, shared by the path validator and the request. */
 // @req FR-ROUTE-005
 // @req FR-HTTP-009
-// @req FR-HTTP-010
+// @req FR-HTTP-025
 public final class PercentDecoder {
 
     private PercentDecoder() {
@@ -22,7 +22,7 @@ public final class PercentDecoder {
      */
     // @req FR-ROUTE-005
     // @req FR-HTTP-009
-    // @req FR-HTTP-010
+    // @req FR-HTTP-025
     public static @Nullable String decode(String s, boolean plusAsSpace) {
         if (s.indexOf('%') < 0) {
             return plusAsSpace ? s.replace('+', ' ') : s;
@@ -56,7 +56,7 @@ public final class PercentDecoder {
     }
 
     /** {@code bytes} as UTF-8, malformed or unmappable input reported rather than replaced. */
-    // @req FR-HTTP-010
+    // @req FR-HTTP-025
     // @req FR-MULTIPART-002
     // @req FR-MULTIPART-003
     static String strictUtf8(byte[] bytes) throws CharacterCodingException {

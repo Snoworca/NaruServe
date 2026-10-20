@@ -4,15 +4,21 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.snoworca.naruserve.RestApp;
+import com.snoworca.naruserve.testing.NoLeftoverThreads;
 import com.snoworca.naruserve.testing.RecordingLogger;
 import com.snoworca.naruserve.tinyhttpd.RawTargetSocketTest.Http;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.After;
+import org.junit.Rule;
 import org.junit.Test;
 
 /** The 426 answer of a WebSocket-only path over a TinyHttpd loopback socket. */
 public class WebSocketOnlySocketTest {
+
+    // I-015: no naruserve-* thread outlives the test
+    @Rule
+    public final NoLeftoverThreads noLeftoverThreads = new NoLeftoverThreads();
 
     private final RestApp app = Http.app(new TinyHttpdAdapter(), new RecordingLogger());
 

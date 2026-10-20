@@ -22,7 +22,7 @@ import org.jspecify.annotations.Nullable;
 
 /** {@link Request} over one exchange; built by the Dispatcher only for a matched HTTP route. */
 // @req FR-HTTP-009
-// @req FR-HTTP-010
+// @req FR-HTTP-025
 // @req FR-HTTP-011
 // @req FR-HTTP-012
 // @req FR-JSON-001
@@ -108,7 +108,7 @@ public final class DefaultRequest implements Request {
      * Parses the raw query once; a new {@code HttpException(400)} without message on every call for bad %XX or
      * invalid UTF-8, which the error path answers.
      */
-    // @req FR-HTTP-010
+    // @req FR-HTTP-025
     // @req FR-HTTP-025
     void decodeQuery() {
         if (query == null) {
@@ -124,7 +124,7 @@ public final class DefaultRequest implements Request {
      * {@code application/x-www-form-urlencoded} pairs split on '&', name and value split on the first '='; a pair
      * without '=' has an empty value, empty names are kept and empty pairs skipped. '+' is a space.
      */
-    // @req FR-HTTP-010
+    // @req FR-HTTP-025
     static Map<String, List<String>> parseQuery(@Nullable String rawQuery) {
         if (rawQuery == null || rawQuery.isEmpty()) {
             return Collections.emptyMap();
@@ -337,14 +337,14 @@ public final class DefaultRequest implements Request {
         return value;
     }
 
-    // @req FR-HTTP-010
+    // @req FR-HTTP-025
     @Override
     public @Nullable String query(String name) {
         List<String> values = queries(name);
         return values.isEmpty() ? null : values.get(0);
     }
 
-    // @req FR-HTTP-010
+    // @req FR-HTTP-025
     @Override
     public List<String> queries(String name) {
         decodeQuery();

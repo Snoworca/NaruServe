@@ -7,6 +7,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.snoworca.naruserve.RestApp;
 import com.snoworca.naruserve.spi.WebSocketSettings;
+import com.snoworca.naruserve.testing.NoLeftoverThreads;
 import com.snoworca.naruserve.testing.RecordingLogger;
 import com.snoworca.naruserve.tinyhttpd.RawTargetSocketTest.Http;
 import com.snoworca.naruserve.tinyhttpd.TinyHttpdWebSocketTest.Recording;
@@ -18,6 +19,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.junit.After;
+import org.junit.Rule;
 import org.junit.Test;
 
 /**
@@ -25,6 +27,10 @@ import org.junit.Test;
  * docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-4.sds.md.
  */
 public class WebSocketSocketTest {
+
+    // I-015: no naruserve-* thread outlives the test
+    @Rule
+    public final NoLeftoverThreads noLeftoverThreads = new NoLeftoverThreads();
 
     private static final Pattern BODY_RID = Pattern.compile("\"requestId\":\"([0-9a-f]{16})\"");
 

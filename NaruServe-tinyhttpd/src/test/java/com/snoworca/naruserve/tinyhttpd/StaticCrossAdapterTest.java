@@ -7,6 +7,7 @@ import com.snoworca.naruserve.RestApp;
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter;
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientRequest;
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientResponse;
+import com.snoworca.naruserve.testing.NoLeftoverThreads;
 import com.snoworca.naruserve.testing.RecordingLogger;
 import com.snoworca.naruserve.testing.StubJsonCodec;
 import com.snoworca.naruserve.testing.TestApp;
@@ -31,6 +32,10 @@ import org.junit.rules.TemporaryFolder;
  * SDS-AC-n cites docs/sds/2026-10-19.naruserve.naruserve-v1-wave-6-8.sds.md.
  */
 public class StaticCrossAdapterTest {
+
+    // I-015: no naruserve-* thread outlives the test
+    @Rule
+    public final NoLeftoverThreads noLeftoverThreads = new NoLeftoverThreads();
 
     @Rule
     public final TemporaryFolder tmp = new TemporaryFolder();

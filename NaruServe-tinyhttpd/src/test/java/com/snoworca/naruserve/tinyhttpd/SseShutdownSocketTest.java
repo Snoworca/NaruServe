@@ -8,6 +8,7 @@ import static org.junit.Assert.fail;
 
 import com.snoworca.naruserve.RestApp;
 import com.snoworca.naruserve.SseClient;
+import com.snoworca.naruserve.testing.NoLeftoverThreads;
 import com.snoworca.naruserve.testing.RecordingLogger;
 import com.snoworca.naruserve.testing.TestSupport;
 import com.snoworca.naruserve.tinyhttpd.RawTargetSocketTest.Http;
@@ -20,6 +21,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import org.junit.After;
+import org.junit.Rule;
 import org.junit.Test;
 
 /**
@@ -27,6 +29,10 @@ import org.junit.Test;
  * docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-11.sds.md.
  */
 public class SseShutdownSocketTest {
+
+    // I-015: no naruserve-* thread outlives the test
+    @Rule
+    public final NoLeftoverThreads noLeftoverThreads = new NoLeftoverThreads();
 
     private static final String NOTICE = "event: shutdown\ndata: shutdown\n\n";
     /** One stalled-stream event: 64 KiB of data. */

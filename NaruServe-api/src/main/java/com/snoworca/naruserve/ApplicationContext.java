@@ -6,7 +6,11 @@ import org.jspecify.annotations.Nullable;
 // @req IR-APP-004
 public interface ApplicationContext extends ServiceRegistry {
 
-    /** Stores {@code value} under {@code key}; a {@code null} value removes the key. */
+    /**
+     * Stores {@code value} under {@code key}; a {@code null} value removes the key.
+     * In Java a {@code null} literal binds to the read overload and throws {@link NullPointerException}, so write
+     * {@code attribute("k", (Object) null)}.
+     */
     void attribute(String key, @Nullable Object value);
 
     /**

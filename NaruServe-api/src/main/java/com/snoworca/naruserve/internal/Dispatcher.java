@@ -35,7 +35,7 @@ import org.jspecify.annotations.Nullable;
  */
 // @req CON-HTTP-001
 // @req FR-HTTP-021
-// @req FR-HTTP-022
+// @req FR-HTTP-026
 // @req FR-HTTP-023
 // @req FR-HTTP-024
 // @req FR-HTTP-025
@@ -166,7 +166,7 @@ public final class Dispatcher implements ExchangeHandler {
     }
 
     // @req FR-HTTP-021
-    // @req FR-HTTP-022
+    // @req FR-HTTP-026
     // @req FR-APP-003
     @Override
     // @req FR-APP-019
@@ -311,7 +311,7 @@ public final class Dispatcher implements ExchangeHandler {
 
     /** The {@link Method} whose declaration name equals {@code token} exactly, or null. */
     // @req FR-HTTP-021
-    // @req FR-HTTP-022
+    // @req FR-HTTP-026
     static @Nullable Method methodOf(String token) {
         for (Method m : METHODS) {
             if (m.name().equals(token)) {
@@ -381,7 +381,7 @@ public final class Dispatcher implements ExchangeHandler {
      * {@code res}, keeping headers middleware set; a response already left NEW is not touched. NOT_FOUND, and
      * METHOD_MISMATCH for GET and HEAD, try the static mounts first; WEBSOCKET_ONLY and 501 never do.
      */
-    // @req FR-HTTP-022
+    // @req FR-HTTP-026
     // @req FR-APP-003
     // @req FR-STATIC-001
     // @req FR-STATIC-002
@@ -423,7 +423,7 @@ public final class Dispatcher implements ExchangeHandler {
     }
 
     /** {@code ", "}-joined members in {@link Method} declaration order. */
-    // @req FR-HTTP-022
+    // @req FR-HTTP-026
     // @req FR-HTTP-023
     static String allowHeader(MethodSet allow) {
         return allow.toString();

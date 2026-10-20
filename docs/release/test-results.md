@@ -67,7 +67,7 @@ No requirement is `verified` on the strength of a `manual-pending` line.
 | T41 | - | automated | NaruServe-api/src/test/java/com/snoworca/naruserve/ServicesAcceptanceTest.java#sdsAc1_FR_APP_007_AC1_T41_serviceFromOnStartIsIdenticalViaServiceAndApplicationGet |
 | T42 | - | automated | NaruServe-api/src/test/java/com/snoworca/naruserve/ServicesAcceptanceTest.java#sdsAc4_FR_APP_007_AC3_T42_duplicateInOnStartFailsListenAndTheCloseHookSeesTheFirst |
 | T43 | - | automated | NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StartFailureTest.java#sdsAc4_FR_APP_010_AC4_resourcesCloseInReverseSeeingFailedThenTheStateIsTerminated |
-| T44 | - | automated | NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownSequenceTest.java#wave7SdsAc7_FR_APP_020_AC5_inFlight300MsRequestCompletesBeforeOnStop |
+| T44 | - | automated | NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownSequenceTest.java#wave7SdsAc7_FR_APP_020_AC5_inFlight300MsRequestCompletesBeforeOnStop, NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LongConnectionShutdownSocketTest.java#wave7SdsAc9_FR_APP_020_AC8_AC6_AC7_oneSecondShutdownClosesStalledAndHealthyConnections, NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/WebSocketShutdownSocketTest.java#sdsAc9_FR_WS_010_AC4_AC2_twoStalledSessionsAbortedWithin1200MsHealthyGets1001, NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/SseShutdownSocketTest.java#sdsAc12_FR_SSE_005_AC2_AC5_AC6_noticeThenEndForAReaderStalledClientForceClosedRegistryEmpty |
 | T45 | - | automated | NaruServe-api/src/test/java/com/snoworca/naruserve/ServicesAcceptanceTest.java#sdsAc10_FR_APP_008_AC1_T45_ownDbThenRegisterUsersCloseUsersThenDbOnShutdown |
 | T46 | - | automated | NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownStatesTest.java#sdsAc20_FR_APP_012_AC6_listenOnATerminatedAppThrowsIllegalState, NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownSequenceTest.java#sdsAc11_FR_APP_011_AC5_concurrentShutdownRunsTheSequenceOnceAndTheLoserWaits |
 | T47 | - | out-of-v1-scope | user decision 2026-10-20 |
@@ -95,7 +95,7 @@ No requirement is `verified` on the strength of a `manual-pending` line.
 Each line records one run on the build machine (macOS, OpenJDK 17.0.20, Gradle 8.14.3).
 
 <a id="run-full-suite"></a>
-- run full-suite: command=./gradlew build --rerun-tasks; date=2026-10-21; result=exit=0; commit=5a03978 (working tree with the wave-8 SRS evidence rows); tests=1534; failures=0; skipped=0
+- run full-suite: command=./gradlew build --rerun-tasks; date=2026-10-21; result=exit=0; commit=3806d59; tests=1566; failures=0; skipped=0
 
 <a id="run-sbom"></a>
 - run sbom: command=./gradlew -Prelease releaseSbom; date=2026-10-20; result=exit=0; commit=ae44f5a; build/reports/naruserve/sbom: NaruServe-api.cdx.json=0, NaruServe-servlet.cdx.json=1, NaruServe-tinyhttpd.cdx.json=3, NaruServe-gson.cdx.json=3, NaruServe.cdx.json=8, NaruServe-kotlin.cdx.json=3, NaruServe-slf4j.cdx.json=2, NaruServe-filelog.cdx.json=1, NaruServe-logcat.cdx.json=1 (components per file)

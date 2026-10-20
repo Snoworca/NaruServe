@@ -6,6 +6,7 @@ import static org.junit.Assert.assertTrue;
 import com.snoworca.naruserve.RestApp;
 import com.snoworca.naruserve.ServerOptions;
 import com.snoworca.naruserve.spi.ServerSettings;
+import com.snoworca.naruserve.testing.NoLeftoverThreads;
 import com.snoworca.naruserve.testing.RecordingLogger;
 import com.snoworca.naruserve.tinyhttpd.RawTargetSocketTest.Http;
 import com.snoworca.tinyhttpd.ServerConfig;
@@ -22,10 +23,15 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import org.junit.After;
+import org.junit.Rule;
 import org.junit.Test;
 
 /** Connection limits and the worker pool. SDS-AC-n cites docs/sds/2026-10-19.naruserve.naruserve-v1-wave-5-5.sds.md. */
 public class ConnectionLimitsTest {
+
+    // I-015: no naruserve-* thread outlives the test
+    @Rule
+    public final NoLeftoverThreads noLeftoverThreads = new NoLeftoverThreads();
 
     private final RecordingLogger log = new RecordingLogger();
     private final List<Socket> sockets = new ArrayList<>();

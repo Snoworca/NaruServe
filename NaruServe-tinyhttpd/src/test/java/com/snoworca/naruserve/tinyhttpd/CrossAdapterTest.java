@@ -6,6 +6,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.snoworca.naruserve.RestApp;
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientResponse;
+import com.snoworca.naruserve.testing.NoLeftoverThreads;
 import com.snoworca.naruserve.testing.RecordingLogger;
 import com.snoworca.naruserve.testing.StubJsonCodec;
 import com.snoworca.naruserve.testing.TestApp;
@@ -17,10 +18,15 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import org.junit.Rule;
 import org.junit.Test;
 
 /** T07 and the path cases on the in-memory and TinyHttpd adapters. SDS-AC-n cites docs/sds/2026-10-19.naruserve.naruserve-v1-wave-5-7.sds.md. */
 public class CrossAdapterTest {
+
+    // I-015: no naruserve-* thread outlives the test
+    @Rule
+    public final NoLeftoverThreads noLeftoverThreads = new NoLeftoverThreads();
 
     /** The in-memory adapter of the NaruServe-api test fixtures. */
     static final class InMemoryRun extends BothAdaptersCases {

@@ -9,6 +9,7 @@ import com.snoworca.naruserve.AppStartException;
 import com.snoworca.naruserve.AppState;
 import com.snoworca.naruserve.RestApp;
 import com.snoworca.naruserve.ServerHandle;
+import com.snoworca.naruserve.testing.NoLeftoverThreads;
 import com.snoworca.naruserve.testing.RecordingLogger;
 import com.snoworca.naruserve.tinyhttpd.RawTargetSocketTest.Http;
 import com.snoworca.tinyhttpd.ServerConfig;
@@ -31,10 +32,15 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import org.junit.After;
 import org.junit.Assume;
+import org.junit.Rule;
 import org.junit.Test;
 
 /** Bind address, Host allowlist and bind outcomes. SDS-AC-n cites docs/sds/2026-10-19.naruserve.naruserve-v1-wave-5-5.sds.md. */
 public class BindingSocketTest {
+
+    // I-015: no naruserve-* thread outlives the test
+    @Rule
+    public final NoLeftoverThreads noLeftoverThreads = new NoLeftoverThreads();
 
     private final List<RestApp> apps = new ArrayList<>();
 

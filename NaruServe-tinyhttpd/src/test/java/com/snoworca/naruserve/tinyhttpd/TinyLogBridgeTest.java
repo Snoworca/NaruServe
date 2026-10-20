@@ -6,6 +6,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.snoworca.naruserve.Logger;
 import com.snoworca.naruserve.RestApp;
+import com.snoworca.naruserve.testing.NoLeftoverThreads;
 import com.snoworca.naruserve.testing.RecordingLogger;
 import com.snoworca.naruserve.tinyhttpd.RawTargetSocketTest.Http;
 import java.io.IOException;
@@ -13,10 +14,15 @@ import java.util.Arrays;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
+import org.junit.Rule;
 import org.junit.Test;
 
 /** TinyHttpd logging into the app logger. SDS-AC-n cites docs/sds/2026-10-19.naruserve.naruserve-v1-wave-5-6.sds.md. */
 public class TinyLogBridgeTest {
+
+    // I-015: no naruserve-* thread outlives the test
+    @Rule
+    public final NoLeftoverThreads noLeftoverThreads = new NoLeftoverThreads();
 
     // SDS-AC-6; FR-ENGINE-005 AC-6
     @Test

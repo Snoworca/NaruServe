@@ -46,7 +46,11 @@ public interface Request {
     /** The {@code Last-Event-ID} header value, or {@code null} when it is absent. */
     @Nullable String lastEventId();
 
-    /** Stores {@code value} under {@code key}; a {@code null} value removes the key. */
+    /**
+     * Stores {@code value} under {@code key}; a {@code null} value removes the key.
+     * In Java a {@code null} literal binds to the read overload and throws {@link NullPointerException}, so write
+     * {@code attribute("k", (Object) null)}.
+     */
     void attribute(String key, @Nullable Object value);
 
     /**

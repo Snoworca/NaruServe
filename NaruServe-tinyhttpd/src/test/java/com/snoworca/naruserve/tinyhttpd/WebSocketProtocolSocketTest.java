@@ -14,6 +14,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.snoworca.naruserve.RestApp;
 import com.snoworca.naruserve.WebSocketSession;
+import com.snoworca.naruserve.testing.NoLeftoverThreads;
 import com.snoworca.naruserve.testing.RecordingLogger;
 import com.snoworca.naruserve.tinyhttpd.RawTargetSocketTest.Http;
 import com.snoworca.naruserve.tinyhttpd.RawWebSocketClient.Frame;
@@ -24,6 +25,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.After;
+import org.junit.Rule;
 import org.junit.Test;
 
 /**
@@ -31,6 +33,10 @@ import org.junit.Test;
  * SDS-AC-n cites docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-4.sds.md.
  */
 public class WebSocketProtocolSocketTest {
+
+    // I-015: no naruserve-* thread outlives the test
+    @Rule
+    public final NoLeftoverThreads noLeftoverThreads = new NoLeftoverThreads();
 
     private final RestApp app = Http.app(new TinyHttpdAdapter(), new RecordingLogger());
     /** Session events in arrival order: "text ...", "binary n", "close code reason", "isOpen ...". */

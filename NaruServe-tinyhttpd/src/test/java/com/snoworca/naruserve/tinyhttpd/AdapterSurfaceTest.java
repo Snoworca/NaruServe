@@ -9,6 +9,7 @@ import com.snoworca.naruserve.spi.HttpAdapter;
 import com.snoworca.naruserve.spi.HttpExchange;
 import com.snoworca.naruserve.spi.StreamDrain;
 import com.snoworca.naruserve.spi.WebSocketSettings;
+import com.snoworca.naruserve.testing.NoLeftoverThreads;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -31,10 +32,15 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.After;
+import org.junit.Rule;
 import org.junit.Test;
 
 /** Module surface. SDS-AC-n cites docs/sds/2026-10-19.naruserve.naruserve-v1-wave-5-5.sds.md. */
 public class AdapterSurfaceTest {
+
+    // I-015: no naruserve-* thread outlives the test
+    @Rule
+    public final NoLeftoverThreads noLeftoverThreads = new NoLeftoverThreads();
 
     private static final String ENGINE = "com.snoworca.tinyhttpd.";
 
