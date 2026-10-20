@@ -72,18 +72,12 @@ public class ServletStopSseTest {
     }
 
     private void awaitOpen(int n) throws InterruptedException {
-        long end = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
-        while (adapter.pool().open() != n && System.nanoTime() < end) {
-            Thread.sleep(10);
-        }
+        SharedApp.until(() -> adapter.pool().open() == n, 5, TimeUnit.SECONDS);
         assertEquals("open streams", n, adapter.pool().open());
     }
 
     private void awaitCompletes(int n) throws InterruptedException {
-        long end = System.nanoTime() + TimeUnit.SECONDS.toNanos(2);
-        while (completes.completes.get() < n && System.nanoTime() < end) {
-            Thread.sleep(10);
-        }
+        SharedApp.until(() -> completes.completes.get() >= n, 2, TimeUnit.SECONDS);
         assertEquals("AsyncContext.complete() calls", n, completes.completes.get());
     }
 
@@ -92,22 +86,24 @@ public class ServletStopSseTest {
      * every buffer on the way and stop cannot end the stream before the deadline; fails if that never happens.
      */
     private static void awaitBlockedWrite() throws InterruptedException {
-        long end = System.nanoTime() + TimeUnit.SECONDS.toNanos(10);
-        while (System.nanoTime() < end) {
-            for (Thread t : ServletSseLimitTest.sseThreads(java.util.Collections.<Thread>emptySet())) {
-                if (t.getState() == Thread.State.RUNNABLE) {
-                    continue;
-                }
-                for (StackTraceElement e : t.getStackTrace()) {
-                    if (e.getClassName().equals(ServletEventStream.FlushingStream.class.getName())
-                            && e.getMethodName().equals("write")) {
-                        return;
-                    }
+        if (!SharedApp.until(ServletStopSseTest::drainBlockedInWrite, 10, TimeUnit.SECONDS)) {
+            fail("the drain never blocked in a write: the socket buffers took the whole queue");
+        }
+    }
+
+    private static boolean drainBlockedInWrite() {
+        for (Thread t : ServletSseLimitTest.sseThreads(java.util.Collections.<Thread>emptySet())) {
+            if (t.getState() == Thread.State.RUNNABLE) {
+                continue;
+            }
+            for (StackTraceElement e : t.getStackTrace()) {
+                if (e.getClassName().equals(ServletEventStream.FlushingStream.class.getName())
+                        && e.getMethodName().equals("write")) {
+                    return true;
                 }
             }
-            Thread.sleep(10);
         }
-        fail("the drain never blocked in a write: the socket buffers took the whole queue");
+        return false;
     }
 
     // FR-SVL-006 AC-2 SDS-AC-2: closing notice, end of each chunked body, one complete per stream, executor down

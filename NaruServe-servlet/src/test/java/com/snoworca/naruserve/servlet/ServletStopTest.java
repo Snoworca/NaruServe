@@ -97,10 +97,7 @@ public class ServletStopTest {
     }
 
     private void awaitStopping() throws InterruptedException {
-        long end = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
-        while (!adapter.stopping() && System.nanoTime() < end) {
-            Thread.sleep(5);
-        }
+        SharedApp.until(adapter::stopping, 5, TimeUnit.SECONDS);
         assertTrue("stop did not begin", adapter.stopping());
     }
 
@@ -194,21 +191,14 @@ public class ServletStopTest {
         SseProbe p = SseProbe.open(container.port(), "/events");
         probes.add(p);
         p.awaitPayload("data: 1");
-        long seen = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
-        while (ServletSseLimitTest.sseThreads(java.util.Collections.<Thread>emptySet()).isEmpty()
-                && System.nanoTime() < seen) {
-            Thread.sleep(10);
-        }
-        assertFalse("the stream runs on an SSE thread", ServletSseLimitTest.sseThreads(
-                java.util.Collections.<Thread>emptySet()).isEmpty());
+        assertTrue("the stream runs on an SSE thread", SharedApp.until(
+                () -> !ServletSseLimitTest.sseThreads(java.util.Collections.<Thread>emptySet()).isEmpty(), 5,
+                TimeUnit.SECONDS));
         app.shutdown(1, TimeUnit.SECONDS);
         app = null;
-        long end = System.nanoTime() + TimeUnit.SECONDS.toNanos(2);
-        List<Thread> left = ServletSseLimitTest.sseThreads(java.util.Collections.<Thread>emptySet());
-        while (!left.isEmpty() && System.nanoTime() < end) {
-            Thread.sleep(20);
-            left = ServletSseLimitTest.sseThreads(java.util.Collections.<Thread>emptySet());
-        }
-        assertEquals(new ArrayList<Thread>(), left);
+        SharedApp.until(() -> ServletSseLimitTest.sseThreads(java.util.Collections.<Thread>emptySet()).isEmpty(), 2,
+                TimeUnit.SECONDS);
+        assertEquals(new ArrayList<Thread>(),
+                ServletSseLimitTest.sseThreads(java.util.Collections.<Thread>emptySet()));
     }
 }

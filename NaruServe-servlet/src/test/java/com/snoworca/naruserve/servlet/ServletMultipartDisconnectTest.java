@@ -80,10 +80,7 @@ public class ServletMultipartDisconnectTest {
                     + "\r\nContent-Length: 100000\r\n\r\n" + head).getBytes(StandardCharsets.ISO_8859_1));
             out.write(half);
             out.flush();
-            long until = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
-            while (dir.list().length == 0 && System.nanoTime() < until) {
-                Thread.sleep(5);
-            }
+            SharedApp.until(() -> dir.list().length != 0, 5, TimeUnit.SECONDS);
             spooled = dir.list().length == 1;
         }
         assertTrue("the part spooled before the disconnect", spooled);

@@ -22,6 +22,8 @@ import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import org.jspecify.annotations.Nullable;
 
@@ -291,6 +293,21 @@ final class SharedApp {
             return i;
         }
         return -1;
+    }
+
+    /**
+     * Looks at {@code cond} every 5 ms until it holds or {@code timeout} has passed; true when it held at the last
+     * look.
+     */
+    static boolean until(BooleanSupplier cond, long timeout, TimeUnit unit) throws InterruptedException {
+        long end = System.nanoTime() + unit.toNanos(timeout);
+        while (!cond.getAsBoolean()) {
+            if (System.nanoTime() >= end) {
+                return false;
+            }
+            Thread.sleep(5);
+        }
+        return true;
     }
 
     /** The same request on the in-memory adapter, as a {@link Reply}. */

@@ -111,22 +111,14 @@ public class ServletSseAsyncTest {
     }
 
     private static void await(AtomicInteger n, int value) throws InterruptedException {
-        long end = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
-        while (n.get() < value && System.nanoTime() < end) {
-            Thread.sleep(5);
-        }
+        SharedApp.until(() -> n.get() >= value, 5, TimeUnit.SECONDS);
     }
 
     /** Waits until every slot is back and no SSE thread runs drain code of the adapter any more. */
     private static void awaitDrainEnded(ServletAdapter adapter) throws InterruptedException {
-        long end = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
-        while (System.nanoTime() < end) {
-            if (adapter.pool().open() == 0 && !inDrain()) {
-                return;
-            }
-            Thread.sleep(5);
+        if (!SharedApp.until(() -> adapter.pool().open() == 0 && !inDrain(), 5, TimeUnit.SECONDS)) {
+            fail("the drain did not end");
         }
-        fail("the drain did not end");
     }
 
     private static boolean inDrain() {
@@ -260,10 +252,7 @@ public class ServletSseAsyncTest {
         await(probe.completes, 1);
         awaitDrainEnded(adapter); // the drain's own end comes after the abort and must not complete again
         assertEquals(1, probe.completes.get());
-        long end = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
-        while (c.isOpen() && System.nanoTime() < end) {
-            Thread.sleep(5);
-        }
+        SharedApp.until(() -> !c.isOpen(), 5, TimeUnit.SECONDS);
         assertFalse(c.isOpen());
     }
 }

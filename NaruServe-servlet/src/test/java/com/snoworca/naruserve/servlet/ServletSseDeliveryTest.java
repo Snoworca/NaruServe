@@ -85,12 +85,8 @@ public class ServletSseDeliveryTest {
         long opened0 = System.nanoTime();
         SseClient c = next();
         // the handler returned once its drain runs on an SSE thread
-        long drainBy = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
-        while (ServletSseLimitTest.sseThreads(Collections.<Thread>emptySet()).isEmpty()
-                && System.nanoTime() < drainBy) {
-            Thread.sleep(5);
-        }
-        assertFalse("no drain thread", ServletSseLimitTest.sseThreads(Collections.<Thread>emptySet()).isEmpty());
+        assertTrue("no drain thread", SharedApp.until(
+                () -> !ServletSseLimitTest.sseThreads(Collections.<Thread>emptySet()).isEmpty(), 5, TimeUnit.SECONDS));
         // The best of up to three rounds is held to the bounds, so one scheduler stall of a loaded host does not
         // fail them; a buffering write path misses them in every round.
         long bestEvent = Long.MAX_VALUE;

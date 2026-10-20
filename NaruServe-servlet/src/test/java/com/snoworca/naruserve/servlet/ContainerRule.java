@@ -161,17 +161,12 @@ class ContainerRule extends ExternalResource {
         if (b != null && !b.delete()) {
             b.deleteOnExit();
         }
-        long end = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(SETTLE_MILLIS);
-        List<String> left = leftovers();
-        while (!left.isEmpty() && System.nanoTime() < end) {
-            try {
-                Thread.sleep(20);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                break;
-            }
-            left = leftovers();
+        try {
+            SharedApp.until(() -> leftovers().isEmpty(), SETTLE_MILLIS, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
+        List<String> left = leftovers();
         File u = uploads;
         if (u != null && left.isEmpty()) {
             u.delete();
