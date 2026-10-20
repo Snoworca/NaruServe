@@ -982,17 +982,7 @@ public final class DefaultResponse implements Response {
 
     /** RFC 9110 token: one or more tchar; the cookie parser and {@code Cookie} share it. Not API. */
     public static boolean isToken(String s) {
-        if (s.isEmpty()) {
-            return false;
-        }
-        for (int i = 0; i < s.length(); i++) {
-            char c = s.charAt(i);
-            boolean alnum = c >= '0' && c <= '9' || c >= 'A' && c <= 'Z' || c >= 'a' && c <= 'z';
-            if (!alnum && "!#$%&'*+-.^_`|~".indexOf(c) < 0) {
-                return false;
-            }
-        }
-        return true;
+        return com.snoworca.naruserve.common.HttpHeaderValues.isToken(s);
     }
 
     /**

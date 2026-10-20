@@ -1,6 +1,7 @@
 package com.snoworca.naruserve.internal;
 
 import com.snoworca.naruserve.HttpException;
+import com.snoworca.naruserve.common.MediaTypes;
 import com.snoworca.naruserve.UnsupportedMediaTypeException;
 import com.snoworca.naruserve.spi.JsonCodec;
 import java.io.IOException;
@@ -10,7 +11,6 @@ import java.lang.reflect.Type;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.CodingErrorAction;
 import java.nio.charset.StandardCharsets;
-import java.util.Locale;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -102,33 +102,6 @@ final class JsonBodyReader {
      */
     // @req FR-JSON-001
     static boolean isJsonType(@Nullable String contentType) {
-        if (contentType == null) {
-            return false;
-        }
-        String[] parts = contentType.split(";", -1);
-        String mediaType = parts[0].trim().toLowerCase(Locale.ROOT);
-        boolean json = mediaType.equals("application/json")
-                || mediaType.startsWith("application/") && mediaType.endsWith("+json")
-                        && mediaType.length() > "application/+json".length()
-                        && mediaType.indexOf('/', "application/".length()) < 0
-                        && mediaType.indexOf(' ') < 0 && mediaType.indexOf('\t') < 0;
-        if (!json) {
-            return false;
-        }
-        for (int i = 1; i < parts.length; i++) {
-            String p = parts[i].trim();
-            int eq = p.indexOf('=');
-            if (eq < 0 || !p.substring(0, eq).trim().equalsIgnoreCase("charset")) {
-                continue;
-            }
-            String charset = p.substring(eq + 1).trim();
-            if (charset.length() >= 2 && charset.startsWith("\"") && charset.endsWith("\"")) {
-                charset = charset.substring(1, charset.length() - 1);
-            }
-            if (!charset.equalsIgnoreCase("utf-8")) {
-                return false;
-            }
-        }
-        return true;
+        return MediaTypes.isJsonUtf8(contentType);
     }
 }

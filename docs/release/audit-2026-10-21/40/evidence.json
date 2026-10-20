@@ -1,0 +1,21 @@
+{
+  "issue": 40,
+  "title": "JSON Content-Type의 토큰과 따옴표 파라미터를 올바르게 해석",
+  "requirements": {
+    "FR-JSON-001": [
+      "AC-1"
+    ]
+  },
+  "testReference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/JsonMediaTypeSyntaxTest.java",
+  "logs": {
+    "red": "docs/release/audit-2026-10-21/40/red.log",
+    "green17": "docs/release/audit-2026-10-21/40/green17.log",
+    "green8": "docs/release/audit-2026-10-21/40/green8.log"
+  },
+  "runtimeVerification": [
+    "JDK17",
+    "OpenJDK1.8.0_504"
+  ],
+  "review": "no remaining HIGH/MEDIUM findings",
+  "integrationRegression": "epic #36 final integration gate"
+}
