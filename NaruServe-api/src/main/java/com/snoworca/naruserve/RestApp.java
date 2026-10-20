@@ -24,6 +24,7 @@ import org.jspecify.annotations.Nullable;
 // @req FR-APP-001
 // @req IR-STATIC-001
 // @req IR-STATIC-002
+// @req IR-WS-001
 public interface RestApp {
 
     /**
@@ -197,6 +198,28 @@ public interface RestApp {
     // @req IR-ENGINE-001
     // @req FR-ENGINE-008
     RestApp trustProxy(boolean trust);
+
+    /**
+     * Registers a WebSocket route, as express-ws {@code app.ws(path, (ws, req) => ...)} with the arguments reversed.
+     * {@code path} uses the route pattern syntax of {@link #get}; {@code handler} runs once per connection after
+     * {@code 101}.
+     */
+    // @req IR-WS-001
+    RestApp ws(String path, WebSocketHandler handler);
+
+    /**
+     * Runs {@code configurer} at once on a copy of the app's WebSocket options, as {@code app.webSocket(o ->
+     * o.maxMessageSize(64 * 1024))}, and keeps the copy only when it returns; calls apply in order.
+     */
+    // @req IR-WS-001
+    RestApp webSocket(Configurer<WebSocketOptions> configurer);
+
+    /**
+     * Runs {@code configurer} at once on a copy of the app's SSE options, as {@code app.sse(o ->
+     * o.heartbeatInterval(30, TimeUnit.SECONDS))}, and keeps the copy only when it returns; calls apply in order.
+     */
+    // @req IR-SSE-001
+    RestApp sse(Configurer<SseOptions> configurer);
 
     /** Explicit app assembly; each setter returns this builder and each {@link #build()} returns a new app. */
     // @req IR-APP-001

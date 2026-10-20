@@ -17,12 +17,30 @@ import java.util.List;
 import java.util.Map;
 import org.junit.Test;
 
-/** Wave 4 decisions recorded in docs/api with the wave 6 marker set (OPS-APP-004, successor of OPS-APP-003). */
+/**
+ * Wave 4 decisions recorded in docs/api with the wave 7 marker set (OPS-APP-005, successor of OPS-APP-004). The
+ * wave7s13 cases cite SDS-AC-n of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-13.sds.md.
+ */
 public class AppDocsTest {
 
     private static final String MARKER = "(미확정)";
 
-    /** Per file, phrases decided in waves 4 to 6: each appears, and no line holding it carries the marker. */
+    /** The app.md shutdown steps of D-446, in order (OPS-APP-005 AC-8). */
+    static final List<String> SHUTDOWN_STEPS = Collections.unmodifiableList(Arrays.asList(
+            "새 요청과 WebSocket Upgrade는 모두 `503`과 `Connection: close`로 답합니다",
+            "연결을 아직 받는 동안 최대 1초, 열린 SSE 스트림에는 종료 알림을 보내고 열린 WebSocket 세션에는 close `1001`을 보냅니다",
+            "연결 받기를 멈추고 진행 중인 요청이 끝나기를 timeout까지 기다립니다",
+            "timeout까지 열려 있는 연결은 강제로 끊습니다",
+            "`onStop` 콜백을 실행합니다"));
+
+    /** The lifecycle.md statements of OPS-APP-005 AC-9. */
+    static final List<String> LIFECYCLE_PHRASES = Collections.unmodifiableList(Arrays.asList(
+            "WebSocket·SSE 작별 인사는 연결을 아직 받는 동안 최대 1초 동안 진행됩니다",
+            "object.md §11.4와 다릅니다",
+            "`shutdown(timeout, unit)`은 timeout에 3초를 더한 시간 안에 반환합니다",
+            "SSE `onClose` 리스너 안에서 부른 `app.shutdown`도 요청 핸들러에서 부른 것처럼 바로 반환합니다"));
+
+    /** Per file, phrases decided in waves 4 to 7: each appears, and no line holding it carries the marker. */
     static final Map<String, List<String>> REMOVED;
 
     /** Per file, phrases owned by later waves: each appears, and every line holding it carries the marker. */
@@ -45,14 +63,21 @@ public class AppDocsTest {
         r.put("static.md", Arrays.asList("SPA fallback은", "`/docs/`로 301", "`cache(pattern, policy)`",
                 "심볼릭 링크(루트 안을"));
         r.put("multipart.md", Arrays.asList("| `tempDirectory`", "무제한 설정 허용 여부"));
+        // Settled by wave 7 (OPS-WS-001, OPS-SSE-001, OPS-ENGINE-002); moved here from KEPT.
+        r.put("app.md", concat(r.get("app.md"), "`ws`의 반환 타입", "`ws`에 넘기는 콜백"));
+        r.put("websocket.md", Arrays.asList("idle timeout", "Ping 주기", "handshake timeout", "`101` 응답 뒤"));
+        r.put("sse.md", Arrays.asList("heartbeat", "연결별 송신 큐 기본값"));
         REMOVED = Collections.unmodifiableMap(r);
 
         Map<String, List<String>> k = new LinkedHashMap<>();
-        k.put("app.md", Arrays.asList("`ws`의 반환 타입", "`ws`에 넘기는 콜백"));
         k.put("express-migration.md", Arrays.asList("| `express.Router()`", "| `cors()`", "| `res.redirect(url)`"));
-        k.put("websocket.md", Arrays.asList("idle timeout", "Ping 주기", "handshake timeout", "`101` 응답 전/후"));
-        k.put("sse.md", Arrays.asList("heartbeat", "연결별 송신 큐 기본값"));
         KEPT = Collections.unmodifiableMap(k);
+    }
+
+    private static List<String> concat(List<String> head, String... tail) {
+        List<String> out = new ArrayList<>(head);
+        out.addAll(Arrays.asList(tail));
+        return out;
     }
 
     private static String doc(String name) throws IOException {
@@ -89,9 +114,9 @@ public class AppDocsTest {
         return found.get(0);
     }
 
-    // SDS-AC-5; OPS-APP-004 AC-6
+    // SDS-AC-5; OPS-APP-005 AC-6
     @Test
-    public void sdsAc5_OPS_APP_004_AC6_decidedMarkersAreGone() throws IOException {
+    public void sdsAc5_OPS_APP_005_AC6_decidedMarkersAreGone() throws IOException {
         for (Map.Entry<String, List<String>> e : REMOVED.entrySet()) {
             String d = doc(e.getKey());
             for (String phrase : e.getValue()) {
@@ -104,9 +129,9 @@ public class AppDocsTest {
         }
     }
 
-    // SDS-AC-5; OPS-APP-004 AC-6
+    // SDS-AC-5; OPS-APP-005 AC-6
     @Test
-    public void sdsAc5_OPS_APP_004_AC6_laterWaveMarkersAreKept() throws IOException {
+    public void sdsAc5_OPS_APP_005_AC6_laterWaveMarkersAreKept() throws IOException {
         for (Map.Entry<String, List<String>> e : KEPT.entrySet()) {
             String d = doc(e.getKey());
             for (String phrase : e.getValue()) {
@@ -119,18 +144,18 @@ public class AppDocsTest {
         }
     }
 
-    // SDS-AC-5; OPS-APP-004 AC-6
+    // SDS-AC-5; OPS-APP-005 AC-6
     @Test
-    public void sdsAc5_OPS_APP_004_AC6_wave4PagesKeepNoMarker() throws IOException {
+    public void sdsAc5_OPS_APP_005_AC6_wave4PagesKeepNoMarker() throws IOException {
         for (String f : new String[] {"middleware.md", "lifecycle.md", "logging.md", "routing.md"}) {
             List<String> m = markerLines(doc(f));
             assertEquals(f + ": " + m, 0, m.size());
         }
     }
 
-    // OPS-APP-004 AC-1
+    // OPS-APP-005 AC-1
     @Test
-    public void OPS_APP_004_AC1_builderFactoryServerHandleAndKeeperThread() throws IOException {
+    public void OPS_APP_005_AC1_builderFactoryServerHandleAndKeeperThread() throws IOException {
         String app = doc("app.md");
         String builder = lineWith(app, "`RestApp.builder()`는");
         for (String m : new String[] {"`httpAdapter(HttpAdapter)`", "`jsonCodec(JsonCodec)`", "`logger(Logger)`",
@@ -163,22 +188,88 @@ public class AppDocsTest {
         assertTrue(readme, readme.contains("`jsonCodec`"));
     }
 
-    // SDS-AC-5; OPS-APP-004 AC-6
+    // SDS-AC-5; wave7s13 SDS-AC-11; OPS-APP-005 AC-6: each of the two ws phrases of app.md sits on exactly one line
+    // without a marker
     @Test
-    public void sdsAc5_OPS_APP_004_AC6_wsMarkersSitOnTheirOwnLines() throws IOException {
+    public void wave7s13SdsAc11_OPS_APP_005_AC6_wsPhrasesSitOnOneLineWithoutMarker() throws IOException {
         String app = doc("app.md");
         for (String l : markerLines(app)) {
             for (String decided : new String[] {"라우트 미들웨어", "onStart", "onStop", "onError", "daemon"}) {
                 assertFalse(l, l.contains(decided));
             }
         }
-        assertEquals(1, linesWith(app, "`ws`의 반환 타입").size());
-        assertEquals(1, linesWith(app, "`ws`에 넘기는 콜백").size());
+        for (String phrase : new String[] {"`ws`의 반환 타입", "`ws`에 넘기는 콜백"}) {
+            List<String> lines = linesWith(app, phrase);
+            assertEquals(phrase + ": " + lines, 1, lines.size());
+            assertFalse(lines.get(0), lines.get(0).contains(MARKER));
+        }
     }
 
-    // OPS-APP-004 AC-2
+    // wave7s13 SDS-AC-11; OPS-APP-005 AC-6: the kept list holds only the three express-migration.md rows, and the
+    // wave 7 phrases are in the removed list
     @Test
-    public void OPS_APP_004_AC2_middlewareAndRoutingDecisions() throws IOException {
+    public void wave7s13SdsAc11_OPS_APP_005_AC6_keptHoldsOnlyTheThreeExpressRows() {
+        Map<String, List<String>> kept = new LinkedHashMap<>();
+        kept.put("express-migration.md", Arrays.asList("| `express.Router()`", "| `cors()`", "| `res.redirect(url)`"));
+        assertEquals(kept, KEPT);
+        assertTrue(REMOVED.get("app.md").containsAll(Arrays.asList("`ws`의 반환 타입", "`ws`에 넘기는 콜백")));
+        assertEquals(Arrays.asList("idle timeout", "Ping 주기", "handshake timeout", "`101` 응답 뒤"),
+                REMOVED.get("websocket.md"));
+        assertEquals(Arrays.asList("heartbeat", "연결별 송신 큐 기본값"), REMOVED.get("sse.md"));
+    }
+
+    // wave7s13 SDS-AC-9; OPS-APP-005 AC-8: app.md states the five shutdown steps in order, and the timeout sentence
+    // names steps 2 to 4 and keeps that onStop, resource close and logger flush have no time limit
+    @Test
+    public void wave7s13SdsAc9_OPS_APP_005_AC8_shutdownStepsInOrderAndTheTimeoutSentence() throws IOException {
+        String app = doc("app.md");
+        int start = app.indexOf("\n## shutdown\n");
+        assertTrue("no shutdown section", start >= 0);
+        int end = app.indexOf("\n## ", start + 1);
+        String section = end < 0 ? app.substring(start) : app.substring(start, end);
+        int at = 0;
+        for (String step : SHUTDOWN_STEPS) {
+            int next = section.indexOf(step, at);
+            assertTrue("step out of order or missing: " + step, next > at);
+            at = next;
+        }
+        String timeout = lineWith(app, "timeout은 2~4단계");
+        assertFalse(timeout, timeout.contains("2단계("));
+        assertTrue(timeout, timeout.contains("최대 1초"));
+        assertTrue(timeout, timeout.contains("`onStop`, 리소스 닫기, 로거 flush에는 시간 제한이 없"));
+        assertFalse(app.contains("timeout은 2단계("));
+    }
+
+    // wave7s13 SDS-AC-10; OPS-APP-005 AC-9: lifecycle.md states the goodbye while accepting and its §11.4
+    // deviation, the 3 s margin with its parts and the shutdown from an SSE onClose listener; logging.md documents
+    // the WebSocket handshake and close lines and the SSE end line without a marker
+    @Test
+    public void wave7s13SdsAc10_OPS_APP_005_AC9_lifecycleStatementsAndLoggingLines() throws IOException {
+        String lifecycle = doc("lifecycle.md");
+        for (String p : LIFECYCLE_PHRASES) {
+            assertTrue("lifecycle.md lacks " + p, lifecycle.contains(p));
+        }
+        String margin = lineWith(lifecycle, "timeout에 3초를 더한 시간");
+        for (String part : new String[] {"1.5초", "1초", "0.5초", "시간 제한 없이"}) {
+            assertTrue(part + " in " + margin, margin.contains(part));
+        }
+        String deviation = lineWith(lifecycle, "object.md §11.4와 다릅니다");
+        assertTrue(deviation, deviation.contains("`503`"));
+        String logging = doc("logging.md");
+        for (String phrase : new String[] {"GET /ws 101", "WS <path>", "sse start="}) {
+            List<String> lines = linesWith(logging, phrase);
+            assertFalse("logging.md lacks " + phrase, lines.isEmpty());
+            for (String l : lines) {
+                assertFalse(l, l.contains(MARKER));
+            }
+        }
+        assertTrue(logging.contains("`WS <path> <closeCode>[ <n>ms][ rid=<id>]`"));
+        assertTrue(logging.contains(" sse start=<epochMillis> cause=<client|app|overflow|shutdown|error>"));
+    }
+
+    // OPS-APP-005 AC-2
+    @Test
+    public void OPS_APP_005_AC2_middlewareAndRoutingDecisions() throws IOException {
         String mw = doc("middleware.md");
         String use = lineWith(mw, "`RouteBuilder.use(middleware)`");
         assertTrue(use, use.contains(".use(") && use.contains("여러"));
@@ -211,9 +302,9 @@ public class AppDocsTest {
         assertTrue(rQueue, rQueue.contains("`503`") && rQueue.contains("TinyHttpd") && rQueue.contains("평문"));
     }
 
-    // OPS-APP-004 AC-7
+    // OPS-APP-005 AC-7
     @Test
-    public void OPS_APP_004_AC7_decisionsCarryAReason() throws IOException {
+    public void OPS_APP_005_AC7_decisionsCarryAReason() throws IOException {
         String mw = doc("middleware.md");
         String use = lineWith(mw, "가변 인자 오버로드 대신 `RouteBuilder.use`");
         assertTrue(use, use.contains("이유"));
@@ -237,9 +328,9 @@ public class AppDocsTest {
         assertTrue(lineWith(doc("express-migration.md"), "| `app.use('/api', mw)`").contains("이유"));
     }
 
-    // OPS-APP-004 AC-3
+    // OPS-APP-005 AC-3
     @Test
-    public void OPS_APP_004_AC3_lifecycleStartGateAndPendingStop() throws IOException {
+    public void OPS_APP_005_AC3_lifecycleStartGateAndPendingStop() throws IOException {
         String d = doc("lifecycle.md");
         assertTrue(lineWith(d, "`registerExternal`").contains("닫지 않"));
         assertTrue(d.contains("<T> void registerExternal(Class<T> type, T instance);"));
@@ -255,9 +346,9 @@ public class AppDocsTest {
         assertTrue(nullAttr, nullAttr.contains("`NullPointerException`"));
     }
 
-    // OPS-APP-004 AC-4
+    // OPS-APP-005 AC-4
     @Test
-    public void OPS_APP_004_AC4_loggingFormatDefaultsAndClose() throws IOException {
+    public void OPS_APP_005_AC4_loggingFormatDefaultsAndClose() throws IOException {
         String d = doc("logging.md");
         assertTrue(d.contains("`<method> <path> <status>[ aborted][ <n>ms][ in=<i> out=<o>][ rid=<id>]`"));
         String defaults = lineWith(d, "기본값:");
@@ -278,9 +369,9 @@ public class AppDocsTest {
         assertTrue(lineWith(d, "여러 앱이").contains("`close()`"));
     }
 
-    // OPS-APP-004 AC-5
+    // OPS-APP-005 AC-5
     @Test
-    public void OPS_APP_004_AC5_expressMigrationRows() throws IOException {
+    public void OPS_APP_005_AC5_expressMigrationRows() throws IOException {
         String d = doc("express-migration.md");
         String route = lineWith(d, "| `app.get('/x', auth, h)`");
         assertFalse(route, route.contains(MARKER));

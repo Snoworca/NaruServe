@@ -100,16 +100,24 @@ public class HttpAcceptanceTest {
         assertEquals(0, calls.get());
     }
 
-    // SDS-AC-18 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-4.sds.md; T06, FR-HTTP-022 AC-5, FR-HTTP-022 AC-6
-    @Test
-    public void sdsAc18_T06_FR_HTTP_022_AC5_AC6_webSocketOnlyHookRouteGives426() {
-        TestApp t = TestApp.create().webSocketRoute("/ws");
-        for (ClientResponse r : new ClientResponse[] {t.send("GET", "/ws"),
-            t.send("GET", "/ws", "Connection", "Upgrade", "Upgrade", "websocket")}) {
-            assertError(426, "UPGRADE_REQUIRED", "Upgrade Required", r);
-            assertEquals("websocket", r.header("Upgrade"));
-            assertEquals("Upgrade", r.header("Connection"));
-        }
+    // SDS-AC-18 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-4.sds.md; T06, FR-HTTP-022 AC-5; the plain case is
+    // re-pointed to FR-WS-004 AC-1 and the upgrade case to SDS-AC-3 of
+    // docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-3.sds.md, FR-WS-001 AC-7 (the handshake from wave 7)
+    @Test(timeout = 20000)
+    public void sdsAc18_T06_FR_HTTP_022_AC5_AC6_webSocketOnlyHookRouteGives426() throws Exception {
+        InMemoryHttpAdapter adapter = new InMemoryHttpAdapter();
+        TestApp t = TestApp.create(adapter).webSocketRoute("/ws");
+        ClientResponse r = t.send("GET", "/ws");
+        assertError(426, "UPGRADE_REQUIRED", "Upgrade Required", r);
+        assertEquals("websocket", r.header("Upgrade"));
+        assertEquals("Upgrade", r.header("Connection"));
+        // The hook's RouteHandler throws if called: the upgrade completes with no ws handler instead.
+        Future<ClientResponse> upgrade = adapter.submit(ClientRequest.of("GET", "/ws")
+                .header("Connection", "Upgrade").header("Upgrade", "websocket"));
+        adapter.nextChannel(5, TimeUnit.SECONDS).clientClose(1000, "");
+        ClientResponse u = upgrade.get(10, TimeUnit.SECONDS);
+        assertEquals(101, u.status());
+        assertEquals(false, u.abnormallyClosed());
     }
 
     // SDS-AC-19 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-4.sds.md, SDS-AC-14; FR-HTTP-023 AC-1, FR-HTTP-023 AC-2, FR-HTTP-023 AC-3, FR-HTTP-023 AC-4,

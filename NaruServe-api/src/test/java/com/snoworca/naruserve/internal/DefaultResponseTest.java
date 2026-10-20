@@ -451,4 +451,84 @@ public class DefaultResponseTest {
         assertEquals(3L, ex.contentLength);
         assertEquals(0, ex.aborts.get());
     }
+
+    private static SseRegistry registry() {
+        return new SseRegistry(new DefaultSseOptions(), null, new SafeLogger(new com.snoworca.naruserve.ConsoleLogger()));
+    }
+
+    // SDS-AC-8 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-9.sds.md; FR-SSE-001 AC-1
+    @Test
+    public void sdsAc8_FR_SSE_001_AC1_aRuntimeExceptionFromEventStreamLeavesNewSoTheErrorPathCommits503() {
+        RecordingExchange ex = new RecordingExchange("GET", "/events");
+        com.snoworca.naruserve.HttpException busy = new com.snoworca.naruserve.HttpException(503);
+        ex.eventStreamFailure = busy;
+        DefaultResponse res = new DefaultResponse(ex, false);
+        SseRegistry reg = registry();
+        res.sseRegistry(reg);
+        try {
+            res.sse();
+            fail("sse() returned although eventStream threw");
+        } catch (com.snoworca.naruserve.HttpException e) {
+            assertSame(busy, e);
+        }
+        assertEquals(ResponseState.NEW, res.state());
+        assertFalse(res.isCommitted());
+        assertEquals(0, reg.size());
+        assertEquals(0, ex.commits.get());
+        res.afterFailure(503, "{}".getBytes(StandardCharsets.UTF_8), busy);
+        assertEquals(503, ex.status);
+        assertEquals(ResponseState.COMPLETED, res.state());
+    }
+
+    // SDS-AC-8; FR-SSE-001 AC-1: an app that catches the refusal answers with its own status and headers
+    @Test
+    public void sdsAc8_FR_SSE_001_AC1_aRefusedSseRestoresTheStatusAndHeadersSetBeforeIt() {
+        RecordingExchange ex = new RecordingExchange("GET", "/events");
+        ex.eventStreamFailure = new com.snoworca.naruserve.HttpException(503);
+        DefaultResponse res = new DefaultResponse(ex, false);
+        res.header("X-A", "1");
+        try {
+            res.sse();
+            fail("sse() returned although eventStream threw");
+        } catch (com.snoworca.naruserve.HttpException expected) {
+            // expected
+        }
+        res.status(503).send("busy");
+        assertEquals(503, ex.status);
+        assertEquals(java.util.Collections.singletonList("text/plain; charset=UTF-8"), ex.committed("Content-Type"));
+        assertEquals(java.util.Collections.singletonList("1"), ex.committed("X-A"));
+        assertTrue(ex.committed("Cache-Control").isEmpty());
+        assertEquals("busy", new String(ex.body.toByteArray(), StandardCharsets.UTF_8));
+    }
+
+    // SDS-AC-8; FR-SSE-001 AC-1
+    @Test
+    public void sdsAc8_FR_SSE_001_AC1_anIOExceptionFromEventStreamAbortsAndReturnsAnEndedClient() throws Exception {
+        RecordingExchange ex = new RecordingExchange("GET", "/events");
+        ex.eventStreamFailure = new java.io.IOException("peer gone");
+        DefaultResponse res = new DefaultResponse(ex, false);
+        SseRegistry reg = registry();
+        res.sseRegistry(reg);
+        com.snoworca.naruserve.SseClient c = res.sse();
+        assertEquals(ResponseState.ABORTED, res.state());
+        assertEquals(1, ex.aborts.get());
+        assertEquals(0, reg.size());
+        assertFalse(c.isOpen());
+        assertFalse(c.send("x"));
+        java.util.concurrent.atomic.AtomicInteger closed = new java.util.concurrent.atomic.AtomicInteger();
+        c.onClose(closed::incrementAndGet); // the listeners already ran, so a late one runs at once
+        assertEquals(1, closed.get());
+    }
+
+    // SDS-AC-7; FR-SSE-001 AC-2
+    @Test
+    public void sdsAc7_FR_SSE_001_AC2_sseOnACommittedResponseThrowsBeforeTouchingTheExchange() {
+        RecordingExchange ex = new RecordingExchange("GET", "/events");
+        ex.eventStreamFailure = new IllegalStateException("eventStream reached");
+        DefaultResponse res = new DefaultResponse(ex, false);
+        res.send("x");
+        assertIse(res::sse, "COMPLETED");
+        assertEquals(1, ex.commits.get());
+        assertEquals("x", new String(ex.body.toByteArray(), StandardCharsets.UTF_8));
+    }
 }

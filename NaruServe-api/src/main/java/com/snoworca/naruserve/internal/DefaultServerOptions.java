@@ -16,6 +16,7 @@ final class DefaultServerOptions implements ServerOptions {
     private static final long MAX_TIMEOUT_MILLIS = TimeUnit.HOURS.toMillis(1);
 
     private final ServerSettings.Builder values = ServerSettings.builder();
+    private int maxUpgradedConnections = 128; // the ServerSettings default
 
     // @req IR-ENGINE-001
     private static int range(String name, int value, int max) {
@@ -125,8 +126,15 @@ final class DefaultServerOptions implements ServerOptions {
 
     @Override
     public synchronized ServerOptions maxUpgradedConnections(int connections) {
-        values.maxUpgradedConnections(range("maxUpgradedConnections", connections, 65536));
+        maxUpgradedConnections = range("maxUpgradedConnections", connections, 65536);
+        values.maxUpgradedConnections(maxUpgradedConnections);
         return this;
+    }
+
+    /** Read at the app's freeze to size the WebSocket sender; the builder keeps its values private. */
+    // @req FR-WS-007
+    synchronized int maxUpgradedConnections() {
+        return maxUpgradedConnections;
     }
 
     @Override

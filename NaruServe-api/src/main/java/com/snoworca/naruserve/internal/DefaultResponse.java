@@ -1,11 +1,13 @@
 package com.snoworca.naruserve.internal;
 
 import com.snoworca.naruserve.CachePolicy;
+import com.snoworca.naruserve.ConsoleLogger;
 import com.snoworca.naruserve.Cookie;
 import com.snoworca.naruserve.HttpException;
 import com.snoworca.naruserve.Method;
 import com.snoworca.naruserve.ResourceResolver;
 import com.snoworca.naruserve.Response;
+import com.snoworca.naruserve.SseClient;
 import com.snoworca.naruserve.spi.HttpExchange;
 import com.snoworca.naruserve.spi.JsonCodec;
 import java.io.ByteArrayOutputStream;
@@ -43,6 +45,8 @@ import org.jspecify.annotations.Nullable;
 // @req FR-HTTP-018
 // @req FR-JSON-002
 // @req FR-COOKIE-001
+// @req IR-SSE-001
+// @req FR-SSE-001
 public final class DefaultResponse implements Response {
 
     private static final int CHUNK = 8192;
@@ -72,6 +76,9 @@ public final class DefaultResponse implements Response {
     private @Nullable CachePolicy defaultCache;
     /** Bytes the pending copy must deliver; -1 copies to the end of the input. */
     private long pendingLimit = -1;
+    private @Nullable SseRegistry sseRegistry;
+    private @Nullable DefaultSseClient sseClient;
+    private boolean upgraded101;
 
     /** Status 200, no headers, state NEW; {@code headRequest} makes every body bodyless. */
     // @req FR-HTTP-013
@@ -95,6 +102,139 @@ public final class DefaultResponse implements Response {
     /** The app's test hook for the resolver {@link #file} and {@link #download} read through. */
     void resolverTap(FileResponder.@Nullable ResolverTap tap) {
         this.tap = tap;
+    }
+
+    /** The app's SSE registry for {@link #sse}; unset means a registry of the default options. */
+    // @req IR-SSE-001
+    void sseRegistry(SseRegistry registry) {
+        this.sseRegistry = registry;
+    }
+
+    /**
+     * Commits 200 with the event-stream headers, replacing an app-set Content-Type and Cache-Control and dropping
+     * Content-Length and Transfer-Encoding, and enters STREAMING. A HEAD request gets the headers with no body and an
+     * ended client. A RuntimeException from the exchange (a 503 from a stream limit) leaves the response NEW and is
+     * rethrown for the error path; an IOException aborts the response and returns an ended client. After the
+     * registry's shutdown flag the client is ended at once with the closing notice queued.
+     */
+    // @req IR-SSE-001
+    // @req FR-SSE-001
+    // @req FR-APP-020
+    @Override
+    public SseClient sse() {
+        SseRegistry reg;
+        Commit head = null;
+        List<Map.Entry<String, String>> hs;
+        DefaultSseClient client = null;
+        int oldStatus;
+        List<Map.Entry<String, String>> oldHeaders;
+        DefaultRequest req = request;
+        String rid = req != null ? req.requestId() : "";
+        synchronized (this) {
+            requireNew();
+            oldStatus = status;
+            oldHeaders = new ArrayList<>(headers);
+            status = 200;
+            put("Content-Type", "text/event-stream; charset=UTF-8");
+            put("Cache-Control", "no-cache, no-transform");
+            remove("Content-Length");
+            remove("Transfer-Encoding");
+            hs = new ArrayList<>(headers);
+            if (sseRegistry == null) {
+                sseRegistry = new SseRegistry(new DefaultSseOptions(), null, new SafeLogger(new ConsoleLogger()));
+            }
+            reg = sseRegistry;
+            if (headRequest) {
+                head = begin(0, EMPTY);
+            } else {
+                committed = true;
+                state = ResponseState.STREAMING;
+                // Set under the same lock, so an abort from another thread from here on ends this client.
+                client = new DefaultSseClient(this, reg, Thread.currentThread(), rid);
+                sseClient = client;
+            }
+        }
+        if (client == null) {
+            deliver(Objects.requireNonNull(head));
+            return DefaultSseClient.ended(rid, reg.log());
+        }
+        if (!reg.register(client)) {
+            // Past the shutdown flag: the stream still starts, carrying only the closing notice, and then ends.
+            client.closing();
+        }
+        try {
+            ex.eventStream(200, hs, client);
+        } catch (RuntimeException e) {
+            reg.remove(client);
+            boolean reopened = false;
+            synchronized (this) {
+                if (state == ResponseState.STREAMING && !handlerDone) {
+                    sseClient = null;
+                    state = ResponseState.NEW;
+                    committed = false;
+                    status = oldStatus; // an app that catches the refusal answers with its own status and headers
+                    headers.clear();
+                    headers.addAll(oldHeaders);
+                    reopened = true;
+                }
+            }
+            if (!reopened) {
+                abort(e); // the Dispatcher already passed, so nothing else would end this response
+            }
+            throw e;
+        } catch (IOException e) {
+            reg.remove(client);
+            client.endBy("client");
+            abort(e);
+            client.runListeners();
+        } catch (Error e) {
+            reg.remove(client);
+            abort(e);
+            throw e;
+        }
+        return client;
+    }
+
+    /**
+     * The end of an SSE stream, called by its drain: STREAMING becomes COMPLETED through {@code ex.finish()}, or
+     * ABORTED for a {@code failure}; either fires onDone.
+     */
+    // @req IR-SSE-001
+    // @req FR-SSE-004
+    void sseEnded(@Nullable Throwable failure) {
+        if (failure != null) {
+            abort(failure);
+            return;
+        }
+        synchronized (this) {
+            if (state != ResponseState.STREAMING) {
+                return;
+            }
+        }
+        try {
+            ex.finish();
+        } catch (IOException | RuntimeException e) {
+            abort(e);
+            return;
+        }
+        synchronized (this) {
+            if (state == ResponseState.STREAMING) {
+                state = ResponseState.COMPLETED;
+            }
+        }
+        fireDone();
+    }
+
+    /** The stream of a non-HEAD {@link #sse}, or null. */
+    // @req FR-SSE-004
+    synchronized @Nullable DefaultSseClient sseClient() {
+        return sseClient;
+    }
+
+    /** Adds SSE bytes written by the client to {@link #bytesWritten}. */
+    // @req FR-SSE-002
+    void addWritten(long n) {
+        bytesWritten.addAndGet(n);
     }
 
     /** The request whose method and conditional headers {@link #file} and {@link #download} evaluate. */
@@ -240,11 +380,23 @@ public final class DefaultResponse implements Response {
     @Override
     public synchronized Response header(String name, String value) {
         requireNew();
+        checkHeader(name, value);
+        put(name, value);
+        return this;
+    }
+
+    /**
+     * The {@code res.header} check, shared with {@code HttpException.withHeader}: {@link NullPointerException} for a
+     * null name or value, {@link IllegalArgumentException} for a non-token name or a bad value char. Not API.
+     */
+    // @req FR-HTTP-015
+    // @req IR-HTTP-008
+    public static void checkHeader(String name, String value) {
+        Objects.requireNonNull(name, "name");
+        Objects.requireNonNull(value, "value");
         if (!isToken(name) || !isFieldValue(value)) {
             throw badHeader();
         }
-        put(name, value);
-        return this;
     }
 
     /** Appends one Set-Cookie line, never replacing an earlier one; nothing is added when validation throws. */
@@ -481,13 +633,13 @@ public final class DefaultResponse implements Response {
     }
 
     /** Body bytes handed to the exchange OutputStream; 0 for HEAD and bodyless responses. */
-    // @req FR-APP-015
+    // @req FR-APP-019
     long bytesWritten() {
         return bytesWritten.get();
     }
 
     /** The committed status, or the current status when never committed. */
-    // @req FR-APP-015
+    // @req FR-APP-019
     synchronized int statusCode() {
         return status;
     }
@@ -496,7 +648,7 @@ public final class DefaultResponse implements Response {
      * Runs {@code callback} once, on the first entry to COMPLETED or ABORTED and only after a running copy ended;
      * at once when that already happened.
      */
-    // @req FR-APP-015
+    // @req FR-APP-019
     void onDone(Runnable callback) {
         synchronized (this) {
             onDone = callback;
@@ -526,24 +678,33 @@ public final class DefaultResponse implements Response {
     /**
      * No-op once COMPLETED or ABORTED; otherwise ABORTED, the exchange aborted and a pending stream closed. Safe from
      * any thread: a running copy keeps the input and closes it itself once its read returns, so the input is never
-     * closed under a read.
+     * closed under a read. An SSE stream ends with cause error, and runs its listeners here when no drain started.
      */
     // @req FR-HTTP-015
+    // @req FR-SSE-004
     @Override
     public void abort(@Nullable Throwable error) {
         boolean copyRunning;
+        DefaultSseClient sse;
         synchronized (this) {
             if (state == ResponseState.COMPLETED || state == ResponseState.ABORTED) {
                 return;
             }
             state = ResponseState.ABORTED;
             copyRunning = copying;
+            sse = sseClient;
+        }
+        if (sse != null) {
+            sse.endBy("error"); // wakes a waiting drain, which writes what is queued and ends
         }
         ex.abort();
         if (!copyRunning) {
             closeInput();
         }
         fireDone(); // a running copy fires it when it ends
+        if (sse != null && !sse.drainStarted()) {
+            sse.runListeners(); // no drain will run them; a later drain call returns at once
+        }
     }
 
     // @req FR-HTTP-016
@@ -582,6 +743,40 @@ public final class DefaultResponse implements Response {
     }
 
     /**
+     * End state of an upgraded exchange, after {@code HttpExchange.webSocket} returned: NEW becomes COMPLETED with
+     * status 101 and the exchange is finished once, without a commit (the adapter wrote the 101). A finish that fails
+     * because the connection is already gone aborts instead. No-op when the response already left NEW.
+     */
+    // @req FR-WS-001
+    void upgraded() {
+        synchronized (this) {
+            if (state != ResponseState.NEW) {
+                return;
+            }
+            handlerDone = true;
+            status = 101;
+            committed = true;
+            state = ResponseState.COMPLETED;
+            upgraded101 = true;
+        }
+        try {
+            ex.finish();
+        } catch (IOException | RuntimeException e) {
+            synchronized (this) {
+                state = ResponseState.ABORTED;
+            }
+            ex.abort();
+        }
+        fireDone();
+    }
+
+    /** True once {@link #upgraded} ended this response: the session writes its own access lines. */
+    // @req FR-APP-019
+    synchronized boolean upgraded101() {
+        return upgraded101;
+    }
+
+    /**
      * The error path's outcome, decided by the state read once under the lock after the onError chain: NEW drops the
      * status and headers set so far and sends {@code status} with the JSON {@code body} (bodyless for HEAD),
      * STREAMING and COMMITTED abort, COMPLETED and ABORTED stay unchanged.
@@ -589,6 +784,7 @@ public final class DefaultResponse implements Response {
     // @req FR-HTTP-016
     // @req FR-APP-005
     // @req FR-HTTP-024
+    // @req IR-HTTP-008
     void afterFailure(int status, byte[] body, Throwable error) {
         Commit c;
         synchronized (this) {
@@ -602,6 +798,14 @@ public final class DefaultResponse implements Response {
                 put("Content-Type", StandardErrors.JSON_TYPE);
                 if (status == 408) {
                     put("Connection", "close"); // FR-ENGINE-005 AC-2: the adapter closes after a 408
+                }
+                if (error instanceof HttpException) {
+                    // prepare() then drops any Content-Length or Transfer-Encoding among them
+                    List<Map.Entry<String, String>> extra = ((HttpException) error).headers();
+                    for (Map.Entry<String, String> h : extra) {
+                        remove(h.getKey()); // replaces like Express setHeader; the exception's own duplicates stay
+                    }
+                    headers.addAll(extra);
                 }
                 c = prepare(body, null);
             } else {

@@ -41,6 +41,7 @@ import org.junit.rules.TemporaryFolder;
 // @req OPS-COOKIE-001
 // @req OPS-MULTIPART-001
 // @req OPS-STATIC-001
+// @req OPS-WS-001
 public final class DocsExamplesCompileTest {
 
     /** One skipped block: its file, a selector ({@code #n} ordinal or the block's first line) and one reason. */
@@ -83,13 +84,12 @@ public final class DocsExamplesCompileTest {
                     "app-defined type `UserService`"),
             skip("express-migration.md", "RestApp app = RestApp.create();", "app-defined type `TodoService` and `Todo`"),
             skip("json.md", "User user = req.body(User.class);                          // 요청 → 객체",
-                    "later-wave method `WebSocketSession.sendJson` (the block calls `ws.sendJson`) and app-defined"
-                            + " type `User`"),
+                    "app-defined type `User`"),
             skip("json.md", "public class User {", "absent type `SerializedName` (Gson)"),
             skip("json.md", "Gson gson = new GsonBuilder()", "absent type `Gson`"),
             skip("json.md", "public interface JsonCodec {",
                     "illustrative copy of `JsonCodec` (its `Type` is java.lang.reflect.Type, not imported)"),
-            skip("lifecycle.md", "RestApp app = RestApp.create();", "later-wave method `RestApp.ws`"),
+            skip("lifecycle.md", "RestApp app = RestApp.create();", "app-defined type `Database` and `UserService`"),
             skip("lifecycle.md", "public interface ServiceRegistry {",
                     "illustrative copy of `ServiceRegistry` and `ApplicationContext` (two public types in one unit)"),
             skip("lifecycle.md", "JdbcUserService impl = new JdbcUserService(db);", "app-defined type `JdbcUserService`"),
@@ -119,12 +119,10 @@ public final class DocsExamplesCompileTest {
                     "app-defined methods `find`, `create` and `remove` (the block calls them on the app)"),
             skip("servlet.md", "// 앱 구성: 내장 엔진과 같은 코드",
                     "app-defined type `UserService` (the block is a method declaration, not statements)"),
-            skip("sse.md", "#1", "later-wave method `Response.sse()`"),
-            skip("sse.md", "app.get(\"/api/progress\", (req, res) -> {", "later-wave method `Response.sse()`"),
-            skip("sse.md", "client.send(SseEvent.event(\"progress\")", "absent type `SseEvent`"),
-            skip("sse.md", "#4", "later-wave method `Response.sse()`"),
-            skip("websocket.md", "app.ws(\"/ws\", (req, ws) -> {", "later-wave method `RestApp.ws`"),
-            skip("websocket.md", "app.ws(\"/chat\", (req, ws) -> {", "later-wave method `RestApp.ws`"),
+            skip("sse.md", "app.get(\"/api/progress\", (req, res) -> {", "app-defined type `ProgressService`"),
+            skip("sse.md", "client.send(SseEvent.event(\"progress\")", "app-defined variable `client`"),
+            skip("sse.md", "#6", "app-defined type `Event` and app-defined variable `eventStore`"),
+            skip("websocket.md", "app.ws(\"/chat\", (req, ws) -> {", "app-defined type `ChatService` and `ChatMessage`"),
             skip("websocket.md", "app.use(\"/ws\", (req, res, next) -> {",
                     "app-defined type `Auth` (the block calls `auth.isAuthorized(req)`)")));
 
@@ -571,9 +569,14 @@ public final class DocsExamplesCompileTest {
 
     /** Skips whose reason names a wave 6 member (last dotted segment, argument list dropped) as a later-wave method. */
     static List<String> waveSixMemberReasons(List<Skip> skips) {
+        return memberReasons(skips, LATER_WAVE_NAMES, WAVE_SIX_MEMBERS);
+    }
+
+    /** Skips whose reason names one of {@code members} in a backticked name of a {@code form} match. */
+    private static List<String> memberReasons(List<Skip> skips, Pattern form, List<String> members) {
         List<String> out = new ArrayList<>();
         for (Skip s : skips) {
-            Matcher m = LATER_WAVE_NAMES.matcher(s.reason);
+            Matcher m = form.matcher(s.reason);
             while (m.find()) {
                 Matcher names = Pattern.compile("`([^`]+)`").matcher(m.group(0));
                 while (names.find()) {
@@ -581,13 +584,110 @@ public final class DocsExamplesCompileTest {
                     int paren = name.indexOf('(');
                     name = paren < 0 ? name : name.substring(0, paren);
                     name = name.substring(name.lastIndexOf('.') + 1);
-                    if (WAVE_SIX_MEMBERS.contains(name)) {
+                    if (members.contains(name)) {
                         out.add(s + ": `" + name + "`");
                     }
                 }
             }
         }
         return out;
+    }
+
+    /** Wave 7 members and types: they exist now, so no skip may name one as a later-wave method or an absent type. */
+    static final List<String> WAVE_SEVEN_MEMBERS = Collections.unmodifiableList(Arrays.asList("ws", "webSocket", "sse",
+            "sendJson", "onJson", "onText", "onBinary", "WebSocketSession", "WebSocketHandler", "WebSocketOptions",
+            "SseClient", "SseEvent", "SseOptions"));
+
+    private static final Pattern LATER_WAVE_OR_ABSENT_NAMES =
+            Pattern.compile("(?:later-wave methods?|absent types?) `([^`]+)`((?: and `[^`]+`)*)");
+
+    /**
+     * Skips whose reason names a wave 7 member or type (last dotted segment, argument list dropped) as a later-wave
+     * method or an absent type.
+     */
+    // @req OPS-WS-001
+    static List<String> waveSevenMemberReasons(List<Skip> skips) {
+        return memberReasons(skips, LATER_WAVE_OR_ABSENT_NAMES, WAVE_SEVEN_MEMBERS);
+    }
+
+    // SDS-AC-5 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-8.sds.md; OPS-WS-001 AC-6
+    @Test
+    public void sdsAc5_OPS_WS_001_AC6_noSkipNamesAWave7MemberAsLaterWaveOrAbsentType() {
+        List<String> fake = waveSevenMemberReasons(Arrays.asList(
+                skip("a.md", "#1", "later-wave method `Response.sse()`"),
+                skip("a.md", "#2", "absent type `SseEvent`"),
+                skip("a.md", "#3", "later-wave method `RestApp.staticFiles`"),
+                skip("a.md", "#4", "app-defined type `WebSocketSession`"),
+                skip("a.md", "#5", "absent types `Gson` and `WebSocketOptions`")));
+        assertEquals(fake.toString(), 3, fake.size());
+        // SDS-AC-7 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-13.sds.md: no sse.md exclusion is left
+        assertEquals(Collections.<String>emptyList(), waveSevenMemberReasons(SKIPS));
+    }
+
+    // SDS-AC-7 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-13.sds.md; OPS-SSE-001 AC-4: the sse.md skips
+    // keep only singular app-defined reasons, the client block names its undeclared `client`, and every other
+    // sse.md block is compiled
+    @Test
+    public void wave7s13SdsAc7_OPS_SSE_001_AC4_sseSkipsKeepOnlyAppDefinedReasonsAndTheRestCompile()
+            throws IOException {
+        List<String> reasons = new ArrayList<>();
+        int sseSkips = 0;
+        for (Skip s : SKIPS) {
+            if (s.file.equals("sse.md")) {
+                sseSkips++;
+                reasons.add(s.reason);
+                assertTrue(s.toString(), s.reason.startsWith("app-defined type `")
+                        || s.reason.startsWith("app-defined variable `")
+                        || s.reason.startsWith("illustrative copy of `"));
+                assertTrue(s.toString(), REASON.matcher(s.reason).matches());
+            }
+        }
+        assertTrue(reasons.toString(), reasons.contains("app-defined variable `client`"));
+        assertTrue(reasons.toString(), reasons.contains("app-defined type `ProgressService`"));
+        assertTrue(String.join("\n", docsDiagnostics()), docsDiagnostics().isEmpty());
+        assertEquals(Integer.valueOf(docs().get("sse.md").size() - sseSkips), compiledPerFile.get("sse.md"));
+    }
+
+    // SDS-AC-13 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-13.sds.md; OPS-HTTP-007 AC-9: the middleware.md
+    // block throwing HttpException(503).withHeader("Retry-After", "1") is compiled, not skipped
+    @Test
+    public void wave7s13SdsAc13_OPS_HTTP_007_AC9_theWithHeaderBlockIsCompiled() throws IOException {
+        int found = 0;
+        List<String> blocks = docs().get("middleware.md");
+        for (int i = 0; i < blocks.size(); i++) {
+            if (blocks.get(i).contains("throw new HttpException(503).withHeader(\"Retry-After\", \"1\");")) {
+                found++;
+                assertNull("skipped withHeader block #" + (i + 1), skipFor("middleware.md", i + 1, blocks.get(i)));
+            }
+        }
+        assertEquals(1, found);
+        assertTrue(String.join("\n", docsDiagnostics()), docsDiagnostics().isEmpty());
+    }
+
+    // SDS-AC-5 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-8.sds.md; OPS-WS-001 AC-6: the websocket.md,
+    // lifecycle.md and json.md skips keep only app-defined-type and illustrative-copy reasons, and every other
+    // websocket.md block is compiled
+    @Test
+    public void sdsAc5_OPS_WS_001_AC6_waveSevenFilesKeepOnlyAppDefinedTypeReasons() throws IOException {
+        List<String> reasons = new ArrayList<>();
+        int wsSkips = 0;
+        for (Skip s : SKIPS) {
+            if (s.file.equals("websocket.md") || s.file.equals("lifecycle.md") || s.file.equals("json.md")) {
+                reasons.add(s.file + " " + s.reason);
+            }
+            wsSkips += s.file.equals("websocket.md") ? 1 : 0;
+        }
+        assertTrue(reasons.toString(), reasons.contains("websocket.md app-defined type `ChatService` and `ChatMessage`"));
+        assertTrue(reasons.toString(), reasons.contains("lifecycle.md app-defined type `Database` and `UserService`"));
+        assertTrue(reasons.toString(), reasons.contains("json.md app-defined type `User`"));
+        for (String r : reasons) {
+            String reason = r.substring(r.indexOf(' ') + 1);
+            assertTrue(r, reason.startsWith("app-defined type `") || reason.startsWith("absent type `")
+                    || reason.startsWith("illustrative copy of `"));
+        }
+        assertEquals("only the ChatService and Auth blocks of websocket.md are skipped", 2, wsSkips);
+        assertTrue(String.join("\n", docsDiagnostics()), docsDiagnostics().isEmpty());
+        assertEquals(Integer.valueOf(docs().get("websocket.md").size() - wsSkips), compiledPerFile.get("websocket.md"));
     }
 
     // SDS-AC-3; OPS-STATIC-001 AC-6; OPS-MULTIPART-001 AC-5
@@ -681,9 +781,9 @@ public final class DocsExamplesCompileTest {
         assertTrue("cookie.md compiled blocks: " + n, n > 0);
     }
 
-    // OPS-ENGINE-001 AC-6 — the blocks calling server, trustProxy or ServerOptions are compiled, not skipped
+    // OPS-ENGINE-002 AC-6 — the blocks calling server, trustProxy or ServerOptions are compiled, not skipped
     @Test
-    public void OPS_ENGINE_001_AC6_serverSettingBlocksAreCompiled() throws IOException {
+    public void OPS_ENGINE_002_AC6_serverSettingBlocksAreCompiled() throws IOException {
         int found = 0;
         for (Map.Entry<String, List<String>> e : docs().entrySet()) {
             List<String> blocks = e.getValue();

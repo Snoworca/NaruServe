@@ -10,13 +10,14 @@ import org.jspecify.annotations.Nullable;
 
 /**
  * One request/response exchange, implemented by the adapter. Request values are undecoded; the core decodes once.
- * The response is started exactly once, by {@link #commit}, {@link #sendFile}, {@link #upgrade} or
- * {@link #eventStream}; a second start throws {@link IllegalStateException}. The exchange outlives
- * {@link ExchangeHandler#handle} until the core calls {@link #finish} or {@link #abort} (or the adapter's stop
- * deadline force-closes it).
+ * The response is started exactly once, by {@link #commit}, {@link #sendFile}, {@link #upgrade},
+ * {@link #eventStream} or {@link #webSocket}; a second start throws {@link IllegalStateException}. The exchange
+ * outlives {@link ExchangeHandler#handle} until the core calls {@link #finish} or {@link #abort} (or the adapter's
+ * stop deadline force-closes it).
  */
 // @req IR-HTTP-003
-// @req IR-HTTP-004
+// @req IR-HTTP-007
+// @req IR-WS-002
 public interface HttpExchange {
 
     /** The request-line method token, as received. */
@@ -76,15 +77,26 @@ public interface HttpExchange {
     void abort();
 
     /** Sends {@code length} bytes of {@code file} from {@code offset} as the whole response body. */
-    // @req IR-HTTP-004
+    // @req IR-HTTP-007
     void sendFile(int status, List<Map.Entry<String, String>> headers, File file, long offset, long length)
             throws IOException;
 
     /** Writes a 101 response with {@code headers}, then calls {@code handler} with the exchange's raw streams. */
-    // @req IR-HTTP-004
+    // @req IR-HTTP-007
     void upgrade(List<Map.Entry<String, String>> headers, UpgradeHandler handler) throws IOException;
 
     /** Sends status and headers, then runs {@code drain} on a thread the adapter chooses; returns at once. */
-    // @req IR-HTTP-004
+    // @req IR-HTTP-007
     void eventStream(int status, List<Map.Entry<String, String>> headers, StreamDrain drain) throws IOException;
+
+    /**
+     * Completes a WebSocket handshake with {@code settings}, calls {@code endpoint} on the adapter's read thread and
+     * returns only after the connection closed. A refusal before 101 throws a NaruServe {@code HttpException} and
+     * leaves the exchange unstarted; the exchange is started once 101 is written. The default throws
+     * {@link UnsupportedOperationException}: an adapter without WebSocket support does not override it.
+     */
+    // @req IR-WS-002
+    default void webSocket(WebSocketSettings settings, WebSocketEndpoint endpoint) throws IOException {
+        throw new UnsupportedOperationException("webSocket is not supported by this adapter");
+    }
 }

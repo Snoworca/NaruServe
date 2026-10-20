@@ -2,7 +2,8 @@ package com.snoworca.naruserve.tinyhttpd;
 
 import com.snoworca.naruserve.spi.StreamDrain;
 import com.snoworca.naruserve.spi.UpgradeHandler;
-import com.snoworca.tinyhttpd.http.Response;
+import com.snoworca.naruserve.spi.WebSocketEndpoint;
+import com.snoworca.naruserve.spi.WebSocketSettings;
 import java.io.EOFException;
 import java.io.File;
 import java.io.IOException;
@@ -12,11 +13,11 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * File transfer, event stream and protocol upgrade over TinyHttpd, kept apart from the exchange bridge so later
- * waves fill these bodies without editing the adapter core.
+ * File transfer, event stream, WebSocket and raw upgrade over TinyHttpd, kept apart from the exchange bridge. Each
+ * hook receives the exchange and keeps its abort check and single-start rule; the event-stream and WebSocket hooks
+ * hold the exchange lock only for those checks, so their loops never block other calls on the exchange.
  */
-// @req FR-ENGINE-001
-// @req FR-ENGINE-010
+// @req FR-ENGINE-011
 final class TinyHttpdFeatures {
 
     private TinyHttpdFeatures() {
@@ -27,7 +28,7 @@ final class TinyHttpdFeatures {
      * plain buffered reads; the caller holds the exchange lock and has checked the range. The file is opened before
      * the commit, so a missing or unreadable file throws with the response still unstarted.
      */
-    // @req FR-ENGINE-010
+    // @req FR-ENGINE-011
     static void sendFile(TinyHttpdExchange ex, int status, List<Map.Entry<String, String>> headers, File file,
             long offset, long length) throws IOException {
         OutputStream out;
@@ -47,13 +48,40 @@ final class TinyHttpdFeatures {
         out.flush();
     }
 
-    // @req FR-ENGINE-001
-    static void eventStream(Response res, int status, List<Map.Entry<String, String>> headers, StreamDrain drain) {
-        throw new UnsupportedOperationException("event streams on the TinyHttpd adapter arrive in wave 7");
+    /**
+     * The chunked event stream of {@link TinyHttpdEventStream#start}; {@link TinyHttpdExchange#run} runs the drain on
+     * this worker after the handler returned.
+     */
+    // @req FR-ENGINE-011
+    // @req FR-SSE-003
+    static void eventStream(TinyHttpdExchange ex, int status, List<Map.Entry<String, String>> headers,
+            StreamDrain drain) throws IOException {
+        TinyHttpdEventStream.start(ex, ex.res, status, headers, drain);
     }
 
-    // @req FR-ENGINE-001
-    static void upgrade(Response res, List<Map.Entry<String, String>> headers, UpgradeHandler handler) {
-        throw new UnsupportedOperationException("protocol upgrades on the TinyHttpd adapter arrive in wave 7");
+    /**
+     * Checks the start rule and marks the exchange upgrading under its lock, then runs the handshake and the read
+     * loop on this worker without it; the 101 marks the exchange started through {@link TinyHttpdExchange#markUpgraded}.
+     */
+    // @req FR-ENGINE-011
+    // @req FR-WS-002
+    static void webSocket(TinyHttpdExchange ex, WebSocketSettings settings, WebSocketEndpoint endpoint)
+            throws IOException {
+        synchronized (ex) {
+            ex.requireStartable();
+            ex.beginUpgrade();
+        }
+        try {
+            new TinyHttpdWebSocket(ex.req, ex.res, settings, endpoint, ex::markUpgraded).run();
+        } finally {
+            ex.endUpgrade();
+        }
+    }
+
+    /** Raw upgrades stay unsupported in v1; the caller checked the start rule, so the response is untouched. */
+    // @req FR-ENGINE-011
+    static void upgrade(TinyHttpdExchange ex, List<Map.Entry<String, String>> headers, UpgradeHandler handler) {
+        throw new UnsupportedOperationException(
+                "raw protocol upgrades are not supported by the TinyHttpd adapter; WebSocket goes through webSocket");
     }
 }

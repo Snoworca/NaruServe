@@ -266,7 +266,7 @@ public final class WaveFiveDocsTest {
         }
     }
 
-    // SDS-AC-1; OPS-ENGINE-001 AC-6
+    // SDS-AC-1; OPS-ENGINE-002 AC-6
     @Test
     public void defaultsMatchCode() throws Exception {
         String d = doc("defaults.md");
@@ -364,7 +364,7 @@ public final class WaveFiveDocsTest {
                 o -> o.maxConnectionsPerAddress(per + 1));
     }
 
-    // OPS-ENGINE-001 AC-2 — the documented maxConnections floor is checked by listen()
+    // OPS-ENGINE-002 AC-2 — the documented maxConnections floor is checked by listen()
     @Test
     public void maxConnectionsBelowWorkersPlusSseFailsListen() throws IOException {
         assertTrue(lineWith(doc("defaults.md"), "| 열린 연결 |").contains("`IllegalStateException`"));
@@ -378,7 +378,7 @@ public final class WaveFiveDocsTest {
         }
     }
 
-    // SDS-AC-1; OPS-ENGINE-001 AC-6
+    // SDS-AC-1; OPS-ENGINE-002 AC-6
     @Test
     public void valueCellsParse() {
         assertEquals(16384, value("16 KiB"));
@@ -390,7 +390,7 @@ public final class WaveFiveDocsTest {
         assertEquals(64, value("64"));
     }
 
-    // SDS-AC-2; OPS-ENGINE-001 AC-7
+    // SDS-AC-10 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-8.sds.md; OPS-ENGINE-002 AC-7
     @Test
     public void settledMarkerLinesAreGoneAndLaterMarkersKept() throws IOException {
         for (String label : new String[] {"| JSON 요청 본문 |", "| JSON 중첩 깊이 |", "| HTTP 헤더 전체 |",
@@ -407,7 +407,7 @@ public final class WaveFiveDocsTest {
                 "`maxUpgradedConnections`", "대기 큐");
         settled("sse.md", "`maxSseStreams`");
         settled("websocket.md", "`maxUpgradedConnections`");
-        kept("websocket.md", "Ping 주기");
+        settled("websocket.md", "Ping 주기");
         assertFalse(lineWith(doc("websocket.md"), "Ping 주기").contains("최대 연결 수"));
         settled("express-migration.md", "| `app.set('trust proxy', ...)`");
         settled("express-migration.md", "`bindAddress(\"0.0.0.0\")`");
@@ -415,15 +415,15 @@ public final class WaveFiveDocsTest {
                 .substring(doc("express-migration.md").indexOf("## Express에 있지만 아직 정해지지 않은 기능"));
         assertFalse(undecided, undecided.contains("trust proxy"));
         assertFalse(undecided, undecided.contains("LAN"));
-        // Wave 6 to 8 markers stay.
-        kept("defaults.md", "| WebSocket 메시지 |");
-        kept("defaults.md", "| SSE 송신 큐(연결당) |");
-        kept("sse.md", "heartbeat");
+        // Wave 7 settles the WebSocket and SSE rows; the wave 8 markers stay.
+        settled("defaults.md", "| WebSocket 메시지 |");
+        settled("defaults.md", "| SSE 송신 큐(연결당) |");
+        settled("sse.md", "heartbeat");
         kept("express-migration.md", "| `express.Router()`");
         kept("express-migration.md", "| `cors()`");
     }
 
-    // SDS-AC-2; OPS-ENGINE-001 AC-2, AC-3
+    // SDS-AC-2; OPS-ENGINE-002 AC-2, AC-3
     @Test
     public void defaultsStatesNoUnlimitedBindProxyRejectionsAndTls() throws IOException {
         String d = doc("defaults.md");
@@ -442,7 +442,7 @@ public final class WaveFiveDocsTest {
         contains("defaults.md", lineWith(d, "TLS 리스너"), "v1");
     }
 
-    // SDS-AC-3; OPS-ENGINE-001 AC-5
+    // SDS-AC-3; OPS-ENGINE-002 AC-5
     @Test
     public void moduleCoordinates() throws IOException {
         Pattern bootstrap = Pattern.compile("com\\.snoworca\\.naruserve:NaruServe(?![-\\w])");
@@ -454,7 +454,7 @@ public final class WaveFiveDocsTest {
         }
     }
 
-    // OPS-ENGINE-001 AC-1, AC-4
+    // OPS-ENGINE-002 AC-1, AC-4
     @Test
     public void appAndRequestNameServerTrustProxyAndKeeper() throws IOException {
         String app = doc("app.md");

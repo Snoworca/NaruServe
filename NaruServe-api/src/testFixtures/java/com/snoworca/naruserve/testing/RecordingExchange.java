@@ -41,6 +41,9 @@ public final class RecordingExchange implements HttpExchange {
     public Runnable onCommit = () -> { };
     public volatile List<Map.Entry<String, String>> headers = Collections.emptyList();
     public final ByteArrayOutputStream body = new ByteArrayOutputStream();
+    /** Thrown by {@link #eventStream} when set (an IOException or a RuntimeException). */
+    public volatile @Nullable Exception eventStreamFailure;
+    private volatile @Nullable StreamDrain drain;
 
     /** {@code headerPairs} are request header name, value, name, value, ... */
     public RecordingExchange(String method, String path, String... headerPairs) {
@@ -147,7 +150,25 @@ public final class RecordingExchange implements HttpExchange {
     }
 
     @Override
-    public void eventStream(int status, List<Map.Entry<String, String>> headers, StreamDrain drain) {
-        throw new UnsupportedOperationException();
+    public void eventStream(int status, List<Map.Entry<String, String>> headers, StreamDrain drain)
+            throws IOException {
+        Exception e = eventStreamFailure;
+        if (e instanceof IOException) {
+            throw (IOException) e;
+        }
+        if (e instanceof RuntimeException) {
+            throw (RuntimeException) e;
+        }
+        commits.incrementAndGet();
+        this.status = status;
+        this.contentLength = -1;
+        this.headers = headers;
+        this.drain = drain; // never attached: the core falls back to its bounded queue
+    }
+
+    /** The drain stored by {@link #eventStream}, run by the test on its own thread; null before that. */
+    // @req FR-SSE-002
+    public @Nullable StreamDrain drain() {
+        return drain;
     }
 }

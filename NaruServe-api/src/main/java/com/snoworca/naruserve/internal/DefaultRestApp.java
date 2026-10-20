@@ -20,6 +20,9 @@ import com.snoworca.naruserve.RouteHandler;
 import com.snoworca.naruserve.ServerHandle;
 import com.snoworca.naruserve.ServerOptions;
 import com.snoworca.naruserve.StaticOptions;
+import com.snoworca.naruserve.WebSocketHandler;
+import com.snoworca.naruserve.SseOptions;
+import com.snoworca.naruserve.WebSocketOptions;
 import com.snoworca.naruserve.routing.RouteKind;
 import com.snoworca.naruserve.routing.RoutePattern;
 import com.snoworca.naruserve.routing.Router;
@@ -65,6 +68,7 @@ import org.jspecify.annotations.Nullable;
 // @req FR-APP-011
 // @req FR-APP-012
 // @req IR-JSON-002
+// @req IR-WS-001
 public final class DefaultRestApp implements RestApp {
 
     /** One registration call as recorded; the router is built from these at freeze. */
@@ -101,6 +105,12 @@ public final class DefaultRestApp implements RestApp {
     private volatile long jsonLimit = JsonBodyReader.DEFAULT_LIMIT;
     private volatile MultipartSettings multipartSettings = new MultipartSettings();
     private volatile long formLimit = 1048576L;
+    private volatile DefaultWebSocketOptions webSocketOptions = new DefaultWebSocketOptions();
+    /** The copy freeze took for the upgrade step; null before freeze. */
+    volatile @Nullable DefaultWebSocketOptions frozenWebSocketOptions;
+    private volatile DefaultSseOptions sseOptions = new DefaultSseOptions();
+    /** The copy freeze took for the SSE streams; null before freeze. */
+    volatile @Nullable DefaultSseOptions frozenSseOptions;
     private final List<StaticMount> staticMounts = new ArrayList<>();
     private volatile @Nullable CachePolicy defaultCache;
     private volatile Logger logger;
@@ -120,6 +130,12 @@ public final class DefaultRestApp implements RestApp {
     }
     // Set by the one listen() that won beginStart.
     private volatile boolean bindAttempted;
+    /** The adapter's bound port once bind returned, 0 before; named in the WebSocket sender and idle threads. */
+    private volatile int boundPort;
+    /** The WebSocket session registry; null before freeze. Guarded by this. */
+    private @Nullable WebSocketRegistry webSocketRegistry;
+    /** The SSE stream registry; null before freeze. Guarded by this. */
+    private @Nullable SseRegistry sseRegistry;
     // The thread inside listen() or the shutdown sequence; a shutdown() from it must not wait for itself. Each owner
     // clears only its own entry, so listen() returning never wipes the identity a racing shutdown thread just set.
     private final AtomicReference<@Nullable Thread> lifecycleThread = new AtomicReference<>();
@@ -203,6 +219,49 @@ public final class DefaultRestApp implements RestApp {
         configurer.configure(next);
         this.multipartSettings = next;
         return this;
+    }
+
+    /** The current WebSocket options; the defaults unless {@link #webSocket(Configurer)} changed them. */
+    // @req IR-WS-001
+    public DefaultWebSocketOptions webSocketOptions() {
+        return webSocketOptions;
+    }
+
+    // @req IR-WS-001
+    @Override
+    public synchronized RestApp webSocket(Configurer<WebSocketOptions> configurer) {
+        lifecycle.requireConfigurable("webSocket");
+        Objects.requireNonNull(configurer, "configurer");
+        DefaultWebSocketOptions next = webSocketOptions.copy();
+        configurer.configure(next);
+        this.webSocketOptions = next;
+        return this;
+    }
+
+    /** The current SSE options; the defaults unless {@link #sse(Configurer)} changed them. */
+    // @req IR-SSE-001
+    public DefaultSseOptions sseOptions() {
+        return sseOptions;
+    }
+
+    // @req IR-SSE-001
+    @Override
+    public synchronized RestApp sse(Configurer<SseOptions> configurer) {
+        lifecycle.requireConfigurable("sse");
+        Objects.requireNonNull(configurer, "configurer");
+        DefaultSseOptions next = sseOptions.copy();
+        configurer.configure(next);
+        this.sseOptions = next;
+        return this;
+    }
+
+    // @req IR-WS-001
+    @Override
+    public synchronized RestApp ws(String path, WebSocketHandler handler) {
+        lifecycle.requireConfigurable("ws");
+        Objects.requireNonNull(path, "path");
+        Objects.requireNonNull(handler, "handler");
+        return webSocketRoute(path, new WebSocketRoute(handler));
     }
 
     /** {@code bytes} checked against 1..{@link JsonBodyReader#MAX_LIMIT}, the range of every body limit. */
@@ -443,6 +502,7 @@ public final class DefaultRestApp implements RestApp {
             Dispatcher d = frozenDispatcher();
             a.bind(frozen, new GatedExchangeHandler(lifecycle, d, d.accessLog()));
             bound = a.boundPort();
+            boundPort = bound;
             if (!lifecycle.markRunning()) {
                 throw stopWhileStarting();
             }
@@ -604,9 +664,10 @@ public final class DefaultRestApp implements RestApp {
      * force-close participants, onStop callbacks (services still registered), after-onStop participants, the owned
      * close in reverse (the app logger skipped), the logger flush and close, adapter release, TERMINATED. A failing
      * step is logged at ERROR and the next step runs; as on the failed-start path, the first {@link Error} is
-     * rethrown once TERMINATED.
+     * rethrown once TERMINATED. Every phase hands its participants {@code deadlineNanos}, computed at shutdown entry.
      */
     // @req FR-APP-011
+    // @req FR-APP-020
     private void runShutdownSequence(long deadlineNanos) {
         SafeLogger log = new SafeLogger(logger);
         Thread self = Thread.currentThread();
@@ -614,13 +675,13 @@ public final class DefaultRestApp implements RestApp {
         Error error = null;
         try {
             HttpAdapter a = Objects.requireNonNull(adapter, "adapter");
-            error = firstError(error, shutdownParticipants.run(ShutdownParticipants.Phase.BEFORE_WAIT, log));
+            error = firstError(error, shutdownParticipants.run(ShutdownParticipants.Phase.BEFORE_WAIT, log, deadlineNanos));
             try {
                 a.stop(left(deadlineNanos), TimeUnit.NANOSECONDS);
             } catch (RuntimeException e) {
                 log.error("adapter stop failed", e);
             }
-            error = firstError(error, shutdownParticipants.run(ShutdownParticipants.Phase.FORCE_CLOSE, log));
+            error = firstError(error, shutdownParticipants.run(ShutdownParticipants.Phase.FORCE_CLOSE, log, deadlineNanos));
             List<LifecycleCallback> callbacks;
             synchronized (this) {
                 callbacks = new ArrayList<>(stopCallbacks);
@@ -633,7 +694,7 @@ public final class DefaultRestApp implements RestApp {
                     error = firstError(error, e);
                 }
             }
-            error = firstError(error, shutdownParticipants.run(ShutdownParticipants.Phase.AFTER_ON_STOP, log));
+            error = firstError(error, shutdownParticipants.run(ShutdownParticipants.Phase.AFTER_ON_STOP, log, deadlineNanos));
             for (Exception e : context.closeOwned(logger)) {
                 log.error("owned resource close failed", e);
             }
@@ -848,7 +909,13 @@ public final class DefaultRestApp implements RestApp {
      */
     // @req FR-HTTP-008
     // @req FR-APP-014
-    // @req FR-APP-015
+    // @req FR-APP-019
+    // @req FR-WS-001
+    // @req FR-WS-007
+    // @req FR-WS-008
+    // @req FR-WS-010
+    // @req FR-SSE-005
+    // @req FR-APP-020
     public synchronized void freeze() {
         if (dispatcher != null) {
             return;
@@ -869,11 +936,52 @@ public final class DefaultRestApp implements RestApp {
         for (PrefixMiddleware pm : prefixMiddleware) {
             pipeline.addPrefix(pm.prefix, pm.middleware);
         }
+        DefaultWebSocketOptions ws = webSocketOptions().copy();
+        frozenWebSocketOptions = ws;
+        DefaultSseOptions sse = sseOptions().copy();
+        frozenSseOptions = sse;
         SafeLogger safe = new SafeLogger(logger); // the logger is fixed from here: logger(...) needs an unfrozen app
+        WebSocketSender.IntSupplier port = () -> boundPort; // threads are made after bind, so they see the real port
+        WebSocketSender sender = new WebSocketSender(serverOptions.maxUpgradedConnections(), port, safe);
+        WebSocketIdleScheduler idle = new WebSocketIdleScheduler(port, safe);
+        WebSocketRegistry registry = new WebSocketRegistry(sender, idle);
+        SseRegistry streams = new SseRegistry(sse, lifecycle, safe);
+        AccessLog accessLog = new AccessLog(accessLogOptions, safe); // shared with the sessions for their lines
         dispatcher = new Dispatcher(router, pipeline, new ErrorPath(errorHandlers, safe),
-                new AccessLog(accessLogOptions, safe), context, jsonCodec(), jsonLimit(), trustProxy,
-                multipartSettings().copy(), formLimit(), spool(), new StaticHandler(staticMounts, mimeTypes, defaultCache));
+                accessLog, context, jsonCodec(), jsonLimit(), trustProxy,
+                multipartSettings().copy(), formLimit(), spool(), new StaticHandler(staticMounts, mimeTypes, defaultCache),
+                new WebSocketUpgrade(ws, jsonCodec(), safe, sender, idle, registry, accessLog),
+                streams);
+        webSocketRegistry = registry;
+        sseRegistry = streams;
+        // SSE first: its closeAll returns at once, while the WebSocket one waits for the closes.
+        shutdownParticipants.add(ShutdownParticipants.Phase.BEFORE_WAIT,
+                (ShutdownParticipants.DeadlineParticipant) streams::closeAll);
+        shutdownParticipants.add(ShutdownParticipants.Phase.BEFORE_WAIT,
+                (ShutdownParticipants.DeadlineParticipant) registry::closeAll);
+        shutdownParticipants.add(ShutdownParticipants.Phase.FORCE_CLOSE, registry::terminate);
+        shutdownParticipants.add(ShutdownParticipants.Phase.FORCE_CLOSE, streams::terminate);
         lifecycle.markFrozen();
+    }
+
+    /** The WebSocket session registry built by a successful {@link #freeze()}; for internal tests. */
+    // @req FR-WS-010
+    synchronized WebSocketRegistry webSocketRegistry() {
+        WebSocketRegistry r = webSocketRegistry;
+        if (r == null) {
+            throw new IllegalStateException("RestApp is not frozen; call freeze() first");
+        }
+        return r;
+    }
+
+    /** The SSE stream registry built by a successful {@link #freeze()}; for internal tests. */
+    // @req FR-SSE-005
+    synchronized SseRegistry sseRegistry() {
+        SseRegistry r = sseRegistry;
+        if (r == null) {
+            throw new IllegalStateException("RestApp is not frozen; call freeze() first");
+        }
+        return r;
     }
 
     /** The dispatcher built by a successful {@link #freeze()}; {@link IllegalStateException} before that. */

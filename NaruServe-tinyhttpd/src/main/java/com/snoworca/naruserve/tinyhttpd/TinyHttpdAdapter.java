@@ -58,13 +58,16 @@ public final class TinyHttpdAdapter implements HttpAdapter {
      */
     // @req FR-ENGINE-002
     // @req FR-ENGINE-006
+    // @req FR-SSE-003
     @Override
     public synchronized void bind(ServerSettings settings, ExchangeHandler handler) throws IOException {
         if (server != null) {
             throw new IllegalStateException("this adapter is already bound");
         }
         WorkerThreadFactory f = new WorkerThreadFactory(settings.logger());
-        TinyHttpd s = configure(settings, (req, res) -> TinyHttpdExchange.run(req, res, handler))
+        // The NaruServe SSE counter; TinyHttpd's own maxEventStreams counts only startEventStream, never called.
+        TinyHttpdEventStream.Slots slots = new TinyHttpdEventStream.Slots(settings.maxSseStreams());
+        TinyHttpd s = configure(settings, (req, res) -> TinyHttpdExchange.run(req, res, handler, slots))
                 .threadFactory(f).build();
         f.server(s);
         KeeperThread k = new KeeperThread();

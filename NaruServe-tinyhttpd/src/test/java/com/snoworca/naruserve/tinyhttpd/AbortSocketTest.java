@@ -26,10 +26,10 @@ public class AbortSocketTest {
         Http.stopQuietly(adapter);
     }
 
-    // FR-ENGINE-010 AC-2: abort() before the response starts closes the connection abnormally, so the client never
+    // FR-ENGINE-011 AC-2: abort() before the response starts closes the connection abnormally, so the client never
     // gets a complete response (no plain 500 page with a matching Content-Length)
     @Test(timeout = 20000)
-    public void FR_ENGINE_010_AC2_abortBeforeCommitGivesATruncatedResponse() throws Exception {
+    public void FR_ENGINE_011_AC2_abortBeforeCommitGivesATruncatedResponse() throws Exception {
         adapter.bind(Http.settings().build(), ex -> ex.abort());
         String response = Http.send(adapter.boundPort(), Http.get("/abort"));
         assertEquals(500, Http.status(response));
@@ -41,10 +41,10 @@ public class AbortSocketTest {
         assertTrue(response, Http.body(response).length() < declared);
     }
 
-    // FR-ENGINE-010 AC-2: abort() from a third thread while another thread streams the body is thread safe: the
+    // FR-ENGINE-011 AC-2: abort() from a third thread while another thread streams the body is thread safe: the
     // writer only ever fails with IOException and the worker hands back a response nobody is still writing
     @Test(timeout = 60000)
-    public void FR_ENGINE_010_AC2_abortDuringAConcurrentWriteOnlyFailsTheWriterWithIOException() throws Exception {
+    public void FR_ENGINE_011_AC2_abortDuringAConcurrentWriteOnlyFailsTheWriterWithIOException() throws Exception {
         AtomicReference<Throwable> unexpected = new AtomicReference<>();
         AtomicReference<CountDownLatch> done = new AtomicReference<>();
         byte[] chunk = new byte[64 * 1024];

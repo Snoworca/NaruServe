@@ -106,9 +106,9 @@ public class LimitsSocketTest {
         assertEquals(414, Http.status(Http.send(port, requestLineOf(8191))));
     }
 
-    // OPS-ENGINE-001 AC-2, AC-6: with the defaults one header line may hold inputBufferBytes - 2 = 8190 bytes
+    // OPS-ENGINE-002 AC-2, AC-6: with the defaults one header line may hold inputBufferBytes - 2 = 8190 bytes
     @Test(timeout = 30000)
-    public void OPS_ENGINE_001_AC2_AC6_defaultHeaderLineLimitIs8190Bytes() throws Exception {
+    public void OPS_ENGINE_002_AC2_AC6_defaultHeaderLineLimitIs8190Bytes() throws Exception {
         int port = app(new TinyHttpdAdapter()).listen(0).port();
         assertEquals(200, Http.status(Http.send(port, Http.get("/h", padHeaders(1, 8190)))));
         assertEquals(431, Http.status(Http.send(port, Http.get("/h", padHeaders(1, 8191)))));

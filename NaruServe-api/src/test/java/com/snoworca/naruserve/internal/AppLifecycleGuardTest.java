@@ -178,6 +178,10 @@ public class AppLifecycleGuardTest {
         if (type == com.snoworca.naruserve.CachePolicy.class) {
             return com.snoworca.naruserve.CachePolicy.noCache();
         }
+        // wave 7: IR-WS-001 AC-3 puts ws and webSocket under the same guard
+        if (type == com.snoworca.naruserve.WebSocketHandler.class) {
+            return (com.snoworca.naruserve.WebSocketHandler) (req, ws) -> { };
+        }
         throw new AssertionError("no test argument for " + type);
     }
 

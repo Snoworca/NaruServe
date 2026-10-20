@@ -458,4 +458,81 @@ public class ErrorPathTest {
         }
         assertNull(t.send("GET", "/bad").header("Connection"));
     }
+
+    /** How many headers of {@code r} are named {@code name}, case-insensitive. */
+    private static int count(ClientResponse r, String name) {
+        int n = 0;
+        for (java.util.Map.Entry<String, String> e : r.headers()) {
+            if (e.getKey().equalsIgnoreCase(name)) {
+                n++;
+            }
+        }
+        return n;
+    }
+
+    // SDS-AC-9 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-2.sds.md; IR-HTTP-008 AC-4
+    @Test
+    public void sdsAc9_IR_HTTP_008_AC4_theExceptionHeadersReplaceTheAppSetOnesOnTheStandardError() {
+        TestApp t = app();
+        t.app().get("/ws", (req, res) -> {
+            res.header("X-App", "1");
+            throw new HttpException(426).withHeader("Sec-WebSocket-Version", "13");
+        });
+        ClientResponse r = t.send("GET", "/ws");
+        DispatcherTest.assertError(426, "UPGRADE_REQUIRED", "Upgrade Required", r);
+        assertEquals("13", r.header("Sec-WebSocket-Version"));
+        assertNull(r.header("X-App"));
+        assertEquals(3, r.headers().size());
+    }
+
+    // SDS-AC-9 (wave-7-2); IR-HTTP-008 AC-5
+    @Test
+    public void sdsAc9_IR_HTTP_008_AC5_onErrorLeavingNewKeepsTheExceptionHeadersAndAnAnsweringOneDropsThem() {
+        TestApp leaving = app();
+        leaving.app().onError((error, req, res) -> res.header("X-From-OnError", "1"));
+        leaving.app().get("/f", throwing(new HttpException(503).withHeader("Retry-After", "1")));
+        ClientResponse r = leaving.send("GET", "/f");
+        DispatcherTest.assertError(503, "SERVICE_UNAVAILABLE", "Service Unavailable", r);
+        assertEquals("1", r.header("Retry-After"));
+        assertNull(r.header("X-From-OnError"));
+
+        TestApp answering = app();
+        answering.app().onError((error, req, res) -> res.status(418).header("X-Tea", "1").send("x"));
+        answering.app().get("/f", throwing(new HttpException(503).withHeader("Retry-After", "1")));
+        ClientResponse tea = answering.send("GET", "/f");
+        assertEquals(418, tea.status());
+        assertEquals("1", tea.header("X-Tea"));
+        assertNull(tea.header("Retry-After"));
+
+        TestApp failing = app();
+        failing.app().onError((error, req, res) -> {
+            throw new IllegalStateException("onError broke");
+        });
+        failing.app().get("/f", throwing(new HttpException(503).withHeader("Retry-After", "1")));
+        ClientResponse broken = failing.send("GET", "/f");
+        DispatcherTest.assertError(500, "INTERNAL_ERROR", "Internal Server Error", broken);
+        assertNull(broken.header("Retry-After"));
+    }
+
+    // SDS-AC-10 (wave-7-2); IR-HTTP-008 AC-7
+    @Test
+    public void sdsAc10_IR_HTTP_008_AC7_framingHeadersFromTheExceptionAreDroppedAndTheBodyLengthIsExact() {
+        TestApp t = app();
+        t.app().get("/f", throwing(new HttpException(400).withHeader("Content-Length", "5")
+                .withHeader("Transfer-Encoding", "chunked").withHeader("X-Kept", "k")));
+        ClientResponse r = t.send("GET", "/f");
+        DispatcherTest.assertError(400, "BAD_REQUEST", "Bad Request", r);
+        assertEquals(1, count(r, "Content-Length"));
+        assertEquals(0, count(r, "Transfer-Encoding"));
+        assertEquals(String.valueOf(r.body().length), r.header("Content-Length"));
+        assertTrue(r.body().length != 5);
+        assertEquals("k", r.header("X-Kept"));
+
+        // a name the error path set itself is replaced, not doubled
+        TestApp late = app();
+        late.app().get("/t", throwing(new HttpException(408).withHeader("Connection", "close")));
+        ClientResponse timeout = late.send("GET", "/t");
+        assertEquals(1, count(timeout, "Connection"));
+        assertEquals(1, count(timeout, "Content-Type"));
+    }
 }
