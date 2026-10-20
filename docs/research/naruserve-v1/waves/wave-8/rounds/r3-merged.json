@@ -1,0 +1,67 @@
+{
+ "round": 3,
+ "findings": [
+  {
+   "finding_id": "W2-001",
+   "severity": "high",
+   "items": [
+    "D-359",
+    "D-363",
+    "D-107"
+   ],
+   "claim": "The start-path decision says boundPort() and ServerHandle.port() report the local port of the first request and 0 before it. The merged core cannot do this for ServerHandle.port(): DefaultRestApp.start() calls a.boundPort() exactly once right after bind, stores it in the local 'bound' and the field 'boundPort', and the returned ServerHandle.port() just returns that captured int, so on the Servlet adapter it is always 0 (the listen-time value). HttpAdapter.boundPort() is also specified as 'stable until stop', and D-107 fixes it as 'the actual bound port'; a value that changes from 0 to the first request's port breaks that contract. An SRS acceptance criterion or test written from the decision ('handle.port() equals the container port after the first request') cannot pass without an unplanned change to DefaultRestApp/ServerHandle behaviour.",
+   "evidence": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:505-518; NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpAdapter.java:24-30; waves/wave-8/design.md:96",
+   "suggested_fix": "State that on the Servlet adapter ServerHandle.port() is 0 (the container owns the socket and Servlet 3.1 offers no connector port at init) and that only the adapter's own boundPort() may report the last seen ServletRequest.getLocalPort(); or explicitly list a core change (ServerHandle.port() delegating to a.boundPort(), SPI doc 'stable until stop' amended for adapters that bind lazily) as part of wave 8 with its tests, and keep I-014 satisfied (no signature change)."
+  },
+  {
+   "finding_id": "W2-002",
+   "severity": "medium",
+   "items": [
+    "D-361",
+    "D-363",
+    "I-012",
+    "D-107"
+   ],
+   "claim": "SSE on the Servlet adapter has no stream bound and no stated thread owner. The core does not enforce maxSseStreams; only TinyHttpdAdapter does (TinyHttpdEventStream.Slots) and sse.md promises '503 over the limit'. The decision lists 'worker and connection limits' as ignored but not maxSseStreams, and D-361 runs the blocking StreamDrain.drain(OutputStream) 'under AsyncContext' without saying which thread runs it. If it runs through AsyncContext.start it holds one container pool thread per open stream for its whole life, with no cap, so a few hundred SSE clients can starve the container's request pool (I-012 'no count limit defaults to unlimited'). 'Releasing the container request thread' is then only a swap of one container thread for another.",
+   "evidence": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdAdapter.java:69; NaruServe-api/src/main/java/com/snoworca/naruserve/spi/StreamDrain.java; docs/api/sse.md:170; waves/wave-8/design.md:101",
+   "suggested_fix": "Decide that the Servlet adapter enforces settings.maxSseStreams() itself (503 with the standard JSON body, same as TinyHttpd) and runs drain on an adapter-owned bounded executor (daemon, named threads, shut down in stop/release) with AsyncContext timeout set to 0 and complete() on finish/abort; add maxSseStreams to the documented behaviour of docs/api/servlet.md instead of leaving it ambiguous. Remove it from the 'ignored' reading."
+  },
+  {
+   "finding_id": "W2-003",
+   "severity": "medium",
+   "items": [
+    "D-359",
+    "D-363",
+    "D-107"
+   ],
+   "claim": "The decision says the Servlet HttpAdapter.stop and release 'detach the handler'. The core shutdown sequence relies on stop(timeout) to wait for in-flight exchanges until the deadline before it runs force-close participants, onStop callbacks and closes owned services (D-107, FR-APP-011). If the Servlet adapter's stop only detaches, a user-invoked app.shutdown() (not only the container destroy) closes registered services while handlers and SSE drains still run. The decision defines abort() but not the in-flight accounting that stop needs, and the container's destroy ordering cannot be assumed for an explicit shutdown().",
+   "evidence": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:664-690; NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpAdapter.java:32-38; waves/wave-8/design.md:96,101",
+   "suggested_fix": "Add: the Servlet adapter counts open exchanges (entered handle() until finish/abort), stop(timeout) first rejects new exchanges with 503, waits for the count to reach zero until the deadline, then abort()s the rest (their writes fail with IOException) and completes their AsyncContexts; release detaches the handler and shuts down the adapter's executor. Test it with a request in flight during app.shutdown()."
+  },
+  {
+   "finding_id": "W2-004",
+   "severity": "low",
+   "items": [
+    "D-363",
+    "D-399",
+    "D-052",
+    "D-358"
+   ],
+   "claim": "Two Servlet path/WebSocket statements are imprecise against the container API and the core. (a) 'minus the context path and the servlet mapping' is only computable from the registered url-pattern: getServletPath() is decoded and normalized and, for the default mapping '/', is the whole path, so stripping it would leave '/' for every request; the decision does not say the prefix comes from the registration pattern (with '/*' suffix removed, and nothing stripped for '/', exact or extension mappings). (b) 'a route registered with app.ws answers 501' is true only for an actual upgrade request: a request without Upgrade headers is answered 426 by the core (Dispatcher/websocket.md:43), and the 501 needs the Servlet exchange's webSocket(...) to throw HttpException(501) before onOpen, because the SPI default throws UnsupportedOperationException, which WebSocketUpgrade.upgrade rethrows into a 500.",
+   "evidence": "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpExchange.java (webSocket default); NaruServe-api/src/main/java/com/snoworca/naruserve/internal/WebSocketUpgrade.java:104-120; docs/api/websocket.md:43; waves/wave-8/design.md:91,98",
+   "suggested_fix": "Record in the decision and in docs/api/servlet.md: the strip prefix is the registered servlet mapping prefix (empty for '/', exact and extension patterns); the Servlet exchange overrides webSocket(...) to throw new HttpException(501) (so the standard JSON body is used), and a non-upgrade GET to an app.ws path keeps the core's 426."
+  },
+  {
+   "finding_id": "W2-005",
+   "severity": "low",
+   "items": [
+    "D-376",
+    "D-377",
+    "D-381"
+   ],
+   "claim": "D-376 allows 'pending' only when network access is unavailable. Network is available in this environment, but a vulnerability scan can still be unusable (for example OWASP dependency-check without an NVD API key is rate-limited or fails on the first database download). The decision gives no rule for that case, so the release gate either fails the build for a tool reason or an implementer marks it pending outside the stated condition. The release results document also has no stated row shape for T26 and T49, which are automated on the JVM but have an out-of-scope device part: a single status literal per T row cannot express both.",
+   "evidence": "waves/wave-8/design.md:57,84,100",
+   "suggested_fix": "Say that a scan that cannot complete for any tool or data-source reason (network, rate limit, missing key) is recorded as pending with the full dependency list, and that T26 and T49 get an 'automated' row plus a separate 'device part' row with the literal out-of-v1-scope (or state that the T26/T49 rows are automated and the device part is only described in prose)."
+  }
+ ]
+}

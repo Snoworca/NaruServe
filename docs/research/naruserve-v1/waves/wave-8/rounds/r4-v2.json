@@ -1,0 +1,76 @@
+{
+ "findings": [
+  {
+   "finding_id": "W2-001",
+   "severity": "medium",
+   "items": [
+    "D-380",
+    "D-434"
+   ],
+   "claim": "D-380 requires every (미확정) marker in docs/api to be resolved or rewritten as a post-v1 item, but verified earlier-wave tests pin three markers as still present: express-migration.md rows '| `express.Router()`', '| `cors()`', '| `res.redirect(url)`' must contain the marker (AppDocsTest KEPT, HttpDocsTest OPS-HTTP-007 AC-8, WaveFiveDocsTest kept()). docs/api/README.md line 7 also states the marker convention. BuildLayoutTest OPS-BUILD-003 AC-5 requires servlet.md to keep the word 'jakarta'. The design settles this collision only for the defaults.md heading (r2) and not for these tests, so a worker following D-380 fails ./gradlew build (I-019) or silently edits verified ACs.",
+   "evidence": "NaruServe-api/src/test/java/com/snoworca/naruserve/AppDocsTest.java:73,141; NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java:248-252; src/test/java/com/snoworca/naruserve/docs/WaveFiveDocsTest.java:84-90,427-428; src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:300-302; docs/api/README.md:7; docs/api/express-migration.md:28,72,88",
+   "suggested_fix": "Add a Wave decision: the three express-migration rows, the AppDocsTest KEPT entry, the HttpDocsTest/WaveFiveDocsTest assertions are changed in the same wave through guarded SRS edits (they flip from 'marker kept' to 'marker gone, post-v1 wording with reason present'); the README line-7 convention sentence is reworded; servlet.md keeps the word 'jakarta' in its post-v1 statement."
+  },
+  {
+   "finding_id": "W2-002",
+   "severity": "medium",
+   "items": [
+    "D-383",
+    "D-375",
+    "D-379",
+    "I-006"
+   ],
+   "claim": "The Publishing decision tells consumers to take TinyHttpd 'through includeBuild or publish it to mavenLocal themselves'. The TinyHttpd checkout has no maven-publish plugin or publishing block (publication is only a plan in docs/next/p12-release.md) and is read-only for this run (I-006), so 'publish it to mavenLocal themselves' is not possible with its build as it stands. Also a NaruServe-tinyhttpd POM published to mavenLocal then names tinyhttpd-core:0.1.0-SNAPSHOT that nobody can resolve outside a composite build.",
+   "evidence": "/Users/beom/work/git/TinyHttpd/build.gradle (no 'publish' except a comment at line 135); /Users/beom/work/git/TinyHttpd/docs/next/p12-release.md:16-18; waves/wave-8/design.md Publishing decision; 00.design.md I-006",
+   "suggested_fix": "Word D-383 as: consumers either use includeBuild of the TinyHttpd checkout (substitution) or apply a publishing init script of their own to a TinyHttpd checkout; this run changes no TinyHttpd file. State in the README that NaruServe-tinyhttpd and NaruServe resolve only with TinyHttpd available that way. Do not require a TinyHttpd release."
+  },
+  {
+   "finding_id": "W2-003",
+   "severity": "medium",
+   "items": [
+    "D-359",
+    "D-363",
+    "D-360"
+   ],
+   "claim": "The start-path decision says the container integration class 'installs the Servlet HttpAdapter' and calls app.listen(...). A built RestApp has no adapter setter: the adapter, JsonCodec and Logger are fixed only through RestApp.builder().httpAdapter(...).jsonCodec(...).build(), and build() throws IllegalStateException without a codec. RestApp.create() cannot serve (its AppFactory yields the TinyHttpd bootstrap, and NaruServe-servlet depends on NaruServe-api only). The design does not say who builds the app, where the JsonCodec/Logger come from, or how the integration class gets both the app and the adapter instance, although docs/api/servlet.md shows a 'configure(RestApp app)' that implies the integration owns app creation.",
+   "evidence": "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:226-263; NaruServe-api/src/main/java/com/snoworca/naruserve/internal/AppFactoryLoader.java (create); build.gradle mainDependencies ':NaruServe-servlet': [api: [':NaruServe-api']]; docs/api/servlet.md:46-52",
+   "suggested_fix": "Decide that the integration builds the app with RestApp.builder().httpAdapter(servletAdapter).jsonCodec(c).logger(l).build() where c and l come from a user-supplied app factory/configurer class named in a context init-param (or a ServiceLoader), that the module adds no Gson dependency, and that the 'installs' wording means 'is passed to the builder'. Record the init-param/class names in docs/api/servlet.md and make the servlet.md example show the builder with an explicit codec."
+  },
+  {
+   "finding_id": "W2-004",
+   "severity": "medium",
+   "items": [
+    "D-375",
+    "D-376",
+    "D-377",
+    "I-019"
+   ],
+   "claim": "The scan is to be recorded 'pending' whenever the scanner cannot finish, but a Gradle scanner or CycloneDX plugin declared in the root plugins{} block must be resolved before any task runs: offline (or with an unreachable plugin portal) the whole ./gradlew build, including the BuildChecksTest TestKit builds that copy the root build.gradle, fails to configure instead of recording 'pending'. The design also does not say whether the scan and the D-377 block are part of check/build; if they are, I-019 ('full suite passes in ./gradlew build') and the pending rule conflict. Neither plugin is in the local Gradle cache.",
+   "evidence": "build.gradle:2-6 (plugins block, apply false still resolves); src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java:132-134 (nested builds run --offline when the outer build did); ~/.gradle/caches/modules-2/files-2.1 holds neither org.cyclonedx nor org.owasp",
+   "suggested_fix": "Decide that the SBOM and scan are standalone root tasks (for example generateSbom, scanDependencies, releaseGate) that are not wired into check/build, and that the scanner runs through a separately resolved configuration or tool invocation so an unresolvable scanner leaves a 'pending' record with the dependency-graphs.txt list rather than failing configuration. State that the SBOM plugin version is pinned and must resolve in the verification environment."
+  },
+  {
+   "finding_id": "W2-005",
+   "severity": "low",
+   "items": [
+    "D-361",
+    "D-363",
+    "D-107"
+   ],
+   "claim": "The Servlet SSE decision omits two container facts the AsyncContext path needs: the servlet registration must be asyncSupported (and any filter in front of it), otherwise startAsync throws IllegalStateException; and AsyncContext has a container default timeout (30 s on Jetty and Tomcat) that ends a long SSE stream unless setTimeout(0) is called. The round-3 suggestion for timeout 0 was not carried into the decision.",
+   "evidence": "waves/wave-8/design.md round 3 'SSE bound and thread owner'; NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpExchange.java (eventStream)",
+   "suggested_fix": "Add: the integration registers the servlet with asyncSupported=true, the adapter calls startAsync then setTimeout(0), and servlet.md states that filters in front of it must support async; a test keeps a stream open longer than the container's default async timeout."
+  },
+  {
+   "finding_id": "W2-006",
+   "severity": "low",
+   "items": [
+    "D-363",
+    "D-361"
+   ],
+   "claim": "The decisions say the Servlet adapter's 'bind(host, port, handler)' stores the handler, while the SSE counter needs settings.maxSseStreams() and the 503 answers need the settings' errorRenderer and logger. The core calls bind(ServerSettings, handler), whose default implementation delegates to the three-argument overload and drops the settings, so following the text literally leaves the adapter without maxSseStreams or the renderer.",
+   "evidence": "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpAdapter.java (default bind(ServerSettings, ExchangeHandler)); NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:505",
+   "suggested_fix": "State that the Servlet adapter overrides bind(ServerSettings, ExchangeHandler), keeps the settings for maxSseStreams, errorRenderer and logger, and that the three-argument overload only supports direct callers."
+  }
+ ]
+}

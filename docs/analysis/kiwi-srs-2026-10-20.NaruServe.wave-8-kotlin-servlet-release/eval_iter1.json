@@ -1,0 +1,246 @@
+{
+ "findings": [
+  {
+   "id": "F01",
+   "severity": "CRITICAL",
+   "req_id": "OPS-REL-003",
+   "axis": "quality",
+   "description": "AC-1 demands exactly 52 lines (one status literal each), but AC-3 and FR-REL-002 AC-3 speak of several T50 lines (SBOM, scan, license) with separate statuses; a single T50 line cannot carry them.",
+   "suggested_fix": "Make T50 three lines (T50-sbom, T50-scan, T50-license) and state 54 lines in AC-1/AC-2, or keep one T50 line with the weakest status and drop the plural in AC-3/FR-REL-002 AC-3."
+  },
+  {
+   "id": "F02",
+   "severity": "HIGH",
+   "req_id": "FR-REL-004",
+   "axis": "quality",
+   "description": "Requirement and AC-4 run './gradlew releaseLicenses' without -Prelease, but FR-REL-001 applies gradle/release.gradle only with -Prelease, so the task does not exist in a default run.",
+   "suggested_fix": "Write './gradlew -Prelease releaseLicenses' in the Requirement and AC-4 (and in FR-REL-003 for releaseCheck)."
+  },
+  {
+   "id": "F03",
+   "severity": "HIGH",
+   "req_id": "FR-REL-004",
+   "axis": "codebase",
+   "description": "Shipped runtime list omits com.google.errorprone:error_prone_annotations:2.48.0 (Gson transitive, in dependency-graphs.txt and BuildLayoutTest); AC-1 row list and FR-REL-002 rationale are incomplete while AC-3 demands no missing row.",
+   "suggested_fix": "Add error_prone_annotations 2.48.0 (Apache-2.0) to FR-REL-004 AC-1 and the FR-REL-002 Measured list; say the list is derived from dependency-graphs.txt."
+  },
+  {
+   "id": "F04",
+   "severity": "HIGH",
+   "req_id": "OPS-REL-001",
+   "axis": "codebase",
+   "description": "AC-2 says the README Java block is compiled by the root docs compile test; DocsExamplesCompileTest.java:76 skips that block (app-defined type User) and the root README.md is not under docs/api.",
+   "suggested_fix": "Replace the clause by: the block equals the docs/api/README.md block, which stays on the named skip list with reason 'app-defined type `User`'."
+  },
+  {
+   "id": "F05",
+   "severity": "HIGH",
+   "req_id": "OPS-REL-004",
+   "axis": "quality",
+   "description": "Status vocab inconsistent: Rationale says 'four literals of OPS-REL-003 plus pending', AC-1 allows only verified/pending/manual-pending/out-of-v1-scope (no automated); the Servlet row (tested on Jetty) gets no literal; OPS-REL-003 lacks pending.",
+   "suggested_fix": "Define the matrix literals once (add automated, pending) in OPS-REL-003 AC-2/OPS-REL-004 AC-1, and give the Servlet row 'automated' (WebSocket 'not supported' as text)."
+  },
+  {
+   "id": "F06",
+   "severity": "HIGH",
+   "req_id": "OPS-REL-002",
+   "axis": "conflict",
+   "description": "AC-3 rewrites the undecided-section sentence of express-migration.md, but HttpDocsTest (section(...)) and WaveFiveDocsTest:420 pin the heading '## Express에 있지만 아직 정해지지 않은 기능'; not in the Kept-unchanged list.",
+   "suggested_fix": "Add the heading to the Kept-unchanged list and AC-3: the heading text stays byte-identical, only the sentence and rows below it change."
+  },
+  {
+   "id": "F07",
+   "severity": "HIGH",
+   "req_id": "OPS-REL-002",
+   "axis": "codebase",
+   "description": "Heading '저사양 Android 튜닝(수동 후속 작업)' is pinned by PERF-APP-001 AC-4 (05.application.srs.md:3511), not OPS-APP-005 AC-4 (logging.md). Wrong id in Rationale, AC-4 and trace; PERF-APP-001 AC-4 'manual follow-up of the release test' becomes stale unrecorded.",
+   "suggested_fix": "Cite PERF-APP-001 AC-4 (OPS-APP-005 AC-6 for the kept rows) and add a recorded deviation note that the follow-up is now post-v1."
+  },
+  {
+   "id": "F08",
+   "severity": "HIGH",
+   "req_id": "FR-SVL-001",
+   "axis": "codebase",
+   "description": "RestApp has only shutdown(long, TimeUnit); app.shutdown() does not exist. AC-2 and FR-SVL-006 do not state the timeout the container destroy callback passes, so the stop deadline is untestable.",
+   "suggested_fix": "State the destroy call as app.shutdown(T, unit) with a concrete T (or an init-parameter naruserve.shutdownTimeoutMillis with default) and assert it in FR-SVL-001 AC-2 and FR-SVL-006 AC-1."
+  },
+  {
+   "id": "F09",
+   "severity": "HIGH",
+   "req_id": "IR-SVL-001",
+   "axis": "codebase",
+   "description": "AC-6 and CON-SVL-001 AC-3 say the wave 1 class-reference check/BuildLayoutTest already assert no jakarta/servlet reference in NaruServe-servlet; classRefPrefixes gives that module no prefixes and no test checks it.",
+   "suggested_fix": "Add a checkClassReferences prefix 'jakarta/servlet/' for :NaruServe-servlet (keep the pinned lines of BuildLayoutTest) and an AC for it, or drop the 'already assert' claim."
+  },
+  {
+   "id": "F10",
+   "severity": "HIGH",
+   "req_id": "FR-REL-002",
+   "axis": "quality",
+   "description": "AC-1 (FR-REL-002), FR-REL-003 AC-1 and FR-REL-004 AC-2 test writer/decision functions 'without network', but the functions live in gradle/release.gradle whose buildscript needs the CycloneDX/OWASP plugins; no loadable location is given.",
+   "suggested_fix": "Put the pure functions in a plugin-free file (e.g. gradle/release-lib.groovy) loaded by both the script and the default-build test; name it in the Trace Links and AC-1."
+  },
+  {
+   "id": "F11",
+   "severity": "HIGH",
+   "req_id": "OPS-REL-007",
+   "axis": "coverage",
+   "description": "Wave decision r1 W1-005 requires the README and the release test results document (D-381) each to state Android sample/device verification are not part of v1; AC-1 names release-notes.md and README.md, never test-results.md.",
+   "suggested_fix": "Add docs/release/test-results.md to OPS-REL-007 AC-1 (and OPS-REL-003) with the same statement and the --release 8/animal-sniffer basis."
+  },
+  {
+   "id": "F12",
+   "severity": "HIGH",
+   "req_id": "FR-SVL-006",
+   "axis": "codebase",
+   "description": "Rationale cites internal/DefaultRestApp.java:617-619 for the adapter stop in the shutdown sequence; that range is the STARTING branch. adapter stop is at 682 and release at 705.",
+   "suggested_fix": "Change the citation to DefaultRestApp.java:682 (a.stop) and :705 (a.release)."
+  },
+  {
+   "id": "F13",
+   "severity": "MEDIUM",
+   "req_id": "FR-SVL-001",
+   "axis": "conflict",
+   "description": "AC-3 requires boundPort() to return 0 before bind; the SPI javadoc and FR-ENGINE-001 AC-5 (verified) require IllegalStateException before bind. No deviation is recorded.",
+   "suggested_fix": "Require ISE before bind and 0 after bind, or record an explicit deviation note beside D-107."
+  },
+  {
+   "id": "F14",
+   "severity": "MEDIUM",
+   "req_id": "FR-KT-004",
+   "axis": "quality",
+   "description": "Markers may sit only in NaruServe-api or NaruServe-kotlin test dirs, yet OPS-SVL-001 AC-5 routes the servlet.md Kotlin example (ServletConfigurer from NaruServe-servlet, not on those classpaths) to this test; servlet.md has 0 kotlin blocks today.",
+   "suggested_fix": "Allow NaruServe-servlet/src/test/kotlin as a marker location and let the docs test read it, or state the example is adapted with an app-defined stand-in."
+  },
+  {
+   "id": "F15",
+   "severity": "MEDIUM",
+   "req_id": "IR-KT-001",
+   "axis": "quality",
+   "description": "AC-4 lists property name 'httpOnly' while AC-2 and kotlin.md use Kotlin 'isHttpOnly' (isX getter keeps the is prefix); the rationale itself states that rule.",
+   "suggested_fix": "Say AC-4 lists JavaBeans names (httpOnly) via Introspector, or list Kotlin names name, value, path, domain, maxAge, secure, isHttpOnly, sameSite."
+  },
+  {
+   "id": "F16",
+   "severity": "MEDIUM",
+   "req_id": "FR-SVL-008",
+   "axis": "quality",
+   "description": "Ignored list uses phrases 'connection and wait-queue limits' and omits maxRequestLineLength, minBodyRate, maxConnections, maxConnectionsPerAddress; ServerOptions has no wait-queue setter, so the AC-4 docs test 'each name exists' cannot pass.",
+   "suggested_fix": "List exact names: allowedHosts, bindAddress, maxHeaderSize, maxHeaderCount, maxRequestLineLength, headerTimeout, bodyReadTimeout, writeTimeout, minBodyRate, maxWorkers, maxConnections, maxUpgradedConnections, maxConnectionsPerAddress."
+  },
+  {
+   "id": "F17",
+   "severity": "MEDIUM",
+   "req_id": "OPS-REL-007",
+   "axis": "quality",
+   "description": "AC-3 resolves requirement ids 'in the SRS index', but docs/spec/00.index.md lists scopes, not requirement ids (FR-WS-004 not found), so the docs test cannot do it.",
+   "suggested_fix": "Resolve each id against the headings of docs/spec/*.srs.md."
+  },
+  {
+   "id": "F18",
+   "severity": "MEDIUM",
+   "req_id": "FR-SVL-001",
+   "axis": "coverage",
+   "description": "Wave decision r4 W2-003 (logger from the same defaults as RestApp.create()) is only in the Rationale; no AC asserts the logger default, nor the configurer-set logger winning.",
+   "suggested_fix": "Add an AC: without Builder.logger the app logger is ConsoleLogger; a configurer-set logger is kept."
+  },
+  {
+   "id": "F19",
+   "severity": "MEDIUM",
+   "req_id": "IR-SVL-001",
+   "axis": "quality",
+   "description": "Discovery via the services file is not exercised end to end: jetty-servlet alone does not run ServletContainerInitializers (needs webapp/annotations), AC-2 only reads the jar entry and AC-3 does not say how the initializer is invoked.",
+   "suggested_fix": "Add an AC that names the Jetty mechanism (ServletContainerInitializerCaller or explicit onStartup call) or a container that discovers SCIs, and record the residual gap."
+  },
+  {
+   "id": "F20",
+   "severity": "MEDIUM",
+   "req_id": "FR-REL-001",
+   "axis": "conflict",
+   "description": "CON-BUILD-003 title/statement ('single root build file', build.gradle header, CLAUDE.md) is stretched by gradle/release.gradle; the rationale says AC-1/AC-2 still hold but leaves the requirement text and CLAUDE.md unchanged.",
+   "suggested_fix": "Record a deviation note on CON-BUILD-003 (release-only script plugin allowed) and update the CLAUDE.md build line, or inline the conditional logic in build.gradle."
+  },
+  {
+   "id": "F21",
+   "severity": "MEDIUM",
+   "req_id": "IR-KT-002",
+   "axis": "quality",
+   "description": "Tests of IR-KT-002/FR-KT-004 AC-5 (NaruServe-kotlin) and the Servlet shared case suite need testFixtures(project(':NaruServe-api')); only filelog, gson, tinyhttpd have it and CON-SVL-001 AC-2 lists only Jetty and gson.",
+   "suggested_fix": "List the testFixtures testImplementation of NaruServe-kotlin and NaruServe-servlet in the Trace Links/ACs (build.gradle addition_site)."
+  },
+  {
+   "id": "F22",
+   "severity": "MEDIUM",
+   "req_id": "OPS-SVL-001",
+   "axis": "conflict",
+   "description": "DocsExamplesCompileTest fails on stale skips; rewriting servlet.md removes the first line '// 앱 구성: 내장 엔진과 같은 코드' that skip(\"servlet.md\", ...) keys on. AC-4 does not require updating that entry.",
+   "suggested_fix": "State in AC-4 that the servlet.md skip entries are updated to the new blocks (ordinal or first line) with an 'absent type' reason."
+  },
+  {
+   "id": "F23",
+   "severity": "MEDIUM",
+   "req_id": "FR-SVL-008",
+   "axis": "codebase",
+   "description": "Rationale says bindAddress and port are read only by the TinyHttpd adapter; DefaultRestApp.java:499 warns for a non-loopback bindAddress and ServerHandle.address() reports it, so the Servlet app logs a false warning.",
+   "suggested_fix": "Correct the claim and add to AC-2/servlet.md: the core warning and address() are meaningless on the Servlet adapter (or are suppressed)."
+  },
+  {
+   "id": "F24",
+   "severity": "MEDIUM",
+   "req_id": "FR-SVL-003",
+   "axis": "quality",
+   "description": "AC-1 'res.stream arrives chunked on HTTP/1.1' is not guaranteed on Jetty: a small fully buffered body gets a Content-Length instead of chunked framing.",
+   "suggested_fix": "Assert intact body and no Transfer-Encoding/Content-Length conflict, and chunked only for a body larger than the output buffer or after flush."
+  },
+  {
+   "id": "F25",
+   "severity": "LOW",
+   "req_id": "IR-SVL-001",
+   "axis": "quality",
+   "description": "Tag 'T-servlet' is not a test id of object.md 17.2 (no T-test covers the Servlet adapter).",
+   "suggested_fix": "Drop the tag or use a plain 'servlet' tag."
+  },
+  {
+   "id": "F26",
+   "severity": "LOW",
+   "req_id": "OPS-REL-002",
+   "axis": "quality",
+   "description": "AC-6 re-points only HttpDocsTest AC-8 methods, while OPS-HTTP-008 re-points every method citing OPS-HTTP-007 (AC1 to AC9).",
+   "suggested_fix": "Reword AC-6 to match OPS-HTTP-008 (all methods re-pointed, only the AC-8 response.md expectation changes)."
+  },
+  {
+   "id": "F27",
+   "severity": "LOW",
+   "req_id": "OPS-REL-007",
+   "axis": "coverage",
+   "description": "Carried 'Kept' line (Core uses no API above 21, no compile-time android.* reference) is only stated in docs; no AC re-verifies it at the wave 8 merge.",
+   "suggested_fix": "Add an AC citing the animal-sniffer and checkClassReferences results of the wave 8 build."
+  },
+  {
+   "id": "F28",
+   "severity": "LOW",
+   "req_id": "FR-REL-001",
+   "axis": "quality",
+   "description": "AC-2/AC-4 (FR-REL-001), OPS-REL-005 AC-2 are recorded manual runs while Verification Method is 'test'.",
+   "suggested_fix": "Set Verification Method to 'test, inspection' or mark those ACs as recorded-evidence."
+  },
+  {
+   "id": "F29",
+   "severity": "LOW",
+   "req_id": "FR-SVL-001",
+   "axis": "quality",
+   "description": "ServerHandle.address() on the Servlet adapter returns the core bind address (127.0.0.1), which is false for a container; servlet.md is not required to say so.",
+   "suggested_fix": "Add to OPS-SVL-001 AC-3 that address() is not the container address."
+  }
+ ],
+ "summary": {
+  "CRITICAL": 1,
+  "HIGH": 11,
+  "MEDIUM": 12,
+  "LOW": 5
+ },
+ "coverage": {
+  "in_scope_items_checked": 26,
+  "uncovered": []
+ }
+}

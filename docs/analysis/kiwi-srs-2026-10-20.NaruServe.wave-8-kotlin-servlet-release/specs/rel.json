@@ -1,0 +1,756 @@
+[
+ {
+  "expectedId": "FR-REL-001",
+  "type": "functional",
+  "scope": "REL",
+  "target": "wave-8",
+  "title": "CycloneDX SBOM for every published module, generated only for a -Prelease run",
+  "requirement": "The release build shall generate a CycloneDX SBOM for each of the nine published modules when run with `./gradlew -Prelease releaseSbom`, through the CycloneDX Gradle plugin that the root `build.gradle` applies only inside `if (project.hasProperty('release'))` by `apply from: 'gradle/release.gradle'`, so that a default `./gradlew build`, online or offline, never resolves the plugin and no release task is wired into `check` or `build`.",
+  "rationale": "Covers D-375, wave decision Release plugins (r4 W2-004), I-019 and T50. Measured (2026-10-20): the nine published modules are the entries of `naruModules` in `build.gradle:11-12`; the Gradle plugin portal metadata lists `org.cyclonedx:cyclonedx-gradle-plugin` up to 3.5.1 and the network was reachable; `build.gradle` has a `plugins {}` block with `ru.vyarus.animalsniffer` and the Kotlin plugin `apply false`. Decision: the plugin is applied from `gradle/release.gradle`, a script plugin with its own `buildscript {}` block, because a `plugins {}` block cannot be conditional and resolves its plugin even with `apply false`; `gradle/release.gradle` is not a module build file, so CON-BUILD-003 AC-2 (no `build.gradle` in a module directory) holds and AC-1 (the root `build.gradle` holds the plugin, compile, dependency and check configuration of every module) holds for every module configuration, only release-only tasks live in the applied script. The plugin version is an exact literal pinned when the file is written (not a dynamic range); the SBOM files go to `build/reports/naruserve/sbom/<module>.cdx.json`; the lifecycle task names are `releaseSbom`, `releaseScan`, `releaseLicenses` and `releaseCheck`. Pitfall: `BuildLayoutTest` reads `build.gradle` for pinned strings (`'java-library'`, `options.release = 8`, the class-reference prefixes), so the conditional apply is added without touching them. Rejected alternative: a `buildscript { classpath }` in the root file; it resolves the plugin on every build, including offline.",
+  "acceptanceCriteria": [
+   "`./gradlew -Prelease releaseSbom` writes one CycloneDX JSON file per published module — nine files named `<module>.cdx.json` under `build/reports/naruserve/sbom/`, one for each entry of `naruModules` — each with `bomFormat` `CycloneDX` and a component for every `runtimeClasspath` dependency of that module (Gson 2.14.0 for `NaruServe-gson`, `kotlin-stdlib` for `NaruServe-kotlin`, `slf4j-api` for `NaruServe-slf4j`, the TinyHttpd components for `NaruServe-tinyhttpd`), and none for `compileOnly` or test-scope artifacts (the Servlet API and Jetty). [D-375; T50]",
+   "The run is recorded with its command, date, file list and component counts in `docs/release/test-results.md` under T50, because the plugin cannot be resolved by the default build. [D-375; D-381]",
+   "A default-build test asserts that `build.gradle` contains the conditional `apply from: 'gradle/release.gradle'` guarded by `project.hasProperty('release')`, that the strings `cyclonedx` and `dependencycheck` occur in no file of the root build except `gradle/release.gradle`, that `gradle/release.gradle` pins each plugin version as an exact literal, and that no release task is a dependency of `check`, `build` or `test`. [r4 W2-004; I-019]",
+   "`./gradlew build --offline` with a Gradle user home that holds neither plugin succeeds, which a recorded run (command, date, exit code) shows for the release machine. [r4 W2-004; I-019]",
+   "The default `./gradlew build` still passes `BuildLayoutTest` unchanged, including `con_BUILD_003_AC1_rootBuildFileHoldsPluginsCompileDependenciesAndChecks` and `con_BUILD_003_AC2_noModuleBuildFile`. [CON-BUILD-003]"
+  ],
+  "priority": "medium",
+  "risk": "medium",
+  "verificationMethod": "test",
+  "githubIssue": "https://github.com/Snoworca/NaruServe/issues/18",
+  "tags": [
+   "wave-8",
+   "feasibility:high",
+   "release",
+   "sbom",
+   "T50"
+  ],
+  "trace": [
+   {
+    "type": "Code",
+    "reference": "build.gradle",
+    "relation": "implements",
+    "notes": "trace_intent=addition_site"
+   },
+   {
+    "type": "Code",
+    "reference": "gradle/release.gradle",
+    "relation": "implements",
+    "notes": "trace_intent=addition_site"
+   },
+   {
+    "type": "Requirement",
+    "reference": "CON-BUILD-003",
+    "relation": "extends",
+    "notes": "single root build file"
+   },
+   {
+    "type": "Requirement",
+    "reference": "CON-BUILD-002",
+    "relation": "extends",
+    "notes": "module set"
+   },
+   {
+    "type": "Requirement",
+    "reference": "OPS-BUILD-002",
+    "relation": "extends",
+    "notes": "root build gate"
+   }
+  ],
+  "links_after": []
+ },
+ {
+  "expectedId": "FR-REL-002",
+  "type": "functional",
+  "scope": "REL",
+  "target": "wave-8",
+  "title": "Dependency vulnerability scan with a pending record that keeps the full dependency list",
+  "requirement": "The release build shall run `./gradlew -Prelease releaseScan`, an OWASP Dependency-Check scan of the runtime dependencies of the published modules, and write `build/reports/naruserve/vulnerability-scan.md` with the status `completed` and the findings, or, whenever the scanner cannot finish — no network, a missing NVD API key, a rate limit or a tool error — with the status `pending`, the failure reason and the full dependency list (`group:name:version`, one line each, sorted, without duplicates), without failing the build for that reason.",
+  "rationale": "Covers D-376, wave decision Release scan and result rows (r3 W2-005: pending for any reason the scanner cannot finish) and T50; the block on findings is FR-REL-003. Measured (2026-10-20): the Gradle plugin portal lists `org.owasp:dependency-check-gradle` up to 13.0.0; the network was reachable but a scan without an NVD API key is rate-limited and can fail partway; the shipped runtime dependencies are Gson 2.14.0, `kotlin-stdlib` with its `org.jetbrains:annotations`, `slf4j-api` 1.7.36 and the TinyHttpd components (`build.gradle:52-62`). Decision: the committed record of the release run is `docs/release/vulnerability-scan.md`, copied from the build report; the scan covers the `runtimeClasspath` of the nine published modules and excludes test scope (Jetty 9.4 of the Servlet tests); the scanner's own failure is caught by a wrapper task that writes the pending report. Pitfall: Dependency-Check fails the build on an update error by default; the wrapper converts that into `pending`, otherwise an offline release machine could not record anything. Rejected alternative: treating a pending scan as a pass; the record says `pending`, T50 stays `manual-pending` for this part and I-020 forbids promoting a requirement on a pending check.",
+  "acceptanceCriteria": [
+   "With the scanner stubbed to fail for each of four causes — no network, a missing NVD API key, a rate limit and a tool error — the report writer produces a report whose status line is `pending`, whose reason line names the cause, and whose dependency list equals the sorted union of the `group:name:version` of the `runtimeClasspath` of the nine published modules, which an automated test over the writer function asserts without network. [D-376; r3 W2-005]",
+   "A finished scan produces the status `completed` with a findings table (dependency, identifier, CVSS score, severity), or the sentence `no findings`, and the report names the scanner version and the data timestamp. [D-376]",
+   "`docs/release/vulnerability-scan.md` exists and holds the report of the release run (`pending` with the reason, or `completed`), and the T50 vulnerability line of `docs/release/test-results.md` is `manual-pending` when the report is `pending` and `automated` or `verified` when it is `completed`, which a docs test compares. [D-376; D-381]",
+   "The report's dependency list excludes `compileOnly` and test-scope artifacts (the Servlet API, JSpecify, JUnit, Jetty) and includes the TinyHttpd components. [D-376]"
+  ],
+  "priority": "medium",
+  "risk": "medium",
+  "verificationMethod": "test",
+  "githubIssue": "https://github.com/Snoworca/NaruServe/issues/18",
+  "tags": [
+   "wave-8",
+   "feasibility:high",
+   "release",
+   "vulnerability",
+   "T50"
+  ],
+  "trace": [
+   {
+    "type": "Code",
+    "reference": "gradle/release.gradle",
+    "relation": "implements",
+    "notes": "trace_intent=addition_site"
+   },
+   {
+    "type": "Requirement",
+    "reference": "CON-BUILD-009",
+    "relation": "extends",
+    "notes": "TinyHttpd dependency boundaries"
+   },
+   {
+    "type": "Requirement",
+    "reference": "CON-BUILD-013",
+    "relation": "extends",
+    "notes": "single Gson version"
+   }
+  ],
+  "links_after": [
+   {
+    "reference": "FR-REL-001",
+    "relation": "depends_on",
+    "notes": "same conditional release script"
+   }
+  ]
+ },
+ {
+  "expectedId": "FR-REL-003",
+  "type": "functional",
+  "scope": "REL",
+  "target": "wave-8",
+  "title": "Release is blocked by an unexcepted High or Critical dependency vulnerability",
+  "requirement": "The release build shall fail `releaseCheck` while the vulnerability report shows a High or Critical finding (CVSS 7.0 or higher) for a runtime dependency of a published module that has no recorded exception in `docs/release/vulnerability-exceptions.md`, where an exception names the vulnerability id, the dependency, the reason, the approver and the date; a `pending` scan does not block the build but is shown as pending, never as passed.",
+  "rationale": "Covers D-377, I-019 and I-020, wave decision Release scan and result rows (r3 W2-005: a finished scan with a High or Critical finding still blocks) and T50. Measured: `object.md:1170` (the first general release gate) requires \"no unresolved High/Critical dependency vulnerability (exception approval procedure separate)\". Decision: severity follows the CVSS v3 base score (High 7.0 to 8.9, Critical 9.0 and above), an exception row with a missing field counts as no exception, the exceptions file starts with a header and the line `no exceptions`, and a `pending` report is shown in the release notes as an open item. Pitfall: a `pending` status must not read as green; the release documentation and `docs/release/test-results.md` print the literal. Rejected alternative: blocking while the scan is pending; D-376 makes pending an allowed recorded state for an offline run, and blocking it would make an offline release impossible, so the open item is explicit instead.",
+  "acceptanceCriteria": [
+   "A fixture report with one High finding and no exception makes the check fail with a message naming the vulnerability id and the dependency; the same report with a complete exception row passes; a Medium finding passes; a Critical finding fails; an exception row without a reason or approver is ignored and the check still fails. [D-377]",
+   "A fixture report with the status `pending` makes the check pass and prints `scan pending: release not cleared for T50 vulnerability part`, and the release notes list the scan as pending. [D-377; r3 W2-005]",
+   "`docs/release/vulnerability-exceptions.md` exists with the table header (id, dependency, reason, approver, date) and either the recorded exceptions or `no exceptions`. [D-377]",
+   "The check reads only the runtime dependencies of the published modules, so a High finding in a test-scope artifact does not block, which a fixture asserts. [D-377]"
+  ],
+  "priority": "medium",
+  "risk": "medium",
+  "verificationMethod": "test",
+  "githubIssue": "https://github.com/Snoworca/NaruServe/issues/18",
+  "tags": [
+   "wave-8",
+   "feasibility:high",
+   "release",
+   "vulnerability",
+   "T50"
+  ],
+  "trace": [
+   {
+    "type": "Code",
+    "reference": "gradle/release.gradle",
+    "relation": "implements",
+    "notes": "trace_intent=addition_site"
+   },
+   {
+    "type": "Requirement",
+    "reference": "CON-BUILD-009",
+    "relation": "extends",
+    "notes": "dependency boundaries"
+   }
+  ],
+  "links_after": [
+   {
+    "reference": "FR-REL-002",
+    "relation": "depends_on",
+    "notes": "the report this check reads"
+   }
+  ]
+ },
+ {
+  "expectedId": "FR-REL-004",
+  "type": "functional",
+  "scope": "REL",
+  "target": "wave-8",
+  "title": "License report: every shipped dependency is non-GPL and listed in THIRD-PARTY-LICENSES.md",
+  "requirement": "The release build shall run `./gradlew releaseLicenses`, which resolves the license of every dependency on the `runtimeClasspath` of the published modules, fails when any has a GPL-family license (GPL, LGPL or AGPL) or none that can be determined, and writes `THIRD-PARTY-LICENSES.md` at the repository root listing each shipped dependency as `group:name:version` with its license name and URL, and a default-build test shall fail when that file does not list exactly those dependencies.",
+  "rationale": "Covers D-378 and T50. Measured (2026-10-20): the root `LICENSE` and `/Users/beom/work/git/TinyHttpd/LICENSE` both open \"BSD 3-Clause License\"; Gson, `kotlin-stdlib` and `org.jetbrains:annotations` are Apache-2.0 and `slf4j-api` 1.7.36 is MIT by their POMs; `javax.servlet-api` 3.1.0 (CDDL with GPLv2 classpath exception) is `compileOnly` and therefore provided by the container, not shipped; `build.gradle` already writes the resolved graphs to `build/reports/naruserve/dependency-graphs.txt` (`checkDependencyRules`). Decision: licenses come from the POMs through an artifact resolution query; the TinyHttpd components come from an override table in `gradle/release.gradle` with the source `TinyHttpd/LICENSE` (the included build has no POM); a component with no license information and no override fails the task; the file also lists the compile-only artifacts under \"provided by the container or the build, not shipped\" with their licenses so the CDDL/GPL entry is explicit. Pitfall: a dependency whose POM states two licenses (dual license) passes when at least one is non-GPL and the file lists both. Rejected alternative: a name-based allowlist of group ids; a new transitive dependency would pass unseen.",
+  "acceptanceCriteria": [
+   "`releaseLicenses` writes `THIRD-PARTY-LICENSES.md` with one row per shipped dependency — Gson 2.14.0, `kotlin-stdlib` and its annotations artifact, `slf4j-api` 1.7.36 and the TinyHttpd components — giving license name and URL, and a section of provided artifacts that names `javax.servlet-api` as container-provided and not shipped. [D-378; T50]",
+   "The license check, exercised by an automated test over its decision function with fixtures, fails for GPL-2.0, LGPL-3.0 and AGPL-3.0 and for an unknown license, and passes for Apache-2.0, MIT, BSD-3-Clause and a dual license with one non-GPL member. [D-378]",
+   "A default-build test compares the dependency list parsed from `build/reports/naruserve/dependency-graphs.txt` (the shipped runtime dependencies) with the rows of `THIRD-PARTY-LICENSES.md` and fails, naming the dependency, on a missing or extra row, so the committed file cannot go stale. [D-378; I-005]",
+   "The run of `releaseLicenses` on the release machine is recorded under T50 in `docs/release/test-results.md` with its command and result. [D-378; D-381]"
+  ],
+  "priority": "medium",
+  "risk": "medium",
+  "verificationMethod": "test",
+  "githubIssue": "https://github.com/Snoworca/NaruServe/issues/18",
+  "tags": [
+   "wave-8",
+   "feasibility:high",
+   "release",
+   "license",
+   "T50"
+  ],
+  "trace": [
+   {
+    "type": "Code",
+    "reference": "gradle/release.gradle",
+    "relation": "implements",
+    "notes": "trace_intent=addition_site"
+   },
+   {
+    "type": "Code",
+    "reference": "THIRD-PARTY-LICENSES.md",
+    "relation": "implements",
+    "notes": "trace_intent=addition_site"
+   },
+   {
+    "type": "Code",
+    "reference": "LICENSE",
+    "relation": "implements",
+    "notes": "trace_intent=verifies"
+   },
+   {
+    "type": "Requirement",
+    "reference": "CON-BUILD-013",
+    "relation": "extends",
+    "notes": "single Gson version and dependency report"
+   },
+   {
+    "type": "Requirement",
+    "reference": "CON-BUILD-009",
+    "relation": "extends",
+    "notes": "TinyHttpd components"
+   }
+  ],
+  "links_after": [
+   {
+    "reference": "FR-REL-001",
+    "relation": "depends_on",
+    "notes": "same conditional release script"
+   }
+  ]
+ },
+ {
+  "expectedId": "FR-REL-005",
+  "type": "functional",
+  "scope": "REL",
+  "target": "wave-8",
+  "title": "Publishing the nine modules to mavenLocal with maven-publish from the root build",
+  "requirement": "The root build shall publish each of the nine modules to `mavenLocal` with `maven-publish` configured in the root `build.gradle` — coordinates `com.snoworca.naruserve:<module>:0.1.0-SNAPSHOT`, no remote repository — with a POM whose dependencies carry the versions the resolved graph selects, including the TinyHttpd components of `NaruServe-tinyhttpd`.",
+  "rationale": "Covers wave decision Publishing (r1 W2-004: v1 publishes to `mavenLocal` only, README coordinates `com.snoworca.naruserve:<module>:0.1.0-SNAPSHOT`, the POM mechanism is settled at SRS authoring) and D-383 (POM part), D-375, D-379. Measured (2026-10-20): `build.gradle` has no `maven-publish` and `allprojects` sets group `com.snoworca.naruserve` and version `0.1.0-SNAPSHOT`; the Gradle declaration of the TinyHttpd dependencies is versionless because \"the included build substitutes the coordinates\" (CON-BUILD-006); TinyHttpd's own build sets group `com.snoworca.tinyhttpd` and version `0.1.0-SNAPSHOT` and has no publishing configuration. Decision: `maven-publish` (a core Gradle plugin, so no download) with `versionMapping { allVariants { fromResolutionResult() } }`, which writes the resolved version of each declared dependency into the POM, so the POM of `NaruServe-tinyhttpd` names `com.snoworca.tinyhttpd:tinyhttpd-core:0.1.0-SNAPSHOT` and `tinyhttpd-websocket:0.1.0-SNAPSHOT`; the Gradle declarations stay versionless and CON-BUILD-006 stays true. `api` dependencies become compile scope and `implementation` ones runtime scope. Pitfall: without the version mapping the generated POM has a dependency without a `<version>`, which Maven consumers reject. Rejected alternative: publishing sources and javadoc jars; v1 publishes to the local repository only, reopen with a remote repository.",
+  "acceptanceCriteria": [
+   "`./gradlew publishToMavenLocal` installs, for each of the nine modules, a jar and a POM under `com/snoworca/naruserve/<module>/0.1.0-SNAPSHOT/` of the Maven local repository (a test uses a temporary `maven.repo.local`), without `-Prelease` and without network access beyond the existing dependencies. [wave decision Publishing]",
+   "A test generates the POM of every module and asserts: `NaruServe-tinyhttpd` declares `com.snoworca.tinyhttpd:tinyhttpd-core` and `com.snoworca.tinyhttpd:tinyhttpd-websocket` each with the non-empty version of the included build (`0.1.0-SNAPSHOT`), `NaruServe-gson` declares `com.google.code.gson:gson:2.14.0` in compile scope, `NaruServe-kotlin` declares `kotlin-stdlib` with `2.2.0`, `NaruServe-slf4j` declares `slf4j-api:1.7.36`, `NaruServe-servlet` declares `NaruServe-api` and no Servlet API, and `NaruServe` declares `NaruServe-tinyhttpd`, `NaruServe-gson` and `NaruServe-logcat` in runtime scope. [D-383]",
+   "`publishing.repositories` holds no remote repository, only the implicit `mavenLocal`, which a text test of `build.gradle` asserts; the Gradle declarations of the TinyHttpd dependencies stay versionless (CON-BUILD-006 unchanged). [wave decision Publishing; CON-BUILD-006]",
+   "`maven-publish` is applied in the root `build.gradle` itself, not in `gradle/release.gradle`, so `publishToMavenLocal` works in a default offline build. [r4 W2-004; I-019]"
+  ],
+  "priority": "medium",
+  "risk": "medium",
+  "verificationMethod": "test",
+  "githubIssue": "https://github.com/Snoworca/NaruServe/issues/18",
+  "tags": [
+   "wave-8",
+   "feasibility:high",
+   "release",
+   "publishing"
+  ],
+  "trace": [
+   {
+    "type": "Code",
+    "reference": "build.gradle",
+    "relation": "implements",
+    "notes": "trace_intent=addition_site"
+   },
+   {
+    "type": "Requirement",
+    "reference": "CON-BUILD-005",
+    "relation": "extends",
+    "notes": "group and version"
+   },
+   {
+    "type": "Requirement",
+    "reference": "CON-BUILD-006",
+    "relation": "extends",
+    "notes": "main dependencies"
+   },
+   {
+    "type": "Requirement",
+    "reference": "CON-BUILD-009",
+    "relation": "extends",
+    "notes": "TinyHttpd dependency boundaries"
+   }
+  ],
+  "links_after": [
+   {
+    "reference": "FR-REL-001",
+    "relation": "depends_on",
+    "notes": "the conditional release script stays separate"
+   }
+  ]
+ },
+ {
+  "expectedId": "OPS-REL-001",
+  "type": "operational",
+  "scope": "REL",
+  "target": "wave-8",
+  "title": "Root README with installation coordinates and a quick start that matches docs/api/README.md",
+  "requirement": "The repository shall contain a root `README.md` with the installation coordinates of the nine modules, the instruction `./gradlew publishToMavenLocal` with `repositories { mavenLocal() }`, how to obtain TinyHttpd, a Java and a Kotlin quick start whose code equals the quick start of `docs/api/README.md`, the statement that the Android sample build and the API 21 device or emulator verification are not part of v1, and links to the API documents and the release documents.",
+  "rationale": "Covers D-379 and wave decisions Release documentation statement (r1 W1-005) and Publishing (r1 W2-004); supports T50 (\"README, API documents and license list exist\", the first general release gate at `object.md:1170`). Measured (2026-10-20): the repository root has no `README.md`; `docs/api/README.md:11-60` holds the \"5분 시작\" Java and Kotlin blocks and `:87-115` the module table with the nine coordinates and `0.1.0-SNAPSHOT`; `docs/api/README.md:6-7` still says the document is a target contract that is \"아직 구현되지 않았습니다\" (OPS-REL-002 rewrites it). Decision: the README quick start is a copy of those two blocks, compared by a test, so the two cannot drift; the README says API 21 compatibility rests on `--release 8` and the animal-sniffer `android-api-level-21` check. Pitfall: the README is read by people who have not seen `docs/api`; it must state that the HTTP engine TinyHttpd is not published by this repository (OPS-REL-005). Rejected alternative: a README that links to the quick start only; D-379 asks for the quick start in the README.",
+  "acceptanceCriteria": [
+   "`README.md` exists at the repository root and a docs test finds in it the nine module coordinates `com.snoworca.naruserve:<module>:0.1.0-SNAPSHOT` equal to the rows of the module table of `docs/api/README.md`, the text `publishToMavenLocal`, the text `mavenLocal()` and the `implementation 'com.snoworca.naruserve:NaruServe:0.1.0-SNAPSHOT'` line. [D-379; wave decision Publishing]",
+   "The ```java and ```kotlin quick-start blocks of `README.md` are character-for-character equal to the Java and Kotlin blocks under \"5분 시작\" of `docs/api/README.md`, which a docs test asserts, and the Java block is one of the blocks the root docs compile test compiles. [D-379; I-009]",
+   "`README.md` states that the Android sample build and API 21 device or emulator verification are not part of v1 and that API 21 compatibility rests on `--release 8` and the animal-sniffer `android-api-level-21` check, and links `docs/api/README.md`, `docs/release/release-notes.md`, `docs/release/test-results.md` and `THIRD-PARTY-LICENSES.md`, all of which exist. [r1 W1-005; D-379]",
+   "`README.md` holds no (미확정) marker and names the TinyHttpd instruction of OPS-REL-005. [D-379; D-380; D-383]"
+  ],
+  "priority": "medium",
+  "risk": "low",
+  "verificationMethod": "test",
+  "githubIssue": "https://github.com/Snoworca/NaruServe/issues/18",
+  "tags": [
+   "wave-8",
+   "feasibility:high",
+   "release",
+   "docs",
+   "readme"
+  ],
+  "trace": [
+   {
+    "type": "Code",
+    "reference": "README.md",
+    "relation": "implements",
+    "notes": "trace_intent=addition_site"
+   },
+   {
+    "type": "Code",
+    "reference": "docs/api/README.md",
+    "relation": "implements",
+    "notes": "trace_intent=verifies"
+   },
+   {
+    "type": "Requirement",
+    "reference": "OPS-BUILD-003",
+    "relation": "extends",
+    "notes": "coordinates in docs"
+   },
+   {
+    "type": "Requirement",
+    "reference": "OPS-HTTP-004",
+    "relation": "extends",
+    "notes": "docs Java examples compile"
+   }
+  ],
+  "links_after": [
+   {
+    "reference": "FR-REL-005",
+    "relation": "depends_on",
+    "notes": "publishing instruction"
+   },
+   {
+    "reference": "OPS-REL-005",
+    "relation": "depends_on",
+    "notes": "TinyHttpd instruction"
+   }
+  ]
+ },
+ {
+  "expectedId": "OPS-REL-002",
+  "type": "operational",
+  "scope": "REL",
+  "target": "wave-8",
+  "title": "Every (미확정) marker of docs/api is resolved or rewritten as a post-v1 item, with three recorded exceptions",
+  "requirement": "The system shall leave in `docs/api/` no `(미확정)` marker except the three rows of `docs/api/express-migration.md` for `express.Router()`, `res.redirect(url)` and `cors()`, resolving every other marker or rewriting it as an explicit post-v1 item with its reason, and shall list the three kept rows in the release documentation as open Express-compatibility items for after v1.",
+  "rationale": "Covers D-380, D-347 (post-v1 rewrite), wave decisions Status of the removed Android tests (r1 W1-001), Pinned heading (r2 W2-002) and Markers pinned by earlier tests (r4 W2-001), and I-013. Frozen: D-380 says every marker is resolved or rewritten. Deviation (recorded): the three express-migration rows keep their text because verified acceptance criteria pin them (`HttpDocsTest` via OPS-HTTP-007 AC-8, `AppDocsTest` via OPS-APP-005 AC-6, `WaveFiveDocsTest.kept`); the check allows exactly those three. Measured (2026-10-20, grep over `docs/api`): `servlet.md` six lines (OPS-SVL-001), `README.md:7` (the legend sentence), `response.md:141` (`res.redirect`), and `express-migration.md` lines 28, 72, 73, 74, 88 and 306 (`express.Router()`, `res.redirect(url)`, `res.type`, `res.render`, `cors()` and the undecided-section sentence). Wave 8 changes one verified assertion: OPS-HTTP-007 AC-8 pins that `response.md` keeps exactly one marker line for `res.redirect`; it is superseded by OPS-HTTP-008 and `HttpDocsTest.sdsAc6_OPS_HTTP_007_AC8_responseKeepsOnlyRedirectMarker` is re-pointed to assert zero marker lines in `response.md` and the post-v1 sentence. Kept unchanged: the heading \"저사양 Android 튜닝(수동 후속 작업)\" of `defaults.md` (OPS-APP-005 AC-4, `WaveSevenDocsTest`), the three `KEPT` rows of `AppDocsTest`, the `kept(...)` rows of `WaveFiveDocsTest`, and the `defaults.md` line with \"TLS 리스너\" and \"v1\" (`WaveFiveDocsTest:447`). Pitfall: the kept `res.redirect(url)` row and the rewritten `response.md` line say the same thing in two states; the rewritten line states that `res.redirect` is not in v1 and shows `res.status(302).header(\"Location\", url).end()`, and the row keeps its marker only because a verified test pins it. Rejected alternative: removing the three markers and re-pointing three test classes; the wave decision keeps the verified assertions.",
+  "acceptanceCriteria": [
+   "A docs test over `docs/api/*.md` finds `(미확정)` on exactly three lines, the rows starting with `| `express.Router()``, `| `res.redirect(url)`` and `| `cors()`` of `express-migration.md`, and on no other line. [D-380; r4 W2-001]",
+   "`docs/api/README.md` no longer says the document is not implemented or explains the marker: the status banner states that the document describes the v1 implementation and that the three Express-compatibility rows are the only open items, and the (미확정) legend sentence is gone. [D-380]",
+   "`response.md` holds no marker: the line on `res.redirect` states that `res.redirect` is not part of v1, why (no wave of the run owns it; Express-style helpers are out of the v1 scope), and the replacement `res.status(302).header(\"Location\", url).end()`; the `express-migration.md` rows for `res.type('png')` and `res.render(view)` and the undecided-section sentence are rewritten as v1 exclusions with their reasons and carry no marker. [D-380; r4 W2-001]",
+   "`defaults.md` keeps the heading \"저사양 Android 튜닝(수동 후속 작업)\" unchanged and has directly under it a sentence stating that the tuning is a post-v1 item (not a manual-pending release check) because Android device verification is out of v1 scope, while the pinned `WaveSevenDocsTest` and OPS-APP-005 AC-4 assertions pass unchanged. [D-347; D-380; r2 W2-002]",
+   "`docs/release/release-notes.md` lists each post-v1 item with its reason: the three open Express-compatibility rows, `res.type`, `res.render`, the low-end Android tuning of D-347, TLS/WSS (OPS-REL-006), `suspend` handlers (OPS-KT-001), the `jakarta.servlet` module and WebSocket on the Servlet adapter. [D-380; D-347]",
+   "The tests that pinned a changed assertion are re-pointed: `HttpDocsTest` methods of OPS-HTTP-007 AC-8 to OPS-HTTP-008, and no other docs test changes its expectation. [D-380; I-013]"
+  ],
+  "priority": "medium",
+  "risk": "medium",
+  "verificationMethod": "test",
+  "githubIssue": "https://github.com/Snoworca/NaruServe/issues/18",
+  "tags": [
+   "wave-8",
+   "feasibility:high",
+   "release",
+   "docs",
+   "markers"
+  ],
+  "trace": [
+   {
+    "type": "Code",
+    "reference": "docs/api",
+    "relation": "implements",
+    "notes": "trace_intent=addition_site"
+   },
+   {
+    "type": "Requirement",
+    "reference": "OPS-HTTP-008",
+    "relation": "extends",
+    "notes": "successor of OPS-HTTP-007 that holds the response.md marker assertion D-380 changes"
+   },
+   {
+    "type": "Requirement",
+    "reference": "OPS-APP-005",
+    "relation": "extends",
+    "notes": "pinned heading and kept rows"
+   },
+   {
+    "type": "Requirement",
+    "reference": "OPS-ENGINE-002",
+    "relation": "extends",
+    "notes": "TLS line pinned"
+   }
+  ],
+  "links_after": [
+   {
+    "reference": "OPS-SVL-001",
+    "relation": "depends_on",
+    "notes": "servlet.md markers are resolved there"
+   },
+   {
+    "reference": "OPS-REL-006",
+    "relation": "depends_on",
+    "notes": "TLS wording in defaults.md"
+   },
+   {
+    "reference": "OPS-KT-001",
+    "relation": "depends_on",
+    "notes": "coroutine post-v1 wording"
+   }
+  ]
+ },
+ {
+  "expectedId": "OPS-REL-003",
+  "type": "operational",
+  "scope": "REL",
+  "target": "wave-8",
+  "title": "Release test results document listing T01 to T50 with four status literals and evidence links",
+  "requirement": "The repository shall contain `docs/release/test-results.md`, which lists T01 to T50 of `object.md` §17.2 with one line each (two lines each for T26 and T49: the JVM part and the Android device part), gives each line exactly one status literal of `automated`, `manual-pending`, `verified` or `out-of-v1-scope` and an evidence link, marks T10, T12, T47 and the Android device parts of T26 and T49 `out-of-v1-scope` with the reason `user decision 2026-10-20`, and records the full-suite result of `./gradlew build`.",
+  "rationale": "Covers D-381, I-018, I-019, I-020, D-347 (listed as a post-v1 row), T10, T12, T47, T26, T49 and T50, and wave decisions Status of the removed Android tests (r1 W1-001), Status literal (r2 W2-005) and Release scan and result rows (r3 W2-005). Frozen: D-381 names three statuses; Deviation (recorded): the fourth literal `out-of-v1-scope` is added and I-018 is narrowed for the five Android lines by the user's decision, which also supersedes the header wording \"device parts of T26 and T49 recorded as manual checks\" and the Q-3 manual device run; I-020 does not apply to them because they are not manual-pending, and no requirement may call them verified. Decision: `automated` means an automated test of `./gradlew build` covers it (evidence `path#method`), `manual-pending` a recorded manual check not yet run (evidence a checklist item), `verified` a manual check run with recorded evidence; the document and its test use the literal only, never the prose \"out of v1 scope (user decision)\". Measured: `object.md:1015-1082` holds the T-table and the platform matrix; T10, T12 and T47 read \"Gson 2.14.0 API21 실기기\", \"R8 최적화 on\" and \"Android Service 메인스레드 IO 금지\". Pitfall: a result document that lists a test as `automated` without a method link rots silently; the docs test resolves each link to an existing file and method. Rejected alternative: marking the Android tests `manual-pending` with a checklist; the user removed device verification from v1.",
+  "acceptanceCriteria": [
+   "The document has one line for each of T01 to T50 and a second line for T26 and T49, so 52 lines in all, whose ids equal the ids of the §17.2 table of `object.md`, which a docs test parses from both files. [D-381; I-018]",
+   "Each line carries exactly one of the literals `automated`, `manual-pending`, `verified` and `out-of-v1-scope` and the test rejects any other status word; T10, T12, T47, the T26 device line and the T49 device line carry `out-of-v1-scope` with the reason `user decision 2026-10-20`, and no other line carries it. [D-381; r1 W1-001; r2 W2-005; r3 W2-005]",
+   "Each `automated` line links a test file that exists, and when the link has a `#method` part the method exists in that file; each `manual-pending` line links a checklist item of the document; each `verified` line links the recorded evidence; the T50 lines for the SBOM, the vulnerability scan (with its `pending` or `completed` literal of FR-REL-002) and the license check link their records. [D-381; I-018]",
+   "The document contains a post-v1 row for the low-end Android tuning of D-347 and records the date, command, commit and test count of the full-suite run of `./gradlew build` (I-019); no requirement is `verified` on the strength of a `manual-pending` line (I-020). [D-347; I-019; I-020]"
+  ],
+  "priority": "medium",
+  "risk": "medium",
+  "verificationMethod": "test",
+  "githubIssue": "https://github.com/Snoworca/NaruServe/issues/18",
+  "tags": [
+   "wave-8",
+   "feasibility:high",
+   "release",
+   "docs",
+   "tests"
+  ],
+  "trace": [
+   {
+    "type": "Code",
+    "reference": "docs/release/test-results.md",
+    "relation": "implements",
+    "notes": "trace_intent=addition_site"
+   },
+   {
+    "type": "Code",
+    "reference": "object.md",
+    "relation": "implements",
+    "notes": "trace_intent=verifies"
+   },
+   {
+    "type": "Requirement",
+    "reference": "OPS-BUILD-002",
+    "relation": "extends",
+    "notes": "root build gate"
+   },
+   {
+    "type": "Requirement",
+    "reference": "PERF-APP-001",
+    "relation": "extends",
+    "notes": "T26 JVM part"
+   }
+  ],
+  "links_after": [
+   {
+    "reference": "FR-REL-001",
+    "relation": "depends_on",
+    "notes": "T50 SBOM line"
+   },
+   {
+    "reference": "FR-REL-002",
+    "relation": "depends_on",
+    "notes": "T50 vulnerability line"
+   },
+   {
+    "reference": "FR-REL-004",
+    "relation": "depends_on",
+    "notes": "T50 license line"
+   }
+  ]
+ },
+ {
+  "expectedId": "OPS-REL-004",
+  "type": "operational",
+  "scope": "REL",
+  "target": "wave-8",
+  "title": "Release notes platform matrix: Java 8 runtime row pending with compile-time evidence, Android rows out of v1 scope",
+  "requirement": "The release documentation `docs/release/release-notes.md` shall contain the platform matrix of `object.md` §17.1 with a status per row: the JVM Java 8 row `pending` when no Java 8 runtime ran the suite, citing `--release 8` and the animal-sniffer `android-api-level-21` check as compile-time evidence; the Android 5.0, latest Android and Kotlin Android rows `out-of-v1-scope`; and the Servlet row reporting HTTP, multipart, async and SSE tested on an embedded Servlet 3.1 container and WebSocket not supported.",
+  "rationale": "Covers D-382 and the Platform matrix of object.md §17.1, and wave decisions Release documentation statement (r1 W1-005). Measured (2026-10-20): the build machine has one JDK, OpenJDK 17.0.20 (`java -version`; `/usr/libexec/java_home -V` finds no other), so no Java 8 runtime ran the suite; the bytecode target is Java 8 by `options.release = 8` (CON-BUILD-004). Decision: the Java 8 row status is `pending` until a Java 8 run is recorded, then `verified` with that record as evidence; meanwhile the row cites the two compile-time checks and the command that produced them. The matrix uses the four literals of OPS-REL-003 plus `pending` for a row whose run has not happened. Pitfall: `--release 8` proves the API surface and bytecode level, not runtime behaviour on a Java 8 JVM (for example Java 8 canonical path caching, FR-STATIC-006); the row must say so. Rejected alternative: marking the row `verified` because the bytecode is Java 8; D-382 forbids it.",
+  "acceptanceCriteria": [
+   "`docs/release/release-notes.md` has a platform-matrix table with the five rows of §17.1, a status column using only `verified`, `pending`, `manual-pending` or `out-of-v1-scope`, and the Java 8 row reads `pending` with the sentence that no Java 8 runtime ran, naming `--release 8` and `android-api-level-21` animal-sniffer as compile-time evidence and the JDK that did run (17). [D-382]",
+   "The three Android-related rows read `out-of-v1-scope` with the reason `user decision 2026-10-20`; the Servlet row states the embedded container (Jetty 9.4, Servlet 3.1) and the tested scope: HTTP, multipart, async and SSE tested, WebSocket not supported, other containers not tested. [D-382; r1 W1-005; D-363]",
+   "A docs test parses the matrix and fails when a row lacks a status literal, when the Java 8 row is `verified` without a recorded Java 8 run reference, or when the file does not mention both compile-time checks. [D-382]"
+  ],
+  "priority": "medium",
+  "risk": "low",
+  "verificationMethod": "test",
+  "githubIssue": "https://github.com/Snoworca/NaruServe/issues/18",
+  "tags": [
+   "wave-8",
+   "feasibility:high",
+   "release",
+   "docs",
+   "platform-matrix"
+  ],
+  "trace": [
+   {
+    "type": "Code",
+    "reference": "docs/release/release-notes.md",
+    "relation": "implements",
+    "notes": "trace_intent=addition_site"
+   },
+   {
+    "type": "Requirement",
+    "reference": "CON-BUILD-004",
+    "relation": "extends",
+    "notes": "Java 8 bytecode"
+   },
+   {
+    "type": "Requirement",
+    "reference": "CON-BUILD-012",
+    "relation": "extends",
+    "notes": "animal-sniffer API 21 check"
+   }
+  ],
+  "links_after": [
+   {
+    "reference": "OPS-REL-003",
+    "relation": "depends_on",
+    "notes": "same status vocabulary"
+   }
+  ]
+ },
+ {
+  "expectedId": "OPS-REL-005",
+  "type": "operational",
+  "scope": "REL",
+  "target": "wave-8",
+  "title": "How consumers obtain TinyHttpd: includeBuild of the checkout, since this repository does not publish it",
+  "requirement": "The README and the release documentation shall state that this repository does not publish TinyHttpd, that Gradle `includeBuild` of the TinyHttpd checkout is the one verified way to obtain it, and that the `NaruServe-tinyhttpd` POM dependency on `com.snoworca.tinyhttpd:tinyhttpd-core` and `tinyhttpd-websocket` resolves only when an artifact with those coordinates is available from the consumer's own build of TinyHttpd.",
+  "rationale": "Covers D-383 and wave decisions TinyHttpd for consumers (r4 W2-002, which supersedes \"publish it to mavenLocal themselves\" of the Publishing decision). Measured (2026-10-20): TinyHttpd's `build.gradle` sets group `com.snoworca.tinyhttpd` and version `0.1.0-SNAPSHOT` and has no publishing configuration; the checkout is read-only here (I-006, CON-BUILD-010); `settings.gradle` does `includeBuild(tinyHttpdDir)` and warns when the checkout HEAD differs from the verified commit `46b973e` (the checkout was at `38051b6` on this date). Decision: the documented snippet is `includeBuild('/path/to/TinyHttpd')` in the consumer's `settings.gradle`, which substitutes the TinyHttpd coordinates of the POM; the doc states the verified commit. Pitfall: a consumer who depends on `NaruServe-tinyhttpd` from `mavenLocal()` without the included build fails to resolve TinyHttpd; the doc says so, naming the coordinates. Rejected alternative: publishing TinyHttpd to `mavenLocal` from here; the checkout is read-only and has no publishing configuration.",
+  "acceptanceCriteria": [
+   "`README.md` and `docs/release/release-notes.md` each contain the statement that TinyHttpd is not published by this repository, the `includeBuild` snippet for a consumer `settings.gradle`, the two TinyHttpd coordinates with `0.1.0-SNAPSHOT`, and the verified commit `46b973e`, which a docs test asserts. [D-383; r4 W2-002]",
+   "A recorded consumer run shows that a Gradle build in a temporary directory that declares `mavenLocal()`, depends on `com.snoworca.naruserve:NaruServe-tinyhttpd:0.1.0-SNAPSHOT` and includes the TinyHttpd checkout through `includeBuild` resolves the runtime classpath of the dependency with the TinyHttpd projects, and that the same build without the `includeBuild` fails with an unresolved `tinyhttpd-core`; the run's command, date and results are in the release notes. [D-383]",
+   "The documents do not say that TinyHttpd can be taken from `mavenLocal` or a remote repository, and a docs test fails on the phrase \"publish it to mavenLocal\". [D-383; r4 W2-002]"
+  ],
+  "priority": "medium",
+  "risk": "low",
+  "verificationMethod": "test",
+  "githubIssue": "https://github.com/Snoworca/NaruServe/issues/18",
+  "tags": [
+   "wave-8",
+   "feasibility:high",
+   "release",
+   "docs",
+   "tinyhttpd"
+  ],
+  "trace": [
+   {
+    "type": "Code",
+    "reference": "README.md",
+    "relation": "implements",
+    "notes": "trace_intent=addition_site"
+   },
+   {
+    "type": "Code",
+    "reference": "docs/release/release-notes.md",
+    "relation": "implements",
+    "notes": "trace_intent=addition_site"
+   },
+   {
+    "type": "Requirement",
+    "reference": "OPS-BUILD-001",
+    "relation": "extends",
+    "notes": "TinyHttpd composite build"
+   },
+   {
+    "type": "Requirement",
+    "reference": "CON-BUILD-009",
+    "relation": "extends",
+    "notes": "TinyHttpd dependency boundaries"
+   },
+   {
+    "type": "Requirement",
+    "reference": "CON-BUILD-010",
+    "relation": "extends",
+    "notes": "TinyHttpd checkout read-only"
+   }
+  ],
+  "links_after": [
+   {
+    "reference": "FR-REL-005",
+    "relation": "depends_on",
+    "notes": "the POM that names the coordinates"
+   }
+  ]
+ },
+ {
+  "expectedId": "OPS-REL-006",
+  "type": "operational",
+  "scope": "REL",
+  "target": "wave-8",
+  "title": "TLS and WSS on the TinyHttpd adapter recorded as a post-v1 item with two reasons",
+  "requirement": "The release documentation and `docs/api/defaults.md` shall record TLS/WSS on the TinyHttpd adapter as an explicit post-v1 item, citing as the two reasons that no sub-issue of epic #20 covers it and that `object.md` §14.3 and §20.3 require separate API 21 TLS provider and certificate testing, which v1 does not run because Android device verification is out of v1 scope.",
+  "rationale": "Covers D-434 and wave decision TLS reason (r1 W1-003, W2-003), which replaces the citation of Q-3's manual device runs. Measured (2026-10-20): `docs/api/defaults.md:114` says the TinyHttpd adapter opens no TLS listener in v1 and gives as reason \"Android 5.0의 오래된 TLS 구현을 기기마다 따로 시험해야 하기 때문\"; `WaveFiveDocsTest:447` asserts that the line containing \"TLS 리스너\" also contains \"v1\" (OPS-ENGINE-001 AC-3: the TinyHttpd adapter has no TLS listener in v1); the Out of Scope list of the Engine Adapter scope document names \"A TLS listener on the TinyHttpd adapter (post-v1 under D-434)\". Decision: the line keeps the phrase \"TLS 리스너\" and the word \"v1\" (so the verified assertion stays) and replaces the reason sentence with the two reasons; the release notes carry the same two reasons. Pitfall: the old reason says devices must be tested one by one, which reads as a plan; with device verification out of v1 scope it is no longer true and must not be repeated. Rejected alternative: citing Q-3; the user's decision removed the manual device runs it relies on.",
+  "acceptanceCriteria": [
+   "`docs/api/defaults.md` keeps a TLS line that contains \"TLS 리스너\" and \"v1\", names TLS/WSS on the TinyHttpd adapter as a post-v1 item, gives the two reasons (no sub-issue of epic #20 covers it; `object.md` §14.3 and §20.3 require separate API 21 TLS provider and certificate testing, which v1 does not run because Android device verification is out of v1 scope), still names the reverse proxy and `app.trustProxy(true)`, and does not cite Q-3 or manual device runs. [D-434; r1 W1-003]",
+   "`docs/release/release-notes.md` records the same item with the same two reasons in a post-v1 list entry, and a docs test asserts both reasons in both documents and the absence of `Q-3` in both. [D-434]",
+   "The unchanged `WaveFiveDocsTest` assertion on the \"TLS 리스너\" line passes, and the other pinned `defaults.md` lines are untouched. [OPS-ENGINE-001 AC-3]"
+  ],
+  "priority": "medium",
+  "risk": "low",
+  "verificationMethod": "test",
+  "githubIssue": "https://github.com/Snoworca/NaruServe/issues/18",
+  "tags": [
+   "wave-8",
+   "feasibility:high",
+   "release",
+   "docs",
+   "tls"
+  ],
+  "trace": [
+   {
+    "type": "Code",
+    "reference": "docs/api/defaults.md",
+    "relation": "implements",
+    "notes": "trace_intent=addition_site"
+   },
+   {
+    "type": "Code",
+    "reference": "docs/release/release-notes.md",
+    "relation": "implements",
+    "notes": "trace_intent=addition_site"
+   },
+   {
+    "type": "Requirement",
+    "reference": "OPS-ENGINE-002",
+    "relation": "extends",
+    "notes": "defaults.md engine decisions"
+   }
+  ],
+  "links_after": [
+   {
+    "reference": "OPS-REL-004",
+    "relation": "depends_on",
+    "notes": "same release notes file"
+   }
+  ]
+ },
+ {
+  "expectedId": "OPS-REL-007",
+  "type": "operational",
+  "scope": "REL",
+  "target": "wave-8",
+  "title": "Release documentation states the Android scope decision and lists the recorded deviations of the run",
+  "requirement": "The release documentation and `docs/api/lifecycle.md` shall state that the Android sample build and the API 21 device or emulator verification are not part of v1 (user decision of 2026-10-20; issue #17 is closed by it and has no remaining deliverable), that the Android-only `ServerService` example is documented but not compiled in the v1 build, and shall list the recorded deviations from frozen design wording — D-408 over TinyHttpd, D-416 thread total 452, D-406 handler-thread writes, D-323 handshake bound, D-340 late-session abort, D-106 add-only SPI, the Servlet SSE blocked-write bound and the D-380 three-row exception — each with the requirement that records it.",
+  "rationale": "Covers the carried lines of `waves/carried-into-wave-8.md`, wave decisions Examples and Gson without the sample (r1 W1-002, W2-002: the `ServerService` example stays documented and the root docs test skips it with the reason \"absent type `android.app.Service`\"), Release documentation statement (r1 W1-005), Blocked writes of a Servlet SSE stream (r5 W2-001), D-364 to D-374 and D-412 (not authored), I-001, I-005, I-009 and I-020. Measured (2026-10-20): `DocsExamplesCompileTest.java:98` already skips `lifecycle.md` \"public class ServerService extends Service {\" with the reason \"absent type `android.app.Service`\"; `lifecycle.md:191` holds the example. Recorded deviations and their records: D-408 (`Connection: Upgrade` not asserted over TinyHttpd, FR-WS-004 AC-2); D-416 (452 threads because of the non-daemon `naruserve-keeper`, PERF-APP-001 AC-2); D-406 (handler-thread sends are written directly before the drain starts, FR-SSE-002 AC-5); D-323 (the handshake is bounded only by `headerTimeout` and `bodyReadTimeout`, FR-WS-008 AC-7); D-340 (a session opening after the close wait is aborted without a close frame, FR-WS-010 AC-7); D-106 (the SPI gained add-only types and default methods, IR-HTTP-007 AC-4); the Servlet SSE bound (FR-SVL-006 AC-3); D-380 (OPS-REL-002 AC-1). Wave 8 authors no requirement for the Android sample items, so no requirement covers or may call verified T10, T12 or T47. Rejected alternative: leaving the deviations in the requirement blocks only; the release reader would not find them.",
+  "acceptanceCriteria": [
+   "`docs/release/release-notes.md` and `README.md` state that the Android sample build, the AGP and R8 builds, StrictMode, Logcat on a device and any API 21 device or emulator run are not part of v1 by the user's decision of 2026-10-20, that issue #17 is closed by that decision, and that API 21 compatibility rests on `--release 8`, the animal-sniffer check and the rule that no module has a compile-time `android.*` reference (D-385). [r1 W1-005; D-385]",
+   "`docs/api/lifecycle.md` states that the Android `ServerService` example is a documented example that the v1 build does not compile, and the root docs compile test still skips it with the reason `absent type `android.app.Service``, which a docs test asserts on both sides. [r1 W1-002; I-009]",
+   "The release notes contain a \"Recorded deviations\" section with one entry each for D-408, D-416, D-406, D-323, D-340, D-106, the Servlet SSE blocked-write bound and the D-380 exception, each naming the frozen wording, the deviation in one sentence and the requirement id that records it, and a docs test finds all eight entries and resolves each named requirement id in the SRS index. [D-408; D-416; D-406; D-323; D-340; D-106; r5 W2-001; D-380]",
+   "No requirement of wave 8 covers D-364 to D-374 or D-412, and the release notes list them as out of v1 scope without the status `manual-pending`. [carried lines; I-020]"
+  ],
+  "priority": "medium",
+  "risk": "low",
+  "verificationMethod": "test",
+  "githubIssue": "https://github.com/Snoworca/NaruServe/issues/18",
+  "tags": [
+   "wave-8",
+   "feasibility:high",
+   "release",
+   "docs",
+   "android-scope"
+  ],
+  "trace": [
+   {
+    "type": "Code",
+    "reference": "docs/release/release-notes.md",
+    "relation": "implements",
+    "notes": "trace_intent=addition_site"
+   },
+   {
+    "type": "Code",
+    "reference": "docs/api/lifecycle.md",
+    "relation": "implements",
+    "notes": "trace_intent=addition_site"
+   },
+   {
+    "type": "Requirement",
+    "reference": "OPS-HTTP-004",
+    "relation": "extends",
+    "notes": "docs examples compile with named skips"
+   },
+   {
+    "type": "Requirement",
+    "reference": "IR-HTTP-007",
+    "relation": "extends",
+    "notes": "D-106 deviation record"
+   },
+   {
+    "type": "Requirement",
+    "reference": "FR-WS-004",
+    "relation": "extends",
+    "notes": "D-408 deviation record"
+   },
+   {
+    "type": "Requirement",
+    "reference": "PERF-APP-001",
+    "relation": "extends",
+    "notes": "D-416 deviation record"
+   },
+   {
+    "type": "Requirement",
+    "reference": "FR-SSE-002",
+    "relation": "extends",
+    "notes": "D-406 deviation record"
+   },
+   {
+    "type": "Requirement",
+    "reference": "FR-WS-008",
+    "relation": "extends",
+    "notes": "D-323 deviation record"
+   },
+   {
+    "type": "Requirement",
+    "reference": "FR-WS-010",
+    "relation": "extends",
+    "notes": "D-340 deviation record"
+   }
+  ],
+  "links_after": [
+   {
+    "reference": "OPS-REL-003",
+    "relation": "depends_on",
+    "notes": "same status vocabulary"
+   },
+   {
+    "reference": "OPS-REL-002",
+    "relation": "depends_on",
+    "notes": "D-380 exception record"
+   },
+   {
+    "reference": "FR-SVL-006",
+    "relation": "depends_on",
+    "notes": "Servlet SSE bound record"
+   }
+  ]
+ }
+]

@@ -1,0 +1,192 @@
+{
+ "findings": [
+  {
+   "id": "F01",
+   "severity": "CRITICAL",
+   "req_id": "FR-SVL-008",
+   "description": "AC-3/AC-4 name `app.bodyLimit`, which does not exist (RestApp has only jsonLimit, formLimit, multipart; no bodyLimit in main or docs). AC-4's docs test (every name exists on ServerOptions or RestApp) fails by construction.",
+   "suggested_fix": "Replace app.bodyLimit in requirement, AC-3, AC-4 with jsonLimit, formLimit and the app.multipart limits (maxFileSize, maxRequestSize, maxParts)."
+  },
+  {
+   "id": "F02",
+   "severity": "HIGH",
+   "req_id": "FR-SVL-004",
+   "description": "AC-3 expects 413 for 'a body above the app body limit'; no generic body limit exists, only jsonLimit, formLimit and multipart limits, so the case is untestable. Requirement text also says 'body limit of the core'.",
+   "suggested_fix": "Drop the generic body-limit clause; assert 413 for jsonLimit, formLimit and multipart maxRequestSize/maxFileSize/maxParts."
+  },
+  {
+   "id": "F03",
+   "severity": "HIGH",
+   "req_id": "FR-KT-001",
+   "description": "AC-3/AC-5 (and FR-KT-002 AC-1, FR-KT-003 AC-1) scan packages by reflection; on the test classpath com.snoworca.naruserve also holds test classes, e.g. NullabilityFixture with @NonNull (verified CON-BUILD-011 AC-2), so AC-3 fails.",
+   "suggested_fix": "State that enumeration reads main classes only (naruserve.apiJar or build/classes/java/main), excluding test and testFixtures classes; same for FR-KT-002 and FR-KT-003."
+  },
+  {
+   "id": "F04",
+   "severity": "HIGH",
+   "req_id": "FR-REL-002",
+   "description": "AC-1 says the dependency list equals the union of runtimeClasspath rows of dependency-graphs.txt, but those rows include the project's own com.snoworca.naruserve:* components (e.g. NaruServe-api, the module itself). FR-REL-004 AC-3 has the same mismatch with THIRD-PARTY-LICENSES.md.",
+   "suggested_fix": "Say rows with group com.snoworca.naruserve are excluded; com.snoworca.tinyhttpd components stay. Apply to FR-REL-002 AC-1/AC-4 and FR-REL-004 AC-1/AC-3."
+  },
+  {
+   "id": "F05",
+   "severity": "HIGH",
+   "req_id": "OPS-SVL-001",
+   "description": "AC-4 says servlet.md Java examples 'compile against the module through the root docs compile test', but the root test classpath is NaruServe-api, gson and fixtures only; ServletConfigurer is absent there. It contradicts the same AC's 'absent type' skip entries.",
+   "suggested_fix": "Say the servlet.md Java blocks are skipped with reason `absent type ServletConfigurer` and compiled in a NaruServe-servlet test, or add the servlet module and javax API to the root testImplementation."
+  },
+  {
+   "id": "F06",
+   "severity": "HIGH",
+   "req_id": "FR-SVL-001",
+   "description": "AC-3 cites FR-ENGINE-001 AC-5, a discarded requirement (FR-ENGINE-001 -> FR-ENGINE-010 -> FR-ENGINE-011); Trace Links and text point at superseded ids.",
+   "suggested_fix": "Cite the live successor FR-ENGINE-011 for the boundPort IllegalStateException contract."
+  },
+  {
+   "id": "F07",
+   "severity": "HIGH",
+   "req_id": "OPS-REL-006",
+   "description": "AC-3 and Rationale cite OPS-ENGINE-001 AC-3, which is discarded (successor OPS-ENGINE-002, AC-3 restated).",
+   "suggested_fix": "Re-point to OPS-ENGINE-002 AC-3."
+  },
+  {
+   "id": "F08",
+   "severity": "HIGH",
+   "req_id": "CON-BUILD-004, CON-BUILD-006, OPS-BUILD-002 (02.build.srs.md l.275, 413, 804)",
+   "description": "These verified requirements keep depends_on CON-BUILD-003, now discarded by the CON-BUILD-017 supersede: dangling references.",
+   "suggested_fix": "Re-point the three depends_on links to CON-BUILD-017 (same relation), or record them as accepted historical links."
+  },
+  {
+   "id": "F09",
+   "severity": "MEDIUM",
+   "req_id": "FR-REL-001",
+   "description": "AC-4 needs `./gradlew build --offline` to pass with a user home lacking both plugins, but CON-SVL-001 measures that jetty-servlet is not cached; checkDependencyRules records unresolved dependencies as violations, so an offline build without Jetty fails.",
+   "suggested_fix": "Require a user home that holds every default-build dependency (Jetty included) but neither release plugin."
+  },
+  {
+   "id": "F10",
+   "severity": "MEDIUM",
+   "req_id": "FR-REL-003",
+   "description": "The lifecycle task releaseCheck is only named; the SRS never says what it depends on (releaseScan, releaseLicenses, releaseSbom) or whether it re-runs the scan, so AC-1..AC-4 do not fix its behaviour.",
+   "suggested_fix": "Define releaseCheck as dependsOn releaseScan and releaseLicenses (and what it reads: build report vs docs/release copy) in the requirement text."
+  },
+  {
+   "id": "F11",
+   "severity": "MEDIUM",
+   "req_id": "OPS-REL-003",
+   "description": "Vocabulary: `automated` means a test of ./gradlew build covers it, yet FR-REL-002 AC-3 and AC-3 here map a `completed` -Prelease scan to `automated`; and the unrun states are `manual-pending` (T50) vs `pending` (Java 8 row, scan report).",
+   "suggested_fix": "Map a completed release-machine run to `verified`; give SBOM and license lines explicit statuses; explain or unify pending vs manual-pending."
+  },
+  {
+   "id": "F12",
+   "severity": "MEDIUM",
+   "req_id": "FR-REL-005",
+   "description": "AC-1/AC-2 run publishToMavenLocal and POM generation 'in a test' of the same build; a nested TestKit run on the real project (with includeBuild) contends for the build dir and .gradle locks of the outer build.",
+   "suggested_fix": "Generate POMs through generatePomFileForMavenPublication in the outer build and let the test read them via a system property, or run publish only in a recorded manual run."
+  },
+  {
+   "id": "F13",
+   "severity": "MEDIUM",
+   "req_id": "FR-REL-002",
+   "description": "Rationale says release-tools Java sources are added to the root test source set and 'compiled and called' by gradle/release.gradle; a script applied at configuration time cannot call classes that are not yet compiled.",
+   "suggested_fix": "Specify how release.gradle runs them (own JavaExec/JavaCompile task or Groovy implementation) and that the unit tests compile in the default build."
+  },
+  {
+   "id": "F14",
+   "severity": "MEDIUM",
+   "req_id": "FR-SVL-002",
+   "description": "AC-5 requires raw `..`/encoded-slash lines to be answered `400` 'by container or core', but Jetty 9.4 normalises `..` before servlet mapping and may answer 404; 'never 2xx' and 'answered 400' differ.",
+   "suggested_fix": "Assert 'status 400, or 404 when the container never reaches the servlet, never 2xx' per case, and record each observed status in servlet.md."
+  },
+  {
+   "id": "F15",
+   "severity": "MEDIUM",
+   "req_id": "FR-SVL-003",
+   "description": "AC-3 says a body write in progress fails with IOException after abort(); the adapter cannot interrupt a write blocked in the container, which FR-SVL-006 AC-3 itself admits.",
+   "suggested_fix": "Reword: the next write, commit or finish after abort() throws IOException; a blocked write ends only by the container's write timeout."
+  },
+  {
+   "id": "F16",
+   "severity": "MEDIUM",
+   "req_id": "CON-KT-001",
+   "description": "AC-3 negative fixture 'a compiled fixture class that calls kotlinx.coroutines.BuildersKt.runBlocking' needs kotlinx-coroutines on a test compile classpath, which the rule forbids on published modules and which adds a network dependency.",
+   "suggested_fix": "Generate the fixture class bytes (constant-pool string) in the test or write a class file by hand; no coroutines artifact in any configuration."
+  },
+  {
+   "id": "F17",
+   "severity": "MEDIUM",
+   "req_id": "OPS-KT-001",
+   "description": "AC-3 mandates the sentence that kotlin-stdlib is 'the only dependency of that module'; NaruServe-kotlin also depends on NaruServe-api, so the mandated doc text is false (kotlin.md now says it is the only module that depends on kotlin-stdlib).",
+   "suggested_fix": "Reword AC-3: kotlin-stdlib is used by this module only; the module otherwise depends on NaruServe-api."
+  },
+  {
+   "id": "F18",
+   "severity": "MEDIUM",
+   "req_id": "OPS-REL-002",
+   "description": "AC-4: defaults.md's existing paragraph under the pinned heading says the tuning is 'a manual follow-up of the release test'; the added sentence says it is not a manual-pending check, leaving two contradicting statements in one section.",
+   "suggested_fix": "Rewrite the paragraph to post-v1 wording while keeping the tokens WaveSevenDocsTest pins (heading, `maxSseStreams`, `maxUpgradedConnections`, `sendQueueSize`, `수동 후속 작업`, `자동`)."
+  },
+  {
+   "id": "F19",
+   "severity": "MEDIUM",
+   "req_id": "FR-REL-001",
+   "description": "Trace Links 'extends CON-BUILD-017' (and OPS-REL-002 'extends OPS-HTTP-008') point at draft-by-supersede requirements; AC-5 says BuildLayoutTest is 'unchanged' while also re-pointing con_BUILD_003 tests and adding a check.",
+   "suggested_fix": "Use depends_on only toward stable requirements or accept same-wave links explicitly; reword AC-5 to 'assertions unchanged, citations re-pointed, one check added'."
+  },
+  {
+   "id": "F20",
+   "severity": "MEDIUM",
+   "req_id": "OPS-SVL-001",
+   "description": "AC-2/AC-3 omit `naruserve.shutdownTimeoutSeconds` (range 1..300, default 10) and the statement that only Jetty 9.4 is exercised, both required by IR-SVL-001 AC-3/AC-5.",
+   "suggested_fix": "Add both to the docs AC and the keyword test."
+  },
+  {
+   "id": "F21",
+   "severity": "LOW",
+   "req_id": "FR-KT-001",
+   "description": "AC-2 finds table accessors 'by name'; `attribute` (void and generic overload) and `body` (Class and TypeRef) are overloaded, so name-only lookup is ambiguous.",
+   "suggested_fix": "Match by name plus the return-typed overload, or iterate all overloads that return a value."
+  },
+  {
+   "id": "F22",
+   "severity": "LOW",
+   "req_id": "FR-KT-003",
+   "description": "AC-1 does not restrict the inventory to interfaces declared in the public API packages (JDK single-method interfaces could match); AC-4 leaves 'generated resource or a shared list' open.",
+   "suggested_fix": "Restrict to com.snoworca.naruserve(.spi/.routing) interfaces and name the one mechanism."
+  },
+  {
+   "id": "F23",
+   "severity": "LOW",
+   "req_id": "FR-KT-004",
+   "description": "Existing Kotlin docs tests (JsonDocsKotlinTest, SseDocsKotlinTest, WebSocketDocsKotlinTest) carry no `// docs-example` markers, so they must be edited, while AC-5/IR-KT-002 AC-4 say JsonDocsKotlinTest 'stays untouched'.",
+   "suggested_fix": "Say only the test-local body() copy is untouched and markers are added to existing tests."
+  },
+  {
+   "id": "F24",
+   "severity": "LOW",
+   "req_id": "CON-BUILD-017",
+   "description": "Rationale says the CLAUDE.md root-build line gets an exception sentence, but no AC covers that edit or keeps the pinned `- 모듈:` line check.",
+   "suggested_fix": "Add an AC for the CLAUDE.md sentence and that BuildLayoutTest's module line assertions still pass."
+  },
+  {
+   "id": "F25",
+   "severity": "LOW",
+   "req_id": "IR-SVL-001",
+   "description": "AC-2 reads the module jar like DefaultAppFactoryTest, but only :NaruServe and :NaruServe-api set a jar system property in build.gradle; Rationale cites RestApp.java:226-270 though the file ends at line 267.",
+   "suggested_fix": "Mention the new build.gradle test property for the servlet jar; correct the line range to 226-267."
+  },
+  {
+   "id": "F26",
+   "severity": "LOW",
+   "req_id": "FR-REL-001",
+   "description": "AC-3 forbids the strings cyclonedx/dependencycheck in 'any file of the root build'; the test itself and BuildLayoutTest sources would contain them, and the scope of 'root build' files is undefined.",
+   "suggested_fix": "List the files scanned (build.gradle, settings.gradle, gradle.properties) explicitly."
+  }
+ ],
+ "summary": {
+  "CRITICAL": 1,
+  "HIGH": 7,
+  "MEDIUM": 12,
+  "LOW": 6
+ }
+}

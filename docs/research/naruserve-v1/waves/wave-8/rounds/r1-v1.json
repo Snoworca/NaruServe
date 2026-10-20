@@ -1,0 +1,220 @@
+{
+ "rows": [
+  {
+   "id": "D-348",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-349",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-350",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-351",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-352",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-353",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-354",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-355",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-356",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-357",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-358",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-359",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-360",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-361",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-362",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-363",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-364",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-365",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-366",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-367",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-368",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-369",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-370",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-412",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-371",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-372",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-373",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-374",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-375",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-376",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-377",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-378",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-379",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-380",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-381",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-382",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-383",
+   "verdict": "covered"
+  },
+  {
+   "id": "D-434",
+   "verdict": "covered"
+  }
+ ],
+ "findings": [
+  {
+   "finding_id": "W1-001",
+   "severity": "medium",
+   "items": [
+    "I-018",
+    "I-020",
+    "D-381"
+   ],
+   "claim": "The exclusion states that T10, T12, T47 and the device parts of T26/T49 are listed in D-381 as 'out of v1 scope (user decision)', a status outside D-381's own vocabulary (automated, manual-pending, verified) and outside I-018 ('exist as an automated test or a recorded manual check before the run closes'). The design does not say that I-018 is narrowed for these tests, so I-018 cannot literally be met and a later gate check may fail the run or force a manual-pending entry the user removed.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-8/design.md:'Carried from earlier waves'; docs/research/naruserve-v1/design/00.design.md:696-698 (I-018, I-020), :D-381",
+   "suggested_fix": "State in the carried section that for T10, T12, T47 (and device parts of T26/T49) the user decision replaces I-018's 'recorded manual check' with the 'out of v1 scope (user decision)' entry, and that D-381 gains that fourth status for exactly these rows."
+  },
+  {
+   "finding_id": "W1-002",
+   "severity": "medium",
+   "items": [
+    "I-005",
+    "I-009"
+   ],
+   "claim": "Integration items I-005 ('every module and the Android sample') and I-009 ('Android-only examples compile in the samples/android build') name the removed sample, and the wave design says nothing about them. With no sample, the Android-only examples of docs/api have no compiling build, and the Gson 2.14.0 check has no sample part.",
+   "evidence": "docs/research/naruserve-v1/design/00.design.md:678, 685; design.md carried section",
+   "suggested_fix": "Add to the carried section: I-005 applies to the root modules only; for I-009 the Android-only examples are either removed from docs/api, marked as not compiled in v1, or covered by the logcat module test, and say which."
+  },
+  {
+   "finding_id": "W1-003",
+   "severity": "medium",
+   "items": [
+    "D-434",
+    "D-381"
+   ],
+   "claim": "D-434 (verbatim) gives as a reason that API 21 TLS testing is 'left to manual device runs by Q-3'. Under the user decision there are no device runs in v1, so the release text written from D-434 would cite a path that was removed. The design does not say how the reason is worded.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-8/design.md:D-434 and 'Carried from earlier waves'",
+   "suggested_fix": "Add a sentence that the release text for D-434 words the second reason as 'separate API 21 TLS provider and certificate testing, which is outside v1 together with device verification (user decision)'."
+  },
+  {
+   "finding_id": "W1-004",
+   "severity": "low",
+   "items": [
+    "D-347",
+    "D-381"
+   ],
+   "claim": "The header still says the 'device parts of T26 and T49 recorded as manual checks' and the section intro still says 'Answers Q-3 (automated builds, manual device run)', while the carried section says those device parts are 'out of v1 scope'. D-347 (wave 7) also requires a manual follow-up for low-end device tuning in the release test results. The design does not say whether D-347's follow-up remains.",
+   "evidence": "design.md header paragraph and 'Answers Q-3' line; 00.design.md:605 (D-347)",
+   "suggested_fix": "Say that the header sentence is superseded by the carried section and state whether D-347's follow-up stays as a plain post-v1 note in D-381 or is folded into the out-of-scope entry."
+  },
+  {
+   "finding_id": "W1-005",
+   "severity": "low",
+   "items": [
+    "D-375",
+    "D-376",
+    "D-377",
+    "D-378",
+    "D-379",
+    "D-380",
+    "D-382",
+    "D-383"
+   ],
+   "claim": "The header still says the wave covers issue #17 and sub-issue #17 (Android sample, device QA, R8) has no remaining deliverable; the design does not say how #17 is closed, or that the release documentation (not just the carried section) carries the 'not part of v1' statement for D-379/D-383. Only the carried section asserts it, with no item owning it.",
+   "evidence": "design.md header ('Covers issues #16, #19, #17 and #18'); 01.intake.md:61, 496-515; carried section last sentence",
+   "suggested_fix": "Name which release item (for example D-379 README or D-381) holds the 'sample and device verification not part of v1' statement, and say how issue #17 is closed or deferred."
+  }
+ ]
+}

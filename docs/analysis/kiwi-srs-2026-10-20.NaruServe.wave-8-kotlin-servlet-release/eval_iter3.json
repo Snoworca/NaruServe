@@ -1,0 +1,124 @@
+{
+  "round": 3,
+  "verifier": "process-A",
+  "findings": [
+    {
+      "id": "A3-001",
+      "severity": "MEDIUM",
+      "req_id": "FR-KT-003",
+      "description": "AC-3 matrix names only ws.onText and ws.onClose and no SPI callbacks, but AC-1/AC-4 inventory (measured by reflection on the api jar) has 16 interfaces: also WebSocketSession Binary/Json/Error listeners, ExchangeHandler, ErrorRenderer, StreamDrain, UpgradeHandler.",
+      "suggested_fix": "In AC-3 list all 16 interfaces (or say the CALLBACK_TYPES matrix must contain every interface of the AC-1 inventory) and state how SPI types get a Kotlin lambda test."
+    },
+    {
+      "id": "A3-002",
+      "severity": "MEDIUM",
+      "req_id": "OPS-HTTP-008",
+      "description": "Rationale re-points only HttpDocsTest methods citing OPS-HTTP-007, but DocsExamplesCompileTest.java:651-654 (wave7s13SdsAc13_OPS_HTTP_007_AC9_...) also cites it. Only the generic OPS-REL-002 AC-6 covers it.",
+      "suggested_fix": "Add DocsExamplesCompileTest.wave7s13SdsAc13_OPS_HTTP_007_AC9_theWithHeaderBlockIsCompiled to the re-point list of OPS-HTTP-008 (expectation unchanged)."
+    },
+    {
+      "id": "A3-003",
+      "severity": "MEDIUM",
+      "req_id": "CON-BUILD-017",
+      "description": "CON-BUILD-004, CON-BUILD-006 and OPS-BUILD-002 keep their depends_on rows to the discarded CON-BUILD-003 next to the new CON-BUILD-017 rows; build.gradle:1 comment also cites CON-BUILD-003 (precedent: FR-ENGINE-001 rows were left too).",
+      "suggested_fix": "Either remove the three old CON-BUILD-003 rows when adding the 017 rows, or add a rationale sentence that the old rows are kept as history; re-point the build.gradle:1 comment to CON-BUILD-017."
+    },
+    {
+      "id": "A3-004",
+      "severity": "MEDIUM",
+      "req_id": "FR-SVL-002",
+      "description": "AC-3 and Requirement promise headers 'in received order' with duplicates kept. The Servlet API gives no cross-name order (getHeaderNames) and only per-name order (getHeaders); the promise holds only by container habit.",
+      "suggested_fix": "Weaken to: repeated values of one name keep their order and duplicates are kept; cross-name order is the container's (state it in servlet.md next to response header order)."
+    },
+    {
+      "id": "A3-005",
+      "severity": "MEDIUM",
+      "req_id": "FR-KT-004",
+      "description": "Rationale puts markers in NaruServe-api and NaruServe-kotlin test dirs only, but AC-1 also reads NaruServe-servlet/src/test/kotlin. AC-2 'adapted' reasons omit the kotlin.md block that defines the body() extension (a copy would clash with the module extension) and import lines.",
+      "suggested_fix": "Add servlet to the Rationale locations and add 'declares the module extension itself or imports it' to the allowed // adapted: reasons (or exclude that definition line from the line match)."
+    },
+    {
+      "id": "A3-006",
+      "severity": "MEDIUM",
+      "req_id": "FR-REL-001",
+      "description": "AC-1, AC-2, AC-4 (and FR-REL-004 AC-4, FR-REL-002 AC-3 on a completed scan) can only be met by a -Prelease run with network on a release machine; they cannot run in the default build, yet Verification Method is test/inspection without saying which AC is which.",
+      "suggested_fix": "Mark those ACs as inspection (recorded run) and keep the default-build tests (AC-3, AC-5, release-tools unit tests) as the test evidence; state that T50 SBOM/license lines stay manual-pending until recorded."
+    },
+    {
+      "id": "A3-007",
+      "severity": "MEDIUM",
+      "req_id": "FR-SVL-003",
+      "description": "Requirement and Decision say headers are written with addHeader as given, but the Pitfall says the core's Content-Length is passed through setHeader. Also Requirement says the adapter never adds Content-Length while AC-1 admits the container may frame with a length.",
+      "suggested_fix": "State one rule (e.g. addHeader for all but Content-Length/Content-Type via setHeader) and word the Content-Length promise as 'the adapter never sets one the core did not give'."
+    },
+    {
+      "id": "A3-008",
+      "severity": "LOW",
+      "req_id": "CON-SVL-001",
+      "description": "AC-4 (no edit under spi, no changed TinyHttpd file) is a git-diff inspection, but Verification Method is only 'test'.",
+      "suggested_fix": "Set Verification Method to 'test, inspection' or rely on the IR-HTTP-007 AC-4 signature test and BuildLayoutTest TinyHttpd-clean test only."
+    },
+    {
+      "id": "A3-009",
+      "severity": "LOW",
+      "req_id": "OPS-REL-007",
+      "description": "Rationale says 'Covers ... D-364 to D-374 and D-412 (not authored)', which reads as coverage while the user decision says these items must not be covered.",
+      "suggested_fix": "Reword to 'D-364 to D-374 and D-412 are out of scope and not covered'."
+    },
+    {
+      "id": "A3-010",
+      "severity": "LOW",
+      "req_id": "OPS-REL-004",
+      "description": "Matrix uses five literals (adds 'pending') while OPS-REL-003 uses four; the Java 8 row says 'pending' where the results document would say 'manual-pending'. The mapping is stated only in OPS-REL-003 AC-2.",
+      "suggested_fix": "Add the same pending = manual-pending mapping sentence to OPS-REL-004 AC-1, or use manual-pending for the Java 8 row."
+    },
+    {
+      "id": "A3-011",
+      "severity": "LOW",
+      "req_id": "FR-SVL-008",
+      "description": "Measured claim 'allowedHosts ... nowhere in NaruServe-api/src/main outside ServerOptions itself' is imprecise: DefaultServerOptions and ServerSettings also hold it (as data, no enforcement).",
+      "suggested_fix": "Reword: 'enforced only by TinyHttpdAdapter; the api module only stores it (ServerOptions, DefaultServerOptions, ServerSettings)'."
+    },
+    {
+      "id": "A3-012",
+      "severity": "LOW",
+      "req_id": "FR-KT-003",
+      "description": "AC-1 says 'interface declared in' the three packages; the 12 listener interfaces are nested types (WebSocketSession.*, SseClient.CloseListener). FR-KT-002 says 'including nested types', FR-KT-003 does not.",
+      "suggested_fix": "Add 'including nested interfaces' to FR-KT-003 AC-1."
+    },
+    {
+      "id": "A3-013",
+      "severity": "LOW",
+      "req_id": "FR-KT-001",
+      "description": "Requirement text lacks the reverse rule that AC-2 enforces (a non-nullable table row must not be @Nullable), so statement and AC are not in sync.",
+      "suggested_fix": "Add 'or when a method of a non-nullable row carries @Nullable' to the Requirement sentence."
+    },
+    {
+      "id": "A3-014",
+      "severity": "LOW",
+      "req_id": "OPS-REL-001",
+      "description": "AC-1 says the nine coordinates equal the rows of docs/api/README.md module table, but those rows carry no version; the README needs ':0.1.0-SNAPSHOT' appended.",
+      "suggested_fix": "Say 'equal to the rows of the table with ":0.1.0-SNAPSHOT" appended'."
+    },
+    {
+      "id": "A3-015",
+      "severity": "LOW",
+      "req_id": "OPS-REL-002",
+      "description": "AC-5 lists suspend handlers as a post-v1 item, but docs/api/express-migration.md bullet 'Kotlin coroutine 지원은 별도 모듈로 검토 중입니다' stays a promise; PERF-APP-001 AC-4 (verified) still says 'manual follow-up'.",
+      "suggested_fix": "Rewrite that express-migration.md bullet as post-v1 with its reason in AC-3; keep the PERF-APP-001 wording note already in the Rationale."
+    }
+  ],
+  "summary": {
+    "critical": 0,
+    "high": 0,
+    "medium": 7,
+    "low": 8,
+    "total": 15,
+    "coverage": "All in-scope items D-348..D-363, D-375..D-383, D-434, wave decisions r1-r5, the 3 residual bullets and the carried lines are covered with decided values in ACs; D-364..D-374 and D-412 are not covered (OPS-REL-007 only lists them as out of scope).",
+    "measured_claims_checked": "build.gradle:11-17,52,70,179-183; RestApp.java:226-267 (Builder); Request.java:25,29-127; Cookie.java:90-151; DefaultRestApp.java:499,506-507,682,705; spi/HttpAdapter.java:20-29; spi/HttpExchange.java:27-37,55-75,99-101; ServerSettings.java:32-56; TinyHttpdAdapter.java:100,118-120; ServerOptions names (13 ignored settings exist); dependency-graphs.txt row format path|configuration|coordinate and runtime set; 18 @FunctionalInterface in 14 files; 45 kotlin blocks and per-file counts; kotlin.md:59 and the 12-row table; json.md:31,69; defaults.md:72,114; lifecycle.md:191; DocsExamplesCompileTest:98,120; WaveFiveDocsTest:420,447; WaveSevenDocsTest tokens; express-migration marker lines 28,72,73,74,88,306; servlet.md six marker lines; TinyHttpd HEAD 38051b6; JDK 17; BuildLayoutTest method names con_BUILD_003_AC1/AC2; all Requirement trace targets are live (none of the 23 discarded ids is referenced from a wave-8 block)."
+  },
+  "validate_spec": {
+    "errors": 0,
+    "warnings": 57
+  }
+}

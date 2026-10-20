@@ -1,0 +1,12 @@
+{
+ "implementability": "high",
+ "product_fit": "core",
+ "code_evidence": [
+  "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpAdapter.java",
+  "NaruServe-kotlin/src/main/kotlin/com/snoworca/naruserve/kotlin/KotlinModule.kt",
+  "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/package-info.java",
+  "build.gradle"
+ ],
+ "blockers": [],
+ "external_module_required": false
+}

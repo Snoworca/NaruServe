@@ -1,0 +1,498 @@
+{
+ "judgements": [
+  {
+   "req_id": "FR-KT-001",
+   "score": 93,
+   "feasibility": "high",
+   "blockers": [],
+   "conditions": [
+    "walk type-use annotations recursively for NonNull (AC-3)"
+   ],
+   "evidence": [
+    "build.gradle:179-183",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java:29-127",
+    "reflection scan of built api jar ok"
+   ],
+   "fix_suggestion": ""
+  },
+  {
+   "req_id": "FR-KT-002",
+   "score": 95,
+   "feasibility": "high",
+   "blockers": [],
+   "conditions": [],
+   "evidence": [
+    "reflection scan of built api jar finds 0 methods named with the 10 words"
+   ],
+   "fix_suggestion": ""
+  },
+  {
+   "req_id": "FR-KT-003",
+   "score": 89,
+   "feasibility": "high",
+   "blockers": [],
+   "conditions": [
+    "AC-4 needs a Kotlin CALLBACK_TYPES list read by a Java test (mixed compile ok)"
+   ],
+   "evidence": [
+    "reflection: exactly 16 SAM param interfaces, all @FunctionalInterface",
+    "grep: 18 @FunctionalInterface in 14 files"
+   ],
+   "fix_suggestion": ""
+  },
+  {
+   "req_id": "FR-KT-004",
+   "score": 79,
+   "feasibility": "medium",
+   "blockers": [
+    "AC-2 'function contains every line of its block' has no defined function extent; AC-5 sends json.md blocks to NaruServe-kotlin while JsonDocsKotlinTest already holds them with a test-local body()"
+   ],
+   "conditions": [
+    "~27 new Kotlin tests for 45 blocks (46 once servlet.md gains one)",
+    "docs test must read ../NaruServe-kotlin and ../NaruServe-servlet src/test/kotlin (user.dir=module dir, as HttpDocsTest.java:24)"
+   ],
+   "evidence": [
+    "docs/api: 45 kotlin blocks counted",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java:24"
+   ],
+   "fix_suggestion": "AC-2: add 'function = text from the marker line to the next marker or top-level fun'; AC-5: 'a marker may appear in the api test (test-local body) or in NaruServe-kotlin; the docs test accepts any one marker per block'."
+  },
+  {
+   "req_id": "FR-KT-005",
+   "score": 91,
+   "feasibility": "high",
+   "blockers": [],
+   "conditions": [],
+   "evidence": [
+    "docs/api/kotlin.md table has 12 rows",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java:332-336 (param throws IAE)"
+   ],
+   "fix_suggestion": ""
+  },
+  {
+   "req_id": "FR-KT-006",
+   "score": 93,
+   "feasibility": "high",
+   "blockers": [],
+   "conditions": [],
+   "evidence": [
+    "NaruServe-gson/src/main/java/com/snoworca/naruserve/gson/GsonJsonCodec.java:85-87 (JsonIOException rethrown)",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StandardErrors.java:101"
+   ],
+   "fix_suggestion": ""
+  },
+  {
+   "req_id": "IR-KT-001",
+   "score": 94,
+   "feasibility": "high",
+   "blockers": [],
+   "conditions": [],
+   "evidence": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/Cookie.java:90-151 (getSecure/isHttpOnly pair)",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/Response.java:43"
+   ],
+   "fix_suggestion": ""
+  },
+  {
+   "req_id": "IR-KT-002",
+   "score": 92,
+   "feasibility": "high",
+   "blockers": [],
+   "conditions": [
+    "root build.gradle: add testImplementation testFixtures(project(':NaruServe-api')) for :NaruServe-kotlin"
+   ],
+   "evidence": [
+    "NaruServe-kotlin/src/main/kotlin/com/snoworca/naruserve/kotlin/KotlinModule.kt",
+    "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/JsonDocsKotlinTest.kt:40",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StandardErrors.java:25-27 (400 message passed through)"
+   ],
+   "fix_suggestion": ""
+  },
+  {
+   "req_id": "CON-KT-001",
+   "score": 74,
+   "feasibility": "medium",
+   "blockers": [
+    "AC-3 negative fixtures are not realisable as stated: the check is a Groovy closure in build.gradle, so a 'class file generated in the test' and a 'fixture dependency set without any coroutines artifact' cannot reach it from JUnit"
+   ],
+   "conditions": [
+    "run the fixtures as TestKit builds in BuildChecksTest (appendBuild + addSource pattern)",
+    "kotlinx-coroutines is only partly in the Gradle cache (kotlinx-coroutines-core-jvm), do not depend on it"
+   ],
+   "evidence": [
+    "build.gradle:92-124 scanClassRefs",
+    "src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java:230-268"
+   ],
+   "fix_suggestion": "AC-3: 'BuildChecksTest adds a stub source kotlinx/coroutines/BuildersKt.java to a module and a file-repo fixture POM+jar org.jetbrains.kotlinx:kotlinx-coroutines-core:0.0 to another, and each makes :checkNoCoroutines fail'; name the task and wire it to check."
+  },
+  {
+   "req_id": "OPS-KT-001",
+   "score": 93,
+   "feasibility": "high",
+   "blockers": [],
+   "conditions": [],
+   "evidence": [
+    "docs/api/kotlin.md:59 (@NonNull to remove)",
+    "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:300,412-425"
+   ],
+   "fix_suggestion": ""
+  },
+  {
+   "req_id": "IR-SVL-001",
+   "score": 86,
+   "feasibility": "high",
+   "blockers": [],
+   "conditions": [
+    "tests use WebAppContext + AnnotationConfiguration; SCI discovered without any ContainerIncludeJarPattern (prototype)",
+    "AC-3 'no multipart config' needs a test filter reading request attribute org.eclipse.jetty.multipartConfig",
+    "ctx.setThrowUnavailableOnStartupException(true) to see the ServletException",
+    "AC-7: use a stub source jakarta/servlet/X.java like the logcat android/util/Log fixture"
+   ],
+   "evidence": [
+    "prototype: SCI onStartup ran, servlet naruserve async=true, '/' mapping overrides DefaultServlet (clash=[])",
+    "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/package-info.java (no @NullMarked yet)",
+    "build.gradle:129-139"
+   ],
+   "fix_suggestion": ""
+  },
+  {
+   "req_id": "FR-SVL-001",
+   "score": 84,
+   "feasibility": "high",
+   "blockers": [],
+   "conditions": [
+    "AC-5 'Gson absent' via WebAppContext.addServerClass('com.snoworca.naruserve.gson.') to hide it from the webapp loader",
+    "AC-8 is prose, assert only the docs sentence"
+   ],
+   "evidence": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:499-507,682,705",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:226-267"
+   ],
+   "fix_suggestion": ""
+  },
+  {
+   "req_id": "FR-SVL-002",
+   "score": 83,
+   "feasibility": "high",
+   "blockers": [],
+   "conditions": [
+    "AC-2 recording proxy = a test Filter wrapping the request",
+    "AC-5: Jetty hands raw '..' and %2F URIs to the servlet, so the 400 comes from the core path validator; OPTIONS * gives 404 on Jetty (record it)"
+   ],
+   "evidence": [
+    "prototype: getRequestURI keeps %41;v=1, %61pi, %2F, ../, %2e%2e raw; getServletPath/getPathInfo are decoded; %00 and %zz give 400 in Jetty"
+   ],
+   "fix_suggestion": ""
+  },
+  {
+   "req_id": "FR-SVL-003",
+   "score": 79,
+   "feasibility": "medium",
+   "blockers": [
+    "requirement says the adapter 'never adds' Content-Length but AC-1 admits Jetty may add a length for small buffered bodies; AC-4 'never reading the file into memory' has no automated check"
+   ],
+   "conditions": [
+    "service() must return only after finish/abort (core finishes inside handle except SSE)"
+   ],
+   "evidence": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpExchange.java:55-75",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java:199-215"
+   ],
+   "fix_suggestion": "Reword: 'the adapter code never adds, removes or changes Content-Length; the container may frame a small buffered body'. AC-4: assert chunk size via a spy OutputStream (max write <= 65536) and the constant-pool scan for java/nio/file/."
+  },
+  {
+   "req_id": "FR-SVL-004",
+   "score": 85,
+   "feasibility": "high",
+   "blockers": [],
+   "conditions": [
+    "AC-4 mid-upload close via raw socket"
+   ],
+   "evidence": [
+    "internal/MultipartParser.java shared parser",
+    "BuildChecksTest copy pattern"
+   ],
+   "fix_suggestion": ""
+  },
+  {
+   "req_id": "FR-SVL-005",
+   "score": 72,
+   "feasibility": "medium",
+   "blockers": [
+    "AC-3 is not discriminating on Jetty 9.4.58: with the default async timeout lowered to 1 s and NO effect from setTimeout, a committed stream still delivered 6 pings in 2.9 s (Jetty only logs IllegalStateException COMMITTED)",
+    "the default timeout is read once from system property org.eclipse.jetty.server.HttpChannelState.DEFAULT_TIMEOUT, so the 'lower it to 1 s' step needs that property on the test JVM"
+   ],
+   "conditions": [
+    "AC-4/AC-6 are timing based, use generous margins"
+   ],
+   "evidence": [
+    "prototype: setTimeout(0) stream alive 6 pings/2.8 s; default-timeout stream also alive but WARN COMMITTED logged"
+   ],
+   "fix_suggestion": "AC-3: assert via a test Filter that after chain.doFilter the request's AsyncContext.getTimeout()==0 and that no AsyncListener.onTimeout fired; keep the heartbeat check as secondary."
+  },
+  {
+   "req_id": "FR-SVL-006",
+   "score": 75,
+   "feasibility": "medium",
+   "blockers": [
+    "AC-3 needs a client that stops reading plus enough bytes to fill TCP buffers (flaky) and its premise is pessimistic: on Jetty 9.4.58 AsyncContext.complete() from another thread unblocked a blocked writer in 1 ms (ClosedChannelException)"
+   ],
+   "conditions": [
+    "small SO_RCVBUF + >=4 MB of events from a sender thread for AC-3"
+   ],
+   "evidence": [
+    "prototype: complete() with blocked writer took 1 ms, writer ended with ClosedChannelException, server.stop 12 ms"
+   ],
+   "fix_suggestion": "AC-3: say 'stop returns within the deadline plus 1 s and the AsyncContext is completed; the drain thread ends once the container closes the output (Jetty: at once, other containers: at their write timeout)'."
+  },
+  {
+   "req_id": "FR-SVL-007",
+   "score": 90,
+   "feasibility": "high",
+   "blockers": [],
+   "conditions": [],
+   "evidence": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpExchange.java:99-101"
+   ],
+   "fix_suggestion": ""
+  },
+  {
+   "req_id": "FR-SVL-008",
+   "score": 87,
+   "feasibility": "high",
+   "blockers": [],
+   "conditions": [],
+   "evidence": [
+    "ServerOptions.java methods match all 13 ignored names",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:499",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/ServerSettings.java:32-56"
+   ],
+   "fix_suggestion": ""
+  },
+  {
+   "req_id": "CON-SVL-001",
+   "score": 78,
+   "feasibility": "medium",
+   "blockers": [
+    "AC-4 'the wave 8 change set contains no edit under spi' is not decidable inside the default build"
+   ],
+   "conditions": [
+    "first resolution of Jetty 9.4.58 needs network (cache has no jetty-servlet); an offline build needs the cache primed",
+    "AC-2 needs a new build check listing configurations"
+   ],
+   "evidence": [
+    "Maven Central: jetty-servlet/webapp/annotations/server 9.4.58.v20250814 poms HTTP 200",
+    "build.gradle:70",
+    "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:234,250"
+   ],
+   "fix_suggestion": "AC-4: 'IR-HTTP-007 AC-4 signature test passes unchanged and git diff <wave-7 commit> -- spi is empty (inspection evidence)'."
+  },
+  {
+   "req_id": "OPS-SVL-001",
+   "score": 84,
+   "feasibility": "high",
+   "blockers": [],
+   "conditions": [
+    "root testImplementation project(':NaruServe-servlet') must not expose Servlet types to the examples"
+   ],
+   "evidence": [
+    "docs/api/servlet.md marker lines 5,11,25,26,27,29",
+    "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java SKIPS servlet.md entry"
+   ],
+   "fix_suggestion": ""
+  },
+  {
+   "req_id": "FR-REL-001",
+   "score": 85,
+   "feasibility": "high",
+   "blockers": [],
+   "conditions": [
+    "apply the plugin by class (org.cyclonedx.gradle.CyclonedxPlugin): apply plugin by id 'org.cyclonedx.bom' from a subproject failed with 'Plugin with id not found'",
+    "task is cyclonedxDirectBom with jsonOutput/includeConfigs in 3.5.1",
+    "AC-2/AC-4 are recorded manual runs"
+   ],
+   "evidence": [
+    "prototype: -Prelease releaseSbom wrote 9 cdx.json incl. tinyhttpd-core/websocket 0.1.0-SNAPSHOT, gson 2.14.0, kotlin-stdlib",
+    "plugins.gradle.org: cyclonedx-gradle-plugin 3.5.1 latest"
+   ],
+   "fix_suggestion": ""
+  },
+  {
+   "req_id": "FR-REL-002",
+   "score": 70,
+   "feasibility": "medium",
+   "blockers": [
+    "the 'wrapper task that converts a scanner failure into pending' has no mechanism: dependencyCheckAggregate 13.0.0 fails with 'Analysis failed' even with failOnError=false, and a Gradle task cannot catch another task's failure declaratively",
+    "a scan without NVD key can run for a very long time"
+   ],
+   "conditions": [
+    "run the scan in a child process (Exec/GradleBuild, ignoreExitValue) or execute the task actions in try/catch"
+   ],
+   "evidence": [
+    "prototype: -Prelease dependencyCheckAggregate FAILED 'Analysis failed' in 13 s",
+    "plugins.gradle.org: dependency-check-gradle 13.0.0 latest"
+   ],
+   "fix_suggestion": "Add to the requirement: 'releaseScan launches dependencyCheckAggregate in a child Gradle invocation with ignoreExitValue and writes pending when the exit code is non-zero or the JSON report is absent'."
+  },
+  {
+   "req_id": "FR-REL-003",
+   "score": 85,
+   "feasibility": "high",
+   "blockers": [],
+   "conditions": [
+    "define how the CVSS rows are parsed from vulnerability-scan.md (table format fixed in FR-REL-002 AC-2)"
+   ],
+   "evidence": [
+    "object.md:1170 gate"
+   ],
+   "fix_suggestion": ""
+  },
+  {
+   "req_id": "FR-REL-004",
+   "score": 76,
+   "feasibility": "medium",
+   "blockers": [
+    "slf4j-api 1.7.36 POM has no <licenses> (MIT sits in parent slf4j-parent); error_prone/gson also carry parents, so 'license from the POMs through an artifact resolution query' fails for slf4j-api unless the parent chain is walked"
+   ],
+   "conditions": [
+    "license names vary (Apache 2.0, The Apache Software License, Version 2.0, Apache-2.0); classify GPL-family by regex"
+   ],
+   "evidence": [
+    "~/.gradle cache poms: slf4j-api-1.7.36 licenses=0, parent slf4j-parent"
+   ],
+   "fix_suggestion": "Add: 'a component without <licenses> inherits them from its parent POM chain'."
+  },
+  {
+   "req_id": "FR-REL-005",
+   "score": 91,
+   "feasibility": "high",
+   "blockers": [],
+   "conditions": [
+    "suppressPomMetadataWarningsFor testFixturesApiElements/RuntimeElements on NaruServe-api (warning observed)"
+   ],
+   "evidence": [
+    "prototype: generatePomFileForMavenPublication gives tinyhttpd-core/websocket 0.1.0-SNAPSHOT runtime, NaruServe-api compile, NaruServe->tinyhttpd/gson/logcat runtime, servlet only NaruServe-api"
+   ],
+   "fix_suggestion": ""
+  },
+  {
+   "req_id": "OPS-REL-001",
+   "score": 86,
+   "feasibility": "high",
+   "blockers": [],
+   "conditions": [],
+   "evidence": [
+    "docs/api/README.md:5-7,11-60,87-115",
+    "README.md absent"
+   ],
+   "fix_suggestion": ""
+  },
+  {
+   "req_id": "OPS-REL-002",
+   "score": 82,
+   "feasibility": "high",
+   "blockers": [],
+   "conditions": [
+    "keep the pinned tokens of WaveSevenDocsTest:65,247 and WaveFiveDocsTest:420; res.type/res.render rows are not pinned by any test"
+   ],
+   "evidence": [
+    "grep docs/api: marker lines match the SRS list",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java:182-193,246-255",
+    "AppDocsTest.java:73,213"
+   ],
+   "fix_suggestion": ""
+  },
+  {
+   "req_id": "OPS-REL-003",
+   "score": 79,
+   "feasibility": "medium",
+   "blockers": [
+    "AC-4 asks for a post-v1 row while AC-2 says no line outside the five Android lines may carry out-of-v1-scope and AC-1 fixes 54 status lines, so the row's status literal is undefined"
+   ],
+   "conditions": [
+    "map 54 lines to existing test methods; no test means manual-pending"
+   ],
+   "evidence": [
+    "object.md:1027-1082 (50 T rows)"
+   ],
+   "fix_suggestion": "AC-4: 'the post-v1 row sits in a separate Post-v1 section outside the 54 status lines and carries no status literal'."
+  },
+  {
+   "req_id": "OPS-REL-004",
+   "score": 90,
+   "feasibility": "high",
+   "blockers": [],
+   "conditions": [],
+   "evidence": [
+    "/usr/libexec/java_home -V: no Java 8, only JDK 17",
+    "object.md:1017-1025 (5 rows)"
+   ],
+   "fix_suggestion": ""
+  },
+  {
+   "req_id": "OPS-REL-005",
+   "score": 83,
+   "feasibility": "high",
+   "blockers": [],
+   "conditions": [
+    "AC-2 consumer run publishes into the real ~/.m2; TinyHttpd checkout HEAD is 38051b6, docs must still say 46b973e"
+   ],
+   "evidence": [
+    "prototype POM: tinyhttpd deps carry 0.1.0-SNAPSHOT",
+    "settings.gradle:26-37"
+   ],
+   "fix_suggestion": ""
+  },
+  {
+   "req_id": "OPS-REL-006",
+   "score": 92,
+   "feasibility": "high",
+   "blockers": [],
+   "conditions": [],
+   "evidence": [
+    "docs/api/defaults.md:114",
+    "src/test/java/com/snoworca/naruserve/docs/WaveFiveDocsTest.java:447"
+   ],
+   "fix_suggestion": ""
+  },
+  {
+   "req_id": "OPS-REL-007",
+   "score": 86,
+   "feasibility": "high",
+   "blockers": [],
+   "conditions": [],
+   "evidence": [
+    "all 8 requirement ids named in AC-3 exist as ### headings",
+    "DocsExamplesCompileTest.java SKIPS lifecycle.md ServerService"
+   ],
+   "fix_suggestion": ""
+  },
+  {
+   "req_id": "OPS-HTTP-008",
+   "score": 88,
+   "feasibility": "high",
+   "blockers": [],
+   "conditions": [
+    "rewrite response.md:141 and the redirect example (uses /login, AC-8 wants url)"
+   ],
+   "evidence": [
+    "docs/spec/04.http-core.srs.md:3962 (OPS-HTTP-007 discarded -> OPS-HTTP-008)",
+    "HttpDocsTest.java:182-193"
+   ],
+   "fix_suggestion": ""
+  },
+  {
+   "req_id": "CON-BUILD-017",
+   "score": 92,
+   "feasibility": "high",
+   "blockers": [],
+   "conditions": [],
+   "evidence": [
+    "docs/spec/02.build.srs.md:166 (CON-BUILD-003 discarded), 1250",
+    "BuildLayoutTest.java:290,317",
+    "CLAUDE.md:21 bullet is one '- 모듈:' line"
+   ],
+   "fix_suggestion": ""
+  }
+ ]
+}

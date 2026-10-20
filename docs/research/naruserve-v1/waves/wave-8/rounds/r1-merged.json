@@ -1,0 +1,162 @@
+{
+ "round": 1,
+ "findings": [
+  {
+   "finding_id": "W1-001",
+   "severity": "medium",
+   "items": [
+    "I-018",
+    "I-020",
+    "D-381"
+   ],
+   "claim": "The exclusion states that T10, T12, T47 and the device parts of T26/T49 are listed in D-381 as 'out of v1 scope (user decision)', a status outside D-381's own vocabulary (automated, manual-pending, verified) and outside I-018 ('exist as an automated test or a recorded manual check before the run closes'). The design does not say that I-018 is narrowed for these tests, so I-018 cannot literally be met and a later gate check may fail the run or force a manual-pending entry the user removed.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-8/design.md:'Carried from earlier waves'; docs/research/naruserve-v1/design/00.design.md:696-698 (I-018, I-020), :D-381",
+   "suggested_fix": "State in the carried section that for T10, T12, T47 (and device parts of T26/T49) the user decision replaces I-018's 'recorded manual check' with the 'out of v1 scope (user decision)' entry, and that D-381 gains that fourth status for exactly these rows."
+  },
+  {
+   "finding_id": "W1-002",
+   "severity": "medium",
+   "items": [
+    "I-005",
+    "I-009"
+   ],
+   "claim": "Integration items I-005 ('every module and the Android sample') and I-009 ('Android-only examples compile in the samples/android build') name the removed sample, and the wave design says nothing about them. With no sample, the Android-only examples of docs/api have no compiling build, and the Gson 2.14.0 check has no sample part.",
+   "evidence": "docs/research/naruserve-v1/design/00.design.md:678, 685; design.md carried section",
+   "suggested_fix": "Add to the carried section: I-005 applies to the root modules only; for I-009 the Android-only examples are either removed from docs/api, marked as not compiled in v1, or covered by the logcat module test, and say which."
+  },
+  {
+   "finding_id": "W1-003",
+   "severity": "medium",
+   "items": [
+    "D-434",
+    "D-381"
+   ],
+   "claim": "D-434 (verbatim) gives as a reason that API 21 TLS testing is 'left to manual device runs by Q-3'. Under the user decision there are no device runs in v1, so the release text written from D-434 would cite a path that was removed. The design does not say how the reason is worded.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-8/design.md:D-434 and 'Carried from earlier waves'",
+   "suggested_fix": "Add a sentence that the release text for D-434 words the second reason as 'separate API 21 TLS provider and certificate testing, which is outside v1 together with device verification (user decision)'."
+  },
+  {
+   "finding_id": "W1-004",
+   "severity": "low",
+   "items": [
+    "D-347",
+    "D-381"
+   ],
+   "claim": "The header still says the 'device parts of T26 and T49 recorded as manual checks' and the section intro still says 'Answers Q-3 (automated builds, manual device run)', while the carried section says those device parts are 'out of v1 scope'. D-347 (wave 7) also requires a manual follow-up for low-end device tuning in the release test results. The design does not say whether D-347's follow-up remains.",
+   "evidence": "design.md header paragraph and 'Answers Q-3' line; 00.design.md:605 (D-347)",
+   "suggested_fix": "Say that the header sentence is superseded by the carried section and state whether D-347's follow-up stays as a plain post-v1 note in D-381 or is folded into the out-of-scope entry."
+  },
+  {
+   "finding_id": "W1-005",
+   "severity": "low",
+   "items": [
+    "D-375",
+    "D-376",
+    "D-377",
+    "D-378",
+    "D-379",
+    "D-380",
+    "D-382",
+    "D-383"
+   ],
+   "claim": "The header still says the wave covers issue #17 and sub-issue #17 (Android sample, device QA, R8) has no remaining deliverable; the design does not say how #17 is closed, or that the release documentation (not just the carried section) carries the 'not part of v1' statement for D-379/D-383. Only the carried section asserts it, with no item owning it.",
+   "evidence": "design.md header ('Covers issues #16, #19, #17 and #18'); 01.intake.md:61, 496-515; carried section last sentence",
+   "suggested_fix": "Name which release item (for example D-379 README or D-381) holds the 'sample and device verification not part of v1' statement, and say how issue #17 is closed or deferred."
+  },
+  {
+   "finding_id": "W2-001",
+   "severity": "high",
+   "items": [
+    "D-381",
+    "I-018",
+    "I-020",
+    "D-373"
+   ],
+   "claim": "The wave design lists T10, T12, T47 and the device parts of T26 and T49 in the release test results document with a fourth status 'out of v1 scope (user decision)'. D-381 allows only automated, manual-pending or verified, and I-018 (applied at this wave's merge per design.md line 5) requires every T01-T50 to exist as an automated test or a recorded manual check. The wave header (design.md line 8) still says the T26/T49 device parts are 'recorded as manual checks', and docs/api/defaults.md:72 calls the Android tuning a 'manual follow-up of the release test', while the carried note says 'not as manual-pending'. The final gate would fail on I-018 or the status vocabulary would be applied inconsistently.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-8/design.md:5,8,77; docs/research/naruserve-v1/design/00.design.md:663,701 (D-381, I-018); docs/api/defaults.md:72",
+   "suggested_fix": "State in the wave design that the 'out of v1 scope (user decision)' status is the single permitted exception to the D-381 vocabulary and to I-018 for exactly T10, T12, T47 and the device parts of T26/T49, record the matching run-level waiver of those parts of I-018, rewrite design.md line 8 to drop 'recorded as manual checks', and have wave 8 reword defaults.md:72 to the same status."
+  },
+  {
+   "finding_id": "W2-002",
+   "severity": "medium",
+   "items": [
+    "I-005",
+    "I-009"
+   ],
+   "claim": "I-005 (Gson 2.14.0 for 'every module and the Android sample') and I-009 ('Android-only examples compile in the samples/android build') depend on the removed sample. design.md line 5 says I-001..I-021 hold at this merge, but the wave gives no replacement. The only Android-only docs example, lifecycle.md ServerService extends Service, is skipped in DocsExamplesCompileTest ('absent type android.app.Service') and has no other compile location, so I-009 cannot be met.",
+   "evidence": "docs/research/naruserve-v1/design/00.design.md:678,685; src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java:98; docs/api/lifecycle.md:182-",
+   "suggested_fix": "Add to the carried-from-earlier-waves section that I-005 and I-009 apply without the sample, and either keep the skipped Android-only example as an explicit, recorded 'not compiled in v1' item in the release documentation or compile it against a stub android.app.Service in the root docs test."
+  },
+  {
+   "finding_id": "W2-003",
+   "severity": "medium",
+   "items": [
+    "D-434",
+    "D-381"
+   ],
+   "claim": "D-434 cites as its reason that 'Q-3 leaves [TLS API 21 provider and certificate testing] to manual device runs'. Device runs are removed from v1 by the user decision, so the cited reason is stale. The release documentation would cite a manual device run the release says it does not do.",
+   "evidence": "docs/research/naruserve-v1/design/00.design.md:666; docs/research/naruserve-v1/waves/wave-8/design.md:77",
+   "suggested_fix": "Keep D-434 verbatim in the wave design but add a carried note that its Q-3 reason is restated as 'API 21 device verification is out of v1 scope (user decision)', and make the release documentation and defaults.md use that wording."
+  },
+  {
+   "finding_id": "W2-004",
+   "severity": "medium",
+   "items": [
+    "D-375",
+    "D-379",
+    "D-383"
+   ],
+   "claim": "The release items presuppose published modules ('every published module', 'installation coordinates', 'published POM'), but no item of any wave configures maven-publish or POM generation, and the root build has none. NaruServe-tinyhttpd declares tinyhttpd-core/-websocket without a version, so a generated POM would lack that version, and TinyHttpd (0.1.0-SNAPSHOT) has no publishing either. The README coordinates of D-379 therefore cannot resolve for a consumer and 'published module' in D-375 has no defined set.",
+   "evidence": "build.gradle:50-62 (versionless tinyhttpd dependency, no maven-publish); /Users/beom/work/git/TinyHttpd/build.gradle:6-7; docs/research/naruserve-v1/design/00.design.md:657,660,665; docs/api/README.md:91-98",
+   "suggested_fix": "Have wave 8 state which modules are published (all nine) and the publication mechanism (local or snapshot repository, or 'no remote publication in v1'), choose how the TinyHttpd dependency appears in the generated POM, and word the README coordinates and D-383 text to match."
+  },
+  {
+   "finding_id": "W2-005",
+   "severity": "medium",
+   "items": [
+    "D-348",
+    "D-072"
+   ],
+   "claim": "D-348 requires 'a nullability annotation' on every reference-typed return and parameter of every public method of NaruServe-api. The built API uses package-level @NullMarked (api, internal, spi, routing) plus @Nullable, and has no @NonNull at all, so non-null positions carry no explicit annotation. A literal check fails hundreds of methods. It also does not say whether the public classes in the 'internal' package (documented as not part of the API contract) and enum values()/valueOf are in scope.",
+   "evidence": "NaruServe-api/src/main/java/com/snoworca/naruserve/package-info.java:2; .../internal/package-info.java; .../spi/package-info.java; Request.java:26,29 (param unannotated, query @Nullable)",
+   "suggested_fix": "In the wave design, define the check as: the type is covered by @NullMarked on the class or package, or carries @Nullable/@NonNull. Say that synthetic/bridge methods are skipped and decide whether the 'internal' package is included. The check should flag any package without @NullMarked."
+  },
+  {
+   "finding_id": "W2-006",
+   "severity": "low",
+   "items": [
+    "D-352"
+   ],
+   "claim": "The D-352 keyword list (in, is, object, fun, when, val, var) leaves out Kotlin hard keywords that are legal Java identifiers: as, typealias, typeof. A check built from the list would accept public methods named like those.",
+   "evidence": "docs/research/naruserve-v1/design/00.design.md:616; CLAUDE.md (Kotlin \ud638\ud658 section)",
+   "suggested_fix": "Make the automated check use the full Kotlin hard-keyword set (adding as, typealias, typeof) while D-352 stays verbatim."
+  },
+  {
+   "finding_id": "W2-007",
+   "severity": "low",
+   "items": [
+    "D-358",
+    "D-359",
+    "D-360",
+    "D-363",
+    "D-399",
+    "D-052",
+    "D-107"
+   ],
+   "claim": "D-363 lists the Servlet decisions but not three things the frozen items already force. First, how the HttpAdapter bind/boundPort/stop/release lifecycle maps onto a container: RestApp.listen(int) is the only start path, runs onStart, then calls adapter.bind, so the servlet module must drive listen() from container init, report a ServerHandle port/address it does not own, and map the force-close of stop() onto completing or aborting AsyncContexts. Second, D-399 and D-052 require the raw request target (getRequestURI minus the raw context path, not the decoded getPathInfo/getServletPath) and 400 rejection on every adapter. Third, D-360 says the same routes apply while WebSocket may be unsupported under D-363 (HttpExchange.webSocket default throws UnsupportedOperationException).",
+   "evidence": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:463-507; NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpExchange.java (webSocket default); docs/research/naruserve-v1/design/00.design.md:107,399,633",
+   "suggested_fix": "Add these three points to the D-363 decision list: the bind-as-container-init mapping, the raw-path rule, and the status a ws route answers with when the container has no WebSocket support. Add them to docs/api/servlet.md."
+  },
+  {
+   "finding_id": "W2-008",
+   "severity": "low",
+   "items": [
+    "D-385",
+    "I-002"
+   ],
+   "claim": "The carried note says 'android.* stays inside the logcat module'. The frozen rule (D-385) and the build (checkClassReferences with prefix android/ on :NaruServe-logcat) forbid any compile-time android.* reference even in the logcat module; it reaches android.util.Log only by reflection.",
+   "evidence": "build.gradle:135-137; docs/research/naruserve-v1/design/00.design.md:24 (D-385); docs/research/naruserve-v1/waves/wave-8/design.md:78",
+   "suggested_fix": "Reword to 'no class references android.* at compile time; the logcat module reaches android.util.Log by reflection only'."
+  }
+ ]
+}

@@ -547,6 +547,27 @@
    "rule": "majority (stopped after 2 agreeing votes)",
    "confidence": 0.88,
    "ts": "2026-10-20T01:54:05.122881Z"
+  },
+  {
+   "gate_id": "wave-design-insufficient",
+   "question": "Wave 8 loop W ended fail-cap (38/38 covered each round; no critical; round-5 medium+2 low settled in Residual)",
+   "options": [
+    "A proceed",
+    "B extra round",
+    "C abort"
+   ],
+   "votes": [
+    "A",
+    "A"
+   ],
+   "confidences": [
+    0.88,
+    0.85
+   ],
+   "decision": "A",
+   "rule": "majority (stopped after 2 agreeing votes)",
+   "confidence": 0.865,
+   "ts": "2026-10-20T10:04:01.760542Z"
   }
  ]
 }

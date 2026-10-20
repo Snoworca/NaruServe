@@ -1,0 +1,77 @@
+{
+ "round": 2,
+ "findings": [
+  {
+   "finding_id": "W2-001",
+   "severity": "high",
+   "items": [
+    "D-359",
+    "D-363",
+    "D-107",
+    "D-358"
+   ],
+   "claim": "The Servlet decision says listen() and the host/port bind overload do not open a socket and fail with IllegalStateException naming the container. But RestApp.listen(int) is the only start path: it runs the onStart callbacks, freezes the context and routes, then calls adapter.bind(ServerSettings, handler) and boundPort(). If listen() fails, the app never leaves NEW, so D-359 (run onStart when the container initialises the app) cannot be implemented; the container module itself must call listen(0). The adapter cannot tell the module's call from a user's call. The decision also leaves open what boundPort() returns (Servlet 3.1 has no bound port) and so what ServerHandle.port() reports; the SPI says boundPort() throws ISE before bind and is stable until stop.",
+   "evidence": "design.md Wave decisions 'Servlet adapter decisions'; NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:463-515 (listen->start->a.bind(frozen, GatedExchangeHandler); a.boundPort()); RestApp.java:116 (listen is the only start); spi/HttpAdapter.java:21-33",
+   "suggested_fix": "Reword: the Servlet module builds the app with RestApp.builder().httpAdapter(servletAdapter) and calls app.listen(0) at container init; the adapter's bind(ServerSettings, handler) captures the handler and opens no socket; only the bind(host, port, handler) overload throws ISE naming the container; a second listen() already fails through the lifecycle. State what boundPort() returns (for example 0 or -1, documented) and what ServerHandle.port() therefore means on the Servlet adapter."
+  },
+  {
+   "finding_id": "W2-002",
+   "severity": "medium",
+   "items": [
+    "D-347",
+    "D-380",
+    "D-381"
+   ],
+   "claim": "The decision says docs/api/defaults.md 'retitles its section \"\uc800\uc0ac\uc591 Android \ud29c\ub2dd(\uc218\ub3d9 \ud6c4\uc18d \uc791\uc5c5)\" as a post-v1 item'. That heading is pinned by the verified wave 7 requirement (AC-4, PERF-APP-001/OPS wave 7) and by WaveSevenDocsTest.LOW_END_HEADING, which also requires the section to contain '\uc218\ub3d9 \ud6c4\uc18d \uc791\uc5c5' and '\uc790\ub3d9'. A retitle breaks that test and silently edits a verified AC; I-014/sdd rules forbid changing a verified requirement outside an SRS edit.",
+   "evidence": "src/test/java/com/snoworca/naruserve/docs/WaveSevenDocsTest.java:65,245-247; docs/spec/05.application.srs.md:3503,3511; docs/api/defaults.md:72-74",
+   "suggested_fix": "Keep the heading and the words '\uc218\ub3d9 \ud6c4\uc18d \uc791\uc5c5' and '\uc790\ub3d9' unchanged; add the post-v1 wording and reason inside the section body (and list it as post-v1 in the release results document). If the heading must change, say that the wave-7 AC-4 and WaveSevenDocsTest are updated through a guarded SRS change in the same wave."
+  },
+  {
+   "finding_id": "W2-003",
+   "severity": "low",
+   "items": [
+    "D-363",
+    "D-399",
+    "D-052"
+   ],
+   "claim": "Path handling is 'raw getRequestURI() minus context path and servlet mapping'. A request to the context root or to the bare mapping (/ctx, /ctx/api for mapping /api/*) leaves an empty remainder, and the core answers 400 for a raw path that does not start with '/'. The decision does not say the remainder becomes '/'. It also strips by the decoded getServletPath() while keeping the URI percent-encoded, and getRequestURI() may carry ';jsessionid' path parameters; neither case is decided.",
+   "evidence": "NaruServe-api/.../internal/Dispatcher.java:301-302 (!rawPath.startsWith(\"/\") -> 400); design.md Servlet adapter decisions",
+   "suggested_fix": "Add: an empty remainder is passed as '/'; the prefix is removed from the raw URI by matching the raw (encoded) mapping prefix, not by the decoded servletPath length; path parameters after ';' are left to the core's D-052 validation or rejected with 400 (record which)."
+  },
+  {
+   "finding_id": "W2-004",
+   "severity": "low",
+   "items": [
+    "D-348",
+    "D-352",
+    "D-072",
+    "D-357"
+   ],
+   "claim": "The nullability check is stated as failing 'when a public method ... declares a null-capable type without @Nullable'. Under @NullMarked every reference type is non-null by default, so which types are 'null-capable' cannot be derived from signatures; the check as worded is undecidable and an implementer can only test the package-level @NullMarked part. Also docs/api/kotlin.md:59 still says the API carries '@Nullable / @NonNull', while the decision says no @NonNull exists (frozen D-072 text names @NonNull).",
+   "evidence": "design.md decision 'Nullability check'; docs/api/kotlin.md:59; NaruServe-api/src/main/java/com/snoworca/naruserve/package-info.java",
+   "suggested_fix": "Define the check by what is testable: every package of the three public API packages and internal has @NullMarked (runtime-retained package annotation), no @NonNull and no @Nullable on primitives or void in the public API, plus the Kotlin accessor table of D-351 as the behavioural evidence. Add that kotlin.md:59 is reworded to the @NullMarked + @Nullable convention."
+  },
+  {
+   "finding_id": "W2-005",
+   "severity": "low",
+   "items": [
+    "D-381",
+    "I-018"
+   ],
+   "claim": "Two literal spellings are given for the fourth status: the carried section says tests are listed as \"out of v1 scope (user decision)\", while the Wave decisions say the status is `out-of-v1-scope` with the reason \"user decision 2026-10-20\". A docs test asserting the release results document cannot satisfy both strings.",
+   "evidence": "design.md 'Carried from earlier waves' vs 'Wave decisions' first bullet",
+   "suggested_fix": "Name one: status column value `out-of-v1-scope`, reason column 'user decision 2026-10-20'; drop the other phrase."
+  },
+  {
+   "finding_id": "W2-006",
+   "severity": "low",
+   "items": [
+    "D-363",
+    "D-360"
+   ],
+   "claim": "D-363's decisions leave several HttpExchange/ServerSettings semantics undefined for a container: abort() (idempotent, any thread, must make a concurrent commit/write fail and close the connection abnormally) has no direct Servlet 3.1 equivalent; headers() must be 'in received order, duplicates kept' while getHeaderNames() order is container-defined; and ServerSettings values such as bindAddress, allowedHosts (the 421 DNS-rebinding defence of defaults.md:91) and the worker/connection limits have no meaning or are not enforced on a container. The docs table says only 'container settings'.",
+   "evidence": "spi/HttpExchange.java (abort, headers javadoc); NaruServe-tinyhttpd/.../TinyHttpdAdapter.java:118-121 (allowedHosts enforced by the engine); docs/api/defaults.md:91",
+   "suggested_fix": "Add to the servlet.md decisions: abort() is best effort (complete the AsyncContext and fail later writes; state the limit), header order is the container's, and which app.server(...) options the Servlet adapter ignores, with a startup warning for allowedHosts so the user knows the Host check is the container's job."
+  }
+ ]
+}

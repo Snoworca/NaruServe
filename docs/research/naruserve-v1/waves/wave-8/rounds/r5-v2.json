@@ -1,0 +1,29 @@
+{
+ "rows": [],
+ "findings": [
+  {
+   "finding_id": "W2-001",
+   "severity": "medium",
+   "items": ["D-361", "D-359", "D-363"],
+   "claim": "The Servlet SSE design has no bound on, and no way to end, a drain-loop write that is blocked on a client that stopped reading. D-107 (frozen) makes the adapter stop force-close the remaining connections after the deadline and makes release wait a fixed margin for the adapter's threads; I-015 asserts no server thread remains after shutdown; I-012 forbids unlimited time limits. On the Servlet adapter the write timeout is declared ignored (r2), abort() only marks the exchange (r2), AsyncContext.setTimeout(0) is mandated (r4), and r3 only says stop waits until the deadline and shuts the executor down. A drain thread blocked inside the container's blocking write is not released by any of these, so the bounded executor (maxSseStreams threads) can be exhausted by stalled clients and stop/release cannot meet D-107 or I-015 for that case. docs/api/sse.md:171 promises that a client that does not read the shutdown notice is cut at the timeout; the Servlet adapter cannot do that as designed.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-8/design.md:101,106,107,117; docs/research/naruserve-v1/design/00.design.md:204 (D-107), :689 (I-012), :695 (I-015); docs/api/sse.md:171; NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java runShutdownSequence (a.stop then a.release, no other force-close of adapter-owned writers)",
+   "suggested_fix": "Add a Wave decision for the Servlet stop path after the deadline: shutdownNow() the SSE executor (interrupt), call AsyncContext.complete() on every open stream, and mark the exchanges aborted; state that ordinary in-flight requests on container threads cannot be force-closed and that a write blocked in the container ends at the container's own write/idle timeout. Say in docs/api/servlet.md that the SSE slow-client bound on this adapter is the container's, and run the Servlet SSE shutdown test with a client that reads (or one the test closes), so I-015 is satisfiable. Alternatively use Servlet 3.1 non-blocking WriteListener writes for SSE (object.md:462 allows AsyncContext or non-blocking writes)."
+  },
+  {
+   "finding_id": "W2-002",
+   "severity": "low",
+   "items": ["D-359", "D-363", "I-005"],
+   "claim": "The r4 container-integration decision hands the configurer a RestApp.Builder that holds the Gson codec 'when NaruServe-gson is on the classpath', but RestApp.Builder.build() throws IllegalStateException when no jsonCodec was set, and the NaruServe-servlet runtimeClasspath is pinned by a verified test to exactly NaruServe-api, so the servlet module cannot declare NaruServe-gson as a dependency. The design does not say how the integration detects Gson (it must be reflection or ServiceLoader, as the logcat module does) nor what happens when Gson is absent and the configurer sets no codec (the build() failure surfaces inside the container's init).",
+   "evidence": "docs/research/naruserve-v1/waves/wave-8/design.md:115; NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:259-262; src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:234; build.gradle mainDependencies ':NaruServe-servlet'",
+   "suggested_fix": "State that the integration loads com.snoworca.naruserve.gson.GsonJsonCodec by reflection (no new dependency on the servlet module), and that without Gson the configurer must call jsonCodec(...) itself or the container init fails with the builder's IllegalStateException, recorded in docs/api/servlet.md."
+  },
+  {
+   "finding_id": "W2-003",
+   "severity": "low",
+   "items": ["D-363", "D-359"],
+   "claim": "The header text of design.md still says the wave 'implements every one' of the frozen items and that the device parts of T26 and T49 are 'recorded as manual checks'. Only the manual-check half is declared superseded in 'Wave decisions'; the 'implements every one of them' sentence (line 5) contradicts the Android scope note (line 77: 'Wave 8 authors no requirement for them') and is not marked superseded, so an SRS author can read it as requiring the Android sample items.",
+   "evidence": "docs/research/naruserve-v1/waves/wave-8/design.md:5,8,77,84",
+   "suggested_fix": "Reword line 5 to 'this wave implements every one of them except D-364..D-374 and D-412, which are out of v1 scope (see Carried from earlier waves)', or list line 5 beside line 8 in the first Wave decisions bullet as superseded."
+  }
+ ]
+}
