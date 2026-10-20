@@ -18,11 +18,9 @@ final class CookieFactoryHook {
     static {
         try {
             // Class.forName also initialises Cookie (IR-COOKIE-001 AC-6)
-            Method m = Class.forName("com.snoworca.naruserve.Cookie")
-                    .getDeclaredMethod("unvalidated", String.class, String.class);
-            m.setAccessible(true);
-            UNVALIDATED = m;
-        } catch (ReflectiveOperationException e) {
+            UNVALIDATED = PackageMethods.lookup(Class.forName("com.snoworca.naruserve.Cookie"), "unvalidated",
+                    String.class, String.class);
+        } catch (ClassNotFoundException e) {
             throw new ExceptionInInitializerError(e);
         }
     }

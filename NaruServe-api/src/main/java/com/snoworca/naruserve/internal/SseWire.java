@@ -10,17 +10,7 @@ import org.jspecify.annotations.Nullable;
 // @req FR-SSE-001
 public final class SseWire {
 
-    private static final Method WIRE;
-
-    static {
-        try {
-            Method m = SseEvent.class.getDeclaredMethod("wire");
-            m.setAccessible(true);
-            WIRE = m;
-        } catch (ReflectiveOperationException e) {
-            throw new ExceptionInInitializerError(e);
-        }
-    }
+    private static final Method WIRE = PackageMethods.lookup(SseEvent.class, "wire");
 
     private SseWire() {
     }
