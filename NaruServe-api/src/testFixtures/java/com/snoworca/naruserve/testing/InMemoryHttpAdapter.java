@@ -277,6 +277,13 @@ public final class InMemoryHttpAdapter implements HttpAdapter {
             return new ClientRequest(method, target);
         }
 
+        /** A request with a {@code Content-Type: application/json} header and {@code body} as UTF-8 bytes. */
+        // @req FR-HTTP-001
+        public static ClientRequest json(String method, String target, String body) {
+            return of(method, target).header("Content-Type", "application/json")
+                    .body(body.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        }
+
         /** A GET upgrade request for {@code target} with the given extra header name/value pairs. */
         // @req FR-WS-001
         public static ClientRequest upgrade(String target, String... headerPairs) {
