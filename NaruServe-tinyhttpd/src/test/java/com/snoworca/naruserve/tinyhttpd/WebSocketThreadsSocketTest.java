@@ -8,6 +8,7 @@ import static org.junit.Assert.assertTrue;
 import com.snoworca.naruserve.RestApp;
 import com.snoworca.naruserve.testing.RecordingLogger;
 import com.snoworca.naruserve.tinyhttpd.RawTargetSocketTest.Http;
+import com.snoworca.naruserve.testing.NoLeftoverThreads;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -16,10 +17,15 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import org.junit.After;
+import org.junit.Rule;
 import org.junit.Test;
 
 /** Sender and idle threads per app. SDS-AC-n cites docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-6.sds.md. */
 public class WebSocketThreadsSocketTest {
+    // I-015: no naruserve-* or tinyhttpd-* thread outlives a test that started a server
+    @Rule
+    public final NoLeftoverThreads noLeftoverThreads = new NoLeftoverThreads();
+
 
     private final RestApp first = Http.app(new TinyHttpdAdapter(), new RecordingLogger());
     private final RestApp second = Http.app(new TinyHttpdAdapter(), new RecordingLogger());

@@ -9,6 +9,7 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import com.snoworca.naruserve.HttpException;
+import com.snoworca.naruserve.testing.NoLeftoverThreads;
 import com.snoworca.naruserve.spi.WebSocketChannel;
 import com.snoworca.naruserve.spi.WebSocketEndpoint;
 import com.snoworca.naruserve.spi.WebSocketSettings;
@@ -29,6 +30,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.After;
+import org.junit.Rule;
 import org.junit.Test;
 
 /**
@@ -36,6 +38,10 @@ import org.junit.Test;
  * SDS-AC-n cites docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-4.sds.md.
  */
 public class TinyHttpdWebSocketTest {
+    // I-015: no naruserve-* or tinyhttpd-* thread outlives a test that started a server
+    @Rule
+    public final NoLeftoverThreads noLeftoverThreads = new NoLeftoverThreads();
+
 
     private static final WebSocketSettings SETTINGS = new WebSocketSettings(4096, 15000);
     private static final String NO_KEY = RawWebSocketClient.request("/ws", "Upgrade", "Sec-WebSocket-Version: 13");

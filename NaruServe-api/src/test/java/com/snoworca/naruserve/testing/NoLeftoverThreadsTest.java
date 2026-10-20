@@ -45,6 +45,25 @@ public class NoLeftoverThreadsTest {
         }
     }
 
+    // I-015: the engine threads of the TinyHttpd adapter (acceptor, watchdog) are watched as well
+    @Test(timeout = 20000)
+    public void i015_aTinyHttpdThreadStartedByTheTestAndStillAliveFailsItWithItsName() throws Throwable {
+        CountDownLatch release = new CountDownLatch(1);
+        try {
+            new NoLeftoverThreads(200).apply(new Statement() {
+                @Override
+                public void evaluate() {
+                    start("tinyhttpd-acceptor-9", release);
+                }
+            }, TEST).evaluate();
+            fail("a leftover engine thread must fail the test");
+        } catch (AssertionError e) {
+            assertTrue(e.getMessage(), e.getMessage().contains("tinyhttpd-acceptor-9"));
+        } finally {
+            release.countDown();
+        }
+    }
+
     // I-015
     @Test(timeout = 20000)
     public void i015_aThreadThatEndsWithinTheWaitAndAThreadAliveBeforeTheTestAreNotLeftovers() throws Throwable {
