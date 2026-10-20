@@ -1,5 +1,6 @@
 package com.snoworca.naruserve.servlet;
 
+import static com.snoworca.naruserve.testing.TestSupport.headers;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -10,12 +11,10 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.reflect.Proxy;
-import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -77,14 +76,6 @@ public class ServletAbortTest {
                 new Class<?>[] {HttpServletRequest.class}, (p, m, args) -> {
                     throw new AssertionError("request." + m.getName() + " was not expected");
                 });
-    }
-
-    static List<Map.Entry<String, String>> headers(String... pairs) {
-        List<Map.Entry<String, String>> out = new ArrayList<>();
-        for (int i = 0; i < pairs.length; i += 2) {
-            out.add(new SimpleImmutableEntry<>(pairs[i], pairs[i + 1]));
-        }
-        return out;
     }
 
     private static void assertIOException(String what, IORunnable r) {

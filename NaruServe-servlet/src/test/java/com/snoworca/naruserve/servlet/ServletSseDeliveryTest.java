@@ -8,6 +8,7 @@ import static org.junit.Assert.assertTrue;
 import com.snoworca.naruserve.RestApp;
 import com.snoworca.naruserve.SseClient;
 import com.snoworca.naruserve.testing.RecordingLogger;
+import com.snoworca.naruserve.testing.TestSupport;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -153,7 +154,7 @@ public class ServletSseDeliveryTest {
         assertTrue("the slot and thread came back after " + ms + " ms", ms <= 3000);
         next();
         assertFalse(c.isOpen());
-        assertEquals("client", ServletSseLimitTest.cause(c));
+        assertEquals("client", TestSupport.cause(c));
         assertEquals(1, closes.get());
         String regex = "INFO GET /events 200 .* cause=client";
         RecordingLogger.awaitMatching(() -> log.lines, regex, 1);

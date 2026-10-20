@@ -79,13 +79,6 @@ public class ServletSseLimitTest {
         return out;
     }
 
-    /** The end reason the core recorded for {@code c}, read reflectively since the client class is internal. */
-    static String cause(SseClient c) throws Exception {
-        java.lang.reflect.Method m = c.getClass().getDeclaredMethod("cause");
-        m.setAccessible(true);
-        return String.valueOf(m.invoke(c));
-    }
-
     SseProbe open(int port) throws IOException {
         SseProbe p = SseProbe.open(port, "/events");
         probes.add(p);

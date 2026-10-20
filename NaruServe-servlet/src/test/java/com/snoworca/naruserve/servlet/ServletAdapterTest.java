@@ -8,8 +8,8 @@ import com.snoworca.naruserve.RestApp;
 import com.snoworca.naruserve.ServerHandle;
 import com.snoworca.naruserve.spi.ExchangeHandler;
 import com.snoworca.naruserve.spi.ServerSettings;
-import com.snoworca.naruserve.testing.RecordingLogger;
 import com.snoworca.naruserve.testing.LiveThreads;
+import com.snoworca.naruserve.testing.TestSupport;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
@@ -25,8 +25,7 @@ public class ServletAdapterTest {
     };
 
     private static ServerSettings settings(int port) {
-        return ServerSettings.builder().port(port).bindAddress("127.0.0.1").logger(new RecordingLogger())
-                .errorRenderer(status -> "{}").build();
+        return TestSupport.settings().port(port).bindAddress("127.0.0.1").build();
     }
 
     private static int freePort() throws IOException {

@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter;
+import com.snoworca.naruserve.testing.TestSupport;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -68,7 +69,7 @@ public class ServletCasesTest {
         } else {
             b.append(" Content-Length=").append(r.header("Content-Length"));
         }
-        b.append(" body=").append(r.text().replaceAll("\"requestId\":\"[^\"]*\"", "\"requestId\":\"*\""));
+        b.append(" body=").append(TestSupport.maskRequestId(r.text()));
         return b.toString();
     }
 

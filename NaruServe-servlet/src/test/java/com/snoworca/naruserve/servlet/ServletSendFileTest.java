@@ -1,11 +1,13 @@
 package com.snoworca.naruserve.servlet;
 
+import static com.snoworca.naruserve.testing.TestSupport.headers;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter;
+import com.snoworca.naruserve.testing.TestSupport;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -33,7 +35,7 @@ public class ServletSendFileTest {
         }
         ServletAbortTest.FakeResponse res = new ServletAbortTest.FakeResponse();
         ServletExchange ex = new ServletExchange(ServletAbortTest.request(), res.proxy, "/");
-        ex.sendFile(206, ServletAbortTest.headers("Content-Length", "250000"), f, 1234, 250000);
+        ex.sendFile(206, headers("Content-Length", "250000"), f, 1234, 250000);
 
         assertArrayEquals(Arrays.copyOfRange(data, 1234, 1234 + 250000), res.body.toByteArray());
         assertTrue(res.writes.toString(), res.writes.size() >= 4);
@@ -56,7 +58,7 @@ public class ServletSendFileTest {
         ServletExchange ex = new ServletExchange(ServletAbortTest.request(), res.proxy, "/");
         ex.abort();
         try {
-            ex.sendFile(200, ServletAbortTest.headers(), f, 0, 200000);
+            ex.sendFile(200, headers(), f, 0, 200000);
             throw new AssertionError("sendFile after abort did not throw");
         } catch (java.io.IOException expected) {
             assertEquals(0, res.body.size());
@@ -71,12 +73,12 @@ public class ServletSendFileTest {
         f.deleteOnExit();
         ServletAbortTest.FakeResponse res = new ServletAbortTest.FakeResponse();
         ServletExchange started = new ServletExchange(ServletAbortTest.request(), res.proxy, "/");
-        started.commit(200, ServletAbortTest.headers(), 0);
+        started.commit(200, headers(), 0);
         ServletExchange aborted = new ServletExchange(ServletAbortTest.request(), res.proxy, "/");
         aborted.abort();
         for (ServletExchange ex : new ServletExchange[] {started, aborted}) {
             try {
-                ex.sendFile(200, ServletAbortTest.headers(), f, 1, 5);
+                ex.sendFile(200, headers(), f, 1, 5);
                 throw new AssertionError("a bad range did not throw");
             } catch (IllegalArgumentException expected) {
                 // the range first
@@ -84,10 +86,10 @@ public class ServletSendFileTest {
         }
         ServletExchange fresh = new ServletExchange(ServletAbortTest.request(), res.proxy, "/");
         try {
-            fresh.sendFile(200, ServletAbortTest.headers(), f, 1, 5);
+            fresh.sendFile(200, headers(), f, 1, 5);
             throw new AssertionError("a bad range did not throw");
         } catch (IllegalArgumentException expected) {
-            fresh.commit(200, ServletAbortTest.headers(), 0); // still unstarted
+            fresh.commit(200, headers(), 0); // still unstarted
         }
     }
 
@@ -102,10 +104,6 @@ public class ServletSendFileTest {
             }
             assertFalse(new String(b.toByteArray(), StandardCharsets.ISO_8859_1).contains("java/nio/file"));
         }
-    }
-
-    private static String mask(String body) {
-        return body.replaceAll("\"requestId\":\"[^\"]*\"", "\"requestId\":\"*\"");
     }
 
     // SDS-AC-10; FR-SVL-003 AC-4
@@ -130,7 +128,7 @@ public class ServletSendFileTest {
             assertEquals(what, m.header("Content-Disposition"), j.header("Content-Disposition"));
             if (j.status == 416) {
                 // The standard error body carries a fresh request id per response.
-                assertEquals(what, mask(m.text()), mask(j.text()));
+                assertEquals(what, TestSupport.maskRequestId(m.text()), TestSupport.maskRequestId(j.text()));
             } else {
                 assertArrayEquals(what, m.body, j.body);
             }

@@ -8,6 +8,7 @@ import static org.junit.Assert.assertTrue;
 import com.snoworca.naruserve.RestApp;
 import com.snoworca.naruserve.UploadFile;
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter;
+import com.snoworca.naruserve.testing.TestSupport;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -74,7 +75,7 @@ public class ServletMultipartTest {
     }
 
     private static String masked(SharedApp.Reply r) {
-        return r.status + " " + r.text().replaceAll("\"requestId\":\"[^\"]*\"", "\"requestId\":\"*\"");
+        return r.status + " " + TestSupport.maskRequestId(r.text());
     }
 
     private static byte[] bytes(String s) {
