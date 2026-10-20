@@ -5,7 +5,11 @@ import com.snoworca.naruserve.spi.WebSocketEndpoint;
 import com.snoworca.naruserve.spi.WebSocketSettings;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingQueue;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
@@ -36,6 +40,7 @@ public final class InMemoryWebSocketChannel implements WebSocketChannel {
 
     private final WebSocketSettings settings;
     private final LinkedBlockingQueue<Event> events = new LinkedBlockingQueue<>();
+    private final Map<String, CountDownLatch> holds = new ConcurrentHashMap<>();
 
     // Guarded by this.
     private final List<Object> sent = new ArrayList<>();
@@ -102,15 +107,45 @@ public final class InMemoryWebSocketChannel implements WebSocketChannel {
         events.add(new Event(null, null, code, reason));
     }
 
+    /**
+     * The next call of channel method {@code method} (sendText, sendBinary, ping, close or abort) waits, before it
+     * does anything, until the returned latch is counted down.
+     */
+    // @req FR-WS-006
+    public CountDownLatch hold(String method) {
+        if (!Arrays.asList("sendText", "sendBinary", "ping", "close", "abort").contains(method)) {
+            throw new IllegalArgumentException("not a held channel method: " + method);
+        }
+        CountDownLatch latch = new CountDownLatch(1);
+        if (holds.putIfAbsent(method, latch) != null) {
+            throw new IllegalStateException("a hold on " + method + " is still pending");
+        }
+        return latch;
+    }
+
+    /** Called outside the lock, so a held call blocks only its own thread. */
+    private void awaitHold(String method) {
+        CountDownLatch latch = holds.remove(method);
+        if (latch != null) {
+            try {
+                latch.await();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
+
     // @req IR-WS-002
     @Override
     public void sendText(String text) throws IOException {
+        awaitHold("sendText");
         record(text);
     }
 
     // @req IR-WS-002
     @Override
     public void sendBinary(byte[] data) throws IOException {
+        awaitHold("sendBinary");
         record(data.clone());
     }
 
@@ -123,7 +158,12 @@ public final class InMemoryWebSocketChannel implements WebSocketChannel {
 
     // @req IR-WS-002
     @Override
-    public synchronized void ping(byte[] payload) throws IOException {
+    public void ping(byte[] payload) throws IOException {
+        awaitHold("ping");
+        countPing();
+    }
+
+    private synchronized void countPing() throws IOException {
         if (!open) {
             throw new IOException("WebSocket closed");
         }
@@ -133,7 +173,12 @@ public final class InMemoryWebSocketChannel implements WebSocketChannel {
     /** Records the first close; while open the peer echoes it, which ends the read loop. */
     // @req IR-WS-002
     @Override
-    public synchronized void close(int code, String reason) {
+    public void close(int code, String reason) {
+        awaitHold("close");
+        recordClose(code, reason);
+    }
+
+    private synchronized void recordClose(int code, String reason) {
         if (closeCode != -1 || aborted) {
             return;
         }
@@ -148,7 +193,12 @@ public final class InMemoryWebSocketChannel implements WebSocketChannel {
     /** Drops pending peer events and ends the read loop with onClose(1006, ""). */
     // @req IR-WS-002
     @Override
-    public synchronized void abort() {
+    public void abort() {
+        awaitHold("abort");
+        recordAbort();
+    }
+
+    private synchronized void recordAbort() {
         if (aborted) {
             return;
         }

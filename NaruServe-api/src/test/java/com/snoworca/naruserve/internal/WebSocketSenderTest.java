@@ -24,12 +24,14 @@ import org.junit.Test;
 /** The app-wide sender. SDS-AC-n cites docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-4.sds.md. */
 public class WebSocketSenderTest {
 
-    private final WebSocketSender sender = new WebSocketSender();
+    private final WebSocketUpgrade upgrade = new WebSocketUpgrade(new DefaultWebSocketOptions(), null,
+            new SafeLogger(new RecordingLogger()));
+    private final WebSocketSender sender = upgrade.sender();
 
     private DefaultWebSocketSession session() {
         RecordingExchange ex = new RecordingExchange("GET", "/ws");
-        return new DefaultWebSocketSession(new DefaultRequest(ex, Method.GET, Collections.<String, String>emptyMap()),
-                null, new SafeLogger(new RecordingLogger()), "0000000000000000", sender);
+        return new DefaultWebSocketSession(upgrade.nextId(), "0000000000000000", upgrade, null,
+                new DefaultRequest(ex, Method.GET, Collections.<String, String>emptyMap()));
     }
 
     // FR-WS-005 AC-7 sender slot

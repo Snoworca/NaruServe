@@ -1,39 +1,52 @@
 package com.snoworca.naruserve.internal;
 
+import com.snoworca.naruserve.HttpException;
 import com.snoworca.naruserve.Request;
 import com.snoworca.naruserve.WebSocketHandler;
 import com.snoworca.naruserve.WebSocketSession;
+import com.snoworca.naruserve.spi.JsonCodec;
 import com.snoworca.naruserve.spi.WebSocketChannel;
 import com.snoworca.naruserve.spi.WebSocketEndpoint;
 import java.io.IOException;
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.jspecify.annotations.Nullable;
 
 /**
  * The core side of one WebSocket connection: the app's {@link WebSocketSession} and the adapter's
- * {@link WebSocketEndpoint}. The handler runs once from {@link #onOpen}, after 101; the endpoint callbacks catch and
- * log every Exception from user code. Ping and close(code, reason) go through the session's sender slot; sends, id,
- * attributes and JSON arrive with FR-WS-006.
+ * {@link WebSocketEndpoint}. The handler runs once from {@link #onOpen}, after 101; the endpoint callbacks catch every
+ * Exception from user code. Sends, ping and close go through the session's sender slot.
  */
 // @req FR-WS-001
 // @req FR-WS-005
+// @req FR-WS-006
 final class DefaultWebSocketSession implements WebSocketSession, WebSocketEndpoint {
 
+    private final String id;
+    private final String rid;
     private final Request req;
     private final @Nullable WebSocketHandler handler;
+    private final @Nullable JsonCodec codec;
     private final SafeLogger log;
-    private final String rid;
     private final WebSocketSender sender;
+    /** onText and onJson entries in one list, so they run in registration order. */
     private final List<TextListener> textListeners = new CopyOnWriteArrayList<>();
     private final List<BinaryListener> binaryListeners = new CopyOnWriteArrayList<>();
     private final List<CloseListener> closeListeners = new CopyOnWriteArrayList<>();
     private final List<ErrorListener> errorListeners = new CopyOnWriteArrayList<>();
+    private final Map<String, Object> attributes = new ConcurrentHashMap<>();
+    private final AtomicBoolean closed = new AtomicBoolean();
     private volatile @Nullable WebSocketChannel channel;
     private volatile boolean opened;
-    // The first close(code, reason): onClose reports this pair whatever code the peer echoed. Guarded by closeLock,
-    // not this: user code holds the session and may synchronize on it.
+    // The first close the core started: onClose reports this pair whatever code the peer echoed. Guarded by
+    // closeLock, not this: user code holds the session and may synchronize on it.
     private final Object closeLock = new Object();
     private boolean closeCalled;
     private int sentCode;
@@ -41,13 +54,16 @@ final class DefaultWebSocketSession implements WebSocketSession, WebSocketEndpoi
 
     /** A null {@code handler} completes the upgrade and runs no user code (a hook route that is no app.ws route). */
     // @req FR-WS-001
-    DefaultWebSocketSession(Request req, @Nullable WebSocketHandler handler, SafeLogger log, String rid,
-            WebSocketSender sender) {
-        this.req = req;
+    // @req FR-WS-006
+    DefaultWebSocketSession(String id, String requestId, WebSocketUpgrade upgrade, @Nullable WebSocketHandler handler,
+            DefaultRequest req) {
+        this.id = Objects.requireNonNull(id, "id");
+        this.rid = Objects.requireNonNull(requestId, "requestId");
+        this.req = Objects.requireNonNull(req, "req");
         this.handler = handler;
-        this.log = log;
-        this.rid = rid;
-        this.sender = Objects.requireNonNull(sender, "sender");
+        this.codec = upgrade.codec();
+        this.log = upgrade.log();
+        this.sender = upgrade.sender();
     }
 
     /** True once {@link #onOpen} ran: the connection is upgraded, so a later failure is no HTTP answer. */
@@ -56,7 +72,13 @@ final class DefaultWebSocketSession implements WebSocketSession, WebSocketEndpoi
         return opened;
     }
 
+    /** The number of attributes; read by tests to see the map released at close. */
+    int attributeCount() {
+        return attributes.size();
+    }
+
     // @req FR-WS-001
+    // @req FR-WS-006
     @Override
     public void onOpen(WebSocketChannel channel) {
         this.channel = channel;
@@ -68,41 +90,50 @@ final class DefaultWebSocketSession implements WebSocketSession, WebSocketEndpoi
         try {
             h.handle(req, this);
         } catch (Exception e) {
-            fail("handler", e);
+            fail(e, "handler");
         }
     }
 
     // @req FR-WS-001
+    // @req FR-WS-006
     @Override
     public void onText(String text) {
         for (TextListener l : textListeners) {
             try {
                 l.onText(text);
             } catch (Exception e) {
-                fail("listener", e);
+                fail(e, "listener");
                 return;
             }
         }
     }
 
     // @req FR-WS-001
+    // @req FR-WS-006
     @Override
     public void onBinary(byte[] data) {
         for (BinaryListener l : binaryListeners) {
             try {
                 l.onBinary(data);
             } catch (Exception e) {
-                fail("listener", e);
+                fail(e, "listener");
                 return;
             }
         }
     }
 
-    /** Reports the pair this side sent with close(code, reason) when there is one, else the adapter's. */
+    /**
+     * Runs the CloseListeners once, with the first pair the core sent when there is one, else the adapter's; then
+     * releases the attributes.
+     */
     // @req FR-WS-001
     // @req FR-WS-005
+    // @req FR-WS-006
     @Override
     public void onClose(int code, String reason) {
+        if (!closed.compareAndSet(false, true)) {
+            return;
+        }
         synchronized (closeLock) {
             if (closeCalled) {
                 code = sentCode;
@@ -116,25 +147,25 @@ final class DefaultWebSocketSession implements WebSocketSession, WebSocketEndpoi
                 log.error("websocket " + rid + " close listener failed", e);
             }
         }
+        attributes.clear();
     }
 
-    /** Logs with the request id, tells the onError listeners and closes with 1011. */
+    /** Tells the onError listeners, logs at ERROR with the request id and closes with 1011. */
     // @req FR-WS-001
-    private void fail(String what, Exception e) {
-        log.error("websocket " + rid + " " + what + " failed", e);
+    // @req FR-WS-006
+    void fail(Exception error, String what) {
+        tellErrorListeners(error);
+        log.error("websocket " + rid + " " + what + " failed", error);
+        closeBy(1011, "");
+    }
+
+    /** An onError listener that throws is logged and skipped, never passed back to fail. */
+    private void tellErrorListeners(Exception error) {
         for (ErrorListener l : errorListeners) {
             try {
-                l.onError(e);
+                l.onError(error);
             } catch (Exception again) {
                 log.error("websocket " + rid + " error listener failed", again);
-            }
-        }
-        WebSocketChannel c = channel;
-        if (c != null) {
-            try {
-                c.close(1011, "");
-            } catch (RuntimeException again) {
-                log.error("websocket " + rid + " close failed", again);
             }
         }
     }
@@ -159,12 +190,12 @@ final class DefaultWebSocketSession implements WebSocketSession, WebSocketEndpoi
         errorListeners.add(Objects.requireNonNull(listener, "listener"));
     }
 
-    /** The channel is open and close was not called. */
+    /** The channel is open and no close was started. */
     // @req FR-WS-005
     @Override
     public boolean isOpen() {
         WebSocketChannel c = channel;
-        if (c == null || !c.isOpen()) {
+        if (closed.get() || c == null || !c.isOpen()) {
             return false;
         }
         synchronized (closeLock) {
@@ -172,57 +203,112 @@ final class DefaultWebSocketSession implements WebSocketSession, WebSocketEndpoi
         }
     }
 
-    // shortcut: the members below throw until FR-WS-006 adds the sends and the session state.
-    private static UnsupportedOperationException later(String what) {
-        return new UnsupportedOperationException(what + " is not available yet");
-    }
-
+    // @req FR-WS-006
     @Override
     public String id() {
-        throw later("id");
+        return id;
     }
 
+    // @req FR-WS-006
     @Override
     public void sendText(String text) {
-        throw later("sendText");
+        Objects.requireNonNull(text, "text");
+        submit(c -> c.sendText(text));
     }
 
+    /** {@code data} is copied, since the write runs later on a sender thread. */
+    // @req FR-WS-006
     @Override
     public void sendBinary(byte[] data) {
-        throw later("sendBinary");
+        Objects.requireNonNull(data, "data");
+        if (!isOpen()) {
+            return;
+        }
+        byte[] copy = data.clone();
+        submit(c -> c.sendBinary(copy));
     }
 
+    /**
+     * Encodes on the calling thread, so a codec failure throws here with nothing queued: HttpException(500), as
+     * Response.json does, since UncheckedIOException needs API 24.
+     */
+    // @req FR-WS-006
     @Override
     public void sendJson(@Nullable Object value) {
-        throw later("sendJson");
+        if (!isOpen()) {
+            return;
+        }
+        StringWriter w = new StringWriter();
+        try {
+            codec().encode(value, w);
+        } catch (IOException e) {
+            throw new HttpException(500, "JSON encoding failed", e);
+        }
+        String text = w.toString();
+        submit(c -> c.sendText(text));
+    }
+
+    private interface Write {
+        void run(WebSocketChannel c) throws IOException;
+    }
+
+    /**
+     * Queues {@code write} unless the session is closed. The check and the submit share closeLock with closeBy, so no
+     * write is queued behind the close frame.
+     */
+    private void submit(Write write) {
+        WebSocketChannel c = channel;
+        synchronized (closeLock) {
+            if (closed.get() || closeCalled || c == null || !c.isOpen()) {
+                return;
+            }
+            sender.submit(this, () -> {
+                try {
+                    write.run(c);
+                } catch (IOException | RuntimeException e) {
+                    // The connection is going away; its onClose follows.
+                    log.debug("websocket " + rid + " write not sent: " + e);
+                }
+            });
+        }
     }
 
     /** An empty Ping through the sender slot, so it never interleaves with a message being written. */
     // @req FR-WS-005
     @Override
     public void ping() {
-        WebSocketChannel c = channel;
-        if (c == null || !isOpen()) {
-            return;
+        submit(c -> c.ping(new byte[0]));
+    }
+
+    /** Checks the code and reason first, also on a closed session, then starts the close. */
+    // @req FR-WS-005
+    // @req FR-WS-006
+    @Override
+    public void close(int code, String reason) {
+        checkClose(code, reason);
+        closeBy(code, reason);
+    }
+
+    /** Refuses a code an endpoint may not send (RFC 6455 section 7.4) and a reason over 123 UTF-8 bytes. */
+    // @req FR-WS-006
+    static void checkClose(int code, String reason) {
+        Objects.requireNonNull(reason, "reason");
+        if (!(code >= 1000 && code <= 1003 || code >= 1007 && code <= 1014 || code >= 3000 && code <= 4999)) {
+            throw new IllegalArgumentException("close code must be 1000-1003, 1007-1014 or 3000-4999: " + code);
         }
-        sender.submit(this, () -> {
-            try {
-                c.ping(new byte[0]);
-            } catch (IOException | RuntimeException e) {
-                // The connection is going away; its onClose follows.
-                log.debug("websocket " + rid + " ping not sent: " + e);
-            }
-        });
+        int n = reason.getBytes(StandardCharsets.UTF_8).length;
+        if (n > 123) {
+            throw new IllegalArgumentException("close reason over 123 UTF-8 bytes: " + n);
+        }
     }
 
     /**
-     * isOpen() turns false at once and later pings are dropped; the close frame goes through the sender slot, behind
-     * any write already queued. Code and reason checks arrive with FR-WS-006.
+     * Every close the core starts. Only the first pair is recorded; isOpen() turns false at once, so later sends and
+     * pings are dropped and the close frame is the slot's last write.
      */
     // @req FR-WS-005
-    @Override
-    public void close(int code, String reason) {
-        Objects.requireNonNull(reason, "reason");
+    // @req FR-WS-006
+    void closeBy(int code, String reason) {
         WebSocketChannel c = channel;
         if (c == null || !c.isOpen()) {
             return;
@@ -234,28 +320,71 @@ final class DefaultWebSocketSession implements WebSocketSession, WebSocketEndpoi
             closeCalled = true;
             sentCode = code;
             sentReason = reason;
+            sender.submit(this, () -> {
+                try {
+                    c.close(code, reason);
+                } catch (RuntimeException e) {
+                    log.error("websocket " + rid + " close failed", e);
+                }
+            });
         }
-        sender.submit(this, () -> {
+    }
+
+    private JsonCodec codec() {
+        JsonCodec c = codec;
+        if (c == null) {
+            throw new IllegalStateException("this session has no JsonCodec; build the app with RestApp.builder()");
+        }
+        return c;
+    }
+
+    /** A decoding entry in the text listener list; a listener exception propagates to onText, which fails. */
+    // @req FR-WS-006
+    @Override
+    public <T> void onJson(Class<T> type, JsonListener<T> listener) {
+        Objects.requireNonNull(type, "type");
+        Objects.requireNonNull(listener, "listener");
+        JsonCodec c = codec();
+        textListeners.add(text -> {
+            T value;
             try {
-                c.close(code, reason);
-            } catch (RuntimeException e) {
-                log.error("websocket " + rid + " close failed", e);
+                value = c.decode(new StringReader(text), type);
+            } catch (IOException | RuntimeException e) {
+                decodeFailed(e);
+                return;
             }
+            listener.onJson(value);
         });
     }
 
-    @Override
-    public <T> void onJson(Class<T> type, JsonListener<T> listener) {
-        throw later("onJson");
+    /** A malformed message is no protocol error: onError hears of it and the session stays open. */
+    private void decodeFailed(Exception e) {
+        if (errorListeners.isEmpty()) {
+            log.warn("websocket " + rid + " json decode failed: " + e);
+        } else {
+            tellErrorListeners(e);
+        }
     }
 
+    /** A null value removes the key; after onClose released the map, writes are ignored. */
+    // @req FR-WS-006
     @Override
     public void attribute(String key, @Nullable Object value) {
-        throw later("attribute");
+        Objects.requireNonNull(key, "key");
+        if (closed.get()) {
+            return;
+        }
+        if (value == null) {
+            attributes.remove(key);
+        } else {
+            attributes.put(key, value);
+        }
     }
 
+    // @req FR-WS-006
     @Override
+    @SuppressWarnings("unchecked") // a wrapper class stands for its primitive T, which is the boxed type at runtime
     public <T> @Nullable T attribute(String key, Class<T> type) {
-        throw later("attribute");
+        return (T) DefaultRequest.wrapper(type).cast(attributes.get(Objects.requireNonNull(key, "key")));
     }
 }
