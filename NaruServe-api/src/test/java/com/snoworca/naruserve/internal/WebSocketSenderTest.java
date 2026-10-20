@@ -7,10 +7,11 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import com.snoworca.naruserve.Method;
+import com.snoworca.naruserve.WebSocketHandler;
+import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientRequest;
 import com.snoworca.naruserve.testing.RecordingExchange;
 import com.snoworca.naruserve.spi.WebSocketChannel;
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter;
-import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientRequest;
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientResponse;
 import com.snoworca.naruserve.testing.InMemoryWebSocketChannel;
 import com.snoworca.naruserve.testing.RecordingLogger;
@@ -42,18 +43,12 @@ public class WebSocketSenderTest {
             new SafeLogger(new RecordingLogger()));
     private final WebSocketSender sender = upgrade.sender();
 
-    private DefaultWebSocketSession session() {
-        RecordingExchange ex = new RecordingExchange("GET", "/ws");
-        return new DefaultWebSocketSession(upgrade.nextId(), "0000000000000000", upgrade, null,
-                new DefaultRequest(ex, Method.GET, Collections.<String, String>emptyMap()));
-    }
-
     // FR-WS-005 AC-7 sender slot
     // SDS-AC-10; FR-WS-005 AC-5: two tasks of one session never overlap, keep submit order and run on a sender
     // thread, not the submitting one
     @Test(timeout = 20000)
     public void sdsAc10_FR_WS_005_AC5_tasksOfOneSessionRunOneAtATimeInSubmitOrder() throws Exception {
-        DefaultWebSocketSession s = session();
+        DefaultWebSocketSession s = session(upgrade);
         List<Integer> order = Collections.synchronizedList(new ArrayList<Integer>());
         AtomicInteger running = new AtomicInteger();
         AtomicBoolean overlapped = new AtomicBoolean();
@@ -88,8 +83,8 @@ public class WebSocketSenderTest {
     // SDS-AC-10; FR-WS-005 AC-5: a write still running for one session never holds back another session's write
     @Test(timeout = 20000)
     public void sdsAc10_FR_WS_005_AC5_aStalledSessionNeverHoldsBackAnotherSession() throws Exception {
-        DefaultWebSocketSession stalled = session();
-        DefaultWebSocketSession other = session();
+        DefaultWebSocketSession stalled = session(upgrade);
+        DefaultWebSocketSession other = session(upgrade);
         CountDownLatch release = new CountDownLatch(1);
         CountDownLatch otherRan = new CountDownLatch(1);
         CountDownLatch stalledSecond = new CountDownLatch(1);
@@ -112,7 +107,7 @@ public class WebSocketSenderTest {
     // SDS-AC-10; FR-WS-005 AC-5: a task that throws does not stop the session's later tasks
     @Test(timeout = 20000)
     public void sdsAc10_FR_WS_005_AC5_aThrowingTaskDoesNotBlockTheSlot() throws Exception {
-        DefaultWebSocketSession s = session();
+        DefaultWebSocketSession s = session(upgrade);
         CountDownLatch after = new CountDownLatch(1);
         sender.submit(s, () -> {
             throw new IllegalStateException("write bug");
@@ -124,7 +119,7 @@ public class WebSocketSenderTest {
     // SDS-AC-10; FR-WS-005 AC-5: a task that throws an Error frees the slot, so the session's next write still runs
     @Test(timeout = 20000)
     public void sdsAc10_FR_WS_005_AC5_anErrorInATaskFreesTheSlot() throws Exception {
-        DefaultWebSocketSession s = session();
+        DefaultWebSocketSession s = session(upgrade);
         CountDownLatch thrown = new CountDownLatch(1);
         sender.submit(s, () -> {
             thrown.countDown();
@@ -142,10 +137,11 @@ public class WebSocketSenderTest {
         assertEquals(0, after.getCount());
     }
 
-    /** A channel that stays open and records each call with its thread. */
+    /** A channel that records each call with its thread and is open until close or abort. */
     static final class RecordingChannel implements WebSocketChannel {
         final BlockingQueue<String> calls = new LinkedBlockingQueue<>();
         final BlockingQueue<Thread> threads = new LinkedBlockingQueue<>();
+        volatile boolean open = true;
 
         private void record(String call) {
             threads.add(Thread.currentThread());
@@ -170,16 +166,18 @@ public class WebSocketSenderTest {
         @Override
         public void close(int code, String reason) {
             record("close " + code + " " + reason);
+            open = false;
         }
 
         @Override
         public void abort() {
             record("abort");
+            open = false;
         }
 
         @Override
         public boolean isOpen() {
-            return true;
+            return open;
         }
     }
 
@@ -187,7 +185,7 @@ public class WebSocketSenderTest {
     // write already running there, on a sender thread
     @Test(timeout = 20000)
     public void sdsAc8_FR_WS_005_AC7_pingGoesThroughTheSenderSlot() throws Exception {
-        DefaultWebSocketSession s = session();
+        DefaultWebSocketSession s = session(upgrade);
         RecordingChannel ch = new RecordingChannel();
         s.onOpen(ch);
         CountDownLatch release = new CountDownLatch(1);
@@ -209,7 +207,7 @@ public class WebSocketSenderTest {
     // pings, sends the close through the slot and reports the sent pair whatever code the peer echoed
     @Test(timeout = 20000)
     public void sdsAc9_FR_WS_005_AC8_closeIsImmediateDropsLaterPingsAndReportsTheSentPair() throws Exception {
-        DefaultWebSocketSession s = session();
+        DefaultWebSocketSession s = session(upgrade);
         RecordingChannel ch = new RecordingChannel();
         s.onOpen(ch);
         BlockingQueue<String> closed = new LinkedBlockingQueue<>();
@@ -232,8 +230,12 @@ public class WebSocketSenderTest {
     }
 
     static DefaultWebSocketSession session(WebSocketUpgrade up) {
+        return session(up, "0000000000000000", null);
+    }
+
+    static DefaultWebSocketSession session(WebSocketUpgrade up, String rid, WebSocketHandler handler) {
         RecordingExchange ex = new RecordingExchange("GET", "/ws");
-        return new DefaultWebSocketSession(up.nextId(), "0000000000000000", up, null,
+        return new DefaultWebSocketSession(up.nextId(), rid, up, handler,
                 new DefaultRequest(ex, Method.GET, Collections.<String, String>emptyMap()));
     }
 
@@ -247,7 +249,7 @@ public class WebSocketSenderTest {
             if (check.ok()) {
                 return true;
             }
-            Thread.sleep(10);
+            Thread.sleep(2);
         }
         return check.ok();
     }
@@ -261,10 +263,6 @@ public class WebSocketSenderTest {
             }
         }
         return out;
-    }
-
-    private static ClientRequest upgradeRequest() {
-        return ClientRequest.of("GET", "/ws").header("Connection", "Upgrade").header("Upgrade", "websocket");
     }
 
     /**
@@ -384,7 +382,7 @@ public class WebSocketSenderTest {
         assertTrue(e.getQueue() instanceof LinkedBlockingQueue);
         BlockingQueue<Thread> ran = new LinkedBlockingQueue<>();
         CountDownLatch hold = new CountDownLatch(1);
-        assertTrue(s.queue(session(), () -> {
+        assertTrue(s.queue(session(upgrade), () -> {
             ran.add(Thread.currentThread());
             try {
                 hold.await(10, TimeUnit.SECONDS);
@@ -396,7 +394,7 @@ public class WebSocketSenderTest {
         assertEquals("naruserve-4242-ws-sender-1", first.getName());
         assertTrue(first.isDaemon());
         port[0] = 4343; // the first thread is busy, so the next session's drain makes a second thread
-        assertTrue(s.queue(session(), () -> ran.add(Thread.currentThread()), 0, 1));
+        assertTrue(s.queue(session(upgrade), () -> ran.add(Thread.currentThread()), 0, 1));
         assertEquals("naruserve-4343-ws-sender-2", ran.poll(5, TimeUnit.SECONDS).getName());
         hold.countDown();
     }
@@ -414,7 +412,7 @@ public class WebSocketSenderTest {
         });
         t.start();
         try {
-            Future<ClientResponse> f = adapter.submit(upgradeRequest());
+            Future<ClientResponse> f = adapter.submit(ClientRequest.upgrade("/ws"));
             InMemoryWebSocketChannel ch = adapter.nextChannel(5, TimeUnit.SECONDS);
             DefaultWebSocketSession s = opened.poll(5, TimeUnit.SECONDS);
             assertEquals(7, s.sender().executor().getMaximumPoolSize());
@@ -435,7 +433,7 @@ public class WebSocketSenderTest {
         assertEquals(200L, s.executor().getKeepAliveTime(TimeUnit.MILLISECONDS));
         CountDownLatch done = new CountDownLatch(3);
         for (int i = 0; i < 3; i++) {
-            assertTrue(s.queue(session(), done::countDown, 0, 1));
+            assertTrue(s.queue(session(upgrade), done::countDown, 0, 1));
         }
         assertTrue(done.await(5, TimeUnit.SECONDS));
         long last = System.nanoTime();
@@ -500,7 +498,7 @@ public class WebSocketSenderTest {
         t.start();
         try {
             for (int i = 0; i < 200; i++) {
-                Future<ClientResponse> f = adapter.submit(upgradeRequest());
+                Future<ClientResponse> f = adapter.submit(ClientRequest.upgrade("/ws"));
                 InMemoryWebSocketChannel ch = adapter.nextChannel(5, TimeUnit.SECONDS);
                 if (i % 3 == 0) {
                     ch.clientText("hello");
@@ -537,7 +535,7 @@ public class WebSocketSenderTest {
     public void sdsAc2_sdsAc6_FR_WS_007_AC6_AC7_overflowAndLastEmptyTheQueueAndReleaseDropsTheSlot()
             throws Exception {
         WebSocketSender s = new WebSocketSender(4, () -> 1, LOG);
-        DefaultWebSocketSession ses = session();
+        DefaultWebSocketSession ses = session(upgrade);
         CountDownLatch hold = new CountDownLatch(1);
         CountDownLatch running = new CountDownLatch(1);
         List<String> ran = Collections.synchronizedList(new ArrayList<String>());
@@ -573,7 +571,7 @@ public class WebSocketSenderTest {
     @Test(timeout = 20000)
     public void sdsAc2_FR_WS_007_AC6_aMessageAloneAboveTheLimitOverflowsAnEmptyQueue() {
         WebSocketSender s = new WebSocketSender(4, () -> 1, LOG);
-        DefaultWebSocketSession ses = session();
+        DefaultWebSocketSession ses = session(upgrade);
         assertFalse(s.queue(ses, () -> {
             throw new AssertionError("dropped write ran");
         }, 101, 100));
@@ -588,7 +586,7 @@ public class WebSocketSenderTest {
         WebSocketSender s = new WebSocketSender(128, () -> 1, LOG);
         assertEquals("no thread made yet", 0L, s.requestedStack());
         CountDownLatch ran = new CountDownLatch(1);
-        assertTrue(s.queue(session(), ran::countDown, 0, 1));
+        assertTrue(s.queue(session(upgrade), ran::countDown, 0, 1));
         assertTrue(ran.await(10, TimeUnit.SECONDS));
         assertEquals(262144L, s.requestedStack());
     }

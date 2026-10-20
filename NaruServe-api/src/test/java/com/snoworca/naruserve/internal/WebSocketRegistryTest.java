@@ -1,5 +1,6 @@
 package com.snoworca.naruserve.internal;
 
+import static com.snoworca.naruserve.internal.WebSocketSenderTest.eventually;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -51,31 +52,12 @@ public class WebSocketRegistryTest {
         return app.webSocketRegistry();
     }
 
-    static ClientRequest upgradeRequest() {
-        return ClientRequest.of("GET", "/ws").header("Connection", "Upgrade").header("Upgrade", "websocket");
-    }
-
     static void assert503Close(ClientResponse r) {
         assertEquals(503, r.status());
         assertEquals("close", r.header("Connection"));
         String body = new String(r.body(), StandardCharsets.UTF_8);
         assertTrue(body, body.matches("\\{\"error\":\\{\"code\":\"SERVICE_UNAVAILABLE\",\"message\":\"Service "
                 + "Unavailable\",\"requestId\":\"[0-9a-f]{16}\"}}"));
-    }
-
-    interface Check {
-        boolean ok();
-    }
-
-    /** Polls {@code check} for up to 5 s. */
-    static boolean eventually(Check check) throws InterruptedException {
-        for (long end = System.nanoTime() + TimeUnit.SECONDS.toNanos(5); System.nanoTime() < end; ) {
-            if (check.ok()) {
-                return true;
-            }
-            Thread.sleep(2);
-        }
-        return check.ok();
     }
 
     /** Runs {@code registry.closeAll} with a deadline {@code millis} from now on its own thread. */
@@ -112,7 +94,7 @@ public class WebSocketRegistryTest {
             handledBefore.set(handled.size());
             hooked.countDown();
         });
-        Future<ClientResponse> f = adapter.submit(upgradeRequest());
+        Future<ClientResponse> f = adapter.submit(ClientRequest.upgrade("/ws"));
         InMemoryWebSocketChannel ch = adapter.nextChannel(5, TimeUnit.SECONDS);
         assertTrue(hooked.await(5, TimeUnit.SECONDS));
         assertEquals(1, seen.get());
@@ -132,7 +114,7 @@ public class WebSocketRegistryTest {
         assertEquals(WebSocketRegistry.State.ENDED, registry.state());
         AtomicBoolean called = new AtomicBoolean();
         adapter.beforeOpen(() -> called.set(true));
-        ClientResponse r = adapter.send(upgradeRequest());
+        ClientResponse r = adapter.send(ClientRequest.upgrade("/ws"));
         assert503Close(r);
         assertFalse("HttpExchange.webSocket ran past the refusal", called.get());
         assertEquals(0, registry.size());
@@ -144,18 +126,18 @@ public class WebSocketRegistryTest {
     @Test(timeout = 20000)
     public void sdsAc3_FR_WS_009_AC4_tenRefused426AndTenOrigin403LeaveTheSizeUnchanged() throws Exception {
         WebSocketRegistry registry = start();
-        Future<ClientResponse> open = adapter.submit(upgradeRequest());
+        Future<ClientResponse> open = adapter.submit(ClientRequest.upgrade("/ws"));
         InMemoryWebSocketChannel ch = adapter.nextChannel(5, TimeUnit.SECONDS);
         handled.poll(5, TimeUnit.SECONDS);
         assertEquals(1, registry.size());
         adapter.refuseWebSocket(new HttpException(426));
         for (int i = 0; i < 10; i++) {
-            assertEquals(426, adapter.send(upgradeRequest()).status());
+            assertEquals(426, adapter.send(ClientRequest.upgrade("/ws")).status());
             assertEquals("after refused handshake " + i, 1, registry.size());
         }
         adapter.refuseWebSocket(null);
         for (int i = 0; i < 10; i++) {
-            ClientResponse r = adapter.send(upgradeRequest().header("Origin", "https://evil.example")
+            ClientResponse r = adapter.send(ClientRequest.upgrade("/ws").header("Origin", "https://evil.example")
                     .header("Host", "app.example.com"));
             assertEquals(403, r.status());
             assertEquals("after Origin refusal " + i, 1, registry.size());
@@ -179,7 +161,7 @@ public class WebSocketRegistryTest {
                 Thread.currentThread().interrupt();
             }
         });
-        Future<ClientResponse> f = adapter.submit(upgradeRequest());
+        Future<ClientResponse> f = adapter.submit(ClientRequest.upgrade("/ws"));
         InMemoryWebSocketChannel ch = adapter.nextChannel(5, TimeUnit.SECONDS);
         assertEquals(101, f.get(5, TimeUnit.SECONDS).status());
         assertEquals(1001, ch.closeCode());
@@ -205,7 +187,7 @@ public class WebSocketRegistryTest {
         // added before freeze, so it runs before the WebSocket closing participant: the registry is still OPEN
         app.shutdownParticipants().add(ShutdownParticipants.Phase.BEFORE_WAIT, () -> {
             stateThen.set(app.webSocketRegistry().state());
-            answer.set(adapter.send(upgradeRequest()));
+            answer.set(adapter.send(ClientRequest.upgrade("/ws")));
         });
         adapter.beforeOpen(() -> called.set(true));
         t.start();

@@ -60,16 +60,14 @@ public class SseQueueTest {
 
     /** A data-only event whose serialised form is exactly 100 bytes: "data: " + 92 chars + "\n\n". */
     private static String data92(char c) {
-        char[] chars = new char[92];
-        Arrays.fill(chars, c);
-        return new String(chars);
+        return MultipartLimitsTest.repeat(c, 92);
     }
 
-    private static void awaitWriter(InMemoryEventStream es) throws InterruptedException {
+    static void awaitWriter(InMemoryEventStream es) throws InterruptedException {
         long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
         while (es.writerThreads().isEmpty()) {
             assertTrue("no write started", System.nanoTime() < deadline);
-            Thread.sleep(5);
+            Thread.sleep(1);
         }
     }
 

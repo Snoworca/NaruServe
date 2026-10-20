@@ -22,6 +22,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -214,17 +215,7 @@ public final class InMemoryHttpAdapter implements HttpAdapter {
      */
     // @req IR-WS-002
     public InMemoryWebSocketChannel nextChannel(long timeout, TimeUnit unit) {
-        InMemoryWebSocketChannel channel;
-        try {
-            channel = openedChannels.poll(timeout, unit);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new AssertionError("interrupted waiting for a WebSocket channel", e);
-        }
-        if (channel == null) {
-            throw new AssertionError("no WebSocket channel opened within " + timeout + " " + unit);
-        }
-        return channel;
+        return next(openedChannels, timeout, unit, "WebSocket channel opened");
     }
 
     /**
@@ -234,17 +225,21 @@ public final class InMemoryHttpAdapter implements HttpAdapter {
      */
     // @req FR-SSE-002
     public InMemoryEventStream nextEventStream(long timeout, TimeUnit unit) {
-        InMemoryEventStream stream;
+        return next(eventStreams, timeout, unit, "event stream started");
+    }
+
+    private static <T> T next(BlockingQueue<T> queue, long timeout, TimeUnit unit, String what) {
+        T item;
         try {
-            stream = eventStreams.poll(timeout, unit);
+            item = queue.poll(timeout, unit);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new AssertionError("interrupted waiting for an event stream", e);
+            throw new AssertionError("interrupted waiting for: " + what, e);
         }
-        if (stream == null) {
-            throw new AssertionError("no event stream started within " + timeout + " " + unit);
+        if (item == null) {
+            throw new AssertionError("no " + what + " within " + timeout + " " + unit);
         }
-        return stream;
+        return item;
     }
 
     /** Splits a request target into raw path and raw query (null without '?'), dropping an absolute-form prefix. */
@@ -280,6 +275,16 @@ public final class InMemoryHttpAdapter implements HttpAdapter {
         // @req FR-HTTP-001
         public static ClientRequest of(String method, String target) {
             return new ClientRequest(method, target);
+        }
+
+        /** A GET upgrade request for {@code target} with the given extra header name/value pairs. */
+        // @req FR-WS-001
+        public static ClientRequest upgrade(String target, String... headerPairs) {
+            ClientRequest r = of("GET", target).header("Connection", "Upgrade").header("Upgrade", "websocket");
+            for (int i = 0; i < headerPairs.length; i += 2) {
+                r.header(headerPairs[i], headerPairs[i + 1]);
+            }
+            return r;
         }
 
         /** Appends a header; duplicates are kept in order. */

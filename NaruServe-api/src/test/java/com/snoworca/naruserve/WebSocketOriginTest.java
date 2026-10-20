@@ -2,10 +2,10 @@ package com.snoworca.naruserve;
 
 import static com.snoworca.naruserve.WebSocketDispatchTest.accepted;
 import static com.snoworca.naruserve.WebSocketDispatchTest.assertError;
-import static com.snoworca.naruserve.WebSocketDispatchTest.upgradeRequest;
 import static org.junit.Assert.assertEquals;
 
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter;
+import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientRequest;
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientResponse;
 import com.snoworca.naruserve.testing.TestApp;
 import java.util.ArrayList;
@@ -33,14 +33,14 @@ public class WebSocketOriginTest {
     /** An upgrade with {@code headerPairs} that the core hands to webSocket: 101 and the handler ran once more. */
     private void admitted(String... headerPairs) throws Exception {
         int before = handled.get();
-        assertEquals(101, accepted(adapter, upgradeRequest("/ws", headerPairs)).status());
+        assertEquals(101, accepted(adapter, ClientRequest.upgrade("/ws", headerPairs)).status());
         assertEquals(before + 1, handled.get());
     }
 
     /** An upgrade with {@code headerPairs} answered 403 with the standard body; the handler never ran. */
     private void refused(String... headerPairs) {
         int before = handled.get();
-        assertError(403, "HTTP_403", "Error", adapter.send(upgradeRequest("/ws", headerPairs)));
+        assertError(403, "HTTP_403", "Error", adapter.send(ClientRequest.upgrade("/ws", headerPairs)));
         assertEquals(before, handled.get());
     }
 
@@ -111,7 +111,7 @@ public class WebSocketOriginTest {
         t.app().use("/ws/private", (req, res, next) -> res.status(401).end());
         t.app().ws("/ws/private", (req, ws) -> handled.incrementAndGet());
         start();
-        ClientResponse denied = adapter.send(upgradeRequest("/ws/private", "Origin", "http://evil.test",
+        ClientResponse denied = adapter.send(ClientRequest.upgrade("/ws/private", "Origin", "http://evil.test",
                 "Host", "example.test"));
         assertEquals(401, denied.status());
         assertEquals(0, handled.get());

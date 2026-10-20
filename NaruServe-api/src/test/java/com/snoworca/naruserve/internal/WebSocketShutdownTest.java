@@ -1,9 +1,8 @@
 package com.snoworca.naruserve.internal;
 
 import static com.snoworca.naruserve.internal.WebSocketRegistryTest.closeAllAsync;
-import static com.snoworca.naruserve.internal.WebSocketRegistryTest.eventually;
 import static com.snoworca.naruserve.internal.WebSocketRegistryTest.holdingHook;
-import static com.snoworca.naruserve.internal.WebSocketRegistryTest.upgradeRequest;
+import static com.snoworca.naruserve.internal.WebSocketSenderTest.eventually;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -12,6 +11,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.snoworca.naruserve.WebSocketSession;
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter;
+import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientRequest;
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientResponse;
 import com.snoworca.naruserve.testing.InMemoryWebSocketChannel;
 import com.snoworca.naruserve.testing.TestApp;
@@ -72,13 +72,13 @@ public class WebSocketShutdownTest {
      */
     private ReservedRun closeAllOverReservedSession(boolean opened) throws Exception {
         WebSocketRegistry registry = start();
-        Future<ClientResponse> fa = adapter.submit(upgradeRequest());
+        Future<ClientResponse> fa = adapter.submit(ClientRequest.upgrade("/ws"));
         InMemoryWebSocketChannel a = adapter.nextChannel(5, TimeUnit.SECONDS);
         handled.poll(5, TimeUnit.SECONDS);
         CountDownLatch entered = new CountDownLatch(1);
         CountDownLatch release = new CountDownLatch(1);
         adapter.beforeOpen(holdingHook(entered, release));
-        Future<ClientResponse> fb = adapter.submit(upgradeRequest());
+        Future<ClientResponse> fb = adapter.submit(ClientRequest.upgrade("/ws"));
         ReservedRun run = new ReservedRun();
         run.b = adapter.nextChannel(5, TimeUnit.SECONDS);
         assertTrue(entered.await(5, TimeUnit.SECONDS));
@@ -98,7 +98,7 @@ public class WebSocketShutdownTest {
             if (opened) {
                 assertTrue("opened session got no close", eventually(() -> a.closeCode() == 1001));
                 assertEquals("server shutdown", a.closeReason());
-                WebSocketRegistryTest.assert503Close(adapter.send(upgradeRequest()));
+                WebSocketRegistryTest.assert503Close(adapter.send(ClientRequest.upgrade("/ws")));
             }
             // release 250 ms into the 1 s close wait: late enough for a wait that skipped the reserved session to
             // have ended, early enough to tell a wake on its close from the 1 s timeout
@@ -153,7 +153,7 @@ public class WebSocketShutdownTest {
     @Test(timeout = 20000)
     public void sdsAc7_FR_WS_010_AC3_fiftyQueuedBehindAHeldWriteAreNeverSent() throws Exception {
         WebSocketRegistry registry = start();
-        Future<ClientResponse> f = adapter.submit(upgradeRequest());
+        Future<ClientResponse> f = adapter.submit(ClientRequest.upgrade("/ws"));
         InMemoryWebSocketChannel ch = adapter.nextChannel(5, TimeUnit.SECONDS);
         DefaultWebSocketSession s = (DefaultWebSocketSession) handled.poll(5, TimeUnit.SECONDS);
         heldWrite = ch.hold("sendText");
@@ -184,7 +184,7 @@ public class WebSocketShutdownTest {
         AtomicLong afterCloseAll = new AtomicLong();
         app.shutdownParticipants().add(ShutdownParticipants.Phase.BEFORE_WAIT,
                 () -> afterCloseAll.set(System.nanoTime()));
-        Future<ClientResponse> f = adapter.submit(upgradeRequest());
+        Future<ClientResponse> f = adapter.submit(ClientRequest.upgrade("/ws"));
         InMemoryWebSocketChannel ch = adapter.nextChannel(5, TimeUnit.SECONDS);
         handled.poll(5, TimeUnit.SECONDS);
         heldWrite = ch.hold("close");
@@ -207,7 +207,7 @@ public class WebSocketShutdownTest {
         CountDownLatch entered = new CountDownLatch(1);
         CountDownLatch release = new CountDownLatch(1);
         adapter.beforeOpen(holdingHook(entered, release));
-        Future<ClientResponse> f = adapter.submit(upgradeRequest());
+        Future<ClientResponse> f = adapter.submit(ClientRequest.upgrade("/ws"));
         InMemoryWebSocketChannel ch = adapter.nextChannel(5, TimeUnit.SECONDS);
         assertTrue(entered.await(5, TimeUnit.SECONDS));
         Thread closer = closeAllAsync(registry, 5000);
@@ -233,7 +233,7 @@ public class WebSocketShutdownTest {
         CountDownLatch entered = new CountDownLatch(1);
         CountDownLatch release = new CountDownLatch(1);
         adapter.beforeOpen(holdingHook(entered, release));
-        Future<ClientResponse> f = adapter.submit(upgradeRequest());
+        Future<ClientResponse> f = adapter.submit(ClientRequest.upgrade("/ws"));
         InMemoryWebSocketChannel ch = adapter.nextChannel(5, TimeUnit.SECONDS);
         assertTrue(entered.await(5, TimeUnit.SECONDS));
         heldWrite = ch.hold("close");
@@ -265,7 +265,7 @@ public class WebSocketShutdownTest {
             }
             opened.set(System.nanoTime());
         });
-        Future<ClientResponse> f = adapter.submit(upgradeRequest());
+        Future<ClientResponse> f = adapter.submit(ClientRequest.upgrade("/ws"));
         InMemoryWebSocketChannel ch = adapter.nextChannel(5, TimeUnit.SECONDS);
         assertTrue(entered.await(5, TimeUnit.SECONDS));
         Thread closer = closeAllAsync(registry, 100);
@@ -291,7 +291,7 @@ public class WebSocketShutdownTest {
         app.freeze();
         assertSame(registry, app.webSocketRegistry());
         t.start();
-        Future<ClientResponse> f = adapter.submit(upgradeRequest());
+        Future<ClientResponse> f = adapter.submit(ClientRequest.upgrade("/ws"));
         adapter.nextChannel(5, TimeUnit.SECONDS);
         DefaultWebSocketSession s = (DefaultWebSocketSession) handled.poll(5, TimeUnit.SECONDS);
         AtomicBoolean beforeWaitSawEnded = new AtomicBoolean();

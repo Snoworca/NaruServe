@@ -216,50 +216,6 @@ public class AccessLogAcceptanceTest {
         }
     }
 
-    /** Waits up to 5 s until an INFO line matches {@code regex} and returns it. */
-    private String awaitLine(String regex) throws InterruptedException {
-        long end = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
-        while (System.nanoTime() < end) {
-            for (String l : log.info()) {
-                if (l.matches(regex)) {
-                    return l;
-                }
-            }
-            Thread.sleep(5);
-        }
-        throw new AssertionError("no line matching " + regex + " in " + log.info());
-    }
-
-    /** Waits up to 5 s until {@code n} INFO lines match {@code regex} and returns the last of them. */
-    private String awaitNth(String regex, int n) throws InterruptedException {
-        long end = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
-        while (System.nanoTime() < end) {
-            String last = null;
-            int seen = 0;
-            for (String l : log.info()) {
-                if (l.matches(regex)) {
-                    seen++;
-                    last = l;
-                }
-            }
-            if (seen >= n) {
-                return last;
-            }
-            Thread.sleep(5);
-        }
-        throw new AssertionError("fewer than " + n + " lines matching " + regex + " in " + log.info());
-    }
-
-    private int count(String regex) {
-        int n = 0;
-        for (String l : log.info()) {
-            if (l.matches(regex)) {
-                n++;
-            }
-        }
-        return n;
-    }
-
     // SDS-AC-1 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-12.sds.md; FR-APP-019 AC-8: the handshake line
     // is written in onOpen, read here before the client sends its first frame, and onDone adds no line (T38)
     @Test(timeout = 20000)
@@ -270,13 +226,13 @@ public class AccessLogAcceptanceTest {
         java.util.concurrent.Future<ClientResponse> f = adapter.submit(
                 ClientRequest.of("GET", "/ws").header("Connection", "Upgrade").header("Upgrade", "websocket"));
         InMemoryWebSocketChannel ch = adapter.nextChannel(5, TimeUnit.SECONDS);
-        String open = awaitLine("GET /ws 101 \\d+ms in=0 out=0 rid=[0-9a-f]{16}");
+        String open = RecordingLogger.awaitMatching(log::info, "GET /ws 101 \\d+ms in=0 out=0 rid=[0-9a-f]{16}", 1).get(0);
         assertEquals(log.info().toString(), 1, log.info().size());
         ch.clientText("first");
         assertEquals("first", texts.poll(5, TimeUnit.SECONDS));
         ch.clientClose(1000, "");
         assertEquals(101, f.get(5, TimeUnit.SECONDS).status());
-        String close = awaitLine("WS /ws 1000 \\d+ms rid=[0-9a-f]{16}");
+        String close = RecordingLogger.awaitMatching(log::info, "WS /ws 1000 \\d+ms rid=[0-9a-f]{16}", 1).get(0);
         assertEquals(lineRid(open), lineRid(close));
         Thread.sleep(50); // a line from onDone would follow the close line at once
         assertEquals(log.info().toString(), 2, log.info().size());
@@ -304,7 +260,7 @@ public class AccessLogAcceptanceTest {
             java.util.concurrent.Future<ClientResponse> f = adapter.submit(
                     ClientRequest.of("GET", "/ws").header("Connection", "Upgrade").header("Upgrade", "websocket"));
             InMemoryWebSocketChannel ch = adapter.nextChannel(5, TimeUnit.SECONDS);
-            String open = awaitNth("GET /ws 101 .*", ++sessions);
+            String open = RecordingLogger.awaitMatching(log::info, "GET /ws 101 .*", ++sessions).get(sessions - 1);
             if ("1000".equals(code)) {
                 ch.clientText("close");
             } else if ("4001".equals(code)) {
@@ -315,18 +271,18 @@ public class AccessLogAcceptanceTest {
                 ch.abort();
             }
             f.get(5, TimeUnit.SECONDS);
-            String close = awaitLine("WS /ws " + code + " \\d+ms rid=" + lineRid(open));
-            assertEquals(close, 1, count("WS /ws " + code + " .*"));
+            String close = RecordingLogger.awaitMatching(log::info, "WS /ws " + code + " \\d+ms rid=" + lineRid(open), 1).get(0);
+            assertEquals(close, 1, RecordingLogger.countMatching(log.info(), "WS /ws " + code + " .*"));
         }
         java.util.concurrent.Future<ClientResponse> last = adapter.submit(
                 ClientRequest.of("GET", "/ws").header("Connection", "Upgrade").header("Upgrade", "websocket"));
         adapter.nextChannel(5, TimeUnit.SECONDS);
-        String open = awaitNth("GET /ws 101 .*", ++sessions);
+        String open = RecordingLogger.awaitMatching(log::info, "GET /ws 101 .*", ++sessions).get(sessions - 1);
         t.app().shutdown(2, TimeUnit.SECONDS);
         last.get(5, TimeUnit.SECONDS);
-        awaitLine("WS /ws 1001 \\d+ms rid=" + lineRid(open));
-        assertEquals(log.info().toString(), 5, count("GET /ws 101 .*"));
-        assertEquals(log.info().toString(), 5, count("WS /ws .*"));
+        RecordingLogger.awaitMatching(log::info, "WS /ws 1001 \\d+ms rid=" + lineRid(open), 1).get(0);
+        assertEquals(log.info().toString(), 5, RecordingLogger.countMatching(log.info(), "GET /ws 101 .*"));
+        assertEquals(log.info().toString(), 5, RecordingLogger.countMatching(log.info(), "WS /ws .*"));
         assertEquals(log.info().toString(), 10, log.info().size());
     }
 
@@ -342,15 +298,6 @@ public class AccessLogAcceptanceTest {
     }
 
     /** Waits until a write to {@code es} began, which a hold then keeps in progress. */
-    private static void awaitWriter(com.snoworca.naruserve.testing.InMemoryEventStream es)
-            throws InterruptedException {
-        long end = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
-        while (es.writerThreads().isEmpty() && System.nanoTime() < end) {
-            Thread.sleep(1);
-        }
-        assertFalse("no write began", es.writerThreads().isEmpty());
-    }
-
     private static final String SSE_LINE = "GET /events 200 \\d+ms in=0 out=%d rid=[0-9a-f]{16} sse start=\\d+ cause=%s";
 
     // SDS-AC-4 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-12.sds.md; FR-APP-019 AC-10: no line at stream
@@ -370,7 +317,7 @@ public class AccessLogAcceptanceTest {
         assertTrue(client.send("1"));
         assertTrue(client.send("2"));
         client.send("3");
-        String line = awaitLine(String.format(SSE_LINE, "data: 1\n\ndata: 2\n\n".length(), "client"));
+        String line = RecordingLogger.awaitMatching(log::info, String.format(SSE_LINE, "data: 1\n\ndata: 2\n\n".length(), "client"), 1).get(0);
         long start = Long.parseLong(line.replaceAll(".* sse start=(\\d+) .*", "$1"));
         assertTrue(line, start >= before && start <= System.currentTimeMillis());
         assertFalse(line, line.contains(" aborted"));
@@ -378,29 +325,29 @@ public class AccessLogAcceptanceTest {
         SseClient error = openStream();
         adapter.nextEventStream(5, TimeUnit.SECONDS).failWrite(1, new IllegalStateException("broken"));
         error.send("1");
-        awaitLine(String.format(SSE_LINE, 0, "error"));
+        RecordingLogger.awaitMatching(log::info, String.format(SSE_LINE, 0, "error"), 1).get(0);
 
         SseClient app = openStream();
         com.snoworca.naruserve.testing.InMemoryEventStream appStream = adapter.nextEventStream(5, TimeUnit.SECONDS);
         appStream.failWrite(1, new IOException("after close"));
         java.util.concurrent.CountDownLatch held = appStream.hold();
         assertTrue(app.send("1"));
-        awaitWriter(appStream);
+        SseQueueTest.awaitWriter(appStream);
         app.close();
         held.countDown();
-        awaitLine(String.format(SSE_LINE, 0, "app"));
+        RecordingLogger.awaitMatching(log::info, String.format(SSE_LINE, 0, "app"), 1).get(0);
 
         SseClient overflow = openStream();
         com.snoworca.naruserve.testing.InMemoryEventStream ovStream = adapter.nextEventStream(5, TimeUnit.SECONDS);
         ovStream.failWrite(1, new IOException("after overflow"));
         java.util.concurrent.CountDownLatch ovHeld = ovStream.hold();
         assertTrue(overflow.send("1"));
-        awaitWriter(ovStream); // the drain holds the first event in its write
+        SseQueueTest.awaitWriter(ovStream); // the drain holds the first event in its write
         char[] big = new char[2000];
         java.util.Arrays.fill(big, 'x');
         assertFalse(overflow.send(new String(big)));
         ovHeld.countDown();
-        awaitLine(String.format(SSE_LINE, 0, "overflow"));
+        RecordingLogger.awaitMatching(log::info, String.format(SSE_LINE, 0, "overflow"), 1).get(0);
         assertEquals(log.info().toString(), 4, log.info().size());
 
         log.lines.clear();

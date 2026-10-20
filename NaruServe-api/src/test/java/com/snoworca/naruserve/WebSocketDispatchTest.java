@@ -52,14 +52,6 @@ public class WebSocketDispatchTest {
     }
 
     /** A GET to {@code target} with {@code Connection: Upgrade} and {@code Upgrade: websocket}, then the pairs. */
-    static ClientRequest upgradeRequest(String target, String... headerPairs) {
-        ClientRequest r = ClientRequest.of("GET", target).header("Connection", "Upgrade").header("Upgrade", "websocket");
-        for (int i = 0; i < headerPairs.length; i += 2) {
-            r.header(headerPairs[i], headerPairs[i + 1]);
-        }
-        return r;
-    }
-
     /** Submits an accepted upgrade, runs {@code peer} on its channel, closes from the peer and returns the response. */
     static ClientResponse accepted(InMemoryHttpAdapter a, ClientRequest r, Peer peer) throws Exception {
         Future<ClientResponse> f = a.submit(r);
@@ -100,7 +92,7 @@ public class WebSocketDispatchTest {
         });
         t.app().ws("/ws/:room", (req, ws) -> log.add("handler " + req.param("room")));
         t.start();
-        ClientResponse r = accepted(adapter, upgradeRequest("/ws/chat"));
+        ClientResponse r = accepted(adapter, ClientRequest.upgrade("/ws/chat"));
         assertEquals(101, r.status());
         assertEquals(Arrays.asList("global", "prefix", "prefix returned", "global returned", "handler chat"), log);
     }
@@ -122,7 +114,7 @@ public class WebSocketDispatchTest {
         t.app().ws("/ws", (req, ws) -> handled.incrementAndGet());
         t.start();
         adapter.refuseWebSocket(new HttpException(503));
-        assertError(503, "SERVICE_UNAVAILABLE", "Service Unavailable", adapter.send(upgradeRequest("/ws")));
+        assertError(503, "SERVICE_UNAVAILABLE", "Service Unavailable", adapter.send(ClientRequest.upgrade("/ws")));
         assertEquals(1, handled.get());
     }
 
@@ -150,7 +142,7 @@ public class WebSocketDispatchTest {
         t.app().ws("/ws", (req, ws) -> handled.incrementAndGet());
         t.start();
         adapter.refuseWebSocket(new HttpException(400));
-        assertError(400, "BAD_REQUEST", "Bad Request", adapter.send(upgradeRequest("/ws")));
+        assertError(400, "BAD_REQUEST", "Bad Request", adapter.send(ClientRequest.upgrade("/ws")));
         assertEquals(0, handled.get());
 
         RecordingLogger logger = new RecordingLogger();
@@ -205,7 +197,7 @@ public class WebSocketDispatchTest {
             ws.onClose((code, reason) -> closed.countDown());
         });
         t.start();
-        Future<ClientResponse> f = adapter.submit(upgradeRequest("/ws"));
+        Future<ClientResponse> f = adapter.submit(ClientRequest.upgrade("/ws"));
         InMemoryWebSocketChannel ch = adapter.nextChannel(5, TimeUnit.SECONDS);
         CountDownLatch release = ch.hold("sendText");
         try {
@@ -273,7 +265,7 @@ public class WebSocketDispatchTest {
         assertEquals(200, g.status());
         assertEquals("g", g.text());
         assertEquals(0, handled.get());
-        assertEquals(101, accepted(adapter, upgradeRequest("/both")).status());
+        assertEquals(101, accepted(adapter, ClientRequest.upgrade("/both")).status());
         assertEquals(1, handled.get());
     }
 
@@ -283,7 +275,7 @@ public class WebSocketDispatchTest {
         LinkedBlockingQueue<String> got = new LinkedBlockingQueue<>();
         t.app().ws("/ws", (req, ws) -> ws.onText(got::add));
         t.start();
-        ClientResponse r = accepted(adapter, upgradeRequest("/ws"), ch -> {
+        ClientResponse r = accepted(adapter, ClientRequest.upgrade("/ws"), ch -> {
             Thread.sleep(500);
             ch.clientText("later");
             assertEquals("later", got.poll(5, TimeUnit.SECONDS));
@@ -305,7 +297,7 @@ public class WebSocketDispatchTest {
             ws.onBinary(data -> messages.countDown());
         });
         t.start();
-        accepted(adapter, upgradeRequest("/ws"), ch -> {
+        accepted(adapter, ClientRequest.upgrade("/ws"), ch -> {
             ch.clientText("1");
             ch.clientBinary(new byte[] {1});
             ch.clientText("2");
@@ -327,7 +319,7 @@ public class WebSocketDispatchTest {
         t.app().onStart(ctx -> ctx.register(Clock.class, clock));
         t.app().ws("/ws", (req, ws) -> seen.set(req.service(Clock.class)));
         t.start();
-        accepted(adapter, upgradeRequest("/ws"));
+        accepted(adapter, ClientRequest.upgrade("/ws"));
         assertSame(clock, seen.get());
     }
 

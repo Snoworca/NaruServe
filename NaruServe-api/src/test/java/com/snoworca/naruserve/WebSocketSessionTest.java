@@ -1,7 +1,6 @@
 package com.snoworca.naruserve;
 
 import static com.snoworca.naruserve.WebSocketDispatchTest.accepted;
-import static com.snoworca.naruserve.WebSocketDispatchTest.upgradeRequest;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -10,6 +9,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.snoworca.naruserve.spi.JsonCodec;
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter;
+import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientRequest;
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientResponse;
 import com.snoworca.naruserve.testing.InMemoryWebSocketChannel;
 import com.snoworca.naruserve.testing.RecordingLogger;
@@ -102,15 +102,6 @@ public class WebSocketSessionTest {
         return s;
     }
 
-    private boolean logged(String regex) {
-        for (String line : new ArrayList<>(logger.lines)) {
-            if (line.matches(regex)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     // SDS-AC-1; FR-WS-006 AC-1: ids count up from 1 per app, are distinct under concurrency and restart in a new app
     @Test(timeout = 60000)
     public void sdsAc1_FR_WS_006_AC1_idsAreSixteenHexDigitsOfAnAppWideCounter() throws Exception {
@@ -123,7 +114,7 @@ public class WebSocketSessionTest {
         });
         t.start();
         for (int i = 0; i < 3; i++) {
-            assertEquals(101, adapter.send(upgradeRequest("/ws")).status());
+            assertEquals(101, adapter.send(ClientRequest.upgrade("/ws")).status());
         }
         assertEquals(Arrays.asList("0000000000000001", "0000000000000002", "0000000000000003"), first);
 
@@ -133,7 +124,7 @@ public class WebSocketSessionTest {
             Thread th = new Thread(() -> {
                 try {
                     for (int j = 0; j < 125; j++) {
-                        assertEquals(101, adapter.send(upgradeRequest("/ws")).status());
+                        assertEquals(101, adapter.send(ClientRequest.upgrade("/ws")).status());
                     }
                 } catch (Throwable e) {
                     failures.add(e);
@@ -159,7 +150,7 @@ public class WebSocketSessionTest {
             ws.close();
         });
         second.start();
-        assertEquals(101, other.send(upgradeRequest("/ws")).status());
+        assertEquals(101, other.send(ClientRequest.upgrade("/ws")).status());
         assertEquals("0000000000000001", secondIds.poll(5, TimeUnit.SECONDS));
     }
 
@@ -176,7 +167,7 @@ public class WebSocketSessionTest {
                     + ws.attribute("n", int.class)));
         });
         t.start();
-        accepted(adapter, upgradeRequest("/ws"), ch -> {
+        accepted(adapter, ClientRequest.upgrade("/ws"), ch -> {
             ch.clientText("read");
             assertEquals("kim null null 5", event());
         });
@@ -202,7 +193,7 @@ public class WebSocketSessionTest {
             events.add("thread " + Thread.currentThread().getName());
         }));
         t.start();
-        accepted(adapter, upgradeRequest("/ws"), ch -> {
+        accepted(adapter, ClientRequest.upgrade("/ws"), ch -> {
             ch.clientText("send");
             String thread = event().substring("thread ".length());
             assertEquals(Collections.<Object>singletonList("J{a=1}"), sent(ch, 1));
@@ -224,7 +215,7 @@ public class WebSocketSessionTest {
             ws.onText(text -> events.add("text2 " + text));
         });
         t.start();
-        accepted(adapter, upgradeRequest("/ws"), ch -> {
+        accepted(adapter, ClientRequest.upgrade("/ws"), ch -> {
             ch.clientText("{\"m\":1}");
             assertEquals("text1 {\"m\":1}", event());
             assertEquals("json {\"m\":1}", event());
@@ -250,7 +241,7 @@ public class WebSocketSessionTest {
             ws.onText(text -> events.add("quiet later"));
         });
         t.start();
-        accepted(adapter, upgradeRequest("/ws"), ch -> {
+        accepted(adapter, ClientRequest.upgrade("/ws"), ch -> {
             ch.clientText("{bad");
             assertEquals("error bad json", event());
             assertEquals("error2 bad json", event());
@@ -262,11 +253,11 @@ public class WebSocketSessionTest {
             assertTrue(session.get().isOpen());
             assertEquals(-1, ch.closeCode());
         });
-        accepted(adapter, upgradeRequest("/quiet"), ch -> {
+        accepted(adapter, ClientRequest.upgrade("/quiet"), ch -> {
             ch.clientText("{bad");
             assertEquals("quiet later", event());
         });
-        assertTrue(logger.lines.toString(), logged("WARN websocket [0-9a-f]{16} json decode failed.*"));
+        assertTrue(logger.lines.toString(), !RecordingLogger.matching(logger.lines, "WARN websocket [0-9a-f]{16} json decode failed.*").isEmpty());
         assertEquals("only the session without onError logs WARN", 1, logger.count("WARN"));
         assertEquals(0, logger.count("ERROR"));
         assertNull(events.poll());
@@ -286,7 +277,7 @@ public class WebSocketSessionTest {
         });
         t.start();
         AtomicReference<InMemoryWebSocketChannel> channel = new AtomicReference<>();
-        accepted(adapter, upgradeRequest("/ws"), ch -> {
+        accepted(adapter, ClientRequest.upgrade("/ws"), ch -> {
             channel.set(ch);
             ch.clientText("x");
             assertEquals("error boom", event());
@@ -295,7 +286,7 @@ public class WebSocketSessionTest {
         assertEquals(1011, channel.get().closeCode());
         // The close 1011 event above arrived through the read loop, so onText returned to it normally.
         assertFalse("the in-memory exchange was aborted", channel.get().aborted());
-        assertTrue(logger.lines.toString(), logged("ERROR websocket [0-9a-f]{16} listener failed boom"));
+        assertTrue(logger.lines.toString(), !RecordingLogger.matching(logger.lines, "ERROR websocket [0-9a-f]{16} listener failed boom").isEmpty());
         assertNull(events.poll());
     }
 
@@ -319,13 +310,13 @@ public class WebSocketSessionTest {
         });
         t.start();
         List<InMemoryWebSocketChannel> channels = Collections.synchronizedList(new ArrayList<InMemoryWebSocketChannel>());
-        accepted(adapter, upgradeRequest("/bin"), ch -> {
+        accepted(adapter, ClientRequest.upgrade("/bin"), ch -> {
             channels.add(ch);
             ch.clientBinary(new byte[] {1});
             assertEquals("error bin boom", event());
             assertEquals("close 1011", event());
         });
-        accepted(adapter, upgradeRequest("/json"), ch -> {
+        accepted(adapter, ClientRequest.upgrade("/json"), ch -> {
             channels.add(ch);
             ch.clientText("ok");
             assertEquals("error json boom ok", event());
@@ -335,8 +326,8 @@ public class WebSocketSessionTest {
             assertEquals(1011, ch.closeCode());
             assertFalse(ch.aborted());
         }
-        assertTrue(logger.lines.toString(), logged("ERROR websocket [0-9a-f]{16} listener failed bin boom"));
-        assertTrue(logger.lines.toString(), logged("ERROR websocket [0-9a-f]{16} listener failed json boom ok"));
+        assertTrue(logger.lines.toString(), !RecordingLogger.matching(logger.lines, "ERROR websocket [0-9a-f]{16} listener failed bin boom").isEmpty());
+        assertTrue(logger.lines.toString(), !RecordingLogger.matching(logger.lines, "ERROR websocket [0-9a-f]{16} listener failed json boom ok").isEmpty());
     }
 
     // SDS-AC-10; FR-WS-006 AC-7: sends and ping on a closed session return quietly, send nothing, encode nothing
@@ -346,7 +337,7 @@ public class WebSocketSessionTest {
         t.app().ws("/ws", (req, ws) -> sessions.add(ws));
         t.start();
         AtomicReference<InMemoryWebSocketChannel> channel = new AtomicReference<>();
-        accepted(adapter, upgradeRequest("/ws"), ch -> {
+        accepted(adapter, ClientRequest.upgrade("/ws"), ch -> {
             channel.set(ch);
             WebSocketSession ws = sessions.poll(5, TimeUnit.SECONDS);
             ws.close();
@@ -373,7 +364,7 @@ public class WebSocketSessionTest {
             data[0] = 9;
         });
         t.start();
-        accepted(adapter, upgradeRequest("/ws"), ch -> {
+        accepted(adapter, ClientRequest.upgrade("/ws"), ch -> {
             List<Object> s = sent(ch, 2);
             assertEquals("hi", s.get(0));
             assertArrayEquals(new byte[] {1, 2}, (byte[]) s.get(1));
@@ -391,7 +382,7 @@ public class WebSocketSessionTest {
         });
         t.start();
         AtomicReference<InMemoryWebSocketChannel> channel = new AtomicReference<>();
-        ClientResponse r = accepted(adapter, upgradeRequest("/ws"), ch -> {
+        ClientResponse r = accepted(adapter, ClientRequest.upgrade("/ws"), ch -> {
             channel.set(ch);
             assertEquals("error IOException no db", event());
             assertEquals("close 1011 ", event());
@@ -399,6 +390,6 @@ public class WebSocketSessionTest {
         assertEquals(101, r.status());
         assertEquals(1011, channel.get().closeCode());
         assertFalse(channel.get().aborted());
-        assertTrue(logger.lines.toString(), logged("ERROR websocket [0-9a-f]{16} handler failed no db"));
+        assertTrue(logger.lines.toString(), !RecordingLogger.matching(logger.lines, "ERROR websocket [0-9a-f]{16} handler failed no db").isEmpty());
     }
 }

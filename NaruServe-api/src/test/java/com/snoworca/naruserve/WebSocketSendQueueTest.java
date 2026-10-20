@@ -1,14 +1,13 @@
 package com.snoworca.naruserve;
 
 import static com.snoworca.naruserve.WebSocketDispatchTest.accepted;
-import static com.snoworca.naruserve.WebSocketDispatchTest.upgradeRequest;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter;
+import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientRequest;
 import com.snoworca.naruserve.testing.InMemoryWebSocketChannel;
 import com.snoworca.naruserve.testing.TestApp;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
@@ -28,12 +27,6 @@ public class WebSocketSendQueueTest {
     @After
     public void stop() {
         t.app().shutdown(2, TimeUnit.SECONDS);
-    }
-
-    private static String repeat(char c, int n) {
-        char[] a = new char[n];
-        Arrays.fill(a, c);
-        return new String(a);
     }
 
     private String event() throws InterruptedException {
@@ -67,12 +60,12 @@ public class WebSocketSendQueueTest {
     public void sdsAc2_FR_WS_007_AC6_overflowClosesWith1008AndTheSendReturnsNormally() throws Exception {
         WebSocketSession[] ws = new WebSocketSession[1];
         listen(text -> {
-            ws[0].sendText(repeat('a', 600));
-            ws[0].sendText(repeat('b', 600));
+            ws[0].sendText(MultipartLimitsTest.repeat('a', 600));
+            ws[0].sendText(MultipartLimitsTest.repeat('b', 600));
             ws[0].sendText("after");
             events.add("returned, open " + ws[0].isOpen());
         }, ws);
-        accepted(adapter, upgradeRequest("/ws"), ch -> {
+        accepted(adapter, ClientRequest.upgrade("/ws"), ch -> {
             CountDownLatch release = ch.hold("sendText");
             ch.clientText("go");
             assertEquals("returned, open false", event());
@@ -80,7 +73,7 @@ public class WebSocketSendQueueTest {
             assertEquals("close 1008 send queue overflow", event());
             assertEquals(1008, ch.closeCode());
             assertEquals("send queue overflow", ch.closeReason());
-            assertEquals(Collections.<Object>singletonList(repeat('a', 600)), ch.sent());
+            assertEquals(Collections.<Object>singletonList(MultipartLimitsTest.repeat('a', 600)), ch.sent());
         });
     }
 
@@ -92,7 +85,7 @@ public class WebSocketSendQueueTest {
             ws[0].sendBinary(new byte[2000]);
             events.add("returned");
         }, ws);
-        accepted(adapter, upgradeRequest("/ws"), ch -> {
+        accepted(adapter, ClientRequest.upgrade("/ws"), ch -> {
             ch.clientText("go");
             assertEquals("returned", event());
             assertEquals("close 1008 send queue overflow", event());
@@ -117,7 +110,7 @@ public class WebSocketSendQueueTest {
                 ws[0].sendJson(thousandDigits.multiply(java.math.BigInteger.TEN));
             }
         }, ws);
-        accepted(adapter, upgradeRequest("/ws"), ch -> {
+        accepted(adapter, ClientRequest.upgrade("/ws"), ch -> {
             ch.clientText("fits");
             assertEquals(Collections.<Object>singletonList(digits.toString()), sent(ch, 1));
             ch.clientText("overflows");

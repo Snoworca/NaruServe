@@ -4,6 +4,8 @@ import com.snoworca.naruserve.Logger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 import org.jspecify.annotations.NullMarked;
 
 /**
@@ -69,5 +71,41 @@ public class RecordingLogger implements Logger {
             }
         }
         return n;
+    }
+
+    /** The entries of a snapshot of {@code lines} that match {@code regex} entirely. */
+    public static List<String> matching(List<String> lines, String regex) {
+        List<String> out = new ArrayList<>();
+        for (String l : new ArrayList<>(lines)) {
+            if (l.matches(regex)) {
+                out.add(l);
+            }
+        }
+        return out;
+    }
+
+    /** The number of entries of {@code lines} that match {@code regex} entirely. */
+    public static int countMatching(List<String> lines, String regex) {
+        return matching(lines, regex).size();
+    }
+
+    /**
+     * Polls {@code lines} (for example {@code log.info()} through a method reference) for up to 5 s until at least
+     * {@code n} entries match {@code regex} and returns the matches.
+     *
+     * @throws AssertionError when fewer than {@code n} matched in time
+     */
+    public static List<String> awaitMatching(Supplier<List<String>> lines, String regex, int n)
+            throws InterruptedException {
+        long end = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
+        List<String> found = matching(lines.get(), regex);
+        while (found.size() < n && System.nanoTime() < end) {
+            Thread.sleep(5);
+            found = matching(lines.get(), regex);
+        }
+        if (found.size() < n) {
+            throw new AssertionError(found.size() + " lines matching " + regex + ", expected " + n + ": " + lines.get());
+        }
+        return found;
     }
 }

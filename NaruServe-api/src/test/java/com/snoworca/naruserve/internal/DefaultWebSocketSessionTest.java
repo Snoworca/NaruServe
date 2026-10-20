@@ -6,13 +6,10 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import com.snoworca.naruserve.Method;
-import com.snoworca.naruserve.spi.WebSocketChannel;
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter;
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientRequest;
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientResponse;
 import com.snoworca.naruserve.testing.InMemoryWebSocketChannel;
-import com.snoworca.naruserve.testing.RecordingExchange;
 import com.snoworca.naruserve.testing.RecordingLogger;
 import com.snoworca.naruserve.testing.TestApp;
 import java.util.ArrayList;
@@ -37,64 +34,14 @@ public class DefaultWebSocketSessionTest {
     private final BlockingQueue<String> events = new LinkedBlockingQueue<>();
 
     private DefaultWebSocketSession session() {
-        RecordingExchange ex = new RecordingExchange("GET", "/ws");
-        return new DefaultWebSocketSession(upgrade.nextId(), RID, upgrade, null,
-                new DefaultRequest(ex, Method.GET, Collections.<String, String>emptyMap()));
+        return WebSocketSenderTest.session(upgrade, RID, null);
     }
 
-    /** A channel that records each call and is open until close or abort. */
-    static final class Channel implements WebSocketChannel {
-        final BlockingQueue<String> calls = new LinkedBlockingQueue<>();
-        volatile boolean open = true;
-
-        @Override
-        public void sendText(String text) {
-            calls.add("text " + text);
-        }
-
-        @Override
-        public void sendBinary(byte[] data) {
-            calls.add("binary " + data.length);
-        }
-
-        @Override
-        public void ping(byte[] payload) {
-            calls.add("ping");
-        }
-
-        @Override
-        public void close(int code, String reason) {
-            calls.add("close " + code + " " + reason);
-            open = false;
-        }
-
-        @Override
-        public void abort() {
-            calls.add("abort");
-            open = false;
-        }
-
-        @Override
-        public boolean isOpen() {
-            return open;
-        }
-    }
-
-    private DefaultWebSocketSession open(Channel ch) {
+    private DefaultWebSocketSession open(WebSocketSenderTest.RecordingChannel ch) {
         DefaultWebSocketSession s = session();
         s.onOpen(ch);
         s.onClose((code, reason) -> events.add(code + " " + reason));
         return s;
-    }
-
-    private int lines(String regex) {
-        int n = 0;
-        for (String line : new ArrayList<>(logger.lines)) {
-            if (line.matches(regex)) {
-                n++;
-            }
-        }
-        return n;
     }
 
     // SDS-AC-1; FR-WS-006 AC-1: nextId counts up from 1 as 16 lowercase hex digits and the session keeps its id
@@ -113,7 +60,7 @@ public class DefaultWebSocketSessionTest {
     @Test(timeout = 20000)
     public void sdsAc3_FR_WS_006_AC2_attributesTakeConcurrentWritesAndAreClearedAfterOnClose() throws Exception {
         DefaultWebSocketSession s = session();
-        s.onOpen(new Channel());
+        s.onOpen(new WebSocketSenderTest.RecordingChannel());
         List<Thread> threads = new ArrayList<>();
         for (int i = 0; i < 8; i++) {
             int n = i;
@@ -146,7 +93,7 @@ public class DefaultWebSocketSessionTest {
     public void sdsAc4_FR_WS_006_AC3_onCloseListenersRunOnce() throws Exception {
         Thread caller = Thread.currentThread();
         DefaultWebSocketSession s = session();
-        s.onOpen(new Channel());
+        s.onOpen(new WebSocketSenderTest.RecordingChannel());
         List<String> calls = Collections.synchronizedList(new ArrayList<String>());
         s.onClose((code, reason) -> {
             calls.add("first " + code + " " + reason + " " + (Thread.currentThread() == caller));
@@ -157,9 +104,9 @@ public class DefaultWebSocketSessionTest {
         s.onClose(1000, "done");
         s.onClose(1006, "");
         assertEquals(Arrays.asList("first 1000 done true", "second 1000 done"), calls);
-        assertEquals(1, lines("ERROR websocket " + RID + " close listener failed listener broke"));
+        assertEquals(1, RecordingLogger.countMatching(logger.lines, "ERROR websocket " + RID + " close listener failed listener broke"));
 
-        Channel ch = new Channel();
+        WebSocketSenderTest.RecordingChannel ch = new WebSocketSenderTest.RecordingChannel();
         DefaultWebSocketSession server = open(ch);
         server.close(4000, "bye");
         server.onClose(1006, ""); // the peer never answered and the socket was aborted
@@ -172,7 +119,7 @@ public class DefaultWebSocketSessionTest {
     // and the 1011 close is sent, without recursing into fail
     @Test(timeout = 20000)
     public void sdsAc9_FR_WS_006_AC6_throwingOnErrorIsLoggedAndTheCloseStillGoesOut() throws Exception {
-        Channel ch = new Channel();
+        WebSocketSenderTest.RecordingChannel ch = new WebSocketSenderTest.RecordingChannel();
         DefaultWebSocketSession s = open(ch);
         List<String> calls = Collections.synchronizedList(new ArrayList<String>());
         RuntimeException boom = new RuntimeException("boom");
@@ -185,8 +132,8 @@ public class DefaultWebSocketSessionTest {
         assertEquals(Arrays.asList("first true", "second true"), calls);
         assertEquals("close 1011 ", ch.calls.poll(5, TimeUnit.SECONDS));
         assertFalse(s.isOpen());
-        assertEquals(1, lines("ERROR websocket " + RID + " error listener failed onError broke"));
-        assertEquals(1, lines("ERROR websocket " + RID + " listener failed boom"));
+        assertEquals(1, RecordingLogger.countMatching(logger.lines, "ERROR websocket " + RID + " error listener failed onError broke"));
+        assertEquals(1, RecordingLogger.countMatching(logger.lines, "ERROR websocket " + RID + " listener failed boom"));
         assertNull(ch.calls.poll(200, TimeUnit.MILLISECONDS));
     }
 
@@ -219,7 +166,7 @@ public class DefaultWebSocketSessionTest {
         }
         DefaultWebSocketSession.checkClose(1000, bytes(123));
 
-        Channel ch = new Channel();
+        WebSocketSenderTest.RecordingChannel ch = new WebSocketSenderTest.RecordingChannel();
         DefaultWebSocketSession s = open(ch);
         try {
             s.close(1005, "");
@@ -244,7 +191,7 @@ public class DefaultWebSocketSessionTest {
     public void sdsAc12_FR_WS_006_AC9_onCloseReportsTheFirstCoreClose() throws Exception {
         String[][] sources = {{"1008", ""}, {"1001", ""}, {"1011", ""}, {"4000", "user"}};
         for (String[] src : sources) {
-            Channel ch = new Channel();
+            WebSocketSenderTest.RecordingChannel ch = new WebSocketSenderTest.RecordingChannel();
             DefaultWebSocketSession s = open(ch);
             s.closeBy(Integer.parseInt(src[0]), src[1]);
             assertFalse(s.isOpen());
@@ -253,7 +200,7 @@ public class DefaultWebSocketSessionTest {
             assertEquals(src[0] + " " + src[1], events.poll(5, TimeUnit.SECONDS));
         }
 
-        Channel ch = new Channel();
+        WebSocketSenderTest.RecordingChannel ch = new WebSocketSenderTest.RecordingChannel();
         DefaultWebSocketSession s = open(ch);
         s.closeBy(1001, "idle");
         s.close(1000, "later");
@@ -264,10 +211,10 @@ public class DefaultWebSocketSessionTest {
         assertEquals("close 1001 idle", ch.calls.poll(5, TimeUnit.SECONDS));
         assertNull("a second close reached the channel", ch.calls.poll(200, TimeUnit.MILLISECONDS));
 
-        DefaultWebSocketSession client = open(new Channel());
+        DefaultWebSocketSession client = open(new WebSocketSenderTest.RecordingChannel());
         client.onClose(1000, "client");
         assertEquals("1000 client", events.poll(5, TimeUnit.SECONDS));
-        DefaultWebSocketSession lost = open(new Channel());
+        DefaultWebSocketSession lost = open(new WebSocketSenderTest.RecordingChannel());
         lost.onClose(1006, "");
         assertEquals("1006 ", events.poll(5, TimeUnit.SECONDS));
     }
@@ -336,15 +283,15 @@ public class DefaultWebSocketSessionTest {
     @Test(timeout = 20000)
     public void sdsAc13_FR_WS_006_AC10_handlerFailureSeesOnlyEarlierOnErrorListeners() throws Exception {
         List<String> calls = Collections.synchronizedList(new ArrayList<String>());
-        DefaultWebSocketSession s = new DefaultWebSocketSession(upgrade.nextId(), RID, upgrade, (req, ws) -> {
+        DefaultWebSocketSession s = WebSocketSenderTest.session(upgrade, RID, (req, ws) -> {
             ws.onError(e -> calls.add("before " + e.getMessage()));
             throw new java.io.IOException("no db");
-        }, new DefaultRequest(new RecordingExchange("GET", "/ws"), Method.GET, Collections.<String, String>emptyMap()));
-        Channel ch = new Channel();
+        });
+        WebSocketSenderTest.RecordingChannel ch = new WebSocketSenderTest.RecordingChannel();
         s.onOpen(ch);
         s.onError(e -> calls.add("after"));
         assertEquals(Collections.singletonList("before no db"), calls);
         assertEquals("close 1011 ", ch.calls.poll(5, TimeUnit.SECONDS));
-        assertEquals(1, lines("ERROR websocket " + RID + " handler failed no db"));
+        assertEquals(1, RecordingLogger.countMatching(logger.lines, "ERROR websocket " + RID + " handler failed no db"));
     }
 }

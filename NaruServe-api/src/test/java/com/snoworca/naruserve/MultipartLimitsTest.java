@@ -78,7 +78,7 @@ public class MultipartLimitsTest {
         }
     }
 
-    private static String repeat(char c, int n) {
+    static String repeat(char c, int n) {
         char[] a = new char[n];
         Arrays.fill(a, c);
         return new String(a);

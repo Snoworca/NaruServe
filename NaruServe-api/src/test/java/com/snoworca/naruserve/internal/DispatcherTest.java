@@ -1,5 +1,6 @@
 package com.snoworca.naruserve.internal;
 
+import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientRequest;
 import com.snoworca.naruserve.testing.RecordingExchange;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -13,7 +14,6 @@ import com.snoworca.naruserve.RouteHandler;
 import com.snoworca.naruserve.routing.Router;
 import com.snoworca.naruserve.routing.RouterPolicy;
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter;
-import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientRequest;
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientResponse;
 import com.snoworca.naruserve.testing.RecordingLogger;
 import java.io.ByteArrayInputStream;
@@ -595,7 +595,7 @@ public class DispatcherTest {
         app.webSocket(o -> o.allowedOrigins("https://good.example"));
         app.listen(0);
         try {
-            Future<ClientResponse> f = a.submit(upgrade("/ws", "Origin", "https://good.example"));
+            Future<ClientResponse> f = a.submit(ClientRequest.upgrade("/ws", "Origin", "https://good.example"));
             a.nextChannel(5, TimeUnit.SECONDS).clientClose(1000, "");
             assertEquals(101, f.get(5, TimeUnit.SECONDS).status());
             long end = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
@@ -607,11 +607,11 @@ public class DispatcherTest {
             assertTrue(log.info().get(0), log.info().get(0).matches("GET /ws 101 \\d+ms in=0 out=0 rid=[0-9a-f]{16}"));
             assertTrue(log.info().get(1), log.info().get(1).matches("WS /ws 1000 \\d+ms rid=[0-9a-f]{16}"));
             log.lines.clear();
-            assertEquals(403, a.send(upgrade("/guarded", "Origin", "https://evil.example")).status());
+            assertEquals(403, a.send(ClientRequest.upgrade("/guarded", "Origin", "https://evil.example")).status());
             a.refuseWebSocket(new com.snoworca.naruserve.HttpException(426).withHeader("Sec-WebSocket-Version", "13"));
-            assertEquals(426, a.send(upgrade("/ws", "Sec-WebSocket-Version", "12")).status());
+            assertEquals(426, a.send(ClientRequest.upgrade("/ws", "Sec-WebSocket-Version", "12")).status());
             a.refuseWebSocket(new com.snoworca.naruserve.HttpException(503).withHeader("Connection", "close"));
-            assertEquals(503, a.send(upgrade("/ws", "Origin", "https://good.example")).status());
+            assertEquals(503, a.send(ClientRequest.upgrade("/ws", "Origin", "https://good.example")).status());
             List<String> lines = log.info();
             assertEquals(lines.toString(), 3, lines.size());
             assertTrue(lines.get(0), lines.get(0).matches("GET /guarded 403 \\d+ms in=0 out=\\d+ rid=[0-9a-f]{16}"));
@@ -620,14 +620,6 @@ public class DispatcherTest {
         } finally {
             app.shutdown(2, TimeUnit.SECONDS);
         }
-    }
-
-    private static ClientRequest upgrade(String target, String... headerPairs) {
-        ClientRequest r = ClientRequest.of("GET", target).header("Connection", "Upgrade").header("Upgrade", "websocket");
-        for (int i = 0; i < headerPairs.length; i += 2) {
-            r.header(headerPairs[i], headerPairs[i + 1]);
-        }
-        return r;
     }
 
     // SDS-AC-2 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-12.sds.md; FR-APP-019 AC-8: upgraded101() turns
