@@ -40,7 +40,7 @@ public class ScanReportTest {
             "com.snoworca.tinyhttpd:tinyhttpd-websocket:0.1.0-SNAPSHOT", "org.slf4j:slf4j-api:1.7.36");
 
     /** The non-empty lines after "## Dependencies". */
-    static List<String> dependencySection(String report) {
+    public static List<String> dependencySection(String report) {
         int start = report.indexOf("\n## Dependencies\n");
         assertTrue("report has a '## Dependencies' section:\n" + report, start >= 0);
         List<String> deps = new ArrayList<>();

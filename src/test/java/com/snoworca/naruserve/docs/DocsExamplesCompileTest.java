@@ -174,21 +174,7 @@ public final class DocsExamplesCompileTest {
     /** Every fenced block opened by a {@code java} info string, in file order. */
     // @req OPS-HTTP-004
     static List<String> extractJavaBlocks(File md) throws IOException {
-        List<String> out = new ArrayList<>();
-        StringBuilder cur = null;
-        for (String line : read(md).split("\n", -1)) {
-            if (cur == null) {
-                if (line.trim().equals("```java")) {
-                    cur = new StringBuilder();
-                }
-            } else if (line.trim().startsWith("```")) {
-                out.add(cur.toString());
-                cur = null;
-            } else {
-                cur.append(line).append('\n');
-            }
-        }
-        return out;
+        return ReadmeDocsTest.blocks(read(md), "java");
     }
 
     /** True when the first line that is not blank, an import, a comment or a lone annotation declares a type. */

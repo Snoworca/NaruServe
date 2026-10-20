@@ -33,7 +33,7 @@ public final class ReadmeDocsTest {
 
     private static final String MARKER = "(미확정)";
 
-    private static File root() {
+    static File root() {
         String root = System.getProperty("naruserve.rootDir");
         assertNotNull("naruserve.rootDir system property", root);
         return new File(root);

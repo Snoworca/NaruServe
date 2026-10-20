@@ -7,8 +7,6 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.TreeMap;
@@ -84,17 +82,14 @@ public class PublishedPomTest {
     }
 
     private static String file(String path) throws IOException {
-        return new String(Files.readAllBytes(new File(System.getProperty("naruserve.rootDir"), path).toPath()),
-                StandardCharsets.UTF_8);
+        return BuildLayoutTest.read(new File(BuildLayoutTest.property("naruserve.rootDir"), path));
     }
 
     // SDS-AC-5; FR-REL-005 AC-1
     @Test
     public void fr_REL_005_AC1_nineGeneratedPomsWithTheModuleCoordinates() throws Exception {
         Map<String, Element> poms = poms();
-        assertEquals(new java.util.TreeSet<>(java.util.Arrays.asList("NaruServe-api", "NaruServe-servlet",
-                "NaruServe-tinyhttpd", "NaruServe-gson", "NaruServe", "NaruServe-kotlin", "NaruServe-slf4j",
-                "NaruServe-filelog", "NaruServe-logcat")), poms.keySet());
+        assertEquals(new java.util.TreeSet<>(BuildLayoutTest.MODULES), poms.keySet());
         for (Element project : poms.values()) {
             assertEquals("com.snoworca.naruserve", text(project, "groupId"));
             assertEquals(VERSION, text(project, "version"));

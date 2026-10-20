@@ -1,6 +1,7 @@
 package com.snoworca.naruserve.docs;
 
 import static com.snoworca.naruserve.docs.ReadmeDocsTest.read;
+import static com.snoworca.naruserve.docs.ReleaseNotesDocsTest.section;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -67,13 +68,6 @@ public final class ReleaseResultsDocsTest {
             }
         }
         return rows;
-    }
-
-    private static String section(String doc, String heading) {
-        int start = doc.indexOf("\n" + heading + "\n");
-        assertTrue(RESULTS + " has '" + heading + "'", start >= 0);
-        int end = doc.indexOf("\n## ", start + 1);
-        return doc.substring(start, end < 0 ? doc.length() : end);
     }
 
     // SDS-AC-6; OPS-REL-003 AC-1

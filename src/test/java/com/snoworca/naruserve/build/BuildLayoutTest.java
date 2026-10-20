@@ -11,6 +11,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,7 +31,7 @@ import org.junit.Test;
  */
 public class BuildLayoutTest {
 
-    static final List<String> MODULES = Arrays.asList("NaruServe-api", "NaruServe-servlet", "NaruServe-tinyhttpd",
+    public static final List<String> MODULES = Arrays.asList("NaruServe-api", "NaruServe-servlet", "NaruServe-tinyhttpd",
             "NaruServe-gson", "NaruServe", "NaruServe-kotlin", "NaruServe-slf4j", "NaruServe-filelog",
             "NaruServe-logcat");
 
@@ -43,18 +44,26 @@ public class BuildLayoutTest {
     }
 
     static String read(File file) throws IOException {
+        return read(file, StandardCharsets.UTF_8);
+    }
+
+    static String read(File file, Charset charset) throws IOException {
         try (InputStream in = new FileInputStream(file)) {
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            byte[] buf = new byte[8192];
-            int n;
-            while ((n = in.read(buf)) > 0) {
-                out.write(buf, 0, n);
-            }
-            return new String(out.toByteArray(), StandardCharsets.UTF_8);
+            return new String(drain(in), charset);
         }
     }
 
-    private static List<File> walk(File dir, String suffix) {
+    private static byte[] drain(InputStream in) throws IOException {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        byte[] buf = new byte[8192];
+        int n;
+        while ((n = in.read(buf)) > 0) {
+            out.write(buf, 0, n);
+        }
+        return out.toByteArray();
+    }
+
+    static List<File> walk(File dir, String suffix) {
         List<File> found = new ArrayList<>();
         File[] children = dir.listFiles();
         if (children == null) {
@@ -406,21 +415,20 @@ public class BuildLayoutTest {
 
     /** Also called after BuildChecksTest's nested builds, since test class order is not fixed. */
     static void assertTinyHttpdClean() throws Exception {
-        // --no-optional-locks keeps git status from rewriting the checkout's index.
-        Process git = new ProcessBuilder("git", "--no-optional-locks", "-C", property("naruserve.tinyHttpdDir"),
-                "status", "--porcelain").redirectErrorStream(true).start();
+        assertEquals("", git(new File(property("naruserve.tinyHttpdDir")), "status", "--porcelain"));
+    }
+
+    /** Runs git in dir and returns its output; the exit status must be zero. --no-optional-locks keeps status from rewriting the index. */
+    static String git(File dir, String... args) throws Exception {
+        List<String> command = new ArrayList<>(Arrays.asList("git", "--no-optional-locks", "-C", dir.getPath()));
+        command.addAll(Arrays.asList(args));
+        Process p = new ProcessBuilder(command).redirectErrorStream(true).start();
         String out;
-        try (InputStream in = git.getInputStream()) {
-            ByteArrayOutputStream buf = new ByteArrayOutputStream();
-            byte[] b = new byte[4096];
-            int n;
-            while ((n = in.read(b)) > 0) {
-                buf.write(b, 0, n);
-            }
-            out = new String(buf.toByteArray(), StandardCharsets.UTF_8);
+        try (InputStream in = p.getInputStream()) {
+            out = new String(drain(in), StandardCharsets.UTF_8);
         }
-        assertEquals(out, 0, git.waitFor());
-        assertEquals("", out);
+        assertEquals(out, 0, p.waitFor());
+        return out;
     }
 
     // SDS-AC-20; OPS-BUILD-003 AC-1

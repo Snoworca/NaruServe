@@ -48,9 +48,7 @@ public final class ApiMarkersDocsTest {
             "`jakarta.servlet`", "WebSocket on the Servlet adapter"));
 
     private static File root() {
-        String root = System.getProperty("naruserve.rootDir");
-        assertNotNull("naruserve.rootDir system property", root);
-        return new File(root);
+        return ReadmeDocsTest.root();
     }
 
     private static String releaseNotes() throws IOException {

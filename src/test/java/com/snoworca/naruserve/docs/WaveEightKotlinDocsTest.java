@@ -2,14 +2,12 @@ package com.snoworca.naruserve.docs;
 
 import static com.snoworca.naruserve.docs.WaveFiveDocsTest.contains;
 import static com.snoworca.naruserve.docs.WaveFiveDocsTest.doc;
+import static com.snoworca.naruserve.docs.WaveSevenDocsTest.section;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -33,22 +31,10 @@ public final class WaveEightKotlinDocsTest {
     /** The header KotlinAccessorTable (NaruServe-api tests) starts the nullable-accessor table from. */
     private static final String TABLE_HEADER = "| Java | Kotlin 타입 |";
 
-    private static String rootFile(String path) throws IOException {
-        File f = new File(System.getProperty("naruserve.rootDir"), path);
-        return new String(Files.readAllBytes(f.toPath()), StandardCharsets.UTF_8);
-    }
-
-    private static String section(String doc, String heading) {
-        int start = doc.indexOf("\n" + heading + "\n");
-        assertTrue("no section " + heading, start >= 0);
-        int end = doc.indexOf("\n#", start + heading.length() + 2);
-        return end < 0 ? doc.substring(start) : doc.substring(start, end);
-    }
-
     // SDS-AC-9; IR-KT-002 AC-4
     @Test
     public void sdsAc9_IR_KT_002_AC_4_the_JsonDocsKotlinTest_body_copy_line_is_unchanged() throws IOException {
-        String copy = rootFile("NaruServe-api/src/test/kotlin/com/snoworca/naruserve/JsonDocsKotlinTest.kt");
+        String copy = ReadmeDocsTest.read("NaruServe-api/src/test/kotlin/com/snoworca/naruserve/JsonDocsKotlinTest.kt");
         assertTrue(Arrays.asList(copy.split("\n")).contains(EXTENSION_LINE));
     }
 
@@ -58,7 +44,7 @@ public final class WaveEightKotlinDocsTest {
         String kotlin = doc("kotlin.md");
         contains("kotlin.md", kotlin, "NaruServe-kotlin", "com.snoworca.naruserve:NaruServe-kotlin:0.1.0-SNAPSHOT");
         assertFalse(kotlin.contains("rest-kotlin"));
-        assertTrue(rootFile("settings.gradle").contains("include ':NaruServe-kotlin'"));
+        assertTrue(ReadmeDocsTest.read("settings.gradle").contains("include ':NaruServe-kotlin'"));
     }
 
     // SDS-AC-11; OPS-KT-001 AC-2

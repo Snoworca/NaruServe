@@ -1,5 +1,7 @@
 package com.snoworca.naruserve.docs;
 
+import static com.snoworca.naruserve.docs.ReleaseNotesDocsTest.section;
+import static com.snoworca.naruserve.docs.WaveFiveDocsTest.contains;
 import static com.snoworca.naruserve.docs.WaveFiveDocsTest.doc;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -156,26 +158,12 @@ public final class ServletDocsTest {
     /** SHA-256 of docs/api/sse.md as wave 7 left it (UTF-8 bytes). */
     static final String WAVE7_SSE_SHA256 = "6941670375a472139ae110a283f2030baaa20606ee05a44b06dd5586cc6d9921";
 
-    /** The text from {@code heading} to the next heading of the same or a higher level. */
-    private static String section(String doc, String heading) {
-        int start = doc.indexOf("\n" + heading + "\n");
-        assertTrue("servlet.md has no section " + heading, start >= 0);
-        int end = doc.indexOf("\n## ", start + heading.length() + 2);
-        return end < 0 ? doc.substring(start) : doc.substring(start, end);
-    }
-
-    private static void has(String where, String text, String... parts) {
-        for (String p : parts) {
-            assertTrue(where + " lacks: " + p, text.contains(p));
-        }
-    }
-
     // OPS-SVL-001 AC-1 SDS-AC-6: no marker; the jakarta sentence says no jakarta.servlet module exists in v1
     @Test
     public void noMarkerAndJakartaSentence() throws IOException {
         String doc = doc("servlet.md");
         assertFalse("servlet.md keeps a marker", doc.contains(MARKER));
-        has("servlet.md", doc, JAKARTA_SENTENCE);
+        contains("servlet.md", doc, JAKARTA_SENTENCE);
         assertFalse("the jakarta module is no promise", doc.contains("별도 모듈로 나눌 예정"));
     }
 
@@ -183,7 +171,7 @@ public final class ServletDocsTest {
     @Test
     public void registrationSection() throws IOException {
         String reg = section(doc("servlet.md"), "## 등록");
-        has("## 등록", reg, "`ServletConfigurer`", "`NaruServeInitializer`",
+        contains("## 등록", reg, "`ServletConfigurer`", "`NaruServeInitializer`",
                 "| `naruserve.configurer` | 없음 |", "| `naruserve.urlPattern` | `/*` |",
                 "| `naruserve.shutdownTimeoutSeconds` | `10` |", "1~300",
                 "`META-INF/services/javax.servlet.ServletContainerInitializer`", "`asyncSupported=true`",
@@ -194,7 +182,7 @@ public final class ServletDocsTest {
     // OPS-SVL-001 AC-3 SDS-AC-8: one keyword for each fact of the comparison table and the sections
     @Test
     public void sectionKeywords() throws IOException {
-        has("servlet.md", doc("servlet.md"),
+        contains("servlet.md", doc("servlet.md"),
                 "`ServerHandle.port()`는 항상 `0`",                       // port owned by the container
                 "`ServerHandle.address()`는 컨테이너의 주소가 아닙니다",     // address is not the container's
                 "`ServletContextListener`가 `app.shutdown(timeout, SECONDS)`", // destroy callback runs shutdown
@@ -215,7 +203,7 @@ public final class ServletDocsTest {
     // FR-SVL-006 AC-3 SDS-AC-3: the deviation sentence in servlet.md and its pointer line in sse.md
     @Test
     public void cutAtTimeoutDeviation() throws IOException {
-        has("servlet.md", section(doc("servlet.md"), "## 종료"), DEVIATION_PHRASE);
+        contains("servlet.md", section(doc("servlet.md"), "## 종료"), DEVIATION_PHRASE);
         assertTrue("sse.md has no pointer line", Arrays.asList(doc("sse.md").split("\n")).contains(SSE_POINTER));
     }
 
@@ -232,10 +220,6 @@ public final class ServletDocsTest {
             hex.append(String.format("%02x", b));
         }
         assertEquals("sse.md changed beyond the pointer line", WAVE7_SSE_SHA256, hex.toString());
-        int kotlin = 0;
-        for (String line : doc("servlet.md").split("\n")) {
-            kotlin += line.trim().equals("```kotlin") ? 1 : 0;
-        }
-        assertEquals("servlet.md kotlin fences", 1, kotlin);
+        assertEquals("servlet.md kotlin fences", 1, ReadmeDocsTest.blocks(doc("servlet.md"), "kotlin").size());
     }
 }

@@ -9,8 +9,6 @@ import com.snoworca.naruserve.release.ReleaseMain;
 import com.snoworca.naruserve.release.ThirdPartyLicenses;
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -24,14 +22,8 @@ public class ThirdPartyLicensesTest {
 
     static final String PROVIDED_HEADING = ThirdPartyLicenses.PROVIDED_HEADING;
 
-    private static String read(File f) throws IOException {
-        return new String(Files.readAllBytes(f.toPath()), StandardCharsets.UTF_8);
-    }
-
     static String committed() throws IOException {
-        String root = System.getProperty("naruserve.rootDir");
-        assertNotNull("naruserve.rootDir system property", root);
-        return read(new File(root, "THIRD-PARTY-LICENSES.md"));
+        return BuildLayoutTest.read(new File(BuildLayoutTest.property("naruserve.rootDir"), "THIRD-PARTY-LICENSES.md"));
     }
 
     static List<String> graph() throws IOException {

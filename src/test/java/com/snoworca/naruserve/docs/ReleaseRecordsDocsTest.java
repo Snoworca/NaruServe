@@ -7,6 +7,8 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
+import com.snoworca.naruserve.build.BuildLayoutTest;
+import com.snoworca.naruserve.build.ScanReportTest;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
@@ -30,9 +32,7 @@ public final class ReleaseRecordsDocsTest {
             "^- run ([\\w-]+): command=(.+?); date=(\\d{4}-\\d{2}-\\d{2}); result=(.+)$");
 
     /** The nine published modules, in the order of naruModules. */
-    static final List<String> MODULES = Arrays.asList("NaruServe-api", "NaruServe-servlet", "NaruServe-tinyhttpd",
-            "NaruServe-gson", "NaruServe", "NaruServe-kotlin", "NaruServe-slf4j", "NaruServe-filelog",
-            "NaruServe-logcat");
+    static final List<String> MODULES = BuildLayoutTest.MODULES;
 
     /**
      * Run lines of the "## Recorded runs" section by name, each [command, date, result].
@@ -101,13 +101,7 @@ public final class ReleaseRecordsDocsTest {
             assertTrue(report, Pattern.compile("(?m)^Reason: (NO_NETWORK|MISSING_API_KEY|RATE_LIMIT|TOOL_ERROR)$")
                     .matcher(report).find());
         }
-        assertTrue(report, report.contains("\n## Dependencies\n"));
-        List<String> recorded = new java.util.ArrayList<>();
-        for (String line : report.substring(report.indexOf("\n## Dependencies\n") + 17).split("\n")) {
-            if (!line.trim().isEmpty()) {
-                recorded.add(line.trim());
-            }
-        }
+        List<String> recorded = ScanReportTest.dependencySection(report);
         File graph = new File(System.getProperty("naruserve.depReport"));
         List<String> graphLines = com.snoworca.naruserve.release.ReleaseMain.graphLines(graph);
         assertEquals("the recorded dependency list is the current runtime list; rerun releaseScan and copy the report",
@@ -121,13 +115,12 @@ public final class ReleaseRecordsDocsTest {
         assumeTrue("docs/release/test-results.md is written by the OPS-REL-003 fragment",
                 new File(root, "docs/release/test-results.md").isFile());
         String expected = "pending".equals(scanStatus()) ? "manual-pending" : "verified";
-        String row = null;
-        for (String line : doc("../release/test-results.md").split("\n")) {
-            String[] cells = line.trim().split("\\s*\\|\\s*");
-            if (cells.length > 3 && "T50".equals(cells[1]) && "vulnerability".equals(cells[2])) {
+        String[] row = null;
+        for (String[] r : ReleaseResultsDocsTest.rows(doc("../release/test-results.md"))) {
+            if ("T50".equals(r[0]) && "vulnerability".equals(r[1])) {
                 assertTrue("one T50 vulnerability row", row == null);
-                row = line;
-                assertTrue(line + " carries " + expected, expected.equals(cells[3]));
+                row = r;
+                assertTrue(r[0] + " " + r[1] + " carries " + expected + ": " + r[2], expected.equals(r[2]));
             }
         }
         assertNotNull("test-results.md has the '| T50 | vulnerability |' row", row);
