@@ -45,14 +45,22 @@ public class AppDocsTest {
         r.put("static.md", Arrays.asList("SPA fallback은", "`/docs/`로 301", "`cache(pattern, policy)`",
                 "심볼릭 링크(루트 안을"));
         r.put("multipart.md", Arrays.asList("| `tempDirectory`", "무제한 설정 허용 여부"));
+        // Settled by wave 7 (OPS-WS-001, OPS-ENGINE-002); moved here from KEPT.
+        r.put("app.md", concat(r.get("app.md"), "`ws`의 반환 타입", "`ws`에 넘기는 콜백"));
+        r.put("websocket.md", Arrays.asList("idle timeout", "Ping 주기", "handshake timeout"));
+        r.put("sse.md", Arrays.asList("heartbeat"));
         REMOVED = Collections.unmodifiableMap(r);
 
         Map<String, List<String>> k = new LinkedHashMap<>();
-        k.put("app.md", Arrays.asList("`ws`의 반환 타입", "`ws`에 넘기는 콜백"));
         k.put("express-migration.md", Arrays.asList("| `express.Router()`", "| `cors()`", "| `res.redirect(url)`"));
-        k.put("websocket.md", Arrays.asList("idle timeout", "Ping 주기", "handshake timeout", "`101` 응답 전/후"));
-        k.put("sse.md", Arrays.asList("heartbeat", "연결별 송신 큐 기본값"));
+        k.put("sse.md", Arrays.asList("연결별 송신 큐 기본값"));
         KEPT = Collections.unmodifiableMap(k);
+    }
+
+    private static List<String> concat(List<String> head, String... tail) {
+        List<String> out = new ArrayList<>(head);
+        out.addAll(Arrays.asList(tail));
+        return out;
     }
 
     private static String doc(String name) throws IOException {

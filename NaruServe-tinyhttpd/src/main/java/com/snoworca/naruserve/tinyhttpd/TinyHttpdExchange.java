@@ -25,18 +25,24 @@ import org.jspecify.annotations.Nullable;
  * {@link HttpExchange} over one TinyHttpd request and response. The raw path comes from {@code getRequestURI()} and
  * the raw query from {@code getQueryString()}, never from the decoded, slash-merging {@code getPath()}.
  */
-// @req FR-ENGINE-001
-// @req FR-ENGINE-010
+// @req FR-ENGINE-011
 final class TinyHttpdExchange implements HttpExchange {
 
-    private final Request req;
-    private final Response res;
+    final Request req;
+    final Response res;
     private final CountDownLatch ended = new CountDownLatch(1);
     // Guarded by this, which also serialises every touch of res by the core so abort() can hand res back safely.
     private boolean started;
     // Guarded by this: the worker runs a WebSocket handshake on res without the lock, so no other start may touch it.
     private boolean upgrading;
     private volatile boolean aborted;
+    // Guarded by this: the event-stream drain run() starts on the worker once the handler returned, and its stream.
+    private @Nullable StreamDrain drain;
+    private @Nullable OutputStream drainOut;
+    // Guarded by this: set when run() took the drain, so a drain recorded later would never run.
+    private boolean handlerReturned;
+
+    static final String LATE_EVENT_STREAM = "eventStream must be called before the handler returns";
 
     private TinyHttpdExchange(Request req, Response res) {
         this.req = req;
@@ -47,10 +53,25 @@ final class TinyHttpdExchange implements HttpExchange {
      * Runs {@code handler} on the TinyHttpd worker, then holds the worker until the core finishes or aborts the
      * exchange, which may happen on another thread; TinyHttpd completes the response once this returns.
      */
-    // @req FR-ENGINE-001
+    // @req FR-ENGINE-011
     static void run(Request req, Response res, ExchangeHandler handler) throws IOException {
         TinyHttpdExchange ex = new TinyHttpdExchange(req, res);
         handler.handle(ex);
+        StreamDrain d;
+        OutputStream out;
+        synchronized (ex) {
+            ex.handlerReturned = true;
+            d = ex.drain;
+            out = ex.drainOut;
+        }
+        if (d != null && out != null) {
+            try {
+                // On this worker, outside the lock; its writes synchronize on ex and fail at once after an abort.
+                d.drain(out);
+            } catch (IOException | RuntimeException e) {
+                ex.abort();
+            }
+        }
         try {
             ex.ended.await();
         } catch (InterruptedException e) {
@@ -200,7 +221,8 @@ final class TinyHttpdExchange implements HttpExchange {
     }
 
     /** The checks of {@link #start()} without starting; caller holds this. */
-    private void requireStartable() throws IOException {
+    // @req FR-ENGINE-011
+    void requireStartable() throws IOException {
         if (aborted) {
             throw new IOException("exchange aborted");
         }
@@ -212,13 +234,7 @@ final class TinyHttpdExchange implements HttpExchange {
         }
     }
 
-    // A feature not yet available never touched res, so the response stays unstarted and the core can still commit.
-    private void unsupported(UnsupportedOperationException e) {
-        started = false;
-        throw e;
-    }
-
-    // Writes that later waves make from another thread (an event-stream drain) must also synchronize on this.
+    // Writes through the committed stream (the event-stream drain, the core's attached sends) also synchronize on this.
     @Override
     public synchronized void sendFile(int status, List<Map.Entry<String, String>> headers, File file, long offset,
             long length) throws IOException {
@@ -232,35 +248,24 @@ final class TinyHttpdExchange implements HttpExchange {
         TinyHttpdFeatures.sendFile(this, status, headers, file, offset, length);
     }
 
+    /** Checks the start rule without starting, so the unsupported raw upgrade leaves the response unstarted. */
+    // @req FR-ENGINE-011
     @Override
     public synchronized void upgrade(List<Map.Entry<String, String>> headers, UpgradeHandler handler)
             throws IOException {
-        start();
-        try {
-            TinyHttpdFeatures.upgrade(res, headers, handler);
-        } catch (UnsupportedOperationException e) {
-            unsupported(e);
-        }
+        requireStartable();
+        TinyHttpdFeatures.upgrade(this, headers, handler);
     }
 
     /**
-     * Holds this lock only to check the start rule and, through {@link #markUpgraded}, to record the 101: the read
-     * loop runs on this worker without it, so abort and the other exchange calls never wait for the connection.
+     * Not synchronized: the hook holds this lock only to check the start rule and, through {@link #markUpgraded}, to
+     * record the 101, so abort and the other exchange calls never wait for the read loop.
      */
     // @req FR-WS-002
+    // @req FR-ENGINE-011
     @Override
     public void webSocket(WebSocketSettings settings, WebSocketEndpoint endpoint) throws IOException {
-        synchronized (this) {
-            requireStartable();
-            upgrading = true;
-        }
-        try {
-            new TinyHttpdWebSocket(req, res, settings, endpoint, this::markUpgraded).run();
-        } finally {
-            synchronized (this) {
-                upgrading = false; // a refusal before 101 leaves the exchange startable for the error path
-            }
-        }
+        TinyHttpdFeatures.webSocket(this, settings, endpoint);
     }
 
     /** The 101 was written: the response is started, so the core can no longer commit an error answer. */
@@ -270,14 +275,45 @@ final class TinyHttpdExchange implements HttpExchange {
         upgrading = false;
     }
 
+    /**
+     * Not synchronized: the hook takes this lock only for {@link #commit}, the first flush and recording the drain,
+     * and the drain runs without it.
+     */
+    // @req FR-ENGINE-011
     @Override
-    public synchronized void eventStream(int status, List<Map.Entry<String, String>> headers, StreamDrain drain)
+    public void eventStream(int status, List<Map.Entry<String, String>> headers, StreamDrain drain)
             throws IOException {
-        start();
-        try {
-            TinyHttpdFeatures.eventStream(res, status, headers, drain);
-        } catch (UnsupportedOperationException e) {
-            unsupported(e);
+        TinyHttpdFeatures.eventStream(this, status, headers, drain);
+    }
+
+    /**
+     * Records the drain {@link #run} starts on the worker once the handler returned; after that nothing would run it,
+     * so a call from another thread past that point throws instead of leaving the stream silent.
+     */
+    // @req FR-ENGINE-011
+    synchronized void drainAfterHandler(StreamDrain d, OutputStream out) {
+        if (handlerReturned) {
+            throw new IllegalStateException(LATE_EVENT_STREAM);
         }
+        drain = d;
+        drainOut = out;
+    }
+
+    /** Whether run() has taken the drain, so an event stream started now would never be drained. */
+    // @req FR-ENGINE-011
+    synchronized boolean handlerReturned() {
+        return handlerReturned;
+    }
+
+    /** Marks the response busy with a WebSocket handshake that runs without this lock; after requireStartable. */
+    // @req FR-ENGINE-011
+    synchronized void beginUpgrade() {
+        upgrading = true;
+    }
+
+    /** Ends the handshake mark; after a refusal before 101 the exchange is startable again for the error path. */
+    // @req FR-ENGINE-011
+    synchronized void endUpgrade() {
+        upgrading = false;
     }
 }

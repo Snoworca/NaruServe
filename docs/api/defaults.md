@@ -22,9 +22,9 @@ NaruServe는 저사양 Android 5.0 기기에서도 안전하게 돌도록 **모�
 | 헤더 한 줄 | 8190 B | — | `431` | 따로 없습니다. TinyHttpd 입력 버퍼의 `inputBufferBytes - 2`이며, 어댑터가 버퍼를 `max(8192, maxRequestLineLength + 2)`로 잡으므로 `maxRequestLineLength`를 8190보다 크게 할 때만 함께 커집니다. `maxHeaderSize`로는 바뀌지 않습니다. |
 | 헤더 개수 | 100 | 10000 | `431` | `maxHeaderCount` |
 | 요청 줄 길이 | 8190 B | 65534 B | `414` | `maxRequestLineLength` |
-| WebSocket 메시지 | 1 MiB | — | 연결 종료 | **(미확정)** |
-| WebSocket 송신 큐(연결당) | 1 MiB | — | 예외 또는 연결 종료 | **(미확정)** |
-| SSE 송신 큐(연결당) | 256 KiB | — | 연결 종료 (**(미확정)**) | **(미확정)** |
+| WebSocket 메시지 | 1 MiB | 16 MiB | 연결 종료(1009) | `app.webSocket(o -> o.maxMessageSize(bytes))`. 프레임 하나와 조각난 메시지 전체에 똑같이 걸립니다. |
+| WebSocket 송신 큐(연결당) | 1 MiB | 64 MiB | 연결 종료(1008) | `app.webSocket(o -> o.sendQueueSize(bytes))`. 넘친 메시지와 큐에 남은 메시지를 버리고 이유 `send queue overflow`로 닫으며, 보내기 호출은 정상으로 돌아옵니다. |
+| SSE 송신 큐(연결당) | 256 KiB | 16 MiB | 스트림 종료 | `app.sse(o -> o.sendQueueSize(bytes))` |
 | `shutdown` 대기 | 호출 인자(예: 10초) | — | 강제 종료 | `app.shutdown(timeout, unit)` |
 
 업로드 임시 폴더의 기본값은 `java.io.tmpdir`(Android에서는 앱 캐시 폴더)이며 `c.tempDirectory(dir)`로 바꿉니다. 업로드 한도는 모두 1 이상이고 최대값을 넘는 값은 받지 않습니다. [파일 업로드](multipart.md#한도-설정)
@@ -49,6 +49,15 @@ NaruServe는 저사양 Android 5.0 기기에서도 안전하게 돌도록 **모�
 | 주소 하나의 연결 | 256 | 65536 | 소켓 수준 `503` | `maxConnectionsPerAddress(connections)` |
 
 시간 설정의 최소값은 1 ms, 나머지 설정의 최소값은 1입니다.
+
+WebSocket 시간 한도는 `ServerOptions`가 아니라 `app.webSocket(o -> ...)`로 정합니다([WebSocket](websocket.md#설정)).
+
+| 항목 | 기본값 | 최대값 | 넘으면 | 설정 |
+|---|---:|---:|---|---|
+| WebSocket Ping 주기 | 30초 | 1시간 | 한 주기 동안 받은 프레임이 없으면 Ping을 보내고, 다음 주기에도 없으면 연결 종료(1001) | `pingInterval(time, unit)`. 최소 1초 |
+| WebSocket idle timeout | 5분 | 24시간 | 연결 종료(1001) | `idleTimeout(time, unit)`. 최소 1초. 텍스트·바이너리 메시지만 셉니다. |
+
+Pong timeout은 Ping 주기와 같습니다. TinyHttpd의 `WebSocketListener`에 Pong 콜백이 없어 별도 Pong timeout은 지원하지 않습니다. WebSocket handshake는 `headerTimeout`과 `bodyReadTimeout`으로만 제한되고 전용 upgrade 기한은 지원하지 않습니다.
 
 ## 기본 보안 정책
 
@@ -86,7 +95,7 @@ TinyHttpd가 요청을 해석하는 단계에서 거부하는 `400`(잘못된 �
 
 - **인증과 권한**: 미들웨어로 구현하세요. [미들웨어](middleware.md)
 - **CSRF**: 쿠키로 인증하는 API라면 미들웨어로 막으세요.
-- **WebSocket 인증**: 미들웨어로 구현하세요. `Origin` 허용 목록은 프레임워크가 Upgrade 전에 검사하지만, 목록은 앱이 정해야 합니다(설정 API·미설정 때 기본 동작 **(미확정)**). [WebSocket](websocket.md#인증과-origin)
+- **WebSocket 인증**: 미들웨어로 구현하세요. 프레임워크는 Upgrade 전에 `Origin`을 검사하며, 기본값은 `Origin`이 없거나 같은 출처인 요청만 허용하고 나머지는 `403`으로 거부합니다. 다른 출처는 `app.webSocket(o -> o.allowedOrigins("https://app.example.com"))`로 허용하며, `allowedOrigins("*")`는 모든 `Origin`을 허용합니다. `Origin` 검사는 인증을 대신하지 않습니다. [WebSocket](websocket.md#인증과-origin)
 - **업로드 파일 이름·내용 검증**: [파일 업로드](multipart.md#보안)
 - **TLS**: 기본 TinyHttpd 어댑터(`NaruServe-tinyhttpd`)는 v1에서 TLS 리스너를 열지 않습니다. 인터넷에 노출하는 평문 서버는 안전하지 않으므로 TLS를 끝내는 리버스 프록시 뒤에 두고 `app.trustProxy(true)`를 켜세요. v1에서 TLS를 빼 둔 이유는 Android 5.0의 오래된 TLS 구현을 기기마다 따로 시험해야 하기 때문입니다.
 - **서비스의 스레드 안전성**: [수명주기와 서비스](lifecycle.md#저장소-범위)

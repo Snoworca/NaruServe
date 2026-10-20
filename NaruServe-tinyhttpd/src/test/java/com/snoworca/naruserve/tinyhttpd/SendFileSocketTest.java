@@ -54,9 +54,9 @@ public class SendFileSocketTest {
         return RawTargetSocketTest.Http.send(a.boundPort(), RawTargetSocketTest.Http.get(path));
     }
 
-    // SDS-AC-3; FR-ENGINE-010 AC-2
+    // SDS-AC-3; FR-ENGINE-011 AC-2
     @Test(timeout = 20000)
-    public void sdsAc3_FR_ENGINE_010_AC2_sendFileWritesExactlyTheRequestedRangeAndCommitsOnce() throws Exception {
+    public void sdsAc3_FR_ENGINE_011_AC2_sendFileWritesExactlyTheRequestedRangeAndCommitsOnce() throws Exception {
         File f = thousandBytes();
         AtomicReference<String> after = new AtomicReference<>();
         adapter.bind(RawTargetSocketTest.Http.settings().build(), ex -> {
@@ -86,9 +86,9 @@ public class SendFileSocketTest {
         assertEquals("IllegalStateException", after.get());
     }
 
-    // SDS-AC-1; FR-ENGINE-010 AC-2
+    // SDS-AC-1; FR-ENGINE-011 AC-2
     @Test(timeout = 20000)
-    public void sdsAc1_FR_ENGINE_010_AC2_badOffsetOrLengthIsRefusedBeforeTheResponseStarts() throws Exception {
+    public void sdsAc1_FR_ENGINE_011_AC2_badOffsetOrLengthIsRefusedBeforeTheResponseStarts() throws Exception {
         File f = thousandBytes();
         AtomicReference<String> seen = new AtomicReference<>();
         adapter.bind(RawTargetSocketTest.Http.settings().build(), RawTargetSocketTest.Http.ok(ex -> {
@@ -111,9 +111,9 @@ public class SendFileSocketTest {
         assertEquals("IAE,IAE,IAE,IAE,", seen.get());
     }
 
-    // SDS-AC-2; FR-ENGINE-010 AC-2
+    // SDS-AC-2; FR-ENGINE-011 AC-2
     @Test(timeout = 20000)
-    public void sdsAc2_FR_ENGINE_010_AC2_fileShrinkingDuringTheCopyThrowsIOExceptionAndAborts() throws Exception {
+    public void sdsAc2_FR_ENGINE_011_AC2_fileShrinkingDuringTheCopyThrowsIOExceptionAndAborts() throws Exception {
         File real = thousandBytes();
         // The file shrinks to 120 bytes right after sendFile has checked its length.
         File shrinking = new File(real.getPath()) {
@@ -151,9 +151,9 @@ public class SendFileSocketTest {
     }
 
     /** The hook copies by plain buffered reads: no zero-copy FileChannel transfer in the module. */
-    // FR-ENGINE-010 AC-2
+    // FR-ENGINE-011 AC-2
     @Test
-    public void FR_ENGINE_010_AC2_hookUsesNoZeroCopyTransfer() throws Exception {
+    public void FR_ENGINE_011_AC2_hookUsesNoZeroCopyTransfer() throws Exception {
         String text = AdapterSurfaceTest.classText(
                 new File(TinyHttpdAdapter.class.getResource("TinyHttpdFeatures.class").toURI()));
         assertTrue(text.contains("java/io/RandomAccessFile"));
@@ -162,9 +162,9 @@ public class SendFileSocketTest {
         }
     }
 
-    // FR-ENGINE-010 AC-2: the file is opened before the head is committed, so a missing file leaves it unstarted
+    // FR-ENGINE-011 AC-2: the file is opened before the head is committed, so a missing file leaves it unstarted
     @Test(timeout = 20000)
-    public void FR_ENGINE_010_AC2_missingFileThrowsBeforeTheResponseStarts() throws Exception {
+    public void FR_ENGINE_011_AC2_missingFileThrowsBeforeTheResponseStarts() throws Exception {
         File missing = new File(tmp.getRoot(), "missing.bin");
         AtomicReference<String> seen = new AtomicReference<>();
         adapter.bind(RawTargetSocketTest.Http.settings().build(), RawTargetSocketTest.Http.ok(ex -> {

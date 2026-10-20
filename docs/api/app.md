@@ -64,7 +64,7 @@ public interface AppFactory {   // com.snoworca.naruserve.spi
 
 모두 `RestApp`을 돌려주므로 이어서 호출할 수 있습니다(`route(path)`는 `RouteBuilder`를 돌려줍니다). 자세한 규칙은 [라우팅](routing.md).
 라우트 미들웨어 오버로드(`get(path, middleware, handler)` 등)도 `RestApp`을 돌려줍니다. 미들웨어를 여러 개 붙일 때는 `route(path).use(m1).use(m2).get(handler)`를 씁니다([미들웨어](middleware.md#등록)).
-`ws`의 반환 타입은 **(미확정)** 입니다.
+`ws`의 반환 타입은 다른 라우트 메서드처럼 `RestApp`이므로 이어서 호출할 수 있습니다([WebSocket](websocket.md#핸들러)).
 
 `RouteHandler`는 `(req, res) -> { ... }` 람다입니다.
 
@@ -96,6 +96,7 @@ public interface RouteHandler {
 | `server(options -> ...)` | 바인딩 주소, 허용 Host, 크기·시간·연결 한도 | [서버 설정](#서버-설정) |
 | `trustProxy(boolean)` | `X-Forwarded-For`·`X-Forwarded-Proto` 신뢰(기본 `false`) | [서버 설정](#서버-설정) |
 | `multipart(config -> ...)` | 업로드 한도·임시 폴더 | [파일 업로드](multipart.md) |
+| `webSocket(options -> ...)` | WebSocket `Origin` 허용 목록, 메시지·송신 큐 크기, Ping 주기, idle timeout | [WebSocket](websocket.md#설정) |
 | `staticFiles(prefix, dir)` | 정적 파일 폴더 마운트 | [정적 파일](static.md) |
 | `staticFiles(prefix, dir, options -> ...)` | 옵션과 함께 마운트 | [정적 파일](static.md) |
 | `mimeTypes()` | 전역 MIME 등록부 | [정적 파일](static.md#mime) |
@@ -184,7 +185,7 @@ app.routerPolicy(RouterPolicy.builder().ignoreTrailingSlash(true).build())
 | `state()` | 현재 상태: `NEW`, `STARTING`, `RUNNING`, `STOPPING`, `FAILED`, `TERMINATED` |
 
 `onStart`/`onStop`의 콜백은 `LifecycleCallback`(`void handle(ApplicationContext ctx) throws Exception`), `onError`의 콜백은 `ErrorHandler`(`void handle(Throwable error, Request req, Response res) throws Exception`)이며, 둘 다 `RouteHandler`·`Middleware`처럼 `@FunctionalInterface`이고 `throws Exception`을 허용하는 이유는 콜백 안의 I/O 예외를 감싸지 않고 그대로 던지게 하려는 것입니다.
-`ws`에 넘기는 콜백 인터페이스의 이름은 **(미확정)** 입니다.
+`ws`에 넘기는 콜백 인터페이스는 `WebSocketHandler`(`void handle(Request req, WebSocketSession ws) throws Exception`)이며, 같은 이유로 `@FunctionalInterface`이고 `throws Exception`을 허용합니다([WebSocket](websocket.md#핸들러)).
 
 [수명주기와 서비스](lifecycle.md)
 

@@ -150,7 +150,7 @@ public class HttpDocsTest {
         String parts = line(d, "| `parts()`");
         assertTrue(parts, parts.contains("`List<UploadFile>`"));
         assertTrue(parts, parts.contains("텍스트 필드도 포함"));
-        // Wave 5 decides proxy trust (OPS-ENGINE-001 AC-4) and jsonTree()/jsonMap() (OPS-JSON-001 AC-2).
+        // Wave 5 decides proxy trust (OPS-ENGINE-002 AC-4) and jsonTree()/jsonMap() (OPS-JSON-001 AC-2).
         String proxy = lineContaining(d, "프록시 헤더");
         assertFalse(proxy, proxy.contains(MARKER));
         assertTrue(proxy, proxy.contains("`app.trustProxy(true)`"));

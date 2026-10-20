@@ -88,7 +88,7 @@ public class ConnectionLimitsTest {
         return n;
     }
 
-    // SDS-AC-11; FR-ENGINE-004 AC-1
+    // SDS-AC-11; FR-ENGINE-004 AC-1; FR-ENGINE-011 AC-4: maxEventStreams and maxUpgradedConnections unchanged by wave 7
     @Test
     public void sdsAc11_FR_ENGINE_004_AC1_defaultConnectionLimitsReachTheBuilder() throws Exception {
         ServerConfig c = TinyHttpdAdapter.configure(Http.settings().build(), (q, r) -> { }).build().getConfig();

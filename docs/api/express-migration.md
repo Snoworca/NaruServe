@@ -102,6 +102,9 @@ Express 코드의 구조(라우트·미들웨어·req/res)는 대부분 그대�
 | `ws.on('message', m => ...)` | `ws.onText(m -> ...)` | 바이너리는 `onBinary`, JSON은 `onJson` |
 | `ws.send(text)` | `ws.sendText(text)` | |
 | `ws.on('close', ...)` | `ws.onClose((code, reason) -> ...)` | |
+| `ws.close(code, reason)` | `ws.close(code, reason)` | 인자 없는 `ws.close()`는 `close(1000, "")`와 같습니다. |
+| `ws.on('error', ...)` | `ws.onError(error -> ...)` | |
+| `new WebSocket.Server({ maxPayload })` 옵션 | `app.webSocket(o -> o.maxMessageSize(bytes))` | `Origin` 허용 목록, 송신 큐, Ping 주기, idle timeout도 여기서 정합니다. [WebSocket](websocket.md#설정) |
 | `res.writeHead(200, {'Content-Type': 'text/event-stream'})` + `res.write(...)` | `SseClient sse = res.sse(); sse.send("event", "data");` | |
 
 ## 꼭 알아야 할 차이

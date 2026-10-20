@@ -39,9 +39,9 @@ public class RawTargetSocketTest {
         Http.stopQuietly(adapter);
     }
 
-    // SDS-AC-4; FR-ENGINE-010 AC-4
+    // SDS-AC-4; FR-ENGINE-011 AC-6
     @Test(timeout = 20000)
-    public void sdsAc4_FR_ENGINE_010_AC4_rawPathAndRawQueryReachTheCoreUndecoded() throws Exception {
+    public void sdsAc4_FR_ENGINE_011_AC6_rawPathAndRawQueryReachTheCoreUndecoded() throws Exception {
         AtomicReference<String> seen = new AtomicReference<>();
         adapter.bind(Http.settings().build(), Http.ok(ex -> seen.set(ex.rawPath() + "|" + ex.rawQuery())));
         int port = adapter.boundPort();
@@ -56,9 +56,9 @@ public class RawTargetSocketTest {
         assertEquals("/q|", seen.get());
     }
 
-    // FR-ENGINE-010 AC-5
+    // FR-ENGINE-011 AC-7
     @Test(timeout = 20000)
-    public void FR_ENGINE_010_AC5_requestLineHeadersAndRemoteAddressReachTheCoreUnchanged() throws Exception {
+    public void FR_ENGINE_011_AC7_requestLineHeadersAndRemoteAddressReachTheCoreUnchanged() throws Exception {
         try {
             adapter.boundPort();
             fail("boundPort before bind must throw");
@@ -86,9 +86,9 @@ public class RawTargetSocketTest {
         assertEquals(java.util.Arrays.asList("a", "b"), ones);
     }
 
-    // FR-ENGINE-010 AC-2 (exchange bridge)
+    // FR-ENGINE-011 AC-2 (exchange bridge)
     @Test(timeout = 20000)
-    public void FR_ENGINE_010_AC2_exchangeOutlivesHandleAndGuardsStartAndAbort() throws Exception {
+    public void FR_ENGINE_011_AC2_exchangeOutlivesHandleAndGuardsStartAndAbort() throws Exception {
         AtomicReference<String> guards = new AtomicReference<>("");
         adapter.bind(Http.settings().build(), ex -> new Thread(() -> {
             StringBuilder sb = new StringBuilder();

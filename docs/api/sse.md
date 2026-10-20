@@ -44,7 +44,7 @@ app.get("/api/progress", (req, res) -> {
 | `send(SseEvent)` | `id`, `retry`까지 지정한 이벤트 |
 | `onClose(listener)` | 연결이 끝날 때 `() -> ...` |
 
-`data`에 줄바꿈이 있으면 여러 `data:` 줄로 나눠 보냅니다. 연결 유지용 heartbeat 주석(`: ping`)은 프레임워크가 보냅니다(주기 **(미확정)**).
+`data`에 줄바꿈이 있으면 여러 `data:` 줄로 나눠 보냅니다. 연결 유지용 heartbeat 주석(`: ping`)은 프레임워크가 보냅니다. 기본 주기는 15초이며 `app.sse(o -> o.heartbeatInterval(...))`로 1초~1시간 안에서 바꿉니다.
 
 `data`만 보내기, 직접 닫기 같은 메서드는 **(미확정)** 입니다.
 
