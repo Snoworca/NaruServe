@@ -25,7 +25,7 @@ Express 코드의 구조(라우트·미들웨어·req/res)는 대부분 그대�
 | (없음) | `app.route(Method.get().post(), "/x", h)` | 여러 메서드를 한 핸들러로 받습니다. |
 | (없음) | `app.route(Method.any().except(Method.DELETE), "/x", h)` | 특정 메서드만 뺍니다. |
 | `app.get('/x', auth, h)` | `app.get("/x", auth, h)` | 라우트 미들웨어 하나. 여러 개(`auth, admin, h`)는 `app.route("/x").use(auth).use(admin).get(h)`로 붙입니다. Java 가변 인자는 맨 끝에만 올 수 있어 `RouteBuilder.use`로 정했습니다. |
-| `express.Router()` + `app.use('/api', router)` | **(미확정)** | 지금은 `app.use("/api", mw)`와 전체 경로 등록으로 대신합니다. |
+| `express.Router()` + `app.use('/api', router)` | `app.group("/api", api -> { ... })` | 경로 그룹으로 나눕니다. 독립 Express Router 객체와 동일한 API는 아닙니다. 그룹 `use`는 해당 그룹의 모든 라우트에 적용됩니다. |
 | `'/ab?cd'`, `'/a*'`, 정규식 경로 (Express 4) / `{/:opt}`, `/*splat` (Express 5) | 지원하지 않음 | `:name` 변수와 고정 세그먼트만 씁니다. |
 
 ### 요청 `req`
@@ -63,14 +63,14 @@ Express 코드의 구조(라우트·미들웨어·req/res)는 대부분 그대�
 | `res.sendStatus(204)` | `res.status(204).end()` | |
 | `res.end()` | `res.end()` | |
 | `res.set('X-A', 'b')` | `res.header("X-A", "b")` | |
-| `res.cookie('s', 'v', {httpOnly: true})` | `res.addCookie(cookie)` | [Cookie](cookie.md) |
-| `res.clearCookie('s')` | `maxAge 0` 쿠키를 `addCookie` | [Cookie](cookie.md#삭제) |
+| `res.cookie('s', 'v', {httpOnly: true})` | `res.cookie("s", "v", o -> o.httpOnly(true))` | [Cookie](cookie.md) |
+| `res.clearCookie('s')` | `res.clearCookie("s")` | 설정 시 사용한 Path·Domain이 있다면 같은 옵션을 지정합니다. |
 | `res.sendFile(path)` | `res.file(file)` | `java.io.File`. Express처럼 `Content-Disposition`을 보내지 않습니다. 브라우저가 내용을 그대로 보여 주게 하려는 Express 동작을 그대로 따랐습니다. |
 | `res.download(path, name)` | `res.download(file, name)` | `Content-Disposition: attachment`. 넘긴 파일이 심볼릭 링크이거나 일반 파일이 아니면 `404`입니다. |
 | `stream.pipe(res)` | `res.stream(in, "video/mp4")` | |
 | `res.headersSent` | `res.isCommitted()` | |
-| `res.redirect(url)` | **(미확정)** | `res.status(302).header("Location", url).end()` |
-| `res.type('png')` | v1에 없음 | `res.header("Content-Type", "image/png")`. 제외한 이유: Express식 편의 헬퍼는 v1 범위 밖이고 헤더 한 줄로 같은 일을 합니다. |
+| `res.redirect(url)` | `res.redirect(url)` | 기본 302, `res.redirect(307, url)`로 상태 지정 |
+| `res.type('png')` | `res.type("png")` | 내장 MIME 표를 사용합니다. |
 | `res.render(view)` | v1에 없음 | HTML은 `res.html(...)`로 직접 보냅니다. 제외한 이유: 사양서에 템플릿 엔진이 없고 v1은 뷰 렌더링을 다루지 않습니다. |
 
 기존 `send(String)`·`send(byte[])` 오버로드는 `send(@Nullable Object)` 하나로 통합되었습니다. 일반 호출 코드는 그대로 다시 컴파일하면 됩니다. 직접 `Response`를 구현하는 클래스는 `send(Object)` 하나를 구현해야 하며, 이전 바이너리는 다시 빌드해야 합니다.
@@ -87,7 +87,7 @@ Express 코드의 구조(라우트·미들웨어·req/res)는 대부분 그대�
 | `express.json()`, `express.urlencoded()` | 필요 없음 | `req.body(...)`, `req.form(...)`이 읽습니다. `express.json({ limit })`의 한도는 `app.jsonLimit(bytes)`입니다. |
 | `express.urlencoded({ limit })` | `app.formLimit(bytes)` | 기본 1 MiB. 한 요청의 multipart 텍스트 필드 합계에도 같은 한도를 씁니다. 텍스트 필드는 메모리에 두므로 urlencoded 본문과 같은 한도로 묶었습니다. |
 | `express.raw()`, `express.text()` | 없음 | v1에는 원본·텍스트 본문을 읽는 API가 없습니다. 본문은 `req.body(...)`(JSON), `req.form(...)`, `req.file(...)`로 읽습니다. |
-| `cors()` | **(미확정)** | 전역 `app.use`에서 `Access-Control-Allow-*` 헤더를 설정합니다. preflight(`OPTIONS` + `Access-Control-Request-Method`)는 `res.status(204).end()`로 바로 끝내고 `next.run()`을 부르지 마세요. 그러지 않으면 `/api` 인증 미들웨어가 preflight를 401로 거부합니다. |
+| `cors()` | `app.cors(o -> o.allowedOrigins("https://app.example.com"))` | 인증 미들웨어보다 먼저 등록합니다. HTTP preflight를 처리하며 WebSocket Origin 설정과는 별개입니다. |
 | `cookie-parser` | 필요 없음 | 내장. v1은 서명 쿠키(`secret`)와 값 자동 인코딩을 제공하지 않습니다. 값은 그대로 쓰고 읽습니다. [Cookie](cookie.md#값-인코딩) |
 | `multer` | `app.multipart(config -> ...)` | 한도 설정만 합니다. 파일은 핸들러에서 `req.file(...)`로 꺼냅니다. 미들웨어 대신 앱 설정으로 둔 이유는 본문을 한 번만 파싱해 모든 라우트가 같은 한도를 쓰게 하려는 것입니다. |
 | `multer({ limits: { fileSize, files, parts } })` | `app.multipart(c -> c.maxFileSize(...).maxParts(...))` | `maxFileSize`, `maxRequestSize`, `maxParts`, `memoryThreshold`. 기본값(32 MiB, 64 MiB, 20, 64 KiB)은 저사양 기기를 기준으로 잡았고, 무제한 값은 받지 않습니다. 설정 실수로 저장 공간이 바닥나지 않게 하려는 것입니다. |
@@ -109,6 +109,12 @@ Express 코드의 구조(라우트·미들웨어·req/res)는 대부분 그대�
 | `new WebSocket.Server({ maxPayload })` 옵션 | `app.webSocket(o -> o.maxMessageSize(bytes))` | `Origin` 허용 목록, 송신 큐, Ping 주기, idle timeout도 여기서 정합니다. [WebSocket](websocket.md#설정) |
 | `res.writeHead(200, {'Content-Type': 'text/event-stream'})` + `res.write(...)` | `SseClient sse = res.sse(); sse.send("event", "data");` | |
 
+## 이전 NaruServe 코드에서 옮기기
+
+타입 지정 속성 조회는 `attribute(key, Type.class)`에서 `attributeAs(key, Type.class)`로 이름이 바뀌었습니다. 요청·앱·WebSocket 세 저장소에 동일하게 적용됩니다. 쓰기와 삭제는 `attribute(key, value)`와 `attribute(key, null)`이며, 명시적으로 `removeAttribute(key)`를 사용할 수도 있습니다. 직접 인터페이스를 구현한 클래스도 조회 메서드 이름을 변경하고 다시 컴파일하세요.
+
+JSON 본문은 같은 타입이면 성공한 결과를 재사용합니다. 미들웨어에서 검증하고 핸들러에서 조회할 때 다시 파싱하지 않습니다. 전역·prefix 미들웨어는 이제 두 종류를 합친 등록 순서대로 실행되므로, 기존 앱의 인증·CORS 등록 순서를 확인하세요.
+
 ## 꼭 알아야 할 차이
 
 ### 1. 핸들러는 여러 스레드에서 동시에 실행됩니다
@@ -129,7 +135,7 @@ app.get("/count", (req, res) -> res.json(count.incrementAndGet()));
 Express에서는 콜백이나 Promise로 나중에 응답할 수 있습니다. NaruServe v1의 핸들러와 미들웨어는 **동기**입니다. 핸들러 안에서 응답을 끝내고 반환하세요.
 예외는 SSE(`res.sse()`), WebSocket, 파일 스트리밍처럼 반환 뒤에도 계속 보내는 응답뿐입니다.
 
-### 3. 본문은 타입을 지정해서 한 번만 읽습니다
+### 3. JSON 본문은 타입별로 성공한 결과를 재사용합니다
 
 ```java
 User user = req.body(User.class);                         // 객체
@@ -137,7 +143,7 @@ List<User> users = req.body(new TypeRef<List<User>>() {}); // 제네릭
 ```
 
 - `Content-Type`이 JSON일 때만 읽습니다. 다른 타입이면 `415`입니다.
-- 본문은 한 번만 읽을 수 있습니다. `req.body(...)`를 두 번 부르면 `BodyAlreadyConsumedException`입니다. 읽은 값을 변수에 담아 쓰세요.
+- 본문 스트림은 한 번 읽고, 성공한 JSON 결과는 같은 타입으로 다시 조회할 수 있습니다. 다른 타입 재조회나 JSON·폼 혼용은 `BodyAlreadyConsumedException`입니다.
 - 크기 한도가 기본으로 켜져 있습니다(JSON 1 MiB). Express `express.json()`의 기본은 100 KB입니다.
 
 ### 4. 기본 바인딩은 localhost입니다
@@ -307,9 +313,9 @@ app.listen(3000)
 
 다음은 v1에 포함되지 않는 v1 이후 항목입니다. 제외한 이유는 v1 개발 계획의 어느 단계(wave)도 이 기능을 맡지 않았기 때문이며, 항목별 이유와 대체 코드는 위 표와 [릴리스 노트](../release/release-notes.md)에 있습니다.
 
-- `express.Router()`와 라우터 마운트
-- CORS 미들웨어(`cors()`)
-- `res.redirect`, `res.type`, `res.location`, `res.format`, `res.sendStatus`
+- 독립 `express.Router()` 객체의 재마운트는 지원하지 않습니다. 경로 분리는 `app.group(...)`을 사용합니다.
+- HTTP CORS는 `app.cors(...)`로 제공합니다. WebSocket 허용 출처는 별도 설정입니다.
+- `res.format`은 지원하지 않습니다. `redirect`, `type`, `location`, `sendStatus`는 제공합니다.
 - `req.hostname`, `req.is(type)`, `req.accepts(...)`
 - `app.param(...)`
 - 비동기 핸들러(Promise/`async`에 해당하는 것). Kotlin `suspend` 핸들러도 v1 이후 항목입니다([Kotlin](kotlin.md)).

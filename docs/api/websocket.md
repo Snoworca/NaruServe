@@ -129,6 +129,7 @@ app.ws("/chat") { req, ws ->
 | `close(code, reason)` | 코드와 이유를 지정해 종료 (`ws.close(1000, "bye")`) |
 | `attribute(key, value)` | 값 저장. `null` 리터럴은 캐스팅 없이 삭제합니다. `removeAttribute(key)`로도 삭제합니다. |
 | `attributeAs(key, Class<T>)` | 값 읽기. 없으면 `null` |
+| `removeAttribute(key)` | 해당 연결의 속성 삭제. 없는 키는 무시 |
 
 Express(express-ws)의 `ws.close(code, reason)`는 `ws.close(code, reason)` 그대로입니다.
 세션 속성은 요청 속성(`req.attribute`)과 별개이며 연결이 끝날 때까지 유지됩니다.
@@ -162,7 +163,7 @@ app.ws("/session") { req, ws ->
 - 단, 브라우저가 아닌 클라이언트는 `Origin`을 마음대로 보낼 수 있으므로 `Origin` 검사는 인증을 대신하지 않습니다.
 - 연결된 뒤의 메시지에는 HTTP 미들웨어가 실행되지 않습니다.
 
-Express에서 `cors({ origin: [...] })`로 정하던 허용 출처 목록에 해당합니다.
+Express의 HTTP CORS 설정은 WebSocket Upgrade의 Origin 검사를 대신하지 않습니다. WebSocket 허용 출처는 `app.webSocket(o -> o.allowedOrigins(...))`로 따로 지정합니다.
 
 ```java
 app.use("/ws", (req, res, next) -> {

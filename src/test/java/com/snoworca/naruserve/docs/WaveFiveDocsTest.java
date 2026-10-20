@@ -424,8 +424,8 @@ public final class WaveFiveDocsTest {
         settled("defaults.md", "| WebSocket 메시지 |");
         settled("defaults.md", "| SSE 송신 큐(연결당) |");
         settled("sse.md", "heartbeat");
-        kept("express-migration.md", "| `express.Router()`");
-        kept("express-migration.md", "| `cors()`");
+        settled("express-migration.md", "| `express.Router()`");
+        settled("express-migration.md", "| `cors()`");
     }
 
     // SDS-AC-9 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-8-12.sds.md; OPS-REL-006 AC-3: TLS 리스너 line

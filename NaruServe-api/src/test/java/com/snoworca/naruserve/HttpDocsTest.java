@@ -255,7 +255,7 @@ public class HttpDocsTest {
     public void sdsAc6_OPS_HTTP_008_AC8_expressKeepsOtherIssuesMarkers() throws IOException {
         String d = doc("express-migration.md");
         for (String prefix : new String[] {"| `express.Router()`", "| `res.redirect(url)`", "| `cors()`"}) {
-            assertTrue(prefix, line(d, prefix).contains(MARKER));
+            assertFalse(prefix, line(d, prefix).contains(MARKER));
         }
         String trust = line(d, "| `app.set('trust proxy', ...)`");
         assertFalse(trust, trust.contains(MARKER));

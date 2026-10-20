@@ -25,6 +25,8 @@ The Android-only design items are out of v1 scope; none of them is a manual rele
 
 ## Recorded deviations
 
+These entries record the original v1 run. The D-380 marker exception was resolved by the API usability update in epic #21 below.
+
 Each entry names the frozen design wording, the deviation and the requirement that records it.
 
 - D-408: frozen: a non-upgrade request to a WebSocket-only path gets `426` with `Upgrade: websocket` and `Connection: Upgrade`; deviation: over TinyHttpd the `Connection: Upgrade` header is not asserted because TinyHttpd keeps only `Connection: close` or `keep-alive` on a non-`101` response, and FR-WS-004 stays below verified until that TinyHttpd gap closes; recorded in FR-WS-004
@@ -59,16 +61,14 @@ The five targets of `object.md` §17.1.
 - The vulnerability scan is pending: [vulnerability-scan.md](vulnerability-scan.md) records `Status: pending`, so the
   vulnerability part of T50 is not cleared.
 
+## API usability update — epic #21
+
+The previous undecided rows are resolved: `app.group` provides nested route groups, `app.cors` handles HTTP CORS and preflight, and `res.redirect`, `res.type`, `res.location`, `res.sendStatus`, `res.cookie` and `res.clearCookie` are available. Independent Express Router objects and arbitrary router remounting remain unsupported.
+
+This update changes the public API: typed attribute reads use `attributeAs`; `attribute(key, null)` deletes without a cast; `send(String)` and `send(byte[])` become one nullable `send(Object)` with runtime dispatch. Recompile applications and update direct interface implementations. Global and prefix middleware now execute in combined registration order. Same-type JSON body reads reuse a successful cached result. Kotlin reified body reads preserve nested generic arguments. See [migration](../api/express-migration.md) and [runnable examples](../../examples/README.md).
+
 ## Post-v1 items
 
-- `express.Router()` and router mounting: an open Express-compatibility row of `docs/api/express-migration.md`,
-  left for after v1 because no wave of the v1 run owns it; `app.use("/api", mw)` with full route paths replaces it.
-- `res.redirect(url)`: an open Express-compatibility row, left for after v1 because Express-style helpers are outside
-  the v1 scope and no wave owns it; `res.status(302).header("Location", url).end()` replaces it.
-- `cors()`: an open Express-compatibility row, left for after v1 because no wave owns a CORS middleware; a global
-  `app.use` that sets the `Access-Control-Allow-*` headers replaces it.
-- `res.type`: excluded from v1 because Express-style helpers are outside the v1 scope;
-  `res.header("Content-Type", ...)` does the same.
 - `res.render`: excluded from v1 because the specification has no template engine; `res.html(...)` sends HTML.
 - Low-end Android tuning of `maxSseStreams`, `maxUpgradedConnections` and `sendQueueSize` (D-347): post-v1 because
   Android device verification is outside the v1 scope, so it is not a manual release check.

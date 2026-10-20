@@ -67,7 +67,7 @@ public class AppDocsTest {
         REMOVED = Collections.unmodifiableMap(r);
 
         Map<String, List<String>> k = new LinkedHashMap<>();
-        k.put("express-migration.md", Arrays.asList("| `express.Router()`", "| `cors()`", "| `res.redirect(url)`"));
+
         KEPT = Collections.unmodifiableMap(k);
     }
 
@@ -194,7 +194,7 @@ public class AppDocsTest {
     @Test
     public void wave7s13SdsAc11_OPS_APP_005_AC6_keptHoldsOnlyTheThreeExpressRows() {
         Map<String, List<String>> kept = new LinkedHashMap<>();
-        kept.put("express-migration.md", Arrays.asList("| `express.Router()`", "| `cors()`", "| `res.redirect(url)`"));
+
         assertEquals(kept, KEPT);
         assertTrue(REMOVED.get("app.md").containsAll(Arrays.asList("`ws`의 반환 타입", "`ws`에 넘기는 콜백")));
         assertEquals(Arrays.asList("idle timeout", "Ping 주기", "handshake timeout", "`101` 응답 뒤"),
@@ -326,8 +326,8 @@ public class AppDocsTest {
         String pending = lineWith(d, "멈춤 요청은 그대로");
         assertTrue(pending, pending.contains("`STARTING`") && pending.contains("timeout"));
         assertTrue(pending, pending.contains("예외 없이 반환"));
-        String nullAttr = lineWith(d, "`(Object) null`");
-        assertTrue(nullAttr, nullAttr.contains("`NullPointerException`"));
+        String nullAttr = lineWith(d, "`attribute(key, null)`");
+        assertTrue(nullAttr, nullAttr.contains("캐스팅 없이"));
     }
 
     // OPS-APP-005 AC-4

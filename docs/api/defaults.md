@@ -4,7 +4,7 @@ NaruServe는 저사양 Android 5.0 기기에서도 안전하게 돌도록 **모�
 
 ## 크기·개수 한도
 
-아래 기본값은 Android 5.0 저사양 기기를 기준으로 잡았습니다. `maxHeaderSize`처럼 이름만 적은 설정은 `app.server(options -> options.maxHeaderSize(32768))`로 바꾸는 `ServerOptions` 설정입니다([RestApp](app.md#서버-설정)).
+아래 기본값은 자원 사용에 한도를 두기 위한 설계값입니다. JVM 자동 테스트로 확인했으며 저사양 Android 기기에서 검증하거나 튜닝한 값은 아닙니다. `maxHeaderSize`처럼 이름만 적은 설정은 `app.server(options -> options.maxHeaderSize(32768))`로 바꾸는 `ServerOptions` 설정입니다([RestApp](app.md#서버-설정)).
 
 | 항목 | 기본값 | 최대값 | 넘으면 | 설정 |
 |---|---:|---:|---|---|

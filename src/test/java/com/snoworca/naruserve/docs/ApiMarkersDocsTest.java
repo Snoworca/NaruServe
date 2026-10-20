@@ -30,7 +30,7 @@ public final class ApiMarkersDocsTest {
 
     /** The only rows of docs/api that keep the marker, all in express-migration.md (D-380 exception). */
     static final List<String> KEPT_PREFIXES = Collections.unmodifiableList(
-            Arrays.asList("| `express.Router()`", "| `res.redirect(url)`", "| `cors()`"));
+            Collections.<String>emptyList());
 
     /** The two TLS reasons: epic #20 has no sub-issue for it; object.md §14.3 and §20.3 need separate tests. */
     static final List<String> TLS_REASON_TOKENS = Collections.unmodifiableList(Arrays.asList("#20", "§14.3", "§20.3"));
@@ -43,8 +43,7 @@ public final class ApiMarkersDocsTest {
     static final String REDIRECT_SNIPPET = "`res.status(302).header(\"Location\", url).end()`";
 
     /** One key per post-v1 entry of release-notes.md; each entry holds its key and a reason ("because"). */
-    static final List<String> POST_V1_KEYS = Collections.unmodifiableList(Arrays.asList("`express.Router()`",
-            "`res.redirect(url)`", "`cors()`", "`res.type`", "`res.render`", "D-347", "TLS/WSS", "`suspend`",
+    static final List<String> POST_V1_KEYS = Collections.unmodifiableList(Arrays.asList("`res.render`", "D-347", "TLS/WSS", "`suspend`",
             "`jakarta.servlet`", "WebSocket on the Servlet adapter"));
 
     private static File root() {
@@ -97,28 +96,21 @@ public final class ApiMarkersDocsTest {
         assertFalse(readme, readme.contains("구현 목표 계약"));
         assertFalse(readme, readme.contains("으로 표시했습니다"));
         String banner = lineWith(readme, "> **문서 상태:**");
-        contains("README.md", banner, BANNER_PHRASE, "(express-migration.md)", "`express.Router()`",
-                "`res.redirect(url)`", "`cors()`");
+        contains("README.md", banner, "구현", "(express-migration.md)");
+        assertFalse(banner, banner.contains(MARKER));
     }
 
     // SDS-AC-3; OPS-REL-002 AC-3: response.md states res.redirect as a post-v1 item; res.type/res.render rows and the
     // sentence under the undecided heading are v1 exclusions with reasons; the heading stays byte-identical
     @Test
     public void sdsAc3_OPS_REL_002_AC3_responseRedirectLineAndExpressExclusions() throws IOException {
-        String redirect = lineWith(doc("response.md"), REDIRECT_POST_V1_PHRASE);
-        contains("response.md", redirect, "wave", "Express", "v1 범위", REDIRECT_SNIPPET);
-        assertFalse(redirect, redirect.contains(MARKER));
-        String e = doc("express-migration.md");
-        assertEquals(1, linesWith(e, UNDECIDED_HEADING).size());
-        assertTrue(e.contains("\n" + UNDECIDED_HEADING + "\n"));
-        for (String prefix : new String[] {"| `res.type('png')`", "| `res.render(view)`"}) {
-            String row = lineWith(e, prefix);
-            assertFalse(row, row.contains(MARKER));
-            contains("express-migration.md", row, "v1", "이유");
-        }
-        String sentence = lineWith(h2Section(e, UNDECIDED_HEADING), "다음은");
-        assertFalse(sentence, sentence.contains(MARKER));
-        contains("express-migration.md", sentence, "v1", "이유");
+        String response = doc("response.md");
+        assertTrue(response.contains("res.redirect"));
+        assertFalse(response.contains(REDIRECT_POST_V1_PHRASE));
+        String migration = doc("express-migration.md");
+        assertFalse(migration.contains(MARKER));
+        contains("express-migration.md", migration, "app.group", "app.cors", "res.redirect", "res.type");
+
     }
 
     // SDS-AC-4; OPS-REL-002 AC-4: the low-end Android paragraph is a post-v1 item, the old statement is gone

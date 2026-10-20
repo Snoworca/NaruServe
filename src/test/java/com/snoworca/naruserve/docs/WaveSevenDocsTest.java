@@ -150,8 +150,9 @@ public final class WaveSevenDocsTest {
     // IR-WS-001, FR-WS-006: a null literal binds to the read overload in Java, so the docs name the cast
     @Test
     public void ws_attributeNullLiteralTrapIsDocumentedWithTheObjectCast() throws IOException {
-        String line = lineWith(doc("websocket.md"), "(Object) null");
-        contains("websocket.md", line, "`attribute(\"k\", (Object) null)`", "`NullPointerException`");
+        String line = lineWith(doc("websocket.md"), "캐스팅 없이 삭제");
+        contains("websocket.md", line, "`null`", "removeAttribute(key)");
+        assertFalse(doc("websocket.md").contains("(Object) null"));
     }
 
     // SDS-AC-2 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-8.sds.md; OPS-WS-001 AC-3
