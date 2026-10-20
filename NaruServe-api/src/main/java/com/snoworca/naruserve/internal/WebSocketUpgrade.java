@@ -4,9 +4,9 @@ import com.snoworca.naruserve.HttpException;
 import com.snoworca.naruserve.WebSocketHandler;
 import com.snoworca.naruserve.spi.HttpExchange;
 import com.snoworca.naruserve.spi.JsonCodec;
+import com.snoworca.naruserve.spi.ServerSettings;
 import com.snoworca.naruserve.spi.WebSocketSettings;
 import java.io.IOException;
-import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicLong;
 import org.jspecify.annotations.Nullable;
@@ -33,11 +33,12 @@ final class WebSocketUpgrade {
     private final AccessLog accessLog;
 
     /**
-     * For an app without server options (the Dispatcher's test constructors): the default limit of 128 sender threads
-     * and port 0 in the thread names.
+     * For an app without server options (the Dispatcher's test constructors): the ServerSettings default limit of
+     * sender threads and port 0 in the thread names.
      */
     WebSocketUpgrade(DefaultWebSocketOptions options, @Nullable JsonCodec codec, SafeLogger log) {
-        this(options, codec, log, new WebSocketSender(128, () -> 0, log), new WebSocketIdleScheduler(() -> 0, log));
+        this(options, codec, log, new WebSocketSender(ServerSettings.DEFAULT_MAX_UPGRADED_CONNECTIONS,
+                () -> 0, log), new WebSocketIdleScheduler(() -> 0, log));
     }
 
     /** With a registry of its own over {@code sender} and {@code idle}. */
@@ -125,7 +126,7 @@ final class WebSocketUpgrade {
     /** The next session id of this app: 16 lowercase hex digits of a counter starting at 1. */
     // @req FR-WS-006
     String nextId() {
-        return String.format(Locale.ROOT, "%016x", ids.incrementAndGet());
+        return RequestIds.hex16(ids.incrementAndGet());
     }
 
     @Nullable JsonCodec codec() {

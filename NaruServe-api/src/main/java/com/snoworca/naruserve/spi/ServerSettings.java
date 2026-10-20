@@ -15,6 +15,9 @@ import org.jspecify.annotations.Nullable;
 // @req IR-ENGINE-002
 public final class ServerSettings {
 
+    /** The default {@code maxUpgradedConnections}, shared by the core's own defaults. */
+    public static final int DEFAULT_MAX_UPGRADED_CONNECTIONS = 128;
+
     private final int port;
     private final String bindAddress;
     private final List<String> allowedHosts;
@@ -145,7 +148,7 @@ public final class ServerSettings {
         private int maxWorkers = 64;
         private int maxSseStreams = 128;
         private int maxConnections = 512;
-        private int maxUpgradedConnections = 128;
+        private int maxUpgradedConnections = DEFAULT_MAX_UPGRADED_CONNECTIONS;
         private int maxConnectionsPerAddress = 256;
         private @Nullable Logger logger;
         private @Nullable ErrorRenderer errorRenderer;

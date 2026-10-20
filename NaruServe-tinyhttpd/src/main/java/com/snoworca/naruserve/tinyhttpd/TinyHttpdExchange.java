@@ -252,9 +252,7 @@ final class TinyHttpdExchange implements HttpExchange {
     /** The checks of {@link #start()} without starting; caller holds this. */
     // @req FR-ENGINE-011
     void requireStartable() throws IOException {
-        if (aborted) {
-            throw new IOException("exchange aborted");
-        }
+        checkNotAborted();
         if (started) {
             throw new IllegalStateException("the response was already started");
         }

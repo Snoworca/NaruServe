@@ -16,10 +16,10 @@ final class DefaultServerOptions implements ServerOptions {
     private static final long MAX_TIMEOUT_MILLIS = TimeUnit.HOURS.toMillis(1);
 
     private final ServerSettings.Builder values = ServerSettings.builder();
-    private int maxUpgradedConnections = 128; // the ServerSettings default
+    private int maxUpgradedConnections = ServerSettings.DEFAULT_MAX_UPGRADED_CONNECTIONS;
 
     // @req IR-ENGINE-001
-    private static int range(String name, int value, int max) {
+    static int range(String name, int value, int max) {
         if (value < 1 || value > max) {
             throw new IllegalArgumentException(name + " must be in 1.." + max + ": " + value);
         }

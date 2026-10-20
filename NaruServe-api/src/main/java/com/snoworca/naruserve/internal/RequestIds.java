@@ -11,7 +11,12 @@ final class RequestIds {
 
     // @req FR-APP-019
     static String next() {
-        String hex = Long.toHexString(ThreadLocalRandom.current().nextLong());
+        return hex16(ThreadLocalRandom.current().nextLong());
+    }
+
+    /** The 64 bits of {@code bits} as 16 lowercase hex digits. */
+    static String hex16(long bits) {
+        String hex = Long.toHexString(bits);
         return "0000000000000000".substring(hex.length()) + hex;
     }
 }

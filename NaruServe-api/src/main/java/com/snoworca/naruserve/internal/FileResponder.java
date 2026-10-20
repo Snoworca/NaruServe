@@ -183,7 +183,7 @@ final class FileResponder {
     }
 
     /** The value of an all-digit string, or -1 (also on overflow). */
-    private static long digits(String s) {
+    static long digits(String s) {
         if (s.isEmpty()) {
             return -1;
         }

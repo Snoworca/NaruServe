@@ -204,6 +204,20 @@ public final class DefaultRestApp implements RestApp {
         return this;
     }
 
+    /** A field-by-field copy of an options object. */
+    private interface Copier<T> {
+        T copy();
+    }
+
+    /** Runs {@code configurer} on a copy, so one that throws leaves the current options untouched; returns the copy. */
+    private <T> T reconfigure(String name, Configurer<? super T> configurer, Copier<T> copier) {
+        lifecycle.requireConfigurable(name);
+        Objects.requireNonNull(configurer, "configurer");
+        T next = copier.copy();
+        configurer.configure(next);
+        return next;
+    }
+
     /** The current multipart settings; the defaults unless {@link #multipart(Configurer)} changed them. */
     // @req IR-MULTIPART-001
     public MultipartSettings multipartSettings() {
@@ -213,11 +227,7 @@ public final class DefaultRestApp implements RestApp {
     // @req IR-MULTIPART-001
     @Override
     public synchronized RestApp multipart(Configurer<MultipartOptions> configurer) {
-        lifecycle.requireConfigurable("multipart");
-        Objects.requireNonNull(configurer, "configurer");
-        MultipartSettings next = multipartSettings.copy();
-        configurer.configure(next);
-        this.multipartSettings = next;
+        this.multipartSettings = reconfigure("multipart", configurer, multipartSettings::copy);
         return this;
     }
 
@@ -230,11 +240,7 @@ public final class DefaultRestApp implements RestApp {
     // @req IR-WS-001
     @Override
     public synchronized RestApp webSocket(Configurer<WebSocketOptions> configurer) {
-        lifecycle.requireConfigurable("webSocket");
-        Objects.requireNonNull(configurer, "configurer");
-        DefaultWebSocketOptions next = webSocketOptions.copy();
-        configurer.configure(next);
-        this.webSocketOptions = next;
+        this.webSocketOptions = reconfigure("webSocket", configurer, webSocketOptions::copy);
         return this;
     }
 
@@ -247,11 +253,7 @@ public final class DefaultRestApp implements RestApp {
     // @req IR-SSE-001
     @Override
     public synchronized RestApp sse(Configurer<SseOptions> configurer) {
-        lifecycle.requireConfigurable("sse");
-        Objects.requireNonNull(configurer, "configurer");
-        DefaultSseOptions next = sseOptions.copy();
-        configurer.configure(next);
-        this.sseOptions = next;
+        this.sseOptions = reconfigure("sse", configurer, sseOptions::copy);
         return this;
     }
 

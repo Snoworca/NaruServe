@@ -42,9 +42,7 @@ final class WebSocketIdleScheduler {
         exec = new ScheduledThreadPoolExecutor(1, r -> {
             long stack = WebSocketSender.STACK_BYTES;
             requestedStack = stack;
-            Thread t = new Thread(null, r, "naruserve-" + port.getAsInt() + "-ws-idle", stack);
-            t.setDaemon(true);
-            return t;
+            return WebSocketSender.daemon("naruserve-" + port.getAsInt() + "-ws-idle", r);
         });
         exec.setRemoveOnCancelPolicy(true);
     }

@@ -92,12 +92,11 @@ final class OriginCheck {
             if (port.isEmpty() || port.length() > 5) {
                 return null;
             }
-            for (int i = 0; i < port.length(); i++) {
-                if (port.charAt(i) < '0' || port.charAt(i) > '9') {
-                    return null;
-                }
+            long digits = FileResponder.digits(port); // at most five digits, so it fits an int
+            if (digits < 0) {
+                return null;
             }
-            p = Integer.parseInt(port);
+            p = (int) digits;
         }
         return scheme + "://" + host.toLowerCase(Locale.ROOT) + ":" + p;
     }

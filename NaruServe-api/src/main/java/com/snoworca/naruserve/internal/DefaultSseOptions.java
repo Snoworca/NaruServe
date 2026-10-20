@@ -1,7 +1,6 @@
 package com.snoworca.naruserve.internal;
 
 import com.snoworca.naruserve.SseOptions;
-import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 /** The app's SSE settings: range checks on every setter, the defaults until set. */
@@ -26,23 +25,14 @@ public final class DefaultSseOptions implements SseOptions {
     // @req IR-SSE-001
     @Override
     public SseOptions heartbeatInterval(long time, TimeUnit unit) {
-        Objects.requireNonNull(unit, "unit");
-        long ms = unit.toMillis(time);
-        // toMillis truncates: the nanos check keeps one hour plus a fraction from passing as one hour
-        if (ms < 1000L || unit.toNanos(time) > TimeUnit.HOURS.toNanos(1)) {
-            throw new IllegalArgumentException("heartbeatInterval must be in 1 s..1 h: " + time + " " + unit);
-        }
-        heartbeatMillis = ms;
+        heartbeatMillis = DefaultWebSocketOptions.millis("heartbeatInterval", time, unit, 1);
         return this;
     }
 
     // @req IR-SSE-001
     @Override
     public SseOptions sendQueueSize(int bytes) {
-        if (bytes < 1 || bytes > MAX_QUEUE) {
-            throw new IllegalArgumentException("sendQueueSize must be in 1.." + MAX_QUEUE + ": " + bytes);
-        }
-        sendQueueSize = bytes;
+        sendQueueSize = DefaultServerOptions.range("sendQueueSize", bytes, MAX_QUEUE);
         return this;
     }
 

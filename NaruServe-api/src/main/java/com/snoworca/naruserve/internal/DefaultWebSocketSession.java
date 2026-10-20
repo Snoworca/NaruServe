@@ -9,7 +9,6 @@ import com.snoworca.naruserve.spi.WebSocketEndpoint;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -425,7 +424,7 @@ final class DefaultWebSocketSession implements WebSocketSession, WebSocketEndpoi
         if (!(code >= 1000 && code <= 1003 || code >= 1007 && code <= 1014 || code >= 3000 && code <= 4999)) {
             throw new IllegalArgumentException("close code must be 1000-1003, 1007-1014 or 3000-4999: " + code);
         }
-        int n = reason.getBytes(StandardCharsets.UTF_8).length;
+        int n = utf8Length(reason);
         if (n > 123) {
             throw new IllegalArgumentException("close reason over 123 UTF-8 bytes: " + n);
         }

@@ -332,10 +332,14 @@ final class WebSocketSender {
         public Thread newThread(Runnable r) {
             long stack = STACK_BYTES;
             requested = stack;
-            Thread t = new Thread(null, r, "naruserve-" + port.getAsInt() + "-ws-sender-" + n.incrementAndGet(),
-                    stack);
-            t.setDaemon(true);
-            return t;
+            return daemon("naruserve-" + port.getAsInt() + "-ws-sender-" + n.incrementAndGet(), r);
         }
+    }
+
+    /** A daemon thread named {@code name} with a {@link #STACK_BYTES} stack. */
+    static Thread daemon(String name, Runnable r) {
+        Thread t = new Thread(null, r, name, STACK_BYTES);
+        t.setDaemon(true);
+        return t;
     }
 }

@@ -45,6 +45,10 @@ final class AccessLog {
         return o;
     }
 
+    private boolean wanted(String rawPath) {
+        return enabled && !exclude.contains(rawPath);
+    }
+
     /** No-op when disabled or excluded; otherwise one line at the configured level. Never throws. */
     // @req FR-APP-019
     // @req FR-APP-014
@@ -52,7 +56,7 @@ final class AccessLog {
     void write(String methodToken, String rawPath, int status, boolean aborted, long startNanos, long in, long out,
             String rid) {
         try {
-            if (!enabled || exclude.contains(rawPath)) {
+            if (!wanted(rawPath)) {
                 return;
             }
             long ms = (System.nanoTime() - startNanos) / 1_000_000;
@@ -66,7 +70,7 @@ final class AccessLog {
     // @req FR-APP-019
     void writeClose(String rawPath, int code, long openNanos, String rid) {
         try {
-            if (!enabled || exclude.contains(rawPath)) {
+            if (!wanted(rawPath)) {
                 return;
             }
             StringBuilder sb = new StringBuilder(48).append("WS ").append(escape(rawPath)).append(' ').append(code);
@@ -87,7 +91,7 @@ final class AccessLog {
     void writeSse(String methodToken, String rawPath, int status, long startNanos, long in, long out, String rid,
             long startMillis, String cause) {
         try {
-            if (!enabled || exclude.contains(rawPath)) {
+            if (!wanted(rawPath)) {
                 return;
             }
             long ms = (System.nanoTime() - startNanos) / 1_000_000;
