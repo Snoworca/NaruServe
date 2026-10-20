@@ -355,6 +355,22 @@ public class WebSocketApiTest {
         }
     }
 
+    // SDS-AC-9 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-6.sds.md; FR-WS-008 AC-3, FR-WS-008 AC-7: no
+    // pong-timeout and no handshake-timeout setting on either options interface
+    @Test
+    public void sdsAc9_FR_WS_008_AC3_AC7_noPongOrHandshakeMethodOnWebSocketOptionsOrServerOptions() {
+        int checked = 0;
+        for (Class<?> type : new Class<?>[] {WebSocketOptions.class, ServerOptions.class}) {
+            for (java.lang.reflect.Method m : type.getMethods()) {
+                String name = m.getName().toLowerCase(Locale.ROOT);
+                assertFalse(type.getSimpleName() + "." + m.getName(), name.contains("pong"));
+                assertFalse(type.getSimpleName() + "." + m.getName(), name.contains("handshake"));
+                checked++;
+            }
+        }
+        assertTrue(checked > 0);
+    }
+
     /** Hand-written session that records close calls; the other methods are never called here. */
     private static final class RecordingSession implements WebSocketSession {
         private final List<String> calls;

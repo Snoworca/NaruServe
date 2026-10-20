@@ -195,6 +195,68 @@ public class WebSocketDispatchTest {
         assertEquals(1, ex.aborts.get());
     }
 
+    // SDS-AC-7 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-6.sds.md; FR-WS-007 AC-8: after
+    // HttpExchange.webSocket returned, the exchange finishes only once the session's held sender task ended
+    @Test(timeout = 20000)
+    public void sdsAc7_FR_WS_007_AC8_theExchangeFinishesOnlyAfterTheHeldSenderTaskEnded() throws Exception {
+        CountDownLatch closed = new CountDownLatch(1);
+        t.app().ws("/ws", (req, ws) -> {
+            ws.onText(text -> ws.sendText("reply"));
+            ws.onClose((code, reason) -> closed.countDown());
+        });
+        t.start();
+        Future<ClientResponse> f = adapter.submit(upgradeRequest("/ws"));
+        InMemoryWebSocketChannel ch = adapter.nextChannel(5, TimeUnit.SECONDS);
+        CountDownLatch release = ch.hold("sendText");
+        try {
+            ch.clientText("go");
+            ch.clientClose(1000, "");
+            // onClose ran on the exchange thread, so HttpExchange.webSocket returns right after it
+            assertTrue(closed.await(5, TimeUnit.SECONDS));
+            Thread.sleep(300);
+            assertTrue("the exchange finished while the sender task was held", !f.isDone());
+        } finally {
+            release.countDown();
+        }
+        assertEquals(101, f.get(5, TimeUnit.SECONDS).status());
+    }
+
+    // SDS-AC-7 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-6.sds.md; FR-WS-007 AC-8: when
+    // HttpExchange.webSocket throws after open, the exchange still finishes only after the held sender task ended
+    @Test(timeout = 20000)
+    public void sdsAc7_FR_WS_007_AC8_aThrowAfterOpenStillWaitsForTheHeldSenderTask() throws Exception {
+        UpgradeExchange ex = new UpgradeExchange();
+        ex.afterOpen = new RuntimeException("connection lost");
+        CountDownLatch release = new CountDownLatch(1);
+        CountDownLatch writing = new CountDownLatch(1);
+        ex.channel.beforeSend = () -> {
+            writing.countDown();
+            release.await(10, TimeUnit.SECONDS);
+        };
+        DefaultRestApp app = new DefaultRestApp();
+        app.logger(new RecordingLogger());
+        app.ws("/ws", (req, ws) -> ws.sendText("x"));
+        app.freeze();
+        Thread exchange = new Thread(() -> {
+            try {
+                app.dispatcher().handle(ex);
+            } catch (Exception e) {
+                throw new AssertionError(e);
+            }
+        });
+        exchange.start();
+        try {
+            assertTrue(writing.await(5, TimeUnit.SECONDS));
+            Thread.sleep(300);
+            assertEquals("the exchange finished while the sender task was held", 0, ex.finishes.get());
+            assertTrue(exchange.isAlive());
+        } finally {
+            release.countDown();
+        }
+        exchange.join(5000);
+        assertEquals(1, ex.finishes.get());
+    }
+
     // SDS-AC-11; FR-WS-004 AC-1, FR-WS-004 AC-4, FR-WS-001 AC-7
     @Test(timeout = 20000)
     public void sdsAc11_FR_WS_004_AC1_AC4_plainGetToAWebSocketOnlyPathGets426AndAGetRouteServesIt() throws Exception {
@@ -378,11 +440,25 @@ public class WebSocketDispatchTest {
         }
     }
 
+    interface Hold {
+        void run() throws Exception;
+    }
+
     static final class PeerChannel implements WebSocketChannel {
         volatile boolean open; // set only by webSocket, right before onOpen
+        /** Runs at the start of each sendText; null does nothing. */
+        volatile Hold beforeSend;
 
         @Override
         public void sendText(String text) {
+            Hold h = beforeSend;
+            if (h != null) {
+                try {
+                    h.run();
+                } catch (Exception e) {
+                    throw new IllegalStateException(e);
+                }
+            }
         }
 
         @Override

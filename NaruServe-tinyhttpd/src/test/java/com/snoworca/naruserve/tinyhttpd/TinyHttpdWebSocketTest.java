@@ -209,6 +209,51 @@ public class TinyHttpdWebSocketTest {
                 "pingInterval 15000"), sorted);
     }
 
+    // SDS-AC-8 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-6.sds.md; FR-WS-008 AC-1: pingInterval(2 s)
+    // reaches TinyHttpd's handler as 2000 ms, TinyHttpd's read loop sends the Ping, and the app starts no thread of
+    // its own for pings: an open session that sent nothing owns only the idle scheduler thread
+    @Test(timeout = 20000)
+    public void sdsAc8_FR_WS_008_AC1_pingInterval2sReachesTinyHttpdAs2000AndNoPingThreadStarts() throws Exception {
+        RecordingHandler h = new RecordingHandler();
+        TinyHttpdWebSocket.configure(h, new WebSocketSettings(4096, 2000));
+        assertTrue(h.calls.toString(), h.calls.contains("pingInterval 2000"));
+
+        com.snoworca.naruserve.RestApp app = Http.app(new TinyHttpdAdapter(),
+                new com.snoworca.naruserve.testing.RecordingLogger());
+        app.webSocket(o -> o.pingInterval(2, TimeUnit.SECONDS));
+        app.ws("/ws", (req, ws) -> { });
+        java.util.Set<Thread> before = new java.util.HashSet<>(Thread.getAllStackTraces().keySet());
+        try {
+            int port = app.listen(0).port();
+            try (RawWebSocketClient c = RawWebSocketClient.open(port, "/ws")) {
+                assertEquals(c.handshake, 101, c.status());
+                c.setReadTimeout(5000);
+                long start = System.nanoTime();
+                RawWebSocketClient.Frame f = c.readFrame();
+                long ms = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
+                assertEquals(RawWebSocketClient.PING, f.opcode);
+                assertTrue("first Ping after " + ms + " ms", ms >= 1500 && ms < 4000);
+                // Every thread this app started: TinyHttpd's acceptor, watchdog, workers and keeper, and NaruServe's
+                // idle scheduler. The session sent nothing, so no sender thread exists and no timer or pool ran.
+                List<String> started = new ArrayList<>();
+                for (Thread t : Thread.getAllStackTraces().keySet()) {
+                    if (t.isAlive() && !before.contains(t)) {
+                        started.add(t.getName());
+                    }
+                }
+                assertTrue(started.toString(), started.contains("naruserve-" + port + "-ws-idle"));
+                for (String name : started) {
+                    assertTrue(started.toString(), name.equals("naruserve-" + port + "-ws-idle")
+                            || name.startsWith("naruserve-" + port + "-worker-")
+                            || name.equals("naruserve-keeper-" + port)
+                            || name.equals("tinyhttpd-acceptor-" + port) || name.equals("tinyhttpd-watchdog"));
+                }
+            }
+        } finally {
+            app.shutdown(2, TimeUnit.SECONDS);
+        }
+    }
+
     // FR-WS-002 AC-10: the handler doing the framing is loaded from TinyHttpd's websocket artifact; the build's
     // checkDependencyRules task keeps every other module off com.snoworca.tinyhttpd artifacts
     @Test

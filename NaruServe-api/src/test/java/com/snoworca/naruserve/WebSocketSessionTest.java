@@ -207,7 +207,7 @@ public class WebSocketSessionTest {
             String thread = event().substring("thread ".length());
             assertEquals(Collections.<Object>singletonList("J{a=1}"), sent(ch, 1));
             assertEquals(Collections.singletonList("encode {a=1} on " + thread), codec.calls);
-            assertFalse(thread.startsWith("naruserve-ws-sender-"));
+            assertFalse(thread.contains("-ws-sender-"));
             ch.clientText("fail");
             assertEquals("threw 500 true", event());
             assertEquals(Arrays.<Object>asList("J{a=1}", "after"), sent(ch, 2));

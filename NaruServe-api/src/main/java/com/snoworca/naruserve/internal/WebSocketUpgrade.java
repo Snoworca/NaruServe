@@ -25,20 +25,36 @@ final class WebSocketUpgrade {
     private final SafeLogger log;
     private final OriginCheck origins;
     private final WebSocketSettings settings;
-    // shortcut: built here until FR-WS-007 builds it at freeze with the thread limit and FR-WS-010 shuts it down
-    private final WebSocketSender sender = new WebSocketSender();
+    private final int sendQueueSize;
+    private final long idleTimeoutMillis;
+    private final WebSocketSender sender;
+    private final WebSocketIdleScheduler idle;
 
     /**
-     * {@code options} must be the frozen copy. An allowlist entry that is not
-     * {@code *} or {@code scheme://host[:port]} never matches, so it gets one warning here.
+     * For an app without server options (the Dispatcher's test constructors): the default limit of 128 sender threads
+     * and port 0 in the thread names.
+     */
+    WebSocketUpgrade(DefaultWebSocketOptions options, @Nullable JsonCodec codec, SafeLogger log) {
+        this(options, codec, log, new WebSocketSender(128, () -> 0, log), new WebSocketIdleScheduler(() -> 0, log));
+    }
+
+    /**
+     * {@code options} must be the frozen copy; {@code sender} and {@code idle} are the app's, built at freeze. An
+     * allowlist entry that is not {@code *} or {@code scheme://host[:port]} never matches, so it gets one warning here.
      */
     // @req FR-WS-001
     // @req FR-WS-003
-    WebSocketUpgrade(DefaultWebSocketOptions options, @Nullable JsonCodec codec, SafeLogger log) {
+    // @req FR-WS-007
+    WebSocketUpgrade(DefaultWebSocketOptions options, @Nullable JsonCodec codec, SafeLogger log,
+            WebSocketSender sender, WebSocketIdleScheduler idle) {
         this.codec = codec;
         this.log = Objects.requireNonNull(log, "log");
+        this.sender = Objects.requireNonNull(sender, "sender");
+        this.idle = Objects.requireNonNull(idle, "idle");
         this.origins = new OriginCheck(options.origins());
         this.settings = options.settings();
+        this.sendQueueSize = options.sendQueueSize();
+        this.idleTimeoutMillis = options.idleTimeoutMillis();
         for (String o : options.origins()) {
             if (!"*".equals(o) && OriginCheck.normalise(o) == null) {
                 log.warn("allowedOrigins entry never matches, expected scheme://host[:port]: " + o);
@@ -49,10 +65,13 @@ final class WebSocketUpgrade {
     /**
      * Decodes the query, checks Origin (HttpException 403 before any session exists), then hands the exchange to
      * the adapter. A failure before onOpen propagates to the error path; after onOpen the connection is upgraded,
-     * so it is logged and the exchange still ends. A null {@code handler} upgrades without running user code.
+     * so it is logged and the exchange still ends, but only once the session's write in flight returned, so the
+     * adapter never frees the connection slot while a sender thread still writes to it. A null {@code handler}
+     * upgrades without running user code.
      */
     // @req FR-WS-001
     // @req FR-WS-003
+    // @req FR-WS-007
     void run(HttpExchange ex, DefaultRequest req, DefaultResponse res, @Nullable WebSocketHandler handler,
             String rid) throws IOException {
         req.decodeQuery();
@@ -68,6 +87,7 @@ final class WebSocketUpgrade {
             }
             log.error("websocket " + rid + " failed", e);
         }
+        sender.awaitIdle(session);
         res.upgraded();
     }
 
@@ -87,5 +107,17 @@ final class WebSocketUpgrade {
 
     WebSocketSender sender() {
         return sender;
+    }
+
+    WebSocketIdleScheduler idle() {
+        return idle;
+    }
+
+    int sendQueueSize() {
+        return sendQueueSize;
+    }
+
+    long idleTimeoutMillis() {
+        return idleTimeoutMillis;
     }
 }

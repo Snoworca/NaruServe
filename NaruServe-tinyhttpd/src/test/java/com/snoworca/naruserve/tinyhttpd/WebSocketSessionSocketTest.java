@@ -88,6 +88,32 @@ public class WebSocketSessionSocketTest {
         assertEquals("close 4000 bye", event());
     }
 
+    // SDS-AC-2 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-6.sds.md; FR-WS-007 AC-6: over TinyHttpd a
+    // 2000-byte message on the empty queue of sendQueueSize(1000) is dropped, the send returns normally, the client
+    // gets close (1008, "send queue overflow"), and onClose reports that pair though the client never answers
+    @Test(timeout = 20000)
+    public void sdsAc2_FR_WS_007_AC6_overflowClosesWith1008ToASilentClient() throws Exception {
+        char[] big = new char[2000];
+        java.util.Arrays.fill(big, 'x');
+        app.webSocket(o -> o.sendQueueSize(1000));
+        app.ws("/big", (req, ws) -> {
+            ws.onClose((code, reason) -> events.add("close " + code + " " + reason));
+            ws.onText(t -> {
+                ws.sendText(new String(big));
+                events.add("returned");
+            });
+        });
+        try (RawWebSocketClient c = RawWebSocketClient.open(app.listen(0).port(), "/big")) {
+            assertEquals(c.handshake, 101, c.status());
+            c.text("go");
+            Frame f = c.readFrame(CLOSE);
+            assertEquals(1008, f.closeCode());
+            assertEquals("send queue overflow", f.closeReason());
+            assertEquals("returned", event());
+        } // closed without a close frame of its own
+        assertEquals("close 1008 send queue overflow", event());
+    }
+
     // SDS-AC-13; FR-WS-006 AC-10: a handler exception after 101 reaches the onError listener registered before it and
     // closes 1011; the client sees the 101 head and then a close frame, no other status line
     @Test(timeout = 20000)

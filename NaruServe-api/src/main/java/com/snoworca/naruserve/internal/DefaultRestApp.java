@@ -126,6 +126,8 @@ public final class DefaultRestApp implements RestApp {
     }
     // Set by the one listen() that won beginStart.
     private volatile boolean bindAttempted;
+    /** The adapter's bound port once bind returned, 0 before; named in the WebSocket sender and idle threads. */
+    private volatile int boundPort;
     // The thread inside listen() or the shutdown sequence; a shutdown() from it must not wait for itself. Each owner
     // clears only its own entry, so listen() returning never wipes the identity a racing shutdown thread just set.
     private final AtomicReference<@Nullable Thread> lifecycleThread = new AtomicReference<>();
@@ -475,6 +477,7 @@ public final class DefaultRestApp implements RestApp {
             Dispatcher d = frozenDispatcher();
             a.bind(frozen, new GatedExchangeHandler(lifecycle, d, d.accessLog()));
             bound = a.boundPort();
+            boundPort = bound;
             if (!lifecycle.markRunning()) {
                 throw stopWhileStarting();
             }
@@ -882,6 +885,8 @@ public final class DefaultRestApp implements RestApp {
     // @req FR-APP-014
     // @req FR-APP-015
     // @req FR-WS-001
+    // @req FR-WS-007
+    // @req FR-WS-008
     public synchronized void freeze() {
         if (dispatcher != null) {
             return;
@@ -905,10 +910,13 @@ public final class DefaultRestApp implements RestApp {
         DefaultWebSocketOptions ws = webSocketOptions().copy();
         frozenWebSocketOptions = ws;
         SafeLogger safe = new SafeLogger(logger); // the logger is fixed from here: logger(...) needs an unfrozen app
+        WebSocketSender.IntSupplier port = () -> boundPort; // threads are made after bind, so they see the real port
         dispatcher = new Dispatcher(router, pipeline, new ErrorPath(errorHandlers, safe),
                 new AccessLog(accessLogOptions, safe), context, jsonCodec(), jsonLimit(), trustProxy,
                 multipartSettings().copy(), formLimit(), spool(), new StaticHandler(staticMounts, mimeTypes, defaultCache),
-                new WebSocketUpgrade(ws, jsonCodec(), safe));
+                new WebSocketUpgrade(ws, jsonCodec(), safe,
+                        new WebSocketSender(serverOptions.maxUpgradedConnections(), port, safe),
+                        new WebSocketIdleScheduler(port, safe)));
         lifecycle.markFrozen();
     }
 

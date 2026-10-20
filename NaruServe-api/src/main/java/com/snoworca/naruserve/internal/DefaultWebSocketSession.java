@@ -27,6 +27,8 @@ import org.jspecify.annotations.Nullable;
 // @req FR-WS-001
 // @req FR-WS-005
 // @req FR-WS-006
+// @req FR-WS-007
+// @req FR-WS-008
 final class DefaultWebSocketSession implements WebSocketSession, WebSocketEndpoint {
 
     private final String id;
@@ -36,6 +38,11 @@ final class DefaultWebSocketSession implements WebSocketSession, WebSocketEndpoi
     private final @Nullable JsonCodec codec;
     private final SafeLogger log;
     private final WebSocketSender sender;
+    private final WebSocketIdleScheduler idle;
+    private final int sendQueueSize;
+    private final long idleTimeoutMillis;
+    /** System.nanoTime() of the last text or binary message received or sent. */
+    private volatile long lastActivity = System.nanoTime();
     /** onText and onJson entries in one list, so they run in registration order. */
     private final List<TextListener> textListeners = new CopyOnWriteArrayList<>();
     private final List<BinaryListener> binaryListeners = new CopyOnWriteArrayList<>();
@@ -64,6 +71,9 @@ final class DefaultWebSocketSession implements WebSocketSession, WebSocketEndpoi
         this.codec = upgrade.codec();
         this.log = upgrade.log();
         this.sender = upgrade.sender();
+        this.idle = upgrade.idle();
+        this.sendQueueSize = upgrade.sendQueueSize();
+        this.idleTimeoutMillis = upgrade.idleTimeoutMillis();
     }
 
     /** True once {@link #onOpen} ran: the connection is upgraded, so a later failure is no HTTP answer. */
@@ -77,12 +87,64 @@ final class DefaultWebSocketSession implements WebSocketSession, WebSocketEndpoi
         return attributes.size();
     }
 
+    WebSocketSender sender() {
+        return sender;
+    }
+
+    /** Restarts the idle clock: a text or binary message was received, or its write returned. */
+    // @req FR-WS-008
+    void touch() {
+        lastActivity = System.nanoTime();
+    }
+
+    long lastActivityNanos() {
+        return lastActivity;
+    }
+
+    /**
+     * The UTF-8 length of {@code s}, as {@code s.getBytes(UTF_8).length} without the copy: an unpaired surrogate
+     * encodes as the one byte {@code '?'}.
+     */
+    // @req FR-WS-007
+    static int utf8Length(String s) {
+        int n = 0;
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if (c < 0x80) {
+                n += 1;
+            } else if (c < 0x800) {
+                n += 2;
+            } else if (Character.isHighSurrogate(c) && i + 1 < s.length()
+                    && Character.isLowSurrogate(s.charAt(i + 1))) {
+                n += 4;
+                i++;
+            } else if (Character.isSurrogate(c)) {
+                n += 1;
+            } else {
+                n += 3;
+            }
+        }
+        return n;
+    }
+
+    /** Drops the connection at once, without a close frame; the adapter then delivers onClose(1006). */
+    // @req FR-WS-008
+    void abort() {
+        WebSocketChannel c = channel;
+        if (c != null) {
+            c.abort();
+        }
+    }
+
     // @req FR-WS-001
     // @req FR-WS-006
+    // @req FR-WS-008
     @Override
     public void onOpen(WebSocketChannel channel) {
         this.channel = channel;
         opened = true;
+        touch();
+        idle.watch(this, idleTimeoutMillis);
         WebSocketHandler h = handler;
         if (h == null) {
             return;
@@ -98,6 +160,7 @@ final class DefaultWebSocketSession implements WebSocketSession, WebSocketEndpoi
     // @req FR-WS-006
     @Override
     public void onText(String text) {
+        touch();
         for (TextListener l : textListeners) {
             try {
                 l.onText(text);
@@ -112,6 +175,7 @@ final class DefaultWebSocketSession implements WebSocketSession, WebSocketEndpoi
     // @req FR-WS-006
     @Override
     public void onBinary(byte[] data) {
+        touch();
         for (BinaryListener l : binaryListeners) {
             try {
                 l.onBinary(data);
@@ -124,11 +188,12 @@ final class DefaultWebSocketSession implements WebSocketSession, WebSocketEndpoi
 
     /**
      * Runs the CloseListeners once, with the first pair the core sent when there is one, else the adapter's; then
-     * releases the attributes.
+     * releases the attributes, the idle watch and the sender slot.
      */
     // @req FR-WS-001
     // @req FR-WS-005
     // @req FR-WS-006
+    // @req FR-WS-007
     @Override
     public void onClose(int code, String reason) {
         if (!closed.compareAndSet(false, true)) {
@@ -148,6 +213,8 @@ final class DefaultWebSocketSession implements WebSocketSession, WebSocketEndpoi
             }
         }
         attributes.clear();
+        idle.unwatch(this);
+        sender.release(this); // after closeLock was taken above, so no closeBy can queue behind the release
     }
 
     /** Tells the onError listeners, logs at ERROR with the request id and closes with 1011. */
@@ -210,14 +277,16 @@ final class DefaultWebSocketSession implements WebSocketSession, WebSocketEndpoi
     }
 
     // @req FR-WS-006
+    // @req FR-WS-007
     @Override
     public void sendText(String text) {
         Objects.requireNonNull(text, "text");
-        submit(c -> c.sendText(text));
+        submit(c -> c.sendText(text), utf8Length(text), true);
     }
 
     /** {@code data} is copied, since the write runs later on a sender thread. */
     // @req FR-WS-006
+    // @req FR-WS-007
     @Override
     public void sendBinary(byte[] data) {
         Objects.requireNonNull(data, "data");
@@ -225,7 +294,7 @@ final class DefaultWebSocketSession implements WebSocketSession, WebSocketEndpoi
             return;
         }
         byte[] copy = data.clone();
-        submit(c -> c.sendBinary(copy));
+        submit(c -> c.sendBinary(copy), copy.length, true);
     }
 
     /**
@@ -233,6 +302,7 @@ final class DefaultWebSocketSession implements WebSocketSession, WebSocketEndpoi
      * Response.json does, since UncheckedIOException needs API 24.
      */
     // @req FR-WS-006
+    // @req FR-WS-007
     @Override
     public void sendJson(@Nullable Object value) {
         if (!isOpen()) {
@@ -245,7 +315,7 @@ final class DefaultWebSocketSession implements WebSocketSession, WebSocketEndpoi
             throw new HttpException(500, "JSON encoding failed", e);
         }
         String text = w.toString();
-        submit(c -> c.sendText(text));
+        submit(c -> c.sendText(text), utf8Length(text), true);
     }
 
     private interface Write {
@@ -253,23 +323,32 @@ final class DefaultWebSocketSession implements WebSocketSession, WebSocketEndpoi
     }
 
     /**
-     * Queues {@code write} unless the session is closed. The check and the submit share closeLock with closeBy, so no
-     * write is queued behind the close frame.
+     * Queues {@code write}, counting {@code bytes} of payload, unless the session is closed; a message that would
+     * pass sendQueueSize closes the session with 1008 instead and the call returns normally. The check and the queue
+     * share closeLock with closeBy, so no write is queued behind the close frame. A {@code touches} write restarts
+     * the idle clock when it returns.
      */
-    private void submit(Write write) {
+    // @req FR-WS-007
+    private void submit(Write write, int bytes, boolean touches) {
         WebSocketChannel c = channel;
         synchronized (closeLock) {
             if (closed.get() || closeCalled || c == null || !c.isOpen()) {
                 return;
             }
-            sender.submit(this, () -> {
+            Runnable task = () -> {
                 try {
                     write.run(c);
+                    if (touches) {
+                        touch();
+                    }
                 } catch (IOException | RuntimeException e) {
                     // The connection is going away; its onClose follows.
                     log.debug("websocket " + rid + " write not sent: " + e);
                 }
-            });
+            };
+            if (!sender.queue(this, task, bytes, sendQueueSize)) {
+                closeBy(1008, "send queue overflow");
+            }
         }
     }
 
@@ -277,7 +356,7 @@ final class DefaultWebSocketSession implements WebSocketSession, WebSocketEndpoi
     // @req FR-WS-005
     @Override
     public void ping() {
-        submit(c -> c.ping(new byte[0]));
+        submit(c -> c.ping(new byte[0]), 0, false);
     }
 
     /** Checks the code and reason first, also on a closed session, then starts the close. */
@@ -304,23 +383,24 @@ final class DefaultWebSocketSession implements WebSocketSession, WebSocketEndpoi
 
     /**
      * Every close the core starts. Only the first pair is recorded; isOpen() turns false at once, so later sends and
-     * pings are dropped and the close frame is the slot's last write.
+     * pings are dropped. The close frame replaces what is still queued and is the slot's last write.
      */
     // @req FR-WS-005
     // @req FR-WS-006
+    // @req FR-WS-007
     void closeBy(int code, String reason) {
         WebSocketChannel c = channel;
         if (c == null || !c.isOpen()) {
             return;
         }
         synchronized (closeLock) {
-            if (closeCalled) {
+            if (closed.get() || closeCalled) {
                 return;
             }
             closeCalled = true;
             sentCode = code;
             sentReason = reason;
-            sender.submit(this, () -> {
+            sender.last(this, () -> {
                 try {
                     c.close(code, reason);
                 } catch (RuntimeException e) {
