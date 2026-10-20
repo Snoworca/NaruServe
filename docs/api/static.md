@@ -48,7 +48,7 @@ app.staticFiles("/", new File("./www"), options -> {
 | 옵션 | 기본값 | 설명 |
 |---|---|---|
 | `index(name)` | `index.html` | 폴더 요청 때 보낼 파일 |
-| `directoryListing(boolean)` | `false` | 폴더 목록 표시. 보안상 기본 꺼짐 |
+| `directoryListing(boolean)` | `false` | 폴더 목록 표시. 보안상 기본 꺼짐. 목록에는 심볼릭 링크가 `allowSymlinks(true)`여도 나타나지 않습니다 |
 | `spaFallback(boolean)` | `false` | 없는 경로의 HTML 탐색 요청에 `index.html`을 보냅니다. |
 | `spaExclude(prefixes...)` | — | SPA fallback에서 뺄 경로 접두사를 더합니다. `/api/`, `/ws/`는 항상 빠집니다 |
 | `cache(pattern, policy)` | — | 경로 패턴별 캐시 정책. 패턴은 마운트 접두사를 뺀, `/`로 시작하는 경로에 맞춥니다. `/`로 시작하지 않는 패턴은 앞에 `**/`가 붙은 것처럼 맞춥니다. `*`는 세그먼트 하나 안에서, `**`는 0개 이상의 세그먼트에 맞으므로 `**/*.html`은 `/index.html`에도 맞습니다. 여러 패턴이 맞으면 먼저 등록한 패턴이 이깁니다 |
@@ -123,6 +123,13 @@ MIME 타입이 빈 문자열이거나 CR, LF 같은 제어 문자를 담아 헤�
 | `.mp4` | `video/mp4` |
 | `.webm` | `video/webm` |
 | `.pdf` | `application/pdf` |
+| `.txt` | `text/plain` |
+| `.csv` | `text/csv` |
+| `.xml` | `application/xml` |
+| `.gif` | `image/gif` |
+| `.ico` | `image/x-icon` |
+| `.mp3` | `audio/mpeg` |
+| `.ogg` | `audio/ogg` |
 | 그 밖 | `application/octet-stream` |
 
 텍스트 타입에는 `charset=UTF-8`이 붙습니다.

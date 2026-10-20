@@ -31,6 +31,19 @@ public class DefaultMimeTypesTest {
         assertEquals("application/json", m.lookup("x.tar.map", NONE));
     }
 
+    // FR-STATIC-007 AC-1; FR-STATIC-007 AC-2
+    @Test
+    public void FR_STATIC_007_AC1_commonTypesAreBuiltIn() {
+        DefaultMimeTypes m = new DefaultMimeTypes(new AppLifecycle());
+        assertEquals("text/plain; charset=UTF-8", m.lookup("robots.txt", NONE));
+        assertEquals("text/csv; charset=UTF-8", m.lookup("a.CSV", NONE));
+        assertEquals("image/gif", m.lookup("a.gif", NONE));
+        assertEquals("image/x-icon", m.lookup("favicon.ico", NONE));
+        assertEquals("application/xml", m.lookup("sitemap.xml", NONE));
+        assertEquals("audio/mpeg", m.lookup("a.mp3", NONE));
+        assertEquals("audio/ogg", m.lookup("a.ogg", NONE));
+    }
+
     // FR-STATIC-007 AC-2
     @Test
     public void FR_STATIC_007_AC2_builtInTableIsExactlyTheDocsTable() throws IOException {

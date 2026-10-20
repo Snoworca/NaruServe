@@ -26,7 +26,9 @@ final class DefaultMimeTypes implements MimeTypes {
             "webmanifest", "application/manifest+json", "wasm", "application/wasm", "svg", "image/svg+xml",
             "png", "image/png", "jpg", "image/jpeg", "jpeg", "image/jpeg", "webp", "image/webp",
             "avif", "image/avif", "woff", "font/woff", "woff2", "font/woff2", "mp4", "video/mp4",
-            "webm", "video/webm", "pdf", "application/pdf"};
+            "webm", "video/webm", "pdf", "application/pdf", "txt", "text/plain", "csv", "text/csv",
+            "xml", "application/xml", "gif", "image/gif", "ico", "image/x-icon", "mp3", "audio/mpeg",
+            "ogg", "audio/ogg"};
 
     private final Map<String, String> builtIn = builtIn();
 
