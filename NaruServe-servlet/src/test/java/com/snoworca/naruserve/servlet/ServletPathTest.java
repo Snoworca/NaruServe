@@ -4,24 +4,14 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
 import com.snoworca.naruserve.RestApp;
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.ServerConnector;
-import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.servlet.ServletHolder;
-import org.junit.After;
+import org.junit.Rule;
 import org.junit.Test;
 
 /** The path remainder: raw request URI minus context path minus url-pattern prefix, undecoded. */
 public class ServletPathTest {
 
-    private Server server;
-
-    @After
-    public void stop() throws Exception {
-        if (server != null) {
-            server.stop();
-        }
-    }
+    @Rule
+    public final ContainerRule container = new ContainerRule();
 
     private static void routes(RestApp app) {
         app.get("/users/:id", (req, res) -> res.send(req.rawPath() + "|" + req.param("id") + "|" + req.query("x")));
@@ -32,13 +22,8 @@ public class ServletPathTest {
     private int start(String pattern) throws Exception {
         ServletAdapter adapter = new ServletAdapter();
         SharedApp.listen(adapter, ServletPathTest::routes);
-        ServletContextHandler ctx = new ServletContextHandler();
-        ctx.setContextPath("/app");
-        ctx.addServlet(new ServletHolder(new NaruServeServlet(adapter, InitParams.prefix(pattern))), pattern);
-        server = new Server(0);
-        server.setHandler(ctx);
-        server.start();
-        return ((ServerConnector) server.getConnectors()[0]).getLocalPort();
+        container.servlet(new NaruServeServlet(adapter, InitParams.prefix(pattern)), pattern, "/app");
+        return container.port();
     }
 
     // SDS-AC-1; FR-SVL-002 AC-1
@@ -78,7 +63,6 @@ public class ServletPathTest {
     @Test
     public void sdsAc1_FR_SVL_002_AC1_slashStarAndSlashStripNothingAfterTheContextPath() throws Exception {
         for (String pattern : new String[] {"/*", "/"}) {
-            stop();
             int port = start(pattern);
             SharedApp.Reply r = SharedApp.http(port, "GET", "/app/users/%41;v=1?x=%20", null);
             assertEquals(pattern, 200, r.status);

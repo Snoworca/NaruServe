@@ -86,8 +86,13 @@ class ContainerRule extends ExternalResource {
 
     /** A plain servlet context serving {@code s} at {@code pattern}, without any initializer. */
     ServletContextHandler servlet(HttpServlet s, String pattern) throws Exception {
+        return servlet(s, pattern, "/");
+    }
+
+    /** As {@link #servlet(HttpServlet, String)}, with the context path {@code contextPath}. */
+    ServletContextHandler servlet(HttpServlet s, String pattern, String contextPath) throws Exception {
         ServletContextHandler ctx = new ServletContextHandler();
-        ctx.setContextPath("/");
+        ctx.setContextPath(contextPath);
         ctx.addServlet(new ServletHolder(s), pattern);
         start(ctx);
         return ctx;
