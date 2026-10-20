@@ -4,7 +4,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.snoworca.naruserve.RestApp;
 import com.snoworca.naruserve.testing.RecordingLogger;
 import java.util.ArrayList;
 import java.util.List;
@@ -53,11 +52,8 @@ public class ServletRejectTest {
     @Test
     public void sdsAc6_FR_SVL_002_AC6_prefixMiss404LogsNoTokenSessionOrPath() throws Exception {
         RecordingLogger logger = new RecordingLogger();
-        ServletAdapter adapter = new ServletAdapter();
-        RestApp app = RestApp.builder().httpAdapter(adapter).jsonCodec(SharedApp.CODEC).logger(logger).build();
-        app.get("/x", (req, res) -> res.send("x"));
-        app.listen(0);
-        container.servlet(new NaruServeServlet(adapter, "/api"), "/api/*");
+        SharedApp.onJetty(container, new ServletAdapter(), "/api/*", logger,
+                app -> app.get("/x", (req, res) -> res.send("x")));
         SharedApp.Reply r = sendWithSecrets("/%61pi/path-SECRET-3");
         assertEquals(404, r.status);
         assertTrue(r.text(), r.text().contains("\"code\":\"NOT_FOUND\""));

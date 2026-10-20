@@ -53,12 +53,7 @@ public class ServletSseLimitTest {
 
     /** An app with {@code routes} over a new ServletAdapter behind {@link NaruServeServlet} at {@code /*}. */
     static RestApp jetty(ContainerRule c, RecordingLogger log, Consumer<RestApp> routes) throws Exception {
-        ServletAdapter adapter = new ServletAdapter();
-        RestApp app = RestApp.builder().httpAdapter(adapter).jsonCodec(SharedApp.CODEC).logger(log).build();
-        routes.accept(app);
-        app.listen(0);
-        c.servlet(new NaruServeServlet(adapter, ""), "/*");
-        return app;
+        return SharedApp.onJetty(c, new ServletAdapter(), "/*", log, routes);
     }
 
     /** SSE threads left alive by earlier tests in this JVM, which this test does not count. */

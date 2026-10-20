@@ -38,11 +38,7 @@ public class ServletSettingsTest {
     /** An app over a new adapter behind Jetty at {@code /*}, with {@code log} as its logger. */
     private ServletAdapter onJetty(RecordingLogger log, Consumer<RestApp> routes) throws Exception {
         ServletAdapter adapter = new ServletAdapter();
-        RestApp a = RestApp.builder().httpAdapter(adapter).jsonCodec(SharedApp.CODEC).logger(log).build();
-        app = a;
-        routes.accept(a);
-        a.listen(0);
-        container.servlet(new NaruServeServlet(adapter, ""), "/*");
+        app = SharedApp.onJetty(container, adapter, "/*", log, routes);
         return adapter;
     }
 

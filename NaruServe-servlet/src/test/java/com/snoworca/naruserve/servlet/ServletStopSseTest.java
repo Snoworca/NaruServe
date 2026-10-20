@@ -53,7 +53,8 @@ public class ServletStopSseTest {
 
     private void start() throws Exception {
         adapter = new ServletAdapter();
-        app = SharedApp.listen(adapter, a -> {
+        container.filter(completes);
+        app = SharedApp.onJetty(container, adapter, "/*", null, a -> {
             a.sse(o -> o.sendQueueSize(16 * 1024 * 1024));
             a.get("/events", (req, res) -> {
                 SseClient c = res.sse();
@@ -61,8 +62,6 @@ public class ServletStopSseTest {
                 opened.add(c);
             });
         });
-        container.filter(completes);
-        container.servlet(new NaruServeServlet(adapter, ""), "/*");
     }
 
     private SseClient next() throws InterruptedException {

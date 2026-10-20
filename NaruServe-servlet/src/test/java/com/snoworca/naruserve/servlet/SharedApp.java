@@ -2,6 +2,7 @@ package com.snoworca.naruserve.servlet;
 
 import com.snoworca.naruserve.Cookie;
 import com.snoworca.naruserve.HttpException;
+import com.snoworca.naruserve.Logger;
 import com.snoworca.naruserve.RestApp;
 import com.snoworca.naruserve.spi.JsonCodec;
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter;
@@ -115,7 +116,17 @@ final class SharedApp {
 
     /** An app over {@code adapter} with {@link #CODEC}, configured by {@code routes}, already listening. */
     static RestApp listen(com.snoworca.naruserve.spi.HttpAdapter adapter, Consumer<RestApp> routes) {
-        RestApp app = RestApp.builder().httpAdapter(adapter).jsonCodec(CODEC).build();
+        return listen(adapter, null, routes);
+    }
+
+    /** As {@link #listen(com.snoworca.naruserve.spi.HttpAdapter, Consumer)}, logging to {@code log} when it is given. */
+    static RestApp listen(com.snoworca.naruserve.spi.HttpAdapter adapter, @Nullable Logger log,
+            Consumer<RestApp> routes) {
+        RestApp.Builder builder = RestApp.builder().httpAdapter(adapter).jsonCodec(CODEC);
+        if (log != null) {
+            builder.logger(log);
+        }
+        RestApp app = builder.build();
         routes.accept(app);
         app.listen(0);
         return app;
@@ -123,8 +134,13 @@ final class SharedApp {
 
     /** Starts {@code routes} on a new ServletAdapter behind {@code container} at {@code pattern}. */
     static RestApp onJetty(ContainerRule container, String pattern, Consumer<RestApp> routes) throws Exception {
-        ServletAdapter adapter = new ServletAdapter();
-        RestApp app = listen(adapter, routes);
+        return onJetty(container, new ServletAdapter(), pattern, null, routes);
+    }
+
+    /** Starts {@code routes} on {@code adapter} behind {@code container} at {@code pattern}, logging to {@code log}. */
+    static RestApp onJetty(ContainerRule container, ServletAdapter adapter, String pattern, @Nullable Logger log,
+            Consumer<RestApp> routes) throws Exception {
+        RestApp app = listen(adapter, log, routes);
         container.servlet(new NaruServeServlet(adapter, InitParams.prefix(pattern)), pattern);
         return app;
     }

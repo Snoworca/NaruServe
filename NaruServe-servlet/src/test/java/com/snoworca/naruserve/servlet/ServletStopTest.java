@@ -44,7 +44,7 @@ public class ServletStopTest {
 
     private void start() throws Exception {
         adapter = new ServletAdapter();
-        app = SharedApp.listen(adapter, a -> {
+        app = SharedApp.onJetty(container, adapter, "/*", null, a -> {
             a.get("/slow", (req, res) -> {
                 entered.countDown();
                 try {
@@ -60,7 +60,6 @@ public class ServletStopTest {
                 c.send("hello", "1");
             });
         });
-        container.servlet(new NaruServeServlet(adapter, ""), "/*");
     }
 
     /** The slow request on its own thread; its reply lands in the returned reference. */
