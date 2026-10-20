@@ -1,0 +1,57 @@
+{
+ "target": "wave-7",
+ "classification": "new-scope",
+ "rationale": "Two new functional areas (WebSocket WS, SSE SSE) by the per-area scope convention; shutdown lines to APP, adapter lines to ENGINE, HttpException headers to HTTP; six verified requirements superseded (update).",
+ "evidence_paths": [
+  "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdFeatures.java",
+  "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpExchange.java",
+  "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ShutdownParticipants.java"
+ ],
+ "affected_existing_reqs": [
+  {
+   "id": "FR-ENGINE-010",
+   "relation": "supersedes",
+   "diff_summary": "event-stream and upgrade filled"
+  },
+  {
+   "id": "IR-HTTP-004",
+   "relation": "supersedes",
+   "diff_summary": "SPI add-only"
+  },
+  {
+   "id": "FR-APP-015",
+   "relation": "supersedes",
+   "diff_summary": "WS/SSE access log lines"
+  },
+  {
+   "id": "OPS-HTTP-006",
+   "relation": "supersedes",
+   "diff_summary": "later-wave marker set"
+  },
+  {
+   "id": "OPS-APP-004",
+   "relation": "supersedes",
+   "diff_summary": "wave 7 markers removed"
+  },
+  {
+   "id": "OPS-ENGINE-001",
+   "relation": "supersedes",
+   "diff_summary": "websocket.md limit markers removed"
+  }
+ ],
+ "proposed_scope": "NEW: WebSocket, NEW: Server-Sent Events; existing APP, ENGINE, HTTP",
+ "proposed_prefix": "WS, SSE",
+ "confidence": "high",
+ "scope_boundary_impact": null,
+ "external_module_impact": null,
+ "scopes_created": [
+  {
+   "scope": "WS",
+   "file": "docs/spec/11.websocket.srs.md"
+  },
+  {
+   "scope": "SSE",
+   "file": "docs/spec/12.server-sent-events.srs.md"
+  }
+ ]
+}

@@ -1,0 +1,1898 @@
+{
+ "run": "2026-10-19.naruserve.wave-3.v01",
+ "judgements": [
+  {
+   "req_id": "IR-HTTP-001",
+   "feasibility": "high",
+   "score": 88,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "building blocks exist; new files are planned addition sites",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/Method.java:10,22 (declaration order, any())",
+      "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/NullabilityKotlinTest.kt (wave 1 Kotlin test pattern)",
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 17,
+     "rationale": "frozen design items + wave decisions; existing router/validator code",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/Method.java:10,22 (declaration order, any())",
+      "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/NullabilityKotlinTest.kt (wave 1 Kotlin test pattern)",
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "deps: IR-ROUTE-001(verified)",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/Method.java:10,22 (declaration order, any())",
+      "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/NullabilityKotlinTest.kt (wave 1 Kotlin test pattern)",
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "ACs are concrete test assertions",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/Method.java:10,22 (declaration order, any())",
+      "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/NullabilityKotlinTest.kt (wave 1 Kotlin test pattern)",
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "scope_fit": {
+     "score": 8,
+     "rationale": "wave-3 scope per design.md",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/Method.java:10,22 (declaration order, any())",
+      "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/NullabilityKotlinTest.kt (wave 1 Kotlin test pattern)",
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "product_fit": {
+     "score": 8,
+     "rationale": "Express-aligned per CLAUDE.md",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/Method.java:10,22 (declaration order, any())",
+      "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/NullabilityKotlinTest.kt (wave 1 Kotlin test pattern)",
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Request/Response nullability checked via @NullMarked package + @Nullable positions"
+   ],
+   "quality_issues": [],
+   "fix_to_raise": null,
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": "none (NaruServe-api + root build/docs only)"
+  },
+  {
+   "req_id": "IR-HTTP-002",
+   "feasibility": "high",
+   "score": 93,
+   "axes": {
+    "implementability": {
+     "score": 29,
+     "rationale": "building blocks exist; new files are planned addition sites",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)",
+      "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/NullabilityKotlinTest.kt (wave 1 Kotlin test pattern)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "frozen design items + wave decisions; existing router/validator code",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)",
+      "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/NullabilityKotlinTest.kt (wave 1 Kotlin test pattern)"
+     ]
+    },
+    "dependency_health": {
+     "score": 14,
+     "rationale": "deps: IR-HTTP-001(planned), CON-ROUTE-006(planned); stale depends_on to discarded CON-ROUTE-001 judged on successor CON-ROUTE-006",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)",
+      "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/NullabilityKotlinTest.kt (wave 1 Kotlin test pattern)"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "ACs are concrete test assertions",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)",
+      "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/NullabilityKotlinTest.kt (wave 1 Kotlin test pattern)"
+     ]
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "wave-3 scope per design.md",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)",
+      "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/NullabilityKotlinTest.kt (wave 1 Kotlin test pattern)"
+     ]
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "Express-aligned per CLAUDE.md",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)",
+      "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/NullabilityKotlinTest.kt (wave 1 Kotlin test pattern)"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "dependency judged on successor CON-ROUTE-006 (stale CON-ROUTE-001 row ignored)"
+   ],
+   "quality_issues": [],
+   "fix_to_raise": null,
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": "none (NaruServe-api + root build/docs only)"
+  },
+  {
+   "req_id": "IR-HTTP-003",
+   "feasibility": "high",
+   "score": 86,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "rationale": "building blocks exist; new files are planned addition sites",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/PathValidator.java:26-46 (isValid, single decode)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:63-98,164-237 (add/addWebSocket/freeze/lookup)",
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 16,
+     "rationale": "frozen design items + wave decisions; existing router/validator code",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/PathValidator.java:26-46 (isValid, single decode)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:63-98,164-237 (add/addWebSocket/freeze/lookup)",
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "deps: FR-ROUTE-005(verified)",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/PathValidator.java:26-46 (isValid, single decode)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:63-98,164-237 (add/addWebSocket/freeze/lookup)",
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "ACs are concrete test assertions",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/PathValidator.java:26-46 (isValid, single decode)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:63-98,164-237 (add/addWebSocket/freeze/lookup)",
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "scope_fit": {
+     "score": 8,
+     "rationale": "wave-3 scope per design.md",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/PathValidator.java:26-46 (isValid, single decode)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:63-98,164-237 (add/addWebSocket/freeze/lookup)",
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "product_fit": {
+     "score": 8,
+     "rationale": "Express-aligned per CLAUDE.md",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/PathValidator.java:26-46 (isValid, single decode)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:63-98,164-237 (add/addWebSocket/freeze/lookup)",
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "quality_issues": [],
+   "fix_to_raise": null,
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": "none (NaruServe-api + root build/docs only)"
+  },
+  {
+   "req_id": "IR-HTTP-004",
+   "feasibility": "medium",
+   "score": 76,
+   "axes": {
+    "implementability": {
+     "score": 22,
+     "rationale": "building blocks exist; new files are planned addition sites",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 14,
+     "rationale": "frozen design items + wave decisions; existing router/validator code",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "dependency_health": {
+     "score": 13,
+     "rationale": "deps: IR-HTTP-003(planned)",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 10,
+     "rationale": "see quality issues",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "scope_fit": {
+     "score": 8,
+     "rationale": "wave-3 scope per design.md",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "Express-aligned per CLAUDE.md",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "three extension points have no in-wave consumer (waves 5-7)"
+   ],
+   "quality_issues": [
+    "AC-1 \"The SPI declares a file-transfer extension point, an event-stream extension point and a protocol-upgrade extension point, each usable by an adapter without any NaruServe class outside NaruServe-api\" only asserts existence; file-transfer and protocol-upgrade points have no behavioural test, so any placeholder type satisfies it and wave 5/7 may have to break the SPI.",
+    "AC-3 \"a non-zero port for port 0\" is checked only against the in-memory adapter, which fabricates the port; it proves the signature, not bind semantics."
+   ],
+   "fix_to_raise": "Give AC-1 a per-point in-memory test like AC-2 (e.g. file-transfer point receives File+offset+length and the adapter writes those bytes; upgrade point hands raw in/out streams after the handler returns), or name the minimal method signatures from D-106.",
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": "none (NaruServe-api + root build/docs only)"
+  },
+  {
+   "req_id": "CON-HTTP-001",
+   "feasibility": "high",
+   "score": 88,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "building blocks exist; new files are planned addition sites",
+     "evidence": [
+      "build.gradle:127,147-160 (checkClassReferences prefixes), 166 (java-test-fixtures), 171-180 (animal-sniffer)",
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "frozen design items + wave decisions; existing router/validator code",
+     "evidence": [
+      "build.gradle:127,147-160 (checkClassReferences prefixes), 166 (java-test-fixtures), 171-180 (animal-sniffer)",
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "dependency_health": {
+     "score": 13,
+     "rationale": "deps: IR-HTTP-003(planned), CON-ROUTE-006(planned); stale depends_on to discarded CON-ROUTE-001 judged on successor CON-ROUTE-006",
+     "evidence": [
+      "build.gradle:127,147-160 (checkClassReferences prefixes), 166 (java-test-fixtures), 171-180 (animal-sniffer)",
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "ACs are concrete test assertions",
+     "evidence": [
+      "build.gradle:127,147-160 (checkClassReferences prefixes), 166 (java-test-fixtures), 171-180 (animal-sniffer)",
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "scope_fit": {
+     "score": 8,
+     "rationale": "wave-3 scope per design.md",
+     "evidence": [
+      "build.gradle:127,147-160 (checkClassReferences prefixes), 166 (java-test-fixtures), 171-180 (animal-sniffer)",
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "product_fit": {
+     "score": 8,
+     "rationale": "Express-aligned per CLAUDE.md",
+     "evidence": [
+      "build.gradle:127,147-160 (checkClassReferences prefixes), 166 (java-test-fixtures), 171-180 (animal-sniffer)",
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "dependency judged on successor CON-ROUTE-006"
+   ],
+   "quality_issues": [],
+   "fix_to_raise": null,
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": "none (NaruServe-api + root build/docs only)"
+  },
+  {
+   "req_id": "FR-HTTP-001",
+   "feasibility": "high",
+   "score": 84,
+   "axes": {
+    "implementability": {
+     "score": 25,
+     "rationale": "building blocks exist; new files are planned addition sites",
+     "evidence": [
+      "build.gradle:127,147-160 (checkClassReferences prefixes), 166 (java-test-fixtures), 171-180 (animal-sniffer)",
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 16,
+     "rationale": "frozen design items + wave decisions; existing router/validator code",
+     "evidence": [
+      "build.gradle:127,147-160 (checkClassReferences prefixes), 166 (java-test-fixtures), 171-180 (animal-sniffer)",
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "dependency_health": {
+     "score": 12,
+     "rationale": "deps: IR-HTTP-003(planned), IR-HTTP-004(planned)",
+     "evidence": [
+      "build.gradle:127,147-160 (checkClassReferences prefixes), 166 (java-test-fixtures), 171-180 (animal-sniffer)",
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "ACs are concrete test assertions",
+     "evidence": [
+      "build.gradle:127,147-160 (checkClassReferences prefixes), 166 (java-test-fixtures), 171-180 (animal-sniffer)",
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "scope_fit": {
+     "score": 8,
+     "rationale": "wave-3 scope per design.md",
+     "evidence": [
+      "build.gradle:127,147-160 (checkClassReferences prefixes), 166 (java-test-fixtures), 171-180 (animal-sniffer)",
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "Express-aligned per CLAUDE.md",
+     "evidence": [
+      "build.gradle:127,147-160 (checkClassReferences prefixes), 166 (java-test-fixtures), 171-180 (animal-sniffer)",
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "depends on IR-HTTP-004 (medium)"
+   ],
+   "quality_issues": [],
+   "fix_to_raise": null,
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": "none (NaruServe-api + root build/docs only)"
+  },
+  {
+   "req_id": "FR-HTTP-002",
+   "feasibility": "high",
+   "score": 84,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "rationale": "building blocks exist; new files are planned addition sites",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/PathValidator.java:26-46 (isValid, single decode)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:63-98,164-237 (add/addWebSocket/freeze/lookup)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouteMatch.java:18-20 (six Kinds)",
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 17,
+     "rationale": "frozen design items + wave decisions; existing router/validator code",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/PathValidator.java:26-46 (isValid, single decode)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:63-98,164-237 (add/addWebSocket/freeze/lookup)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouteMatch.java:18-20 (six Kinds)",
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "dependency_health": {
+     "score": 13,
+     "rationale": "deps: FR-ROUTE-004(verified), IR-ROUTE-004(verified), FR-HTTP-001(planned), CON-HTTP-001(planned)",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/PathValidator.java:26-46 (isValid, single decode)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:63-98,164-237 (add/addWebSocket/freeze/lookup)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouteMatch.java:18-20 (six Kinds)",
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 12,
+     "rationale": "ACs are concrete test assertions",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/PathValidator.java:26-46 (isValid, single decode)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:63-98,164-237 (add/addWebSocket/freeze/lookup)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouteMatch.java:18-20 (six Kinds)",
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "scope_fit": {
+     "score": 8,
+     "rationale": "wave-3 scope per design.md",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/PathValidator.java:26-46 (isValid, single decode)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:63-98,164-237 (add/addWebSocket/freeze/lookup)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouteMatch.java:18-20 (six Kinds)",
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "product_fit": {
+     "score": 8,
+     "rationale": "Express-aligned per CLAUDE.md",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/PathValidator.java:26-46 (isValid, single decode)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:63-98,164-237 (add/addWebSocket/freeze/lookup)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouteMatch.java:18-20 (six Kinds)",
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "AC-6 \"The HTTP-level assertions of T01, T02, T03, T05 and T06 run as tests\" relies on object.md §17 for its content; tests should cite T-ids"
+   ],
+   "quality_issues": [],
+   "fix_to_raise": null,
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": "none (NaruServe-api + root build/docs only)"
+  },
+  {
+   "req_id": "FR-HTTP-003",
+   "feasibility": "high",
+   "score": 89,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "building blocks exist; new files are planned addition sites",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouteMatch.java:18-20 (six Kinds)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:243-266 (allowFor/allowOf adds OPTIONS, HEAD with GET)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/Method.java:10,22 (declaration order, any())",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:272 (isWebSocketUpgrade)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 19,
+     "rationale": "frozen design items + wave decisions; existing router/validator code",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouteMatch.java:18-20 (six Kinds)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:243-266 (allowFor/allowOf adds OPTIONS, HEAD with GET)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/Method.java:10,22 (declaration order, any())",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:272 (isWebSocketUpgrade)"
+     ]
+    },
+    "dependency_health": {
+     "score": 13,
+     "rationale": "deps: FR-ROUTE-009(verified), FR-ROUTE-010(verified), FR-ROUTE-012(verified), FR-ROUTE-013(verified), FR-ROUTE-016(verified), FR-HTTP-002(planned)",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouteMatch.java:18-20 (six Kinds)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:243-266 (allowFor/allowOf adds OPTIONS, HEAD with GET)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/Method.java:10,22 (declaration order, any())",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:272 (isWebSocketUpgrade)"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "ACs are concrete test assertions",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouteMatch.java:18-20 (six Kinds)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:243-266 (allowFor/allowOf adds OPTIONS, HEAD with GET)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/Method.java:10,22 (declaration order, any())",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:272 (isWebSocketUpgrade)"
+     ]
+    },
+    "scope_fit": {
+     "score": 8,
+     "rationale": "wave-3 scope per design.md",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouteMatch.java:18-20 (six Kinds)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:243-266 (allowFor/allowOf adds OPTIONS, HEAD with GET)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/Method.java:10,22 (declaration order, any())",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:272 (isWebSocketUpgrade)"
+     ]
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "Express-aligned per CLAUDE.md",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouteMatch.java:18-20 (six Kinds)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:243-266 (allowFor/allowOf adds OPTIONS, HEAD with GET)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/Method.java:10,22 (declaration order, any())",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:272 (isWebSocketUpgrade)"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "quality_issues": [],
+   "fix_to_raise": null,
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": "none (NaruServe-api + root build/docs only)"
+  },
+  {
+   "req_id": "FR-HTTP-004",
+   "feasibility": "high",
+   "score": 91,
+   "axes": {
+    "implementability": {
+     "score": 28,
+     "rationale": "building blocks exist; new files are planned addition sites",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:63-98,164-237 (add/addWebSocket/freeze/lookup)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouteMatch.java:18-20 (six Kinds)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 19,
+     "rationale": "frozen design items + wave decisions; existing router/validator code",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:63-98,164-237 (add/addWebSocket/freeze/lookup)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouteMatch.java:18-20 (six Kinds)"
+     ]
+    },
+    "dependency_health": {
+     "score": 13,
+     "rationale": "deps: FR-ROUTE-011(verified), FR-HTTP-002(planned)",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:63-98,164-237 (add/addWebSocket/freeze/lookup)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouteMatch.java:18-20 (six Kinds)"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "ACs are concrete test assertions",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:63-98,164-237 (add/addWebSocket/freeze/lookup)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouteMatch.java:18-20 (six Kinds)"
+     ]
+    },
+    "scope_fit": {
+     "score": 8,
+     "rationale": "wave-3 scope per design.md",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:63-98,164-237 (add/addWebSocket/freeze/lookup)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouteMatch.java:18-20 (six Kinds)"
+     ]
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "Express-aligned per CLAUDE.md",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:63-98,164-237 (add/addWebSocket/freeze/lookup)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouteMatch.java:18-20 (six Kinds)"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "quality_issues": [],
+   "fix_to_raise": null,
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": "none (NaruServe-api + root build/docs only)"
+  },
+  {
+   "req_id": "FR-HTTP-005",
+   "feasibility": "high",
+   "score": 89,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "building blocks exist; new files are planned addition sites",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/PathValidator.java:26-46 (isValid, single decode)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/Method.java:10,22 (declaration order, any())"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "frozen design items + wave decisions; existing router/validator code",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/PathValidator.java:26-46 (isValid, single decode)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/Method.java:10,22 (declaration order, any())"
+     ]
+    },
+    "dependency_health": {
+     "score": 13,
+     "rationale": "deps: IR-ROUTE-001(verified), FR-HTTP-002(planned), FR-HTTP-001(planned)",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/PathValidator.java:26-46 (isValid, single decode)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/Method.java:10,22 (declaration order, any())"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "ACs are concrete test assertions",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/PathValidator.java:26-46 (isValid, single decode)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/Method.java:10,22 (declaration order, any())"
+     ]
+    },
+    "scope_fit": {
+     "score": 8,
+     "rationale": "wave-3 scope per design.md",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/PathValidator.java:26-46 (isValid, single decode)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/Method.java:10,22 (declaration order, any())"
+     ]
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "Express-aligned per CLAUDE.md",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/PathValidator.java:26-46 (isValid, single decode)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/Method.java:10,22 (declaration order, any())"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "quality_issues": [],
+   "fix_to_raise": null,
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": "none (NaruServe-api + root build/docs only)"
+  },
+  {
+   "req_id": "FR-HTTP-006",
+   "feasibility": "high",
+   "score": 84,
+   "axes": {
+    "implementability": {
+     "score": 25,
+     "rationale": "building blocks exist; new files are planned addition sites",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 16,
+     "rationale": "frozen design items + wave decisions; existing router/validator code",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "dependency_health": {
+     "score": 13,
+     "rationale": "deps: FR-HTTP-002(planned)",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "ACs are concrete test assertions",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "scope_fit": {
+     "score": 8,
+     "rationale": "wave-3 scope per design.md",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "Express-aligned per CLAUDE.md",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "response state (ABORTED/COMPLETED) is not public API; tests read it through the internal implementation"
+   ],
+   "quality_issues": [],
+   "fix_to_raise": null,
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": "none (NaruServe-api + root build/docs only)"
+  },
+  {
+   "req_id": "IR-HTTP-005",
+   "feasibility": "high",
+   "score": 90,
+   "axes": {
+    "implementability": {
+     "score": 28,
+     "rationale": "building blocks exist; new files are planned addition sites",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouterPolicy.java:30-96 (builder)",
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "frozen design items + wave decisions; existing router/validator code",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouterPolicy.java:30-96 (builder)",
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "dependency_health": {
+     "score": 13,
+     "rationale": "deps: IR-HTTP-002(planned), FR-ROUTE-002(verified), FR-ROUTE-006(verified), FR-ROUTE-014(verified), IR-ROUTE-001(verified)",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouterPolicy.java:30-96 (builder)",
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "ACs are concrete test assertions",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouterPolicy.java:30-96 (builder)",
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "scope_fit": {
+     "score": 8,
+     "rationale": "wave-3 scope per design.md",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouterPolicy.java:30-96 (builder)",
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "Express-aligned per CLAUDE.md",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouterPolicy.java:30-96 (builder)",
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "quality_issues": [],
+   "fix_to_raise": null,
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": "none (NaruServe-api + root build/docs only)"
+  },
+  {
+   "req_id": "IR-HTTP-006",
+   "feasibility": "high",
+   "score": 90,
+   "axes": {
+    "implementability": {
+     "score": 28,
+     "rationale": "building blocks exist; new files are planned addition sites",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:63-98,164-237 (add/addWebSocket/freeze/lookup)",
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "frozen design items + wave decisions; existing router/validator code",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:63-98,164-237 (add/addWebSocket/freeze/lookup)",
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "dependency_health": {
+     "score": 13,
+     "rationale": "deps: IR-HTTP-005(planned), FR-ROUTE-008(verified)",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:63-98,164-237 (add/addWebSocket/freeze/lookup)",
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "ACs are concrete test assertions",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:63-98,164-237 (add/addWebSocket/freeze/lookup)",
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "scope_fit": {
+     "score": 8,
+     "rationale": "wave-3 scope per design.md",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:63-98,164-237 (add/addWebSocket/freeze/lookup)",
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "Express-aligned per CLAUDE.md",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:63-98,164-237 (add/addWebSocket/freeze/lookup)",
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "quality_issues": [],
+   "fix_to_raise": null,
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": "none (NaruServe-api + root build/docs only)"
+  },
+  {
+   "req_id": "FR-HTTP-007",
+   "feasibility": "high",
+   "score": 91,
+   "axes": {
+    "implementability": {
+     "score": 28,
+     "rationale": "building blocks exist; new files are planned addition sites",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:63-98,164-237 (add/addWebSocket/freeze/lookup)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouteMatch.java:18-20 (six Kinds)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 19,
+     "rationale": "frozen design items + wave decisions; existing router/validator code",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:63-98,164-237 (add/addWebSocket/freeze/lookup)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouteMatch.java:18-20 (six Kinds)"
+     ]
+    },
+    "dependency_health": {
+     "score": 13,
+     "rationale": "deps: IR-HTTP-005(planned), FR-ROUTE-002(verified), FR-HTTP-004(planned)",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:63-98,164-237 (add/addWebSocket/freeze/lookup)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouteMatch.java:18-20 (six Kinds)"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "ACs are concrete test assertions",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:63-98,164-237 (add/addWebSocket/freeze/lookup)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouteMatch.java:18-20 (six Kinds)"
+     ]
+    },
+    "scope_fit": {
+     "score": 8,
+     "rationale": "wave-3 scope per design.md",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:63-98,164-237 (add/addWebSocket/freeze/lookup)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouteMatch.java:18-20 (six Kinds)"
+     ]
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "Express-aligned per CLAUDE.md",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:63-98,164-237 (add/addWebSocket/freeze/lookup)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouteMatch.java:18-20 (six Kinds)"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "quality_issues": [],
+   "fix_to_raise": null,
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": "none (NaruServe-api + root build/docs only)"
+  },
+  {
+   "req_id": "FR-HTTP-008",
+   "feasibility": "high",
+   "score": 86,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "rationale": "building blocks exist; new files are planned addition sites",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:63-98,164-237 (add/addWebSocket/freeze/lookup)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RoutePattern.java:35 (public parse)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouterPolicy.java:30-96 (builder)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "frozen design items + wave decisions; existing router/validator code",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:63-98,164-237 (add/addWebSocket/freeze/lookup)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RoutePattern.java:35 (public parse)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouterPolicy.java:30-96 (builder)"
+     ]
+    },
+    "dependency_health": {
+     "score": 13,
+     "rationale": "deps: IR-HTTP-005(planned), FR-ROUTE-003(verified), FR-ROUTE-008(verified), FR-HTTP-002(planned)",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:63-98,164-237 (add/addWebSocket/freeze/lookup)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RoutePattern.java:35 (public parse)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouterPolicy.java:30-96 (builder)"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "ACs are concrete test assertions",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:63-98,164-237 (add/addWebSocket/freeze/lookup)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RoutePattern.java:35 (public parse)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouterPolicy.java:30-96 (builder)"
+     ]
+    },
+    "scope_fit": {
+     "score": 8,
+     "rationale": "wave-3 scope per design.md",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:63-98,164-237 (add/addWebSocket/freeze/lookup)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RoutePattern.java:35 (public parse)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouterPolicy.java:30-96 (builder)"
+     ]
+    },
+    "product_fit": {
+     "score": 8,
+     "rationale": "Express-aligned per CLAUDE.md",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:63-98,164-237 (add/addWebSocket/freeze/lookup)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RoutePattern.java:35 (public parse)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouterPolicy.java:30-96 (builder)"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "internal package must stay out of public API docs"
+   ],
+   "quality_issues": [],
+   "fix_to_raise": null,
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": "none (NaruServe-api + root build/docs only)"
+  },
+  {
+   "req_id": "FR-HTTP-009",
+   "feasibility": "high",
+   "score": 92,
+   "axes": {
+    "implementability": {
+     "score": 28,
+     "rationale": "building blocks exist; new files are planned addition sites",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:63-98,164-237 (add/addWebSocket/freeze/lookup)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/PathValidator.java:26-46 (isValid, single decode)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 19,
+     "rationale": "frozen design items + wave decisions; existing router/validator code",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:63-98,164-237 (add/addWebSocket/freeze/lookup)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/PathValidator.java:26-46 (isValid, single decode)"
+     ]
+    },
+    "dependency_health": {
+     "score": 14,
+     "rationale": "deps: IR-HTTP-001(planned), FR-ROUTE-005(verified), IR-HTTP-003(planned)",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:63-98,164-237 (add/addWebSocket/freeze/lookup)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/PathValidator.java:26-46 (isValid, single decode)"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "ACs are concrete test assertions",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:63-98,164-237 (add/addWebSocket/freeze/lookup)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/PathValidator.java:26-46 (isValid, single decode)"
+     ]
+    },
+    "scope_fit": {
+     "score": 8,
+     "rationale": "wave-3 scope per design.md",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:63-98,164-237 (add/addWebSocket/freeze/lookup)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/PathValidator.java:26-46 (isValid, single decode)"
+     ]
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "Express-aligned per CLAUDE.md",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:63-98,164-237 (add/addWebSocket/freeze/lookup)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/PathValidator.java:26-46 (isValid, single decode)"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "quality_issues": [],
+   "fix_to_raise": null,
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": "none (NaruServe-api + root build/docs only)"
+  },
+  {
+   "req_id": "FR-HTTP-010",
+   "feasibility": "high",
+   "score": 90,
+   "axes": {
+    "implementability": {
+     "score": 28,
+     "rationale": "building blocks exist; new files are planned addition sites",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/PathValidator.java:26-46 (isValid, single decode)",
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 17,
+     "rationale": "frozen design items + wave decisions; existing router/validator code",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/PathValidator.java:26-46 (isValid, single decode)",
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "dependency_health": {
+     "score": 14,
+     "rationale": "deps: IR-HTTP-001(planned), IR-HTTP-003(planned), FR-HTTP-002(planned)",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/PathValidator.java:26-46 (isValid, single decode)",
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "ACs are concrete test assertions",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/PathValidator.java:26-46 (isValid, single decode)",
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "scope_fit": {
+     "score": 8,
+     "rationale": "wave-3 scope per design.md",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/PathValidator.java:26-46 (isValid, single decode)",
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "Express-aligned per CLAUDE.md",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/PathValidator.java:26-46 (isValid, single decode)",
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "quality_issues": [],
+   "fix_to_raise": null,
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": "none (NaruServe-api + root build/docs only)"
+  },
+  {
+   "req_id": "FR-HTTP-011",
+   "feasibility": "high",
+   "score": 92,
+   "axes": {
+    "implementability": {
+     "score": 28,
+     "rationale": "building blocks exist; new files are planned addition sites",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "frozen design items + wave decisions; existing router/validator code",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "deps: IR-HTTP-001(planned), IR-HTTP-003(planned)",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "ACs are concrete test assertions",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "scope_fit": {
+     "score": 8,
+     "rationale": "wave-3 scope per design.md",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "Express-aligned per CLAUDE.md",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "quality_issues": [],
+   "fix_to_raise": null,
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": "none (NaruServe-api + root build/docs only)"
+  },
+  {
+   "req_id": "FR-HTTP-012",
+   "feasibility": "high",
+   "score": 89,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "building blocks exist; new files are planned addition sites",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 17,
+     "rationale": "frozen design items + wave decisions; existing router/validator code",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "deps: IR-HTTP-001(planned)",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "ACs are concrete test assertions",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "scope_fit": {
+     "score": 8,
+     "rationale": "wave-3 scope per design.md",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "Express-aligned per CLAUDE.md",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "quality_issues": [],
+   "fix_to_raise": null,
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": "none (NaruServe-api + root build/docs only)"
+  },
+  {
+   "req_id": "FR-HTTP-013",
+   "feasibility": "high",
+   "score": 93,
+   "axes": {
+    "implementability": {
+     "score": 29,
+     "rationale": "building blocks exist; new files are planned addition sites",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "frozen design items + wave decisions; existing router/validator code",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "deps: IR-HTTP-001(planned)",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "ACs are concrete test assertions",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "scope_fit": {
+     "score": 8,
+     "rationale": "wave-3 scope per design.md",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "Express-aligned per CLAUDE.md",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "quality_issues": [],
+   "fix_to_raise": null,
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": "none (NaruServe-api + root build/docs only)"
+  },
+  {
+   "req_id": "FR-HTTP-014",
+   "feasibility": "high",
+   "score": 84,
+   "axes": {
+    "implementability": {
+     "score": 25,
+     "rationale": "building blocks exist; new files are planned addition sites",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 16,
+     "rationale": "frozen design items + wave decisions; existing router/validator code",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "dependency_health": {
+     "score": 14,
+     "rationale": "deps: IR-HTTP-001(planned), IR-HTTP-003(planned)",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "ACs are concrete test assertions",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "scope_fit": {
+     "score": 8,
+     "rationale": "wave-3 scope per design.md",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "product_fit": {
+     "score": 8,
+     "rationale": "Express-aligned per CLAUDE.md",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "AC-7 asynchronous copy after handler return must be driven by the dispatcher thread in the in-memory adapter"
+   ],
+   "quality_issues": [],
+   "fix_to_raise": null,
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": "none (NaruServe-api + root build/docs only)"
+  },
+  {
+   "req_id": "FR-HTTP-015",
+   "feasibility": "high",
+   "score": 87,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "building blocks exist; new files are planned addition sites",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 17,
+     "rationale": "frozen design items + wave decisions; existing router/validator code",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "dependency_health": {
+     "score": 14,
+     "rationale": "deps: IR-HTTP-001(planned)",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "ACs are concrete test assertions",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "scope_fit": {
+     "score": 8,
+     "rationale": "wave-3 scope per design.md",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "product_fit": {
+     "score": 8,
+     "rationale": "Express-aligned per CLAUDE.md",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "quality_issues": [],
+   "fix_to_raise": null,
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": "none (NaruServe-api + root build/docs only)"
+  },
+  {
+   "req_id": "FR-HTTP-016",
+   "feasibility": "high",
+   "score": 82,
+   "axes": {
+    "implementability": {
+     "score": 25,
+     "rationale": "building blocks exist; new files are planned addition sites",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 16,
+     "rationale": "frozen design items + wave decisions; existing router/validator code",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "dependency_health": {
+     "score": 13,
+     "rationale": "deps: FR-HTTP-014(planned), FR-HTTP-015(planned)",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 12,
+     "rationale": "ACs are concrete test assertions",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "scope_fit": {
+     "score": 8,
+     "rationale": "wave-3 scope per design.md",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "product_fit": {
+     "score": 8,
+     "rationale": "Express-aligned per CLAUDE.md",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "AC-1 \"is COMMITTED once status and headers are handed to the adapter\" is transient during send; observable only via adapter callback or internal state accessor"
+   ],
+   "quality_issues": [],
+   "fix_to_raise": null,
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": "none (NaruServe-api + root build/docs only)"
+  },
+  {
+   "req_id": "FR-HTTP-017",
+   "feasibility": "high",
+   "score": 89,
+   "axes": {
+    "implementability": {
+     "score": 28,
+     "rationale": "building blocks exist; new files are planned addition sites",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "frozen design items + wave decisions; existing router/validator code",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "dependency_health": {
+     "score": 13,
+     "rationale": "deps: FR-HTTP-014(planned)",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "ACs are concrete test assertions",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "scope_fit": {
+     "score": 8,
+     "rationale": "wave-3 scope per design.md",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "product_fit": {
+     "score": 8,
+     "rationale": "Express-aligned per CLAUDE.md",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "quality_issues": [],
+   "fix_to_raise": null,
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": "none (NaruServe-api + root build/docs only)"
+  },
+  {
+   "req_id": "FR-HTTP-018",
+   "feasibility": "high",
+   "score": 89,
+   "axes": {
+    "implementability": {
+     "score": 28,
+     "rationale": "building blocks exist; new files are planned addition sites",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "frozen design items + wave decisions; existing router/validator code",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "dependency_health": {
+     "score": 13,
+     "rationale": "deps: FR-HTTP-016(planned), FR-HTTP-015(planned)",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "ACs are concrete test assertions",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "scope_fit": {
+     "score": 8,
+     "rationale": "wave-3 scope per design.md",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "product_fit": {
+     "score": 8,
+     "rationale": "Express-aligned per CLAUDE.md",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "quality_issues": [],
+   "fix_to_raise": null,
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": "none (NaruServe-api + root build/docs only)"
+  },
+  {
+   "req_id": "FR-HTTP-019",
+   "feasibility": "high",
+   "score": 81,
+   "axes": {
+    "implementability": {
+     "score": 25,
+     "rationale": "building blocks exist; new files are planned addition sites",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "rationale": "frozen design items + wave decisions; existing router/validator code",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "dependency_health": {
+     "score": 14,
+     "rationale": "deps: IR-HTTP-001(planned), IR-HTTP-003(planned)",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 12,
+     "rationale": "ACs are concrete test assertions",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "scope_fit": {
+     "score": 7,
+     "rationale": "wave-3 scope per design.md",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "product_fit": {
+     "score": 8,
+     "rationale": "Express-aligned per CLAUDE.md",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "BodyState read kinds and shared-parse handle are internal and have no wave 3 consumer; unit tests use a stub parse"
+   ],
+   "quality_issues": [],
+   "fix_to_raise": null,
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": "none (NaruServe-api + root build/docs only)"
+  },
+  {
+   "req_id": "FR-HTTP-020",
+   "feasibility": "high",
+   "score": 87,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "building blocks exist; new files are planned addition sites",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 17,
+     "rationale": "frozen design items + wave decisions; existing router/validator code",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "dependency_health": {
+     "score": 14,
+     "rationale": "deps: FR-HTTP-019(planned)",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "ACs are concrete test assertions",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "scope_fit": {
+     "score": 7,
+     "rationale": "wave-3 scope per design.md",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    },
+    "product_fit": {
+     "score": 8,
+     "rationale": "Express-aligned per CLAUDE.md",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md (D-040..D-109, D-392..D-399, D-442, wave decisions)"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "quality_issues": [],
+   "fix_to_raise": null,
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": "none (NaruServe-api + root build/docs only)"
+  },
+  {
+   "req_id": "OPS-HTTP-001",
+   "feasibility": "medium",
+   "score": 75,
+   "axes": {
+    "implementability": {
+     "score": 23,
+     "rationale": "building blocks exist; new files are planned addition sites",
+     "evidence": [
+      "docs/api/routing.md:21,72,127,155,167; request.md:13,135; response.md:36; express-migration.md:46,84; defaults.md:40",
+      "build.gradle:240-243 (root test deps: junit, gradleTestKit only)",
+      "build.gradle:127,147-160 (checkClassReferences prefixes), 166 (java-test-fixtures), 171-180 (animal-sniffer)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 14,
+     "rationale": "frozen design items + wave decisions; existing router/validator code",
+     "evidence": [
+      "docs/api/routing.md:21,72,127,155,167; request.md:13,135; response.md:36; express-migration.md:46,84; defaults.md:40",
+      "build.gradle:240-243 (root test deps: junit, gradleTestKit only)",
+      "build.gradle:127,147-160 (checkClassReferences prefixes), 166 (java-test-fixtures), 171-180 (animal-sniffer)"
+     ]
+    },
+    "dependency_health": {
+     "score": 11,
+     "rationale": "deps: OPS-ROUTE-002(planned), IR-HTTP-005(planned), FR-HTTP-014(planned), FR-HTTP-012(planned), FR-HTTP-009(planned)",
+     "evidence": [
+      "docs/api/routing.md:21,72,127,155,167; request.md:13,135; response.md:36; express-migration.md:46,84; defaults.md:40",
+      "build.gradle:240-243 (root test deps: junit, gradleTestKit only)",
+      "build.gradle:127,147-160 (checkClassReferences prefixes), 166 (java-test-fixtures), 171-180 (animal-sniffer)"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 10,
+     "rationale": "see quality issues",
+     "evidence": [
+      "docs/api/routing.md:21,72,127,155,167; request.md:13,135; response.md:36; express-migration.md:46,84; defaults.md:40",
+      "build.gradle:240-243 (root test deps: junit, gradleTestKit only)",
+      "build.gradle:127,147-160 (checkClassReferences prefixes), 166 (java-test-fixtures), 171-180 (animal-sniffer)"
+     ]
+    },
+    "scope_fit": {
+     "score": 8,
+     "rationale": "wave-3 scope per design.md",
+     "evidence": [
+      "docs/api/routing.md:21,72,127,155,167; request.md:13,135; response.md:36; express-migration.md:46,84; defaults.md:40",
+      "build.gradle:240-243 (root test deps: junit, gradleTestKit only)",
+      "build.gradle:127,147-160 (checkClassReferences prefixes), 166 (java-test-fixtures), 171-180 (animal-sniffer)"
+     ]
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "Express-aligned per CLAUDE.md",
+     "evidence": [
+      "docs/api/routing.md:21,72,127,155,167; request.md:13,135; response.md:36; express-migration.md:46,84; defaults.md:40",
+      "build.gradle:240-243 (root test deps: junit, gradleTestKit only)",
+      "build.gradle:127,147-160 (checkClassReferences prefixes), 166 (java-test-fixtures), 171-180 (animal-sniffer)"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "69 ```java blocks across docs/api; skip list will be long"
+   ],
+   "quality_issues": [
+    "AC-9 states as fact \"the root project's src/test, whose test classpath the root build.gradle gives the NaruServe-api main classes\", but build.gradle:240-243 gives the root test only junit and gradleTestKit; the needed build change is not stated as an obligation.",
+    "AC-9 bundles a whole compile harness (extraction, two compilation modes, method template with stub handlers, a reasoned skip list, js relabelling) into one AC of a docs requirement, so partial progress cannot be verified and the AC dominates the requirement.",
+    "Depends on five planned requirements (OPS-ROUTE-002, IR-HTTP-005, FR-HTTP-014, FR-HTTP-012, FR-HTTP-009), so it lands last."
+   ],
+   "fix_to_raise": "Make AC-9 say \"the root build.gradle adds testImplementation project(':NaruServe-api') (or the NaruServe-api main output) to the root test classpath\", and split AC-9 into its own requirement (I-009 docs-examples compile) with separate ACs for extraction, compilation modes, the skip-list format and the js relabel.",
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": "none (NaruServe-api + root build/docs only)"
+  },
+  {
+   "req_id": "OPS-ROUTE-002",
+   "feasibility": "high",
+   "score": 90,
+   "axes": {
+    "implementability": {
+     "score": 28,
+     "rationale": "building blocks exist; new files are planned addition sites",
+     "evidence": [
+      "docs/api/routing.md:21,72,127,155,167; request.md:13,135; response.md:36; express-migration.md:46,84; defaults.md:40"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "frozen design items + wave decisions; existing router/validator code",
+     "evidence": [
+      "docs/api/routing.md:21,72,127,155,167; request.md:13,135; response.md:36; express-migration.md:46,84; defaults.md:40"
+     ]
+    },
+    "dependency_health": {
+     "score": 13,
+     "rationale": "deps: ; stale depends_on to discarded CON-ROUTE-001 judged on successor CON-ROUTE-006",
+     "evidence": [
+      "docs/api/routing.md:21,72,127,155,167; request.md:13,135; response.md:36; express-migration.md:46,84; defaults.md:40"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "ACs are concrete test assertions",
+     "evidence": [
+      "docs/api/routing.md:21,72,127,155,167; request.md:13,135; response.md:36; express-migration.md:46,84; defaults.md:40"
+     ]
+    },
+    "scope_fit": {
+     "score": 8,
+     "rationale": "wave-3 scope per design.md",
+     "evidence": [
+      "docs/api/routing.md:21,72,127,155,167; request.md:13,135; response.md:36; express-migration.md:46,84; defaults.md:40"
+     ]
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "Express-aligned per CLAUDE.md",
+     "evidence": [
+      "docs/api/routing.md:21,72,127,155,167; request.md:13,135; response.md:36; express-migration.md:46,84; defaults.md:40"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "must land with OPS-HTTP-001 AC-4 (no new marker on routing.md)"
+   ],
+   "quality_issues": [],
+   "fix_to_raise": null,
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": "none (NaruServe-api + root build/docs only)"
+  },
+  {
+   "req_id": "CON-ROUTE-006",
+   "feasibility": "high",
+   "score": 92,
+   "axes": {
+    "implementability": {
+     "score": 29,
+     "rationale": "building blocks exist; new files are planned addition sites",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:63-98,164-237 (add/addWebSocket/freeze/lookup)",
+      "build.gradle:127,147-160 (checkClassReferences prefixes), 166 (java-test-fixtures), 171-180 (animal-sniffer)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 19,
+     "rationale": "frozen design items + wave decisions; existing router/validator code",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:63-98,164-237 (add/addWebSocket/freeze/lookup)",
+      "build.gradle:127,147-160 (checkClassReferences prefixes), 166 (java-test-fixtures), 171-180 (animal-sniffer)"
+     ]
+    },
+    "dependency_health": {
+     "score": 14,
+     "rationale": "deps: ; stale depends_on to discarded CON-ROUTE-001 judged on successor CON-ROUTE-006",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:63-98,164-237 (add/addWebSocket/freeze/lookup)",
+      "build.gradle:127,147-160 (checkClassReferences prefixes), 166 (java-test-fixtures), 171-180 (animal-sniffer)"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "ACs are concrete test assertions",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:63-98,164-237 (add/addWebSocket/freeze/lookup)",
+      "build.gradle:127,147-160 (checkClassReferences prefixes), 166 (java-test-fixtures), 171-180 (animal-sniffer)"
+     ]
+    },
+    "scope_fit": {
+     "score": 8,
+     "rationale": "wave-3 scope per design.md",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:63-98,164-237 (add/addWebSocket/freeze/lookup)",
+      "build.gradle:127,147-160 (checkClassReferences prefixes), 166 (java-test-fixtures), 171-180 (animal-sniffer)"
+     ]
+    },
+    "product_fit": {
+     "score": 8,
+     "rationale": "Express-aligned per CLAUDE.md",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:63-98,164-237 (add/addWebSocket/freeze/lookup)",
+      "build.gradle:127,147-160 (checkClassReferences prefixes), 166 (java-test-fixtures), 171-180 (animal-sniffer)"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "quality_issues": [],
+   "fix_to_raise": null,
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": "none (NaruServe-api + root build/docs only)"
+  }
+ ]
+}

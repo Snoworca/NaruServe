@@ -1,0 +1,78 @@
+{
+ "iter": 4,
+ "findings": [
+  {
+   "id": "A4-01",
+   "severity": "MEDIUM",
+   "axis": "ii-contradiction",
+   "req_id": "OPS-APP-005",
+   "ac": "AC-8",
+   "quote": "the sentence on what the timeout covers (today `timeout은 2단계(진행 중인 요청을 기다리는 시간)에만 걸리고`) names the renumbered step, step 3 that waits for in-flight requests within the deadline, instead of `2단계` ... finds that sentence naming `3단계`",
+   "description": "The iteration-3 fix makes app.md say the timeout applies only to step 3 (the wait for in-flight requests). D-344 and FR-APP-020 count the WebSocket close wait (min(1 s, time left), step 2 of the new list) and the force-close at the deadline (step 4) inside the same deadline (FR-APP-020 AC-2: timeout 500 ms -> close wait ends within 700 ms and shutdown returns within 500 ms + 3 s). A reader of app.md would add up to 1 s of goodbye on top of the timeout, which the code does not do, and lifecycle.md (OPS-APP-005 AC-9) says the opposite. The docs test would lock the wrong sentence in.",
+   "suggested_fix": "AC-8: \"... the sentence on what the timeout covers names steps 2 to 4 (the goodbye, which waits at most 1 s or the time left, the wait for in-flight requests and the force-close at the timeout) as sharing the one timeout, instead of `2단계`, and keeps that `onStop`, closing owned resources and the logger flush have no time limit; a docs test finds that sentence naming `2~4단계`.\""
+  },
+  {
+   "id": "A4-02",
+   "severity": "MEDIUM",
+   "axis": "iii-feasibility",
+   "req_id": "FR-WS-001",
+   "ac": "AC-7 (and rationale)",
+   "quote": "the `TestApp.webSocketRoute(path)` fixture keeps its signature and keeps registering through that hook ... The upgrade cases of `HttpAcceptanceTest#sdsAc18_...` ... are re-pointed to this AC and changed to assert the handshake",
+   "description": "The hook takes a `RouteHandler`, but `app.ws` takes a `WebSocketHandler`; no AC says how `ws` carries its handler through a `RouteHandler`-typed hook, or what the core runs after `101` for a hook route whose `RouteHandler` is not an `app.ws` handler. The fixture registers `(req, res) -> { throw new IllegalStateException(\"WebSocket hook routes are not dispatched in wave 3\"); }` (TestApp.java:48-51), so the re-pointed HttpAcceptanceTest upgrade case could see an open session, a 1011 close (FR-WS-006 AC-10) or a 500, and the expected result of \"assert the handshake\" is open. The first rationale note ('the TestApp.webSocketRoute fixture move to FR-WS-001') still contradicts the correcting note below it.",
+   "suggested_fix": "Add a Decision to AC-7: \"`app.ws` passes the hook an internal `RouteHandler` adapter holding its `WebSocketHandler`; for a hook route whose `RouteHandler` is not such an adapter the core completes the upgrade and runs no `ws` handler, never invoking that `RouteHandler`, so the re-pointed fixture cases assert that `HttpExchange.webSocket` was called (over the in-memory adapter: the recorded hand-over) and the fixture's javadoc says wave 7 dispatches the handshake.\" Drop or mark superseded the first rationale note."
+  },
+  {
+   "id": "A4-03",
+   "severity": "LOW",
+   "axis": "v-hygiene",
+   "req_id": "FR-WS-008",
+   "ac": "AC-4",
+   "quote": "a session whose client sends a Ping frame every 300 ms but no text or binary message is handed close `1001` by the scheduler within 2 s of its last text or binary message",
+   "description": "The client sends no text or binary message, so 'its last text or binary message' has no time point; the test cannot anchor the 2 s bound.",
+   "suggested_fix": "\"... is handed close `1001` by the scheduler within 2 s of the `101` (no text or binary message is exchanged) ...\""
+  },
+  {
+   "id": "A4-04",
+   "severity": "LOW",
+   "axis": "i-coverage",
+   "req_id": "OPS-WS-001; FR-WS-008",
+   "ac": "OPS-WS-001 AC-3; FR-WS-008 rationale note",
+   "quote": "A peer that never answers the close and keeps sending frames keeps the session open ... This is a TinyHttpd gap under D-020, deferred",
+   "description": "FR-WS-008 records a fourth deferred TinyHttpd gap (a peer that never answers the server's close but keeps sending frames stays open), but OPS-WS-001 AC-3 lists only three deferred limitations for websocket.md, so users are not told that idle/overflow closes depend on the peer answering.",
+   "suggested_fix": "Add to OPS-WS-001 AC-3: \"and that a peer that never answers the server's close frame but keeps sending frames stays open until its own close, shutdown or `writeTimeout` (deferred TinyHttpd limitation)\", found by a fixed phrase."
+  },
+  {
+   "id": "A4-05",
+   "severity": "LOW",
+   "axis": "iv-regression",
+   "req_id": "IR-SSE-001",
+   "ac": "AC-1",
+   "quote": "a reflection test asserts the default method and the override",
+   "description": "Only the rationale names the `HttpApiSurfaceTest` changes for `sse`: the Response signature set (sdsAc2_IR_HTTP_001_AC2) must gain `sse()->SseClient` and `LATER_WAVE_NAMES` (now only `sse`) must drop it, or the verified IR-HTTP-001 AC-2/AC-3 tests fail. AC-4 names the RestApp set; AC-1 names neither Response change.",
+   "suggested_fix": "Add to AC-1: \"and `HttpApiSurfaceTest`'s Response signature set gains `sse()->SseClient` while its later-wave name list drops `sse` (IR-HTTP-001 AC-3 is stated for the wave 3 merge).\""
+  }
+ ],
+ "summary": {
+  "CRITICAL": 0,
+  "HIGH": 0,
+  "MEDIUM": 2,
+  "LOW": 3,
+  "total": 5,
+  "coverage_script": "design ids 70 missing [], decision/residual/carried missing [], wave-7 blocks 29",
+  "iter3_fixes_verified": [
+   "A3-01 holds: the new reasons (app-defined type `ChatService` and `ChatMessage`, `Database` and `UserService`, `User`; app-defined variable `client`; app-defined type `Event` and app-defined variable `eventStore`) match REASON (DocsExamplesCompileTest.java:131-133), and every backticked name is in its block, as sdsAc4_OPS_JSON_001_AC5 also requires",
+   "A3-02 holds: FR-APP-019 AC-10, FR-SSE-003 AC-7, FR-SSE-004 AC-5 and FR-SSE-005 AC-5 agree on first-recorded-reason-wins; shutdown is recorded before the force-close IOException, consistent with D-436",
+   "A3-03 holds: the WAVE_SEVEN_MEMBERS check covers later-wave-method and absent-type forms with a self-test; OPS-SSE-001 AC-4 cites it",
+   "A3-04 holds: FR-WS-006 AC-10 matches TinyHttpd WebSocket.run (onOpen on the read thread, RuntimeException -> close 1011 + rethrow), so catching in the core is needed",
+   "A3-05 holds in signature terms (hook and fixture kept; FR-HTTP-008 AC-5/AC-7 and FR-HTTP-022 AC-6 say 'until wave 7 adds app.ws'); remaining ambiguity is A4-02",
+   "A3-06 applied, but the chosen step reference is wrong, see A4-01"
+  ],
+  "checked": [
+   "29 wave-7 blocks read in full against design.md and excerpt.md; no Java-9+ API, no placeholder, no doubled AC prefix",
+   "all 33 Code trace paths exist; all non-wave-7 Requirement links point to verified blocks, and the six supersedes links point to the discarded predecessors",
+   "TinyHttpd checkout at 38051b6: WebSocketHandler.handle order, ResponseWrapper/UpgradedConnection, WebSocket.run close-code handling unchanged from the iter-3 check",
+   "PERF-APP-001 arithmetic (192+128+128+1+3 = 452; 449 x 256 KiB = 112.25 MiB) checked",
+   "docs markers at websocket.md 34/54/74/97/117, sse.md 35/47/49/95, defaults.md 25-27/89, app.md 67/187 all owned by a wave-7 AC; WaveFiveDocsTest 410-421 and AppDocsTest 53-54 kept lists handled by OPS-ENGINE-002 AC-7 and OPS-APP-005 AC-6"
+  ]
+ }
+}

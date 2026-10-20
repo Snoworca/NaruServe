@@ -1,0 +1,281 @@
+{
+ "iter": 1,
+ "findings": [
+  {
+   "id": "A1-01",
+   "severity": "HIGH",
+   "axis": "iii-feasibility",
+   "req_id": "FR-WS-006",
+   "ac": "AC-4",
+   "description": "AC text uses the Java 9+ API `Map.of(\"a\", 1)` (\"`ws.sendJson(Map.of(\"a\", 1))` sends a text message ...\"). C-02 fixes Java 8 source/target and API 21; a test written from this AC does not compile under options.release = 8.",
+   "suggested_fix": "Replace with a Java 8 value: \"`ws.sendJson(Collections.singletonMap(\"a\", 1))` sends a text message equal to the app `JsonCodec` encoding of the value ...\"."
+  },
+  {
+   "id": "A1-02",
+   "severity": "HIGH",
+   "axis": "iv-regression",
+   "req_id": "OPS-WS-001",
+   "ac": "AC-6",
+   "description": "The verified root docs compile test (OPS-HTTP-004, `src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java:502`) fails when a skipped block compiles (\"these skipped blocks compile now; drop their skip entries\"). SKIPS holds `websocket.md` (2 x \"later-wave method `RestApp.ws`\"), `lifecycle.md` (\"RestApp app = RestApp.create();\", \"later-wave method `RestApp.ws`\") and `json.md` (\"later-wave method `WebSocketSession.sendJson`\"). Once wave 7 adds `ws`, those blocks compile (or their reason becomes untrue) and the verified test breaks. Only OPS-SSE-001 AC-4 removes its own (sse.md) skips; no wave-7 AC owns the websocket.md, lifecycle.md and json.md entries. OPS-WS-001 AC-6 instead names a different mechanism (\"compiled by a test source that copies it (the wave 6 docs-test pattern)\") that does not exist: WaveSixDocsTest compiles nothing, and OPS-WS-001's trace points at WaveSixDocsTest.java.",
+   "suggested_fix": "Rewrite OPS-WS-001 AC-6: \"Every Java code block of `docs/api/websocket.md` is compiled by the root docs compile test of OPS-HTTP-004 with no skip entry naming `websocket.md` except app-defined-type reasons (the `Auth` block), the `lifecycle.md` skip whose reason is `later-wave method RestApp.ws` is removed, the `json.md` skip reason no longer names `WebSocketSession.sendJson` as a later-wave method, and a `WAVE_SEVEN_MEMBERS` check (ws, webSocket, sse, sendJson, onJson, SseEvent ...) finds no skip naming a wave 7 member as later-wave; `./gradlew build` passes.\" Change the trace from WaveSixDocsTest.java to DocsExamplesCompileTest.java."
+  },
+  {
+   "id": "A1-03",
+   "severity": "HIGH",
+   "axis": "i-coverage",
+   "req_id": "FR-WS-008",
+   "ac": "AC-3",
+   "description": "Frozen D-424 requires \"a separate pong timeout recorded as a deferred TinyHttpd gap under D-020\". AC-3 is tagged [D-424] but asserts only reflection and docs wording; no AC asserts that the pong-timeout gap is recorded (contrast FR-WS-004 AC-3, which asserts its D-020 ledger issue). Nominal coverage of a frozen item part.",
+   "suggested_fix": "Add to FR-WS-008 AC-3: \"..., and the wave 7 issue ledger holds a deferred D-020 TinyHttpd-gap issue naming the missing Pong callback of `WebSocketListener` (separate pong timeout), found by its id. [D-424]\""
+  },
+  {
+   "id": "A1-04",
+   "severity": "HIGH",
+   "axis": "i-coverage",
+   "req_id": "FR-WS-008",
+   "ac": "AC-7",
+   "description": "Residual r5 W2-002 binds: \"A dedicated upgrade deadline is opened as a deferred TinyHttpd-gap issue (D-020) in the wave 7 issue ledger.\" AC-7 only mentions it inside the deviation note (\"a dedicated upgrade deadline is a deferred D-020 TinyHttpd-gap issue\") and asserts nothing about it; the tag [residual: WebSocket handshake timeout (r5 W2-002)] is nominal for that part.",
+   "suggested_fix": "Append to FR-WS-008 AC-7 an assertion: \"and the wave 7 issue ledger holds a deferred D-020 TinyHttpd-gap issue for a dedicated upgrade (handshake) deadline, found by its id.\""
+  },
+  {
+   "id": "A1-05",
+   "severity": "HIGH",
+   "axis": "iii-feasibility",
+   "req_id": "FR-WS-008",
+   "ac": "AC-4",
+   "description": "\"With `idleTimeout(1, SECONDS)` and `pingInterval(30, SECONDS)`, a session ... is handed close `1001` within 2 s by the scheduler, even while its client answers Pings\". With a 30 s ping interval TinyHttpd sends no Ping inside the 2 s window, so the clause that proves D-425's reason (TinyHttpd counts Ping/Pong as activity) cannot occur; the AC is untestable as written and D-425 is only nominally covered on that point.",
+   "suggested_fix": "\"With `idleTimeout(1, SECONDS)` and `pingInterval(30, SECONDS)`, a session whose client sends a Ping frame every 300 ms but no text or binary message is handed close `1001` by the scheduler within 2 s of its last text or binary message, the client receives a Pong for each Ping until then, and `onClose` receives `1001` (T21). [D-425; D-323]\""
+  },
+  {
+   "id": "A1-06",
+   "severity": "HIGH",
+   "axis": "iii-feasibility",
+   "req_id": "FR-WS-007; FR-WS-010; FR-WS-008; FR-WS-005; FR-APP-019",
+   "ac": "FR-WS-007 AC-6; FR-WS-010 AC-2; FR-WS-008 AC-4; FR-WS-005 AC-8; FR-APP-019 AC-9",
+   "description": "Several ACs assert the close code/reason delivered to `onClose` and the access-log close line for server-initiated closes (\"`onClose` receives `1008`\" with a non-reading client, \"onClose listeners run once with `1001`\", \"`onClose` receives `(4000, \\\"bye\\\")`\"). TinyHttpd 46b973e `WebSocket.run` reports to `WebSocketListener.onClose` the code/reason of the peer's close frame; when the server sent close and the peer does not answer before the read timeout, or the socket is aborted, it reports `1006` (closeCode stays ABNORMAL), and the reason is whatever the peer echoed (often empty). A stalled client in FR-WS-007 AC-6 never answers, so `onClose` would receive 1006, not 1008. No requirement states the core rule that makes these ACs achievable.",
+   "suggested_fix": "Add a decision AC to FR-WS-006: \"When the server initiated the close (`ws.close`, overflow, idle timeout, shutdown, listener exception) with code c and reason r, `onClose` and the FR-APP-019 close line report (c, r) whatever the peer answers or whether the socket was aborted; otherwise they report the code and reason TinyHttpd delivers, and `1006` with an empty reason for an abort without a close frame. Decision: the server's own close code wins.\" Re-tag FR-WS-005 AC-8, FR-WS-007 AC-6, FR-WS-008 AC-4, FR-WS-010 AC-2/AC-7 and FR-APP-019 AC-9 to it."
+  },
+  {
+   "id": "A1-07",
+   "severity": "MEDIUM",
+   "axis": "iv-regression",
+   "req_id": "FR-WS-001",
+   "ac": "AC-7",
+   "description": "Verified FR-HTTP-022 AC-6 (not superseded) is evidenced by `HttpAcceptanceTest#sdsAc18_T06_FR_HTTP_022_AC5_AC6_webSocketOnlyHookRouteGives426`, which sends `Upgrade: websocket` + `Connection: Upgrade` to the `TestApp.webSocketRoute` hook and expects `426`. FR-WS-001 AC-7 makes such requests reach `HttpExchange.webSocket`, and IR-WS-001 rationale makes the hook \"the implementation of `ws`\" (the hook and the `TestApp.webSocketRoute(path)` fixture take a `RouteHandler` today and are used by StaticMethodTest, MiddlewarePipelineTest, ErrorPathTest, DefaultRestAppTest). The rationale only says \"tests asserting that 426 are re-pointed here\"; no AC names the replaced test, the fixture's fate or the FR-HTTP-022 AC-6 evidence update.",
+   "suggested_fix": "Add to FR-WS-001 AC-7: \"`HttpAcceptanceTest#sdsAc18_...AC6...` keeps its non-upgrade `426` case and its upgrade case is replaced by this AC's test; the `TestApp.webSocketRoute(path)` fixture and the internal hook either keep their `RouteHandler` signature or are re-pointed to `ws` with every caller (StaticMethodTest FR-STATIC-002 AC-4, MiddlewarePipelineTest, ErrorPathTest, DefaultRestAppTest) still passing\", and add a Change Note on FR-HTTP-022 that AC-6 is historical from wave 7."
+  },
+  {
+   "id": "A1-08",
+   "severity": "MEDIUM",
+   "axis": "ii-wrong",
+   "req_id": "FR-WS-006",
+   "ac": "AC-8",
+   "description": "Decision accepts close codes \"1000..4999 excluding 1004, 1005, 1006 and 1015\", which admits 1016..2999 (unassigned/IANA-reserved). TinyHttpd's own `sendableCloseCode` (RFC 6455 7.4) accepts only 1000-1003, 1007-1014 and 3000-4999 and fails a received close with such a code as a protocol error, so a NaruServe server sending close(2000) to a TinyHttpd-like or Autobahn-strict client gets the connection failed. The rationale claims this range is \"per RFC 6455 section 7.4\".",
+   "suggested_fix": "\"`close(1005, \\\"\\\")`, `close(999, \\\"\\\")`, `close(2000, \\\"\\\")` and `close(5000, \\\"\\\")` throw `IllegalArgumentException`, ...; `close(1012, \\\"\\\")`, `close(3000, \\\"\\\")` and `close(4999, \\\"x\\\")` are accepted. Decision: the close code must be 1000-1003, 1007-1014 or 3000-4999 (the sendable set of TinyHttpd's `WebSocket`), and the reason must fit 123 UTF-8 bytes.\""
+  },
+  {
+   "id": "A1-09",
+   "severity": "MEDIUM",
+   "axis": "v-hygiene",
+   "req_id": "IR-WS-001; IR-SSE-001",
+   "ac": "IR-WS-001 AC-8; IR-SSE-001 AC-6",
+   "description": "\"... and no value means unlimited\" reads as \"leaving a setting unset means unlimited\", which contradicts the defaults of IR-WS-001 AC-7 / IR-SSE-001 AC-5. The rationale (\"no value means unlimited\") has the same ambiguity; the intent is I-012 (no accepted value is unlimited).",
+   "suggested_fix": "Replace with \"and no accepted value of any setting means unlimited (I-012).\""
+  },
+  {
+   "id": "A1-10",
+   "severity": "MEDIUM",
+   "axis": "ii-wrong",
+   "req_id": "IR-SSE-001",
+   "ac": "AC-2",
+   "description": "AC-2 defines `send` as returning \"`true` when the event was written or queued and `false` when the client has already ended\", but FR-SSE-002 AC-4 makes the overflowing send return `false` on a client that had not yet ended (it ends because of that send). The two definitions disagree on the overflow case.",
+   "suggested_fix": "\"... `send` returns `true` when the event was written or queued, and `false` when it was not (the client had already ended, or the send overflowed the queue and ended the stream as FR-SSE-002 states).\""
+  },
+  {
+   "id": "A1-11",
+   "severity": "MEDIUM",
+   "axis": "iii-feasibility",
+   "req_id": "FR-SSE-003; FR-SSE-004",
+   "ac": "FR-SSE-003 AC-7; FR-SSE-004 AC-2",
+   "description": "Disconnect detection is bounded to \"one heartbeat interval plus 1 s\". After the peer closes, the first write to the socket usually succeeds (it only elicits a RST) and only the next write fails, so detection can take up to two heartbeat intervals; with a 1 s heartbeat the 2 s bound is flaky.",
+   "suggested_fix": "Use \"within two heartbeat intervals plus 1 s (with `heartbeatInterval` 1 s: 3 s)\" in both ACs and in the FR-SSE-004 rationale pitfall."
+  },
+  {
+   "id": "A1-12",
+   "severity": "MEDIUM",
+   "axis": "ii-wrong",
+   "req_id": "FR-ENGINE-011",
+   "ac": "AC-2",
+   "description": "The requirement says \"event-stream and upgrade paths ... run the TinyHttpd WebSocket handshake\" and AC-2 bans any `UnsupportedOperationException` naming wave 7 in TinyHttpdFeatures, but the wave decision keeps the raw `upgrade(headers, UpgradeHandler)` \"for raw upgrades\" and no AC states what the raw upgrade does on TinyHttpd at wave 7 (implemented through `Response.upgrade`, or still unsupported with a non-wave message). The raw upgrade and `webSocket` are conflated.",
+   "suggested_fix": "Add to AC-2: \"The raw `upgrade(headers, UpgradeHandler)` path on TinyHttpd <either: writes 101 through `Response.upgrade(protocol)` and calls the handler with the `UpgradedConnection` streams / or: throws `UnsupportedOperationException` stating that raw upgrades are not supported by the TinyHttpd adapter in v1>, which a test asserts. Decision: ...\"; keep the requirement text distinguishing `webSocket` from the raw `upgrade`."
+  },
+  {
+   "id": "A1-13",
+   "severity": "MEDIUM",
+   "axis": "v-hygiene",
+   "req_id": "PERF-APP-001",
+   "ac": "AC-4",
+   "description": "\"a docs test of the wave close finds that entry in the release test results file\" names no file path or entry phrase, so the AC cannot be checked deterministically.",
+   "suggested_fix": "Name the file and phrase, e.g. \"... in `docs/research/naruserve-v1/waves/wave-7/release-test-results.md` under the heading `Manual follow-up: low-end Android tuning`, which a docs test finds\"."
+  },
+  {
+   "id": "A1-14",
+   "severity": "MEDIUM",
+   "axis": "i-coverage",
+   "req_id": "OPS-WS-001",
+   "ac": "AC-1; AC-4",
+   "description": "`docs/api/defaults.md:26` reads `| WebSocket 송신 큐(연결당) | 1 MiB | — | 예외 또는 연결 종료 | **(미확정)** |`. AC-1 only removes the marker and AC-4 only checks the size values, so the row can keep \"예외 또는 연결 종료\" (exception or close) next to the decided 1008-close policy; OPS-SSE-001 AC-2 asserts the SSE row's answer \"스트림 종료\", the WebSocket row has no equivalent.",
+   "suggested_fix": "Add to OPS-WS-001 AC-4: \"the `| WebSocket 송신 큐(연결당) |` row of `docs/api/defaults.md` states the maximum 64 MiB and the answer `연결 종료(1008)` without `예외`, and the `| WebSocket 메시지 |` row states the maximum 16 MiB and `연결 종료(1009)`\"."
+  },
+  {
+   "id": "A1-15",
+   "severity": "LOW",
+   "axis": "iv-regression",
+   "req_id": "IR-WS-001; IR-SSE-001",
+   "ac": "IR-WS-001 AC-1; AC-6; IR-SSE-001 AC-4",
+   "description": "`HttpApiSurfaceTest` asserts the exact RestApp signature set (adding `ws`, `webSocket`, `sse` fails it); IR-SSE-001 names the Response set re-point but no AC names the RestApp set update.",
+   "suggested_fix": "Add to IR-WS-001 AC-1/AC-6 and IR-SSE-001 AC-4: \"`HttpApiSurfaceTest`'s RestApp signature set gains `ws(String,WebSocketHandler)->RestApp`, `webSocket(Configurer)->RestApp` and `sse(Configurer)->RestApp`.\""
+  },
+  {
+   "id": "A1-16",
+   "severity": "LOW",
+   "axis": "v-hygiene",
+   "req_id": "IR-WS-002; IR-HTTP-007",
+   "ac": "IR-WS-002 AC-5; IR-HTTP-007 AC-4",
+   "description": "The baseline is called \"the wave 6 merge (`40b9665`)\", but 40b9665 is \"Record wave 6 loop P and issue triage\"; the wave 6 close is 9ce5cc4 (SPI identical). The list of compared SPI types also omits the existing `AppFactory` and `ErrorRenderer`.",
+   "suggested_fix": "Say \"the wave 6 close (`9ce5cc4`; SPI unchanged since `40b9665`)\" and compare every type of `com.snoworca.naruserve.spi` (add `AppFactory`, `ErrorRenderer`)."
+  },
+  {
+   "id": "A1-17",
+   "severity": "LOW",
+   "axis": "v-hygiene",
+   "req_id": "FR-ENGINE-011",
+   "ac": "-",
+   "description": "Rationale says \"the `@req FR-ENGINE-010` comments of `TinyHttpdExchange.java` and `TinyHttpdFeatures.java` move to FR-ENGINE-011\", but the feature hooks carry `@req FR-ENGINE-001` (a discarded id, 11 occurrences in the module); only 3 tags cite FR-ENGINE-010.",
+   "suggested_fix": "\"the `@req FR-ENGINE-001` and `@req FR-ENGINE-010` comments of `TinyHttpdExchange.java` and `TinyHttpdFeatures.java` move to FR-ENGINE-011\"."
+  },
+  {
+   "id": "A1-18",
+   "severity": "LOW",
+   "axis": "v-hygiene",
+   "req_id": "PERF-APP-001",
+   "ac": "-",
+   "description": "Rationale: \"64 MiB of used-heap growth ... which stays below the 1 MiB-per-session queue limit because queues are filled only on demand\" is garbled (64 MiB is not below 1 MiB).",
+   "suggested_fix": "\"64 MiB ..., far below 120 full 1 MiB queues, because queues allocate only what is queued.\""
+  },
+  {
+   "id": "A1-19",
+   "severity": "LOW",
+   "axis": "v-hygiene",
+   "req_id": "IR-WS-001; IR-SSE-001",
+   "ac": "IR-WS-001 AC-8; IR-SSE-001 AC-6",
+   "description": "Message form `<setting> must be in <lo>..<hi>: <value>` is undefined for duration settings; the existing ServerOptions form is `headerTimeout must be in 1 ms..1 h: 0 SECONDS`.",
+   "suggested_fix": "State the duration form: \"`pingInterval must be in 1 s..1 h: <time> <unit>`\"."
+  },
+  {
+   "id": "A1-20",
+   "severity": "LOW",
+   "axis": "v-hygiene",
+   "req_id": "FR-WS-007",
+   "ac": "AC-2",
+   "description": "\"an idle thread ends after the executor's keep-alive time\" with the keep-alive value unspecified; the test cannot bound its wait.",
+   "suggested_fix": "Name the value (e.g. 60 s, internal override for tests) in the AC as a Decision."
+  },
+  {
+   "id": "A1-21",
+   "severity": "LOW",
+   "axis": "ii-wrong",
+   "req_id": "FR-WS-007",
+   "ac": "AC-6",
+   "description": "A single message larger than `sendQueueSize` (e.g. 1.5 MiB with the 1 MiB default) closes a healthy idle session with 1008; the AC does not state this edge, which an Express/ws user would not expect.",
+   "suggested_fix": "Add: \"a single message larger than `sendQueueSize` overflows on an empty queue and closes with 1008 the same way\" (or decide otherwise) and record it in websocket.md."
+  },
+  {
+   "id": "A1-22",
+   "severity": "LOW",
+   "axis": "i-coverage",
+   "req_id": "FR-WS-007",
+   "ac": "-",
+   "description": "D-417 clause \"a stalled session holds only its own sender thread until TinyHttpd's write timeout (default 30 s) aborts its socket\" is not asserted by any AC.",
+   "suggested_fix": "Add to AC-5: \"and a stalled session's sender thread is released once TinyHttpd's `writeTimeout` (set to 1 s in the test) aborts its socket\"."
+  },
+  {
+   "id": "A1-23",
+   "severity": "LOW",
+   "axis": "i-coverage",
+   "req_id": "FR-WS-006",
+   "ac": "AC-2",
+   "description": "D-313 \"stored per connection in a concurrent map\" is only tagged; AC-2 does not assert concurrent access.",
+   "suggested_fix": "Add: \"attributes written from 8 threads concurrently are all readable afterwards without exception\"."
+  },
+  {
+   "id": "A1-24",
+   "severity": "LOW",
+   "axis": "iii-feasibility",
+   "req_id": "FR-SSE-004",
+   "ac": "AC-8",
+   "description": "The request mark is a ThreadLocal (`AppLifecycle.enterRequest`); the in-memory adapter runs the drain on its own worker thread (IR-HTTP-007 AC-3), so the mark must be set on that thread too. AC-8 names no adapter.",
+   "suggested_fix": "State \"over the in-memory adapter and over TinyHttpd\" and that the drain thread enters the request mark before the drain loop."
+  },
+  {
+   "id": "A1-25",
+   "severity": "LOW",
+   "axis": "ii-wrong",
+   "req_id": "FR-APP-019",
+   "ac": "AC-9; AC-10",
+   "description": "The `cause` for an SSE stream force-closed by the adapter stop at the deadline (FR-SSE-005 AC-5) and the close code logged for a session aborted without a close frame (FR-WS-010 AC-7) are not defined.",
+   "suggested_fix": "Add: force-closed stream -> `cause=shutdown`; aborted session -> close code `1006` (or the server's own code per the close-code decision)."
+  },
+  {
+   "id": "A1-26",
+   "severity": "LOW",
+   "axis": "v-hygiene",
+   "req_id": "all wave-7 requirements",
+   "ac": "-",
+   "description": "All 29 blocks are Stability draft with the title suffix \"[DRAFT — pending decision]\"; every depends_on edge between wave-7 requirements points at a draft requirement. Expected before the feasibility pass, but the suffix is placeholder text.",
+   "suggested_fix": "Drop the title suffix and raise Stability through kiwi-srs-feasibility before SDS work."
+  },
+  {
+   "id": "A1-27",
+   "severity": "LOW",
+   "axis": "v-hygiene",
+   "req_id": "FR-WS-008; FR-WS-010",
+   "ac": "FR-WS-008 AC-5; FR-WS-010 AC-7",
+   "description": "\"return to other sessions at once\", \"aborted at once\" are unmeasured.",
+   "suggested_fix": "Give bounds, e.g. \"within 100 ms\"."
+  },
+  {
+   "id": "A1-28",
+   "severity": "LOW",
+   "axis": "v-hygiene",
+   "req_id": "FR-WS-004",
+   "ac": "AC-3",
+   "description": "\"which a test or review check finds by its id\" leaves the verification method open.",
+   "suggested_fix": "\"which a docs test finds by its id in the wave 7 issue ledger file <path>\"."
+  },
+  {
+   "id": "A1-29",
+   "severity": "LOW",
+   "axis": "ii-wrong",
+   "req_id": "FR-WS-009",
+   "ac": "AC-4",
+   "description": "The reservation is made before `webSocket`, and the Origin check (FR-WS-003) also runs before `webSocket`; if the reservation precedes the Origin check, a `403` must also remove it, which no AC states.",
+   "suggested_fix": "Add: \"an upgrade refused with `403` by the Origin check (or by any core check before `webSocket`) leaves no reservation\"."
+  },
+  {
+   "id": "A1-30",
+   "severity": "LOW",
+   "axis": "ii-wrong",
+   "req_id": "IR-WS-001",
+   "ac": "AC-6; AC-7",
+   "description": "Whether a second `allowedOrigins(...)` call replaces or appends the list is undefined (TinyHttpd's own `allowedOrigins` appends).",
+   "suggested_fix": "Decide: \"each call replaces the allowlist\" (Express cors-style), and assert it."
+  }
+ ],
+ "summary": {
+  "CRITICAL": 0,
+  "HIGH": 6,
+  "MEDIUM": 8,
+  "LOW": 16
+ }
+}

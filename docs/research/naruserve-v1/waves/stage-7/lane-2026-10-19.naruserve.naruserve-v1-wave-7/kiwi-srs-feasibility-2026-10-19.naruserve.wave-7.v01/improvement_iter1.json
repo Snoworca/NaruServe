@@ -1,0 +1,99 @@
+{
+  "target": "wave-7",
+  "iteration": 1,
+  "generated": "2026-10-20",
+  "inputs": ["per-req-judgement.json", "synthesis.json", "../2026-10-19.NaruServe.naruserve-v1/auto_decisions.json (gate wave-7-feasibility-B1-sse-pre-drain-stream)"],
+  "mcp_workspace": {"workspaceRoot": "/Users/beom/work/git/NaruServe", "rootSource": "server-cwd-discovery"},
+  "items": [
+    {
+      "id": "1-B1",
+      "title": "Blocker B-1: StreamDrain.attach committee decision",
+      "status": "applied",
+      "changes": {
+        "IR-HTTP-007": "AC-4: SPI gains default StreamDrain.attach(OutputStream) (no-op); signature test finds webSocket and attach the only added methods and StreamDrain still @FunctionalInterface; every adapter eventStream calls drain.attach(out) with the same stream later passed to drain(out); second deviation from W2-001 recorded. Rationale note added.",
+        "IR-WS-002": "AC-5: 'webSocket the only added HttpExchange method and attach(OutputStream) the only added StreamDrain method'; statement amended so it no longer says the WS types are the only SPI additions.",
+        "FR-SSE-002": "AC-5: handler latch after first send, test reads the first event from the socket before releasing it; write goes to the attached stream under the exchange lock and is flushed. AC-6: 'to the stream attached through StreamDrain.attach(out)'. AC-8 (new, appended): in-memory adapter calls attach with the same instance; adapter that never calls attach falls back to the bounded queue. Rationale note added.",
+        "FR-SSE-003": "AC-6: eventStream calls drain.attach(out) before returning with the same exchange-synchronized stream; test asserts same instance.",
+        "OPS-SSE-001": "no change: AC-3 wording ('written straight to the socket') still holds for both shipped adapters",
+        "FR-ENGINE-011": "no change: no AC mentions the pre-drain path; AC-2 defers to FR-SSE-003"
+      },
+      "tags_added": ["[wave decision: Sends inside the SSE handler (r4 W2-001)]", "[committee decision: StreamDrain.attach (wave-7 feasibility B-1)]"],
+      "mcp_calls": [
+        "replace_acceptance_criteria IR-HTTP-007",
+        "append_section_note IR-HTTP-007 rationale",
+        "replace_acceptance_criteria IR-WS-002",
+        "edit_requirement_fields IR-WS-002 statement",
+        "replace_acceptance_criteria FR-SSE-002",
+        "append_section_note FR-SSE-002 rationale",
+        "replace_acceptance_criteria FR-SSE-003"
+      ]
+    },
+    {
+      "id": "2-cycle",
+      "title": "Hidden cycle FR-WS-010 <-> FR-APP-020",
+      "status": "applied",
+      "decision": "FR-APP-020 already depends_on FR-WS-010, so FR-WS-010 -> FR-APP-020 would form a cycle and was rejected. The existing edge is already the acyclic direction; its note was restricted to the T44 ACs (AC-2, AC-6, AC-8, AC-9), and FR-WS-010 records the AC-5 use of FR-APP-020 AC-1 as verification coupling (implement FR-APP-020 AC-1 first, verify both in one group).",
+      "mcp_calls": [
+        "edit_requirement_table_rows FR-APP-020 trace_links row 6 notes (dryRun, then apply)",
+        "append_section_note FR-WS-010 rationale"
+      ]
+    },
+    {
+      "id": "3-edges",
+      "title": "Missing depends_on edges from synthesis.json",
+      "status": "applied",
+      "added": [
+        "FR-WS-002 -> IR-HTTP-008",
+        "FR-WS-009 -> IR-HTTP-008",
+        "FR-APP-020 -> IR-HTTP-008",
+        "FR-WS-005 -> FR-WS-006",
+        "FR-WS-006 -> FR-WS-002",
+        "FR-WS-007 -> FR-WS-002",
+        "OPS-WS-001 -> FR-WS-007",
+        "OPS-WS-001 -> FR-WS-010",
+        "OPS-WS-001 -> FR-WS-004"
+      ],
+      "rejected": [],
+      "cycle_check": "DFS over 29 wave-7 nodes, 65 depends_on edges (was 56): no cycle",
+      "mcp_calls": ["add_trace_link x9"]
+    },
+    {
+      "id": "4-threads",
+      "title": "Name-based thread counting and per-app thread names",
+      "status": "applied",
+      "changes": {
+        "PERF-APP-001": "AC-1: count threads named naruserve-* plus tinyhttpd-acceptor-<port> and tinyhttpd-watchdog in an isolated test JVM fork (watchdog name has no port). AC-3: requested stack size read through an internal hook of each thread factory. Rationale correction note replaces the 'TinyHttpd thread group' sentence.",
+        "FR-APP-020": "AC-9: same name-based counting in an isolated fork.",
+        "FR-WS-007": "AC-2: Decision: sender threads named naruserve-<port>-ws-sender-<n>, port read at thread creation; two-app test asserts distinct names.",
+        "FR-WS-008": "AC-5: Decision: idle scheduler thread named naruserve-<port>-ws-idle.",
+        "FR-WS-010": "AC-8: lists naruserve-<port>-ws- threads for that app's port."
+      },
+      "note": "The names live in FR-WS-007 AC-2 and FR-WS-008 AC-5 (where the threads are defined), not IR-WS-001.",
+      "mcp_calls": [
+        "replace_acceptance_criteria PERF-APP-001",
+        "append_section_note PERF-APP-001 rationale",
+        "replace_acceptance_criteria FR-APP-020",
+        "replace_acceptance_criteria FR-WS-007",
+        "replace_acceptance_criteria FR-WS-008",
+        "replace_acceptance_criteria FR-WS-010"
+      ]
+    },
+    {
+      "id": "5-flush",
+      "title": "FR-SSE-003 condition: flush after each event and heartbeat",
+      "status": "applied",
+      "changes": {"FR-SSE-003": "AC-8 (new, appended): the attached/drained stream is flushed after each event, each : ping heartbeat and each pre-drain handler-thread write; socket test reads a single event within 500 ms and a ping within 1 s + 500 ms."},
+      "mcp_calls": ["replace_acceptance_criteria FR-SSE-003 (same call as item 1)"]
+    }
+  ],
+  "ac_numbering": "Stable: no AC removed or reordered; new ACs appended (FR-SSE-002 AC-8, FR-SSE-003 AC-8).",
+  "not_done": [
+    "FR-SSE-003 AC-7 verification-coupling fix (move the FR-APP-019 log-line assertion to FR-APP-019 AC-10) from quality_issues_below_80: not in this pass's scope",
+    "No stability changes (FR-SSE-002/003 stay draft until rescored)"
+  ],
+  "verification": {
+    "validate_spec": "0 errors, 50 warnings (SRS-W023 draft x29, SRS-W015 completed-log x21; unchanged)",
+    "w7coverage.py": "design ids 70, missing []; decision/residual/carried missing []; wave-7 blocks 29",
+    "depends_on_graph": "acyclic, 29 nodes, 65 edges"
+  }
+}

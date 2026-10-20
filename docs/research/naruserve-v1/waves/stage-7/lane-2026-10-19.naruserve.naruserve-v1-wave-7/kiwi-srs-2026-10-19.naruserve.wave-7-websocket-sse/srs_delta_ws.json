@@ -1,0 +1,382 @@
+{
+ "run": "kiwi-srs-2026-10-19.naruserve.wave-7-websocket-sse",
+ "scope": "WS",
+ "file": "docs/spec/11.websocket.srs.md",
+ "target": "wave-7",
+ "added_ids": [
+  "IR-WS-001",
+  "IR-WS-002",
+  "FR-WS-001",
+  "FR-WS-002",
+  "FR-WS-003",
+  "FR-WS-004",
+  "FR-WS-005",
+  "FR-WS-006",
+  "FR-WS-007",
+  "FR-WS-008",
+  "FR-WS-009",
+  "FR-WS-010",
+  "OPS-WS-001"
+ ],
+ "requirements": {
+  "IR-WS-001": {
+   "title": "Public WebSocket API: app.ws, WebSocketHandler, WebSocketSession, listeners and app.webSocket(Configurer<WebSocketOptions>)",
+   "covered_tags": [
+    "D-294",
+    "D-311",
+    "D-303",
+    "D-419",
+    "D-323",
+    "D-424",
+    "residual r5 W2-002",
+    "C-03",
+    "T11"
+   ],
+   "traces_added": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java"
+   ],
+   "links_added": [
+    "IR-APP-007 extends",
+    "FR-APP-002 extends",
+    "FR-ROUTE-003 extends",
+    "FR-ROUTE-015 extends"
+   ],
+   "mcp_call_ok_counts": {
+    "add_requirement": 1
+   }
+  },
+  "IR-WS-002": {
+   "title": "Add-only WebSocket SPI: WebSocketEndpoint, WebSocketChannel, WebSocketSettings and HttpExchange.webSocket",
+   "covered_tags": [
+    "W2-001",
+    "r2 W2-001",
+    "r2 W2-002",
+    "D-302",
+    "D-419",
+    "D-423"
+   ],
+   "traces_added": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpExchange.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/package-info.java",
+    "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/InMemoryHttpAdapter.java"
+   ],
+   "links_added": [
+    "IR-HTTP-003 extends",
+    "IR-WS-001 depends_on"
+   ],
+   "mcp_call_ok_counts": {
+    "add_requirement": 1,
+    "replace_acceptance_criteria": 1
+   }
+  },
+  "FR-WS-001": {
+   "title": "Upgrade dispatch: middleware chain to completion, then the upgrade extension point, handler once after 101",
+   "covered_tags": [
+    "D-295",
+    "D-296",
+    "D-297",
+    "D-316",
+    "D-429",
+    "D-294",
+    "W2-004",
+    "carried D-142 WebSocket case",
+    "T21",
+    "T22",
+    "T41"
+   ],
+   "traces_added": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/MiddlewarePipeline.java"
+   ],
+   "links_added": [
+    "FR-APP-003 extends",
+    "FR-ROUTE-015 extends",
+    "FR-HTTP-022 extends",
+    "IR-APP-004 extends",
+    "IR-WS-001 depends_on",
+    "IR-WS-002 depends_on"
+   ],
+   "mcp_call_ok_counts": {
+    "add_requirement": 1
+   }
+  },
+  "FR-WS-002": {
+   "title": "TinyHttpd upgrade class: RFC 6455 handshake through WebSocketHandler and pre-101 rejections through the dispatcher's error path",
+   "covered_tags": [
+    "D-298",
+    "D-299",
+    "D-302",
+    "D-444",
+    "D-429",
+    "W2-001",
+    "W2-008",
+    "r2 W2-002",
+    "r2 W2-005",
+    "carried V2-001",
+    "T19"
+   ],
+   "traces_added": [
+    "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdFeatures.java",
+    "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdExchange.java"
+   ],
+   "links_added": [
+    "IR-ENGINE-001 extends",
+    "FR-APP-005 extends",
+    "FR-APP-006 extends",
+    "IR-WS-002 depends_on",
+    "FR-WS-001 depends_on"
+   ],
+   "mcp_call_ok_counts": {
+    "add_requirement": 1,
+    "edit_requirement_table_rows": 1,
+    "replace_acceptance_criteria": 1
+   }
+  },
+  "FR-WS-003": {
+   "title": "Origin check in the core before the upgrade extension point, same-origin default and allowlist",
+   "covered_tags": [
+    "D-300",
+    "D-303",
+    "D-429",
+    "W2-005",
+    "T22"
+   ],
+   "traces_added": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java"
+   ],
+   "links_added": [
+    "FR-APP-006 extends",
+    "IR-WS-001 depends_on",
+    "FR-WS-001 depends_on"
+   ],
+   "mcp_call_ok_counts": {
+    "add_requirement": 1
+   }
+  },
+  "FR-WS-004": {
+   "title": "426 Upgrade Required for a non-upgrade request to a path that has only an app.ws route",
+   "covered_tags": [
+    "D-408",
+    "D-294",
+    "carried D-408 over TinyHttpd",
+    "r2 W1-002"
+   ],
+   "traces_added": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java"
+   ],
+   "links_added": [
+    "FR-ROUTE-016 extends",
+    "FR-HTTP-022 extends",
+    "IR-WS-001 depends_on"
+   ],
+   "mcp_call_ok_counts": {
+    "add_requirement": 1
+   }
+  },
+  "FR-WS-005": {
+   "title": "RFC 6455 protocol enforcement from TinyHttpd: masking, UTF-8, message limit, reassembly, control frames, ping and close handshake",
+   "covered_tags": [
+    "D-302",
+    "D-304",
+    "D-305",
+    "D-306",
+    "D-307",
+    "D-308",
+    "D-309",
+    "D-310",
+    "D-419",
+    "r2 W2-001",
+    "carried V1-004",
+    "carried V2-003",
+    "T20",
+    "T21"
+   ],
+   "traces_added": [
+    "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdFeatures.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java"
+   ],
+   "links_added": [
+    "FR-WS-002 depends_on",
+    "IR-WS-001 depends_on"
+   ],
+   "mcp_call_ok_counts": {
+    "add_requirement": 1
+   }
+  },
+  "FR-WS-006": {
+   "title": "WebSocketSession semantics: unique ids, per-connection attributes, onClose once, JSON through JsonCodec, onJson failure and listener exceptions",
+   "covered_tags": [
+    "D-312",
+    "D-313",
+    "D-314",
+    "D-315",
+    "D-317",
+    "D-311",
+    "D-310",
+    "r2 W2-005",
+    "T21"
+   ],
+   "traces_added": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/RequestIds.java"
+   ],
+   "links_added": [
+    "IR-JSON-002 extends",
+    "IR-WS-001 depends_on",
+    "IR-WS-002 depends_on"
+   ],
+   "mcp_call_ok_counts": {
+    "add_requirement": 1
+   }
+  },
+  "FR-WS-007": {
+   "title": "Bounded per-session send queue drained by one app-wide sender executor, whole ordered messages and the 1008 overflow policy",
+   "covered_tags": [
+    "D-318",
+    "D-417",
+    "D-319",
+    "D-320",
+    "D-321",
+    "D-322",
+    "W2-007",
+    "r2 W2-004",
+    "T23"
+   ],
+   "traces_added": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java"
+   ],
+   "links_added": [
+    "FR-ENGINE-004 extends",
+    "IR-WS-001 depends_on",
+    "FR-WS-006 depends_on"
+   ],
+   "mcp_call_ok_counts": {
+    "add_requirement": 1
+   }
+  },
+  "FR-WS-008": {
+   "title": "Ping interval, pong timeout, idle timeout scheduler and the handshake bound on TinyHttpd",
+   "covered_tags": [
+    "D-323",
+    "D-423",
+    "D-424",
+    "D-425",
+    "residual r5 W2-002",
+    "T21"
+   ],
+   "traces_added": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+    "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdFeatures.java"
+   ],
+   "links_added": [
+    "IR-ENGINE-001 extends",
+    "IR-WS-001 depends_on",
+    "FR-WS-002 depends_on",
+    "FR-WS-007 depends_on"
+   ],
+   "mcp_call_ok_counts": {
+    "add_requirement": 1
+   }
+  },
+  "FR-WS-009": {
+   "title": "WebSocket connection limit and session registration: 503 beyond maxUpgradedConnections, reservation before the upgrade, refusal after the closed flag and after STOPPING",
+   "covered_tags": [
+    "D-301",
+    "D-324",
+    "D-444",
+    "D-445 (WS part)",
+    "r2 W2-003"
+   ],
+   "traces_added": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+    "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdAdapter.java"
+   ],
+   "links_added": [
+    "FR-ENGINE-004 extends",
+    "FR-APP-013 extends",
+    "FR-WS-001 depends_on",
+    "FR-WS-002 depends_on"
+   ],
+   "mcp_call_ok_counts": {
+    "add_requirement": 1
+   }
+  },
+  "FR-WS-010": {
+   "title": "Shutdown of WebSocket sessions: before-wait participant closes with 1001, bounded close wait and abort through UpgradedConnection",
+   "covered_tags": [
+    "D-340",
+    "D-343 (WS part)",
+    "D-435",
+    "D-445",
+    "r3 W2-003",
+    "r4 W2-002",
+    "residual r5 W2-003",
+    "T21",
+    "T44"
+   ],
+   "traces_added": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ShutdownParticipants.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java"
+   ],
+   "links_added": [
+    "FR-APP-011 extends",
+    "FR-ENGINE-006 extends",
+    "FR-WS-007 depends_on",
+    "FR-WS-009 depends_on",
+    "FR-WS-002 depends_on"
+   ],
+   "mcp_call_ok_counts": {
+    "add_requirement": 1
+   }
+  },
+  "OPS-WS-001": {
+   "title": "WebSocket API documentation records the wave 7 decisions without markers, with compiling Java examples and a Kotlin compile-and-run test",
+   "covered_tags": [
+    "D-303",
+    "D-317",
+    "D-321",
+    "D-323",
+    "D-419",
+    "D-424",
+    "r4 W2-002",
+    "residual r5 W2-002",
+    "C-03",
+    "T11"
+   ],
+   "traces_added": [
+    "docs/api/websocket.md",
+    "docs/api/defaults.md",
+    "docs/api/app.md",
+    "docs/api/express-migration.md",
+    "src/test/java/com/snoworca/naruserve/docs/WaveSixDocsTest.java"
+   ],
+   "links_added": [
+    "IR-WS-001 depends_on",
+    "FR-WS-003 depends_on",
+    "FR-WS-008 depends_on"
+   ],
+   "mcp_call_ok_counts": {
+    "add_requirement": 1
+   }
+  }
+ },
+ "notes": [
+  "Code traces and requirement links were seeded through the add_requirement trace field (each type Code, relation implements, notes trace_intent=addition_site).",
+  "FR-WS-002: build.gradle Code trace removed (websocket artifact already declared); AC-10 reworded.",
+  "IR-WS-002 AC-6: HttpExchange has no isCommitted(); reworded to an error-path commit without IllegalStateException.",
+  "All 13 created with Stability=draft (tool default); the feasibility step sets stability."
+ ],
+ "validate_spec": {
+  "errors": 0,
+  "warnings": 29,
+  "byCode": {
+   "SRS-W023": 13,
+   "SRS-W015": 16
+  }
+ },
+ "coverage_gaps": []
+}

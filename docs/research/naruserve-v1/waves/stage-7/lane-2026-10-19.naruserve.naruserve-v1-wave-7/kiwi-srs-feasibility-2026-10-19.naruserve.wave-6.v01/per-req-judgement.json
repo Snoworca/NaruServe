@@ -1,0 +1,1636 @@
+{
+ "run": "2026-10-19.naruserve.wave-6.v01",
+ "target": "wave-6",
+ "tinyhttpd_head": "38051b6",
+ "tinyhttpd_verified": "46b973e",
+ "judgements": [
+  {
+   "req_id": "IR-MULTIPART-001",
+   "feasibility": "high",
+   "score": 95,
+   "axes": {
+    "implementability": {
+     "score": 28,
+     "rationale": "Additive RestApp methods following the existing Configurer (RestApp.java:132) and jsonLimit range-check pattern (DefaultRestApp.java:169-174, requireConfigurable guard AppLifecycle.java:37). Ranges fit long/int.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:132",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:143",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:169-174",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/AppLifecycle.java:37"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "Trace paths RestApp.java and DefaultRestApp.java exist; MultipartOptions is new (addition site).",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:24",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:96"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "All link targets verified/evolving or wave-6: IR-APP-007, IR-JSON-002, FR-APP-002.",
+     "evidence": [
+      "IR-APP-007 verified/evolving",
+      "IR-JSON-002 verified/evolving",
+      "FR-APP-002 verified/evolving"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Exact numeric bounds/defaults; reflection, unit and Kotlin compile tests.",
+     "evidence": [
+      "AC-1..AC-7"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Within MULTIPART scope §2 (09.multipart.srs.md:15-25).",
+     "evidence": [
+      "docs/spec/09.multipart.srs.md:15-25"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "object.md T13-T18 / T27-T32 with Express multer/express.static/res.sendFile parity.",
+     "evidence": [
+      "object.md",
+      "docs/api/multipart.md",
+      "docs/api/static.md"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "AC-6/IR-STATIC-001 AC-5 re-point AppLifecycleGuardTest (NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AppLifecycleGuardTest.java:188) for multipart/formLimit; land in the same change."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "srs_file": "docs/spec/09.multipart.srs.md",
+   "external_module_impact": "none"
+  },
+  {
+   "req_id": "IR-MULTIPART-002",
+   "feasibility": "high",
+   "score": 94,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "Request is an interface with default methods (Request.java:13,80); new accessors are additive. BodyState already has Kind.FORM and a cached sharedParse (BodyState.java:24-25,121-150) for the four accessors.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java:13",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java:80",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/BodyState.java:24-25",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/BodyState.java:121"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "Request.java and package-info.java exist. HttpApiSurfaceTest LATER_WAVE_NAMES at HttpApiSurfaceTest.java:29 lists form/file/files/parts; BodyStateTest method sdsAc11_FR_HTTP_019_AC5_requestHasNoPublicBodyReadingMethod exists at BodyStateTest.java:250.",
+     "evidence": [
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java:29",
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/BodyStateTest.java:250"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "All link targets verified/evolving or wave-6: IR-HTTP-001, FR-HTTP-019.",
+     "evidence": [
+      "IR-HTTP-001 verified/evolving",
+      "FR-HTTP-019 verified/evolving"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Reflection signature checks, animal-sniffer, Kotlin compile/run; 8 MiB limit exact.",
+     "evidence": [
+      "AC-1..AC-7"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Within MULTIPART scope §2 (09.multipart.srs.md:15-25).",
+     "evidence": [
+      "docs/spec/09.multipart.srs.md:15-25"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "object.md T13-T18 / T27-T32 with Express multer/express.static/res.sendFile parity.",
+     "evidence": [
+      "object.md",
+      "docs/api/multipart.md",
+      "docs/api/static.md"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "AC-6 and IR-STATIC-002 AC-5 both re-point HttpApiSurfaceTest; after both, LATER_WAVE_NAMES keeps only 'sse' (Response.file and Request.file share a name)."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "srs_file": "docs/spec/09.multipart.srs.md",
+   "external_module_impact": "none"
+  },
+  {
+   "req_id": "FR-MULTIPART-001",
+   "feasibility": "high",
+   "score": 90,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "rationale": "Engine-free parser over the raw body stream: the adapter already hands the core TinyHttpd's raw InputStream (TinyHttpdExchange.java:112) and never calls readForm/MultipartReader; TinyHttpd form parsing is opt-in (server/Exchange.java:271-275). Default body cap -1 (TinyHttpd.java:268). Lingering close (server/Connection.java:426-442) lets an early 413 reach a client still sending.",
+     "evidence": [
+      "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdExchange.java:112",
+      "/Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/Exchange.java:271",
+      "/Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/TinyHttpd.java:268",
+      "/Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/Connection.java:426"
+     ]
+    },
+    "evidence_strength": {
+     "score": 17,
+     "rationale": "internal/package-info.java and DefaultRequest.java exist (addition sites); the parser class itself is new.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/package-info.java",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java:36"
+     ]
+    },
+    "dependency_health": {
+     "score": 14,
+     "rationale": "IR-MULTIPART-001/002 are wave-6; FR-ENGINE-003 and CON-HTTP-001 verified/evolving. FR-ENGINE-003 itself still depends_on the discarded FR-ENGINE-001 (06.engine-adapter.srs.md:486), via 'extends' only.",
+     "evidence": [
+      "FR-ENGINE-003 verified",
+      "docs/spec/06.engine-adapter.srs.md:486"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "Byte-exact limits and 400/413 cases; AC-5 needs a 64 MiB socket test (slow, disk spool) and AC-1 a dual-adapter run.",
+     "evidence": [
+      "AC-1..AC-5"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Within MULTIPART scope §2 (09.multipart.srs.md:15-25).",
+     "evidence": [
+      "docs/spec/09.multipart.srs.md:15-25"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "object.md T13-T18 / T27-T32 with Express multer/express.static/res.sendFile parity.",
+     "evidence": [
+      "object.md",
+      "docs/api/multipart.md",
+      "docs/api/static.md"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "AC-5 64 MiB socket test: the client must read the 413 even when its write fails (TinyHttpd lingering close helps); keep TinyHttpd bodyReadTimeout default adequate.",
+    "Seven verified wave-5 requirements (FR-ENGINE-002..006 and two more in 06.engine-adapter.srs.md:388,486,571,667,758,839,1012) still carry depends_on FR-ENGINE-001, now discarded and superseded by FR-ENGINE-010; reached here only through 'extends', so not blocking, but re-point those edges to FR-ENGINE-010 for link hygiene.",
+    "TinyHttpd checkout HEAD is 38051b6, not the verified 46b973e (settings.gradle only warns); no fact cited by this requirement changed, re-verify or pin before implementation."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "srs_file": "docs/spec/09.multipart.srs.md",
+   "external_module_impact": "NaruServe-tinyhttpd (class-reference test that MultipartReader is unused)"
+  },
+  {
+   "req_id": "FR-MULTIPART-002",
+   "feasibility": "high",
+   "score": 93,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "LimitedInputStream counts bytes read with overrun detection (LimitedInputStream.java:15-22,111-119) and the declared-length fast path exists in JsonBodyReader.java:38-41; reuse for multipart and urlencoded.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/LimitedInputStream.java:15",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/LimitedInputStream.java:111",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/JsonBodyReader.java:38"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "Trace paths LimitedInputStream.java and DefaultRequest.java exist and match.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/LimitedInputStream.java",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "All link targets verified/evolving or wave-6: FR-HTTP-020.",
+     "evidence": [
+      "FR-HTTP-020 verified/evolving"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "Exact byte/part thresholds; AC-2 'reads no more than limit + 8192' measurable with a counting test stream; 'before any part reaches the handler' means the accessor throws before returning.",
+     "evidence": [
+      "AC-1..AC-3"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Within MULTIPART scope §2 (09.multipart.srs.md:15-25).",
+     "evidence": [
+      "docs/spec/09.multipart.srs.md:15-25"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "object.md T13-T18 / T27-T32 with Express multer/express.static/res.sendFile parity.",
+     "evidence": [
+      "object.md",
+      "docs/api/multipart.md",
+      "docs/api/static.md"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "srs_file": "docs/spec/09.multipart.srs.md",
+   "external_module_impact": "none"
+  },
+  {
+   "req_id": "FR-MULTIPART-003",
+   "feasibility": "high",
+   "score": 93,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "BodyState.begin runs before the JSON media-type check (DefaultRequest.java:160-162 then JsonBodyReader.java:34), so AC-5 ordering already holds; sharedParse caches one result (BodyState.java:121-150); FORM decoding reuses PercentDecoder (PercentDecoder.java).",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java:160",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/JsonBodyReader.java:34",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/BodyState.java:121",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/PercentDecoder.java"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "BodyState.java and DefaultRequest.java exist and match.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/BodyState.java:22-25"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "All link targets verified/evolving or wave-6: FR-HTTP-019, FR-HTTP-025.",
+     "evidence": [
+      "FR-HTTP-019 verified/evolving",
+      "FR-HTTP-025 verified/evolving"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Concrete bodies and expected values; exception types named.",
+     "evidence": [
+      "AC-1..AC-5"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Within MULTIPART scope §2 (09.multipart.srs.md:15-25).",
+     "evidence": [
+      "docs/spec/09.multipart.srs.md:15-25"
+     ]
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "Express parity: after req.body read, form() throws BodyAlreadyConsumedException rather than returning null; decided and documented, minor surprise.",
+     "evidence": [
+      "docs/api/request.md"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "AC-2: form/file/files/parts must check body state before the media-type short-circuit so a consumed JSON body throws instead of returning null."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "srs_file": "docs/spec/09.multipart.srs.md",
+   "external_module_impact": "none"
+  },
+  {
+   "req_id": "FR-MULTIPART-004",
+   "feasibility": "high",
+   "score": 90,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "rationale": "File.createTempFile in a configured java.io.File dir is API 21 safe; spooling over a bounded buffer is standard. Text-part cap by formLimit reuses LimitedInputStream.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/LimitedInputStream.java:15"
+     ]
+    },
+    "evidence_strength": {
+     "score": 17,
+     "rationale": "internal/package-info.java exists (addition site only; spool classes are new).",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/package-info.java"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "All link targets verified/evolving or wave-6: IR-MULTIPART-001 (wave-6), IR-MULTIPART-002 (wave-6).",
+     "evidence": [
+      "IR-MULTIPART-001 (wave-6) verified/evolving",
+      "IR-MULTIPART-002 (wave-6) verified/evolving"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 12,
+     "rationale": "AC-2 heap bound after System.gc() is inherently noisy; directory listing before/after is deterministic.",
+     "evidence": [
+      "AC-1..AC-5"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Within MULTIPART scope §2 (09.multipart.srs.md:15-25).",
+     "evidence": [
+      "docs/spec/09.multipart.srs.md:15-25"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "object.md T13-T18 / T27-T32 with Express multer/express.static/res.sendFile parity.",
+     "evidence": [
+      "object.md",
+      "docs/api/multipart.md",
+      "docs/api/static.md"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "AC-2: run the heap test with a fixed -Xmx and repeated GC, or isolate it, to avoid flakiness."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "srs_file": "docs/spec/09.multipart.srs.md",
+   "external_module_impact": "none"
+  },
+  {
+   "req_id": "FR-MULTIPART-005",
+   "feasibility": "high",
+   "score": 94,
+   "axes": {
+    "implementability": {
+     "score": 28,
+     "rationale": "Plain java.io copy/rename; IllegalStateException for post-request and post-save use needs a per-upload state flag.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/package-info.java"
+     ]
+    },
+    "evidence_strength": {
+     "score": 17,
+     "rationale": "Addition site only (internal/package-info.java).",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/package-info.java"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "All link targets verified/evolving or wave-6: IR-MULTIPART-002 (wave-6).",
+     "evidence": [
+      "IR-MULTIPART-002 (wave-6) verified/evolving"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Exact 8388608/8388609 boundary, close-recording stream, byte equality.",
+     "evidence": [
+      "AC-1..AC-5"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Within MULTIPART scope §2 (09.multipart.srs.md:15-25).",
+     "evidence": [
+      "docs/spec/09.multipart.srs.md:15-25"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "object.md T13-T18 / T27-T32 with Express multer/express.static/res.sendFile parity.",
+     "evidence": [
+      "object.md",
+      "docs/api/multipart.md",
+      "docs/api/static.md"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "srs_file": "docs/spec/09.multipart.srs.md",
+   "external_module_impact": "none"
+  },
+  {
+   "req_id": "FR-MULTIPART-006",
+   "feasibility": "high",
+   "score": 89,
+   "axes": {
+    "implementability": {
+     "score": 25,
+     "rationale": "ShutdownParticipants has Phase.AFTER_ON_STOP (ShutdownParticipants.java:19-25) run after adapter stop, force-close and onStop in DefaultRestApp.java:498-519. Disconnect mapping exists in TinyHttpdBodyStream (FR-ENGINE-005).",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ShutdownParticipants.java:25",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:519",
+      "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdBodyStream.java"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "ShutdownParticipants.java and DefaultRestApp.java exist and match.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ShutdownParticipants.java:15",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:491"
+     ]
+    },
+    "dependency_health": {
+     "score": 14,
+     "rationale": "FR-APP-011 and FR-ENGINE-005 verified; FR-ENGINE-005 still depends_on discarded FR-ENGINE-001 (06.engine-adapter.srs.md:667), extends-only here.",
+     "evidence": [
+      "FR-APP-011 verified",
+      "FR-ENGINE-005 verified"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 12,
+     "rationale": "AC-3 needs a handler thread that outlives the adapter force-close and then parses: deterministic only with latches over the in-memory adapter (testFixtures InMemoryHttpAdapter), since a TinyHttpd body is gone after force-close.",
+     "evidence": [
+      "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/InMemoryHttpAdapter.java"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Within MULTIPART scope §2 (09.multipart.srs.md:15-25).",
+     "evidence": [
+      "docs/spec/09.multipart.srs.md:15-25"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "object.md T13-T18 / T27-T32 with Express multer/express.static/res.sendFile parity.",
+     "evidence": [
+      "object.md",
+      "docs/api/multipart.md",
+      "docs/api/static.md"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "AC-3: run over the in-memory test adapter with buffered body bytes; over TinyHttpd the body read fails first.",
+    "Seven verified wave-5 requirements (FR-ENGINE-002..006 and two more in 06.engine-adapter.srs.md:388,486,571,667,758,839,1012) still carry depends_on FR-ENGINE-001, now discarded and superseded by FR-ENGINE-010; reached here only through 'extends', so not blocking, but re-point those edges to FR-ENGINE-010 for link hygiene."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "srs_file": "docs/spec/09.multipart.srs.md",
+   "external_module_impact": "none"
+  },
+  {
+   "req_id": "OPS-MULTIPART-001",
+   "feasibility": "high",
+   "score": 94,
+   "axes": {
+    "implementability": {
+     "score": 28,
+     "rationale": "Doc edits plus removal of the two multipart skip entries (DocsExamplesCompileTest.java:105-106 region).",
+     "evidence": [
+      "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java:72",
+      "docs/api/multipart.md:62-64"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "docs/api/multipart.md and DocsExamplesCompileTest.java exist; markers at multipart.md:62,64.",
+     "evidence": [
+      "docs/api/multipart.md:62",
+      "docs/api/multipart.md:64"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "All link targets verified/evolving or wave-6: OPS-HTTP-004, IR-MULTIPART-001/002 (wave-6).",
+     "evidence": [
+      "OPS-HTTP-004 verified/evolving",
+      "IR-MULTIPART-001/002 (wave-6) verified/evolving"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "Marker and compile tests; AC-4 'states its reason in one sentence' is checkable only as presence of a sentence.",
+     "evidence": [
+      "AC-1..AC-5"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Within MULTIPART scope §2 (09.multipart.srs.md:15-25).",
+     "evidence": [
+      "docs/spec/09.multipart.srs.md:15-25"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "object.md T13-T18 / T27-T32 with Express multer/express.static/res.sendFile parity.",
+     "evidence": [
+      "object.md",
+      "docs/api/multipart.md",
+      "docs/api/static.md"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "WaveFiveDocsTest uses first-match lineWith(d, \"무제한\") on defaults.md (WaveFiveDocsTest.java:430); new defaults rows must not put 무제한 above defaults.md:3.",
+    "OPS-APP-004 AC-6 requires the phrase 무제한 설정 허용 여부 and the `tempDirectory` row to remain present (AppDocsTest.java:98 fails when a REMOVED phrase is absent); reword around the anchor."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "srs_file": "docs/spec/09.multipart.srs.md",
+   "external_module_impact": "none"
+  },
+  {
+   "req_id": "IR-STATIC-001",
+   "feasibility": "high",
+   "score": 94,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "Additive RestApp overloads with Configurer; ResourceResolver interface of java.io/java.lang only; same NEW-state guard (AppLifecycle.java:37).",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:132",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/AppLifecycle.java:37"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "RestApp.java, package-info.java, DefaultRestApp.java exist; AppLifecycleGuardTest method at AppLifecycleGuardTest.java:188 exists.",
+     "evidence": [
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AppLifecycleGuardTest.java:188"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "All link targets verified/evolving or wave-6: IR-HTTP-005, IR-APP-007, FR-APP-002, IR-MULTIPART-001 (wave-6).",
+     "evidence": [
+      "IR-HTTP-005 verified/evolving",
+      "IR-APP-007 verified/evolving",
+      "FR-APP-002 verified/evolving",
+      "IR-MULTIPART-001 (wave-6) verified/evolving"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Reflection, argument-validation and Kotlin run tests.",
+     "evidence": [
+      "AC-1..AC-6"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Within STATIC scope of 10.static-files.srs.md; frozen items D-256..D-293, D-407..D-447.",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-6/design.md:62-131"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "object.md T13-T18 / T27-T32 with Express multer/express.static/res.sendFile parity.",
+     "evidence": [
+      "object.md",
+      "docs/api/multipart.md",
+      "docs/api/static.md"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "AC-5: mimeTypes().register(...) after listen() must consult the app state even though the registry object was obtained before listen()."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "srs_file": "docs/spec/10.static-files.srs.md",
+   "external_module_impact": "none"
+  },
+  {
+   "req_id": "IR-STATIC-002",
+   "feasibility": "high",
+   "score": 94,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "Additive Response methods (Response.java:13-34) and RestApp methods; CachePolicy is a pure value object.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/Response.java:13",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/Response.java:34"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "Response.java, RestApp.java, package-info.java exist; LATER_WAVE_NAMES lists download/cache/sse (HttpApiSurfaceTest.java:29-30).",
+     "evidence": [
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java:29"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "All link targets verified/evolving or wave-6: IR-HTTP-001, IR-HTTP-005, IR-STATIC-001/IR-MULTIPART-001 (wave-6).",
+     "evidence": [
+      "IR-HTTP-001 verified/evolving",
+      "IR-HTTP-005 verified/evolving",
+      "IR-STATIC-001/IR-MULTIPART-001 (wave-6) verified/evolving"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Exact header value strings and reflection sets.",
+     "evidence": [
+      "AC-1..AC-6"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Within STATIC scope of 10.static-files.srs.md; frozen items D-256..D-293, D-407..D-447.",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-6/design.md:62-131"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "object.md T13-T18 / T27-T32 with Express multer/express.static/res.sendFile parity.",
+     "evidence": [
+      "object.md",
+      "docs/api/multipart.md",
+      "docs/api/static.md"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Coordinate the HttpApiSurfaceTest re-point with IR-MULTIPART-002 AC-6."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "srs_file": "docs/spec/10.static-files.srs.md",
+   "external_module_impact": "none"
+  },
+  {
+   "req_id": "FR-STATIC-001",
+   "feasibility": "high",
+   "score": 93,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "Static lookup fits the Dispatcher fallback terminal, which already runs after global middleware and the route lookup (Dispatcher.java:118,137-141,280-301), so D-407 middleware and access-log (Dispatcher.java:126-127) cover static requests. PathValidator allows empty segments (PathValidator.java:34-38), so //assets reaches the static layer for its 404.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:118",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:280",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:126",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/PathValidator.java:34"
+     ]
+    },
+    "evidence_strength": {
+     "score": 17,
+     "rationale": "Dispatcher.java and DefaultRestApp.java exist and match the fallback point.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:272-301"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "All link targets verified/evolving or wave-6: FR-HTTP-022, FR-APP-003, FR-APP-015.",
+     "evidence": [
+      "FR-HTTP-022 verified/evolving",
+      "FR-APP-003 verified/evolving",
+      "FR-APP-015 verified/evolving"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Concrete paths, Location values and 301/404 cases.",
+     "evidence": [
+      "AC-1..AC-6"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Within STATIC scope of 10.static-files.srs.md; frozen items D-256..D-293, D-407..D-447.",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-6/design.md:62-131"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "object.md T13-T18 / T27-T32 with Express multer/express.static/res.sendFile parity.",
+     "evidence": [
+      "object.md",
+      "docs/api/multipart.md",
+      "docs/api/static.md"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "AC-6 assumes the default RouterPolicy mergeSlashes(false) (routing/RouterPolicy.java:35); state the case under default policy in the test."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "srs_file": "docs/spec/10.static-files.srs.md",
+   "external_module_impact": "none"
+  },
+  {
+   "req_id": "FR-STATIC-002",
+   "feasibility": "high",
+   "score": 91,
+   "axes": {
+    "implementability": {
+     "score": 25,
+     "rationale": "Implementable as written, including the design Residual line: preCheck already orders OPTIONS *, path-not-/ 400, PathValidator 400, unknown-token 501 (Dispatcher.java:179-198) before router.lookup (Dispatcher.java:118); the fallback switch distinguishes METHOD_MISMATCH, AUTO_OPTIONS, WEBSOCKET_ONLY, UNSUPPORTED_METHOD (Dispatcher.java:283-300), so static 405 needs a side-effect-free 'would GET be answered from the file system' probe (file, index, listing, trailing-slash 301) before the 404 default; SPA is excluded from that probe. Router.addWebSocket exists for AC-4 (routing/Router.java:76-81).",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:179",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:283",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:78",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/PathValidator.java:36"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "Dispatcher.java exists and holds every decision point named.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:189-198"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "All link targets verified/evolving or wave-6: FR-ROUTE-010, FR-HTTP-022, FR-HTTP-021.",
+     "evidence": [
+      "FR-ROUTE-010 verified/evolving",
+      "FR-HTTP-022 verified/evolving",
+      "FR-HTTP-021 verified/evolving"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "Many concrete method/path cases; METHOD_MISMATCH combined with a double-encoded path is not an explicit case (behaviour follows AC-3 ordering).",
+     "evidence": [
+      "AC-1..AC-5"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Within STATIC scope of 10.static-files.srs.md; frozen items D-256..D-293, D-407..D-447.",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-6/design.md:62-131"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "object.md T13-T18 / T27-T32 with Express multer/express.static/res.sendFile parity.",
+     "evidence": [
+      "object.md",
+      "docs/api/multipart.md",
+      "docs/api/static.md"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "The 405 probe must reuse the exact resolution of GET (dot-segment 404, symlink refusal, canonical containment) so POST /.env and a refused symlink stay 404.",
+    "Residual line of design.md:140 narrowed correctly: D-268 400 applies to paths under a mount prefix with no matching route; explicit routes (POST /:x) still win."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "srs_file": "docs/spec/10.static-files.srs.md",
+   "external_module_impact": "none"
+  },
+  {
+   "req_id": "FR-STATIC-003",
+   "feasibility": "high",
+   "score": 90,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "rationale": "Listing via File.list with String.compareTo and escaping is java.io only; bounded copy exists in the stream path (DefaultResponse.java:180-230) but file bodies need a known-length commit (ex.commit(status, headers, length), HttpExchange.java:65).",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java:180",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpExchange.java:65"
+     ]
+    },
+    "evidence_strength": {
+     "score": 17,
+     "rationale": "DefaultResponse.java and internal/package-info.java exist.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java:206"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "All link targets verified/evolving or wave-6: FR-HTTP-014.",
+     "evidence": [
+      "FR-HTTP-014 verified/evolving"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 12,
+     "rationale": "AC-4 heap bound after System.gc() is noisy; AC-2 needs files named <x>&.txt and a symlink (POSIX test host; test sources may use java.nio.file since animal-sniffer checks only main, build.gradle:223-225).",
+     "evidence": [
+      "build.gradle:223-225"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Within STATIC scope of 10.static-files.srs.md; frozen items D-256..D-293, D-407..D-447.",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-6/design.md:62-131"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "object.md T13-T18 / T27-T32 with Express multer/express.static/res.sendFile parity.",
+     "evidence": [
+      "object.md",
+      "docs/api/multipart.md",
+      "docs/api/static.md"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "AC-4: isolate the heap test with fixed -Xmx.",
+    "res.stream drops Content-Length (DefaultResponse.java:189-190); file bodies need a separate known-length commit path."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "srs_file": "docs/spec/10.static-files.srs.md",
+   "external_module_impact": "none"
+  },
+  {
+   "req_id": "FR-STATIC-004",
+   "feasibility": "high",
+   "score": 93,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "Segment-boundary prefix matching already exists for app.use (PrefixMatcher.java); SPA decision sits after every mount miss in the fallback.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/PrefixMatcher.java",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:280"
+     ]
+    },
+    "evidence_strength": {
+     "score": 17,
+     "rationale": "Dispatcher.java exists.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "All link targets verified/evolving or wave-6: IR-STATIC-001 (wave-6).",
+     "evidence": [
+      "IR-STATIC-001 (wave-6) verified/evolving"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Concrete Accept values and paths, including /apix.",
+     "evidence": [
+      "AC-1..AC-4"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Within STATIC scope of 10.static-files.srs.md; frozen items D-256..D-293, D-407..D-447.",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-6/design.md:62-131"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "object.md T13-T18 / T27-T32 with Express multer/express.static/res.sendFile parity.",
+     "evidence": [
+      "object.md",
+      "docs/api/multipart.md",
+      "docs/api/static.md"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "srs_file": "docs/spec/10.static-files.srs.md",
+   "external_module_impact": "none"
+  },
+  {
+   "req_id": "FR-STATIC-005",
+   "feasibility": "high",
+   "score": 96,
+   "axes": {
+    "implementability": {
+     "score": 28,
+     "rationale": "PathValidator already rejects decoded '/', NUL, '.' and '..' segments with 400 (PathValidator.java:34-38, Dispatcher.java:193-194); only the double-encoded check (%252e, %252F) and the dot-prefix 404 are new.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/PathValidator.java:36",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:193"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "Dispatcher.java and internal/package-info.java exist.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:193"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "All link targets verified/evolving or wave-6: FR-ROUTE-004.",
+     "evidence": [
+      "FR-ROUTE-004 verified/evolving"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 15,
+     "rationale": "Fully enumerated request paths and statuses.",
+     "evidence": [
+      "AC-1..AC-2"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Within STATIC scope of 10.static-files.srs.md; frozen items D-256..D-293, D-407..D-447.",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-6/design.md:62-131"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "object.md T13-T18 / T27-T32 with Express multer/express.static/res.sendFile parity.",
+     "evidence": [
+      "object.md",
+      "docs/api/multipart.md",
+      "docs/api/static.md"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Send AC-1 paths over a raw socket so no HTTP client normalizes /../ before sending."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "srs_file": "docs/spec/10.static-files.srs.md",
+   "external_module_impact": "none"
+  },
+  {
+   "req_id": "FR-STATIC-006",
+   "feasibility": "high",
+   "score": 87,
+   "axes": {
+    "implementability": {
+     "score": 24,
+     "rationale": "java.io getCanonicalFile per component is API 21 safe; the post-open re-check plus test hook is internal. Test symlinks may use java.nio.file in test code (animal-sniffer main only, build.gradle:223-225). Local JDK 17: canonical cache is already off by default, so AC-6's property is harmless there.",
+     "evidence": [
+      "build.gradle:223-225",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/package-info.java"
+     ]
+    },
+    "evidence_strength": {
+     "score": 16,
+     "rationale": "Only an addition site (internal/package-info.java); no resolver code exists yet.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/package-info.java"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "All link targets verified/evolving or wave-6: CON-BUILD-012, IR-STATIC-001 (wave-6).",
+     "evidence": [
+      "CON-BUILD-012 verified/evolving",
+      "IR-STATIC-001 (wave-6) verified/evolving"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 12,
+     "rationale": "Symlink tests need a POSIX host; 'computes once when the app starts listening' needs a hook or a post-listen link swap to observe; AC-4 swap test needs an internal hook.",
+     "evidence": [
+      "AC-1..AC-6"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Within STATIC scope of 10.static-files.srs.md; frozen items D-256..D-293, D-407..D-447.",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-6/design.md:62-131"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "object.md T13-T18 / T27-T32 with Express multer/express.static/res.sendFile parity.",
+     "evidence": [
+      "object.md",
+      "docs/api/multipart.md",
+      "docs/api/static.md"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Add an internal test hook between check and open (AC-4); AC-6 sets -Dsun.io.useCanonCaches=false in the Gradle test task (build.gradle:144/333).",
+    "Behaviour when a mount root does not exist at listen() is not stated; pick 404 per request or fail listen and document it."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "srs_file": "docs/spec/10.static-files.srs.md",
+   "external_module_impact": "none"
+  },
+  {
+   "req_id": "FR-STATIC-007",
+   "feasibility": "high",
+   "score": 93,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "Immutable built-in Map plus per-app registry; no static mutable state (FR-APP-002).",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java"
+     ]
+    },
+    "evidence_strength": {
+     "score": 17,
+     "rationale": "internal/package-info.java and DefaultRestApp.java exist; the built-in table is at docs/api/static.md:84-102.",
+     "evidence": [
+      "docs/api/static.md:84-102"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "All link targets verified/evolving or wave-6: FR-APP-002, IR-STATIC-001/002 (wave-6).",
+     "evidence": [
+      "FR-APP-002 verified/evolving",
+      "IR-STATIC-001/002 (wave-6) verified/evolving"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "AC-4 expects .txt as text/plain; charset=UTF-8, but the static.md built-in table (static.md:84-102) has no .txt row and AC-2 requires the built-in table to equal that table exactly, so as the docs stand AC-4 fails (.txt would be application/octet-stream) unless an unstated .txt row is added to static.md. Re-scored after AC-4 changed from .txt to .css (eval E1-01): every example is in the static.md table.",
+     "evidence": [
+      "docs/api/static.md:86-101"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Within STATIC scope of 10.static-files.srs.md; frozen items D-256..D-293, D-407..D-447.",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-6/design.md:62-131"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "object.md T13-T18 / T27-T32 with Express multer/express.static/res.sendFile parity.",
+     "evidence": [
+      "object.md",
+      "docs/api/multipart.md",
+      "docs/api/static.md"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "FR-STATIC-007 AC-4 vs AC-2: add `.txt` -> `text/plain` to the static.md built-in table (and say so in AC-4 as a Decision), or change AC-4's example to `.css` -> `text/css; charset=UTF-8`."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "srs_file": "docs/spec/10.static-files.srs.md",
+   "external_module_impact": "none"
+  },
+  {
+   "req_id": "FR-STATIC-008",
+   "feasibility": "high",
+   "score": 93,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "Pattern compiler (*, **) and a commit-time default header in DefaultResponse's begin/commit path (DefaultResponse.java:206,452).",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java:206",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java:452"
+     ]
+    },
+    "evidence_strength": {
+     "score": 17,
+     "rationale": "DefaultResponse.java and package-info.java exist.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "All link targets verified/evolving or wave-6: FR-HTTP-016.",
+     "evidence": [
+      "FR-HTTP-016 verified/evolving"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Exact Cache-Control strings and pattern cases.",
+     "evidence": [
+      "AC-1..AC-5"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Within STATIC scope of 10.static-files.srs.md; frozen items D-256..D-293, D-407..D-447.",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-6/design.md:62-131"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "object.md T13-T18 / T27-T32 with Express multer/express.static/res.sendFile parity.",
+     "evidence": [
+      "object.md",
+      "docs/api/multipart.md",
+      "docs/api/static.md"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "defaultCache applies to error responses (404/500 JSON) too, since they set no Cache-Control; confirm that is intended."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "srs_file": "docs/spec/10.static-files.srs.md",
+   "external_module_impact": "none"
+  },
+  {
+   "req_id": "FR-STATIC-009",
+   "feasibility": "high",
+   "score": 94,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "ETag/date math verified: 1234=0x4d2, 1700000000123=0x18bcfe5687b, 1700000000 s = Tue, 14 Nov 2023 22:13:20 GMT. TinyHttpd keeps a set Content-Length on HEAD (server/ExchangeResponse.java:438-440,153) and drops it on 304.",
+     "evidence": [
+      "/Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/ExchangeResponse.java:438",
+      "/Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/ExchangeResponse.java:153"
+     ]
+    },
+    "evidence_strength": {
+     "score": 17,
+     "rationale": "DefaultResponse.java and package-info.java exist.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java:180"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "All link targets verified/evolving or wave-6: FR-HTTP-017, IR-STATIC-002 (wave-6).",
+     "evidence": [
+      "FR-HTTP-017 verified/evolving",
+      "IR-STATIC-002 (wave-6) verified/evolving"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 15,
+     "rationale": "Exact header values and precedence cases.",
+     "evidence": [
+      "AC-1..AC-4"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Within STATIC scope of 10.static-files.srs.md; frozen items D-256..D-293, D-407..D-447.",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-6/design.md:62-131"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "object.md T13-T18 / T27-T32 with Express multer/express.static/res.sendFile parity.",
+     "evidence": [
+      "object.md",
+      "docs/api/multipart.md",
+      "docs/api/static.md"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "srs_file": "docs/spec/10.static-files.srs.md",
+   "external_module_impact": "none"
+  },
+  {
+   "req_id": "FR-STATIC-010",
+   "feasibility": "high",
+   "score": 94,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "Single-range parse plus skip/limit on the opened stream; 416 renders code HTTP_416 via StandardErrors default (StandardErrors.java:91-104).",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StandardErrors.java:104"
+     ]
+    },
+    "evidence_strength": {
+     "score": 17,
+     "rationale": "DefaultResponse.java and package-info.java exist.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "All link targets verified/evolving or wave-6: IR-HTTP-003, FR-STATIC-009 (wave-6).",
+     "evidence": [
+      "IR-HTTP-003 verified/evolving",
+      "FR-STATIC-009 (wave-6) verified/evolving"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 15,
+     "rationale": "Byte-exact ranges and statuses.",
+     "evidence": [
+      "AC-1..AC-5"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Within STATIC scope of 10.static-files.srs.md; frozen items D-256..D-293, D-407..D-447.",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-6/design.md:62-131"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "object.md T13-T18 / T27-T32 with Express multer/express.static/res.sendFile parity.",
+     "evidence": [
+      "object.md",
+      "docs/api/multipart.md",
+      "docs/api/static.md"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "416 reason phrase falls to 'Error' (StandardErrors.java:47); add 416 'Range Not Satisfiable' if the standard body message should name it."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "srs_file": "docs/spec/10.static-files.srs.md",
+   "external_module_impact": "none"
+  },
+  {
+   "req_id": "FR-STATIC-011",
+   "feasibility": "high",
+   "score": 92,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "rationale": "HttpExchange.commit(status, headers, contentLength) exists (HttpExchange.java:65) and sendFile stays as frozen (HttpExchange.java:80); a recording adapter can assert sendFile is never called (InMemoryHttpAdapter.java:445).",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpExchange.java:65",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpExchange.java:80",
+      "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/InMemoryHttpAdapter.java:445"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "DefaultResponse.java, spi/HttpExchange.java and TinyHttpdFeatures.java exist and match.",
+     "evidence": [
+      "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdFeatures.java:21"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "All link targets verified/evolving or wave-6: IR-HTTP-004, CON-HTTP-001, FR-ENGINE-010/IR-STATIC-001/002 (wave-6).",
+     "evidence": [
+      "IR-HTTP-004 verified/evolving",
+      "CON-HTTP-001 verified/evolving",
+      "FR-ENGINE-010/IR-STATIC-001/002 (wave-6) verified/evolving"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "Header-injection and filename* cases concrete; AC-5 needs a spy on the internal resolver.",
+     "evidence": [
+      "AC-1..AC-5"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Within STATIC scope of 10.static-files.srs.md; frozen items D-256..D-293, D-407..D-447.",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-6/design.md:62-131"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "object.md T13-T18 / T27-T32 with Express multer/express.static/res.sendFile parity.",
+     "evidence": [
+      "object.md",
+      "docs/api/multipart.md",
+      "docs/api/static.md"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "srs_file": "docs/spec/10.static-files.srs.md",
+   "external_module_impact": "NaruServe-tinyhttpd (T30/T31 over TinyHttpd)"
+  },
+  {
+   "req_id": "OPS-STATIC-001",
+   "feasibility": "high",
+   "score": 93,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "Doc edits plus removal of static/response skip entries (DocsExamplesCompileTest.java SKIPS static.md/response.md/app.md#10/express-migration).",
+     "evidence": [
+      "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java:72"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "docs/api/static.md, response.md and DocsExamplesCompileTest.java exist; markers at static.md:19,42,55,60 and response.md:30.",
+     "evidence": [
+      "docs/api/static.md:19",
+      "docs/api/response.md:30"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "All link targets verified/evolving or wave-6: OPS-HTTP-004, IR-STATIC-001/002, FR-STATIC-002/006/008 (wave-6).",
+     "evidence": [
+      "OPS-HTTP-004 verified/evolving",
+      "IR-STATIC-001/002, FR-STATIC-002/006/008 (wave-6) verified/evolving"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "Marker/compile checks plus a skip-reason guard; sentence-presence checks are phrase-based.",
+     "evidence": [
+      "AC-1..AC-6"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Within STATIC scope of 10.static-files.srs.md; frozen items D-256..D-293, D-407..D-447.",
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-6/design.md:62-131"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "object.md T13-T18 / T27-T32 with Express multer/express.static/res.sendFile parity.",
+     "evidence": [
+      "object.md",
+      "docs/api/multipart.md",
+      "docs/api/static.md"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Keep the AppDocsTest anchors in static.md (`SPA fallback은`, `` `/docs/`로 301 ``, `` `cache(pattern, policy)` ``, `심볼릭 링크(루트 안을`) present without the marker; AppDocsTest.java:98 fails when an anchor disappears."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "srs_file": "docs/spec/10.static-files.srs.md",
+   "external_module_impact": "none"
+  },
+  {
+   "req_id": "FR-ENGINE-010",
+   "feasibility": "high",
+   "score": 95,
+   "axes": {
+    "implementability": {
+     "score": 28,
+     "rationale": "TinyHttpdFeatures.sendFile currently throws 'arrives in wave 6' (TinyHttpdFeatures.java:21-23); the exchange already applies start()/abort check (TinyHttpdExchange.java:191-218). Buffered copy through res.getOutputStream like commit (TinyHttpdExchange.java:137); ev/upgrade stay wave 7 (TinyHttpdFeatures.java:28,33).",
+     "evidence": [
+      "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdFeatures.java:23",
+      "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdExchange.java:210",
+      "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdExchange.java:137"
+     ]
+    },
+    "evidence_strength": {
+     "score": 19,
+     "rationale": "TinyHttpdFeatures.java and TinyHttpdExchange.java exist and match; AC-1,3,4,5 restated verbatim from verified FR-ENGINE-001.",
+     "evidence": [
+      "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdFeatures.java:21"
+     ]
+    },
+    "dependency_health": {
+     "score": 14,
+     "rationale": "FR-ENGINE-003/004, IR-HTTP-003/004, IR-ENGINE-002 verified; several of them still depends_on the discarded FR-ENGINE-001 it supersedes.",
+     "evidence": [
+      "docs/spec/06.engine-adapter.srs.md:388",
+      "docs/spec/06.engine-adapter.srs.md:486"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Socket test with offset/length; reflection/class-reference tests carried.",
+     "evidence": [
+      "AC-1..AC-5"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "ENGINE scope.",
+     "evidence": [
+      "docs/spec/06.engine-adapter.srs.md"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "object.md T13-T18 / T27-T32 with Express multer/express.static/res.sendFile parity.",
+     "evidence": [
+      "object.md",
+      "docs/api/multipart.md",
+      "docs/api/static.md"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Re-point AdapterSurfaceTest#sdsAc2_FR_ENGINE_001_AC2_featureHooksThrowNamingTheirWave as the change note says.",
+    "sendFile must set Content-Length=length on the TinyHttpd response so framing is not chunked.",
+    "Seven verified wave-5 requirements (FR-ENGINE-002..006 and two more in 06.engine-adapter.srs.md:388,486,571,667,758,839,1012) still carry depends_on FR-ENGINE-001, now discarded and superseded by FR-ENGINE-010; reached here only through 'extends', so not blocking, but re-point those edges to FR-ENGINE-010 for link hygiene.",
+    "TinyHttpd checkout HEAD is 38051b6, not the verified 46b973e (settings.gradle only warns); no fact cited by this requirement changed, re-verify or pin before implementation."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "srs_file": "docs/spec/06.engine-adapter.srs.md",
+   "external_module_impact": "NaruServe-tinyhttpd"
+  },
+  {
+   "req_id": "OPS-HTTP-006",
+   "feasibility": "high",
+   "score": 96,
+   "axes": {
+    "implementability": {
+     "score": 28,
+     "rationale": "AC-1..AC-7 restated from verified OPS-HTTP-005 and already true; AC-8 only drops the parts() and file(File) markers (request.md:85, response.md:30), leaving redirect (response.md:123).",
+     "evidence": [
+      "docs/api/request.md:85",
+      "docs/api/response.md:30",
+      "docs/api/response.md:123"
+     ]
+    },
+    "evidence_strength": {
+     "score": 19,
+     "rationale": "docs/api/request.md, response.md and HttpDocsTest.java exist.",
+     "evidence": [
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "All link targets verified/evolving or wave-6: OPS-MULTIPART-001/OPS-STATIC-001 (wave-6).",
+     "evidence": [
+      "OPS-MULTIPART-001/OPS-STATIC-001 (wave-6) verified/evolving"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Phrase/marker tests.",
+     "evidence": [
+      "AC-1..AC-8"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "HTTP docs scope.",
+     "evidence": [
+      "docs/spec/04.http-core.srs.md"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "object.md T13-T18 / T27-T32 with Express multer/express.static/res.sendFile parity.",
+     "evidence": [
+      "object.md",
+      "docs/api/multipart.md",
+      "docs/api/static.md"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "srs_file": "docs/spec/04.http-core.srs.md",
+   "external_module_impact": "none"
+  },
+  {
+   "req_id": "OPS-APP-004",
+   "feasibility": "high",
+   "score": 93,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "AC-1..AC-5,7 restated from verified OPS-APP-003; AC-6 adds REMOVED phrases that all exist today with markers (static.md:19,42,55,60; multipart.md:62,64; defaults.md:54).",
+     "evidence": [
+      "docs/api/static.md:55",
+      "docs/api/multipart.md:64",
+      "docs/api/defaults.md:54"
+     ]
+    },
+    "evidence_strength": {
+     "score": 19,
+     "rationale": "docs/api/static.md, multipart.md and AppDocsTest.java (REMOVED/KEPT maps at AppDocsTest.java:26-54) exist.",
+     "evidence": [
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/AppDocsTest.java:26"
+     ]
+    },
+    "dependency_health": {
+     "score": 14,
+     "rationale": "FR-ENGINE-006 verified but still depends_on discarded FR-ENGINE-001 (extends-only here); OPS-STATIC-001/OPS-MULTIPART-001 wave-6.",
+     "evidence": [
+      "FR-ENGINE-006 verified"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "Marker tests; AppDocsTest also requires each REMOVED phrase to stay present (AppDocsTest.java:98), which the AC wording leaves implicit.",
+     "evidence": [
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/AppDocsTest.java:98"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "APP docs scope.",
+     "evidence": [
+      "docs/spec/05.application.srs.md"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "object.md T13-T18 / T27-T32 with Express multer/express.static/res.sendFile parity.",
+     "evidence": [
+      "object.md",
+      "docs/api/multipart.md",
+      "docs/api/static.md"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Anchor phrases must remain in the docs after the markers go (e.g. keep the words 무제한 설정 허용 여부 in multipart.md).",
+    "Seven verified wave-5 requirements (FR-ENGINE-002..006 and two more in 06.engine-adapter.srs.md:388,486,571,667,758,839,1012) still carry depends_on FR-ENGINE-001, now discarded and superseded by FR-ENGINE-010; reached here only through 'extends', so not blocking, but re-point those edges to FR-ENGINE-010 for link hygiene."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "srs_file": "docs/spec/05.application.srs.md",
+   "external_module_impact": "none"
+  }
+ ]
+}

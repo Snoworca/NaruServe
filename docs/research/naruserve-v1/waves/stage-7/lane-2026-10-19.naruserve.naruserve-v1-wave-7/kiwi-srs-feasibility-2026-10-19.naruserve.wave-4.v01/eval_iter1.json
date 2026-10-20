@@ -1,0 +1,78 @@
+{
+  "iter": 1,
+  "findings": [
+    {
+      "id": "E1-01",
+      "severity": "HIGH",
+      "axis": "mapping_conformance",
+      "req_id": "OPS-APP-001",
+      "description": "mutation-plan.json keeps OPS-APP-001 at draft (medium 76 -> keep). The trace cycle and AC-7 conditions behind that score are now fixed, and the current text re-scores to 87 (high), which maps to evolving. If the plan is applied as it stands, OPS-APP-001 stays draft, so the draft-stability gate stops its implementation in wave 4. OPS-HTTP-003, OPS-ROUTE-003 and OPS-APP-002, which would be evolving, depend_on it.",
+      "suggested_action": "Change the OPS-APP-001 plan entry to proposed_stability=evolving (score 87, high) and update per-req-judgement.json to match."
+    },
+    {
+      "id": "E1-02",
+      "severity": "LOW",
+      "axis": "internal_coherence",
+      "req_id": "OPS-APP-001",
+      "description": "synthesis.json is stale after the fix: distribution says high 36 / medium 1, target_verdict asks to fix the OPS-APP-001 trace cycle, and dependency_cycles still reports the cycle. The current spec has no depends_on/extends cycle among the 37 wave-4 blocks (re-parsed).",
+      "suggested_action": "Regenerate synthesis: distribution high 37 / medium 0, clear dependency_cycles, drop the cycle clause from the verdict."
+    },
+    {
+      "id": "E1-03",
+      "severity": "LOW",
+      "axis": "evidence_strength",
+      "req_id": "OPS-APP-001",
+      "description": "AC-1 to AC-6 cover docs/api/README.md, routing.md and express-migration.md and require a docs test, but Trace Links list only app.md, middleware.md, lifecycle.md and logging.md as Code rows. The missing files all exist.",
+      "suggested_action": "Add Code trace rows for docs/api/README.md, docs/api/routing.md, docs/api/express-migration.md and the docs test that AC-6 names."
+    },
+    {
+      "id": "E1-04",
+      "severity": "LOW",
+      "axis": "ac_verifiability",
+      "req_id": "OPS-APP-001",
+      "description": "AC-7 (a one-sentence reason next to each decision) is now concrete, but Verification Method is test and a docs test can only check it if the reason sentences carry a detectable form.",
+      "suggested_action": "Either give each reason a fixed lead such as 'Reason:' that the AC-6 docs test counts, or note in AC-7 that it is checked by review."
+    },
+    {
+      "id": "E1-05",
+      "severity": "LOW",
+      "axis": "dependency_cycles",
+      "req_id": "OPS-APP-002",
+      "description": "OPS-APP-002 has an 'extends' link to OPS-HTTP-002, which is discarded (superseded by OPS-HTTP-004). It also extends OPS-HTTP-004. This is not a depends_on, so the gate rule holds, but the link points at a dead block.",
+      "suggested_action": "Drop the OPS-APP-002 -> OPS-HTTP-002 extends row and keep OPS-HTTP-004 as the parent."
+    },
+    {
+      "id": "E1-06",
+      "severity": "LOW",
+      "axis": "score_label_consistency",
+      "req_id": "OPS-HTTP-003",
+      "description": "OPS-HTTP-003 (dependency_health 9) and OPS-ROUTE-003 (10) were marked down for the OPS-APP-001 cycle, which no longer exists. Both stay high (90), so the stability mapping does not change.",
+      "suggested_action": "Optionally raise dependency_health for OPS-HTTP-003 and OPS-ROUTE-003; no stability change is needed."
+    }
+  ],
+  "summary": {
+    "requirements_checked": 37,
+    "critical": 0,
+    "high": 1,
+    "medium": 0,
+    "low": 5,
+    "axis_sum_mismatches": 0,
+    "score_label_mismatches": 0,
+    "mapping_mismatches_vs_current_text": 1,
+    "dependency_cycles": 0,
+    "bad_depends_on_targets": 0,
+    "missing_trace_paths": 0,
+    "blockers_listed": 0,
+    "checks": "Axis sums equal the score for all 37. Every label matches the score bands. No wave-4 depends_on points at a discarded or non-wave-4 unverified block (all targets are wave-4 or verified waves 1-3). All Code trace paths exist. The trace-link fixes are present: IR-APP-001->IR-APP-006, FR-APP-010->FR-APP-017, FR-APP-014 Dispatcher/DefaultRestApp, FR-APP-017 build.gradle. FR-APP-002 AC-2 now exempts the private static final METHODS/EMPTY arrays, and the code confirms them. FR-APP-015 AC-5 names a concrete 4-of-10-byte test.",
+    "gate": "Normal gate not met (HIGH=1) until the OPS-APP-001 plan entry is updated to evolving."
+  },
+  "rescored": [
+    {
+      "req_id": "OPS-APP-001",
+      "score": 87,
+      "feasibility": "high",
+      "axes": {"implementability": 27, "evidence_strength": 17, "dependency_health": 13, "ac_verifiability": 12, "scope_fit": 9, "product_fit": 9},
+      "proposed_stability": "evolving"
+    }
+  ]
+}

@@ -1,0 +1,90 @@
+{
+ "evaluator": "verify-pass-1",
+ "iter": 1,
+ "findings": [
+  {
+   "id": "E1-01",
+   "finding_hash": "a341f027c714",
+   "severity": "MEDIUM",
+   "axis": "internal_coherence",
+   "req_id": "FR-STATIC-007",
+   "evidence_path": "docs/analysis/kiwi-srs-feasibility-2026-10-19.naruserve.wave-6.v01/per-req-judgement.json",
+   "description": "Judgement is stale after the AC-4 edit: ac_verifiability=10 and the condition (and synthesis.notable_conditions[0]) still describe a .txt->text/plain conflict with AC-2. Current AC-4 (10.static-files.srs.md:544) uses .css/.html/.png, all present in docs/api/static.md:86-93, and line 104 states the text charset rule, so the conflict is gone.",
+   "suggested_action": "Re-score ac_verifiability (about 13-14, total about 92-93) and drop the .txt condition from the judgement and synthesis. Mapping (high->evolving) is unchanged."
+  },
+  {
+   "id": "E1-02",
+   "finding_hash": "0cd025c4c8da",
+   "severity": "LOW",
+   "axis": "dependency_health",
+   "req_id": "FR-ENGINE-010",
+   "evidence_path": "docs/spec/06.engine-adapter.srs.md:388",
+   "description": "Seven verified wave-5 requirements (lines 388,486,571,667,758,839,1012) still depends_on discarded FR-ENGINE-001 (heading line 225 DISCARDED -> FR-ENGINE-010). No wave-6 depends_on chain reaches it (only extends edges from FR-MULTIPART-001/006, OPS-APP-004), and there are no cycles, so this does not block wave-6.",
+   "suggested_action": "Re-point those edges to FR-ENGINE-010 with a separate guarded trace-link mutation outside this feasibility run."
+  },
+  {
+   "id": "E1-03",
+   "finding_hash": "8bcefbdaaaa3",
+   "severity": "LOW",
+   "axis": "internal_coherence",
+   "req_id": "IR-MULTIPART-001",
+   "evidence_path": "docs/spec/09.multipart.srs.md:38",
+   "description": "25 of the 26 headings carry '[DRAFT — pending decision]' (OPS-HTTP-006 at 04.http-core.srs.md:3637 does not). After promotion to evolving the marker contradicts Stability.",
+   "suggested_action": "Strip the heading suffix when Stability becomes evolving, or confirm that the tooling manages it."
+  },
+  {
+   "id": "E1-04",
+   "finding_hash": "59c8df66db2f",
+   "severity": "LOW",
+   "axis": "blocker_substantiation",
+   "req_id": "FR-MULTIPART-001",
+   "evidence_path": "/Users/beom/work/git/TinyHttpd core/src/main/java/com/snoworca/tinyhttpd/TinyHttpd.java:268",
+   "description": "The TinyHttpd drift condition checks out: HEAD is 38051b6 vs the verified 46b973e. 46b973e..38051b6 only adds UNLIMITED constants and overflow guards (BodyInput, Connection, HttpServer), and the default maxRequestBodyBytes is still -1, so FR-MULTIPART-001 AC-5 holds. This is a condition, not a blocker.",
+   "suggested_action": "Pin or re-verify at 38051b6 before implementation, and update the settings.gradle expected commit."
+  },
+  {
+   "id": "E1-05",
+   "finding_hash": "adb96e31e129",
+   "severity": "LOW",
+   "axis": "ac_verifiability",
+   "req_id": "FR-STATIC-006",
+   "evidence_path": "docs/spec/10.static-files.srs.md:482",
+   "description": "No AC defines what happens when a mount root does not exist or is not a directory at listen(): AC-1 only says the canonical root is computed at listen. The judgement condition says the same. A test cannot pin this behaviour.",
+   "suggested_action": "Decide during implementation (per CLAUDE.md undecided-item rule): either 404 per request or listen() failure, then record it in AC-1 and static.md."
+  },
+  {
+   "id": "E1-06",
+   "finding_hash": "450171505594",
+   "severity": "LOW",
+   "axis": "ac_verifiability",
+   "req_id": "FR-MULTIPART-001",
+   "evidence_path": "docs/spec/09.multipart.srs.md:189",
+   "description": "AC-4's 8192-byte part header line limit does not say whether the CRLF terminator counts. That changes the 8192/8193 boundary test.",
+   "suggested_action": "Add a Decision clause (e.g. the length excludes CRLF, matching the TinyHttpd header-line convention)."
+  },
+  {
+   "id": "E1-07",
+   "finding_hash": "feb16d1743d5",
+   "severity": "LOW",
+   "axis": "ac_verifiability",
+   "req_id": "FR-MULTIPART-004",
+   "evidence_path": "docs/spec/09.multipart.srs.md:365",
+   "description": "AC-2 heap bound (also FR-STATIC-003 AC-4, 10.static-files.srs.md:315) uses System.gc() deltas, which can be flaky. The judgement already deducts for this and adds a fixed -Xmx isolation condition. The score stays above 80.",
+   "suggested_action": "Keep the condition and run in an isolated Gradle test task with fixed -Xmx."
+  }
+ ],
+ "summary": {
+  "CRITICAL": 0,
+  "HIGH": 0,
+  "MEDIUM": 1,
+  "LOW": 6
+ },
+ "checks": {
+  "axis_sums": "26/26 axes sum equals score; all 87-96 labelled high (consistent)",
+  "evidence_sampled": "14 cited path:line read (RestApp.java:132,143; DefaultRestApp.java:169-174; AppLifecycle.java:37; AppLifecycleGuardTest.java:188; RouterPolicy.java:35; DefaultResponse.java:189-190; StandardErrors.java:47; WaveFiveDocsTest.java:430; AppDocsTest.java:98; build.gradle:144,333; wave-6/design.md:140; 09.multipart.srs.md:15-25; TinyHttpd.java:268). All exist and match the claims; 120 cited paths resolved",
+  "cycles": "none; all wave-6 depends_on targets are wave-6; none reaches a discarded or draft requirement outside wave-6",
+  "mapping": "26 high->evolving, requires_user_confirm=false, no stable/frozen proposed",
+  "status_conflicts": "none (all planned, no evidence, has_verification=false consistent)",
+  "below_80": "none; no AC defect found severe enough to drop any requirement below 80"
+ }
+}

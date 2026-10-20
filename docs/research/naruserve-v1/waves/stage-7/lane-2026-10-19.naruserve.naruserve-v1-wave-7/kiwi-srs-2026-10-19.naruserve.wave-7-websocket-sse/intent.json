@@ -1,0 +1,26 @@
+{
+ "summary": "Wave 7: WebSocket over TinyHttpd websocket module, SSE through res.sse, shutdown of long-lived connections (issues #13, #14, #15)",
+ "intent_type_hint": "new-scope",
+ "key_entities": [
+  "app.ws",
+  "WebSocketSession",
+  "WebSocketEndpoint/Channel/Settings SPI",
+  "HttpExchange.webSocket",
+  "res.sse",
+  "SseClient",
+  "SseEvent",
+  "before-wait ShutdownParticipants with deadline",
+  "HttpException.withHeader/headers"
+ ],
+ "ambiguities": [],
+ "implied_requirements": [
+  "supersede FR-ENGINE-010",
+  "supersede IR-HTTP-004",
+  "supersede FR-APP-015",
+  "supersede OPS-HTTP-006",
+  "supersede OPS-APP-004",
+  "supersede OPS-ENGINE-001"
+ ],
+ "semantic_equivalences": [],
+ "note": "All (\ubbf8\ud655\uc815) choices are settled by the wave decisions or by C-07 implementer decisions in authoring_plan.md; --auto skips QnA."
+}

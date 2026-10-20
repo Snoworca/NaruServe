@@ -1,0 +1,153 @@
+{
+ "iter": 2,
+ "findings": [
+  {
+   "id": "A2-01",
+   "severity": "HIGH",
+   "axis": "iii-feasibility",
+   "req_id": "OPS-WS-001",
+   "ac": "AC-6",
+   "quote": "its `SKIPS` list drops the two `websocket.md` entries and the `lifecycle.md` entry whose reason is ``later-wave method `RestApp.ws` `` ... and only app-defined-type, absent-type and illustrative-copy reasons remain for those files (the `websocket.md` `Auth` block)",
+   "description": "Introduced by the iter-1 fix (A1-02). DocsExamplesCompileTest has no stubs (wrap() adds only imports), so a block whose skip entry is dropped must compile. The `lifecycle.md` block `RestApp app = RestApp.create();` uses the app-defined types `Database` and `UserService`, and the `websocket.md` `/chat` block (`app.ws(\"/chat\", ...)`) uses `ChatService` and `ChatMessage`. Dropping those two entries makes the verified OPS-HTTP-004 compile test fail, unless the docs are rewritten; the AC also says the `Auth` block is the only remaining websocket.md entry. The AC as written cannot pass with the current docs.",
+   "suggested_fix": "\"... its `SKIPS` list drops the `websocket.md` `/ws` entry, changes the reason of the `websocket.md` `/chat` entry to ``app-defined type `ChatService` and `ChatMessage` `` and of the `lifecycle.md` `RestApp app = RestApp.create();` entry to ``app-defined type `Database` and `UserService` ``, changes the `json.md` reason to ``app-defined type `User` ``, and keeps the `Auth` entry; no reason for those files names a wave 7 member as a later-wave method ...\""
+  },
+  {
+   "id": "A2-02",
+   "severity": "HIGH",
+   "axis": "i-coverage",
+   "req_id": "FR-WS-002",
+   "ac": "AC-5",
+   "quote": "An error response for a pre-`101` rejection carries no `Sec-WebSocket-Accept` and no `Sec-WebSocket-Protocol` header, which the `426` and `400` tests over TinyHttpd assert.",
+   "description": "Nominal coverage of wave decision W2-008. In TinyHttpd 46b973e `WebSocketHandler.handle` throws 400 and 426 before it calls `res.setHeader(\"Sec-WebSocket-Accept\", ...)`, so those cases never carry the header and pass whether or not the upgrade class drops it. The header is already set only when `res.upgrade(\"websocket\")` throws: `413` (body over maxDrainBytes) or `503` + Retry-After (`Upgraded.start`, maxUpgradedConnections). Neither case is asserted, so the AC the rationale's pitfall describes is left untested.",
+   "suggested_fix": "\"... carries no `Sec-WebSocket-Accept` and no `Sec-WebSocket-Protocol` header, which a TinyHttpd test asserts on the `503` of a third upgrade with `maxUpgradedConnections(2)` (FR-WS-009 AC-1) and on a `413` upgrade whose body exceeds `maxDrainBytes`, the two rejections raised after TinyHttpd set `Sec-WebSocket-Accept`.\""
+  },
+  {
+   "id": "A2-03",
+   "severity": "HIGH",
+   "axis": "ii-contradiction",
+   "req_id": "FR-APP-019; FR-SSE-003; FR-SSE-004",
+   "ac": "FR-APP-019 AC-10; FR-SSE-003 AC-7; FR-SSE-004 AC-2, AC-5",
+   "quote": "`cause` is `client` for a disconnect, ... and `error` for a failed write",
+   "description": "FR-SSE-003 AC-7 and FR-SSE-004 AC-2 state that a client disconnect is detected only when a drain write or heartbeat fails (\"a later write or heartbeat of the drain loop fails\"), and FR-SSE-004 AC-5 ends the stream on a drain write that fails with `IOException`. Both events are the same `IOException` from the adapter's output stream, so the core cannot tell `cause=client` from `cause=error` as defined, and a test cannot know which value to expect for a disconnect.",
+   "suggested_fix": "Decide in FR-APP-019 AC-10: \"`cause` is `client` when a drain write or heartbeat fails with an `IOException` (how a disconnect is detected), `app` for `close()`, `overflow`, `shutdown` ..., and `error` when the stream ends on a non-I/O failure (a `RuntimeException` in the drain or serialisation)\"; and state in FR-SSE-004 AC-5 that its injected `IOException` logs `cause=client`."
+  },
+  {
+   "id": "A2-04",
+   "severity": "MEDIUM",
+   "axis": "iii-feasibility",
+   "req_id": "FR-WS-008",
+   "ac": "AC-4",
+   "quote": "a session whose client sends a Ping frame every 300 ms but no text or binary message is handed close `1001` by the scheduler ..., the client receives a Pong for each Ping until then, and `onClose` receives `1001`",
+   "description": "Introduced by the iter-1 fix (A1-05). After the core's close, TinyHttpd 46b973e (`WebSocket.close` / `run`) sets the read timeout to max(1000, min(pingInterval, 5000)) = 5 s, and any inbound frame resets it. A client that keeps pinging every 300 ms and does not answer the close frame keeps the read loop alive with no end. The D-425 abort check fires only when the close task has not returned, and here it returned. So `onClose` never runs and the test hangs unless the client answers the close. The AC does not say the client answers, and no requirement states that the closing handshake is unbounded for such a peer.",
+   "suggested_fix": "\"... the client receives a Pong for each Ping until then, then answers the server's close frame, and `onClose` receives `1001` ...\"; and record in the FR-WS-008 rationale (and websocket.md) that a peer which ignores the close frame and keeps sending frames is ended only by its own close, the shutdown abort or `writeTimeout`, because TinyHttpd's closing read timeout restarts on every frame (deferred D-020 note)."
+  },
+  {
+   "id": "A2-05",
+   "severity": "MEDIUM",
+   "axis": "ii-contradiction",
+   "req_id": "OPS-SSE-001",
+   "ac": "AC-4",
+   "quote": "every Java code block of `docs/api/sse.md` is compiled by the root docs compile test of OPS-HTTP-004 with no skip entry naming `sse.md`",
+   "description": "The current sse.md Java blocks use app-defined names: `ProgressService` (block 3), an undeclared `client` (block 4), and `Event` / `eventStore` (block 5, the replay example that FR-SSE-001 AC-8 cites). Banning every sse.md skip forces these examples to be rewritten as self-contained code. OPS-WS-001 AC-6 instead allows app-defined-type reasons for websocket.md, so the two docs requirements apply different rules to the same compile test.",
+   "suggested_fix": "\"... with no skip entry for `sse.md` whose reason is a later-wave method or an absent type; app-defined type or variable reasons (for example `ProgressService`, `eventStore`) may remain.\""
+  },
+  {
+   "id": "A2-06",
+   "severity": "LOW",
+   "axis": "v-hygiene",
+   "req_id": "IR-HTTP-007; PERF-APP-001; IR-SSE-001; FR-ENGINE-011",
+   "ac": "Rationale",
+   "quote": "IR-HTTP-007: \"the comparison baseline is the wave 6 merge `40b9665`\"; PERF-APP-001: \"which stays below the 1 MiB-per-session queue limit because queues are filled only on demand\"; IR-SSE-001: \"message `<setting> must be in <lo>..<hi>: <value>`\"; FR-ENGINE-011: \"is replaced by a test that asserts the event-stream and upgrade paths no longer throw\"",
+   "description": "The iter-1 fixes changed the ACs, or added correction notes, but left the old rationale sentences. These sentences now contradict their own ACs: the baseline 9ce5cc4, the heap-bound reasoning, the size and duration message forms of IR-SSE-001 AC-6, and raw upgrade still throwing under FR-ENGINE-011 AC-2.",
+   "suggested_fix": "Replace the four sentences in place (append_section_note replace mode), as was done for FR-WS-006 and FR-SSE-004."
+  },
+  {
+   "id": "A2-07",
+   "severity": "LOW",
+   "axis": "ii-wrong",
+   "req_id": "FR-WS-007",
+   "ac": "AC-1; AC-6",
+   "quote": "queued sends up to 1000 bytes of payload",
+   "description": "The text-message byte count is undefined: UTF-8 bytes or `String.length()`. The SSE queue defines it (\"queued bytes count the serialised UTF-8 bytes of each event\"), but the WebSocket queue does not, so a non-ASCII test of the 1008 boundary has no defined expected value.",
+   "suggested_fix": "Add a decision: \"queued bytes count the UTF-8 payload bytes of a text message and the array length of a binary message (ping and close frames are not counted)\"."
+  },
+  {
+   "id": "A2-08",
+   "severity": "LOW",
+   "axis": "v-hygiene",
+   "req_id": "FR-WS-006",
+   "ac": "AC-9",
+   "quote": "the overflow and client-close cases over TinyHttpd with a client that does not answer the server's close frame",
+   "description": "In the client-close case the client sends close first, so \"does not answer the server's close frame\" cannot apply to it. The qualifier belongs only to the overflow case.",
+   "suggested_fix": "\"... the overflow case over TinyHttpd with a client that does not answer the server's close frame, and the client-close case over TinyHttpd.\""
+  },
+  {
+   "id": "A2-09",
+   "severity": "LOW",
+   "axis": "iii-feasibility",
+   "req_id": "FR-WS-002",
+   "ac": "AC-4",
+   "quote": "`403` for a `null` listener ... which a test with a fake TinyHttpd response asserts for each status",
+   "description": "The 403 for a null listener is thrown by `WebSocketHandler.handle` from its `Factory`, not by the response, and FR-WS-002 AC-6 says the upgrade class's factory always returns NaruServe's listener. A fake response cannot produce this case, so the AC names a test seam that does not exist.",
+   "suggested_fix": "State the seam: \"... and for the `403` case a test that builds the upgrade class with a factory returning `null` (package-private constructor)\", or limit the fake-response list to `413` and `503` and map `400`/`426`/`403` through a fake `Request`."
+  },
+  {
+   "id": "A2-10",
+   "severity": "LOW",
+   "axis": "v-hygiene",
+   "req_id": "FR-APP-019",
+   "ac": "Rationale",
+   "quote": "the access-log asserts of `internal/StoppingGateTest.java` and `AppIsolationTest.java`",
+   "description": "The file is `NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AppIsolationTest.java`. The rationale puts the `internal/` prefix only on the first path.",
+   "suggested_fix": "\"`internal/StoppingGateTest.java` and `internal/AppIsolationTest.java`\"."
+  }
+ ],
+ "summary": {
+  "CRITICAL": 0,
+  "HIGH": 3,
+  "MEDIUM": 2,
+  "LOW": 5,
+  "total": 10,
+  "iter1_fixes_verified": [
+   "A1-01",
+   "A1-02 (applied but see A2-01)",
+   "A1-03",
+   "A1-04",
+   "A1-05 (applied but see A2-04)",
+   "A1-06",
+   "A1-07",
+   "A1-08",
+   "A1-09",
+   "A1-10",
+   "A1-11",
+   "A1-12",
+   "A1-13",
+   "A1-14",
+   "A1-15",
+   "A1-16 (AC only; rationale stale, A2-06)",
+   "A1-17",
+   "A1-18 (note added; old sentence stays, A2-06)",
+   "A1-19 (AC; IR-SSE-001 rationale stale, A2-06)",
+   "A1-20",
+   "A1-21",
+   "A1-22",
+   "A1-23",
+   "A1-24",
+   "A1-25",
+   "A1-27",
+   "A1-28",
+   "A1-29",
+   "A1-30"
+  ],
+  "iter1_rejected_accepted": [
+   "A1-26"
+  ],
+  "checked": [
+   "29 wave-7 blocks read in full",
+   "6 successors: re_stated ACs byte-equal to discarded blocks (FR-APP-019 AC1-7, OPS-APP-005 AC1-5,7, FR-ENGINE-011 AC1,5-7, OPS-ENGINE-002 AC1-6, IR-HTTP-007 AC1-3,5,6, OPS-HTTP-007 AC1-7); changed ACs marked",
+   "trace Code paths all exist",
+   "no depends_on/extends to discarded ids",
+   "TinyHttpd 46b973e WebSocket/WebSocketHandler/Upgraded checked for close codes, frame limits, 413/503 order, watchdog 500 ms tick"
+  ]
+ }
+}

@@ -1,0 +1,107 @@
+{
+  "run": "2026-10-19.naruserve.wave-1.v01",
+  "target": "wave-1",
+  "distribution": {
+    "high": 16,
+    "medium": 0,
+    "low": 0,
+    "blocked": 0
+  },
+  "average_score": 87.4,
+  "target_verdict": "GO_WITH_CONDITIONS",
+  "verdict_reason": "All 16 requirements are implementable with existing tooling (Gradle 8.14.3 wrapper, animal-sniffer 2.0.1, Maven Central artifacts all resolvable, TinyHttpd checkout at 46b973e clean) and all score high. No blocker; the conditions below are implementation notes, the heaviest being the custom checks of CON-BUILD-013.",
+  "revision": "iter 1: re-scored OPS-BUILD-003 (F02) and CON-BUILD-013 (F03); recorded CON-BUILD-011 -> CON-BUILD-006 ordering (F05) and the OPS-BUILD-002 chain links (F06).",
+  "critical_blockers": [],
+  "key_conditions": [
+    "KGP JVM-target validation on JDK 17 (CON-BUILD-004 AC-3): set Java source/targetCompatibility 1.8 alongside options.release = 8.",
+    "Nullability library choice (CON-BUILD-011) comes first; CON-BUILD-006 AC-2/AC-4/AC-6 declare it in the same root build.gradle change.",
+    "CON-BUILD-013 needs three custom checks (two bytecode reference scans via jdeps, buildscript ASM or a constant-pool scan, one Gson version check) plus negative fixtures."
+  ],
+  "informational_notes": [
+    "First build downloads Kotlin Gradle Plugin 2.x (not in local cache); network is available, so no score is reduced."
+  ],
+  "ordering_constraints": [
+    {
+      "first": "CON-BUILD-011",
+      "then": "CON-BUILD-006",
+      "kind": "decision-before-declaration, co-implemented",
+      "reason": "CON-BUILD-006 AC-2/AC-4/AC-6 (docs/spec/02.build.srs.md:338) name the library CON-BUILD-011 chooses, while CON-BUILD-011 traces depends_on CON-BUILD-006 for the declaration; no structural cycle in trace links. SDS/work order: make the CON-BUILD-011 library decision first, then implement both together."
+    }
+  ],
+  "dependency_chains": [
+    [
+      "CON-BUILD-007",
+      "CON-BUILD-006",
+      "CON-BUILD-003",
+      "CON-BUILD-002"
+    ],
+    [
+      "CON-BUILD-008",
+      "CON-BUILD-006",
+      "CON-BUILD-003",
+      "CON-BUILD-002"
+    ],
+    [
+      "CON-BUILD-011",
+      "CON-BUILD-006",
+      "CON-BUILD-003",
+      "CON-BUILD-002"
+    ],
+    [
+      "CON-BUILD-013",
+      "CON-BUILD-006",
+      "CON-BUILD-003",
+      "CON-BUILD-002"
+    ],
+    [
+      "CON-BUILD-009",
+      "CON-BUILD-006",
+      "CON-BUILD-003",
+      "CON-BUILD-002"
+    ],
+    [
+      "CON-BUILD-009",
+      "OPS-BUILD-001"
+    ],
+    [
+      "CON-BUILD-010",
+      "OPS-BUILD-001"
+    ],
+    [
+      "CON-BUILD-004",
+      "CON-BUILD-003",
+      "CON-BUILD-002"
+    ],
+    [
+      "OPS-BUILD-002",
+      "CON-BUILD-003",
+      "CON-BUILD-002"
+    ],
+    [
+      "OPS-BUILD-002",
+      "CON-BUILD-004",
+      "CON-BUILD-003",
+      "CON-BUILD-002"
+    ],
+    [
+      "OPS-BUILD-002",
+      "CON-BUILD-007",
+      "CON-BUILD-006",
+      "CON-BUILD-003",
+      "CON-BUILD-002"
+    ],
+    [
+      "CON-BUILD-006",
+      "CON-BUILD-011 (decision first; see ordering_constraints)"
+    ],
+    [
+      "OPS-BUILD-003",
+      "CON-BUILD-012",
+      "CON-BUILD-002"
+    ]
+  ],
+  "dependency_cycles": [],
+  "stability_drift_candidates": [],
+  "stability_drift_note": "All 16 are draft and pre-tagged feasibility:high; the assessment confirms high for all 16, so there is no label drift. All 16 are draft->evolving candidates.",
+  "semantic_dependency_note": "Dependency edges from SRS trace links only; OPS-BUILD-002 -> CON-BUILD-004/CON-BUILD-007 and CON-BUILD-006 -> CON-BUILD-011 are semantic edges taken from AC text and conditions, not trace links. No cycle results."
+}

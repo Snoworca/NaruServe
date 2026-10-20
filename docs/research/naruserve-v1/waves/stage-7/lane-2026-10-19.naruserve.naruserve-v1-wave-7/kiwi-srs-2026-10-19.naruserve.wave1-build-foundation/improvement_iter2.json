@@ -1,0 +1,23 @@
+{
+  "iter": 2,
+  "process": "B-apply",
+  "target": "wave-1",
+  "source": "improvements_iter2.md",
+  "mcp_calls": [
+    {"tool": "replace_acceptance_criteria", "id": "CON-BUILD-005", "findings": ["F-01"], "ok": true, "note": "first pass doubled AC prefix; re-issued"},
+    {"tool": "replace_acceptance_criteria", "id": "CON-BUILD-008", "findings": ["F-02"], "ok": true, "note": "first pass doubled AC prefix; re-issued"},
+    {"tool": "replace_acceptance_criteria", "id": "CON-BUILD-007", "findings": ["F-03"], "ok": true, "note": "first pass doubled AC prefix; re-issued"},
+    {"tool": "replace_acceptance_criteria", "id": "CON-BUILD-004", "findings": ["F-05"], "ok": true, "note": "first pass doubled AC prefix; re-issued"},
+    {"tool": "replace_acceptance_criteria", "id": "OPS-BUILD-002", "findings": ["F-06"], "ok": true, "note": "first pass doubled AC prefix; re-issued"},
+    {"tool": "replace_acceptance_criteria", "id": "CON-BUILD-006", "findings": ["F-04"], "ok": true, "note": "added AC-8 java-test-fixtures [D-005, D-108]"},
+    {"tool": "append_section_note", "id": "CON-BUILD-006", "section": "implementation_notes", "mode": "append", "findings": ["F-04"], "ok": true},
+    {"tool": "append_section_note", "id": "CON-BUILD-004", "section": "implementation_notes", "mode": "replace", "findings": ["F-05"], "ok": true},
+    {"tool": "update_stability", "id": "CON-BUILD-013", "stability": "draft", "dryRun": true, "findings": ["F-07"], "ok": true},
+    {"tool": "update_stability", "id": "CON-BUILD-013", "stability": "draft", "findings": ["F-07"], "ok": true, "warnings": ["redundant"], "note": "heading marker restored"},
+    {"tool": "validate_spec", "ok": true, "errors": 0, "warnings": {"SRS-W023": 16}}
+  ],
+  "findings": {
+    "F-01": "applied", "F-02": "applied", "F-03": "applied", "F-04": "applied (note + AC-8)",
+    "F-05": "applied", "F-06": "applied", "F-07": "applied (marker restored via update_stability)"
+  }
+}

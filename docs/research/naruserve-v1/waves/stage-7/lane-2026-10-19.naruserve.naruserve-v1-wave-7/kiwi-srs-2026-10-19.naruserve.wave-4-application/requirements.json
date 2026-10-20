@@ -1,0 +1,1524 @@
+{
+ "common": {
+  "target": "wave-4",
+  "status": "planned",
+  "verificationMethod": "test",
+  "scope": "APP"
+ },
+ "paths": {
+  "P": "NaruServe-api/src/main/java/com/snoworca/naruserve/",
+  "note": "every Code trace reference below is a path relative to the repo root"
+ },
+ "requirements": [
+  {
+   "expect_id": "IR-APP-002",
+   "type": "interface",
+   "priority": "high",
+   "risk": "medium",
+   "githubIssue": "https://github.com/Snoworca/NaruServe/issues/5",
+   "tags": [
+    "wave-4",
+    "feasibility:high",
+    "middleware"
+   ],
+   "title": "Middleware and Next interfaces and the middleware registration methods",
+   "requirement": "The system shall declare in `com.snoworca.naruserve` the `@FunctionalInterface` `Middleware` with `void handle(Request req, Response res, Next next) throws Exception` and the interface `Next` with `void run()` and `void error(Throwable error)`, and shall add to `RestApp` the methods `use(Middleware)`, `use(String prefix, Middleware)`, one route-middleware overload per route registration method (`get`, `post`, `put`, `patch`, `delete`, `head`, `options` with `(String path, Middleware mw, RouteHandler h)`, `route(Method, String, Middleware, RouteHandler)` and `route(MethodSet, String, Middleware, RouteHandler)`), each returning the app, and to `RouteBuilder` the method `use(Middleware)` returning the builder, with no API that continues a chain from another thread.",
+   "rationale": "Covers D-115, D-116, D-119, D-128 and the D-137 decisions on multi-middleware overloads, `RouteBuilder.use(middleware)` and the return type of the route-middleware overloads. Only new methods are added (I-014). T35.",
+   "acceptanceCriteria": [
+    "Reflection finds `Middleware` annotated `@FunctionalInterface` with the single abstract method `void handle(Request, Response, Next) throws Exception`, and `Next` with exactly the abstract methods `void run()` and `void error(Throwable)`; a Java lambda `(req, res, next) -> next.run()` compiles as a `Middleware`. [D-115; D-116]",
+    "`RestApp` declares `use(Middleware)`, `use(String, Middleware)`, the seven overloads `get|post|put|patch|delete|head|options(String, Middleware, RouteHandler)` and `route(Method, String, Middleware, RouteHandler)` and `route(MethodSet, String, Middleware, RouteHandler)`, each returning `RestApp`, and every wave 3 `RestApp` method keeps its signature. [D-119; I-014; D-137] Decision: the route-middleware overloads return `RestApp` like the plain registration methods.",
+    "`RouteBuilder` declares `use(Middleware)` returning `RouteBuilder`; middleware added through it applies as route middleware to every method the same builder registers after the `use` call, in `use` call order, so `app.route(\"/a\").use(m1).use(m2).get(h)` runs `m1`, `m2`, then `h` for `GET /a`. [D-137; D-120] Decision: `RouteBuilder.use(middleware)` is adopted and is the way to attach several route middleware; no varargs or multi-middleware overload is added to `RestApp`.",
+    "`use(null)`, `use(\"/api\", null)`, `use(null, mw)` and every route-middleware overload with a `null` middleware or handler throw `NullPointerException`, and `use(prefix, mw)` with a prefix that does not start with `/` throws `IllegalArgumentException`. [D-118; D-119]",
+    "No public type of `NaruServe-api` declares a method that resumes a middleware chain from another thread or returns a future, and `Next` has no method other than `run()` and `error(Throwable)`. [D-128]",
+    "A Kotlin test in `NaruServe-api` compiles and runs `app.use { req, res, next -> next.run() }`, `app.use(\"/api\") { req, res, next -> next.run() }` and `app.get(\"/x\", mw) { req, res -> res.send(\"x\") }` without a DSL. [D-115; C-03]"
+   ],
+   "trace": [
+    {
+     "type": "Code",
+     "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site"
+    },
+    {
+     "type": "Code",
+     "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/RouteBuilder.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site"
+    },
+    {
+     "type": "Code",
+     "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/package-info.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site"
+    }
+   ],
+   "links": [
+    [
+     "extends",
+     "IR-HTTP-005",
+     "adds methods to the wave 3 RestApp surface"
+    ],
+    [
+     "extends",
+     "IR-HTTP-006",
+     "adds RouteBuilder.use"
+    ]
+   ]
+  },
+  {
+   "expect_id": "IR-APP-003",
+   "type": "interface",
+   "priority": "high",
+   "risk": "medium",
+   "githubIssue": "https://github.com/Snoworca/NaruServe/issues/5",
+   "tags": [
+    "wave-4",
+    "feasibility:high",
+    "error-handling"
+   ],
+   "title": "onError, ErrorHandler and the framework HTTP error types",
+   "requirement": "The system shall declare the `@FunctionalInterface` `ErrorHandler` with `void handle(Throwable error, Request req, Response res) throws Exception`, add `RestApp onError(ErrorHandler handler)`, and expose the HTTP status of framework-raised errors through the public unchecked exception `com.snoworca.naruserve.HttpException` with `int status()` and `String code()`, plus its subclass `UnsupportedMediaTypeException` for `415`.",
+   "rationale": "Covers D-129 (interface part), D-130 and the D-137 decisions on the callback interface name and `throws Exception`, and the wave decision on `415` (the framework exception type for `415`; the body readers of waves 5 and 6 raise it). Apps may throw `HttpException` themselves, which gives the explicit `422` of D-134.",
+   "acceptanceCriteria": [
+    "Reflection finds `ErrorHandler` annotated `@FunctionalInterface` with the single abstract method `void handle(Throwable, Request, Response) throws Exception`, and `RestApp.onError(ErrorHandler)` returning `RestApp`; `app.onError((error, req, res) -> res.status(500).send(\"x\"))` compiles in Java and `app.onError { error, req, res -> }` in a Kotlin test. [D-129; D-137] Decision: the callback interface is `ErrorHandler` and it may throw `Exception`.",
+    "`HttpException` extends `RuntimeException`, has public constructors `(int status)`, `(int status, String message)` and `(int status, String message, Throwable cause)`, and `status()` returns the given status; a status outside `400..599` throws `IllegalArgumentException`. [D-130; D-134] Decision: framework errors expose their status through `HttpException#status()`.",
+    "`HttpException#code()` returns the `code` value of FR-APP-006 for its status (for example `BAD_REQUEST` for `400`, `UNPROCESSABLE_ENTITY` for `422`). [D-130; D-137]",
+    "`new UnsupportedMediaTypeException()` and `new UnsupportedMediaTypeException(\"m\")` are `HttpException`s with `status()` `415` and `code()` `UNSUPPORTED_MEDIA_TYPE`. [D-134; wave decision: 415]",
+    "`onError(null)` throws `NullPointerException`, and `onError` is a registration method under the `NEW`-state guard of FR-APP-002. [D-114; D-129]"
+   ],
+   "trace": [
+    {
+     "type": "Code",
+     "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site"
+    },
+    {
+     "type": "Code",
+     "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/package-info.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site"
+    }
+   ],
+   "links": [
+    [
+     "extends",
+     "IR-HTTP-005",
+     "adds onError to RestApp"
+    ]
+   ]
+  },
+  {
+   "expect_id": "IR-APP-004",
+   "type": "interface",
+   "priority": "high",
+   "risk": "medium",
+   "githubIssue": "https://github.com/Snoworca/NaruServe/issues/6",
+   "tags": [
+    "wave-4",
+    "feasibility:high",
+    "services"
+   ],
+   "title": "ServiceRegistry, ApplicationContext and the request service accessors",
+   "requirement": "The system shall declare in `com.snoworca.naruserve` the interface `ServiceRegistry` with `<T> void register(Class<T> type, T instance)`, `<T> void registerExternal(Class<T> type, T instance)`, `<T> T get(Class<T> type)`, `<T> T getOrNull(Class<T> type)` and `boolean contains(Class<?> type)`, the unchecked `ServiceNotFoundException`, and the interface `ApplicationContext extends ServiceRegistry` with `void attribute(String key, Object value)`, `<T> T attribute(String key, Class<T> type)`, `void own(AutoCloseable resource)` and `Logger logger()`, and shall add to `Request` the methods `ApplicationContext application()` and `<T> T service(Class<T> type)`.",
+   "rationale": "Covers D-138, D-142 (interface part), D-145, D-146 and the D-151 decision (`registerExternal` registers an object without automatic close). Only new methods are added to `Request` (I-014).",
+   "acceptanceCriteria": [
+    "Reflection finds on `ServiceRegistry` exactly `register(Class, Object)`, `registerExternal(Class, Object)`, `get(Class)`, `getOrNull(Class)` and `contains(Class)` with the generic signatures of the requirement, and on `ApplicationContext` (a subinterface of `ServiceRegistry`) `attribute(String, Object)`, `attribute(String, Class)`, `own(AutoCloseable)` and `logger()`. [D-138; D-151] Decision: an externally owned object is registered with `registerExternal(Class<T>, T)`, which the framework never closes.",
+    "`get(type)` for a type that is not registered throws `ServiceNotFoundException` (a `RuntimeException`) whose message names the type, and `getOrNull(type)` returns `null` and `contains(type)` returns `false` for it. [D-138]",
+    "`Request` declares `ApplicationContext application()` and `<T> T service(Class<T> type)`, and every wave 3 `Request` method keeps its signature. [D-142; I-014]",
+    "`register`, `registerExternal` and `own` with a `null` argument, `get`, `getOrNull` and `contains` with a `null` type, and `attribute` with a `null` key throw `NullPointerException`; `attribute(key, null)` removes the key and `attribute(key, type)` throws `ClassCastException` when the stored value is not an instance of `type`, as the request attribute store of FR-HTTP-012 does. [D-138; D-144]",
+    "The new types carry nullability annotations on public signatures (`getOrNull` and `attribute(String, Class)` `@Nullable`, `get` and `service` `@NonNull`), and a Kotlin test compiles `ctx.register(UserService::class.java, s)` and `req.service(UserService::class.java)` with a non-null result type. [D-138; C-03]"
+   ],
+   "trace": [
+    {
+     "type": "Code",
+     "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site"
+    },
+    {
+     "type": "Code",
+     "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/package-info.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site"
+    }
+   ],
+   "links": [
+    [
+     "extends",
+     "IR-HTTP-001",
+     "adds service and application to Request"
+    ],
+    [
+     "extends",
+     "FR-HTTP-012",
+     "same attribute semantics as the request attribute store"
+    ]
+   ]
+  },
+  {
+   "expect_id": "IR-APP-005",
+   "type": "interface",
+   "priority": "high",
+   "risk": "medium",
+   "githubIssue": "https://github.com/Snoworca/NaruServe/issues/6",
+   "tags": [
+    "wave-4",
+    "feasibility:high",
+    "lifecycle"
+   ],
+   "title": "Lifecycle API: AppState, onStart/onStop, listen, ServerHandle and shutdown",
+   "requirement": "The system shall declare the enum `AppState` with `NEW`, `STARTING`, `RUNNING`, `STOPPING`, `FAILED` and `TERMINATED`, the `@FunctionalInterface` `LifecycleCallback` with `void handle(ApplicationContext ctx) throws Exception`, the interface `ServerHandle` with `int port()`, `String address()` and `AppState state()`, the unchecked `AppStartException`, and add to `RestApp` the methods `onStart(LifecycleCallback)` and `onStop(LifecycleCallback)` returning the app, `ServerHandle listen(int port)`, `void shutdown(long timeout, TimeUnit unit)` and `AppState state()`.",
+   "rationale": "Covers D-152, D-155 (accessor names decided for #6), the D-159 and D-426 exception type decided for #6 and the D-137 callback-name decision for `onStart`/`onStop`. `listen` binds to `127.0.0.1` (localhost only, `docs/api/app.md`); the LAN binding API stays with a later wave.",
+   "acceptanceCriteria": [
+    "`AppState.values()` is exactly `NEW, STARTING, RUNNING, STOPPING, FAILED, TERMINATED` in that order, and `app.state()` of a newly built app is `NEW`. [D-152]",
+    "Reflection finds `LifecycleCallback` annotated `@FunctionalInterface` with the single abstract method `void handle(ApplicationContext) throws Exception`, and `RestApp.onStart(LifecycleCallback)` and `RestApp.onStop(LifecycleCallback)` returning `RestApp`; `onStart(null)` and `onStop(null)` throw `NullPointerException`. [D-137] Decision: `onStart` and `onStop` share the callback interface `LifecycleCallback`, which may throw `Exception`.",
+    "`ServerHandle` declares exactly `int port()`, `String address()` and `AppState state()`; after `listen(0)` succeeded `port()` returns the adapter's `boundPort()`, `address()` returns `127.0.0.1` and `state()` returns the app's current state, so it reads `TERMINATED` after shutdown. [D-155] Decision: the accessors are `port()`, `address()` and `state()`, and `listen` binds to `127.0.0.1`.",
+    "`listen(port)` with a port outside `0..65535` throws `IllegalArgumentException` and leaves the state `NEW`; `shutdown(timeout, unit)` with a negative timeout throws `IllegalArgumentException` and with a `null` unit `NullPointerException`. [D-153; D-161]",
+    "`AppStartException` extends `RuntimeException`; it is the type `listen()` throws for a checked start-failure cause (as its cause) and for a start ended by a pending stop. [D-159; D-426] Decision: the unchecked wrapper type is `AppStartException`.",
+    "A Kotlin test compiles and runs `app.onStart { ctx -> ctx.attribute(\"k\", 1) }`, `val h = app.listen(0)`, `h.port`, `app.state()` and `app.shutdown(1, TimeUnit.SECONDS)`. [D-152; D-155; C-03]"
+   ],
+   "trace": [
+    {
+     "type": "Code",
+     "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site"
+    },
+    {
+     "type": "Code",
+     "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/package-info.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site"
+    }
+   ],
+   "links": [
+    [
+     "extends",
+     "IR-HTTP-005",
+     "adds lifecycle methods to RestApp"
+    ],
+    [
+     "extends",
+     "IR-HTTP-004",
+     "listen and shutdown drive the adapter bind, stop and release"
+    ]
+   ]
+  },
+  {
+   "expect_id": "IR-APP-006",
+   "type": "interface",
+   "priority": "high",
+   "risk": "low",
+   "githubIssue": "https://github.com/Snoworca/NaruServe/issues/7",
+   "tags": [
+    "wave-4",
+    "feasibility:high",
+    "logging"
+   ],
+   "title": "Logger SPI, LogLevel, the console logger and app.logger",
+   "requirement": "The system shall declare in `com.snoworca.naruserve` the interface `Logger` with exactly `trace(String)`, `debug(String)`, `info(String)`, `warn(String)`, `error(String)` and `error(String, Throwable)`, the enum `LogLevel` (`TRACE`, `DEBUG`, `INFO`, `WARN`, `ERROR`), and the public console logger `ConsoleLogger implements Logger, Flushable, AutoCloseable` that is the default app logger of `RestApp.builder()`, and shall add to `RestApp` the methods `Logger logger()` and `RestApp logger(Logger logger)`.",
+   "rationale": "Covers D-168, D-169 (the console logger and its default for the explicit entry point; the `create()` half is wave 5), D-170 and the D-181 decision on the console line format. The wave decision on logger shutdown keeps the six `Logger` methods.",
+   "acceptanceCriteria": [
+    "Reflection finds on `Logger` exactly the six abstract methods `trace(String)`, `debug(String)`, `info(String)`, `warn(String)`, `error(String)` and `error(String, Throwable)`, and `LogLevel.values()` is `TRACE, DEBUG, INFO, WARN, ERROR`. [D-168; wave decision: Logger shutdown]",
+    "`new ConsoleLogger()` writes `info`, `warn` and `error` records and drops `trace` and `debug`; `new ConsoleLogger(LogLevel.TRACE)` writes all five levels. Each record is one line `<ISO-8601 timestamp with offset> <LEVEL> <message>`, `TRACE`/`DEBUG`/`INFO` go to `System.out` and `WARN`/`ERROR` to `System.err`, and `error(m, t)` writes the stack trace of `t` after the line. [D-169; D-181] Decision: the console logger defaults to threshold `INFO` and uses this line format.",
+    "`ConsoleLogger#close()` and `flush()` flush both streams and leave `System.out` and `System.err` open, so a later `System.out.println` still prints. [wave decision: Logger shutdown]",
+    "`app.logger(l)` makes `app.logger()` return `l`, `app.logger()` before any call returns the builder's logger (the console logger by default), and `app.logger(null)` throws `NullPointerException`; `logger(l)` is under the `NEW`-state guard of FR-APP-002 while `logger()` is readable in every state. [D-170; D-114]",
+    "`ConsoleLogger` is in `NaruServe-api` and references no SLF4J or `android.*` type. [D-169; D-178]"
+   ],
+   "trace": [
+    {
+     "type": "Code",
+     "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site"
+    },
+    {
+     "type": "Code",
+     "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/package-info.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site"
+    }
+   ],
+   "links": [
+    [
+     "extends",
+     "IR-HTTP-005",
+     "adds logger methods to RestApp"
+    ]
+   ]
+  },
+  {
+   "expect_id": "IR-APP-007",
+   "type": "interface",
+   "priority": "medium",
+   "risk": "low",
+   "githubIssue": "https://github.com/Snoworca/NaruServe/issues/7",
+   "tags": [
+    "wave-4",
+    "feasibility:high",
+    "access-log"
+   ],
+   "title": "Access log configuration API",
+   "requirement": "The system shall declare the generic `@FunctionalInterface` `Configurer<T>` with `void configure(T target)` and the configuration type `AccessLogOptions` with `enabled(boolean)`, `level(LogLevel)`, `includeRequestId(boolean)`, `includeDuration(boolean)`, `includeBytes(boolean)` and `exclude(String path)`, each returning the options, and add `RestApp accessLog(Configurer<AccessLogOptions> configurer)` with the defaults enabled, level `INFO`, request id, duration and bytes included, and no excluded path.",
+   "rationale": "Covers D-172 and the D-181 decision on the option defaults. `Configurer<T>` avoids `java.util.function` in the public API (Android API 21) and is the shape later `multipart(config -> ...)` and `staticFiles(..., options -> ...)` reuse.",
+   "acceptanceCriteria": [
+    "`app.accessLog(options -> options.enabled(true).level(LogLevel.DEBUG).includeRequestId(false).includeDuration(false).includeBytes(false).exclude(\"/health\"))` compiles and returns the app, and each option method returns the same `AccessLogOptions` instance. [D-172]",
+    "Without any `accessLog` call the access log is enabled at level `INFO` with request id, duration and bytes included and no excluded path; two `accessLog` calls apply both configurers to the same options in call order. [D-181; D-172] Decision: these are the defaults, and `accessLog` calls accumulate.",
+    "`accessLog(null)`, `level(null)` and `exclude(null)` throw `NullPointerException`, and `accessLog` is under the `NEW`-state guard of FR-APP-002. [D-172; D-114]",
+    "`Configurer` is annotated `@FunctionalInterface`, and a Kotlin test compiles `app.accessLog { it.exclude(\"/health\") }`. [D-172; C-03]"
+   ],
+   "trace": [
+    {
+     "type": "Code",
+     "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site"
+    },
+    {
+     "type": "Code",
+     "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/package-info.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site"
+    }
+   ],
+   "links": [
+    [
+     "depends_on",
+     "IR-APP-006",
+     "LogLevel"
+    ]
+   ]
+  },
+  {
+   "expect_id": "FR-APP-001",
+   "type": "functional",
+   "priority": "high",
+   "risk": "medium",
+   "githubIssue": "https://github.com/Snoworca/NaruServe/issues/5",
+   "tags": [
+    "wave-4",
+    "feasibility:high",
+    "app-assembly"
+   ],
+   "title": "RestApp.create() looks up the bootstrap AppFactory through ServiceLoader",
+   "requirement": "The system shall provide the static interface method `RestApp.create()` that looks up the engine-free SPI `com.snoworca.naruserve.spi.AppFactory` (`RestApp create()`) with `ServiceLoader.load(AppFactory.class, RestApp.class.getClassLoader())` through a helper in `com.snoworca.naruserve.internal` and returns the app the single provider creates, throws an exception whose message names `com.snoworca.naruserve:NaruServe` when no provider is present and an exception naming every provider class when more than one is present.",
+   "rationale": "Covers D-110 (declaration and lookup; the bootstrap factory and the end-to-end half are wave 5, `carried-into-wave-5.md`), the D-226 lookup and D-227 missing-module exception delivered by wave 4 (wave decision RestApp.create(), W2-001) and the residual on the class-loader overload (the helper lives in `internal`; `RestApp` gains no overload).",
+   "acceptanceCriteria": [
+    "`RestApp.create()` is a `public static` method of the `RestApp` interface returning `RestApp`, and `RestApp` declares no other `create` overload. [D-110; residual: class-loader overload]",
+    "Through the internal lookup helper and a dedicated class loader that exposes exactly one fake provider at `META-INF/services/com.snoworca.naruserve.spi.AppFactory`, the helper returns the app the provider's `create()` returned. [D-226; wave decision: RestApp.create()] Decision: the lookup uses `ServiceLoader.load(AppFactory.class, loader)` where `RestApp.create()` passes `RestApp.class.getClassLoader()` and never the thread context class loader.",
+    "With a class loader that exposes no provider, the helper throws `IllegalStateException` whose message contains `com.snoworca.naruserve:NaruServe` and mentions `RestApp.builder()`; `RestApp.create()` itself throws that exception in the `NaruServe-api` test run, where no provider is on the class path. [D-227]",
+    "With a class loader that exposes two providers, the helper throws `IllegalStateException` whose message names both provider class names. [wave decision: RestApp.create()]",
+    "The fake providers live in the `NaruServe-api` `test` source set, not in its `testFixtures`, so no other module's tests see a provider, and `NaruServe-api` main has no compile-time reference to TinyHttpd or Gson. [D-226; wave decision: RestApp.create()]"
+   ],
+   "trace": [
+    {
+     "type": "Code",
+     "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site"
+    },
+    {
+     "type": "Code",
+     "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/package-info.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site"
+    },
+    {
+     "type": "Code",
+     "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/package-info.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site"
+    }
+   ],
+   "links": [
+    [
+     "depends_on",
+     "IR-APP-001",
+     "the explicit entry point that a factory provider uses"
+    ],
+    [
+     "extends",
+     "CON-HTTP-001",
+     "engine-free placement of the SPI"
+    ]
+   ]
+  },
+  {
+   "expect_id": "FR-APP-002",
+   "type": "functional",
+   "priority": "high",
+   "risk": "medium",
+   "githubIssue": "https://github.com/Snoworca/NaruServe/issues/5",
+   "tags": [
+    "wave-4",
+    "feasibility:high",
+    "app-assembly"
+   ],
+   "title": "Per-app state isolation and the NEW-state guard",
+   "requirement": "The system shall keep each `RestApp`'s configuration, routes, middleware, service registry, application context and logger in that instance with no mutable static state shared between instances, and shall reject every registration and configuration method of `RestApp` and `RouteBuilder` with `IllegalStateException` when the app state is not `NEW`, through one internal state guard that later waves call for `ws`, `staticFiles`, `multipart` and `jsonCodec`.",
+   "rationale": "Covers D-113, D-114 and the carried rule that the wave 3 after-freeze `IllegalStateException` becomes the `NEW`-state rule of D-114 and D-152.",
+   "acceptanceCriteria": [
+    "Two apps built in one JVM with different routes, middleware, loggers and `onStart` registrations each answer only their own routes, run only their own middleware, log only to their own logger and expose only their own services and attributes. [D-113]",
+    "A reflection scan finds no non-`final` static field and no static field of a mutable collection type in the classes of `com.snoworca.naruserve` and `com.snoworca.naruserve.internal` other than compile-time constants. [D-113]",
+    "In each of the states `STARTING` (called from an `onStart` callback), `RUNNING`, `STOPPING` (called from an `onStop` callback) and `TERMINATED`, each of `get`, `post`, `put`, `patch`, `delete`, `head`, `options`, `route(Method, ...)`, `route(MethodSet, ...)`, their route-middleware overloads, `use(mw)`, `use(prefix, mw)`, `accessLog`, `logger(l)`, `onStart`, `onStop`, `onError`, `routerPolicy` and the `get`/`use` methods of a `RouteBuilder` obtained in `NEW` throw `IllegalStateException` whose message names the method and the current state, and the refused call changes nothing. [D-114; wave-4 carried: NEW-state rule]",
+    "Every guarded method calls one internal guard method, so a test that lists the guarded methods by reflection over `RestApp` (all methods returning `RestApp` except `logger()`) finds each one rejected in `RUNNING`. [D-114]"
+   ],
+   "trace": [
+    {
+     "type": "Code",
+     "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site"
+    }
+   ],
+   "links": [
+    [
+     "extends",
+     "FR-HTTP-008",
+     "replaces the after-freeze rejection with the NEW-state guard"
+    ],
+    [
+     "depends_on",
+     "IR-APP-005",
+     "AppState"
+    ]
+   ]
+  },
+  {
+   "expect_id": "FR-APP-003",
+   "type": "functional",
+   "priority": "high",
+   "risk": "high",
+   "githubIssue": "https://github.com/Snoworca/NaruServe/issues/5",
+   "tags": [
+    "wave-4",
+    "feasibility:high",
+    "middleware"
+   ],
+   "title": "Middleware scope and pipeline order in the dispatcher",
+   "requirement": "The system shall run, for every request for which a `Request` is built, all global middleware in registration order, then all prefix middleware whose prefix covers the path on a segment boundary in registration order, then, for a matched route, its route middleware in registration order and the handler, and, without a matched route, the dispatcher's fallback point, which answers the automatic `404`, `405`, `426`, `501` or `OPTIONS` response until wave 6 adds static mounts in front of it.",
+   "rationale": "Covers D-117, D-118, D-120, D-121 and the wave decision on pre-request rejections (middleware runs for `404`, `405`, `426`, the automatic `OPTIONS` reply and the `501` of a disabled `TRACE` or `CONNECT`, including `CONNECT /`; the static-file and WebSocket-upgrade cases are asserted in waves 6 and 7). T35.",
+   "acceptanceCriteria": [
+    "With global middleware `g1`, `g2`, prefix middleware `p1` on `/api` registered before `g2` and `p2` on `/api`, and `GET /api/users` registered with route middleware `r1` (plus `r2` through `RouteBuilder.use`), a request to `/api/users` records `g1, g2, p1, p2, r1, r2, handler`. [D-120; T35]",
+    "Prefix `/api` runs for `/api` and `/api/users` and not for `/apix` or `/ap`; prefix `/api/` behaves as `/api`, and prefix `/` runs for every path. [D-118; T35] Decision: a trailing `/` of a prefix is ignored and `/` covers every path.",
+    "With `RouterPolicy.builder().caseInsensitive(true)` the `/api` prefix middleware runs for `/API/users`, and with `mergeSlashes(true)` it runs for `//api//users`, so every path that reaches a route under the prefix runs the prefix middleware. [D-118] Decision: the prefix comparison uses the same case and slash normalisation that the router applies under the app's `RouterPolicy`.",
+    "Inside prefix middleware and the handler, `req.path()` still returns the full decoded path (for example `/api/users`, not `/users`). [D-118; D-137] Decision: NaruServe does not strip the mount prefix from `req.path()` and has no `baseUrl`.",
+    "A request that matches no route runs global and matching prefix middleware and then receives the `404` of the fallback point; route middleware of other routes does not run. [D-121; D-117]",
+    "A recording global middleware runs once each for a `405` (method mismatch), a `426` (WebSocket-only route without upgrade), an automatic `OPTIONS /r` `204`, a `501` for `TRACE /x` with `TRACE` disabled and a `501` for `CONNECT /`, before the automatic response is written. [D-117; wave decision: Pre-request rejections]",
+    "A global middleware does not run for the pre-request rejections (unrecognised method token `501`, raw path not starting with `/` `400`, `PathValidator` rejection `400`, `OPTIONS *` `204`) nor for the lifecycle-gate `503`s of FR-APP-009 and FR-APP-013. [wave decision: Pre-request rejections; wave decision: Lifecycle gate]",
+    "For a matched route all middleware and the handler run on the adapter thread that called the dispatcher, one after the other. [D-128]"
+   ],
+   "trace": [
+    {
+     "type": "Code",
+     "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site"
+    },
+    {
+     "type": "Code",
+     "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site"
+    }
+   ],
+   "links": [
+    [
+     "depends_on",
+     "IR-APP-002",
+     "middleware types and registration"
+    ],
+    [
+     "extends",
+     "FR-ROUTE-006",
+     "prefix comparison follows the path-form policies"
+    ],
+    [
+     "extends",
+     "FR-HTTP-001",
+     "tests run through the in-memory adapter"
+    ]
+   ]
+  },
+  {
+   "expect_id": "FR-APP-004",
+   "type": "functional",
+   "priority": "high",
+   "risk": "medium",
+   "githubIssue": "https://github.com/Snoworca/NaruServe/issues/5",
+   "tags": [
+    "wave-4",
+    "feasibility:high",
+    "middleware"
+   ],
+   "title": "next.run() contract",
+   "requirement": "The system shall let each middleware invocation continue the chain at most once through `next.run()` or `next.error(e)`, return from `next.run()` only after every downstream middleware and the handler returned, deliver the response of a middleware that responds without calling `next.run()` with no later middleware or handler run, and throw `IllegalStateException` for a second continuation within one invocation and for a continuation after the response completed or the request ended.",
+   "rationale": "Covers D-122, D-123, D-124, D-125 and D-128 (synchronous execution). The unfinished-response case of D-126 is in the wave 4 successor of FR-HTTP-006. T35, T36.",
+   "acceptanceCriteria": [
+    "A middleware that calls `next.run()` twice gets `IllegalStateException` from the second call, and the downstream middleware and handler ran once. [D-122; T35]",
+    "A middleware that calls `next.run()` after `res.send(\"x\")` completed the response gets `IllegalStateException` and no downstream middleware runs; a `Next` kept and called after the request ended (from the test thread after the in-memory exchange finished) throws `IllegalStateException`. [D-123]",
+    "A middleware that records a marker after `next.run()` returns sees the handler's marker already recorded and `res.isCommitted()` true for a handler that called `res.send(...)`. [D-124]",
+    "A middleware that writes `res.status(401).send(\"no\")` and returns without `next.run()` delivers `401` with body `no`, and the later middleware and the handler record no call. [D-125; T36]",
+    "Calling `next.error(e)` after `next.run()` in the same invocation, or `next.run()` after `next.error(e)`, throws `IllegalStateException`; `next.error(null)` throws `NullPointerException`. [D-122; D-116] Decision: `next.run()` and `next.error(e)` together count as the single continuation of one invocation.",
+    "`next.run()` runs the downstream chain on the calling thread, and no middleware or handler runs after the dispatcher returned to the adapter for a non-streaming response. [D-128]"
+   ],
+   "trace": [
+    {
+     "type": "Code",
+     "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site"
+    }
+   ],
+   "links": [
+    [
+     "depends_on",
+     "FR-APP-003",
+     "pipeline order"
+    ],
+    [
+     "extends",
+     "FR-HTTP-016",
+     "response completion state"
+    ]
+   ]
+  },
+  {
+   "expect_id": "FR-APP-005",
+   "type": "functional",
+   "priority": "high",
+   "risk": "high",
+   "githubIssue": "https://github.com/Snoworca/NaruServe/issues/5",
+   "tags": [
+    "wave-4",
+    "feasibility:high",
+    "error-handling"
+   ],
+   "title": "Unified error path and onError chain",
+   "requirement": "The system shall route an exception thrown by a middleware or handler and an error passed to `next.error(e)` to one error path that calls the registered `onError` handlers in registration order while the previous one left the response `NEW`, writes the standard error response of FR-APP-006 when the response is still `NEW` after them, and aborts instead of writing an error body when the response is already committed but not completed, while `onError` never receives the automatic `404`, `405`, `426`, `501` or `OPTIONS` responses.",
+   "rationale": "Covers D-127, D-129, D-131, the D-137 decision on `onError` chaining, D-136 (asserted in wave 5 once `res.json` exists) and the residual on `onError` scope. Replaces the wave 3 interim failure handling (FR-HTTP-006, superseded in wave 4). T36, T37.",
+   "acceptanceCriteria": [
+    "With one recording `onError`, a `RuntimeException` thrown by a middleware, a checked `IOException` thrown by a handler and `next.error(e)` from a middleware each reach the handler once with the same `Throwable` instance and the request's `Request` and `Response`. [D-127; D-129; T36]",
+    "An `HttpException(400)` thrown by a handler, an `HttpException(413)` and an `UnsupportedMediaTypeException` each reach `onError` with `status()` readable, and the malformed query `?x=%zz` raises an `HttpException` with status `400` that reaches `onError` after the middleware ran and before the handler. [D-129; D-130; wave-4 carried: malformed query]",
+    "With two `onError` handlers, the second runs only when the first returned with the response `NEW`, and receives the same error; when the first responded, the second records no call. [D-137] Decision: `onError` registrations form one chain in registration order that stops at the first handler that starts the response.",
+    "When every `onError` handler returned with the response `NEW`, or none is registered, the response is the standard error response of FR-APP-006 for the error. [D-132; D-137]",
+    "An `onError` handler that throws makes the framework log the thrown exception at `ERROR` through the app logger and answer the standard `500` error response if the response is still `NEW`; no later `onError` handler runs. [D-129; D-133]",
+    "When a handler throws while the response is `STREAMING`, `onError` is still called once, no error body is written, and after the error path the response is `ABORTED` with the in-memory exchange closed abnormally; when the response is `COMPLETED`, it stays `COMPLETED` with the sent bytes unchanged. [D-131; T37]",
+    "A recording `onError` records no call for the automatic `404`, `405`, `426`, `501` and `OPTIONS` responses and for the pre-request and lifecycle-gate rejections. [residual: onError scope; wave decision: Pre-request rejections]",
+    "An error that ends in a standard `500` response is logged once at `ERROR` with its `Throwable` through the app logger; an `HttpException` with a `4xx` status is not logged at `ERROR`. [D-129; D-133] Decision: only `500`s are logged at `ERROR`, with the stack trace kept in the server log."
+   ],
+   "trace": [
+    {
+     "type": "Code",
+     "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site"
+    },
+    {
+     "type": "Code",
+     "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+     "relation": "uses",
+     "notes": "trace_intent=verifies"
+    }
+   ],
+   "links": [
+    [
+     "depends_on",
+     "IR-APP-003",
+     "ErrorHandler and HttpException"
+    ],
+    [
+     "depends_on",
+     "FR-APP-004",
+     "next.error continuation rules"
+    ],
+    [
+     "extends",
+     "FR-HTTP-015",
+     "abort after commit"
+    ]
+   ]
+  },
+  {
+   "expect_id": "FR-APP-006",
+   "type": "functional",
+   "priority": "high",
+   "risk": "medium",
+   "githubIssue": "https://github.com/Snoworca/NaruServe/issues/5",
+   "tags": [
+    "wave-4",
+    "feasibility:high",
+    "error-handling"
+   ],
+   "title": "Standard error JSON body, status mapping and code values",
+   "requirement": "The system shall answer an error with no `onError` response, and the framework's own error statuses `400`, `404`, `405`, `426`, `501` and `503`, with the body `{\"error\":{\"code\":...,\"message\":...,\"requestId\":...}}`, `Content-Type: application/json; charset=UTF-8` and a `Content-Length`, using the status mapping of D-134 and the `code` values decided for #5, with no stack trace or exception class name and with `requestId` equal to the id the access log records for the request.",
+   "rationale": "Covers D-132, D-133, D-134, D-135, the D-137 decisions on `code` values per status and on custom `404`/`405` bodies, the wave decisions on `415`, on `426` and `501` (automatic responses with the standard body) and on overload `503` (a full TinyHttpd queue is a transport-level `503`, D-400, not standard JSON), and the carried line that wave 4 gives the error statuses the standard error body.",
+   "acceptanceCriteria": [
+    "A handler that throws `new RuntimeException(\"secret com.example.Foo\")` is answered `500` with exactly `{\"error\":{\"code\":\"INTERNAL_ERROR\",\"message\":\"Internal Server Error\",\"requestId\":\"<id>\"}}`, `Content-Type: application/json; charset=UTF-8` and a matching `Content-Length`, and the body contains neither the exception message, nor `RuntimeException`, nor `at ` stack frames. [D-132; D-133]",
+    "The `code` values are `400` `BAD_REQUEST`, `404` `NOT_FOUND`, `405` `METHOD_NOT_ALLOWED`, `413` `PAYLOAD_TOO_LARGE`, `415` `UNSUPPORTED_MEDIA_TYPE`, `422` `UNPROCESSABLE_ENTITY`, `426` `UPGRADE_REQUIRED`, `500` `INTERNAL_ERROR`, `501` `NOT_IMPLEMENTED` and `503` `SERVICE_UNAVAILABLE`, and any other `HttpException` status uses `HTTP_<status>`. [D-134; D-137] Decision: these are the `code` values per status.",
+    "The `message` is the status reason phrase (for example `Not Found`), except for an `HttpException` created with a message, whose message is used; a `500` always uses `Internal Server Error`. [D-133; D-137] Decision: only an app-supplied `HttpException` message reaches the client.",
+    "Through the harness, a handler throwing `HttpException(400)`, `HttpException(422)`, `HttpException(413)` and `UnsupportedMediaTypeException` is answered `400`, `422`, `413` and `415` with the standard body, and any other exception `500`. [D-134; wave decision: 415]",
+    "The automatic `404`, `405` (with its `Allow` header), `426` (with `Upgrade: websocket` and `Connection: Upgrade`), `501`, the pre-request `400`s and `501` and the lifecycle-gate `503`s carry the standard body with their `code`; the `204` answers keep no body. [D-134; wave decision: 426 and 501; wave-4 carried: standard error body]",
+    "For a `HEAD` request the standard error response carries the headers and the `Content-Length` of the body it would have had and no body. [D-132; FR-HTTP-017]",
+    "The `requestId` of a standard error body equals the request id field of the access log line of FR-APP-015 for the same request, also for the pre-request rejections. [D-135]",
+    "The body is generated by the core without the app's `JsonCodec`, escapes `\"`, `\\` and control characters of the `message` per RFC 8259, and is identical with any codec. [D-132] Decision: the core writes the standard error JSON itself.",
+    "No API replaces the automatic `404`/`405` bodies in v1; an app answers custom `404` pages with a route of its own. [D-137] Decision: custom `404`/`405` bodies are not configurable in v1."
+   ],
+   "trace": [
+    {
+     "type": "Code",
+     "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site"
+    },
+    {
+     "type": "Code",
+     "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+     "relation": "uses",
+     "notes": "trace_intent=verifies"
+    }
+   ],
+   "links": [
+    [
+     "depends_on",
+     "IR-APP-003",
+     "HttpException status and code"
+    ],
+    [
+     "depends_on",
+     "FR-APP-005",
+     "error path"
+    ],
+    [
+     "extends",
+     "FR-HTTP-017",
+     "bodyless HEAD rule"
+    ]
+   ]
+  },
+  {
+   "expect_id": "FR-APP-007",
+   "type": "functional",
+   "priority": "high",
+   "risk": "medium",
+   "githubIssue": "https://github.com/Snoworca/NaruServe/issues/6",
+   "tags": [
+    "wave-4",
+    "feasibility:high",
+    "services"
+   ],
+   "title": "Service registration, frozen registry and the single application context",
+   "requirement": "The system shall accept `ctx.register` and `ctx.registerExternal` only while the app is `STARTING` and the `onStart` callbacks run, reject a second registration of the same `Class` key without replacing the first instance, freeze the registry into an immutable snapshot before `RUNNING`, run each `onStart` callback exactly once per successful `listen()`, keep exactly one `ApplicationContext` per app, which `onStart`, `onStop` and `req.application()` all receive, and return from `req.service(T)` the instance `req.application().get(T)` returns.",
+   "rationale": "Covers D-139, D-140, D-141, D-142 (HTTP handlers; the WebSocket and SSE cases are wave 7, `carried-into-wave-7.md`), D-143, D-144, D-145 and D-146. T41, T42.",
+   "acceptanceCriteria": [
+    "A `UserService` registered in `onStart` is returned with identity by `req.service(UserService.class)` and `req.application().get(UserService.class)` in an HTTP handler. [D-142; T41]",
+    "`ctx.register` and `ctx.registerExternal` called from `onStop`, and `req.application().register(...)` called from a handler in `RUNNING`, throw `IllegalStateException`, and the registry is unchanged. [D-139; D-141; T42]",
+    "A second `ctx.register(UserService.class, other)` in `onStart` throws `IllegalStateException` naming the key, so `listen()` fails with it, and `getOrNull(UserService.class)` read from a failing-start close hook still returns the first instance. [D-140; T42] Decision: the configuration error is `IllegalStateException`.",
+    "In `RUNNING` sixteen threads calling `req.service(UserService.class)` concurrently all receive the registered instance, and the registry seen in `RUNNING` is an unmodifiable snapshot taken before the state became `RUNNING`. [D-141]",
+    "Two `onStart` callbacks run in registration order, each exactly once for one successful `listen()`, and neither runs again on `shutdown`. [D-143; D-154; T41]",
+    "`ctx.attribute` set in `onStart` is read by handlers in `RUNNING` and by `onStop` in `STOPPING`, and eight threads writing and reading distinct keys concurrently during `RUNNING` lose no write. [D-144]",
+    "`ctx.logger()` in `onStart` and `onStop` returns the same instance as `app.logger()`, also after `app.logger(l)` replaced it before `listen`. [D-145]",
+    "The `ctx` passed to `onStart`, the `ctx` passed to `onStop` and `req.application()` in every request are the same instance. [D-146]"
+   ],
+   "trace": [
+    {
+     "type": "Code",
+     "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site"
+    },
+    {
+     "type": "Code",
+     "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site"
+    }
+   ],
+   "links": [
+    [
+     "depends_on",
+     "IR-APP-004",
+     "registry and context types"
+    ],
+    [
+     "depends_on",
+     "IR-APP-005",
+     "lifecycle states"
+    ]
+   ]
+  },
+  {
+   "expect_id": "FR-APP-008",
+   "type": "functional",
+   "priority": "high",
+   "risk": "medium",
+   "githubIssue": "https://github.com/Snoworca/NaruServe/issues/6",
+   "tags": [
+    "wave-4",
+    "feasibility:high",
+    "services"
+   ],
+   "title": "Owned and registered resources close once in reverse order",
+   "requirement": "The system shall close every object passed to `ctx.own` and every `AutoCloseable` passed to `ctx.register` on shutdown and on start failure, exactly once per object compared by identity, in reverse order of each object's first `own` or `register` call, continuing after a failing `close()`, and shall never close an object registered only through `registerExternal`.",
+   "rationale": "Covers D-147, D-148, D-149, D-150 and the D-151 decision (`registerExternal`). T43, T45.",
+   "acceptanceCriteria": [
+    "`ctx.own(db)`, then `ctx.register(UserService.class, users)` (an `AutoCloseable`) close as `users`, then `db` on shutdown. [D-147; D-149; T45]",
+    "One object registered under an interface key and under its implementation key and also owned is closed exactly once, at the position of its first `own` or `register` call. [D-148; T45]",
+    "When the second of three resources throws from `close()`, the first and third are still closed; on shutdown the failure is logged at `ERROR` through the app logger, and on start failure it is added as a suppressed exception to the exception `listen()` throws. [D-150; D-158] Decision: close failures are logged on shutdown and attached as suppressed on start failure.",
+    "An object registered only with `registerExternal` is not closed on shutdown or start failure, while `get` returns it like any service; an object passed to both `registerExternal` and `own` is closed once. [D-151]",
+    "A non-`AutoCloseable` service is registered and returned normally and nothing is closed for it. [D-149]"
+   ],
+   "trace": [
+    {
+     "type": "Code",
+     "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site"
+    },
+    {
+     "type": "Code",
+     "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/package-info.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site"
+    }
+   ],
+   "links": [
+    [
+     "depends_on",
+     "IR-APP-004",
+     "own, register and registerExternal"
+    ]
+   ]
+  },
+  {
+   "expect_id": "FR-APP-009",
+   "type": "functional",
+   "priority": "high",
+   "risk": "high",
+   "githubIssue": "https://github.com/Snoworca/NaruServe/issues/6",
+   "tags": [
+    "wave-4",
+    "feasibility:high",
+    "lifecycle"
+   ],
+   "title": "listen() startup sequence and the start gate",
+   "requirement": "The system shall move the app from `NEW` to `STARTING` atomically in `listen()`, rejecting a second or concurrent `listen()`, then run the `onStart` callbacks in registration order, freeze and validate the router, registry and options with the wave 3 route-table freeze, bind and start accepting through the adapter in one call, enter `RUNNING` and return a `ServerHandle`, while the dispatcher holds every request that reaches it before `RUNNING` on a start gate, releases it into the pipeline once `RUNNING` is set and answers it `503` with `Connection: close` when the start fails or a pending stop ends it.",
+   "rationale": "Covers D-153, D-154, D-155, D-156, D-428, the wave decisions on `STARTING` and on the lifecycle gate (gate answers skip middleware and `onError` but get an access-log line and the standard error body) and the carried line that `listen()` runs the same route-table freeze as the wave 3 harness.",
+   "acceptanceCriteria": [
+    "Two threads calling `listen(0)` at the same time on a `NEW` app: exactly one proceeds and the other gets `IllegalStateException`; a second `listen` after a successful one throws `IllegalStateException`. [D-153]",
+    "A recording test adapter and callbacks observe the order: state `STARTING`, `onStart` callbacks in registration order, route-table freeze, one `bind` call, state `RUNNING`, `listen` returns. [D-154; wave-4 carried: listen runs the route-table freeze]",
+    "A duplicate route of D-044 makes `listen()` throw the freeze's `RoutingConfigException` after the `onStart` callbacks ran and before any `bind` call. [D-154; D-157]",
+    "`listen()` returns only after `bind` returned, and the returned `ServerHandle` reports the bound port. [D-155]",
+    "With a test adapter whose `bind` dispatches a request from another thread before returning, the request's middleware and handler run only after `app.state()` is `RUNNING` (asserted inside the handler), and the request is answered normally. [D-156; D-428]",
+    "With a test adapter whose `bind` dispatches a request from another thread and then throws `IOException`, the held request is answered `503` with `Connection: close` and the standard error body, and no middleware, handler or `onError` runs for it. [D-428; wave decision: Lifecycle gate; wave decision: STARTING]"
+   ],
+   "trace": [
+    {
+     "type": "Code",
+     "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site"
+    },
+    {
+     "type": "Code",
+     "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site"
+    }
+   ],
+   "links": [
+    [
+     "depends_on",
+     "IR-APP-005",
+     "listen and ServerHandle"
+    ],
+    [
+     "extends",
+     "FR-HTTP-008",
+     "the route-table freeze listen runs"
+    ],
+    [
+     "extends",
+     "IR-HTTP-004",
+     "adapter bind"
+    ],
+    [
+     "extends",
+     "FR-ROUTE-008",
+     "conflict detection at the freeze"
+    ]
+   ]
+  },
+  {
+   "expect_id": "FR-APP-010",
+   "type": "functional",
+   "priority": "high",
+   "risk": "high",
+   "githubIssue": "https://github.com/Snoworca/NaruServe/issues/6",
+   "tags": [
+    "wave-4",
+    "feasibility:high",
+    "lifecycle"
+   ],
+   "title": "Start failure leaves no socket and closes resources",
+   "requirement": "The system shall, when an `onStart` callback, the freeze validation or the adapter bind fails, leave no listening socket open, close the already owned and registered resources in reverse order, never run `onStop`, pass the state through `FAILED` to `TERMINATED`, then close the app logger in the final log-writer step, and throw the cause from `listen()`, an unchecked cause as is and a checked cause wrapped in `AppStartException`.",
+   "rationale": "Covers D-157, D-158, D-159, D-160 and the residual on closing the logger on every path into `TERMINATED` (failed start). T43.",
+   "acceptanceCriteria": [
+    "An `onStart` that throws `IllegalArgumentException` makes `listen()` throw that same instance, and the recording test adapter saw no `bind` call. [D-157; D-159; T43]",
+    "An `onStart` that throws `IOException` makes `listen()` throw `AppStartException` whose cause is that `IOException`. [D-159]",
+    "A bind failure (`bind` throws `IOException`) makes `listen()` throw `AppStartException` with that cause, after which the test adapter's `stop` and `release` were called, so the adapter holds no socket. [D-157; D-159]",
+    "Resources owned and registered before an `onStart` failure are closed in reverse order before `listen()` throws, and a resource's `close()` reads `app.state()` as `FAILED`; after `listen()` threw, `app.state()` is `TERMINATED`. [D-158; D-159; T43]",
+    "No `onStop` callback runs for any start failure. [D-160]",
+    "With a rotating file logger of FR-APP-017 as the app logger, no writer thread of it remains after a failed `listen()`, and a console app logger that is also owned is closed once. [residual: Logger close on every path into TERMINATED; D-148; I-015]"
+   ],
+   "trace": [
+    {
+     "type": "Code",
+     "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site"
+    }
+   ],
+   "links": [
+    [
+     "depends_on",
+     "FR-APP-009",
+     "startup sequence"
+    ],
+    [
+     "depends_on",
+     "FR-APP-008",
+     "resource closing order"
+    ]
+   ]
+  },
+  {
+   "expect_id": "FR-APP-011",
+   "type": "functional",
+   "priority": "high",
+   "risk": "high",
+   "githubIssue": "https://github.com/Snoworca/NaruServe/issues/6",
+   "tags": [
+    "wave-4",
+    "feasibility:high",
+    "lifecycle"
+   ],
+   "title": "Shutdown sequence, deadline and shutdown participants",
+   "requirement": "The system shall move a `RUNNING` app to `STOPPING` atomically on the first `shutdown(timeout, unit)` call, compute one deadline from the timeout and run in order the before-wait participants, the adapter stop up to the deadline, the force-close participants, the `onStop` callbacks once while services are still registered, the after-`onStop` participants, closing owned and registered resources in reverse order, flushing and closing the app logger, the adapter release and the move to `TERMINATED`, through an internal shutdown participant registry with these three fixed phases.",
+   "rationale": "Covers D-161, D-162, D-163, D-401, the wave decision on logger shutdown and the carried line that the adapter may force-close only at the stop deadline. Wave 6 adds temporary-file cleanup (D-255) as an after-`onStop` participant and wave 7 adds WebSocket (D-435) and SSE (D-436) closing as before-wait participants. T45, T46.",
+   "acceptanceCriteria": [
+    "A recording test adapter, participants in all three phases, an `onStop` callback, an owned resource and a `Flushable`/`AutoCloseable` app logger record the order: before-wait participants, `adapter.stop`, force-close participants, `onStop`, after-`onStop` participants, owned resource `close`, logger `flush` and `close`, `adapter.release`, then `app.state()` is `TERMINATED`. [D-162; D-401; T46]",
+    "The timeout passed to `adapter.stop` is the time left until the one deadline computed when `shutdown` began, so a before-wait participant that sleeps 200 ms of a 1 s timeout leaves at most 800 ms for the adapter stop. [D-162]",
+    "The internal participant registry adds participants to a phase in order and runs them in that order; a participant that throws is logged at `ERROR` and the sequence continues. [D-401]",
+    "`onStop` reads every service registered in `onStart` through `ctx.get`, before any owned resource is closed. [D-163; T45]",
+    "Two threads calling `shutdown` on a `RUNNING` app: one runs the sequence; the other and any later call return without running any step again, and `onStop` ran once. [D-161; T46]",
+    "A request in flight when `shutdown` begins completes normally while the adapter stop waits within the deadline. [D-162]",
+    "An app logger that is also owned is skipped at its owned position and closed once at the log-writer step; closing the console logger leaves `System.out` open. [wave decision: Logger shutdown; D-148]",
+    "An `onStop` callback that throws is logged at `ERROR`, the remaining `onStop` callbacks run and the sequence continues to `TERMINATED`. [D-162] Decision: `onStop` failures do not stop shutdown."
+   ],
+   "trace": [
+    {
+     "type": "Code",
+     "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site"
+    },
+    {
+     "type": "Code",
+     "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/package-info.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site"
+    }
+   ],
+   "links": [
+    [
+     "depends_on",
+     "FR-APP-008",
+     "resource closing"
+    ],
+    [
+     "depends_on",
+     "IR-APP-005",
+     "shutdown API"
+    ],
+    [
+     "extends",
+     "IR-HTTP-004",
+     "adapter stop and release"
+    ],
+    [
+     "extends",
+     "IR-HTTP-003",
+     "exchange outlives handle until finish or abort; force-close at the deadline"
+    ]
+   ]
+  },
+  {
+   "expect_id": "FR-APP-012",
+   "type": "functional",
+   "priority": "high",
+   "risk": "high",
+   "githubIssue": "https://github.com/Snoworca/NaruServe/issues/6",
+   "tags": [
+    "wave-4",
+    "feasibility:high",
+    "lifecycle"
+   ],
+   "title": "shutdown in NEW, STARTING, FAILED and TERMINATED, and listen after termination",
+   "requirement": "The system shall move a `NEW` app to `TERMINATED` on `shutdown` without running `onStart` or `onStop`, record a pending stop for a `shutdown` during `STARTING` and wait up to its timeout for `listen()` to end, which then finishes the step in progress, closes any bound socket, never enters `RUNNING`, never runs `onStop`, closes resources in reverse order, passes through `FAILED` to `TERMINATED` and throws `AppStartException`, return normally when that timeout passes first, wait up to the timeout for a `FAILED` app to reach `TERMINATED`, return at once for a `TERMINATED` app, and reject `listen()` on a `TERMINATED` app.",
+   "rationale": "Covers D-164, D-165, D-426, D-427, D-438 and the residual on closing the logger on every path into `TERMINATED` (stop while starting, shutdown before start). T46.",
+   "acceptanceCriteria": [
+    "`shutdown` on a `NEW` app sets `TERMINATED`, runs no `onStart` or `onStop` callback, never calls the adapter's `bind`, and closes a `Flushable`/`AutoCloseable` app logger once. [D-164; residual: Logger close on every path into TERMINATED]",
+    "With `onStart` blocked on a latch inside `listen()` on thread A, `shutdown(5, SECONDS)` on thread B, then the latch released: `onStart` finishes, no `bind` happens, `listen()` throws `AppStartException`, no `onStop` runs, owned resources close in reverse order and observe `FAILED`, `app.state()` ends `TERMINATED`, and `shutdown` returns after `listen()` ended. [D-426; T46] Decision: a start ended by a pending stop throws `AppStartException` with a message saying shutdown was requested while starting.",
+    "When the pending stop is recorded during `bind`, the socket bound by it is released (`stop` and `release` called) and `RUNNING` is never set. [D-426]",
+    "With `onStart` blocked on a latch, `shutdown(100, MILLISECONDS)` returns normally without an exception before the latch is released, `app.state()` is then `STARTING` or `FAILED`, and once the latch is released `listen()` still passes through `FAILED` to `TERMINATED` and throws `AppStartException`. [D-438; T46]",
+    "A `shutdown` call while a failing `listen()` is in `FAILED` (made from a resource `close()` that blocks briefly) returns once the state is `TERMINATED`, within its timeout; `shutdown` on a `TERMINATED` app returns at once with no callback or close run. [D-427]",
+    "`listen(0)` on a `TERMINATED` app throws `IllegalStateException`. [D-165; T46]"
+   ],
+   "trace": [
+    {
+     "type": "Code",
+     "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site"
+    }
+   ],
+   "links": [
+    [
+     "depends_on",
+     "FR-APP-010",
+     "start failure path"
+    ],
+    [
+     "depends_on",
+     "FR-APP-011",
+     "shutdown sequence"
+    ]
+   ]
+  },
+  {
+   "expect_id": "FR-APP-013",
+   "type": "functional",
+   "priority": "high",
+   "risk": "medium",
+   "githubIssue": "https://github.com/Snoworca/NaruServe/issues/6",
+   "tags": [
+    "wave-4",
+    "feasibility:high",
+    "lifecycle"
+   ],
+   "title": "Requests reaching the dispatcher during STOPPING get 503 with Connection: close",
+   "requirement": "The system shall answer every request that reaches the dispatcher after `STOPPING` began with `503`, `Connection: close` and the standard error body, at the lifecycle gate before the pipeline, so no middleware, handler or `onError` runs for it while it still gets one access-log line.",
+   "rationale": "Covers D-166 for the in-memory adapter and the wave decisions on keep-alive at shutdown and on the lifecycle gate. The TinyHttpd keep-alive socket case and T44 are wave 5 (`carried-into-wave-5.md`). D-134 maps a request arriving during `STOPPING` to `503`.",
+   "acceptanceCriteria": [
+    "A request sent through the in-memory adapter from a before-wait shutdown participant (after `STOPPING` began, before the adapter stop) is answered `503` with `Connection: close` and `{\"error\":{\"code\":\"SERVICE_UNAVAILABLE\",...}}`. [D-166; D-134; wave decision: Keep-alive at shutdown]",
+    "For that request a recording global middleware, the route handler and a recording `onError` record no call, and the access log records exactly one line with status `503`. [wave decision: Lifecycle gate; D-173]",
+    "A request that was in flight when `STOPPING` began is not answered `503` and completes with its handler's response. [D-166; D-162]"
+   ],
+   "trace": [
+    {
+     "type": "Code",
+     "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site"
+    },
+    {
+     "type": "Code",
+     "reference": "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/InMemoryHttpAdapter.java",
+     "relation": "uses",
+     "notes": "trace_intent=verifies"
+    }
+   ],
+   "links": [
+    [
+     "depends_on",
+     "FR-APP-011",
+     "STOPPING state and participants"
+    ],
+    [
+     "depends_on",
+     "FR-APP-006",
+     "standard error body"
+    ]
+   ]
+  },
+  {
+   "expect_id": "FR-APP-014",
+   "type": "functional",
+   "priority": "high",
+   "risk": "medium",
+   "githubIssue": "https://github.com/Snoworca/NaruServe/issues/7",
+   "tags": [
+    "wave-4",
+    "feasibility:high",
+    "logging"
+   ],
+   "title": "Logger failures never interrupt requests or the server",
+   "requirement": "The system shall catch every `RuntimeException` thrown by the app logger or a log writer when the framework logs (access log, developer warnings, error logging, lifecycle logging, flush and close), so request processing, `listen()` and `shutdown()` complete as they would with a working logger.",
+   "rationale": "Covers D-171.",
+   "acceptanceCriteria": [
+    "With an app logger whose six methods all throw `RuntimeException`, a request to a route is answered with its handler's response, a handler exception is still answered with the standard `500` body, and an unfinished response is still finished. [D-171]",
+    "With that logger, `listen(0)` returns `RUNNING`, and `shutdown` reaches `TERMINATED` even when the logger's `flush` and `close` also throw. [D-171]",
+    "No exception thrown by the logger reaches the adapter's `ExchangeHandler` caller or the thread that called `listen` or `shutdown`. [D-171]"
+   ],
+   "trace": [
+    {
+     "type": "Code",
+     "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/package-info.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site"
+    }
+   ],
+   "links": [
+    [
+     "depends_on",
+     "IR-APP-006",
+     "Logger"
+    ]
+   ]
+  },
+  {
+   "expect_id": "FR-APP-015",
+   "type": "functional",
+   "priority": "high",
+   "risk": "medium",
+   "githubIssue": "https://github.com/Snoworca/NaruServe/issues/7",
+   "tags": [
+    "wave-4",
+    "feasibility:high",
+    "access-log"
+   ],
+   "title": "One access log line per HTTP request",
+   "requirement": "The system shall write through the app logger at the configured level exactly one access log line per HTTP request that reaches the dispatcher, when the response completes or is aborted, in the format `<method> <path> <status>[ aborted][ <duration>ms][ in=<bytesIn> out=<bytesOut>][ rid=<requestId>]`, where `path` is the raw path without the query, the optional parts follow the options of IR-APP-007, the byte fields count body bytes actually read from and written to the connection, and requests to an excluded path produce no line.",
+   "rationale": "Covers D-173 (HTTP part of T38), D-174, D-177, D-135 and the D-181 decision on the line format, plus the wave decisions that the three pre-request rejections and the two lifecycle-gate `503`s also get exactly one line; only TinyHttpd's transport-level rejections (D-400) have none.",
+   "acceptanceCriteria": [
+    "With the defaults, `GET /users/7` answered `200` with a 5-byte body produces exactly one `info` line matching `GET /users/7 200 \\d+ms in=0 out=5 rid=[0-9a-f]{16}`. [D-173; D-181; T38] Decision: this is the line format, and the request id is 16 lowercase hex characters generated per request.",
+    "With `includeDuration(false)`, `includeBytes(false)` and `includeRequestId(false)` the line is `GET /users/7 200`, and with `level(LogLevel.DEBUG)` it is written through `debug`. [D-172; D-173]",
+    "A response aborted after commit (handler throws while `STREAMING`) produces one line with its committed status followed by ` aborted`; a `404`, a `405`, a handler `500`, each pre-request rejection (`501` unknown token, `400` raw path, `400` validator, `204` `OPTIONS *`) and each lifecycle-gate `503` produce exactly one line. [D-173; wave decision: Pre-request rejections; wave decision: Lifecycle gate]",
+    "For a streaming response the line is written once after the stream copy finished, with `out` equal to the bytes copied; for a `HEAD` response `out` is `0`. [D-173; D-177]",
+    "`in` counts the request body bytes the core read from the adapter's body stream (not the declared `Content-Length`), so a 10-byte body that the handler never reads gives `in=0`. [D-177]",
+    "After `exclude(\"/health\")`, `GET /health` produces no line while `GET /health/x` and `GET /healthz` do; with `enabled(false)` no request produces a line. [D-174; D-172] Decision: `exclude` matches the raw path without the query exactly.",
+    "The `rid` value of the line equals the `requestId` of the standard error body of the same request. [D-135]"
+   ],
+   "trace": [
+    {
+     "type": "Code",
+     "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site"
+    },
+    {
+     "type": "Code",
+     "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site"
+    }
+   ],
+   "links": [
+    [
+     "depends_on",
+     "IR-APP-007",
+     "access log options"
+    ],
+    [
+     "depends_on",
+     "FR-APP-006",
+     "requestId shared with the error body"
+    ]
+   ]
+  },
+  {
+   "expect_id": "SEC-APP-001",
+   "type": "security",
+   "priority": "high",
+   "risk": "medium",
+   "githubIssue": "https://github.com/Snoworca/NaruServe/issues/7",
+   "tags": [
+    "wave-4",
+    "feasibility:high",
+    "access-log"
+   ],
+   "title": "Access log never records secrets and escapes control characters",
+   "requirement": "The system shall keep `Authorization` and `Cookie` header values, passwords, tokens, request and response bodies, multipart content and the query string out of the access log line, and escape CR, LF and every other control character in each logged value.",
+   "rationale": "Covers D-175 and D-176 (T39).",
+   "acceptanceCriteria": [
+    "A request `POST /login?token=abc&password=pw` with `Authorization: Bearer s3cr3t`, `Cookie: sid=c00k1e` and body `password=pw2` whose handler answers `token-xyz` produces a line that contains none of `abc`, `pw`, `s3cr3t`, `c00k1e`, `pw2`, `token-xyz` or `?`. [D-175; T39]",
+    "A raw path containing `%0d%0a` is logged with the raw percent-encoded form, and an unrecognised method token or path containing a CR, LF, TAB, `0x01`, `0x7F` or `0x85` character is logged with `\\r`, `\\n`, `\\t` and `\\u0001`, `\\u007f`, `\\u0085`, and `\\` as `\\\\`, so every access log record is one line. [D-176; T39] Decision: control characters U+0000–U+001F, U+007F and U+0080–U+009F are escaped this way.",
+    "The access log line holds no header value at all. [D-175]"
+   ],
+   "trace": [
+    {
+     "type": "Code",
+     "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site"
+    }
+   ],
+   "links": [
+    [
+     "depends_on",
+     "FR-APP-015",
+     "the access log line"
+    ]
+   ]
+  },
+  {
+   "expect_id": "FR-APP-016",
+   "type": "functional",
+   "priority": "medium",
+   "risk": "medium",
+   "githubIssue": "https://github.com/Snoworca/NaruServe/issues/7",
+   "tags": [
+    "wave-4",
+    "feasibility:high",
+    "logging"
+   ],
+   "title": "Logcat logger through reflection on android.util.Log",
+   "requirement": "The system shall provide in `NaruServe-logcat` the public `com.snoworca.naruserve.logcat.LogcatLogger implements Logger` that maps `trace`, `debug`, `info`, `warn`, `error(String)` and `error(String, Throwable)` to `android.util.Log.v`, `d`, `i`, `w`, `e(String, String)` and `e(String, String, Throwable)` looked up by reflection, with the default tag `NaruServe` and a constructor taking a tag.",
+   "rationale": "Covers D-403 and the D-181 decision on the Logcat tag. The module builds without an Android SDK (wave 1). `RestApp.create()` choosing it on Android is D-402, wave 5.",
+   "acceptanceCriteria": [
+    "A JVM test in `NaruServe-logcat` with a test-scope fake `android.util.Log` that records calls shows `new LogcatLogger()` calling `v`, `d`, `i`, `w`, `e(tag, msg)` and `e(tag, msg, t)` with tag `NaruServe` for the six methods. [D-403] Decision: the default tag is `NaruServe`.",
+    "`new LogcatLogger(\"MyApp\")` uses tag `MyApp`, and `new LogcatLogger(null)` throws `NullPointerException`. [D-403]",
+    "Without `android.util.Log` on the class path, the `LogcatLogger` constructor throws `IllegalStateException` naming `android.util.Log`; an exception thrown by a reflective call is caught and not rethrown. [D-403; D-171]",
+    "The `NaruServe-logcat` main classes reference no `android.*` type in their bytecode; `android.util.Log` appears only as a string for reflection, and the fake class lives only in the test source set. [D-403; D-178]"
+   ],
+   "trace": [
+    {
+     "type": "Code",
+     "reference": "NaruServe-logcat/src/main/java/com/snoworca/naruserve/logcat/package-info.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site"
+    }
+   ],
+   "links": [
+    [
+     "depends_on",
+     "IR-APP-006",
+     "Logger"
+    ],
+    [
+     "extends",
+     "CON-BUILD-008",
+     "builds without an Android SDK"
+    ]
+   ]
+  },
+  {
+   "expect_id": "FR-APP-017",
+   "type": "functional",
+   "priority": "medium",
+   "risk": "medium",
+   "githubIssue": "https://github.com/Snoworca/NaruServe/issues/7",
+   "tags": [
+    "wave-4",
+    "feasibility:high",
+    "logging"
+   ],
+   "title": "Rotating file logger with a bounded queue",
+   "requirement": "The system shall provide in `NaruServe-filelog` the public `com.snoworca.naruserve.filelog.RotatingFileLogger implements Logger, Flushable, AutoCloseable`, built with `RotatingFileLogger.builder()` (`directory`, `maxFileBytes`, `maxFiles`, `queueCapacity`, `level`, `build()`), that hands records to one writer thread through a bounded queue with a drop counter, rotates files, defaults to directory `./logs`, 5 MiB per file and 5 files, and stops its writer thread in `close()`.",
+   "rationale": "Covers D-180, D-179 (module placement), the wave decisions on logger shutdown (implements `AutoCloseable`, no writer thread outlives shutdown, I-015) and on the file logger directory (Android apps pass a writable directory; an unwritable one drops and counts records without stopping the HTTP service).",
+   "acceptanceCriteria": [
+    "`RotatingFileLogger.builder().build()` uses directory `./logs`, `maxFileBytes` `5242880`, `maxFiles` `5`, `queueCapacity` `1024` and level `INFO`; `maxFileBytes`, `maxFiles` or `queueCapacity` below `1` throw `IllegalArgumentException`. [D-180; I-012] Decision: the queue capacity defaults to 1024 records and no value may be unlimited.",
+    "Records are written to `naruserve.log` in the console line format of IR-APP-006; when the next record would exceed `maxFileBytes` the files rotate to `naruserve.log.1` up to `naruserve.log.<maxFiles-1>`, dropping the oldest, so a test with `maxFileBytes(200)` and `maxFiles(3)` ends with at most three files. [D-180] Decision: the file names are `naruserve.log` and `naruserve.log.<n>`.",
+    "With the writer blocked and `queueCapacity(2)`, the third and later records are dropped without blocking the caller and `droppedCount()` counts them. [D-180]",
+    "With a directory that cannot be created, logging calls return normally and `droppedCount()` grows; no exception reaches the caller. [wave decision: File logger directory; D-171]",
+    "`flush()` returns after every record queued before the call is written; `close()` writes the queued records, stops the writer thread so no thread of the logger remains, and later logging calls are dropped and counted. [wave decision: Logger shutdown; I-015]",
+    "The module's main classes reference no SLF4J or `android.*` type and pass the API 21 animal-sniffer check. [D-179; C-02]"
+   ],
+   "trace": [
+    {
+     "type": "Code",
+     "reference": "NaruServe-filelog/src/main/java/com/snoworca/naruserve/filelog/package-info.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site"
+    }
+   ],
+   "links": [
+    [
+     "depends_on",
+     "IR-APP-006",
+     "Logger and LogLevel"
+    ],
+    [
+     "extends",
+     "CON-BUILD-012",
+     "API 21 animal-sniffer check"
+    ]
+   ]
+  },
+  {
+   "expect_id": "FR-APP-018",
+   "type": "functional",
+   "priority": "low",
+   "risk": "low",
+   "githubIssue": "https://github.com/Snoworca/NaruServe/issues/7",
+   "tags": [
+    "wave-4",
+    "feasibility:high",
+    "logging"
+   ],
+   "title": "SLF4J logger adapter",
+   "requirement": "The system shall provide in the JVM-only module `NaruServe-slf4j` the public `com.snoworca.naruserve.slf4j.Slf4jLogger implements Logger` that forwards the six methods to `org.slf4j.Logger` `trace`, `debug`, `info`, `warn`, `error(String)` and `error(String, Throwable)`, with a constructor taking an `org.slf4j.Logger` and a no-argument constructor using `LoggerFactory.getLogger(\"NaruServe\")`.",
+   "rationale": "Covers D-179 (the SLF4J adapter in its optional module, T40).",
+   "acceptanceCriteria": [
+    "A test with a recording `org.slf4j.Logger` shows each of the six methods forwarded once to the matching SLF4J method with the same message and throwable. [D-179]",
+    "`new Slf4jLogger()` delegates to the SLF4J logger named `NaruServe`, and `new Slf4jLogger(null)` throws `NullPointerException`. [D-179]",
+    "`Slf4jLogger` lives only in `NaruServe-slf4j`, and `NaruServe-api` contains no class of the package `com.snoworca.naruserve.slf4j`. [D-179; T40]"
+   ],
+   "trace": [
+    {
+     "type": "Code",
+     "reference": "NaruServe-slf4j/src/main/java/com/snoworca/naruserve/slf4j/package-info.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site"
+    }
+   ],
+   "links": [
+    [
+     "depends_on",
+     "IR-APP-006",
+     "Logger"
+    ]
+   ]
+  },
+  {
+   "expect_id": "CON-APP-001",
+   "type": "constraint",
+   "priority": "high",
+   "risk": "low",
+   "githubIssue": "https://github.com/Snoworca/NaruServe/issues/7",
+   "tags": [
+    "wave-4",
+    "feasibility:high",
+    "logging"
+   ],
+   "title": "NaruServe-api stays free of SLF4J and android.* while logger implementations live in their modules",
+   "requirement": "The system shall keep `NaruServe-api` free of any dependency on or bytecode reference to SLF4J (`org.slf4j`) or `android.*`, with the SLF4J adapter in `NaruServe-slf4j`, the rotating file logger in `NaruServe-filelog` and the Logcat logger in `NaruServe-logcat`.",
+   "rationale": "Covers D-178 and D-179 (T40), in line with the wave 1 module declarations.",
+   "acceptanceCriteria": [
+    "The `NaruServe-api` runtime and compile class paths contain no `org.slf4j` artifact, and a bytecode scan of the `NaruServe-api` main classes finds no reference to an `org.slf4j` or `android` type. [D-178; T40]",
+    "`RotatingFileLogger`, `Slf4jLogger` and `LogcatLogger` are absent from the `NaruServe-api` jar and present in the jars of `NaruServe-filelog`, `NaruServe-slf4j` and `NaruServe-logcat`. [D-179; T40]",
+    "The checks run in `./gradlew build`. [D-178]"
+   ],
+   "trace": [
+    {
+     "type": "Code",
+     "reference": "build.gradle",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site"
+    }
+   ],
+   "links": [
+    [
+     "extends",
+     "CON-BUILD-013",
+     "core isolation build checks"
+    ],
+    [
+     "extends",
+     "CON-BUILD-006",
+     "module dependencies declared in wave 1"
+    ]
+   ]
+  },
+  {
+   "expect_id": "OPS-APP-001",
+   "type": "operational",
+   "priority": "medium",
+   "risk": "low",
+   "githubIssue": "https://github.com/Snoworca/NaruServe/issues/5",
+   "tags": [
+    "wave-4",
+    "feasibility:high",
+    "docs"
+   ],
+   "title": "Wave 4 decisions recorded in docs/api and their markers removed",
+   "requirement": "The system shall record every wave 4 decision in `docs/api` (app, middleware, lifecycle, logging, routing, express-migration and README pages), remove the (미확정) markers that #5, #6 and #7 own, and keep the remaining markers of later waves, with each decision and its reason stated in the wave 4 commit.",
+   "rationale": "Covers D-137, D-151, D-167, D-181, the `docs/api/lifecycle.md` part of D-438, the wave decisions on overload `503`, `STARTING`, JVM lifetime, logger shutdown, the file logger directory and `RestApp.create()` (the `AppFactory` SPI documented beside `RestApp.builder()`), and I-008 and I-013.",
+   "acceptanceCriteria": [
+    "`docs/api/app.md` and `docs/api/README.md` document `RestApp.builder()` with `httpAdapter`, `jsonCodec`, `logger` and `build()`, the `AppFactory` SPI and the missing-module exception of `RestApp.create()`, the route-middleware overload return type, `LifecycleCallback` and `ErrorHandler` with `throws Exception`, `ServerHandle#port()`, `address()` and `state()`, and that server threads keep the JVM alive after `main` returns until `shutdown`, and no longer mark these as (미확정). [D-137; D-167; wave decision: RestApp.create(); wave decision: JVM lifetime]",
+    "`docs/api/middleware.md` and `docs/api/routing.md` document `RouteBuilder.use(middleware)` as the way to attach several route middleware, the warning-and-`end()` finishing of D-126, `ErrorHandler`, `HttpException#status()`/`code()` and `UnsupportedMediaTypeException`, the `onError` chain rule, the `code` table of FR-APP-006, that `404`/`405` bodies are not configurable in v1, the row `STOPPING` → `503` with the standard body, and the full-queue `503` as a TinyHttpd transport-level plain-text answer, and drop the matching markers. [D-137; D-134; wave decision: Overload 503]",
+    "`docs/api/lifecycle.md` documents `registerExternal`, `AppStartException`, the start gate (a request arriving in `STARTING` waits until `RUNNING` and gets `503` with `Connection: close` if the start fails) and that a `shutdown` during `STARTING` whose timeout passes returns normally while the pending stop stays in force, and drops the matching markers. [D-151; D-438; D-159; wave decision: STARTING]",
+    "`docs/api/logging.md` documents the access log line format, the option defaults, the byte fields as body bytes actually read and written, the Logcat tag `NaruServe`, the console logger format, the file logger defaults and file names, that Android apps pass a writable directory such as `context.getFilesDir()`, that shutdown flushes and closes the app logger, and that a logger shared by several apps needs a delegate whose `close()` does nothing, and drops its marker. [D-181; D-177; wave decision: Logger shutdown; wave decision: File logger directory]",
+    "`docs/api/express-migration.md` documents route middleware through `RouteBuilder.use`, that `req.path()` keeps the full path under `app.use(\"/api\", mw)`, the `500` `code` `INTERNAL_ERROR` and the absence of custom `404` bodies, and drops those markers. [D-137]",
+    "A docs test asserts that none of the markers listed above remains and that the markers owned by later waves (for example `ws`, `staticFiles`, `multipart`, cookies, SSE, the LAN binding API) are still present. [D-137; I-008]",
+    "The wave 4 commit message or pull request states each (미확정) decision of this wave with its reason. [I-013]"
+   ],
+   "trace": [
+    {
+     "type": "Code",
+     "reference": "docs/api/app.md",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site"
+    },
+    {
+     "type": "Code",
+     "reference": "docs/api/middleware.md",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site"
+    },
+    {
+     "type": "Code",
+     "reference": "docs/api/lifecycle.md",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site"
+    },
+    {
+     "type": "Code",
+     "reference": "docs/api/logging.md",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site"
+    }
+   ],
+   "links": [
+    [
+     "extends",
+     "OPS-HTTP-001",
+     "the wave 3 docs decisions this builds on"
+    ]
+   ]
+  },
+  {
+   "expect_id": "OPS-APP-002",
+   "type": "operational",
+   "priority": "medium",
+   "risk": "low",
+   "githubIssue": "https://github.com/Snoworca/NaruServe/issues/5",
+   "tags": [
+    "wave-4",
+    "feasibility:high",
+    "docs"
+   ],
+   "title": "docs/api Java examples compile against the wave 4 API",
+   "requirement": "The system shall compile every `docs/api` Java block that uses only wave 1 to 4 API in the root docs-examples compile test, removing from its skip list each entry whose block now compiles, while blocks that need a later-wave type or method stay skipped with a named reason.",
+   "rationale": "Covers I-008 for the wave 4 public API, building on the wave 3 docs compile gate.",
+   "acceptanceCriteria": [
+    "The skip entries whose reason is a wave 4 method or type (`RestApp.builder()`, `listen`, `shutdown`, `use`, `onStart`, `onStop`, `onError`, `Middleware`, `Logger`, `accessLog`, `ApplicationContext`) are removed or re-pointed to the later-wave member the block still needs, and the docs-examples compile test passes in `./gradlew build`. [I-008]",
+    "A block that still needs a later-wave member (for example `res.json`, `RestApp.create()` returning a working app, `app.ws`, `staticFiles`) stays on the skip list with the name of that member, and the test fails for a skip entry whose block compiles. [I-008]"
+   ],
+   "trace": [
+    {
+     "type": "Code",
+     "reference": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site"
+    }
+   ],
+   "links": [
+    [
+     "extends",
+     "OPS-HTTP-002",
+     "the docs compile gate of wave 3"
+    ],
+    [
+     "depends_on",
+     "OPS-APP-001",
+     "docs content"
+    ]
+   ]
+  }
+ ],
+ "supersedes": [
+  {
+   "oldId": "FR-HTTP-002",
+   "title": "Dispatcher pipeline and pre-request checks before route lookup (wave 4)",
+   "githubIssue": "https://github.com/Snoworca/NaruServe/issues/5",
+   "statement": "The system shall provide a dispatcher that takes each exchange from an `HttpAdapter`, checks the asterisk-form `OPTIONS *` first, then rejects a raw path not starting with `/` with `400`, then rejects a raw path refused by the wave 2 path validator with `400`, and only then calls the router lookup and either runs the middleware pipeline and the matched `RouteHandler` with a `Request` and a `Response` or writes the automatic response, where the pre-request rejections are answered before any `Request` is built, so no middleware, handler or `onError` sees them, and the two `400` rejections carry the standard error body.",
+   "reason": "Wave 4 gives the pre-request 400 the standard error JSON body (AC-3 changed) and adds middleware and onError to the pre-request exclusion; other ACs restated unchanged.",
+   "acceptanceCriteria": [
+    "Through the harness, a `GET /users/7` request with `app.get(\"/users/:id\", h)` registered reaches `h` once with a `Request` and a `Response`, and the status, headers and body `h` wrote come back through the in-memory adapter. [D-394; D-397]",
+    "With a recording handler registered through `app.route(Method.any(), \"/\", h)` and `app.route(Method.any(), \"/:x\", h)`, `OPTIONS *` is answered `204` before path validation (so `*` is not rejected with `400`), and a validator rejection happens before the router lookup: `GET /%2e%2e` and `GET /a%2Fb` (both rejected by the `PathValidator`) are answered `400`, no lookup exception escapes, and `h` registered on the matching pattern `/:x` records no call. [wave decision: Order before lookup; D-442; D-052] Decision: the dispatcher checks in this order: `OPTIONS` with raw path `*` gives `204`, any raw path not starting with `/` gives `400`, a `PathValidator` rejection gives `400`, then the router lookup runs.",
+    "A raw path that the wave 2 `PathValidator` rejects is answered `400` with the standard error body of FR-APP-006 (`code` `BAD_REQUEST`, `Content-Type: application/json; charset=UTF-8`) without a router lookup, and the validator sees the raw form with a single decoding: `/%2e%2e` and `/a%2Fb` are answered `400`, while `/%252e%252e` reaches a `/:x` route with `req.param(\"x\")` = `%2e%2e`. [wave-3 carried: path validator before lookup; D-052; wave-4 carried: standard error body; D-134]",
+    "An unrecognised method token is answered `501`, a raw path not starting with `/` `400`, a validator rejection `400` and `OPTIONS *` `204`, each before a `Request` is built, so no middleware, handler or `onError` sees them; a recording global middleware, a recording `onError` and a recording handler registered through `app.route(Method.any(), \"/\", h)` and `app.route(Method.any(), \"/:x\", h)` record that they were never called. [wave-3 residual: pre-request rejections; D-422; wave decision: Pre-request rejections]",
+    "In every handler and middleware call `req.method()` returns a non-null `Method` and `req.path()` a non-null decoded path. [wave-3 residual: pre-request rejections; I-014]",
+    "The HTTP-level assertions of T01, T02, T03, T05 and T06 run as tests through the in-memory adapter and the harness in `./gradlew build`. [D-397]"
+   ],
+   "links": [
+    [
+     "depends_on",
+     "FR-APP-006",
+     "standard error body"
+    ],
+    [
+     "depends_on",
+     "FR-APP-003",
+     "middleware pipeline"
+    ],
+    [
+     "extends",
+     "FR-ROUTE-004",
+     "path validator"
+    ]
+   ],
+   "trace": [
+    {
+     "type": "Code",
+     "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site"
+    }
+   ],
+   "tests_to_repoint": [
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java#sdsAc1_FR_HTTP_002_AC2_AC3_validatorRejectionIs400BeforeAnyMatch (empty-body assertion)"
+   ]
+  },
+  {
+   "oldId": "FR-HTTP-003",
+   "title": "Automatic responses for router lookup results with the standard error body (wave 4)",
+   "githubIssue": "https://github.com/Snoworca/NaruServe/issues/5",
+   "statement": "The system shall, after the global and prefix middleware ran, answer the no-match result with `404`, the method-mismatch result with `405` and an `Allow` header, the automatic-OPTIONS result with `204` and an `Allow` header, the unsupported-method result with `501` and the WebSocket-only result with `426` plus `Upgrade: websocket` and `Connection: Upgrade`, where the `404`, `405`, `426` and `501` answers carry the standard error body and the `204` answers carry no body.",
+   "reason": "Wave 4 replaces the empty Content-Length: 0 bodies of 404/405/426/501 with the standard error JSON body (AC-1, 2, 4, 5, 6, 7 changed) and runs middleware before the automatic responses; AC-3 restated unchanged.",
+   "acceptanceCriteria": [
+    "Through the harness, a request whose path matches no route is answered `404` with the standard error body of FR-APP-006 (`code` `NOT_FOUND`). [D-395; wave-4 carried: standard error body; D-134]",
+    "With only `POST /p` registered, `GET /p` is answered `405` with `Allow` listing `POST, OPTIONS`, and with `GET /r` registered `DELETE /r` is answered `405` with `Allow` including the automatic `HEAD` and `OPTIONS`, both with the standard error body (`code` `METHOD_NOT_ALLOWED`). [D-395; T02; D-134] Decision: the `Allow` value joins the allowed methods (or `Method.any()` for `OPTIONS *`) with `, ` in `MethodSet` iteration (`Method` declaration) order.",
+    "With `GET /r` and `POST /r` registered and no `OPTIONS` route, `OPTIONS /r` is answered `204` with `Allow` = `GET, HEAD, POST, OPTIONS`, no body and no `Content-Length` header. [D-395; T05; wave decision: Automatic response bodies]",
+    "A request with an unsupported method token is answered `501` with the standard error body (`code` `NOT_IMPLEMENTED`). [D-395; wave decision: 426 and 501]",
+    "With a WebSocket-only route registered through the internal hook of FR-HTTP-008 AC-7, a plain `GET` to that path is answered `426` with headers `Upgrade: websocket` and `Connection: Upgrade` and the standard error body (`code` `UPGRADE_REQUIRED`), asserted through the in-memory adapter. [D-395; T06; wave decision: 426 over TinyHttpd; wave decision: 426 and 501] Decision: the upgrade flag passed to the lookup is `Router.isWebSocketUpgrade(token, Connection, Upgrade)` with each header's values joined by `, `.",
+    "With the same WebSocket-only hook route, a `GET` carrying `Upgrade: websocket` and `Connection: Upgrade` (for which the router returns a `MATCHED` result with route kind `WEBSOCKET`) is answered with the same `426`, both headers and the standard error body, and no handshake is attempted, until wave 7 adds `app.ws`. [D-395; T06; FR-ROUTE-015]",
+    "After `app.route(Method.any().except(Method.DELETE), \"/t\", h)`, `DELETE /t` through the in-memory harness is answered `405` with `Allow` = `GET, HEAD, POST, PUT, PATCH, OPTIONS` (the router's `Method` declaration order, FR-ROUTE-010 AC-1) and the standard error body. [D-395; T02]",
+    "A recording global middleware runs once before each of the `404`, `405`, `426`, `501` and automatic `OPTIONS` answers above, and a recording `onError` records no call for them. [wave decision: Pre-request rejections; residual: onError scope; D-117]"
+   ],
+   "links": [
+    [
+     "depends_on",
+     "FR-APP-006",
+     "standard error body"
+    ],
+    [
+     "depends_on",
+     "FR-APP-003",
+     "middleware before automatic responses"
+    ],
+    [
+     "extends",
+     "IR-ROUTE-004",
+     "lookup result contract"
+    ]
+   ],
+   "trace": [
+    {
+     "type": "Code",
+     "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site"
+    }
+   ],
+   "tests_to_repoint": [
+    "DispatcherTest and HttpAcceptanceTest tests citing FR-HTTP-003 AC-1/2/4/5/6/7 that assert Content-Length: 0 or an empty body for 404/405/426/501"
+   ]
+  },
+  {
+   "oldId": "FR-HTTP-005",
+   "title": "Asterisk-form OPTIONS and raw paths not starting with a slash (wave 4)",
+   "githubIssue": "https://github.com/Snoworca/NaruServe/issues/5",
+   "statement": "The system shall answer the asterisk-form request `OPTIONS *` (raw path `*`) with `204` and an `Allow` header listing the methods of `Method.any()`, without route lookup or path validation, and answer any other raw path that does not start with `/` with `400` and the standard error body.",
+   "reason": "Wave 4 gives the 400 for a raw path not starting with / the standard error JSON body (AC-3 changed); AC-1, AC-2, AC-4 restated unchanged.",
+   "acceptanceCriteria": [
+    "Through the in-memory adapter, `OPTIONS *` is answered `204` with `Allow` listing exactly the methods of `Method.any()` in `Method` declaration order and no body, even when no route is registered. [D-442; loop D: V1-006/V2-004]",
+    "`OPTIONS *` reaches neither the router lookup nor the path validator: with a recording handler registered through `app.route(Method.any(), \"/\", h)` and `app.route(Method.any(), \"/:x\", h)`, `OPTIONS *` is still answered `204` with the `Allow` of AC-1 (not the validator's `400` for a raw path `*`), and `h` records no call. [D-442; D-052]",
+    "A raw path `abc` and a raw path `*` with method `GET` are each answered `400` with the standard error body of FR-APP-006 (`code` `BAD_REQUEST`) without route lookup, and the access log records one line for each. [D-442; wave-4 carried: standard error body; wave decision: Pre-request rejections]",
+    "The `OPTIONS *` and non-`/` cases are tested through the in-memory adapter in waves 3 and 4; their TinyHttpd counterparts are not asserted in this requirement. [I-021; wave decision: Adapter halves]"
+   ],
+   "links": [
+    [
+     "depends_on",
+     "FR-APP-006",
+     "standard error body"
+    ],
+    [
+     "depends_on",
+     "FR-APP-015",
+     "access log line"
+    ]
+   ],
+   "trace": [
+    {
+     "type": "Code",
+     "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site"
+    }
+   ],
+   "tests_to_repoint": [
+    "DispatcherTest test citing FR-HTTP-005 AC-3 (Content-Length: 0)"
+   ]
+  },
+  {
+   "oldId": "FR-HTTP-006",
+   "title": "Handler failure and unfinished-response handling through the wave 4 error path",
+   "githubIssue": "https://github.com/Snoworca/NaruServe/issues/5",
+   "statement": "The system shall answer an exception thrown by a handler or middleware through the error path of FR-APP-005, which gives the standard `500` error body while the response is not committed and no `onError` responded, abort the response when the exception is thrown after commit or while streaming, and, when the chain returns with the response not started and no `next.run()`, log a developer warning through the app logger and finish the response with the status and headers set so far and an empty body without waiting for a timeout.",
+   "reason": "Wave 4 replaces the interim failure handling: AC-1/AC-2 now give the standard error JSON body instead of an empty body, AC-4 adds the D-126 developer warning; AC-3 restated unchanged.",
+   "acceptanceCriteria": [
+    "A handler that throws `RuntimeException` before writing anything is answered `500` with the standard error body of FR-APP-006 (`code` `INTERNAL_ERROR`) through the harness when no `onError` is registered. [D-127; D-132; wave-4 carried: interim failure handling replaced]",
+    "A handler that throws a checked `IOException` after setting status `201` and header `X-A: 1` but before commit is answered `500` with the standard error body; the status and headers the handler set are dropped and the exception is not rethrown to the adapter. [D-127; D-132; D-134]",
+    "A handler that throws after commit while the response is `STREAMING` (the only committed-but-incomplete state a handler can reach before wave 5) leaves the response `ABORTED` and the in-memory adapter reports the exchange closed abnormally instead of a `500`; a handler that throws after the response is `COMPLETED` (for example after `res.send(\"x\")`) leaves it `COMPLETED`, because abort is a no-op there, with the sent bytes unchanged and no `500`. [D-097; D-099; D-131; wave decision: abort() after completion]",
+    "A handler that sets `status(202)` and `header(\"X-A\", \"1\")` and returns without a body write or `end()`, and a middleware that returns without responding or calling `next.run()`, each yield the status and headers set so far (`202` with `X-A: 1`, and `200` for the middleware case) with an empty body, the response is `COMPLETED`, and the app logger received one `warn` naming the method and path. [D-126] Decision: the finishing behaviour is a `warn` through the app logger followed by `end()`; with the response `STREAMING` the dispatcher runs the pending stream copy on the same adapter thread and logs no warning."
+   ],
+   "links": [
+    [
+     "depends_on",
+     "FR-APP-005",
+     "error path"
+    ],
+    [
+     "depends_on",
+     "FR-APP-006",
+     "standard error body"
+    ],
+    [
+     "extends",
+     "FR-HTTP-016",
+     "response state machine"
+    ]
+   ],
+   "trace": [
+    {
+     "type": "Code",
+     "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site"
+    }
+   ],
+   "tests_to_repoint": [
+    "DispatcherTest/HttpAcceptanceTest tests citing FR-HTTP-006 AC-1/AC-2 (500 with empty body) and AC-4 (no warning assertion)"
+   ]
+  },
+  {
+   "oldId": "FR-HTTP-010",
+   "title": "Query accessors with form-urlencoded decoding and malformed-query 400 through the error path (wave 4)",
+   "githubIssue": "https://github.com/Snoworca/NaruServe/issues/5",
+   "statement": "The system shall decode the raw query string as UTF-8 `application/x-www-form-urlencoded` text with `+` read as a space, make `req.query(name)` return the first value or `null` and `req.queries(name)` every value in request order or an empty list, and answer a query with malformed percent-encoding or invalid UTF-8 with `400` and the standard error body through the error path, after the middleware ran and before the handler runs.",
+   "reason": "Wave 4 sends the malformed-query 400 through middleware and onError with the standard error JSON body (AC-3 changed); other ACs restated unchanged.",
+   "links": [
+    [
+     "depends_on",
+     "FR-APP-005",
+     "error path"
+    ],
+    [
+     "depends_on",
+     "FR-APP-006",
+     "standard error body"
+    ]
+   ],
+   "trace": [
+    {
+     "type": "Code",
+     "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java",
+     "relation": "implements",
+     "notes": "trace_intent=addition_site"
+    }
+   ],
+   "tests_to_repoint": [
+    "DefaultRequestTest/DispatcherTest tests citing FR-HTTP-010 AC-3 (400 with Content-Length: 0 before the handler)"
+   ],
+   "acceptanceCriteria": [
+    "For `?a=1&a=2&b=3`, `req.query(\"a\")` returns `1`, `req.queries(\"a\")` returns `[1, 2]`, `req.query(\"c\")` returns `null` and `req.queries(\"c\")` returns an empty list. [D-076; T07]",
+    "For `?q=a+b%20c&%ED%95%9C=%EA%B8%80`, `req.query(\"q\")` returns `a b c` and `req.query(\"한\")` returns `글`. [D-077; T07] Decision: a pair without `=` has the empty string as its value, empty names are kept, and names and values decode `+` as space.",
+    "A query `?x=%zz`, a query `?x=%E0%A4` (truncated UTF-8) and a query `?x=%C3%28` (invalid UTF-8) are each answered `400` with the standard error body of FR-APP-006 (`code` `BAD_REQUEST`) and the matched handler is not called. [D-078; T07; wave-4 carried: malformed query reaches middleware and onError] Decision: a malformed `%XX` or bytes that are not valid UTF-8 (decoder `CodingErrorAction.REPORT`) make the query parse raise `HttpException` with status `400`; the dispatcher parses the query after the middleware ran and before the handler, so global and prefix middleware run, a middleware that reads `req.query(...)` receives that exception, and it reaches `onError` through the error path of FR-APP-005."
+   ]
+  }
+ ]
+}
