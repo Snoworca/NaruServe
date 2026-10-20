@@ -46,15 +46,8 @@ public final class ThirdPartyLicenses {
     /** Compile-only components of the graph: on a compileClasspath, on no runtimeClasspath, not the project's own. */
     // @req FR-REL-004
     public static SortedSet<String> provided(List<String> graphLines) {
-        SortedSet<String> shipped = DependencyList.runtime(graphLines);
-        SortedSet<String> provided = new TreeSet<>();
-        for (String line : graphLines) {
-            String[] cells = line.trim().split("\\|");
-            if (cells.length == 3 && cells[1].equals("compileClasspath") && !shipped.contains(cells[2])
-                    && !cells[2].startsWith("com.snoworca.naruserve:")) {
-                provided.add(cells[2]);
-            }
-        }
+        SortedSet<String> provided = DependencyList.configuration(graphLines, "compileClasspath");
+        provided.removeAll(DependencyList.runtime(graphLines));
         return provided;
     }
 

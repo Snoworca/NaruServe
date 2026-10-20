@@ -11,6 +11,7 @@ def kotlinVersion = '2.2.0'
 // @req CON-BUILD-002
 def naruModules = [':NaruServe-api', ':NaruServe-servlet', ':NaruServe-tinyhttpd', ':NaruServe-gson', ':NaruServe',
                    ':NaruServe-kotlin', ':NaruServe-slf4j', ':NaruServe-filelog', ':NaruServe-logcat']
+def naruProjects = naruModules.collect { project(it) }
 
 // @req CON-BUILD-012
 // @req CON-BUILD-013
@@ -166,7 +167,7 @@ def configurePublishing = { Project p ->
     }
 }
 
-configure(naruModules.collect { project(it) }) { p ->
+configure(naruProjects) { p ->
     apply plugin: 'java-library'
     apply plugin: 'org.jetbrains.kotlin.jvm'
     configureCompile(p)
@@ -308,11 +309,12 @@ configure(androidModules.collect { project(it) }) {
 // @req CON-BUILD-009
 // @req CON-BUILD-013
 def dependencyReport = layout.buildDirectory.file('reports/naruserve/dependency-graphs.txt')
+ext.dependencyReport = dependencyReport // read by gradle/release.gradle
 def checkDependencyRules = tasks.register('checkDependencyRules') {
     description = 'Fails on kotlin-stdlib outside NaruServe-kotlin, a Gson other than 2.14.0 or a misplaced TinyHttpd.'
     group = 'verification'
     def reportFile = dependencyReport.get().asFile
-    def modules = naruModules.collect { project(it) }
+    def modules = naruProjects
     doLast {
         def lines = []
         def violations = []
@@ -376,7 +378,7 @@ tasks.named('check') { dependsOn checkDependencyRules }
 def checkNoCoroutines = tasks.register('checkNoCoroutines') {
     description = 'Fails when a published module references kotlinx.coroutines or resolves a kotlinx-coroutines artifact.'
     group = 'verification'
-    def modules = naruModules.collect { project(it) }
+    def modules = naruProjects
     def classesDirs = modules.collectEntries { Project p -> [p.path, p.sourceSets.main.output.classesDirs] }
     dependsOn modules.collect { it.tasks.named('classes') }
     doLast {
@@ -474,7 +476,7 @@ test {
     systemProperty 'naruserve.testKitWorkDir', layout.buildDirectory.dir('testkit-work').get().asFile.absolutePath
     // @req FR-REL-005
     // PublishedPomTest reads the generated POMs; no nested Gradle build runs inside the test.
-    def pomFilesProperty = naruModules.collect { project(it).layout.buildDirectory
+    def pomFilesProperty = naruProjects.collect { it.layout.buildDirectory
             .file('publications/maven/pom-default.xml').get().asFile.absolutePath }.join(',')
     dependsOn naruModules.collect { "${it}:generatePomFileForMavenPublication" }
     systemProperty 'naruserve.pomFiles', pomFilesProperty

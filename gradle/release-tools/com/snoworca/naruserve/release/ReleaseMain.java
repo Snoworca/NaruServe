@@ -59,7 +59,7 @@ public final class ReleaseMain {
             }
             File log = new File(args[5]);
             String report = ScanReport.fromChild(Integer.parseInt(args[1]), findings,
-                    DependencyList.runtime(Arrays.asList(read(new File(args[3])).split("\r?\n"))),
+                    DependencyList.runtime(graphLines(new File(args[3]))),
                     log.isFile() ? read(log) : "", args[6], scanDate);
             write(new File(args[4]), report);
             System.out.println(report.substring(0, report.indexOf("\n## Dependencies")).trim());
@@ -81,7 +81,7 @@ public final class ReleaseMain {
     /** The {@code licenses} command: shipped rows must pass {@link LicenseCheck#verdict}; provided rows are listed. */
     // @req FR-REL-004
     private static void licenses(String[] args) throws IOException {
-        List<String> graph = Arrays.asList(read(new File(args[1])).split("\r?\n"));
+        List<String> graph = graphLines(new File(args[1]));
         File pomDir = new File(args[2]);
         Map<String, License> overrides = new HashMap<>();
         for (String o : Arrays.asList(args).subList(4, args.length)) {
@@ -96,7 +96,7 @@ public final class ReleaseMain {
         SortedMap<String, License> rows = new TreeMap<>();
         List<String> failures = new ArrayList<>();
         for (String dep : shipped) {
-            License override = overrides.get(dep.substring(0, dep.lastIndexOf(':')));
+            License override = overrides.get(DependencyList.module(dep));
             List<License> found = override != null ? Arrays.asList(override)
                     : LicenseCheck.licensesOf(pomChain(pomDir, dep));
             LicenseCheck.Verdict verdict = LicenseCheck.verdict(found);
@@ -262,6 +262,12 @@ public final class ReleaseMain {
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.ROOT);
         format.setTimeZone(TimeZone.getTimeZone("UTC"));
         return format.format(new Date(millis));
+    }
+
+    /** The lines of a dependency graph report. */
+    // @req FR-REL-002
+    public static List<String> graphLines(File report) throws IOException {
+        return Arrays.asList(read(report).split("\r?\n"));
     }
 
     private static String read(File file) throws IOException {

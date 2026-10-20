@@ -109,8 +109,7 @@ public final class ReleaseRecordsDocsTest {
             }
         }
         File graph = new File(System.getProperty("naruserve.depReport"));
-        List<String> graphLines = Arrays.asList(new String(java.nio.file.Files.readAllBytes(graph.toPath()),
-                java.nio.charset.StandardCharsets.UTF_8).split("\r?\n"));
+        List<String> graphLines = com.snoworca.naruserve.release.ReleaseMain.graphLines(graph);
         assertEquals("the recorded dependency list is the current runtime list; rerun releaseScan and copy the report",
                 new java.util.ArrayList<>(com.snoworca.naruserve.release.DependencyList.runtime(graphLines)), recorded);
     }

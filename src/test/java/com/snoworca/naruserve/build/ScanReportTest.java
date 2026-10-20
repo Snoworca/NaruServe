@@ -78,7 +78,7 @@ public class ScanReportTest {
     @Test
     public void fr_REL_002_AC1_realGraphReportGivesTheShippedRuntimeDependencies() throws IOException {
         File report = new File(BuildLayoutTest.property("naruserve.depReport"));
-        List<String> lines = Arrays.asList(BuildLayoutTest.read(report).split("\r?\n"));
+        List<String> lines = ReleaseMain.graphLines(report);
         SortedSet<String> deps = DependencyList.runtime(lines);
         for (String expected : new String[] {"com.google.code.gson:gson:2.14.0",
                 "com.google.errorprone:error_prone_annotations:2.48.0", "org.jetbrains.kotlin:kotlin-stdlib:2.2.0",

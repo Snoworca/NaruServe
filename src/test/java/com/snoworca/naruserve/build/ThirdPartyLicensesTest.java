@@ -5,6 +5,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import com.snoworca.naruserve.release.LicenseCheck.License;
+import com.snoworca.naruserve.release.ReleaseMain;
 import com.snoworca.naruserve.release.ThirdPartyLicenses;
 import java.io.File;
 import java.io.IOException;
@@ -34,7 +35,7 @@ public class ThirdPartyLicensesTest {
     }
 
     static List<String> graph() throws IOException {
-        return Arrays.asList(read(new File(System.getProperty("naruserve.depReport"))).split("\r?\n"));
+        return ReleaseMain.graphLines(new File(System.getProperty("naruserve.depReport")));
     }
 
     private static SortedMap<String, License> shipped() {

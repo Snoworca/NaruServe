@@ -50,7 +50,7 @@ public final class ReleaseGate {
         for (String line : section(report, "## Dependencies")) {
             if (COORDINATE.matcher(line.trim()).matches()) {
                 deps.add(line.trim());
-                shippedModules.add(module(line.trim()));
+                shippedModules.add(DependencyList.module(line.trim()));
             }
         }
         if (deps.isEmpty()) {
@@ -73,7 +73,7 @@ public final class ReleaseGate {
             }
             String dependency = row.get(0);
             boolean coordinate = COORDINATE.matcher(dependency).matches();
-            if (coordinate && !shippedModules.contains(module(dependency))) {
+            if (coordinate && !shippedModules.contains(DependencyList.module(dependency))) {
                 continue; // not shipped: test scope or compileOnly
             }
             double cvss;
@@ -95,11 +95,6 @@ public final class ReleaseGate {
             return new Decision(false, String.join("\n", blocked));
         }
         return new Decision(true, "vulnerability scan cleared: no unexcepted High or Critical finding");
-    }
-
-    /** {@code group:name} of a {@code group:name:version} coordinate; a finding of another version still blocks. */
-    private static String module(String coordinate) {
-        return coordinate.substring(0, coordinate.lastIndexOf(':'));
     }
 
     private static List<String> splitLines(String text) {
