@@ -28,7 +28,11 @@ public interface WebSocketOptions {
      */
     WebSocketOptions sendQueueSize(int bytes);
 
-    /** Ping interval, {@code 1 s..1 h}; default 30 s. A pong must arrive within the same interval. */
+    /**
+     * Ping interval, {@code 1 s..1 h}; default 30 s. A ping goes out when no frame arrived for one interval, and the
+     * connection is closed with {@code 1001} when none arrives in the next one either. Any received frame counts, not
+     * only a pong: there is no separate pong timeout.
+     */
     WebSocketOptions pingInterval(long time, TimeUnit unit);
 
     /**
