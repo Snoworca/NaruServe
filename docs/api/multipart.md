@@ -13,8 +13,13 @@ Express에서 `multer`로 하던 일을 내장 기능으로 합니다. 미들웨
 
 ## 예제
 
+서버 시작 전에 저장 폴더를 준비합니다. 전체 import와 main이 있는 [Java](../../examples/java/src/main/java/example/JavaExample.java)·[Kotlin](../../examples/kotlin/src/main/kotlin/example/KotlinExample.kt) 예제도 있습니다.
+
 ```java
 File uploadDir = new File("./uploads");
+if (!uploadDir.isDirectory() && !uploadDir.mkdirs() && !uploadDir.isDirectory()) {
+    throw new IOException("Cannot create upload directory: " + uploadDir);
+}
 
 app.post("/api/upload", (req, res) -> {
     String title = req.form("title");
@@ -33,6 +38,7 @@ Kotlin:
 
 ```kotlin
 val uploadDir = File("./uploads")
+check(uploadDir.isDirectory || uploadDir.mkdirs()) { "Cannot create upload directory: $uploadDir" }
 
 app.post("/api/upload") { req, res ->
     val file = req.file("file")

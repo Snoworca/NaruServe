@@ -74,8 +74,6 @@ public final class DocsExamplesCompileTest {
     // @req OPS-HTTP-004
     // @req OPS-APP-002
     static final List<Skip> SKIPS = Collections.unmodifiableList(Arrays.asList(
-            skip("README.md", "RestApp app = RestApp.create();",
-                    "app-defined type `User` (the block also calls the app's `userService`)"),
             skip("app.md", "#10", "app-defined type `Database` and `UserService`"),
             skip("express-migration.md", "// Express: let count = 0; 은 안전하지만 Java에서는 아닙니다.",
                     "absent type `AtomicLong` (java.util.concurrent.atomic is not among the fixed imports)"),

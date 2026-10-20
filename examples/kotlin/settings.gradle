@@ -1,0 +1,3 @@
+rootProject.name = 'naruserve-kotlin-example'
+// Source checkout build. Pass -PtinyHttpdDir=/absolute/path/to/TinyHttpd when needed.
+includeBuild('../..')

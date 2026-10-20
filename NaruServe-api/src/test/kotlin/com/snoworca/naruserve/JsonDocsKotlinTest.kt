@@ -85,8 +85,8 @@ class JsonDocsKotlinTest {
     // SDS-AC-5; OPS-JSON-001 AC-4, AC-5 — README.md Kotlin example
     @Test
     fun `SDS-AC-5 OPS-JSON-001 AC-5 README post users example runs`() {
-        assertTrue(doc("README.md").contains(
-            "    val user = req.body(User::class.java) ?: throw HttpException(400, \"JSON body is null\")"))
+        assertTrue(doc("README.md").contains("fun main() {"))
+        assertTrue(doc("README.md").contains("import com.snoworca.naruserve.RestApp"))
         val adapter = app { app ->
             app.post("/users") { req, res ->
                 val user = req.body(User::class.java) ?: throw HttpException(400, "JSON body is null")

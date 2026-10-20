@@ -198,6 +198,27 @@ class KotlinDocsExamplesKotlinTest {
 
     // docs-example: cookie.md#1
     @Test
+    fun `FR-DX-005 OPS-DX-001 cookie convenience Kotlin example writes and clears a scoped cookie`() {
+        app.get("/cookie-helpers") { _, res ->
+            val token = "abc"
+            res.cookie("session", token) { c ->
+                c.httpOnly(true).secure(true).sameSite(SameSite.LAX).path("/")
+            }
+            res.clearCookie("session") { c -> c.path("/") }
+            res.end()
+        }
+        val headers = send("GET", "/cookie-helpers").headers().filter { it.key.equals("Set-Cookie", ignoreCase = true) }.map { it.value }
+        assertEquals(2, headers.size)
+        assertTrue(headers[0].contains("session=abc"))
+        assertTrue(headers[0].contains("HttpOnly"))
+        assertTrue(headers[0].contains("Secure"))
+        assertTrue(headers[0].contains("SameSite=Lax"))
+        assertTrue(headers[1].contains("Max-Age=0"))
+        assertTrue(headers[1].contains("Path=/"))
+    }
+
+    // docs-example: cookie.md#2
+    @Test
     fun `SDS-AC-2 FR-KT-004 AC-2 cookie md property syntax builds the Set-Cookie header`() {
         app.get("/login") { req, res ->
             val token = "abc"
@@ -258,17 +279,21 @@ class KotlinDocsExamplesKotlinTest {
             ws.onText { message -> ws.sendText("Echo: $message") }
         }
 
+        val uploadDir = temp
         app.post("/api/upload") { req, res ->
-            req.file("file")?.save(File("/data/upload.bin"))
-            res.json(mapOf("success" to true))
+            val file = req.file("file")
+            if (file == null || file.size() == 0L) throw HttpException(400, "Missing file")
+            file.save(File(uploadDir, "${UUID.randomUUID()}.bin"))
+            res.status(201).json(mapOf("size" to file.size()))
         }
 
         app.staticFiles("/", File("./www"))
 
         assertEquals("[u1, u2]", send("GET", "/api/users").text())
         assertEquals("[u1, u2]", send("POST", "/api/users").text())
-        // No file part, so nothing is saved.
-        assertEquals("{success=true}", multipart("/api/upload", Triple("note", null, "x")).text())
+        assertEquals(400, multipart("/api/upload", Triple("note", null, "x")).status())
+        assertEquals(201, multipart("/api/upload", Triple("file", "a.txt", "hello")).status())
+        assertEquals("hello", uploadDir.listFiles()!!.single().readText())
         val (response, channel) = ws("/api/ws")
         try {
             channel.clientText("hi")
@@ -327,11 +352,12 @@ class KotlinDocsExamplesKotlinTest {
     @Test
     fun `SDS-AC-2 FR-KT-004 AC-2 kotlin md nullable accessors fall back with elvis and safe calls`() {
         app.get("/page") { req, res ->
-            val page = req.query("page")?.toIntOrNull() ?: 1
+            val page = req.queryInt("page", 1)
             val token = req.cookie("session")?.value
             res.send("$page $token")
         }
-        assertEquals("1 null", send("GET", "/page?page=x").text())
+        assertEquals("1 null", send("GET", "/page").text())
+        assertEquals(400, send("GET", "/page?page=x").status())
         assertEquals("3 abc", send("GET", "/page?page=3", "Cookie", "session=abc").text())
     }
 
@@ -522,7 +548,7 @@ class KotlinDocsExamplesKotlinTest {
     fun `SDS-AC-2 FR-KT-004 AC-2 request md attribute null clears the attribute`() {
         app.get("/a") { req, res ->
             req.attribute("user", "kim")
-            req.attribute("user", null as Any?)                // "user" 속성을 지웁니다
+            req.attribute("user", null)                // "user" 속성을 지웁니다
             val left = req.attributeAs("user", String::class.java)
             res.send("left=$left")
         }
@@ -785,11 +811,11 @@ class KotlinDocsExamplesKotlinTest {
     fun `SDS-AC-2 FR-KT-004 AC-2 this file with a kotlin md block line removed fails naming the block`() {
         val path = "src/test/kotlin/com/snoworca/naruserve/KotlinDocsExamplesKotlinTest.kt"
         val source = File(System.getProperty("user.dir"), path).readText()
-        val line = "            val page = req.query(\"page\")?.toIntOrNull() ?: 1\n"
+        val line = "            val page = req.queryInt(\"page\", 1)\n"
         assertTrue(source.contains(line))
         val kotlinDoc = File(System.getProperty("user.dir"), "../docs/api/kotlin.md").readText()
         val failures = KotlinDocsMarkers.failures(mapOf("kotlin.md" to kotlinDoc), mapOf(path to source.replace(line, "")))
-        assertTrue(failures.toString(), failures.any { it.startsWith("kotlin.md#4") && it.contains("toIntOrNull") })
+        assertTrue(failures.toString(), failures.any { it.startsWith("kotlin.md#4") && it.contains("queryInt") })
         assertFalse(failures.toString(), KotlinDocsMarkers.failures(mapOf("kotlin.md" to kotlinDoc), mapOf(path to source))
             .any { it.startsWith("kotlin.md#4") })
     }

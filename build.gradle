@@ -240,9 +240,11 @@ project(':NaruServe-gson') {
 // The reified Request.body extension tests drive an app over the in-memory adapter (IR-KT-002 AC-1).
 project(':NaruServe-kotlin') {
     // @req IR-KT-002
+    sourceSets.test.kotlin.srcDir rootProject.file('examples/kotlin/src/main/kotlin')
     dependencies {
         testImplementation testFixtures(project(':NaruServe-api'))
         testImplementation project(':NaruServe-gson')
+        testRuntimeOnly project(':NaruServe')
     }
 }
 
@@ -453,6 +455,8 @@ def rootServletTestDependency = project(':NaruServe-servlet')
 // @req FR-REL-003
 // The plain-Java release tools compile and run their unit tests in the default build; release.gradle runs them.
 sourceSets.test.java.srcDir 'gradle/release-tools'
+// @req OPS-DX-001 — compile the actual runnable Java example.
+sourceSets.test.java.srcDir 'examples/java/src/main/java'
 dependencies {
     testImplementation 'junit:junit:4.13.2'
     // docs/api type blocks such as UploadFile carry @Nullable (OPS-MULTIPART-001 AC-1).
@@ -463,6 +467,7 @@ dependencies {
     testImplementation testFixtures(project(':NaruServe-api'))
     // @req OPS-ENGINE-002
     testImplementation project(':NaruServe-gson')
+    testRuntimeOnly project(':NaruServe')
     // @req OPS-SVL-001
     testImplementation rootServletTestDependency
 }

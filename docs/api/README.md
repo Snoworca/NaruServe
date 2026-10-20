@@ -3,7 +3,7 @@
 NaruServe는 Express.js처럼 쓰는 Java 8 / Kotlin용 경량 HTTP 서버 라이브러리입니다.
 Android 5.0(API 21)부터 최신 Android, 그리고 일반 JVM에서 같은 API로 동작합니다.
 
-> **문서 상태:** 이 문서는 v1 구현을 설명합니다. 남은 미결 항목은 [Express에서 오신 분께](express-migration.md)의 Express 호환 세 행(`express.Router()`, `res.redirect(url)`, `cors()`)뿐이며, 세 행 모두 v1 이후 항목이고 표에 대체 코드를 적었습니다.
+> **문서 상태:** v1과 API 사용성 개선 구현을 설명합니다. Express 대응과 실행 규칙은 [Express에서 오신 분께](express-migration.md)를 참고하세요.
 
 Express를 써 봤다면 [Express에서 오신 분께](express-migration.md)부터 읽으세요.
 
@@ -12,54 +12,32 @@ Express를 써 봤다면 [Express에서 오신 분께](express-migration.md)부�
 ### Java
 
 ```java
-RestApp app = RestApp.create();
+import com.snoworca.naruserve.RestApp;
 
-app.get("/hello", (req, res) -> res.send("Hello World"));
-
-app.get("/users/:id", (req, res) -> {
-    res.json(userService.findById(req.param("id")));
-});
-
-app.post("/users", (req, res) -> {
-    User user = req.body(User.class);
-    res.status(201).json(userService.create(user));
-});
-
-app.listen(3000);
+public class HelloServer {
+    public static void main(String[] args) {
+        RestApp app = RestApp.create();
+        app.get("/hello", (req, res) -> res.send("Hello World"));
+        app.listen(3000);
+    }
+}
 ```
 
 ### Kotlin
 
 ```kotlin
-val app = RestApp.create()
+import com.snoworca.naruserve.RestApp
 
-app.get("/hello") { req, res -> res.send("Hello World") }
-
-app.get("/users/:id") { req, res ->
-    res.json(userService.findById(req.param("id")))
+fun main() {
+    val app = RestApp.create()
+    app.get("/hello") { _, res -> res.send("Hello World") }
+    app.listen(3000)
 }
-
-app.post("/users") { req, res ->
-    val user = req.body(User::class.java) ?: throw HttpException(400, "JSON body is null")
-    res.status(201).json(userService.create(user))
-}
-
-app.listen(3000)
 ```
 
-같은 코드를 Express로 쓰면 이렇습니다.
+위 코드는 import와 실행 진입점을 포함한 최소 서버입니다. `curl http://127.0.0.1:3000/hello`로 확인하세요.
 
-```javascript
-const app = express();
-app.use(express.json());
-app.get('/hello', (req, res) => res.send('Hello World'));
-app.get('/users/:id', (req, res) => res.json(userService.findById(req.params.id)));
-app.post('/users', (req, res) => res.status(201).json(userService.create(req.body)));
-app.listen(3000);
-```
-
-Java에서는 `express.json()` 같은 본문 파서를 따로 등록하지 않습니다. `req.body(User.class)`를 호출할 때 읽습니다.
-`req.body(...)`는 본문이 JSON `null`이면 `null`을 돌려주므로 Kotlin에서는 `?:`로 처리합니다([Kotlin](kotlin.md#null-처리)).
+DTO 검증, 스레드 안전한 사용자 서비스, 업로드, 스트림 응답까지 포함한 [Java 예제](../../examples/java)와 [Kotlin 예제](../../examples/kotlin)는 [실행 안내](../../examples/README.md)를 따라 실행할 수 있습니다. 예제는 이 소스 체크아웃을 Gradle composite build로 사용합니다. 별도 소비자 프로젝트의 로컬 Maven 설치는 [루트 README](../../README.md#install)를 참고하세요.
 
 ## 문서 목록
 

@@ -22,7 +22,7 @@ public final class WaveEightKotlinDocsTest {
             "공개 API는 `@NullMarked`(기본 non-null)이고 null일 수 있는 값에만 `@Nullable`이 붙어 있어 Kotlin이 타입을 정확히 압니다.";
     static final String IMPORT_LINE = "import com.snoworca.naruserve.kotlin.body";
     static final String EXTENSION_LINE =
-            "inline fun <reified T : Any> Request.body(): T = body(T::class.java) ?: throw HttpException(400, \"JSON body is null\")";
+            "inline fun <reified T : Any> Request.body(): T = body(object : TypeRef<T>() {}) ?: throw HttpException(400, \"JSON body is null\")";
     static final String STDLIB_PHRASE = "`kotlin-stdlib`은 이 모듈만 사용하며 이 모듈은 `NaruServe-api`에만 의존합니다.";
     static final String COROUTINE_PHRASE = "Coroutine 지원은 v1 이후 항목입니다. 논블로킹 coroutine 어댑터는 별도 설계가 필요하고 "
             + "v1 핸들러는 동기이기 때문입니다.";
@@ -33,7 +33,7 @@ public final class WaveEightKotlinDocsTest {
 
     // SDS-AC-9; IR-KT-002 AC-4
     @Test
-    public void sdsAc9_IR_KT_002_AC_4_the_JsonDocsKotlinTest_body_copy_line_is_unchanged() throws IOException {
+    public void FR_DX_006_AC1_JsonDocsKotlinTest_copy_preserves_type_arguments() throws IOException {
         String copy = ReadmeDocsTest.read("NaruServe-api/src/test/kotlin/com/snoworca/naruserve/JsonDocsKotlinTest.kt");
         assertTrue(Arrays.asList(copy.split("\n")).contains(EXTENSION_LINE));
     }

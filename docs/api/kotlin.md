@@ -13,9 +13,13 @@ app.ws("/api/ws") { req, ws ->
     ws.onText { message -> ws.sendText("Echo: $message") }
 }
 
+val uploadDir = File("./uploads")
+check(uploadDir.isDirectory || uploadDir.mkdirs()) { "Cannot create upload directory: $uploadDir" }
 app.post("/api/upload") { req, res ->
-    req.file("file")?.save(File("/data/upload.bin"))
-    res.json(mapOf("success" to true))
+    val file = req.file("file")
+    if (file == null || file.size() == 0L) throw HttpException(400, "Missing file")
+    file.save(File(uploadDir, "${java.util.UUID.randomUUID()}.bin"))
+    res.status(201).json(mapOf("size" to file.size()))
 }
 
 app.staticFiles("/", File("./www"))
@@ -74,7 +78,7 @@ app.get("/users/:id") { req, res ->
 | `req.body(type)` | `T?` | 본문이 JSON `null`이면 `null` |
 
 ```kotlin
-val page = req.query("page")?.toIntOrNull() ?: 1
+val page = req.queryInt("page", 1)
 val token = req.cookie("session")?.value
 ```
 
@@ -135,6 +139,8 @@ val committed = res.isCommitted
 `req.param("id")`, `req.path()`, `res.status(201)`처럼 Express식 짧은 이름은 일반 메서드라 괄호를 붙여 부릅니다.
 
 ## JSON
+
+실행 가능한 전체 DTO·검증·서비스 코드는 [Kotlin 예제](../../examples/kotlin/src/main/kotlin/example/KotlinExample.kt)를 보세요.
 
 Gson은 Kotlin의 기본 인자와 null 불가 타입을 이해하지 못합니다. [JSON](json.md#kotlin-주의)
 

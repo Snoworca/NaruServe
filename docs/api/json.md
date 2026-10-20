@@ -18,6 +18,8 @@ ws.sendJson(user);                                          // WebSocket
 
 ## DTO 작성
 
+완성된 [Java](../../examples/java/src/main/java/example/JavaExample.java)·[Kotlin](../../examples/kotlin/src/main/kotlin/example/KotlinExample.kt) 예제는 기본 Gson이 생성할 수 있는 DTO를 쓰며 누락·null·공백 이름을 400으로 거부합니다. `Unsafe`를 켜서 생성자를 우회하지 않습니다. Kotlin의 immutable data class를 직접 바인딩하려면 Kotlin 생성자와 nullability를 이해하는 코덱을 명시적으로 제공하세요.
+
 ```java
 public class User {
     @SerializedName("id")   private String id;

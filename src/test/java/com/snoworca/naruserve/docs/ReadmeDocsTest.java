@@ -109,14 +109,9 @@ public final class ReadmeDocsTest {
             assertEquals("one ```" + lang + " block in README.md", 1, readmeBlocks.size());
             assertEquals(lang + " quick start", apiBlocks.get(0), readmeBlocks.get(0));
         }
-        DocsExamplesCompileTest.Skip skip = null;
-        for (DocsExamplesCompileTest.Skip s : DocsExamplesCompileTest.SKIPS) {
-            if (s.file.equals("README.md") && s.block.equals("RestApp app = RestApp.create();")) {
-                skip = s;
-            }
-        }
-        assertNotNull("the docs/api/README.md Java quick start stays on the DocsExamplesCompileTest skip list", skip);
-        assertTrue(skip.reason, skip.reason.startsWith("app-defined type `User`"));
+        assertTrue("quick start contains an executable entrypoint", readme.contains("public static void main(String[] args)"));
+        assertTrue("quick start contains imports", readme.contains("import com.snoworca.naruserve.RestApp;"));
+        assertFalse("quick start no longer needs a placeholder service", readme.contains("userService"));
     }
 
     // SDS-AC-11; OPS-REL-001 AC-3

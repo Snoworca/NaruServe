@@ -214,3 +214,7 @@ public class ServerService extends Service {
     @Override public IBinder onBind(Intent intent) { return null; }
 }
 ```
+
+## 처음 실행하는 앱
+
+전체 import와 main, 종료 훅은 [Java](../../examples/java/src/main/java/example/JavaExample.java)·[Kotlin](../../examples/kotlin/src/main/kotlin/example/KotlinExample.kt) 예제에 있습니다. 사용자 서비스는 요청 스레드가 공유하므로 ConcurrentHashMap과 AtomicInteger로 상태를 관리합니다. 업로드 폴더는 listen 전에 준비하고 실패하면 시작을 중단합니다. 스트림 응답은 NaruServe가 전송을 마친 뒤 닫으므로 호출부에서 try-with-resources 또는 use로 먼저 닫지 않습니다.

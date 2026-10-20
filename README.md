@@ -46,42 +46,42 @@ dependencies {
 ### Java
 
 ```java
-RestApp app = RestApp.create();
+import com.snoworca.naruserve.RestApp;
 
-app.get("/hello", (req, res) -> res.send("Hello World"));
-
-app.get("/users/:id", (req, res) -> {
-    res.json(userService.findById(req.param("id")));
-});
-
-app.post("/users", (req, res) -> {
-    User user = req.body(User.class);
-    res.status(201).json(userService.create(user));
-});
-
-app.listen(3000);
+public class HelloServer {
+    public static void main(String[] args) {
+        RestApp app = RestApp.create();
+        app.get("/hello", (req, res) -> res.send("Hello World"));
+        app.listen(3000);
+    }
+}
 ```
 
 ### Kotlin
 
 ```kotlin
-val app = RestApp.create()
+import com.snoworca.naruserve.RestApp
 
-app.get("/hello") { req, res -> res.send("Hello World") }
-
-app.get("/users/:id") { req, res ->
-    res.json(userService.findById(req.param("id")))
+fun main() {
+    val app = RestApp.create()
+    app.get("/hello") { _, res -> res.send("Hello World") }
+    app.listen(3000)
 }
-
-app.post("/users") { req, res ->
-    val user = req.body(User::class.java) ?: throw HttpException(400, "JSON body is null")
-    res.status(201).json(userService.create(user))
-}
-
-app.listen(3000)
 ```
 
-`User` and `userService` stand for your own application types.
+The complete [Java](examples/java) and [Kotlin](examples/kotlin) applications include DTO validation, a thread-safe user service, uploads and streaming. See [running the examples](examples/README.md).
+
+Run the source examples from this checkout (requires a JDK and the TinyHttpd checkout):
+
+```sh
+./gradlew -p examples/java -PtinyHttpdDir=/absolute/path/to/TinyHttpd run
+# Or Kotlin:
+./gradlew -p examples/kotlin -PtinyHttpdDir=/absolute/path/to/TinyHttpd run
+```
+
+In another terminal: `curl http://127.0.0.1:3000/hello`.
+The examples use a Gradle composite build of this source checkout; they do not require local Maven publication.
+For a separate consumer project using Maven coordinates, follow Install and TinyHttpd above/below: publish NaruServe locally, add `mavenLocal()`, and include the TinyHttpd checkout. Nothing here is published to Maven Central.
 
 ## Scope of v1
 
