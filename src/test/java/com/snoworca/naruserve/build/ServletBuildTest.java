@@ -113,8 +113,35 @@ public class ServletBuildTest {
     @Test
     public void sdsAc11_CON_SVL_001_AC4_spiAndTinyHttpdUntouched() throws Exception {
         String spi = "NaruServe-api/src/main/java/com/snoworca/naruserve/spi";
-        assertEquals("", BuildLayoutTest.git(ROOT, "diff", "--stat", "f7da71d", "--", spi));
+        String drain = spi + "/StreamDrain.java";
+        assertEquals("", BuildLayoutTest.git(ROOT, "diff", "--stat", "f7da71d", "--", spi, ":(exclude)" + drain));
+        String baseline = BuildLayoutTest.git(ROOT, "show", "f7da71d:" + drain);
+        String current = BuildLayoutTest.read(new File(ROOT, drain));
+        assertEquals("only the documented optional cancellation callback may be added",
+                originalDrainDeclarations(baseline), originalDrainDeclarations(current));
+        assertTrue(com.snoworca.naruserve.spi.StreamDrain.class.getMethod("abort").isDefault());
         assertEquals("", BuildLayoutTest.git(ROOT, "status", "--porcelain", "--", spi));
         BuildLayoutTest.assertTinyHttpdClean();
     }
+    /** Removes comments, whitespace and only the explicitly permitted empty default cancellation callback. */
+    private static String originalDrainDeclarations(String source) {
+        return source.replaceAll("(?s)/\\*.*?\\*/|//[^\\r\\n]*", "")
+                .replaceAll("default\\s+void\\s+abort\\s*\\(\\s*\\)\\s*\\{\\s*\\}", "")
+                .replaceAll("\\s+", "");
+    }
+
+    // CON-SVL-001 AC-4; IR-HTTP-007 AC-3: the exception must not permit unrelated or mandatory SPI changes.
+    @Test
+    public void cancellationExceptionRejectsOtherSignatureAndMethodChanges() {
+        String original = "interface StreamDrain { void drain(OutputStream out) throws IOException; }";
+        String permitted = original.replace("}", "default void abort() { } }");
+        assertEquals(originalDrainDeclarations(original), originalDrainDeclarations(permitted));
+        for (String changed : new String[] {permitted.replace("void drain", "int drain"),
+                permitted.replace("default void abort() { }", "void abort();"),
+                permitted.replace("default void abort() { }", "default void abort() { throw new RuntimeException(); }"),
+                permitted.replace("default void abort() { }", "default void abort() { } default void extra() { }")}) {
+            assertFalse(changed, originalDrainDeclarations(original).equals(originalDrainDeclarations(changed)));
+        }
+    }
+
 }
