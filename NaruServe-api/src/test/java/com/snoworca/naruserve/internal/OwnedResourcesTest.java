@@ -104,4 +104,31 @@ public class OwnedResourcesTest {
         assertTrue(owned.closeAll(null).isEmpty());
         assertEquals(Arrays.asList("a"), closed);
     }
+
+    // review P2-001; FR-APP-008 AC-3: an Error from one close() does not stop the closes of the rest; it is rethrown
+    // once every resource was closed, with the Exception failures attached
+    @Test
+    public void review_P2_001_FR_APP_008_AC3_errorFromACloseStillClosesTheRestThenIsRethrown() {
+        OwnedResources owned = new OwnedResources();
+        Exception boom = new Exception("boom");
+        AssertionError fatal = new AssertionError("fatal");
+        owned.add(resource("1"));
+        owned.add(() -> {
+            closed.add("2");
+            throw fatal;
+        });
+        owned.add(() -> {
+            closed.add("3");
+            throw boom;
+        });
+        try {
+            owned.closeAll(null);
+            org.junit.Assert.fail("the Error must be rethrown after every close ran");
+        } catch (AssertionError e) {
+            assertSame(fatal, e);
+            assertEquals(Arrays.asList(boom), Arrays.asList(e.getSuppressed()));
+        }
+        assertEquals(Arrays.asList("3", "2", "1"), closed);
+        assertTrue(owned.closeAll(null).isEmpty());
+    }
 }

@@ -263,6 +263,17 @@ final class DefaultSseClient implements SseClient, StreamDrain {
         return startMillis;
     }
 
+    /** The force close of a stream no drain took over (the adapter skipped it): aborts the response, which runs the listeners. */
+    // @req FR-SSE-005
+    void abortUndrained() {
+        if (!drainStarted() && res != null) {
+            res.abort(null);
+        }
+        if (!drainStarted()) {
+            runListeners();
+        }
+    }
+
     /** Whether a drain call took over the stream; until then an abort runs the listeners itself. */
     synchronized boolean drainStarted() {
         return draining;

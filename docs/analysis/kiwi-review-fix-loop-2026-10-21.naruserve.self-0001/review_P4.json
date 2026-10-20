@@ -1,0 +1,110 @@
+{
+  "findings": [
+    {
+      "id": "P4-001",
+      "axis": "P2",
+      "severity": "MEDIUM",
+      "title": "SSE stream whose drain never starts keeps its close listeners and response unfinished after shutdown (Servlet adapter skip-drain path; SseRegistry.terminate does not finish it)",
+      "location": {
+        "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/SseRegistry.java",
+        "line_range": "88-104"
+      },
+      "description": "SseRegistry.terminate() only calls endBy(\"shutdown\") and clearQueue() and says 'Listeners stay with the drain or the abort'. That holds for TinyHttpd, where a skipped drain is always preceded by the core's own DefaultResponse.abort (which runs listeners when !drainStarted). It does not hold for the Servlet adapter: ServletExchange.afterHandler (NaruServe-servlet/.../ServletExchange.java:296-330) skips submitting the drain when the exchange is already aborted or when pool.submit throws RejectedExecutionException, and then calls only ServletExchange.abort() (adapter-level, sets a flag and completes the AsyncContext) plus pool.finish(). The core is never told. Trigger: app.shutdown() while an SSE request is still inside its handler at the stop deadline; ServletAdapter.stop() runs p.shutdownNow(), the handler then returns, afterHandler gets RejectedExecutionException. Result: DefaultSseClient.runListeners() never runs (user onClose cleanup such as unsubscribe never fires, contradicting docs/api/sse.md 'app.shutdown() closes open SSE streams and runs onClose'), DefaultResponse stays STREAMING (no onDone, no access-log line), and the client stays in SseRegistry.open until terminate() clears it without running listeners. The same happens if the container's AsyncListener.onError/onTimeout aborts the exchange before the handler returns.",
+      "suggested_fix": "In SseRegistry.terminate(), for every client left that is !drainStarted(), call c.endBy(\"shutdown\") then c.runListeners() (and have DefaultResponse finish the stream, e.g. res.sseEnded(null)/abort). Additionally make ServletExchange.afterHandler run d.drain(out) inline on the request thread (it fails at once on the aborted stream) instead of silently returning, so the core always finalizes the stream.",
+      "is_behavioral": true,
+      "tags": ["bug"]
+    }
+  ],
+  "coverage_rows": [
+    {
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultSseClient.java",
+      "hunks_total": 1,
+      "anchors": ["queue.add(NOTICE);"],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultSseOptions.java",
+      "hunks_total": 1,
+      "anchors": ["heartbeatMillis = DefaultWebSocketOptions.millis(\"heartbeatInterval\", time, unit, 1);"],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultWebSocketOptions.java",
+      "hunks_total": 1,
+      "anchors": ["idleTimeoutMillis = millis(\"idleTimeout\", time, unit, 24);"],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultWebSocketSession.java",
+      "hunks_total": 1,
+      "anchors": ["sender.last(this, () -> {"],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/OriginCheck.java",
+      "hunks_total": 1,
+      "anchors": ["long digits = FileResponder.digits(port); // at most five digits, so it fits an int"],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/SseRegistry.java",
+      "hunks_total": 1,
+      "anchors": ["left = new ArrayList<>(open);"],
+      "findings": ["P4-001"]
+    },
+    {
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/SseWire.java",
+      "hunks_total": 1,
+      "anchors": ["throw new IllegalStateException(\"SseEvent.wire is unreachable\", x);"],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/WebSocketIdleScheduler.java",
+      "hunks_total": 1,
+      "anchors": ["w.next = exec.schedule(() -> abortUnlessClosed(session), ABORT_AFTER_MILLIS, TimeUnit.MILLISECONDS);"],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/WebSocketRegistry.java",
+      "hunks_total": 1,
+      "anchors": ["TimeUnit.NANOSECONDS.timedWait(this, left); // remove and the onOpen state read notify"],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/WebSocketRoute.java",
+      "hunks_total": 1,
+      "anchors": ["throw new IllegalStateException(\"a WebSocket route is not an HTTP handler\");"],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/WebSocketSender.java",
+      "hunks_total": 1,
+      "anchors": ["pool.allowCoreThreadTimeOut(true);"],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/WebSocketUpgrade.java",
+      "hunks_total": 1,
+      "anchors": ["session.onClose(1006, \"\");"],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/WebSocketChannel.java",
+      "hunks_total": 1,
+      "anchors": ["void abort();"],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/WebSocketEndpoint.java",
+      "hunks_total": 1,
+      "anchors": ["void onBinary(byte[] data);"],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/WebSocketSettings.java",
+      "hunks_total": 1,
+      "anchors": ["this.pingIntervalMillis = pingIntervalMillis;"],
+      "findings": []
+    }
+  ]
+}

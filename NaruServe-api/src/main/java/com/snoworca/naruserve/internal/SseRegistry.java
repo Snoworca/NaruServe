@@ -87,7 +87,7 @@ final class SseRegistry {
 
     /**
      * The force-close participant, after the adapter stop: empties the registry, then ends and empties every stream
-     * left. Listeners stay with the drain or the abort, so a drain starting later still ends its response.
+     * left. A running drain keeps its listeners; a stream whose drain never started is aborted here, which runs them.
      */
     // @req FR-SSE-005
     void terminate() {
@@ -100,6 +100,7 @@ final class SseRegistry {
         for (DefaultSseClient c : left) {
             c.endBy("shutdown");
             c.clearQueue();
+            c.abortUndrained();
         }
     }
 }

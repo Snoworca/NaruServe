@@ -49,6 +49,7 @@ public final class RotatingFileLogger implements Logger, Flushable, AutoCloseabl
     final long maxFileBytes;
     final int maxFiles;
     final LogLevel level;
+    final long waitMillis;
     final Thread writer;
     private final StreamFactory streams;
     private final BlockingQueue<Object> queue;
@@ -76,6 +77,7 @@ public final class RotatingFileLogger implements Logger, Flushable, AutoCloseabl
         this.maxFileBytes = b.maxFileBytes;
         this.maxFiles = b.maxFiles;
         this.level = b.level;
+        this.waitMillis = b.waitMillis;
         this.streams = Objects.requireNonNull(streams, "streams");
         this.queue = new ArrayBlockingQueue<>(b.queueCapacity);
         this.writer = new Thread(this::drain, "naruserve-filelog-writer");
@@ -155,7 +157,10 @@ public final class RotatingFileLogger implements Logger, Flushable, AutoCloseabl
         return rotationFailures.get();
     }
 
-    /** Returns once every record queued before the call is written (or dropped); at once after close. */
+    /**
+     * Returns once every record queued before the call is written (or dropped); at once after close. A writer stuck
+     * in a write releases the caller after five seconds, so shutdown never waits on a stalled log file.
+     */
     // @req FR-APP-017
     @Override
     public void flush() {
@@ -165,15 +170,16 @@ public final class RotatingFileLogger implements Logger, Flushable, AutoCloseabl
                 return;
             }
         }
+        long deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(waitMillis);
         try {
             // A concurrent close() may stop the writer before it takes or reaches the marker.
-            while (!queue.offer(marker, 100, TimeUnit.MILLISECONDS)) {
-                if (!writer.isAlive()) {
+            while (!queue.offer(marker, sliceMillis(deadline), TimeUnit.MILLISECONDS)) {
+                if (!writer.isAlive() || System.nanoTime() - deadline >= 0) {
                     return;
                 }
             }
-            while (!marker.await(100, TimeUnit.MILLISECONDS)) {
-                if (!writer.isAlive()) {
+            while (!marker.await(sliceMillis(deadline), TimeUnit.MILLISECONDS)) {
+                if (!writer.isAlive() || System.nanoTime() - deadline >= 0) {
                     return;
                 }
             }
@@ -182,7 +188,16 @@ public final class RotatingFileLogger implements Logger, Flushable, AutoCloseabl
         }
     }
 
-    /** Writes the queued records, closes the file and joins the writer thread; idempotent. */
+    /** At most 100 ms, and never past the deadline; at least 1 ms so a wait never turns into an unbounded one. */
+    private static long sliceMillis(long deadline) {
+        return Math.max(1, Math.min(100, TimeUnit.NANOSECONDS.toMillis(deadline - System.nanoTime())));
+    }
+
+    /**
+     * Writes the queued records, closes the file and joins the writer thread; idempotent. A writer stuck in a write is
+     * abandoned after five seconds: the records still queued are counted as dropped and the daemon thread ends when
+     * the write returns.
+     */
     // @req FR-APP-017
     @Override
     public void close() {
@@ -192,27 +207,43 @@ public final class RotatingFileLogger implements Logger, Flushable, AutoCloseabl
             }
             closed = true;
         }
+        long deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(waitMillis);
         boolean interrupted = false;
         // A writer that died from an Error never frees queue space; stop waiting once it is gone.
-        while (writer.isAlive()) {
+        boolean stopped = false;
+        while (!stopped && writer.isAlive() && System.nanoTime() - deadline < 0) {
             try {
-                if (queue.offer(STOP, 100, TimeUnit.MILLISECONDS)) {
-                    break;
-                }
+                stopped = queue.offer(STOP, sliceMillis(deadline), TimeUnit.MILLISECONDS);
             } catch (InterruptedException e) {
                 interrupted = true;
             }
         }
-        while (writer.isAlive()) {
+        while (writer.isAlive() && System.nanoTime() - deadline < 0) {
             try {
-                writer.join();
+                writer.join(sliceMillis(deadline));
             } catch (InterruptedException e) {
                 interrupted = true;
             }
+        }
+        if (writer.isAlive()) {
+            abandonQueue();
         }
         if (interrupted) {
             Thread.currentThread().interrupt();
         }
+    }
+
+    /** The writer did not stop in time: count what it never wrote and leave it a STOP to find once it is unblocked. */
+    private void abandonQueue() {
+        Object item;
+        while ((item = queue.poll()) != null) {
+            if (item instanceof CountDownLatch) {
+                ((CountDownLatch) item).countDown();
+            } else if (item != STOP) {
+                dropped.incrementAndGet();
+            }
+        }
+        queue.offer(STOP);
     }
 
     // @req FR-APP-017
@@ -231,8 +262,16 @@ public final class RotatingFileLogger implements Logger, Flushable, AutoCloseabl
             }
             if (item instanceof CountDownLatch) {
                 ((CountDownLatch) item).countDown();
-            } else {
+                continue;
+            }
+            try {
                 write((String) item);
+            } catch (ThreadDeath death) {
+                throw death;
+            } catch (Throwable fatal) {
+                // An Error (OutOfMemoryError on a low-memory device, a linkage error) costs this record, not the logger.
+                dropped.incrementAndGet();
+                closeStream();
             }
         }
     }
@@ -273,7 +312,8 @@ public final class RotatingFileLogger implements Logger, Flushable, AutoCloseabl
 
     /**
      * {@code naruserve.log} becomes {@code .1}, {@code .n} becomes {@code .n+1} up to the first free slot; the oldest
-     * is deleted only when every slot is taken, so a rename that keeps failing deletes no further backup. Returns
+     * is deleted only when every slot is taken, so a rename that keeps failing deletes no further backup, and a failed
+     * shift stops the rotation before the live file is touched. Returns
      * whether {@code naruserve.log} was moved or deleted, so the caller may start it empty.
      */
     // @req FR-APP-017
@@ -287,7 +327,11 @@ public final class RotatingFileLogger implements Logger, Flushable, AutoCloseabl
         }
         new File(directory, FILE_NAME + "." + free).delete();
         for (int n = free - 1; n >= 1; n--) {
-            streams.rename(new File(directory, FILE_NAME + "." + n), new File(directory, FILE_NAME + "." + (n + 1)));
+            // A failed shift leaves .n in place, and renaming the live file to .1 would replace it on POSIX.
+            if (!streams.rename(new File(directory, FILE_NAME + "." + n),
+                    new File(directory, FILE_NAME + "." + (n + 1)))) {
+                return false;
+            }
         }
         return streams.rename(new File(directory, FILE_NAME), new File(directory, FILE_NAME + ".1"));
     }
@@ -312,6 +356,8 @@ public final class RotatingFileLogger implements Logger, Flushable, AutoCloseabl
         int maxFiles = 5;
         int queueCapacity = 1024;
         LogLevel level = LogLevel.INFO;
+        // flush()/close() give up on a stalled writer after this long; package-private so tests can shorten it.
+        long waitMillis = 5000L;
 
         private Builder() {
         }

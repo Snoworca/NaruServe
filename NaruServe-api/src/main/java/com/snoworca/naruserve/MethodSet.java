@@ -12,7 +12,11 @@ import org.jspecify.annotations.Nullable;
 // @req IR-ROUTE-003
 public final class MethodSet implements Iterable<Method> {
 
-    private static final Method[] METHODS = Method.values();
+    // Lazy holder: Method.<clinit> builds Method.any() through this class, so this class's own <clinit> must not
+    // touch Method or two threads first using one each would deadlock on the class-init locks.
+    private static final class Values {
+        private static final Method[] ALL = Method.values();
+    }
 
     private final int mask;
 
@@ -118,7 +122,7 @@ public final class MethodSet implements Iterable<Method> {
                 }
                 int ordinal = Integer.numberOfTrailingZeros(rest);
                 rest &= rest - 1;
-                return METHODS[ordinal];
+                return Values.ALL[ordinal];
             }
 
             // Overridden explicitly: Android API 21 has no default Iterator.remove().

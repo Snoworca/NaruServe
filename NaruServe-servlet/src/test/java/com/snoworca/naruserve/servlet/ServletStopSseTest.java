@@ -136,4 +136,55 @@ public class ServletStopSseTest extends SseJettyTest {
             awaitOpen(0);
         }
     }
+
+    private static int blockedWrites() {
+        int n = 0;
+        for (Thread t : ServletSseLimitTest.sseThreads(java.util.Collections.<Thread>emptySet())) {
+            for (StackTraceElement e : t.getStackTrace()) {
+                if (e.getClassName().equals(ServletEventStream.FlushingStream.class.getName())
+                        && e.getMethodName().equals("write") && t.getState() != Thread.State.RUNNABLE) {
+                    n++;
+                    break;
+                }
+            }
+        }
+        return n;
+    }
+
+    // FR-SVL-006 AC-3: the aborts of several stalled streams share one wait, so stop overshoots its deadline once
+    @Test
+    public void FR_SVL_006_AC3_severalNonReadingClientsAddOneAbortWaitNotOnePerStream() throws Exception {
+        start();
+        int streams = 4;
+        java.util.List<Socket> sockets = new java.util.ArrayList<>();
+        try {
+            char[] chunk = new char[64 * 1024];
+            Arrays.fill(chunk, 'x');
+            String data = new String(chunk);
+            for (int k = 0; k < streams; k++) {
+                Socket s = new Socket();
+                sockets.add(s);
+                s.setReceiveBufferSize(4096);
+                s.connect(new InetSocketAddress("127.0.0.1", container.port()), 5000);
+                s.getOutputStream().write("GET /events HTTP/1.1\r\nHost: localhost\r\n\r\n"
+                        .getBytes(StandardCharsets.ISO_8859_1));
+                SseClient c = next();
+                for (int i = 0; i < 240; i++) {
+                    assertTrue("send " + i, c.send(data));
+                }
+            }
+            assertTrue("every drain blocked in a write",
+                    SharedApp.until(() -> blockedWrites() == streams, 20, TimeUnit.SECONDS));
+            awaitOpen(streams);
+            long at = System.nanoTime();
+            adapter.stop(1, TimeUnit.SECONDS);
+            long took = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - at);
+            assertTrue("stop took " + took + " ms", took >= 900 && took <= 1600);
+            awaitOpen(0);
+        } finally {
+            for (Socket s : sockets) {
+                s.close();
+            }
+        }
+    }
 }

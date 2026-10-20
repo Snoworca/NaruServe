@@ -1,0 +1,486 @@
+{
+ "findings": [
+  {
+   "id": "P6-001",
+   "axis": "P4",
+   "severity": "MEDIUM",
+   "title": "Response header chars U+0080..U+00FF go out as two UTF-8 bytes, breaking the one-byte-per-char contract of HttpExchange.commit and docs/api/response.md",
+   "location": {
+    "file": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdExchange.java",
+    "line_range": "183-190"
+   },
+   "description": "commit() (and TinyHttpdEventStream.start, lines 49-56 of TinyHttpdEventStream.java) pass the core's header strings straight to TinyHttpd's Response.addHeader/setHeader. TinyHttpd serialises the head with sb.toString().getBytes(UTF-8) (core/.../ExchangeResponse.java:473, Upgraded.java:93), whereas it decodes request heads as ISO-8859-1 (InputBuffer.java:90). The SPI javadoc of HttpExchange.commit says 'the adapter writes each char as one byte' and docs/api/response.md:16 says 'ISO-8859-1, one byte per char', and the core deliberately admits chars up to U+00FF (DefaultResponse.java:946-952). Scenario: res.header(\"X-Name\", \"caf\\u00e9\") or res.attachment with an accented Latin-1 filename: the in-memory adapter and a Servlet container emit 0xE9, the TinyHttpd adapter emits C3 A9. A request header echoed back (request byte E9 -> char U+00E9 -> response C3 A9) does not round-trip. No test in the module sends a >0x7F header value over a socket, so the divergence is unpinned and CrossAdapterTest cannot catch it.",
+   "suggested_fix": "Add a socket test that commits a header value containing U+00E9 and asserts the wire bytes; then either fix TinyHttpd (encode the head as ISO-8859-1) or state the TinyHttpd limitation in docs/api/response.md next to the websocket.md 426 note and in the HttpExchange.commit javadoc (the adapter cannot produce a lone 0xE9 through a UTF-8 encoder, so it cannot repair this itself).",
+   "is_behavioral": true,
+   "tags": [
+    "bug",
+    "doc"
+   ]
+  },
+  {
+   "id": "P6-002",
+   "axis": "P8",
+   "severity": "LOW",
+   "title": "Test reads guards after the exchange was finished but before the writer thread stored it",
+   "location": {
+    "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/RawTargetSocketTest.java",
+    "line_range": "98-122"
+   },
+   "description": "FR_ENGINE_011_AC2_exchangeOutlivesHandleAndGuardsStartAndAbort: the spawned thread calls ex.finish() (which releases the worker, which flushes and closes the socket) and only then runs guards.set(sb.toString()). The test thread returns from Http.send as soon as it reads EOF and immediately asserts assertEquals(\"second-commit \", guards.get()). If the writer thread is descheduled between finish() and set(), guards still holds its initial \"\" and the test fails spuriously.",
+   "suggested_fix": "Store the result before ex.finish(), or have the thread count down a latch after guards.set and await it before asserting.",
+   "is_behavioral": false,
+   "tags": [
+    "bug"
+   ]
+  },
+  {
+   "id": "P6-003",
+   "axis": "P8",
+   "severity": "LOW",
+   "title": "BindingSocketTest compares JVM-global thread counts that other apps' exiting threads can change",
+   "location": {
+    "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/BindingSocketTest.java",
+    "line_range": "158-183"
+   },
+   "description": "sdsAc7_FR_ENGINE_002_AC6 counts every live thread named exactly 'tinyhttpd-watchdog' (Http.threads) before and after the failed second listen and asserts equality. All TinyHttpd instances in the test JVM share that name, and a previous test's watchdog leaves its loop asynchronously after HttpServer.stop sets STOPPED. If one is still alive at the first sample and gone at the second, the assertion fails although the adapter leaked nothing; the same global-name pattern is used in ShutdownSocketTest AC8.",
+   "suggested_fix": "Snapshot the watchdog Thread objects (as ShutdownSocketTest does with removeAll) and compare sets, or wait for pre-existing watchdogs to die before sampling.",
+   "is_behavioral": false,
+   "tags": [
+    "bug"
+   ]
+  },
+  {
+   "id": "P6-004",
+   "axis": "P8",
+   "severity": "LOW",
+   "title": "Thread-bound test asserts hard-coded literals against themselves",
+   "location": {
+    "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LoadIsolatedSocketTest.java",
+    "line_range": "94-114"
+   },
+   "description": "sdsAc2_PERF_APP_001_AC2 adds s.maxWorkers()+s.maxSseStreams()+2*maxUpgradedConnections plus the literals idleScheduler=1 and acceptorWatchdogKeeper=3 and asserts the sum equals 452 and THREAD_BOUND (also 452). Only the four settings defaults are actually read from the code; nothing counts threads the adapter really starts, so adding a thread to TinyHttpdAdapter or KeeperThread would not fail it. The real census is only the >= 120 / <= THREAD_BOUND check in the load test.",
+   "suggested_fix": "Drop the literals and assert against a measured census of an idle bound app (Http.appThreads), or fold the defaults check into the load test.",
+   "is_behavioral": false,
+   "tags": [
+    "style"
+   ]
+  },
+  {
+   "id": "P6-005",
+   "axis": "P8",
+   "severity": "LOW",
+   "title": "Shutdown tests assert 200 ms slack over a 1 s deadline measured from a freshly started thread",
+   "location": {
+    "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/WebSocketShutdownSocketTest.java",
+    "line_range": "91-106"
+   },
+   "description": "sdsAc9_FR_WS_010: 'start' is taken before stopper.start(); stalled sessions must be aborted within ms <= 1200 and their client sockets must end within 1200 ms of that instant, after the stalled-write state was established by polling thread stack traces for 'write' frames (Http.blockedThreads). Thread start-up, a busy CI host or GC adds directly to the measured time, so a correct adapter can fail; LongConnectionShutdownSocketTest and WebSocketSendSocketTest use the same stack-sampling plus tight wall-clock margins.",
+   "suggested_fix": "Measure from the moment the before-wait participant starts (not from stopper.start()), widen the slack to the documented margin, or assert on ordering instead of absolute milliseconds.",
+   "is_behavioral": false,
+   "tags": [
+    "bug"
+   ]
+  },
+  {
+   "id": "P6-006",
+   "axis": "P3",
+   "severity": "LOW",
+   "title": "Defensive catches drop the original exception without a log line",
+   "location": {
+    "file": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdExchange.java",
+    "line_range": "96-103"
+   },
+   "description": "run() catches IOException|RuntimeException from d.drain(out) and only calls ex.abort(); TinyHttpdWebSocket.Listener.onText/onBinary/onClose (lines 150-176) and onOpen do the same for RuntimeException and only abort the connection. The core's DefaultSseClient.drain and WebSocket session never throw today, but if a future drain or endpoint does, the root cause is never logged: for the SSE case TinyHttpd then logs a SEVERE 'handler failed' whose cause is the synthetic IOException(\"exchange aborted\") thrown later in run(), not the original failure, and for WebSocket nothing is logged at all (the connection just ends with 1006).",
+   "suggested_fix": "Hand the adapter's Logger (settings.logger()) to TinyHttpdExchange/TinyHttpdWebSocket and log the caught throwable at ERROR before aborting.",
+   "is_behavioral": false,
+   "tags": [
+    "bug"
+   ]
+  }
+ ],
+ "coverage_rows": [
+  {
+   "file": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/JsonErrorHandler.java",
+   "hunks_total": 1,
+   "anchors": [
+    "response.setContentLengthLong(body.length);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/KeeperThread.java",
+   "hunks_total": 1,
+   "anchors": [
+    "t.join(1000);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdAdapter.java",
+   "hunks_total": 1,
+   "anchors": [
+    "boolean ended = s.awaitTermination(RELEASE_MARGIN_MS);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdBodyStream.java",
+   "hunks_total": 1,
+   "anchors": [
+    "status = 413;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdEventStream.java",
+   "hunks_total": 1,
+   "anchors": [
+    "res.setHeader(h.getKey(), h.getValue());"
+   ],
+   "findings": [
+    "P6-001"
+   ]
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdExchange.java",
+   "hunks_total": 1,
+   "anchors": [
+    "res.setContentLengthLong(1);"
+   ],
+   "findings": [
+    "P6-001",
+    "P6-006"
+   ]
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdFeatures.java",
+   "hunks_total": 1,
+   "anchors": [
+    "throw new EOFException(\"file ended \" + left + \" bytes before the requested range: \" + file);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdWebSocket.java",
+   "hunks_total": 1,
+   "anchors": [
+    "res.setHeader(\"Sec-WebSocket-Accept\", null);"
+   ],
+   "findings": [
+    "P6-006"
+   ]
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyLogBridge.java",
+   "hunks_total": 1,
+   "anchors": [
+    "String text = thrown == null ? message : message + \": \" + thrown;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/WorkerThreadFactory.java",
+   "hunks_total": 1,
+   "anchors": [
+    "int port = s == null ? 0 : s.getPort();"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/package-info.java",
+   "hunks_total": 1,
+   "anchors": [
+    "@org.jspecify.annotations.NullMarked"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/AbortSocketTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "new Thread(ex::abort).start();"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/AdapterSurfaceTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(\"slot released after the stream ended\", 0, slots.open());"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/BindingSocketTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(watchdogs, Http.threads(\"tinyhttpd-watchdog\").size());"
+   ],
+   "findings": [
+    "P6-003"
+   ]
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/BothAdaptersCases.java",
+   "hunks_total": 1,
+   "anchors": [
+    "Reply star = send(app, \"OPTIONS\", \"*\");"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/ConnectionLimitsTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(320, c.getMaxConnections() - c.getMaxWorkers());"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/CrossAdapterTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(\"in-memory vs TinyHttpd\", transcripts.get(0), transcripts.get(1));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/ErrorHeadersSocketTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "fail(\"the server kept the connection open after the 503\");"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/KeeperThreadTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(\"naruserve-0-worker-1\", t.getName());"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LimitsSocketTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(9002, c.inputBufferBytes);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LoadIsolatedSocketTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(452, total);"
+   ],
+   "findings": [
+    "P6-004"
+   ]
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LongConnectionShutdownSocketTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(\"sender threads blocked in a write\", blockedBefore + 1, Http.blockedThreads(port).size());"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/MultipartCrossAdapterTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertTrue(over, over.startsWith(\"413 \"));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/MultipartDisconnectSocketTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertTrue(\"the parse failed on the disconnect\", failed.await(10, TimeUnit.SECONDS));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/RawTargetSocketTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(\"second-commit \", guards.get());"
+   ],
+   "findings": [
+    "P6-002"
+   ]
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/RawWebSocketClient.java",
+   "hunks_total": 1,
+   "anchors": [
+    "fail(\"the WebSocket client socket is still open\");"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/SendFileSocketTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(\"IAE,IAE,IAE,IAE,\", seen.get());"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/ShutdownIsolatedSocketTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(\"the part spooled before shutdown\", 1, dir.list().length);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/ShutdownSocketTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertTrue(\"took \" + took.get(), took.get() != null && took.get() >= 900 && took.get() < 1000 + 1500);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/SseLimitSocketTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertNotNull(\"no stream accepted after one ended\", accepted);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/SseShutdownSocketTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertNull(\"an onClose ran twice\", closed.poll(200, TimeUnit.MILLISECONDS));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/SseSocketTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(4000, events);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/StaticCrossAdapterTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(memory, socket);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdBodyStreamTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "fail(\"ContentLengthExceededException must not become a client status\");"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdWebSocketTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(RawWebSocketClient.ACCEPT, acceptSeen.get());"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/TinyLogBridgeTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertSame(boom, log.errors.get(0));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/TransportRejectionTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertNotEquals(requestId(first), requestId(second));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/WebSocketLimitSocketTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(2, handlers.get());"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/WebSocketOnlySocketTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(r, \"websocket\", Http.header(r, \"Upgrade\"));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/WebSocketProtocolSocketTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(\"binary 4096\", event());"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/WebSocketSendSocketTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(\"sender threads blocked in a write\", n, blockedWriters(port));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/WebSocketSessionSocketTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(\"close 4000 bye\", event());"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/WebSocketShutdownSocketTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(\"1001 server shutdown\", healthyClosed.poll(10, TimeUnit.SECONDS));"
+   ],
+   "findings": [
+    "P6-005"
+   ]
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/WebSocketSocketTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertTrue(\"end of stream within 1 s\", c.endOfStream());"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/WebSocketThreadsSocketTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(idles, idle);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/WebSocketTimeoutSocketTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(\"idle timeout\", close.closeReason());"
+   ],
+   "findings": []
+  }
+ ]
+}

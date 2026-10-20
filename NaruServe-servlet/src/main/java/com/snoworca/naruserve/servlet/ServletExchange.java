@@ -193,6 +193,12 @@ final class ServletExchange implements HttpExchange {
         res.flushBuffer();
     }
 
+    /** True when {@link #abort} ran on an exchange that never started an event stream: the servlet then fails the request. */
+    // @req FR-SVL-003
+    boolean abortedWithoutStream() {
+        return aborted && async == null;
+    }
+
     /**
      * Marks the exchange aborted; the container owns the socket, so nothing is called on it, except that an event
      * stream's AsyncContext is completed (once) so the container ends the response. A drain write already running

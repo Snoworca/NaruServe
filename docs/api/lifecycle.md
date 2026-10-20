@@ -66,20 +66,20 @@ app.get("/api/users/:id") { req, res ->
 
 ## ApplicationContext
 
-`onStart`/`onStop`의 `ctx`, 그리고 `req.application()`이 돌려주는 객체입니다.
+`onStart`/`onStop`의 `ctx`, 그리고 `req.application()`이 돌려주는 객체입니다. 아래의 `@Nullable`은 `org.jspecify.annotations.Nullable`이며, Kotlin에서는 `T?`가 됩니다.
 
 ```java
 public interface ServiceRegistry {
     <T> void register(Class<T> type, T instance);          // AutoCloseable이면 종료 때 닫음
     <T> void registerExternal(Class<T> type, T instance);  // 닫지 않음
     <T> T get(Class<T> type);           // 없으면 ServiceNotFoundException
-    <T> T getOrNull(Class<T> type);     // 없으면 null
+    <T> @Nullable T getOrNull(Class<T> type);     // 없으면 null
     boolean contains(Class<?> type);
 }
 
 public interface ApplicationContext extends ServiceRegistry {
-    void attribute(String key, Object value);   // null이면 키를 지움
-    <T> T attribute(String key, Class<T> type);
+    void attribute(String key, @Nullable Object value);   // null이면 키를 지움
+    <T> @Nullable T attribute(String key, Class<T> type);
     void own(AutoCloseable resource);
     Logger logger();
 }

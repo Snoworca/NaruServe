@@ -7,7 +7,7 @@ public interface ServerHandle {
     /** The bound port. */
     int port();
 
-    /** The bound address, {@code 127.0.0.1}. */
+    /** The address the server was bound with: the configured bind address, {@code 127.0.0.1} by default. */
     String address();
 
     /** The app's current state, read at each call. */

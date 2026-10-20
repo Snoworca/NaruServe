@@ -79,6 +79,14 @@ def releaseScanChild = tasks.register('releaseScanChild', Exec) {
     if (gradle.startParameter.offline) {
         command << '--offline'
     }
+    // The child must see the same command-line properties (-PtinyHttpdDir ...), or a settings error would be recorded as
+    // a pending scan.
+    gradle.startParameter.projectProperties.each { k, v ->
+        if (!(k in ['release', 'releaseScanChild'])) {
+            command << "-P${k}=${v}".toString()
+        }
+    }
+    gradle.startParameter.systemPropertiesArgs.each { k, v -> command << "-D${k}=${v}".toString() }
     commandLine(command + ['dependencyCheckAggregate'])
     ignoreExitValue = true
     def logFile = scanLog.get().asFile

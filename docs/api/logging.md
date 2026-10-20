@@ -128,8 +128,8 @@ val line = ConsoleLogger.format(LogLevel.WARN, "disk almost full")
 ### 파일 로거
 
 `RotatingFileLogger.builder()`의 기본값은 폴더 `./logs`, 파일당 5 MiB(5242880 바이트), 최대 5개, 대기 큐 1024건, 레벨 `INFO`이며, 파일 이름은 `naruserve.log`이고 가득 차면 `naruserve.log.1`, `naruserve.log.2` … `naruserve.log.4`로 밀려나고 가장 오래된 파일은 지워집니다.
-줄 형식은 콘솔 로거와 같은 `<timestamp> <LEVEL> <message>`입니다. 별도 스레드가 파일에 쓰며, 큐가 가득 차거나 쓰기가 실패하면 그 줄을 버리고 `droppedCount()`로 셉니다.
-`naruserve.log`의 이름을 바꾸지 못해 회전이 실패하면 기존 줄을 지우지 않고 같은 파일에 이어 쓰며, 실패 횟수는 `rotationFailureCount()`로 셉니다. 다음 회전은 그 파일이 `maxFileBytes`만큼 더 커진 뒤에 다시 시도하고, 백업은 빈 번호가 없을 때만 가장 오래된 것을 지우므로 실패가 되풀이되어도 백업이 더 지워지지 않습니다. 실패가 계속되는 동안 `naruserve.log`는 `maxFileBytes`보다 커질 수 있으니 `rotationFailureCount()`가 0이 아니면 폴더 권한과 디스크를 확인하세요.
+줄 형식은 콘솔 로거와 같은 `<timestamp> <LEVEL> <message>`입니다. 별도 스레드가 파일에 쓰며, 큐가 가득 차거나 쓰기가 실패하면(쓰기 중 `OutOfMemoryError` 같은 `Error`도 포함) 그 줄을 버리고 `droppedCount()`로 센 뒤 다음 줄부터 계속 씁니다.
+`naruserve.log`나 백업의 이름을 바꾸지 못해 회전이 실패하면(백업 이동이 하나라도 실패하면 `naruserve.log.1`을 덮어쓰지 않도록 회전을 멈춥니다) 기존 줄을 지우지 않고 같은 파일에 이어 쓰며, 실패 횟수는 `rotationFailureCount()`로 셉니다. 다음 회전은 그 파일이 `maxFileBytes`만큼 더 커진 뒤에 다시 시도하고, 백업은 빈 번호가 없을 때만 가장 오래된 것을 지우므로 실패가 되풀이되어도 백업이 더 지워지지 않습니다. 실패가 계속되는 동안 `naruserve.log`는 `maxFileBytes`보다 커질 수 있으니 `rotationFailureCount()`가 0이 아니면 폴더 권한과 디스크를 확인하세요.
 
 Android에서는 작업 폴더 `./logs`에 쓸 수 없으므로 `context.getFilesDir()` 같은 쓰기 가능한 폴더를 넘기세요. 기본 폴더를 Android용으로 바꾸지 않은 이유는 `NaruServe-filelog`가 `android.*`에 의존하지 않기 때문입니다.
 
@@ -141,5 +141,5 @@ RotatingFileLogger logger = RotatingFileLogger.builder()
 
 ### 종료와 로거
 
-`shutdown(...)`과 시작 실패 정리는 끝 무렵(HTTP 어댑터를 놓기 직전)에 앱 로거를 `flush()`(`Flushable`일 때)한 뒤 `close()`(`AutoCloseable`일 때)하며, 그렇게 하는 이유는 파일 로거의 큐에 남은 줄을 잃지 않기 위해서입니다. `ConsoleLogger`의 `close()`는 `System.out`/`System.err`를 flush만 하고 닫지 않습니다.
+`shutdown(...)`과 시작 실패 정리는 끝 무렵(HTTP 어댑터를 놓기 직전)에 앱 로거를 `flush()`(`Flushable`일 때)한 뒤 `close()`(`AutoCloseable`일 때)하며, 그렇게 하는 이유는 파일 로거의 큐에 남은 줄을 잃지 않기 위해서입니다. 파일 로거의 `flush()`와 `close()`는 쓰기에 걸려 멈춘 스레드(응답 없는 NFS 마운트 등)를 최대 5초만 기다립니다. 그 뒤에는 큐에 남은 줄을 버린 것으로 세고 돌아오므로 종료가 로그 파일 때문에 막히지 않습니다. `ConsoleLogger`의 `close()`는 `System.out`/`System.err`를 flush만 하고 닫지 않습니다.
 여러 앱이 로거 하나를 같이 쓰면 먼저 종료한 앱이 그 로거를 닫으므로, 앱마다 `close()`가 아무것도 하지 않는(`AutoCloseable`을 구현하지 않은) 위임 로거를 넘기세요.

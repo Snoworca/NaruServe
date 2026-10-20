@@ -1,0 +1,514 @@
+{
+ "findings": [
+  {
+   "id": "R1-001",
+   "axis": "P3",
+   "severity": "MEDIUM",
+   "title": "FileResponder re-stat after open leaks the just-opened stream when the file vanished",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/FileResponder.java",
+    "line_range": "92-100"
+   },
+   "description": "The P5-001 fix calls ((FileResourceResolver) r).stat(path) after r.open(path) outside any try. FileResourceResolver.stat -> file() -> check() throws FileNotFoundException when the file was removed or became unreachable (rm + cp deploys, symlink flip). The exception leaves respond() with 'in' open and never closed (only the later answer() try closes it), so each such request leaks a descriptor until GC finalization; under a deploy that deletes a hot asset repeatedly this can exhaust fds. The second-pass failure also surfaces as a plain IOException('file changed while it was answered') which the caller presumably maps to 500 instead of the 404/503 a missing file gets.",
+   "suggested_fix": "Wrap the re-stat in try { ... } catch (IOException | RuntimeException e) { in.close(); throw e; } (or compute the comparison inside a try/finally that closes on every non-handoff path); map the changed-twice case to FileNotFoundException/503.",
+   "is_behavioral": true,
+   "tags": [
+    "bug",
+    "regression"
+   ]
+  },
+  {
+   "id": "R1-002",
+   "axis": "P1",
+   "severity": "MEDIUM",
+   "title": "Pool.completeAll starts one new thread per open stream, unbounded and with an uncaught Error path",
+   "location": {
+    "file": "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/ServletEventStream.java",
+    "line_range": "177-199"
+   },
+   "description": "The P7-002 fix replaces the sequential abort with 'new Thread(...).start()' per stream. With maxSseStreams up to its configured limit (hundreds/thousands) shutdown creates that many threads at once, right when the container is closing; a Thread.start() OutOfMemoryError (an Error, not caught) leaves the loop midway: streams after the failing one are never aborted/removed and the exception escapes ServletAdapter.stop before p.shutdownNow(). The join loop also adds up: each stuck thread (a container call that does not return, not just the 250 ms lock wait) costs ABORT_WAIT_MILLIS*4 = 1 s sequentially, so N stuck aborts overshoot stop by N seconds, contradicting the 'waits must not add up' comment. Threads are daemon so no permanent leak, but they are unnamed-per-stream duplicates of the pool.",
+   "suggested_fix": "Do the aborts on the existing SSE pool or a small fixed executor (or set aborted=true on all, then complete on one helper thread), join against one shared deadline (not per thread), and catch Throwable around start so the remaining streams are still handled in the calling thread.",
+   "is_behavioral": true,
+   "tags": [
+    "bug",
+    "performance"
+   ]
+  },
+  {
+   "id": "R1-003",
+   "axis": "P2",
+   "severity": "LOW",
+   "title": "Shutdown still skips adapter.release() and loses the Error when the logger flush/close throws an Error",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/SafeLogger.java",
+    "line_range": "27-42"
+   },
+   "description": "P2-002 was fixed for adapter stop/release and owned close, but SafeLogger.flushAndClose catches only Exception. In runShutdownSequence the call at DefaultRestApp.java:736 sits between the owned-close step and a.release(): an Error from logger.flush()/close() (e.g. NoClassDefFoundError in a torn-down webapp, or an AssertionError from a test logger) exits the try body, so a.release() never runs (TinyHttpd threads are not awaited, Servlet SSE pool is not shut down) and the Error is not routed through firstError/log. TERMINATED is still reached via finally, so impact is limited to the release step.",
+   "suggested_fix": "Catch Throwable in the shutdown sequence around SafeLogger.flushAndClose (record via firstError) or make flushAndClose itself return the first Error; keep a.release() after it.",
+   "is_behavioral": true,
+   "tags": [
+    "bug"
+   ]
+  },
+  {
+   "id": "R1-004",
+   "axis": "P9",
+   "severity": "MEDIUM",
+   "title": "NaruServe-kotlin languageVersion/apiVersion 1.9 does not make the module consumable from Kotlin 1.9/2.0: the api dependency still pins kotlin-stdlib 2.2.0",
+   "location": {
+    "file": "build.gradle",
+    "line_range": "48-53, 69"
+   },
+   "description": "The fix sets languageVersion/apiVersion KOTLIN_1_9 so the module's own metadata is 1.9, but the same build declares ':NaruServe-kotlin' api -> org.jetbrains.kotlin:kotlin-stdlib:2.2.0 (build.gradle:69, published as an api/compile dependency). A consumer on Kotlin 1.9.x or 2.0.x resolves the highest stdlib (2.2.0), whose class metadata (2.2) is newer than those compilers accept (current+1), so the original 'incompatible version of Kotlin' error class is not removed. The comment 'keeps Android apps on Kotlin 1.9/2.0 compiling' is therefore unverified; there is no test pinning the metadata level (e.g. a check of kotlin.Metadata mv in the produced classes) and docs/api/kotlin.md states no minimum Kotlin version.",
+   "suggested_fix": "Either also declare the stdlib dependency at the 1.9 level (kotlin-stdlib:1.9.x as api, consumers then upgrade it themselves) or state the real minimum Kotlin version in docs/api/kotlin.md; add a build check that reads the kotlin.Metadata mv of NaruServe-kotlin classes.",
+   "is_behavioral": false,
+   "tags": [
+    "bug",
+    "doc"
+   ]
+  },
+  {
+   "id": "R1-005",
+   "axis": "P7",
+   "severity": "MEDIUM",
+   "title": "Servlet adapter now throws IOException('exchange aborted') for every aborted non-SSE exchange, including routine client disconnects",
+   "location": {
+    "file": "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/NaruServeServlet.java",
+    "line_range": "63-67"
+   },
+   "description": "P7-001 is resolved (the connection no longer gets the terminating chunk), but the mechanism is a plain IOException without cause thrown out of service(). The core calls ex.abort() on any failed write, i.e. for a client that closes its socket during a download or an error render (Dispatcher.java:369, DefaultResponse.java:700/768). Jetty treats an EofException quietly but a bare IOException from a servlet is logged as a servlet failure (WARN/ERROR with stack trace) and, for an uncommitted response, triggers the container error dispatch/500 page; Tomcat logs it at ERROR. A flood of aborted downloads therefore floods the container log, which the previous silent behavior did not.",
+   "suggested_fix": "Throw only when it matters (response committed) and use a dedicated quiet exception or the container's own abort convention (rethrow the original IOException cause, or Jetty/Tomcat specific ClientAbort handling); at least document the log noise in docs/api/servlet.md.",
+   "is_behavioral": true,
+   "tags": [
+    "regression"
+   ]
+  },
+  {
+   "id": "R1-006",
+   "axis": "P2",
+   "severity": "LOW",
+   "title": "OwnedResources.closeAll drops every Error after the first without suppressing it",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/OwnedResources.java",
+    "line_range": "50-59"
+   },
+   "description": "The P2-001 fix keeps only the first Error; a second Error from another close() (catch (Error e) { firstError = firstError == null ? e : firstError; }) is discarded silently, while Exception failures are attached as suppressed. The diagnostic of a second broken resource is lost.",
+   "suggested_fix": "In the catch, call firstError.addSuppressed(e) when firstError != null.",
+   "is_behavioral": false,
+   "tags": [
+    "bug"
+   ]
+  },
+  {
+   "id": "R1-007",
+   "axis": "P8",
+   "severity": "LOW",
+   "title": "RotatingFileLogger writer can still die: closeStream() in the new Throwable catch handles IOException only",
+   "location": {
+    "file": "NaruServe-filelog/src/main/java/com/snoworca/naruserve/filelog/RotatingFileLogger.java",
+    "line_range": "272-277, 339-349"
+   },
+   "description": "The P8-001 fix catches Throwable from write() and calls closeStream(). closeStream catches only IOException, so an unchecked exception or Error from OutputStream.close() (the very state that follows an OutOfMemoryError or a broken stream) escapes drain() and kills the writer thread, i.e. the survive-an-Error guarantee does not hold for that path; the same hole existed in write()'s own catch.",
+   "suggested_fix": "Catch Throwable (except ThreadDeath) inside closeStream, or wrap the catch body in its own try/catch.",
+   "is_behavioral": true,
+   "tags": [
+    "bug"
+   ]
+  },
+  {
+   "id": "R1-008",
+   "axis": "P8",
+   "severity": "LOW",
+   "title": "flush() 5 s bound is a hard cut-off even for a writer that is only slow: shutdown can drop records the writer would have written",
+   "location": {
+    "file": "NaruServe-filelog/src/main/java/com/snoworca/naruserve/filelog/RotatingFileLogger.java",
+    "line_range": "173-190, 210-232"
+   },
+   "description": "flush() and close() each give up after waitMillis (5 s) whether the writer is stalled or merely draining a 1024-record backlog on slow storage; close() then abandonQueue() counts everything still queued as dropped even though the writer is running and would have written it. Up to 10 s (flush + close) can also be spent beyond the app's shutdown deadline because SafeLogger.flushAndClose does not take the deadline. Documented, but the progress of the writer is not considered (no reset of the deadline while the queue shrinks).",
+   "suggested_fix": "Extend the deadline while the queue length decreases (progress-based wait), or take the shutdown deadline into account.",
+   "is_behavioral": true,
+   "tags": [
+    "performance"
+   ]
+  },
+  {
+   "id": "R1-009",
+   "axis": "P8",
+   "severity": "LOW",
+   "title": "New tests are weaker than their names claim",
+   "location": {
+    "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletAbortConnectionTest.java",
+    "line_range": "47-65"
+   },
+   "description": "ServletAbortConnectionTest swallows the 10 s SocketTimeoutException (an IOException) as 'a reset', so a connection that is simply left hanging without a terminator also passes assertFalse(endsWith 0-chunk); it does not prove the connection ended abnormally. ServletStopSseTest.FR_SVL_006_AC3 asserts a 900..1600 ms wall-clock window (stop deadline 1 s + one 250 ms wait), 350 ms of slack on a loaded CI box. ReleaseScriptTextTest.fr_REL_002_AC5 only checks that two strings occur in release.gradle (a comment would satisfy it). SpoolPermissionsTest passes vacuously under umask 077 and on non-POSIX stores (assumeTrue).",
+   "suggested_fix": "Assert the read ended with -1/reset within a few seconds (not by timeout); widen or remove the upper timing bound and count aborted exchanges instead; assert the forwarded argument list of the child command; create the file with an explicit permissive umask-independent precondition.",
+   "is_behavioral": false,
+   "tags": [
+    "style"
+   ]
+  }
+ ],
+ "resolved": [
+  "P1-001",
+  "P2-001",
+  "P2-002",
+  "P3-001",
+  "P4-001",
+  "P5-001",
+  "P5-002",
+  "P7-001",
+  "P7-002",
+  "P8-001",
+  "P8-002",
+  "P8-003",
+  "P9-001"
+ ],
+ "unresolved": [
+  {
+   "id": "P9-004",
+   "reason": "module metadata is lowered to 1.9 but the api dependency kotlin-stdlib:2.2.0 still forces 2.2 metadata on consumers and nothing tests or documents the minimum (see R1-004)."
+  }
+ ],
+ "coverage_rows": [
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/MethodSet.java",
+   "hunks_total": 2,
+   "anchors": [
+    "// Lazy holder: Method.<clinit> builds Method.any() through this class, so this class's own <clinit> must not",
+    "return Values.ALL[ordinal];"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/MultipartOptions.java",
+   "hunks_total": 1,
+   "anchors": [
+    "* Directory for spooled parts; default {@code java.io.tmpdir} as read when the app was created. A null"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/Response.java",
+   "hunks_total": 1,
+   "anchors": [
+    "/** Sets a header, replacing a same-name header as Express {@code res.set} does; returns this response. */"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/ServerHandle.java",
+   "hunks_total": 1,
+   "anchors": [
+    "/** The address the server was bound with: the configured bind address, {@code 127.0.0.1} by default. */"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/ServerOptions.java",
+   "hunks_total": 1,
+   "anchors": [
+    "* options; a value outside its range throws {@link IllegalArgumentException} naming the setting and the range. There is"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/UploadFile.java",
+   "hunks_total": 4,
+   "anchors": [
+    "/** A new stream over the content; {@link IllegalStateException} once the request has ended. */",
+    "/** Writes the content to {@code destination}, replacing it, and releases the temporary copy. */",
+    "/** Copies the content into {@code target} and flushes it; {@code target} is not closed. */",
+    "* The whole content in memory; {@link IllegalStateException} for a part over 8 MiB (8388608 bytes) or once the"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+   "hunks_total": 12,
+   "anchors": [
+    "Error cleanupError = null;",
+    "suppress(result, e);",
+    "cleanupError = cleanupFailure(result, cleanupError, e);",
+    "for (Exception closeFailure : context.closeOwned(logger)) {",
+    "suppress(cleanupError, result);",
+    "* Records a failed-start cleanup failure: an Exception, or any failure when the result is itself an Error, is",
+    "} catch (Throwable e) {",
+    "error = firstError(error, e);",
+    "for (Exception e : context.closeOwned(logger)) {",
+    "+ error = firstError(error, e);",
+    "} catch (RuntimeException e) {",
+    "+  error = firstError(error, e);"
+   ],
+   "findings": [
+    "R1-003"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultSseClient.java",
+   "hunks_total": 1,
+   "anchors": [
+    "/** The force close of a stream no drain took over (the adapter skipped it): aborts the response, which runs the listeners. */"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DirectoryListing.java",
+   "hunks_total": 2,
+   "anchors": [
+    "* name, the text HTML-escaped and the href percent-encoded UTF-8; dot entries, symbolic links and names StaticPath refuses are left out.",
+    "if (name.startsWith(\".\") || !f.getCanonicalPath().equals(expected) || StaticPath.check(encode(name)) != 0) {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/FileResponder.java",
+   "hunks_total": 4,
+   "anchors": [
+    "import java.util.Arrays;",
+    "private static void respond(DefaultRequest req, DefaultResponse res, ResourceResolver r, String path, String type,",
+    "long[] stat = ((FileResourceResolver) r).stat(path); // one check, one File: the ETag matches the rest",
+    "in.close(); // replaced between the stat and the open: the length and validators no longer fit the body"
+   ],
+   "findings": [
+    "R1-001"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/OwnedResources.java",
+   "hunks_total": 4,
+   "anchors": [
+    "* An {@link Error} from a close does not stop the others: after the last close the first Error is rethrown with",
+    "Error firstError = null;",
+    "firstError = firstError == null ? e : firstError;",
+    "for (Exception failure : failures) {"
+   ],
+   "findings": [
+    "R1-006"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/SpoolRegistry.java",
+   "hunks_total": 1,
+   "anchors": [
+    "// owner only: createTempFile honours the umask (0644), and the file is still empty here"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/SseRegistry.java",
+   "hunks_total": 2,
+   "anchors": [
+    "* left. A running drain keeps its listeners; a stream whose drain never started is aborted here, which runs them.",
+    "c.abortUndrained();"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpAdapter.java",
+   "hunks_total": 3,
+   "anchors": [
+    "* {@code settings.bindAddress()} and {@code settings.port()} through {@link #bind(String, int, ExchangeHandler)}.",
+    "/** Binds synchronously and returns once bound; port 0 picks a free port. Exchanges go to {@code handler}. */",
+    "/** Stops accepting, waits for in-flight exchanges until the deadline, then force-closes the rest. */"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/MethodSetTest.java",
+   "hunks_total": 3,
+   "anchors": [
+    "import java.net.URLClassLoader;",
+    "import java.util.concurrent.CyclicBarrier;",
+    "// review P1-001; IR-ROUTE-002: Method.<clinit> builds ANY through MethodSet, so MethodSet.<clinit> must never"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AppLifecycleGuardTest.java",
+   "hunks_total": 2,
+   "anchors": [
+    "// A state is added only after its rejectAll returned: a callback that dies on a non-ISE exception (which",
+    "assertEquals(java.util.Arrays.asList(AppState.STARTING, AppState.STOPPING), completed);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DirectoryListingTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "// FR-STATIC-003: a name StaticPath refuses (here \"a%2eb\") is not listed, so no listed link answers 400"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/OwnedResourcesTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "// review P2-001; FR-APP-008 AC-3: an Error from one close() does not stop the closes of the rest; it is rethrown"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownSequenceTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "// review P2-001; FR-APP-011 AC-8: an Error from an owned close() is logged, the earlier-registered resource, the"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/SseShutdownTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "// FR-SSE-005: a stream whose drain never started (an adapter that skipped it) still ends: terminate runs onClose"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StartFailureTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "// owned close and the logger flush running; the Error is thrown after TERMINATED with the start failure suppressed."
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-filelog/src/main/java/com/snoworca/naruserve/filelog/RotatingFileLogger.java",
+   "hunks_total": 19,
+   "anchors": [
+    "final long waitMillis;",
+    "this.waitMillis = b.waitMillis;",
+    "* Returns once every record queued before the call is written (or dropped); at once after close. A writer stuck",
+    "long deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(waitMillis);",
+    "while (!queue.offer(marker, sliceMillis(deadline), TimeUnit.MILLISECONDS)) {",
+    "while (!marker.await(sliceMillis(deadline), TimeUnit.MILLISECONDS)) {",
+    "* Writes the queued records, closes the file and joins the writer thread; idempotent. A writer stuck in a write is",
+    "+ long deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(waitMillis);",
+    "while (!stopped && writer.isAlive() && System.nanoTime() - deadline < 0) {",
+    "stopped = queue.offer(STOP, sliceMillis(deadline), TimeUnit.MILLISECONDS);",
+    "while (writer.isAlive() && System.nanoTime() - deadline < 0) {",
+    "writer.join(sliceMillis(deadline));",
+    "if (writer.isAlive()) {",
+    "/** The writer did not stop in time: count what it never wrote and leave it a STOP to find once it is unblocked. */",
+    "continue;",
+    "// An Error (OutOfMemoryError on a low-memory device, a linkage error) costs this record, not the logger.",
+    "* is deleted only when every slot is taken, so a rename that keeps failing deletes no further backup, and a failed",
+    "streams.rename(new File(directory, FILE_NAME + \".\" + n), new File(directory, FILE_NAME + \".\" + (n + 1)));",
+    "// flush()/close() give up on a stalled writer after this long; package-private so tests can shorten it."
+   ],
+   "findings": [
+    "R1-007",
+    "R1-008"
+   ]
+  },
+  {
+   "file": "NaruServe-filelog/src/test/java/com/snoworca/naruserve/filelog/RotatingFileLoggerTest.java",
+   "hunks_total": 2,
+   "anchors": [
+    "throw new AssertionError(\"writer dies\");",
+    "// FR-APP-017 AC-8 \u2014 a failed backup shift stops the rotation instead of renaming the live file over naruserve.log.1"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/NaruServeServlet.java",
+   "hunks_total": 1,
+   "anchors": [
+    "// abort() is \"close the connection abnormally\": the container drops a committed response without its"
+   ],
+   "findings": [
+    "R1-005"
+   ]
+  },
+  {
+   "file": "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/ServletEventStream.java",
+   "hunks_total": 5,
+   "anchors": [
+    "import java.util.ArrayList;",
+    "// In parallel: each abort may wait ABORT_WAIT_MILLIS on a blocked writer, and those waits must not add up.",
+    "ex.abort(); // aborted before complete, so a running drain cannot write to the ended response",
+    "t.join(ServletExchange.ABORT_WAIT_MILLIS * 4); // bounded: a stuck container call must not hold stop",
+    "streams.remove(ex);"
+   ],
+   "findings": [
+    "R1-002"
+   ]
+  },
+  {
+   "file": "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/ServletExchange.java",
+   "hunks_total": 1,
+   "anchors": [
+    "/** True when {@link #abort} ran on an exchange that never started an event stream: the servlet then fails the request. */"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletStopSseTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "// FR-SVL-006 AC-3: the aborts of several stalled streams share one wait, so stop overshoots its deadline once"
+   ],
+   "findings": []
+  },
+  {
+   "file": "build.gradle",
+   "hunks_total": 1,
+   "anchors": [
+    "// The module ships inline reified helpers, so its metadata level is what consumer apps must read: 1.9 keeps"
+   ],
+   "findings": [
+    "R1-004"
+   ]
+  },
+  {
+   "file": "gradle/release.gradle",
+   "hunks_total": 1,
+   "anchors": [
+    "// The child must see the same command-line properties (-PtinyHttpdDir ...), or a settings error would be recorded as"
+   ],
+   "findings": []
+  },
+  {
+   "file": "src/test/java/com/snoworca/naruserve/build/ReleaseScriptTextTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "// FR-REL-002 AC-5 \u2014 the scan child sees the parent's command-line properties, so -PtinyHttpdDir is not lost"
+   ],
+   "findings": []
+  },
+  {
+   "file": "src/test/java/com/snoworca/naruserve/docs/ServletDocsTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "static final String THREAD_TOTAL_PHRASE = \"\ub0b4\uc7a5 \uc5d4\uc9c4\uc758 \uc2a4\ub808\ub4dc \ucd1d\ub7c9 452\uac1c(D-416\uc758 451\uc5d0 `naruserve-keeper` 1)\ub294 Servlet \uc5b4\ub311\ud130\uc5d0 \uc801\uc6a9\ub418\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4\";"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticReplaceRaceTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "/** FR-STATIC-009: a file replaced between the stat and the open is never sent truncated under the old validators. */"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/SpoolPermissionsTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "p.removeAll(java.util.EnumSet.of(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletAbortConnectionTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "/** FR-SVL-003: an aborted non-SSE exchange ends the connection abnormally, as the TinyHttpd adapter does. */"
+   ],
+   "findings": [
+    "R1-009"
+   ]
+  }
+ ]
+}

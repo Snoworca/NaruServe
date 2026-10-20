@@ -1,0 +1,401 @@
+{
+ "findings": [
+  {
+   "id": "P7-001",
+   "axis": "P2",
+   "severity": "HIGH",
+   "title": "abort() of a non-SSE exchange does not end the connection abnormally: a failed unknown-length body is delivered as a cleanly terminated chunked response",
+   "location": {
+    "file": "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/NaruServeServlet.java",
+    "line_range": "45-66"
+   },
+   "description": "HttpExchange.abort() is specified as 'Closes the connection abnormally' and the TinyHttpd adapter honours it: after the handler returns with ex.aborted it sets close-connection and throws IOException('exchange aborted') (TinyHttpdExchange.run, lines 111-126), so the client sees a truncated message. The Servlet adapter's abort() (ServletExchange.java:205-222) only sets the aborted flag, and NaruServeServlet.service() then returns normally. Trigger: res.stream(in) / res.json of a large body without a known length (Transfer-Encoding: chunked, see ServletResponseTest.unknownLengthStream) whose source throws IOException after the first 32 KiB flushed -> DefaultResponse.runTransfer catches it and calls abort(e) (DefaultResponse.java:620-624) -> ex.abort() sets the flag only -> service() returns -> the container writes the terminating 0-length chunk. The client receives HTTP 200 with a well-formed chunked body that is silently cut short, and the keep-alive connection is reused. A declared-length body is protected only by the container's own Content-Length underflow handling (container specific, not asserted by any test). Also, an abort before anything was committed (ex.abort() then service returns) leaves the container to send its default empty 200. No test covers a mid-body abort over a real container (ServletAbortTest uses a recording proxy and asserts only 'abort makes no container call').",
+   "suggested_fix": "After handler.handle(ex) (and not for an exchange whose AsyncContext started), if the exchange was aborted rethrow from service(): throw new IOException(\"exchange aborted\") when the response is committed so Jetty/Tomcat abort the connection without the terminating chunk, and answer 500/close when nothing was committed (the TinyHttpd behaviour). Expose a ServletExchange.aborted() accessor for this and add a Jetty test with a failing InputStream on an unknown-length res.stream that asserts the client sees a truncated chunked body (no 0-chunk) / a closed connection. Update docs/api/servlet.md ('연결을 끊는 일은 컨테이너 몫') accordingly.",
+   "is_behavioral": true,
+   "tags": [
+    "bug",
+    "regression"
+   ]
+  },
+  {
+   "id": "P7-002",
+   "axis": "P2",
+   "severity": "MEDIUM",
+   "title": "Pool.completeAll() aborts streams sequentially and each abort() may wait 250 ms on a blocked writer, so stop() overshoots its deadline by up to N x 250 ms",
+   "location": {
+    "file": "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/ServletEventStream.java",
+    "line_range": "176-186"
+   },
+   "description": "ServletAdapter.stop() (ServletAdapter.java:137-165) waits until the deadline, then calls Pool.completeAll(), which loops over the open streams and calls ex.abort() on each; abort() does writeLock.tryLock(ABORT_WAIT_MILLIS=250) before complete() (ServletExchange.java:205-222). A drain blocked in FlushingStream.write holds writeLock for the whole blocking write, so each stream whose client stopped reading costs a full 250 ms, one after the other. Trigger: 100 SSE clients on slow/stalled mobile links with large queued events at shutdown; adapter.stop(10 s) returns after about 10 s + 100 x 0.25 s = 35 s, so RestApp.shutdown(timeout) overshoots its timeout and the container's contextDestroyed thread (and the 'timeout plus 3 s' bound asserted in ServletLifecycleTest) is violated. ServletStopSseTest.sdsAc3 (took in [900,2000] ms for ONE blocked stream, i.e. 1 s + 250 ms) already contains one such wait and would fail at four blocked streams, but only one stream is ever tested.",
+   "suggested_fix": "Give completeAll a single shared budget (for example the remaining part of 250 ms in total) instead of 250 ms per stream: set aborted=true on all streams first, then complete them (or complete them on the pool's own threads in parallel), only trying writeLock with the leftover shared budget; add a test with several blocked non-reading clients that asserts stop() returns within deadline + about 1 s.",
+   "is_behavioral": true,
+   "tags": [
+    "bug",
+    "performance"
+   ]
+  }
+ ],
+ "coverage_rows": [
+  {
+   "file": "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/AppStarter.java",
+   "hunks_total": 1,
+   "anchors": [
+    "boolean noCodec = !preset && String.valueOf(e.getMessage()).contains(\"jsonCodec\");"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/InitParams.java",
+   "hunks_total": 1,
+   "anchors": [
+    "return pattern.endsWith(\"/*\") ? pattern.substring(0, pattern.length() - 2) : \"\";"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/NaruServeInitializer.java",
+   "hunks_total": 1,
+   "anchors": [
+    "// addMapping returns the patterns another servlet already owns; left unchecked the app would never be routed to"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/NaruServeServlet.java",
+   "hunks_total": 1,
+   "anchors": [
+    "ex.afterHandler(); // starts a registered event-stream drain on the adapter's pool"
+   ],
+   "findings": [
+    "P7-001"
+   ]
+  },
+  {
+   "file": "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/ServletAdapter.java",
+   "hunks_total": 1,
+   "anchors": [
+    "changed.awaitNanos(Math.min(left, POLL_NANOS));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/ServletConfigurer.java",
+   "hunks_total": 1,
+   "anchors": [
+    "RestApp configure(RestApp.Builder builder) throws Exception;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/ServletEventStream.java",
+   "hunks_total": 1,
+   "anchors": [
+    "ex.abort(); // aborted before complete, so a running drain cannot write to the ended response"
+   ],
+   "findings": [
+    "P7-002"
+   ]
+  },
+  {
+   "file": "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/ServletExchange.java",
+   "hunks_total": 1,
+   "anchors": [
+    "held = writeLock.tryLock(ABORT_WAIT_MILLIS, TimeUnit.MILLISECONDS);"
+   ],
+   "findings": [
+    "P7-001",
+    "P7-002"
+   ]
+  },
+  {
+   "file": "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/ServletPath.java",
+   "hunks_total": 1,
+   "anchors": [
+    "return rest.charAt(0) == '/' ? rest : null;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/ShutdownListener.java",
+   "hunks_total": 1,
+   "anchors": [
+    "if (!destroyed.compareAndSet(false, true)) {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/package-info.java",
+   "hunks_total": 1,
+   "anchors": [
+    "@org.jspecify.annotations.NullMarked"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-servlet/src/main/resources/META-INF/services/javax.servlet.ServletContainerInitializer",
+   "hunks_total": 1,
+   "anchors": [
+    "com.snoworca.naruserve.servlet.NaruServeInitializer"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ContainerRule.java",
+   "hunks_total": 1,
+   "anchors": [
+    "throw new AssertionError(\"left \" + SETTLE_MILLIS + \" ms after shutdown: \" + left);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/RecordingRequest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "return type.cast(Proxy.newProxyInstance(RecordingRequest.class.getClassLoader(), new Class<?>[] {type},"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletAbortTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(\"abort waits for the running write\", Thread.State.TIMED_WAITING, aborter.getState());"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletAdapterTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "return s.getLocalPort() == port;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletCasesTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertTrue(all, all.contains(\"GET /boom -> 500\"));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletCodecTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertSame(Replacing.CODEC, appCodec(app));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletConfigurerTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertSame(ServletAdapter.class, adapter.getClass());"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletLifecycleTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertTrue(millis + \" ms\", millis < 1000 + 3000);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletMultipartDisconnectTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertTrue(\"the container thread returned\", returned.await(10, TimeUnit.SECONDS));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletMultipartTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "many.append(part(\"p\" + i, null, \"v\"));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletPathTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(\"/users/%41;v=1\", ServletPath.remainder(\"/app/api/users/%41;v=1\", \"/app\", \"/api\"));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRawTargetTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "CASES.put(\"GET /a%2Fb\", \"/a%2Fb\");"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRegistrationTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "ir_SVL_001_AC4_urlPatternOwnedByAnotherServletFailsStartup"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRejectTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(\"close\", r.header(\"Connection\"));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRequestTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(\"1,2|1|abc|s=abc; t=%20x|127.0.0.1|false\", r.text());"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletResponseTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(\"chunked\", r.header(\"Transfer-Encoding\"));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRuleTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "AssertionError e = expectFailure(new ContainerRule(), new Statement() {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletSendFileTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertTrue(saw206 && saw416);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletServicesFileTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(\"com.snoworca.naruserve.servlet.NaruServeInitializer\", text.trim());"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletSettingsTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(\"served localhost\", r.text());"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletSseAsyncTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "awaitDrainEnded(adapter); // the drain's own end comes after the abort and must not complete again"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletSseDeliveryTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertTrue(\"event after \" + bestEvent + \" ms (best round)\", bestEvent <= 500);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletSseLimitTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(\"503 false\", refused.get());"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletStartFailureTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertSame(FAILURE, cause.getCause());"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletStopSseTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertTrue(\"stop took \" + took + \" ms\", took >= 900 && took <= 2000);"
+   ],
+   "findings": [
+    "P7-002"
+   ]
+  },
+  {
+   "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletStopTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertTrue(\"the slow request is not interrupted\", slowThread[0].isAlive());"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletSurfaceTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(abstracts.toString(), 1, abstracts.size());"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletWebSocketTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(r.text(), 501, r.status);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/SharedApp.java",
+   "hunks_total": 1,
+   "anchors": [
+    "static boolean until(BooleanSupplier cond, long timeout, TimeUnit unit) throws InterruptedException {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/SseJettyTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertNotNull(\"no stream opened\", c);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/SseProbe.java",
+   "hunks_total": 1,
+   "anchors": [
+    "boolean awaitEnd(int timeoutMillis) throws IOException {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-servlet/src/test/kotlin/com/snoworca/naruserve/servlet/ServletDocsKotlinTest.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "val r = adapter.send(ClientRequest.of(\"GET\", \"/users/7\"))"
+   ],
+   "findings": []
+  }
+ ]
+}

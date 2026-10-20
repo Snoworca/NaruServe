@@ -42,4 +42,15 @@ public class DirectoryListingTest {
         assertFalse(html, html.contains("link.txt"));
         assertFalse(html, html.contains("<x>"));
     }
+
+    // FR-STATIC-003: a name StaticPath refuses (here "a%2eb") is not listed, so no listed link answers 400
+    @Test
+    public void FR_STATIC_003_entryWhoseEncodedLinkStaticPathRefusesIsNotListed() throws IOException {
+        File dir = tmp.getRoot();
+        touch(new File(dir, "a%2eb"));
+        touch(new File(dir, "ok.txt"));
+        String html = DirectoryListing.render("/files/", dir);
+        assertTrue(html, html.contains("href=\"ok.txt\""));
+        assertFalse(html, html.contains("2eb"));
+    }
 }

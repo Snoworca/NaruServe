@@ -4,8 +4,8 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Server settings, configured through {@code app.server(o -> o.bindAddress("0.0.0.0"))}. Each setter returns these
- * options; a value outside its range throws {@link IllegalArgumentException} naming the setting and the range, and no
- * value means unlimited.
+ * options; a value outside its range throws {@link IllegalArgumentException} naming the setting and the range. There is
+ * no unlimited value; an unset setting keeps the default shown on its setter.
  */
 // @req IR-ENGINE-001
 public interface ServerOptions {

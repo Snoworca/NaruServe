@@ -5,6 +5,7 @@ import com.snoworca.naruserve.spi.StreamDrain;
 import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -174,13 +175,28 @@ final class ServletEventStream {
          */
         // @req FR-SVL-006
         void completeAll() {
+            // In parallel: each abort may wait ABORT_WAIT_MILLIS on a blocked writer, and those waits must not add up.
+            List<Thread> aborts = new ArrayList<>();
             for (ServletExchange ex : streams) {
-                try {
-                    ex.abort(); // aborted before complete, so a running drain cannot write to the ended response
-                } catch (RuntimeException e) {
-                    // the container already ended this request
-                }
+                Thread t = new Thread(() -> {
+                    try {
+                        ex.abort(); // aborted before complete, so a running drain cannot write to the ended response
+                    } catch (RuntimeException e) {
+                        // the container already ended this request
+                    }
+                }, "naruserve-sse-abort");
+                t.setDaemon(true);
+                t.start();
+                aborts.add(t);
                 streams.remove(ex);
+            }
+            for (Thread t : aborts) {
+                try {
+                    t.join(ServletExchange.ABORT_WAIT_MILLIS * 4); // bounded: a stuck container call must not hold stop
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    return;
+                }
             }
         }
 

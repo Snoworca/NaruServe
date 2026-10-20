@@ -62,7 +62,7 @@ public final class ServletDocsTest {
         assertTrue(doc.contains(HEADER_ORDER_PHRASE));
     }
 
-    static final String THREAD_TOTAL_PHRASE = "내장 엔진의 스레드 총량 451개(D-416)는 Servlet 어댑터에 적용되지 않습니다";
+    static final String THREAD_TOTAL_PHRASE = "내장 엔진의 스레드 총량 452개(D-416의 451에 `naruserve-keeper` 1)는 Servlet 어댑터에 적용되지 않습니다";
     static final String THREAD_SOURCE_PHRASE = "컨테이너의 스레드에 SSE 스레드 최대 `maxSseStreams`개를 더한 것";
     static final String IGNORED_PREFIX = "- 무시하는 `ServerOptions` 설정:";
     static final String APPLIED_PREFIX = "- 적용하는 설정:";

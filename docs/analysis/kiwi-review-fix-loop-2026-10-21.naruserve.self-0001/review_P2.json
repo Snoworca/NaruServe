@@ -1,0 +1,335 @@
+{
+ "findings": [
+  {
+   "id": "P2-001",
+   "axis": "P2",
+   "severity": "MEDIUM",
+   "title": "OwnedResources.closeAll catches only Exception: an Error from one close() aborts the whole shutdown/failed-start cleanup",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/OwnedResources.java",
+    "line_range": "38-48"
+   },
+   "description": "closeAll() loops over the owned resources with catch (Exception e). If one resource's close() throws an Error (NoClassDefFoundError/LinkageError while a webapp classloader is being torn down under the Servlet adapter, AssertionError, StackOverflowError), the loop is left, the list was already cleared (order.clear()), so every resource registered earlier is never closed and can never be retried. The Error then propagates out of context.closeOwned() in DefaultRestApp.runShutdownSequence (line ~700) and failStart (line ~570): SafeLogger.flushAndClose(logger) (the file logger queue is never flushed), adapter.release() (Servlet SSE pool / TinyHttpd workers never awaited) and the remaining steps are skipped; only the finally block moves the state to TERMINATED. This contradicts the sequence's own design (ShutdownParticipants.run and the onStop loop catch Throwable, continue, and rethrow the first Error after TERMINATED), docs/api/lifecycle.md:65 ('Error ... also finishes cleanup completely') and object.md 11.4 step 6 ('close exception: keep cleaning and collect'). No test covers an Error from a close() (OwnedResourcesTest, ShutdownSequenceTest cover only onStop/participant Errors).",
+   "suggested_fix": "In OwnedResources.closeAll catch Throwable, keep Exceptions in the failures list and remember the first Error (return it or rethrow it after the loop). In runShutdownSequence/failStart route that Error through DefaultRestApp.firstError like the participants do, so flushAndClose and a.release() always run, then rethrow after TERMINATED. Add a test with an AutoCloseable whose close() throws AssertionError followed by an earlier-registered resource.",
+   "is_behavioral": true,
+   "tags": [
+    "bug"
+   ]
+  },
+  {
+   "id": "P2-002",
+   "axis": "P2",
+   "severity": "LOW",
+   "title": "Adapter stop()/release() failures that are Errors skip the rest of the shutdown sequence and failed-start cleanup",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+    "line_range": "681-708"
+   },
+   "description": "runShutdownSequence wraps a.stop(...) and a.release() in catch (RuntimeException) only (lines 681-685, 704-708); failStart does the same (lines 559-568). An Error from the adapter (OutOfMemoryError from a thread start inside TinyHttpd stop, NoClassDefFoundError in the Servlet adapter) leaves the try body of the sequence: FORCE_CLOSE participants (WebSocketRegistry.terminate / SseRegistry.terminate: sender and idle executors), the onStop callbacks, the AFTER_ON_STOP spool cleanup (temp upload files stay on disk) and the owned-resource close never run, whereas the same Error thrown by a participant or an onStop callback is logged and the sequence continues. Same inconsistency with docs/api/lifecycle.md:65.",
+   "suggested_fix": "Catch Throwable around a.stop and a.release (log, firstError(error, e)) exactly like the participant and onStop loops, in both runShutdownSequence and failStart (failStart: keep suppress() and rethrow the first Error at the end).",
+   "is_behavioral": true,
+   "tags": [
+    "bug"
+   ]
+  },
+  {
+   "id": "P2-003",
+   "axis": "P4",
+   "severity": "LOW",
+   "title": "HttpAdapter SPI does not state the stop()/release() idempotence and unbound-call contract the core relies on",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpAdapter.java",
+    "line_range": "32-38"
+   },
+   "description": "DefaultRestApp.failStart calls a.stop(1 s) and a.release() whenever bindAttempted is true, including when bind() itself threw (port in use, UnknownHostException) or when markRunning lost the race to a pending stop; the core also calls stop() before release() on every normal shutdown. The SPI Javadoc only says 'Stops accepting, waits ...' and 'Final release ...'. ServletAdapter documents 'Idempotent and harmless before bind' and TinyHttpdAdapter happens to no-op, but a third-party adapter written from the SPI text (stop() dereferencing a null server after a failed bind) throws a RuntimeException inside failStart, which is only attached as a suppressed exception and hides nothing but also leaves its half-built engine running. The contract that matters (stop and release must be callable on an adapter whose bind failed or never ran, and be idempotent; a failed bind must leave no thread or socket behind; bind may be called at most once) is not written down.",
+   "suggested_fix": "Add the three guarantees to the stop() and release() Javadoc of HttpAdapter (and bind(): failed bind leaves nothing running) and to docs/api if the SPI is documented there; optionally add them to HttpAdapterSpiTest.",
+   "is_behavioral": false,
+   "tags": [
+    "doc"
+   ]
+  },
+  {
+   "id": "P2-004",
+   "axis": "P4",
+   "severity": "LOW",
+   "title": "server() and accessLog() run the Configurer on the live options, so a throwing configurer leaves a half-applied configuration (unlike multipart/webSocket/sse)",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+    "line_range": "366-383"
+   },
+   "description": "multipart(), webSocket() and sse() go through reconfigure(), which runs the Configurer on a copy so that a configurer that throws leaves the current options untouched (documented in the reconfigure Javadoc). server() (line 381) and accessLog() (line 371) pass the one live DefaultServerOptions / DefaultAccessLogOptions instead. app.server(o -> o.maxWorkers(10).maxSseStreams(0)) throws IllegalArgumentException from the second setter but maxWorkers(10) stays applied; if the caller catches the exception (e.g. to fall back to defaults) the app silently starts with a partly changed configuration. A retained reference to the options object also stays writable after freeze, with no effect and no IllegalStateException.",
+   "suggested_fix": "Either copy-then-assign for server() and accessLog() like the other three, or state in docs/api/app.md that these two configurers are applied in place and a throw leaves earlier setters applied.",
+   "is_behavioral": true,
+   "tags": [
+    "bug",
+    "doc"
+   ]
+  }
+ ],
+ "coverage_rows": [
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/AppFactoryLoader.java",
+   "hunks_total": 1,
+   "anchors": [
+    "return found.get(0).create();"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/AppLifecycle.java",
+   "hunks_total": 1,
+   "anchors": [
+    "return state.compareAndSet(AppState.RUNNING, AppState.STOPPING);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ChainNext.java",
+   "hunks_total": 1,
+   "anchors": [
+    "chain.routedError = error;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultApplicationContext.java",
+   "hunks_total": 1,
+   "anchors": [
+    "// Barrier: called after the state left STARTING, so an own in progress finishes and later ones are refused."
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+   "hunks_total": 1,
+   "anchors": [
+    "lifecycleThread.compareAndSet(self, null);"
+   ],
+   "findings": [
+    "P2-001",
+    "P2-002",
+    "P2-004"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultServerOptions.java",
+   "hunks_total": 1,
+   "anchors": [
+    "values.maxSseStreams(range(\"maxSseStreams\", streams, 1024));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+   "hunks_total": 1,
+   "anchors": [
+    "AtomicInteger untilEnd = new AtomicInteger(2);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/GatedExchangeHandler.java",
+   "hunks_total": 1,
+   "anchors": [
+    "lifecycle.awaitStartGate();"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/MiddlewarePipeline.java",
+   "hunks_total": 1,
+   "anchors": [
+    "errors.logger.error(\"request \" + requestId + \": exception after next.error(e) dropped\", e);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/OwnedResources.java",
+   "hunks_total": 1,
+   "anchors": [
+    "if (r == skip) {"
+   ],
+   "findings": [
+    "P2-001"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/PackageMethods.java",
+   "hunks_total": 1,
+   "anchors": [
+    "throw new ExceptionInInitializerError(e);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/PrefixMatcher.java",
+   "hunks_total": 1,
+   "anchors": [
+    "if (caseInsensitive ? !p.equalsIgnoreCase(s) : !p.equals(s)) {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ShutdownParticipants.java",
+   "hunks_total": 1,
+   "anchors": [
+    "logger.error(\"shutdown participant failed (\" + phase + \")\", e);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/package-info.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.internal;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/PathValidator.java",
+   "hunks_total": 1,
+   "anchors": [
+    "return PercentDecoder.decode(segment, false);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouteKind.java",
+   "hunks_total": 1,
+   "anchors": [
+    "HTTP, WEBSOCKET"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouteMatch.java",
+   "hunks_total": 1,
+   "anchors": [
+    "return autoHead;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RoutePattern.java",
+   "hunks_total": 1,
+   "anchors": [
+    "cs[i] = Character.toLowerCase(Character.toUpperCase(cs[i]));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java",
+   "hunks_total": 1,
+   "anchors": [
+    "methodMask |= 1 << r.method.ordinal();"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouterPolicy.java",
+   "hunks_total": 1,
+   "anchors": [
+    "private static final RouterPolicy STRICT = new Builder().build();"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RoutingConfigException.java",
+   "hunks_total": 1,
+   "anchors": [
+    "private static final long serialVersionUID = 1L;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/package-info.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.routing;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/AppFactory.java",
+   "hunks_total": 1,
+   "anchors": [
+    "RestApp create();"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/ErrorRenderer.java",
+   "hunks_total": 1,
+   "anchors": [
+    "String render(int status);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/ExchangeHandler.java",
+   "hunks_total": 1,
+   "anchors": [
+    "void handle(HttpExchange exchange);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpAdapter.java",
+   "hunks_total": 1,
+   "anchors": [
+    "void stop(long timeout, TimeUnit unit);"
+   ],
+   "findings": [
+    "P2-003"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpExchange.java",
+   "hunks_total": 1,
+   "anchors": [
+    "throw new UnsupportedOperationException(\"webSocket is not supported by this adapter\");"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/JsonCodec.java",
+   "hunks_total": 1,
+   "anchors": [
+    "void encode(@Nullable Object value, Writer writer) throws IOException;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/ServerSettings.java",
+   "hunks_total": 1,
+   "anchors": [
+    "this.maxConnectionsPerAddress = connections;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/StreamDrain.java",
+   "hunks_total": 1,
+   "anchors": [
+    "default void attach(OutputStream out) {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/UpgradeHandler.java",
+   "hunks_total": 1,
+   "anchors": [
+    "void upgraded(InputStream in, OutputStream out) throws IOException;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/package-info.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.spi;"
+   ],
+   "findings": []
+  }
+ ]
+}

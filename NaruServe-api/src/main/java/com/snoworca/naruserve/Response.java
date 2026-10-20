@@ -21,7 +21,7 @@ public interface Response {
      */
     Response status(int code);
 
-    /** Adds a header; returns this response. */
+    /** Sets a header, replacing a same-name header as Express {@code res.set} does; returns this response. */
     Response header(String name, String value);
 
     /** Sends {@code body} as the whole response body. */

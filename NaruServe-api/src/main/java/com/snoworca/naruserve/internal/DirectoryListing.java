@@ -8,7 +8,7 @@ import java.util.List;
 
 /**
  * The {@code directoryListing(true)} body: one relative link per entry, sorted by {@link String#compareTo} on the raw
- * name, the text HTML-escaped and the href percent-encoded UTF-8; dot entries and symbolic links are left out.
+ * name, the text HTML-escaped and the href percent-encoded UTF-8; dot entries, symbolic links and names StaticPath refuses are left out.
  */
 // @req FR-STATIC-003
 final class DirectoryListing {
@@ -31,8 +31,8 @@ final class DirectoryListing {
         for (String name : sorted) {
             File f = new File(dir, name);
             String expected = base.endsWith(File.separator) ? base + name : base + File.separator + name;
-            if (name.startsWith(".") || !f.getCanonicalPath().equals(expected)) {
-                continue; // hidden, or a symbolic link
+            if (name.startsWith(".") || !f.getCanonicalPath().equals(expected) || StaticPath.check(encode(name)) != 0) {
+                continue; // hidden, a symbolic link, or a name whose own link StaticPath would refuse
             }
             String slash = f.isDirectory() ? "/" : "";
             sb.append("<li><a href=\"").append(encode(name)).append(slash).append("\">").append(escape(name))

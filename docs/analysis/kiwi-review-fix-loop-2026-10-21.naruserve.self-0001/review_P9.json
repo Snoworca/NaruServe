@@ -1,0 +1,448 @@
+{
+ "findings": [
+  {
+   "id": "P9-001",
+   "axis": "P4",
+   "severity": "MEDIUM",
+   "title": "releaseScanChild drops -PtinyHttpdDir (and every other -P/-D) so a non-default checkout turns the scan into a silently passing 'pending'",
+   "location": {
+    "file": "gradle/release.gradle",
+    "line_range": "76-84"
+   },
+   "description": "The child gradlew is launched with only -Prelease -PreleaseScanChild --no-daemon (+ --offline). settings.gradle takes the TinyHttpd checkout from -PtinyHttpdDir, default the hard-coded /Users/beom/... path. A release run on any other machine/CI (./gradlew -Prelease -PtinyHttpdDir=/ci/TinyHttpd releaseCheck) makes the child fail in settings ('TinyHttpd checkout not found') or scan a different checkout. Exit != 0 -> ScanReport.fromChild writes 'Status: pending / Reason: TOOL_ERROR', and ReleaseGate.decide passes pending with exit 0. The release gate therefore goes green without any scan. BuildChecksTest.runner() forwards -PtinyHttpdDir for exactly this reason, but release.gradle does not.",
+   "suggested_fix": "Forward the parent's relevant properties to the child (at least tinyHttpdDir via project.findProperty / gradle.startParameter.projectProperties) and make releaseCheck fail (or print a loud non-zero) when the child exit was a settings/tool error rather than a classified network/key cause.",
+   "is_behavioral": true,
+   "tags": [
+    "bug"
+   ]
+  },
+  {
+   "id": "P9-002",
+   "axis": "P8",
+   "severity": "MEDIUM",
+   "title": "ServletBuildTest pins the SPI to commit f7da71d and a clean working tree: fails on any dirty tree, shallow clone or source archive, and freezes the SPI forever",
+   "location": {
+    "file": "src/test/java/com/snoworca/naruserve/build/ServletBuildTest.java",
+    "line_range": "111-119"
+   },
+   "description": "sdsAc11 runs 'git diff --stat f7da71d -- NaruServe-api/.../spi' and 'git status --porcelain -- spi' inside the default root test (part of ./gradlew build). (a) A developer who edits any SPI file (uncommitted) gets a red build even when the change is intended; (b) in a shallow clone, a tarball without .git or a fork lacking that commit, BuildLayoutTest.git() asserts exit status 0 and fails with 'unknown revision' / 'not a git repository'; (c) the test encodes a wave-process rule (wave 8 must not touch the SPI) as a permanent invariant, so legitimate later SPI evolution needs editing the test. It also does not skip when git is unavailable.",
+   "suggested_fix": "Drop it from the default suite (keep as an orchestrator-time check) or guard it with assumeTrue(git history contains the commit) and compare against a content hash/API listing instead of a commit id and working-tree cleanliness.",
+   "is_behavioral": false,
+   "tags": [
+    "style",
+    "regression"
+   ]
+  },
+  {
+   "id": "P9-003",
+   "axis": "P8",
+   "severity": "MEDIUM",
+   "title": "ServletDocsTest freezes docs/api/sse.md by SHA-256, so any docs/api drift fix in sse.md breaks the build",
+   "location": {
+    "file": "src/test/java/com/snoworca/naruserve/docs/ServletDocsTest.java",
+    "line_range": "158-159,211-224"
+   },
+   "description": "sseDocOnlyGainsPointer hashes sse.md minus one pointer line and compares with the wave-7 digest. CLAUDE.md requires docs/api to be corrected together with API changes, but a correction to sse.md (typo, a changed default, a drifted statement) turns this test red and the only way green is editing the constant, i.e. the check detects change, not drift. It also hashes decoded UTF-8 text with exact line endings, so a CRLF checkout (core.autocrlf) changes the hash and fails on Windows.",
+   "suggested_fix": "Replace by assertions about the pointer line and the specific wave-7 phrases already pinned in WaveSevenDocsTest; drop the digest.",
+   "is_behavioral": false,
+   "tags": [
+    "style",
+    "doc"
+   ]
+  },
+  {
+   "id": "P9-004",
+   "axis": "P6",
+   "severity": "MEDIUM",
+   "title": "NaruServe-kotlin is compiled with Kotlin 2.2 defaults: metadata 2.2, inline reified Request.body() inlined into callers; Kotlin < 2.1 Android projects cannot compile against it",
+   "location": {
+    "file": "build.gradle",
+    "line_range": "44-48"
+   },
+   "description": "configureCompile sets jvmTarget=1.8 but no languageVersion/apiVersion. NaruServe-kotlin/.../RequestExtensions.kt declares 'inline fun <reified T : Any> Request.body()', so its class files carry Kotlin metadata 2.2.0. A consumer app on Kotlin 1.9.x or 2.0 (very common on AGP 8 / Android 5.0-targeting apps) fails with 'Module was compiled with an incompatible version of Kotlin. The binary version of its metadata is 2.2.0, expected version is 1.9.0'. The project requires the Kotlin helper to be usable by Android callers (CLAUDE.md), and kotlin.md does not state a minimum Kotlin version.",
+   "suggested_fix": "Set kotlin.compilerOptions.languageVersion/apiVersion to an older level (e.g. KOTLIN_1_9) for NaruServe-kotlin, or document 'requires Kotlin 2.1+' in docs/api/kotlin.md and the POM description.",
+   "is_behavioral": true,
+   "tags": [
+    "bug",
+    "doc"
+   ]
+  },
+  {
+   "id": "P9-005",
+   "axis": "P5",
+   "severity": "LOW",
+   "title": "Gson 2.14.0 is a soft 'api' dependency: a consumer graph can upgrade it to 2.15+ (API 24+) and break API 21 devices",
+   "location": {
+    "file": "build.gradle",
+    "line_range": "60"
+   },
+   "description": "':NaruServe-gson': [api: [..., 'com.google.code.gson:gson:2.14.0']] is a plain version. checkDependencyRules enforces the pin only for this build's own configurations. An app that also depends on a library requiring gson 2.15 resolves to 2.15 via conflict resolution and the published POM/Gradle metadata does nothing to stop it, contradicting the CLAUDE.md rule that 2.15+ must not be used.",
+   "suggested_fix": "Use a strict constraint (version { strictly '2.14.0' }) or document the pin prominently in json.md; update PublishedPomTest expectation accordingly.",
+   "is_behavioral": false,
+   "tags": [
+    "bug"
+   ]
+  },
+  {
+   "id": "P9-006",
+   "axis": "P4",
+   "severity": "LOW",
+   "title": "Published POMs carry no name/description/url/licenses/scm; the project's own license is invisible to consumers' license scanners",
+   "location": {
+    "file": "build.gradle",
+    "line_range": "151-168"
+   },
+   "description": "configurePublishing only sets from components.java and versionMapping. The generated pom-default.xml (read by PublishedPomTest) has no <name>, <description>, <url>, <licenses> or <scm>. A consumer running the same kind of GPL/unknown-license gate this repo ships (LicenseCheck) would classify every NaruServe artifact as 'unknown license'; the repository root has a LICENSE file that never reaches the POM. PublishedPomTest does not assert any metadata, nor that api/gson dependencies stay out of other POMs (e.g. NaruServe-api POM has no dependencies).",
+   "suggested_fix": "Add a pom { name; description; licenses { license { name; url } } } block shared by all modules and assert it plus an empty dependency list for NaruServe-api in PublishedPomTest.",
+   "is_behavioral": false,
+   "tags": [
+    "doc"
+   ]
+  },
+  {
+   "id": "P9-007",
+   "axis": "P5",
+   "severity": "LOW",
+   "title": "LicenseCheck denylist misses 'Licence' spelling and 'GNU Public License', so such a shipped dependency passes the license gate",
+   "location": {
+    "file": "gradle/release-tools/com/snoworca/naruserve/release/LicenseCheck.java",
+    "line_range": "16-18,80"
+   },
+   "description": "DENIED matches 'General Public License' and \\b[AL]?GPL only. A POM license named 'GNU General Public Licence v2' or 'GNU Lesser Public License' matches nothing, verdict() returns pass, and releaseLicenses writes it into THIRD-PARTY-LICENSES.md as shipped. The gate is a denylist on free text, so it fails open on unlisted wording; unknown wording is not treated as unknown.",
+   "suggested_fix": "Match 'Licen[sc]e' and 'GNU' generically (e.g. (?i)\\bGNU\\b|\\b[AL]?GPL), or switch to an allowlist of permissive SPDX ids with the denylist as secondary.",
+   "is_behavioral": true,
+   "tags": [
+    "bug",
+    "security"
+   ]
+  },
+  {
+   "id": "P9-008",
+   "axis": "P8",
+   "severity": "LOW",
+   "title": "BuildChecksTest pins the author's absolute home path and settings.gradle hard-codes it; -PtinyHttpdDir is undocumented for contributors",
+   "location": {
+    "file": "src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java",
+    "line_range": "148"
+   },
+   "description": "sdsAc3 asserts settings.gradle contains the literal '/Users/beom/work/git/TinyHttpd'. Any other contributor/CI must know to pass -PtinyHttpdDir (settings.gradle:16 throws GradleException otherwise even for 'help'), but README.md, docs/release and CLAUDE.md never mention that property (README only documents consumer includeBuild). The test additionally prevents changing the default to a relative path without editing it. TinyHttpd HEAD is currently 38051b6, not the 46b973e the docs/test claim as verified (only a warning, README still says verified).",
+   "suggested_fix": "Document -PtinyHttpdDir in README (contributor section) and assert the property mechanism instead of the literal path.",
+   "is_behavioral": false,
+   "tags": [
+    "doc"
+   ]
+  },
+  {
+   "id": "P9-009",
+   "axis": "P8",
+   "severity": "LOW",
+   "title": "ReleaseNotesDocsTest hard-asserts the Java 8 matrix row is 'pending', making its own 'verified' branch dead and blocking a real Java 8 run record",
+   "location": {
+    "file": "src/test/java/com/snoworca/naruserve/docs/ReleaseNotesDocsTest.java",
+    "line_range": "224-232"
+   },
+   "description": "ops_REL_004_AC1 first accepts a verified row if a 'run java8' record exists, then unconditionally assertEquals(\"pending\", java8[1]). If someone runs the suite on a Java 8 JVM and records it, matrixRules passes but the test fails; the verified branch can never be exercised. Similarly ReleaseRecordsDocsTest only checks that doc lines claiming a run (full-suite tests=N exit=0) are self-consistent, so these tests verify prose, not that any run happened.",
+   "suggested_fix": "Drop the unconditional pending assertion or make it conditional on the absence of a java8 run line.",
+   "is_behavioral": false,
+   "tags": [
+    "style"
+   ]
+  },
+  {
+   "id": "P9-010",
+   "axis": "P4",
+   "severity": "LOW",
+   "title": "docs/api drift: servlet.md compares against 451 threads while defaults.md (verified against code) says 452",
+   "location": {
+    "file": "docs/api/servlet.md",
+    "line_range": "96,133"
+   },
+   "description": "defaults.md:69 documents the embedded engine total as 452 (design 451 plus the non-daemon naruserve-keeper). servlet.md:96 and :133 still say 451(D-416) as the embedded total and ServletDocsTest.THREAD_TOTAL_PHRASE pins the 451 text, so the two API docs give different numbers for the same quantity.",
+   "suggested_fix": "Say '452 (451 by D-416 plus the keeper)' in servlet.md and update THREAD_TOTAL_PHRASE.",
+   "is_behavioral": false,
+   "tags": [
+    "doc"
+   ]
+  }
+ ],
+ "coverage_rows": [
+  {
+   "file": ".gitignore",
+   "hunks_total": 1,
+   "anchors": [
+    "/*/build/"
+   ],
+   "findings": []
+  },
+  {
+   "file": "build.gradle",
+   "hunks_total": 14,
+   "anchors": [
+    "// the end under -Prelease (CON-BUILD-017).",
+    "id 'java'",
+    "id 'org.jetbrains.kotlin.jvm' version '2.2.0' apply false",
+    "def kotlinVersion = '2.2.0'",
+    "}",
+    "tasks.withType(Test).configureEach { systemProperty 'sun.io.useCanonCaches', 'false' }",
+    "def configureCompile = { Project p ->",
+    "p.tasks.withType(JavaCompile).configureEach {",
+    "p.kotlin.compilerOptions.freeCompilerArgs.add('-Xjspecify-annotations=strict')",
+    "def classRefPrefixes = { String path ->",
+    "testFixturesCompileOnly 'org.jspecify:jspecify:1.0.0'",
+    "// Android 5.0 (API 21) is the minimum runtime: fail the build on any API that API 21 lacks.",
+    "// JVM-only: Servlet API never reaches Android, so no API 21 check here.",
+    "def checkNoCoroutines = tasks.register('checkNoCoroutines') {"
+   ],
+   "findings": [
+    "P9-004",
+    "P9-005",
+    "P9-006"
+   ]
+  },
+  {
+   "file": "gradle.properties",
+   "hunks_total": 1,
+   "anchors": [
+    "kotlin.stdlib.default.dependency=false"
+   ],
+   "findings": []
+  },
+  {
+   "file": "gradle/release-tools/com/snoworca/naruserve/release/DependencyList.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public static String module(String coordinate) {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "gradle/release-tools/com/snoworca/naruserve/release/LicenseCheck.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public static Verdict verdict(List<License> licenses) {"
+   ],
+   "findings": [
+    "P9-007"
+   ]
+  },
+  {
+   "file": "gradle/release-tools/com/snoworca/naruserve/release/ReleaseGate.java",
+   "hunks_total": 1,
+   "anchors": [
+    "boolean blocking = Double.isNaN(cvss) || cvss >= 7.0;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "gradle/release-tools/com/snoworca/naruserve/release/ReleaseMain.java",
+   "hunks_total": 1,
+   "anchors": [
+    "private static double bandFloor(String severity) {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "gradle/release-tools/com/snoworca/naruserve/release/ScanReport.java",
+   "hunks_total": 1,
+   "anchors": [
+    "static Cause classify(String log) {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "gradle/release-tools/com/snoworca/naruserve/release/ThirdPartyLicenses.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public static SortedSet<String> provided(List<String> graphLines) {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "gradle/release.gradle",
+   "hunks_total": 1,
+   "anchors": [
+    "tasks.register('releaseCheck', JavaExec) {"
+   ],
+   "findings": [
+    "P9-001"
+   ]
+  },
+  {
+   "file": "settings.gradle",
+   "hunks_total": 2,
+   "anchors": [
+    "rootProject.name = 'NaruServe-build'",
+    "include ':NaruServe-kotlin'"
+   ],
+   "findings": []
+  },
+  {
+   "file": "src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public void sdsAc18_CON_BUILD_012_AC1_AC2_animalSnifferOnAndroidModulesOnly() throws IOException {"
+   ],
+   "findings": [
+    "P9-008"
+   ]
+  },
+  {
+   "file": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public void con_BUILD_007_AC1_AC2_kotlinStdlibOnlyInKotlinModule() throws IOException {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "src/test/java/com/snoworca/naruserve/build/LicenseCheckTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public void fr_REL_004_AC2_parentOnlyLicenseCountsAndTheFirstDeclaringPomWins() {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "src/test/java/com/snoworca/naruserve/build/PublishedPomTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public void fr_REL_005_AC3_noPublishingRepositoryAndVersionlessTinyHttpd() throws IOException {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "src/test/java/com/snoworca/naruserve/build/ReleaseGateTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public void fr_REL_003_AC1_findingThatCannotBeCheckedFailsClosed() {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "src/test/java/com/snoworca/naruserve/build/ReleaseScriptTextTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "static boolean wiresReleaseTaskIntoDefaultBuild(String script) {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "src/test/java/com/snoworca/naruserve/build/ScanReportTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public void fr_REL_002_AC5_emptyOrHeaderlessCsvGivesPending() {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "src/test/java/com/snoworca/naruserve/build/ServletBuildTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public void sdsAc11_CON_SVL_001_AC4_spiAndTinyHttpdUntouched() throws Exception {"
+   ],
+   "findings": [
+    "P9-002"
+   ]
+  },
+  {
+   "file": "src/test/java/com/snoworca/naruserve/build/ThirdPartyLicensesTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public void fr_REL_004_AC3_staleProvidedRowIsNamed() throws IOException {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "src/test/java/com/snoworca/naruserve/docs/ApiMarkersDocsTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public void noTestCitesOps007() throws IOException {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "private static synchronized List<String> docsDiagnostics() throws IOException {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "src/test/java/com/snoworca/naruserve/docs/ReadmeDocsTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public void ops_REL_005_AC3_noDocumentSaysToPublishTinyHttpdToMavenLocal() throws IOException {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "src/test/java/com/snoworca/naruserve/docs/ReleaseNotesDocsTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public void ops_REL_004_AC3_matrixRulesRejectTheNegativeFixtures() {"
+   ],
+   "findings": [
+    "P9-009"
+   ]
+  },
+  {
+   "file": "src/test/java/com/snoworca/naruserve/docs/ReleaseRecordsDocsTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public void fr_REL_004_AC4_licensesRunLineRecordsTheReleaseLicensesCommandAndResult() throws IOException {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "src/test/java/com/snoworca/naruserve/docs/ReleaseResultsDocsTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public void ops_REL_003_AC3_t50RowsMatchTheirRecords() throws IOException {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "src/test/java/com/snoworca/naruserve/docs/ServletDocsTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public void sseDocOnlyGainsPointer() throws Exception {"
+   ],
+   "findings": [
+    "P9-003"
+   ]
+  },
+  {
+   "file": "src/test/java/com/snoworca/naruserve/docs/WaveEightKotlinDocsTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public void sdsAc14_OPS_KT_001_AC_5_the_nullable_accessor_table_keeps_its_twelve_rows() throws IOException {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "src/test/java/com/snoworca/naruserve/docs/WaveFiveDocsTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public void defaultsMatchCode() throws Exception {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "src/test/java/com/snoworca/naruserve/docs/WaveSevenDocsTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public void sdsAc3_OPS_WS_001_AC4_limitsAreListedInBothFiles() throws IOException {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "src/test/java/com/snoworca/naruserve/docs/WaveSixDocsTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public void requestFormDecisions() throws IOException {"
+   ],
+   "findings": []
+  }
+ ]
+}

@@ -26,6 +26,8 @@ final class OwnedResources {
     /**
      * Closes every tracked resource in reverse order, never the object identical to {@code skip}, continuing after
      * a failing close. Returns the failures in close order; the list is emptied, so a second call closes nothing.
+     * An {@link Error} from a close does not stop the others: after the last close the first Error is rethrown with
+     * the Exception failures attached as suppressed.
      */
     // @req FR-APP-008
     List<Exception> closeAll(@Nullable Object skip) {
@@ -35,6 +37,7 @@ final class OwnedResources {
             order.clear();
         }
         List<Exception> failures = new ArrayList<>();
+        Error firstError = null;
         for (int i = toClose.size() - 1; i >= 0; i--) {
             AutoCloseable r = toClose.get(i);
             if (r == skip) {
@@ -44,7 +47,15 @@ final class OwnedResources {
                 r.close();
             } catch (Exception e) {
                 failures.add(e);
+            } catch (Error e) {
+                firstError = firstError == null ? e : firstError;
             }
+        }
+        if (firstError != null) {
+            for (Exception failure : failures) {
+                firstError.addSuppressed(failure);
+            }
+            throw firstError;
         }
         return failures;
     }

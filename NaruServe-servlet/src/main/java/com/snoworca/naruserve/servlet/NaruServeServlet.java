@@ -60,6 +60,11 @@ final class NaruServeServlet extends HttpServlet {
             } finally {
                 ex.afterHandler(); // starts a registered event-stream drain on the adapter's pool
             }
+            if (ex.abortedWithoutStream()) {
+                // abort() is "close the connection abnormally": the container drops a committed response without its
+                // terminating chunk and answers 500 for an uncommitted one (the TinyHttpd adapter throws the same)
+                throw new IOException("exchange aborted");
+            }
         } finally {
             adapter.leave();
         }

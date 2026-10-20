@@ -117,6 +117,14 @@ public class ReleaseScriptTextTest {
                         .matcher(file("build.gradle")).find());
     }
 
+    // FR-REL-002 AC-5 — the scan child sees the parent's command-line properties, so -PtinyHttpdDir is not lost
+    @Test
+    public void fr_REL_002_AC5_scanChildForwardsTheParentCommandLineProperties() throws IOException {
+        String script = file("gradle/release.gradle");
+        assertTrue(script.contains("gradle.startParameter.projectProperties"));
+        assertTrue(script.contains("gradle.startParameter.systemPropertiesArgs"));
+    }
+
     // SDS-AC-10; FR-REL-003 AC-5
     @Test
     public void fr_REL_003_AC5_releaseCheckDependsOnScanAndLicensesAndReadsTheScanReport() throws IOException {

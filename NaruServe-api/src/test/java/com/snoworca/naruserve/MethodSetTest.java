@@ -9,11 +9,14 @@ import static org.junit.Assert.fail;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.CyclicBarrier;
 import org.junit.Test;
 
 public class MethodSetTest {
@@ -143,5 +146,41 @@ public class MethodSetTest {
         assertNotEquals(a, Method.get());
         assertEquals("GET, POST", a.toString());
         assertEquals("GET, POST, DELETE", Method.of(Method.DELETE, Method.POST, Method.GET).toString());
+    }
+
+    // review P1-001; IR-ROUTE-002: Method.<clinit> builds ANY through MethodSet, so MethodSet.<clinit> must never
+    // need Method, or two threads first touching one class each deadlock on the class-init locks
+    @Test(timeout = 120000)
+    public void review_P1_001_firstUseOfMethodAndMethodSetFromTwoThreadsDoesNotDeadlock() throws Exception {
+        URL[] classes = {MethodSet.class.getProtectionDomain().getCodeSource().getLocation()};
+        for (int round = 0; round < 200; round++) {
+            // a null parent so both classes are initialised from scratch in every round
+            try (URLClassLoader loader = new URLClassLoader(classes, null)) {
+                final CyclicBarrier start = new CyclicBarrier(2);
+                final String[] names = {"com.snoworca.naruserve.Method", "com.snoworca.naruserve.MethodSet"};
+                Thread[] threads = new Thread[2];
+                for (int t = 0; t < 2; t++) {
+                    final String name = names[t];
+                    final ClassLoader cl = loader;
+                    threads[t] = new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                start.await();
+                                Class.forName(name, true, cl);
+                            } catch (Exception e) {
+                                throw new IllegalStateException(e);
+                            }
+                        }
+                    }, "init-" + t);
+                    threads[t].setDaemon(true);
+                    threads[t].start();
+                }
+                for (Thread t : threads) {
+                    t.join(5000);
+                    assertFalse("class-init deadlock in round " + round, t.isAlive());
+                }
+            }
+        }
     }
 }

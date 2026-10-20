@@ -1,0 +1,213 @@
+{
+ "findings": [
+  {
+   "id": "P3-001",
+   "axis": "P5",
+   "severity": "MEDIUM",
+   "title": "Spooled upload temp files are created world-readable (0644) on POSIX JVMs",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/SpoolRegistry.java",
+    "line_range": "37-40"
+   },
+   "description": "createTemp uses File.createTempFile, which on Unix opens the file with mode 0666 minus umask (verified: createTemp in java.io.tmpdir yields [OWNER_READ, OWNER_WRITE, GROUP_READ, OTHERS_READ]). With the default tempDirectory (java.io.tmpdir = /tmp on a JVM server) any other local account can read an in-flight or request-lifetime upload (documents, images, credentials uploaded by users) for as long as it is spooled, i.e. whenever a file part exceeds memoryThreshold (64 KiB default). Android is unaffected (app-private cache dir).",
+   "suggested_fix": "Right after File.createTempFile (file is still empty, so no exposure window for data) restrict it with java.io.File only: f.setReadable(false,false); f.setReadable(true,true); f.setWritable(false,false); f.setWritable(true,true). These are API 9 and java.io-only, so the Core constraint holds. Add a POSIX-only test asserting no group/other bits (the test may use java.nio in test code).",
+   "is_behavioral": true,
+   "tags": [
+    "bug",
+    "security"
+   ]
+  },
+  {
+   "id": "P3-002",
+   "axis": "P1",
+   "severity": "LOW",
+   "title": "Interrupt of a thread waiting in BodyState.sharedParse becomes a 400 and loses the interrupt flag",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java",
+    "line_range": "229-233"
+   },
+   "description": "A second thread calling req.form()/file() while another thread is parsing blocks in BodyState.sharedParse (BodyState.java:128 wait()). If it is interrupted (executor shutdownNow, app.shutdown force-close of in-flight work), InterruptedException is a checked Exception, so DefaultRequest.formData's generic catch (Exception) maps it to HttpException(400) and the thread's interrupt status is cleared; the interrupted worker sees a client error and no longer observes the interruption. Needs two threads sharing one request, so rare.",
+   "suggested_fix": "In sharedParse (or formData) catch InterruptedException, call Thread.currentThread().interrupt() and throw an HttpException(503) or IllegalStateException instead of a 400.",
+   "is_behavioral": true,
+   "tags": [
+    "bug"
+   ]
+  },
+  {
+   "id": "P3-003",
+   "axis": "P8",
+   "severity": "LOW",
+   "title": "Heap-growth test depends on System.gc() and whole-JVM heap readings",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartSpoolingTest.java",
+    "line_range": "203-230"
+   },
+   "description": "FR_MULTIPART_004_AC2_spooledUploadKeepsHeapGrowthUnder8MiB compares MemoryMXBean used-heap before and after a 32 MiB in-memory upload with an 8 MiB tolerance. System.gc() is only a hint, and the figure includes the adapter's response buffers, other test threads and JIT/class loading, so a run under a different GC or a loaded CI box can exceed 8 MiB (false failure) while a regression that retained up to the tolerance would pass. The file itself is not in the P3 denominator, so this is reported from skimming.",
+   "suggested_fix": "Assert on the mechanism instead: a counting OutputStream/SpoolingBuffer test that the memory buffer never exceeds memoryThreshold bytes, or measure peak via a bounded -Xmx forked test.",
+   "is_behavioral": false,
+   "tags": [
+    "bug"
+   ]
+  }
+ ],
+ "coverage_rows": [
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/BodyState.java",
+   "hunks_total": 1,
+   "anchors": [
+    "throw new IllegalStateException(\"body is \" + state + \", not PARSING\");"
+   ],
+   "findings": [
+    "P3-002"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/BodyTooLargeException.java",
+   "hunks_total": 1,
+   "anchors": [
+    "super(\"request body exceeds the limit of \" + limit + \" bytes\");"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/CookieFactoryHook.java",
+   "hunks_total": 1,
+   "anchors": [
+    "throw new IllegalStateException(\"Cookie.unvalidated is unreachable\", e);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/CookieParser.java",
+   "hunks_total": 1,
+   "anchors": [
+    "if (DefaultResponse.isToken(name)) {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/CookieSerializer.java",
+   "hunks_total": 1,
+   "anchors": [
+    "sb.append(\"; Max-Age=\").append(c.getMaxAge());"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "throw new IllegalArgumentException(\"malformed percent-encoding or invalid UTF-8\");"
+   ],
+   "findings": [
+    "P3-002"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+   "hunks_total": 1,
+   "anchors": [
+    "put(\"Connection\", \"close\"); // FR-ENGINE-005 AC-2: the adapter closes after a 408"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultUploadFile.java",
+   "hunks_total": 1,
+   "anchors": [
+    "throw new IOException(\"upload stream closed\");"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/FormBodyReader.java",
+   "hunks_total": 1,
+   "anchors": [
+    "throw new HttpException(400, \"malformed form encoding\", e);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/FormData.java",
+   "hunks_total": 1,
+   "anchors": [
+    "throw new HttpException(400, \"multipart text field is not UTF-8\", e);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/JsonBodyReader.java",
+   "hunks_total": 1,
+   "anchors": [
+    "throw new HttpException(413); // the codec swallowed the limit failure: the value is truncated"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/LimitedInputStream.java",
+   "hunks_total": 1,
+   "anchors": [
+    "throw new IOException(\"mark/reset not supported\");"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/MultipartParser.java",
+   "hunks_total": 1,
+   "anchors": [
+    "throw new HttpException(413, \"multipart part header line too long\");"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/MultipartSettings.java",
+   "hunks_total": 1,
+   "anchors": [
+    "maxParts = (int) range(\"maxParts\", count, 10000);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ProxyTrust.java",
+   "hunks_total": 1,
+   "anchors": [
+    "return proto != null ? proto.equalsIgnoreCase(\"https\") : exchangeSecure;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/RequestIds.java",
+   "hunks_total": 1,
+   "anchors": [
+    "return \"0000000000000000\".substring(hex.length()) + hex;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ResponseState.java",
+   "hunks_total": 1,
+   "anchors": [
+    "NEW, COMMITTED, STREAMING, COMPLETED, ABORTED"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/SpoolRegistry.java",
+   "hunks_total": 1,
+   "anchors": [
+    "files = new ArrayList<>(open);"
+   ],
+   "findings": [
+    "P3-001"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/SpoolingBuffer.java",
+   "hunks_total": 1,
+   "anchors": [
+    "return new HttpException(500, \"upload spool failed\", e);"
+   ],
+   "findings": []
+  }
+ ]
+}

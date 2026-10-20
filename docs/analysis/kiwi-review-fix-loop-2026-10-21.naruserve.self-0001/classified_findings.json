@@ -1,0 +1,6 @@
+{"immediate_fix":["P7-001","P7-002","P1-001","P2-001","P2-002","P3-001","P4-001","P5-001","P8-001","P8-002","P9-001","P9-004","P10-001","P1-002","P1-003","P1-004","P1-005","P1-006","P2-003","P5-002","P8-003","P9-010"],
+"discussion_needed":[{"id":"P6-001","why":"needs TinyHttpd (read-only external) change or a core contract change; left open"}],
+"rejected":[
+{"ids":["P11-001","P11-002","P11-003","P11-004","P10-004","P6-005"],"why":"timing-window test flakiness: widening tolerance would weaken existing tests; not observed failing in baseline (build passes); reported only"},
+{"ids":["P9-002","P9-003"],"why":"intentional pins of SPI commit and docs hash by prior waves; loosening them weakens tests"},
+{"ids":["P2-004","P3-002","P3-003","P8-004","P8-005","P9-005","P9-006","P9-007","P9-008","P9-009","P10-002","P10-003","P10-005","P10-006","P10-007","P10-008","P10-009","P11-005","P11-006","P11-007","P11-008","P11-009","P11-010","P11-011","P6-002","P6-003","P6-004","P6-006"],"why":"auto mode low-severity skip / test hygiene without a failing scenario"}]}

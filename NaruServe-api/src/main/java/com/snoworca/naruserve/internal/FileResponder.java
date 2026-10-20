@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
@@ -48,11 +49,17 @@ final class FileResponder {
     // @req FR-STATIC-011
     static void respond(DefaultRequest req, DefaultResponse res, ResourceResolver r, String path, String type,
             @Nullable CachePolicy policy) throws IOException {
+        respond(req, res, r, path, type, policy, true);
+    }
+
+    private static void respond(DefaultRequest req, DefaultResponse res, ResourceResolver r, String path, String type,
+            @Nullable CachePolicy policy, boolean retry) throws IOException {
+        long[] stat = null;
         long length;
         long modified;
         String tag;
         if (r instanceof FileResourceResolver) {
-            long[] stat = ((FileResourceResolver) r).stat(path); // one check, one File: the ETag matches the rest
+            stat = ((FileResourceResolver) r).stat(path); // one check, one File: the ETag matches the rest
             length = stat[0];
             modified = stat[1];
             tag = etag(length, modified);
@@ -83,6 +90,23 @@ final class FileResponder {
             }
         }
         InputStream in = status == 200 || status == 206 ? r.open(path) : null;
+        boolean changed = false;
+        if (in != null && stat != null) {
+            try {
+                changed = !Arrays.equals(stat, ((FileResourceResolver) r).stat(path));
+            } catch (IOException | RuntimeException e) {
+                in.close(); // vanished after the open: the stream must not outlive the failed request
+                throw e;
+            }
+        }
+        if (changed) {
+            in.close(); // replaced between the stat and the open: the length and validators no longer fit the body
+            if (retry) {
+                respond(req, res, r, path, type, policy, false);
+                return;
+            }
+            throw new IOException("file changed while it was answered: " + path);
+        }
         try {
             answer(req, res, in, status, range, length, tag, seconds, type, policy);
         } catch (IOException | RuntimeException e) {

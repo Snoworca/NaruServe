@@ -23,6 +23,9 @@ public interface MultipartOptions {
     /** Bytes a file part keeps in memory before it spools to disk, {@code 1..16777216}; default 65536 (64 KiB). */
     MultipartOptions memoryThreshold(int bytes);
 
-    /** Directory for spooled parts; default {@code java.io.tmpdir} as read when the app was created. */
+    /**
+     * Directory for spooled parts; default {@code java.io.tmpdir} as read when the app was created. A null
+     * {@code dir} throws {@link NullPointerException}.
+     */
     MultipartOptions tempDirectory(File dir);
 }

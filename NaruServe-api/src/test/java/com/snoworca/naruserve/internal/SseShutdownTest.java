@@ -252,6 +252,23 @@ public class SseShutdownTest {
         }
     }
 
+    // FR-SSE-005: a stream whose drain never started (an adapter that skipped it) still ends: terminate runs onClose
+    // and finishes the response, and a drain that comes later returns at once
+    @Test(timeout = 20000)
+    public void FR_SSE_005_terminateFinishesAStreamWhoseDrainNeverStarted() throws Exception {
+        SseRegistry registry = registry(262144);
+        DefaultResponse res = new DefaultResponse(new RecordingExchange("GET", "/events"), false);
+        res.sseRegistry(registry);
+        DefaultSseClient c = (DefaultSseClient) res.sse();
+        AtomicInteger closed = new AtomicInteger();
+        c.onClose(closed::incrementAndGet);
+        registry.closeAll(System.nanoTime());
+        registry.terminate();
+        assertEquals(1, closed.get());
+        assertEquals(ResponseState.ABORTED, res.state());
+        assertEquals(0, registry.size());
+    }
+
     // SDS-AC-12; FR-SSE-005 AC-6: after shutdown returned the app's registry is empty and holds no queued event
     @Test(timeout = 20000)
     public void sdsAc12_FR_SSE_005_AC6_afterShutdownTheAppRegistryIsEmpty() throws Exception {

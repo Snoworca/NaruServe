@@ -102,13 +102,23 @@ public class AppLifecycleGuardTest {
         Logger original = app.logger();
         app.get("/x", H);
         List<String> problems = new ArrayList<>();
-        app.onStart(ctx -> problems.addAll(rejectAll(app, early, AppState.STARTING)));
-        app.onStop(ctx -> problems.addAll(rejectAll(app, early, AppState.STOPPING)));
+        // A state is added only after its rejectAll returned: a callback that dies on a non-ISE exception (which
+        // the lifecycle error logging would swallow in STOPPING) or never runs leaves it missing.
+        List<AppState> completed = new ArrayList<>();
+        app.onStart(ctx -> {
+            problems.addAll(rejectAll(app, early, AppState.STARTING));
+            completed.add(AppState.STARTING);
+        });
+        app.onStop(ctx -> {
+            problems.addAll(rejectAll(app, early, AppState.STOPPING));
+            completed.add(AppState.STOPPING);
+        });
         app.listen(0);
         problems.addAll(rejectAll(app, early, AppState.RUNNING));
         app.shutdown(1, TimeUnit.SECONDS);
         problems.addAll(rejectAll(app, early, AppState.TERMINATED));
         assertEquals(new ArrayList<String>(), problems);
+        assertEquals(java.util.Arrays.asList(AppState.STARTING, AppState.STOPPING), completed);
         // The refused calls changed nothing.
         assertEquals(1, app.registrations().size());
         assertSame(original, app.logger());

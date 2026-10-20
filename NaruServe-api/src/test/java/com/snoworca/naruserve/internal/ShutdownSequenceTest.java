@@ -400,6 +400,68 @@ public class ShutdownSequenceTest {
         assertEquals(AppState.TERMINATED, app.state());
     }
 
+    // review P2-001; FR-APP-011 AC-8: an Error from an owned close() is logged, the earlier-registered resource, the
+    // logger flush and close and the adapter release still run, and it is rethrown after TERMINATED.
+    @Test
+    public void review_P2_001_FR_APP_011_AC8_ownedCloseErrorStillRunsEveryLaterStepThenIsRethrown() {
+        DefaultRestApp app = app();
+        app.onStart(ctx -> {
+            ctx.own(new Closer(events, "first", app));
+            ctx.own(() -> {
+                events.add("close broken");
+                throw new AssertionError("close error");
+            });
+        });
+        listen(app);
+        try {
+            app.shutdown(1, TimeUnit.SECONDS);
+            fail("the Error must be rethrown after cleanup");
+        } catch (AssertionError e) {
+            assertEquals("close error", e.getMessage());
+        }
+        assertEquals(Arrays.asList("adapter.stop", "close broken", "close first STOPPING",
+                "logger.flush STOPPING", "logger.close STOPPING", "adapter.release"), events);
+        assertEquals(1, logger.errors.size());
+        assertTrue(logger.errors.toString(), logger.errors.get(0).contains("close error"));
+        assertEquals(AppState.TERMINATED, app.state());
+    }
+
+    // review P2-002; FR-APP-011 AC-8: an Error from the adapter's stop() and release() is logged like one from a
+    // participant, every other step runs, and the first Error is rethrown after TERMINATED.
+    @Test
+    public void review_P2_002_FR_APP_011_AC8_adapterStopAndReleaseErrorsStillRunEveryStepThenFirstIsRethrown() {
+        RecordingAdapter failing = new RecordingAdapter(events) {
+            @Override
+            public void stop(long timeout, TimeUnit unit) {
+                super.stop(timeout, unit);
+                throw new AssertionError("stop error");
+            }
+
+            @Override
+            public void release() {
+                super.release();
+                throw new AssertionError("release error");
+            }
+        };
+        DefaultRestApp app = (DefaultRestApp) RestApp.builder().httpAdapter(failing).jsonCodec(new StubJsonCodec())
+                .logger(logger).build();
+        logger.app = app;
+        app.onStart(ctx -> ctx.own(new Closer(events, "owned", app)));
+        app.onStop(ctx -> events.add("onStop"));
+        app.shutdownParticipants().add(ShutdownParticipants.Phase.FORCE_CLOSE, () -> events.add("forceClose"));
+        listen(app);
+        try {
+            app.shutdown(1, TimeUnit.SECONDS);
+            fail("the Error must be rethrown after cleanup");
+        } catch (AssertionError e) {
+            assertEquals("stop error", e.getMessage());
+        }
+        assertEquals(Arrays.asList("adapter.stop", "forceClose", "onStop", "close owned STOPPING",
+                "logger.flush STOPPING", "logger.close STOPPING", "adapter.release"), events);
+        assertEquals(2, logger.errors.size());
+        assertEquals(AppState.TERMINATED, app.state());
+    }
+
     // SDS-AC-7 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-12.sds.md; FR-APP-020 AC-1: every phase passes
     // the deadline shutdown(timeout, unit) computed at entry; at the before-wait entry deadline - nanoTime lies
     // within [timeout - 100 ms, timeout]

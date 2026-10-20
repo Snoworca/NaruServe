@@ -35,6 +35,11 @@ public final class SpoolRegistry {
             }
         }
         File f = File.createTempFile("naru-upload-", ".tmp", dir);
+        // owner only: createTempFile honours the umask (0644), and the file is still empty here
+        f.setReadable(false, false);
+        f.setReadable(true, true);
+        f.setWritable(false, false);
+        f.setWritable(true, true);
         synchronized (this) {
             if (!closed) {
                 open.add(f);

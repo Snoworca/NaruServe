@@ -1,0 +1,551 @@
+{
+ "findings": [
+  {
+   "id": "P10-001",
+   "axis": "P8",
+   "severity": "MEDIUM",
+   "title": "AppLifecycleGuardTest never proves its STOPPING-state guard checks ran; onStop swallows any non-ISE failure",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AppLifecycleGuardTest.java",
+    "line_range": "105-111"
+   },
+   "description": "sdsAc3 runs rejectAll(...) inside app.onStart/app.onStop callbacks (lines 105-106) and only checks that the collected `problems` list is empty (line 111). rejectAll catches only IllegalStateException. In STOPPING, an exception thrown from an onStop callback is logged and swallowed by the shutdown sequence (see AppIsolationTest, where a throwing onStop is only logged), so a regression where e.g. `post(\"/n\", null, H)` throws NullPointerException before the lifecycle guard (the exact ordering the test claims to pin at line 58), or where a guarded method simply stops throwing inside the callback after the first accepted call, leaves `problems` empty and the test green. There is also no assertion that the onStop (or onStart) callback executed at all (no counter), so the STARTING/STOPPING rows of FR-APP-002 AC-3 are unverified; only RUNNING and TERMINATED are checked from the test thread.",
+   "suggested_fix": "Record a per-state invocation marker (e.g. an AtomicInteger/EnumSet of states reached) in the callbacks and assert STARTING and STOPPING were both visited; catch Throwable in rejectAll and add non-ISE failures to `problems` so they cannot be swallowed by the lifecycle error logging.",
+   "is_behavioral": false,
+   "tags": [
+    "bug"
+   ]
+  },
+  {
+   "id": "P10-002",
+   "axis": "P8",
+   "severity": "LOW",
+   "title": "sdsAc2_IR_HTTP_001_AC3_laterWaveMethodNamesAreAbsent is vacuous",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java",
+    "line_range": "32-33"
+   },
+   "description": "LATER_WAVE_NAMES is Collections.<String>emptyList() (line 32), so the loop at lines 228-232 asserts `emptyList().contains(name)` is false for every Request/Response method; it can never fail. The test name and the SDS reference still advertise a guard that no longer exists.",
+   "suggested_fix": "Delete the test and the constant (the exact-signature sets in the neighbouring tests already pin the surface), or give it a real forbidden-name list.",
+   "is_behavioral": false,
+   "tags": [
+    "style"
+   ]
+  },
+  {
+   "id": "P10-003",
+   "axis": "P8",
+   "severity": "LOW",
+   "title": "Negative assertions use a fixed sleep/poll window that hides late extra log lines and callbacks",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogAcceptanceTest.java",
+    "line_range": "237-238"
+   },
+   "description": "AccessLogAcceptanceTest:237 sleeps 50 ms and then asserts exactly 2 log lines (\"a line from onDone would follow the close line at once\"); DispatcherTest:605 repeats the same 5+50 ms pattern. The defect these guard against (a duplicate access line written by onDone on another thread) passes both tests whenever the extra line lands later than 50 ms, e.g. on a loaded CI box. Likewise DefaultWebSocketSessionTest:115,137,212,251,279 and HttpAdapterSpiTest:146 assert \"nothing else happens\" with events.poll(200 ms)/get(150 ms) timeouts. These are false-pass (not flaky-fail) windows.",
+   "suggested_fix": "Make the extra event observable deterministically: e.g. flush the adapter/exchange to its terminal state (session TERMINATED, adapter.release()) before reading the log, or have RecordingLogger expose a latch that is counted down after the last expected writer finished, and assert the count once after that point.",
+   "is_behavioral": false,
+   "tags": [
+    "bug"
+   ]
+  },
+  {
+   "id": "P10-004",
+   "axis": "P8",
+   "severity": "LOW",
+   "title": "Wall-clock upper bounds in SPI and access-log tests are timing dependent",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/spi/HttpAdapterSpiTest.java",
+    "line_range": "251-260"
+   },
+   "description": "sdsAc6 asserts adapter.stop(100 ms) took `elapsedMs >= 90 && elapsedMs < 2000` and adapter.release() returns in <= 1500 ms. On a CPU-starved or GC-paused CI worker the 2 s / 1.5 s ceilings are exceeded without any defect (reproducible under -Dtest parallelism or a stop-the-world pause). AccessLogAcceptanceTest:311-322 also compares the logged `sse start=` epoch with two System.currentTimeMillis() reads, which breaks if the wall clock steps backwards between them.",
+   "suggested_fix": "Drop the upper bounds (keep only the lower bound proving the deadline was honoured) or raise them to a generous multiple; for the epoch check use `start >= before - slack`.",
+   "is_behavioral": false,
+   "tags": [
+    "bug"
+   ]
+  },
+  {
+   "id": "P10-005",
+   "axis": "P8",
+   "severity": "LOW",
+   "title": "SPI tests hard-code the module jar name and version",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/spi/HttpAdapterSpiTest.java",
+    "line_range": "303-306"
+   },
+   "description": "sdsAc7 requires the SPI classes to come from `.../NaruServe-api/build/classes/java/main` or a jar ending in `NaruServe-api-0.1.0-SNAPSHOT.jar` (lines 305-306); the sibling check at lines 334-335 uses a different, version-agnostic regex. build.gradle line 23 owns the version (`0.1.0-SNAPSHOT`), so bumping it for a release (the window adds release tooling, -Prelease) makes this test fail although nothing is wrong, and a checkout directory not named NaruServe-api also fails it.",
+   "suggested_fix": "Reuse the regex form of line 335 (`NaruServe-api-[^/]*\\.jar`) or assert only that the code source is not under src/testFixtures or the test output.",
+   "is_behavioral": false,
+   "tags": [
+    "bug"
+   ]
+  },
+  {
+   "id": "P10-006",
+   "axis": "P8",
+   "severity": "LOW",
+   "title": "CallbackMatrixKotlinTest depends on method order and static state shared between tests",
+   "location": {
+    "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/CallbackMatrixKotlinTest.kt",
+    "line_range": "29-46"
+   },
+   "description": "The final test `z every CALLBACK_TYPES interface was exercised` (line 189-191) passes only if all of a..e already ran in the same JVM and class (shared companion `exercised`, @FixMethodOrder(NAME_ASCENDING)). Running it alone (IDE re-run of a single test, `gradle test --tests \"*CallbackMatrixKotlinTest.*z*\"`) or any earlier failure before a `hit(...)` call makes it fail with a misleading set difference, and it would break under parallel method execution.",
+   "suggested_fix": "Compute the exercised set in a single test, or use a @ClassRule/@AfterClass assertion that is skipped when fewer than all tests ran, instead of a test that relies on ordering.",
+   "is_behavioral": false,
+   "tags": [
+    "bug"
+   ]
+  },
+  {
+   "id": "P10-007",
+   "axis": "P3",
+   "severity": "LOW",
+   "title": "Tests leave files in the system temp dir via createTempFile + deleteOnExit",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultUploadFileTest.java",
+    "line_range": "70-71"
+   },
+   "description": "DefaultUploadFileTest.assertContentGone creates `File.createTempFile(\"dest\", \".bin\")` on every call (invoked about ten times per run) and relies on deleteOnExit, so the files persist for the life of the test JVM and accumulate in the deleteOnExit registry; a killed Gradle worker leaves them forever. HttpAdapterSpiTest:165-166 does the same. The class already has a TemporaryFolder rule that would clean up deterministically.",
+   "suggested_fix": "Create the destination with tmp.newFile() (instance rule is not available in the static helper, so pass the File in) and drop deleteOnExit.",
+   "is_behavioral": false,
+   "tags": [
+    "bug"
+   ]
+  },
+  {
+   "id": "P10-008",
+   "axis": "P8",
+   "severity": "LOW",
+   "title": "Docs tests resolve ../docs/api from user.dir, inconsistent with other tests that also accept the repo root",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java",
+    "line_range": "25-36"
+   },
+   "description": "HttpDocsTest.doc (used by AppDocsTest and ten other test methods) and DefaultMimeTypesTest:50 open `new File(user.dir, \"../docs/api/...\")`; they throw FileNotFoundException when the test JVM starts in the repository root (IDE default working directory), while CookieParserTest:86-90, DefaultRestAppTest:257-261 and HttpAdapterSpiTest.checkoutRoot handle both layouts. Failure shows up as an IOException rather than an assertion, which hides what was being verified.",
+   "suggested_fix": "Share one helper that tries `docs/api` then `../docs/api` (as checkoutRoot does) and use it from all docs tests.",
+   "is_behavioral": false,
+   "tags": [
+    "doc"
+   ]
+  },
+  {
+   "id": "P10-009",
+   "axis": "P8",
+   "severity": "LOW",
+   "title": "ConsoleLoggerTest swaps process-global System.out/err, TimeZone and Locale while other threads may still log",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/ConsoleLoggerTest.java",
+    "line_range": "78-82"
+   },
+   "description": "redirect() replaces System.out/System.err for the whole JVM and several tests call TimeZone.setDefault / Locale.setDefault. Other tests in the module leave live daemon threads (InMemoryHttpAdapter workers, WebSocket sender threads, drain threads) and construct ConsoleLogger instances (DefaultResponseTest.registry, DefaultSseClientTest.registry); any of them writing a WARN/INFO line while a ConsoleLoggerTest case runs lands in the captured `out`/`err`, so assertions such as `assertEquals(o.toString(), 1, o.size())` (line 125) fail intermittently. The restore in @After is correct but does not remove the window.",
+   "suggested_fix": "Test ConsoleLogger.format and the write path against an injectable PrintStream, or run this class in its own fork (forkEvery) / filter captured lines by the test message prefix.",
+   "is_behavioral": false,
+   "tags": [
+    "bug"
+   ]
+  }
+ ],
+ "coverage_rows": [
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogAcceptanceTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(log.info().toString(), 10, log.info().size());"
+   ],
+   "findings": [
+    "P10-003"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogOptionsTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(1, abstractCount);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/ApiJarClasses.java",
+   "hunks_total": 1,
+   "anchors": [
+    "types.sort((a, b) -> a.getName().compareTo(b.getName()));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/AppDocsTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertFalse(app.contains(\"timeout은 2단계(\"));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/AppEntryApiTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(404, t.send(\"GET\", \"/x\").status());"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/AppLifecycleApiTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertSame(given, built.logger());"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/CachePolicyTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertSame(app, app.defaultCache(null));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/CallbackInventory.java",
+   "hunks_total": 1,
+   "anchors": [
+    "return ApiJarClasses.PUBLIC_PACKAGES.contains(name.substring(0, name.lastIndexOf('.')));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/CallbackInventoryTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "String removed = declared.remove(0);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/ConsoleLoggerTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertFalse(System.out.checkError());"
+   ],
+   "findings": [
+    "P10-009"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/ConsumerRulesTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertTrue(\"-keepclassmembers line for Cookie.unvalidated\", cookie);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/CookieAcceptanceTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(Arrays.asList(\"v=a\"), setCookies(r));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/CookiePropertiesTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "Collections.sort(kotlin);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/CookieTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(Cookie.class, factory.getReturnType());"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/FileResponseTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(100, t.send(\"GET\", \"/a.bin\", \"Range\", \"bytes=0-99\").contentLength());"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/FormAccessorsTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertTrue(methods.size() > 4);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(Arrays.asList(AppState.RUNNING), seen);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(setOf(\"builder->Builder\", \"create->RestApp\"), factories);"
+   ],
+   "findings": [
+    "P10-002"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(\"raw/text stated once\", 1, statements);"
+   ],
+   "findings": [
+    "P10-008"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpExceptionTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(2, e.headers().size());"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AccessLogTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "accessLog(off).writeClose(\"/ws\", 1000, System.nanoTime(), RID);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AppFactoryLoaderTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "ClassLoader dedicated = loaderWith(OneFactory.class);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AppIsolationTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertNull(staticField(DefaultRestApp.class));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AppLifecycleGuardTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "problems.addAll(rejectAll(app, early, AppState.TERMINATED));"
+   ],
+   "findings": [
+    "P10-001"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/BodyStateTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(BodyState.State.CLOSED, shared.state());"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/CachePatternTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(null, CachePattern.select(both, \"/x.css\"));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ChainNextTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(Arrays.asList(\"other thread run ISE\", \"h\"), calls);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/CookieParserTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(\"v\", CookieFactoryHook.create(\"n\", \"v\").getValue());"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultApplicationContextTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(Integer.valueOf(7), app.context().get(int.class));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultMimeTypesTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(\"image/x-png\", m.lookup(\"a.png\", NONE));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRequestTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(\"second\", second.attribute(\"k\", String.class));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultResponseTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertIse(res::sse, \"COMPLETED\");"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRestAppTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertSame(wh, ((WebSocketRoute) r.handler).handler());"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultSseClientTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(\"error\", c.cause());"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultUploadFileTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(Arrays.asList(), Arrays.asList(tmp.getRoot().list()));"
+   ],
+   "findings": [
+    "P10-007"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultWebSocketSessionTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertNull(\"onClose ran twice\", events.poll(200, TimeUnit.MILLISECONDS));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DirectoryListingTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertFalse(html, html.contains(\"link.txt\"));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(Method.GET, methods.get(1));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ErrorPathTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertTrue(r.body().length != 5);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/FileResourceResolverTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(FileResponder.etag(stat[0], stat[1]), r.etag(\"a.txt\"));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/FormDataTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertTrue(u.files(\"a\").isEmpty());"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/spi/HttpAdapterSpiTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(2000L, channel.settings().pingIntervalMillis());"
+   ],
+   "findings": [
+    "P10-004",
+    "P10-005"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppEntryKotlinTest.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(listOf(\"mw\", \"h\"), calls)"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AppLifecycleKotlinTest.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(true, seen.toString().contains(\"exclude=[/health]\"))"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/CallbackMatrix.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "WebSocketSession.TextListener::class.java,"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/CallbackMatrixKotlinTest.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(CallbackMatrix.CALLBACK_TYPES.sorted(), exercised.sorted())"
+   ],
+   "findings": [
+    "P10-006"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/CookieKotlinTest.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(\"s=; Path=/; Max-Age=0\", r.header(\"Set-Cookie\"))"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/HttpApiKotlinTest.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "assertTrue(t.send(\"GET\", \"/abort\").abnormallyClosed())"
+   ],
+   "findings": []
+  }
+ ]
+}

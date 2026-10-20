@@ -1,0 +1,544 @@
+{
+ "findings": [
+  {
+   "id": "P1-001",
+   "axis": "P1",
+   "severity": "MEDIUM",
+   "title": "Method <-> MethodSet static-initializer cycle can deadlock two threads on first use",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/Method.java",
+    "line_range": "12-12"
+   },
+   "description": "Method.<clinit> builds ANY = MethodSet.of(...) (Method.java:12) so initializing Method needs MethodSet initialized, while MethodSet.<clinit> evaluates METHODS = Method.values() (MethodSet.java:15) so initializing MethodSet needs Method initialized. If thread A first touches Method (e.g. Method.GET / Method.valueOf in an adapter or app thread) while thread B first touches MethodSet (e.g. app.route(Method.get().post(), ...) or MethodSet.of), each holds one class-init lock and waits for the other: permanent JVM-level hang with no exception. Reproduced by compiling just Method.java + MethodSet.java and releasing two threads from a CyclicBarrier (Class.forName of each): 1 of 6 JVM runs hung (DEADLOCK after 3 s join). Single-threaded first use is fine, which is why per-wave tests never saw it.",
+   "suggested_fix": "Break the cycle in one direction: drop the static METHODS array from MethodSet and use Method.values() inside the iterator (or a lazy holder class), so MethodSet.<clinit> never touches Method; or move ANY into a lazy holder inside Method. Add a regression test that initializes both classes from two threads in a fresh class loader.",
+   "is_behavioral": true,
+   "tags": [
+    "bug"
+   ]
+  },
+  {
+   "id": "P1-002",
+   "axis": "P4",
+   "severity": "LOW",
+   "title": "ServerHandle.address() javadoc says the bound address is always 127.0.0.1, code and docs/api return the configured bindAddress",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/ServerHandle.java",
+    "line_range": "10-11"
+   },
+   "description": "Javadoc: 'The bound address, 127.0.0.1.' DefaultRestApp.java:521 returns settings.bindAddress(), and docs/api/app.md:203 says it is the configured value (default 127.0.0.1). With app.server(o -> o.bindAddress(\"0.0.0.0\")) address() returns \"0.0.0.0\", so an IDE user reading the javadoc builds a client URL assuming loopback.",
+   "suggested_fix": "Change the javadoc to 'The address the server was bound with: the configured bind address, 127.0.0.1 by default.'",
+   "is_behavioral": false,
+   "tags": [
+    "doc"
+   ]
+  },
+  {
+   "id": "P1-003",
+   "axis": "P4",
+   "severity": "LOW",
+   "title": "Response.header javadoc says 'Adds a header' but the implementation replaces a same-name header",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/Response.java",
+    "line_range": "24-25"
+   },
+   "description": "Javadoc on Response.header: 'Adds a header; returns this response.' DefaultResponse.header (internal/DefaultResponse.java:375-386) documents and implements Express res.set semantics: put(name, value) replaces any same-name header (case-insensitive), and docs/api/response.md says the same. A caller who reads only the javadoc and calls res.header(\"Link\", a).header(\"Link\", b) expecting two header lines silently loses the first (only addCookie appends).",
+   "suggested_fix": "Reword to 'Sets a header, replacing a same-name header (as Express res.set); only addCookie appends a repeatable header.'",
+   "is_behavioral": false,
+   "tags": [
+    "doc"
+   ]
+  },
+  {
+   "id": "P1-004",
+   "axis": "P4",
+   "severity": "LOW",
+   "title": "UploadFile.bytes() and MultipartOptions.tempDirectory javadoc omit documented limits and exceptions",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/UploadFile.java",
+    "line_range": "38-39"
+   },
+   "description": "UploadFile.bytes() javadoc says 'The whole content in memory.' while docs/api/multipart.md says it throws IllegalStateException for a part over 8 MiB (8388608 bytes); likewise save()/inputStream() on a part whose request already ended throw IllegalStateException (docs only), and MultipartOptions.tempDirectory(File) (MultipartOptions.java:26-27) does not say a null dir throws NullPointerException (MultipartSettings.java:85, docs multipart.md). A Java/Kotlin caller relying on the javadoc calls bytes() on a large upload and gets an unexpected ISE.",
+   "suggested_fix": "Add the 8 MiB / IllegalStateException contract to UploadFile.bytes(), the 'unusable after the request ends' note to inputStream/save/transferTo/bytes, and 'null throws NullPointerException' to tempDirectory.",
+   "is_behavioral": false,
+   "tags": [
+    "doc"
+   ]
+  },
+  {
+   "id": "P1-005",
+   "axis": "P4",
+   "severity": "LOW",
+   "title": "ServerOptions javadoc 'no value means unlimited' contradicts docs/api (there is no unlimited value)",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/ServerOptions.java",
+    "line_range": "5-9"
+   },
+   "description": "ServerOptions class javadoc ends 'and no value means unlimited'. docs/api/app.md:131 states no value means unlimited (each setter rejects 0/negative/over-max with IllegalArgumentException; DefaultServerOptions.range enforces 1..max). Read literally the sentence suggests that leaving a limit unset is unlimited, whereas an unset limit takes the stated default. MultipartOptions/SseOptions/WebSocketOptions phrase this correctly ('There is no unlimited value').",
+   "suggested_fix": "Replace with 'there is no unlimited value; an unset setting keeps the default shown on its setter.'",
+   "is_behavioral": false,
+   "tags": [
+    "doc"
+   ]
+  },
+  {
+   "id": "P1-006",
+   "axis": "P7",
+   "severity": "LOW",
+   "title": "docs/api/lifecycle.md ServiceRegistry/ApplicationContext listing drops @Nullable that the code (and Kotlin T?) has",
+   "location": {
+    "file": "docs/api/lifecycle.md",
+    "line_range": "72-84"
+   },
+   "description": "The documented interfaces show '<T> T getOrNull(Class<T> type);' and '<T> T attribute(String key, Class<T> type);' and 'void attribute(String key, Object value);' without @Nullable, but ServiceRegistry.getOrNull (ServiceRegistry.java:19), ApplicationContext.attribute(key, Class) (ApplicationContext.java:16) return @Nullable T and attribute(key, value) takes @Nullable Object. Kotlin users see T? (kotlin.md table says req.attribute is T?); the lifecycle page reads as non-null T and contradicts it. CLAUDE.md requires docs/api to follow API changes.",
+   "suggested_fix": "Add import org.jspecify.annotations.Nullable and the @Nullable markers to the listing, as multipart.md already does for UploadFile.",
+   "is_behavioral": false,
+   "tags": [
+    "doc"
+   ]
+  }
+ ],
+ "coverage_rows": [
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/AccessLogOptions.java",
+   "hunks_total": 1,
+   "anchors": [
+    "AccessLogOptions includeBytes(boolean include);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/AppStartException.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public AppStartException(String message, Throwable cause) {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/AppState.java",
+   "hunks_total": 1,
+   "anchors": [
+    "NEW, STARTING, RUNNING, STOPPING, FAILED, TERMINATED"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/ApplicationContext.java",
+   "hunks_total": 1,
+   "anchors": [
+    "void own(AutoCloseable resource);"
+   ],
+   "findings": [
+    "P1-006"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/BodyAlreadyConsumedException.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public BodyAlreadyConsumedException(String message) {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/CachePolicy.java",
+   "hunks_total": 1,
+   "anchors": [
+    "return new CachePolicy(headerValue.endsWith(IMMUTABLE) ? headerValue : headerValue + IMMUTABLE);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/Configurer.java",
+   "hunks_total": 1,
+   "anchors": [
+    "void configure(T target);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/ConsoleLogger.java",
+   "hunks_total": 1,
+   "anchors": [
+    "PrintStream stream = level.compareTo(LogLevel.WARN) < 0 ? System.out : System.err;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/Cookie.java",
+   "hunks_total": 1,
+   "anchors": [
+    "if (c < 0x21 || c > 0x7E || c == '\"' || c == ',' || c == ';' || c == '\\\\') {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/ErrorHandler.java",
+   "hunks_total": 1,
+   "anchors": [
+    "void handle(Throwable error, Request req, Response res) throws Exception;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/HttpException.java",
+   "hunks_total": 1,
+   "anchors": [
+    "return h == null ? Collections.<Map.Entry<String, String>>emptyList() : Collections.unmodifiableList(h);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/LifecycleCallback.java",
+   "hunks_total": 1,
+   "anchors": [
+    "void handle(ApplicationContext ctx) throws Exception;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/LogLevel.java",
+   "hunks_total": 1,
+   "anchors": [
+    "TRACE, DEBUG, INFO, WARN, ERROR"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/Logger.java",
+   "hunks_total": 1,
+   "anchors": [
+    "void error(String message, Throwable error);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/Method.java",
+   "hunks_total": 1,
+   "anchors": [
+    "private static final MethodSet ANY = MethodSet.of(GET, HEAD, POST, PUT, PATCH, DELETE, OPTIONS);"
+   ],
+   "findings": [
+    "P1-001"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/MethodSet.java",
+   "hunks_total": 1,
+   "anchors": [
+    "private static final Method[] METHODS = Method.values();"
+   ],
+   "findings": [
+    "P1-001"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/Middleware.java",
+   "hunks_total": 1,
+   "anchors": [
+    "void handle(Request req, Response res, Next next) throws Exception;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/MimeTypes.java",
+   "hunks_total": 1,
+   "anchors": [
+    "MimeTypes register(String ext, String type);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/MultipartOptions.java",
+   "hunks_total": 1,
+   "anchors": [
+    "MultipartOptions tempDirectory(File dir);"
+   ],
+   "findings": [
+    "P1-004"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/Next.java",
+   "hunks_total": 1,
+   "anchors": [
+    "void error(Throwable error);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java",
+   "hunks_total": 1,
+   "anchors": [
+    "default <T> @Nullable T body(TypeRef<T> type) {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/ResourceResolver.java",
+   "hunks_total": 1,
+   "anchors": [
+    "String etag(String path) throws IOException;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/Response.java",
+   "hunks_total": 1,
+   "anchors": [
+    "return header(\"Cache-Control\", policy.getHeaderValue());"
+   ],
+   "findings": [
+    "P1-003"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java",
+   "hunks_total": 1,
+   "anchors": [
+    "return new DefaultRestApp(a, c, l != null ? l : new ConsoleLogger());"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/RouteBuilder.java",
+   "hunks_total": 1,
+   "anchors": [
+    "RouteBuilder use(Middleware mw);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/RouteHandler.java",
+   "hunks_total": 1,
+   "anchors": [
+    "void handle(Request req, Response res) throws Exception;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/SameSite.java",
+   "hunks_total": 1,
+   "anchors": [
+    "LAX,"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/ServerHandle.java",
+   "hunks_total": 1,
+   "anchors": [
+    "AppState state();"
+   ],
+   "findings": [
+    "P1-002"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/ServerOptions.java",
+   "hunks_total": 1,
+   "anchors": [
+    "ServerOptions maxConnectionsPerAddress(int connections);"
+   ],
+   "findings": [
+    "P1-005"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/ServiceNotFoundException.java",
+   "hunks_total": 1,
+   "anchors": [
+    "super(\"No service registered for \" + type.getName());"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/ServiceRegistry.java",
+   "hunks_total": 1,
+   "anchors": [
+    "<T> @Nullable T getOrNull(Class<T> type);"
+   ],
+   "findings": [
+    "P1-006"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/SseClient.java",
+   "hunks_total": 1,
+   "anchors": [
+    "void onClose() throws Exception;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/SseEvent.java",
+   "hunks_total": 1,
+   "anchors": [
+    "return SseWire.encode(name, id, retry, data);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/SseOptions.java",
+   "hunks_total": 1,
+   "anchors": [
+    "SseOptions sendQueueSize(int bytes);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/StaticOptions.java",
+   "hunks_total": 1,
+   "anchors": [
+    "StaticOptions allowSymlinks(boolean allow);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/TypeRef.java",
+   "hunks_total": 1,
+   "anchors": [
+    "return changed ? new Parameterized(p.getOwnerType(), p.getRawType(), args) : t;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/UnsupportedMediaTypeException.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public UnsupportedMediaTypeException(@Nullable String message) {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/UploadFile.java",
+   "hunks_total": 1,
+   "anchors": [
+    "byte[] bytes() throws IOException;"
+   ],
+   "findings": [
+    "P1-004"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/WebSocketHandler.java",
+   "hunks_total": 1,
+   "anchors": [
+    "void handle(Request req, WebSocketSession ws) throws Exception;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/WebSocketOptions.java",
+   "hunks_total": 1,
+   "anchors": [
+    "WebSocketOptions idleTimeout(long time, TimeUnit unit);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/WebSocketSession.java",
+   "hunks_total": 1,
+   "anchors": [
+    "void onError(Throwable error) throws Exception;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/package-info.java",
+   "hunks_total": 1,
+   "anchors": [
+    "@org.jspecify.annotations.NullMarked"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/resources/META-INF/proguard/naruserve-api.pro",
+   "hunks_total": 1,
+   "anchors": [
+    "-keep,allowobfuscation,allowshrinking class * extends com.snoworca.naruserve.TypeRef"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/InMemoryEventStream.java",
+   "hunks_total": 1,
+   "anchors": [
+    "writeTimes.add(new long[] {written.size(), System.nanoTime()});"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/InMemoryHttpAdapter.java",
+   "hunks_total": 1,
+   "anchors": [
+    "exchange.awaitEnd(END_TIMEOUT_MS);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/InMemoryWebSocketChannel.java",
+   "hunks_total": 1,
+   "anchors": [
+    "events.add(new Event(null, null, 1006, \"\"));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/LiveThreads.java",
+   "hunks_total": 1,
+   "anchors": [
+    "if (t.isAlive() && t.getName().startsWith(prefix)) {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/RecordingExchange.java",
+   "hunks_total": 1,
+   "anchors": [
+    "this.drain = drain; // never attached: the core falls back to its bounded queue"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/RecordingLogger.java",
+   "hunks_total": 1,
+   "anchors": [
+    "Thread.sleep(5);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/SettingsCapturingAdapter.java",
+   "hunks_total": 1,
+   "anchors": [
+    "throw new AssertionError(\"listen must use bind(ServerSettings, ExchangeHandler)\");"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/StubJsonCodec.java",
+   "hunks_total": 1,
+   "anchors": [
+    "throw new UnsupportedOperationException(\"StubJsonCodec encodes only null, numbers and booleans\");"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/TestApp.java",
+   "hunks_total": 1,
+   "anchors": [
+    "throw new IllegalArgumentException(\"headerPairs needs a value for every name\");"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/TestSupport.java",
+   "hunks_total": 1,
+   "anchors": [
+    "return body.replaceAll(\"\\\"requestId\\\":\\\"[^\\\"]*\\\"\", \"\\\"requestId\\\":\\\"*\\\"\");"
+   ],
+   "findings": []
+  }
+ ]
+}

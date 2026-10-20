@@ -26,16 +26,25 @@ public interface UploadFile extends AutoCloseable {
     /** The content length in bytes. */
     long size();
 
-    /** A new stream over the content. */
+    /** A new stream over the content; {@link IllegalStateException} once the request has ended. */
     InputStream inputStream() throws IOException;
 
-    /** Writes the content to {@code destination}, replacing it, and releases the temporary copy. */
+    /**
+     * Writes the content to {@code destination}, replacing it, and releases the temporary copy;
+     * {@link IllegalStateException}, with {@code destination} untouched, once the request has ended.
+     */
     void save(File destination) throws IOException;
 
-    /** Copies the content into {@code target} and flushes it; {@code target} is not closed. */
+    /**
+     * Copies the content into {@code target} and flushes it; {@code target} is not closed.
+     * {@link IllegalStateException} once the request has ended.
+     */
     void transferTo(OutputStream target) throws IOException;
 
-    /** The whole content in memory. */
+    /**
+     * The whole content in memory; {@link IllegalStateException} for a part over 8 MiB (8388608 bytes) or once the
+     * request has ended.
+     */
     byte[] bytes() throws IOException;
 
     /** Releases the content, deleting any temporary file; the metadata stays readable. */

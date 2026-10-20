@@ -82,6 +82,36 @@ public class StartFailureTest {
                 "logger.close FAILED"), events);
     }
 
+    // review P2-002; FR-APP-010 AC-3: an Error from the adapter's stop() on the failed-start path leaves release, the
+    // owned close and the logger flush running; the Error is thrown after TERMINATED with the start failure suppressed.
+    @Test
+    public void review_P2_002_FR_APP_010_AC3_adapterStopErrorStillReleasesClosesAndThenIsRethrown() {
+        RecordingAdapter failing = new RecordingAdapter(events) {
+            @Override
+            public void stop(long timeout, java.util.concurrent.TimeUnit unit) {
+                super.stop(timeout, unit);
+                throw new AssertionError("stop error");
+            }
+        };
+        IOException cause = new IOException("address in use");
+        failing.bindFailure = cause;
+        DefaultRestApp app = (DefaultRestApp) RestApp.builder().httpAdapter(failing).jsonCodec(new StubJsonCodec())
+                .logger(logger).build();
+        logger.app = app;
+        app.onStart(ctx -> ctx.own(new Closer(events, "owned", app)));
+        try {
+            app.listen(0);
+            fail("the Error must be thrown");
+        } catch (AssertionError e) {
+            assertEquals("stop error", e.getMessage());
+            assertEquals(1, e.getSuppressed().length);
+            assertSame(cause, e.getSuppressed()[0].getCause());
+        }
+        assertEquals(Arrays.asList("bind", "adapter.stop", "adapter.release", "close owned FAILED",
+                "logger.flush FAILED", "logger.close FAILED"), events);
+        assertEquals(AppState.TERMINATED, app.state());
+    }
+
     // SDS-AC-4; FR-APP-010 AC-4
     @Test
     public void sdsAc4_FR_APP_010_AC4_resourcesCloseInReverseSeeingFailedThenTheStateIsTerminated() {

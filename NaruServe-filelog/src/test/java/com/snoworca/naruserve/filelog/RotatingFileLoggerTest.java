@@ -261,7 +261,7 @@ public class RotatingFileLoggerTest {
         File dir = tmp.newFolder("logs");
         RotatingFileLogger.Builder b = RotatingFileLogger.builder().directory(dir).queueCapacity(1);
         RotatingFileLogger logger = new RotatingFileLogger(b, (file, append) -> {
-            throw new AssertionError("writer dies");
+            throw new ThreadDeath();
         });
         logger.info("kills the writer");
         logger.writer.join(5000);
@@ -272,6 +272,77 @@ public class RotatingFileLoggerTest {
         closer.start();
         closer.join(3000);
         assertFalse("close() hung on a dead writer", closer.isAlive());
+    }
+
+    // FR-APP-017 AC-4 — an Error in the write path drops that record and counts it; later records still reach the file
+    @Test(timeout = 10000)
+    public void FR_APP_017_AC4_writerSurvivesAnErrorInTheWritePath() throws Exception {
+        File dir = tmp.newFolder("logs");
+        java.util.concurrent.atomic.AtomicInteger opens = new java.util.concurrent.atomic.AtomicInteger();
+        RotatingFileLogger logger = track(new RotatingFileLogger(RotatingFileLogger.builder().directory(dir),
+                (file, append) -> {
+                    if (opens.getAndIncrement() == 0) {
+                        throw new OutOfMemoryError("simulated");
+                    }
+                    return new FileOutputStream(file, append);
+                }));
+        logger.info("lost to the error");
+        logger.flush();
+        logger.info("survivor");
+        logger.flush();
+        assertTrue("the writer thread survived", logger.writer.isAlive());
+        assertEquals(1, logger.droppedCount());
+        String text = read(new File(dir, "naruserve.log"));
+        assertTrue(text, text.contains("INFO survivor") && !text.contains("lost to the error"));
+    }
+
+    // FR-APP-017 AC-5 — flush() and close() give up after a bounded wait on a writer stuck inside a write
+    @Test(timeout = 10000)
+    public void FR_APP_017_AC5_flushAndCloseReturnWithinTheBoundOnAStalledWriter() throws Exception {
+        File dir = tmp.newFolder("logs");
+        BlockingStreams streams = new BlockingStreams();
+        RotatingFileLogger.Builder b = RotatingFileLogger.builder().directory(dir).queueCapacity(2);
+        b.waitMillis = 300;
+        RotatingFileLogger logger = track(new RotatingFileLogger(b, streams));
+        logger.info("blocker");
+        assertTrue(streams.entered.await(5, TimeUnit.SECONDS));
+        logger.info("queued");
+        long start = System.nanoTime();
+        logger.flush();
+        logger.close();
+        assertTrue("bounded", System.nanoTime() - start < TimeUnit.SECONDS.toNanos(5));
+        assertEquals("the queued record is counted as dropped", 1, logger.droppedCount());
+        streams.release.countDown();
+        logger.writer.join(5000);
+        assertFalse("the writer stops once unblocked", logger.writer.isAlive());
+    }
+
+    // FR-APP-017 AC-8 — a failed backup shift stops the rotation instead of renaming the live file over naruserve.log.1
+    @Test
+    public void FR_APP_017_AC8_failedBackupShiftKeepsTheOldBackup() throws IOException {
+        File dir = tmp.newFolder("logs");
+        java.nio.file.Files.write(new File(dir, "naruserve.log.1").toPath(), "b1".getBytes(StandardCharsets.UTF_8));
+        RotatingFileLogger.Builder b = RotatingFileLogger.builder().directory(dir).maxFileBytes(200).maxFiles(3);
+        RotatingFileLogger logger = track(new RotatingFileLogger(b, new RotatingFileLogger.StreamFactory() {
+            @Override
+            public OutputStream open(File file, boolean append) throws IOException {
+                return new FileOutputStream(file, append);
+            }
+
+            @Override
+            public boolean rename(File from, File to) {
+                return !from.getName().equals("naruserve.log.1") && from.renameTo(to);
+            }
+        }));
+        int records = 8;
+        for (int i = 0; i < records; i++) {
+            logger.info("record " + i + " padding padding");
+        }
+        logger.close();
+        assertEquals("b1", read(new File(dir, "naruserve.log.1")));
+        assertEquals(records, lines(read(new File(dir, "naruserve.log"))));
+        assertTrue(logger.rotationFailureCount() >= 1);
+        assertEquals(0, logger.droppedCount());
     }
 
     /** Constant-pool scan of every main class (same rule as build.gradle scanClassRefs): Class names and L..; descriptors. */

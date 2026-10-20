@@ -1,0 +1,993 @@
+{
+ "findings": [
+  {
+   "id": "P11-001",
+   "axis": "P8",
+   "severity": "MEDIUM",
+   "title": "WebSocketIdleScheduler tests assert tight wall-clock windows and are sensitive to scheduler stalls",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/WebSocketIdleSchedulerTest.java",
+    "line_range": "43-47, 137-141"
+   },
+   "description": "sdsAc10 sends a message every Thread.sleep(500) against a 1 s idle timeout (line 44): one GC pause or CI deschedule of more than 500 ms between two iterations lets the real scheduler close the session with 1001, so assertTrue(received.isOpen()) fails spuriously. sdsAc12 asserts the other session's check ran at most 100 ms late (otherLate <= 100, line 137) and the abort fired 900..1200 ms after the close (line 141). On a loaded runner the single scheduler thread or the test thread easily slips by more than 100 ms, so the test fails without any product bug. The same file also bounds close-after-last-activity at 2000 ms (lines 80, 103).",
+   "suggested_fix": "Inject a fake clock/scheduler into WebSocketIdleScheduler or widen the tolerances (assert only lower bounds plus a generous upper bound such as 5 s); drive the 500 ms loop by touching lastActivity instead of sleeping.",
+   "is_behavioral": false,
+   "tags": [
+    "bug",
+    "performance"
+   ]
+  },
+  {
+   "id": "P11-002",
+   "axis": "P8",
+   "severity": "MEDIUM",
+   "title": "WebSocketShutdownTest asserts 100-500 ms timing windows on closeAll and abort",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/WebSocketShutdownTest.java",
+    "line_range": "146-148, 194-195, 219, 276"
+   },
+   "description": "closeAllOverReservedSession releases the held session 250 ms in and then requires afterRelease < 300 and total < 900 (lines 147-148); sdsAc8 requires the 300 ms-timeout close wait to end within 250..500 ms (lines 194-195); sdsAc10 requires < 900 ms (line 219); sdsAc11 requires the abort within 100 ms of onOpen (line 276). Any pause of a few hundred ms on a shared CI box (the test also sleeps up to 250 ms itself and does assert503Close/HTTP round trips on the way) turns these into false failures, and the 250 ms lower bound can also be missed when the clock check races the shutdown thread start.",
+   "suggested_fix": "Assert ordering (the wait ended because the session closed, not because the 1 s timeout fired) using latches or recorded nanoTime deltas relative to the release, with margins of seconds; keep one tight timing test behind an opt-in tag.",
+   "is_behavioral": false,
+   "tags": [
+    "bug",
+    "performance"
+   ]
+  },
+  {
+   "id": "P11-003",
+   "axis": "P8",
+   "severity": "MEDIUM",
+   "title": "SSE tests pin sub-second timings (ping gaps, shutdown from onClose, closeAll)",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/SseQueueTest.java",
+    "line_range": "94-95, 111-114"
+   },
+   "description": "SseQueueTest.sdsAc2 requires the first heartbeat within 1500 ms and each gap between 900 and 1500 ms for a 1 s interval (lines 94-95); the next test sends an event every Thread.sleep(300) for 3 s and asserts no ': ping' ever appears (lines 111-114), so a single 1 s stall of the test thread produces a legitimate ping and a false failure. SseLifetimeTest line 243 asserts app.shutdown from an onClose listener returned in under 500 ms, and SseShutdownTest line 218 asserts closeAll of 50 streams returned in under 200 ms; all three depend on host speed rather than on the property under test (not blocking).",
+   "suggested_fix": "Replace elapsed-time assertions with 'returned while the held write/drain was still blocked' checks (the tests already hold a latch), and widen the remaining windows or use an injectable clock for the heartbeat.",
+   "is_behavioral": false,
+   "tags": [
+    "bug",
+    "performance"
+   ]
+  },
+  {
+   "id": "P11-004",
+   "axis": "P8",
+   "severity": "MEDIUM",
+   "title": "MultipartSpoolingTest heap-growth assertion depends on System.gc() and JVM-wide allocation",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartSpoolingTest.java",
+    "line_range": "195-232"
+   },
+   "description": "FR_MULTIPART_004_AC2 builds a 32 MiB upload, calls System.gc() before and inside the handler and asserts getHeapMemoryUsage().getUsed() grew by less than 8 MiB. System.gc() is only a hint (a no-op under -XX:+DisableExplicitGC, concurrent for G1/ZGC), the 32 MiB request copy is still live, and daemon threads from earlier tests in the same JVM (WebSocket sender/idle threads, leaked apps) allocate in parallel, so the measured delta is noise-dominated and can be either flaky-red or, when GC runs between the two samples, negative and pass without proving anything.",
+   "suggested_fix": "Measure what the parser allocates directly: wrap the source in a counting InputStream and assert the largest array requested/retained (or use a heap-capped forked JVM with -Xmx48m and assert no OutOfMemoryError).",
+   "is_behavioral": false,
+   "tags": [
+    "bug"
+   ]
+  },
+  {
+   "id": "P11-005",
+   "axis": "P8",
+   "severity": "LOW",
+   "title": "MultipartLimitsTest 'no temp file left' assertions can never fail because nothing is spooled",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartLimitsTest.java",
+    "line_range": "170-181, 205-216"
+   },
+   "description": "sdsAc6 (maxFileSize 1024, endless file part) and sdsAc7 (maxRequestSize 4096, endless chunked body) use settings() with the default memoryThreshold of 64 KiB. The parser stops after at most ~1025 resp. 4096+8192 bytes, below the threshold, so no temp file is ever created and assertEquals(0, tmp.getRoot().list().length) (lines 181, 216) passes regardless of cleanup. The scenario that matters, a file part already spooled to disk when maxRequestSize (or the part count) is exceeded, is not covered at parser or app level (assertAnswered only sets memoryThreshold(100) together with maxFileSize).",
+   "suggested_fix": "Set s.memoryThreshold(16) in both tests (and add an app-level case maxRequestSize + memoryThreshold small with a file part) so the 413 path must delete a real temp file.",
+   "is_behavioral": false,
+   "tags": [
+    "bug"
+   ]
+  },
+  {
+   "id": "P11-006",
+   "axis": "P8",
+   "severity": "LOW",
+   "title": "Non-daemon 'releaser' threads busy-wait forever if the shutdown sequence never reaches adapter.stop",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownSequenceTest.java",
+    "line_range": "286-300"
+   },
+   "description": "The releaser thread loops on !events.contains(\"adapter.stop\") with Thread.sleep(5) and is a normal (non-daemon) thread; releaser.join(5000) only bounds the join. If a regression makes shutdown throw or skip adapter.stop, the thread spins forever and the handler (release.await(5s)) is released late, leaving a live non-daemon thread in the test JVM. StoppingGateTest lines 96-106 repeats the same pattern.",
+   "suggested_fix": "Make the thread a daemon and give the wait loop a deadline, or hook the release into RecordingAdapter.stop() with a latch instead of polling the event list.",
+   "is_behavioral": false,
+   "tags": [
+    "bug"
+   ]
+  },
+  {
+   "id": "P11-007",
+   "axis": "P8",
+   "severity": "LOW",
+   "title": "Several tests depend on the working directory or build layout and fail outside Gradle",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/KotlinDocsMarkersTest.java",
+    "line_range": "25-40"
+   },
+   "description": "root() returns user.dir's parent and docs() calls listFiles() on <root>/docs/api without a null check (line 36 loops over a null array -> NullPointerException) when the JVM starts in the repo root or an IDE module dir. NullableAccessorDocsTest (line 22) and the Kotlin doc tests read src/test/kotlin and ../docs/api through user.dir; RouterRegistrationTest line 67 requires the class location to contain NaruServe-api/build/classes/java/main or a NaruServe-api-*.jar; InMemoryHttpAdapterTest line 88 requires 'testFixtures' in the code source; StaticSymlinkTest line 108 only checks a system property that build.gradle sets. They pass only under the exact Gradle layout and give NPEs or misleading failures elsewhere.",
+   "suggested_fix": "Resolve paths from a build-provided system property (project dir) with an explicit assumeTrue/clear failure message, and drop assertions on the physical classes dir.",
+   "is_behavioral": false,
+   "tags": [
+    "bug",
+    "style"
+   ]
+  },
+  {
+   "id": "P11-008",
+   "axis": "P8",
+   "severity": "LOW",
+   "title": "ETag constants bake in millisecond mtime precision of the test filesystem",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticConditionalTest.java",
+    "line_range": "26, 42"
+   },
+   "description": "ETAG \"4d2-18bcfe5687b\" (and StaticRangeTest line 20 \"3e8-18bcfe5687b\") is size-hex plus mtime-ms-hex of a file whose mtime was set with setLastModified(1700000000123L). On filesystems with 1 s or 2 s granularity (HFS+, ext3, FAT, some container overlays) the stored mtime is truncated and the ETag differs, failing every conditional/range test; the call only asserts that setLastModified returned true, not that the value read back matches. This also shows the product emits a strong ETag derived from (size, mtime): two edits of equal size within the filesystem's mtime granularity give the same strong validator, so If-Range/If-None-Match can splice or miss versions.",
+   "suggested_fix": "Compute the expected ETag from file.lastModified() read back in the test; consider weak ETags (W/) or including a content-derived component in the product.",
+   "is_behavioral": false,
+   "tags": [
+    "bug"
+   ]
+  },
+  {
+   "id": "P11-009",
+   "axis": "P8",
+   "severity": "LOW",
+   "title": "Tests mutate JVM-global state (java.io.tmpdir, default Locale) that leaked threads of other tests can observe",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartApiTest.java",
+    "line_range": "143-156"
+   },
+   "description": "sdsAc4 sets java.io.tmpdir to a bogus path for the duration of the test and RouterPolicyTest (lines 44-50) switches Locale.setDefault to tr_TR; both restore in finally, but any daemon thread alive from earlier tests (WebSocket sender/idle threads, apps never shut down) that creates a temp file or does locale-sensitive formatting in that window sees the altered value. Today the window is small, so this is a latent order/parallelism hazard rather than a current failure.",
+   "suggested_fix": "Inject the tmpdir/locale via the code under test (the MultipartSettings constructor already reads the property once) or isolate these tests in a forked JVM.",
+   "is_behavioral": false,
+   "tags": [
+    "bug"
+   ]
+  },
+  {
+   "id": "P11-010",
+   "axis": "P8",
+   "severity": "LOW",
+   "title": "WebSocket tests start apps and never shut them down, leaving per-app scheduler threads alive",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/WebSocketSessionTest.java",
+    "line_range": "15-25"
+   },
+   "description": "WebSocketSessionTest, WebSocketDispatchTest and WebSocketOriginTest have no @After and never call shutdown (WebSocketSessionTest.sdsAc1 additionally creates a second TestApp 'second' and 1003 sessions). WebSocketIdleScheduler's ScheduledThreadPoolExecutor(1) never lets its core thread time out, so each app that opened a session keeps one naruserve-<port>-ws-idle daemon thread (plus sender threads for 60 s) for the life of the JVM; with dozens of WebSocket tests this inflates the thread count and makes LiveThreads.withPrefix based assertions depend on suite order.",
+   "suggested_fix": "Add an @After that calls app.shutdown(2, SECONDS) (as WebSocketSendQueueTest and WebSocketRegistryTest do), or give TestApp an AutoCloseable/@Rule.",
+   "is_behavioral": false,
+   "tags": [
+    "bug"
+   ]
+  },
+  {
+   "id": "P11-011",
+   "axis": "P8",
+   "severity": "LOW",
+   "title": "MethodSetTest ROUTE-001 AC-3 test only asserts a constant and leaves a stale 'shortcut' TODO",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/MethodSetTest.java",
+    "line_range": "112-123"
+   },
+   "description": "sdsAc5_FR_ROUTE_001_AC3_anyIsConstantAndTraceConnectOnlyWhenNamed is documented with 'shortcut: RouterPolicy is written by the wave-2-2 lane ... add the built-router case once RouterPolicy is on this branch'. RouterPolicy has long been on this branch, but the test still checks only that Method.any() equals itself after Method.of(TRACE, CONNECT) was built (it cannot fail), so the AC that any() does not serve TRACE/CONNECT on a built router is verified only indirectly by RouterTraceConnectTest.",
+   "suggested_fix": "Replace the body with a Router built from Method.any() asserting UNSUPPORTED_METHOD for TRACE/CONNECT, and remove the shortcut comment.",
+   "is_behavioral": false,
+   "tags": [
+    "doc",
+    "style"
+   ]
+  }
+ ],
+ "coverage_rows": [
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/JsonApiTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertFalse(encode.getAnnotatedReturnType().isAnnotationPresent(Nullable.class));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/JsonBodyAcceptanceTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public void sdsAc8_FR_JSON_001_AC2_codecIOExceptionGives400() {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/JsonResponseTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "res.stream(new ByteArrayInputStream(new byte[10]), \"text/plain\");"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/KotlinAccessorTable.java",
+   "hunks_total": 1,
+   "anchors": [
+    "throw new IllegalStateException(\"kotlin.md has no row starting with \" + HEADER);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/KotlinContractChecks.java",
+   "hunks_total": 1,
+   "anchors": [
+    "if (nonNull(v) || nonNull(v.getAnnotatedBounds())) {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/KotlinContractFixtures.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public static class SoftNames {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/KotlinDocsMarkers.java",
+   "hunks_total": 1,
+   "anchors": [
+    "for (Map.Entry<String, List<Marker>> marker : markers.entrySet()) {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/KotlinDocsMarkersTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "List<String> failures = KotlinDocsMarkers.failures(one(\"t.md\", doc), one(\"T.kt\", SOURCE));"
+   ],
+   "findings": [
+    "P11-007"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/KotlinKeywordsTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(Arrays.asList(\"Keywords.as\", \"Keywords.fun\", \"Keywords.in\", \"Keywords.is\", \"Keywords.object\","
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/KotlinNullabilityTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "KotlinContractChecks.nonNullFailures(Collections.<Class<?>>singletonList(NullabilityFixture.class)));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/LoggerIsolationTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "+ \"\\\"Internal Server Error\\\",\\\"requestId\\\":\\\"[0-9a-f]{16}\\\"}}\"));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/MethodSetTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public void sdsAc5_FR_ROUTE_001_AC2_anyExceptDeleteEquality() {"
+   ],
+   "findings": [
+    "P11-011"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/MethodTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "fail(\"of(null) must throw\");"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/MimeTypesTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public void FR_STATIC_007_AC3_extensionsMatchWithoutRegardToCaseOrLeadingDot() throws IOException {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartApiTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "app.shutdown(1, TimeUnit.SECONDS);"
+   ],
+   "findings": [
+    "P11-009"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartLimitsTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "Map<String, List<String>> form = FormBodyReader.read(in(\"name=Kim+Lee&name=x&&a&city=%EC%84%9C\"), -1, 1048576L);"
+   ],
+   "findings": [
+    "P11-005"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartSpoolingTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "seen.add(req.parts().get(0).size());"
+   ],
+   "findings": [
+    "P11-004"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/NullabilityFixture.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public static @NonNull String annotatedNonNull() {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/NullableAccessorDocsTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "Collection<String> keys = KotlinAccessorTable.rows().keySet();"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/ProxyTrustAcceptanceTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(\"127.0.0.1 false\", who(t));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/RestAppBuilderTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertTrue(e.getMessage(), e.getMessage().contains(\"jsonCodec(...)\"));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/RoutingDocsTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "for (String line : doc(\"routing.md\").split(\"\\n\")) {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/ServerOptionsTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "rejected(name, \"1 ms..1 h\", o -> timeout(o, name, -1, TimeUnit.SECONDS));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/ServicesAcceptanceTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "ctx.register(Runnable.class, users);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/SmokeTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(\"ok\", NullabilityFixture.annotatedNonNull());"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/SseApiTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(4096, options(t).sendQueueSize());"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/SseLifetimeTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "+ \" onClose listener failed boom\", errors.get(0));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/SseQueueTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "List<Boolean> results = new ArrayList<>();"
+   ],
+   "findings": [
+    "P11-003"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/SseStreamTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public void sdsAc12_FR_SSE_001_AC7_dataOnlySendWritesNoEventLineAndParsesAsMessage() {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticApiTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "seen.add(o.index(\"main.html\"));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticCacheTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "res.header(\"Cache-Control\", \"private\");"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticConditionalTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "t.app().staticFiles(\"/l\", new File(tmp.getRoot(), \"list\"), o -> o.directoryListing(true));"
+   ],
+   "findings": [
+    "P11-008"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMethodTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "ClientResponse r = t.send(\"GET\", \"/chat\", \"Accept\", \"text/html\");"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMountingTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public void FR_STATIC_001_AC5_globalMiddlewareRunsOnStaticAndCanEndIt() throws IOException {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticRangeTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(null, r.header(\"Content-Range\"));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticSpaTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(404, t.send(\"GET\", \"/app/users/7\", \"Accept\", \"text/html\").status());"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticSymlinkTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertTrue(dir.renameTo(new File(tmp.getRoot(), \"moved\")));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticTraversalTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public void sdsAc2_FR_STATIC_005_AC2_dotSegments400FirstHiddenFiles404EmptySegment404() throws IOException {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/TypeRefTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertSame(Type.class, TypeRef.class.getMethod(\"getType\").getReturnType());"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/WebSocketApiTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public void sdsAc4_IR_WS_001_AC8_durationsAreBoundedWithTheCallersTimeAndUnitInTheMessage() {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/WebSocketDispatchTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public void FR_WS_001_AC5_noMiddlewareRunsPerMessage() throws Exception {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/WebSocketOriginTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public void sdsAc9_FR_WS_003_AC5_listedOriginIsAdmittedAfterNormalisation() throws Exception {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/WebSocketSendQueueTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "ws[0].sendBinary(new byte[2000]);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/WebSocketSessionTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "ws.onText(text -> events.add(\"second ran\"));"
+   ],
+   "findings": [
+    "P11-010"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/JsonBodyReaderTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertSame(malformed, out.thrown.get().getCause());"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/LimitedInputStreamTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "long s = in.skip(11 - skipped);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ListenStartupTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "first.shutdown(1, TimeUnit.SECONDS);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MiddlewarePipelineTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(204, t.send(\"OPTIONS\", \"*\").status());"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MultipartParserTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public void sdsAc3_FR_MULTIPART_001_AC2_preambleAndEpilogueAreIgnored() throws IOException {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/OriginCheckTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertFalse(sameOnly.admits(\"null\", \"example.test\", false));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/OwnedResourcesTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(Arrays.asList(\"y\", \"x\"), closed);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/PercentDecoderTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public void malformedInputIsNull() {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/PrefixMatcherTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertTrue(matches(\"/API\", \"/api/users\", ci));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ResponseStreamTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertTrue(\"isCommitted waited on the exchange commit\", prompt[0]);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownParticipantsTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertTrue(log.errors.toString(), log.errors.get(0).contains(\"boom\"));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownSequenceTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(Arrays.asList(\"adapter.stop\", \"close last STOPPING\", \"close first STOPPING\","
+   ],
+   "findings": [
+    "P11-006"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownStatesTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "app.shutdown(0, TimeUnit.SECONDS);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/SpoolCleanupTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "CountDownLatch cleaned = new CountDownLatch(1);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/SseShutdownTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public void sdsAc12_FR_SSE_005_AC6_afterShutdownTheAppRegistryIsEmpty() throws Exception {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/SseWireTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "for (String bad : new String[] {\"\\r\", \"x\\n\", \"\\u0000y\"}) {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StandardErrorsTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertArrayEquals((\"{\\\"error\\\":{\\\"code\\\":\\\"BAD_REQUEST\\\",\\\"message\\\":\\\"q\\\\\\\"\\\\u001f한\\\",\\\"requestId\\\":\\\"r\\\"}}\")"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StartFailureTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "adapter.bindFailure = new IOException(\"y\");"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StartGateTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public void sdsAc10_FR_APP_009_AC5_requestDuringStartingIsHeldUntilRunningThenAnsweredNormally()"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StaticPathTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public void sdsAc1_sdsAc2_plainPathsPassAndSegmentsAreDecodedOnce() {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StoppingGateTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public void sdsAc24_FR_APP_013_AC4_gateRunsBeforePreRequestChecksDuringStopping() {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/WebSocketIdleSchedulerTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "long handed = chh.firstNanos.get(\"close\");"
+   ],
+   "findings": [
+    "P11-001"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/WebSocketRegistryTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(403, r.status());"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/WebSocketSenderTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertFalse(LiveThreads.withPrefix(\"naruserve-\" + adapter.boundPort() + \"-ws-sender-\").isEmpty());"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/WebSocketShutdownTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(\"server shutdown\", ch.closeReason());"
+   ],
+   "findings": [
+    "P11-002"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/WebSocketUpgradeFailureTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(1, RecordingLogger.countMatching(log.lines, \"ERROR websocket [0-9a-f]{16} failed connection lost\"));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/PathValidatorTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "if (m.getDeclaringClass() == PathValidator.class) {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouteMatchTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "RouteMatch<String> options = router().lookup(\"OPTIONS\", \"/p\", false);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RoutePatternTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public void sdsAc5_FR_ROUTE_003_AC3_parseNamesThePattern() {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterAutoResponseTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public void sdsAc8_FR_ROUTE_012_AC1_autoOptionsAllow() {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterFreezeTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "r.add(Method.of(Method.CONNECT), \"/c\", \"2\");"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterLookupTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public void FR_ROUTE_006_AC1_mergeSlashesThroughLookup() {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterMatchingTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(Collections.singletonList(\"a b\"), Router.decodeSegments(\"/a%20b\", STRICT));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterPolicyTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertTrue(b.build().caseInsensitive());"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterPriorityTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(\"GET /a/b/:y\", handler(router(\"GET /a/:x/c\", \"GET /a/b/:y\"), Method.GET, \"/a/b/c\"));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterRegistrationTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "r.addWebSocket(\"/chat\", \"w\");"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterTraceConnectTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(RouteMatch.Kind.UNSUPPORTED_METHOD, kind(r, disabled.name(), \"/x\"));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterWebSocketTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(RouteMatch.Kind.MATCHED, ws.kind());"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/testing/InMemoryHttpAdapterTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "channel.clientClose(1000, \"done\");"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/JsonDocsKotlinTest.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "+ \"body(T::class.java) ?: throw HttpException(400, \\\"JSON body is null\\\")\"))"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/JsonKotlinTest.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "val adapter = InMemoryHttpAdapter()"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/KotlinDocsExamplesKotlinTest.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "fun `SDS-AC-2 FR-KT-004 AC-2 response md stream sends the input with its content type`() {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/KotlinSurfaceKotlinTest.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "val user = t.send(\"GET\", \"/users/7\")"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/MethodKotlinTest.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(listOf(Method.GET, Method.DELETE), seen)"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/NullabilityKotlinTest.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "fun `CON-BUILD-011 AC-2 Nullable method is seen as nullable String`() {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/NullableAccessorKotlinTest.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "val id: String? = req.lastEventId()"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/PropertySyntaxKotlinTest.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "for (secure in listOf(false, true)) {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/ServerOptionsKotlinTest.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "val app = RestApp.builder().httpAdapter(adapter).jsonCodec(StubJsonCodec()).build()"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/SseDocsKotlinTest.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "val response = adapter.submit(ClientRequest.of(\"GET\", \"/api/events\"))"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/SseKotlinTest.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "val event: SseEvent = SseEvent.event(\"x\")"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/WaveSixKotlinTest.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "res.send(\"$name|$filename|$seen|${req.file(\"missing\") == null}\")"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/WebSocketDocsKotlinTest.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(10)"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/WebSocketKotlinTest.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "fun `IR-HTTP-008 AC-8 withHeader compiles inside a SAM handler and returns non-platform types`() {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/routing/RouterKotlinTest.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "assertNull(mismatch.handler())"
+   ],
+   "findings": []
+  }
+ ]
+}

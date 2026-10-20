@@ -1,0 +1,326 @@
+{
+ "findings": [
+  {
+   "id": "P8-001",
+   "axis": "P8",
+   "severity": "MEDIUM",
+   "title": "RotatingFileLogger writer thread dies permanently on any Error and file logging silently stops",
+   "location": {
+    "file": "NaruServe-filelog/src/main/java/com/snoworca/naruserve/filelog/RotatingFileLogger.java",
+    "line_range": "219-272"
+   },
+   "description": "drain() loops forever but write() only catches IOException|RuntimeException (line 268). Any Error in the write path (OutOfMemoryError from record.getBytes(UTF_8) of a large stack-trace record or from streams.open on a low-memory Android 5.0 device, NoClassDefFoundError, StackOverflowError) escapes drain(), the thread terminates, and nothing restarts it. From then on log() offers into the bounded queue and nothing consumes it: the first 1024 records are accepted (droppedCount does not move, so the failure is invisible), afterwards they are dropped. The test FR_APP_017_AC5_closeReturnsWhenTheWriterDied... pins close() not hanging, but not that logging survives. A transient OOM therefore disables file logging until process restart, and the records already queued are lost.",
+   "suggested_fix": "In drain() wrap the per-item handling in try/catch (Throwable) (rethrow only ThreadDeath/after STOP), count the record as dropped, closeStream() and continue; keep the writer.isAlive() guards in close()/flush() for a truly dead thread. Add a test whose StreamFactory throws OutOfMemoryError once and assert later records are written.",
+   "is_behavioral": true,
+   "tags": [
+    "bug"
+   ]
+  },
+  {
+   "id": "P8-002",
+   "axis": "P8",
+   "severity": "MEDIUM",
+   "title": "flush()/close() wait without bound on a stalled writer, so app.shutdown never reaches TERMINATED",
+   "location": {
+    "file": "NaruServe-filelog/src/main/java/com/snoworca/naruserve/filelog/RotatingFileLogger.java",
+    "line_range": "160-216"
+   },
+   "description": "RestApp shutdown calls SafeLogger.flushAndClose(logger) synchronously (DefaultRestApp.java:573/612/703). flush() loops on marker.await(100ms) while writer.isAlive(), and close() loops on offer(STOP) and then writer.join() with interrupts swallowed (lines 197-212). If the writer is blocked inside FileOutputStream.write/flush (log directory on a stalled NFS/FUSE mount, a FIFO placed at naruserve.log, or a disk that hangs), neither returns. Scenario: app.shutdown(2, SECONDS) from the shutdown route: the winning shutdown thread never completes lifecycle.terminate(), other callers time out and return, and the JVM (kept alive by the keeper thread until TERMINATED) never exits on its own. The documented shutdown timeout is not honoured because of a log file. The BlockingStreams test hook models exactly this stall but only releases it.",
+   "suggested_fix": "Give flush() and close() a bounded wait (for example 5 seconds or a builder option closeTimeout); on expiry give up joining (the thread is a daemon), count the unwritten queue as dropped and return. Add a test with BlockingStreams that never releases and assert close() returns within the bound.",
+   "is_behavioral": true,
+   "tags": [
+    "bug",
+    "regression"
+   ]
+  },
+  {
+   "id": "P8-003",
+   "axis": "P8",
+   "severity": "LOW",
+   "title": "rotate() ignores failed backup shifts and then renames the live file over naruserve.log.1 on POSIX",
+   "location": {
+    "file": "NaruServe-filelog/src/main/java/com/snoworca/naruserve/filelog/RotatingFileLogger.java",
+    "line_range": "284-293"
+   },
+   "description": "rotate() deletes slot .free (result ignored, line 288), shifts .n to .n+1 ignoring each rename result (line 290), then renames naruserve.log to .1 and reports success. If a shift fails (for example .free could not be deleted because a non-empty directory or an undeletable entry occupies that name, so renaming .1 onto it fails), .1 is still in place and on POSIX renameTo atomically replaces it with the live file: the old .1 backup is destroyed, rotation reports movedAway=true and no rotationFailureCount is recorded. The documented guarantee that a failing rename deletes no backup only holds for the live-file rename that the tests fake (name equals naruserve.log).",
+   "suggested_fix": "Stop and return false when any shift rename returns false (leaving the live file in place and counting the failure), or refuse to rename the live file over an existing .1.",
+   "is_behavioral": true,
+   "tags": [
+    "bug"
+   ]
+  },
+  {
+   "id": "P8-004",
+   "axis": "P8",
+   "severity": "LOW",
+   "title": "Concurrent close() and flush() after the first close() return before the writer has finished draining",
+   "location": {
+    "file": "NaruServe-filelog/src/main/java/com/snoworca/naruserve/filelog/RotatingFileLogger.java",
+    "line_range": "161-167 and 188-194"
+   },
+   "description": "close() sets closed under the lock and a second concurrent caller returns at once (line 190-192), and flush() returns at once when closed is set (line 163-167), although the first closer is still waiting for the writer to drain up to 1024 queued records. With a logger shared by two apps (docs/api/logging.md allows this with the first closer winning) or a JVM shutdown hook racing app.shutdown, the second caller proceeds (for example to System.exit or to read the file) while records are still unwritten, contradicting the Javadoc 'Returns once every record queued before the call is written' and 'close ... joins the writer thread; idempotent'.",
+   "suggested_fix": "Have the closed-path of both methods wait for the writer to die (writer.join with the same loop as close()) instead of returning immediately; close() is already safe to call from several threads for that.",
+   "is_behavioral": true,
+   "tags": [
+    "bug"
+   ]
+  },
+  {
+   "id": "P8-005",
+   "axis": "P8",
+   "severity": "LOW",
+   "title": "Default logger choice treats any visible android.util.Log (including android.jar test stubs) as Android, so every log call is silently swallowed",
+   "location": {
+    "file": "NaruServe/src/main/java/com/snoworca/naruserve/bootstrap/DefaultAppFactory.java",
+    "line_range": "31-40"
+   },
+   "description": "defaultLogger() picks LogcatLogger as soon as Class.forName(\"android.util.Log\") resolves. In Android local unit tests (JVM with the android.jar stubs, returnDefaultValues=false) or any JVM project that has a com.google.android:android stub artifact on the class path, Log.v/d/i/w/e throw RuntimeException(\"... not mocked\"/\"Stub!\"), which LogcatLogger.invoke (LogcatLogger.java:88-94) swallows by contract. RestApp.create() then logs nothing at all, including startup warnings and 500 error traces, where the ConsoleLogger would have printed them. The documented default (docs/api/logging.md table 'Android: Logcat') is met on devices, but the detection is wrong off-device and gives no hint.",
+   "suggested_fix": "Also require a real Android runtime, for example System.getProperty(\"java.vm.vendor\") containing 'Android' or android.os.Build.VERSION.SDK_INT > 0 read reflectively, or fall back to ConsoleLogger when the first Log call throws (probe once in LogcatLogger).",
+   "is_behavioral": true,
+   "tags": [
+    "bug"
+   ]
+  }
+ ],
+ "coverage_rows": [
+  {
+   "file": "NaruServe-filelog/src/main/java/com/snoworca/naruserve/filelog/RotatingFileLogger.java",
+   "hunks_total": 1,
+   "anchors": [
+    "boolean movedAway = rotate();"
+   ],
+   "findings": [
+    "P8-001",
+    "P8-002",
+    "P8-003",
+    "P8-004"
+   ]
+  },
+  {
+   "file": "NaruServe-filelog/src/main/java/com/snoworca/naruserve/filelog/package-info.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.filelog;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-filelog/src/test/java/com/snoworca/naruserve/filelog/FailedListenWriterThreadTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertFalse(\"the writer thread is gone\", logger.writer.isAlive());"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-filelog/src/test/java/com/snoworca/naruserve/filelog/RotatingFileLoggerTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public void FR_APP_017_AC5_closeReturnsWhenTheWriterDiedWithAFullQueue() throws Exception {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-gson/src/main/java/com/snoworca/naruserve/gson/GsonJsonCodec.java",
+   "hunks_total": 1,
+   "anchors": [
+    "throw new IOException(e.getMessage(), new JsonSyntaxException(e));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-gson/src/main/java/com/snoworca/naruserve/gson/package-info.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.gson;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-gson/src/test/java/com/snoworca/naruserve/gson/GsonJsonCodecTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public void FR_JSON_001_bomPrefixedBodyIsDecodedByTheDefaultCodec() {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-gson/src/test/kotlin/com/snoworca/naruserve/gson/GsonCodecKotlinTest.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(400, post(\"[\".repeat(33) + \"]\".repeat(33)).status())"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-gson/src/test/kotlin/com/snoworca/naruserve/gson/GsonDataClassLimitKotlinTest.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "val empty = codec.decode<CreateUserRequest>(StringReader(\"{}\"), CreateUserRequest::class.java)"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-kotlin/src/main/kotlin/com/snoworca/naruserve/kotlin/KotlinModule.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "const val NAME = \"NaruServe-kotlin\""
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-kotlin/src/main/kotlin/com/snoworca/naruserve/kotlin/RequestExtensions.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "inline fun <reified T : Any> Request.body(): T = body(T::class.java) ?: throw HttpException(400, \"JSON body is null\")"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-kotlin/src/test/kotlin/com/snoworca/naruserve/kotlin/KotlinDocsBodyKotlinTest.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "val rejected = post(adapter, \"null\")"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-kotlin/src/test/kotlin/com/snoworca/naruserve/kotlin/KotlinSmokeTest.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(\"NaruServe-kotlin\", KotlinModule.NAME)"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-kotlin/src/test/kotlin/com/snoworca/naruserve/kotlin/RequestBodyExtensionKotlinTest.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(\"java.util.List\", (codec.types[0] as Class<*>).name)"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-logcat/src/main/java/com/snoworca/naruserve/logcat/LogcatLogger.java",
+   "hunks_total": 1,
+   "anchors": [
+    "eThrowable = log.getMethod(\"e\", String.class, String.class, Throwable.class);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-logcat/src/main/java/com/snoworca/naruserve/logcat/package-info.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.logcat;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-logcat/src/test/java/android/util/Log.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public static int w(String tag, String msg) {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-logcat/src/test/java/com/snoworca/naruserve/logcat/LogcatLoggerTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "Log.failure = new IllegalStateException(\"log down\");"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-slf4j/src/main/java/com/snoworca/naruserve/slf4j/Slf4jLogger.java",
+   "hunks_total": 1,
+   "anchors": [
+    "delegate.error(message, error);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-slf4j/src/main/java/com/snoworca/naruserve/slf4j/package-info.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.slf4j;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-slf4j/src/test/java/com/snoworca/naruserve/slf4j/Slf4jLoggerTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "new Slf4jLogger(null);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-slf4j/src/test/java/org/slf4j/impl/StaticLoggerBinder.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public static String REQUESTED_API_VERSION = \"1.6.99\";"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe/src/main/java/com/snoworca/naruserve/bootstrap/DefaultAppFactory.java",
+   "hunks_total": 1,
+   "anchors": [
+    "Class.forName(\"android.util.Log\", false, loader);"
+   ],
+   "findings": [
+    "P8-005"
+   ]
+  },
+  {
+   "file": "NaruServe/src/main/java/com/snoworca/naruserve/bootstrap/package-info.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.bootstrap;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe/src/main/resources/META-INF/proguard/naruserve-bootstrap.pro",
+   "hunks_total": 1,
+   "anchors": [
+    "-keepnames class com.snoworca.naruserve.spi.AppFactory"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe/src/main/resources/META-INF/services/com.snoworca.naruserve.spi.AppFactory",
+   "hunks_total": 1,
+   "anchors": [
+    "com.snoworca.naruserve.bootstrap.DefaultAppFactory"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe/src/test/java/com/snoworca/naruserve/bootstrap/DefaultAppFactoryTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertSame(DefaultAppFactory.class, found.get(0).getClass());"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe/src/test/java/com/snoworca/naruserve/bootstrap/DefaultLoggerTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(0, javac.run(null, null, null, \"-d\", out.getPath(), logSource.getPath()));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe/src/test/java/com/snoworca/naruserve/bootstrap/JvmLifetimeTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertTrue(\"child still running after the shutdown route\", child.waitFor(15, TimeUnit.SECONDS));"
+   ],
+   "findings": []
+  }
+ ]
+}

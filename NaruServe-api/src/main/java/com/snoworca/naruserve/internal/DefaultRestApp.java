@@ -551,6 +551,7 @@ public final class DefaultRestApp implements RestApp {
     RuntimeException failStart(Throwable cause) {
         Throwable result = cause instanceof RuntimeException || cause instanceof Error ? cause
                 : new AppStartException("app start failed: " + cause, cause);
+        Error cleanupError = null;
         try {
             lifecycle.fail();
             HttpAdapter a = adapter;
@@ -558,17 +559,21 @@ public final class DefaultRestApp implements RestApp {
                 try {
                     // 1 s grace so requests released from the start gate can send their 503.
                     a.stop(1, TimeUnit.SECONDS);
-                } catch (RuntimeException e) {
-                    suppress(result, e);
+                } catch (Throwable e) {
+                    cleanupError = cleanupFailure(result, cleanupError, e);
                 }
                 try {
                     a.release();
-                } catch (RuntimeException e) {
-                    suppress(result, e);
+                } catch (Throwable e) {
+                    cleanupError = cleanupFailure(result, cleanupError, e);
                 }
             }
-            for (Exception closeFailure : context.closeOwned(logger)) {
-                suppress(result, closeFailure);
+            try {
+                for (Exception closeFailure : context.closeOwned(logger)) {
+                    suppress(result, closeFailure);
+                }
+            } catch (Error e) {
+                cleanupError = cleanupFailure(result, cleanupError, e);
             }
             SafeLogger.flushAndClose(logger);
         } finally {
@@ -577,7 +582,29 @@ public final class DefaultRestApp implements RestApp {
         if (result instanceof Error) {
             throw (Error) result;
         }
+        if (cleanupError != null) {
+            suppress(cleanupError, result);
+            throw cleanupError;
+        }
         return (RuntimeException) result;
+    }
+
+    /**
+     * Records a failed-start cleanup failure: an Exception, or any failure when the result is itself an Error, is
+     * suppressed on the result; otherwise the first Error is returned to be thrown after TERMINATED, later ones
+     * suppressed on it.
+     */
+    @Nullable
+    private static Error cleanupFailure(Throwable result, @Nullable Error cleanupError, Throwable failure) {
+        if (!(failure instanceof Error) || result instanceof Error) {
+            suppress(result, failure);
+            return cleanupError;
+        }
+        if (cleanupError == null) {
+            return (Error) failure;
+        }
+        suppress(cleanupError, failure);
+        return cleanupError;
     }
 
     /** addSuppressed refuses the throwable itself, which a close() rethrowing the cause would pass. */
@@ -680,8 +707,9 @@ public final class DefaultRestApp implements RestApp {
             error = firstError(error, shutdownParticipants.run(ShutdownParticipants.Phase.BEFORE_WAIT, log, deadlineNanos));
             try {
                 a.stop(left(deadlineNanos), TimeUnit.NANOSECONDS);
-            } catch (RuntimeException e) {
+            } catch (Throwable e) {
                 log.error("adapter stop failed", e);
+                error = firstError(error, e);
             }
             error = firstError(error, shutdownParticipants.run(ShutdownParticipants.Phase.FORCE_CLOSE, log, deadlineNanos));
             List<LifecycleCallback> callbacks;
@@ -697,14 +725,20 @@ public final class DefaultRestApp implements RestApp {
                 }
             }
             error = firstError(error, shutdownParticipants.run(ShutdownParticipants.Phase.AFTER_ON_STOP, log, deadlineNanos));
-            for (Exception e : context.closeOwned(logger)) {
+            try {
+                for (Exception e : context.closeOwned(logger)) {
+                    log.error("owned resource close failed", e);
+                }
+            } catch (Error e) {
                 log.error("owned resource close failed", e);
+                error = firstError(error, e);
             }
             SafeLogger.flushAndClose(logger);
             try {
                 a.release();
-            } catch (RuntimeException e) {
+            } catch (Throwable e) {
                 log.error("adapter release failed", e);
+                error = firstError(error, e);
             }
         } finally {
             lifecycleThread.compareAndSet(self, null);

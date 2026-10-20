@@ -24,6 +24,7 @@ final class FileResourceResolver implements ResourceResolver {
     private final String rootPath;
     private final boolean allowSymlinks;
     private volatile @Nullable Runnable afterCheck;
+    private volatile @Nullable Runnable afterOpen;
 
     FileResourceResolver(File canonicalRoot, boolean allowSymlinks) {
         this.root = canonicalRoot;
@@ -47,6 +48,11 @@ final class FileResourceResolver implements ResourceResolver {
     /** Test hook run between the first check and the open. */
     void afterCheck(@Nullable Runnable hook) {
         this.afterCheck = hook;
+    }
+
+    /** Test hook run once the stream is open and verified, just before {@link #open} returns it. */
+    void afterOpen(@Nullable Runnable hook) {
+        this.afterOpen = hook;
     }
 
     /** The canonical path of {@code root/path} after the containment, link and regular-file checks. */
@@ -131,6 +137,10 @@ final class FileResourceResolver implements ResourceResolver {
         }
         if (!ok) {
             throw new FileNotFoundException(path);
+        }
+        Runnable opened = afterOpen;
+        if (opened != null) {
+            opened.run();
         }
         return in;
     }
