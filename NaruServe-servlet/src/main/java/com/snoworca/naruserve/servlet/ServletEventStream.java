@@ -66,9 +66,7 @@ final class ServletEventStream {
             registered = true;
         } finally {
             if (!registered) {
-                pool.release();
-                ex.complete(); // an AsyncContext already started would otherwise never end
-                pool.streams.remove(ex);
+                pool.finish(ex); // an AsyncContext already started would otherwise never end
             }
         }
     }
@@ -122,6 +120,14 @@ final class ServletEventStream {
             open.decrementAndGet();
         }
 
+        /** Ends one stream: gives its slot back, completes its AsyncContext once and untracks the exchange. */
+        // @req FR-SVL-005
+        void finish(ServletExchange ex) {
+            release();
+            ex.complete();
+            streams.remove(ex);
+        }
+
         /** Runs {@code task} on a pool thread; throws RejectedExecutionException once the pool was shut down. */
         // @req FR-SVL-005
         void submit(Runnable task) {
@@ -146,13 +152,12 @@ final class ServletEventStream {
 
                 @Override
                 public void onTimeout(AsyncEvent e) {
-                    ex.abort(); // the drain's next write fails, so it ends and gives its slot back
-                    streams.remove(ex);
+                    onError(e);
                 }
 
                 @Override
                 public void onError(AsyncEvent e) {
-                    ex.abort();
+                    ex.abort(); // the drain's next write fails, so it ends and gives its slot back
                     streams.remove(ex);
                 }
 
@@ -199,7 +204,7 @@ final class ServletEventStream {
     }
 
     /**
-     * The body stream handed to attach and drain: each write runs under the exchange lock, fails at once after an
+     * The body stream handed to attach and drain: each write runs under the exchange's write lock, fails at once after an
      * abort and is flushed to the client at once, so the container buffers no event or heartbeat.
      */
     // @req FR-SVL-005
@@ -214,27 +219,36 @@ final class ServletEventStream {
 
         @Override
         public void write(int b) throws IOException {
-            synchronized (ex) {
+            ex.writeLock.lock();
+            try {
                 ex.checkNotAborted();
                 out.write(b);
                 out.flush();
+            } finally {
+                ex.writeLock.unlock();
             }
         }
 
         @Override
         public void write(byte[] b, int off, int len) throws IOException {
-            synchronized (ex) {
+            ex.writeLock.lock();
+            try {
                 ex.checkNotAborted();
                 out.write(b, off, len);
                 out.flush();
+            } finally {
+                ex.writeLock.unlock();
             }
         }
 
         @Override
         public void flush() throws IOException {
-            synchronized (ex) {
+            ex.writeLock.lock();
+            try {
                 ex.checkNotAborted();
                 out.flush();
+            } finally {
+                ex.writeLock.unlock();
             }
         }
 
@@ -256,10 +270,7 @@ final class ServletEventStream {
             } catch (IOException | RuntimeException e) {
                 ex.abort();
             } finally {
-                Pool pool = ex.pool();
-                pool.release();
-                ex.complete();
-                pool.streams.remove(ex);
+                ex.pool().finish(ex);
             }
         };
     }

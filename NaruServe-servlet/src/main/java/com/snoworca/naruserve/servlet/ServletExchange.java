@@ -21,7 +21,9 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.ReentrantLock;
 import javax.servlet.AsyncContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -45,6 +47,9 @@ final class ServletExchange implements HttpExchange {
     /** The largest chunk {@link #sendFile} reads and writes at once. */
     static final int CHUNK = 65536;
 
+    /** How long abort() waits for a running drain write before completing anyway (a write blocked on the client). */
+    static final long ABORT_WAIT_MILLIS = 250;
+
     private final HttpServletRequest req;
     private final HttpServletResponse res;
     private final String path;
@@ -60,6 +65,8 @@ final class ServletExchange implements HttpExchange {
     // Set once an event stream started async processing.
     private volatile @Nullable AsyncContext async;
     private final AtomicBoolean completed = new AtomicBoolean();
+    /** Held by the event stream's body stream around each write; abort() waits for it before completing. */
+    final ReentrantLock writeLock = new ReentrantLock();
 
     /** An exchange without an adapter: no event stream can start on it. */
     // @req FR-SVL-002
@@ -156,19 +163,19 @@ final class ServletExchange implements HttpExchange {
         return new FilterOutputStream(res.getOutputStream()) {
             @Override
             public void write(int b) throws IOException {
-                check();
+                checkNotAborted();
                 out.write(b);
             }
 
             @Override
             public void write(byte[] b, int off, int len) throws IOException {
-                check();
+                checkNotAborted();
                 out.write(b, off, len);
             }
 
             @Override
             public void flush() throws IOException {
-                check();
+                checkNotAborted();
                 out.flush();
             }
 
@@ -182,13 +189,15 @@ final class ServletExchange implements HttpExchange {
     // @req FR-SVL-003
     @Override
     public void finish() throws IOException {
-        check();
+        checkNotAborted();
         res.flushBuffer();
     }
 
     /**
      * Marks the exchange aborted; the container owns the socket, so nothing is called on it, except that an event
-     * stream's AsyncContext is completed (once) so the container ends the response.
+     * stream's AsyncContext is completed (once) so the container ends the response. A drain write already running
+     * is given {@link #ABORT_WAIT_MILLIS} to return first, so complete() does not overlap it; a write blocked on a
+     * slow client is cut by complete() after that wait, which is what frees it.
      */
     // @req FR-SVL-003
     // @req FR-SVL-005
@@ -196,23 +205,39 @@ final class ServletExchange implements HttpExchange {
     public void abort() {
         aborted = true;
         if (async != null) {
-            complete();
+            boolean held = false;
+            try {
+                held = writeLock.tryLock(ABORT_WAIT_MILLIS, TimeUnit.MILLISECONDS);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            try {
+                complete();
+            } finally {
+                if (held) {
+                    writeLock.unlock();
+                }
+            }
         }
     }
 
-    /** Commits, then copies {@code length} bytes from {@code offset} through java.io in chunks of {@link #CHUNK}. */
+    /**
+     * Commits, then copies {@code length} bytes from {@code offset} through java.io in chunks of {@link #CHUNK}. The
+     * arguments are checked in the order of the TinyHttpd adapter: the range (IllegalArgumentException), then the
+     * abort check and single-start rule, then the open of the file.
+     */
     // @req FR-SVL-003
     @Override
     public void sendFile(int status, List<Map.Entry<String, String>> headers, File file, long offset, long length)
             throws IOException {
-        // The start rule first, then the range and the open, so a bad range or a missing file leaves the response
-        // unstarted and the core can still answer with an error.
-        requireStartable();
+        // The range first, then the start rule, then the open (the order of the TinyHttpd adapter), so a bad range or
+        // a missing file leaves the response unstarted and the core can still answer with an error.
         long size = file.length();
         if (offset < 0 || length < 0 || offset > size - length) {
             throw new IllegalArgumentException(
                     "range offset " + offset + " length " + length + " outside file of " + size + " bytes");
         }
+        requireStartable();
         OutputStream out;
         try (InputStream in = new FileInputStream(file)) {
             for (long skipped = 0; skipped < offset; ) {
@@ -293,8 +318,7 @@ final class ServletExchange implements HttpExchange {
                 abort();
             }
         }
-        pool.release();
-        complete();
+        pool.finish(this);
     }
 
     /** The pool of the adapter; IllegalStateException for an exchange without one. */
@@ -337,10 +361,7 @@ final class ServletExchange implements HttpExchange {
     /** Records the drain {@link #afterHandler} submits and the stream it writes to. */
     // @req FR-SVL-005
     synchronized void register(StreamDrain d, OutputStream out) {
-        if (handlerReturned) {
-            // afterHandler already ran, so this drain would never be submitted
-            throw new IllegalStateException("eventStream must be called before the handler returns");
-        }
+        requireDrainable(); // afterHandler already ran, so this drain would never be submitted
         drain = d;
         drainOut = out;
     }
@@ -372,21 +393,17 @@ final class ServletExchange implements HttpExchange {
     }
 
     void checkNotAborted() throws IOException {
-        check();
+        if (aborted) {
+            throw new IOException("exchange aborted");
+        }
     }
 
     /** A second start of one exchange throws IllegalStateException; an aborted one throws IOException. */
     // @req FR-SVL-003
     synchronized void requireStartable() throws IOException {
-        check();
+        checkNotAborted();
         if (started) {
             throw new IllegalStateException("the response was already started");
-        }
-    }
-
-    private void check() throws IOException {
-        if (aborted) {
-            throw new IOException("exchange aborted");
         }
     }
 }

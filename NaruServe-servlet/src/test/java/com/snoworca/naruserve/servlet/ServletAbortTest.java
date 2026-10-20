@@ -16,6 +16,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.servlet.AsyncContext;
 import javax.servlet.AsyncListener;
@@ -169,7 +171,7 @@ public class ServletAbortTest {
     }
 
     /** An AsyncContext proxy that keeps its listeners and counts complete(); any other call returns a default. */
-    static final class FakeAsync {
+    static class FakeAsync {
         final List<AsyncListener> listeners = Collections.synchronizedList(new ArrayList<AsyncListener>());
         final AtomicInteger completes = new AtomicInteger();
         final AsyncContext proxy = (AsyncContext) Proxy.newProxyInstance(ServletAbortTest.class.getClassLoader(),
@@ -178,9 +180,13 @@ public class ServletAbortTest {
                         listeners.add((AsyncListener) args[0]);
                     } else if (m.getName().equals("complete")) {
                         completes.incrementAndGet();
+                        onComplete();
                     }
                     return null;
                 });
+
+        void onComplete() {
+        }
     }
 
     /** A started event stream exchange registered in {@code pool}, and the drain's stream over it. */
@@ -208,6 +214,67 @@ public class ServletAbortTest {
         } finally {
             pool.shutdownNow();
         }
+    }
+
+    // FR-SVL-003 AC-3 / FR-SVL-006 AC-3 (review P2-001): abort during a drain write that is running but not stuck on
+    // the client waits for it, so complete() never overlaps the write; the aborted write itself is not cut short
+    @Test
+    public void fr_SVL_006_AC3_abortWaitsForARunningDrainWriteBeforeCompleting() throws Exception {
+        List<String> order = Collections.synchronizedList(new ArrayList<String>());
+        CountDownLatch entered = new CountDownLatch(1);
+        CountDownLatch release = new CountDownLatch(1);
+        ServletOutputStream slow = new ServletOutputStream() {
+            @Override
+            public boolean isReady() {
+                return true;
+            }
+
+            @Override
+            public void setWriteListener(WriteListener listener) {
+            }
+
+            @Override
+            public void write(int b) throws IOException {
+                entered.countDown();
+                try {
+                    release.await(10, TimeUnit.SECONDS);
+                } catch (InterruptedException e) {
+                    throw new IOException(e);
+                }
+                order.add("write-end");
+            }
+        };
+        FakeAsync ac = new FakeAsync() {
+            @Override
+            void onComplete() {
+                order.add("complete");
+            }
+        };
+        ServletExchange ex = new ServletExchange(request(), new FakeResponse().proxy, "/");
+        ex.async(ac.proxy);
+        OutputStream out = new ServletEventStream.FlushingStream(ex, slow);
+        Thread writer = new Thread(() -> {
+            try {
+                out.write(1);
+            } catch (IOException e) {
+                order.add("write-failed");
+            }
+        });
+        writer.start();
+        assertTrue("the write started", entered.await(10, TimeUnit.SECONDS));
+        Thread aborter = new Thread(ex::abort);
+        aborter.start();
+        long end = System.nanoTime() + TimeUnit.SECONDS.toNanos(10);
+        while (aborter.getState() != Thread.State.TIMED_WAITING && aborter.isAlive() && System.nanoTime() < end) {
+            Thread.sleep(1);
+        }
+        assertEquals("abort waits for the running write", Thread.State.TIMED_WAITING, aborter.getState());
+        assertEquals("no complete during the write", 0, ac.completes.get());
+        release.countDown();
+        writer.join(10000);
+        aborter.join(10000);
+        assertEquals(Arrays.asList("write-end", "complete"), order);
+        assertIOException("write after the abort", () -> out.write(2));
     }
 
     // FR-SVL-005 AC-5 (one complete per stream): a container onError/onTimeout aborts the exchange, completes the

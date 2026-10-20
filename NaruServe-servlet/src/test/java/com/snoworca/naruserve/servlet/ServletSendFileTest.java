@@ -63,6 +63,34 @@ public class ServletSendFileTest {
         }
     }
 
+    // SDS-AC-10; FR-SVL-003 AC-4 (review S2-002): the range is checked before the abort and single-start rules, as in
+    // TinyHttpdExchange, and a bad range starts nothing
+    @Test
+    public void sdsAc10_FR_SVL_003_AC4_badRangeWinsOverAbortAndSingleStart() throws Exception {
+        File f = File.createTempFile("naruserve-sendfile", ".bin");
+        f.deleteOnExit();
+        ServletAbortTest.FakeResponse res = new ServletAbortTest.FakeResponse();
+        ServletExchange started = new ServletExchange(ServletAbortTest.request(), res.proxy, "/");
+        started.commit(200, ServletAbortTest.headers(), 0);
+        ServletExchange aborted = new ServletExchange(ServletAbortTest.request(), res.proxy, "/");
+        aborted.abort();
+        for (ServletExchange ex : new ServletExchange[] {started, aborted}) {
+            try {
+                ex.sendFile(200, ServletAbortTest.headers(), f, 1, 5);
+                throw new AssertionError("a bad range did not throw");
+            } catch (IllegalArgumentException expected) {
+                // the range first
+            }
+        }
+        ServletExchange fresh = new ServletExchange(ServletAbortTest.request(), res.proxy, "/");
+        try {
+            fresh.sendFile(200, ServletAbortTest.headers(), f, 1, 5);
+            throw new AssertionError("a bad range did not throw");
+        } catch (IllegalArgumentException expected) {
+            fresh.commit(200, ServletAbortTest.headers(), 0); // still unstarted
+        }
+    }
+
     // SDS-AC-10; FR-SVL-003 AC-4
     @Test
     public void sdsAc10_FR_SVL_003_AC4_servletExchangeReferencesNoJavaNioFile() throws Exception {
