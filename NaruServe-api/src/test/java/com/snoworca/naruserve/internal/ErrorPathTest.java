@@ -97,6 +97,91 @@ public class ErrorPathTest {
         }
     }
 
+    // CON-APP-003 AC-1: a try/catch middleware sees the handler's own instance, and rethrowing it reaches onError once
+    @Test
+    public void con_APP_003_AC1_aCatchingMiddlewareSeesTheHandlersInstanceAndOnErrorGetsItOnceOnRethrow() {
+        IllegalStateException thrown = new IllegalStateException("handler");
+        List<Throwable> caught = new ArrayList<>();
+        TestApp t = app();
+        t.app().use((req, res, next) -> {
+            try {
+                next.run();
+            } catch (RuntimeException e) {
+                caught.add(e);
+                throw e;
+            }
+        });
+        t.app().onError(recording);
+        t.app().get("/x", throwing(thrown));
+        assertEquals(500, t.send("GET", "/x").status());
+        assertEquals(1, caught.size());
+        assertSame(thrown, caught.get(0));
+        assertEquals(1, seen.size());
+        assertSame(thrown, seen.get(0).error);
+    }
+
+    /** A codec that fails in both directions. */
+    private static final class ThrowingCodec implements com.snoworca.naruserve.spi.JsonCodec {
+        @Override
+        public <T> T decode(java.io.Reader reader, java.lang.reflect.Type type) throws IOException {
+            throw new IOException("decode down");
+        }
+
+        @Override
+        public void encode(Object value, java.io.Writer writer) throws IOException {
+            throw new IOException("encode down");
+        }
+    }
+
+    /** A codec that works for the one value this test encodes. */
+    private static final class WorkingCodec implements com.snoworca.naruserve.spi.JsonCodec {
+        @Override
+        public <T> T decode(java.io.Reader reader, java.lang.reflect.Type type) {
+            return null;
+        }
+
+        @Override
+        public void encode(Object value, java.io.Writer writer) throws IOException {
+            writer.write("{}");
+        }
+    }
+
+    private static ClientResponse failureAnswer(com.snoworca.naruserve.spi.JsonCodec codec, RouteHandler handler) {
+        com.snoworca.naruserve.testing.InMemoryHttpAdapter adapter =
+                new com.snoworca.naruserve.testing.InMemoryHttpAdapter();
+        com.snoworca.naruserve.RestApp app = com.snoworca.naruserve.RestApp.builder().httpAdapter(adapter)
+                .jsonCodec(codec).logger(new RecordingLogger()).build();
+        app.get("/f", handler);
+        app.listen(0);
+        try {
+            return adapter.send(com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientRequest.of("GET", "/f"));
+        } finally {
+            app.shutdown(1, java.util.concurrent.TimeUnit.SECONDS);
+        }
+    }
+
+    private static String withoutRequestId(ClientResponse r) {
+        return new String(r.body(), StandardCharsets.UTF_8).replaceAll("\"requestId\":\"[0-9a-f]{16}\"",
+                "\"requestId\":\"X\"");
+    }
+
+    // CON-APP-004 AC-1: the standard error body does not depend on the app JsonCodec
+    @Test
+    public void con_APP_004_AC1_aThrowingAppCodecLeavesTheStandardErrorBodyEqualToTheWorkingCodecOne() {
+        RouteHandler boom = throwing(new IllegalStateException("boom"));
+        ClientResponse working = failureAnswer(new WorkingCodec(), boom);
+        ClientResponse broken = failureAnswer(new ThrowingCodec(), boom);
+        DispatcherTest.assertError(500, "INTERNAL_ERROR", "Internal Server Error", working);
+        DispatcherTest.assertError(500, "INTERNAL_ERROR", "Internal Server Error", broken);
+        assertEquals(working.header("Content-Type"), broken.header("Content-Type"));
+        assertEquals(working.header("Content-Length"), broken.header("Content-Length"));
+        assertEquals(withoutRequestId(working), withoutRequestId(broken));
+        // The codec itself failing inside the handler (res.json) is answered with the same body.
+        ClientResponse viaJson = failureAnswer(new ThrowingCodec(), (req, res) -> res.json(Collections.singletonList(1)));
+        DispatcherTest.assertError(500, "INTERNAL_ERROR", "Internal Server Error", viaJson);
+        assertEquals(withoutRequestId(working), withoutRequestId(viaJson));
+    }
+
     // SDS-AC-1; FR-APP-005 AC-1
     @Test
     public void sdsAc1_FR_APP_005_AC1_aThrownErrorIsNotRoutedButAbortsAndPropagates() {
@@ -146,7 +231,7 @@ public class ErrorPathTest {
         assertEquals(Arrays.asList("first /pass", "second /pass"), calls);
     }
 
-    // SDS-AC-3; FR-APP-005 AC-4, FR-APP-006 AC-1
+    // SDS-AC-3; FR-APP-005 AC-4, FR-APP-006 AC-1; CON-APP-005 AC-1
     @Test
     public void sdsAc3_FR_APP_005_AC4_noOnErrorOrOnErrorLeavingNewGivesTheStandardBodyWithoutAppHeaders() {
         TestApp none = app();

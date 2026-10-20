@@ -291,7 +291,7 @@ public class ServletAbortTest {
         }
     }
 
-    // SDS-AC-7; FR-SVL-003 AC-1 — setStatus, addHeader in order, Content-Length through setHeader, no sendError
+    // SDS-AC-7; FR-SVL-003 AC-1, CON-SVL-005 AC-1 — setStatus, addHeader in order, Content-Length through setHeader, no sendError
     @Test
     public void sdsAc7_FR_SVL_003_AC1_commitWritesStatusAndHeadersAsGiven() throws Exception {
         FakeResponse res = new FakeResponse();

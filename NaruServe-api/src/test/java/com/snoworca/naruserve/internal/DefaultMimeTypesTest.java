@@ -44,7 +44,7 @@ public class DefaultMimeTypesTest {
         assertEquals("audio/ogg", m.lookup("a.ogg", NONE));
     }
 
-    // FR-STATIC-007 AC-2
+    // FR-STATIC-007 AC-2; CON-STATIC-001 AC-1
     @Test
     public void FR_STATIC_007_AC2_builtInTableIsExactlyTheDocsTable() throws IOException {
         File doc = new File(System.getProperty("user.dir"), "../docs/api/static.md");

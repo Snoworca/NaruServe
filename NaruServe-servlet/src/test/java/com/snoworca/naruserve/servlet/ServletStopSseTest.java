@@ -74,7 +74,7 @@ public class ServletStopSseTest extends SseJettyTest {
         return false;
     }
 
-    // FR-SVL-006 AC-2 SDS-AC-2: closing notice, end of each chunked body, one complete per stream, executor down
+    // FR-SVL-006 AC-2 SDS-AC-2, CON-SVL-010 AC-1: closing notice, end of each chunked body, one complete per stream, executor down
     @Test
     public void sdsAc2_FR_SVL_006_AC2_shutdownEndsEveryOpenStream() throws Exception {
         start();
@@ -104,7 +104,7 @@ public class ServletStopSseTest extends SseJettyTest {
         }
     }
 
-    // FR-SVL-006 AC-3 SDS-AC-3: a stream whose client stopped reading is cut by complete() at the deadline
+    // FR-SVL-006 AC-3 SDS-AC-3, CON-SVL-010 AC-1: a stream whose client stopped reading is cut by complete() at the deadline
     @Test
     public void sdsAc3_FR_SVL_006_AC3_nonReadingClientIsCutAtTheDeadline() throws Exception {
         start();

@@ -70,7 +70,7 @@ public class ServletCodecTest {
         return (JsonCodec) app.getClass().getMethod("jsonCodec").invoke(app);
     }
 
-    // SDS-AC-5; FR-SVL-001 AC-5
+    // SDS-AC-5; FR-SVL-001 AC-5, CON-SVL-007 AC-1
     @Test
     public void sdsAc5_FR_SVL_001_AC5_gsonOnTheClassPathIsPreset() throws Exception {
         RestApp.Builder b = RestApp.builder();

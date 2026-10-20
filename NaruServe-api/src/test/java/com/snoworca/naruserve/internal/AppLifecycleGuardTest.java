@@ -204,7 +204,7 @@ public class AppLifecycleGuardTest {
         return args;
     }
 
-    // SDS-AC-4; FR-APP-002 AC-4; re-pointed to IR-STATIC-001 AC-5: multipart, formLimit, both staticFiles overloads,
+    // SDS-AC-4; FR-APP-002 AC-4; CON-APP-002 AC-1; re-pointed to IR-STATIC-001 AC-5: multipart, formLimit, both staticFiles overloads,
     // defaultCache and mimeTypes().register are refused after listen()
     @Test
     public void sdsAc4_FR_APP_002_AC4_reflectionFindsEveryRestAppAndRouteBuilderRegistrationRefusedInRunning()

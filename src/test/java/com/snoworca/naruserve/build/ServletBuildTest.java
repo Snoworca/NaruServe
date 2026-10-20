@@ -28,7 +28,7 @@ public class ServletBuildTest {
                 || component.startsWith("jakarta.servlet:");
     }
 
-    // SDS-AC-8; CON-SVL-001 AC-1
+    // SDS-AC-8; CON-SVL-001 AC-1, CON-SVL-007 AC-1
     @Test
     public void sdsAc8_CON_SVL_001_AC1_servletClasspaths() throws IOException {
         Set<String> compile = BuildLayoutTest.components(SERVLET, "compileClasspath");
@@ -39,7 +39,7 @@ public class ServletBuildTest {
                 BuildLayoutTest.components(SERVLET, "runtimeClasspath"));
     }
 
-    // SDS-AC-9; CON-SVL-001 AC-2
+    // SDS-AC-9; CON-SVL-001 AC-2, CON-SVL-003 AC-1
     @Test
     public void sdsAc9_CON_SVL_001_AC2_testScopeOnlyDependencies() throws IOException {
         Set<String> testCompile = BuildLayoutTest.components(SERVLET, "testCompileClasspath");

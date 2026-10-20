@@ -48,7 +48,7 @@ public class HttpAcceptanceTest {
                 + "\",\"requestId\":\"[0-9a-f]{16}\"}}"));
     }
 
-    // SDS-AC-15 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-4.sds.md; T02, FR-HTTP-022 AC-7
+    // SDS-AC-15 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-4.sds.md; T02, FR-HTTP-022 AC-7, FR-HTTP-026 AC-7
     @Test
     public void sdsAc15_T02_FR_HTTP_022_AC7_anyExceptDeleteAnswersDelete405() {
         TestApp t = TestApp.create();
@@ -73,7 +73,7 @@ public class HttpAcceptanceTest {
         }
     }
 
-    // SDS-AC-16 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-4.sds.md; T05, FR-HTTP-022 AC-3
+    // SDS-AC-16 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-4.sds.md; T05, FR-HTTP-022 AC-3, FR-HTTP-026 AC-3
     @Test
     public void sdsAc16_T05_FR_HTTP_022_AC3_automaticOptionsListsAllowWithoutBody() {
         TestApp t = TestApp.create();
@@ -86,7 +86,7 @@ public class HttpAcceptanceTest {
         assertEquals(0, calls.get());
     }
 
-    // SDS-AC-15 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-4.sds.md, SDS-AC-14; T06, FR-HTTP-022 AC-1, FR-HTTP-022 AC-2, FR-HTTP-022 AC-4, FR-HTTP-021 AC-4
+    // SDS-AC-15 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-4.sds.md, SDS-AC-14; T06, FR-HTTP-022 AC-1, FR-HTTP-022 AC-2, FR-HTTP-022 AC-4, FR-HTTP-021 AC-4, FR-HTTP-026 AC-1, FR-HTTP-026 AC-2, FR-HTTP-026 AC-4
     @Test
     public void sdsAc15_T06_FR_HTTP_022_AC1_AC2_AC4_noPathNoMethodUnknownMethod() {
         TestApp t = TestApp.create();
@@ -100,7 +100,7 @@ public class HttpAcceptanceTest {
         assertEquals(0, calls.get());
     }
 
-    // SDS-AC-18 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-4.sds.md; T06, FR-HTTP-022 AC-5; the plain case is
+    // SDS-AC-18 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-4.sds.md; T06, FR-HTTP-022 AC-5, FR-HTTP-026 AC-5, FR-HTTP-026 AC-6; the plain case is
     // re-pointed to FR-WS-004 AC-1 and the upgrade case to SDS-AC-3 of
     // docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-3.sds.md, FR-WS-001 AC-7 (the handshake from wave 7)
     @Test(timeout = 20000)

@@ -98,7 +98,7 @@ public class AppDocsTest {
         return found.get(0);
     }
 
-    // SDS-AC-5; OPS-APP-005 AC-6
+    // SDS-AC-5; OPS-APP-005 AC-6; CON-APP-009 AC-1
     @Test
     public void sdsAc5_OPS_APP_005_AC6_decidedMarkersAreGone() throws IOException {
         for (Map.Entry<String, List<String>> e : REMOVED.entrySet()) {
@@ -286,7 +286,7 @@ public class AppDocsTest {
         assertTrue(rQueue, rQueue.contains("`503`") && rQueue.contains("TinyHttpd") && rQueue.contains("평문"));
     }
 
-    // OPS-APP-005 AC-7
+    // OPS-APP-005 AC-7; CON-APP-009 AC-1
     @Test
     public void OPS_APP_005_AC7_decisionsCarryAReason() throws IOException {
         String mw = doc("middleware.md");

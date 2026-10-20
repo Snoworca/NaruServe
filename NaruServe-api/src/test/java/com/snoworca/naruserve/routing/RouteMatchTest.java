@@ -41,7 +41,7 @@ public class RouteMatchTest {
         }
     }
 
-    // SDS-AC-1; IR-ROUTE-004 AC-1
+    // SDS-AC-1; IR-ROUTE-004 AC-1; CON-ROUTE-005 AC-1
     @Test
     public void sdsAc1_IR_ROUTE_004_AC1_exactlySixKindsAndNoPublicConstructor() {
         assertEquals(

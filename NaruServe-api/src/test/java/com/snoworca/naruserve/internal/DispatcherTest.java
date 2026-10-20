@@ -146,7 +146,7 @@ public class DispatcherTest {
         assertFalse(r.abnormallyClosed());
     }
 
-    // SDS-AC-15 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-4.sds.md; FR-HTTP-022 AC-2
+    // SDS-AC-15 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-4.sds.md; FR-HTTP-022 AC-2, FR-HTTP-026 AC-2
     @Test
     public void sdsAc15_FR_HTTP_022_AC2_methodMismatchListsAllowInDeclarationOrder() {
         router.add(Method.POST, "/p", recording);
@@ -161,7 +161,7 @@ public class DispatcherTest {
         assertEquals(0, calls.get());
     }
 
-    // SDS-AC-15 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-4.sds.md; FR-HTTP-022 AC-7
+    // SDS-AC-15 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-4.sds.md; FR-HTTP-022 AC-7, FR-HTTP-026 AC-7
     @Test
     public void sdsAc15_FR_HTTP_022_AC7_anyExceptDeleteGives405WithAllow() {
         router.add(Method.any().except(Method.DELETE), "/t", recording);
@@ -184,14 +184,14 @@ public class DispatcherTest {
         assertEquals(0, r.body().length);
     }
 
-    // SDS-AC-19 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-4.sds.md; FR-HTTP-022 AC-2
+    // SDS-AC-19 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-4.sds.md; FR-HTTP-022 AC-2, FR-HTTP-026 AC-2
     @Test
     public void sdsAc19_FR_HTTP_022_AC2_allowHeaderJoinsInMethodOrder() {
         assertEquals("GET, POST, OPTIONS", Dispatcher.allowHeader(MethodSet.of(Method.OPTIONS, Method.POST, Method.GET)));
         assertEquals("DELETE", Dispatcher.allowHeader(MethodSet.of(Method.DELETE)));
     }
 
-    // SDS-AC-18 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-4.sds.md; FR-HTTP-022 AC-5; the upgrade is
+    // SDS-AC-18 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-4.sds.md; FR-HTTP-022 AC-5, FR-HTTP-026 AC-5, FR-HTTP-026 AC-6; the upgrade is
     // re-pointed to SDS-AC-3 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-3.sds.md, FR-WS-001 AC-7
     @Test(timeout = 20000)
     public void sdsAc18_FR_HTTP_022_AC5_AC6_splitUpgradeHeadersAreJoinedBeforeLookup() throws Exception {
@@ -218,7 +218,7 @@ public class DispatcherTest {
         return f.get(10, TimeUnit.SECONDS);
     }
 
-    // SDS-AC-18 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-4.sds.md; FR-HTTP-022 AC-5; the plain case is
+    // SDS-AC-18 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-4.sds.md; FR-HTTP-022 AC-5, FR-HTTP-026 AC-5, FR-HTTP-026 AC-6; the plain case is
     // re-pointed to FR-WS-004 AC-1 and the upgrade case to SDS-AC-3 of
     // docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-3.sds.md, FR-WS-001 AC-7 (the handshake from wave 7)
     @Test(timeout = 20000)
@@ -236,7 +236,44 @@ public class DispatcherTest {
         assertEquals(0, calls.get());
     }
 
-    // SDS-AC-15, SDS-AC-17 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-4.sds.md; FR-HTTP-022 AC-1, FR-HTTP-022 AC-4
+    // CON-HTTP-008 AC-1: body writers, end, stream, automatic answers and failure answers start the response once at most
+    @Test
+    public void con_HTTP_008_AC1_everyResponsePathStartsTheResponseAtMostOnce() {
+        router.add(Method.GET, "/send", (req, res) -> res.send("x"));
+        router.add(Method.GET, "/html", (req, res) -> res.html("<p>x</p>"));
+        router.add(Method.GET, "/bytes", (req, res) -> res.send(new byte[] {1, 2}));
+        router.add(Method.GET, "/end", (req, res) -> res.status(202).end());
+        router.add(Method.GET, "/stream", (req, res) -> res.stream(new ByteArrayInputStream(new byte[10]), "text/plain"));
+        router.add(Method.GET, "/none", (req, res) -> res.status(202));
+        router.add(Method.GET, "/before", (req, res) -> {
+            throw new IllegalStateException("before");
+        });
+        router.add(Method.GET, "/after", (req, res) -> {
+            res.send("x");
+            throw new IllegalStateException("after");
+        });
+        router.add(Method.GET, "/afterStream", (req, res) -> {
+            res.stream(new ByteArrayInputStream(new byte[10]), "text/plain");
+            throw new IllegalStateException("after stream");
+        });
+        router.add(Method.GET, "/twice", (req, res) -> {
+            res.send("x");
+            res.send("y");
+        });
+        router.freeze();
+        String[][] cases = {{"GET", "/send"}, {"GET", "/html"}, {"GET", "/bytes"}, {"GET", "/end"}, {"GET", "/stream"},
+            {"GET", "/none"}, {"GET", "/before"}, {"GET", "/after"}, {"GET", "/afterStream"}, {"GET", "/twice"},
+            {"HEAD", "/send"}, {"GET", "/missing"}, {"DELETE", "/send"}, {"OPTIONS", "/send"}, {"OPTIONS", "*"},
+            {"FOO", "/send"}, {"GET", "abc"}, {"GET", "/%2e%2e"}};
+        for (String[] c : cases) {
+            RecordingExchange ex = new RecordingExchange(c[0], c[1]);
+            new Dispatcher(router).handle(ex);
+            assertTrue(c[0] + " " + c[1] + ": commits " + ex.commits.get() + ", sendFiles " + ex.sendFiles.get(),
+                    ex.commits.get() + ex.sendFiles.get() <= 1);
+        }
+    }
+
+    // SDS-AC-15, SDS-AC-17 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-4.sds.md; FR-HTTP-022 AC-1, FR-HTTP-022 AC-4, FR-HTTP-026 AC-1, FR-HTTP-026 AC-4
     @Test
     public void sdsAc15_FR_HTTP_022_AC1_AC4_noMatchAndUnsupportedCarryTheStandardBody() {
         router.add(Method.GET, "/r", recording);
@@ -248,7 +285,7 @@ public class DispatcherTest {
         assertEquals(0, calls.get());
     }
 
-    // SDS-AC-15 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-4.sds.md; FR-HTTP-022 AC-1
+    // SDS-AC-15 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-4.sds.md; FR-HTTP-022 AC-1, FR-HTTP-026 AC-1
     @Test
     public void sdsAc15_FR_HTTP_022_AC1_fallbackKeepsMiddlewareHeadersAndLeavesAnAnsweredResponse() {
         router.freeze();
@@ -269,7 +306,7 @@ public class DispatcherTest {
         assertEquals("tea", new String(done.body(), StandardCharsets.UTF_8));
     }
 
-    // SDS-AC-15 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-4.sds.md; FR-HTTP-022 AC-1
+    // SDS-AC-15 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-4.sds.md; FR-HTTP-022 AC-1, FR-HTTP-026 AC-1
     @Test
     public void sdsAc15_FR_HTTP_022_AC1_fallbackLeavesAResponseThatAlreadyLeftNew() {
         router.freeze();
@@ -287,7 +324,7 @@ public class DispatcherTest {
         assertFalse(r.abnormallyClosed());
     }
 
-    // SDS-AC-16 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-4.sds.md; FR-HTTP-022 AC-3
+    // SDS-AC-16 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-4.sds.md; FR-HTTP-022 AC-3, FR-HTTP-026 AC-3
     @Test
     public void sdsAc16_FR_HTTP_022_AC3_automaticOptionsIs204WithoutContentLength() {
         router.add(Method.GET, "/r", recording);
@@ -464,7 +501,7 @@ public class DispatcherTest {
         }
     }
 
-    // SDS-AC-5 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-5.sds.md; FR-HTTP-024 AC-3
+    // SDS-AC-5 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-5.sds.md; FR-HTTP-024 AC-3; CON-APP-005 AC-1
     @Test
     public void sdsAc5_FR_HTTP_024_AC3_throwWhileStreamingIsAbortedByTheCoreNotTheAdapter() {
         router.add(Method.GET, "/s", capturing((req, res) -> {

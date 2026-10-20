@@ -225,7 +225,7 @@ public class BuildChecksTest {
         assertTrue(out, out.contains(":NaruServe-kotlin:test"));
     }
 
-    // SDS-AC-12; CON-BUILD-013 AC-1
+    // SDS-AC-12; CON-BUILD-013 AC-1, CON-BUILD-015 AC-1
     @Test
     public void sdsAc12_CON_BUILD_013_AC1_apiMainClassReferencingKotlinFails() throws IOException {
         appendBuild("project(':NaruServe-api') { dependencies { compileOnly 'org.jetbrains.kotlin:kotlin-stdlib:2.2.0' } }");
@@ -253,7 +253,7 @@ public class BuildChecksTest {
         assertTrue(out, out.contains("com/snoworca/naruserve/gson/probe/UsesServlet -> javax/servlet/Servlet"));
     }
 
-    // SDS-AC-7; IR-SVL-001 AC-7 — a source stub stands in for the jakarta API, so no artifact is resolved
+    // SDS-AC-7; IR-SVL-001 AC-7, CON-SVL-002 AC-1 — a source stub stands in for the jakarta API, so no artifact is resolved
     @Test
     public void sdsAc7_IR_SVL_001_AC7_servletMainReferencingJakartaFails() throws IOException {
         assertFalse(BuildLayoutTest.read(new File(root, "settings.gradle")).contains("jakarta"));
@@ -266,7 +266,7 @@ public class BuildChecksTest {
         assertTrue(out, out.contains("com/snoworca/naruserve/servlet/probe/UsesJakarta -> jakarta/servlet/Servlet"));
     }
 
-    // SDS-AC-14; CON-BUILD-008 AC-1
+    // SDS-AC-14; CON-BUILD-008 AC-1, CON-APP-008 AC-1
     @Test
     public void sdsAc14_CON_BUILD_008_AC1_logcatMainReferencingAndroidFails() throws IOException {
         addSource("NaruServe-logcat/src/main/java/android/util/Log.java",
@@ -298,7 +298,7 @@ public class BuildChecksTest {
         assertTrue(out, out.contains("com.google.code.gson:gson:2.10.1 on runtimeClasspath of :NaruServe-slf4j"));
     }
 
-    // SDS-AC-17; CON-BUILD-009 AC-2, CON-BUILD-009 AC-3, CON-BUILD-009 AC-4
+    // SDS-AC-17; CON-BUILD-009 AC-2, CON-BUILD-009 AC-3, CON-BUILD-009 AC-4, CON-BUILD-016 AC-1
     @Test
     public void sdsAc17_CON_BUILD_009_AC2_AC3_tinyHttpdOutsideAdapterOrRouterFails() throws IOException {
         appendBuild("project(':NaruServe-gson') { dependencies { implementation 'com.snoworca.tinyhttpd:tinyhttpd-core' } }\n"
@@ -335,7 +335,7 @@ public class BuildChecksTest {
         assertEquals(TaskOutcome.SUCCESS, result.task(":NaruServe-logcat:checkClassReferences").getOutcome());
     }
 
-    // SDS-AC-14; CON-APP-001 AC-1, CON-APP-001 AC-3
+    // SDS-AC-14; CON-APP-001 AC-1, CON-APP-001 AC-3, CON-APP-008 AC-1
     @Test
     public void sdsAc14_CON_APP_001_AC1_AC3_apiMainClassReferencingSlf4jFails() throws IOException {
         for (String row : BuildLayoutTest.read(new File(BuildLayoutTest.property("naruserve.depReport"))).split("\n")) {

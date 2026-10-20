@@ -38,7 +38,7 @@ public class ServletRequestTest {
         }
     }
 
-    // SDS-AC-2; FR-SVL-002 AC-2
+    // SDS-AC-2; FR-SVL-002 AC-2, CON-SVL-004 AC-1
     @Test
     public void sdsAc2_FR_SVL_002_AC2_encodedPrefixMissIs404WithStandardBodyAndNoForbiddenGetter()
             throws Exception {

@@ -335,7 +335,7 @@ public class BuildLayoutTest {
         }
     }
 
-    // SDS-AC-5, SDS-AC-7; CON-BUILD-017 AC-2, FR-REL-001 AC-5 (re-pointed from CON-BUILD-003 AC-2, body unchanged)
+    // SDS-AC-5, SDS-AC-7; CON-BUILD-017 AC-2, CON-BUILD-014 AC-1, FR-REL-001 AC-5 (re-pointed from CON-BUILD-003 AC-2, body unchanged)
     @Test
     public void con_BUILD_017_AC2_noModuleBuildFile() {
         for (String module : MODULES) {

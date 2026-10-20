@@ -153,7 +153,7 @@ public class ChainNextTest {
         assertEquals(new ArrayList<String>(), calls);
     }
 
-    // SDS-AC-11; FR-APP-004 AC-3
+    // SDS-AC-11; FR-APP-004 AC-3; CON-APP-003 AC-1
     @Test
     public void sdsAc11_FR_APP_004_AC3_downstreamExceptionLeavesNextRunUnchanged() {
         IllegalArgumentException thrown = new IllegalArgumentException("boom");

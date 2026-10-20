@@ -115,7 +115,7 @@ public class ServletMultipartTest {
         assertEquals(Collections.emptyList(), Arrays.asList(dir.list()));
     }
 
-    // SDS-AC-2; FR-SVL-004 AC-2
+    // SDS-AC-2; FR-SVL-004 AC-2, CON-SVL-009 AC-1
     @Test
     public void sdsAc2_FR_SVL_004_AC2_theAdapterReadsGetInputStreamOnlyAndHoldsNoMultipartConfig() throws Exception {
         File dir = container.uploads(); // checked again by the rule after the test (FR-SVL-006 AC-5)

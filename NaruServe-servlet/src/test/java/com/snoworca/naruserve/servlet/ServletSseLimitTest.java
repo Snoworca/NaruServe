@@ -112,7 +112,7 @@ public class ServletSseLimitTest extends SseJettyTest {
         next();
     }
 
-    // SDS-AC-6; FR-SVL-005 AC-2
+    // SDS-AC-6; FR-SVL-005 AC-2, CON-SVL-008 AC-1
     @Test(timeout = 60000)
     public void sdsAc6_FR_SVL_005_AC2_theDrainRunsOnABoundedDaemonExecutorAfterServiceReturned() throws Exception {
         List<String> handlerThreads = new ArrayList<>();

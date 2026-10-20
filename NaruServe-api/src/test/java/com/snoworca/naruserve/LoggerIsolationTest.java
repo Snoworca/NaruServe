@@ -84,7 +84,7 @@ public class LoggerIsolationTest {
 
     private final ThrowingLogger logger = new ThrowingLogger();
 
-    // SDS-AC-1; FR-APP-014 AC-1, FR-APP-014 AC-3
+    // SDS-AC-1; FR-APP-014 AC-1, FR-APP-014 AC-3; CON-APP-007 AC-1
     @Test
     public void sdsAc1_FR_APP_014_AC1_AC3_throwingLoggerChangesNoResponse() {
         TestApp t = TestApp.create();
@@ -112,7 +112,7 @@ public class LoggerIsolationTest {
         assertTrue("warn records " + logger.warns.get(), logger.warns.get() >= 3);
     }
 
-    // SDS-AC-2; FR-APP-014 AC-2, FR-APP-014 AC-3
+    // SDS-AC-2; FR-APP-014 AC-2, FR-APP-014 AC-3; CON-APP-007 AC-1
     @Test
     public void sdsAc2_FR_APP_014_AC2_AC3_listenAndShutdownCompleteWithAThrowingLogger() {
         TestApp t = TestApp.create();

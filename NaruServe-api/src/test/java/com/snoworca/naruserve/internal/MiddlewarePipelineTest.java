@@ -130,7 +130,7 @@ public class MiddlewarePipelineTest {
         assertTrue(calls.toString(), calls.contains("onError"));
     }
 
-    // SDS-AC-6; FR-APP-003 AC-5
+    // SDS-AC-6; FR-APP-003 AC-5; CON-HTTP-010 AC-1
     @Test
     public void sdsAc6_FR_APP_003_AC5_fallbackRequestCarriesTheParsedMethodAndNoParams() {
         List<Object> seen = new ArrayList<>();
@@ -150,7 +150,7 @@ public class MiddlewarePipelineTest {
         assertEquals(Arrays.asList(Method.DELETE, "/nothing", "no param"), seen);
     }
 
-    // SDS-AC-7; FR-APP-003 AC-7, FR-HTTP-021 AC-4
+    // SDS-AC-7; FR-APP-003 AC-7, FR-HTTP-021 AC-4; CON-HTTP-007 AC-1, CON-HTTP-010 AC-1
     @Test
     public void sdsAc7_FR_APP_003_AC7_FR_HTTP_021_AC4_preRequestRejectionsRunNoMiddlewareHandlerOrOnError() {
         TestApp t = TestApp.create();
@@ -195,7 +195,7 @@ public class MiddlewarePipelineTest {
         }
     }
 
-    // SDS-AC-17; FR-HTTP-022 AC-8, FR-APP-003 AC-6, FR-HTTP-022 AC-4
+    // SDS-AC-17; FR-HTTP-022 AC-8, FR-APP-003 AC-6, FR-HTTP-022 AC-4, FR-HTTP-026 AC-8, FR-HTTP-026 AC-4
     @Test
     public void sdsAc17_FR_HTTP_022_AC8_globalRunsOnceForEveryFallbackAnswerButNotTheUnknownToken() {
         TestApp t = TestApp.create().webSocketRoute("/ws");
@@ -221,7 +221,7 @@ public class MiddlewarePipelineTest {
         assertTrue(calls.toString(), calls.contains("onError"));
     }
 
-    // SDS-AC-17; FR-HTTP-022 AC-4
+    // SDS-AC-17; FR-HTTP-022 AC-4, FR-HTTP-026 AC-4
     @Test
     public void sdsAc17_FR_HTTP_022_AC4_disabledTraceRequestSeesTheTraceMethod() {
         List<Method> seen = new ArrayList<>();

@@ -113,7 +113,7 @@ public class StoppingGateTest {
         assertEquals("slow ok", new String(resp.body(), StandardCharsets.UTF_8));
     }
 
-    // SDS-AC-24; FR-APP-013 AC-4
+    // SDS-AC-24; FR-APP-013 AC-4; CON-HTTP-010 AC-1
     @Test
     public void sdsAc24_FR_APP_013_AC4_gateRunsBeforePreRequestChecksDuringStopping() {
         RecordingAdapter adapter = new RecordingAdapter(events);

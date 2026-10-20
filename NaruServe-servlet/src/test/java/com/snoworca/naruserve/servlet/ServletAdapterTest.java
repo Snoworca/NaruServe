@@ -57,7 +57,7 @@ public class ServletAdapterTest {
         }
     }
 
-    // SDS-AC-3; FR-SVL-001 AC-3
+    // SDS-AC-3; FR-SVL-001 AC-3, CON-SVL-006 AC-1
     @Test
     public void sdsAc3_FR_SVL_001_AC3_hostPortBindStoresTheHandlerOnly() throws IOException {
         ServletAdapter adapter = new ServletAdapter();
@@ -72,7 +72,7 @@ public class ServletAdapterTest {
         assertTrue("no socket on " + port, portFree(port));
     }
 
-    // SDS-AC-3; FR-SVL-001 AC-3
+    // SDS-AC-3; FR-SVL-001 AC-3, CON-SVL-006 AC-1
     @Test
     public void sdsAc3_FR_SVL_001_AC3_settingsBindStoresTheHandlerOnly() throws IOException {
         ServletAdapter adapter = new ServletAdapter();

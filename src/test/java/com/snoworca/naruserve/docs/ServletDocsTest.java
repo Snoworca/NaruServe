@@ -158,7 +158,7 @@ public final class ServletDocsTest {
     /** SHA-256 of docs/api/sse.md as wave 7 left it (UTF-8 bytes). */
     static final String WAVE7_SSE_SHA256 = "6941670375a472139ae110a283f2030baaa20606ee05a44b06dd5586cc6d9921";
 
-    // OPS-SVL-001 AC-1 SDS-AC-6: no marker; the jakarta sentence says no jakarta.servlet module exists in v1
+    // OPS-SVL-001 AC-1 SDS-AC-6, CON-SVL-011 AC-1: no marker; the jakarta sentence says no jakarta.servlet module exists in v1
     @Test
     public void noMarkerAndJakartaSentence() throws IOException {
         String doc = doc("servlet.md");

@@ -29,7 +29,7 @@ public class MethodSetTest {
         return out;
     }
 
-    // SDS-AC-3; IR-ROUTE-002 AC-4
+    // SDS-AC-3; IR-ROUTE-002 AC-4; CON-ROUTE-002 AC-1
     @Test
     public void sdsAc3_IR_ROUTE_002_AC4_iteratorRemoveThrowsAndSetUnchanged() {
         MethodSet s = Method.get().post();
@@ -44,7 +44,7 @@ public class MethodSetTest {
         assertEquals(Arrays.asList(Method.GET, Method.POST), members(s));
     }
 
-    // SDS-AC-3; IR-ROUTE-002 AC-4
+    // SDS-AC-3; IR-ROUTE-002 AC-4; CON-ROUTE-002 AC-1
     @Test
     public void sdsAc3_IR_ROUTE_002_AC4_noPublicConstructorAndOnlyFinalFields() {
         assertTrue(Modifier.isFinal(MethodSet.class.getModifiers()));

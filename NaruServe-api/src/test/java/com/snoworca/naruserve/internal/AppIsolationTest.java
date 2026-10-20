@@ -109,7 +109,7 @@ public class AppIsolationTest {
         }
     }
 
-    // SDS-AC-1; FR-APP-002 AC-1
+    // SDS-AC-1; FR-APP-002 AC-1; CON-APP-006 AC-1
     @Test
     public void sdsAc1_FR_APP_002_AC1_twoAppsInOneJvmKeepRoutesMiddlewareLoggerServicesAndAttributesApart() {
         Built a = new Built("a");
@@ -150,6 +150,37 @@ public class AppIsolationTest {
         assertFalse(b.logger.lines.isEmpty());
     }
 
+    /** A closeable service; the owning app closes it at shutdown. */
+    static final class Pool implements AutoCloseable {
+        final java.util.concurrent.atomic.AtomicInteger closes = new java.util.concurrent.atomic.AtomicInteger();
+
+        @Override
+        public void close() {
+            closes.incrementAndGet();
+        }
+    }
+
+    // CON-APP-006 AC-1: the same service key in two apps gives each its own instance, and a shutdown closes only its own
+    @Test
+    public void con_APP_006_AC1_sameServiceKeyInTwoAppsClosesOnlyTheOwnedResourceOfTheStoppedApp() {
+        Pool[] pools = {new Pool(), new Pool()};
+        Built[] apps = {new Built("a"), new Built("b")};
+        for (int i = 0; i < 2; i++) {
+            final Pool pool = pools[i];
+            apps[i].app.onStart(c -> c.register(Pool.class, pool));
+            apps[i].app.listen(0);
+        }
+        assertSame(pools[0], apps[0].ctx.get().get(Pool.class));
+        assertSame(pools[1], apps[1].ctx.get().get(Pool.class));
+        apps[0].app.shutdown(1, TimeUnit.SECONDS);
+        assertEquals(1, pools[0].closes.get());
+        assertEquals(0, pools[1].closes.get());
+        assertEquals("b", apps[1].body("/b"));
+        apps[1].app.shutdown(1, TimeUnit.SECONDS);
+        assertEquals(1, pools[0].closes.get());
+        assertEquals(1, pools[1].closes.get());
+    }
+
     /** Binary names of the classes compiled into {@code pkg} (nested classes included). */
     private static List<String> classNames(String pkg) throws Exception {
         File location = new File(RestApp.class.getProtectionDomain().getCodeSource().getLocation().toURI());
@@ -179,7 +210,7 @@ public class AppIsolationTest {
         return out;
     }
 
-    // SDS-AC-2; FR-APP-002 AC-2
+    // SDS-AC-2; FR-APP-002 AC-2; CON-APP-006 AC-1
     @Test
     public void sdsAc2_FR_APP_002_AC2_noMutableStaticStateInTheApiAndInternalPackages() throws Exception {
         List<String> offenders = new ArrayList<>();
