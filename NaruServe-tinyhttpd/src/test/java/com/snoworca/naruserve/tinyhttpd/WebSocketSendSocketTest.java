@@ -210,7 +210,8 @@ public class WebSocketSendSocketTest {
 
     // SDS-AC-5; FR-WS-007 AC-5: with writeTimeout(1 s) TinyHttpd aborts each stalled socket, so every stalled
     // session ends within 2 s after its write blocked and its sender thread is free for others. Each session and
-    // each sender thread is timed on its own, so the 20 need not be blocked at once; 1 s of slack for a loaded host.
+    // each sender thread is timed on its own, so the 20 need not be blocked at once. The 2 s of the AC is asserted
+    // as is: the write timeout is 1 s, so a healthy run leaves 1 s of slack for a loaded host.
     @Test(timeout = 60000)
     public void sdsAc5_FR_WS_007_AC5_writeTimeoutFreesEachStalledSessionWithinTwoSeconds() throws Exception {
         app.server(o -> o.writeTimeout(1, TimeUnit.SECONDS));
@@ -231,12 +232,12 @@ public class WebSocketSendSocketTest {
             for (Map.Entry<String, Long> e : stallNanos.entrySet()) {
                 long ms = TimeUnit.NANOSECONDS.toMillis(closeNanos.get(e.getKey()) - e.getValue());
                 assertTrue("stalled session " + e.getKey() + " ended " + ms + " ms after its writes were queued",
-                        ms <= 3000);
+                        ms <= 2000);
             }
             assertEquals("sender threads still blocked", 0, blockedWriters(port));
             assertTrue("no sender thread was seen blocked in a write", longestBlock > 0);
             assertTrue("a stalled sender thread was released " + longestBlock + " ms after its write blocked",
-                    longestBlock <= 3000);
+                    longestBlock <= 2000);
             try (RawWebSocketClient healthy = RawWebSocketClient.open(port, "/ws")) {
                 healthy.text("hi");
                 assertEquals("hello", healthy.readFrame(TEXT).text());
