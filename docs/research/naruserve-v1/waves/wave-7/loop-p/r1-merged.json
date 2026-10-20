@@ -1,0 +1,75 @@
+{
+ "findings": [
+  {
+   "finding_id": "P1-001",
+   "severity": "MEDIUM",
+   "claim": "FR-WS-007 AC-5 requires each stalled session sender thread to be released within 2 s after its write blocked (writeTimeout 1 s), but the TinyHttpd test asserts <= 3000 ms for both the session end and the longest blocked write, so the 2 s bound of the AC is not demonstrated and a regression between 2 s and 3 s passes. The lane review left this open as R2-004.",
+   "evidence": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/WebSocketSendSocketTest.java:234 and :239 (comment at :212-214); AC in docs/spec/11.websocket.srs.md FR-WS-007 AC-5",
+   "suggested_fix": "Assert <= 2000 (with a slack figure written into the AC if a loaded host needs one) or amend FR-WS-007 AC-5 to state the 3 s bound and its reason."
+  },
+  {
+   "finding_id": "P1-002",
+   "severity": "LOW",
+   "claim": "FR-WS-008 VE-9 (covers AC-6) cites sdsAc10_FR_WS_008_AC6_pingsDoNotResetTheIdleClock, which does not exist; the test is named sdsAc10_FR_WS_008_AC4_pingsDoNotResetTheIdleClock and exercises AC-4 (pings are no activity), not AC-6. AC-6 stays covered by VE-8, but the trace pointer is unresolvable and misattributed.",
+   "evidence": "docs/spec/11.websocket.srs.md:804 versus NaruServe-api/src/test/java/com/snoworca/naruserve/internal/WebSocketIdleSchedulerTest.java:65",
+   "suggested_fix": "Correct VE-9 to the existing method name and change Covers to AC-4 through the SRS MCP evidence tools."
+  },
+  {
+   "finding_id": "P1-003",
+   "severity": "LOW",
+   "claim": "The close-wait timing half of the FR-WS-010 AC-1 reserved-session test is guarded by Assume.assumeTrue(releaseMs <= 600), so on a slow host the check that the wait ends on the reserved session close (not on the 1 s timeout) is skipped silently inside a test the SRS cites as passing.",
+   "evidence": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/WebSocketShutdownTest.java:114",
+   "suggested_fix": "Fail or retry instead of skipping, or move the timing assertions to their own test whose setup controls the release time."
+  },
+  {
+   "finding_id": "P2-001",
+   "severity": "low",
+   "severity_class": "docs-api-correctness",
+   "claim": "docs/api/sse.md says onClose runs 'when the connection ends' and sells it as Express req.on('close'), but the core detects a client disconnect only on a write: DefaultSseClient.loop waits up to one heartbeat interval (default 15 s) before the next write, and FR-SSE-004 records detection as bounded by two heartbeat intervals plus 1 s (default about 31 s). The page never says so, so an Express user porting req.on('close') cleanup (unsubscribe, release a resource) expects an immediate callback and a later wave (Servlet adapter docs, express-migration) will copy the claim.",
+   "evidence": "docs/api/sse.md:29 (onClose bullet) and :67 (heartbeat paragraph); NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultSseClient.java:340-365 (loop: timedWait up to heartbeatNanos, disconnect seen only when out.write throws); docs/spec/12.server-sent-events.srs.md:380 (Pitfall: detection bounded to two intervals plus 1 s)",
+   "suggested_fix": "Add one sentence to sse.md under the onClose bullet and the heartbeat paragraph: a client disconnect is noticed only on the next write, so onClose can run up to two heartbeat intervals plus 1 s after the peer left; lower heartbeatInterval to detect sooner."
+  },
+  {
+   "finding_id": "P2-002",
+   "severity": "low",
+   "severity_class": "api-javadoc-consistency",
+   "claim": "WebSocketOptions.pingInterval javadoc states 'A pong must arrive within the same interval', which is the stricter behaviour; docs/api/websocket.md and defaults.md (and the TinyHttpd adapter, which has no Pong callback) say any received frame keeps the connection alive and there is no separate Pong timeout. The Javadoc is what IDE and Kotlin users read first, and a future Servlet or other adapter author would implement the stricter reading.",
+   "evidence": "NaruServe-api/src/main/java/com/snoworca/naruserve/WebSocketOptions.java:31-32 (pingInterval javadoc) vs docs/api/websocket.md (Settings section, 'Pong timeout' paragraph) and docs/api/defaults.md (Pong timeout paragraph)",
+   "suggested_fix": "Reword the javadoc to match the contract doc: 'Ping interval, 1 s..1 h; default 30 s. The connection is closed with 1001 when no frame arrives for two intervals; any frame, not only a pong, counts.'"
+  },
+  {
+   "finding_id": "S2-001",
+   "severity": "medium",
+   "items": [
+    "FR-MULTIPART-004",
+    "FR-MULTIPART-006",
+    "IR-MULTIPART-001"
+   ],
+   "claim": "A server-side spool failure during a multipart parse is answered 400 Bad Request instead of 500. DefaultRequest.formData() wraps every checked Exception from the parse in HttpException(400). For multipart the only IOExceptions that reach that catch are the spool's own: File.createTempFile throws when tempDirectory is missing, not a directory or unwritable, and FileOutputStream/write throws on a full disk or quota. Body-read faults never get there because TinyHttpdBodyStream already maps them to HttpException 413/408/400 inside the stream. tempDirectory(File) accepts any non-null File and nothing validates it at configure or listen time, so a mistyped directory makes every upload with a part above memoryThreshold fail as a client error ('Bad Request'), hiding the misconfiguration from the client, from status-based alerts and from retry logic. The 400 comment ('as for a JSON body') fits a JSON body, whose IOExceptions come from the client stream, not here. Neither the SRS nor docs/api/multipart.md states this status, and no test sets an unusable tempDirectory.",
+   "evidence": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java:230-232 (catch (Exception e) -> HttpException(400, null, e)); NaruServe-api/src/main/java/com/snoworca/naruserve/internal/SpoolRegistry.java:37 (File.createTempFile with the configured dir); NaruServe-api/src/main/java/com/snoworca/naruserve/internal/SpoolingBuffer.java:40-44 (FileOutputStream and writeTo); NaruServe-api/src/main/java/com/snoworca/naruserve/internal/MultipartSettings.java:84-87 (tempDirectory only null-checked); NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdBodyStream.java:21-31 (body faults already mapped to HttpException)",
+   "suggested_fix": "In the multipart branch of formData() let an IOException that did not come from the request body surface as HttpException(500) (for example catch IOException around SpoolRegistry.createTemp/SpoolingBuffer writes in MultipartParser and rethrow as HttpException(500, 'upload spool failed', e)), keep 400 for body-stream faults, add a test with a nonexistent tempDirectory that expects 500 and an empty temp dir, and say it in docs/api/multipart.md (tempDirectory row). Optionally reject a non-directory at listen."
+  },
+  {
+   "finding_id": "S2-002",
+   "severity": "low",
+   "items": [
+    "FR-STATIC-007",
+    "IR-STATIC-002"
+   ],
+   "claim": "The built-in MIME table has no entry for very common static extensions (.txt, .gif, .ico, .xml, .csv, .mp3, .ogg, .jpeg is present but .jfif/.bmp are not), so they are served as application/octet-stream together with X-Content-Type-Options: nosniff. A browser then downloads robots.txt, README.txt or sitemap.xml instead of showing it and Express (express.static / send) users porting a public folder get a different behaviour with no warning in docs/api/static.md, which lists the table but does not say 'register what you need'. The table is the documented and tested contract (FR-STATIC-007 AC-2 compares code to the docs table), so this is a gap in the contract, not a code drift.",
+   "evidence": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultMimeTypes.java:24-28 (BUILT_IN_ROWS); docs/api/static.md MIME '\ub0b4\uc7a5 \ud45c' section; docs/spec/10.static-files.srs.md:839 ('exactly the entries listed in docs/api/static.md')",
+   "suggested_fix": "Add text/plain (.txt), image/gif, image/x-icon, application/xml and text/xml (.xml), text/csv, audio/mpeg to the docs table and BUILT_IN_ROWS together (the equality test keeps them in step) through the SRS MCP, or add one sentence to static.md that anything not in the table is octet-stream and must be registered with app.mimeTypes().register."
+  },
+  {
+   "finding_id": "S2-003",
+   "severity": "low",
+   "items": [
+    "FR-STATIC-003",
+    "FR-STATIC-006"
+   ],
+   "claim": "DirectoryListing always hides symbolic-link entries, even on a mount with allowSymlinks(true), where the same links are served by GET. The listing therefore omits files a visitor can fetch (and the docs page only describes 'folder listing' as off by default without saying links are never listed). The check f.getCanonicalPath() equals base/name is unconditional and render() does not receive the mount's allowSymlinks flag.",
+   "evidence": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DirectoryListing.java:34-35; call site NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StaticHandler.java:183; docs/spec/10.static-files.srs.md:478 (AC-2 only covers the default allowSymlinks false)",
+   "suggested_fix": "Either state in docs/api/static.md that a listing never shows symbolic links, also with allowSymlinks(true), or pass the flag to render() and keep a link whose canonical target lies under the root when allowed."
+  }
+ ]
+}

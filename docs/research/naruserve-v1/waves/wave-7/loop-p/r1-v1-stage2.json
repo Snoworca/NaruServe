@@ -1,0 +1,30 @@
+{
+  "confirmed": ["P2-001", "P2-002"],
+  "rebutted": [],
+  "added": [
+    {
+      "finding_id": "S2-001",
+      "severity": "medium",
+      "items": ["FR-MULTIPART-004", "FR-MULTIPART-006", "IR-MULTIPART-001"],
+      "claim": "A server-side spool failure during a multipart parse is answered 400 Bad Request instead of 500. DefaultRequest.formData() wraps every checked Exception from the parse in HttpException(400). For multipart the only IOExceptions that reach that catch are the spool's own: File.createTempFile throws when tempDirectory is missing, not a directory or unwritable, and FileOutputStream/write throws on a full disk or quota. Body-read faults never get there because TinyHttpdBodyStream already maps them to HttpException 413/408/400 inside the stream. tempDirectory(File) accepts any non-null File and nothing validates it at configure or listen time, so a mistyped directory makes every upload with a part above memoryThreshold fail as a client error ('Bad Request'), hiding the misconfiguration from the client, from status-based alerts and from retry logic. The 400 comment ('as for a JSON body') fits a JSON body, whose IOExceptions come from the client stream, not here. Neither the SRS nor docs/api/multipart.md states this status, and no test sets an unusable tempDirectory.",
+      "evidence": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java:230-232 (catch (Exception e) -> HttpException(400, null, e)); NaruServe-api/src/main/java/com/snoworca/naruserve/internal/SpoolRegistry.java:37 (File.createTempFile with the configured dir); NaruServe-api/src/main/java/com/snoworca/naruserve/internal/SpoolingBuffer.java:40-44 (FileOutputStream and writeTo); NaruServe-api/src/main/java/com/snoworca/naruserve/internal/MultipartSettings.java:84-87 (tempDirectory only null-checked); NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdBodyStream.java:21-31 (body faults already mapped to HttpException)",
+      "suggested_fix": "In the multipart branch of formData() let an IOException that did not come from the request body surface as HttpException(500) (for example catch IOException around SpoolRegistry.createTemp/SpoolingBuffer writes in MultipartParser and rethrow as HttpException(500, 'upload spool failed', e)), keep 400 for body-stream faults, add a test with a nonexistent tempDirectory that expects 500 and an empty temp dir, and say it in docs/api/multipart.md (tempDirectory row). Optionally reject a non-directory at listen."
+    },
+    {
+      "finding_id": "S2-002",
+      "severity": "low",
+      "items": ["FR-STATIC-007", "IR-STATIC-002"],
+      "claim": "The built-in MIME table has no entry for very common static extensions (.txt, .gif, .ico, .xml, .csv, .mp3, .ogg, .jpeg is present but .jfif/.bmp are not), so they are served as application/octet-stream together with X-Content-Type-Options: nosniff. A browser then downloads robots.txt, README.txt or sitemap.xml instead of showing it and Express (express.static / send) users porting a public folder get a different behaviour with no warning in docs/api/static.md, which lists the table but does not say 'register what you need'. The table is the documented and tested contract (FR-STATIC-007 AC-2 compares code to the docs table), so this is a gap in the contract, not a code drift.",
+      "evidence": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultMimeTypes.java:24-28 (BUILT_IN_ROWS); docs/api/static.md MIME '내장 표' section; docs/spec/10.static-files.srs.md:839 ('exactly the entries listed in docs/api/static.md')",
+      "suggested_fix": "Add text/plain (.txt), image/gif, image/x-icon, application/xml and text/xml (.xml), text/csv, audio/mpeg to the docs table and BUILT_IN_ROWS together (the equality test keeps them in step) through the SRS MCP, or add one sentence to static.md that anything not in the table is octet-stream and must be registered with app.mimeTypes().register."
+    },
+    {
+      "finding_id": "S2-003",
+      "severity": "low",
+      "items": ["FR-STATIC-003", "FR-STATIC-006"],
+      "claim": "DirectoryListing always hides symbolic-link entries, even on a mount with allowSymlinks(true), where the same links are served by GET. The listing therefore omits files a visitor can fetch (and the docs page only describes 'folder listing' as off by default without saying links are never listed). The check f.getCanonicalPath() equals base/name is unconditional and render() does not receive the mount's allowSymlinks flag.",
+      "evidence": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DirectoryListing.java:34-35; call site NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StaticHandler.java:183; docs/spec/10.static-files.srs.md:478 (AC-2 only covers the default allowSymlinks false)",
+      "suggested_fix": "Either state in docs/api/static.md that a listing never shows symbolic links, also with allowSymlinks(true), or pass the flag to render() and keep a link whose canonical target lies under the root when allowed."
+    }
+  ]
+}

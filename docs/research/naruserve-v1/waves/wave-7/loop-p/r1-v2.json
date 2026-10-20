@@ -1,0 +1,26 @@
+{
+  "findings": [
+    {
+      "finding_id": "P2-001",
+      "severity": "low",
+      "severity_class": "docs-api-correctness",
+      "claim": "docs/api/sse.md says onClose runs 'when the connection ends' and sells it as Express req.on('close'), but the core detects a client disconnect only on a write: DefaultSseClient.loop waits up to one heartbeat interval (default 15 s) before the next write, and FR-SSE-004 records detection as bounded by two heartbeat intervals plus 1 s (default about 31 s). The page never says so, so an Express user porting req.on('close') cleanup (unsubscribe, release a resource) expects an immediate callback and a later wave (Servlet adapter docs, express-migration) will copy the claim.",
+      "evidence": "docs/api/sse.md:29 (onClose bullet) and :67 (heartbeat paragraph); NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultSseClient.java:340-365 (loop: timedWait up to heartbeatNanos, disconnect seen only when out.write throws); docs/spec/12.server-sent-events.srs.md:380 (Pitfall: detection bounded to two intervals plus 1 s)",
+      "suggested_fix": "Add one sentence to sse.md under the onClose bullet and the heartbeat paragraph: a client disconnect is noticed only on the next write, so onClose can run up to two heartbeat intervals plus 1 s after the peer left; lower heartbeatInterval to detect sooner."
+    },
+    {
+      "finding_id": "P2-002",
+      "severity": "low",
+      "severity_class": "api-javadoc-consistency",
+      "claim": "WebSocketOptions.pingInterval javadoc states 'A pong must arrive within the same interval', which is the stricter behaviour; docs/api/websocket.md and defaults.md (and the TinyHttpd adapter, which has no Pong callback) say any received frame keeps the connection alive and there is no separate Pong timeout. The Javadoc is what IDE and Kotlin users read first, and a future Servlet or other adapter author would implement the stricter reading.",
+      "evidence": "NaruServe-api/src/main/java/com/snoworca/naruserve/WebSocketOptions.java:31-32 (pingInterval javadoc) vs docs/api/websocket.md (Settings section, 'Pong timeout' paragraph) and docs/api/defaults.md (Pong timeout paragraph)",
+      "suggested_fix": "Reword the javadoc to match the contract doc: 'Ping interval, 1 s..1 h; default 30 s. The connection is closed with 1001 when no frame arrives for two intervals; any frame, not only a pong, counts.'"
+    }
+  ],
+  "regression": {
+    "command": "./gradlew build --rerun-tasks",
+    "exit_code": 0,
+    "failing_tests": []
+  },
+  "substantive_clean": true
+}
