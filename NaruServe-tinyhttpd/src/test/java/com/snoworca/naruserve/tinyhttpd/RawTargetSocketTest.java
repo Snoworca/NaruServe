@@ -1,7 +1,6 @@
 package com.snoworca.naruserve.tinyhttpd;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -12,6 +11,7 @@ import com.snoworca.naruserve.spi.ServerSettings;
 import com.snoworca.naruserve.testing.LiveThreads;
 import com.snoworca.naruserve.testing.RecordingLogger;
 import com.snoworca.naruserve.testing.StubJsonCodec;
+import com.snoworca.naruserve.testing.TestSupport;
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
@@ -155,7 +155,7 @@ public class RawTargetSocketTest {
 
         /** Settings with the documented defaults, port 0, a recording logger and a fixed renderer. */
         static ServerSettings.Builder settings() {
-            return ServerSettings.builder().logger(new RecordingLogger()).errorRenderer(status -> "{}");
+            return TestSupport.settings();
         }
 
         /** An app over {@code adapter}, logging to {@code log}. */

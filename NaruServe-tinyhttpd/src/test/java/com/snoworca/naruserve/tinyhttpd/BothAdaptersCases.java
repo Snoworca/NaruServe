@@ -6,6 +6,7 @@ import static org.junit.Assert.assertTrue;
 import com.snoworca.naruserve.Method;
 import com.snoworca.naruserve.RestApp;
 import com.snoworca.naruserve.routing.RouterPolicy;
+import com.snoworca.naruserve.testing.TestSupport;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -43,7 +44,7 @@ abstract class BothAdaptersCases {
             sb.append(" ").append(h).append('=').append(r.header(h));
         }
         // The error body's requestId is random per request, so it is masked before the two runs compare.
-        transcript.add(sb.append(" body=").append(r.body().replaceAll("\"requestId\":\"[^\"]*\"", "\"requestId\":\"*\""))
+        transcript.add(sb.append(" body=").append(TestSupport.maskRequestId(r.body()))
                 .toString());
     }
 

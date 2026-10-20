@@ -9,6 +9,7 @@ import static org.junit.Assert.fail;
 import com.snoworca.naruserve.RestApp;
 import com.snoworca.naruserve.SseClient;
 import com.snoworca.naruserve.testing.RecordingLogger;
+import com.snoworca.naruserve.testing.TestSupport;
 import com.snoworca.naruserve.tinyhttpd.RawTargetSocketTest.Http;
 import com.snoworca.naruserve.tinyhttpd.SseSocketTest.Stream;
 import java.io.IOException;
@@ -113,8 +114,8 @@ public class SseShutdownSocketTest {
         } catch (IOException reset) {
             // a reset: the adapter stop closed the connection
         }
-        assertEquals("shutdown", SseLimitSocketTest.cause(a));
-        assertEquals("shutdown", SseLimitSocketTest.cause(b));
+        assertEquals("shutdown", TestSupport.cause(a));
+        assertEquals("shutdown", TestSupport.cause(b));
         List<SseClient> ran = Arrays.asList(closed.poll(5, TimeUnit.SECONDS), closed.poll(5, TimeUnit.SECONDS));
         assertTrue("onClose of the reading stream", ran.contains(a));
         assertTrue("onClose of the stalled stream", ran.contains(b));

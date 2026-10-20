@@ -8,6 +8,7 @@ import com.snoworca.naruserve.HttpException;
 import com.snoworca.naruserve.RestApp;
 import com.snoworca.naruserve.SseClient;
 import com.snoworca.naruserve.testing.RecordingLogger;
+import com.snoworca.naruserve.testing.TestSupport;
 import com.snoworca.naruserve.tinyhttpd.RawTargetSocketTest.Http;
 import com.snoworca.naruserve.tinyhttpd.SseSocketTest.Stream;
 import java.io.IOException;
@@ -44,11 +45,6 @@ public class SseLimitSocketTest {
             app.shutdown(2, TimeUnit.SECONDS);
         }
         Http.stopQuietly(adapter);
-    }
-
-    /** The end reason the core recorded for {@code c}, read reflectively since the client class is internal. */
-    static String cause(SseClient c) throws Exception {
-        return (String) Http.invoke(c, "cause");
     }
 
     /** Opens a stream to /events and returns its status line and headers. */
@@ -157,7 +153,7 @@ public class SseLimitSocketTest {
         assertEquals(3, accepted);
         assertTrue("new streams open after " + ms + " ms", ms <= 3000);
         for (SseClient c : old) {
-            assertEquals("client", cause(c));
+            assertEquals("client", TestSupport.cause(c));
         }
     }
 }

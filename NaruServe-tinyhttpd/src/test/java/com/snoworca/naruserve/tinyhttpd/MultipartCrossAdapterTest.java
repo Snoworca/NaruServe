@@ -15,6 +15,7 @@ import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientResponse;
 import com.snoworca.naruserve.testing.RecordingLogger;
 import com.snoworca.naruserve.testing.StubJsonCodec;
 import com.snoworca.naruserve.testing.TestApp;
+import com.snoworca.naruserve.testing.TestSupport;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -87,7 +88,7 @@ public class MultipartCrossAdapterTest {
     }
 
     private static String reply(int status, String body) {
-        return status + " " + body.replaceAll("\"requestId\":\"[^\"]*\"", "\"requestId\":\"*\"");
+        return status + " " + TestSupport.maskRequestId(body);
     }
 
     private String inMemory(String body) {

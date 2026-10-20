@@ -1,5 +1,6 @@
 package com.snoworca.naruserve.tinyhttpd;
 
+import static com.snoworca.naruserve.testing.TestSupport.headers;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -17,12 +18,10 @@ import com.snoworca.tinyhttpd.http.Handler;
 import com.snoworca.tinyhttpd.http.ResponseWrapper;
 import com.snoworca.tinyhttpd.http.UpgradedConnection;
 import com.snoworca.tinyhttpd.websocket.WebSocketHandler;
-import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -153,14 +152,6 @@ public class TinyHttpdWebSocketTest {
         Throwable t = thrown.get();
         assertTrue(String.valueOf(t), t instanceof HttpException);
         return (HttpException) t;
-    }
-
-    private static List<Map.Entry<String, String>> headers(String... pairs) {
-        List<Map.Entry<String, String>> out = new ArrayList<>();
-        for (int i = 0; i < pairs.length; i += 2) {
-            out.add(new SimpleImmutableEntry<>(pairs[i], pairs[i + 1]));
-        }
-        return out;
     }
 
     /** Records the four configuration calls; the base class keeps its own behaviour. */
