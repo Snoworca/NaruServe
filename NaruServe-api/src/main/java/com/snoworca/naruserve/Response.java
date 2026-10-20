@@ -113,6 +113,30 @@ public interface Response {
         throw new UnsupportedOperationException(getClass().getName() + " has no cookie writer");
     }
 
+    /** Appends a session cookie with Path=/; returns this response. Values follow Cookie's existing validation. */
+    // @req FR-DX-005
+    default Response cookie(String name, String value) {
+        return cookie(name, value, options -> { });
+    }
+
+    /** Appends a cookie configured fluently; its default Path is / and maxAge is measured in seconds. */
+    // @req FR-DX-005
+    default Response cookie(String name, String value, Configurer<CookieOptions> configurer) {
+        return addCookie(CookieOptions.configured(name, value, configurer, false));
+    }
+
+    /** Deletes a cookie scoped to Path=/ and no Domain; returns this response. */
+    // @req FR-DX-005
+    default Response clearCookie(String name) {
+        return clearCookie(name, options -> { });
+    }
+
+    /** Deletes a cookie with matching Path/Domain; Max-Age is forced to zero after the callback. */
+    // @req FR-DX-005
+    default Response clearCookie(String name, Configurer<CookieOptions> configurer) {
+        return addCookie(CookieOptions.configured(name, "", configurer, true));
+    }
+
     /**
      * Sets {@code Cache-Control} from {@code policy}, replacing an earlier value; returns this response. A committed
      * response throws {@link IllegalStateException} as {@link #header} does.

@@ -2,6 +2,30 @@
 
 Servlet의 `javax.servlet.http.Cookie`와 비슷한 NaruServe 자체 `Cookie` 클래스를 씁니다. `cookie-parser` 없이 바로 읽습니다.
 
+## 간단히 설정하기
+
+```java
+res.cookie("session", token);
+res.cookie("session", token, c ->
+    c.httpOnly(true).secure(true).sameSite(SameSite.LAX).path("/").maxAge(3600)
+);
+res.clearCookie("session");
+res.clearCookie("session", c -> c.path("/app").domain("example.com"));
+```
+
+편의 함수는 기본 `Path=/`를 사용합니다. `clearCookie`에도 만들 때와 같은 Path와 Domain을 지정하세요. 삭제는 콜백이 끝난 뒤 `Max-Age=0`을 강제하므로 콜백의 `maxAge` 값으로 취소되지 않습니다. `maxAge`는 초입니다. 이름·값·옵션은 기존 `Cookie` 검증을 사용하며 잘못된 값이나 콜백 실패는 `Set-Cookie`를 추가하지 않습니다.
+
+Kotlin에서도 끝 람다를 사용할 수 있습니다.
+
+```kotlin
+res.cookie("session", token) { c ->
+    c.httpOnly(true).secure(true).sameSite(SameSite.LAX).path("/")
+}
+res.clearCookie("session") { c -> c.path("/") }
+```
+
+`Cookie` 객체를 직접 설정하는 기존 방법도 사용할 수 있습니다. 직접 만드는 `Cookie`의 기본 Path는 지정되지 않은 상태이며, 위 편의 함수의 기본값과 구분하세요.
+
 ## 보내기
 
 ```java

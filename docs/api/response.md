@@ -14,6 +14,8 @@ res.status(201).header("X-Request-ID", id).json(created);
 |---|---|---|---|
 | `status(code)` | `Response` | `res.status(code)` | 상태 코드. 기본은 `200`. `100`–`999` 밖이면 `IllegalArgumentException` |
 | `header(name, value)` | `Response` | `res.set(name, value)` | 응답 헤더. 같은 이름(대소문자 무시)이 있으면 바꿔 씁니다. 이름이 HTTP 토큰이 아니거나(빈 이름, 공백·`:` 포함 등) 값에 CR/LF·NUL 같은 제어 문자(탭 제외)나 U+00FF를 넘는 문자(헤더는 ISO-8859-1, 한 글자 1바이트)가 있으면 `IllegalArgumentException` |
+| `cookie(name, value[, configurer])` | `Response` | `res.cookie(...)` | 기본 Path=/인 쿠키. 옵션은 `CookieOptions`로 설정합니다. |
+| `clearCookie(name[, configurer])` | `Response` | `res.clearCookie(...)` | 같은 Path/Domain의 쿠키를 Max-Age=0으로 삭제합니다. |
 | `addCookie(cookie)` | `Response` | `res.cookie(...)` | `Set-Cookie` 추가. [Cookie](cookie.md) |
 | `cache(policy)` | `Response` | `res.set('Cache-Control', ...)` | `Cache-Control`을 정합니다. 보내기 전에 다시 부르면 마지막 값이 이깁니다. [캐시](static.md#캐시-정책) |
 | `location(url)` | `Response` | `res.location(url)` | Location 헤더. 빈 주소나 유효하지 않은 헤더 값은 거부합니다. |
@@ -83,7 +85,7 @@ res.json(mapOf("success" to true))
 응답은 한 번만 확정(commit)됩니다. 상태는 `NEW → COMMITTED → COMPLETED`(스트리밍 응답은 `COMMITTED → STREAMING → COMPLETED`)로 진행하고, 비정상 종료 시 `ABORTED`가 됩니다.
 
 - 본문을 보낸 뒤 `status`, `header`, `addCookie`를 부르거나 다시 `json`/`send`를 부르면 `IllegalStateException`이 납니다(메시지에 현재 상태가 들어갑니다). `isCommitted()`와 `req`의 읽기 메서드는 응답이 끝난 뒤에도 그대로 씁니다.
-- 핸들러가 본문 없이 반환하면 그때까지 정한 상태와 헤더로 `end()`한 것과 같습니다. 핸들러가 예외를 던지면, 아직 아무것도 보내지 않았을 때는 정한 상태·헤더를 버리고 빈 본문 `500`으로 답하고, 스트리밍 중이면 연결을 끊습니다.
+- 핸들러가 본문 없이 반환하면 그때까지 정한 상태와 헤더로 `end()`한 것과 같습니다. 핸들러가 예외를 던지면, 아직 아무것도 보내지 않았을 때는 오류 처리 경로를 거쳐 표준 JSON 오류 본문으로 답하고, 스트리밍 중이면 연결을 끊습니다.
 - `status(code)`는 `100`–`999` 밖의 코드(`0`, `-1`, `1000` 등)를 받으면 `IllegalArgumentException`을 던집니다. Express 5의 `res.status`가 같은 범위 밖에서 `RangeError`를 던지는 것과 같습니다.
 - `204`, `304` 응답과 `HEAD` 요청에는 본문을 보내지 않습니다. `res.status(204).json(x)`의 `x`는 버려집니다.
 - 핸들러가 반환하기 전에 응답을 끝내세요. `sse()`, `file()`, `download()`, `stream()`은 핸들러가 반환한 뒤에도 전송이 이어질 수 있습니다.
