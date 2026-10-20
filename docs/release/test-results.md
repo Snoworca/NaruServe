@@ -95,7 +95,7 @@ No requirement is `verified` on the strength of a `manual-pending` line.
 Each line records one run on the build machine (macOS, OpenJDK 17.0.20, Gradle 8.14.3).
 
 <a id="run-full-suite"></a>
-- run full-suite: command=./gradlew build --rerun-tasks; date=2026-10-21; result=exit=0; commit=ae44f5a (working tree with the wave-8-13 documents); tests=1527; failures=0; skipped=0
+- run full-suite: command=./gradlew build --rerun-tasks; date=2026-10-21; result=exit=0; commit=5a03978 (working tree with the wave-8 SRS evidence rows); tests=1534; failures=0; skipped=0
 
 <a id="run-sbom"></a>
 - run sbom: command=./gradlew -Prelease releaseSbom; date=2026-10-20; result=exit=0; commit=ae44f5a; build/reports/naruserve/sbom: NaruServe-api.cdx.json=0, NaruServe-servlet.cdx.json=1, NaruServe-tinyhttpd.cdx.json=3, NaruServe-gson.cdx.json=3, NaruServe.cdx.json=8, NaruServe-kotlin.cdx.json=3, NaruServe-slf4j.cdx.json=2, NaruServe-filelog.cdx.json=1, NaruServe-logcat.cdx.json=1 (components per file)
@@ -107,7 +107,7 @@ Each line records one run on the build machine (macOS, OpenJDK 17.0.20, Gradle 8
 - run publish-local: command=./gradlew publishToMavenLocal --offline; date=2026-10-20; result=exit=0; commit=ae44f5a; ~/.m2/repository: com/snoworca/naruserve/NaruServe-api/0.1.0-SNAPSHOT/, com/snoworca/naruserve/NaruServe-servlet/0.1.0-SNAPSHOT/, com/snoworca/naruserve/NaruServe-tinyhttpd/0.1.0-SNAPSHOT/, com/snoworca/naruserve/NaruServe-gson/0.1.0-SNAPSHOT/, com/snoworca/naruserve/NaruServe/0.1.0-SNAPSHOT/, com/snoworca/naruserve/NaruServe-kotlin/0.1.0-SNAPSHOT/, com/snoworca/naruserve/NaruServe-slf4j/0.1.0-SNAPSHOT/, com/snoworca/naruserve/NaruServe-filelog/0.1.0-SNAPSHOT/, com/snoworca/naruserve/NaruServe-logcat/0.1.0-SNAPSHOT/
 
 <a id="run-licenses"></a>
-- run licenses: command=./gradlew -Prelease releaseLicenses; date=2026-10-20; result=exit=0; commit=ae44f5a; THIRD-PARTY-LICENSES.md: 7 shipped, 3 provided (the file was unchanged)
+- run licenses: command=./gradlew -Prelease releaseLicenses --offline; date=2026-10-21; result=exit=0; commit=5a03978; THIRD-PARTY-LICENSES.md: 7 shipped, 3 provided (the file was unchanged since the TinyHttpd url rows)
 
 <a id="run-vulnerability-scan"></a>
 - run vulnerability-scan: command=./gradlew -Prelease releaseScan; date=2026-10-20; result=exit=0; commit=ae44f5a; Status: pending, Reason: MISSING_API_KEY (no NVD_API_KEY on the build machine; see checklist item 1)
