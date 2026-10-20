@@ -225,7 +225,7 @@ public class ScanReportTest {
     // FR-REL-002 AC-2, AC-5: broken CSV cannot become a completed no-findings result.
     @Test
     public void malformedCsvAndInvalidScoresAreNeverLowRisk() {
-        for (String csv : new String[] {"\"CVE\",\"Identifiers", "CVE,Identifiers\nCVE-1\n",
+        for (String csv : new String[] {"\"CVE\",\"Identifiers", "CVE,Identifiers\nCVE-1\n", "CVE,Identifiers\n\"\"\n",
                 "CVE,Identifiers\n\"CVE-1\"garbage,pkg:maven/g/a@1\n",
                 "CVE,Identifiers,CVE\nCVE-1,pkg:maven/g/a@1,CVE-2\n"}) {
             assertTrue(csv, ReleaseMain.findingsFromCsv(csv) == null);

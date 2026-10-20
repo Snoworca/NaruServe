@@ -68,21 +68,11 @@ tinyHttpdDir: TinyHttpd HEAD is '38051b6', but NaruServe was verified against 46
 > Task :NaruServe-gson:processResources NO-SOURCE
 > Task :NaruServe-gson:classes UP-TO-DATE
 > Task :NaruServe-gson:jar UP-TO-DATE
-> Task :NaruServe-gson:compileTestKotlin UP-TO-DATE
-> Task :NaruServe-gson:compileTestJava UP-TO-DATE
 > Task :NaruServe-gson:processTestResources NO-SOURCE
-> Task :NaruServe-gson:testClasses UP-TO-DATE
 > Task :NaruServe-kotlin:generatePomFileForMavenPublication
 > Task :NaruServe-kotlin:checkKotlinGradlePluginConfigurationErrors SKIPPED
-> Task :NaruServe-kotlin:compileKotlin UP-TO-DATE
-> Task :NaruServe-kotlin:compileJava NO-SOURCE
 > Task :NaruServe-kotlin:processResources NO-SOURCE
-> Task :NaruServe-kotlin:classes UP-TO-DATE
-> Task :NaruServe-kotlin:jar UP-TO-DATE
-> Task :NaruServe-kotlin:compileTestKotlin UP-TO-DATE
-> Task :NaruServe-kotlin:compileTestJava NO-SOURCE
 > Task :NaruServe-kotlin:processTestResources NO-SOURCE
-> Task :NaruServe-kotlin:testClasses UP-TO-DATE
 > Task :NaruServe-logcat:generatePomFileForMavenPublication
 > Task :NaruServe-logcat:processResources NO-SOURCE
 > Task :NaruServe-logcat:classes UP-TO-DATE
@@ -91,14 +81,18 @@ tinyHttpdDir: TinyHttpd HEAD is '38051b6', but NaruServe was verified against 46
 > Task :NaruServe-logcat:compileTestJava UP-TO-DATE
 > Task :NaruServe-logcat:processTestResources NO-SOURCE
 > Task :NaruServe-logcat:testClasses UP-TO-DATE
+> Task :NaruServe-gson:compileTestKotlin
 > Task :NaruServe-servlet:generatePomFileForMavenPublication
+> Task :NaruServe-gson:compileTestJava UP-TO-DATE
+> Task :NaruServe-gson:testClasses UP-TO-DATE
 > Task :NaruServe-servlet:processResources UP-TO-DATE
 > Task :NaruServe-servlet:classes UP-TO-DATE
 > Task :NaruServe-servlet:jar UP-TO-DATE
-> Task :NaruServe-servlet:compileTestKotlin UP-TO-DATE
-> Task :NaruServe-servlet:compileTestJava UP-TO-DATE
+> Task :NaruServe-kotlin:compileKotlin
+> Task :NaruServe-kotlin:compileJava NO-SOURCE
+> Task :NaruServe-kotlin:classes UP-TO-DATE
+> Task :NaruServe-kotlin:jar UP-TO-DATE
 > Task :NaruServe-servlet:processTestResources NO-SOURCE
-> Task :NaruServe-servlet:testClasses UP-TO-DATE
 > Task :NaruServe-slf4j:generatePomFileForMavenPublication
 > Task :NaruServe-slf4j:checkKotlinGradlePluginConfigurationErrors SKIPPED
 > Task :NaruServe-slf4j:compileKotlin NO-SOURCE
@@ -113,21 +107,24 @@ tinyHttpdDir: TinyHttpd HEAD is '38051b6', but NaruServe was verified against 46
 > Task :NaruServe-tinyhttpd:generatePomFileForMavenPublication
 > Task :NaruServe-tinyhttpd:processResources NO-SOURCE
 > Task :NaruServe-tinyhttpd:classes UP-TO-DATE
+> Task :NaruServe-servlet:compileTestKotlin
 > Task :NaruServe-tinyhttpd:jar UP-TO-DATE
+> Task :NaruServe-servlet:compileTestJava UP-TO-DATE
+> Task :NaruServe-servlet:testClasses UP-TO-DATE
 > Task :NaruServe-tinyhttpd:compileTestKotlin NO-SOURCE
 > Task :NaruServe-tinyhttpd:compileTestJava UP-TO-DATE
+> Task :NaruServe-kotlin:compileTestKotlin
+> Task :NaruServe-kotlin:compileTestJava NO-SOURCE
+> Task :NaruServe-kotlin:testClasses UP-TO-DATE
 > Task :NaruServe-tinyhttpd:processTestResources NO-SOURCE
 > Task :NaruServe-tinyhttpd:testClasses UP-TO-DATE
 
 > Task :test FAILED
 
-ReleaseGateTest > malformedCompletedReportsAndInvalidScoresCannotClearRelease FAILED
-    java.lang.AssertionError at ReleaseGateTest.java:136
-
 ScanReportTest > malformedCsvAndInvalidScoresAreNeverLowRisk FAILED
     java.lang.AssertionError at ScanReportTest.java:231
 
-23 tests completed, 2 failed
+11 tests completed, 1 failed
 
 FAILURE: Build failed with an exception.
 
@@ -138,5 +135,5 @@ Execution failed for task ':test'.
 * Try:
 > Run with --scan to get full insights.
 
-BUILD FAILED in 852ms
-51 actionable tasks: 12 executed, 39 up-to-date
+BUILD FAILED in 721ms
+51 actionable tasks: 16 executed, 35 up-to-date

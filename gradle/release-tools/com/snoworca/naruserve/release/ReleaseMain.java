@@ -233,6 +233,7 @@ public final class ReleaseMain {
         StringBuilder field = new StringBuilder();
         boolean quoted = false;
         boolean closed = false;
+        boolean recordStarted = false;
         for (int i = 0; i < csv.length(); i++) {
             char c = csv.charAt(i);
             if (quoted) {
@@ -248,7 +249,9 @@ public final class ReleaseMain {
             } else if (c == '"') {
                 if (closed || field.length() != 0) return null;
                 quoted = true;
+                recordStarted = true;
             } else if (c == ',') {
+                recordStarted = true;
                 closed = false;
                 row.add(field.toString());
                 field.setLength(0);
@@ -256,23 +259,25 @@ public final class ReleaseMain {
                 if (c == '\r' && i + 1 < csv.length() && csv.charAt(i + 1) == '\n') {
                     i++;
                 }
-                endRow(rows, row, field);
+                endRow(rows, row, field, recordStarted);
                 row = new ArrayList<>();
                 closed = false;
+                recordStarted = false;
             } else {
                 if (closed) return null;
                 field.append(c);
+                recordStarted = true;
             }
         }
         if (quoted) return null;
-        endRow(rows, row, field);
+        endRow(rows, row, field, recordStarted);
         return rows;
     }
 
-    private static void endRow(List<List<String>> rows, List<String> row, StringBuilder field) {
+    private static void endRow(List<List<String>> rows, List<String> row, StringBuilder field, boolean recordStarted) {
         row.add(field.toString());
         field.setLength(0);
-        if (row.size() > 1 || !row.get(0).isEmpty()) {
+        if (recordStarted || row.size() > 1 || !row.get(0).isEmpty()) {
             rows.add(row);
         }
     }
