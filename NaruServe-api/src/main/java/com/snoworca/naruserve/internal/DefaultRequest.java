@@ -109,7 +109,6 @@ public final class DefaultRequest implements Request {
      * invalid UTF-8, which the error path answers.
      */
     // @req FR-HTTP-025
-    // @req FR-HTTP-025
     void decodeQuery() {
         if (query == null) {
             try {

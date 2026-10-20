@@ -95,7 +95,7 @@ No requirement is `verified` on the strength of a `manual-pending` line.
 Each line records one run on the build machine (macOS, OpenJDK 17.0.20, Gradle 8.14.3).
 
 <a id="run-full-suite"></a>
-- run full-suite: command=./gradlew build --rerun-tasks; date=2026-10-21; result=exit=0; commit=3806d59; tests=1566; failures=0; skipped=0
+- run full-suite: command=./gradlew build --rerun-tasks; date=2026-10-21; result=exit=0; commit=f357caf; tests=1566; failures=0; skipped=0
 
 <a id="run-sbom"></a>
 - run sbom: command=./gradlew -Prelease releaseSbom; date=2026-10-20; result=exit=0; commit=ae44f5a; build/reports/naruserve/sbom: NaruServe-api.cdx.json=0, NaruServe-servlet.cdx.json=1, NaruServe-tinyhttpd.cdx.json=3, NaruServe-gson.cdx.json=3, NaruServe.cdx.json=8, NaruServe-kotlin.cdx.json=3, NaruServe-slf4j.cdx.json=2, NaruServe-filelog.cdx.json=1, NaruServe-logcat.cdx.json=1 (components per file)
