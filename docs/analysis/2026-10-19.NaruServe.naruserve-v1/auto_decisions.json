@@ -526,6 +526,27 @@
    "decided_by": "committee",
    "context": "kiwi-srs-feasibility wave-7 blocker B-1 (FR-SSE-002, FR-SSE-003; IR-HTTP-007 AC-4, IR-WS-002 AC-5)",
    "ts": "2026-10-20T00:26:37.592315Z"
+  },
+  {
+   "gate_id": "partition-review-unrecorded",
+   "question": "Stage 7 lane plan review (1 lane, wave 7)",
+   "options": [
+    "pass",
+    "revise",
+    "abort"
+   ],
+   "votes": [
+    "pass",
+    "pass"
+   ],
+   "confidences": [
+    0.88,
+    0.88
+   ],
+   "decision": "pass",
+   "rule": "majority (stopped after 2 agreeing votes)",
+   "confidence": 0.88,
+   "ts": "2026-10-20T01:54:05.122881Z"
   }
  ]
 }
