@@ -33,29 +33,35 @@ final class NaruServeServlet extends HttpServlet {
     }
 
     /**
-     * Overrides without super, so HttpServlet refuses no method token; unbound is 503, a prefix miss 404. Once the
-     * handler returned, the exchange's afterHandler runs, so this request thread is released while an SSE stream
-     * stays open.
+     * Overrides without super, so HttpServlet refuses no method token; unbound, stopping or released is 503 with
+     * {@code Connection: close}, a prefix miss 404. Every admitted request is counted in and out of the adapter, so
+     * its stop can wait for it. Once the handler returned, the exchange's afterHandler runs, so this request thread
+     * is released while an SSE stream stays open.
      */
     // @req FR-SVL-002
     // @req FR-SVL-005
+    // @req FR-SVL-006
     @Override
     protected void service(HttpServletRequest req, HttpServletResponse res) throws IOException {
-        ExchangeHandler handler = adapter.handler();
+        ExchangeHandler handler = adapter.enter();
         if (handler == null) {
             reject(res, 503, true);
             return;
         }
-        String path = ServletPath.remainder(req.getRequestURI(), req.getContextPath(), prefix);
-        if (path == null) {
-            reject(res, 404, false);
-            return;
-        }
-        ServletExchange ex = new ServletExchange(req, res, path, adapter);
         try {
-            handler.handle(ex);
+            String path = ServletPath.remainder(req.getRequestURI(), req.getContextPath(), prefix);
+            if (path == null) {
+                reject(res, 404, false);
+                return;
+            }
+            ServletExchange ex = new ServletExchange(req, res, path, adapter);
+            try {
+                handler.handle(ex);
+            } finally {
+                ex.afterHandler(); // starts a registered event-stream drain on the adapter's pool
+            }
         } finally {
-            ex.afterHandler(); // starts a registered event-stream drain on the adapter's pool
+            adapter.leave();
         }
     }
 

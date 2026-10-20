@@ -42,6 +42,7 @@ import org.junit.rules.TemporaryFolder;
 // @req OPS-MULTIPART-001
 // @req OPS-STATIC-001
 // @req OPS-WS-001
+// @req OPS-SVL-001
 public final class DocsExamplesCompileTest {
 
     /** One skipped block: its file, a selector ({@code #n} ordinal or the block's first line) and one reason. */
@@ -798,6 +799,27 @@ public final class DocsExamplesCompileTest {
         }
         assertTrue("docs/api has Java blocks calling server or trustProxy", found > 0);
         assertTrue(String.join("\n", docsDiagnostics()), docsDiagnostics().isEmpty());
+    }
+
+    // SDS-AC-9 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-8-8.sds.md; OPS-SVL-001 AC-4: the servlet.md
+    // blocks naming ServletConfigurer compile against project(':NaruServe-servlet'), and its skips are app-defined
+    @Test
+    public void wave8s8SdsAc9_OPS_SVL_001_AC4_servletConfigurerBlocksCompile() throws IOException {
+        int configurers = 0;
+        List<String> blocks = docs().get("servlet.md");
+        for (int i = 0; i < blocks.size(); i++) {
+            Skip s = skipFor("servlet.md", i + 1, blocks.get(i));
+            if (blocks.get(i).contains("ServletConfigurer")) {
+                configurers++;
+                assertNull("skipped ServletConfigurer block #" + (i + 1), s);
+            }
+            if (s != null) {
+                assertTrue(s.toString(), s.reason.startsWith("app-defined type `"));
+            }
+        }
+        assertTrue("servlet.md has a Java ServletConfigurer block", configurers > 0);
+        assertTrue(String.join("\n", docsDiagnostics()), docsDiagnostics().isEmpty());
+        assertEquals(Collections.emptyList(), staleSkips(SKIPS, docs()));
     }
 
     // SDS-AC-12; OPS-HTTP-004 AC-4

@@ -169,6 +169,7 @@ app.get("/api/events") { req, res ->
 - 연결별 송신 큐 기본값은 256 KiB입니다(`sendQueueSize`). 클라이언트가 느려서 큐가 가득 차면 스트림을 끝냅니다. 큐에 남은 이벤트는 버리고 넘치게 한 `send`는 `false`를 돌려줍니다.
 - 최대 동시 SSE 연결 수는 `app.server(options -> options.maxSseStreams(256))`처럼 `maxSseStreams`로 정합니다(기본 128, 최대 1024). 넘치면 `503`으로 답합니다. [서버 설정](app.md#서버-설정)
 - `app.shutdown(...)` 때 열린 SSE 연결을 닫고 `onClose`를 실행합니다. 종료할 때 `event: shutdown`과 `data: shutdown`으로 된 종료 알림을 보냅니다. 알림을 읽지 않는 클라이언트는 timeout 때 강제로 끊습니다. [shutdown](app.md#shutdown)
+- Servlet 어댑터(`NaruServe-servlet`)에서는 이 강제 종료가 컨테이너의 쓰기 제한 시간에 묶입니다. [Servlet 모듈](servlet.md#종료)
 
 ## WebSocket과 비교
 

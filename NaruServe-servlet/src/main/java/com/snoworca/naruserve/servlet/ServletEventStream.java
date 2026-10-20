@@ -5,13 +5,18 @@ import com.snoworca.naruserve.spi.StreamDrain;
 import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.servlet.AsyncContext;
+import javax.servlet.AsyncEvent;
+import javax.servlet.AsyncListener;
 
 /**
  * The event stream over a Servlet container, the mirror of the TinyHttpd one: open streams are counted against the
@@ -52,6 +57,7 @@ final class ServletEventStream {
             AsyncContext ac = ex.request().startAsync();
             ac.setTimeout(0); // a container default (30 s on Jetty 9.4) would end a long stream
             ex.async(ac);
+            pool.track(ex, ac);
             ex.head(status, headers);
             ex.response().flushBuffer();
             FlushingStream out = new FlushingStream(ex, ex.response().getOutputStream());
@@ -62,6 +68,7 @@ final class ServletEventStream {
             if (!registered) {
                 pool.release();
                 ex.complete(); // an AsyncContext already started would otherwise never end
+                pool.streams.remove(ex);
             }
         }
     }
@@ -76,6 +83,9 @@ final class ServletEventStream {
         private final int max;
         private final AtomicInteger open = new AtomicInteger();
         private final ThreadPoolExecutor executor;
+        /** The exchanges whose AsyncContext started and has not completed yet. */
+        private final Set<ServletExchange> streams =
+                Collections.newSetFromMap(new ConcurrentHashMap<ServletExchange, Boolean>());
 
         // @req FR-SVL-005
         Pool(int max) {
@@ -122,6 +132,67 @@ final class ServletEventStream {
         // @req FR-SVL-005
         void shutdown() {
             executor.shutdown();
+        }
+
+        /** Registers the started AsyncContext of {@code ex}; it leaves the set when the container completes it. */
+        // @req FR-SVL-006
+        void track(ServletExchange ex, AsyncContext ac) {
+            streams.add(ex);
+            ac.addListener(new AsyncListener() {
+                @Override
+                public void onComplete(AsyncEvent e) {
+                    streams.remove(ex);
+                }
+
+                @Override
+                public void onTimeout(AsyncEvent e) {
+                    streams.remove(ex);
+                }
+
+                @Override
+                public void onError(AsyncEvent e) {
+                    streams.remove(ex);
+                }
+
+                @Override
+                public void onStartAsync(AsyncEvent e) {
+                }
+            });
+        }
+
+        /**
+         * {@code AsyncContext.complete()} on every open stream, each failure swallowed: the container closes the
+         * output, which frees a drain blocked in a write on Jetty at once and elsewhere at the container's own
+         * write timeout. No thread is interrupted here.
+         */
+        // @req FR-SVL-006
+        void completeAll() {
+            for (ServletExchange ex : streams) {
+                try {
+                    ex.complete();
+                } catch (RuntimeException e) {
+                    // the container already ended this request
+                }
+                streams.remove(ex);
+            }
+        }
+
+        /** The open stream count: slots taken and not yet given back. */
+        // @req FR-SVL-006
+        int open() {
+            return open.get();
+        }
+
+        /** Stops the executor and interrupts its own drain threads, never a container thread. */
+        // @req FR-SVL-006
+        void shutdownNow() {
+            executor.shutdownNow();
+        }
+
+        /** Waits up to {@code timeout} for the drain threads to end; false when some are still running. */
+        // @req FR-SVL-006
+        boolean awaitTermination(long timeout, TimeUnit unit) throws InterruptedException {
+            return executor.awaitTermination(timeout, unit);
         }
     }
 
@@ -183,8 +254,10 @@ final class ServletEventStream {
             } catch (IOException | RuntimeException e) {
                 ex.abort();
             } finally {
-                ex.pool().release();
+                Pool pool = ex.pool();
+                pool.release();
                 ex.complete();
+                pool.streams.remove(ex);
             }
         };
     }
