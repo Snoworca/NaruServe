@@ -1,0 +1,21 @@
+{
+  "issue": 43,
+  "title": "multipart 종료 boundary 뒤 epilogue의 요청 크기 한도 우회 방지",
+  "requirements": {
+    "FR-MULTIPART-002": [
+      "AC-2"
+    ]
+  },
+  "testReference": "NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartEpilogueLimitsTest.java",
+  "logs": {
+    "red": "docs/release/audit-2026-10-21/43/red.log",
+    "green17": "docs/release/audit-2026-10-21/43/green17.log",
+    "green8": "docs/release/audit-2026-10-21/43/green8.log"
+  },
+  "runtimeVerification": [
+    "JDK17",
+    "OpenJDK1.8.0_504"
+  ],
+  "review": "no remaining HIGH/MEDIUM findings",
+  "integrationRegression": "epic #36 final integration gate"
+}

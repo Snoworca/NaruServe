@@ -108,6 +108,8 @@ public final class MultipartParser {
                     parts.add(new DefaultUploadFile(name, null, contentType, size, buf.toByteArray(), null, spool));
                 }
             }
+            // Epilogue content is ignored, but its bytes still belong to the bounded request body.
+            sc.discardRemainder();
             ok = true;
             return parts;
         } catch (BodyTooLargeException e) {
@@ -291,6 +293,13 @@ public final class MultipartParser {
             }
         }
 
+        /** Discards buffered and remaining framed bytes, keeping the whole-body limit active. */
+        void discardRemainder() throws IOException {
+            do {
+                pos = lim;
+            } while (fill());
+        }
+
         private int indexOfDelim() {
             outer:
             for (int i = pos; i <= lim - delim.length; i++) {
@@ -309,7 +318,7 @@ public final class MultipartParser {
             int c = next();
             if (c == '-') {
                 if (next() == '-') {
-                    return true; // the epilogue is never read
+                    return true; // parse discards the epilogue through the same bounded body stream
                 }
                 throw malformed();
             }
