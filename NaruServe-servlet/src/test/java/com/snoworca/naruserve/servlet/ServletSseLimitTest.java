@@ -9,6 +9,7 @@ import com.snoworca.naruserve.HttpException;
 import com.snoworca.naruserve.RestApp;
 import com.snoworca.naruserve.SseClient;
 import com.snoworca.naruserve.spi.ExchangeHandler;
+import com.snoworca.naruserve.testing.LiveThreads;
 import com.snoworca.naruserve.testing.RecordingLogger;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -70,12 +71,8 @@ public class ServletSseLimitTest {
 
     /** The live threads named {@code naruserve-servlet-sse-*} that are not in {@code skip}. */
     static List<Thread> sseThreads(java.util.Set<Thread> skip) {
-        List<Thread> out = new ArrayList<>();
-        for (Thread t : Thread.getAllStackTraces().keySet()) {
-            if (t.getName().startsWith("naruserve-servlet-sse-") && !skip.contains(t)) {
-                out.add(t);
-            }
-        }
+        List<Thread> out = LiveThreads.withPrefix("naruserve-servlet-sse-");
+        out.removeAll(skip);
         return out;
     }
 

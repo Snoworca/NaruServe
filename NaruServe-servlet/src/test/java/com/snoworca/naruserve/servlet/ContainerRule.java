@@ -1,5 +1,6 @@
 package com.snoworca.naruserve.servlet;
 
+import com.snoworca.naruserve.testing.LiveThreads;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -183,18 +184,12 @@ class ContainerRule extends ExternalResource {
     /** Live SSE and Jetty threads and upload files of this rule's app. */
     private List<String> leftovers() {
         List<String> out = new ArrayList<>();
-        for (Thread t : Thread.getAllStackTraces().keySet()) {
-            String name = t.getName();
-            if (!t.isAlive()) {
-                continue;
-            }
-            if (name.startsWith("naruserve-servlet-sse-")) {
-                out.add("thread " + name);
-            }
-            for (String pool : jettyPools) {
-                if (name.startsWith(pool)) {
-                    out.add("Jetty thread " + name);
-                }
+        for (Thread t : LiveThreads.withPrefix("naruserve-servlet-sse-")) {
+            out.add("thread " + t.getName());
+        }
+        for (String pool : jettyPools) {
+            for (Thread t : LiveThreads.withPrefix(pool)) {
+                out.add("Jetty thread " + t.getName());
             }
         }
         File u = uploads;
