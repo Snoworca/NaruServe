@@ -1,0 +1,452 @@
+{
+ "schema_version": "1.0.0",
+ "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-3",
+ "sds_path": "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-8-3.sds.md",
+ "sds_sha256": "849796a4792a9475454da406479cedb9147852e382d07c612294cba4ab2d5834",
+ "target": "wave-8",
+ "req_ids": [
+  "FR-KT-004",
+  "IR-KT-002",
+  "OPS-KT-001",
+  "FR-KT-006"
+ ],
+ "mode": "normal",
+ "spawn_context": "pm-child",
+ "phase": "done",
+ "next_resume_hint": null,
+ "failed": false,
+ "red_evidence": {
+  "command": "./gradlew :NaruServe-api:compileTestKotlin :NaruServe-kotlin:compileTestKotlin",
+  "exit_code": 1,
+  "captured_failure": "Unresolved reference 'KotlinDocsMarkers'; Unresolved reference 'body' and 'testing' in NaruServe-kotlin tests",
+  "timestamp": "2026-10-20T13:00:00Z"
+ },
+ "green_evidence": {
+  "command": "./gradlew build",
+  "exit_code": 0,
+  "timestamp": "2026-10-20T13:30:00Z"
+ },
+ "regression_baseline": {
+  "command": "./gradlew build",
+  "head_sha": "d28426f"
+ },
+ "mcp_call_log": [
+  {
+   "called_at": "2026-10-20T13:30:00Z",
+   "tool": "update_status",
+   "args": {
+    "id": "FR-KT-004",
+    "status": "in_progress"
+   },
+   "args_hash": "ac894a7b2d142727c64f4f4b688d23c711640ff2",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-3"
+  },
+  {
+   "called_at": "2026-10-20T13:30:00Z",
+   "tool": "update_status",
+   "args": {
+    "id": "IR-KT-002",
+    "status": "in_progress"
+   },
+   "args_hash": "17d64b035aef06554dec195a1b047e1f59fcc215",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-3"
+  },
+  {
+   "called_at": "2026-10-20T13:30:00Z",
+   "tool": "update_status",
+   "args": {
+    "id": "OPS-KT-001",
+    "status": "in_progress"
+   },
+   "args_hash": "8599e2c2357de33d73cd0362e2cc02144f3b210c",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-3"
+  },
+  {
+   "called_at": "2026-10-20T13:30:00Z",
+   "tool": "update_status",
+   "args": {
+    "id": "FR-KT-006",
+    "status": "in_progress"
+   },
+   "args_hash": "149bcc1432fccf2f99a9622b0eff9dfe4cc75a53",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-3"
+  },
+  {
+   "called_at": "2026-10-20T13:30:00Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-KT-004",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/KotlinDocsMarkersTest.java#sdsAc1_FR_KT_004_AC_1_real_docs_and_three_source_dirs_give_no_failure",
+    "covers": "AC-1",
+    "notes": "command: ./gradlew build; result: pass"
+   },
+   "args_hash": "d1fd6ac5f7503866c64ad6624df3a21016410760",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-3"
+  },
+  {
+   "called_at": "2026-10-20T13:30:00Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-KT-004",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/KotlinDocsExamplesKotlinTest.kt#SDS-AC-2 FR-KT-004 AC-2 this file with a kotlin md block line removed fails naming the block",
+    "covers": "AC-2",
+    "notes": "command: ./gradlew build; result: pass"
+   },
+   "args_hash": "7cefcddff562533f5bff8e84c10ec23dd7f7f574",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-3"
+  },
+  {
+   "called_at": "2026-10-20T13:30:00Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-KT-004",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/KotlinDocsExamplesKotlinTest.kt#SDS-AC-3 FR-KT-004 AC-3 kotlin md return at get gives 404 and return at use gives 401",
+    "covers": "AC-3",
+    "notes": "command: ./gradlew build; result: pass"
+   },
+   "args_hash": "7d6b17a13d5756c2104dec1ef2dd6d5e124b3453",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-3"
+  },
+  {
+   "called_at": "2026-10-20T13:30:00Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-KT-004",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/KotlinDocsExamplesKotlinTest.kt#SDS-AC-3 FR-KT-004 AC-3 kotlin md if else form gives the same 404 and 401 without return at",
+    "covers": "AC-3",
+    "notes": "command: ./gradlew build; result: pass"
+   },
+   "args_hash": "250162a824b610882b0d9907f363f17c56d8a284",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-3"
+  },
+  {
+   "called_at": "2026-10-20T13:30:00Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-KT-004",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/KotlinDocsMarkersTest.java#sdsAc4_FR_KT_004_AC_4_an_inserted_block_without_its_marker_is_named",
+    "covers": "AC-4",
+    "notes": "command: ./gradlew build; result: pass"
+   },
+   "args_hash": "071851ee7e803f1b1fb0195eb11c868a0b9f8fe1",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-3"
+  },
+  {
+   "called_at": "2026-10-20T13:30:00Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-KT-004",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/KotlinDocsMarkersTest.java#sdsAc4_FR_KT_004_AC_4_a_stale_marker_is_named",
+    "covers": "AC-4",
+    "notes": "command: ./gradlew build; result: pass"
+   },
+   "args_hash": "4dbe3416604fa70c342fe4a090115b0559c56202",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-3"
+  },
+  {
+   "called_at": "2026-10-20T13:30:00Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-KT-004",
+    "type": "test",
+    "reference": "NaruServe-kotlin/src/test/kotlin/com/snoworca/naruserve/kotlin/KotlinDocsBodyKotlinTest.kt#SDS-AC-5 FR-KT-004 AC-5 kotlin md reified extension block runs against the module extension",
+    "covers": "AC-5",
+    "notes": "command: ./gradlew build; result: pass"
+   },
+   "args_hash": "6f14acda27075392cc9fa1579967f93f293cdf8a",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-3"
+  },
+  {
+   "called_at": "2026-10-20T13:30:00Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "IR-KT-002",
+    "type": "test",
+    "reference": "NaruServe-kotlin/src/test/kotlin/com/snoworca/naruserve/kotlin/RequestBodyExtensionKotlinTest.kt#SDS-AC-6 IR-KT-002 AC-1 val user User = req body compiles non-null inside app post",
+    "covers": "AC-1",
+    "notes": "command: ./gradlew build; result: pass"
+   },
+   "args_hash": "6c9473c5d86395bc416f9bb58d6af972577a5003",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-3"
+  },
+  {
+   "called_at": "2026-10-20T13:30:00Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "IR-KT-002",
+    "type": "test",
+    "reference": "NaruServe-kotlin/src/test/kotlin/com/snoworca/naruserve/kotlin/RequestBodyExtensionKotlinTest.kt#SDS-AC-7 IR-KT-002 AC-2 the body decodes to the instance and JSON null answers 400",
+    "covers": "AC-2",
+    "notes": "command: ./gradlew build; result: pass"
+   },
+   "args_hash": "5b9b0bfb4ee98c9671b3fc5c7c02a021dae47d65",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-3"
+  },
+  {
+   "called_at": "2026-10-20T13:30:00Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "IR-KT-002",
+    "type": "test",
+    "reference": "NaruServe-kotlin/src/test/kotlin/com/snoworca/naruserve/kotlin/RequestBodyExtensionKotlinTest.kt#SDS-AC-8 IR-KT-002 AC-3 req body of List of User passes the raw java util List",
+    "covers": "AC-3",
+    "notes": "command: ./gradlew build; result: pass"
+   },
+   "args_hash": "fbb83de45c3df20a24462ea0fc4d7dddd4df2275",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-3"
+  },
+  {
+   "called_at": "2026-10-20T13:30:00Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "IR-KT-002",
+    "type": "test",
+    "reference": "src/test/java/com/snoworca/naruserve/docs/WaveEightKotlinDocsTest.java#sdsAc9_IR_KT_002_AC_4_the_JsonDocsKotlinTest_body_copy_line_is_unchanged",
+    "covers": "AC-4",
+    "notes": "command: ./gradlew build; result: pass"
+   },
+   "args_hash": "991c0c26af6c26a329f40bc9d6b23f2de2693aa2",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-3"
+  },
+  {
+   "called_at": "2026-10-20T13:30:00Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "OPS-KT-001",
+    "type": "test",
+    "reference": "src/test/java/com/snoworca/naruserve/docs/WaveEightKotlinDocsTest.java#sdsAc10_OPS_KT_001_AC_1_kotlin_md_names_the_module_and_settings_include_it",
+    "covers": "AC-1",
+    "notes": "command: ./gradlew build; result: pass"
+   },
+   "args_hash": "b2579e36a3432a1846f685f30627c5203682dc86",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-3"
+  },
+  {
+   "called_at": "2026-10-20T13:30:00Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "OPS-KT-001",
+    "type": "test",
+    "reference": "src/test/java/com/snoworca/naruserve/docs/WaveEightKotlinDocsTest.java#sdsAc11_OPS_KT_001_AC_2_the_null_paragraph_names_NullMarked_and_no_NonNull",
+    "covers": "AC-2",
+    "notes": "command: ./gradlew build; result: pass"
+   },
+   "args_hash": "55263ba2ff4c68834af174e2609bfd584c7bc48f",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-3"
+  },
+  {
+   "called_at": "2026-10-20T13:30:00Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "OPS-KT-001",
+    "type": "test",
+    "reference": "src/test/java/com/snoworca/naruserve/docs/WaveEightKotlinDocsTest.java#sdsAc12_OPS_KT_001_AC_3_the_extension_section_shows_the_import_above_the_pinned_lines",
+    "covers": "AC-3",
+    "notes": "command: ./gradlew build; result: pass"
+   },
+   "args_hash": "69323bd022170ea30780df13ce915d0ce3ebe533",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-3"
+  },
+  {
+   "called_at": "2026-10-20T13:30:00Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "OPS-KT-001",
+    "type": "test",
+    "reference": "src/test/java/com/snoworca/naruserve/docs/WaveEightKotlinDocsTest.java#sdsAc13_OPS_KT_001_AC_4_the_coroutine_section_states_the_post_v1_item",
+    "covers": "AC-4",
+    "notes": "command: ./gradlew build; result: pass"
+   },
+   "args_hash": "1660281d42441ec3d84cc4b26ed2609b7ab44feb",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-3"
+  },
+  {
+   "called_at": "2026-10-20T13:30:00Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "OPS-KT-001",
+    "type": "test",
+    "reference": "src/test/java/com/snoworca/naruserve/docs/WaveEightKotlinDocsTest.java#sdsAc14_OPS_KT_001_AC_5_the_nullable_accessor_table_keeps_its_twelve_rows",
+    "covers": "AC-5",
+    "notes": "command: ./gradlew build; result: pass"
+   },
+   "args_hash": "0d1971d7d026bd488bf13752958b857107a52ed8",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-3"
+  },
+  {
+   "called_at": "2026-10-20T13:30:00Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-KT-006",
+    "type": "test",
+    "reference": "NaruServe-gson/src/test/kotlin/com/snoworca/naruserve/gson/GsonDataClassLimitKotlinTest.kt#SDS-AC-15 FR-KT-006 AC-1 decoding a data class throws JsonIOException",
+    "covers": "AC-1",
+    "notes": "command: ./gradlew build; result: pass"
+   },
+   "args_hash": "039ac567fc6e67314b044b841ea633880fdfd470",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-3"
+  },
+  {
+   "called_at": "2026-10-20T13:30:00Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-KT-006",
+    "type": "test",
+    "reference": "NaruServe-gson/src/test/kotlin/com/snoworca/naruserve/gson/GsonDataClassLimitKotlinTest.kt#SDS-AC-16 FR-KT-006 AC-2 req body of a data class answers 500 INTERNAL_ERROR",
+    "covers": "AC-2",
+    "notes": "command: ./gradlew build; result: pass"
+   },
+   "args_hash": "5146646c2634a998591de66ff7138a9f3f28741a",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-3"
+  },
+  {
+   "called_at": "2026-10-20T13:30:00Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-KT-006",
+    "type": "test",
+    "reference": "NaruServe-gson/src/test/kotlin/com/snoworca/naruserve/gson/GsonDataClassLimitKotlinTest.kt#SDS-AC-17 FR-KT-006 AC-3 a nullable var DTO decodes a name and an empty object",
+    "covers": "AC-3",
+    "notes": "command: ./gradlew build; result: pass"
+   },
+   "args_hash": "8218cbfe6dd24250320f25db2d43e2e5e699cc87",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-3"
+  },
+  {
+   "called_at": "2026-10-20T13:30:00Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-KT-006",
+    "type": "test",
+    "reference": "src/test/java/com/snoworca/naruserve/docs/WaveEightKotlinDocsTest.java#sdsAc18_FR_KT_006_AC_4_json_md_and_kotlin_md_name_the_gson_limit",
+    "covers": "AC-4",
+    "notes": "command: ./gradlew build; result: pass"
+   },
+   "args_hash": "aa715a18be48065a6f8be4749ade9d11fa28dc0a",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-3"
+  },
+  {
+   "called_at": "2026-10-20T13:30:00Z",
+   "tool": "add_completed_work",
+   "args": {
+    "date": "2026-10-20",
+    "summary": "[sds] 2026-10-19.naruserve.naruserve-v1-wave-8-3 - docs-example markers for all 45 docs/api kotlin blocks with a marker check, the reified Request.body extension in NaruServe-kotlin, kotlin.md NullMarked, import and post-v1 coroutine text, and the default Gson data class limit test. green=PASS (./gradlew build). SDS-AC: 1..18 PASS",
+    "requirementIds": [
+     "FR-KT-004",
+     "IR-KT-002",
+     "OPS-KT-001",
+     "FR-KT-006"
+    ],
+    "target": "wave-8"
+   },
+   "args_hash": "d71d837de70ac78565ecb48d3160eca350ffa9e7",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-3"
+  }
+ ]
+}

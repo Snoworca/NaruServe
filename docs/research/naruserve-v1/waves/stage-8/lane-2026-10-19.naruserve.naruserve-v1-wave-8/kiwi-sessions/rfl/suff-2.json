@@ -1,0 +1,864 @@
+{
+ "scope": {
+  "target": null,
+  "ids": [
+   "FR-KT-003",
+   "FR-KT-005",
+   "IR-KT-001"
+  ],
+  "sds": "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-8-2.sds.md",
+  "testGlobs": [
+   "**/*.test.*",
+   "**/*.spec.*",
+   "**/test_*.py",
+   "**/*_test.py",
+   "**/*_test.go",
+   "**/*Test.java",
+   "**/*Tests.cs",
+   "**/test/**",
+   "**/tests/**",
+   "**/__tests__/**"
+  ]
+ },
+ "testFileCount": 1548,
+ "requirements": [
+  {
+   "requirementId": "FR-KT-003",
+   "acs": [
+    {
+     "acId": "AC-1",
+     "cited": true,
+     "citations": [
+      {
+       "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/CallbackInventoryTest.java",
+       "line": 81
+      },
+      {
+       "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/CallbackInventoryTest.java",
+       "line": 88
+      }
+     ]
+    },
+    {
+     "acId": "AC-2",
+     "cited": true,
+     "citations": [
+      {
+       "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/CallbackInventoryTest.java",
+       "line": 97
+      }
+     ]
+    },
+    {
+     "acId": "AC-3",
+     "cited": true,
+     "citations": [
+      {
+       "file": "NaruServe-api/build/classes/kotlin/test/com/snoworca/naruserve/CallbackMatrixKotlinTest.class",
+       "line": 16
+      },
+      {
+       "file": "NaruServe-api/build/classes/kotlin/test/com/snoworca/naruserve/CallbackMatrixKotlinTest.class",
+       "line": 32
+      },
+      {
+       "file": "NaruServe-api/build/classes/kotlin/test/com/snoworca/naruserve/CallbackMatrixKotlinTest.class",
+       "line": 71
+      },
+      {
+       "file": "NaruServe-api/build/reports/tests/test/classes/com.snoworca.naruserve.CallbackMatrixKotlinTest.html",
+       "line": 84
+      },
+      {
+       "file": "NaruServe-api/build/reports/tests/test/classes/com.snoworca.naruserve.CallbackMatrixKotlinTest.html",
+       "line": 89
+      },
+      {
+       "file": "NaruServe-api/build/reports/tests/test/classes/com.snoworca.naruserve.CallbackMatrixKotlinTest.html",
+       "line": 94
+      },
+      {
+       "file": "NaruServe-api/build/reports/tests/test/classes/com.snoworca.naruserve.CallbackMatrixKotlinTest.html",
+       "line": 99
+      },
+      {
+       "file": "NaruServe-api/build/reports/tests/test/classes/com.snoworca.naruserve.CallbackMatrixKotlinTest.html",
+       "line": 104
+      },
+      {
+       "file": "NaruServe-api/build/reports/tests/test/classes/com.snoworca.naruserve.CallbackMatrixKotlinTest.html",
+       "line": 109
+      },
+      {
+       "file": "NaruServe-api/build/reports/tests/test/classes/com.snoworca.naruserve.CallbackMatrixKotlinTest.html",
+       "line": 144
+      },
+      {
+       "file": "NaruServe-api/build/test-results/test/TEST-com.snoworca.naruserve.CallbackMatrixKotlinTest.xml",
+       "line": 4
+      },
+      {
+       "file": "NaruServe-api/build/test-results/test/TEST-com.snoworca.naruserve.CallbackMatrixKotlinTest.xml",
+       "line": 5
+      },
+      {
+       "file": "NaruServe-api/build/test-results/test/TEST-com.snoworca.naruserve.CallbackMatrixKotlinTest.xml",
+       "line": 6
+      },
+      {
+       "file": "NaruServe-api/build/test-results/test/TEST-com.snoworca.naruserve.CallbackMatrixKotlinTest.xml",
+       "line": 7
+      },
+      {
+       "file": "NaruServe-api/build/test-results/test/TEST-com.snoworca.naruserve.CallbackMatrixKotlinTest.xml",
+       "line": 8
+      },
+      {
+       "file": "NaruServe-api/build/test-results/test/TEST-com.snoworca.naruserve.CallbackMatrixKotlinTest.xml",
+       "line": 9
+      },
+      {
+       "file": "NaruServe-api/build/test-results/test/TEST-com.snoworca.naruserve.CallbackMatrixKotlinTest.xml",
+       "line": 31
+      },
+      {
+       "file": "NaruServe-api/build/test-results/test/binary/output.bin",
+       "line": 2116
+      },
+      {
+       "file": "NaruServe-api/build/test-results/test/binary/results.bin",
+       "line": 20
+      },
+      {
+       "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/CallbackMatrixKotlinTest.kt",
+       "line": 62
+      },
+      {
+       "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/CallbackMatrixKotlinTest.kt",
+       "line": 64
+      },
+      {
+       "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/CallbackMatrixKotlinTest.kt",
+       "line": 82
+      },
+      {
+       "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/CallbackMatrixKotlinTest.kt",
+       "line": 84
+      },
+      {
+       "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/CallbackMatrixKotlinTest.kt",
+       "line": 104
+      },
+      {
+       "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/CallbackMatrixKotlinTest.kt",
+       "line": 106
+      },
+      {
+       "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/CallbackMatrixKotlinTest.kt",
+       "line": 134
+      },
+      {
+       "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/CallbackMatrixKotlinTest.kt",
+       "line": 136
+      },
+      {
+       "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/CallbackMatrixKotlinTest.kt",
+       "line": 149
+      },
+      {
+       "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/CallbackMatrixKotlinTest.kt",
+       "line": 151
+      },
+      {
+       "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/CallbackMatrixKotlinTest.kt",
+       "line": 187
+      },
+      {
+       "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/CallbackMatrixKotlinTest.kt",
+       "line": 189
+      }
+     ]
+    },
+    {
+     "acId": "AC-4",
+     "cited": true,
+     "citations": [
+      {
+       "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/CallbackInventoryTest.java",
+       "line": 108
+      },
+      {
+       "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/CallbackInventoryTest.java",
+       "line": 115
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "requirementId": "FR-KT-005",
+   "acs": [
+    {
+     "acId": "AC-1",
+     "cited": true,
+     "citations": [
+      {
+       "file": "NaruServe-api/build/classes/kotlin/test/com/snoworca/naruserve/NullableAccessorKotlinTest.class",
+       "line": 43
+      },
+      {
+       "file": "NaruServe-api/build/reports/tests/test/classes/com.snoworca.naruserve.NullableAccessorKotlinTest.html",
+       "line": 81
+      },
+      {
+       "file": "NaruServe-api/build/reports/tests/test/classes/com.snoworca.naruserve.NullableAccessorKotlinTest.html",
+       "line": 86
+      },
+      {
+       "file": "NaruServe-api/build/reports/tests/test/classes/com.snoworca.naruserve.NullableAccessorKotlinTest.html",
+       "line": 91
+      },
+      {
+       "file": "NaruServe-api/build/reports/tests/test/classes/com.snoworca.naruserve.NullableAccessorKotlinTest.html",
+       "line": 96
+      },
+      {
+       "file": "NaruServe-api/build/reports/tests/test/classes/com.snoworca.naruserve.NullableAccessorKotlinTest.html",
+       "line": 101
+      },
+      {
+       "file": "NaruServe-api/build/reports/tests/test/classes/com.snoworca.naruserve.NullableAccessorKotlinTest.html",
+       "line": 106
+      },
+      {
+       "file": "NaruServe-api/build/reports/tests/test/classes/com.snoworca.naruserve.NullableAccessorKotlinTest.html",
+       "line": 111
+      },
+      {
+       "file": "NaruServe-api/build/test-results/test/TEST-com.snoworca.naruserve.NullableAccessorKotlinTest.xml",
+       "line": 4
+      },
+      {
+       "file": "NaruServe-api/build/test-results/test/TEST-com.snoworca.naruserve.NullableAccessorKotlinTest.xml",
+       "line": 7
+      },
+      {
+       "file": "NaruServe-api/build/test-results/test/TEST-com.snoworca.naruserve.NullableAccessorKotlinTest.xml",
+       "line": 8
+      },
+      {
+       "file": "NaruServe-api/build/test-results/test/TEST-com.snoworca.naruserve.NullableAccessorKotlinTest.xml",
+       "line": 9
+      },
+      {
+       "file": "NaruServe-api/build/test-results/test/TEST-com.snoworca.naruserve.NullableAccessorKotlinTest.xml",
+       "line": 10
+      },
+      {
+       "file": "NaruServe-api/build/test-results/test/TEST-com.snoworca.naruserve.NullableAccessorKotlinTest.xml",
+       "line": 14
+      },
+      {
+       "file": "NaruServe-api/build/test-results/test/TEST-com.snoworca.naruserve.NullableAccessorKotlinTest.xml",
+       "line": 15
+      },
+      {
+       "file": "NaruServe-api/build/test-results/test/binary/results.bin",
+       "line": 7
+      },
+      {
+       "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/NullableAccessorKotlinTest.kt",
+       "line": 104
+      },
+      {
+       "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/NullableAccessorKotlinTest.kt",
+       "line": 106
+      },
+      {
+       "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/NullableAccessorKotlinTest.kt",
+       "line": 116
+      },
+      {
+       "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/NullableAccessorKotlinTest.kt",
+       "line": 118
+      },
+      {
+       "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/NullableAccessorKotlinTest.kt",
+       "line": 128
+      },
+      {
+       "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/NullableAccessorKotlinTest.kt",
+       "line": 130
+      },
+      {
+       "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/NullableAccessorKotlinTest.kt",
+       "line": 139
+      },
+      {
+       "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/NullableAccessorKotlinTest.kt",
+       "line": 141
+      },
+      {
+       "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/NullableAccessorKotlinTest.kt",
+       "line": 151
+      },
+      {
+       "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/NullableAccessorKotlinTest.kt",
+       "line": 153
+      },
+      {
+       "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/NullableAccessorKotlinTest.kt",
+       "line": 171
+      },
+      {
+       "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/NullableAccessorKotlinTest.kt",
+       "line": 173
+      },
+      {
+       "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/NullableAccessorKotlinTest.kt",
+       "line": 182
+      },
+      {
+       "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/NullableAccessorKotlinTest.kt",
+       "line": 184
+      }
+     ]
+    },
+    {
+     "acId": "AC-2",
+     "cited": true,
+     "citations": [
+      {
+       "file": "NaruServe-api/build/classes/kotlin/test/com/snoworca/naruserve/NullableAccessorKotlinTest.class",
+       "line": 61
+      },
+      {
+       "file": "NaruServe-api/build/classes/kotlin/test/com/snoworca/naruserve/NullableAccessorKotlinTest.class",
+       "line": 70
+      },
+      {
+       "file": "NaruServe-api/build/classes/kotlin/test/com/snoworca/naruserve/NullableAccessorKotlinTest.class",
+       "line": 72
+      },
+      {
+       "file": "NaruServe-api/build/reports/tests/test/classes/com.snoworca.naruserve.NullableAccessorKotlinTest.html",
+       "line": 116
+      },
+      {
+       "file": "NaruServe-api/build/reports/tests/test/classes/com.snoworca.naruserve.NullableAccessorKotlinTest.html",
+       "line": 121
+      },
+      {
+       "file": "NaruServe-api/build/reports/tests/test/classes/com.snoworca.naruserve.NullableAccessorKotlinTest.html",
+       "line": 126
+      },
+      {
+       "file": "NaruServe-api/build/reports/tests/test/classes/com.snoworca.naruserve.NullableAccessorKotlinTest.html",
+       "line": 131
+      },
+      {
+       "file": "NaruServe-api/build/test-results/test/TEST-com.snoworca.naruserve.NullableAccessorKotlinTest.xml",
+       "line": 5
+      },
+      {
+       "file": "NaruServe-api/build/test-results/test/TEST-com.snoworca.naruserve.NullableAccessorKotlinTest.xml",
+       "line": 6
+      },
+      {
+       "file": "NaruServe-api/build/test-results/test/TEST-com.snoworca.naruserve.NullableAccessorKotlinTest.xml",
+       "line": 11
+      },
+      {
+       "file": "NaruServe-api/build/test-results/test/TEST-com.snoworca.naruserve.NullableAccessorKotlinTest.xml",
+       "line": 13
+      },
+      {
+       "file": "NaruServe-api/build/test-results/test/binary/results.bin",
+       "line": 7
+      },
+      {
+       "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/NullableAccessorKotlinTest.kt",
+       "line": 93
+      },
+      {
+       "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/NullableAccessorKotlinTest.kt",
+       "line": 95
+      },
+      {
+       "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/NullableAccessorKotlinTest.kt",
+       "line": 196
+      },
+      {
+       "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/NullableAccessorKotlinTest.kt",
+       "line": 198
+      },
+      {
+       "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/NullableAccessorKotlinTest.kt",
+       "line": 207
+      },
+      {
+       "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/NullableAccessorKotlinTest.kt",
+       "line": 209
+      },
+      {
+       "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/NullableAccessorKotlinTest.kt",
+       "line": 219
+      },
+      {
+       "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/NullableAccessorKotlinTest.kt",
+       "line": 221
+      }
+     ]
+    },
+    {
+     "acId": "AC-3",
+     "cited": true,
+     "citations": [
+      {
+       "file": "NaruServe-api/build/classes/kotlin/test/com/snoworca/naruserve/NullableAccessorKotlinTest$FR-KT-005 AC-3 accessor_body is T? and null for a JSON null body through both overloads$many$1$users$1.class",
+       "line": 1
+      },
+      {
+       "file": "NaruServe-api/build/classes/kotlin/test/com/snoworca/naruserve/NullableAccessorKotlinTest$FR-KT-005 AC-3 accessor_body is T? and null for a JSON null body through both overloads$many$1$users$1.class",
+       "line": 2
+      },
+      {
+       "file": "NaruServe-api/build/classes/kotlin/test/com/snoworca/naruserve/NullableAccessorKotlinTest.class",
+       "line": 74
+      },
+      {
+       "file": "NaruServe-api/build/classes/kotlin/test/com/snoworca/naruserve/NullableAccessorKotlinTest.class",
+       "line": 75
+      },
+      {
+       "file": "NaruServe-api/build/reports/tests/test/classes/com.snoworca.naruserve.NullableAccessorKotlinTest.html",
+       "line": 136
+      },
+      {
+       "file": "NaruServe-api/build/test-results/test/TEST-com.snoworca.naruserve.NullableAccessorKotlinTest.xml",
+       "line": 12
+      },
+      {
+       "file": "NaruServe-api/build/test-results/test/binary/results.bin",
+       "line": 7
+      },
+      {
+       "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/NullableAccessorKotlinTest.kt",
+       "line": 232
+      },
+      {
+       "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/NullableAccessorKotlinTest.kt",
+       "line": 234
+      }
+     ]
+    },
+    {
+     "acId": "AC-4",
+     "cited": true,
+     "citations": [
+      {
+       "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/NullableAccessorDocsTest.java",
+       "line": 18
+      },
+      {
+       "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/NullableAccessorDocsTest.java",
+       "line": 40
+      },
+      {
+       "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/NullableAccessorDocsTest.java",
+       "line": 49
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "requirementId": "IR-KT-001",
+   "acs": [
+    {
+     "acId": "AC-1",
+     "cited": true,
+     "citations": [
+      {
+       "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/CookiePropertiesTest.java",
+       "line": 80
+      },
+      {
+       "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/CookiePropertiesTest.java",
+       "line": 128
+      },
+      {
+       "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/CookiePropertiesTest.java",
+       "line": 134
+      }
+     ]
+    },
+    {
+     "acId": "AC-2",
+     "cited": true,
+     "citations": [
+      {
+       "file": "NaruServe-api/build/reports/tests/test/classes/com.snoworca.naruserve.PropertySyntaxKotlinTest.html",
+       "line": 81
+      },
+      {
+       "file": "NaruServe-api/build/test-results/test/TEST-com.snoworca.naruserve.PropertySyntaxKotlinTest.xml",
+       "line": 5
+      },
+      {
+       "file": "NaruServe-api/build/test-results/test/binary/results.bin",
+       "line": 1
+      },
+      {
+       "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/PropertySyntaxKotlinTest.kt",
+       "line": 11
+      },
+      {
+       "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/PropertySyntaxKotlinTest.kt",
+       "line": 13
+      }
+     ]
+    },
+    {
+     "acId": "AC-3",
+     "cited": true,
+     "citations": [
+      {
+       "file": "NaruServe-api/build/classes/kotlin/test/com/snoworca/naruserve/PropertySyntaxKotlinTest.class",
+       "line": 16
+      },
+      {
+       "file": "NaruServe-api/build/reports/tests/test/classes/com.snoworca.naruserve.PropertySyntaxKotlinTest.html",
+       "line": 86
+      },
+      {
+       "file": "NaruServe-api/build/test-results/test/TEST-com.snoworca.naruserve.PropertySyntaxKotlinTest.xml",
+       "line": 4
+      },
+      {
+       "file": "NaruServe-api/build/test-results/test/binary/results.bin",
+       "line": 1
+      },
+      {
+       "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/PropertySyntaxKotlinTest.kt",
+       "line": 40
+      },
+      {
+       "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/PropertySyntaxKotlinTest.kt",
+       "line": 42
+      }
+     ]
+    },
+    {
+     "acId": "AC-4",
+     "cited": true,
+     "citations": [
+      {
+       "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/CookiePropertiesTest.java",
+       "line": 80
+      },
+      {
+       "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/CookiePropertiesTest.java",
+       "line": 141
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "sdsContracts": [
+  {
+   "sdsAcId": "SDS-AC-1",
+   "requirementId": "FR-KT-003",
+   "acId": "AC-1",
+   "cited": true,
+   "testFiles": [
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/CallbackInventoryTest.java",
+     "exists": true,
+     "citations": [
+      {
+       "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/CallbackInventoryTest.java",
+       "line": 81
+      },
+      {
+       "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/CallbackInventoryTest.java",
+       "line": 88
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "sdsAcId": "SDS-AC-2",
+   "requirementId": "FR-KT-003",
+   "acId": "AC-2",
+   "cited": true,
+   "testFiles": [
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/CallbackInventoryTest.java",
+     "exists": true,
+     "citations": [
+      {
+       "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/CallbackInventoryTest.java",
+       "line": 97
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "sdsAcId": "SDS-AC-3",
+   "requirementId": "FR-KT-003",
+   "acId": "AC-3",
+   "cited": true,
+   "testFiles": [
+    {
+     "path": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/CallbackMatrixKotlinTest.kt",
+     "exists": true,
+     "citations": [
+      {
+       "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/CallbackMatrixKotlinTest.kt",
+       "line": 62
+      },
+      {
+       "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/CallbackMatrixKotlinTest.kt",
+       "line": 82
+      },
+      {
+       "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/CallbackMatrixKotlinTest.kt",
+       "line": 104
+      },
+      {
+       "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/CallbackMatrixKotlinTest.kt",
+       "line": 134
+      },
+      {
+       "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/CallbackMatrixKotlinTest.kt",
+       "line": 149
+      },
+      {
+       "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/CallbackMatrixKotlinTest.kt",
+       "line": 187
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "sdsAcId": "SDS-AC-4",
+   "requirementId": "FR-KT-003",
+   "acId": "AC-4",
+   "cited": true,
+   "testFiles": [
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/CallbackInventoryTest.java",
+     "exists": true,
+     "citations": [
+      {
+       "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/CallbackInventoryTest.java",
+       "line": 108
+      },
+      {
+       "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/CallbackInventoryTest.java",
+       "line": 115
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "sdsAcId": "SDS-AC-5",
+   "requirementId": "FR-KT-005",
+   "acId": "AC-1",
+   "cited": true,
+   "testFiles": [
+    {
+     "path": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/NullableAccessorKotlinTest.kt",
+     "exists": true,
+     "citations": [
+      {
+       "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/NullableAccessorKotlinTest.kt",
+       "line": 104
+      },
+      {
+       "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/NullableAccessorKotlinTest.kt",
+       "line": 116
+      },
+      {
+       "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/NullableAccessorKotlinTest.kt",
+       "line": 128
+      },
+      {
+       "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/NullableAccessorKotlinTest.kt",
+       "line": 139
+      },
+      {
+       "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/NullableAccessorKotlinTest.kt",
+       "line": 151
+      },
+      {
+       "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/NullableAccessorKotlinTest.kt",
+       "line": 171
+      },
+      {
+       "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/NullableAccessorKotlinTest.kt",
+       "line": 182
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "sdsAcId": "SDS-AC-6",
+   "requirementId": "FR-KT-005",
+   "acId": "AC-2",
+   "cited": true,
+   "testFiles": [
+    {
+     "path": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/NullableAccessorKotlinTest.kt",
+     "exists": true,
+     "citations": [
+      {
+       "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/NullableAccessorKotlinTest.kt",
+       "line": 93
+      },
+      {
+       "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/NullableAccessorKotlinTest.kt",
+       "line": 196
+      },
+      {
+       "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/NullableAccessorKotlinTest.kt",
+       "line": 207
+      },
+      {
+       "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/NullableAccessorKotlinTest.kt",
+       "line": 219
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "sdsAcId": "SDS-AC-7",
+   "requirementId": "FR-KT-005",
+   "acId": "AC-3",
+   "cited": true,
+   "testFiles": [
+    {
+     "path": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/NullableAccessorKotlinTest.kt",
+     "exists": true,
+     "citations": [
+      {
+       "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/NullableAccessorKotlinTest.kt",
+       "line": 232
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "sdsAcId": "SDS-AC-8",
+   "requirementId": "FR-KT-005",
+   "acId": "AC-4",
+   "cited": true,
+   "testFiles": [
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/NullableAccessorDocsTest.java",
+     "exists": true,
+     "citations": [
+      {
+       "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/NullableAccessorDocsTest.java",
+       "line": 40
+      },
+      {
+       "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/NullableAccessorDocsTest.java",
+       "line": 49
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "sdsAcId": "SDS-AC-9",
+   "requirementId": "IR-KT-001",
+   "acId": "AC-1",
+   "cited": true,
+   "testFiles": [
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/CookiePropertiesTest.java",
+     "exists": true,
+     "citations": [
+      {
+       "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/CookiePropertiesTest.java",
+       "line": 128
+      },
+      {
+       "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/CookiePropertiesTest.java",
+       "line": 134
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "sdsAcId": "SDS-AC-10",
+   "requirementId": "IR-KT-001",
+   "acId": "AC-2",
+   "cited": true,
+   "testFiles": [
+    {
+     "path": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/PropertySyntaxKotlinTest.kt",
+     "exists": true,
+     "citations": [
+      {
+       "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/PropertySyntaxKotlinTest.kt",
+       "line": 11
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "sdsAcId": "SDS-AC-11",
+   "requirementId": "IR-KT-001",
+   "acId": "AC-3",
+   "cited": true,
+   "testFiles": [
+    {
+     "path": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/PropertySyntaxKotlinTest.kt",
+     "exists": true,
+     "citations": [
+      {
+       "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/PropertySyntaxKotlinTest.kt",
+       "line": 40
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "sdsAcId": "SDS-AC-12",
+   "requirementId": "IR-KT-001",
+   "acId": "AC-4",
+   "cited": true,
+   "testFiles": [
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/CookiePropertiesTest.java",
+     "exists": true,
+     "citations": [
+      {
+       "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/CookiePropertiesTest.java",
+       "line": 141
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "gaps": {
+  "requirements": [],
+  "sdsContracts": []
+ },
+ "passed": true
+}

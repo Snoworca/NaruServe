@@ -1,0 +1,116 @@
+{
+  "target": "wave-6",
+  "classification": "new-scope",
+  "mode": "live",
+  "scopes_created": [
+    {
+      "scope": "MULTIPART",
+      "file": "docs/spec/09.multipart.srs.md"
+    },
+    {
+      "scope": "STATIC",
+      "file": "docs/spec/10.static-files.srs.md"
+    }
+  ],
+  "added_ids": {
+    "MULTIPART": [
+      "IR-MULTIPART-001",
+      "IR-MULTIPART-002",
+      "FR-MULTIPART-001",
+      "FR-MULTIPART-002",
+      "FR-MULTIPART-003",
+      "FR-MULTIPART-004",
+      "FR-MULTIPART-005",
+      "FR-MULTIPART-006",
+      "OPS-MULTIPART-001"
+    ],
+    "STATIC": [
+      "IR-STATIC-001",
+      "IR-STATIC-002",
+      "FR-STATIC-001",
+      "FR-STATIC-002",
+      "FR-STATIC-003",
+      "FR-STATIC-004",
+      "FR-STATIC-005",
+      "FR-STATIC-006",
+      "FR-STATIC-007",
+      "FR-STATIC-008",
+      "FR-STATIC-009",
+      "FR-STATIC-010",
+      "FR-STATIC-011",
+      "OPS-STATIC-001"
+    ],
+    "ENGINE": [
+      "FR-ENGINE-010"
+    ],
+    "HTTP": [
+      "OPS-HTTP-006"
+    ],
+    "APP": [
+      "OPS-APP-004"
+    ]
+  },
+  "supersedes": {
+    "FR-ENGINE-001": "FR-ENGINE-010",
+    "OPS-HTTP-005": "OPS-HTTP-006",
+    "OPS-APP-003": "OPS-APP-004"
+  },
+  "not_superseded": {
+    "IR-HTTP-001": "wave 3 surface ACs; HttpApiSurfaceTest re-pointed from IR-MULTIPART-002 AC-6 and IR-STATIC-002 AC-5",
+    "IR-HTTP-005": "wave 3 merge statement; RestApp surface test re-pointed from IR-STATIC-002 AC-5; AC-4 (no serve) holds",
+    "IR-ENGINE-001": "AC-7 is a wave 5 delta statement (re-point convention)",
+    "IR-JSON-002": "AC-8 wave 5 re-point delta; BodyStateTest re-pointed from IR-MULTIPART-002 AC-6",
+    "FR-COOKIE-002": "AC-8 wave 5 delta, true as history",
+    "FR-HTTP-019": "exclusive kinds and shared form parse reused; AC-5 re-pointed via IR-MULTIPART-002 AC-6",
+    "FR-HTTP-020": "limit stream and BodyTooLargeException unchanged; reused (FR-MULTIPART-002)",
+    "FR-HTTP-021": "pre-request path validation order unchanged",
+    "FR-HTTP-022": "AC scenarios register routes only; static mounts consulted after the fallback point",
+    "FR-HTTP-025": "query decoding unchanged; urlencoded body is a new reader",
+    "IR-HTTP-003": "SPI unchanged",
+    "IR-HTTP-004": "SPI unchanged (AC-4 holds)",
+    "OPS-HTTP-004": "rule ACs; wave 6 removes stale skip entries as required (OPS-MULTIPART-001 AC-5, OPS-STATIC-001 AC-6)",
+    "FR-APP-002": "new setters use the NEW guard; AppLifecycleGuardTest re-pointed from IR-STATIC-001 AC-5",
+    "FR-APP-003": "AC-5 asserted without static mount; D-407 builds on it",
+    "FR-APP-011": "new internal after-onStop participant through the existing registry",
+    "FR-ENGINE-003": "AC-7 holds: TinyHttpd default body limit -1, core enforces multipart limits (FR-MULTIPART-001 AC-5)",
+    "OPS-ENGINE-001": "AC-2 holds because unlimited multipart limits are not allowed (IR-MULTIPART-001 AC-3)",
+    "OPS-ROUTE-003": "routing.md stays marker-free; static fall-through recorded in static.md",
+    "WaveFiveDocsTest": "kept markers are not wave 6 items (OPS-MULTIPART-001 AC-3 watch item)"
+  },
+  "tests_to_repoint": {
+    "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/AdapterSurfaceTest.java#sdsAc2_FR_ENGINE_001_AC2_featureHooksThrowNamingTheirWave": "FR-ENGINE-010",
+    "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/AdapterSurfaceTest.java#FR_ENGINE_001_AC2_featureHooksShareTheCommitLockAbortCheckAndSingleStart": "FR-ENGINE-010",
+    "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/AdapterSurfaceTest.java#sdsAc1_FR_ENGINE_001_AC1_noEngineTypeInAnyPublicSignature": "FR-ENGINE-010",
+    "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/AdapterSurfaceTest.java#sdsAc3_FR_ENGINE_001_AC3_noClassReferencesTlsConfig": "FR-ENGINE-010",
+    "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/RawTargetSocketTest.java (FR_ENGINE_001 AC-2, AC-4, AC-5 methods)": "FR-ENGINE-010",
+    "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/AbortSocketTest.java (FR_ENGINE_001_AC2 methods)": "FR-ENGINE-010",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java (OPS_HTTP_005 AC1..AC8 methods)": "OPS-HTTP-006",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/AppDocsTest.java (OPS_APP_003 AC1..AC7 methods)": "OPS-APP-004",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java (Request set, LATER_WAVE_NAMES, nullable positions)": "IR-MULTIPART-002",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java (RestApp and Response sets, LATER_WAVE_NAMES=sse)": "IR-STATIC-002",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/BodyStateTest.java#sdsAc11_FR_HTTP_019_AC5_requestHasNoPublicBodyReadingMethod": "IR-MULTIPART-002",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AppLifecycleGuardTest.java#sdsAc4_FR_APP_002_AC4_reflectionFindsEveryRestAppAndRouteBuilderRegistrationRefusedInRunning": "IR-STATIC-001",
+    "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java (form, multipart skips)": "OPS-MULTIPART-001",
+    "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java (staticFiles, res.file, mimeTypes, cache skips)": "OPS-STATIC-001"
+  },
+  "validate_spec_result": {
+    "errors": 0,
+    "warnings": 42,
+    "byCode": {
+      "SRS-W023": 26,
+      "SRS-W015": 16
+    },
+    "notes": "W023: all 26 wave 6 requirements are Stability=draft by default until the feasibility phase. W015: 13 pre-existing; 3 new (FR-ENGINE-001, OPS-HTTP-005, OPS-APP-003) are the structural effect of superseding completed-log entries, same as earlier supersedes (OPS-APP-001, OPS-HTTP-003)."
+  },
+  "coverage": {
+    "script": "/private/tmp/claude-501/-Users-beom-work-git-NaruServe/2d9d3869-c3b1-4164-b018-05a05207e613/scratchpad/w6coverage.py",
+    "design_ids": 70,
+    "wave_decisions": 9,
+    "residual": 1,
+    "carried": [
+      "V1-003",
+      "V1-008"
+    ],
+    "missing": []
+  }
+}

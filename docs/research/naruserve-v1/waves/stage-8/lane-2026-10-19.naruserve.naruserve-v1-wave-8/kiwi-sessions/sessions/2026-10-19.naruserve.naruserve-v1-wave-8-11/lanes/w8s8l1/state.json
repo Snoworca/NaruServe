@@ -1,0 +1,21 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-11",
+  "sds_path": "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-8-11.sds.md",
+  "sds_sha256": "60387f9c5eb00926d3ecbe638e5bd4dd5d9b48d80a68af50771472324be70153",
+  "target": "wave-8",
+  "req_ids": ["FR-REL-004", "FR-REL-005", "OPS-REL-001", "OPS-REL-005"],
+  "mode": "normal",
+  "flags": ["--auto", "--auto-integration", "--auto-cost-warning", "--defer-srs-mutation"],
+  "spawn_context": "pm-child",
+  "phase": "done",
+  "next_resume_hint": null,
+  "failed": false,
+  "severity_counters": {"phase2": {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 4, "LOW": 9, "rounds": 1}},
+  "red_evidence": {"command": "./gradlew :compileTestJava --offline", "exit_code": 1, "captured_failure": "LicenseCheckTest.java: package com.snoworca.naruserve.release.LicenseCheck does not exist; ReadmeDocsTest: README.md exists assertion failed", "timestamp": "2026-10-20T14:30:00Z"},
+  "green_evidence": {"command": "./gradlew build --offline", "exit_code": 0, "timestamp": "2026-10-20T14:50:00Z"},
+  "regression_baseline": {"command": "./gradlew build", "head_sha": "0350848", "source": "--regression-baseline (parent pinned)"},
+  "regression_summary": {"scope": "full", "failed": 0, "regressed_files": []},
+  "deferred_queue": "/Users/beom/work/git/NaruServe/kiwi/orchestrator/2026-10-19.NaruServe.naruserve-v1/lanes/lane-2026-10-19.naruserve.naruserve-v1-wave-8/deferred-srs-queue.jsonl",
+  "deferred_entries": 24
+}

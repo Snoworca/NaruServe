@@ -1,0 +1,20 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-10",
+  "sds_path": "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-8-10.sds.md",
+  "sds_sha256": "2cb89d8a81d86e693ad291951c04e3779a8f8ea2067f4eab5cc86c1afa02d0f4",
+  "target": "wave-8",
+  "req_ids": ["FR-REL-002", "FR-REL-003"],
+  "mode": "normal",
+  "flags": ["--auto", "--auto-integration", "--auto-cost-warning", "--defer-srs-mutation"],
+  "spawn_context": "pm-child",
+  "phase": "done",
+  "next_resume_hint": null,
+  "failed": false,
+  "red_evidence": {"command": "./gradlew :compileTestJava --offline", "exit_code": 1, "captured_failure": "ScanReportTest.java:7: error: package com.snoworca.naruserve.release does not exist", "timestamp": "2026-10-20T00:00:00Z"},
+  "green_evidence": {"command": "./gradlew build", "exit_code": 0, "timestamp": "2026-10-20T00:00:00Z"},
+  "regression_baseline": {"command": "./gradlew build", "head_sha": "18c30d1c050e33a80e4dac82a8556f071dfcf508", "note": "pinned by parent"},
+  "regression_summary": {"scope": "full", "result": "BUILD SUCCESSFUL"},
+  "review": {"prickly_rounds": 1, "fixed": ["HIGH jar-name finding fail-open", "HIGH unscored finding fail-open", "MEDIUM cause classification", "MEDIUM missing child result", "LOW findings section", "LOW purl decode", "LOW record staleness test", "LOW csv fixtures"], "open": ["MEDIUM data timestamp is the CSV ScanDate", "MEDIUM Exec start failure fails releaseScan"]},
+  "mcp_call_log": "deferred to queue file"
+}

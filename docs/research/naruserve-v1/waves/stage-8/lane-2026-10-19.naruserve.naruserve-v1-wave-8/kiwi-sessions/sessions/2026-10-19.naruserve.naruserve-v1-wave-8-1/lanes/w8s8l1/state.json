@@ -1,0 +1,20 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-1",
+  "sds_path": "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-8-1.sds.md",
+  "target": "wave-8",
+  "req_ids": ["FR-KT-001", "FR-KT-002", "CON-KT-001"],
+  "spawn_context": "pm-child",
+  "mode": "normal",
+  "flags": ["--auto", "--auto-integration", "--auto-cost-warning", "--defer-srs-mutation"],
+  "phase": "phase-3.2",
+  "failed": false,
+  "regression_baseline": {"command": "./gradlew build", "exit_code": 0, "head_sha": "69940eb"},
+  "red_evidence": {
+    "command": "./gradlew :NaruServe-api:test --tests KotlinNullabilityTest --tests KotlinKeywordsTest --tests KotlinSurfaceKotlinTest :test --tests BuildChecksTest.checkNoCoroutines* --tests BuildChecksTest.con_KT* --tests BuildLayoutTest.con_KT*",
+    "exit_code": 1,
+    "captured_failure": "api: 8 tests, 5 failed (sdsAc1..4 KotlinNullabilityTest expected failures but was [], sdsAc7 KotlinKeywordsTest expected ten Keywords.* but was []); root: 3 failed (task checkNoCoroutines not found)",
+    "timestamp": "2026-10-20T12:30:00Z"
+  },
+  "green_evidence": {"command": "./gradlew build", "exit_code": 0, "timestamp": "2026-10-20T12:45:00Z"}
+}

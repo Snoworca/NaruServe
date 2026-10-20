@@ -1,0 +1,346 @@
+{
+ "scope": {
+  "target": null,
+  "ids": [
+   "FR-REL-001",
+   "CON-BUILD-017"
+  ],
+  "sds": "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-8-9.sds.md",
+  "testGlobs": [
+   "**/*.test.*",
+   "**/*.spec.*",
+   "**/test_*.py",
+   "**/*_test.py",
+   "**/*_test.go",
+   "**/*Test.java",
+   "**/*Tests.cs",
+   "**/test/**",
+   "**/tests/**",
+   "**/__tests__/**"
+  ]
+ },
+ "testFileCount": 1548,
+ "requirements": [
+  {
+   "requirementId": "CON-BUILD-017",
+   "acs": [
+    {
+     "acId": "AC-1",
+     "cited": true,
+     "citations": [
+      {
+       "file": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java",
+       "line": 288
+      },
+      {
+       "file": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java",
+       "line": 339
+      }
+     ]
+    },
+    {
+     "acId": "AC-2",
+     "cited": true,
+     "citations": [
+      {
+       "file": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java",
+       "line": 329
+      }
+     ]
+    },
+    {
+     "acId": "AC-3",
+     "cited": true,
+     "citations": [
+      {
+       "file": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java",
+       "line": 356
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "requirementId": "FR-REL-001",
+   "acs": [
+    {
+     "acId": "AC-1",
+     "cited": true,
+     "citations": [
+      {
+       "file": "src/test/java/com/snoworca/naruserve/build/ReleaseScriptTextTest.java",
+       "line": 137
+      }
+     ]
+    },
+    {
+     "acId": "AC-2",
+     "cited": true,
+     "citations": [
+      {
+       "file": "src/test/java/com/snoworca/naruserve/docs/ReleaseRecordsDocsTest.java",
+       "line": 67
+      },
+      {
+       "file": "src/test/java/com/snoworca/naruserve/docs/ReleaseRecordsDocsTest.java",
+       "line": 77
+      }
+     ]
+    },
+    {
+     "acId": "AC-3",
+     "cited": true,
+     "citations": [
+      {
+       "file": "src/test/java/com/snoworca/naruserve/build/ReleaseScriptTextTest.java",
+       "line": 34
+      },
+      {
+       "file": "src/test/java/com/snoworca/naruserve/build/ReleaseScriptTextTest.java",
+       "line": 40
+      },
+      {
+       "file": "src/test/java/com/snoworca/naruserve/build/ReleaseScriptTextTest.java",
+       "line": 52
+      },
+      {
+       "file": "src/test/java/com/snoworca/naruserve/build/ReleaseScriptTextTest.java",
+       "line": 77
+      }
+     ]
+    },
+    {
+     "acId": "AC-4",
+     "cited": true,
+     "citations": [
+      {
+       "file": "src/test/java/com/snoworca/naruserve/docs/ReleaseRecordsDocsTest.java",
+       "line": 67
+      },
+      {
+       "file": "src/test/java/com/snoworca/naruserve/docs/ReleaseRecordsDocsTest.java",
+       "line": 192
+      }
+     ]
+    },
+    {
+     "acId": "AC-5",
+     "cited": true,
+     "citations": [
+      {
+       "file": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java",
+       "line": 288
+      },
+      {
+       "file": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java",
+       "line": 329
+      },
+      {
+       "file": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java",
+       "line": 339
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "sdsContracts": [
+  {
+   "sdsAcId": "SDS-AC-1",
+   "requirementId": "FR-REL-001",
+   "acId": "AC-1",
+   "cited": true,
+   "testFiles": [
+    {
+     "path": "src/test/java/com/snoworca/naruserve/build/ReleaseScriptTextTest.java",
+     "exists": true,
+     "citations": [
+      {
+       "file": "src/test/java/com/snoworca/naruserve/build/ReleaseScriptTextTest.java",
+       "line": 137
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "sdsAcId": "SDS-AC-2",
+   "requirementId": "FR-REL-001",
+   "acId": "AC-2",
+   "cited": true,
+   "testFiles": [
+    {
+     "path": "src/test/java/com/snoworca/naruserve/docs/ReleaseRecordsDocsTest.java",
+     "exists": true,
+     "citations": [
+      {
+       "file": "src/test/java/com/snoworca/naruserve/docs/ReleaseRecordsDocsTest.java",
+       "line": 67
+      },
+      {
+       "file": "src/test/java/com/snoworca/naruserve/docs/ReleaseRecordsDocsTest.java",
+       "line": 77
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "sdsAcId": "SDS-AC-3",
+   "requirementId": "FR-REL-001",
+   "acId": "AC-3",
+   "cited": true,
+   "testFiles": [
+    {
+     "path": "src/test/java/com/snoworca/naruserve/build/ReleaseScriptTextTest.java",
+     "exists": true,
+     "citations": [
+      {
+       "file": "src/test/java/com/snoworca/naruserve/build/ReleaseScriptTextTest.java",
+       "line": 34
+      },
+      {
+       "file": "src/test/java/com/snoworca/naruserve/build/ReleaseScriptTextTest.java",
+       "line": 40
+      },
+      {
+       "file": "src/test/java/com/snoworca/naruserve/build/ReleaseScriptTextTest.java",
+       "line": 52
+      },
+      {
+       "file": "src/test/java/com/snoworca/naruserve/build/ReleaseScriptTextTest.java",
+       "line": 77
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "sdsAcId": "SDS-AC-4",
+   "requirementId": "FR-REL-001",
+   "acId": "AC-4",
+   "cited": true,
+   "testFiles": [
+    {
+     "path": "src/test/java/com/snoworca/naruserve/docs/ReleaseRecordsDocsTest.java",
+     "exists": true,
+     "citations": [
+      {
+       "file": "src/test/java/com/snoworca/naruserve/docs/ReleaseRecordsDocsTest.java",
+       "line": 67
+      },
+      {
+       "file": "src/test/java/com/snoworca/naruserve/docs/ReleaseRecordsDocsTest.java",
+       "line": 169
+      },
+      {
+       "file": "src/test/java/com/snoworca/naruserve/docs/ReleaseRecordsDocsTest.java",
+       "line": 192
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "sdsAcId": "SDS-AC-5",
+   "requirementId": "FR-REL-001",
+   "acId": "AC-5",
+   "cited": true,
+   "testFiles": [
+    {
+     "path": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java",
+     "exists": true,
+     "citations": [
+      {
+       "file": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java",
+       "line": 288
+      },
+      {
+       "file": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java",
+       "line": 329
+      },
+      {
+       "file": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java",
+       "line": 339
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "sdsAcId": "SDS-AC-6",
+   "requirementId": "CON-BUILD-017",
+   "acId": "AC-1",
+   "cited": true,
+   "testFiles": [
+    {
+     "path": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java",
+     "exists": true,
+     "citations": [
+      {
+       "file": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java",
+       "line": 137
+      },
+      {
+       "file": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java",
+       "line": 288
+      },
+      {
+       "file": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java",
+       "line": 339
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "sdsAcId": "SDS-AC-7",
+   "requirementId": "CON-BUILD-017",
+   "acId": "AC-2",
+   "cited": true,
+   "testFiles": [
+    {
+     "path": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java",
+     "exists": true,
+     "citations": [
+      {
+       "file": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java",
+       "line": 174
+      },
+      {
+       "file": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java",
+       "line": 318
+      },
+      {
+       "file": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java",
+       "line": 329
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "sdsAcId": "SDS-AC-8",
+   "requirementId": "CON-BUILD-017",
+   "acId": "AC-3",
+   "cited": true,
+   "testFiles": [
+    {
+     "path": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java",
+     "exists": true,
+     "citations": [
+      {
+       "file": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java",
+       "line": 356
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "gaps": {
+  "requirements": [],
+  "sdsContracts": []
+ },
+ "passed": true
+}

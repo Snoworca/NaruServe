@@ -1,0 +1,483 @@
+{
+ "schema_version": "1.0.0",
+ "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-6",
+ "sds_path": "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-8-6.sds.md",
+ "target": "wave-8",
+ "req_ids": [
+  "FR-SVL-001",
+  "FR-SVL-008"
+ ],
+ "spawn_context": "pm-child",
+ "phase": "done",
+ "next_resume_hint": null,
+ "failed": false,
+ "red_evidence": {
+  "command": "./gradlew :NaruServe-servlet:test --offline",
+  "exit_code": 1,
+  "captured_failure": "compileTestJava: cannot find symbol ShutdownListener, ServletAdapter.stopping(), AppStarter.presetCodec",
+  "timestamp": "2026-10-20T13:29:27Z"
+ },
+ "green_evidence": {
+  "command": "./gradlew build --offline",
+  "exit_code": 0,
+  "timestamp": "2026-10-20T13:29:27Z"
+ },
+ "mcp_call_log": [
+  {
+   "called_at": "2026-10-20T13:29:27Z",
+   "tool": "update_status",
+   "args": {
+    "id": "FR-SVL-001",
+    "status": "in_progress"
+   },
+   "args_hash": "2200a7cd29f5bda43fc59e2083ab54b720b0ab97",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-6"
+  },
+  {
+   "called_at": "2026-10-20T13:29:27Z",
+   "tool": "update_status",
+   "args": {
+    "id": "FR-SVL-008",
+    "status": "in_progress"
+   },
+   "args_hash": "41b32e11a5e2d7074be766b301276cf52a48b235",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-6"
+  },
+  {
+   "called_at": "2026-10-20T13:29:27Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-SVL-001",
+    "type": "test",
+    "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletLifecycleTest.java#sdsAc1_FR_SVL_001_AC1_startupListensBeforeTheFirstRequest",
+    "covers": "AC-1",
+    "notes": "command: ./gradlew build; result: pass"
+   },
+   "args_hash": "d452a784b010ce79371fe600f6f56202aeea4b94",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-6"
+  },
+  {
+   "called_at": "2026-10-20T13:29:27Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-SVL-001",
+    "type": "test",
+    "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletLifecycleTest.java#sdsAc2_FR_SVL_001_AC2_destructionShutsTheAppDown",
+    "covers": "AC-2",
+    "notes": "command: ./gradlew build; result: pass"
+   },
+   "args_hash": "0fc50ed2e7090459d99297c0042dace582550f10",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-6"
+  },
+  {
+   "called_at": "2026-10-20T13:29:27Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-SVL-001",
+    "type": "test",
+    "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletLifecycleTest.java#sdsAc2_FR_SVL_001_AC2_defaultTimeoutIsTenSeconds",
+    "covers": "AC-2",
+    "notes": "command: ./gradlew build; result: pass"
+   },
+   "args_hash": "a21c48475ac22c2fc9b544b497d34bcfd6c1cc37",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-6"
+  },
+  {
+   "called_at": "2026-10-20T13:29:27Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-SVL-001",
+    "type": "test",
+    "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletLifecycleTest.java#sdsAc2_FR_SVL_001_AC2_secondDestructionIsHarmless",
+    "covers": "AC-2",
+    "notes": "command: ./gradlew build; result: pass"
+   },
+   "args_hash": "378f23c05223974d252b8127724bb26e09f7574a",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-6"
+  },
+  {
+   "called_at": "2026-10-20T13:29:27Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-SVL-001",
+    "type": "test",
+    "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletAdapterTest.java#sdsAc3_FR_SVL_001_AC3_hostPortBindStoresTheHandlerOnly",
+    "covers": "AC-3",
+    "notes": "command: ./gradlew build; result: pass"
+   },
+   "args_hash": "55e0578ef1b26ea8ca87b00132afbb143bd1ee39",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-6"
+  },
+  {
+   "called_at": "2026-10-20T13:29:27Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-SVL-001",
+    "type": "test",
+    "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletAdapterTest.java#sdsAc3_FR_SVL_001_AC3_settingsBindStoresTheHandlerOnly",
+    "covers": "AC-3",
+    "notes": "command: ./gradlew build; result: pass"
+   },
+   "args_hash": "a1a7f91dc414945eec617f6170315c73c194de26",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-6"
+  },
+  {
+   "called_at": "2026-10-20T13:29:27Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-SVL-001",
+    "type": "test",
+    "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletAdapterTest.java#sdsAc3_FR_SVL_001_AC3_secondBindIsRefused",
+    "covers": "AC-3",
+    "notes": "command: ./gradlew build; result: pass"
+   },
+   "args_hash": "3b00515fab9720b752c050e14b12201b1b89d015",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-6"
+  },
+  {
+   "called_at": "2026-10-20T13:29:27Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-SVL-001",
+    "type": "test",
+    "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletAdapterTest.java#sdsAc3_FR_SVL_001_AC3_serverHandlePortIsZero",
+    "covers": "AC-3",
+    "notes": "command: ./gradlew build; result: pass"
+   },
+   "args_hash": "74a588d4d0d9523a15c0a25b2b93f172dc4a135e",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-6"
+  },
+  {
+   "called_at": "2026-10-20T13:29:27Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-SVL-001",
+    "type": "test",
+    "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletLifecycleTest.java#sdsAc4_FR_SVL_001_AC4_userListen8080BindsNothing",
+    "covers": "AC-4",
+    "notes": "command: ./gradlew build; result: pass"
+   },
+   "args_hash": "877624b2ee8c9baed0afc0d695d4cc8b735ec300",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-6"
+  },
+  {
+   "called_at": "2026-10-20T13:29:27Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-SVL-001",
+    "type": "test",
+    "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletCodecTest.java#sdsAc5_FR_SVL_001_AC5_gsonOnTheClassPathIsPreset",
+    "covers": "AC-5",
+    "notes": "command: ./gradlew build; result: pass"
+   },
+   "args_hash": "0995b0f59fc4b88b3788a788a8d4c94079dfa986",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-6"
+  },
+  {
+   "called_at": "2026-10-20T13:29:27Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-SVL-001",
+    "type": "test",
+    "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletCodecTest.java#sdsAc5_FR_SVL_001_AC5_configurerMayReplaceThePresetCodec",
+    "covers": "AC-5",
+    "notes": "command: ./gradlew build; result: pass"
+   },
+   "args_hash": "1dacc0c3fd542004d125318e8ab57e9cb03ebc87",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-6"
+  },
+  {
+   "called_at": "2026-10-20T13:29:27Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-SVL-001",
+    "type": "test",
+    "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletCodecTest.java#sdsAc5_FR_SVL_001_AC5_noCodecFailsStartupNamingGsonAndJsonCodec",
+    "covers": "AC-5",
+    "notes": "command: ./gradlew build; result: pass"
+   },
+   "args_hash": "5923da69ed6367947c1ac00c1e3bcadb2f537dfa",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-6"
+  },
+  {
+   "called_at": "2026-10-20T13:29:27Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-SVL-001",
+    "type": "test",
+    "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletLifecycleTest.java#sdsAc6_FR_SVL_001_AC6_defaultLoggerIsConsoleLogger",
+    "covers": "AC-6",
+    "notes": "command: ./gradlew build; result: pass"
+   },
+   "args_hash": "49e28de2cb1b00dc6abedbc38684f1b0f41d7ff8",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-6"
+  },
+  {
+   "called_at": "2026-10-20T13:29:27Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-SVL-001",
+    "type": "test",
+    "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletLifecycleTest.java#sdsAc6_FR_SVL_001_AC6_configuredLoggerIsKept",
+    "covers": "AC-6",
+    "notes": "command: ./gradlew build; result: pass"
+   },
+   "args_hash": "20685f8644bbcbaec1c9e5f9d21316a2b8b0d3a8",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-6"
+  },
+  {
+   "called_at": "2026-10-20T13:29:27Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-SVL-001",
+    "type": "test",
+    "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletStartFailureTest.java#sdsAc7_FR_SVL_001_AC7_failingOnStartFailsContextStartup",
+    "covers": "AC-7",
+    "notes": "command: ./gradlew build; result: pass"
+   },
+   "args_hash": "430c0234f9b4ed3cc841fffc001d641288a3d973",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-6"
+  },
+  {
+   "called_at": "2026-10-20T13:29:27Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-SVL-001",
+    "type": "test",
+    "reference": "src/test/java/com/snoworca/naruserve/docs/ServletDocsTest.java#threadTotalDeviation",
+    "covers": "AC-8",
+    "notes": "command: ./gradlew build; result: pass"
+   },
+   "args_hash": "bbcd40df4414c6026d1321903337170cf9f27c9e",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-6"
+  },
+  {
+   "called_at": "2026-10-20T13:29:27Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-SVL-008",
+    "type": "test",
+    "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletSettingsTest.java#sdsAc9_FR_SVL_008_AC1_adapterDeclaresItsOwnSettingsBind",
+    "covers": "AC-1",
+    "notes": "command: ./gradlew build; result: pass"
+   },
+   "args_hash": "7cb1849e8af2eac007c2fd889366615cbb02c575",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-6"
+  },
+  {
+   "called_at": "2026-10-20T13:29:27Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-SVL-008",
+    "type": "test",
+    "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletSettingsTest.java#sdsAc9_FR_SVL_008_AC1_settingsKeepMaxSseStreams",
+    "covers": "AC-1",
+    "notes": "command: ./gradlew build; result: pass"
+   },
+   "args_hash": "1c0740c8c15ddc99726e898b30806254e07ef54f",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-6"
+  },
+  {
+   "called_at": "2026-10-20T13:29:27Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-SVL-008",
+    "type": "test",
+    "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletSettingsTest.java#sdsAc9_FR_SVL_008_AC1_settingsRendererWritesTheAdapters404",
+    "covers": "AC-1",
+    "notes": "command: ./gradlew build; result: pass"
+   },
+   "args_hash": "02a4c8d902378d2e3e509d5583578d1a2ab9f990",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-6"
+  },
+  {
+   "called_at": "2026-10-20T13:29:27Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-SVL-008",
+    "type": "test",
+    "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletSettingsTest.java#sdsAc10_FR_SVL_008_AC2_engineOptionsHaveNoEffect",
+    "covers": "AC-2",
+    "notes": "command: ./gradlew build; result: pass"
+   },
+   "args_hash": "83ef54c9a99ed8dda9a534686c2f41b8a3a44ac5",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-6"
+  },
+  {
+   "called_at": "2026-10-20T13:29:27Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-SVL-008",
+    "type": "test",
+    "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletSettingsTest.java#sdsAc11_FR_SVL_008_AC3_coreBodyLimitsAnswer413",
+    "covers": "AC-3",
+    "notes": "command: ./gradlew build; result: pass"
+   },
+   "args_hash": "709f57ccc20d00e4534d14315e4a64bd823abf22",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-6"
+  },
+  {
+   "called_at": "2026-10-20T13:29:27Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-SVL-008",
+    "type": "test",
+    "reference": "src/test/java/com/snoworca/naruserve/docs/ServletDocsTest.java#ignoredAndAppliedOptions",
+    "covers": "AC-4",
+    "notes": "command: ./gradlew build; result: pass"
+   },
+   "args_hash": "d4b151a0f06a7dcfbc0c95c7be5d2c0dc1b57b3e",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-6"
+  },
+  {
+   "called_at": "2026-10-20T13:29:27Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-SVL-008",
+    "type": "test",
+    "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletSettingsTest.java#sdsAc13_FR_SVL_008_AC5_defaultAppLogsNoLanWarning",
+    "covers": "AC-5",
+    "notes": "command: ./gradlew build; result: pass"
+   },
+   "args_hash": "2a85f4c6a537555a42889255a68c3ca91cadb470",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-6"
+  },
+  {
+   "called_at": "2026-10-20T13:29:27Z",
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-SVL-008",
+    "type": "test",
+    "reference": "src/test/java/com/snoworca/naruserve/docs/ServletDocsTest.java#lanWarningSentence",
+    "covers": "AC-5",
+    "notes": "command: ./gradlew build; result: pass"
+   },
+   "args_hash": "87edc10a1792cdf6c82c872384d29eccd900c57b",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-6"
+  },
+  {
+   "called_at": "2026-10-20T13:29:27Z",
+   "tool": "add_completed_work",
+   "args": {
+    "date": "2026-10-20",
+    "summary": "[sds] 2026-10-19.naruserve.naruserve-v1-wave-8-6 - Servlet lifecycle, port and settings: initializer presets GsonJsonCodec by reflection, calls app.listen(0) before the first request and adds a ShutdownListener that runs app.shutdown(naruserve.shutdownTimeoutSeconds) once; ServletAdapter binds no socket, boundPort 0, own settings bind keeping maxSseStreams and the error renderer, second bind refused, release detaches the handler; servlet.md port, lifecycle, Gson, ignored and applied options, LAN and thread-total sentences. green=PASS (./gradlew build). SDS-AC: 1..13 PASS",
+    "requirementIds": [
+     "FR-SVL-001",
+     "FR-SVL-008"
+    ],
+    "target": "wave-8"
+   },
+   "args_hash": "3b7cf28b23a39fa989ae4f02143ef9a642c43cd2",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "deferred": true,
+   "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-6"
+  }
+ ],
+ "updated_at": "2026-10-20T13:29:27Z"
+}

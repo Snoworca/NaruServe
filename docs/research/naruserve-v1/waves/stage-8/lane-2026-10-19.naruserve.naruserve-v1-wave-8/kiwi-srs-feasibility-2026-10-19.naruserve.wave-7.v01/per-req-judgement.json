@@ -1,0 +1,1556 @@
+{
+ "target": "wave-7",
+ "generated": "2026-10-20",
+ "analyst": "kiwi-srs-feasibility Phase 2+3 (senior)",
+ "tinyhttpd": {
+  "cited": "46b973e",
+  "head": "38051b6",
+  "delta": "38051b6 (#115 docs), 3a20f23 (TinyHttpd.UNLIMITED constants), 1c90685 (research); WebSocketHandler/UpgradedConnection javadoc only, HttpServer overflow-safe arithmetic; no behaviour change for wave 7 ACs"
+ },
+ "path_prefixes": {
+  "TinyHttpd:": "/Users/beom/work/git/TinyHttpd/"
+ },
+ "judgements": [
+  {
+   "req_id": "IR-WS-001",
+   "feasibility": "high",
+   "score": 91,
+   "axes": {
+    "implementability": {
+     "score": 28,
+     "rationale": "Pure public API additions on RestApp plus internal settings; registration reuses the existing internal hook and router path; range-message forms already exist.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:826 webSocketRoute(String, RouteHandler) records RouteKind.WEBSOCKET",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:859 router.addWebSocket",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultServerOptions.java:23 and :35 range message forms",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/Configurer.java:5-6 @FunctionalInterface Configurer<T>"
+     ]
+    },
+    "evidence_strength": {
+     "score": 19,
+     "rationale": "Both trace paths exist and are the right addition sites; HttpApiSurfaceTest signature set exists.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java (244 lines)",
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java:30"
+     ]
+    },
+    "dependency_health": {
+     "score": 12,
+     "rationale": "No depends_on; every extends target (IR-APP-007, FR-APP-002, FR-ROUTE-003, FR-ROUTE-015) is verified. AC-2 (req.param resolved in the handler), AC-5 (two listeners both run) and AC-10 ('runs') need FR-WS-001/FR-WS-006, which depend on this requirement: verification coupling.",
+     "evidence": []
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "Reflection, range and message-form checks are concrete; AC-2 and AC-5 second clauses are behavioural checks owned elsewhere.",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "API scope; small behavioural spill into dispatch/session.",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "express-ws mapping and Kotlin SAM goal match CLAUDE.md.",
+     "evidence": []
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Verify and promote together with the requirements its ACs cross-reference (declared graph is acyclic, but AC text creates verification-order cycles; see synthesis.verification_coupling).",
+    "Move the behavioural halves of AC-2 (req.param in handler) and AC-5 (both listeners run in order) to FR-WS-001 AC-1/FR-WS-006, or accept group verification."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": [
+    "NaruServe-api (RestApp, new public WebSocketHandler/WebSocketSession/WebSocketOptions)",
+    "NaruServe-api tests (HttpApiSurfaceTest, Kotlin test)"
+   ]
+  },
+  {
+   "req_id": "IR-WS-002",
+   "feasibility": "high",
+   "score": 87,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "rationale": "Add-only SPI types and a default method are plain Java 8; TinyHttpd HttpException exposes status and flattened headers for the AC-6 mapping; SPI unchanged since 40b9665 (empty git diff).",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpExchange.java:84-89 existing upgrade/eventStream",
+      "TinyHttpd:core/src/main/java/com/snoworca/tinyhttpd/http/HttpException.java:39 getStatus(), :60 getHeaders() flattened pairs",
+      "git diff 40b9665 HEAD -- NaruServe-api/.../spi/ is empty"
+     ]
+    },
+    "evidence_strength": {
+     "score": 19,
+     "rationale": "HttpExchange.java, spi/package-info.java and the testFixtures InMemoryHttpAdapter all exist at the cited paths.",
+     "evidence": [
+      "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/InMemoryHttpAdapter.java:474 upgrade, :489 eventStream"
+     ]
+    },
+    "dependency_health": {
+     "score": 12,
+     "rationale": "depends_on IR-WS-001 (wave-7); extends IR-HTTP-003 verified. AC-3 (settings passed to webSocket), AC-6 (dispatcher error path) and AC-8 (session receives sendText) need FR-WS-001/FR-WS-006, which depend on this requirement.",
+     "evidence": []
+    },
+    "ac_verifiability": {
+     "score": 12,
+     "rationale": "AC-1..AC-5 reflection/signature tests are concrete; AC-7 'source scan finds no frame-opcode or masking-key handling' names no scan pattern, so the check is heuristic.",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "SPI scope; AC-5's 'webSocket the only added HttpExchange method' also constrains the SSE design (see FR-SSE-002).",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "Keeps engine types out of core (CLAUDE.md constraint).",
+     "evidence": []
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Verify and promote together with the requirements its ACs cross-reference (declared graph is acyclic, but AC text creates verification-order cycles; see synthesis.verification_coupling).",
+    "AC-7: name the scan (e.g. no literal 0x80|opcode masks / no 'mask' byte-array XOR loop in com.snoworca.naruserve sources).",
+    "If the SSE handler-thread write gap is fixed by an extra add-only SPI member, amend AC-5's allowed-additions list in the same change."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": [
+    "NaruServe-api spi (add-only)",
+    "NaruServe-api testFixtures (InMemoryHttpAdapter)"
+   ]
+  },
+  {
+   "req_id": "FR-WS-001",
+   "feasibility": "high",
+   "score": 91,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "Dispatcher already resolves WEBSOCKET routes and answers the fallback with 426; the upgrade branch replaces that case; middleware pipeline and request mark already wrap dispatch on the worker.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:357-360 MATCHED/WEBSOCKET_ONLY -> 426",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/GatedExchangeHandler.java:45-50 enterRequest around dispatcher.handle",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/MiddlewarePipeline.java"
+     ]
+    },
+    "evidence_strength": {
+     "score": 19,
+     "rationale": "Dispatcher.java and MiddlewarePipeline.java exist; both re-pointed tests exist by name.",
+     "evidence": [
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java:105",
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java:210",
+      "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/TestApp.java"
+     ]
+    },
+    "dependency_health": {
+     "score": 13,
+     "rationale": "depends_on IR-WS-001, IR-WS-002 (wave-7); extends FR-APP-003, FR-ROUTE-015, FR-HTTP-022, IR-APP-004 all verified.",
+     "evidence": []
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "In-memory call-log tests are concrete; AC-7 is a long compound AC (re-point plus fixture and four test classes).",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Dispatch scope.",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Express middleware-before-upgrade behaviour.",
+     "evidence": []
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "The FR-HTTP-022 AC-6 re-point is a requirement change; keep the non-upgrade 426 cases under FR-WS-004 AC-1 as stated."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": [
+    "NaruServe-api internal (Dispatcher, MiddlewarePipeline)",
+    "existing tests HttpAcceptanceTest, DispatcherTest re-pointed"
+   ]
+  },
+  {
+   "req_id": "FR-WS-002",
+   "feasibility": "high",
+   "score": 87,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "rationale": "Every TinyHttpd API the ACs name exists: WebSocketHandler(Factory) with allowAnyOrigin/maxFramePayloadBytes/maxMessageBytes/pingInterval(int)/handle; ResponseWrapper is non-final with an overridable upgrade; UpgradedConnection.close() aborts the socket. Handshake checks throw 400/426(+Sec-WebSocket-Version: 13)/400 in that order; 413 and 503(+Retry-After: 5) come from Upgraded.start after Sec-WebSocket-Accept was set, and setHeader(name, null) removes a header so W2-008 is achievable. The current TinyHttpdExchange.upgrade calls start() before the hook; webSocket must not.",
+     "evidence": [
+      "TinyHttpd:websocket/src/main/java/com/snoworca/tinyhttpd/websocket/WebSocketHandler.java:27 Factory, :53 ctor, :67 allowAnyOrigin, :86 maxFramePayloadBytes, :96 maxMessageBytes, :106 pingInterval(int), :112-145 handle",
+      "TinyHttpd:core/src/main/java/com/snoworca/tinyhttpd/http/ResponseWrapper.java:13 class ResponseWrapper, :123 upgrade",
+      "TinyHttpd:core/src/main/java/com/snoworca/tinyhttpd/http/UpgradedConnection.java:46 close()",
+      "TinyHttpd:core/src/main/java/com/snoworca/tinyhttpd/server/Upgraded.java start(): 413 drain, 503 withHeader(Retry-After,5), headers copied into the 101",
+      "TinyHttpd:core/src/main/java/com/snoworca/tinyhttpd/server/ExchangeResponse.java:184-197 setHeader with null removes",
+      "TinyHttpd:core/src/main/java/com/snoworca/tinyhttpd/http/HttpException.java:60 getHeaders",
+      "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdExchange.java:229-237 upgrade() calls start() first",
+      "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdFeatures.java:56-58 throws UnsupportedOperationException naming wave 7"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "TinyHttpdFeatures.java and TinyHttpdExchange.java exist and are the addition sites; build.gradle already declares tinyhttpd-websocket for NaruServe-tinyhttpd only.",
+     "evidence": [
+      "build.gradle:54-56",
+      "build.gradle:256-257 dependency check"
+     ]
+    },
+    "dependency_health": {
+     "score": 11,
+     "rationale": "depends_on IR-WS-002, FR-WS-001; extends IR-ENGINE-001, FR-APP-005, FR-APP-006 verified. Missing edge: AC-3/AC-4 need IR-HTTP-008 (HttpException.withHeader) to carry Sec-WebSocket-Version/Retry-After; AC-4 asserts the FR-WS-003 403 over TinyHttpd without an edge.",
+     "evidence": []
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "Loopback handshake bytes (RFC test vector), statuses and headers are concrete; AC-4 uses a fake TinyHttpd response for 413/503.",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Adapter scope.",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Standard error body for handshake rejections.",
+     "evidence": []
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Add depends_on IR-HTTP-008 (and FR-WS-003 for the AC-4 403 case).",
+    "AC-5 drop mechanism: remove Sec-WebSocket-Accept/Protocol with TinyHttpd Response.setHeader(name, null) before the error path commits.",
+    "maxDrainBytes is a TinyHttpd default (64 KiB, not a NaruServe setting: TinyHttpdAdapter.java:94); the IR-ENGINE-001 extends note should not imply a NaruServe setting.",
+    "TinyHttpd checkout HEAD is 38051b6, three commits past the cited 46b973e (javadoc on UNLIMITED, overflow-safe arithmetic in HttpServer, research note); no WebSocket/upgrade/response behaviour the ACs rely on changed (git diff 46b973e HEAD). Re-verify the wave 7 TinyHttpd tests against 38051b6 or check out 46b973e, and update settings.gradle verifiedTinyHttpd plus the SRS commit citations together."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": [
+    "NaruServe-tinyhttpd (new upgrade class, TinyHttpdFeatures/TinyHttpdExchange)",
+    "TinyHttpd read-only: none"
+   ]
+  },
+  {
+   "req_id": "FR-WS-003",
+   "feasibility": "high",
+   "score": 93,
+   "axes": {
+    "implementability": {
+     "score": 28,
+     "rationale": "Pure core logic between middleware and the extension point; isSecure and Host are already on the exchange/request; TinyHttpd's own check is bypassed with allowAnyOrigin().",
+     "evidence": [
+      "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdExchange.java isSecure()",
+      "TinyHttpd:websocket/src/main/java/com/snoworca/tinyhttpd/websocket/WebSocketHandler.java:67 allowAnyOrigin, originAllowed() admits null/same-origin always"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "Dispatcher.java and DefaultRestApp.java are the right sites.",
+     "evidence": []
+    },
+    "dependency_health": {
+     "score": 13,
+     "rationale": "depends_on IR-WS-001, FR-WS-001; extends FR-APP-006 verified.",
+     "evidence": []
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Concrete Origin/Host pairs with expected 403 or admit; only scheme case-insensitivity (HTTP://) is implied rather than stated.",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Security check in core as designed.",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Blocks cross-site WebSocket hijacking by default.",
+     "evidence": []
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "State in AC-3 that the scheme is compared case-insensitively (the AC's own example uses HTTP://)."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": [
+    "NaruServe-api internal"
+   ]
+  },
+  {
+   "req_id": "FR-WS-004",
+   "feasibility": "high",
+   "score": 89,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "Core already sets both headers; TinyHttpd replaces Connection on non-101 responses exactly as measured, while Upgrade passes through.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:357-360",
+      "TinyHttpd:core/src/main/java/com/snoworca/tinyhttpd/server/ExchangeResponse.java:172-177 Connection header handled as close/ignored"
+     ]
+    },
+    "evidence_strength": {
+     "score": 19,
+     "rationale": "Measured line citations hold at HEAD.",
+     "evidence": []
+    },
+    "dependency_health": {
+     "score": 13,
+     "rationale": "depends_on IR-WS-001; extends FR-ROUTE-016, FR-HTTP-022 verified.",
+     "evidence": []
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "Concrete; AC-3 docs phrase is unnamed ('a fixed phrase').",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 8,
+     "rationale": "By its own rationale it cannot reach verified in wave 7 while the D-020 TinyHttpd gap is open.",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "Correct 426 semantics; TinyHttpd half is a recorded deviation.",
+     "evidence": []
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Open the D-020 TinyHttpd-gap issue (Connection: Upgrade dropped on non-101) at triage; promotion stops at implemented until it closes."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": [
+    "NaruServe-api internal",
+    "docs/api/websocket.md",
+    "TinyHttpd read-only: deferred gap"
+   ]
+  },
+  {
+   "req_id": "FR-WS-005",
+   "feasibility": "high",
+   "score": 89,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "All enforcement exists in TinyHttpd's read loop: unmasked -> 1002, invalid UTF-8 -> 1007, frame > maxFramePayloadBytes -> 1009, continuation total > maxMessageBytes -> 1009, control frame >125 or FIN clear -> 1002, Ping answered with Pong (also between fragments), close handshake; the 4097-byte 2048/2048/1 case trips at the third fragment, the 4096 case passes.",
+     "evidence": [
+      "TinyHttpd:websocket/src/main/java/com/snoworca/tinyhttpd/websocket/WebSocket.java run(): mask check, len>maxFramePayloadBytes, OP_CONT size check, control-frame check, OP_PING pong, OP_CLOSE",
+      "TinyHttpd:websocket/src/main/java/com/snoworca/tinyhttpd/websocket/WebSocket.java decodeText -> Fail(INVALID_PAYLOAD)",
+      "TinyHttpd:websocket/src/main/java/com/snoworca/tinyhttpd/websocket/WebSocket.java:168 ping(byte[]<=125), :181 close(code, reason)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 17,
+     "rationale": "Trace targets (TinyHttpdFeatures, DefaultRestApp) are where the limits are passed; the behaviour itself lives in TinyHttpd, so evidence is end-to-end tests only.",
+     "evidence": []
+    },
+    "dependency_health": {
+     "score": 12,
+     "rationale": "depends_on FR-WS-002, IR-WS-001; AC-8 relies on FR-WS-006 AC-9 (server code wins) with no edge.",
+     "evidence": []
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Byte-level raw-socket tests with exact close codes.",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Protocol scope, no codec (D-302).",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "RFC 6455 compliance.",
+     "evidence": []
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Add depends_on FR-WS-006 for AC-8.",
+    "TinyHttpd keeps delivering data frames after closeSent (WebSocket.run has no closeSent guard on deliver); the core endpoint should drop them after it started a close.",
+    "TinyHttpd checkout HEAD is 38051b6, three commits past the cited 46b973e (javadoc on UNLIMITED, overflow-safe arithmetic in HttpServer, research note); no WebSocket/upgrade/response behaviour the ACs rely on changed (git diff 46b973e HEAD). Re-verify the wave 7 TinyHttpd tests against 38051b6 or check out 46b973e, and update settings.gradle verifiedTinyHttpd plus the SRS commit citations together."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": [
+    "NaruServe-tinyhttpd",
+    "TinyHttpd read-only: relies on websocket module behaviour"
+   ]
+  },
+  {
+   "req_id": "FR-WS-006",
+   "feasibility": "high",
+   "score": 87,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "Core-only session logic; the close-code set matches TinyHttpd's receive check; TinyHttpd truncates long reasons, so the core must validate first as AC-8 says; TinyHttpd reports 1006 when the peer never answers, which motivates AC-9's recorded code.",
+     "evidence": [
+      "TinyHttpd:websocket/src/main/java/com/snoworca/tinyhttpd/websocket/WebSocket.java sendableCloseCode(): 1000-1003, 1007-1014, 3000-4999",
+      "TinyHttpd:websocket/src/main/java/com/snoworca/tinyhttpd/websocket/WebSocket.java:181-190 close() truncates reason to 123 bytes",
+      "TinyHttpd:websocket/src/main/java/com/snoworca/tinyhttpd/websocket/WebSocketListener.java:28-31 onClose code 1006 on drop",
+      "TinyHttpd:websocket/src/main/java/com/snoworca/tinyhttpd/websocket/WebSocket.java run(): RuntimeException -> close 1011 + rethrow"
+     ]
+    },
+    "evidence_strength": {
+     "score": 17,
+     "rationale": "DefaultRestApp.java fits; RequestIds.java as the session-id addition site is plausible but the id is a separate app-wide counter.",
+     "evidence": []
+    },
+    "dependency_health": {
+     "score": 11,
+     "rationale": "depends_on IR-WS-001, IR-WS-002; extends IR-JSON-002 verified. AC-9/AC-10 TinyHttpd cases need FR-WS-002 (no edge); AC-9 asserts the FR-APP-019 close line while FR-APP-019 depends_on this requirement (verification cycle).",
+     "evidence": []
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "Ids, codes and attribute cases are concrete; AC-9 bundles six close scenarios across two adapters.",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Session scope.",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "ws-library-like semantics.",
+     "evidence": []
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Verify and promote together with the requirements its ACs cross-reference (declared graph is acyclic, but AC text creates verification-order cycles; see synthesis.verification_coupling).",
+    "Add depends_on FR-WS-002 for the TinyHttpd cases of AC-9/AC-10."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": [
+    "NaruServe-api internal"
+   ]
+  },
+  {
+   "req_id": "FR-WS-007",
+   "feasibility": "high",
+   "score": 87,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "rationale": "A ThreadPoolExecutor with max threads = maxUpgradedConnections and a per-session serial slot is plain java.util.concurrent; TinyHttpd sends are synchronous under one write lock, and the watchdog aborts a write older than writeTimeout on a 500 ms tick, so AC-5's 2 s release bound holds for writeTimeout 1 s.",
+     "evidence": [
+      "TinyHttpd:websocket/src/main/java/com/snoworca/tinyhttpd/websocket/WebSocket.java sendFrame(): synchronized(writeLock)",
+      "TinyHttpd:core/src/main/java/com/snoworca/tinyhttpd/server/HttpServer.java:379-382 write-timeout abort",
+      "TinyHttpd:core/src/main/java/com/snoworca/tinyhttpd/server/HttpServer.java:357 stateLock.wait(500) watchdog period",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/ServerOptions.java:53-54 maxUpgradedConnections 1..65536 default 128"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "DefaultRestApp.java and Dispatcher.java (wait before finish) are the right sites.",
+     "evidence": []
+    },
+    "dependency_health": {
+     "score": 12,
+     "rationale": "depends_on IR-WS-001, FR-WS-006; extends FR-ENGINE-004 verified; AC-5 over TinyHttpd needs FR-WS-002 (no edge).",
+     "evidence": []
+    },
+    "ac_verifiability": {
+     "score": 12,
+     "rationale": "AC-5 needs sessions whose writes really block on loopback; with the 1 MiB default sendQueueSize and large loopback buffers the queue can overflow (1008) before the socket blocks, so the test must shrink the client receive buffer and detect the blocked write through an internal hook.",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Concurrency scope.",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Slow-peer isolation is a core product need.",
+     "evidence": []
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Add depends_on FR-WS-002.",
+    "AC-5 test: set a small client SO_RCVBUF and stop sending once the internal hook reports the write blocked, so overflow does not end the session first."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": [
+    "NaruServe-api internal (sender executor)"
+   ]
+  },
+  {
+   "req_id": "FR-WS-008",
+   "feasibility": "high",
+   "score": 87,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "TinyHttpd sets the upgraded read timeout to pingInterval, pings after one silent interval and closes 1001 after the next; headerTimeout is a socket deadline answered 408; the idle scheduler is core-only.",
+     "evidence": [
+      "TinyHttpd:websocket/src/main/java/com/snoworca/tinyhttpd/websocket/WebSocket.java run(): setReadTimeout(pingIntervalMillis), SocketTimeoutException -> ping, then close(1001, 'ping timeout')",
+      "TinyHttpd:websocket/src/main/java/com/snoworca/tinyhttpd/websocket/WebSocketHandler.java:106 pingInterval(int millis)",
+      "TinyHttpd:core/src/main/java/com/snoworca/tinyhttpd/server/Connection.java:166 deadline = now + headerTimeout, SocketTimeoutException -> 408"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "DefaultRestApp.java and TinyHttpdFeatures.java are the right sites.",
+     "evidence": []
+    },
+    "dependency_health": {
+     "score": 12,
+     "rationale": "depends_on IR-WS-001, FR-WS-002, FR-WS-007; extends IR-ENGINE-001 verified; AC-2/AC-4 rely on FR-WS-006 AC-9 with no edge.",
+     "evidence": []
+    },
+    "ac_verifiability": {
+     "score": 12,
+     "rationale": "Timing bounds (3 s, 2 s, 100 ms, 1 s+200 ms) are realistic for the measured TinyHttpd loop; AC-7 'disconnected' should state whether a 408 then EOF counts.",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Timeout scope.",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "Pong timeout fixed to ping interval is a recorded limitation.",
+     "evidence": []
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "AC-7: say the client reads the 408 answer and then end of stream within headerTimeout + 1 s.",
+    "Open the two deferred D-020 issues (no Pong callback, no upgrade deadline).",
+    "TinyHttpd checkout HEAD is 38051b6, three commits past the cited 46b973e (javadoc on UNLIMITED, overflow-safe arithmetic in HttpServer, research note); no WebSocket/upgrade/response behaviour the ACs rely on changed (git diff 46b973e HEAD). Re-verify the wave 7 TinyHttpd tests against 38051b6 or check out 46b973e, and update settings.gradle verifiedTinyHttpd plus the SRS commit citations together."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": [
+    "NaruServe-api internal (idle scheduler)",
+    "NaruServe-tinyhttpd",
+    "docs/api"
+   ]
+  },
+  {
+   "req_id": "FR-WS-009",
+   "feasibility": "high",
+   "score": 87,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "rationale": "TinyHttpd counts upgrades and throws 503 + Retry-After beyond the limit; the adapter already maps the limit; registry reservation and closed flag are core-only.",
+     "evidence": [
+      "TinyHttpd:core/src/main/java/com/snoworca/tinyhttpd/server/Upgraded.java start(): upgraded.incrementAndGet() > max -> 503 withHeader(Retry-After, 5)",
+      "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdAdapter.java:113 maxUpgradedConnections mapping"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "DefaultRestApp, Dispatcher and TinyHttpdAdapter paths exist.",
+     "evidence": []
+    },
+    "dependency_health": {
+     "score": 11,
+     "rationale": "depends_on FR-WS-001, FR-WS-002; extends FR-ENGINE-004, FR-APP-013 verified. Missing edge: AC-3's 503 + Connection: close is carried through IR-HTTP-008.",
+     "evidence": []
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "Registry-size assertions and statuses are concrete.",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Limits scope.",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Bounded connections (I-012).",
+     "evidence": []
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Add depends_on IR-HTTP-008."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": [
+    "NaruServe-api internal",
+    "NaruServe-tinyhttpd"
+   ]
+  },
+  {
+   "req_id": "FR-WS-010",
+   "feasibility": "high",
+   "score": 84,
+   "axes": {
+    "implementability": {
+     "score": 25,
+     "rationale": "Abort through UpgradedConnection.close() closes the socket, which makes a blocked write throw; TinyHttpd's stop callback then finds closeSent set and returns. The participant needs the deadline overload, which today does not exist and is owned by FR-APP-020 AC-1.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ShutdownParticipants.java:33 add(Phase, Runnable) only",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:617-619 BEFORE_WAIT before adapter.stop",
+      "TinyHttpd:core/src/main/java/com/snoworca/tinyhttpd/server/Upgraded.java close() -> conn.abortSocket(); fireStop -> callback",
+      "TinyHttpd:websocket/src/main/java/com/snoworca/tinyhttpd/websocket/WebSocket.java run(): onServerStop -> close(1001, 'server stopping')"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "ShutdownParticipants.java and DefaultRestApp.java are the sites.",
+     "evidence": []
+    },
+    "dependency_health": {
+     "score": 10,
+     "rationale": "depends_on FR-WS-007, FR-WS-009, FR-WS-002; extends FR-APP-011, FR-ENGINE-006 verified. AC-5 needs FR-APP-020 AC-1's deadline overload while FR-APP-020 depends_on FR-WS-010 (hidden cycle); AC-7 asserts the FR-APP-019 close line without an edge.",
+     "evidence": []
+    },
+    "ac_verifiability": {
+     "score": 12,
+     "rationale": "Timing bounds (1 s + 200 ms, 300 ms + 200 ms, 100 ms) are realistic; AC-8's thread-name check is ambiguous when several apps run in one JVM unless names carry the app/port.",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Shutdown scope.",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Bounded shutdown (D-344).",
+     "evidence": []
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Move the ShutdownParticipants deadline overload (FR-APP-020 AC-1) into this requirement, or add depends_on FR-APP-020 after moving FR-APP-020's dependency on FR-WS-010 to its T44 ACs only.",
+    "Name the sender and idle threads with the app's port, as naruserve-keeper-<port> and naruserve-<port>-worker-N already do, so AC-8 attributes threads per app.",
+    "Verify and promote together with the requirements its ACs cross-reference (declared graph is acyclic, but AC text creates verification-order cycles; see synthesis.verification_coupling)."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": [
+    "NaruServe-api internal"
+   ]
+  },
+  {
+   "req_id": "OPS-WS-001",
+   "feasibility": "high",
+   "score": 89,
+   "axes": {
+    "implementability": {
+     "score": 28,
+     "rationale": "Docs edits plus docs tests; the SKIPS entries, REASON pattern and WAVE_SIX_MEMBERS check the AC builds on all exist.",
+     "evidence": [
+      "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java:85-87, :92, :126-130 SKIPS entries; :131 REASON; :567 WAVE_SIX_MEMBERS"
+     ]
+    },
+    "evidence_strength": {
+     "score": 19,
+     "rationale": "Every measured marker line matches: websocket.md:34,54,74,97,117; app.md:67,187; defaults.md:25,26,89; express-migration.md:101.",
+     "evidence": []
+    },
+    "dependency_health": {
+     "score": 12,
+     "rationale": "depends_on IR-WS-001, FR-WS-003, FR-WS-008; AC-3 also documents FR-WS-007 overflow, FR-WS-010 late session and FR-WS-004 426 without edges; extends OPS-HTTP-004 verified.",
+     "evidence": []
+    },
+    "ac_verifiability": {
+     "score": 12,
+     "rationale": "AC-6 packs about ten assertions into one AC; 'fixed phrase' is chosen by the implementer.",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Docs scope.",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "Required by the CLAUDE.md docs rule.",
+     "evidence": []
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Split AC-6 into the SKIPS changes and the WAVE_SEVEN_MEMBERS check.",
+    "Add depends_on FR-WS-007, FR-WS-010, FR-WS-004."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": [
+    "docs/api",
+    "root src/test docs tests",
+    "NaruServe-api Kotlin test"
+   ]
+  },
+  {
+   "req_id": "IR-SSE-001",
+   "feasibility": "high",
+   "score": 91,
+   "axes": {
+    "implementability": {
+     "score": 28,
+     "rationale": "default sse() follows the existing add-only default-method pattern; lastEventId already exists.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/Response.java:9 'No sse method yet', :55 default json, :66 default addCookie",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java:47 lastEventId()"
+     ]
+    },
+    "evidence_strength": {
+     "score": 19,
+     "rationale": "Response.java, RestApp.java, DefaultResponse.java exist; HttpApiSurfaceTest LATER_WAVE_NAMES holds 'sse'.",
+     "evidence": [
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java:30"
+     ]
+    },
+    "dependency_health": {
+     "score": 12,
+     "rationale": "No depends_on; extends IR-APP-007, FR-APP-002, FR-HTTP-016 verified. AC-2's false-return cases (overflow, HEAD) and AC-7's send against the in-memory adapter need FR-SSE-001/002/004.",
+     "evidence": []
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "Reflection and range checks are concrete.",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "API scope with some behaviour definition.",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Express-friendly SSE API.",
+     "evidence": []
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Verify and promote together with the requirements its ACs cross-reference (declared graph is acyclic, but AC text creates verification-order cycles; see synthesis.verification_coupling)."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": [
+    "NaruServe-api (Response, RestApp, new SseClient/SseEvent/SseOptions)"
+   ]
+  },
+  {
+   "req_id": "FR-SSE-001",
+   "feasibility": "high",
+   "score": 91,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "Serialisation is core-only; the STREAMING state and single-commit rule exist in DefaultResponse.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java:410 state = STREAMING, :561-569 after-handler rule"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "DefaultResponse.java and Response.java are the sites.",
+     "evidence": []
+    },
+    "dependency_health": {
+     "score": 12,
+     "rationale": "depends_on IR-SSE-001; extends FR-HTTP-016, FR-HTTP-011, FR-HTTP-015 verified. AC-1 'over TinyHttpd' needs FR-SSE-003, which depends (via FR-SSE-002) on this requirement.",
+     "evidence": []
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Byte-exact expectations.",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Serialisation scope.",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "WHATWG-compatible framing.",
+     "evidence": []
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Verify AC-1's TinyHttpd half together with FR-SSE-003."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": [
+    "NaruServe-api internal"
+   ]
+  },
+  {
+   "req_id": "FR-SSE-002",
+   "feasibility": "medium",
+   "score": 75,
+   "axes": {
+    "implementability": {
+     "score": 18,
+     "rationale": "Queue, drain loop, heartbeat and overflow are core-only and feasible. The handler-thread 'straight write before the drain starts' (AC-5, AC-6) has no stream to write to on TinyHttpd under the frozen add-only SPI. SPI gap (substantiated): NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpExchange.java:89 eventStream(int, List, StreamDrain) returns void and spi/StreamDrain.java:13 drain(OutputStream) is the only place the core receives the stream; on TinyHttpd the drain is run only after the handler returned (FR-SSE-003 AC-2), and IR-HTTP-007 AC-4 / IR-WS-002 AC-5 allow no SPI member besides HttpExchange.webSocket and the three WebSocket types. So a handler-thread send 'straight to the committed stream' before the drain starts has no stream to write to on TinyHttpd; only an unbounded pre-drain buffer (contradicts socket pacing and I-012) or a non-SPI back channel would pass the ACs.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpExchange.java:89 void eventStream(int, List, StreamDrain)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/StreamDrain.java:13 void drain(OutputStream out)",
+      "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdExchange.java:30-35 run(): handler.handle(ex) then await",
+      "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/InMemoryHttpAdapter.java:489-500 in-memory eventStream starts the drain at once on its own worker"
+     ]
+    },
+    "evidence_strength": {
+     "score": 16,
+     "rationale": "StreamDrain.java and DefaultResponse.java are the right sites, but the cited trace is the point that lacks the needed channel.",
+     "evidence": []
+    },
+    "dependency_health": {
+     "score": 11,
+     "rationale": "depends_on IR-SSE-001, FR-SSE-001; extends IR-HTTP-003 verified. AC-5 over TinyHttpd needs FR-SSE-003, which depends on this requirement.",
+     "evidence": []
+    },
+    "ac_verifiability": {
+     "score": 12,
+     "rationale": "AC-1..AC-4, AC-7 concrete; AC-5/AC-6 pass even with an unbounded pre-drain buffer, so they don't check the 'paced by the socket' intent. On the in-memory adapter the drain starts at once, so the pre-drain window only exists on TinyHttpd.",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Queue scope.",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "Replay inside the handler is a real use case.",
+     "evidence": []
+    }
+   },
+   "blockers": [
+    "SPI gap (substantiated): NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpExchange.java:89 eventStream(int, List, StreamDrain) returns void and spi/StreamDrain.java:13 drain(OutputStream) is the only place the core receives the stream; on TinyHttpd the drain is run only after the handler returned (FR-SSE-003 AC-2), and IR-HTTP-007 AC-4 / IR-WS-002 AC-5 allow no SPI member besides HttpExchange.webSocket and the three WebSocket types. So a handler-thread send 'straight to the committed stream' before the drain starts has no stream to write to on TinyHttpd; only an unbounded pre-drain buffer (contradicts socket pacing and I-012) or a non-SPI back channel would pass the ACs."
+   ],
+   "conditions": [
+    "Resolve the SSE pre-drain stream channel in the SDS before coding, and amend IR-HTTP-007 AC-4 and IR-WS-002 AC-5 if the fix adds an SPI member."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": [
+    "NaruServe-api spi (possible add-only member)",
+    "NaruServe-api internal",
+    "NaruServe-tinyhttpd"
+   ]
+  },
+  {
+   "req_id": "FR-SSE-003",
+   "feasibility": "medium",
+   "score": 79,
+   "axes": {
+    "implementability": {
+     "score": 20,
+     "rationale": "TinyHttpd Response.setHeader, flushBuffer and getOutputStream exist, and a HTTP/1.1 body without Content-Length is chunked. Running the drain after the handler in TinyHttpdExchange.run and the NaruServe counter are straightforward. AC-6's 'every handler-thread write before the drain starts' has the same missing SPI channel as FR-SSE-002.",
+     "evidence": [
+      "TinyHttpd:core/src/main/java/com/snoworca/tinyhttpd/http/Response.java:38 setHeader, :92 flushBuffer, :128 getOutputStream, :174 startEventStream (unused)",
+      "TinyHttpd:core/src/main/java/com/snoworca/tinyhttpd/server/ExchangeResponse.java:447 chunked when no length on HTTP/1.1",
+      "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdFeatures.java:51-53 eventStream throws naming wave 7",
+      "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdExchange.java:240-248 synchronized eventStream with start()",
+      "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdAdapter.java:110-111 pool = maxWorkers + maxSseStreams, maxEventStreams mapped"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "TinyHttpdFeatures.java and TinyHttpdExchange.java are the addition sites; the measured lines hold.",
+     "evidence": []
+    },
+    "dependency_health": {
+     "score": 10,
+     "rationale": "depends_on FR-SSE-002, FR-ENGINE-011; extends FR-ENGINE-004, FR-APP-005 verified. FR-ENGINE-011 AC-2 asserts this requirement's behaviour (verification cycle); AC-7 reads the FR-APP-019 cause=client line, and FR-APP-019 depends on FR-SSE-004, which depends on this requirement.",
+     "evidence": []
+    },
+    "ac_verifiability": {
+     "score": 12,
+     "rationale": "AC-3 with maxWorkers(2)/maxSseStreams(3) and AC-7's two-heartbeats-plus-1 s bound are realistic (TCP: the first write after the peer closed succeeds, the next fails); AC-6 needs the resolved write path.",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Adapter scope.",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Avoids TinyHttpd's fixed Cache-Control/retry block (D-335).",
+     "evidence": []
+    }
+   },
+   "blockers": [
+    "Same SPI channel gap as FR-SSE-002 for AC-6's handler-thread writes before the drain starts: NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpExchange.java:89 returns void and the stream reaches the core only through spi/StreamDrain.java:13, which TinyHttpd runs after the handler returned."
+   ],
+   "conditions": [
+    "The drain must flush after each event and heartbeat; TinyHttpd buffers output (ExchangeResponse flushOut), and AC-7's disconnect detection relies on real socket writes.",
+    "Verify and promote together with the requirements its ACs cross-reference (declared graph is acyclic, but AC text creates verification-order cycles; see synthesis.verification_coupling).",
+    "TinyHttpd checkout HEAD is 38051b6, three commits past the cited 46b973e (javadoc on UNLIMITED, overflow-safe arithmetic in HttpServer, research note); no WebSocket/upgrade/response behaviour the ACs rely on changed (git diff 46b973e HEAD). Re-verify the wave 7 TinyHttpd tests against 38051b6 or check out 46b973e, and update settings.gradle verifiedTinyHttpd plus the SRS commit citations together."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": [
+    "NaruServe-tinyhttpd",
+    "TinyHttpd read-only: startEventStream deliberately unused"
+   ]
+  },
+  {
+   "req_id": "FR-SSE-004",
+   "feasibility": "high",
+   "score": 86,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "rationale": "The request mark is thread-local, so the drain thread can enter and leave it itself; HEAD bodyless framing exists in TinyHttpd.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/AppLifecycle.java:110-116 enterRequest/exitRequest (ThreadLocal)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/GatedExchangeHandler.java:46-50",
+      "TinyHttpd:core/src/main/java/com/snoworca/tinyhttpd/server/ExchangeResponse.java:439 HEAD discard"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "DefaultResponse.java and GatedExchangeHandler.java are the sites.",
+     "evidence": []
+    },
+    "dependency_health": {
+     "score": 11,
+     "rationale": "depends_on FR-SSE-002, FR-SSE-003; extends FR-HTTP-017, IR-APP-004, FR-APP-011 verified. AC-2/AC-5 assert the FR-APP-019 line while FR-APP-019 depends_on this requirement.",
+     "evidence": []
+    },
+    "ac_verifiability": {
+     "score": 12,
+     "rationale": "Concrete; AC-8's 500 ms bound is reasonable.",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Lifetime scope.",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Express-like req.on('close') semantics.",
+     "evidence": []
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Verify and promote together with the requirements its ACs cross-reference (declared graph is acyclic, but AC text creates verification-order cycles; see synthesis.verification_coupling)."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": [
+    "NaruServe-api internal"
+   ]
+  },
+  {
+   "req_id": "FR-SSE-005",
+   "feasibility": "high",
+   "score": 86,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "rationale": "The BEFORE_WAIT phase runs before adapter.stop; TinyHttpd stop aborts every remaining socket at the deadline, so a stalled drain write fails and the worker returns.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ShutdownParticipants.java:19-26 Phase.BEFORE_WAIT",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:617-619",
+      "TinyHttpd:core/src/main/java/com/snoworca/tinyhttpd/server/HttpServer.java stop(): onServerStopping loop until deadline, then abortSocket for all"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "ShutdownParticipants.java and DefaultRestApp.java are the sites.",
+     "evidence": []
+    },
+    "dependency_health": {
+     "score": 11,
+     "rationale": "depends_on FR-SSE-002, FR-SSE-004; extends FR-APP-011, FR-ENGINE-006 verified. AC-5 asserts FR-APP-019 cause=shutdown, and FR-APP-019 AC-10 asserts this AC (2-cycle in verification).",
+     "evidence": []
+    },
+    "ac_verifiability": {
+     "score": 12,
+     "rationale": "AC-4's 200 ms with 50 streams is realistic; AC-5 depends on adapter force-close timing.",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Shutdown scope.",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Clients can tell shutdown from failure.",
+     "evidence": []
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Verify and promote together with the requirements its ACs cross-reference (declared graph is acyclic, but AC text creates verification-order cycles; see synthesis.verification_coupling)."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": [
+    "NaruServe-api internal"
+   ]
+  },
+  {
+   "req_id": "OPS-SSE-001",
+   "feasibility": "high",
+   "score": 86,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "rationale": "Docs edits plus tests; AC-3 must describe the handler-thread write deviation whose mechanism is still unresolved (FR-SSE-002).",
+     "evidence": [
+      "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java:122-125 sse.md SKIPS"
+     ]
+    },
+    "evidence_strength": {
+     "score": 19,
+     "rationale": "sse.md:35,47,49,95 and defaults.md:27 markers match the measured lines.",
+     "evidence": []
+    },
+    "dependency_health": {
+     "score": 12,
+     "rationale": "depends_on IR-SSE-001, FR-SSE-002, FR-SSE-005; extends OPS-HTTP-004 verified; also documents FR-SSE-004 (HEAD, onClose after end) without an edge.",
+     "evidence": []
+    },
+    "ac_verifiability": {
+     "score": 11,
+     "rationale": "AC-4 fixes only the `client.send(SseEvent.event(\"progress\")` entry; the other three sse.md skips ('#1', the /api/progress block, '#4', all 'later-wave method `Response.sse()`') have no stated outcome (compile, or re-reason with which app-defined type).",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Docs scope.",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "CLAUDE.md docs rule.",
+     "evidence": []
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "AC-4: state for each of the sse.md skips '#1', 'app.get(\"/api/progress\"...' and '#4' whether it is dropped (block compiles) or re-reasoned, and with which app-defined type."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": [
+    "docs/api/sse.md, defaults.md",
+    "root src/test docs tests"
+   ]
+  },
+  {
+   "req_id": "FR-APP-019",
+   "feasibility": "high",
+   "score": 89,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "AccessLog already formats and writes the D-173 line once; the 101, WS close and SSE end lines are extra calls with known fields.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/AccessLog.java:51-58 write(...), :82 format(...)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 19,
+     "rationale": "AccessLog, Dispatcher, DefaultResponse exist; the re-point lists name concrete tests.",
+     "evidence": []
+    },
+    "dependency_health": {
+     "score": 11,
+     "rationale": "depends_on FR-WS-006, FR-SSE-004; extends IR-APP-007, FR-APP-006 verified; supersedes FR-APP-015 (discarded). AC-9 (1001 at shutdown) needs FR-WS-010 and AC-10 (cause=shutdown over TinyHttpd) needs FR-SSE-005, while those requirements assert this line: verification cycles.",
+     "evidence": []
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "Regex line forms are concrete; AC-10 is long but every cause has a named test.",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Logging scope.",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Operational visibility of long connections.",
+     "evidence": []
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Verify and promote together with the requirements its ACs cross-reference (declared graph is acyclic, but AC text creates verification-order cycles; see synthesis.verification_coupling).",
+    "Several non-wave-7 requirements still link to discarded FR-APP-015 (05.application.srs.md:2089 SEC-APP-001 depends_on; 04.http-core.srs.md:3103; 10.static-files.srs.md:334); re-point them to FR-APP-019 in a separate sdd change."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": [
+    "NaruServe-api internal (AccessLog)",
+    "existing AccessLog tests re-pointed"
+   ]
+  },
+  {
+   "req_id": "FR-APP-020",
+   "feasibility": "high",
+   "score": 85,
+   "axes": {
+    "implementability": {
+     "score": 25,
+     "rationale": "The deadline overload is a package-private add; the 3 s margin matches TinyHttpd stop exactly (acceptor join 1000 ms + awaitWorkers 500 ms) plus the 1 s release; TinyHttpd stop closes listeners before onServerStopping, so running participants first keeps accepting as the deviation states.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ShutdownParticipants.java:33",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:544 deadline, :610-636 sequence",
+      "TinyHttpd:core/src/main/java/com/snoworca/tinyhttpd/server/HttpServer.java stop(): close bound sockets, onServerStopping, acceptor.join(1000), pool.awaitWorkers(500)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:119 AFTER_ON_STOP spool cleanup exists"
+     ]
+    },
+    "evidence_strength": {
+     "score": 19,
+     "rationale": "ShutdownParticipants, DefaultRestApp and docs/api/lifecycle.md exist.",
+     "evidence": []
+    },
+    "dependency_health": {
+     "score": 10,
+     "rationale": "depends_on FR-WS-010, FR-SSE-005, FR-WS-009; extends FR-APP-011, FR-APP-013, FR-ENGINE-006 verified. AC-1 is a prerequisite of FR-WS-010 AC-5 (inverse edge -> hidden cycle); AC-3/AC-4's 503 + Connection: close goes through IR-HTTP-008 without an edge.",
+     "evidence": []
+    },
+    "ac_verifiability": {
+     "score": 12,
+     "rationale": "Bounds are realistic. AC-9's 'threads belonging to its TinyHttpd server' has no clean discriminator: workers are naruserve-<port>-worker-N and the acceptor is tinyhttpd-acceptor-<port>, but the watchdog name tinyhttpd-watchdog is shared by every app.",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Coordination scope.",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Bounded shutdown (D-344).",
+     "evidence": []
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Move AC-1 to FR-WS-010 (or a separate requirement) to break the hidden cycle.",
+    "Add depends_on IR-HTTP-008.",
+    "AC-9: count TinyHttpd threads as tinyhttpd-acceptor-<port> plus the single tinyhttpd-watchdog, run in an isolated test JVM or fork."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": [
+    "NaruServe-api internal",
+    "docs/api/lifecycle.md",
+    "NaruServe-tinyhttpd (T44 socket tests)"
+   ]
+  },
+  {
+   "req_id": "PERF-APP-001",
+   "feasibility": "high",
+   "score": 84,
+   "axes": {
+    "implementability": {
+     "score": 25,
+     "rationale": "The thread arithmetic matches the code: pool = maxWorkers + maxSseStreams; a WebSocket keeps its worker thread, detached from the pool budget; Thread(group, r, name, stackSize) is Java 8/API 21. The heap delta after System.gc() is inherently noisy, though the 64 MiB bound is generous.",
+     "evidence": [
+      "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdAdapter.java:110 maxWorkers(s.maxWorkers() + s.maxSseStreams())",
+      "TinyHttpd:core/src/main/java/com/snoworca/tinyhttpd/server/Upgraded.java start(): server.pool.detach(c.worker)",
+      "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/WorkerThreadFactory.java:44-52 naruserve-<port>-worker-N with STACK_BYTES",
+      "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/KeeperThread.java:20-27 naruserve-keeper-<port>"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "ServerOptions, TinyHttpdAdapter and defaults.md are the sites.",
+     "evidence": []
+    },
+    "dependency_health": {
+     "score": 12,
+     "rationale": "depends_on FR-WS-007, FR-WS-008, FR-SSE-003; extends FR-ENGINE-004, FR-ENGINE-006 verified; inherits FR-SSE-003's open SPI question.",
+     "evidence": []
+    },
+    "ac_verifiability": {
+     "score": 11,
+     "rationale": "The rationale counts TinyHttpd threads 'by the TinyHttpd thread group', but none exists: TinyHttpd creates acceptor/watchdog with the default group and NaruServe supplies the worker factory. AC-3's stack size has no Thread getter, so it must be read from the factory.",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Load scope; D-347 handled as a documented manual follow-up.",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "Android 5.0 resource bounds.",
+     "evidence": []
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Replace 'by the TinyHttpd thread group' with name-based counting (naruserve-*, tinyhttpd-acceptor-<port>, tinyhttpd-watchdog) in an isolated JVM fork.",
+    "Expose the requested stack size from the sender/idle thread factories through an internal hook for AC-3."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": [
+    "NaruServe-api",
+    "NaruServe-tinyhttpd",
+    "docs/api/defaults.md"
+   ]
+  },
+  {
+   "req_id": "OPS-APP-005",
+   "feasibility": "high",
+   "score": 90,
+   "axes": {
+    "implementability": {
+     "score": 28,
+     "rationale": "Docs plus AppDocsTest list edits; anchors exist.",
+     "evidence": [
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/AppDocsTest.java:51-55 KEPT map, :168 wsMarkersSitOnTheirOwnLines",
+      "docs/api/app.md:212 step 2 goodbye sentence, :219 '2단계(진행 중인 요청을 기다리는 시간)'"
+     ]
+    },
+    "evidence_strength": {
+     "score": 19,
+     "rationale": "Measured lines match.",
+     "evidence": []
+    },
+    "dependency_health": {
+     "score": 12,
+     "rationale": "depends_on OPS-WS-001, OPS-SSE-001, FR-APP-020, FR-APP-019; supersedes OPS-APP-004 (discarded); extends FR-ENGINE-006 verified.",
+     "evidence": []
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "Kept/removed lists are explicit; AC-8's `2~4단계` is concrete.",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Docs scope.",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "CLAUDE.md docs rule.",
+     "evidence": []
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "express-migration.md also carries (미확정) on res.type (:73), res.render (:74) and :303; they are outside the KEPT guard. Confirm they are intended to stay unguarded."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": [
+    "docs/api",
+    "NaruServe-api AppDocsTest"
+   ]
+  },
+  {
+   "req_id": "FR-ENGINE-011",
+   "feasibility": "high",
+   "score": 86,
+   "axes": {
+    "implementability": {
+     "score": 25,
+     "rationale": "Changing the package-private hooks to take the exchange is allowed (D-210). The current eventStream/upgrade are synchronized and call start() for the whole call, so webSocket must take the lock only around the start bookkeeping (AC-3). AC-2's eventStream half inherits FR-SSE-003's open write path.",
+     "evidence": [
+      "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdFeatures.java:51-58 both hooks throw naming wave 7",
+      "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdExchange.java:229-248 synchronized upgrade/eventStream",
+      "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdExchange.java:207-212 unsupported() resets started"
+     ]
+    },
+    "evidence_strength": {
+     "score": 19,
+     "rationale": "Sites exist; the replaced test exists by name.",
+     "evidence": [
+      "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/AdapterSurfaceTest.java:181"
+     ]
+    },
+    "dependency_health": {
+     "score": 11,
+     "rationale": "depends_on IR-HTTP-007; extends FR-ENGINE-004, IR-HTTP-003 verified; supersedes FR-ENGINE-010 (discarded). AC-2 asserts FR-SSE-003/FR-WS-002 behaviour while FR-SSE-003 depends_on this requirement.",
+     "evidence": []
+    },
+    "ac_verifiability": {
+     "score": 12,
+     "rationale": "AC-2 re-states many wave-6 decisions inside one AC; AC-3's 100 ms lock probe is concrete.",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Adapter scope.",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Keeps engine types confined.",
+     "evidence": []
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Do the hook-signature change (AC-3) first; verify AC-2 together with FR-SSE-003 and FR-WS-002.",
+    "TinyHttpd checkout HEAD is 38051b6, three commits past the cited 46b973e (javadoc on UNLIMITED, overflow-safe arithmetic in HttpServer, research note); no WebSocket/upgrade/response behaviour the ACs rely on changed (git diff 46b973e HEAD). Re-verify the wave 7 TinyHttpd tests against 38051b6 or check out 46b973e, and update settings.gradle verifiedTinyHttpd plus the SRS commit citations together."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": [
+    "NaruServe-tinyhttpd"
+   ]
+  },
+  {
+   "req_id": "OPS-ENGINE-002",
+   "feasibility": "high",
+   "score": 91,
+   "axes": {
+    "implementability": {
+     "score": 28,
+     "rationale": "Docs edits plus kept->settled changes in WaveFiveDocsTest.",
+     "evidence": [
+      "src/test/java/com/snoworca/naruserve/docs/WaveFiveDocsTest.java:410, :419-421 kept(...) calls",
+      "docs/api/websocket.md:117 marker row"
+     ]
+    },
+    "evidence_strength": {
+     "score": 19,
+     "rationale": "Measured lines match exactly.",
+     "evidence": []
+    },
+    "dependency_health": {
+     "score": 13,
+     "rationale": "depends_on OPS-WS-001, OPS-SSE-001; extends IR-ENGINE-001, OPS-HTTP-004 verified; supersedes OPS-ENGINE-001 (discarded).",
+     "evidence": []
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "Named kept/settled phrases; first-match 무제한 pitfall stated (defaults.md:3).",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Docs scope.",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "CLAUDE.md docs rule.",
+     "evidence": []
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": [
+    "docs/api",
+    "root src/test WaveFiveDocsTest"
+   ]
+  },
+  {
+   "req_id": "IR-HTTP-007",
+   "feasibility": "high",
+   "score": 88,
+   "axes": {
+    "implementability": {
+     "score": 25,
+     "rationale": "The signature-baseline test is feasible: the SPI is unchanged since 40b9665 and commit 9ce5cc4 exists. But AC-4's closed list of wave 7 additions leaves no room for the channel FR-SSE-002/003 need.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpExchange.java",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpAdapter.java",
+      "git cat-file -t 9ce5cc4 / 40b9665 -> commit"
+     ]
+    },
+    "evidence_strength": {
+     "score": 19,
+     "rationale": "Both trace files exist; HttpAdapterSpiTest is the re-point target.",
+     "evidence": []
+    },
+    "dependency_health": {
+     "score": 13,
+     "rationale": "depends_on IR-WS-002; extends IR-HTTP-003 verified; supersedes IR-HTTP-004 (discarded).",
+     "evidence": []
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "The baseline must be a hard-coded signature list in the test (a test cannot read a git commit at runtime).",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "SPI scope.",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "Adapter compatibility.",
+     "evidence": []
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "If the SSE gap is fixed with an SPI member, extend AC-4's allowed list in the same change.",
+    "Write the baseline as a checked-in signature list taken from 9ce5cc4."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": [
+    "NaruServe-api spi"
+   ]
+  },
+  {
+   "req_id": "IR-HTTP-008",
+   "feasibility": "high",
+   "score": 95,
+   "axes": {
+    "implementability": {
+     "score": 28,
+     "rationale": "HttpException is a RuntimeException with no header state today; the add-only methods and the error-path apply step are small. On TinyHttpd, Connection: close sets closeRequested (AC-6). Transfer-Encoding via setHeader throws, which is a further reason for AC-7's skip.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/HttpException.java:8-37 constructors, status(), code()",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ErrorPath.java",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StandardErrors.java",
+      "TinyHttpd:core/src/main/java/com/snoworca/tinyhttpd/server/ExchangeResponse.java:169-176 Transfer-Encoding throws, Connection: close -> closeRequested"
+     ]
+    },
+    "evidence_strength": {
+     "score": 19,
+     "rationale": "All three trace files exist.",
+     "evidence": []
+    },
+    "dependency_health": {
+     "score": 14,
+     "rationale": "No depends_on; extends IR-APP-003, FR-APP-005, FR-HTTP-015 verified.",
+     "evidence": []
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Byte-for-byte and header-order checks.",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Error-path scope.",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Mirrors Express finalhandler err.headers.",
+     "evidence": []
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": [
+    "NaruServe-api (HttpException, ErrorPath, StandardErrors)"
+   ]
+  },
+  {
+   "req_id": "OPS-HTTP-007",
+   "feasibility": "high",
+   "score": 90,
+   "axes": {
+    "implementability": {
+     "score": 28,
+     "rationale": "Docs plus HttpDocsTest method renames and two new checks.",
+     "evidence": [
+      "docs/api/defaults.md:25-27, :89",
+      "docs/api/response.md:141",
+      "docs/api/express-migration.md:28, :72, :88"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "Measured marker lines hold; middleware.md documents HttpException at :161-173.",
+     "evidence": []
+    },
+    "dependency_health": {
+     "score": 13,
+     "rationale": "depends_on IR-HTTP-008, OPS-WS-001, OPS-SSE-001; extends OPS-HTTP-004 verified; supersedes OPS-HTTP-006 (discarded).",
+     "evidence": []
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "Explicit marker states.",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Docs scope.",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "CLAUDE.md docs rule.",
+     "evidence": []
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": [
+    "docs/api",
+    "NaruServe-api HttpDocsTest"
+   ]
+  }
+ ]
+}

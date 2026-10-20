@@ -1,0 +1,329 @@
+{
+ "findings": [
+  {
+   "id": "G1-001",
+   "axis": "P7",
+   "severity": "LOW",
+   "title": "CallbackMatrixKotlinTest completeness check depends on test order and sibling success",
+   "location": {
+    "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/CallbackMatrixKotlinTest.kt",
+    "line_range": "187-191"
+   },
+   "description": "Test 'z every CALLBACK_TYPES interface was exercised' compares the static 'exercised' set, which is filled only by the other five tests of the class (relies on @FixMethodOrder NAME_ASCENDING). Run alone or with a --tests filter it fails with a misleading set difference, and when any earlier test fails it adds a second, derived failure that hides which interface was not reached.",
+   "suggested_fix": "Make the completeness check independent: assert inside each test (or in an @AfterClass) only for the interfaces that test owns, or have each test return the set of hit() names and compare their union in one test that calls them itself.",
+   "is_behavioral": false,
+   "tags": [
+    "style"
+   ]
+  },
+  {
+   "id": "G1-002",
+   "axis": "P7",
+   "severity": "LOW",
+   "title": "KotlinSurfaceKotlinTest never runs the WebSocketSession call it claims to exercise",
+   "location": {
+    "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/KotlinSurfaceKotlinTest.kt",
+    "line_range": "20-20"
+   },
+   "description": "FR-KT-002 AC-3 asks for a Kotlin call of one method of WebSocketSession. The test only registers app.ws(\"/ws\") { _, ws -> ws.onText { ... } }; no WebSocket session is opened, so the lambda holding ws.onText/ws.sendText is compiled but never executed. The check is compile-only for that type, unlike the other four types, and the test name says the types are used without a backtick.",
+   "suggested_fix": "Open a session through InMemoryHttpAdapter (as CallbackMatrixKotlinTest does) and assert the echoed frame, or state in the test that WebSocketSession is covered at compile time only.",
+   "is_behavioral": false,
+   "tags": [
+    "style"
+   ]
+  },
+  {
+   "id": "G1-003",
+   "axis": "P7",
+   "severity": "LOW",
+   "title": "Docs tests locate files through user.dir-relative paths and one exact-indent source literal",
+   "location": {
+    "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/KotlinDocsExamplesKotlinTest.kt",
+    "line_range": "783-786"
+   },
+   "description": "KotlinAccessorTable.rows (line 24), NullableAccessorDocsTest.kotlinSource (22-23), KotlinDocsMarkersTest.root (25-27) and the negative test at KotlinDocsExamplesKotlinTest 783-787 read docs/api and test sources from System.getProperty(\"user.dir\") plus '../' or a module-relative path, so they work only when the test JVM starts in the module directory (Gradle default; IDE or a changed workingDir breaks them). The negative test also asserts source.contains of a line with exactly 12 leading spaces, so a pure reformat of the kotlin.md#4 test fails it with an unrelated assertion.",
+   "suggested_fix": "Pass the repository root and module directory as system properties from build.gradle (like naruserve.apiJar) and build paths from them; match the removed line after whitespace normalisation instead of an exact-indent literal.",
+   "is_behavioral": false,
+   "tags": [
+    "style"
+   ]
+  },
+  {
+   "id": "G1-004",
+   "axis": "P7",
+   "severity": "LOW",
+   "title": "Marker check accepts trivial block lines and an unconstrained adapted comment",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/KotlinDocsMarkers.java",
+    "line_range": "104-125"
+   },
+   "description": "missingLine returns null (block fully accepted) as soon as any '// adapted: <text>' line sits in the extent (line 107), with no check of the reason; 9 of the 47 blocks use it. For the others a block line only has to equal some extent line in any order, so lines such as '}' or '})' match anything and a block can lose its substance without a failure. The extent of the last marker of a file also runs to the end of the source.",
+   "suggested_fix": "Ignore pure-brace lines when computing the missing set, require each adapted block to still match at least its first non-trivial line, and end an extent at the next top-level @Test/fun boundary.",
+   "is_behavioral": false,
+   "tags": [
+    "style"
+   ]
+  }
+ ],
+ "coverage_rows": [
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/ApiJarClasses.java",
+   "hunks_total": 1,
+   "anchors": [
+    "* Classes of the main jar named by {@code naruserve.apiJar}, never the test class path, which also holds classes of"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/CallbackInventory.java",
+   "hunks_total": 1,
+   "anchors": [
+    "final class CallbackInventory {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/CallbackInventoryTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class CallbackInventoryTest {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/CookiePropertiesTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class CookiePropertiesTest {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java",
+   "hunks_total": 29,
+   "anchors": [
+    "/** Wave 3 decisions recorded in docs/api (OPS-HTTP-008); routing.md keeps no marker, checked by RoutingDocsTest. */",
+    "/** The response.md statement that res.redirect is a post-v1 item (OPS-HTTP-008 AC-8). */",
+    "// OPS-HTTP-008 AC-1",
+    "public void OPS_HTTP_008_AC1_rawPathRowIsRawPathWithoutQuery() throws IOException {",
+    "// OPS-HTTP-008 AC-2",
+    "public void OPS_HTTP_008_AC2_attributeTypeMismatchAndNullRemoval() throws IOException {",
+    "// SDS-AC-6; OPS-HTTP-008 AC-8",
+    "public void sdsAc6_OPS_HTTP_008_AC8_requestKeepsNoMarker() throws IOException {",
+    "// OPS-HTTP-008 AC-3",
+    "public void OPS_HTTP_008_AC3_octetStreamAndStreamClosing() throws IOException {",
+    "// SDS-AC-6; OPS-HTTP-007 AC-8",
+    "public void sdsAc6_OPS_HTTP_008_AC8_responseKeepsNoMarker() throws IOException {",
+    "assertTrue(m.toString(), m.isEmpty());",
+    "// OPS-HTTP-008 AC-4",
+    "public void OPS_HTTP_008_AC4_routerPolicyDocumented() throws IOException {",
+    "// OPS-HTTP-008 AC-7",
+    "public void OPS_HTTP_008_AC7_expressRawPathAndRawTextMapping() throws IOException {",
+    "007",
+    "public void sdsAc6_OPS_HTTP_008_AC8_expressKeepsOtherIssuesMarkers() throws IOException {",
+    "// OPS-HTTP-008 AC-5",
+    "public void OPS_HTTP_008_AC5_appListsRouterPolicy() throws IOException {",
+    "// OPS-HTTP-008 AC-6",
+    "public void OPS_HTTP_008_AC6_defaultsNamesTraceConnectPolicy() throws IOException {",
+    "008",
+    "public void sdsAc6_OPS_HTTP_008_AC8_routingKeepsNoMarker() throws IOException {",
+    "// SDS-AC-12 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-13.sds.md; OPS-HTTP-008 AC-8: wave 7 settles",
+    "public void OPS_HTTP_008_AC8_defaultsWaveSevenRowsKeepNoMarker() throws IOException {",
+    "// SDS-AC-13 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-13.sds.md; OPS-HTTP-008 AC-9: middleware.md",
+    "public void OPS_HTTP_008_AC9_middlewareDocumentsWithHeader() throws IOException {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/KotlinAccessorTable.java",
+   "hunks_total": 1,
+   "anchors": [
+    "final class KotlinAccessorTable {"
+   ],
+   "findings": [
+    "G1-003"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/KotlinContractChecks.java",
+   "hunks_total": 1,
+   "anchors": [
+    "final class KotlinContractChecks {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/KotlinContractFixtures.java",
+   "hunks_total": 1,
+   "anchors": [
+    "/** Negative fixtures of {@link KotlinContractChecks}; they live on the test class path, never in the api jar. */"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/KotlinDocsMarkers.java",
+   "hunks_total": 1,
+   "anchors": [
+    "final class KotlinDocsMarkers {"
+   ],
+   "findings": [
+    "G1-004"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/KotlinDocsMarkersTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public final class KotlinDocsMarkersTest {"
+   ],
+   "findings": [
+    "G1-003"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/KotlinKeywordsTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class KotlinKeywordsTest {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/KotlinNullabilityTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class KotlinNullabilityTest {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/NullableAccessorDocsTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class NullableAccessorDocsTest {"
+   ],
+   "findings": [
+    "G1-003"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/CallbackMatrix.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "object CallbackMatrix {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/CallbackMatrixKotlinTest.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "class CallbackMatrixKotlinTest {"
+   ],
+   "findings": [
+    "G1-001"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/JsonDocsKotlinTest.kt",
+   "hunks_total": 4,
+   "anchors": [
+    "// docs-example: README.md#1",
+    "// docs-example: kotlin.md#6",
+    "// docs-example: kotlin.md#10",
+    "// docs-example: express-migration.md#1"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/KotlinDocsExamplesKotlinTest.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "class KotlinDocsExamplesKotlinTest {"
+   ],
+   "findings": [
+    "G1-003"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/KotlinSurfaceKotlinTest.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "class KotlinSurfaceKotlinTest {"
+   ],
+   "findings": [
+    "G1-002"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/NullableAccessorKotlinTest.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "class NullableAccessorKotlinTest {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/PropertySyntaxKotlinTest.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "class PropertySyntaxKotlinTest {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/SseDocsKotlinTest.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "// docs-example: sse.md#1"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/WebSocketDocsKotlinTest.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "// docs-example: websocket.md#2"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-gson/src/test/kotlin/com/snoworca/naruserve/gson/GsonDataClassLimitKotlinTest.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "/** The default GsonJsonCodec (no Unsafe) against a Kotlin data class and the nullable-var DTO of kotlin.md. */"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-kotlin/src/main/kotlin/com/snoworca/naruserve/kotlin/RequestExtensions.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "* ([HttpException] `400`). `T::class.java` drops type arguments, so use `req.body(TypeRef)` for generic bodies."
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-kotlin/src/test/kotlin/com/snoworca/naruserve/kotlin/KotlinDocsBodyKotlinTest.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "class KotlinDocsBodyKotlinTest {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-kotlin/src/test/kotlin/com/snoworca/naruserve/kotlin/RequestBodyExtensionKotlinTest.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "class RequestBodyExtensionKotlinTest {"
+   ],
+   "findings": []
+  }
+ ],
+ "summary": {
+  "total": 4,
+  "by_severity": {
+   "LOW": 4
+  }
+ }
+}

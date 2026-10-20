@@ -1,0 +1,13 @@
+{"iter":4,"applied":[
+{"id":"F4-01","action":"skipped","reason":"handled by main session (CON-ROUTE-001 superseded by CON-ROUTE-006)"},
+{"id":"F4-02","req":"OPS-HTTP-001","action":"AC-9 path moved to root suite src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java (root project has src/test with BuildLayoutTest/BuildChecksTest); AC states root build.gradle gives root test classpath the NaruServe-api main classes; 'NaruServe-api test classpath' -> 'root test classpath'; new trace added via add_trace_link; old NaruServe-api path row cannot be removed, recorded as stale in implementation_notes"},
+{"id":"F4-03","req":"OPS-HTTP-001","action":"AC-4 requires replacing the routing.md sentence (section '라우팅 규칙 (wave 2 결정)', ~line 167) that calls the policy API name undecided with a pointer to app.routerPolicy(RouterPolicy)"},
+{"id":"F4-04","req":"OPS-HTTP-001","action":"AC-4 docs value now 'allowed only while the app is in NEW (before listen()), like every setting in app.md'; wave 3 freeze IllegalStateException kept as internal behaviour referencing FR-HTTP-008"},
+{"id":"F4-05","req":"FR-HTTP-003","action":"added AC-7: app.route(Method.any().except(Method.DELETE), \"/t\", h); DELETE /t -> 405, Allow = GET, HEAD, POST, PUT, PATCH, OPTIONS (Method declaration order, FR-ROUTE-010 AC-1), Content-Length: 0 [D-395] [T02]"},
+{"id":"F4-06","req":"OPS-HTTP-001","action":"AC-9 skip entry names file, block within file (ordinal or first line) and reason"},
+{"id":"F4-07","req":"OPS-HTTP-001","action":"AC-9 method template declares throws Exception"},
+{"id":"F4-08","req":"FR-HTTP-009","action":"not fixed: FR-ROUTE-006 and design (D-073) do not fix req.path() for /a//b under mergeSlashes(true); implementation note 'left to implementer, C-07'"},
+{"id":"F4-09","req":"FR-HTTP-016","action":"AC-4 adds: read failure during copy (incl. after handler returned) ends ABORTED with input stream closed (FR-HTTP-014 AC-5) [D-103; D-097; wave decision: stream() closing]"},
+{"id":"F4-10","req":"OPS-ROUTE-002","action":"Verification Method inspection -> test via edit_requirement_fields"}
+],
+"validate_spec":"see final report"}

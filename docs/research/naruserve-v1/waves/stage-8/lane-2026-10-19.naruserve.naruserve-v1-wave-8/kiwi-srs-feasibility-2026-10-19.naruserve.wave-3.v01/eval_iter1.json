@@ -1,0 +1,238 @@
+{
+ "evaluator": "verify-pass-1",
+ "iter": 1,
+ "findings": [
+  {
+   "id": "V1-001",
+   "severity": "MEDIUM",
+   "axis": "9-internal-coherence",
+   "req_id": "OPS-HTTP-002",
+   "evidence_path": "docs/spec/04.http-core.srs.md:1689",
+   "description": "OPS-HTTP-002 (split from OPS-HTTP-001 AC-9) is in target wave-3 but has no judgement and no mutation-plan row; the plan covers 30 of 31 in-scope requirements. Rescored here as medium 77 -> keep (draft). Add it to per-req-judgement.json and mutation-plan.json before apply."
+  },
+  {
+   "id": "V1-002",
+   "severity": "MEDIUM",
+   "axis": "9-internal-coherence",
+   "req_id": "IR-HTTP-004",
+   "evidence_path": "docs/spec/04.http-core.srs.md:234-239",
+   "description": "The judgement (medium 76, ac_verifiability 10, design.md-only evidence) predates the AC rewrite. The new ACs 1-6 each name an in-memory test (byte range at an offset, 101 hand-over, drain loop on an adapter-chosen thread, port 0 -> positive stable port, force-close at the deadline). Rescored high 81, so the plan row (keep/draft, rule 2) is stale and should become evolving (rule 1, auto, dryRun required)."
+  },
+  {
+   "id": "V1-003",
+   "severity": "MEDIUM",
+   "axis": "9-internal-coherence",
+   "req_id": "OPS-HTTP-001",
+   "evidence_path": "docs/spec/04.http-core.srs.md:1640-1647",
+   "description": "The judgement (medium 75, dependency 11, ac 10) was scored with the docs-example compile rule (old AC-9) inside it. With AC-9 moved to OPS-HTTP-002, AC-1..8 are string-level docs edits checked the way RoutingDocsTest reads docs (NaruServe-api/src/test/java/com/snoworca/naruserve/RoutingDocsTest.java:17,21). Rescored high 86, so the plan row (keep/draft) is stale and should become evolving."
+  },
+  {
+   "id": "V1-004",
+   "severity": "MEDIUM",
+   "axis": "2-evidence-existence",
+   "req_id": "FR-HTTP-011..FR-HTTP-020, FR-HTTP-006, IR-HTTP-002",
+   "evidence_path": "docs/research/naruserve-v1/waves/wave-3/design.md",
+   "description": "Twelve judgements cite only the design.md decision range 'D-040..D-109, D-392..D-399, D-442' with no line, yet score evidence_strength 15-19 (e.g. FR-HTTP-011 18, FR-HTTP-013 18, FR-HTTP-017/018 18). The path and IDs exist (75 D-lines, D-040/D-109/D-392/D-399/D-442 present), so this is not CRITICAL. But one shared, unlined decision-range citation does not support near-top evidence scores. Cite the specific D-line (e.g. design.md:82-83 for D-106/D-107) or lower to about 14-15. Labels would not change, since every affected score is at least 81 and stays at 80 or more after -3."
+  },
+  {
+   "id": "V1-005",
+   "severity": "LOW",
+   "axis": "4-dependency-cycles",
+   "req_id": "IR-HTTP-004",
+   "evidence_path": "docs/spec/04.http-core.srs.md:364-372",
+   "description": "No declared depends_on cycle exists across the 31 requirements (DFS over the trace tables). There is an implicit test-time loop, though. FR-HTTP-001 depends_on IR-HTTP-004, and IR-HTTP-004 AC-1/2/3/5/6 are verified only with FR-HTTP-001's in-memory adapter, so the two must land in one step."
+  },
+  {
+   "id": "V1-006",
+   "severity": "LOW",
+   "axis": "8-status-conflicts",
+   "req_id": "IR-HTTP-002, CON-HTTP-001",
+   "evidence_path": "docs/spec/03.routing.srs.md:319",
+   "description": "All 31 requirements are Status=planned and Stability=draft, matching the plan's current_stability, so there is no status conflict. The stale depends_on row to discarded CON-ROUTE-001 (Status discarded, Stability evolving) remains next to the CON-ROUTE-006 successor row. It is already recorded as a drift candidate in synthesis.json and does not block."
+  },
+  {
+   "id": "V1-007",
+   "severity": "LOW",
+   "axis": "9-internal-coherence",
+   "req_id": "IR-HTTP-004, OPS-HTTP-001, OPS-HTTP-002",
+   "evidence_path": "docs/spec/04.http-core.srs.md:217,1623,1697",
+   "description": "The Tags feasibility:* values disagree with the scores: IR-HTTP-004 is tagged medium (now high 81), OPS-HTTP-001 is tagged high (judged medium 75, now high 86), and OPS-HTTP-002 is tagged high (rescored medium 77). Tags do not drive the mapping, but they should be refreshed with the final judgement."
+  },
+  {
+   "id": "V1-008",
+   "severity": "LOW",
+   "axis": "9-internal-coherence",
+   "req_id": "OPS-HTTP-001",
+   "evidence_path": "docs/spec/04.http-core.srs.md:1670-1671",
+   "description": "The trace rows to DocsExamplesCompileTest (two paths) stay on OPS-HTTP-001 although the rule moved to OPS-HTTP-002. Implementation Notes record this as superseded. These rows are informational only."
+  },
+  {
+   "id": "V1-009",
+   "severity": "LOW",
+   "axis": "3-ac-verifiability",
+   "req_id": "OPS-ROUTE-002",
+   "evidence_path": "docs/spec/03.routing.srs.md:1872",
+   "description": "ac_verifiability 14 is slightly generous: AC-1 is a long descriptive list checked by docs text assertions. AC-3 is crisp (exactly one (미확정) line naming use(middleware); routing.md currently still has markers at lines 21, 72, 127 and 155), so 13 would be fair. The label does not change."
+  }
+ ],
+ "summary": {
+  "requirements_in_scope": 31,
+  "judged": 30,
+  "rescored": 3,
+  "axis_results": {
+   "1_score_label": "PASS: all 30 axes sums equal score; every label matches band (28 high 81-93, 2 medium 75-76).",
+   "2_evidence_existence": "PASS: 13 unique citations, 11 path:line read and confirmed (Method.java:10,22; PathValidator.java:26-46; RouteMatch.java:18-20; RoutePattern.java:35; Router.java:63,164,243,257-264,272; RouterPolicy.java:30,96; build.gradle:127,147,160,166,171,180,240-243; docs/api lines 11/11 hold (미확정) markers; NullabilityKotlinTest.kt exists; design.md D-ids present). No nonexistent path.",
+   "3_ac_verifiability": "PASS with notes: sampled FR-HTTP-001/002/013/016/019, CON-HTTP-001, OPS-ROUTE-002 plus rescored IR-HTTP-004/OPS-HTTP-001/OPS-HTTP-002; judged ac scores within +-1 except stale IR-HTTP-004/OPS-HTTP-001.",
+   "4_dependency_cycles": "PASS: no declared cycle; implicit test-time coupling IR-HTTP-004<->FR-HTTP-001 (LOW).",
+   "5_blockers": "PASS: no blockers claimed; none found that would be required.",
+   "6_mapping": "PASS for the 30 planned rows: high->evolving (rule 1, auto) x28, medium->keep x2, has_verification false for all, no stable proposals. Stale for IR-HTTP-004/OPS-HTTP-001 after rescoring; OPS-HTTP-002 missing.",
+   "7_dryrun_guard": "PASS: 28 evolving rows dryRun ok (written:false, 0 diagnostics); 2 keep rows not called; summary counts consistent (evolving_auto 28, keep 2, refused 0). Re-run dryRun for IR-HTTP-004 and OPS-HTTP-001 if they move to evolving.",
+   "8_status_conflicts": "PASS: all planned/draft.",
+   "9_internal_coherence": "MEDIUM: plan stale for 3 reqs after SRS edits; synthesis distribution (28/2) and target verdict 'go' still hold, revised to 30 high / 1 medium of 31."
+  },
+  "counts": {
+   "CRITICAL": 0,
+   "HIGH": 0,
+   "MEDIUM": 4,
+   "LOW": 5
+  },
+  "gate": "Normal gate CRITICAL=0+HIGH=0 met; refresh plan rows for IR-HTTP-004, OPS-HTTP-001, add OPS-HTTP-002 before apply."
+ },
+ "rescored": [
+  {
+   "req_id": "IR-HTTP-004",
+   "score": 81,
+   "feasibility": "high",
+   "proposed_stability": "evolving",
+   "axes": {
+    "implementability": {
+     "score": 24,
+     "evidence": [
+      "docs/research/naruserve-v1/waves/wave-3/design.md:82-83 (D-106, D-107)",
+      "/Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/HttpServer.java:132,456 (start(), stop(long graceMillis)) @46b973e",
+      "build.gradle:166 (java-test-fixtures on NaruServe-api)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "evidence": [
+      "design.md:82-83 decisions are concrete; HttpAdapter.java not yet present (addition_site); TinyHttpd lifecycle pieces exist but in-memory force-close has no precedent"
+     ]
+    },
+    "dependency_health": {
+     "score": 13,
+     "evidence": [
+      "depends_on IR-HTTP-003 (high 86); verified only through FR-HTTP-001 in-memory adapter (test-time coupling)"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 12,
+     "evidence": [
+      "04.http-core.srs.md:234-239 AC-1/3/5/6 concrete in-memory tests; AC-2 allows 'or recorded the hand-over' fallback; AC-4 'waves 6-8 without changing the SPI' is only verifiable now via its class-reference half"
+     ]
+    },
+    "scope_fit": {
+     "score": 8,
+     "evidence": [
+      "04.http-core.srs.md:11 scope names HttpAdapter SPI"
+     ]
+    },
+    "product_fit": {
+     "score": 9,
+     "evidence": [
+      "CLAUDE.md: TinyHttpd as HttpAdapter, Servlet optional module"
+     ]
+    }
+   }
+  },
+  {
+   "req_id": "OPS-HTTP-001",
+   "score": 86,
+   "feasibility": "high",
+   "proposed_stability": "evolving",
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "evidence": [
+      "docs/api/request.md:13,135; response.md:36; routing.md:72,127,155,167; express-migration.md:46,84; defaults.md:40 (markers to remove exist exactly where cited)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 17,
+     "evidence": [
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/RoutingDocsTest.java:17,21 (existing docs-reading test pattern)"
+     ]
+    },
+    "dependency_health": {
+     "score": 12,
+     "evidence": [
+      "depends_on OPS-ROUTE-002, IR-HTTP-005, FR-HTTP-014, FR-HTTP-012, FR-HTTP-009 (all high); doc text must track those decisions"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "evidence": [
+      "04.http-core.srs.md:1640-1647 AC-1..8 are text/marker assertions; AC-7 'without contradiction' and AC-2 overload-resolution sentence need careful string checks"
+     ]
+    },
+    "scope_fit": {
+     "score": 8,
+     "evidence": [
+      "04.http-core.srs.md:11 'docs/api markers decided in wave 3'"
+     ]
+    },
+    "product_fit": {
+     "score": 9,
+     "evidence": [
+      "CLAUDE.md API docs rule: decide (미확정) during implementation and remove markers"
+     ]
+    }
+   }
+  },
+  {
+   "req_id": "OPS-HTTP-002",
+   "score": 77,
+   "feasibility": "medium",
+   "proposed_stability": "draft (keep)",
+   "axes": {
+    "implementability": {
+     "score": 23,
+     "evidence": [
+      "build.gradle:240-243 root test deps are junit + gradleTestKit only; needs testImplementation project(':NaruServe-api') (AC-1)",
+      "69 ```java blocks across 17 docs/api files (grep -c), most in later-wave docs (sse, websocket, multipart, middleware, json, static, servlet, lifecycle) -> large curated skip list; javax.tools compile harness has no precedent in repo"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "evidence": [
+      "src/test/java exists at root; RoutingDocsTest.java:21 docs reading pattern; no in-repo compile-test precedent"
+     ]
+    },
+    "dependency_health": {
+     "score": 11,
+     "evidence": [
+      "depends_on OPS-HTTP-001, IR-HTTP-001; in practice needs the whole wave-3 public surface (IR-HTTP-002/005, RouteBuilder) since template has RestApp/Request/Response fields (AC-3); last in chain"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 12,
+     "evidence": [
+      "04.http-core.srs.md:1714-1719 AC-1,2,5,6 mechanical; AC-3 'stub handlers the docs name' open-ended; AC-4 reason categories judgement-based"
+     ]
+    },
+    "scope_fit": {
+     "score": 8,
+     "evidence": [
+      "I-009 docs-example rule; split from OPS-HTTP-001 AC-9"
+     ]
+    },
+    "product_fit": {
+     "score": 8,
+     "evidence": [
+      "Guards docs/api Java examples for Express users; JVM-only test, no runtime impact"
+     ]
+    }
+   }
+  }
+ ]
+}

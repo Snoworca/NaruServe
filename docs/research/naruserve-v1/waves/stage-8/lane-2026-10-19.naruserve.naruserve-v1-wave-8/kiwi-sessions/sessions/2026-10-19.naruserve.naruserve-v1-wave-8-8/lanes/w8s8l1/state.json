@@ -1,0 +1,23 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-8",
+  "sds_path": "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-8-8.sds.md",
+  "sds_sha256": "666574eda9cb11e952c1ef3579a6affeecb9ac159280e6c8115dcb48f20c60b5",
+  "target": "wave-8",
+  "req_ids": ["FR-SVL-006", "OPS-SVL-001"],
+  "spawn_context": "pm-child",
+  "flags": ["--auto", "--auto-integration", "--auto-cost-warning", "--defer-srs-mutation"],
+  "phase": "done",
+  "next_resume_hint": null,
+  "failed": false,
+  "regression_baseline": {"command": "./gradlew build", "head_sha": "bb12b0c"},
+  "red_evidence": {
+    "command": "./gradlew --offline :NaruServe-servlet:test :test --tests '*ServletDocsTest' --tests '*DocsExamplesCompileTest*'",
+    "exit_code": 1,
+    "captured_failure": "ServletStopSseTest: cannot find symbol Pool.open(); ServletDocsTest noMarkerAndJakartaSentence, registrationSection, sectionKeywords, cutAtTimeoutDeviation, sseDocOnlyGainsPointer FAILED; DocsExamplesCompileTest wave8s8SdsAc9 FAILED",
+    "timestamp": "2026-10-20T13:58:00Z"
+  },
+  "green_evidence": {"command": "./gradlew --offline build --continue", "exit_code": 0, "timestamp": "2026-10-20T14:08:00Z"},
+  "out_of_lease_paths": ["NaruServe-servlet/src/test/kotlin/com/snoworca/naruserve/servlet/ServletDocsKotlinTest.kt"],
+  "mcp_call_log_ref": "deferred-srs-queue.jsonl (23 entries, run_id 2026-10-19.naruserve.naruserve-v1-wave-8-8)"
+}

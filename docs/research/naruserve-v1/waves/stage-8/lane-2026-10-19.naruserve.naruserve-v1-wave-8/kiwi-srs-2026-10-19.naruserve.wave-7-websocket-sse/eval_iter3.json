@@ -1,0 +1,98 @@
+{
+ "iter": 3,
+ "findings": [
+  {
+   "id": "A3-01",
+   "severity": "HIGH",
+   "axis": "iv-regression",
+   "req_id": "OPS-WS-001; OPS-SSE-001",
+   "ac": "OPS-WS-001 AC-6; OPS-SSE-001 AC-4",
+   "quote": "changes the reason of the `websocket.md` `app.ws(\"/chat\", (req, ws) -> {` entry to ``app-defined types `ChatService` and `ChatMessage` ``, changes the reason of the `lifecycle.md` `RestApp app = RestApp.create();` entry to ``app-defined types `Database` and `UserService` `` ... and `./gradlew build` passes  /  (OPS-SSE-001 AC-4) ``app-defined types `Event` and `eventStore` ``",
+   "description": "The iter-2 fixes (A2-01, A2-05) introduced this. The verified test `DocsExamplesCompileTest#sdsAc12_OPS_HTTP_004_AC4_everySkipNamesFileBlockAndReason` (OPS-HTTP-004 AC-4, line 494) requires every skip reason to match `REASON` = `(later-wave method|illustrative copy of|absent type|app-defined type|app-defined variables?|app-defined methods) `[^`]+`.*` (lines 131-133). The plural `app-defined types `X`` does not match: after `app-defined type` the regex expects a space and a backtick, not `s`. I checked this with the same regex in Python: the plural form gives False and the singular form gives True. The existing entry `express-migration.md` already uses the singular form for two types (``app-defined type `TodoService` and `Todo` ``). As written, AC-6 makes the verified OPS-HTTP-004 test fail, so its own `./gradlew build passes` clause cannot hold. The OPS-SSE-001 AC-4 example has the same fault.",
+   "suggested_fix": "OPS-WS-001 AC-6: use ``app-defined type `ChatService` and `ChatMessage` `` and ``app-defined type `Database` and `UserService` ``, the singular form that the `REASON` pattern of OPS-HTTP-004 accepts. OPS-SSE-001 AC-4: use ``app-defined type `Event` and app-defined variable `eventStore` `` or ``app-defined type `Event` ``. If the plural should stay, AC-6 must instead say that `REASON` gains `app-defined types?` and that sdsAc12 keeps passing."
+  },
+  {
+   "id": "A3-02",
+   "severity": "HIGH",
+   "axis": "ii-contradiction",
+   "req_id": "FR-APP-019",
+   "ac": "AC-10",
+   "quote": "`cause` is `client` when the stream ended because a drain write or heartbeat to the socket failed with an `IOException` ... `shutdown` for the closing participant and for a stream force-closed by the adapter stop at the shutdown deadline ... Decision: ... an `IOException` on the socket always maps to `client`.",
+   "description": "The iter-2 fix (A2-03) introduced this. A stream force-closed at the deadline (FR-SSE-005 AC-5, FR-APP-020 AC-6) ends because TinyHttpd's `stop` calls `abortSocket()` on every remaining connection (HttpServer.stop, after the grace loop), so the blocked drain write throws an `IOException`. The same AC requires `cause=shutdown` for that stream and says that an `IOException` on the socket always maps to `client`. The same clash arises when a drain write fails with `IOException` after `close()` (`app`) or after an overflow end (`overflow`) was already recorded. A test of the force-closed stream therefore has no defined expected cause.",
+   "suggested_fix": "Add to AC-10: \"the first end reason recorded wins: a stream already marked ended by `close()`, by overflow or by the closing participant keeps `app`, `overflow` or `shutdown` even when its drain write then fails with an `IOException`; only an `IOException` on a stream that was not yet marked ended maps to `client`\". Add a TinyHttpd case asserting `cause=shutdown` for the stalled stream of FR-SSE-005 AC-5."
+  },
+  {
+   "id": "A3-03",
+   "severity": "MEDIUM",
+   "axis": "ii-contradiction",
+   "req_id": "OPS-SSE-001; OPS-WS-001",
+   "ac": "OPS-SSE-001 AC-4; OPS-WS-001 AC-6",
+   "quote": "OPS-SSE-001 AC-4: \"no `sse.md` skip reason names a wave 7 member (such as ``later-wave method `Response.sse()` `` or ``absent type `SseEvent` ``), which the `WAVE_SEVEN_MEMBERS` check of OPS-WS-001 AC-6 asserts\"; OPS-WS-001 AC-6: \"finds no skip reason naming a wave 7 member as a later-wave method\"",
+   "description": "OPS-WS-001 AC-6 defines the check like the existing `waveSixMemberReasons`, which only scans `LATER_WAVE_NAMES` (`later-wave methods? `...``, DocsExamplesCompileTest:570). So it never sees the current reason ``absent type `SseEvent` `` (line 124). That block (`client.send(SseEvent.event(\"progress\")...`) still fails to compile after wave 7 because `client` is undeclared in the `wrap()` stubs. A stale `absent type `SseEvent`` reason therefore survives both `sdsAc14_OPS_APP_002_AC2_everySkippedBlockStillFailsToCompile` and the planned check. OPS-SSE-001 AC-4 claims a guarantee that the check it cites does not give.",
+   "suggested_fix": "OPS-WS-001 AC-6: \"... finds no skip reason naming a wave 7 member as a later-wave method or as an absent type\". Alternatively, OPS-SSE-001 AC-4 names its own assertion that the sse.md `SseEvent` entry's reason is ``app-defined variable `client` ``."
+  },
+  {
+   "id": "A3-04",
+   "severity": "MEDIUM",
+   "axis": "i-coverage",
+   "req_id": "FR-WS-006; FR-WS-001",
+   "ac": "FR-WS-006 AC-6 (missing case)",
+   "quote": "AC-6: An exception thrown by an `onText` listener is passed to the `onError` listeners, logged at ERROR with the request id, and the client receives close `1011`",
+   "description": "Wave decision r2 W2-005 says that the core endpoint catches every exception from user code after `101`, and IR-WS-001 AC-1 declares `WebSocketHandler.handle(...) throws Exception`. The handler runs from the endpoint's `onOpen` (FR-WS-001 AC-3). No AC says what happens when the handler itself throws. TinyHttpd's `WebSocketListener.onOpen` declares no checked exception, and its `run()` answers a `RuntimeException` from `onOpen` with `close(1011)` and a rethrow out of `handle`. So the result (1011 from the core, a TinyHttpd rethrow, or FR-WS-002 AC-9's ERROR log) is undefined and untested.",
+   "suggested_fix": "Add to FR-WS-006: \"AC-10: a checked or unchecked exception thrown by the `ws` handler is caught by the core endpoint, passed to any `onError` listener the handler already registered, logged at ERROR with the request id, and closes the session with `1011`; `onClose` receives `1011` and no exception reaches TinyHttpd's `onOpen`, which an in-memory and a TinyHttpd test assert.\""
+  },
+  {
+   "id": "A3-05",
+   "severity": "LOW",
+   "axis": "iv-regression",
+   "req_id": "FR-WS-001",
+   "ac": "AC-7",
+   "quote": "the `TestApp.webSocketRoute(path)` fixture is re-pointed to `app.ws`, and every test that uses it (StaticMethodTest, MiddlewarePipelineTest, ErrorPathTest, DefaultRestAppTest) still passes",
+   "description": "Verified FR-HTTP-008 AC-7 says that the test-fixtures harness uses the internal WebSocket-route hook to register a WebSocket-only route. Re-pointing `TestApp.webSocketRoute` to `app.ws` makes that clause untrue, and no wave 7 note records it as history, unlike FR-HTTP-022 AC-6. DefaultRestAppTest does not use the fixture: it calls `DefaultRestApp.webSocketRoute(\"/ws\", h)` directly with a `RouteHandler` (lines 221, 240; FR-HTTP-008 AC-5/AC-7). The IR-WS-001 rationale also says this hook \"becomes the implementation of `ws`\", which would change its signature and break those two verified tests.",
+   "suggested_fix": "FR-WS-001 AC-7 / IR-WS-001 rationale: state that `DefaultRestApp.webSocketRoute(String, RouteHandler)` keeps its signature (the verified FR-HTTP-008 AC-5/AC-7 tests stay unchanged) and that FR-HTTP-008 AC-7's harness clause is history from wave 7, in the same way as the FR-HTTP-022 AC-6 note. Drop DefaultRestAppTest from the fixture-user list."
+  },
+  {
+   "id": "A3-06",
+   "severity": "LOW",
+   "axis": "v-hygiene",
+   "req_id": "OPS-APP-005",
+   "ac": "AC-8",
+   "quote": "The `shutdown` steps of `docs/api/app.md` state, in this order: ... then `onStop`, closing owned resources and the logger flush as before",
+   "description": "`docs/api/app.md:217` says \"timeout은 2단계(진행 중인 요청을 기다리는 시간)에만 걸리고\". AC-8 reorders the steps (goodbye, then the wait, then force-close), and D-344/FR-APP-020 count the goodbye inside the deadline. That sentence then names the wrong step and leaves out the goodbye. AC-8 does not require it to be rewritten.",
+   "suggested_fix": "Add to AC-8: \"and the sentence on what the timeout covers names the goodbye, the wait and the force-close steps by their new numbers while keeping that `onStop`, resource close and logger flush have no time limit\"."
+  }
+ ],
+ "summary": {
+  "CRITICAL": 0,
+  "HIGH": 2,
+  "MEDIUM": 2,
+  "LOW": 2,
+  "total": 6,
+  "coverage_script": "design ids 70 missing [], decision/residual/carried missing [], wave-7 blocks 29",
+  "iter2_fixes_verified": [
+   "A2-01 (applied; plural reason form breaks OPS-HTTP-004 REASON check, see A3-01)",
+   "A2-02",
+   "A2-03 (applied; IOException-always-client clashes with the shutdown force-close cause, see A3-02)",
+   "A2-04",
+   "A2-05 (applied; example reason form and check scope, see A3-01, A3-03)",
+   "A2-06",
+   "A2-07",
+   "A2-08",
+   "A2-09",
+   "A2-10"
+  ],
+  "checked": [
+   "29 wave-7 blocks read in full; no doubled 'AC-n:' prefix, no placeholder or vague word; the only ACs without an end tag are the byte-equal re_stated ACs FR-APP-019 AC-6 and FR-ENGINE-011 AC-1 (accepted in iter 2)",
+   "every Code trace path exists; links to non-wave-7 blocks go only to verified blocks, or to discarded blocks through supersedes",
+   "TinyHttpd checkout HEAD is 38051b6 (3 commits after 46b973e); the diff touches only javadoc and overflow guards in WebSocketHandler/HttpServer, and WebSocket.java and ExchangeResponse.java are unchanged, so every cited TinyHttpd fact holds",
+   "WebSocketHandler.handle order (400, 426+Sec-WebSocket-Version, 400 key, 403 origin, 403 null listener, Sec-WebSocket-Accept set, then res.upgrade -> Upgraded.start 413 drain, 503+Retry-After) matches FR-WS-002 AC-2..AC-5",
+   "WebSocket.run: control frame >125 or !FIN -> 1002, unmasked -> 1002, frame > maxFramePayloadBytes / joined > maxMessageBytes -> 1009, invalid UTF-8 -> 1007, ping-timeout close 1001 reported, own close unanswered -> 1006, sendableCloseCode = 1000-1003/1007-1014/3000-4999; this matches FR-WS-005 and FR-WS-006 AC-8/AC-9",
+   "TinyHttpd stop closes the listening sockets first, then aborts every remaining connection at the grace deadline, then joins the acceptor (1000 ms) and waits for workers (500 ms); this matches the D-344 3 s margin and the D-446 ordering (before-wait participants run before adapter.stop)",
+   "watchdog: 500 ms tick, write timeout aborts the socket, so FR-WS-007 AC-5's 2 s release holds; the header timeout uses the socket deadline and answers 408 (FR-WS-008 AC-7)",
+   "NaruServe line references (DefaultRestApp 544/610-636/828/859, DefaultServerOptions 23/35, HttpExchange 85/89, TinyHttpdFeatures 51-57, TinyHttpdExchange 229-240, ServerOptions 29/32/41-54, TinyHttpdAdapter 105-116, Dispatcher 357-360, Response 9/55/66, Request 47, AppDocsTest 51-55/168-179, WaveFiveDocsTest 410/419-421) checked",
+   "SPI unchanged between 40b9665, 9ce5cc4 and HEAD; spi type list in IR-WS-002 AC-5 / IR-HTTP-007 AC-4 matches the directory",
+   "cited test methods exist (HttpAcceptanceTest, DispatcherTest, AdapterSurfaceTest); the non-upgrade 426 asserts in ErrorPathTest, MiddlewarePipelineTest and StaticMethodTest stay valid",
+   "docs markers at the cited lines (websocket.md 34/54/74/97/117, app.md 67/187, defaults.md 25-27/89, sse.md 35/47/49/95) confirmed"
+  ]
+ }
+}

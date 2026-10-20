@@ -1,0 +1,92 @@
+{
+  "evaluator": "verify-pass-1",
+  "iter": 1,
+  "findings": [
+    {
+      "id": "F01",
+      "finding_hash": "2b677753ec5fdf91c5863015eb268d10966a0d5d",
+      "severity": "CRITICAL",
+      "axis": "mapping_conformance",
+      "req_id": null,
+      "evidence_path": "mutation-plan.json",
+      "description": "All 14 high->evolving entries carry requires_user_confirm=true and summary.requires_user_confirm=14. Policy: high->evolving is applied automatically; user confirmation is only for stable promotion or deprecation/demotion. No entry in this plan is a stable promotion or a demotion, so requires_user_confirm must be false everywhere (summary 0). apply_with ('after user approval') also contradicts the policy for these transitions.",
+      "suggested_action": "Set requires_user_confirm=false on every draft->evolving entry, set summary.requires_user_confirm=0, and change apply_with to automatic application of draft->evolving."
+    },
+    {
+      "id": "F02",
+      "finding_hash": "51940c110673d5ad44258e25d847d8347208313a",
+      "severity": "HIGH",
+      "axis": "blocker_substantiation",
+      "req_id": "OPS-BUILD-003",
+      "evidence_path": "docs/research/naruserve-v1/waves/wave-1/design.md:60",
+      "description": "The medium label (79, product_fit 6/10, the lowest product_fit in the target) rests on the condition that the CLAUDE.md edit needs user authorization. That is a mistaken assumption: the user explicitly asked for CLAUDE.md to be edited, and D-448 (design.md:60) requires wave 1 to update its module line. Only the remaining deductions are backed by facts: the (미확정) markers that are not about module names (docs/api/app.md:22, docs/api/logging.md:33), and the dependency on the final logger names from CON-BUILD-002. Removing the unbacked deduction moves product_fit to about 9-10 and the total to 82-83, which is high, so the plan should be draft->evolving.",
+      "suggested_action": "Drop the CLAUDE.md authorization condition, re-score product_fit (expected 9-10) and the total, relabel high, and change the plan entry to draft->evolving (requires_user_confirm=false)."
+    },
+    {
+      "id": "F03",
+      "finding_hash": "8c08c075d59a530f0f1e7c1ec0f90d38f1a69171",
+      "severity": "HIGH",
+      "axis": "blocker_substantiation",
+      "req_id": "CON-BUILD-013",
+      "evidence_path": "docs/research/naruserve-v1/waves/wave-1/design.md:5",
+      "description": "Two of the reasons that lower this to medium are not backed by fact. (1) 'Adding a build-script dependency must not violate CON-BUILD-006': CON-BUILD-006 governs the module api/implementation/runtimeOnly/compileOnly configurations, not the buildscript or plugin classpath. A buildscript ASM dependency, jdeps from JDK 17 or a constant-pool scan in Groovy are all allowed, and TinyHttpd build.gradle:51-61 already shows the pattern for resolving a classpath check. (2) The scope_fit deduction because the items are 'from loop-W integration items, not a numbered D- item' contradicts design.md:5, which puts the build-related I-items in scope at this wave's merge. With those reasons removed, the score (77) plausibly crosses the high threshold (80).",
+      "suggested_action": "Remove both reasons, re-score implementability and scope_fit from the real remaining effort (three custom checks plus negative fixtures), and relabel if the total reaches 80 or more."
+    },
+    {
+      "id": "F04",
+      "finding_hash": "045d3bfa92c433d958e598f57ab293b19589571d",
+      "severity": "MEDIUM",
+      "axis": "internal_coherence",
+      "req_id": null,
+      "evidence_path": "synthesis.json",
+      "description": "synthesis.verdict_reason and key_conditions repeat 'CLAUDE.md edits (OPS-BUILD-003) need explicit user authorization' and the mutation-plan reason for OPS-BUILD-003 cites it, although the condition is void (see the OPS-BUILD-003 finding). The distribution (14/2), stability_drift_candidates and the plan summary must change with any relabel.",
+      "suggested_action": "Remove the CLAUDE.md authorization condition from synthesis and the mutation plan, then recompute the distribution, average, drift candidates and plan summary after re-scoring."
+    },
+    {
+      "id": "F05",
+      "finding_hash": "3f83047840097f27f88f4ae5908a88eed8d64d2d",
+      "severity": "MEDIUM",
+      "axis": "dependency_cycle",
+      "req_id": "CON-BUILD-006",
+      "evidence_path": "docs/spec/02.build.srs.md:338",
+      "description": "CON-BUILD-011 traces to CON-BUILD-006 (existing_srs_context edge 011->006), while CON-BUILD-006 AC-2/AC-4/AC-6 need the library that CON-BUILD-011 chooses, and the judgement condition says 'depends on the nullability library choice of CON-BUILD-011 being made first'. That is a semantic two-way dependency. synthesis.dependency_cycles=[] and the chains list only 011->006, so the ordering is not recorded.",
+      "suggested_action": "Record that CON-BUILD-006 and CON-BUILD-011 are co-implemented, or that the library choice comes first, in synthesis.dependency_chains or the conditions, so that the SDS and work order put the CON-BUILD-011 decision first."
+    },
+    {
+      "id": "F06",
+      "finding_hash": "ff4571d5d646ae950c7d07e8be9392cd0d571445",
+      "severity": "LOW",
+      "axis": "dependency_cycle",
+      "req_id": "OPS-BUILD-002",
+      "evidence_path": "docs/spec/02.build.srs.md:680",
+      "description": "The OPS-BUILD-002 conditions say it depends on CON-BUILD-004 AC-3, and AC-5 references CON-BUILD-007 AC-2, but the synthesis dependency_chains show only OPS-BUILD-002 -> CON-BUILD-003 -> CON-BUILD-002.",
+      "suggested_action": "Add the OPS-BUILD-002 -> CON-BUILD-004 and OPS-BUILD-002 -> CON-BUILD-007 edges to dependency_chains. No cycle results."
+    },
+    {
+      "id": "F07",
+      "finding_hash": "3b9145b8f0b7304c2cb52e1caffbb2cb4c181dbe",
+      "severity": "LOW",
+      "axis": "evidence_existence",
+      "req_id": "CON-BUILD-011",
+      "evidence_path": "CLAUDE.md:36",
+      "description": "The pointer CLAUDE.md:36 is the Express short-method-name rule. The @Nullable/@NonNull compileOnly rule is at CLAUDE.md:35. The file exists, but the line is off by one.",
+      "suggested_action": "Change the evidence pointer to CLAUDE.md:35."
+    },
+    {
+      "id": "F08",
+      "finding_hash": "83845b8d62cf433ba54684e6e3b307d2a86d8055",
+      "severity": "LOW",
+      "axis": "blocker_substantiation",
+      "req_id": "OPS-BUILD-002",
+      "evidence_path": "/Users/beom/work/git/TinyHttpd/build.gradle:1",
+      "description": "The condition that the first build needs network for KGP 2.x is factually correct (no kotlin-gradle-plugin in ~/.gradle/caches), but network access to Maven Central and the plugin portal is available, so it is not a risk. It should not lower dependency_health.",
+      "suggested_action": "Keep it as an informational note only, and confirm that dependency_health (12/15) is not reduced for it."
+    }
+  ],
+  "summary": {
+    "CRITICAL": 1,
+    "HIGH": 2,
+    "MEDIUM": 2,
+    "LOW": 3
+  }
+}

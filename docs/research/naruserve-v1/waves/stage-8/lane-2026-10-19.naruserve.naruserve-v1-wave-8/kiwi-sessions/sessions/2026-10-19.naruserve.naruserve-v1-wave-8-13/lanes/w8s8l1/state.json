@@ -1,0 +1,30 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-13",
+  "sds_path": "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-8-13.sds.md",
+  "sds_sha256": "6e0d38cb04877ba55c61d9ab567634b60aadb54084c2977d99426c77d8a0c2fc",
+  "target": "wave-8",
+  "req_ids": ["OPS-REL-007", "OPS-REL-003", "OPS-REL-004"],
+  "write_set": ["docs/release/release-notes.md", "README.md", "docs/release/test-results.md",
+    "src/test/java/com/snoworca/naruserve/docs/ReleaseNotesDocsTest.java",
+    "src/test/java/com/snoworca/naruserve/docs/ReleaseResultsDocsTest.java", "docs/api/lifecycle.md"],
+  "mode": "normal",
+  "flags": ["--auto", "--auto-integration", "--auto-cost-warning", "--defer-srs-mutation"],
+  "spawn_context": "pm-child",
+  "phase": "done",
+  "next_resume_hint": null,
+  "deferred_queue_entries": 18,
+  "prickly_review": {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "LOW": 6, "fixed": "HIGH-1, MEDIUM-2, MEDIUM-3, LOW-4, LOW-6, LOW-8, LOW-9; LOW-5 and LOW-7 left (LOW-5 is outside the SDS Files)"},
+  "failed": false,
+  "red_evidence": {
+    "command": "./gradlew :test --offline --tests com.snoworca.naruserve.docs.ReleaseNotesDocsTest --tests com.snoworca.naruserve.docs.ReleaseResultsDocsTest",
+    "exit_code": 1,
+    "captured_failure": "14 tests completed, 12 failed, 1 skipped: test-results.md absent; release-notes.md lacks Android scope, Recorded deviations, API 21 checks and Platform matrix; lifecycle.md lacks the ServerService note",
+    "timestamp": "2026-10-20"
+  },
+  "regression_baseline": {"command": "./gradlew build --offline", "exit_code": 0, "failed": 0, "failed_test_ids": [], "head_sha": "ae44f5a", "captured_at": "2026-10-20"},
+  "green_evidence": {"command": "./gradlew build --rerun-tasks", "exit_code": 0, "timestamp": "2026-10-21"},
+  "regression_summary": {"scope": "full", "passed": 1527, "failed": 0, "skipped": 0, "regressed_files": []},
+  "mcp_call_log": [],
+  "pending_mutations": []
+}

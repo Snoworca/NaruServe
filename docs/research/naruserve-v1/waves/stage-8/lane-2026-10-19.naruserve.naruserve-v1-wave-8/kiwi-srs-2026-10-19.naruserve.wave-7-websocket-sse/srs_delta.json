@@ -1,0 +1,124 @@
+{
+ "target": "wave-7",
+ "classification": "new-scope",
+ "mode": "live",
+ "scopes_created": [
+  {
+   "scope": "WS",
+   "file": "docs/spec/11.websocket.srs.md"
+  },
+  {
+   "scope": "SSE",
+   "file": "docs/spec/12.server-sent-events.srs.md"
+  }
+ ],
+ "added_ids": [
+  "IR-WS-001",
+  "IR-WS-002",
+  "FR-WS-001",
+  "FR-WS-002",
+  "FR-WS-003",
+  "FR-WS-004",
+  "FR-WS-005",
+  "FR-WS-006",
+  "FR-WS-007",
+  "FR-WS-008",
+  "FR-WS-009",
+  "FR-WS-010",
+  "OPS-WS-001",
+  "IR-SSE-001",
+  "FR-SSE-001",
+  "FR-SSE-002",
+  "FR-SSE-003",
+  "FR-SSE-004",
+  "FR-SSE-005",
+  "OPS-SSE-001",
+  "FR-APP-019",
+  "FR-APP-020",
+  "PERF-APP-001",
+  "OPS-APP-005",
+  "FR-ENGINE-011",
+  "OPS-ENGINE-002",
+  "IR-HTTP-007",
+  "IR-HTTP-008",
+  "OPS-HTTP-007"
+ ],
+ "supersedes": {
+  "FR-APP-015": "FR-APP-019",
+  "OPS-APP-004": "OPS-APP-005",
+  "FR-ENGINE-010": "FR-ENGINE-011",
+  "OPS-ENGINE-001": "OPS-ENGINE-002",
+  "IR-HTTP-004": "IR-HTTP-007",
+  "OPS-HTTP-006": "OPS-HTTP-007"
+ },
+ "discarded_ids": [
+  "FR-APP-015",
+  "OPS-APP-004",
+  "FR-ENGINE-010",
+  "OPS-ENGINE-001",
+  "IR-HTTP-004",
+  "OPS-HTTP-006"
+ ],
+ "not_superseded": "see existing_srs_context.md",
+ "tests_to_repoint": null,
+ "ab_loop": {
+  "iterations": 4,
+  "summaries": [
+   {
+    "iter": 1,
+    "CRITICAL": 0,
+    "HIGH": 6,
+    "MEDIUM": 8,
+    "LOW": 16
+   },
+   {
+    "iter": 2,
+    "CRITICAL": 0,
+    "HIGH": 3,
+    "MEDIUM": 2,
+    "LOW": 5
+   },
+   {
+    "iter": 3,
+    "CRITICAL": 0,
+    "HIGH": 2,
+    "MEDIUM": 2,
+    "LOW": 2
+   },
+   {
+    "iter": 4,
+    "CRITICAL": 0,
+    "HIGH": 0,
+    "MEDIUM": 2,
+    "LOW": 3
+   }
+  ],
+  "post_loop_fixes": [
+   "A4-01 OPS-APP-005 AC-8 (2~4\ub2e8\uacc4)",
+   "A4-02 FR-WS-001 implementation note"
+  ],
+  "residual_low": [
+   "A4-03",
+   "A4-04",
+   "A4-05"
+  ]
+ },
+ "validate_spec_result": {
+  "errors": 0,
+  "warnings": 50,
+  "byCode": {
+   "SRS-W023": 29,
+   "SRS-W015": 21
+  }
+ },
+ "coverage": {
+  "script": "/private/tmp/claude-501/-Users-beom-work-git-NaruServe/2d9d3869-c3b1-4164-b018-05a05207e613/scratchpad/w7coverage.py",
+  "design_ids": 70,
+  "missing": []
+ },
+ "parts": [
+  "srs_delta_ws.json",
+  "srs_delta_rest.json"
+ ],
+ "notes": "TinyHttpd checkout at 38051b6 (three commits past 46b973e; websocket module unchanged except javadoc)."
+}

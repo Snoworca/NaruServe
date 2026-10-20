@@ -1,0 +1,17 @@
+{"relevant_files":[
+{"path":"NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java","relevance":"add multipart, staticFiles, mimeTypes, form limit, default cache policy"},
+{"path":"NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java","relevance":"add form/file/files/parts"},
+{"path":"NaruServe-api/src/main/java/com/snoworca/naruserve/Response.java","relevance":"add file/download/cache"},
+{"path":"NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java","line_range":"96-104,233,486-519,756","relevance":"settings, shutdown participants, Dispatcher construction"},
+{"path":"NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java","line_range":"112-150,278-305","relevance":"fallback order 204/405/426/501/404; static mounts after routes"},
+{"path":"NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java","line_range":"90-164","relevance":"parseQuery/decodeQuery, body reading"},
+{"path":"NaruServe-api/src/main/java/com/snoworca/naruserve/internal/BodyState.java","line_range":"24-26,88-121","relevance":"Kind.FORM, sharedParse"},
+{"path":"NaruServe-api/src/main/java/com/snoworca/naruserve/internal/LimitedInputStream.java","line_range":"26,124","relevance":"accumulated limits"},
+{"path":"NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java","line_range":"180,239,360-445","relevance":"stream/commit path for file bodies"},
+{"path":"NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ShutdownParticipants.java","line_range":"21-33","relevance":"AFTER_ON_STOP phase"},
+{"path":"NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpExchange.java","line_range":"80","relevance":"sendFile SPI unchanged"},
+{"path":"NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdFeatures.java","line_range":"21-24","relevance":"sendFile throws 'arrives in wave 6'"},
+{"path":"NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdExchange.java","line_range":"210-217","relevance":"synchronized sendFile delegate"}],
+"tests_affected":["NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java (LATER_WAVE_NAMES, exact signature sets, nullable positions)","NaruServe-api/src/test/java/com/snoworca/naruserve/AppDocsTest.java (KEPT static/multipart markers)","src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java (skips staticFiles, form, multipart, mimeTypes, cache)","src/test/java/com/snoworca/naruserve/docs/WaveFiveDocsTest.java:418-428","NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/AdapterSurfaceTest.java#sdsAc2_FR_ENGINE_001_AC2_featureHooksThrowNamingTheirWave"],
+"external_paths_detected":[],
+"risk":"TinyHttpd body limit vs 64 MiB uploads unchecked (ServerSettings mapping in TinyHttpdAdapter)"}

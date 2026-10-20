@@ -1,0 +1,1119 @@
+{
+  "run": "2026-10-19.naruserve.wave-1.v01",
+  "target": "wave-1",
+  "basis": "Nothing is implemented yet; scores judge feasibility of implementing each requirement against the current tree, TinyHttpd reference build and the frozen wave-1 design.",
+  "requirements": [
+    {
+      "id": "CON-BUILD-001",
+      "title": "Gradle 8.14.3 wrapper as the only build tool",
+      "axes": {
+        "implementability": {
+          "score": 30,
+          "max": 30
+        },
+        "evidence_strength": {
+          "score": 18,
+          "max": 20
+        },
+        "dependency_health": {
+          "score": 15,
+          "max": 15
+        },
+        "ac_verifiability": {
+          "score": 15,
+          "max": 15
+        },
+        "scope_fit": {
+          "score": 10,
+          "max": 10
+        },
+        "product_fit": {
+          "score": 10,
+          "max": 10
+        }
+      },
+      "total_score": 98,
+      "label": "high",
+      "evidence": [
+        "gradle/wrapper/gradle-wrapper.properties:3",
+        "gradlew:1",
+        "/Users/beom/work/git/TinyHttpd/build.gradle:1",
+        "docs/spec/02.build.srs.md:69",
+        "docs/research/naruserve-v1/waves/wave-1/design.md:12"
+      ],
+      "blockers": [],
+      "conditions": [
+        "Keep the repo free of pom.xml/build.xml/mvnw (none present at analysis time)."
+      ],
+      "has_verification": false,
+      "current_stability": "draft",
+      "current_status": "planned",
+      "priority": "high",
+      "external_module_impact": "none",
+      "notes": "AC-1 already holds on the current tree; only inspection evidence is missing.",
+      "pre_tag": [
+        "feasibility:high"
+      ]
+    },
+    {
+      "id": "CON-BUILD-002",
+      "title": "Module set and root project name",
+      "axes": {
+        "implementability": {
+          "score": 28,
+          "max": 30
+        },
+        "evidence_strength": {
+          "score": 16,
+          "max": 20
+        },
+        "dependency_health": {
+          "score": 15,
+          "max": 15
+        },
+        "ac_verifiability": {
+          "score": 13,
+          "max": 15
+        },
+        "scope_fit": {
+          "score": 10,
+          "max": 10
+        },
+        "product_fit": {
+          "score": 9,
+          "max": 10
+        }
+      },
+      "total_score": 91,
+      "label": "high",
+      "evidence": [
+        "settings.gradle:1",
+        "settings.gradle:3",
+        "/Users/beom/work/git/TinyHttpd/settings.gradle:1",
+        "docs/spec/02.build.srs.md:122",
+        "docs/spec/02.build.srs.md:123",
+        "docs/research/naruserve-v1/waves/wave-1/design.md:13",
+        "docs/research/naruserve-v1/waves/wave-1/design.md:74"
+      ],
+      "blockers": [],
+      "conditions": [
+        "Implementer picks the three logger module suffixes under C-07 within the NaruServe- prefix; the chosen names must then flow into OPS-BUILD-003."
+      ],
+      "has_verification": false,
+      "current_stability": "draft",
+      "current_status": "planned",
+      "priority": "high",
+      "external_module_impact": "none",
+      "notes": "Rename to NaruServe-build avoids a coordinate clash with the bootstrap module NaruServe; TinyHttpd root is tinyhttpd-project, so no clash there.",
+      "pre_tag": [
+        "feasibility:high"
+      ]
+    },
+    {
+      "id": "CON-BUILD-003",
+      "title": "Single root build file configures every module",
+      "axes": {
+        "implementability": {
+          "score": 29,
+          "max": 30
+        },
+        "evidence_strength": {
+          "score": 17,
+          "max": 20
+        },
+        "dependency_health": {
+          "score": 13,
+          "max": 15
+        },
+        "ac_verifiability": {
+          "score": 15,
+          "max": 15
+        },
+        "scope_fit": {
+          "score": 10,
+          "max": 10
+        },
+        "product_fit": {
+          "score": 10,
+          "max": 10
+        }
+      },
+      "total_score": 94,
+      "label": "high",
+      "evidence": [
+        "build.gradle:14",
+        "build.gradle:25",
+        "build.gradle:39",
+        "/Users/beom/work/git/TinyHttpd/build.gradle:18",
+        "docs/spec/02.build.srs.md:177",
+        "docs/research/naruserve-v1/waves/wave-1/design.md:14"
+      ],
+      "blockers": [],
+      "conditions": [
+        "Seven new modules need only a directory plus an include line; per-module build files stay forbidden."
+      ],
+      "has_verification": false,
+      "current_stability": "draft",
+      "current_status": "planned",
+      "priority": "high",
+      "external_module_impact": "none",
+      "notes": "",
+      "pre_tag": [
+        "feasibility:high"
+      ]
+    },
+    {
+      "id": "CON-BUILD-004",
+      "title": "Java 8 bytecode target for Java and Kotlin compilation",
+      "axes": {
+        "implementability": {
+          "score": 24,
+          "max": 30
+        },
+        "evidence_strength": {
+          "score": 15,
+          "max": 20
+        },
+        "dependency_health": {
+          "score": 13,
+          "max": 15
+        },
+        "ac_verifiability": {
+          "score": 14,
+          "max": 15
+        },
+        "scope_fit": {
+          "score": 10,
+          "max": 10
+        },
+        "product_fit": {
+          "score": 10,
+          "max": 10
+        }
+      },
+      "total_score": 86,
+      "label": "high",
+      "evidence": [
+        "build.gradle:18",
+        "build.gradle:19",
+        "/Users/beom/work/git/TinyHttpd/build.gradle:23",
+        "docs/spec/02.build.srs.md:232",
+        "docs/spec/02.build.srs.md:252",
+        "docs/research/naruserve-v1/waves/wave-1/design.md:17",
+        "docs/research/naruserve-v1/waves/wave-1/design.md:18"
+      ],
+      "blockers": [],
+      "conditions": [
+        "On JDK 17 the Kotlin Gradle Plugin JVM-target validation compares jvmTarget 1.8 with the Java task target; set sourceCompatibility/targetCompatibility = 1.8 next to options.release = 8 (Implementation Notes) or AC-3 fails.",
+        "Class-file major version 52 check needs a small verification step (javap or a test reading class headers)."
+      ],
+      "has_verification": false,
+      "current_stability": "draft",
+      "current_status": "planned",
+      "priority": "high",
+      "external_module_impact": "none",
+      "notes": "",
+      "pre_tag": [
+        "feasibility:high"
+      ]
+    },
+    {
+      "id": "CON-BUILD-005",
+      "title": "Maven group and Java package root",
+      "axes": {
+        "implementability": {
+          "score": 29,
+          "max": 30
+        },
+        "evidence_strength": {
+          "score": 17,
+          "max": 20
+        },
+        "dependency_health": {
+          "score": 15,
+          "max": 15
+        },
+        "ac_verifiability": {
+          "score": 14,
+          "max": 15
+        },
+        "scope_fit": {
+          "score": 10,
+          "max": 10
+        },
+        "product_fit": {
+          "score": 10,
+          "max": 10
+        }
+      },
+      "total_score": 95,
+      "label": "high",
+      "evidence": [
+        "build.gradle:6",
+        "docs/spec/02.build.srs.md:285",
+        "docs/research/naruserve-v1/waves/wave-1/design.md:19"
+      ],
+      "blockers": [],
+      "conditions": [
+        "Package check covers main source sets only; test-scope fake android.util.Log (D-403) is allowed."
+      ],
+      "has_verification": false,
+      "current_stability": "draft",
+      "current_status": "planned",
+      "priority": "high",
+      "external_module_impact": "none",
+      "notes": "",
+      "pre_tag": [
+        "feasibility:high"
+      ]
+    },
+    {
+      "id": "CON-BUILD-006",
+      "title": "Main dependencies of every module declared in wave 1",
+      "axes": {
+        "implementability": {
+          "score": 25,
+          "max": 30
+        },
+        "evidence_strength": {
+          "score": 17,
+          "max": 20
+        },
+        "dependency_health": {
+          "score": 12,
+          "max": 15
+        },
+        "ac_verifiability": {
+          "score": 13,
+          "max": 15
+        },
+        "scope_fit": {
+          "score": 9,
+          "max": 10
+        },
+        "product_fit": {
+          "score": 10,
+          "max": 10
+        }
+      },
+      "total_score": 86,
+      "label": "high",
+      "evidence": [
+        "build.gradle:33",
+        "build.gradle:41",
+        "build.gradle:42",
+        "docs/spec/02.build.srs.md:337",
+        "docs/spec/02.build.srs.md:345",
+        "docs/research/naruserve-v1/waves/wave-1/design.md:16",
+        "docs/research/naruserve-v1/waves/wave-1/design.md:21",
+        "docs/research/naruserve-v1/waves/wave-1/design.md:23",
+        "docs/research/naruserve-v1/waves/wave-1/design.md:24",
+        "docs/research/naruserve-v1/waves/wave-1/design.md:26"
+      ],
+      "blockers": [],
+      "conditions": [
+        "All named artifacts resolve on Maven Central at analysis time (gson 2.14.0, javax.websocket-api 1.1, slf4j-api 1.7.36, junit 4.13.2: HTTP 200).",
+        "gson 2.14.0 brings com.google.errorprone:error_prone_annotations transitively; AC-4 is about declarations, so it holds, but the transitive jar appears on runtimeClasspath of gson consumers.",
+        "Ordering with CON-BUILD-011: the nullability library choice (CON-BUILD-011, C-07) is made first; CON-BUILD-006 AC-2/AC-4/AC-6 then declare it, and both land in the same root build.gradle change (co-implemented)."
+      ],
+      "has_verification": false,
+      "current_stability": "draft",
+      "current_status": "planned",
+      "priority": "high",
+      "external_module_impact": "none",
+      "notes": "Nine ACs across nine modules: implementable but the widest requirement of the wave; the run-end D-005 clause is explicitly deferred.",
+      "pre_tag": [
+        "feasibility:high"
+      ],
+      "original_judgement": {
+        "axes": {
+          "implementability": {
+            "score": 25,
+            "max": 30
+          },
+          "evidence_strength": {
+            "score": 17,
+            "max": 20
+          },
+          "dependency_health": {
+            "score": 12,
+            "max": 15
+          },
+          "ac_verifiability": {
+            "score": 13,
+            "max": 15
+          },
+          "scope_fit": {
+            "score": 9,
+            "max": 10
+          },
+          "product_fit": {
+            "score": 10,
+            "max": 10
+          }
+        },
+        "total_score": 86,
+        "label": "high",
+        "evidence": [
+          "build.gradle:33",
+          "build.gradle:41",
+          "build.gradle:42",
+          "docs/spec/02.build.srs.md:337",
+          "docs/spec/02.build.srs.md:345",
+          "docs/research/naruserve-v1/waves/wave-1/design.md:16",
+          "docs/research/naruserve-v1/waves/wave-1/design.md:21",
+          "docs/research/naruserve-v1/waves/wave-1/design.md:23",
+          "docs/research/naruserve-v1/waves/wave-1/design.md:24",
+          "docs/research/naruserve-v1/waves/wave-1/design.md:26"
+        ],
+        "conditions": [
+          "All named artifacts resolve on Maven Central at analysis time (gson 2.14.0, javax.websocket-api 1.1, slf4j-api 1.7.36, junit 4.13.2: HTTP 200).",
+          "gson 2.14.0 brings com.google.errorprone:error_prone_annotations transitively; AC-4 is about declarations, so it holds, but the transitive jar appears on runtimeClasspath of gson consumers.",
+          "Depends on the nullability library choice of CON-BUILD-011 being made first."
+        ],
+        "notes": "Nine ACs across nine modules: implementable but the widest requirement of the wave; the run-end D-005 clause is explicitly deferred."
+      }
+    },
+    {
+      "id": "CON-BUILD-007",
+      "title": "kotlin-stdlib confined to the Kotlin extension module",
+      "axes": {
+        "implementability": {
+          "score": 25,
+          "max": 30
+        },
+        "evidence_strength": {
+          "score": 15,
+          "max": 20
+        },
+        "dependency_health": {
+          "score": 12,
+          "max": 15
+        },
+        "ac_verifiability": {
+          "score": 14,
+          "max": 15
+        },
+        "scope_fit": {
+          "score": 10,
+          "max": 10
+        },
+        "product_fit": {
+          "score": 10,
+          "max": 10
+        }
+      },
+      "total_score": 86,
+      "label": "high",
+      "evidence": [
+        "build.gradle:14",
+        "/Users/beom/work/git/TinyHttpd/build.gradle:51",
+        "docs/spec/02.build.srs.md:402",
+        "docs/spec/02.build.srs.md:403",
+        "docs/research/naruserve-v1/waves/wave-1/design.md:22",
+        "docs/research/naruserve-v1/waves/wave-1/design.md:48",
+        "docs/research/naruserve-v1/waves/wave-1/design.md:49"
+      ],
+      "blockers": [],
+      "conditions": [
+        "The runtimeClasspath check is new code; TinyHttpd checkRuntimeDependencies (build.gradle:51-61) is a direct pattern to copy.",
+        "gradle.properties does not exist yet (addition_site)."
+      ],
+      "has_verification": false,
+      "current_stability": "draft",
+      "current_status": "planned",
+      "priority": "high",
+      "external_module_impact": "none",
+      "notes": "",
+      "pre_tag": [
+        "feasibility:high"
+      ]
+    },
+    {
+      "id": "CON-BUILD-008",
+      "title": "Logcat Logger module builds without an Android SDK",
+      "axes": {
+        "implementability": {
+          "score": 26,
+          "max": 30
+        },
+        "evidence_strength": {
+          "score": 14,
+          "max": 20
+        },
+        "dependency_health": {
+          "score": 12,
+          "max": 15
+        },
+        "ac_verifiability": {
+          "score": 13,
+          "max": 15
+        },
+        "scope_fit": {
+          "score": 10,
+          "max": 10
+        },
+        "product_fit": {
+          "score": 10,
+          "max": 10
+        }
+      },
+      "total_score": 85,
+      "label": "high",
+      "evidence": [
+        "build.gradle:26",
+        "docs/spec/02.build.srs.md:457",
+        "docs/research/naruserve-v1/waves/wave-1/design.md:25"
+      ],
+      "blockers": [],
+      "conditions": [
+        "Reflection-only access to android.util.Log; a test-scope fake android.util.Log (D-403) is allowed but must stay out of the main source set so animal-sniffer and CON-BUILD-005 hold.",
+        "\"Runs its tests\" is weak in wave 1 if the module ships no test yet; evidence should cite at least a compile plus test task run."
+      ],
+      "has_verification": false,
+      "current_stability": "draft",
+      "current_status": "planned",
+      "priority": "high",
+      "external_module_impact": "none",
+      "notes": "",
+      "pre_tag": [
+        "feasibility:high"
+      ]
+    },
+    {
+      "id": "OPS-BUILD-001",
+      "title": "TinyHttpd composite build through a Gradle property",
+      "axes": {
+        "implementability": {
+          "score": 26,
+          "max": 30
+        },
+        "evidence_strength": {
+          "score": 16,
+          "max": 20
+        },
+        "dependency_health": {
+          "score": 14,
+          "max": 15
+        },
+        "ac_verifiability": {
+          "score": 14,
+          "max": 15
+        },
+        "scope_fit": {
+          "score": 10,
+          "max": 10
+        },
+        "product_fit": {
+          "score": 8,
+          "max": 10
+        }
+      },
+      "total_score": 88,
+      "label": "high",
+      "evidence": [
+        "settings.gradle:1",
+        "/Users/beom/work/git/TinyHttpd/settings.gradle:1",
+        "/Users/beom/work/git/TinyHttpd/settings.gradle:3",
+        "/Users/beom/work/git/TinyHttpd/settings.gradle:6",
+        "/Users/beom/work/git/TinyHttpd/build.gradle:6",
+        "docs/spec/02.build.srs.md:510",
+        "docs/spec/02.build.srs.md:512",
+        "docs/research/naruserve-v1/waves/wave-1/design.md:32",
+        "docs/research/naruserve-v1/waves/wave-1/design.md:34"
+      ],
+      "blockers": [],
+      "conditions": [
+        "The checkout must exist at /Users/beom/work/git/TinyHttpd (present, HEAD 46b973e at analysis time).",
+        "Read the property in settings.gradle via providers.gradleProperty(...) with an in-file default, and throw a GradleException naming the property and path when the directory is missing.",
+        "Absolute machine-specific default is accepted by the design (D-013) but ties the default build to this machine."
+      ],
+      "has_verification": false,
+      "current_stability": "draft",
+      "current_status": "planned",
+      "priority": "high",
+      "external_module_impact": "Build writes git-ignored output under /Users/beom/work/git/TinyHttpd (build/, .gradle); no tracked file is touched.",
+      "notes": "",
+      "pre_tag": [
+        "feasibility:high"
+      ]
+    },
+    {
+      "id": "CON-BUILD-009",
+      "title": "TinyHttpd dependency boundaries",
+      "axes": {
+        "implementability": {
+          "score": 26,
+          "max": 30
+        },
+        "evidence_strength": {
+          "score": 16,
+          "max": 20
+        },
+        "dependency_health": {
+          "score": 12,
+          "max": 15
+        },
+        "ac_verifiability": {
+          "score": 14,
+          "max": 15
+        },
+        "scope_fit": {
+          "score": 10,
+          "max": 10
+        },
+        "product_fit": {
+          "score": 10,
+          "max": 10
+        }
+      },
+      "total_score": 88,
+      "label": "high",
+      "evidence": [
+        "/Users/beom/work/git/TinyHttpd/build.gradle:6",
+        "/Users/beom/work/git/TinyHttpd/settings.gradle:3",
+        "/Users/beom/work/git/TinyHttpd/settings.gradle:5",
+        "docs/spec/02.build.srs.md:565",
+        "docs/spec/02.build.srs.md:568",
+        "docs/research/naruserve-v1/waves/wave-1/design.md:35",
+        "docs/research/naruserve-v1/waves/wave-1/design.md:77"
+      ],
+      "blockers": [],
+      "conditions": [
+        "Composite substitution works because TinyHttpd projects carry group com.snoworca.tinyhttpd and project names tinyhttpd-core / tinyhttpd-websocket.",
+        "Depends on OPS-BUILD-001 includeBuild being in place first."
+      ],
+      "has_verification": false,
+      "current_stability": "draft",
+      "current_status": "planned",
+      "priority": "high",
+      "external_module_impact": "Uses the included TinyHttpd projects read-only.",
+      "notes": "",
+      "pre_tag": [
+        "feasibility:high"
+      ]
+    },
+    {
+      "id": "CON-BUILD-010",
+      "title": "TinyHttpd checkout stays read-only",
+      "axes": {
+        "implementability": {
+          "score": 24,
+          "max": 30
+        },
+        "evidence_strength": {
+          "score": 15,
+          "max": 20
+        },
+        "dependency_health": {
+          "score": 13,
+          "max": 15
+        },
+        "ac_verifiability": {
+          "score": 12,
+          "max": 15
+        },
+        "scope_fit": {
+          "score": 9,
+          "max": 10
+        },
+        "product_fit": {
+          "score": 10,
+          "max": 10
+        }
+      },
+      "total_score": 83,
+      "label": "high",
+      "evidence": [
+        "/Users/beom/work/git/TinyHttpd/.gitignore:2",
+        "/Users/beom/work/git/TinyHttpd/.gitignore:13",
+        "docs/spec/02.build.srs.md:622",
+        "docs/spec/02.build.srs.md:623",
+        "docs/research/naruserve-v1/waves/wave-1/design.md:38",
+        "docs/research/naruserve-v1/waves/wave-1/design.md:39",
+        "docs/research/naruserve-v1/waves/wave-1/design.md:78"
+      ],
+      "blockers": [],
+      "conditions": [
+        "Relies on TinyHttpd .gitignore covering build/ and .gradle; a TinyHttpd build that emits a non-ignored file would break AC-1.",
+        "AC-2 is process evidence (deferred-issue list), not an automated check.",
+        "Serial waves only: parallel workers sharing the TinyHttpd build output are excluded by the design."
+      ],
+      "has_verification": false,
+      "current_stability": "draft",
+      "current_status": "planned",
+      "priority": "high",
+      "external_module_impact": "Constrains /Users/beom/work/git/TinyHttpd: read-only; verified by git status --porcelain there.",
+      "notes": "",
+      "pre_tag": [
+        "feasibility:high"
+      ]
+    },
+    {
+      "id": "OPS-BUILD-002",
+      "title": "Test tooling and the root build gate",
+      "axes": {
+        "implementability": {
+          "score": 24,
+          "max": 30
+        },
+        "evidence_strength": {
+          "score": 15,
+          "max": 20
+        },
+        "dependency_health": {
+          "score": 12,
+          "max": 15
+        },
+        "ac_verifiability": {
+          "score": 14,
+          "max": 15
+        },
+        "scope_fit": {
+          "score": 10,
+          "max": 10
+        },
+        "product_fit": {
+          "score": 10,
+          "max": 10
+        }
+      },
+      "total_score": 85,
+      "label": "high",
+      "evidence": [
+        "/Users/beom/work/git/TinyHttpd/build.gradle:46",
+        "/Users/beom/work/git/TinyHttpd/build.gradle:63",
+        "docs/spec/02.build.srs.md:679",
+        "docs/spec/02.build.srs.md:680",
+        "docs/research/naruserve-v1/waves/wave-1/design.md:44",
+        "docs/research/naruserve-v1/waves/wave-1/design.md:45",
+        "docs/research/naruserve-v1/waves/wave-1/design.md:46",
+        "docs/research/naruserve-v1/waves/wave-1/design.md:47"
+      ],
+      "blockers": [],
+      "conditions": [
+        "Kotlin test source sets need kotlin-stdlib in test scope because kotlin.stdlib.default.dependency=false.",
+        "Depends on CON-BUILD-004 AC-3 (JVM-target consistency) and on CON-BUILD-007 AC-2 (kotlin.stdlib.default.dependency=false, referenced by AC-5); dependency_health 12/15 reflects these three upstream requirements only."
+      ],
+      "has_verification": false,
+      "current_stability": "draft",
+      "current_status": "planned",
+      "priority": "high",
+      "external_module_impact": "none",
+      "notes": "Info only: Kotlin Gradle Plugin 2.x is not in the local Gradle cache, so the first build downloads it; network access is available, so no score is reduced for it (F08).",
+      "pre_tag": [
+        "feasibility:high"
+      ],
+      "original_judgement": {
+        "axes": {
+          "implementability": {
+            "score": 24,
+            "max": 30
+          },
+          "evidence_strength": {
+            "score": 15,
+            "max": 20
+          },
+          "dependency_health": {
+            "score": 12,
+            "max": 15
+          },
+          "ac_verifiability": {
+            "score": 14,
+            "max": 15
+          },
+          "scope_fit": {
+            "score": 10,
+            "max": 10
+          },
+          "product_fit": {
+            "score": 10,
+            "max": 10
+          }
+        },
+        "total_score": 85,
+        "label": "high",
+        "evidence": [
+          "/Users/beom/work/git/TinyHttpd/build.gradle:46",
+          "/Users/beom/work/git/TinyHttpd/build.gradle:63",
+          "docs/spec/02.build.srs.md:679",
+          "docs/spec/02.build.srs.md:680",
+          "docs/research/naruserve-v1/waves/wave-1/design.md:44",
+          "docs/research/naruserve-v1/waves/wave-1/design.md:45",
+          "docs/research/naruserve-v1/waves/wave-1/design.md:46",
+          "docs/research/naruserve-v1/waves/wave-1/design.md:47"
+        ],
+        "conditions": [
+          "Kotlin Gradle Plugin 2.x is not in the local Gradle cache; the first build needs network access to the plugin portal.",
+          "Kotlin test source sets need kotlin-stdlib in test scope because kotlin.stdlib.default.dependency=false.",
+          "Depends on CON-BUILD-004 AC-3 (JVM-target consistency) to keep ./gradlew build green."
+        ],
+        "notes": ""
+      }
+    },
+    {
+      "id": "CON-BUILD-011",
+      "title": "compileOnly nullability annotations recognised by Kotlin",
+      "axes": {
+        "implementability": {
+          "score": 24,
+          "max": 30
+        },
+        "evidence_strength": {
+          "score": 14,
+          "max": 20
+        },
+        "dependency_health": {
+          "score": 12,
+          "max": 15
+        },
+        "ac_verifiability": {
+          "score": 12,
+          "max": 15
+        },
+        "scope_fit": {
+          "score": 10,
+          "max": 10
+        },
+        "product_fit": {
+          "score": 10,
+          "max": 10
+        }
+      },
+      "total_score": 82,
+      "label": "high",
+      "evidence": [
+        "docs/spec/02.build.srs.md:733",
+        "docs/spec/02.build.srs.md:734",
+        "docs/research/naruserve-v1/waves/wave-1/design.md:53",
+        "CLAUDE.md:35"
+      ],
+      "blockers": [],
+      "conditions": [
+        "Library not chosen yet (C-07); it must be Kotlin-recognised, compileOnly, annotation-only and API 21 clean (e.g. JSpecify or JetBrains annotations).",
+        "AC-2 needs a negative compile fixture (assert that val s: String = annotatedNullable() fails to compile); this needs a test harness that invokes the Kotlin compiler or a dedicated failing source set, which is non-trivial."
+      ],
+      "has_verification": false,
+      "current_stability": "draft",
+      "current_status": "planned",
+      "priority": "high",
+      "external_module_impact": "none",
+      "notes": "",
+      "pre_tag": [
+        "feasibility:high"
+      ],
+      "original_judgement": {
+        "axes": {
+          "implementability": {
+            "score": 24,
+            "max": 30
+          },
+          "evidence_strength": {
+            "score": 14,
+            "max": 20
+          },
+          "dependency_health": {
+            "score": 12,
+            "max": 15
+          },
+          "ac_verifiability": {
+            "score": 12,
+            "max": 15
+          },
+          "scope_fit": {
+            "score": 10,
+            "max": 10
+          },
+          "product_fit": {
+            "score": 10,
+            "max": 10
+          }
+        },
+        "total_score": 82,
+        "label": "high",
+        "evidence": [
+          "docs/spec/02.build.srs.md:733",
+          "docs/spec/02.build.srs.md:734",
+          "docs/research/naruserve-v1/waves/wave-1/design.md:53",
+          "CLAUDE.md:36"
+        ],
+        "conditions": [
+          "Library not chosen yet (C-07); it must be Kotlin-recognised, compileOnly, annotation-only and API 21 clean (e.g. JSpecify or JetBrains annotations).",
+          "AC-2 needs a negative compile fixture (assert that val s: String = annotatedNullable() fails to compile); this needs a test harness that invokes the Kotlin compiler or a dedicated failing source set, which is non-trivial."
+        ],
+        "notes": ""
+      }
+    },
+    {
+      "id": "CON-BUILD-012",
+      "title": "animal-sniffer API 21 check on Android-bound modules",
+      "axes": {
+        "implementability": {
+          "score": 24,
+          "max": 30
+        },
+        "evidence_strength": {
+          "score": 17,
+          "max": 20
+        },
+        "dependency_health": {
+          "score": 13,
+          "max": 15
+        },
+        "ac_verifiability": {
+          "score": 13,
+          "max": 15
+        },
+        "scope_fit": {
+          "score": 10,
+          "max": 10
+        },
+        "product_fit": {
+          "score": 10,
+          "max": 10
+        }
+      },
+      "total_score": 87,
+      "label": "high",
+      "evidence": [
+        "build.gradle:2",
+        "build.gradle:26",
+        "build.gradle:29",
+        "build.gradle:34",
+        "/Users/beom/work/git/TinyHttpd/build.gradle:20",
+        "/Users/beom/work/git/TinyHttpd/build.gradle:39",
+        "/Users/beom/work/git/TinyHttpd/build.gradle:44",
+        "docs/spec/02.build.srs.md:787",
+        "docs/spec/02.build.srs.md:788",
+        "docs/research/naruserve-v1/waves/wave-1/design.md:54",
+        "docs/research/naruserve-v1/waves/wave-1/design.md:55"
+      ],
+      "blockers": [],
+      "conditions": [
+        "Same plugin (ru.vyarus.animalsniffer 2.0.1) and signature as TinyHttpd, already wired for NaruServe-api.",
+        "Kotlin main classes (NaruServe-kotlin) compiled with jvmTarget 1.8 may emit invokedynamic lambdas; confirm animal-sniffer does not report LambdaMetafactory, or compile with -Xlambdas=class.",
+        "The negative half of AC-1 (a forbidden API fails the check) needs a throwaway fixture or a documented manual run."
+      ],
+      "has_verification": false,
+      "current_stability": "draft",
+      "current_status": "planned",
+      "priority": "high",
+      "external_module_impact": "none",
+      "notes": "",
+      "pre_tag": [
+        "feasibility:high"
+      ]
+    },
+    {
+      "id": "CON-BUILD-013",
+      "title": "Core isolation, servlet-free Android modules and single Gson version build checks",
+      "axes": {
+        "implementability": {
+          "score": 23,
+          "max": 30
+        },
+        "evidence_strength": {
+          "score": 14,
+          "max": 20
+        },
+        "dependency_health": {
+          "score": 12,
+          "max": 15
+        },
+        "ac_verifiability": {
+          "score": 12,
+          "max": 15
+        },
+        "scope_fit": {
+          "score": 10,
+          "max": 10
+        },
+        "product_fit": {
+          "score": 10,
+          "max": 10
+        }
+      },
+      "total_score": 81,
+      "label": "high",
+      "evidence": [
+        "/Users/beom/work/git/TinyHttpd/build.gradle:51",
+        "/Users/beom/work/git/TinyHttpd/build.gradle:53",
+        "docs/spec/02.build.srs.md:841",
+        "docs/spec/02.build.srs.md:842",
+        "docs/spec/02.build.srs.md:843",
+        "docs/research/naruserve-v1/waves/wave-1/design.md:5"
+      ],
+      "blockers": [],
+      "conditions": [
+        "Three new custom checks with no existing helper: two bytecode reference scans (forbidden packages in NaruServe-api main output; javax.servlet in seven Android modules) and one Gson version resolution check.",
+        "The bytecode scans can use jdeps from JDK 17, a buildscript ASM dependency or a Groovy constant-pool scan; CON-BUILD-006 governs module configurations only, not the buildscript classpath. The Gson check can follow the TinyHttpd resolved-classpath pattern (build.gradle:51-61).",
+        "Negative paths of each AC need fixtures to prove the check fails."
+      ],
+      "has_verification": false,
+      "current_stability": "draft",
+      "current_status": "planned",
+      "priority": "high",
+      "external_module_impact": "none",
+      "notes": "In scope: design.md:5 places the build-related I-items at this wave merge. Still the most custom-code-heavy item of the wave. Re-scored in iter 1 (F03).",
+      "pre_tag": [
+        "feasibility:high"
+      ],
+      "original_judgement": {
+        "axes": {
+          "implementability": {
+            "score": 21,
+            "max": 30
+          },
+          "evidence_strength": {
+            "score": 13,
+            "max": 20
+          },
+          "dependency_health": {
+            "score": 12,
+            "max": 15
+          },
+          "ac_verifiability": {
+            "score": 12,
+            "max": 15
+          },
+          "scope_fit": {
+            "score": 9,
+            "max": 10
+          },
+          "product_fit": {
+            "score": 10,
+            "max": 10
+          }
+        },
+        "total_score": 77,
+        "label": "medium",
+        "evidence": [
+          "/Users/beom/work/git/TinyHttpd/build.gradle:51",
+          "docs/spec/02.build.srs.md:841",
+          "docs/spec/02.build.srs.md:842",
+          "docs/spec/02.build.srs.md:843",
+          "docs/research/naruserve-v1/waves/wave-1/design.md:5"
+        ],
+        "conditions": [
+          "Three new custom checks with no existing helper: two bytecode reference scans (forbidden packages in NaruServe-api main output; javax.servlet in seven Android modules) and one Gson version resolution check.",
+          "The bytecode scans need jdeps (JDK 17) or a class constant-pool scan; Gradle has no public ASM API, and adding a build-script dependency must not violate CON-BUILD-006.",
+          "Negative paths of each AC need fixtures to prove the check fails.",
+          "Requirement comes from loop-W integration items (I-002/I-004/I-005), not from a numbered D- item of the wave."
+        ],
+        "notes": "Feasible but the most custom-code-heavy item; medium rather than high."
+      }
+    },
+    {
+      "id": "OPS-BUILD-003",
+      "title": "Module names and coordinates in docs/api and CLAUDE.md",
+      "axes": {
+        "implementability": {
+          "score": 25,
+          "max": 30
+        },
+        "evidence_strength": {
+          "score": 15,
+          "max": 20
+        },
+        "dependency_health": {
+          "score": 12,
+          "max": 15
+        },
+        "ac_verifiability": {
+          "score": 12,
+          "max": 15
+        },
+        "scope_fit": {
+          "score": 9,
+          "max": 10
+        },
+        "product_fit": {
+          "score": 10,
+          "max": 10
+        }
+      },
+      "total_score": 83,
+      "label": "high",
+      "evidence": [
+        "CLAUDE.md:21",
+        "CLAUDE.md:38",
+        "docs/api/README.md:93",
+        "docs/api/json.md:47",
+        "docs/api/kotlin.md:97",
+        "docs/api/kotlin.md:99",
+        "docs/api/logging.md:83",
+        "docs/api/servlet.md:11",
+        "docs/spec/02.build.srs.md:899",
+        "docs/spec/02.build.srs.md:900",
+        "docs/research/naruserve-v1/waves/wave-1/design.md:59",
+        "docs/research/naruserve-v1/waves/wave-1/design.md:60",
+        "docs/research/naruserve-v1/waves/wave-1/design.md:76"
+      ],
+      "blockers": [],
+      "conditions": [
+        "AC-2 counts only (미확정) markers about module names or coordinates; the same files keep other (미확정) markers (e.g. docs/api/app.md:22, docs/api/logging.md:33), so the check needs a reviewer judgement, not a plain grep.",
+        "Final logger module names come from CON-BUILD-002 and must be fixed first."
+      ],
+      "has_verification": false,
+      "current_stability": "draft",
+      "current_status": "planned",
+      "priority": "medium",
+      "external_module_impact": "none",
+      "notes": "Documentation-only; D-448 (design.md:60) requires the CLAUDE.md module-line edit in wave 1. Depends on CON-BUILD-002 and CON-BUILD-012 decisions. Re-scored in iter 1 (F02): the CLAUDE.md authorization deduction was removed.",
+      "pre_tag": [
+        "feasibility:high"
+      ],
+      "original_judgement": {
+        "axes": {
+          "implementability": {
+            "score": 25,
+            "max": 30
+          },
+          "evidence_strength": {
+            "score": 15,
+            "max": 20
+          },
+          "dependency_health": {
+            "score": 12,
+            "max": 15
+          },
+          "ac_verifiability": {
+            "score": 12,
+            "max": 15
+          },
+          "scope_fit": {
+            "score": 9,
+            "max": 10
+          },
+          "product_fit": {
+            "score": 6,
+            "max": 10
+          }
+        },
+        "total_score": 79,
+        "label": "medium",
+        "evidence": [
+          "CLAUDE.md:21",
+          "CLAUDE.md:38",
+          "docs/api/README.md:93",
+          "docs/api/json.md:47",
+          "docs/api/kotlin.md:97",
+          "docs/api/kotlin.md:99",
+          "docs/api/logging.md:83",
+          "docs/api/servlet.md:11",
+          "docs/spec/02.build.srs.md:899",
+          "docs/spec/02.build.srs.md:900",
+          "docs/research/naruserve-v1/waves/wave-1/design.md:59",
+          "docs/research/naruserve-v1/waves/wave-1/design.md:60",
+          "docs/research/naruserve-v1/waves/wave-1/design.md:76"
+        ],
+        "conditions": [
+          "Editing CLAUDE.md (AC-3, AC-4) changes project agent instructions; an agent may not do this on another agent's say-so, so the user must authorize the CLAUDE.md edit.",
+          "AC-2 counts only (미확정) markers about module names or coordinates; the same files keep other (미확정) markers (e.g. docs/api/app.md:22, docs/api/logging.md:33), so the check needs a reviewer judgement, not a plain grep.",
+          "Final logger module names come from CON-BUILD-002 and must be fixed first."
+        ],
+        "notes": "Documentation-only; depends on CON-BUILD-002 and CON-BUILD-012 decisions."
+      }
+    }
+  ]
+}

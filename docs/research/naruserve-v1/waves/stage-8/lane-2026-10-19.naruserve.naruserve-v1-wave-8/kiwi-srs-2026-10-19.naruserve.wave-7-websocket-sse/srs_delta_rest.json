@@ -1,0 +1,484 @@
+{
+ "run": "kiwi-srs-2026-10-19.naruserve.wave-7-websocket-sse",
+ "part": "items 14-29 (SSE, APP, ENGINE, HTTP)",
+ "target": "wave-7",
+ "added_ids": [
+  "IR-SSE-001",
+  "FR-SSE-001",
+  "FR-SSE-002",
+  "FR-SSE-003",
+  "FR-SSE-004",
+  "FR-SSE-005",
+  "OPS-SSE-001",
+  "FR-APP-020",
+  "PERF-APP-001",
+  "IR-HTTP-008"
+ ],
+ "supersedes": {
+  "FR-APP-015": "FR-APP-019",
+  "OPS-APP-004": "OPS-APP-005",
+  "FR-ENGINE-010": "FR-ENGINE-011",
+  "OPS-ENGINE-001": "OPS-ENGINE-002",
+  "IR-HTTP-004": "IR-HTTP-007",
+  "OPS-HTTP-006": "OPS-HTTP-007"
+ },
+ "requirements": {
+  "IR-SSE-001": {
+   "title": "Public SSE API: res.sse(), SseClient, SseEvent and app.sse(Configurer<SseOptions>)",
+   "file": "docs/spec/12.server-sent-events.srs.md",
+   "ac_count": 7,
+   "covered_tags": [
+    "C-03",
+    "D-326",
+    "D-330",
+    "D-332",
+    "D-339",
+    "D-419",
+    "T11"
+   ],
+   "traces": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/Response.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java"
+   ],
+   "links": [
+    "IR-APP-007 extends",
+    "FR-APP-002 extends",
+    "FR-HTTP-016 extends"
+   ],
+   "tests_to_repoint": "`HttpApiSurfaceTest` (the `LATER_WAVE_NAMES` entry `sse` and the `Response` method set) moves to IR-SSE-001."
+  },
+  "FR-SSE-001": {
+   "title": "SSE stream start and event serialisation: 200 with event-stream headers, field order, line splitting, name and id checks, data-only events and Last-Event-ID",
+   "file": "docs/spec/12.server-sent-events.srs.md",
+   "ac_count": 9,
+   "covered_tags": [
+    "D-326",
+    "D-328",
+    "D-329",
+    "D-330",
+    "D-331",
+    "D-337",
+    "D-339"
+   ],
+   "traces": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/Response.java"
+   ],
+   "links": [
+    "FR-HTTP-016 extends",
+    "FR-HTTP-011 extends",
+    "FR-HTTP-015 extends",
+    "IR-SSE-001 depends_on"
+   ],
+   "tests_to_repoint": "none (new requirement)"
+  },
+  "FR-SSE-002": {
+   "title": "SSE outbound queue, drain loop and heartbeat: any-thread sends in call order, handler-thread writes before the drain starts and the overflow policy",
+   "file": "docs/spec/12.server-sent-events.srs.md",
+   "ac_count": 7,
+   "covered_tags": [
+    "D-332",
+    "D-333",
+    "D-339",
+    "D-406",
+    "residual: SSE send order before the drain starts (r5 W2-001)",
+    "wave decision: Sends inside the SSE handler (r4 W2-001)"
+   ],
+   "traces": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/StreamDrain.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java"
+   ],
+   "links": [
+    "IR-HTTP-003 extends",
+    "IR-SSE-001 depends_on",
+    "FR-SSE-001 depends_on"
+   ],
+   "tests_to_repoint": "none (new requirement)"
+  },
+  "FR-SSE-003": {
+   "title": "TinyHttpd event-stream class: chunked body on the request worker, NaruServe SSE counter with 503 before start, drain writes synchronized on the exchange",
+   "file": "docs/spec/12.server-sent-events.srs.md",
+   "ac_count": 7,
+   "covered_tags": [
+    "D-335",
+    "D-336",
+    "carried: wave 5 drain synchronization (w5-P2-002)",
+    "wave decision: SSE limit answer (r3 W2-001)",
+    "wave decision: TinyHttpd feature hooks (W2-003)",
+    "wave decision: maxEventStreams (W2-009)"
+   ],
+   "traces": [
+    "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdFeatures.java",
+    "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdExchange.java"
+   ],
+   "links": [
+    "FR-ENGINE-004 extends",
+    "FR-APP-005 extends",
+    "FR-SSE-002 depends_on",
+    "FR-ENGINE-011 depends_on"
+   ],
+   "tests_to_repoint": "none (new requirement)"
+  },
+  "FR-SSE-004": {
+   "title": "SSE stream lifetime: open after the handler returns, onClose exactly once, explicit close, HEAD on an SSE route, req.service in SSE handlers and shutdown from onClose",
+   "file": "docs/spec/12.server-sent-events.srs.md",
+   "ac_count": 8,
+   "covered_tags": [
+    "D-327",
+    "D-334",
+    "D-339",
+    "carried: D-142 SSE case",
+    "residual: shutdown from an SSE onClose listener (r5 W2-004)",
+    "wave decision: HEAD on an SSE route (r3 W2-002)"
+   ],
+   "traces": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/GatedExchangeHandler.java"
+   ],
+   "links": [
+    "FR-HTTP-017 extends",
+    "IR-APP-004 extends",
+    "FR-APP-011 extends",
+    "FR-SSE-002 depends_on",
+    "FR-SSE-003 depends_on"
+   ],
+   "tests_to_repoint": "none (new requirement)"
+  },
+  "FR-SSE-005": {
+   "title": "Shutdown of SSE streams: before-wait participant appends the closing notice, marks streams ended and does not wait",
+   "file": "docs/spec/12.server-sent-events.srs.md",
+   "ac_count": 6,
+   "covered_tags": [
+    "D-341",
+    "D-343",
+    "D-436",
+    "D-445"
+   ],
+   "traces": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ShutdownParticipants.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java"
+   ],
+   "links": [
+    "FR-APP-011 extends",
+    "FR-ENGINE-006 extends",
+    "FR-SSE-002 depends_on",
+    "FR-SSE-004 depends_on"
+   ],
+   "tests_to_repoint": "none (new requirement)"
+  },
+  "OPS-SSE-001": {
+   "title": "SSE API documentation records the wave 7 decisions without markers, with compiling Java examples and a Kotlin compile-and-run test",
+   "file": "docs/spec/12.server-sent-events.srs.md",
+   "ac_count": 5,
+   "covered_tags": [
+    "C-03",
+    "D-332",
+    "D-339",
+    "D-419",
+    "D-436",
+    "T11",
+    "residual: SSE send order before the drain starts (r5 W2-001)",
+    "wave decision: HEAD on an SSE route (r3 W2-002)",
+    "wave decision: Sends inside the SSE handler (r4 W2-001)"
+   ],
+   "traces": [
+    "docs/api/sse.md",
+    "docs/api/defaults.md"
+   ],
+   "links": [
+    "OPS-HTTP-004 extends",
+    "IR-SSE-001 depends_on",
+    "FR-SSE-002 depends_on",
+    "FR-SSE-005 depends_on"
+   ],
+   "tests_to_repoint": "none (new requirement)"
+  },
+  "FR-APP-020": {
+   "title": "Long-connection shutdown coordination: closed flags before snapshots, participants with the deadline, the accepting phase, in-flight requests, force-close and the 3 s bound",
+   "file": "docs/spec/05.application.srs.md",
+   "ac_count": 9,
+   "covered_tags": [
+    "D-342",
+    "D-343",
+    "D-344",
+    "D-345",
+    "D-439",
+    "D-445",
+    "D-446",
+    "T44",
+    "carried: V2-002",
+    "residual: Deadline for shutdown participants (r5 W2-003)",
+    "wave decision: Shutdown bound (W2-010)"
+   ],
+   "traces": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ShutdownParticipants.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+    "docs/api/lifecycle.md"
+   ],
+   "links": [
+    "FR-APP-011 extends",
+    "FR-APP-013 extends",
+    "FR-ENGINE-006 extends",
+    "FR-WS-010 depends_on",
+    "FR-SSE-005 depends_on",
+    "FR-WS-009 depends_on"
+   ],
+   "tests_to_repoint": "none (new requirement)"
+  },
+  "PERF-APP-001": {
+   "title": "Long-connection load bounds: 100+ WebSocket and SSE connections within the thread total and a heap bound, documented thread and stack figures, and the low-end Android follow-up",
+   "file": "docs/spec/05.application.srs.md",
+   "ac_count": 4,
+   "covered_tags": [
+    "D-346",
+    "D-347",
+    "D-416",
+    "T26",
+    "wave decision: Thread total (W2-006)",
+    "wave decision: Thread total (r2 W1-001)"
+   ],
+   "traces": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/ServerOptions.java",
+    "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdAdapter.java",
+    "docs/api/defaults.md"
+   ],
+   "links": [
+    "FR-ENGINE-004 extends",
+    "FR-ENGINE-006 extends",
+    "FR-WS-007 depends_on",
+    "FR-WS-008 depends_on",
+    "FR-SSE-003 depends_on"
+   ],
+   "tests_to_repoint": "none (new requirement)"
+  },
+  "IR-HTTP-008": {
+   "title": "HttpException response headers: withHeader, headers() and the error path that applies them",
+   "file": "docs/spec/04.http-core.srs.md",
+   "ac_count": 8,
+   "covered_tags": [
+    "C-03",
+    "D-444",
+    "D-445",
+    "T11",
+    "wave decision: Rejection headers (W2-002)"
+   ],
+   "traces": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/HttpException.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ErrorPath.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StandardErrors.java"
+   ],
+   "links": [
+    "IR-APP-003 extends",
+    "FR-APP-005 extends",
+    "FR-HTTP-015 extends"
+   ],
+   "tests_to_repoint": "none (new requirement)"
+  },
+  "FR-APP-019": {
+   "title": "Access log: one line per HTTP request, the WebSocket handshake and close lines, and the SSE stream-end line (wave 7)",
+   "file": "docs/spec/05.application.srs.md",
+   "ac_count": 11,
+   "covered_tags": [
+    "D-135",
+    "D-172",
+    "D-173",
+    "D-174",
+    "D-177",
+    "D-181",
+    "D-325",
+    "D-338",
+    "D-430",
+    "T38",
+    "wave decision: Lifecycle gate",
+    "wave decision: Pre-request rejections"
+   ],
+   "traces": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/AccessLog.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java"
+   ],
+   "links": [
+    "FR-APP-015 supersedes",
+    "IR-APP-007 extends",
+    "FR-APP-006 extends",
+    "FR-WS-006 depends_on",
+    "FR-SSE-004 depends_on"
+   ],
+   "tests_to_repoint": "every `FR_APP_015_*` method of `NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AccessLogTest.java`, `AccessLogAcceptanceTest.java`, `internal/DispatcherTest.java` (pre-request rejection log asserts) and the access-log asserts of `internal/StoppingGateTest.java` and `AppIsolationTest.java`; the `@req FR-APP-015` comments of `AccessLog.java`, `BodyState.java`, `DefaultAccessLogOptions.java`, `DefaultResponse.java`, `DefaultRestApp.java`, `Dispatcher.java` and `RequestIds.java` move to FR-APP-019."
+  },
+  "OPS-APP-005": {
+   "title": "docs/api keeps the wave 4 decisions, removes the wave 7 markers and describes the long-connection shutdown steps",
+   "file": "docs/spec/05.application.srs.md",
+   "ac_count": 9,
+   "covered_tags": [
+    "D-134",
+    "D-137",
+    "D-151",
+    "D-159",
+    "D-167",
+    "D-177",
+    "D-181",
+    "D-303",
+    "D-325",
+    "D-338",
+    "D-339",
+    "D-340",
+    "D-341",
+    "D-342",
+    "D-343",
+    "D-344",
+    "D-419",
+    "D-438",
+    "D-446",
+    "residual: shutdown from an SSE onClose listener (r5 W2-004)",
+    "wave decision: File logger directory",
+    "wave decision: Handler timing (W2-004)",
+    "wave decision: JVM lifetime",
+    "wave decision: Logger shutdown",
+    "wave decision: Overload 503",
+    "wave decision: RestApp.create()",
+    "wave decision: STARTING",
+    "wave decision: Shutdown bound (W2-010)"
+   ],
+   "traces": [
+    "docs/api/app.md",
+    "docs/api/lifecycle.md",
+    "docs/api/logging.md",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/AppDocsTest.java"
+   ],
+   "links": [
+    "OPS-APP-004 supersedes",
+    "FR-ENGINE-006 extends",
+    "OPS-WS-001 depends_on",
+    "OPS-SSE-001 depends_on",
+    "FR-APP-020 depends_on",
+    "FR-APP-019 depends_on"
+   ],
+   "tests_to_repoint": "every `OPS_APP_004_*` and `sdsAc5_OPS_APP_004_*` method of `AppDocsTest` (`decidedMarkersAreGone`, `laterWaveMarkersAreKept`, `wave4PagesKeepNoMarker`, `wsMarkersSitOnTheirOwnLines`, AC1 to AC5 and AC7), with the KEPT list cut to the three `express-migration.md` rows, the wave 7 phrases added to REMOVED, and new methods for AC-8 and AC-9."
+  },
+  "FR-ENGINE-011": {
+   "title": "TinyHttpd adapter implements HttpAdapter with confined engine types and per-feature classes, event-stream and upgrade paths filled (wave 7)",
+   "file": "docs/spec/06.engine-adapter.srs.md",
+   "ac_count": 7,
+   "covered_tags": [
+    "D-080",
+    "D-106",
+    "D-107",
+    "D-209",
+    "D-210",
+    "D-291",
+    "D-336",
+    "D-399",
+    "D-404",
+    "D-433",
+    "wave decision: File bodies come from the opened stream",
+    "wave decision: TinyHttpd feature hooks (W2-003)",
+    "wave decision: maxEventStreams (W2-009)"
+   ],
+   "traces": [
+    "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdFeatures.java",
+    "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdExchange.java"
+   ],
+   "links": [
+    "FR-ENGINE-010 supersedes",
+    "FR-ENGINE-004 extends",
+    "IR-HTTP-003 extends",
+    "IR-HTTP-007 depends_on"
+   ],
+   "tests_to_repoint": "every `FR_ENGINE_010_*` method of `AdapterSurfaceTest`, `RawTargetSocketTest`, `AbortSocketTest` and `SendFileSocketTest` in `NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/`; `AdapterSurfaceTest#FR_ENGINE_010_AC2_sendFileIsFilledAndTheOtherHooksThrowNamingWave7` is replaced by a test that asserts the event-stream and upgrade paths no longer throw; the `@req FR-ENGINE-010` comments of `TinyHttpdExchange.java` and `TinyHttpdFeatures.java` move to FR-ENGINE-011."
+  },
+  "OPS-ENGINE-002": {
+   "title": "docs/api records the wave 5 engine decisions, with the WebSocket idle, ping and handshake rows settled by wave 7",
+   "file": "docs/spec/06.engine-adapter.srs.md",
+   "ac_count": 7,
+   "covered_tags": [
+    "D-080",
+    "D-167",
+    "D-212",
+    "D-213",
+    "D-225",
+    "D-230",
+    "D-323",
+    "D-400",
+    "D-404",
+    "D-418",
+    "D-424",
+    "D-433",
+    "D-437",
+    "residual: Upper bounds on size settings",
+    "residual: WebSocket handshake timeout (r5 W2-002)",
+    "wave decision: The LAN warning is unconditional",
+    "wave decision: The default bind address is IPv4 `127.0.0.1`",
+    "wave decision: Thread wording"
+   ],
+   "traces": [
+    "docs/api/websocket.md",
+    "docs/api/defaults.md",
+    "src/test/java/com/snoworca/naruserve/docs/WaveFiveDocsTest.java"
+   ],
+   "links": [
+    "OPS-ENGINE-001 supersedes",
+    "IR-ENGINE-001 extends",
+    "OPS-HTTP-004 extends",
+    "OPS-WS-001 depends_on",
+    "OPS-SSE-001 depends_on"
+   ],
+   "tests_to_repoint": "`WaveFiveDocsTest` (all methods citing OPS-ENGINE-001, including `settledMarkerLinesAreGoneAndLaterMarkersKept`, `defaultsMatchCode`, `defaultsStatesNoUnlimitedBindProxyRejectionsAndTls`, `moduleCoordinates`, `appAndRequestNameServerTrustProxyAndKeeper`), the OPS-ENGINE-001 comments of `HttpDocsTest`, and the `OPS_ENGINE_001_*` methods of `DocsExamplesCompileTest` and `LimitsSocketTest`."
+  },
+  "IR-HTTP-007": {
+   "title": "HttpAdapter SPI extension points and bind/stop lifecycle calls, extended add-only by wave 7",
+   "file": "docs/spec/04.http-core.srs.md",
+   "ac_count": 6,
+   "covered_tags": [
+    "D-106",
+    "D-107",
+    "wave decision: WebSocket upgrade SPI (W2-001)"
+   ],
+   "traces": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpExchange.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpAdapter.java"
+   ],
+   "links": [
+    "IR-HTTP-004 supersedes",
+    "IR-HTTP-003 extends",
+    "IR-WS-002 depends_on"
+   ],
+   "tests_to_repoint": "every `IR_HTTP_004_*` method of `NaruServe-api/src/test/java/com/snoworca/naruserve/spi/HttpAdapterSpiTest.java`, and the `@req IR-HTTP-004` comments of `HttpAdapter.java`, `HttpExchange.java`, `StreamDrain.java`, `UpgradeHandler.java` and the test-fixture `InMemoryHttpAdapter.java`."
+  },
+  "OPS-HTTP-007": {
+   "title": "docs/api keeps the wave 3 HTTP decisions without markers and keeps only the markers owned by waves later than wave 7",
+   "file": "docs/spec/04.http-core.srs.md",
+   "ac_count": 9,
+   "covered_tags": [
+    "D-109",
+    "D-137",
+    "D-192",
+    "D-225",
+    "D-239",
+    "D-293",
+    "D-303",
+    "D-398",
+    "D-419",
+    "wave decision: Body ownership",
+    "wave decision: Null attribute values",
+    "wave decision: Rejection headers (W2-002)",
+    "wave decision: Remaining markers",
+    "wave decision: req.method() during automatic HEAD",
+    "wave decision: stream() closing"
+   ],
+   "traces": [
+    "docs/api/middleware.md",
+    "docs/api/defaults.md"
+   ],
+   "links": [
+    "OPS-HTTP-006 supersedes",
+    "OPS-HTTP-004 extends",
+    "IR-HTTP-008 depends_on",
+    "OPS-WS-001 depends_on",
+    "OPS-SSE-001 depends_on"
+   ],
+   "tests_to_repoint": "every `OPS_HTTP_006_*` and `sdsAc6_OPS_HTTP_006_*` method of `NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java` (AC1, AC2, AC3, AC4, AC5, AC6, AC7 and the AC8 methods `requestKeepsNoMarker`, `responseKeepsOnlyRedirectMarker`, `expressKeepsOtherIssuesMarkers`, `routingKeepsNoMarker`), plus a new AC-8 check for the `defaults.md` WebSocket and SSE rows and a new AC-9 check for `middleware.md`."
+  }
+ }
+}

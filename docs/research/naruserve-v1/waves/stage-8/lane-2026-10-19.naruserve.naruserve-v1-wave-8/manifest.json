@@ -1,0 +1,86 @@
+{
+  "branch": "kiwi/orch/2026-10-19.NaruServe.naruserve-v1/lane-2026-10-19.naruserve.naruserve-v1-wave-8",
+  "worktree_path": "/Users/beom/work/git/NaruServe/.claude/worktrees/agent-a69e9824e13ed649e",
+  "head_sha": "c88825d30240da9b739571060a88095e4c57ae53",
+  "base_sha": "69940ebe96d161cf17d5fcc71014cc5f1804bdf6",
+  "commits": [
+    "9a35c5092137c3d4d48a34395d3141070458073e",
+    "d28426f15386bd74767d215e77f6a4df0d3af4c1",
+    "543c5efcfbf4bcdf2460d2915a038790b6b97473",
+    "48729f3e2b0feca58ceb5dc732f5a88426151774",
+    "2963d044e3dee158c384bbd17d3fd1474d9dc3b3",
+    "21bdb681a408eac425f16686993a416c1667b45b",
+    "bb12b0c7c5678ddfdfc36597443123ff1b892925",
+    "cd13b2d077fd3c2f43236c67828530216377b7d2",
+    "18c30d1c050e33a80e4dac82a8556f071dfcf508",
+    "0350848107098466b6e30ae539c642721dbbc62b",
+    "c63303ee4692aa542175255df1a8aec99979ae26",
+    "ae44f5a3f0d7b0343b8876fddd5844922ef0290e",
+    "4320bb287a21abada6f265bb5a2b1f1e9fcffde7",
+    "9087a451cf999ae92c2d9fc5f44bf54209650999",
+    "c88825d30240da9b739571060a88095e4c57ae53"
+  ],
+  "deferred_queue": "/Users/beom/work/git/NaruServe/kiwi/orchestrator/2026-10-19.NaruServe.naruserve-v1/lanes/lane-2026-10-19.naruserve.naruserve-v1-wave-8/deferred-srs-queue.jsonl",
+  "reports": [
+    "/Users/beom/work/git/NaruServe/.claude/worktrees/agent-a69e9824e13ed649e/.kiwi/rfl/review-g1-r1.json",
+    "/Users/beom/work/git/NaruServe/.claude/worktrees/agent-a69e9824e13ed649e/.kiwi/rfl/review-g2-r1.json",
+    "/Users/beom/work/git/NaruServe/.claude/worktrees/agent-a69e9824e13ed649e/.kiwi/rfl/review-g3-r1.json",
+    "/Users/beom/work/git/NaruServe/.claude/worktrees/agent-a69e9824e13ed649e/.kiwi/rfl/review-g4-r1.json",
+    "/Users/beom/work/git/NaruServe/.claude/worktrees/agent-a69e9824e13ed649e/.kiwi/rfl/review-r2.json",
+    "/Users/beom/work/git/NaruServe/.claude/worktrees/agent-a69e9824e13ed649e/.kiwi/rfl/suff-1.json",
+    "/Users/beom/work/git/NaruServe/.claude/worktrees/agent-a69e9824e13ed649e/.kiwi/rfl/suff-3.json",
+    "/Users/beom/work/git/NaruServe/.claude/worktrees/agent-a69e9824e13ed649e/.kiwi/rfl/suff-12.json",
+    "/Users/beom/work/git/NaruServe/.claude/worktrees/agent-a69e9824e13ed649e/.kiwi/rfl/final-build.log"
+  ],
+  "red_evidence": [
+    {"test_id": "NaruServe-api/src/test/java/com/snoworca/naruserve/KotlinNullabilityTest.java#sdsAc1_FR_KT_001_AC1_publicPackagesAreNullMarkedAndInternalKeepsIt", "failure": "expected [package com.snoworca.naruserve.fixture.bare lacks @NullMarked] but was []"},
+    {"test_id": "src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java#checkNoCoroutinesFailsOnClassAndOnArtifact", "failure": "TestKit build failed: task checkNoCoroutines not found"},
+    {"test_id": "NaruServe-api/src/test/java/com/snoworca/naruserve/CallbackInventoryTest.java#sdsAc4_FR_KT_003_AC4_inventoryEqualsCallbackTypes", "failure": "compile error: cannot find symbol CallbackMatrix; with empty CALLBACK_TYPES a ComparisonFailure listing the 16 callback types"},
+    {"test_id": "NaruServe-kotlin/src/test/kotlin/com/snoworca/naruserve/kotlin/RequestBodyExtensionKotlinTest.kt#SDS-AC-6 IR-KT-002 AC-1", "failure": "compileTestKotlin: Unresolved reference testing and no applicable body() candidate"},
+    {"test_id": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletSurfaceTest.java#sdsAc1_IR_SVL_001_AC1_servletAdapterIsPublicFinalHttpAdapterWithNoArgConstructor", "failure": "compileTestJava: cannot find symbol ServletAdapter, ServletConfigurer, NaruServeInitializer, InitParams, NaruServeServlet"},
+    {"test_id": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletPathTest.java#sdsAc1_FR_SVL_002_AC1_remainderStripsContextAndPrefixAtASegmentBoundary", "failure": "compileTestJava: 31 errors, cannot find symbol ServletPath, ServletExchange"},
+    {"test_id": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletLifecycleTest.java#sdsAc2_FR_SVL_001_AC2_destructionShutsTheAppDown", "failure": "compileTestJava: cannot find symbol ShutdownListener and ServletAdapter.stopping()"},
+    {"test_id": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletWebSocketTest.java#sdsAc11_FR_SVL_007_AC1_aValidUpgradeToAnAppWsRouteAnswers501WithTheStandardBody", "failure": "expected:<501> but was:<500>"},
+    {"test_id": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletStopSseTest.java#sdsAc2_FR_SVL_006_AC2_shutdownEndsEveryOpenStream", "failure": "compileTestJava: cannot find symbol method open() in class Pool"},
+    {"test_id": "src/test/java/com/snoworca/naruserve/build/ReleaseScriptTextTest.java#fr_REL_001_AC1_releaseSbomWritesOneCycloneDxJsonPerModuleFromRuntimeClasspath", "failure": "FileNotFoundException gradle/release.gradle"},
+    {"test_id": "src/test/java/com/snoworca/naruserve/build/ScanReportTest.java#fr_REL_002_AC1_eachFailureCauseWritesPendingWithReasonAndSortedRuntimeList", "failure": "compileTestJava: package com.snoworca.naruserve.release does not exist"},
+    {"test_id": "src/test/java/com/snoworca/naruserve/build/LicenseCheckTest.java#fr_REL_004_AC2_gplFamilyAndUnknownFail", "failure": "compileTestJava: package com.snoworca.naruserve.release.LicenseCheck does not exist"},
+    {"test_id": "src/test/java/com/snoworca/naruserve/docs/ApiMarkersDocsTest.java#sdsAc2_OPS_REL_002_AC2_apiReadmeBanner", "failure": "README still says the API is not implemented yet"},
+    {"test_id": "src/test/java/com/snoworca/naruserve/docs/ReleaseResultsDocsTest.java#ops_REL_003_AC1_fiftyFourRowsWhoseIdsEqualTheObjectTable", "failure": "AssertionError: docs/release/test-results.md exists (the file was absent)"},
+    {"test_id": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletAbortTest.java#fr_SVL_006_AC3_streamWriteAfterCompleteAllThrowsIOException", "failure": "write after completeAll did not throw IOException (review fix G2-001)"},
+    {"test_id": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRegistrationTest.java#ir_SVL_001_AC4_urlPatternOwnedByAnotherServletFailsStartup", "failure": "startup did not fail with a ServletException (review fix G2-002)"},
+    {"test_id": "src/test/java/com/snoworca/naruserve/build/ReleaseGateTest.java#fr_REL_003_AC1_AC4_unknownShipStatusFailsClosed", "failure": "vulnerability scan cleared: no unexcepted High or Critical finding (review fix G4-001)"},
+    {"test_id": "src/test/java/com/snoworca/naruserve/build/ScanReportTest.java#fr_REL_002_AC5_emptyOrHeaderlessCsvGivesPending", "failure": "[] gave [] instead of null (review fix G4-002)"}
+  ],
+  "review_outcome": {
+    "status": "TASK_DONE",
+    "residual_critical": 0,
+    "residual_high": 0,
+    "residual_medium": 0,
+    "residual_low": 21,
+    "notes": "Round 1: 4 reviewers over 94 code files (15 prose md files excluded), 0 critical, 0 high, 6 medium, 21 low. The 6 medium were fixed by a senior fixer with TDD (commit 9087a45). Round 2 recheck over the fix commit: all 6 resolved, 1 new low (stop tests keep wall-clock bounds). Coverage anchors were machine-checked each round (some groups needed a corrected anchor once). LOW findings were not fixed (auto mode rejects low severity)."
+  },
+  "intentionally_empty": null,
+  "design_refuted": [],
+  "out_of_lease_paths": [
+    "NaruServe-servlet/src/test/kotlin/com/snoworca/naruserve/servlet/ServletDocsKotlinTest.kt (SDS 8-8: carries the docs-example marker that KotlinDocsMarkersTest requires for the servlet.md kotlin block)"
+  ],
+  "test_sufficiency": {
+    "per_fragment": "speckiwi coverage --tests --ids <fragment requirements> --sds <fragment> --json run for all 13 fragments in the worktree",
+    "first_run": "11 of 13 passed; fragment 3 and fragment 12 had citation gaps",
+    "fill": "one fill pass added citation comment lines above existing real tests (commit c88825d); no test was added, weakened or removed",
+    "final": "all 13 fragments passed with no gaps",
+    "caveat": "the coverage tool ignores the SDS-file qualifier of a citation, so SDS-AC-12 and SDS-AC-13 of fragment 12 pass through citations of the wave-7-13 SDS"
+  },
+  "deferred_queue_summary": {
+    "entries": 338,
+    "update_status": 70,
+    "add_verification_evidence": 255,
+    "add_completed_work": 13,
+    "note": "35 allocation ids each have update_status in_progress, update_status implemented (inserted by the lane before the first add_completed_work referencing the id), evidence (path#method, ./gradlew build, pass) and one add_completed_work; no summary contains the pipe character"
+  },
+  "verification": {
+    "command": "./gradlew build",
+    "exit_code": 0
+  }
+}

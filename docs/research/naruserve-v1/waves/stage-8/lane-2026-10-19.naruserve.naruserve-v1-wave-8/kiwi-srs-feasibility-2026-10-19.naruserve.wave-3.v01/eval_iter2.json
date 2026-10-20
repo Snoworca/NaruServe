@@ -1,0 +1,29 @@
+{
+ "evaluator": "verify-pass-1",
+ "iter": 2,
+ "findings": [
+  {
+   "id": "V2-001",
+   "severity": "LOW",
+   "axis": "ac_verifiability",
+   "req_id": "OPS-HTTP-002",
+   "evidence_path": "docs/api/response.md (java blocks 1-2); docs/spec/04.http-core.srs.md:1716-1717",
+   "description": "AC-3's template declares app/req/res and stub handlers but no free value variables; response.md block 1 uses `id`/`created` and block 2 uses `user`/`user1`/`user2`. These are wave 3 calls, so AC-4 gives no skip reason for them and they will fail to compile unless the template also declares stub values (e.g. `Object user, user1, user2, created; String id;`) or the docs declare them. Does not block AC-7: response.md blocks 4-5 (`res.status(204).end()`, `res.status(302).header(...).end()`) and routing.md block 4 (Method.of/MethodSet, already in NaruServe-api) compile with the current template."
+  }
+ ],
+ "rescored": [
+  {
+   "req_id": "OPS-HTTP-002",
+   "score": 83,
+   "feasibility": "high",
+   "axes": {
+    "implementability": {"score": 26, "max": 30, "evidence": "Gradle runs on JDK 17 with no toolchain override, so ToolProvider.getSystemJavaCompiler() is non-null and `--release 8` matches configureCompile (build.gradle:35); AC-1 needs one testImplementation line next to junit/gradleTestKit (build.gradle:240-243). Harness is new code but small."},
+    "evidence_strength": {"score": 16, "max": 20, "evidence": "Method.of / Method.get / MethodSet already exist in NaruServe-api main; response.md blocks 4-5 and routing.md blocks 1,4,5 use only wave 3 methods (res.status/header/end, app.route/get, MethodSet)."},
+    "dependency_health": {"score": 11, "max": 15, "evidence": "OPS-HTTP-001 and IR-HTTP-001 are planned and only about to move to evolving; Request/Response/RestApp/RouteHandler/RouteBuilder signatures are not yet in code."},
+    "ac_verifiability": {"score": 13, "max": 15, "evidence": "In-process compile with fixed imports, staleness check (AC-6) and the AC-7 floor (>=1 compiled block per file) are mechanically testable; gap is undeclared free variables (V2-001)."},
+    "scope_fit": {"score": 9, "max": 10, "evidence": "One root test plus one build line and fence relabels; skip list bounds later-wave content across ~69 java blocks."},
+    "product_fit": {"score": 8, "max": 10, "evidence": "Keeps docs/api examples honest per CLAUDE.md docs rule; JVM-side only, no runtime impact."}
+   }
+  }
+ ]
+}

@@ -1,0 +1,24 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-7",
+  "sds_path": "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-8-7.sds.md",
+  "sds_sha256": "696b086d8342a75057bb132f9f474806cae96994dea8791d9f1f55d6c612c114",
+  "target": "wave-8",
+  "req_ids": ["FR-SVL-004", "FR-SVL-005", "FR-SVL-007"],
+  "mode": "normal",
+  "flags": ["--auto", "--auto-integration", "--auto-cost-warning", "--defer-srs-mutation"],
+  "spawn_context": "pm-child",
+  "phase": "phase-3",
+  "next_resume_hint": "phase-3.2",
+  "failed": false,
+  "regression_baseline": {"command": "./gradlew build", "pinned_by_parent": true, "head_sha": "21bdb68"},
+  "red_evidence": {
+    "command": "./gradlew :NaruServe-servlet:test --tests '*ServletMultipart*' --tests '*ServletSse*' --tests '*ServletWebSocket*' --offline",
+    "exit_code": 1,
+    "captured_failure": "15 tests completed, 10 failed: ServletWebSocketTest#sdsAc11 expected 501 but was 500; #sdsAc13 UnsupportedOperationException webSocket is not supported by this adapter; ServletSseLimitTest#sdsAc5 abort expected 200 but was 500; SSE tests no stream opened (eventStream UnsupportedOperationException). Multipart tests passed at once (requestBody already read only getInputStream). ServletDocsTest#websocketNotSupportedSentence phrase absent at HEAD.",
+    "timestamp": "2026-10-20T13:40:00Z"
+  },
+  "green_evidence": {"command": "./gradlew build --offline", "exit_code": 0, "timestamp": "2026-10-20T13:55:00Z"},
+  "mcp_call_log": [],
+  "pending_mutations": []
+}

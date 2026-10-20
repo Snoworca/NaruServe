@@ -1,0 +1,14 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-4",
+  "sds_path": "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-8-4.sds.md",
+  "sds_sha256": "84afcdb56a2cb50d0330dd28c9fc06f7f7b5d2bba0d6174e130fd4eff7a7f6f6",
+  "target": "wave-8",
+  "req_ids": ["IR-SVL-001", "CON-SVL-001"],
+  "spawn_context": "pm-child",
+  "phase": "phase-3",
+  "red_evidence": {"command": "./gradlew :NaruServe-servlet:test --offline", "exit_code": 1, "captured_failure": "compileTestJava: cannot find symbol ServletAdapter, ServletConfigurer, NaruServeInitializer, InitParams, NaruServeServlet", "timestamp": "2026-10-20T14:00:00Z"},
+  "green_evidence": {"command": "./gradlew build", "exit_code": 0, "timestamp": "2026-10-20T14:10:00Z"},
+  "regression_baseline": null,
+  "failed": false
+}

@@ -1,0 +1,573 @@
+{
+ "run_id": "2026-10-19.NaruServe.naruserve-v1",
+ "decisions": [
+  {
+   "gate_id": "intake-qna",
+   "question_id": "Q-1",
+   "question": "How should NaruServe depend on TinyHttpd?",
+   "options": [
+    "composite",
+    "publish-local",
+    "vendor"
+   ],
+   "votes": [
+    "composite",
+    "composite",
+    "composite"
+   ],
+   "confidences": [
+    0.88,
+    0.9,
+    0.85
+   ],
+   "merge_method": {
+    "rule": "majority",
+    "outcome": "unanimous"
+   },
+   "decision": "composite",
+   "confidence": 0.88
+  },
+  {
+   "gate_id": "intake-qna",
+   "question_id": "Q-2",
+   "question": "May lanes modify the TinyHttpd repository?",
+   "options": [
+    "read-only",
+    "allow-edits"
+   ],
+   "votes": [
+    "read-only",
+    "read-only",
+    "read-only"
+   ],
+   "confidences": [
+    0.9,
+    0.88,
+    0.85
+   ],
+   "merge_method": {
+    "rule": "majority",
+    "outcome": "unanimous"
+   },
+   "decision": "read-only",
+   "confidence": 0.88
+  },
+  {
+   "gate_id": "intake-qna",
+   "question_id": "Q-3",
+   "question": "How to handle Android API 21 verification (T10,T12,T47)?",
+   "options": [
+    "automate-build-manual-device",
+    "try-install-api21",
+    "drop"
+   ],
+   "votes": [
+    "automate-build-manual-device",
+    "automate-build-manual-device",
+    "automate-build-manual-device"
+   ],
+   "confidences": [
+    0.85,
+    0.85,
+    0.8
+   ],
+   "merge_method": {
+    "rule": "majority",
+    "outcome": "unanimous"
+   },
+   "decision": "automate-build-manual-device",
+   "confidence": 0.83
+  },
+  {
+   "gate_id": "intake-qna",
+   "question_id": "Q-4",
+   "question": "Scope of #18 and #19 in this run?",
+   "options": [
+    "include-both-late",
+    "include-18-defer-19",
+    "defer-both"
+   ],
+   "votes": [
+    "include-both-late",
+    "include-both-late",
+    "include-both-late"
+   ],
+   "confidences": [
+    0.75,
+    0.7,
+    0.7
+   ],
+   "merge_method": {
+    "rule": "majority",
+    "outcome": "unanimous"
+   },
+   "decision": "include-both-late",
+   "confidence": 0.72
+  },
+  {
+   "gate_id": "intake-qna",
+   "question_id": "Q-5",
+   "question": "Android sample build vs root-only build rule?",
+   "options": [
+    "separate-sample-build",
+    "include-in-root",
+    "no-sample"
+   ],
+   "votes": [
+    "separate-sample-build",
+    "separate-sample-build",
+    "separate-sample-build"
+   ],
+   "confidences": [
+    0.85,
+    0.85,
+    0.8
+   ],
+   "merge_method": {
+    "rule": "majority",
+    "outcome": "unanimous"
+   },
+   "decision": "separate-sample-build",
+   "confidence": 0.83
+  },
+  {
+   "gate_id": "design-intake-insufficient",
+   "note": "critical gate delegated to committee by standing user instruction (user asleep: never stop, committee decides)",
+   "options": [
+    "fix-and-freeze",
+    "fix-and-extend",
+    "abort"
+   ],
+   "votes": [
+    "fix-and-freeze",
+    "fix-and-freeze",
+    "fix-and-freeze"
+   ],
+   "confidences": [
+    0.82,
+    0.85,
+    0.85
+   ],
+   "merge_method": {
+    "rule": "majority",
+    "outcome": "unanimous"
+   },
+   "decision": "fix-and-freeze",
+   "confidence": 0.84,
+   "conditions": [
+    "residual 13 findings carried into owning waves' loop W",
+    "cap exhaustion recorded as deviation",
+    "if fixes fail marking check or add a high/contradiction, one targeted loop D round on changed items"
+   ]
+  },
+  {
+   "gate_id": "new-scope",
+   "note": "kiwi-srs Phase 2.5 scope gate, run-wide vocabulary",
+   "options": [
+    "per-area",
+    "per-wave",
+    "single-scope"
+   ],
+   "votes": [
+    "per-area",
+    "per-area",
+    "per-area"
+   ],
+   "confidences": [
+    0.82,
+    0.82,
+    0.85
+   ],
+   "merge_method": {
+    "rule": "majority",
+    "outcome": "unanimous"
+   },
+   "decision": "per-area",
+   "confidence": 0.83,
+   "scopes": {
+    "Build": "BUILD",
+    "Routing": "ROUTE",
+    "HTTP Core": "HTTP",
+    "Application": "APP",
+    "Engine Adapter": "ENGINE",
+    "JSON": "JSON",
+    "Cookie": "COOKIE",
+    "Multipart": "UPLOAD",
+    "Static Files": "STATIC",
+    "WebSocket": "WS",
+    "SSE": "SSE",
+    "Kotlin": "KOTLIN",
+    "Servlet": "SERVLET",
+    "Android": "ANDROID",
+    "Release": "RELEASE"
+   },
+   "conditions": [
+    "create a scope when its first wave needs it, serially on the host",
+    "greatest-responsibility rule for cross-area requirements"
+   ]
+  },
+  {
+   "gate_id": "partition-review-unrecorded",
+   "question": "Stage 3 partition review",
+   "options": [
+    "pass",
+    "revise",
+    "abort"
+   ],
+   "votes": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "confidences": [
+    0.88,
+    0.88,
+    0.9
+   ],
+   "decision": "pass",
+   "rule": "majority",
+   "confidence": 0.89,
+   "ts": "2026-10-19T00:55:32.869508Z"
+  },
+  {
+   "gate_id": "wave-4-srs-supersede-successor-scope",
+   "skill": "kiwi-srs",
+   "question": "Scope for the wave-4 successors of superseded FR-HTTP-002/003/005/006/010",
+   "options": [
+    "A: all in HTTP scope",
+    "B: all in APP scope",
+    "C: mixed"
+   ],
+   "votes": [
+    "A",
+    "A",
+    "A"
+   ],
+   "confidences": [
+    0.7,
+    0.7,
+    0.7
+   ],
+   "decision": "A",
+   "rule": "majority",
+   "confidence": 0.7,
+   "ts": "2026-10-19T03:44:29.323016Z"
+  },
+  {
+   "gate_id": "partition-review-unrecorded",
+   "question": "Stage 4 partition review",
+   "options": [
+    "pass",
+    "revise",
+    "abort"
+   ],
+   "votes": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "confidences": [
+    0.88,
+    0.9,
+    0.88
+   ],
+   "decision": "pass",
+   "rule": "majority",
+   "confidence": 0.89,
+   "ts": "2026-10-19T05:08:47.127483Z"
+  },
+  {
+   "gate_id": "wave-design-insufficient",
+   "question": "Wave 5 loop W ended fail-cap; D-211 altered by the 127.0.0.1 bind decision",
+   "options": [
+    "A: proceed with the 127.0.0.1 interpretation",
+    "B: follow D-211 literally",
+    "C: abort"
+   ],
+   "votes": [
+    "A",
+    "A"
+   ],
+   "confidences": [
+    0.85,
+    0.85
+   ],
+   "decision": "A",
+   "rule": "majority (2 of 3; third vote not needed)",
+   "confidence": 0.85,
+   "conditions": [
+    "SRS criterion names 127.0.0.1 and cites the wave decision",
+    "run report records the interpretation of frozen D-211",
+    "T49 asserts the default bind and ServerHandle.address()"
+   ],
+   "ts": "2026-10-19T10:58:42.658415Z"
+  },
+  {
+   "gate_id": "wave-5-srs-supersede",
+   "question": "Wave 5 kiwi-srs: supersede IR-APP-005 (AC-3 address()/listen binds 127.0.0.1) because of the LAN binding API?",
+   "options": [
+    "A: supersede",
+    "B: keep; AC-3 describes the default configuration"
+   ],
+   "votes": [
+    "B",
+    "A",
+    "B"
+   ],
+   "confidences": [
+    0.7,
+    0.6,
+    0.6
+   ],
+   "decision": "B",
+   "rule": "majority 2 of 3 (confidence below 0.7; fallback to the run rule 'only supersede where the verified AC really changes', which favours B)",
+   "confidence": 0.65,
+   "conditions": [
+    "wave-5 ENGINE requirement states ServerHandle.address() after a LAN bind",
+    "IR-APP-005 AC-3 test keeps passing unchanged under the default 127.0.0.1"
+   ],
+   "ts": "2026-10-19T11:49:15.956596Z"
+  },
+  {
+   "gate_id": "wave-5-srs-supersede",
+   "question": "Wave 5 kiwi-srs: supersede IR-APP-001 (AC-5 JsonCodec nullness) because decode gains @Nullable on its return?",
+   "options": [
+    "A: supersede",
+    "B: keep; AC-4/AC-5 stay literally true"
+   ],
+   "votes": [
+    "B",
+    "B",
+    "B"
+   ],
+   "confidences": [
+    0.65,
+    0.65,
+    0.55
+   ],
+   "decision": "B",
+   "rule": "unanimous 3 of 3 (confidence below 0.7; fallback to the run rule 'only supersede where the verified AC really changes')",
+   "confidence": 0.62,
+   "conditions": [
+    "IR-JSON-002 states the @Nullable return of JsonCodec.decode",
+    "AppEntryApiTest keeps passing; a new JSON test asserts the annotation"
+   ],
+   "ts": "2026-10-19T11:49:15.956596Z"
+  },
+  {
+   "gate_id": "wave-5-srs-supersede",
+   "question": "Wave 5 kiwi-srs: supersede OPS-HTTP-003 (AC-8 keeps proxy-trust and jsonTree()/jsonMap() markers in request.md)?",
+   "options": [
+    "A: supersede",
+    "B: keep"
+   ],
+   "votes": [
+    "A",
+    "A"
+   ],
+   "confidences": [
+    0.8,
+    0.9
+   ],
+   "decision": "A",
+   "rule": "majority (2 of 3; third vote also A at 0.85)",
+   "confidence": 0.85,
+   "conditions": [
+    "successor restates AC-1..AC-7 and AC-8 with the wave-5 marker set",
+    "HttpDocsTest re-pointed to the successor"
+   ],
+   "ts": "2026-10-19T11:49:15.956596Z"
+  },
+  {
+   "gate_id": "wave-5-srs-supersede",
+   "question": "Wave 5 kiwi-srs: supersede OPS-APP-001 (AC-6 keeps cookie and LAN-binding markers; AC-1 server-thread wording)?",
+   "options": [
+    "A: supersede",
+    "B: keep"
+   ],
+   "votes": [
+    "A",
+    "A"
+   ],
+   "confidences": [
+    0.85,
+    0.9
+   ],
+   "decision": "A",
+   "rule": "majority (2 of 3; third vote also A at 0.85)",
+   "confidence": 0.88,
+   "conditions": [
+    "successor restates unchanged ACs and changes AC-1 wording and AC-6 kept-marker list",
+    "AppDocsTest re-pointed to the successor"
+   ],
+   "ts": "2026-10-19T11:49:15.956596Z"
+  },
+  {
+   "gate_id": "partition-review-unrecorded",
+   "question": "Stage 5 partition review",
+   "options": [
+    "pass",
+    "revise",
+    "abort"
+   ],
+   "votes": [
+    "pass",
+    "pass"
+   ],
+   "confidences": [
+    0.9,
+    0.88
+   ],
+   "decision": "pass",
+   "rule": "majority (stopped after 2 agreeing votes)",
+   "confidence": 0.89,
+   "lane_plan_digest": "sha256:39563522ffd876481ec5b500129fa788b7ebc501749cc96b3e6ca0a026a504c5",
+   "ts": "2026-10-19T13:20:02.539766Z"
+  },
+  {
+   "gate_id": "wave-design-insufficient",
+   "question": "Wave 6 loop W ended fail-cap (0 altered, last medium settled in Residual)",
+   "options": [
+    "A proceed",
+    "B extra round",
+    "C abort"
+   ],
+   "votes": [
+    "A",
+    "A"
+   ],
+   "confidences": [
+    0.85,
+    0.85
+   ],
+   "decision": "A",
+   "rule": "majority (stopped after 2 agreeing votes)",
+   "confidence": 0.85,
+   "ts": "2026-10-19T17:05:37.101304Z"
+  },
+  {
+   "gate_id": "partition-review-unrecorded",
+   "question": "Stage 6 partition review",
+   "options": [
+    "pass",
+    "revise",
+    "abort"
+   ],
+   "votes": [
+    "pass",
+    "pass"
+   ],
+   "confidences": [
+    0.9,
+    0.88
+   ],
+   "decision": "pass",
+   "rule": "majority (stopped after 2 agreeing votes)",
+   "confidence": 0.89,
+   "lane_plan_digest": "sha256:996f005ffec8acdbc28eba79885b69114712fa73fd51e97d4895dd49ea5ba38f",
+   "ts": "2026-10-19T18:21:01.764423Z"
+  },
+  {
+   "gate_id": "wave-design-insufficient",
+   "question": "Wave 7 loop W ended fail-cap (2 recorded deviations D-408/D-416; four round-5 findings settled in Residual; handshake-timeout line revised to the verifier's fix after vote 1)",
+   "options": [
+    "A proceed",
+    "B extra round",
+    "C abort"
+   ],
+   "votes": [
+    "A",
+    "A"
+   ],
+   "confidences": [
+    0.72,
+    0.82
+   ],
+   "decision": "A",
+   "rule": "majority (stopped after 2 agreeing votes)",
+   "confidence": 0.77,
+   "ts": "2026-10-19T22:19:04.183218Z"
+  },
+  {
+   "gate_id": "out-of-scope-user-consent",
+   "question": "Remove the Android release part of wave 8 while keeping Android 5.0 (API 21) compatible code",
+   "options": [
+    "Android sample and device verification only",
+    "Android sample plus release preparation"
+   ],
+   "decision": "Android sample and device verification only (D-364..D-374, D-412 out of scope; release preparation kept; API 21 animal-sniffer and Java 8 checks kept)",
+   "rule": "user decision",
+   "decided_by": "user",
+   "ts": "2026-10-19T23:32:16.849052Z"
+  },
+  {
+   "gate_id": "wave-7-feasibility-B1-sse-pre-drain-stream",
+   "question": "How does the core write SSE events sent on the handler thread before the drain loop starts, given HttpExchange.eventStream returns nothing and StreamDrain.drain is the only stream hand-over (r4 W2-001, W2-001 one default method)?",
+   "options": [
+    "A: add-only default StreamDrain.attach(OutputStream) called by eventStream before it returns (deviation from W2-001 'one default method')",
+    "B: unbounded pre-drain buffer, no SPI change (deviation from r4 W2-001, conflicts I-012)",
+    "C: bounded queue with overflow (reverses r4 W2-001)"
+   ],
+   "decision": "A: add-only `default void attach(OutputStream out) {}` on StreamDrain; every adapter's eventStream calls drain.attach(out) with the exchange-synchronized body stream before returning; an adapter that never calls attach falls back to queuing; recorded as a deviation from the W2-001 'one default method' wording",
+   "votes": [
+    {
+     "member": 1,
+     "choice": "A",
+     "confidence": 0.82
+    },
+    {
+     "member": 2,
+     "choice": "A",
+     "confidence": 0.72
+    }
+   ],
+   "confidence": 0.77,
+   "rule": "3-member committee, sequential, stopped after 2 agreeing votes",
+   "decided_by": "committee",
+   "context": "kiwi-srs-feasibility wave-7 blocker B-1 (FR-SSE-002, FR-SSE-003; IR-HTTP-007 AC-4, IR-WS-002 AC-5)",
+   "ts": "2026-10-20T00:26:37.592315Z"
+  },
+  {
+   "gate_id": "partition-review-unrecorded",
+   "question": "Stage 7 lane plan review (1 lane, wave 7)",
+   "options": [
+    "pass",
+    "revise",
+    "abort"
+   ],
+   "votes": [
+    "pass",
+    "pass"
+   ],
+   "confidences": [
+    0.88,
+    0.88
+   ],
+   "decision": "pass",
+   "rule": "majority (stopped after 2 agreeing votes)",
+   "confidence": 0.88,
+   "ts": "2026-10-20T01:54:05.122881Z"
+  },
+  {
+   "gate_id": "wave-design-insufficient",
+   "question": "Wave 8 loop W ended fail-cap (38/38 covered each round; no critical; round-5 medium+2 low settled in Residual)",
+   "options": [
+    "A proceed",
+    "B extra round",
+    "C abort"
+   ],
+   "votes": [
+    "A",
+    "A"
+   ],
+   "confidences": [
+    0.88,
+    0.85
+   ],
+   "decision": "A",
+   "rule": "majority (stopped after 2 agreeing votes)",
+   "confidence": 0.865,
+   "ts": "2026-10-20T10:04:01.760542Z"
+  }
+ ]
+}

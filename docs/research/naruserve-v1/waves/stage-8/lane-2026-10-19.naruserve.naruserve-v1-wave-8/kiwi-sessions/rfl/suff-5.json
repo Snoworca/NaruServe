@@ -1,0 +1,496 @@
+{
+ "scope": {
+  "target": null,
+  "ids": [
+   "FR-SVL-002",
+   "FR-SVL-003"
+  ],
+  "sds": "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-8-5.sds.md",
+  "testGlobs": [
+   "**/*.test.*",
+   "**/*.spec.*",
+   "**/test_*.py",
+   "**/*_test.py",
+   "**/*_test.go",
+   "**/*Test.java",
+   "**/*Tests.cs",
+   "**/test/**",
+   "**/tests/**",
+   "**/__tests__/**"
+  ]
+ },
+ "testFileCount": 1548,
+ "requirements": [
+  {
+   "requirementId": "FR-SVL-002",
+   "acs": [
+    {
+     "acId": "AC-1",
+     "cited": true,
+     "citations": [
+      {
+       "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletPathTest.java",
+       "line": 44
+      },
+      {
+       "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletPathTest.java",
+       "line": 58
+      },
+      {
+       "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletPathTest.java",
+       "line": 67
+      },
+      {
+       "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletPathTest.java",
+       "line": 77
+      }
+     ]
+    },
+    {
+     "acId": "AC-2",
+     "cited": true,
+     "citations": [
+      {
+       "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRequestTest.java",
+       "line": 41
+      }
+     ]
+    },
+    {
+     "acId": "AC-3",
+     "cited": true,
+     "citations": [
+      {
+       "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRequestTest.java",
+       "line": 62
+      },
+      {
+       "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRequestTest.java",
+       "line": 72
+      }
+     ]
+    },
+    {
+     "acId": "AC-4",
+     "cited": true,
+     "citations": [
+      {
+       "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletCasesTest.java",
+       "line": 75
+      }
+     ]
+    },
+    {
+     "acId": "AC-5",
+     "cited": true,
+     "citations": [
+      {
+       "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletPathTest.java",
+       "line": 58
+      },
+      {
+       "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRawTargetTest.java",
+       "line": 86
+      },
+      {
+       "file": "src/test/java/com/snoworca/naruserve/docs/ServletDocsTest.java",
+       "line": 30
+      },
+      {
+       "file": "src/test/java/com/snoworca/naruserve/docs/ServletDocsTest.java",
+       "line": 45
+      }
+     ]
+    },
+    {
+     "acId": "AC-6",
+     "cited": true,
+     "citations": [
+      {
+       "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRejectTest.java",
+       "line": 42
+      },
+      {
+       "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRejectTest.java",
+       "line": 52
+      },
+      {
+       "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRejectTest.java",
+       "line": 76
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "requirementId": "FR-SVL-003",
+   "acs": [
+    {
+     "acId": "AC-1",
+     "cited": true,
+     "citations": [
+      {
+       "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletAbortTest.java",
+       "line": 236
+      },
+      {
+       "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletResponseTest.java",
+       "line": 43
+      },
+      {
+       "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletResponseTest.java",
+       "line": 53
+      },
+      {
+       "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletResponseTest.java",
+       "line": 63
+      }
+     ]
+    },
+    {
+     "acId": "AC-2",
+     "cited": true,
+     "citations": [
+      {
+       "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletResponseTest.java",
+       "line": 75
+      },
+      {
+       "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletResponseTest.java",
+       "line": 84
+      }
+     ]
+    },
+    {
+     "acId": "AC-3",
+     "cited": true,
+     "citations": [
+      {
+       "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletAbortTest.java",
+       "line": 111
+      },
+      {
+       "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletAbortTest.java",
+       "line": 127
+      },
+      {
+       "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletAbortTest.java",
+       "line": 138
+      },
+      {
+       "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletAbortTest.java",
+       "line": 154
+      }
+     ]
+    },
+    {
+     "acId": "AC-4",
+     "cited": true,
+     "citations": [
+      {
+       "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletSendFileTest.java",
+       "line": 25
+      },
+      {
+       "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletSendFileTest.java",
+       "line": 47
+      },
+      {
+       "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletSendFileTest.java",
+       "line": 66
+      },
+      {
+       "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletSendFileTest.java",
+       "line": 83
+      }
+     ]
+    },
+    {
+     "acId": "AC-5",
+     "cited": true,
+     "citations": [
+      {
+       "file": "src/test/java/com/snoworca/naruserve/docs/ServletDocsTest.java",
+       "line": 56
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "sdsContracts": [
+  {
+   "sdsAcId": "SDS-AC-1",
+   "requirementId": "FR-SVL-002",
+   "acId": "AC-1",
+   "cited": true,
+   "testFiles": [
+    {
+     "path": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletPathTest.java",
+     "exists": true,
+     "citations": [
+      {
+       "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletPathTest.java",
+       "line": 44
+      },
+      {
+       "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletPathTest.java",
+       "line": 58
+      },
+      {
+       "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletPathTest.java",
+       "line": 67
+      },
+      {
+       "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletPathTest.java",
+       "line": 77
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "sdsAcId": "SDS-AC-2",
+   "requirementId": "FR-SVL-002",
+   "acId": "AC-2",
+   "cited": true,
+   "testFiles": [
+    {
+     "path": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRequestTest.java",
+     "exists": true,
+     "citations": [
+      {
+       "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRequestTest.java",
+       "line": 41
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "sdsAcId": "SDS-AC-3",
+   "requirementId": "FR-SVL-002",
+   "acId": "AC-3",
+   "cited": true,
+   "testFiles": [
+    {
+     "path": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRequestTest.java",
+     "exists": true,
+     "citations": [
+      {
+       "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRequestTest.java",
+       "line": 62
+      },
+      {
+       "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRequestTest.java",
+       "line": 72
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "sdsAcId": "SDS-AC-4",
+   "requirementId": "FR-SVL-002",
+   "acId": "AC-4",
+   "cited": true,
+   "testFiles": [
+    {
+     "path": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletCasesTest.java",
+     "exists": true,
+     "citations": [
+      {
+       "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletCasesTest.java",
+       "line": 75
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "sdsAcId": "SDS-AC-5",
+   "requirementId": "FR-SVL-002",
+   "acId": "AC-5",
+   "cited": true,
+   "testFiles": [
+    {
+     "path": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRawTargetTest.java",
+     "exists": true,
+     "citations": [
+      {
+       "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRawTargetTest.java",
+       "line": 86
+      }
+     ]
+    },
+    {
+     "path": "src/test/java/com/snoworca/naruserve/docs/ServletDocsTest.java",
+     "exists": true,
+     "citations": [
+      {
+       "file": "src/test/java/com/snoworca/naruserve/docs/ServletDocsTest.java",
+       "line": 45
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "sdsAcId": "SDS-AC-6",
+   "requirementId": "FR-SVL-002",
+   "acId": "AC-6",
+   "cited": true,
+   "testFiles": [
+    {
+     "path": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRejectTest.java",
+     "exists": true,
+     "citations": [
+      {
+       "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRejectTest.java",
+       "line": 42
+      },
+      {
+       "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRejectTest.java",
+       "line": 52
+      },
+      {
+       "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRejectTest.java",
+       "line": 76
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "sdsAcId": "SDS-AC-7",
+   "requirementId": "FR-SVL-003",
+   "acId": "AC-1",
+   "cited": true,
+   "testFiles": [
+    {
+     "path": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletResponseTest.java",
+     "exists": true,
+     "citations": [
+      {
+       "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletResponseTest.java",
+       "line": 43
+      },
+      {
+       "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletResponseTest.java",
+       "line": 53
+      },
+      {
+       "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletResponseTest.java",
+       "line": 63
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "sdsAcId": "SDS-AC-8",
+   "requirementId": "FR-SVL-003",
+   "acId": "AC-2",
+   "cited": true,
+   "testFiles": [
+    {
+     "path": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletResponseTest.java",
+     "exists": true,
+     "citations": [
+      {
+       "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletResponseTest.java",
+       "line": 75
+      },
+      {
+       "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletResponseTest.java",
+       "line": 84
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "sdsAcId": "SDS-AC-9",
+   "requirementId": "FR-SVL-003",
+   "acId": "AC-3",
+   "cited": true,
+   "testFiles": [
+    {
+     "path": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletAbortTest.java",
+     "exists": true,
+     "citations": [
+      {
+       "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletAbortTest.java",
+       "line": 111
+      },
+      {
+       "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletAbortTest.java",
+       "line": 127
+      },
+      {
+       "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletAbortTest.java",
+       "line": 138
+      },
+      {
+       "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletAbortTest.java",
+       "line": 154
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "sdsAcId": "SDS-AC-10",
+   "requirementId": "FR-SVL-003",
+   "acId": "AC-4",
+   "cited": true,
+   "testFiles": [
+    {
+     "path": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletSendFileTest.java",
+     "exists": true,
+     "citations": [
+      {
+       "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletSendFileTest.java",
+       "line": 25
+      },
+      {
+       "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletSendFileTest.java",
+       "line": 47
+      },
+      {
+       "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletSendFileTest.java",
+       "line": 66
+      },
+      {
+       "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletSendFileTest.java",
+       "line": 83
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "sdsAcId": "SDS-AC-11",
+   "requirementId": "FR-SVL-003",
+   "acId": "AC-5",
+   "cited": true,
+   "testFiles": [
+    {
+     "path": "src/test/java/com/snoworca/naruserve/docs/ServletDocsTest.java",
+     "exists": true,
+     "citations": [
+      {
+       "file": "src/test/java/com/snoworca/naruserve/docs/ServletDocsTest.java",
+       "line": 56
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "gaps": {
+  "requirements": [],
+  "sdsContracts": []
+ },
+ "passed": true
+}

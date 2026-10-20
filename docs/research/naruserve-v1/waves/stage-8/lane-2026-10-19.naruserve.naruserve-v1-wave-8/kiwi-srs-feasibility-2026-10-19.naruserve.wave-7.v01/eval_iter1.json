@@ -1,0 +1,154 @@
+{
+  "iter": 1,
+  "target": "wave-7",
+  "evaluator": "independent verifier (kiwi-srs-feasibility Phase 5), read-only",
+  "generated": "2026-10-20",
+  "inputs": [
+    "docs/spec/04.http-core.srs.md, 05.application.srs.md, 06.engine-adapter.srs.md, 11.websocket.srs.md, 12.server-sent-events.srs.md (29 blocks with | Target | wave-7 |)",
+    "per-req-judgement.json (feasibility, score, axes scores, blockers, conditions only)",
+    "improvement_iter1.json (to know what the improvement pass changed)",
+    "NaruServe-api, NaruServe-tinyhttpd, TinyHttpd checkout 38051b6 (read-only)"
+  ],
+  "checks": {
+    "score_label_consistency": "29/29 consistent with 80+ high, 60-79 medium, 40-59 low, <40 blocked. Six-axis sums equal the stated score for all 29 (no summation error). Only FR-SSE-002 (75) and FR-SSE-003 (79) are medium; both now rescored below.",
+    "trace_paths": "All 67 Code trace links of the 29 blocks exist on disk (checked by script, more than the 10 required). Sampled rationale line citations also match: spi/HttpExchange.java:85 upgrade and :89 eventStream, Response.java:9/:55/:66, Request.java:47 lastEventId, TinyHttpdFeatures.java:51 eventStream throws UnsupportedOperationException, TinyHttpdExchange.java:240 synchronized eventStream, TinyHttpdAdapter.java:94 maxDrainBytes comment, :109-113 maxWorkers + maxSseStreams mapping, KeeperThread.java:26 naruserve-keeper-<port>, WorkerThreadFactory.java:52 naruserve-<port>-worker-<n>, TinyHttpd HttpServer.java:162 tinyhttpd-acceptor-<port> and :171 tinyhttpd-watchdog. One drift: the judgement evidence for IR-WS-001 cites DefaultRestApp.java:826 webSocketRoute, which is at :828 (F-10).",
+    "ac_verifiability": "Spot-checked the judgement conditions against the current AC text for FR-WS-003 AC-3 (host case-insensitive, scheme not stated although the example uses HTTP://), FR-WS-008 AC-7 (disconnect only, no 408 read), FR-WS-007 AC-5, FR-WS-002 AC-5, OPS-WS-001 AC-6, IR-WS-001 AC-2/AC-5/AC-10, FR-APP-020 AC-1, FR-WS-010 AC-5, FR-SSE-001 AC-1, OPS-SSE-001 AC-3/AC-4: every condition matches the text. PERF-APP-001 ac_verifiability (11) was scored on the old 'TinyHttpd thread group' wording; the improvement pass replaced it with name-based counting, so that axis is now conservative (not a defect).",
+    "b1_resolution": "Resolved consistently. IR-HTTP-007 AC-4 adds default StreamDrain.attach(OutputStream) (no-op), keeps StreamDrain @FunctionalInterface with drain(OutputStream) the only abstract method, and requires every adapter's eventStream to call attach(out) with the stream later passed to drain(out). IR-WS-002 statement and AC-5 allow exactly webSocket and attach as added methods. FR-SSE-002 AC-5/AC-6/AC-8 write handler-thread pre-drain sends to the attached stream under the exchange lock, flush them, and fall back to the bounded queue when an adapter never attaches. FR-SSE-003 AC-6 makes the TinyHttpd eventStream call attach with the same exchange-synchronized instance, AC-8 requires a flush after every event, heartbeat and pre-drain write. TinyHttpd feasibility confirmed: ExchangeResponse.getOutputStream (server/ExchangeResponse.java:307) returns Body; Body.flush (:627) calls flushOut(false) (:477), which commits the head with Transfer-Encoding: chunked on HTTP/1.1 (:447) and writes through Connection.write (server/Connection.java:293-299) straight to socket.getOutputStream() (:128). Nothing ties body writes to handler return: TinyHttpd ends the response only after TinyHttpdExchange.run returns, and run blocks on the ended latch after handler.handle (TinyHttpdExchange.java:47-56). The stream to hand over already exists: commit() wraps res.getOutputStream() in a FilterOutputStream whose write/flush synchronize on the exchange and check abort (TinyHttpdExchange.java:130-175). Handler and drain both run on the same TinyHttpd worker, so ExchangeResponse (not thread-safe) is touched by one thread plus the lock-free abort flag. Upgraded and SSE connections run on the NaruServe WorkerThreadFactory threads, so the name-based thread counts of PERF-APP-001/FR-APP-020 also see them. No source yet declares attach (grep), as expected for planned requirements.",
+    "contradictions_after_improvement": "No hard contradiction between requirements. Soft ones: FR-SSE-002 statement vs its own AC-8 fallback (F-02), OPS-SSE-001 AC-3 docs phrase 'before it returns ... straight to the socket' vs FR-SSE-002 'before the drain starts' plus fallback (F-08), FR-SSE-002 AC-2 'written by the drain loop' vs AC-6 handler-thread writes of queued events (F-09), stale rationale text in IR-WS-002 and PERF-APP-001 (F-05, F-06). Thread-name decisions agree across FR-WS-007 AC-2, FR-WS-008 AC-5, FR-WS-010 AC-8, PERF-APP-001 AC-1 and FR-APP-020 AC-9.",
+    "new_blockers": "None. The only new coupling is verification-order (F-03), the same class the judgement already accepts through group verification."
+  },
+  "findings": [
+    {
+      "id": "F-01",
+      "severity": "MEDIUM",
+      "axis": "dependency_health",
+      "req_id": "FR-SSE-002",
+      "description": "AC-5, AC-6 and AC-8 depend on StreamDrain.attach, which IR-HTTP-007 AC-4 defines, but FR-SSE-002's Trace Links have no depends_on IR-HTTP-007 and no transitive path to it (FR-SSE-002 -> IR-SSE-001, FR-SSE-001 only). The improvement pass added nine edges but not this one.",
+      "suggested_fix": "add_trace_link FR-SSE-002 depends_on IR-HTTP-007 (note: StreamDrain.attach of AC-4). Checked acyclic: IR-HTTP-007 -> IR-WS-002 -> IR-WS-001 has no path back to FR-SSE-002."
+    },
+    {
+      "id": "F-02",
+      "severity": "MEDIUM",
+      "axis": "internal_coherence",
+      "req_id": "FR-SSE-002",
+      "description": "The statement says a handler-thread send before the drain starts is written 'straight to the stream' and that only sends 'from another thread' trip the overflow policy, unconditionally. AC-8 adds a case the statement does not cover: with an adapter that never calls attach, a handler-thread send is queued under the sendQueueSize bound, so it can overflow. The statement also never names StreamDrain.attach.",
+      "suggested_fix": "edit_requirement_fields FR-SSE-002 statement: '... write a send made on the handler's own thread before the drain loop starts, after every event already queued, straight to the stream the adapter attached through StreamDrain.attach, or queue it under the sendQueueSize bound when no stream was attached, ...'."
+    },
+    {
+      "id": "F-03",
+      "severity": "MEDIUM",
+      "axis": "dependency_health",
+      "req_id": "IR-WS-002",
+      "description": "New hidden verification-order cycle from the improvement pass: IR-HTTP-007 depends_on IR-WS-002, while IR-WS-002 AC-5 now requires StreamDrain.attach, the SSE method that IR-HTTP-007 AC-4 owns. IR-WS-002's signature test cannot pass until IR-HTTP-007's addition exists. Adding IR-WS-002 depends_on IR-HTTP-007 would close a declared cycle, so the edge must not be added. Neither rationale records this coupling (unlike the FR-WS-010/FR-APP-020 case).",
+      "suggested_fix": "Either narrow IR-WS-002 AC-5 to the HttpExchange surface ('webSocket the only added HttpExchange method; StreamDrain additions as IR-HTTP-007 AC-4 states'), or append a rationale note to both blocks recording the coupling and that IR-HTTP-007 AC-4 and IR-WS-002 AC-5 share one signature test and are verified in one group."
+    },
+    {
+      "id": "F-04",
+      "severity": "LOW",
+      "axis": "dependency_health",
+      "req_id": "FR-SSE-003",
+      "description": "AC-6 and AC-8 now call and flush the attached stream, but FR-SSE-003 has no direct depends_on IR-HTTP-007 (it reaches it only through FR-ENGINE-011). The statement mentions neither attach nor the per-event flush that AC-6 and AC-8 require.",
+      "suggested_fix": "Optionally add depends_on IR-HTTP-007 (acyclic) and extend the statement with 'hand the same exchange-synchronized stream to StreamDrain.attach before eventStream returns and flush it after each event, heartbeat and handler-thread write'."
+    },
+    {
+      "id": "F-05",
+      "severity": "LOW",
+      "axis": "internal_coherence",
+      "req_id": "IR-WS-002",
+      "description": "The Rationale still says the wave reads D-106 as 'add-only types and one default method', which contradicts the amended statement and AC-5 (two default methods with StreamDrain.attach).",
+      "suggested_fix": "append_section_note IR-WS-002 rationale: '[2026-10-20] Correction: \"one default method\" above now reads two (HttpExchange.webSocket and StreamDrain.attach, committee decision B-1).'"
+    },
+    {
+      "id": "F-06",
+      "severity": "LOW",
+      "axis": "internal_coherence",
+      "req_id": "PERF-APP-001",
+      "description": "The Rationale pitfall still says the test counts threads 'by the TinyHttpd thread group'. The appended 2026-10-20 correction note supersedes it, so a reader sees both versions.",
+      "suggested_fix": "Leave it as is (the correction note is the recorded supersession), or rewrite the pitfall sentence when the requirement is next edited."
+    },
+    {
+      "id": "F-07",
+      "severity": "LOW",
+      "axis": "ac_verifiability",
+      "req_id": "IR-HTTP-007",
+      "description": "AC-4's new sentence 'Every adapter's eventStream calls drain.attach(out) ... with the same exchange-synchronized body stream' names no test of its own; the per-adapter checks live in FR-SSE-002 AC-8 (in-memory) and FR-SSE-003 AC-6 (TinyHttpd). Trace Links also lack spi/StreamDrain.java as an addition site.",
+      "suggested_fix": "Append 'which FR-SSE-002 AC-8 (in-memory) and FR-SSE-003 AC-6 (TinyHttpd) assert' to AC-4 and add a Code trace link to NaruServe-api/src/main/java/com/snoworca/naruserve/spi/StreamDrain.java (trace_intent=addition_site)."
+    },
+    {
+      "id": "F-08",
+      "severity": "LOW",
+      "axis": "internal_coherence",
+      "req_id": "OPS-SSE-001",
+      "description": "AC-3's docs phrase 'sends on the handler's own thread before it returns are written straight to the socket and are not limited by the send queue' holds for TinyHttpd, where the drain starts on the same worker after the handler returns. It does not hold for the queue fallback of FR-SSE-002 AC-8 or for an adapter that starts the drain while the handler runs (the in-memory adapter submits it at once, InMemoryHttpAdapter.java:489-503). The improvement pass recorded this as no change.",
+      "suggested_fix": "Acceptable for v1 (both shipped adapters attach). Optionally add to the docs phrase 'on adapters that hand over the stream (TinyHttpd)'."
+    },
+    {
+      "id": "F-09",
+      "severity": "LOW",
+      "axis": "internal_coherence",
+      "req_id": "FR-SSE-002",
+      "description": "AC-2 says another thread's send is 'written to the socket by the drain loop', but in AC-6 the handler thread writes the queued A and B before C. The AC-2 test (writer thread != sender thread) passes either way, but the sentence is inaccurate. Also, the in-memory drain starts as soon as eventStream returns (InMemoryHttpAdapter.java:493), possibly while the handler still runs, so the core's switch from direct writes to queued writes when the drain starts must be atomic with the handler-thread write path.",
+      "suggested_fix": "In AC-2 write 'is queued and written to the socket by the drain loop, or by the handler thread's next send before the drain starts (AC-6)'. Record the atomic switch as an SDS interface note."
+    },
+    {
+      "id": "F-10",
+      "severity": "LOW",
+      "axis": "evidence_strength",
+      "req_id": "IR-WS-001",
+      "description": "The judgement evidence cites DefaultRestApp.java:826 for webSocketRoute(String, RouteHandler), which is at :828 (:826 is its javadoc). The line drifted; the content is right.",
+      "suggested_fix": "Refresh the line number in per-req-judgement.json (no SRS change)."
+    },
+    {
+      "id": "F-11",
+      "severity": "LOW",
+      "axis": "dependency_health",
+      "req_id": "FR-SSE-003",
+      "description": "Carried over and still open (improvement not_done): AC-7 asserts the FR-APP-019 access-log line cause=client, a verification coupling with FR-APP-019 AC-10. Already covered by the 'verify and promote together' condition.",
+      "suggested_fix": "Keep the group-verification condition, or move the log-line assertion to FR-APP-019 AC-10 in a later pass."
+    }
+  ],
+  "rescores": {
+    "FR-SSE-002": {
+      "score": 84,
+      "label": "high",
+      "previous": {"score": 75, "label": "medium"},
+      "axes": {
+        "implementability": 25,
+        "evidence_strength": 17,
+        "dependency_health": 11,
+        "ac_verifiability": 13,
+        "scope_fit": 9,
+        "product_fit": 9
+      },
+      "blockers": [],
+      "basis": "B-1 is removed: attach gives the core the committed stream before the handler returns, and TinyHttpd's Body.flush -> flushOut writes chunks to the socket during the handler (ExchangeResponse.java:477/:627, Connection.java:293). Implementability stays below 28 because the core still needs a direct/queue state machine, the queue fallback and an atomic switch when the drain starts (F-09). Evidence: trace files exist, but there is no TinyHttpd trace for AC-5 and no IR-HTTP-007 link. Dependency: the IR-HTTP-007 edge is missing (F-01). AC: AC-5 is now socket-observable through the latch and AC-8 is concrete; the statement does not match the AC-8 fallback (F-02).",
+      "proposed_stability": "evolving (policy: high -> evolving, no confirm)",
+      "conditions": ["Apply F-01 and F-02 before or with the stability change", "SDS must state the atomic drain-start switch (F-09)"]
+    },
+    "FR-SSE-003": {
+      "score": 87,
+      "label": "high",
+      "previous": {"score": 79, "label": "medium"},
+      "axes": {
+        "implementability": 26,
+        "evidence_strength": 18,
+        "dependency_health": 11,
+        "ac_verifiability": 13,
+        "scope_fit": 9,
+        "product_fit": 10
+      },
+      "blockers": [],
+      "basis": "The handler-thread write gap is closed. The exchange-synchronized FilterOutputStream from commit() (TinyHttpdExchange.java:130-175) is the instance to pass to attach and drain, and its flush reaches the socket. Handler and drain share one worker, so TinyHttpd's single-thread response is safe. The flush condition is now AC-8 with concrete timings. Remaining: run() must run the registered drain before the ended latch (small change), AC-7 is still coupled to FR-APP-019 (F-11), and there is no direct IR-HTTP-007 edge (F-04, transitive through FR-ENGINE-011).",
+      "proposed_stability": "evolving (policy: high -> evolving, no confirm)",
+      "conditions": ["Verify AC-7 together with FR-APP-019", "Verify and promote together with FR-SSE-002 and FR-ENGINE-011"]
+    }
+  },
+  "cycle_check": "Parsed the Trace Links tables of all 29 wave-7 blocks: 65 depends_on edges, all inside wave 7, no edge to a non-wave-7 requirement. DFS found no cycle, which matches improvement_iter1 ('65 edges, no cycle'). Adding the suggested FR-SSE-002 -> IR-HTTP-007 and FR-SSE-003 -> IR-HTTP-007 edges keeps the graph acyclic (IR-HTTP-007 -> IR-WS-002 -> IR-WS-001 -> none). Adding IR-WS-002 -> IR-HTTP-007 would create the declared cycle IR-HTTP-007 -> IR-WS-002 -> IR-HTTP-007 and must not be done; that pair is an AC-level verification coupling (F-03). FR-WS-010 <-> FR-APP-020 stays acyclic: only FR-APP-020 -> FR-WS-010 is declared, and the reverse use is recorded as coupling.",
+  "summary": {
+    "CRITICAL": 0,
+    "HIGH": 0,
+    "MEDIUM": 3,
+    "LOW": 8
+  },
+  "gate": "Normal gate passes (CRITICAL=0, HIGH=0). Under the default policy all 29 requirements are high, so all 29 would go draft -> evolving."
+}

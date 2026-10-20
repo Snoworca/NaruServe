@@ -1,0 +1,2602 @@
+{
+ "run": "2026-10-19.naruserve.wave-4.v01",
+ "judgements": [
+  {
+   "req_id": "CON-APP-001",
+   "feasibility": "high",
+   "score": 96,
+   "axes": {
+    "implementability": {
+     "score": 29,
+     "max": 30,
+     "rationale": "Add org/slf4j/ to the :NaruServe-api prefix list; jar content check in root tests.",
+     "evidence": [
+      "build.gradle:124-132",
+      "build.gradle:248-255"
+     ]
+    },
+    "evidence_strength": {
+     "score": 19,
+     "max": 20,
+     "rationale": "build.gradle is the addition site.",
+     "evidence": [
+      "build.gradle"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "max": 15,
+     "rationale": "extends verified CON-BUILD-013/CON-BUILD-006.",
+     "evidence": [
+      "extends CON-BUILD-013",
+      "extends CON-BUILD-006"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "max": 15,
+     "rationale": "Build-time scan and jar inspection.",
+     "evidence": [
+      "AC-1",
+      "AC-2",
+      "AC-3"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "max": 10,
+     "rationale": "Within wave 4 scope boundaries of 05.application.srs.md \u00a72.",
+     "evidence": [
+      "docs/spec/05.application.srs.md:13-26"
+     ]
+    },
+    "product_fit": {
+     "score": 9,
+     "max": 10,
+     "rationale": "Required by object.md / issues #5-#7 for v1.",
+     "evidence": [
+      "05.application.srs.md"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": false
+  },
+  {
+   "req_id": "FR-APP-001",
+   "feasibility": "high",
+   "score": 95,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "max": 30,
+     "rationale": "ServiceLoader is in API 21; helper in internal; temp-dir META-INF/services + URLClassLoader test is standard.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:7-33",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/package-info.java",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/package-info.java"
+     ]
+    },
+    "evidence_strength": {
+     "score": 19,
+     "max": 20,
+     "rationale": "All three addition sites exist.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/package-info.java",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/package-info.java"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "max": 15,
+     "rationale": "depends_on IR-APP-001 (wave 4); extends verified CON-HTTP-001.",
+     "evidence": [
+      "depends_on IR-APP-001",
+      "extends CON-HTTP-001"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "max": 15,
+     "rationale": "Dedicated class loader makes the one/zero/two-provider cases deterministic.",
+     "evidence": [
+      "AC-1",
+      "AC-2",
+      "AC-3",
+      "AC-4",
+      "AC-5"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "max": 10,
+     "rationale": "Within wave 4 scope boundaries of 05.application.srs.md \u00a72.",
+     "evidence": [
+      "docs/spec/05.application.srs.md:13-26"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "max": 10,
+     "rationale": "Required by object.md / issues #5-#7 for v1.",
+     "evidence": [
+      "05.application.srs.md"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Bootstrap provider and end-to-end half stay wave 5 (out of scope)."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": false
+  },
+  {
+   "req_id": "FR-APP-002",
+   "feasibility": "high",
+   "score": 91,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "max": 30,
+     "rationale": "One guard in DefaultRestApp replaces checkNotFrozen; registrations already funnel through record()/routerPolicy.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:126-139",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:108-117",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:179-189"
+     ]
+    },
+    "evidence_strength": {
+     "score": 19,
+     "max": 20,
+     "rationale": "DefaultRestApp is the addition site.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "max": 15,
+     "rationale": "depends_on IR-APP-005; extends verified FR-HTTP-008.",
+     "evidence": [
+      "extends FR-HTTP-008",
+      "depends_on IR-APP-005"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 11,
+     "max": 15,
+     "rationale": "AC-2 \"no static field of a mutable collection type\" is ambiguous for existing final arrays (MethodSet.java:15 Method[] METHODS, internal/DefaultResponse.java:33 byte[] EMPTY): decide whether arrays count or the scan fails on current code.",
+     "evidence": [
+      "AC-1",
+      "AC-2",
+      "AC-3",
+      "AC-4",
+      "AC-5"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "max": 10,
+     "rationale": "Within wave 4 scope boundaries of 05.application.srs.md \u00a72.",
+     "evidence": [
+      "docs/spec/05.application.srs.md:13-26"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "max": 10,
+     "rationale": "Required by object.md / issues #5-#7 for v1.",
+     "evidence": [
+      "05.application.srs.md"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Clarify AC-2: state whether static final arrays count as mutable (and exempt or convert MethodSet.METHODS / DefaultResponse.EMPTY)."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": false
+  },
+  {
+   "req_id": "FR-APP-003",
+   "feasibility": "high",
+   "score": 93,
+   "axes": {
+    "implementability": {
+     "score": 25,
+     "max": 30,
+     "rationale": "Dispatcher must build a Request before answering 404/405/426/501/OPTIONS and run a chain; Router.decodeSegments gives the policy-normalised segments for prefix matching.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:44-75",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:124-144",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:296"
+     ]
+    },
+    "evidence_strength": {
+     "score": 19,
+     "max": 20,
+     "rationale": "Dispatcher and DefaultRestApp are the addition sites.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "max": 15,
+     "rationale": "depends_on IR-APP-002; extends verified FR-ROUTE-006/FR-HTTP-001.",
+     "evidence": [
+      "depends_on IR-APP-002",
+      "extends FR-ROUTE-006",
+      "extends FR-HTTP-001"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "max": 15,
+     "rationale": "Recording middleware through TestApp; ordering assertions deterministic.",
+     "evidence": [
+      "AC-1",
+      "AC-2",
+      "AC-3",
+      "AC-4",
+      "AC-5",
+      "AC-6",
+      "AC-7",
+      "AC-8"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "max": 10,
+     "rationale": "Within wave 4 scope boundaries of 05.application.srs.md \u00a72.",
+     "evidence": [
+      "docs/spec/05.application.srs.md:13-26"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "max": 10,
+     "rationale": "Required by object.md / issues #5-#7 for v1.",
+     "evidence": [
+      "05.application.srs.md"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "DefaultRequest must be constructible without a matched route (empty params) for the fallback point."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": false
+  },
+  {
+   "req_id": "FR-APP-004",
+   "feasibility": "high",
+   "score": 94,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "max": 30,
+     "rationale": "Per-invocation Next object with a once flag and response/exchange-ended checks; DefaultResponse already tracks state.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java:40,216-246",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:124-144"
+     ]
+    },
+    "evidence_strength": {
+     "score": 19,
+     "max": 20,
+     "rationale": "Dispatcher is the addition site; extends FR-HTTP-016 response states.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "max": 15,
+     "rationale": "depends_on FR-APP-003 (wave 4).",
+     "evidence": [
+      "depends_on FR-APP-003",
+      "extends FR-HTTP-016"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "max": 15,
+     "rationale": "Each AC is a direct single-thread assertion.",
+     "evidence": [
+      "AC-1",
+      "AC-2",
+      "AC-3",
+      "AC-4",
+      "AC-5",
+      "AC-6"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "max": 10,
+     "rationale": "Within wave 4 scope boundaries of 05.application.srs.md \u00a72.",
+     "evidence": [
+      "docs/spec/05.application.srs.md:13-26"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "max": 10,
+     "rationale": "Required by object.md / issues #5-#7 for v1.",
+     "evidence": [
+      "05.application.srs.md"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": false
+  },
+  {
+   "req_id": "FR-APP-005",
+   "feasibility": "high",
+   "score": 91,
+   "axes": {
+    "implementability": {
+     "score": 24,
+     "max": 30,
+     "rationale": "Replaces DefaultResponse.afterFailure interim handling with an onError chain decided by response state; abort path exists.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java:227-246",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java:283-306",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:133-143"
+     ]
+    },
+    "evidence_strength": {
+     "score": 19,
+     "max": 20,
+     "rationale": "Dispatcher/DefaultResponse traced; error path state machine exists.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "max": 15,
+     "rationale": "depends_on IR-APP-003, FR-APP-004 (wave 4); extends verified FR-HTTP-015.",
+     "evidence": [
+      "depends_on IR-APP-003",
+      "depends_on FR-APP-004",
+      "extends FR-HTTP-015"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "max": 15,
+     "rationale": "9 ACs; AC-9 states a rule whose real case (res.json) is wave 5 \u2014 testable only via STREAMING/COMPLETED here.",
+     "evidence": [
+      "AC-1",
+      "AC-2",
+      "AC-3",
+      "AC-4",
+      "AC-5",
+      "AC-6",
+      "AC-7",
+      "AC-8",
+      "AC-9"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "max": 10,
+     "rationale": "Within wave 4 scope boundaries of 05.application.srs.md \u00a72.",
+     "evidence": [
+      "docs/spec/05.application.srs.md:13-26"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "max": 10,
+     "rationale": "Required by object.md / issues #5-#7 for v1.",
+     "evidence": [
+      "05.application.srs.md"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": false
+  },
+  {
+   "req_id": "FR-APP-006",
+   "feasibility": "high",
+   "score": 93,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "max": 30,
+     "rationale": "Core-written JSON (no codec) with RFC 8259 escaping; automatic() must switch from Content-Length:0 to the standard body incl. HEAD rule.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:95-113",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java:308-334"
+     ]
+    },
+    "evidence_strength": {
+     "score": 19,
+     "max": 20,
+     "rationale": "Dispatcher/DefaultResponse are the sites.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java"
+     ]
+    },
+    "dependency_health": {
+     "score": 14,
+     "max": 15,
+     "rationale": "depends_on IR-APP-003/FR-APP-005; AC-7 needs FR-APP-015 requestId but has no trace to it (FR-APP-015 links the other way).",
+     "evidence": [
+      "depends_on IR-APP-003",
+      "depends_on FR-APP-005",
+      "extends FR-HTTP-017"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "max": 15,
+     "rationale": "Exact-body assertions.",
+     "evidence": [
+      "AC-1",
+      "AC-2",
+      "AC-3",
+      "AC-4",
+      "AC-5",
+      "AC-6",
+      "AC-7",
+      "AC-8",
+      "AC-9"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "max": 10,
+     "rationale": "Within wave 4 scope boundaries of 05.application.srs.md \u00a72.",
+     "evidence": [
+      "docs/spec/05.application.srs.md:13-26"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "max": 10,
+     "rationale": "Required by object.md / issues #5-#7 for v1.",
+     "evidence": [
+      "05.application.srs.md"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Wave 3 tests asserting empty automatic bodies must be re-pointed (FR-APP-009 AC-7)."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": false
+  },
+  {
+   "req_id": "FR-APP-007",
+   "feasibility": "high",
+   "score": 93,
+   "axes": {
+    "implementability": {
+     "score": 25,
+     "max": 30,
+     "rationale": "Registry with STARTING-only writes, freeze to unmodifiable snapshot, single ApplicationContext per DefaultRestApp.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:25-51",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java:25"
+     ]
+    },
+    "evidence_strength": {
+     "score": 19,
+     "max": 20,
+     "rationale": "DefaultRestApp/DefaultRequest are the sites.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "max": 15,
+     "rationale": "depends_on IR-APP-004/IR-APP-005.",
+     "evidence": [
+      "depends_on IR-APP-004",
+      "depends_on IR-APP-005"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "max": 15,
+     "rationale": "Concurrency ACs use fixed thread counts and identity; deterministic enough.",
+     "evidence": [
+      "AC-1",
+      "AC-2",
+      "AC-3",
+      "AC-4",
+      "AC-5",
+      "AC-6",
+      "AC-7",
+      "AC-8"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "max": 10,
+     "rationale": "Within wave 4 scope boundaries of 05.application.srs.md \u00a72.",
+     "evidence": [
+      "docs/spec/05.application.srs.md:13-26"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "max": 10,
+     "rationale": "Required by object.md / issues #5-#7 for v1.",
+     "evidence": [
+      "05.application.srs.md"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": false
+  },
+  {
+   "req_id": "FR-APP-008",
+   "feasibility": "high",
+   "score": 94,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "max": 30,
+     "rationale": "Identity-ordered close list (IdentityHashMap + list) with suppressed/logged failures.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:25-51"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "max": 20,
+     "rationale": "DefaultRestApp/internal package-info are the sites.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/package-info.java"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "max": 15,
+     "rationale": "depends_on IR-APP-004.",
+     "evidence": [
+      "depends_on IR-APP-004"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "max": 15,
+     "rationale": "Order/once assertions with recording closeables.",
+     "evidence": [
+      "AC-1",
+      "AC-2",
+      "AC-3",
+      "AC-4",
+      "AC-5"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "max": 10,
+     "rationale": "Within wave 4 scope boundaries of 05.application.srs.md \u00a72.",
+     "evidence": [
+      "docs/spec/05.application.srs.md:13-26"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "max": 10,
+     "rationale": "Required by object.md / issues #5-#7 for v1.",
+     "evidence": [
+      "05.application.srs.md"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": false
+  },
+  {
+   "req_id": "FR-APP-009",
+   "feasibility": "high",
+   "score": 91,
+   "axes": {
+    "implementability": {
+     "score": 24,
+     "max": 30,
+     "rationale": "listen = CAS NEW->STARTING, onStart, existing freeze(), adapter.bind, RUNNING; start gate wraps the dispatcher (latch). TestApp must move from new DefaultRestApp()+freeze+bind to builder+listen(0).",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:146-169",
+      "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/TestApp.java:17,54-60",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpAdapter.java:13"
+     ]
+    },
+    "evidence_strength": {
+     "score": 19,
+     "max": 20,
+     "rationale": "Sites exist; TestApp migration is named in AC-7.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "max": 15,
+     "rationale": "depends_on IR-APP-005; extends verified FR-HTTP-008/IR-HTTP-004/FR-ROUTE-008.",
+     "evidence": [
+      "depends_on IR-APP-005",
+      "extends FR-HTTP-008",
+      "extends IR-HTTP-004",
+      "extends FR-ROUTE-008"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "max": 15,
+     "rationale": "AC-5/AC-6 need a recording adapter that dispatches from another thread during bind; AC-7 is a broad migration clause over every wave 3 TestApp test.",
+     "evidence": [
+      "AC-1",
+      "AC-2",
+      "AC-3",
+      "AC-4",
+      "AC-5",
+      "AC-6",
+      "AC-7",
+      "AC-8"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "max": 10,
+     "rationale": "Within wave 4 scope boundaries of 05.application.srs.md \u00a72.",
+     "evidence": [
+      "docs/spec/05.application.srs.md:13-26"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "max": 10,
+     "rationale": "Required by object.md / issues #5-#7 for v1.",
+     "evidence": [
+      "05.application.srs.md"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Do the TestApp migration and the re-pointing of FR-HTTP-002/003/005/006/010 tests in one change; never weaken a test."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": false
+  },
+  {
+   "req_id": "FR-APP-010",
+   "feasibility": "high",
+   "score": 90,
+   "axes": {
+    "implementability": {
+     "score": 25,
+     "max": 30,
+     "rationale": "FAILED path in listen: close resources reverse, flush/close logger, stop+release adapter, TERMINATED, rethrow/wrap.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:146-160",
+      "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/InMemoryHttpAdapter.java:97-136"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "max": 20,
+     "rationale": "DefaultRestApp is the site; in-memory stop/release accept no bound socket (InMemoryHttpAdapter.java:97-136).",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java"
+     ]
+    },
+    "dependency_health": {
+     "score": 13,
+     "max": 15,
+     "rationale": "depends_on FR-APP-009/FR-APP-008; AC-6 needs FR-APP-017 (RotatingFileLogger) but has no trace link.",
+     "evidence": [
+      "depends_on FR-APP-009",
+      "depends_on FR-APP-008"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "max": 15,
+     "rationale": "Deterministic assertions; AC-6 lives in NaruServe-filelog.",
+     "evidence": [
+      "AC-1",
+      "AC-2",
+      "AC-3",
+      "AC-4",
+      "AC-5",
+      "AC-6"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "max": 10,
+     "rationale": "Within wave 4 scope boundaries of 05.application.srs.md \u00a72.",
+     "evidence": [
+      "docs/spec/05.application.srs.md:13-26"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "max": 10,
+     "rationale": "Required by object.md / issues #5-#7 for v1.",
+     "evidence": [
+      "05.application.srs.md"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Add trace FR-APP-017 depends_on for AC-6."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": false
+  },
+  {
+   "req_id": "FR-APP-011",
+   "feasibility": "high",
+   "score": 90,
+   "axes": {
+    "implementability": {
+     "score": 24,
+     "max": 30,
+     "rationale": "Internal participant registry with three phases, one deadline; InMemoryHttpAdapter.stop waits in-flight up to the deadline.",
+     "evidence": [
+      "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/InMemoryHttpAdapter.java:97-121",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:25-51"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "max": 20,
+     "rationale": "DefaultRestApp/internal package-info sites exist.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/package-info.java"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "max": 15,
+     "rationale": "depends_on FR-APP-008/IR-APP-005; extends verified IR-HTTP-003/004.",
+     "evidence": [
+      "depends_on FR-APP-008",
+      "depends_on IR-APP-005",
+      "extends IR-HTTP-004",
+      "extends IR-HTTP-003"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "max": 15,
+     "rationale": "AC-2 is timing-based (200 ms of 1 s, <=800 ms) \u2014 assert on the timeout value passed to a recording adapter, not wall clock.",
+     "evidence": [
+      "AC-1",
+      "AC-2",
+      "AC-3",
+      "AC-4",
+      "AC-5",
+      "AC-6",
+      "AC-7",
+      "AC-8"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "max": 10,
+     "rationale": "Within wave 4 scope boundaries of 05.application.srs.md \u00a72.",
+     "evidence": [
+      "docs/spec/05.application.srs.md:13-26"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "max": 10,
+     "rationale": "Required by object.md / issues #5-#7 for v1.",
+     "evidence": [
+      "05.application.srs.md"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "AC-2: assert the timeout argument recorded by the test adapter, with tolerance."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": false
+  },
+  {
+   "req_id": "FR-APP-012",
+   "feasibility": "high",
+   "score": 89,
+   "axes": {
+    "implementability": {
+     "score": 23,
+     "max": 30,
+     "rationale": "Pending-stop handshake between listen and shutdown across STARTING/bind/FAILED is the hardest concurrency in the wave, but every case is spelled out.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:146-160",
+      "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/InMemoryHttpAdapter.java:75-84"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "max": 20,
+     "rationale": "DefaultRestApp is the site.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "max": 15,
+     "rationale": "depends_on FR-APP-010/FR-APP-011.",
+     "evidence": [
+      "depends_on FR-APP-010",
+      "depends_on FR-APP-011"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "max": 15,
+     "rationale": "Latch-driven multi-thread tests; AC-4 allows STARTING or FAILED, AC-5 needs a 100 ms block \u2014 slight timing sensitivity.",
+     "evidence": [
+      "AC-1",
+      "AC-2",
+      "AC-3",
+      "AC-4",
+      "AC-5",
+      "AC-6"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "max": 10,
+     "rationale": "Within wave 4 scope boundaries of 05.application.srs.md \u00a72.",
+     "evidence": [
+      "docs/spec/05.application.srs.md:13-26"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "max": 10,
+     "rationale": "Required by object.md / issues #5-#7 for v1.",
+     "evidence": [
+      "05.application.srs.md"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Implement with one lock + condition for state transitions so shutdown can wait with timeout."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": false
+  },
+  {
+   "req_id": "FR-APP-013",
+   "feasibility": "high",
+   "score": 94,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "max": 30,
+     "rationale": "Lifecycle gate is the first check of the wrapping exchange handler; in-memory adapter still accepts sends before stop().",
+     "evidence": [
+      "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/InMemoryHttpAdapter.java:142-152",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:44-47"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "max": 20,
+     "rationale": "Dispatcher/InMemoryHttpAdapter traced (gate actually lives in the wrapper of FR-APP-009 AC-8).",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+      "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/InMemoryHttpAdapter.java"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "max": 15,
+     "rationale": "depends_on FR-APP-011/FR-APP-006.",
+     "evidence": [
+      "depends_on FR-APP-011",
+      "depends_on FR-APP-006"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "max": 15,
+     "rationale": "Before-wait participant sends one request; deterministic.",
+     "evidence": [
+      "AC-1",
+      "AC-2",
+      "AC-3",
+      "AC-4"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "max": 10,
+     "rationale": "Within wave 4 scope boundaries of 05.application.srs.md \u00a72.",
+     "evidence": [
+      "docs/spec/05.application.srs.md:13-26"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "max": 10,
+     "rationale": "Required by object.md / issues #5-#7 for v1.",
+     "evidence": [
+      "05.application.srs.md"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": false
+  },
+  {
+   "req_id": "FR-APP-014",
+   "feasibility": "high",
+   "score": 88,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "max": 30,
+     "rationale": "try/catch around every framework logger call (a SafeLog helper).",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:124-144",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:146-160"
+     ]
+    },
+    "evidence_strength": {
+     "score": 13,
+     "max": 20,
+     "rationale": "Only internal/package-info.java is traced; the real call sites (Dispatcher, DefaultRestApp, access log) are not.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/package-info.java"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "max": 15,
+     "rationale": "depends_on IR-APP-006.",
+     "evidence": [
+      "depends_on IR-APP-006"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "max": 15,
+     "rationale": "Throwing logger fixture; direct assertions.",
+     "evidence": [
+      "AC-1",
+      "AC-2",
+      "AC-3"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "max": 10,
+     "rationale": "Within wave 4 scope boundaries of 05.application.srs.md \u00a72.",
+     "evidence": [
+      "docs/spec/05.application.srs.md:13-26"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "max": 10,
+     "rationale": "Required by object.md / issues #5-#7 for v1.",
+     "evidence": [
+      "05.application.srs.md"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Trace Dispatcher.java and DefaultRestApp.java as addition sites."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": false
+  },
+  {
+   "req_id": "FR-APP-015",
+   "feasibility": "high",
+   "score": 87,
+   "axes": {
+    "implementability": {
+     "score": 24,
+     "max": 30,
+     "rationale": "Line built at response completion/abort; out bytes from DefaultResponse; in bytes need a counting wrapper on HttpExchange.requestBody (via DefaultRequest/BodyState).",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java:177-214,339-360",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java:26,82-85"
+     ]
+    },
+    "evidence_strength": {
+     "score": 16,
+     "max": 20,
+     "rationale": "Dispatcher/DefaultResponse traced; the in-byte counting site (DefaultRequest/BodyState) is not.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "max": 15,
+     "rationale": "depends_on IR-APP-007/FR-APP-006.",
+     "evidence": [
+      "depends_on IR-APP-007",
+      "depends_on FR-APP-006"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 12,
+     "max": 15,
+     "rationale": "AC-5 non-zero in= cannot be shown through public API in wave 4 (no body reader until wave 5); only in=0 is asserted.",
+     "evidence": [
+      "AC-1",
+      "AC-2",
+      "AC-3",
+      "AC-4",
+      "AC-5",
+      "AC-6",
+      "AC-7"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "max": 10,
+     "rationale": "Within wave 4 scope boundaries of 05.application.srs.md \u00a72.",
+     "evidence": [
+      "docs/spec/05.application.srs.md:13-26"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "max": 10,
+     "rationale": "Required by object.md / issues #5-#7 for v1.",
+     "evidence": [
+      "05.application.srs.md"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Trace DefaultRequest.java/BodyState.java for the in-byte counter; add an internal-level test for a non-zero in= or note it is asserted in wave 5."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": false
+  },
+  {
+   "req_id": "FR-APP-016",
+   "feasibility": "high",
+   "score": 94,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "max": 30,
+     "rationale": "Reflective android.util.Log calls; animal-sniffer only checks main (build.gradle:178) and checkClassReferences already bans android/ in logcat (build.gradle:129-131).",
+     "evidence": [
+      "build.gradle:129-131",
+      "build.gradle:177-179",
+      "NaruServe-logcat/src/main/java/com/snoworca/naruserve/logcat/package-info.java"
+     ]
+    },
+    "evidence_strength": {
+     "score": 19,
+     "max": 20,
+     "rationale": "Module package-info is the addition site.",
+     "evidence": [
+      "NaruServe-logcat/src/main/java/com/snoworca/naruserve/logcat/package-info.java"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "max": 15,
+     "rationale": "depends_on IR-APP-006; extends verified CON-BUILD-008.",
+     "evidence": [
+      "depends_on IR-APP-006",
+      "extends CON-BUILD-008"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "max": 15,
+     "rationale": "Fake Log in test set; isolated class loader case.",
+     "evidence": [
+      "AC-1",
+      "AC-2",
+      "AC-3",
+      "AC-4"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "max": 10,
+     "rationale": "Within wave 4 scope boundaries of 05.application.srs.md \u00a72.",
+     "evidence": [
+      "docs/spec/05.application.srs.md:13-26"
+     ]
+    },
+    "product_fit": {
+     "score": 9,
+     "max": 10,
+     "rationale": "Required by object.md / issues #5-#7 for v1.",
+     "evidence": [
+      "05.application.srs.md"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": false
+  },
+  {
+   "req_id": "FR-APP-017",
+   "feasibility": "high",
+   "score": 88,
+   "axes": {
+    "implementability": {
+     "score": 25,
+     "max": 30,
+     "rationale": "Single writer thread + ArrayBlockingQueue + rename-based rotation, all API 21 java.io.",
+     "evidence": [
+      "NaruServe-filelog/src/main/java/com/snoworca/naruserve/filelog/package-info.java",
+      "build.gradle:60"
+     ]
+    },
+    "evidence_strength": {
+     "score": 16,
+     "max": 20,
+     "rationale": "package-info traced; AC-7 requires a build.gradle change (testImplementation testFixtures(project(':NaruServe-api'))) that is not traced.",
+     "evidence": [
+      "NaruServe-filelog/src/main/java/com/snoworca/naruserve/filelog/package-info.java"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "max": 15,
+     "rationale": "depends_on IR-APP-006; extends verified CON-BUILD-012.",
+     "evidence": [
+      "depends_on IR-APP-006",
+      "extends CON-BUILD-012"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "max": 15,
+     "rationale": "Latch-blocked writer via package-private stream factory; thread-gone check needs a join/thread scan.",
+     "evidence": [
+      "AC-1",
+      "AC-2",
+      "AC-3",
+      "AC-4",
+      "AC-5",
+      "AC-6",
+      "AC-7"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "max": 10,
+     "rationale": "Within wave 4 scope boundaries of 05.application.srs.md \u00a72.",
+     "evidence": [
+      "docs/spec/05.application.srs.md:13-26"
+     ]
+    },
+    "product_fit": {
+     "score": 9,
+     "max": 10,
+     "rationale": "Required by object.md / issues #5-#7 for v1.",
+     "evidence": [
+      "05.application.srs.md"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Trace build.gradle for the filelog testFixtures dependency."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": false
+  },
+  {
+   "req_id": "FR-APP-018",
+   "feasibility": "high",
+   "score": 94,
+   "axes": {
+    "implementability": {
+     "score": 28,
+     "max": 30,
+     "rationale": "Thin delegate; slf4j-api 1.7.36 already declared (build.gradle:59); StaticLoggerBinder test binding works with 1.7.",
+     "evidence": [
+      "build.gradle:59",
+      "NaruServe-slf4j/src/main/java/com/snoworca/naruserve/slf4j/package-info.java"
+     ]
+    },
+    "evidence_strength": {
+     "score": 19,
+     "max": 20,
+     "rationale": "Addition site exists.",
+     "evidence": [
+      "NaruServe-slf4j/src/main/java/com/snoworca/naruserve/slf4j/package-info.java"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "max": 15,
+     "rationale": "depends_on IR-APP-006.",
+     "evidence": [
+      "depends_on IR-APP-006"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "max": 15,
+     "rationale": "Recording logger; name capture through a test binder.",
+     "evidence": [
+      "AC-1",
+      "AC-2",
+      "AC-3",
+      "AC-4"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "max": 10,
+     "rationale": "Within wave 4 scope boundaries of 05.application.srs.md \u00a72.",
+     "evidence": [
+      "docs/spec/05.application.srs.md:13-26"
+     ]
+    },
+    "product_fit": {
+     "score": 8,
+     "max": 10,
+     "rationale": "Optional module or docs item; useful, lower priority.",
+     "evidence": [
+      "05.application.srs.md"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": false
+  },
+  {
+   "req_id": "FR-HTTP-021",
+   "feasibility": "high",
+   "score": 93,
+   "axes": {
+    "implementability": {
+     "score": 25,
+     "max": 30,
+     "rationale": "Pre-checks exist in Dispatcher.preCheck; wave 4 adds the 501-token check before Request build, standard 400 body, and the middleware chain.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:80-91",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:44-50"
+     ]
+    },
+    "evidence_strength": {
+     "score": 19,
+     "max": 20,
+     "rationale": "Dispatcher is the site.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "max": 15,
+     "rationale": "depends_on FR-APP-006/FR-APP-003; supersedes discarded FR-HTTP-002.",
+     "evidence": [
+      "supersedes FR-HTTP-002",
+      "depends_on FR-APP-006",
+      "depends_on FR-APP-003",
+      "extends FR-ROUTE-004"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "max": 15,
+     "rationale": "Recording handler/middleware/onError through the harness.",
+     "evidence": [
+      "AC-1",
+      "AC-2",
+      "AC-3",
+      "AC-4",
+      "AC-5",
+      "AC-6"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "max": 10,
+     "rationale": "Within wave 4 scope boundaries of 05.application.srs.md \u00a72.",
+     "evidence": [
+      "docs/spec/05.application.srs.md:13-26"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "max": 10,
+     "rationale": "Required by object.md / issues #5-#7 for v1.",
+     "evidence": [
+      "04.http-core.srs.md"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": false
+  },
+  {
+   "req_id": "FR-HTTP-022",
+   "feasibility": "high",
+   "score": 94,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "max": 30,
+     "rationale": "All lookup kinds are already mapped (Dispatcher.java:51-74); change is body + ordering after middleware.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:51-74",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:95-113"
+     ]
+    },
+    "evidence_strength": {
+     "score": 19,
+     "max": 20,
+     "rationale": "Dispatcher is the site.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "max": 15,
+     "rationale": "depends_on FR-APP-006/FR-APP-003; extends verified IR-ROUTE-004.",
+     "evidence": [
+      "supersedes FR-HTTP-003",
+      "depends_on FR-APP-006",
+      "depends_on FR-APP-003",
+      "extends IR-ROUTE-004"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "max": 15,
+     "rationale": "Header and body assertions.",
+     "evidence": [
+      "AC-1",
+      "AC-2",
+      "AC-3",
+      "AC-4",
+      "AC-5",
+      "AC-6",
+      "AC-7",
+      "AC-8"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "max": 10,
+     "rationale": "Within wave 4 scope boundaries of 05.application.srs.md \u00a72.",
+     "evidence": [
+      "docs/spec/05.application.srs.md:13-26"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "max": 10,
+     "rationale": "Required by object.md / issues #5-#7 for v1.",
+     "evidence": [
+      "04.http-core.srs.md"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": false
+  },
+  {
+   "req_id": "FR-HTTP-023",
+   "feasibility": "high",
+   "score": 95,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "max": 30,
+     "rationale": "Already implemented in preCheck; wave 4 adds standard body and access-log line.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:80-91"
+     ]
+    },
+    "evidence_strength": {
+     "score": 19,
+     "max": 20,
+     "rationale": "Dispatcher is the site.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "max": 15,
+     "rationale": "depends_on FR-APP-006/FR-APP-015.",
+     "evidence": [
+      "supersedes FR-HTTP-005",
+      "depends_on FR-APP-006",
+      "depends_on FR-APP-015"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "max": 15,
+     "rationale": "Harness assertions.",
+     "evidence": [
+      "AC-1",
+      "AC-2",
+      "AC-3",
+      "AC-4"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "max": 10,
+     "rationale": "Within wave 4 scope boundaries of 05.application.srs.md \u00a72.",
+     "evidence": [
+      "docs/spec/05.application.srs.md:13-26"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "max": 10,
+     "rationale": "Required by object.md / issues #5-#7 for v1.",
+     "evidence": [
+      "04.http-core.srs.md"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": false
+  },
+  {
+   "req_id": "FR-HTTP-024",
+   "feasibility": "high",
+   "score": 94,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "max": 30,
+     "rationale": "Replaces DefaultResponse.afterFailure/afterHandler interim rules (drop handler headers on 500, warn + end()).",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java:259-306",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:133-143"
+     ]
+    },
+    "evidence_strength": {
+     "score": 19,
+     "max": 20,
+     "rationale": "Dispatcher is the site; DefaultResponse is where the change lands (not traced but uses).",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "max": 15,
+     "rationale": "depends_on FR-APP-005/FR-APP-006; extends verified FR-HTTP-016.",
+     "evidence": [
+      "supersedes FR-HTTP-006",
+      "depends_on FR-APP-005",
+      "depends_on FR-APP-006",
+      "extends FR-HTTP-016"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "max": 15,
+     "rationale": "Harness assertions incl. logger warn count.",
+     "evidence": [
+      "AC-1",
+      "AC-2",
+      "AC-3",
+      "AC-4"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "max": 10,
+     "rationale": "Within wave 4 scope boundaries of 05.application.srs.md \u00a72.",
+     "evidence": [
+      "docs/spec/05.application.srs.md:13-26"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "max": 10,
+     "rationale": "Required by object.md / issues #5-#7 for v1.",
+     "evidence": [
+      "04.http-core.srs.md"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": false
+  },
+  {
+   "req_id": "FR-HTTP-025",
+   "feasibility": "high",
+   "score": 94,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "max": 30,
+     "rationale": "Decoding exists (DefaultRequest.decodeQuery); change IllegalArgumentException to HttpException(400) and move parse after route middleware.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java:44-46,213-217",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:127-132"
+     ]
+    },
+    "evidence_strength": {
+     "score": 19,
+     "max": 20,
+     "rationale": "DefaultRequest is the site.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "max": 15,
+     "rationale": "depends_on FR-APP-005/FR-APP-006.",
+     "evidence": [
+      "supersedes FR-HTTP-010",
+      "depends_on FR-APP-005",
+      "depends_on FR-APP-006"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "max": 15,
+     "rationale": "Value and 400 assertions.",
+     "evidence": [
+      "AC-1",
+      "AC-2",
+      "AC-3"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "max": 10,
+     "rationale": "Within wave 4 scope boundaries of 05.application.srs.md \u00a72.",
+     "evidence": [
+      "docs/spec/05.application.srs.md:13-26"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "max": 10,
+     "rationale": "Required by object.md / issues #5-#7 for v1.",
+     "evidence": [
+      "04.http-core.srs.md"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": false
+  },
+  {
+   "req_id": "IR-APP-001",
+   "feasibility": "high",
+   "score": 94,
+   "axes": {
+    "implementability": {
+     "score": 28,
+     "max": 30,
+     "rationale": "New static method + nested Builder on RestApp interface; DefaultRestApp has a public no-arg ctor to build from.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:7-33",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:50-51",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/package-info.java"
+     ]
+    },
+    "evidence_strength": {
+     "score": 19,
+     "max": 20,
+     "rationale": "All three trace paths exist and are the addition sites.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/package-info.java",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java"
+     ]
+    },
+    "dependency_health": {
+     "score": 13,
+     "max": 15,
+     "rationale": "No Requirement link to IR-APP-006 although AC-3 asserts ConsoleLogger from it.",
+     "evidence": []
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "max": 15,
+     "rationale": "Reflection and Kotlin compile tests; deterministic.",
+     "evidence": [
+      "AC-1",
+      "AC-2",
+      "AC-3",
+      "AC-4",
+      "AC-5"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "max": 10,
+     "rationale": "Within wave 4 scope boundaries of 05.application.srs.md \u00a72.",
+     "evidence": [
+      "docs/spec/05.application.srs.md:13-26"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "max": 10,
+     "rationale": "Required by object.md / issues #5-#7 for v1.",
+     "evidence": [
+      "05.application.srs.md"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Add trace Requirement IR-APP-006 depends_on (ConsoleLogger default, AC-3)."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": false
+  },
+  {
+   "req_id": "IR-APP-002",
+   "feasibility": "high",
+   "score": 95,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "max": 30,
+     "rationale": "Pure interface additions; RouteBuilder gains use(); DefaultRouteBuilder delegates through DefaultRestApp.route.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:9-32",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/RouteBuilder.java:8-23",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:179-225"
+     ]
+    },
+    "evidence_strength": {
+     "score": 19,
+     "max": 20,
+     "rationale": "Trace paths exist and are the addition sites.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/RouteBuilder.java",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/package-info.java"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "max": 15,
+     "rationale": "extends verified IR-HTTP-005/IR-HTTP-006 only.",
+     "evidence": [
+      "extends IR-HTTP-005",
+      "extends IR-HTTP-006"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "max": 15,
+     "rationale": "Reflection, compile and Kotlin tests; AC-2 re-points the verified wave 3 surface test (HttpApiSurfaceTest) explicitly.",
+     "evidence": [
+      "AC-1",
+      "AC-2",
+      "AC-3",
+      "AC-4",
+      "AC-5",
+      "AC-6"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "max": 10,
+     "rationale": "Within wave 4 scope boundaries of 05.application.srs.md \u00a72.",
+     "evidence": [
+      "docs/spec/05.application.srs.md:13-26"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "max": 10,
+     "rationale": "Required by object.md / issues #5-#7 for v1.",
+     "evidence": [
+      "05.application.srs.md"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Re-point HttpApiSurfaceTest (IR-HTTP-005 AC-5) in the same change, as AC-2 says."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": false
+  },
+  {
+   "req_id": "IR-APP-003",
+   "feasibility": "high",
+   "score": 94,
+   "axes": {
+    "implementability": {
+     "score": 28,
+     "max": 30,
+     "rationale": "New ErrorHandler, HttpException, UnsupportedMediaTypeException and RestApp.onError; no existing type changes.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:7-33",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/package-info.java"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "max": 20,
+     "rationale": "Trace paths exist; the code table lives in FR-APP-006.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/package-info.java"
+     ]
+    },
+    "dependency_health": {
+     "score": 14,
+     "max": 15,
+     "rationale": "depends implicitly on FR-APP-006 code table (AC-3) and FR-APP-002 guard (AC-5) without a trace link; no cycle.",
+     "evidence": [
+      "extends IR-HTTP-005"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "max": 15,
+     "rationale": "Reflection and value assertions.",
+     "evidence": [
+      "AC-1",
+      "AC-2",
+      "AC-3",
+      "AC-4",
+      "AC-5"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "max": 10,
+     "rationale": "Within wave 4 scope boundaries of 05.application.srs.md \u00a72.",
+     "evidence": [
+      "docs/spec/05.application.srs.md:13-26"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "max": 10,
+     "rationale": "Required by object.md / issues #5-#7 for v1.",
+     "evidence": [
+      "05.application.srs.md"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Optionally trace FR-APP-006 (code values) and FR-APP-002 (guard) as related."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": false
+  },
+  {
+   "req_id": "IR-APP-004",
+   "feasibility": "high",
+   "score": 95,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "max": 30,
+     "rationale": "ServiceRegistry/ApplicationContext new; Request gains two methods; attribute semantics mirror DefaultRequest store.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java:11-54",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java:25,173-186"
+     ]
+    },
+    "evidence_strength": {
+     "score": 19,
+     "max": 20,
+     "rationale": "Request.java and package-info are the addition sites.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/package-info.java"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "max": 15,
+     "rationale": "extends verified IR-HTTP-001 and FR-HTTP-012.",
+     "evidence": [
+      "extends IR-HTTP-001",
+      "extends FR-HTTP-012"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "max": 15,
+     "rationale": "Reflection, null/ClassCast and Kotlin tests.",
+     "evidence": [
+      "AC-1",
+      "AC-2",
+      "AC-3",
+      "AC-4",
+      "AC-5"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "max": 10,
+     "rationale": "Within wave 4 scope boundaries of 05.application.srs.md \u00a72.",
+     "evidence": [
+      "docs/spec/05.application.srs.md:13-26"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "max": 10,
+     "rationale": "Required by object.md / issues #5-#7 for v1.",
+     "evidence": [
+      "05.application.srs.md"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Re-point the IR-HTTP-001 AC-3 surface test in the same change."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": false
+  },
+  {
+   "req_id": "IR-APP-005",
+   "feasibility": "high",
+   "score": 95,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "max": 30,
+     "rationale": "New enum/interfaces and RestApp methods; listen/shutdown map onto HttpAdapter bind/boundPort/stop/release.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpAdapter.java:13-29",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:7-33",
+      "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/InMemoryHttpAdapter.java:75-136"
+     ]
+    },
+    "evidence_strength": {
+     "score": 19,
+     "max": 20,
+     "rationale": "Trace paths exist; adapter SPI already offers every call needed.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/package-info.java"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "max": 15,
+     "rationale": "extends verified IR-HTTP-004/IR-HTTP-005.",
+     "evidence": [
+      "extends IR-HTTP-005",
+      "extends IR-HTTP-004"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "max": 15,
+     "rationale": "Reflection, bounds checks and a Kotlin run test over the in-memory adapter.",
+     "evidence": [
+      "AC-1",
+      "AC-2",
+      "AC-3",
+      "AC-4",
+      "AC-5",
+      "AC-6"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "max": 10,
+     "rationale": "Within wave 4 scope boundaries of 05.application.srs.md \u00a72.",
+     "evidence": [
+      "docs/spec/05.application.srs.md:13-26"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "max": 10,
+     "rationale": "Required by object.md / issues #5-#7 for v1.",
+     "evidence": [
+      "05.application.srs.md"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": false
+  },
+  {
+   "req_id": "IR-APP-006",
+   "feasibility": "high",
+   "score": 93,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "max": 30,
+     "rationale": "Logger/LogLevel/ConsoleLogger are new; SimpleDateFormat with Z is API 21-safe.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:7-33",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/package-info.java"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "max": 20,
+     "rationale": "Addition sites exist; ConsoleLogger file is new.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/package-info.java"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "max": 15,
+     "rationale": "extends verified IR-HTTP-005.",
+     "evidence": [
+      "extends IR-HTTP-005"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "max": 15,
+     "rationale": "AC-2 two-time-zone test needs System.out/err capture and TimeZone.setDefault; ConsoleLogger must read System.out/err per write (not cache) to be capturable; SimpleDateFormat is not thread-safe.",
+     "evidence": [
+      "AC-1",
+      "AC-2",
+      "AC-3",
+      "AC-4",
+      "AC-5"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "max": 10,
+     "rationale": "Within wave 4 scope boundaries of 05.application.srs.md \u00a72.",
+     "evidence": [
+      "docs/spec/05.application.srs.md:13-26"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "max": 10,
+     "rationale": "Required by object.md / issues #5-#7 for v1.",
+     "evidence": [
+      "05.application.srs.md"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "ConsoleLogger: create SimpleDateFormat per record or synchronise; resolve System.out/err at write time."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": false
+  },
+  {
+   "req_id": "IR-APP-007",
+   "feasibility": "high",
+   "score": 95,
+   "axes": {
+    "implementability": {
+     "score": 28,
+     "max": 30,
+     "rationale": "Configurer<T> and AccessLogOptions are plain new types plus accessLog on RestApp.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:7-33"
+     ]
+    },
+    "evidence_strength": {
+     "score": 19,
+     "max": 20,
+     "rationale": "Addition sites exist.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/package-info.java"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "max": 15,
+     "rationale": "depends_on IR-APP-006 (wave 4).",
+     "evidence": [
+      "depends_on IR-APP-006"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "max": 15,
+     "rationale": "Compile, default and NPE tests.",
+     "evidence": [
+      "AC-1",
+      "AC-2",
+      "AC-3",
+      "AC-4"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "max": 10,
+     "rationale": "Within wave 4 scope boundaries of 05.application.srs.md \u00a72.",
+     "evidence": [
+      "docs/spec/05.application.srs.md:13-26"
+     ]
+    },
+    "product_fit": {
+     "score": 9,
+     "max": 10,
+     "rationale": "Required by object.md / issues #5-#7 for v1.",
+     "evidence": [
+      "05.application.srs.md"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": false
+  },
+  {
+   "req_id": "OPS-APP-001",
+   "feasibility": "high",
+   "score": 87,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "max": 30,
+     "rationale": "Docs edits; markers exist where listed (app.md:27,50,113,125,128; middleware.md:25,26,100,124,143,144,152; lifecycle.md:62,110; logging.md:33; routing.md:21; README.md:106; express-migration.md:26,80,83,158).",
+     "evidence": [
+      "docs/api/app.md:27",
+      "docs/api/middleware.md:25",
+      "docs/api/lifecycle.md:110",
+      "docs/api/logging.md:33"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "max": 20,
+     "rationale": "All four doc paths exist.",
+     "evidence": [
+      "docs/api/app.md",
+      "docs/api/middleware.md",
+      "docs/api/lifecycle.md",
+      "docs/api/logging.md"
+     ]
+    },
+    "dependency_health": {
+     "score": 8,
+     "max": 15,
+     "rationale": "Cycle: OPS-APP-001 extends OPS-HTTP-003 while OPS-HTTP-003 depends_on OPS-APP-001 (and via OPS-ROUTE-003).",
+     "evidence": [
+      "extends OPS-HTTP-001",
+      "extends OPS-HTTP-003"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 9,
+     "max": 15,
+     "rationale": "AC-7 (commit/PR message states each decision) is not checkable by the automated docs test although Verification Method is test; AC-1 documents JVM-alive-after-main (D-167), whose TinyHttpd behaviour is carried to wave 5.",
+     "evidence": [
+      "AC-1",
+      "AC-2",
+      "AC-3",
+      "AC-4",
+      "AC-5",
+      "AC-6",
+      "AC-7"
+     ]
+    },
+    "scope_fit": {
+     "score": 7,
+     "max": 10,
+     "rationale": "Partly states behaviour the scope defers to wave 5.",
+     "evidence": [
+      "docs/spec/05.application.srs.md:13-26"
+     ]
+    },
+    "product_fit": {
+     "score": 8,
+     "max": 10,
+     "rationale": "Optional module or docs item; useful, lower priority.",
+     "evidence": [
+      "05.application.srs.md"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Break the trace cycle: change OPS-APP-001 -> OPS-HTTP-003 from extends to a non-dependency relation (or drop it).",
+    "Move AC-7 to an inspection/review check or drop it from the test-verified AC set.",
+    "AC-1: either mark the JVM-lifetime sentence as a wave 5 guarantee or keep it but note no wave 4 test asserts it."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": false,
+   "original_judgement": {
+    "score": 76,
+    "feasibility": "medium"
+   },
+   "revised_after_fix": true
+  },
+  {
+   "req_id": "OPS-APP-002",
+   "feasibility": "high",
+   "score": 94,
+   "axes": {
+    "implementability": {
+     "score": 28,
+     "max": 30,
+     "rationale": "Skip list exists with the wave 4 reasons; stale-skip detection already implemented.",
+     "evidence": [
+      "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java:66-130",
+      "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java:147"
+     ]
+    },
+    "evidence_strength": {
+     "score": 19,
+     "max": 20,
+     "rationale": "DocsExamplesCompileTest is the site.",
+     "evidence": [
+      "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java"
+     ]
+    },
+    "dependency_health": {
+     "score": 14,
+     "max": 15,
+     "rationale": "depends_on OPS-APP-001 (wave 4, in a trace cycle elsewhere); extends OPS-HTTP-004.",
+     "evidence": [
+      "extends OPS-HTTP-002",
+      "depends_on OPS-APP-001",
+      "extends OPS-HTTP-004"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "max": 15,
+     "rationale": "Compile gate is automatic.",
+     "evidence": [
+      "AC-1",
+      "AC-2"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "max": 10,
+     "rationale": "Within wave 4 scope boundaries of 05.application.srs.md \u00a72.",
+     "evidence": [
+      "docs/spec/05.application.srs.md:13-26"
+     ]
+    },
+    "product_fit": {
+     "score": 9,
+     "max": 10,
+     "rationale": "Required by object.md / issues #5-#7 for v1.",
+     "evidence": [
+      "05.application.srs.md"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "json.md \"public interface JsonCodec {\" skip reason must change to \"illustrative copy of JsonCodec\" once the type exists."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": false
+  },
+  {
+   "req_id": "OPS-HTTP-003",
+   "feasibility": "high",
+   "score": 90,
+   "axes": {
+    "implementability": {
+     "score": 29,
+     "max": 30,
+     "rationale": "Wave 3 content is already in docs (request.md/response.md/express-migration.md:85/app.md:85-99/defaults.md:40); wave 4 only drops routing.md:21 marker and re-points HttpDocsTest.",
+     "evidence": [
+      "docs/api/routing.md:21",
+      "docs/api/express-migration.md:85",
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java"
+     ]
+    },
+    "evidence_strength": {
+     "score": 19,
+     "max": 20,
+     "rationale": "All traced docs and HttpDocsTest exist.",
+     "evidence": [
+      "docs/api/request.md",
+      "docs/api/response.md",
+      "docs/api/routing.md",
+      "docs/api/app.md",
+      "docs/api/defaults.md",
+      "docs/api/express-migration.md",
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java"
+     ]
+    },
+    "dependency_health": {
+     "score": 9,
+     "max": 15,
+     "rationale": "In the OPS-APP-001 trace cycle (depends_on OPS-APP-001 and OPS-ROUTE-003, which depends_on OPS-APP-001, which extends OPS-HTTP-003).",
+     "evidence": [
+      "supersedes OPS-HTTP-001",
+      "depends_on OPS-APP-001",
+      "depends_on OPS-ROUTE-003",
+      "depends_on IR-HTTP-005",
+      "depends_on FR-HTTP-014",
+      "depends_on FR-HTTP-012",
+      "depends_on FR-HTTP-009"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "max": 15,
+     "rationale": "Docs marker test.",
+     "evidence": [
+      "AC-1",
+      "AC-2",
+      "AC-3",
+      "AC-4",
+      "AC-5",
+      "AC-6",
+      "AC-7",
+      "AC-8"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "max": 10,
+     "rationale": "Within wave 4 scope boundaries of 05.application.srs.md \u00a72.",
+     "evidence": [
+      "docs/spec/05.application.srs.md:13-26"
+     ]
+    },
+    "product_fit": {
+     "score": 9,
+     "max": 10,
+     "rationale": "Required by object.md / issues #5-#7 for v1.",
+     "evidence": [
+      "04.http-core.srs.md"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Break the cycle on the OPS-APP-001 side."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": false
+  },
+  {
+   "req_id": "OPS-HTTP-004",
+   "feasibility": "high",
+   "score": 96,
+   "axes": {
+    "implementability": {
+     "score": 29,
+     "max": 30,
+     "rationale": "Already implemented: DocsExamplesCompileTest and testImplementation project(:NaruServe-api) exist.",
+     "evidence": [
+      "build.gradle:248",
+      "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java:36-147"
+     ]
+    },
+    "evidence_strength": {
+     "score": 19,
+     "max": 20,
+     "rationale": "Both sites exist.",
+     "evidence": [
+      "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java",
+      "build.gradle"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "max": 15,
+     "rationale": "depends_on verified IR-HTTP-001; supersedes discarded OPS-HTTP-002.",
+     "evidence": [
+      "supersedes OPS-HTTP-002",
+      "extends IR-HTTP-005",
+      "depends_on IR-HTTP-001"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "max": 15,
+     "rationale": "Compile gate.",
+     "evidence": [
+      "AC-1",
+      "AC-2",
+      "AC-3",
+      "AC-4",
+      "AC-5",
+      "AC-6",
+      "AC-7"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "max": 10,
+     "rationale": "Within wave 4 scope boundaries of 05.application.srs.md \u00a72.",
+     "evidence": [
+      "docs/spec/05.application.srs.md:13-26"
+     ]
+    },
+    "product_fit": {
+     "score": 9,
+     "max": 10,
+     "rationale": "Required by object.md / issues #5-#7 for v1.",
+     "evidence": [
+      "04.http-core.srs.md"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Re-point DocsExamplesCompileTest @req to OPS-HTTP-004 (AC-6)."
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": false
+  },
+  {
+   "req_id": "OPS-ROUTE-003",
+   "feasibility": "high",
+   "score": 90,
+   "axes": {
+    "implementability": {
+     "score": 28,
+     "max": 30,
+     "rationale": "Single marker left in routing.md (line 21); RoutingDocsTest re-point.",
+     "evidence": [
+      "docs/api/routing.md:21",
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/RoutingDocsTest.java"
+     ]
+    },
+    "evidence_strength": {
+     "score": 19,
+     "max": 20,
+     "rationale": "routing.md exists.",
+     "evidence": [
+      "docs/api/routing.md"
+     ]
+    },
+    "dependency_health": {
+     "score": 10,
+     "max": 15,
+     "rationale": "depends_on OPS-APP-001, which is in a trace cycle with OPS-HTTP-003.",
+     "evidence": [
+      "supersedes OPS-ROUTE-002",
+      "depends_on OPS-APP-001"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "max": 15,
+     "rationale": "Marker grep test.",
+     "evidence": [
+      "AC-1",
+      "AC-2",
+      "AC-3"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "max": 10,
+     "rationale": "Within wave 4 scope boundaries of 05.application.srs.md \u00a72.",
+     "evidence": [
+      "docs/spec/05.application.srs.md:13-26"
+     ]
+    },
+    "product_fit": {
+     "score": 9,
+     "max": 10,
+     "rationale": "Required by object.md / issues #5-#7 for v1.",
+     "evidence": [
+      "03.routing.srs.md"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": false
+  },
+  {
+   "req_id": "SEC-APP-001",
+   "feasibility": "high",
+   "score": 95,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "max": 30,
+     "rationale": "Line holds only method/path/status/options; add an escaper for C0/DEL/C1.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:154-163"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "max": 20,
+     "rationale": "Dispatcher traced.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "max": 15,
+     "rationale": "depends_on FR-APP-015.",
+     "evidence": [
+      "depends_on FR-APP-015"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 15,
+     "max": 15,
+     "rationale": "Concrete forbidden-substring and escape assertions.",
+     "evidence": [
+      "AC-1",
+      "AC-2",
+      "AC-3"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "max": 10,
+     "rationale": "Within wave 4 scope boundaries of 05.application.srs.md \u00a72.",
+     "evidence": [
+      "docs/spec/05.application.srs.md:13-26"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "max": 10,
+     "rationale": "Required by object.md / issues #5-#7 for v1.",
+     "evidence": [
+      "05.application.srs.md"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": false
+  }
+ ]
+}

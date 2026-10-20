@@ -1,0 +1,41 @@
+{
+ "policy_source": "default",
+ "rules": [
+  {
+   "when": "high+has_verification",
+   "stability": "stable",
+   "mode": "user_confirm"
+  },
+  {
+   "when": "high",
+   "stability": "evolving",
+   "mode": "auto"
+  },
+  {
+   "when": "medium",
+   "stability": "keep"
+  },
+  {
+   "when": "low",
+   "stability": "draft"
+  },
+  {
+   "when": "blocked+status in {in_progress,implemented,verified}",
+   "stability": "keep",
+   "report": true
+  },
+  {
+   "when": "blocked",
+   "stability": "deprecated",
+   "mode": "user_confirm"
+  },
+  {
+   "when": "no_match",
+   "stability": "keep",
+   "mode": "user_confirm"
+  }
+ ],
+ "gates": {
+  "status_conflict_policy": "warn"
+ }
+}

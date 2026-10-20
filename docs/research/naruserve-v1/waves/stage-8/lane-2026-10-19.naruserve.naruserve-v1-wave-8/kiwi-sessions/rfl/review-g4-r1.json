@@ -1,0 +1,149 @@
+{
+  "findings": [
+    {
+      "id": "G4-001",
+      "axis": "P2",
+      "severity": "MEDIUM",
+      "title": "Release gate silently drops a coordinate finding that is not in the report's Dependencies list (fail-open)",
+      "location": {"file": "gradle/release-tools/com/snoworca/naruserve/release/ReleaseGate.java", "line_range": "69-71"},
+      "description": "decide() does `continue` for any finding whose dependency is a group:name:version coordinate absent from the '## Dependencies' section ('not shipped: test scope or compileOnly'). The scan is already limited to runtimeClasspath (release.gradle scanConfigurations), so the skip adds no correctness, but it opens a hole: ReleaseMain.findingsFromCsv takes the FIRST pkg:maven purl of the Identifiers cell, so a High/Critical row whose first purl is a related or version-normalised coordinate that is not byte-equal to the resolved graph entry is dropped instead of blocking. A completed report whose Dependencies section is empty (hand-edited or truncated graph) also passes every coordinate finding. The gate is the release block, so it must fail closed.",
+      "suggested_fix": "Do not skip unknown coordinates: block them (unless excepted) like jar-name findings, or at minimum fail the gate when a completed report has an empty Dependencies section. Keep the test-scope case (fr_REL_003_AC4) by excluding such artifacts at scan time, not by ignoring findings at gate time.",
+      "is_behavioral": true,
+      "tags": ["bug", "security"]
+    },
+    {
+      "id": "G4-002",
+      "axis": "P6",
+      "severity": "MEDIUM",
+      "title": "An existing but empty or header-less Dependency-Check CSV is recorded as 'completed, no findings'",
+      "location": {"file": "gradle/release-tools/com/snoworca/naruserve/release/ReleaseMain.java", "line_range": "54-58, 152-156"},
+      "description": "scan-report only checks csv.isFile(); findingsFromCsv returns an empty list when parseCsv yields no rows, and ScanReport.fromChild(exit==0, empty list) then writes 'Status: completed ... no findings'. A zero-byte or truncated report file with child exit 0 therefore passes the release gate as cleared. A report with the expected header but missing the CVE/Identifiers columns is likewise treated as zero findings. The only pending trigger is a missing file or a non-zero exit.",
+      "suggested_fix": "In findingsFromCsv/scan-report return null (so fromChild writes pending TOOL_ERROR) when there is no header row or the header lacks the 'CVE' and 'Identifiers' columns; add a ScanReportTest case with an empty file and a header-less file.",
+      "is_behavioral": true,
+      "tags": ["bug", "security"]
+    },
+    {
+      "id": "G4-003",
+      "axis": "P3",
+      "severity": "LOW",
+      "title": "A lower-version numeric score wins over a higher-version severity band",
+      "location": {"file": "gradle/release-tools/com/snoworca/naruserve/release/ReleaseMain.java", "line_range": "160-176"},
+      "description": "The score loop (v3, v4, v2) runs completely before the severity-band loop. A row with CVSSv3_BaseSeverity=HIGH/CRITICAL but an empty v3 score and a CVSSv2_Score of 5.0 gets cvss=5.0 (Medium) and the band is never consulted, so the finding does not block. The test csvRowsWithoutScoreOrPurlKeepTheirSeverityAndJarName only covers rows with no score at all.",
+      "suggested_fix": "Resolve per version in order v3, v4, v2: use the score, else that version's severity band, and only then fall to the next version; add a test row with v3 severity HIGH, v3 score empty and v2 score 5.0.",
+      "is_behavioral": true,
+      "tags": ["bug"]
+    },
+    {
+      "id": "G4-004",
+      "axis": "P7",
+      "severity": "LOW",
+      "title": "Contradictory dead branch in ops_REL_004_AC1: the 'verified' check can never be reached",
+      "location": {"file": "src/test/java/com/snoworca/naruserve/docs/ReleaseNotesDocsTest.java", "line_range": "227-231"},
+      "description": "The test first handles `if (\"verified\".equals(java8[1]))` (requiring a recorded 'run java8' line) and then unconditionally asserts `assertEquals(\"pending\", java8[1])`. Whenever the first branch is entered the second assertion fails, so the branch is dead and the doc test pins 'pending' forever, contradicting matrixRules which accepts a verified Java 8 row with a run link. The first branch gives a false impression that a recorded Java 8 run is supported.",
+      "suggested_fix": "Either drop the verified branch and keep the pending pin with a comment that a Java 8 run changes this test, or assert pending-or-(verified with a recorded java8 run) consistently.",
+      "is_behavioral": false,
+      "tags": ["style"]
+    },
+    {
+      "id": "G4-005",
+      "axis": "P7",
+      "severity": "LOW",
+      "title": "Text guard for 'no release task wired into the default build' misses common forms (assemble, tasks.check, nested braces)",
+      "location": {"file": "src/test/java/com/snoworca/naruserve/build/ReleaseScriptTextTest.java", "line_range": "68-75"},
+      "description": "wiresReleaseTaskIntoDefaultBuild only recognises tasks.named('check|build|test') blocks and `check|build|test.dependsOn/finalizedBy` calls. release.gradle itself documents that the CycloneDX plugin hangs its task on `assemble` (which `build` runs), but `assemble` is not a guarded target; `tasks.check { }`, `tasks.getByName('build')`, `tasks.matching {}` and a block containing a nested closure (`[^}]*` stops at the first brace) are not caught either. The 'offline default build must not break' invariant is therefore only weakly defended; no test executes a default `build -m` with the release property absent and asserts that no release task is in the plan.",
+      "suggested_fix": "Add assemble/tasks.check/getByName to the target pattern, and add a TestKit dry run (`build -m` without -Prelease) asserting no task name matches RELEASE_TASK.",
+      "is_behavioral": false,
+      "tags": ["style"]
+    },
+    {
+      "id": "G4-006",
+      "axis": "P3",
+      "severity": "LOW",
+      "title": "project.hasProperty('release') enables the release script for any value or any gradle.properties entry",
+      "location": {"file": "build.gradle", "line_range": "486"},
+      "description": "`-Prelease=false`, or a `release=` line in ~/.gradle/gradle.properties or gradle.properties, makes hasProperty true and applies gradle/release.gradle, whose buildscript resolves two plugins from the plugin portal. A default offline build on a machine that happens to define such a property would break, which is the invariant CON-BUILD-017 protects. GUARDED_APPLY in ReleaseScriptTextTest pins this exact text, so it also locks the weaker form in.",
+      "suggested_fix": "Guard with `project.findProperty('release') == 'true' || project.hasProperty('release') && project.property('release') == ''` (or document that only -Prelease is supported) and adjust GUARDED_APPLY accordingly.",
+      "is_behavioral": true,
+      "tags": ["bug"]
+    },
+    {
+      "id": "G4-007",
+      "axis": "P3",
+      "severity": "LOW",
+      "title": "License deny regex over-matches 'CDDL + GPLv2 with classpath exception' style names and any 'Commercial' substring",
+      "location": {"file": "gradle/release-tools/com/snoworca/naruserve/release/LicenseCheck.java", "line_range": "16-18"},
+      "description": "DENIED matches the substring GPL anywhere, so a single-license entry such as 'CDDL + GPLv2 with classpath exception' (the exact name ThirdPartyLicensesTest uses for javax.servlet) fails the shipped check although the classpath exception makes it permissible, and 'Non-Commercial'/'Commercial use permitted' wording matches 'Commercial'. These fail closed, but the only escape is a hard-coded override list in release.gradle that is limited to TinyHttpd today.",
+      "suggested_fix": "Either document that such licenses must be added to the override list, or special-case 'classpath exception' / dual 'CDDL' names; add a LicenseCheckTest case stating the intended verdict for 'CDDL + GPLv2 with classpath exception'.",
+      "is_behavioral": true,
+      "tags": ["bug"]
+    },
+    {
+      "id": "G4-008",
+      "axis": "P7",
+      "severity": "LOW",
+      "title": "sdsAc11 makes the default build depend on the git binary, .git history and a pinned wave-7 commit",
+      "location": {"file": "src/test/java/com/snoworca/naruserve/build/ServletBuildTest.java", "line_range": "161-167"},
+      "description": "`git diff --stat f7da71d -- spi` and `git status --porcelain` run inside the default `./gradlew build` test. From a source archive without .git, a shallow clone lacking f7da71d, or any later wave that legitimately touches spi, the test fails with an unrelated git error (assertEquals(out, 0, p.waitFor())). It also fails whenever a developer has an uncommitted edit under spi, regardless of intent.",
+      "suggested_fix": "assumeTrue the .git directory and the commit exist (git cat-file -e f7da71d), and pin the spi surface by a content hash or file listing instead of a git ref.",
+      "is_behavioral": false,
+      "tags": ["style"]
+    }
+  ],
+  "coverage_rows": [
+    {"file": "build.gradle", "hunks_total": 12, "anchors": [
+      "// The only build file: every module is configured here; the one exception is the release-only script applied at",
+      "prefixes += ['jakarta/servlet/']",
+      "def configurePublishing = { Project p ->",
+      "configurePublishing(p)",
+      "project(':NaruServe-kotlin') {",
+      "def servletTestDependencies = ['jetty-servlet', 'jetty-webapp', 'jetty-annotations'].collect {",
+      "boolean jetty = mv.group.startsWith('org.eclipse.jetty')",
+      "def checkNoCoroutines = tasks.register('checkNoCoroutines') {",
+      "def rootServletTestDependency = project(':NaruServe-servlet')",
+      "testImplementation rootServletTestDependency",
+      "systemProperty 'naruserve.pomFiles', pomFilesProperty",
+      "if (project.hasProperty('release')) { apply from: 'gradle/release.gradle' }"
+    ], "findings": ["G4-006"]},
+    {"file": "gradle/release-tools/com/snoworca/naruserve/release/DependencyList.java", "hunks_total": 1, "anchors": ["public final class DependencyList {"], "findings": []},
+    {"file": "gradle/release-tools/com/snoworca/naruserve/release/LicenseCheck.java", "hunks_total": 1, "anchors": ["public final class LicenseCheck {"], "findings": ["G4-007"]},
+    {"file": "gradle/release-tools/com/snoworca/naruserve/release/ReleaseGate.java", "hunks_total": 1, "anchors": ["public final class ReleaseGate {"], "findings": ["G4-001"]},
+    {"file": "gradle/release-tools/com/snoworca/naruserve/release/ReleaseMain.java", "hunks_total": 1, "anchors": ["public final class ReleaseMain {"], "findings": ["G4-002", "G4-003"]},
+    {"file": "gradle/release-tools/com/snoworca/naruserve/release/ScanReport.java", "hunks_total": 1, "anchors": ["public final class ScanReport {"], "findings": []},
+    {"file": "gradle/release-tools/com/snoworca/naruserve/release/ThirdPartyLicenses.java", "hunks_total": 1, "anchors": ["public final class ThirdPartyLicenses {"], "findings": []},
+    {"file": "gradle/release.gradle", "hunks_total": 1, "anchors": ["tasks.register('releaseSbom') {"], "findings": []},
+    {"file": "src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java", "hunks_total": 2, "anchors": [
+      "public void sdsAc7_IR_SVL_001_AC7_servletMainReferencingJakartaFails() throws IOException {",
+      "public void checkNoCoroutinesFailsOnClassAndOnArtifact() throws IOException {"
+    ], "findings": []},
+    {"file": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java", "hunks_total": 7, "anchors": [
+      "static Set<String> components(String module, String configuration) throws IOException {",
+      "// SDS-AC-5, SDS-AC-6; CON-BUILD-017 AC-1, FR-REL-001 AC-5 (re-pointed from CON-BUILD-003 AC-1, body unchanged)",
+      "public void con_BUILD_017_AC1_rootBuildFileHoldsPluginsCompileDependenciesAndChecks() throws IOException {",
+      "public void con_KT_001_AC4_checkNoCoroutinesLeavesTheClassReferencePrefixesUnchanged() throws IOException {",
+      "// SDS-AC-5, SDS-AC-7; CON-BUILD-017 AC-2, FR-REL-001 AC-5 (re-pointed from CON-BUILD-003 AC-2, body unchanged)",
+      "public void con_BUILD_017_AC2_noModuleBuildFile() {",
+      "public void con_BUILD_017_AC1_onlyReferenceToAnotherScriptIsTheGuardedReleaseApply() throws IOException {"
+    ], "findings": []},
+    {"file": "src/test/java/com/snoworca/naruserve/build/LicenseCheckTest.java", "hunks_total": 1, "anchors": ["public class LicenseCheckTest {"], "findings": []},
+    {"file": "src/test/java/com/snoworca/naruserve/build/PublishedPomTest.java", "hunks_total": 1, "anchors": ["public class PublishedPomTest {"], "findings": []},
+    {"file": "src/test/java/com/snoworca/naruserve/build/ReleaseGateTest.java", "hunks_total": 1, "anchors": ["public class ReleaseGateTest {"], "findings": []},
+    {"file": "src/test/java/com/snoworca/naruserve/build/ReleaseScriptTextTest.java", "hunks_total": 1, "anchors": ["public class ReleaseScriptTextTest {"], "findings": ["G4-005"]},
+    {"file": "src/test/java/com/snoworca/naruserve/build/ScanReportTest.java", "hunks_total": 1, "anchors": ["public class ScanReportTest {"], "findings": []},
+    {"file": "src/test/java/com/snoworca/naruserve/build/ServletBuildTest.java", "hunks_total": 1, "anchors": ["public class ServletBuildTest {"], "findings": ["G4-008"]},
+    {"file": "src/test/java/com/snoworca/naruserve/build/ThirdPartyLicensesTest.java", "hunks_total": 1, "anchors": ["public class ThirdPartyLicensesTest {"], "findings": []},
+    {"file": "src/test/java/com/snoworca/naruserve/docs/ApiMarkersDocsTest.java", "hunks_total": 1, "anchors": ["public final class ApiMarkersDocsTest {"], "findings": []},
+    {"file": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java", "hunks_total": 4, "anchors": [
+      "// @req OPS-SVL-001",
+      "// SDS-AC-13 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-13.sds.md; OPS-HTTP-008 AC-9: the middleware.md",
+      "public void wave7s13SdsAc13_OPS_HTTP_008_AC9_theWithHeaderBlockIsCompiled() throws IOException {",
+      "public void wave8s8SdsAc9_OPS_SVL_001_AC4_servletConfigurerBlocksCompile() throws IOException {"
+    ], "findings": []},
+    {"file": "src/test/java/com/snoworca/naruserve/docs/ReadmeDocsTest.java", "hunks_total": 1, "anchors": ["public final class ReadmeDocsTest {"], "findings": []},
+    {"file": "src/test/java/com/snoworca/naruserve/docs/ReleaseNotesDocsTest.java", "hunks_total": 1, "anchors": ["public final class ReleaseNotesDocsTest {"], "findings": ["G4-004"]},
+    {"file": "src/test/java/com/snoworca/naruserve/docs/ReleaseRecordsDocsTest.java", "hunks_total": 1, "anchors": ["public final class ReleaseRecordsDocsTest {"], "findings": []},
+    {"file": "src/test/java/com/snoworca/naruserve/docs/ReleaseResultsDocsTest.java", "hunks_total": 1, "anchors": ["public final class ReleaseResultsDocsTest {"], "findings": []},
+    {"file": "src/test/java/com/snoworca/naruserve/docs/ServletDocsTest.java", "hunks_total": 1, "anchors": ["public final class ServletDocsTest {"], "findings": []},
+    {"file": "src/test/java/com/snoworca/naruserve/docs/WaveEightKotlinDocsTest.java", "hunks_total": 1, "anchors": ["public final class WaveEightKotlinDocsTest {"], "findings": []}
+  ],
+  "summary": {"total": 8, "by_severity": {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 2, "LOW": 6}}
+}

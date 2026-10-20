@@ -1,0 +1,206 @@
+{
+ "classification": "new-scope",
+ "mode": "live",
+ "added_ids": [
+  "IR-HTTP-001",
+  "IR-HTTP-002",
+  "IR-HTTP-003",
+  "IR-HTTP-004",
+  "CON-HTTP-001",
+  "FR-HTTP-001",
+  "FR-HTTP-002",
+  "FR-HTTP-003",
+  "FR-HTTP-004",
+  "FR-HTTP-005",
+  "FR-HTTP-006",
+  "IR-HTTP-005",
+  "IR-HTTP-006",
+  "FR-HTTP-007",
+  "FR-HTTP-008",
+  "FR-HTTP-009",
+  "FR-HTTP-010",
+  "FR-HTTP-011",
+  "FR-HTTP-012",
+  "FR-HTTP-013",
+  "FR-HTTP-014",
+  "FR-HTTP-015",
+  "FR-HTTP-016",
+  "FR-HTTP-017",
+  "FR-HTTP-018",
+  "FR-HTTP-019",
+  "FR-HTTP-020",
+  "OPS-HTTP-001"
+ ],
+ "note": "trace links seeded via add_requirement trace param; OPS-HTTP-001 depends_on OPS-ROUTE-002",
+ "mcp_calls": [
+  {
+   "tool": "add_requirement",
+   "result_id": "IR-HTTP-001",
+   "ok": true
+  },
+  {
+   "tool": "add_requirement",
+   "result_id": "IR-HTTP-002",
+   "ok": true
+  },
+  {
+   "tool": "add_requirement",
+   "result_id": "IR-HTTP-003",
+   "ok": true
+  },
+  {
+   "tool": "add_requirement",
+   "result_id": "IR-HTTP-004",
+   "ok": true
+  },
+  {
+   "tool": "add_requirement",
+   "result_id": "CON-HTTP-001",
+   "ok": true
+  },
+  {
+   "tool": "add_requirement",
+   "result_id": "FR-HTTP-001",
+   "ok": true
+  },
+  {
+   "tool": "add_requirement",
+   "result_id": "FR-HTTP-002",
+   "ok": true
+  },
+  {
+   "tool": "add_requirement",
+   "result_id": "FR-HTTP-003",
+   "ok": true
+  },
+  {
+   "tool": "add_requirement",
+   "result_id": "FR-HTTP-004",
+   "ok": true
+  },
+  {
+   "tool": "add_requirement",
+   "result_id": "FR-HTTP-005",
+   "ok": true
+  },
+  {
+   "tool": "add_requirement",
+   "result_id": "FR-HTTP-006",
+   "ok": true
+  },
+  {
+   "tool": "add_requirement",
+   "result_id": "IR-HTTP-005",
+   "ok": true
+  },
+  {
+   "tool": "add_requirement",
+   "result_id": "IR-HTTP-006",
+   "ok": true
+  },
+  {
+   "tool": "add_requirement",
+   "result_id": "FR-HTTP-007",
+   "ok": true
+  },
+  {
+   "tool": "add_requirement",
+   "result_id": "FR-HTTP-008",
+   "ok": true
+  },
+  {
+   "tool": "add_requirement",
+   "result_id": "FR-HTTP-009",
+   "ok": true
+  },
+  {
+   "tool": "add_requirement",
+   "result_id": "FR-HTTP-010",
+   "ok": true
+  },
+  {
+   "tool": "add_requirement",
+   "result_id": "FR-HTTP-011",
+   "ok": true
+  },
+  {
+   "tool": "add_requirement",
+   "result_id": "FR-HTTP-012",
+   "ok": true
+  },
+  {
+   "tool": "add_requirement",
+   "result_id": "FR-HTTP-013",
+   "ok": true
+  },
+  {
+   "tool": "add_requirement",
+   "result_id": "FR-HTTP-014",
+   "ok": true
+  },
+  {
+   "tool": "add_requirement",
+   "result_id": "FR-HTTP-015",
+   "ok": true
+  },
+  {
+   "tool": "add_requirement",
+   "result_id": "FR-HTTP-016",
+   "ok": true
+  },
+  {
+   "tool": "add_requirement",
+   "result_id": "FR-HTTP-017",
+   "ok": true
+  },
+  {
+   "tool": "add_requirement",
+   "result_id": "FR-HTTP-018",
+   "ok": true
+  },
+  {
+   "tool": "add_requirement",
+   "result_id": "FR-HTTP-019",
+   "ok": true
+  },
+  {
+   "tool": "add_requirement",
+   "result_id": "FR-HTTP-020",
+   "ok": true
+  },
+  {
+   "tool": "add_requirement",
+   "result_id": "OPS-HTTP-001",
+   "ok": true
+  },
+  {
+   "tool": "replace_acceptance_criteria",
+   "result_id": "IR-HTTP-004",
+   "ok": true
+  },
+  {
+   "tool": "replace_acceptance_criteria",
+   "result_id": "FR-HTTP-003",
+   "ok": true
+  },
+  {
+   "tool": "replace_acceptance_criteria",
+   "result_id": "FR-HTTP-005",
+   "ok": true
+  },
+  {
+   "tool": "validate_spec",
+   "result_id": null,
+   "ok": true
+  }
+ ],
+ "validate_spec_result": {
+  "errors": 0,
+  "warnings": 30,
+  "byCode": {
+   "SRS-W023": 29,
+   "SRS-W015": 1
+  },
+  "note": "W023 = draft stability (expected); W015 pre-existing for superseded OPS-ROUTE-001"
+ }
+}

@@ -1,0 +1,6 @@
+{"event":"phase_start","run_id":"2026-10-19.naruserve.naruserve-v1-wave-8-11","sds_path":"docs/sds/2026-10-19.naruserve.naruserve-v1-wave-8-11.sds.md","target":"wave-8","mode":"normal","flags":["--auto","--auto-integration","--auto-cost-warning","--defer-srs-mutation"]}
+{"event":"run_start","sds_id":"2026-10-19.naruserve.naruserve-v1-wave-8-11"}
+{"event":"tdd_draft_done","sds_id":"2026-10-19.naruserve.naruserve-v1-wave-8-11","iter":1,"file_paths":["src/test/java/com/snoworca/naruserve/build/LicenseCheckTest.java","src/test/java/com/snoworca/naruserve/build/ThirdPartyLicensesTest.java","src/test/java/com/snoworca/naruserve/build/PublishedPomTest.java","src/test/java/com/snoworca/naruserve/docs/ReadmeDocsTest.java","src/test/java/com/snoworca/naruserve/docs/ReleaseRecordsDocsTest.java"]}
+{"event":"tdd_red_confirmed","sds_id":"2026-10-19.naruserve.naruserve-v1-wave-8-11","exit_code":1,"test_names":["LicenseCheckTest (compile: LicenseCheck missing)","ThirdPartyLicensesTest (compile)","PublishedPomTest.fr_REL_005_AC3","ReadmeDocsTest x7 (README.md absent)"]}
+{"event":"impl_done","sds_id":"2026-10-19.naruserve.naruserve-v1-wave-8-11","iter":1}
+{"event":"test_green","sds_id":"2026-10-19.naruserve.naruserve-v1-wave-8-11","exit_code":0}

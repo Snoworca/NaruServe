@@ -1,0 +1,548 @@
+[
+ {
+  "expectedId": "FR-KT-002",
+  "type": "functional",
+  "scope": "KT",
+  "target": "wave-8",
+  "title": "Public method names of NaruServe-api avoid the Kotlin hard keywords",
+  "requirement": "The system shall run, as part of `./gradlew build`, an automated check that fails, naming `Type.method`, when a public or protected method of a public type in the public API packages of `NaruServe-api` is named with a Kotlin hard keyword that is a legal Java identifier — `as`, `fun`, `in`, `is`, `object`, `typealias`, `typeof`, `val`, `var` or `when` — so that no Kotlin call needs backticks.",
+  "rationale": "Covers D-352 and wave decision Kotlin keywords (r1 W2-006); supports T11. Measured (2026-10-20): a source scan of the method declarations of `NaruServe-api/src/main/java` and the other published modules finds no method named with one of the ten words. Decision: the check list is the ten words that are Kotlin hard keywords and legal Java identifiers; the other Kotlin hard keywords (`break`, `class`, `do`, `else`, `for`, `if`, `interface`, `package`, `return`, `super`, `this`, `throw`, `try`, `while`, `continue`, `null`, `true`, `false`) are Java keywords or literals and cannot be method names. Pitfall: Kotlin soft and modifier keywords (`get`, `set`, `by`, `value`, `where`, `open`, `field`) are legal names and `app.get(...)` depends on it; adding them to the list would forbid the Express-style `get`. Pitfall: the rule is on method names only, because Java parameter names are invisible to Kotlin. Rejected alternative: also scanning every other published module; their public classes (`TinyHttpdAdapter`, `GsonJsonCodec`, loggers, servlet classes) are implementation classes that app code rarely calls; reopen if one of them gains a keyword-named public method.",
+  "acceptanceCriteria": [
+   "A test in `NaruServe-api` enumerates by reflection every public and protected method of every public class, interface and enum of `com.snoworca.naruserve`, `com.snoworca.naruserve.spi` and `com.snoworca.naruserve.routing`, including nested types, and fails with the message `Type.method` when a name is one of `as`, `fun`, `in`, `is`, `object`, `typealias`, `typeof`, `val`, `var` or `when`. [D-352]",
+   "The check is a reusable function proved by a negative fixture: a fixture type with a method named each of the ten words makes it fail once per word, and a fixture type with methods `get`, `set`, `use`, `value` and `isSecure` passes, so soft keywords and `is`-prefixed names are not flagged. [D-352]",
+   "The check passes on the wave 8 API and runs in `./gradlew build`; a Kotlin test calls one method of each of `RestApp`, `Request`, `Response`, `RouteBuilder` and `WebSocketSession` without a backtick. [D-352; I-010]"
+  ],
+  "priority": "high",
+  "risk": "low",
+  "verificationMethod": "test",
+  "githubIssue": "https://github.com/Snoworca/NaruServe/issues/16",
+  "tags": [
+   "wave-8",
+   "feasibility:high",
+   "kotlin",
+   "keywords",
+   "T11"
+  ],
+  "trace": [
+   {
+    "type": "Code",
+    "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve",
+    "relation": "implements",
+    "notes": "trace_intent=addition_site"
+   },
+   {
+    "type": "Requirement",
+    "reference": "IR-HTTP-001",
+    "relation": "extends",
+    "notes": "public Request and Response surface"
+   }
+  ],
+  "links_after": []
+ },
+ {
+  "expectedId": "FR-KT-003",
+  "type": "functional",
+  "scope": "KT",
+  "target": "wave-8",
+  "title": "Kotlin lambdas are accepted by every callback parameter without a DSL",
+  "requirement": "The system shall accept a Kotlin lambda, without a DSL builder, for every callback parameter of the public API: each interface used as a callback parameter type of a public method is a Java functional interface annotated `@FunctionalInterface` with exactly one abstract method, and a Kotlin test passes a trailing lambda to each such parameter, for example `app.get(\"/x\") { req, res -> }`.",
+  "rationale": "Covers D-350 and the callback part of I-007 and I-010; supports T11. Measured (2026-10-20): `@FunctionalInterface` appears 18 times in 14 files of `NaruServe-api/src/main/java`, on `RouteHandler`, `Middleware`, `ErrorHandler`, `LifecycleCallback`, `Configurer`, `WebSocketHandler`, the `SseClient` and `WebSocketSession` listener types, the SPI types `ExchangeHandler`, `ErrorRenderer`, `StreamDrain`, `UpgradeHandler` and the internal `ShutdownParticipants` and `MultipartParser` callbacks; earlier waves already compile lambdas for subsets in `HttpApiKotlinTest`, `AppEntryKotlinTest`, `WebSocketKotlinTest`, `SseKotlinTest` and `WaveSixKotlinTest`. Decision: the inventory test lists every interface that is a parameter type of a public method and has exactly one abstract method, and the Kotlin matrix names each of them, so a new callback type fails the build until it has a Kotlin lambda test. Pitfall: SAM conversion needs exactly one abstract method; a callback interface that gains a second abstract method silently loses lambda syntax in Kotlin (a `default` method does not). Rejected alternative: a Kotlin DSL builder (`routes { get(\"/x\") { } }`); it is forbidden by C-03 and would put `kotlin.*` in Core.",
+  "acceptanceCriteria": [
+   "A reflection test finds every interface that is the parameter type of a public method in the public API packages and has exactly one abstract method (ignoring `Object` methods and `default` methods) and fails, naming it, when it lacks `@FunctionalInterface`. [D-350; I-007]",
+   "The same test fails, naming the interface, when an interface that is a callback parameter type has no abstract method or more than one, which would stop Kotlin SAM conversion. [D-350]",
+   "A Kotlin test passes a lambda to each callback parameter of the matrix: `app.get`/`post`/`route` with `RouteHandler`, `app.use(path) { req, res, next -> }` with `Middleware`, `app.onError`, `app.onStart`, `app.onStop`, `app.server`, `app.multipart`, `app.webSocket`, `app.sse`, `app.ws`, `ws.onText`, `ws.onClose { code, reason -> }` and `res.sse().onClose { }`, each without a receiver DSL, and runs a request or session through the in-memory harness that reaches the lambda. [D-350; T11]",
+   "A second Kotlin test fails the build when the Java reflection inventory of AC-1 names an interface that the Kotlin matrix of AC-3 does not list, by reading the inventory from a generated resource or a shared list, so the matrix cannot fall behind the API. [D-350; I-010]"
+  ],
+  "priority": "high",
+  "risk": "medium",
+  "verificationMethod": "test",
+  "githubIssue": "https://github.com/Snoworca/NaruServe/issues/16",
+  "tags": [
+   "wave-8",
+   "feasibility:high",
+   "kotlin",
+   "sam-lambda",
+   "T11"
+  ],
+  "trace": [
+   {
+    "type": "Code",
+    "reference": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve",
+    "relation": "implements",
+    "notes": "trace_intent=addition_site"
+   },
+   {
+    "type": "Requirement",
+    "reference": "IR-HTTP-002",
+    "relation": "extends",
+    "notes": "RouteHandler functional interface"
+   },
+   {
+    "type": "Requirement",
+    "reference": "IR-APP-002",
+    "relation": "extends",
+    "notes": "Middleware and Next"
+   },
+   {
+    "type": "Requirement",
+    "reference": "IR-APP-003",
+    "relation": "extends",
+    "notes": "ErrorHandler"
+   },
+   {
+    "type": "Requirement",
+    "reference": "IR-APP-005",
+    "relation": "extends",
+    "notes": "lifecycle callbacks"
+   },
+   {
+    "type": "Requirement",
+    "reference": "IR-WS-001",
+    "relation": "extends",
+    "notes": "WebSocketHandler"
+   },
+   {
+    "type": "Requirement",
+    "reference": "IR-SSE-001",
+    "relation": "extends",
+    "notes": "SseClient"
+   }
+  ],
+  "links_after": []
+ },
+ {
+  "expectedId": "FR-KT-004",
+  "type": "functional",
+  "scope": "KT",
+  "target": "wave-8",
+  "title": "Every Kotlin example of docs/api exists as a Kotlin test that compiles and runs",
+  "requirement": "The system shall keep every fenced `kotlin` block of `docs/api/*.md` as a Kotlin test that compiles and runs in `./gradlew build`, and a docs test shall fail, naming `<file>#<n>`, when a block has no matching Kotlin test or a marker names a block that no longer exists.",
+  "rationale": "Covers D-349, the Kotlin part of I-009 and I-010; supports T11. Measured (2026-10-20): `docs/api/*.md` holds 45 ```kotlin blocks (`kotlin.md` 10, `websocket.md` 7, `sse.md` 5, `app.md`, `middleware.md`, `response.md` and `routing.md` 3 each, `json.md` and `request.md` 2 each, `cookie.md`, `express-migration.md`, `logging.md`, `multipart.md`, `static.md`, `README.md` and `lifecycle.md` 1 each); waves 5 and 7 already compile subsets in `JsonDocsKotlinTest`, `SseDocsKotlinTest` and `WebSocketDocsKotlinTest`. Decision: each block is matched by a marker comment `// docs-example: <file>#<n>` (n counts the kotlin blocks of that file from 1) placed before its test function in `NaruServe-api/src/test/kotlin` or `NaruServe-kotlin/src/test/kotlin`; a function holds every non-blank line of its block after whitespace normalisation, or carries `// adapted: <reason>` where it declares an app-defined type, swaps `RestApp.create()` for the in-memory harness or replaces `listen`. Pitfall: matching by block text alone breaks on every doc edit; the position marker fails loudly when a block is inserted before another. Rejected alternative: extracting and compiling the blocks automatically; the blocks are fragments that need app-defined types and an engine-free harness, which the Java docs compile test of OPS-HTTP-004 already solves with a named skip list, and an unrunnable skip is not allowed for D-349.",
+  "acceptanceCriteria": [
+   "A docs test in `NaruServe-api` enumerates every ```kotlin block of every `docs/api/*.md` and fails, naming `<file>#<n>`, when the Kotlin test sources of `NaruServe-api` and `NaruServe-kotlin` hold no `// docs-example: <file>#<n>` marker for it, and when a marker names a block that does not exist. [D-349]",
+   "Each marked test function contains every non-blank whitespace-normalised line of its block or the comment `// adapted: <reason>`, declares the app-defined types the block uses (`User`, `UserService`, `Todo` and so on) and runs in `./gradlew build` through the in-memory harness, asserting the outcome that the surrounding docs text states. [D-349; T11]",
+   "The `kotlin.md` early-exit blocks run and are asserted: `return@get` yields `404` for an unknown user, `return@use` yields `401` without `Authorization`, and the `if/else` expression form yields the same two outcomes without `return@`. [D-349]",
+   "The docs test is a reusable function proved by negative fixtures, so an inserted block without its marker and a stale marker each make it fail, and adding a kotlin block to any `docs/api` file in a later wave fails the build until its test exists. [D-349; I-008; I-010]",
+   "Blocks that use the `NaruServe-kotlin` extension (`req.body<User>()`) are run in `NaruServe-kotlin`'s tests against the module extension of IR-KT-002, while the test-local copy in `JsonDocsKotlinTest` (wave 5, OPS-JSON-001 AC-5) stays untouched. [D-349; D-354]"
+  ],
+  "priority": "high",
+  "risk": "medium",
+  "verificationMethod": "test",
+  "githubIssue": "https://github.com/Snoworca/NaruServe/issues/16",
+  "tags": [
+   "wave-8",
+   "feasibility:high",
+   "kotlin",
+   "docs",
+   "T11"
+  ],
+  "trace": [
+   {
+    "type": "Code",
+    "reference": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve",
+    "relation": "implements",
+    "notes": "trace_intent=addition_site"
+   },
+   {
+    "type": "Code",
+    "reference": "docs/api/kotlin.md",
+    "relation": "implements",
+    "notes": "trace_intent=verifies"
+   },
+   {
+    "type": "Requirement",
+    "reference": "OPS-HTTP-004",
+    "relation": "extends",
+    "notes": "docs/api Java examples compile"
+   },
+   {
+    "type": "Requirement",
+    "reference": "OPS-JSON-001",
+    "relation": "extends",
+    "notes": "wave 5 Kotlin req.body examples"
+   },
+   {
+    "type": "Requirement",
+    "reference": "OPS-WS-001",
+    "relation": "extends",
+    "notes": "wave 7 WebSocket docs tests"
+   },
+   {
+    "type": "Requirement",
+    "reference": "OPS-SSE-001",
+    "relation": "extends",
+    "notes": "wave 7 SSE docs tests"
+   }
+  ],
+  "links_after": [
+   {
+    "reference": "IR-KT-002",
+    "relation": "depends_on",
+    "notes": "blocks that call req.body<T>() run against the module extension"
+   }
+  ]
+ },
+ {
+  "expectedId": "FR-KT-005",
+  "type": "functional",
+  "scope": "KT",
+  "target": "wave-8",
+  "title": "Kotlin test of every nullable accessor with safe-call syntax and every non-null accessor without it",
+  "requirement": "The system shall test with Kotlin, for every row of the nullable-accessor table of `docs/api/kotlin.md`, that the accessor assigns to the Kotlin type the table states: a nullable accessor is used with safe-call or elvis syntax and returns `null` when the value is absent, and a non-null accessor is used without them and returns the stated empty value or throws the stated exception.",
+  "rationale": "Covers D-351; supports T11. Measured (2026-10-20): the table has 12 rows: `req.param` `String` (throws `IllegalArgumentException` for a name the pattern lacks, `Request.java:25`), `req.query`, `req.form`, `req.header`, `req.cookie`, `req.file`, `req.lastEventId`, `req.attribute(key, type)` and `req.body(type)` nullable, `req.queries` and `req.files` empty lists, `req.service` throwing. Decision: the test routes real requests through the in-memory harness and asserts each row in both the present and the absent case; the declared Kotlin type is written in the test (`val page: String? = req.query(\"page\")`, `val id: String = req.param(\"id\")`) so a platform-type regression fails compilation. Pitfall: `val x = req.query(\"a\")` would infer a platform type if the annotation were lost; the explicit declared type is what makes the test fail. Rejected alternative: deriving the test from the table text; Kotlin types cannot be generated from text, and AC-2 of FR-KT-001 already compares the table with the annotations.",
+  "acceptanceCriteria": [
+   "A Kotlin test in `NaruServe-api` calls `req.query(\"page\")?.toIntOrNull() ?: 1`, `req.cookie(\"session\")?.value`, `req.header(\"Authorization\")`, `req.form(\"name\")`, `req.file(\"file\")?.save(...)`, `req.lastEventId()` and `req.attribute(\"k\", String::class.java)` with declared nullable types, and asserts each returns `null` when the request lacks the value and the value when present. [D-351; T11]",
+   "The same test calls `req.param(\"id\")` as `String` and asserts `IllegalArgumentException` for a name the pattern lacks, calls `req.queries(\"tag\")` and `req.files(\"f\")` as non-null lists and asserts an empty list when absent, and calls `req.service(UserService::class.java)` as `UserService` and asserts an exception when the service is not registered. [D-351]",
+   "The test calls `req.body(User::class.java)` as `User?` and asserts `null` for a JSON `null` body, and `req.body(object : TypeRef<List<User>>() {})` as `List<User>?`. [D-351; D-349]",
+   "Each table row of `docs/api/kotlin.md` maps to a test function named after the accessor, and a docs test fails, naming the row, when a row has no function, so a row added to the table is tested. [D-351]"
+  ],
+  "priority": "high",
+  "risk": "medium",
+  "verificationMethod": "test",
+  "githubIssue": "https://github.com/Snoworca/NaruServe/issues/16",
+  "tags": [
+   "wave-8",
+   "feasibility:high",
+   "kotlin",
+   "nullability",
+   "T11"
+  ],
+  "trace": [
+   {
+    "type": "Code",
+    "reference": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve",
+    "relation": "implements",
+    "notes": "trace_intent=addition_site"
+   },
+   {
+    "type": "Code",
+    "reference": "docs/api/kotlin.md",
+    "relation": "implements",
+    "notes": "trace_intent=verifies"
+   },
+   {
+    "type": "Requirement",
+    "reference": "IR-HTTP-001",
+    "relation": "extends",
+    "notes": "Request accessors"
+   },
+   {
+    "type": "Requirement",
+    "reference": "IR-MULTIPART-002",
+    "relation": "extends",
+    "notes": "form, file, files accessors"
+   },
+   {
+    "type": "Requirement",
+    "reference": "IR-APP-004",
+    "relation": "extends",
+    "notes": "service accessor"
+   },
+   {
+    "type": "Requirement",
+    "reference": "IR-JSON-002",
+    "relation": "extends",
+    "notes": "req.body"
+   },
+   {
+    "type": "Requirement",
+    "reference": "IR-COOKIE-001",
+    "relation": "extends",
+    "notes": "Cookie"
+   }
+  ],
+  "links_after": [
+   {
+    "reference": "FR-KT-001",
+    "relation": "depends_on",
+    "notes": "the annotation check that the table rows are compared with"
+   }
+  ]
+ },
+ {
+  "expectedId": "FR-KT-006",
+  "type": "functional",
+  "scope": "KT",
+  "target": "wave-8",
+  "title": "Kotlin test of the default Gson codec limit for classes without a no-argument constructor",
+  "requirement": "The system shall show with a Kotlin test over the default `GsonJsonCodec` that a Kotlin data class without a no-argument constructor cannot be decoded — the codec fails with Gson's `JsonIOException` and the request path answers `500` — while a class with a no-argument constructor (nullable properties initialised to `null`) decodes, matching `docs/api/json.md` and `docs/api/kotlin.md`.",
+  "rationale": "Covers D-355; supports T11. Measured (2026-10-20): `docs/api/json.md:31` states that the default Gson configuration turns off constructor-bypassing instance creation (`Unsafe`) and `:69` that a type problem such as a class without a default constructor (`JsonIOException`) is `500`; `docs/api/kotlin.md` recommends nullable `var` fields; `NaruServe-gson/src/test/kotlin/com/snoworca/naruserve/gson/GsonCodecKotlinTest.kt` exists. Pitfall: a Kotlin class whose constructor parameters all have default values gets a synthetic public no-argument constructor on the JVM, so only a data class with at least one parameter without a default demonstrates the limit. Decision: the failing fixture is `data class User(val name: String)`; the passing fixture is the `CreateUserRequest { var name: String? = null }` shape of `kotlin.md`. Rejected alternative: enabling Unsafe creation so data classes decode; it is off on purpose (FR-JSON-003) because it bypasses constructors and defaults.",
+  "acceptanceCriteria": [
+   "A Kotlin test in `NaruServe-gson` decodes `{\"name\":\"a\"}` into `data class User(val name: String)` through the default `GsonJsonCodec` and asserts that `com.google.gson.JsonIOException` is thrown. [D-355; T11]",
+   "A Kotlin test routes `POST` with `{\"name\":\"a\"}` and `req.body(User::class.java)` through the in-memory harness with the default `GsonJsonCodec` and asserts status `500` with the standard error body of code `INTERNAL_ERROR`, matching the `json.md` statement. [D-355; T11]",
+   "A class `CreateUserRequest { var name: String? = null }` decodes `{\"name\":\"a\"}` with `name == \"a\"` and `{}` with `name == null` through the same codec. [D-355; D-349]",
+   "A docs test asserts that `json.md` contains `JsonIOException` and the default-constructor sentence and that `kotlin.md` contains the sentence that Gson does not understand Kotlin default arguments and non-null types, so the test and the text name the same limit. [D-355]"
+  ],
+  "priority": "high",
+  "risk": "low",
+  "verificationMethod": "test",
+  "githubIssue": "https://github.com/Snoworca/NaruServe/issues/16",
+  "tags": [
+   "wave-8",
+   "feasibility:high",
+   "kotlin",
+   "gson",
+   "T11"
+  ],
+  "trace": [
+   {
+    "type": "Code",
+    "reference": "NaruServe-gson/src/test/kotlin/com/snoworca/naruserve/gson",
+    "relation": "implements",
+    "notes": "trace_intent=addition_site"
+   },
+   {
+    "type": "Code",
+    "reference": "docs/api/json.md",
+    "relation": "implements",
+    "notes": "trace_intent=verifies"
+   },
+   {
+    "type": "Requirement",
+    "reference": "FR-JSON-003",
+    "relation": "extends",
+    "notes": "GsonJsonCodec defaults"
+   },
+   {
+    "type": "Requirement",
+    "reference": "OPS-JSON-001",
+    "relation": "extends",
+    "notes": "json.md Kotlin note"
+   }
+  ],
+  "links_after": []
+ },
+ {
+  "expectedId": "IR-KT-001",
+  "type": "interface",
+  "scope": "KT",
+  "target": "wave-8",
+  "title": "Value objects follow getX, setX and isX naming so Kotlin property syntax compiles",
+  "requirement": "The system shall name the accessors of value objects such as `Cookie` with the Servlet-style `getX()`, `setX(value)` and `isX()` rules so that Kotlin property syntax compiles — `cookie.maxAge = 60`, `cookie.isHttpOnly = true`, `cookie.secure = true`, `res.isCommitted` and `req.isSecure` — while the Express-style short methods (`req.param`, `req.path`, `res.status`) stay ordinary methods.",
+  "rationale": "Covers D-353 and wave decisions of waves 3 and 5 on `Cookie`; supports T11. Measured (2026-10-20): `Cookie.java:90-151` declares `getName`, `getValue`/`setValue`, `getPath`/`setPath`, `getDomain`/`setDomain`, `getMaxAge`/`setMaxAge`, `getSecure`/`setSecure`, `isHttpOnly`/`setHttpOnly` and `getSameSite`/`setSameSite`; `docs/api/kotlin.md` already shows `isHttpOnly = true`, `secure = true`, `maxAge = 3600` and `res.isCommitted`. Pitfall: Kotlin synthesises a property from a `boolean getX()` as `x` and from `boolean isX()` as `isX`; the pair `getSecure`/`setSecure` therefore reads `secure`, not `isSecure`, and a rename to `isSecure()` would break `kotlin.md`. Pitfall: a getter without a matching setter gives a read-only `val`; a setter whose parameter type differs from the getter's return type gives no property. Rejected alternative: fluent setters (`cookie.maxAge(60)`) as in Express; they would not form Kotlin properties and C-03 requires property syntax.",
+  "acceptanceCriteria": [
+   "A reflection test on `Cookie` finds, for every public `setX` method, a public `getX` or `isX` method with the same property name and the identical type, `isX` only for `boolean`, and fails naming the property otherwise. [D-353]",
+   "A Kotlin test constructs `Cookie(\"session\", \"t\")` and assigns `maxAge = 60`, `isHttpOnly = true`, `secure = true`, `path = \"/\"`, `domain = null` and `sameSite = SameSite.LAX`, reads them back through the property names, and adds the cookie through `res.addCookie`, asserting the `Set-Cookie` header. [D-353; D-349]",
+   "A Kotlin test reads `res.isCommitted` before and after `res.send(\"x\")` and `req.isSecure`, `req.method()` and `req.path()` in a handler, asserting `false`, `true`, a `Boolean` and the Express-style calls with parentheses. [D-353; T11]",
+   "A reflection test lists the property names of `Cookie` as exactly `name` (read-only), `value`, `path`, `domain`, `maxAge`, `secure`, `httpOnly` and `sameSite`, so a later wave that adds an accessor must keep the `getX`/`setX`/`isX` rule and update the list together with `docs/api/cookie.md`. [D-353]"
+  ],
+  "priority": "high",
+  "risk": "low",
+  "verificationMethod": "test",
+  "githubIssue": "https://github.com/Snoworca/NaruServe/issues/16",
+  "tags": [
+   "wave-8",
+   "feasibility:high",
+   "kotlin",
+   "property-syntax",
+   "T11"
+  ],
+  "trace": [
+   {
+    "type": "Code",
+    "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/Cookie.java",
+    "relation": "implements",
+    "notes": "trace_intent=verifies"
+   },
+   {
+    "type": "Code",
+    "reference": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve",
+    "relation": "implements",
+    "notes": "trace_intent=addition_site"
+   },
+   {
+    "type": "Requirement",
+    "reference": "IR-COOKIE-001",
+    "relation": "extends",
+    "notes": "Cookie value class"
+   },
+   {
+    "type": "Requirement",
+    "reference": "FR-HTTP-015",
+    "relation": "extends",
+    "notes": "Response commit flag"
+   }
+  ],
+  "links_after": []
+ },
+ {
+  "expectedId": "IR-KT-002",
+  "type": "interface",
+  "scope": "KT",
+  "target": "wave-8",
+  "title": "NaruServe-kotlin provides the reified Request.body extension",
+  "requirement": "The system shall provide in `NaruServe-kotlin`, in package `com.snoworca.naruserve.kotlin`, the top-level function `inline fun <reified T : Any> Request.body(): T = body(T::class.java) ?: throw HttpException(400, \"JSON body is null\")`, so that `req.body<User>()` returns a non-null `T` and a JSON `null` body is a client error.",
+  "rationale": "Covers D-354 and the module line of wave decision Kotlin reified extension of wave 5 (OPS-JSON-001 AC-3, which fixed the shape in `docs/api/kotlin.md`); supports T11. Measured (2026-10-20): `NaruServe-kotlin/src/main` holds only the placeholder `KotlinModule.NAME`; `NaruServe-api/src/test/kotlin/com/snoworca/naruserve/JsonDocsKotlinTest.kt:40` carries a test-local copy of the same function with the comment that the module extension arrives in wave 8; `NaruServe-kotlin` has `kotlin-stdlib` as `api` and depends on `NaruServe-api` (CON-BUILD-006). Decision: the file is `RequestExtensions.kt` and the consumer imports `com.snoworca.naruserve.kotlin.body`; the extension adds no overload on `Request` because the member `body(Class<T>)` takes an argument, so `req.body<User>()` resolves to the extension. Pitfall: `T::class.java` loses element types, so `req.body<List<User>>()` decodes a raw `List`; `docs/api/kotlin.md` says so and points to `TypeRef`. Rejected alternative: an extension that returns `T?`; it would only rename the member, and the point of D-354 is a non-null result for a caller that asked for one.",
+  "acceptanceCriteria": [
+   "`NaruServe-kotlin/src/main/kotlin/com/snoworca/naruserve/kotlin/RequestExtensions.kt` declares exactly the function above, and a Kotlin test in `NaruServe-kotlin` compiles `val user = req.body<User>()` with `user` of type `User` (non-null) inside an `app.post` lambda. [D-354]",
+   "Through the in-memory harness with a test `JsonCodec`, a `POST` with `{\"name\":\"a\"}` returns the decoded instance, and a `POST` whose body is the JSON `null` answers `400` with the standard error body whose message is `JSON body is null`. [D-354; T11]",
+   "A test asserts that `req.body<List<User>>()` passes the raw class `java.util.List` to the codec (no element type), matching the sentence of `docs/api/kotlin.md` that the extension does not preserve the element type. [D-354]",
+   "`NaruServe-api` and `NaruServe-servlet` stay free of `kotlin.*` and `kotlin-stdlib` stays on the `runtimeClasspath` of `NaruServe-kotlin` only, which the wave 1 build checks assert, and the test-local copy in `JsonDocsKotlinTest` is not edited. [D-354; CON-BUILD-007; I-002]"
+  ],
+  "priority": "high",
+  "risk": "low",
+  "verificationMethod": "test",
+  "githubIssue": "https://github.com/Snoworca/NaruServe/issues/16",
+  "tags": [
+   "wave-8",
+   "feasibility:high",
+   "kotlin",
+   "extension",
+   "T11"
+  ],
+  "trace": [
+   {
+    "type": "Code",
+    "reference": "NaruServe-kotlin/src/main/kotlin/com/snoworca/naruserve/kotlin/KotlinModule.kt",
+    "relation": "implements",
+    "notes": "trace_intent=verifies"
+   },
+   {
+    "type": "Code",
+    "reference": "NaruServe-kotlin/src/main/kotlin/com/snoworca/naruserve/kotlin",
+    "relation": "implements",
+    "notes": "trace_intent=addition_site"
+   },
+   {
+    "type": "Requirement",
+    "reference": "IR-JSON-002",
+    "relation": "extends",
+    "notes": "req.body and the nullable decode"
+   },
+   {
+    "type": "Requirement",
+    "reference": "OPS-JSON-001",
+    "relation": "extends",
+    "notes": "kotlin.md reified extension text"
+   },
+   {
+    "type": "Requirement",
+    "reference": "CON-BUILD-007",
+    "relation": "extends",
+    "notes": "kotlin-stdlib confined to this module"
+   },
+   {
+    "type": "Requirement",
+    "reference": "CON-BUILD-002",
+    "relation": "extends",
+    "notes": "module set"
+   }
+  ],
+  "links_after": []
+ },
+ {
+  "expectedId": "CON-KT-001",
+  "type": "constraint",
+  "scope": "KT",
+  "target": "wave-8",
+  "title": "The framework never uses runBlocking as an asynchronous adapter",
+  "requirement": "The system shall not use `runBlocking` as an asynchronous adapter: no class of a published module references `kotlinx.coroutines`, no published module has a `kotlinx-coroutines` artifact on its `compileClasspath` or `runtimeClasspath`, and a build check fails the build when either appears.",
+  "rationale": "Covers D-356. Measured (2026-10-20): `grep -rn \"runBlocking\\|kotlinx.coroutines\"` over `NaruServe*/src` and `src` finds no match; `docs/api/kotlin.md` documents that `suspend` handlers are unsupported in v1 and that `runBlocking` holds the request thread. Decision: the check is separate from the wave 1 `checkClassReferences` and `checkDependencyRules` tasks, because `BuildLayoutTest` pins the exact `prefixes += [...]` list of `build.gradle`; the new check scans constant pools of the main output of the nine published modules for `kotlinx/coroutines/` and reads each module's resolved `compileClasspath` and `runtimeClasspath` for group `org.jetbrains.kotlinx`, artifact `kotlinx-coroutines-*`. Pitfall: the existing prefix `kotlin/` does not match `kotlinx/` because of the slash. Rejected alternative: adding a coroutine adapter in `NaruServe-kotlin` with `runBlocking`; it would hold a request thread per suspend call and hide the cost behind a friendly signature; reopen when a separate non-blocking coroutine module is designed (post-v1).",
+  "acceptanceCriteria": [
+   "A build check wired into `check` scans the main class output of every published module and fails, naming `Class -> kotlinx/coroutines/...`, when a constant-pool class name or descriptor starts with `kotlinx/coroutines/`, and passes on the wave 8 modules. [D-356]",
+   "The same check reads the resolved `compileClasspath` and `runtimeClasspath` of every published module and fails, naming the module and artifact, when a `kotlinx-coroutines` artifact is on either. [D-356]",
+   "A negative fixture proves both parts: a compiled fixture class that calls `kotlinx.coroutines.BuildersKt.runBlocking` and a fixture dependency set with `kotlinx-coroutines-core` each make the check fail, so it cannot pass vacuously. [D-356]",
+   "The wave 1 prefix list of `checkClassReferences` and the pinned strings of `BuildLayoutTest` stay unchanged, and `./gradlew build` passes with both checks. [D-356; CON-BUILD-013]"
+  ],
+  "priority": "high",
+  "risk": "low",
+  "verificationMethod": "test",
+  "githubIssue": "https://github.com/Snoworca/NaruServe/issues/16",
+  "tags": [
+   "wave-8",
+   "feasibility:high",
+   "kotlin",
+   "coroutines",
+   "build-check"
+  ],
+  "trace": [
+   {
+    "type": "Code",
+    "reference": "build.gradle",
+    "relation": "implements",
+    "notes": "trace_intent=addition_site"
+   },
+   {
+    "type": "Requirement",
+    "reference": "CON-BUILD-007",
+    "relation": "extends",
+    "notes": "kotlin-stdlib confined"
+   },
+   {
+    "type": "Requirement",
+    "reference": "CON-BUILD-013",
+    "relation": "extends",
+    "notes": "class reference and dependency build checks"
+   }
+  ],
+  "links_after": []
+ },
+ {
+  "expectedId": "OPS-KT-001",
+  "type": "operational",
+  "scope": "KT",
+  "target": "wave-8",
+  "title": "docs/api/kotlin.md names the Kotlin module and the nullability annotations exactly and states the coroutine limit",
+  "requirement": "The system shall correct and verify `docs/api/kotlin.md`: it names the Kotlin module `NaruServe-kotlin` and its coordinate exactly as wave 1 fixed them, its null-handling paragraph names `@NullMarked` (non-null by default) and `@Nullable` without `@NonNull`, its nullable-accessor table is the one that FR-KT-001 and FR-KT-005 check, and its Coroutine section states that `suspend` handlers are unsupported in v1 and that the framework does not use `runBlocking` as an asynchronous adapter.",
+  "rationale": "Covers D-357, the docs part of D-348, D-351, D-354 and D-356, wave decision Nullability check second reading (r2 W2-004: line 59 names `@NullMarked` and `@Nullable` and no longer mentions `@NonNull`) and the post-v1 rewrite rule of D-380. Measured (2026-10-20): `docs/api/kotlin.md:59` reads \"공개 API에는 `@Nullable` / `@NonNull`이 붙어 있어\"; the file has no (미확정) marker; `BuildLayoutTest` (OPS-BUILD-003 AC-2 and AC-4) already asserts the module name, the coordinate `com.snoworca.naruserve:NaruServe-kotlin:` and the absence of `rest-kotlin`; the last sentence of the Coroutine section says coroutine support is \"별도 모듈로 검토 중입니다\". Decision: the sentence about the separate module becomes an explicit post-v1 item with its reason (a non-blocking coroutine adapter is a separate design; v1 handlers are synchronous). Pitfall: the pinned wave 5 lines stay byte-identical (the `T?` row of `req.body(type)`, the `inline fun <reified T : Any> Request.body(): T = ` line and `val user = req.body<User>()`), asserted by `JsonDocsKotlinTest`, so the import line is added above them without editing them.",
+  "acceptanceCriteria": [
+   "A docs test asserts that `docs/api/kotlin.md` contains `NaruServe-kotlin` and `com.snoworca.naruserve:NaruServe-kotlin:0.1.0-SNAPSHOT`, does not contain `rest-kotlin`, and that `settings.gradle` includes `:NaruServe-kotlin`, so the doc names the module as wave 1 fixed it. [D-357; CON-BUILD-002; CON-BUILD-005]",
+   "The null-handling paragraph of `kotlin.md` names `@NullMarked` (non-null by default) and `@Nullable`, `kotlin.md` contains no `@NonNull`, and a docs test asserts both. [D-348; wave decision: Nullability check second reading]",
+   "The `NaruServe-kotlin` extension section shows the import `import com.snoworca.naruserve.kotlin.body` above the unchanged pinned lines and states that `kotlin-stdlib` is the only dependency of that module. [D-354]",
+   "The Coroutine section states that `suspend` handlers are not supported in v1, that `runBlocking` holds the request thread, that the framework does not use `runBlocking` as an asynchronous adapter, and that coroutine support is a post-v1 item with its reason, and `kotlin.md` holds no (미확정) marker. [D-356; D-380]",
+   "The nullable-accessor table rows are unchanged in count (12) and Kotlin types, and the docs test of FR-KT-005 AC-4 and the annotation check of FR-KT-001 AC-2 read the same table. [D-351]"
+  ],
+  "priority": "high",
+  "risk": "low",
+  "verificationMethod": "test",
+  "githubIssue": "https://github.com/Snoworca/NaruServe/issues/16",
+  "tags": [
+   "wave-8",
+   "feasibility:high",
+   "kotlin",
+   "docs"
+  ],
+  "trace": [
+   {
+    "type": "Code",
+    "reference": "docs/api/kotlin.md",
+    "relation": "implements",
+    "notes": "trace_intent=addition_site"
+   },
+   {
+    "type": "Requirement",
+    "reference": "OPS-BUILD-003",
+    "relation": "extends",
+    "notes": "module names and coordinates in docs"
+   },
+   {
+    "type": "Requirement",
+    "reference": "OPS-JSON-001",
+    "relation": "extends",
+    "notes": "kotlin.md wave 5 text"
+   }
+  ],
+  "links_after": [
+   {
+    "reference": "FR-KT-001",
+    "relation": "depends_on",
+    "notes": "annotation check of the table"
+   },
+   {
+    "reference": "FR-KT-005",
+    "relation": "depends_on",
+    "notes": "nullable accessor test"
+   },
+   {
+    "reference": "CON-KT-001",
+    "relation": "depends_on",
+    "notes": "runBlocking ban"
+   },
+   {
+    "reference": "IR-KT-002",
+    "relation": "depends_on",
+    "notes": "reified extension text"
+   }
+  ]
+ }
+]

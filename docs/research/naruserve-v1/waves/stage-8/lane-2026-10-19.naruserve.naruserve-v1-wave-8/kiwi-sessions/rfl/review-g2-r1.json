@@ -1,0 +1,63 @@
+{
+  "findings": [
+    {
+      "id": "G2-001",
+      "axis": "P4",
+      "severity": "MEDIUM",
+      "title": "Stop and container-side AsyncListener events end the AsyncContext without marking the exchange aborted, so a drain thread can keep writing to a completed (possibly recycled) response",
+      "location": {"file": "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/ServletEventStream.java", "line_range": "139-178"},
+      "description": "Pool.completeAll() calls ex.complete() (ac.complete()) but never sets ServletExchange.aborted; FlushingStream.write/flush only fail once aborted is true (ServletExchange.check, line 387-391). After completeAll() the still-running drain keeps writing events/heartbeats through the old response output stream until shutdownNow() interrupts it, and a write that is not blocked/interruptible (heartbeat tick racing the stop) goes to a response the container has completed and may already have recycled for another connection (Jetty/Tomcat recycle request/response objects). The same gap exists in the AsyncListener of track(): onError/onTimeout only remove the exchange from the set; they neither complete the context (the Servlet 3.1 contract expects the app to complete or dispatch) nor flag the exchange, so the drain continues on a dead response and holds its SSE slot until the next write throws. Only abort() (aborted=true then complete()) is safe; completeAll and the listener bypass it.",
+      "suggested_fix": "In completeAll() call ex.abort() instead of ex.complete() (sets aborted first, then completes once). In the AsyncListener onError/onTimeout call ex.abort() so the next FlushingStream write throws IOException and the drain ends and releases the slot. Add a test that a write after completeAll() throws IOException.",
+      "is_behavioral": true,
+      "tags": ["bug", "regression"]
+    },
+    {
+      "id": "G2-002",
+      "axis": "P6",
+      "severity": "MEDIUM",
+      "title": "ServletRegistration.Dynamic.addMapping result is ignored: a conflicting url-pattern silently leaves the started app unreachable",
+      "location": {"file": "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/NaruServeInitializer.java", "line_range": "51-57"},
+      "description": "addMapping(String...) returns the set of patterns that were NOT mapped because another servlet already owns them (typical for \"/\" against a container default servlet registration, or \"/api/*\" against an existing mapping). register() discards the return value, so context startup succeeds, listen(0) has run, onStart callbacks fired, but the servlet receives no request. The operator sees a healthy app that answers 404 from the container. The other failure paths in this class (name clash, bad init-param) are all turned into a ServletException with app shutdown, so this one is inconsistent with the design's fail-fast startup.",
+      "suggested_fix": "Capture the returned Collection<String>; if it is non-empty throw new ServletException(\"naruserve.urlPattern '\" + pattern + \"' conflicts with an existing mapping\") so the surrounding catch shuts the app down. Add a test registering a second servlet on the same pattern.",
+      "is_behavioral": true,
+      "tags": ["bug"]
+    },
+    {
+      "id": "G2-003",
+      "axis": "P6",
+      "severity": "LOW",
+      "title": "AppStarter error wrapping is incomplete: Errors from configure() escape unnamed, and a failing GsonJsonCodec constructor is reported as an absent codec",
+      "location": {"file": "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/AppStarter.java", "line_range": "61-95"},
+      "description": "(a) The Javadoc and IR-SVL-001 AC-6 promise every configure failure is a ServletException naming the class, but only Exception is caught (line 66); a NoClassDefFoundError/LinkageError thrown by the configurer body (e.g. a missing optional dependency, the most common real deployment failure) propagates raw without the configurer class name. (b) presetCodec catches ReflectiveOperationException, so an InvocationTargetException from a throwing GsonJsonCodec constructor is swallowed and returns false; if the configurer then does not set a codec the message tells the user to put GsonJsonCodec on the class path although it is there and failed. (c) The no-codec hint depends on the substring \"jsonCodec\" in RestApp.Builder.build()'s IllegalStateException message (RestApp.java:261), a silent coupling with no shared constant.",
+      "suggested_fix": "Catch LinkageError in the configure try block and wrap it like the Exception branch; in presetCodec rethrow or log the InvocationTargetException cause (keep returning false only for ClassNotFoundException/NoClassDefFoundError); note the message coupling in a test that fails if the core message changes.",
+      "is_behavioral": true,
+      "tags": ["bug"]
+    },
+    {
+      "id": "G2-004",
+      "axis": "P3",
+      "severity": "LOW",
+      "title": "shutdownTimeoutSeconds accepts forms the SRS does not intend because Integer.parseInt is used on the raw text",
+      "location": {"file": "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/InitParams.java", "line_range": "43-49"},
+      "description": "IR-SVL-001 AC-5 specifies an integer from 1 to 300; Integer.parseInt also accepts a leading '+' (\"+5\") and non-ASCII Unicode digits, while rejecting surrounding whitespace that web.xml authors commonly produce (<param-value>\n 30\n</param-value>), which then fails startup with a message naming the value. Behavior is inconsistent: some non-canonical forms pass, the most likely one does not.",
+      "suggested_fix": "Either trim() the value before parsing, or match against \"[0-9]{1,3}\" first so only canonical digits pass; document the choice in docs/api/servlet.md.",
+      "is_behavioral": true,
+      "tags": ["bug", "style"]
+    }
+  ],
+  "coverage_rows": [
+    {"file": "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/AppStarter.java", "hunks_total": 1, "anchors": ["final class AppStarter {"], "findings": ["G2-003"]},
+    {"file": "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/InitParams.java", "hunks_total": 1, "anchors": ["final class InitParams {"], "findings": ["G2-004"]},
+    {"file": "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/NaruServeInitializer.java", "hunks_total": 1, "anchors": ["public class NaruServeInitializer implements ServletContainerInitializer {"], "findings": ["G2-002"]},
+    {"file": "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/NaruServeServlet.java", "hunks_total": 1, "anchors": ["final class NaruServeServlet extends HttpServlet {"], "findings": []},
+    {"file": "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/ServletAdapter.java", "hunks_total": 1, "anchors": ["public final class ServletAdapter implements HttpAdapter {"], "findings": []},
+    {"file": "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/ServletConfigurer.java", "hunks_total": 1, "anchors": ["public interface ServletConfigurer {"], "findings": []},
+    {"file": "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/ServletEventStream.java", "hunks_total": 1, "anchors": ["final class ServletEventStream {"], "findings": ["G2-001"]},
+    {"file": "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/ServletExchange.java", "hunks_total": 1, "anchors": ["final class ServletExchange implements HttpExchange {"], "findings": ["G2-001"]},
+    {"file": "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/ServletPath.java", "hunks_total": 1, "anchors": ["final class ServletPath {"], "findings": []},
+    {"file": "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/ShutdownListener.java", "hunks_total": 1, "anchors": ["final class ShutdownListener implements ServletContextListener {"], "findings": []},
+    {"file": "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/package-info.java", "hunks_total": 1, "anchors": ["@org.jspecify.annotations.NullMarked"], "findings": []},
+    {"file": "NaruServe-servlet/src/main/resources/META-INF/services/javax.servlet.ServletContainerInitializer", "hunks_total": 1, "anchors": ["com.snoworca.naruserve.servlet.NaruServeInitializer"], "findings": []}
+  ],
+  "summary": {"total": 4, "by_severity": {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 2, "LOW": 2}}
+}

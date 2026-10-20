@@ -1,0 +1,625 @@
+{
+ "scope": {
+  "target": null,
+  "ids": [
+   "OPS-REL-002",
+   "OPS-REL-006",
+   "OPS-HTTP-008"
+  ],
+  "sds": "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-8-12.sds.md",
+  "testGlobs": [
+   "**/*.test.*",
+   "**/*.spec.*",
+   "**/test_*.py",
+   "**/*_test.py",
+   "**/*_test.go",
+   "**/*Test.java",
+   "**/*Tests.cs",
+   "**/test/**",
+   "**/tests/**",
+   "**/__tests__/**"
+  ]
+ },
+ "testFileCount": 1548,
+ "requirements": [
+  {
+   "requirementId": "OPS-HTTP-008",
+   "acs": [
+    {
+     "acId": "AC-1",
+     "cited": true,
+     "citations": [
+      {
+       "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java",
+       "line": 114
+      }
+     ]
+    },
+    {
+     "acId": "AC-2",
+     "cited": true,
+     "citations": [
+      {
+       "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java",
+       "line": 127
+      }
+     ]
+    },
+    {
+     "acId": "AC-3",
+     "cited": true,
+     "citations": [
+      {
+       "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java",
+       "line": 166
+      }
+     ]
+    },
+    {
+     "acId": "AC-4",
+     "cited": true,
+     "citations": [
+      {
+       "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java",
+       "line": 202
+      }
+     ]
+    },
+    {
+     "acId": "AC-5",
+     "cited": true,
+     "citations": [
+      {
+       "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java",
+       "line": 267
+      }
+     ]
+    },
+    {
+     "acId": "AC-6",
+     "cited": true,
+     "citations": [
+      {
+       "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java",
+       "line": 285
+      }
+     ]
+    },
+    {
+     "acId": "AC-7",
+     "cited": true,
+     "citations": [
+      {
+       "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java",
+       "line": 228
+      }
+     ]
+    },
+    {
+     "acId": "AC-8",
+     "cited": true,
+     "citations": [
+      {
+       "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java",
+       "line": 22
+      },
+      {
+       "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java",
+       "line": 148
+      },
+      {
+       "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java",
+       "line": 187
+      },
+      {
+       "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java",
+       "line": 254
+      },
+      {
+       "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java",
+       "line": 295
+      },
+      {
+       "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java",
+       "line": 302
+      }
+     ]
+    },
+    {
+     "acId": "AC-9",
+     "cited": true,
+     "citations": [
+      {
+       "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java",
+       "line": 314
+      },
+      {
+       "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java",
+       "line": 315
+      },
+      {
+       "file": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java",
+       "line": 652
+      },
+      {
+       "file": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java",
+       "line": 653
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "requirementId": "OPS-REL-002",
+   "acs": [
+    {
+     "acId": "AC-1",
+     "cited": true,
+     "citations": [
+      {
+       "file": "src/test/java/com/snoworca/naruserve/docs/ApiMarkersDocsTest.java",
+       "line": 74
+      }
+     ]
+    },
+    {
+     "acId": "AC-2",
+     "cited": true,
+     "citations": [
+      {
+       "file": "src/test/java/com/snoworca/naruserve/docs/ApiMarkersDocsTest.java",
+       "line": 94
+      }
+     ]
+    },
+    {
+     "acId": "AC-3",
+     "cited": true,
+     "citations": [
+      {
+       "file": "src/test/java/com/snoworca/naruserve/docs/ApiMarkersDocsTest.java",
+       "line": 106
+      }
+     ]
+    },
+    {
+     "acId": "AC-4",
+     "cited": true,
+     "citations": [
+      {
+       "file": "src/test/java/com/snoworca/naruserve/docs/ApiMarkersDocsTest.java",
+       "line": 126
+      }
+     ]
+    },
+    {
+     "acId": "AC-5",
+     "cited": true,
+     "citations": [
+      {
+       "file": "src/test/java/com/snoworca/naruserve/docs/ApiMarkersDocsTest.java",
+       "line": 137
+      }
+     ]
+    },
+    {
+     "acId": "AC-6",
+     "cited": true,
+     "citations": [
+      {
+       "file": "src/test/java/com/snoworca/naruserve/docs/ApiMarkersDocsTest.java",
+       "line": 147
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "requirementId": "OPS-REL-006",
+   "acs": [
+    {
+     "acId": "AC-1",
+     "cited": true,
+     "citations": [
+      {
+       "file": "src/test/java/com/snoworca/naruserve/docs/ApiMarkersDocsTest.java",
+       "line": 187
+      }
+     ]
+    },
+    {
+     "acId": "AC-2",
+     "cited": true,
+     "citations": [
+      {
+       "file": "src/test/java/com/snoworca/naruserve/docs/ApiMarkersDocsTest.java",
+       "line": 201
+      }
+     ]
+    },
+    {
+     "acId": "AC-3",
+     "cited": true,
+     "citations": [
+      {
+       "file": "src/test/java/com/snoworca/naruserve/docs/ApiMarkersDocsTest.java",
+       "line": 187
+      },
+      {
+       "file": "src/test/java/com/snoworca/naruserve/docs/WaveFiveDocsTest.java",
+       "line": 431
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "sdsContracts": [
+  {
+   "sdsAcId": "SDS-AC-1",
+   "requirementId": "OPS-REL-002",
+   "acId": "AC-1",
+   "cited": true,
+   "testFiles": [
+    {
+     "path": "src/test/java/com/snoworca/naruserve/docs/ApiMarkersDocsTest.java",
+     "exists": true,
+     "citations": [
+      {
+       "file": "src/test/java/com/snoworca/naruserve/docs/ApiMarkersDocsTest.java",
+       "line": 74
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "sdsAcId": "SDS-AC-2",
+   "requirementId": "OPS-REL-002",
+   "acId": "AC-2",
+   "cited": true,
+   "testFiles": [
+    {
+     "path": "src/test/java/com/snoworca/naruserve/docs/ApiMarkersDocsTest.java",
+     "exists": true,
+     "citations": [
+      {
+       "file": "src/test/java/com/snoworca/naruserve/docs/ApiMarkersDocsTest.java",
+       "line": 94
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "sdsAcId": "SDS-AC-3",
+   "requirementId": "OPS-REL-002",
+   "acId": "AC-3",
+   "cited": true,
+   "testFiles": [
+    {
+     "path": "src/test/java/com/snoworca/naruserve/docs/ApiMarkersDocsTest.java",
+     "exists": true,
+     "citations": [
+      {
+       "file": "src/test/java/com/snoworca/naruserve/docs/ApiMarkersDocsTest.java",
+       "line": 106
+      }
+     ]
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java",
+     "exists": true,
+     "citations": []
+    }
+   ]
+  },
+  {
+   "sdsAcId": "SDS-AC-4",
+   "requirementId": "OPS-REL-002",
+   "acId": "AC-4",
+   "cited": true,
+   "testFiles": [
+    {
+     "path": "src/test/java/com/snoworca/naruserve/docs/ApiMarkersDocsTest.java",
+     "exists": true,
+     "citations": [
+      {
+       "file": "src/test/java/com/snoworca/naruserve/docs/ApiMarkersDocsTest.java",
+       "line": 126
+      }
+     ]
+    },
+    {
+     "path": "src/test/java/com/snoworca/naruserve/docs/WaveSevenDocsTest.java",
+     "exists": true,
+     "citations": [
+      {
+       "file": "src/test/java/com/snoworca/naruserve/docs/WaveSevenDocsTest.java",
+       "line": 207
+      },
+      {
+       "file": "src/test/java/com/snoworca/naruserve/docs/WaveSevenDocsTest.java",
+       "line": 225
+      },
+      {
+       "file": "src/test/java/com/snoworca/naruserve/docs/WaveSevenDocsTest.java",
+       "line": 235
+      },
+      {
+       "file": "src/test/java/com/snoworca/naruserve/docs/WaveSevenDocsTest.java",
+       "line": 250
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "sdsAcId": "SDS-AC-5",
+   "requirementId": "OPS-REL-002",
+   "acId": "AC-5",
+   "cited": true,
+   "testFiles": [
+    {
+     "path": "src/test/java/com/snoworca/naruserve/docs/ApiMarkersDocsTest.java",
+     "exists": true,
+     "citations": [
+      {
+       "file": "src/test/java/com/snoworca/naruserve/docs/ApiMarkersDocsTest.java",
+       "line": 137
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "sdsAcId": "SDS-AC-6",
+   "requirementId": "OPS-REL-002",
+   "acId": "AC-6",
+   "cited": true,
+   "testFiles": [
+    {
+     "path": "src/test/java/com/snoworca/naruserve/docs/ApiMarkersDocsTest.java",
+     "exists": true,
+     "citations": [
+      {
+       "file": "src/test/java/com/snoworca/naruserve/docs/ApiMarkersDocsTest.java",
+       "line": 147
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "sdsAcId": "SDS-AC-7",
+   "requirementId": "OPS-REL-006",
+   "acId": "AC-1",
+   "cited": true,
+   "testFiles": [
+    {
+     "path": "src/test/java/com/snoworca/naruserve/docs/ApiMarkersDocsTest.java",
+     "exists": true,
+     "citations": [
+      {
+       "file": "src/test/java/com/snoworca/naruserve/docs/ApiMarkersDocsTest.java",
+       "line": 187
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "sdsAcId": "SDS-AC-8",
+   "requirementId": "OPS-REL-006",
+   "acId": "AC-2",
+   "cited": true,
+   "testFiles": [
+    {
+     "path": "src/test/java/com/snoworca/naruserve/docs/ApiMarkersDocsTest.java",
+     "exists": true,
+     "citations": [
+      {
+       "file": "src/test/java/com/snoworca/naruserve/docs/ApiMarkersDocsTest.java",
+       "line": 201
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "sdsAcId": "SDS-AC-9",
+   "requirementId": "OPS-REL-006",
+   "acId": "AC-3",
+   "cited": true,
+   "testFiles": [
+    {
+     "path": "src/test/java/com/snoworca/naruserve/docs/WaveFiveDocsTest.java",
+     "exists": true,
+     "citations": [
+      {
+       "file": "src/test/java/com/snoworca/naruserve/docs/WaveFiveDocsTest.java",
+       "line": 431
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "sdsAcId": "SDS-AC-10",
+   "requirementId": "OPS-HTTP-008",
+   "acId": "AC-1",
+   "cited": true,
+   "testFiles": [
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java",
+     "exists": true,
+     "citations": [
+      {
+       "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java",
+       "line": 113
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "sdsAcId": "SDS-AC-11",
+   "requirementId": "OPS-HTTP-008",
+   "acId": "AC-2",
+   "cited": true,
+   "testFiles": [
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java",
+     "exists": true,
+     "citations": [
+      {
+       "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java",
+       "line": 126
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "sdsAcId": "SDS-AC-12",
+   "requirementId": "OPS-HTTP-008",
+   "acId": "AC-3",
+   "cited": true,
+   "testFiles": [
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java",
+     "exists": true,
+     "citations": [
+      {
+       "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java",
+       "line": 302
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "sdsAcId": "SDS-AC-13",
+   "requirementId": "OPS-HTTP-008",
+   "acId": "AC-4",
+   "cited": true,
+   "testFiles": [
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java",
+     "exists": true,
+     "citations": [
+      {
+       "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java",
+       "line": 315
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "sdsAcId": "SDS-AC-14",
+   "requirementId": "OPS-HTTP-008",
+   "acId": "AC-5",
+   "cited": true,
+   "testFiles": [
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java",
+     "exists": true,
+     "citations": [
+      {
+       "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java",
+       "line": 266
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "sdsAcId": "SDS-AC-15",
+   "requirementId": "OPS-HTTP-008",
+   "acId": "AC-6",
+   "cited": true,
+   "testFiles": [
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java",
+     "exists": true,
+     "citations": [
+      {
+       "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java",
+       "line": 284
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "sdsAcId": "SDS-AC-16",
+   "requirementId": "OPS-HTTP-008",
+   "acId": "AC-7",
+   "cited": true,
+   "testFiles": [
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java",
+     "exists": true,
+     "citations": [
+      {
+       "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java",
+       "line": 227
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "sdsAcId": "SDS-AC-17",
+   "requirementId": "OPS-HTTP-008",
+   "acId": "AC-8",
+   "cited": true,
+   "testFiles": [
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java",
+     "exists": true,
+     "citations": [
+      {
+       "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java",
+       "line": 187
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "sdsAcId": "SDS-AC-18",
+   "requirementId": "OPS-HTTP-008",
+   "acId": "AC-9",
+   "cited": true,
+   "testFiles": [
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java",
+     "exists": true,
+     "citations": [
+      {
+       "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java",
+       "line": 314
+      }
+     ]
+    },
+    {
+     "path": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java",
+     "exists": true,
+     "citations": [
+      {
+       "file": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java",
+       "line": 652
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "gaps": {
+  "requirements": [],
+  "sdsContracts": []
+ },
+ "passed": true
+}

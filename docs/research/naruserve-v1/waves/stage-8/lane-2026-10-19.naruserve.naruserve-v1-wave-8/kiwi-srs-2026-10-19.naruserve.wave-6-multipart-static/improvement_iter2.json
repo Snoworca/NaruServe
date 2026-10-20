@@ -1,0 +1,27 @@
+[
+  {
+    "improvement_iter2": {
+      "date": "2026-10-20",
+      "source": "w6-eval-iter2.json",
+      "fixed": {
+        "W6-A2-001": "FR-STATIC-002 AC-5 + statement: for a path no explicit route matches under a static mount prefix, the static D-268 check runs before the static 405/404 method decision; GET/HEAD/POST/PUT/DELETE/OPTIONS of /%252e%252e/secret.txt and /a%252Fb under / get 400 (test cases); D-052 forms keep the PathValidator 400 of FR-HTTP-021; explicit routes still win (app.post(\"/:x\") gets POST /a%252Fb). OPS-STATIC-001 AC-3 records the 400 for every method in static.md",
+        "W6-A2-002": "FR-MULTIPART-004 AC-5: total text-part bytes per multipart request capped by formLimit (default 1 MiB), 413 above; cases 1048576 ok, 1048577 -> 413, 2 x 600000 -> 413; heap bound equals urlencoded bound. Recorded in OPS-MULTIPART-001 AC-1 (multipart.md), AC-2 (request.md formLimit row), AC-3 (defaults.md)",
+        "W6-A2-004": "OPS-STATIC-001 AC-6: app.md skip keeps only the app-defined-type reason; express-migration.md skip removed or keeps only a still-valid reason; check fails if a skip reason names a wave 6 member as later-wave",
+        "W6-A2-005": "OPS-APP-004 AC-6 quotes '심볼릭 링크(루트 안을' (static.md) and '무제한 설정 허용 여부' (multipart.md); AC-1..5,7 unchanged byte for byte. FR-MULTIPART-002 AC-2: internal read buffer 8192 bytes",
+        "W6-A2-006": "FR-MULTIPART-001 AC-1: dual-adapter clause is T13-T16 plus T17 cases except the mid-upload disconnect, which runs over TinyHttpd only (FR-MULTIPART-006 AC-1)",
+        "W6-A2-007": "FR-ENGINE-010 trace links added: IR-ENGINE-002 extends, IR-HTTP-003 extends",
+        "W6-A2-008": "FR-STATIC-002 AC-2: 'before any static mount lookup' with the FR-HTTP-021 AC-2 pre-check order, then router lookup with FR-HTTP-022 AC-4 disabled-method 501, then static mounts",
+        "W6-A2-009": "IR-STATIC-001 AC-3: for res.file/res.download the built-in resolver is rooted at the canonical absolute parent (FR-STATIC-006 AC-5) and the path is the file name",
+        "W6-A2-010": "OPS-MULTIPART-001 AC-1: multipart.md UploadFile block matches IR-MULTIPART-002 AC-2 (@Nullable filename/contentType, close() without checked exception)",
+        "W6-A2-011": "FR-MULTIPART-003 AC-1: malformed percent-encoding (a=%G1, a=%4) or invalid UTF-8 (a=%FF) in an urlencoded body -> HttpException(400), standard error body, like FR-HTTP-025"
+      },
+      "skipped": {
+        "W6-A2-003": "Seven verified wave 5 requirements keep depends_on FR-ENGINE-001 (discarded). Re-pointing needs edits to verified blocks, which this loop must not touch; carry to wave close after FR-ENGINE-010 is verified."
+      },
+      "checks": {
+        "validate_spec": "0 errors (42 warnings: SRS-W023 draft x26, SRS-W015 x16, pre-existing)",
+        "w6coverage": "{\"ids\": 70, \"missing\": []}"
+      }
+    }
+  }
+]

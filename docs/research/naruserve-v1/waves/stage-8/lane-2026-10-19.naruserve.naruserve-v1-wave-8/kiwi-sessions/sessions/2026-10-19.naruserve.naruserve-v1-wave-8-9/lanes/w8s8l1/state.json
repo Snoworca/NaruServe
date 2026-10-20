@@ -1,0 +1,309 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-9",
+  "sds_path": "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-8-9.sds.md",
+  "sds_sha256": "b1436173525dca198dc18f28faa506aea58cf281cd22dce372a25e9341b968e4",
+  "target": "wave-8",
+  "req_ids": [
+    "FR-REL-001",
+    "CON-BUILD-017"
+  ],
+  "spawn_context": "pm-child",
+  "flags": [
+    "--auto",
+    "--auto-integration",
+    "--auto-cost-warning",
+    "--defer-srs-mutation"
+  ],
+  "phase": "done",
+  "next_resume_hint": null,
+  "failed": false,
+  "regression_baseline": {
+    "command": "./gradlew build",
+    "head_sha": "cd13b2d",
+    "exit_code": 0,
+    "source": "parent pin"
+  },
+  "red_evidence": {
+    "command": "./gradlew :test --tests ReleaseScriptTextTest --tests BuildLayoutTest --tests ReleaseRecordsDocsTest",
+    "exit_code": 1,
+    "captured_failure": "31 tests completed, 7 failed, 3 skipped: ReleaseScriptTextTest x5 (FileNotFoundException gradle/release.gradle, guarded apply missing), BuildLayoutTest con_BUILD_017_AC1_onlyReferenceToAnotherScriptIsTheGuardedReleaseApply, con_BUILD_017_AC3_claudeMdStatesReleaseScriptException; ReleaseRecordsDocsTest skipped (test-results.md absent)",
+    "timestamp": "2026-10-20T14:10:00Z"
+  },
+  "green_evidence": {
+    "command": "./gradlew build",
+    "exit_code": 0,
+    "timestamp": "2026-10-20T14:15:00Z"
+  },
+  "mcp_call_log": [
+    {
+      "called_at": "2026-10-20T14:17:55Z",
+      "tool": "update_status",
+      "args": {
+        "id": "FR-REL-001",
+        "status": "in_progress"
+      },
+      "args_hash": "da27e797a9361f512c27fe65e2006bef3fb81591",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-9"
+    },
+    {
+      "called_at": "2026-10-20T14:17:55Z",
+      "tool": "update_status",
+      "args": {
+        "id": "CON-BUILD-017",
+        "status": "in_progress"
+      },
+      "args_hash": "64301760fe7d8bc6b793bb4dcf3b72bb9b731a3c",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-9"
+    },
+    {
+      "called_at": "2026-10-20T14:17:55Z",
+      "tool": "add_verification_evidence",
+      "args": {
+        "id": "FR-REL-001",
+        "type": "test",
+        "reference": "src/test/java/com/snoworca/naruserve/build/ReleaseScriptTextTest.java#fr_REL_001_AC1_releaseSbomWritesOneCycloneDxJsonPerModuleFromRuntimeClasspath",
+        "covers": "AC-1",
+        "notes": "command: ./gradlew build; result: pass"
+      },
+      "args_hash": "7fb00d2fbd2fdf5aaa751f409c896def74fbeaab",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-9"
+    },
+    {
+      "called_at": "2026-10-20T14:17:55Z",
+      "tool": "add_verification_evidence",
+      "args": {
+        "id": "FR-REL-001",
+        "type": "test",
+        "reference": "src/test/java/com/snoworca/naruserve/build/ReleaseScriptTextTest.java#fr_REL_001_AC3_buildGradleAppliesReleaseScriptOnlyUnderTheReleaseProperty",
+        "covers": "AC-3",
+        "notes": "command: ./gradlew build; result: pass"
+      },
+      "args_hash": "6084fb0c00609dd3b377073001564171e78b09fa",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-9"
+    },
+    {
+      "called_at": "2026-10-20T14:17:55Z",
+      "tool": "add_verification_evidence",
+      "args": {
+        "id": "FR-REL-001",
+        "type": "test",
+        "reference": "src/test/java/com/snoworca/naruserve/build/ReleaseScriptTextTest.java#fr_REL_001_AC3_releasePluginNamesOccurOnlyInReleaseScript",
+        "covers": "AC-3",
+        "notes": "command: ./gradlew build; result: pass"
+      },
+      "args_hash": "59f9666a16aeac64767e56d6cfde7079478cb468",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-9"
+    },
+    {
+      "called_at": "2026-10-20T14:17:55Z",
+      "tool": "add_verification_evidence",
+      "args": {
+        "id": "FR-REL-001",
+        "type": "test",
+        "reference": "src/test/java/com/snoworca/naruserve/build/ReleaseScriptTextTest.java#fr_REL_001_AC3_releaseScriptPinsEveryPluginVersionAsExactLiteral",
+        "covers": "AC-3",
+        "notes": "command: ./gradlew build; result: pass"
+      },
+      "args_hash": "c95c2b819356bb517649502349245a18c5a54009",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-9"
+    },
+    {
+      "called_at": "2026-10-20T14:17:55Z",
+      "tool": "add_verification_evidence",
+      "args": {
+        "id": "FR-REL-001",
+        "type": "test",
+        "reference": "src/test/java/com/snoworca/naruserve/build/ReleaseScriptTextTest.java#fr_REL_001_AC3_noReleaseTaskIsWiredIntoCheckBuildOrTest",
+        "covers": "AC-3",
+        "notes": "command: ./gradlew build; result: pass"
+      },
+      "args_hash": "0c2d4031b162eb4f0a7ceb67222832f55fda3acf",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-9"
+    },
+    {
+      "called_at": "2026-10-20T14:17:55Z",
+      "tool": "add_verification_evidence",
+      "args": {
+        "id": "FR-REL-001",
+        "type": "test",
+        "reference": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java#con_BUILD_017_AC1_rootBuildFileHoldsPluginsCompileDependenciesAndChecks",
+        "covers": "AC-5",
+        "notes": "command: ./gradlew build; result: pass"
+      },
+      "args_hash": "05b63cb47b9c8f524e18e7bb5d644d3aacff4585",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-9"
+    },
+    {
+      "called_at": "2026-10-20T14:17:55Z",
+      "tool": "add_verification_evidence",
+      "args": {
+        "id": "FR-REL-001",
+        "type": "test",
+        "reference": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java#con_BUILD_017_AC2_noModuleBuildFile",
+        "covers": "AC-5",
+        "notes": "command: ./gradlew build; result: pass"
+      },
+      "args_hash": "953cf5aea307bf6be17edf9d5586d2ff4127f2f0",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-9"
+    },
+    {
+      "called_at": "2026-10-20T14:17:55Z",
+      "tool": "add_verification_evidence",
+      "args": {
+        "id": "FR-REL-001",
+        "type": "test",
+        "reference": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java#con_BUILD_017_AC1_onlyReferenceToAnotherScriptIsTheGuardedReleaseApply",
+        "covers": "AC-5",
+        "notes": "command: ./gradlew build; result: pass"
+      },
+      "args_hash": "9ad4871ffc4b447d0e683b63d7b6122f7bb689da",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-9"
+    },
+    {
+      "called_at": "2026-10-20T14:17:55Z",
+      "tool": "add_verification_evidence",
+      "args": {
+        "id": "CON-BUILD-017",
+        "type": "test",
+        "reference": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java#con_BUILD_017_AC1_rootBuildFileHoldsPluginsCompileDependenciesAndChecks",
+        "covers": "AC-1",
+        "notes": "command: ./gradlew build; result: pass"
+      },
+      "args_hash": "4b8bf0ec390b254bdc4c93a27915e5fcf41601d0",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-9"
+    },
+    {
+      "called_at": "2026-10-20T14:17:55Z",
+      "tool": "add_verification_evidence",
+      "args": {
+        "id": "CON-BUILD-017",
+        "type": "test",
+        "reference": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java#con_BUILD_017_AC1_onlyReferenceToAnotherScriptIsTheGuardedReleaseApply",
+        "covers": "AC-1",
+        "notes": "command: ./gradlew build; result: pass"
+      },
+      "args_hash": "473e0708f29bb5bfc7f1494da49fa6bb9b734511",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-9"
+    },
+    {
+      "called_at": "2026-10-20T14:17:55Z",
+      "tool": "add_verification_evidence",
+      "args": {
+        "id": "CON-BUILD-017",
+        "type": "test",
+        "reference": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java#con_BUILD_017_AC2_noModuleBuildFile",
+        "covers": "AC-2",
+        "notes": "command: ./gradlew build; result: pass"
+      },
+      "args_hash": "1deb28cdec6cf256bb9ea6029a164f02d518c6f2",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-9"
+    },
+    {
+      "called_at": "2026-10-20T14:17:55Z",
+      "tool": "add_verification_evidence",
+      "args": {
+        "id": "CON-BUILD-017",
+        "type": "test",
+        "reference": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java#con_BUILD_017_AC3_claudeMdStatesReleaseScriptException",
+        "covers": "AC-3",
+        "notes": "command: ./gradlew build; result: pass"
+      },
+      "args_hash": "56bffd05f1695cbdb14818cd56eac136e9eb732e",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-9"
+    },
+    {
+      "called_at": "2026-10-20T14:17:55Z",
+      "tool": "add_verification_evidence",
+      "args": {
+        "id": "CON-BUILD-017",
+        "type": "test",
+        "reference": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java#ops_BUILD_003_AC3_AC4_claudeMdModuleLineAndNoRestKotlin",
+        "covers": "AC-3",
+        "notes": "command: ./gradlew build; result: pass"
+      },
+      "args_hash": "5ffd56f4eebd2fbd6b6fdbaea97d9dbac6778784",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-9"
+    },
+    {
+      "called_at": "2026-10-20T14:17:55Z",
+      "tool": "add_completed_work",
+      "args": {
+        "date": "2026-10-20",
+        "summary": "[sds] 2026-10-19.naruserve.naruserve-v1-wave-8-9 - release-only gradle/release.gradle (CycloneDX 3.5.1 by class, releaseSbom writes nine runtimeClasspath JSON SBOMs to build/reports/naruserve/sbom, run outside assemble/build) applied from build.gradle only under -Prelease; BuildLayoutTest CON-BUILD-003 methods re-pointed to CON-BUILD-017 plus guarded-apply and CLAUDE.md exception checks; ReleaseScriptTextTest text checks; ReleaseRecordsDocsTest run-line checks skip until docs/release/test-results.md exists (FR-REL-001 AC-2 and AC-4 pending). green=PASS. SDS-AC: 1,3,5,6,7,8 PASS; 2,4 pending record. ./gradlew build PASS",
+        "requirementIds": [
+          "FR-REL-001",
+          "CON-BUILD-017"
+        ],
+        "target": "wave-8"
+      },
+      "args_hash": "9524a8ce6fdaec2d8ba932ee19ec94f44bb86d68",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "deferred": true,
+      "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-9"
+    }
+  ],
+  "updated_at": "2026-10-20T14:17:55Z"
+}

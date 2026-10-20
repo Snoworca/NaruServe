@@ -1,0 +1,32 @@
+{
+ "target": "wave-8",
+ "classification": "new-scope",
+ "rationale_note": "three new scopes KT, SVL, REL given by the orchestrator; one update (OPS-HTTP-007 -> OPS-HTTP-008 via supersede_requirement)",
+ "proposed_scopes": [
+  {
+   "name": "Kotlin Compatibility",
+   "prefix": "KT",
+   "doc": "13.kotlin-compatibility.srs.md"
+  },
+  {
+   "name": "Servlet Adapter",
+   "prefix": "SVL",
+   "doc": "14.servlet-adapter.srs.md"
+  },
+  {
+   "name": "Release",
+   "prefix": "REL",
+   "doc": "15.release.srs.md"
+  }
+ ],
+ "affected_existing_reqs": [
+  {
+   "id": "OPS-HTTP-007",
+   "relation": "supersedes",
+   "diff_summary": "AC-8: response.md redirect marker becomes a post-v1 sentence (D-380); AC-1..7,9 restated"
+  }
+ ],
+ "scope_boundary_impact": null,
+ "external_module_impact": null,
+ "confidence": "high"
+}

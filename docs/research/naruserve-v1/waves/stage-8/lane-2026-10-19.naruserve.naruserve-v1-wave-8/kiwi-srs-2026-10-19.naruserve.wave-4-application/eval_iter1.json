@@ -1,0 +1,245 @@
+{
+ "iter": 1,
+ "findings": [
+  {
+   "id": "A-1-1",
+   "severity": "CRITICAL",
+   "req_id": "FR-HTTP-022",
+   "ac": "AC-4",
+   "design_ref": "wave decision Pre-request rejections; D-117; D-129",
+   "description": "FR-HTTP-022's requirement text, AC-4 ('a request with an unsupported method token is answered 501') and AC-8 ('a recording global middleware runs once before each of the ... 501') make middleware run for the router's UNSUPPORTED_METHOD result. In this codebase that result covers both unrecognised tokens (FR-ROUTE-013: every token that is not a Method constant) and disabled TRACE/CONNECT (FR-ROUTE-014), and the current Dispatcher maps both through the same case. So FR-HTTP-022 requires middleware to run for an unrecognised token, which contradicts FR-HTTP-021 AC-4, FR-APP-003 AC-7 and the wave decision: no Request can be built because no Method value exists (I-014).",
+   "suggested_fix": "Split the 501 in FR-HTTP-022: requirement text 'the unsupported-method result for a disabled TRACE or CONNECT (a Method value) with 501 after the global and prefix middleware ran'. AC-4: 'TRACE /x with TRACE disabled and CONNECT / are answered 501 with the standard error body (code NOT_IMPLEMENTED)'. AC-8: limit the 501 to disabled TRACE/CONNECT. Add: 'an unrecognised method token (FR-ROUTE-013) is answered 501 with the standard body before any Request is built, as FR-HTTP-021 AC-4'. The dispatcher has to tell the two apart before lookup, for example by resolving the token to a Method."
+  },
+  {
+   "id": "A-1-2",
+   "severity": "HIGH",
+   "req_id": "FR-APP-003",
+   "ac": "AC-1",
+   "design_ref": "D-120; D-119; D-137",
+   "description": "AC-1 registers GET /api/users with route middleware r1 'plus r2 through RouteBuilder.use'. One registration cannot have both. The overload app.get(path, mw, h) and app.route(path).use(r2).get(h) are two registrations of the same method and pattern, so the freeze rejects them as a duplicate (IR-HTTP-006 AC-3). IR-APP-2 adds no RouteBuilder.get(mw, h). The AC cannot be met as written.",
+   "suggested_fix": "Reword: 'GET /api/users registered with app.route(\"/api/users\").use(r1).use(r2).get(h) records g1, g2, p1, p2, r1, r2, handler'. Add a separate assertion that app.get(\"/b\", r1, h) records g1, g2, r1, handler."
+  },
+  {
+   "id": "A-1-3",
+   "severity": "HIGH",
+   "req_id": "FR-APP-009",
+   "ac": null,
+   "design_ref": "D-156; D-428; wave-4 carried: listen runs the route-table freeze",
+   "description": "Regression and feasibility of verified FR-HTTP-001 AC-3 (not superseded). The test-fixtures TestApp builds `new DefaultRestApp()`, calls freeze() and adapter.bind(...) directly, and never calls listen(). With the wave-4 start gate (FR-APP-9), the app stays NEW, so every request sent through the harness is held on the gate forever. With RestApp.builder() requiring a JsonCodec (IR-APP-001 AC-2), the harness also has no codec. No wave-4 AC says how TestApp and the roughly 346 wave-3 tests that use it keep working.",
+   "suggested_fix": "Add an AC (in FR-APP-009 or a new FR-HTTP successor of FR-HTTP-001): 'TestApp.start() builds the app with RestApp.builder().httpAdapter(inMemory).jsonCodec(<testFixtures stub codec>) and calls listen(0); a freeze RoutingConfigException still reaches the caller unwrapped; every wave 3 test through TestApp passes unchanged'. Record the FR-HTTP-001 AC-3 change through a supersede or a Change Note."
+  },
+  {
+   "id": "A-1-4",
+   "severity": "HIGH",
+   "req_id": "FR-APP-002",
+   "ac": "AC-3",
+   "design_ref": "D-114; wave-4 carried: NEW-state rule; D-111",
+   "description": "FR-APP-002 says it 'replaces' the after-freeze rejection of verified FR-HTTP-008 AC-5, and IR-APP-001 and FR-APP-001 add public static methods that return a RestApp (RestApp.builder().build(), RestApp.create()). Both change verified FR-HTTP-008 (AC-5, and AC-6 'No public static method ... returns a RestApp') without superseding it. Under a pure NEW-state guard, a harness freeze that leaves the state NEW would accept registrations again, which contradicts FR-HTTP-008 AC-5.",
+   "suggested_fix": "Supersede FR-HTTP-008 with a wave-4 successor (or amend through a guarded change) whose AC-5 reads 'registration and routerPolicy after the freeze or outside NEW throw IllegalStateException' and which drops AC-6. Alternatively, state in FR-APP-002 that the freeze moves the guard state, and update the AC-6 test."
+  },
+  {
+   "id": "A-1-5",
+   "severity": "HIGH",
+   "req_id": "OPS-APP-001",
+   "ac": "AC-2",
+   "design_ref": "D-137; wave decision: Remaining markers",
+   "description": "OPS-APP-001 AC-2 removes the routing.md marker on RouteBuilder.use(middleware). Verified OPS-HTTP-001 AC-8 (not superseded) explicitly requires that marker to stay, and RoutingDocsTest asserts exactly one marker line in routing.md and that it contains `use(middleware)`. Some of the express-migration markers that HttpDocsTest pins are also affected. Wave 4 breaks a verified requirement and its test without saying so.",
+   "suggested_fix": "Add to OPS-APP-001: 'OPS-HTTP-001 AC-8 and RoutingDocsTest/HttpDocsTest are updated: routing.md keeps no #5 marker; the remaining-marker assertions move to the OPS-APP-001 AC-6 docs test'. Record the OPS-HTTP-001 change (supersede or Change Note)."
+  },
+  {
+   "id": "A-1-6",
+   "severity": "HIGH",
+   "req_id": "OPS-APP-002",
+   "ac": "AC-2",
+   "design_ref": "I-008",
+   "description": "AC-2 keeps on the skip list a block that needs 'RestApp.create() returning a working app' and also says 'the test fails for a skip entry whose block compiles'. In wave 4 RestApp.create() exists as a static method (FR-APP-001). The blocks skipped today only for CREATE (README.md 'RestApp app = RestApp.create();', app.md #1 and #7, express-migration.md, lifecycle.md) therefore compile and must be removed from the list, and the two rules in AC-2 contradict each other. A compile-only test cannot tell 'returns a working app' apart from compiling.",
+   "suggested_fix": "Drop RestApp.create() from AC-2's examples. Add to AC-1: 'entries whose only reason is RestApp.create() are removed, since the static method compiles in wave 4'. Keep only blocks that reference res.json, app.ws, staticFiles and similar members."
+  },
+  {
+   "id": "A-1-7",
+   "severity": "HIGH",
+   "req_id": "IR-APP-005",
+   "ac": "AC-6",
+   "design_ref": "D-155; C-03",
+   "description": "AC-6 requires a Kotlin test to compile `h.port`. ServerHandle declares `int port()`, not getPort(), so Kotlin has no property syntax for it and `h.port` does not compile. The AC cannot pass as written.",
+   "suggested_fix": "Replace `h.port` with `h.port()`, or rename the accessors getPort()/getAddress()/getState(). Express-style short names are the convention for app objects, so `h.port()` fits better."
+  },
+  {
+   "id": "A-1-8",
+   "severity": "MEDIUM",
+   "req_id": "FR-APP-012",
+   "ac": "AC-3",
+   "design_ref": "D-428; D-426",
+   "description": "D-428 requires a request held on the start gate to be answered 503 with Connection: close when a pending stop of D-426 ends the start. FR-APP-009 AC-6 covers only bind failure, and FR-APP-012 AC-3 asserts only the socket release. The pending-stop branch of the gate has no AC.",
+   "suggested_fix": "Add to FR-APP-012 AC-3: 'a request dispatched by the test adapter during that bind is answered 503 with Connection: close and the standard error body, and no middleware, handler or onError runs for it'."
+  },
+  {
+   "id": "A-1-9",
+   "severity": "MEDIUM",
+   "req_id": "FR-APP-012",
+   "ac": "AC-2",
+   "design_ref": "residual: Logger close on every path into TERMINATED; D-426",
+   "description": "The rationale claims the residual for the stop-while-starting path, but neither the requirement text nor AC-2 or AC-4 asserts that the app logger is flushed and closed once when a pending stop ends listen(). Only the NEW path (AC-1), the failed start (FR-APP-010 AC-6) and normal shutdown (FR-APP-011) are asserted.",
+   "suggested_fix": "Add to AC-2 (and AC-4): '... and a Flushable/AutoCloseable app logger is flushed and closed once after the resource closes and before TERMINATED'. Add 'closes the app logger' to the requirement text."
+  },
+  {
+   "id": "A-1-10",
+   "severity": "MEDIUM",
+   "req_id": "FR-APP-012",
+   "ac": "AC-5",
+   "design_ref": "D-427",
+   "description": "'A shutdown call ... made from a resource close() that blocks briefly' would run on the listen() thread. That shutdown waits for TERMINATED, which cannot happen until close() returns, so it would time out instead of 'returns once the state is TERMINATED'. As worded the test deadlocks for its whole timeout.",
+   "suggested_fix": "Reword: 'a resource close() starts thread B, which calls shutdown(5, SECONDS) while the state is FAILED, and then blocks 100 ms; B's shutdown returns after the state became TERMINATED and within its timeout'."
+  },
+  {
+   "id": "A-1-11",
+   "severity": "MEDIUM",
+   "req_id": "FR-APP-010",
+   "ac": null,
+   "design_ref": "D-162; residual: Logger close on every path into TERMINATED",
+   "description": "The requirement text orders the steps as 'pass the state through FAILED to TERMINATED, then close the app logger'. That puts the logger close after TERMINATED, while D-162, the Logger shutdown decision and FR-APP-011 close log writers before the move to TERMINATED.",
+   "suggested_fix": "Reword: '... close the already owned and registered resources in reverse order while FAILED, flush and close the app logger, move to TERMINATED and throw ...'."
+  },
+  {
+   "id": "A-1-12",
+   "severity": "MEDIUM",
+   "req_id": "IR-APP-004",
+   "ac": "AC-4",
+   "design_ref": "D-144; D-138",
+   "description": "'attribute(key, null) removes the key' cannot be written as stated. With the overloads attribute(String, Object) and <T> attribute(String, Class<T>), a literal null resolves to the read overload, which is exactly the wave 3 decision on Request (IR-HTTP-001 AC-1, FR-HTTP-012 AC-4). The value parameter also needs @Nullable.",
+   "suggested_fix": "Reword: 'with a typed null variable Object v = null, ctx.attribute(key, v) removes the key; the value parameter is @Nullable'."
+  },
+  {
+   "id": "A-1-13",
+   "severity": "MEDIUM",
+   "req_id": "SEC-APP-001",
+   "ac": "AC-1",
+   "design_ref": "D-175; T39",
+   "description": "The line must contain none of `abc`, but with the defaults it ends in rid=<16 random lowercase hex chars>, and 'abc' is a hex substring. The test fails at random (about 0.3% of runs).",
+   "suggested_fix": "Use secret values with non-hex letters (for example token=xyzq), or assert with includeRequestId(false) and check rid separately."
+  },
+  {
+   "id": "A-1-14",
+   "severity": "MEDIUM",
+   "req_id": "FR-APP-010",
+   "ac": "AC-6",
+   "design_ref": "residual: Logger close on every path into TERMINATED; I-015",
+   "description": "AC-6 needs RotatingFileLogger (NaruServe-filelog), a failing listen() and a test adapter in one test. NaruServe-api cannot depend on NaruServe-filelog (filelog has api on NaruServe-api). The logger modules have no test source sets or test dependencies (no testFixtures(':NaruServe-api') and no slf4j test logger), and the SRS does not say where these tests live.",
+   "suggested_fix": "State the location: 'tested in NaruServe-filelog with testImplementation testFixtures(project(\":NaruServe-api\"))'. Add the matching test-dependency AC to CON-APP-001 or FR-APP-017/018."
+  },
+  {
+   "id": "A-1-15",
+   "severity": "MEDIUM",
+   "req_id": "FR-APP-001",
+   "ac": "AC-3",
+   "design_ref": "D-226; D-227; wave decision: RestApp.create()",
+   "description": "AC-5 places the fake providers in the NaruServe-api test source set, while AC-3 requires RestApp.create() to throw in the same test run 'where no provider is on the class path'. If the META-INF/services file sits in src/test/resources it is on the test class path, RestApp.create() finds the fake provider and AC-3 fails.",
+   "suggested_fix": "Add: 'the provider classes are in src/test/java, but their META-INF/services/com.snoworca.naruserve.spi.AppFactory file is not on the test class path; the test writes it into a temporary directory that only the dedicated class loader sees'."
+  },
+  {
+   "id": "A-1-16",
+   "severity": "MEDIUM",
+   "req_id": "IR-APP-006",
+   "ac": "AC-2",
+   "design_ref": "D-169; D-181; C-02",
+   "description": "The format '<ISO-8601 timestamp with offset>' is risky on API 21. java.time is absent, and SimpleDateFormat's 'X' pattern only works on Android API 24+, while the 'ZZZZZ' output differs between the JVM and Android. Animal-sniffer does not detect pattern letters, so a JVM-green implementation can break on Android 5.0.",
+   "suggested_fix": "Add to AC-2: 'the offset is formatted from TimeZone#getOffset as +HH:MM without java.time or the SimpleDateFormat X pattern, and a test checks the format under two time zones'."
+  },
+  {
+   "id": "A-1-17",
+   "severity": "MEDIUM",
+   "req_id": "FR-HTTP-021",
+   "ac": null,
+   "design_ref": "wave decision: Pre-request rejections",
+   "description": "Dependency hygiene caused by wave 4's supersession: verified FR-HTTP-004 and FR-HTTP-008 (not superseded) still carry depends_on links to FR-HTTP-002, which is now discarded (successor FR-HTTP-021).",
+   "suggested_fix": "Retarget the depends_on links of FR-HTTP-004 and FR-HTTP-008 from FR-HTTP-002 to FR-HTTP-021, or record why they stay."
+  },
+  {
+   "id": "A-1-18",
+   "severity": "MEDIUM",
+   "req_id": "IR-APP-004",
+   "ac": "AC-3",
+   "design_ref": "D-142; I-014",
+   "description": "Regression not stated. HttpApiSurfaceTest pins verified IR-HTTP-001 AC-3 (no `service`/`application` on Request) and IR-HTTP-005 AC-5 (the RestApp methods are exactly the wave 3 set; no use/listen). Wave 4 adds those methods (IR-APP-002..007). Both ACs say 'at the wave 3 merge', but the existing tests fail, and no wave-4 AC says they are updated.",
+   "suggested_fix": "Add to IR-APP-004 AC-3 and IR-APP-002 AC-2: 'the wave 3 surface tests of IR-HTTP-001 AC-3 and IR-HTTP-005 AC-5 are updated to the wave 4 surface (service/application allowed; RestApp method set = wave 3 set + wave 4 methods)'."
+  },
+  {
+   "id": "A-1-19",
+   "severity": "LOW",
+   "req_id": "FR-HTTP-021",
+   "ac": null,
+   "design_ref": null,
+   "description": "The wave-4 successors FR-HTTP-021..025 have Rationale '-' and dropped their predecessors' trace links (FR-HTTP-001 depends_on, CON-HTTP-001, FR-ROUTE-009..016, IR-ROUTE-001, FR-ROUTE-011). Coverage statements such as D-394, D-395, D-442 and I-021 now exist only as inline AC tags.",
+   "suggested_fix": "Copy the predecessor rationale with the wave-4 delta, and restore the extends/depends_on links that still hold."
+  },
+  {
+   "id": "A-1-20",
+   "severity": "LOW",
+   "req_id": "FR-APP-002",
+   "ac": "AC-4",
+   "design_ref": "D-114",
+   "description": "'all methods returning RestApp except logger()' is inexact. logger() returns Logger, not RestApp, and the static RestApp.create() returns RestApp. route(String) returns RouteBuilder and is not guarded either.",
+   "suggested_fix": "Reword: 'all non-static RestApp methods that return RestApp (including logger(Logger)), plus route(String)-obtained RouteBuilder methods'."
+  },
+  {
+   "id": "A-1-21",
+   "severity": "LOW",
+   "req_id": "FR-APP-013",
+   "ac": null,
+   "design_ref": "wave decision: Lifecycle gate; wave decision: Pre-request rejections",
+   "description": "The order between the lifecycle gate and the pre-request checks is not stated. For example, OPTIONS * or an unrecognised token arriving during STOPPING (or STARTING) could be answered 204/501 or 503.",
+   "suggested_fix": "State: 'the lifecycle gate runs first; during STOPPING every request that reaches the dispatcher, including OPTIONS * and pre-request rejections, is answered 503'. Alternatively state the opposite and assert it."
+  },
+  {
+   "id": "A-1-22",
+   "severity": "LOW",
+   "req_id": "FR-APP-007",
+   "ac": "AC-6",
+   "design_ref": "D-144",
+   "description": "D-144 requires ApplicationContext.attribute to be readable and writable in every state from STARTING to STOPPING. AC-6 asserts writes in onStart and RUNNING and reads in STOPPING, but no write during STOPPING.",
+   "suggested_fix": "Add: 'onStop writes ctx.attribute(\"k2\", v) and reads it back'."
+  },
+  {
+   "id": "A-1-23",
+   "severity": "LOW",
+   "req_id": "OPS-APP-001",
+   "ac": "AC-7",
+   "design_ref": "I-013",
+   "description": "AC-7 (the commit message or PR states each decision) cannot be checked by an automated test, but the requirement's Verification Method is test.",
+   "suggested_fix": "Mark AC-7 verification as inspection, or move it to the wave close checklist."
+  },
+  {
+   "id": "A-1-24",
+   "severity": "LOW",
+   "req_id": "FR-APP-017",
+   "ac": "AC-3",
+   "design_ref": "D-180",
+   "description": "'With the writer blocked' gives no way to block the writer thread in a test.",
+   "suggested_fix": "Name the mechanism, for example a package-private constructor taking a Writer factory, or a test whose first write blocks on a latch."
+  },
+  {
+   "id": "A-1-25",
+   "severity": "LOW",
+   "req_id": "FR-APP-010",
+   "ac": "AC-3",
+   "design_ref": "D-157; IR-HTTP-004",
+   "description": "AC-3 requires adapter.stop and adapter.release after a failed bind. IR-HTTP-004 does not define stop() on an adapter whose bind failed, and InMemoryHttpAdapter may reject it.",
+   "suggested_fix": "State that the core calls stop(0) and release() after a failed bind, and that adapters must accept both calls without a bound socket. Alternatively require only release()."
+  },
+  {
+   "id": "A-1-26",
+   "severity": "LOW",
+   "req_id": "CON-APP-001",
+   "ac": "AC-1",
+   "design_ref": "D-178",
+   "description": "The root build's checkClassReferences prefixes for :NaruServe-api do not include 'org/slf4j/', so the AC-1 bytecode scan does not exist yet. The AC is feasible but needs a build.gradle change.",
+   "suggested_fix": "Add to CON-APP-001: 'classRefPrefixes for :NaruServe-api gains org/slf4j/'."
+  }
+ ],
+ "summary": {
+  "CRITICAL": 1,
+  "HIGH": 6,
+  "MEDIUM": 11,
+  "LOW": 8
+ }
+}

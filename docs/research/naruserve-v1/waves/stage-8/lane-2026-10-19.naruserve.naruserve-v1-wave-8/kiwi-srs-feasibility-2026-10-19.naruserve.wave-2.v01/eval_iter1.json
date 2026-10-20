@@ -1,0 +1,66 @@
+{
+  "findings": [
+    {
+      "id": "F-01",
+      "severity": "MEDIUM",
+      "axis": "evidence_existence",
+      "req_id": "*",
+      "evidence_path": "docs/spec/03.routing.srs.md",
+      "description": "SRS line citations are stale for 20 of 23 REQs: cited 208,263,322,378,434,490,547,603,658,715,773,828,884,939,994,1048,1104,1160,1215,1270 but the headings are at 209,264,323,380,436,492,549,605,660,719,778,833,889,944,999,1053,1109,1165,1220,1275 (1-5 lines off; e.g. :378 and :715 land on the previous REQ's Change Notes table). The SRS mtime (06:42) is later than the judgement files (06:41). Only 42, 96 and 152 are correct. The content still resolves, so this does not change any verdict, but the evidence should be re-anchored."
+    },
+    {
+      "id": "F-02",
+      "severity": "MEDIUM",
+      "axis": "internal_coherence",
+      "req_id": "*",
+      "evidence_path": "docs/analysis/kiwi-srs-feasibility-2026-10-19.naruserve.wave-2.v01/synthesis.json",
+      "description": "synthesis non_blocking_findings[0] and dependency_chains call several existing explicit depends_on links implicit or missing. FR-ROUTE-002 already depends_on IR-ROUTE-002 (03.routing.srs.md:364); IR-ROUTE-004 depends_on FR-ROUTE-004 (:719 block); FR-ROUTE-008 depends_on FR-ROUTE-006 and FR-ROUTE-014; FR-ROUTE-001 depends_on FR-ROUTE-014 (:193); OPS-ROUTE-001 depends_on IR-ROUTE-003. The chain IR-ROUTE-001>IR-ROUTE-002>IR-ROUTE-003>FR-ROUTE-001 is not what the SRS says: IR-ROUTE-002, IR-ROUTE-003 and FR-ROUTE-001 each depend directly on IR-ROUTE-001."
+    },
+    {
+      "id": "F-03",
+      "severity": "LOW",
+      "axis": "dependency_cycles",
+      "req_id": "CON-ROUTE-001,IR-ROUTE-004,FR-ROUTE-009..017",
+      "evidence_path": "docs/spec/03.routing.srs.md",
+      "description": "The dependency graph has no cycles (DFS over all depends_on edges). Some real dependencies are still unlinked and unscored. CON-ROUTE-001 AC-2 registers routes but has no link to IR-ROUTE-002 (MethodSet). IR-ROUTE-004 AC-1 carries an Allow MethodSet but has no link to IR-ROUTE-002. FR-ROUTE-009..017 assert result kinds defined by IR-ROUTE-004 but link only CON-ROUTE-001. FR-ROUTE-003/008 raise the configuration error type named in IR-ROUTE-004 AC-5. dependency_health stays 14-15 despite this. Ordering only, not a blocker."
+    },
+    {
+      "id": "F-04",
+      "severity": "LOW",
+      "axis": "external_module_dependency",
+      "req_id": "FR-ROUTE-004",
+      "evidence_path": "docs/spec/03.routing.srs.md:459-464",
+      "description": "AC-2 ties validator behaviour to \"TinyHttpd's request-target parser\" and the evidence cites /Users/beom/work/git/TinyHttpd, yet external_module_impact is null. It is a read-only parity reference, and Out of Scope forbids changing TinyHttpd, so there is no module change. Record it as a read-only external reference instead of null so the parity source is traceable."
+    },
+    {
+      "id": "F-05",
+      "severity": "LOW",
+      "axis": "ac_verifiability",
+      "req_id": "OPS-ROUTE-001",
+      "evidence_path": "docs/spec/03.routing.srs.md:1286",
+      "description": "Verification Method is inspection and AC-1 is a long checklist (and lacks a terminal period), so the ac_verifiability score of 11 and the synthesis note are consistent. AC-3 deliberately departs from D-070 \"removing those markers\" (design.md:70 vs :92). The departure is documented by the wave decision, and the condition is substantiated."
+    },
+    {
+      "id": "F-06",
+      "severity": "LOW",
+      "axis": "internal_coherence",
+      "req_id": "*",
+      "evidence_path": "docs/spec/03.routing.srs.md:42",
+      "description": "Every heading carries \"[DRAFT — pending decision]\" and every Tags row already holds \"feasibility:high\" before the stability mapping is applied. Once the REQs move to evolving, the heading suffix will be stale and should be cleared or updated with the stability change, to avoid implying an open decision."
+    }
+  ],
+  "summary": {
+    "CRITICAL": 0,
+    "HIGH": 0,
+    "MEDIUM": 2,
+    "LOW": 4
+  },
+  "checks_passed": [
+    "axis sums equal score for all 23",
+    "all high, score 86-98, no blockers",
+    "mapping high->evolving for all 23, no stable promotion, has_verification false for all",
+    "all current_status planned, current_stability draft: no status conflict",
+    "build.gradle:35,40,76,80,124-133,137,142,147-160,170-179 and BuildLayoutTest.java:98,111-121, BuildChecksTest.java:301-303 match their claims; NaruServe-api/src/main/java exists and is empty; Kotlin test source set exists",
+    "no dependency cycles"
+  ]
+}

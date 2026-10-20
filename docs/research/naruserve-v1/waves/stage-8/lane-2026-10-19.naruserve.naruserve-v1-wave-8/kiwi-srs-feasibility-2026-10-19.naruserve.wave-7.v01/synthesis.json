@@ -1,0 +1,324 @@
+{
+ "target": "wave-7",
+ "generated": "2026-10-20",
+ "evaluated": 29,
+ "distribution": {
+  "high": 27,
+  "medium": 2,
+  "low": 0,
+  "blocked": 0
+ },
+ "score_stats": {
+  "mean": 87.6,
+  "min": 75,
+  "max": 95
+ },
+ "lowest_five": [
+  {
+   "req_id": "FR-SSE-002",
+   "score": 75
+  },
+  {
+   "req_id": "FR-SSE-003",
+   "score": 79
+  },
+  {
+   "req_id": "FR-WS-010",
+   "score": 84
+  },
+  {
+   "req_id": "PERF-APP-001",
+   "score": 84
+  },
+  {
+   "req_id": "FR-APP-020",
+   "score": 85
+  }
+ ],
+ "verdict": "conditionally-ready",
+ "verdict_rationale": "27 of 29 score high, and every TinyHttpd API the ACs rely on exists with the cited behaviour: WebSocketHandler(Factory) with allowAnyOrigin/maxFramePayloadBytes/maxMessageBytes/pingInterval(int)/handle; WebSocketListener onOpen/onText/onBinary/onClose (no onError, no Pong callback); WebSocket sendText/sendBinary/ping/close/isOpen; UpgradedConnection close/onServerStop; ResponseWrapper; Response setHeader/flushBuffer/getOutputStream/upgrade. Every trace path exists, every extends target is verified, and the declared depends_on graph is acyclic. Design may start once the SSE pre-drain write channel (FR-SSE-002/003) is settled and the hidden verification cycles are accepted as one verification group or cut.",
+ "has_verification_any": false,
+ "tinyhttpd_checkout": {
+  "cited_commit": "46b973e",
+  "head": "38051b6",
+  "commits_ahead": [
+   "38051b6 Document UNLIMITED / UNLIMITED_LONG on every limit and timeout setter (#115)",
+   "3a20f23 TinyHttpd.UNLIMITED / UNLIMITED_LONG: type-maximum limits without overflow (#115)",
+   "1c90685 Research: timeout and size settings under a '<= 0 means unlimited' rule"
+  ],
+  "impact": "No behaviour change for wave 7: WebSocketHandler.java and UpgradedConnection.java change only javadoc; HttpServer.java gains overflow-safe arithmetic (buffer pool size, load hysteresis, stop deadline clamp). The cited lines ExchangeResponse.java:172-177 (Connection handling) still match at HEAD. settings.gradle:26 only warns on the mismatch.",
+  "action": "Before wave 7 TinyHttpd tests, either pin the checkout to 46b973e or re-verify against 38051b6 and update settings.gradle verifiedTinyHttpd plus the SRS commit citations together."
+ },
+ "dependency_graph": {
+  "declared_cycles": [],
+  "cycle_check": "DFS over the 29 wave-7 depends_on edges: no cycle. All depends_on targets are wave-7 requirements; all extends targets are verified; supersedes targets (FR-APP-015, OPS-APP-004, FR-ENGINE-010, OPS-ENGINE-001, IR-HTTP-004, OPS-HTTP-006) are discarded.",
+  "max_depth": 9,
+  "longest_chains": [
+   [
+    "OPS-HTTP-007",
+    "OPS-SSE-001",
+    "FR-SSE-005",
+    "FR-SSE-004",
+    "FR-SSE-003",
+    "FR-ENGINE-011",
+    "IR-HTTP-007",
+    "IR-WS-002",
+    "IR-WS-001"
+   ],
+   [
+    "OPS-APP-005",
+    "FR-APP-020",
+    "FR-WS-010",
+    "FR-WS-009",
+    "FR-WS-002",
+    "FR-WS-001",
+    "IR-WS-002",
+    "IR-WS-001"
+   ],
+   [
+    "PERF-APP-001",
+    "FR-WS-008",
+    "FR-WS-007",
+    "FR-WS-006",
+    "IR-WS-002",
+    "IR-WS-001"
+   ]
+  ],
+  "notable": "The SSE track depends on the WebSocket SPI through FR-SSE-003 -> FR-ENGINE-011 -> IR-HTTP-007 -> IR-WS-002, so SSE adapter work cannot start before the WebSocket SPI types exist.",
+  "roots": [
+   "IR-WS-001",
+   "IR-SSE-001",
+   "IR-HTTP-008"
+  ],
+  "missing_edges": [
+   {
+    "from": "FR-WS-002",
+    "to": "IR-HTTP-008",
+    "why": "AC-3/AC-4 carry Sec-WebSocket-Version and Retry-After through HttpException headers"
+   },
+   {
+    "from": "FR-WS-009",
+    "to": "IR-HTTP-008",
+    "why": "AC-3 503 + Connection: close"
+   },
+   {
+    "from": "FR-APP-020",
+    "to": "IR-HTTP-008",
+    "why": "AC-3/AC-4 503 + Connection: close"
+   },
+   {
+    "from": "FR-WS-005",
+    "to": "FR-WS-006",
+    "why": "AC-8 server close code wins (FR-WS-006 AC-9)"
+   },
+   {
+    "from": "FR-WS-006",
+    "to": "FR-WS-002",
+    "why": "AC-9/AC-10 TinyHttpd cases"
+   },
+   {
+    "from": "FR-WS-007",
+    "to": "FR-WS-002",
+    "why": "AC-5 over TinyHttpd"
+   },
+   {
+    "from": "OPS-WS-001",
+    "to": "FR-WS-007/FR-WS-010/FR-WS-004",
+    "why": "AC-3 documents their decisions"
+   }
+  ]
+ },
+ "verification_coupling": {
+  "summary": "The declared graph has no cycle, but AC text creates verification-order cycles: an upstream requirement's AC can only pass once a downstream requirement that depends on it is implemented. These requirements cannot be promoted one at a time; verify each group in one step, or move the cross-referencing AC clauses.",
+  "pairs": [
+   [
+    "IR-WS-001",
+    "FR-WS-001/FR-WS-006",
+    "IR-WS-001 AC-2 req.param in handler, AC-5 listeners run"
+   ],
+   [
+    "IR-WS-002",
+    "FR-WS-001/FR-WS-006",
+    "IR-WS-002 AC-3, AC-6, AC-8"
+   ],
+   [
+    "IR-SSE-001",
+    "FR-SSE-001/002/004",
+    "IR-SSE-001 AC-2 false-return cases, AC-7 send"
+   ],
+   [
+    "FR-SSE-001",
+    "FR-SSE-003",
+    "FR-SSE-001 AC-1 over TinyHttpd"
+   ],
+   [
+    "FR-SSE-002",
+    "FR-SSE-003",
+    "FR-SSE-002 AC-5 over TinyHttpd"
+   ],
+   [
+    "FR-ENGINE-011",
+    "FR-SSE-003",
+    "FR-ENGINE-011 AC-2 asserts FR-SSE-003 behaviour"
+   ],
+   [
+    "FR-WS-010",
+    "FR-APP-020",
+    "FR-WS-010 AC-5 needs FR-APP-020 AC-1 deadline overload"
+   ],
+   [
+    "FR-APP-019",
+    "FR-WS-006/FR-WS-010/FR-SSE-003/FR-SSE-004/FR-SSE-005",
+    "each asserts the FR-APP-019 line; FR-APP-019 AC-9/AC-10 assert their behaviour"
+   ]
+  ]
+ },
+ "critical_blockers": [
+  {
+   "id": "B-1",
+   "severity": "high",
+   "reqs": [
+    "FR-SSE-002",
+    "FR-SSE-003"
+   ],
+   "also_touches": [
+    "IR-HTTP-007",
+    "IR-WS-002",
+    "OPS-SSE-001",
+    "FR-ENGINE-011"
+   ],
+   "finding": "Before the drain starts, the core has no stream for handler-thread SSE writes on TinyHttpd. NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpExchange.java:89 `void eventStream(int, List, StreamDrain)` returns nothing, and spi/StreamDrain.java:13 `drain(OutputStream out)` is the only hand-over of the stream. On TinyHttpd the drain is run on the worker only after the handler returned (FR-SSE-003 AC-2; TinyHttpdExchange.run). IR-HTTP-007 AC-4 and IR-WS-002 AC-5 allow no SPI member other than HttpExchange.webSocket and the three WebSocket types. FR-SSE-002 AC-5/AC-6 and FR-SSE-003 AC-6 ('straight to the committed stream under the exchange lock') therefore cannot be met as specified. Only an unbounded pre-drain buffer (against the socket-pacing intent and I-012) or a non-SPI back channel would pass them.",
+   "ac_fix": {
+    "IR-HTTP-007 AC-4": "append: \"... and the `default` method `StreamDrain.attach(OutputStream out)`, which does nothing by default;\" and add `StreamDrain.attach` to the allowed wave 7 additions of the signature comparison.",
+    "IR-WS-002 AC-5": "replace \"with `webSocket` the only added `HttpExchange` method\" by \"with `webSocket` the only added `HttpExchange` method and `attach(OutputStream)` the only added `StreamDrain` method\".",
+    "FR-SSE-003 AC-6": "append: \"`eventStream` calls `drain.attach(out)` before it returns, with the same exchange-synchronized stream it later passes to `drain(out)`, and a test asserts both calls receive the same instance.\"",
+    "FR-SSE-002 AC-5": "append: \"the handler waits on a latch after its first send, and the test reads that first event from the client socket before releasing the latch, so handler-thread sends reach the socket while the handler is still running.\""
+   },
+   "resolution_owner": "step SDS for the SSE track (sdd edit of IR-HTTP-007/IR-WS-002 ACs, because they are body requirements)"
+  }
+ ],
+ "quality_issues_below_80": [
+  {
+   "req_id": "FR-SSE-002",
+   "score": 75,
+   "issue": "B-1: the pre-drain handler-thread write path has no SPI channel on TinyHttpd; AC-5/AC-6 also pass with an unbounded buffer, so they don't check the 'paced by the socket' intent.",
+   "exact_ac_fix": "See B-1 ac_fix (IR-HTTP-007 AC-4, IR-WS-002 AC-5, FR-SSE-003 AC-6, FR-SSE-002 AC-5). Expected rescore: implementability 18->26, ac_verifiability 12->14, about 85."
+  },
+  {
+   "req_id": "FR-SSE-003",
+   "score": 79,
+   "issue": "B-1 for AC-6's handler-thread writes. AC-7 asserts the FR-APP-019 line while FR-APP-019 transitively depends on FR-SSE-003 (verification cycle).",
+   "exact_ac_fix": "FR-SSE-003 AC-6 as in B-1. In AC-7, replace \"ends with the FR-APP-019 line `cause=client`\" with \"records the end reason `client` in the internal stream state, which a test reads\", and move the log-line assertion to FR-APP-019 AC-10. Expected rescore: implementability 20->26, dependency_health 10->12, about 87."
+  }
+ ],
+ "conditions_target_wide": [
+  "Settle B-1 in the SSE SDS before coding; the ACs it changes belong to body requirements, so the edit goes through sdd mode.",
+  "Add the missing depends_on edges listed above. This is an SRS edit; the analysis made no mutation.",
+  "Verify the verification-coupling groups in one step: WS API+dispatch+session; SSE API+serialisation+adapter; FR-WS-010+FR-APP-020; FR-APP-019 with its producers.",
+  "Pin or re-verify TinyHttpd (HEAD 38051b6 vs 46b973e).",
+  "FR-WS-004 cannot reach verified while the D-020 Connection: Upgrade gap is open. FR-WS-008 also opens two deferred D-020 issues: no Pong callback and no upgrade deadline.",
+  "Give per-app names to the threads that thread-count tests check (naruserve-ws-sender/idle with the port; TinyHttpd watchdog name is shared) and run those tests in an isolated JVM fork.",
+  "Out of target: non-wave-7 requirements still link to discarded predecessors (SEC-APP-001 and 04.http-core.srs.md:3103 depends_on FR-APP-015; 10.static-files.srs.md:334 extends FR-APP-015 and :1283 depends_on FR-ENGINE-010; several extends IR-HTTP-004). Re-point them in a separate sdd change."
+ ],
+ "stability_proposal_by_policy": {
+  "source": "policy-resolved.json (default): high->evolving (no confirm), medium->keep",
+  "proposed": {
+   "evolving": [
+    "IR-WS-001",
+    "IR-WS-002",
+    "FR-WS-001",
+    "FR-WS-002",
+    "FR-WS-003",
+    "FR-WS-004",
+    "FR-WS-005",
+    "FR-WS-006",
+    "FR-WS-007",
+    "FR-WS-008",
+    "FR-WS-009",
+    "FR-WS-010",
+    "OPS-WS-001",
+    "IR-SSE-001",
+    "FR-SSE-001",
+    "FR-SSE-004",
+    "FR-SSE-005",
+    "OPS-SSE-001",
+    "FR-APP-019",
+    "FR-APP-020",
+    "PERF-APP-001",
+    "OPS-APP-005",
+    "FR-ENGINE-011",
+    "OPS-ENGINE-002",
+    "IR-HTTP-007",
+    "IR-HTTP-008",
+    "OPS-HTTP-007"
+   ],
+   "keep_draft": [
+    "FR-SSE-002",
+    "FR-SSE-003"
+   ]
+  },
+  "note": "Proposal only; no update_stability call was made (read-only analysis). If the auto-applied high->evolving moves IR-HTTP-007 and IR-WS-002, B-1's AC edits then go through change control."
+ },
+ "tinyhttpd_api_check": [
+  {
+   "api": "WebSocketHandler(Factory)",
+   "present": true,
+   "ref": "websocket/.../WebSocketHandler.java:27,53"
+  },
+  {
+   "api": "WebSocketHandler.allowAnyOrigin()",
+   "present": true,
+   "ref": ":67"
+  },
+  {
+   "api": "WebSocketHandler.maxFramePayloadBytes(int)",
+   "present": true,
+   "ref": ":86"
+  },
+  {
+   "api": "WebSocketHandler.maxMessageBytes(int)",
+   "present": true,
+   "ref": ":96"
+  },
+  {
+   "api": "WebSocketHandler.pingInterval(int millis)",
+   "present": true,
+   "ref": ":106"
+  },
+  {
+   "api": "WebSocketHandler.handle(Request, Response)",
+   "present": true,
+   "ref": ":112 (checks 400 / 426+Sec-WebSocket-Version:13 / 400 key / 403 origin / 403 null listener; sets Sec-WebSocket-Accept before res.upgrade)"
+  },
+  {
+   "api": "WebSocketListener onOpen/onText/onBinary/onClose",
+   "present": true,
+   "ref": "WebSocketListener.java:10-31 (no onError, no onPong)"
+  },
+  {
+   "api": "WebSocket sendText/sendBinary/ping/close/isOpen",
+   "present": true,
+   "ref": "WebSocket.java:142-190 (ping <=125 bytes; close truncates reason to 123 bytes)"
+  },
+  {
+   "api": "UpgradedConnection.close()/onServerStop(Runnable)",
+   "present": true,
+   "ref": "core/.../http/UpgradedConnection.java:38,46; Upgraded.close -> conn.abortSocket()"
+  },
+  {
+   "api": "ResponseWrapper (non-final, upgrade overridable)",
+   "present": true,
+   "ref": "core/.../http/ResponseWrapper.java:13,123"
+  },
+  {
+   "api": "Response.setHeader/flushBuffer/getOutputStream/upgrade",
+   "present": true,
+   "ref": "core/.../http/Response.java:38,92,128,185; setHeader(name,null) removes (ExchangeResponse.java:184-197)"
+  },
+  {
+   "api": "HttpException status + headers",
+   "present": true,
+   "ref": "core/.../http/HttpException.java:39 getStatus, :60 getHeaders (flattened name/value list)"
+  }
+ ]
+}

@@ -1,0 +1,268 @@
+[
+ {
+  "id": "FR-SVL-008",
+  "statement": "The system shall override `HttpAdapter.bind(ServerSettings, ExchangeHandler)` on the Servlet adapter to keep the frozen settings it uses — `maxSseStreams` and the `ErrorRenderer` (and logger) — while `bind(host, port, handler)` only stores the handler, and shall ignore every `ServerOptions` setting that configures the embedded engine (`bindAddress`, `allowedHosts`, `maxHeaderSize`, `maxHeaderCount`, `maxRequestLineLength`, `headerTimeout`, `bodyReadTimeout`, `writeTimeout`, `minBodyRate`, `maxWorkers`, `maxConnections`, `maxUpgradedConnections` and `maxConnectionsPerAddress`), listed as ignored in `docs/api/servlet.md`, while `jsonLimit`, `formLimit` and the `app.multipart` limits still apply in the core.",
+  "acceptanceCriteria": [
+   "Reflection finds that `ServletAdapter` declares its own `bind(ServerSettings, ExchangeHandler)`, and a test shows that the adapter used `maxSseStreams(3)` (a fourth stream is refused, FR-SVL-005) and the settings' `ErrorRenderer` (a custom renderer's body appears in the adapter's own `503` and `404` answers). [r4 W2-006; D-363]",
+   "A test sets `allowedHosts(\"example.test\")`, `bindAddress(\"10.255.255.1\")`, `maxWorkers(1)` and `maxHeaderSize(1024)` on the app and shows the Servlet adapter serves a request with another `Host` header and a normal header block unchanged, so these settings have no effect there. [r2 W2-006]",
+   "The core limits still apply: a JSON body above `app.jsonLimit` answers `413`, a urlencoded form above `app.formLimit` answers `413` and a multipart request above the `app.multipart` limits answers `413`, each with the standard error body, on the embedded container. [D-363; r1 W2-007]",
+   "`docs/api/servlet.md` lists the 13 ignored `ServerOptions` settings by exactly the names above and the applied settings (`jsonLimit`, `formLimit`, `app.multipart`, `maxSseStreams`, the SSE options, `trustProxy`), and a docs test checks that every listed name exists on `ServerOptions` or `RestApp`, so the list cannot drift. [D-363]",
+   "`docs/api/servlet.md` states that the core's LAN warning for a non-loopback `bindAddress` and `ServerHandle.address()` describe the configured setting, not the container's connector, and a test shows that a default app logs no such warning on the Servlet adapter. [r2 W2-006]"
+  ],
+  "rationale": "Covers D-359, D-363, wave decisions Servlet adapter semantics left open (r2 W2-006) and Servlet bind (r4 W2-006). Measured (2026-10-20): `allowedHosts` is enforced only by the TinyHttpd adapter (`NaruServe-tinyhttpd/.../TinyHttpdAdapter.java:118-120`) and nowhere in `NaruServe-api/src/main` outside `ServerOptions` itself; `bindAddress` and `port` are applied only by the TinyHttpd adapter's bind (`:100`), but the core still logs a LAN warning for a non-loopback `bindAddress` (`internal/DefaultRestApp.java:499`) and `ServerHandle.address()` reports the configured address, so on the Servlet adapter both describe the setting, not the container; `ServerSettings` carries `maxSseStreams` (default 128), `logger` and `errorRenderer` (`spi/ServerSettings.java:32-56`). Decision: the ignored list in `servlet.md` names exactly the `ServerOptions` settings `bindAddress`, `allowedHosts`, `maxHeaderSize`, `maxHeaderCount`, `maxRequestLineLength`, `headerTimeout`, `bodyReadTimeout`, `writeTimeout`, `minBodyRate`, `maxWorkers`, `maxConnections`, `maxUpgradedConnections` and `maxConnectionsPerAddress`, plus the port argument of `listen`; the applied list names `jsonLimit`, `formLimit`, `app.multipart`, `maxSseStreams`, the SSE options and `trustProxy`. Pitfall: because `allowedHosts` is an adapter setting, a Host allowlist the application relies on is not enforced behind a container; `servlet.md` tells the reader to configure virtual hosts in the container. Rejected alternative: enforcing `allowedHosts` in the Servlet adapter; the container owns the connector and virtual host, and a second enforcement would diverge from it."
+ },
+ {
+  "id": "FR-SVL-004",
+  "statement": "The system shall serve multipart and urlencoded request bodies on the Servlet adapter through the core parser reading `requestBody()`, the container's input stream, and shall never call `getParts()`, `getPart(...)`, `getParameter*`, or register the servlet with a `MultipartConfig`, so the `app.multipart`, `formLimit` and `jsonLimit` limits of the core apply as on the embedded engine.",
+  "rationale": "Covers D-363 (multipart support) and wave decision Servlet adapter decisions (r1 W2-007: multipart uses the core parser over the request input stream, not the Servlet `Part` API; `jsonLimit`, `formLimit` and the multipart limits still apply in the core (the wave decision's \"body limit\"; `RestApp` has no other body limit setting)), r4 W2-005 (no multipart configuration) and I-015. Measured: `internal/MultipartParser.java` is the engine-free parser shared by every adapter (FR-MULTIPART-001). Pitfall: on a POST with `application/x-www-form-urlencoded`, `getParameter*` makes the container read and consume the body, leaving the core an empty stream; the adapter must not touch it. Pitfall: a servlet registered with a `MultipartConfig` makes some containers parse multipart before the servlet and write temp files the core cannot clean. Rejected alternative: `getParts()` with `MultipartConfig` limits; it would duplicate the limits (container versus `app.multipart`) and break the one-parser rule of FR-MULTIPART-001.",
+  "acceptanceCriteria": [
+   "On the embedded container, a multipart request with two files and a text field returns the same `req.file`, `req.files`, `req.form` and `req.parts` values as on the in-memory adapter, and a urlencoded form returns its fields, using the shared case suite of FR-SVL-002. [D-363; FR-MULTIPART-003]",
+   "A recording `HttpServletRequest` proxy shows that during these requests the adapter reads `getInputStream()` and never calls `getParts`, `getPart`, `getParameter`, `getParameterMap`, `getParameterNames` or `getParameterValues`, and the registered servlet has no multipart configuration. [r1 W2-007; r4 W2-005]",
+   "A multipart body above the `app.multipart` file size, part count or total limit is answered `413`, a urlencoded form above `app.formLimit` is answered `413` and a JSON body above `app.jsonLimit` is answered `413`, each with the standard error body, and after the response no upload temporary file of the app remains in `tempDirectory`. [D-363; FR-MULTIPART-002; I-015]",
+   "A client that closes the connection in the middle of a multipart upload leaves no upload temporary file after the request ends (T17 on this adapter), which a test asserts by listing `tempDirectory` after the container's request thread returned. [FR-MULTIPART-006; I-015]"
+  ]
+ },
+ {
+  "id": "FR-KT-001",
+  "rationale": "Covers D-348, wave decisions Nullability check (r1 W2-005) and its second reading (r2 W2-004), and the Kotlin-visible part of I-007 and I-010; supports T11. Measured (2026-10-20): `package-info.java` of `com.snoworca.naruserve`, `.spi`, `.routing` and `.internal` each carries `@org.jspecify.annotations.NullMarked`; `grep -rn NonNull NaruServe-*/src/main` finds no `@NonNull` (only `Objects.requireNonNull`); the nullable `Request` accessors are `query`, `header`, `lastEventId`, `attribute(String, Class)`, `body(Class)`, `body(TypeRef)`, `cookie`, `form` and `file` (`Request.java:29-127`). Decision: \"has a nullability annotation\" is satisfied by the package default plus `@Nullable`, because under `@NullMarked` an unannotated reference type is non-null by contract and Kotlin reads it as `T`; no `@NonNull` exists. The round-1 test \"a null-capable type without `@Nullable`\" is dropped because it cannot be derived from signatures. Pitfall: the test class path of `NaruServe-api` also holds classes of package `com.snoworca.naruserve` (for example `NullabilityFixture`, which carries `@NonNull` on purpose, CON-BUILD-011 AC-2); every enumeration of this requirement and of FR-KT-002 and FR-KT-003 therefore reads the classes of the main jar given by the existing system property `naruserve.apiJar` (`build.gradle:179-183`), never the test class path. Pitfall: JSpecify `@Nullable` is a type-use annotation, so on `<T> @Nullable T attribute(...)` it sits on the return type, not the method; reflection must read `getAnnotatedReturnType()`. Rejected alternative: adding `@NonNull` to every signature; it is redundant under `@NullMarked` and the wave 1 convention (CON-BUILD-011) already drops it; reopen only if Kotlin stops reading the package default.",
+  "acceptanceCriteria": [
+   "A test in `NaruServe-api` fails, naming the package, when `com.snoworca.naruserve`, `com.snoworca.naruserve.spi` or `com.snoworca.naruserve.routing` lacks `@NullMarked` on its package, and it also asserts that `com.snoworca.naruserve.internal` keeps `@NullMarked` although the method-level checks skip that package. [D-348]",
+   "The same test parses the nullable-accessor table of `docs/api/kotlin.md` and, for every row whose Kotlin type column ends in `?`, finds every public overload of that name that returns a value (for example `Request.query`, `header`, `form`, `cookie`, `file`, `lastEventId`, `attribute(String, Class)`, `body(Class)` and `body(TypeRef)`; the void overload `attribute(String, Object)` is skipped) and fails when `getAnnotatedReturnType()` lacks `@Nullable`; for every row without `?` it fails when such an overload's return type is `@Nullable`. [D-348; D-351]",
+   "Reflection over every public class and interface of the three public API packages in the main jar named by `naruserve.apiJar` (not the test class path) finds no `org.jspecify.annotations.NonNull` on a type, member, parameter or type use, because under `@NullMarked` an unannotated reference type is non-null. [D-348]",
+   "x",
+   "x"
+  ]
+ },
+ {
+  "id": "FR-KT-002",
+  "acceptanceCriteria": [
+   "A test in `NaruServe-api` enumerates by reflection, from the main jar named by `naruserve.apiJar`, every public and protected method of every public class, interface and enum of `com.snoworca.naruserve`, `com.snoworca.naruserve.spi` and `com.snoworca.naruserve.routing`, including nested types, and fails with the message `Type.method` when a name is one of `as`, `fun`, `in`, `is`, `object`, `typealias`, `typeof`, `val`, `var` or `when`. [D-352]",
+   "The check is a reusable function proved by a negative fixture: a fixture type with a method named each of the ten words makes it fail once per word, and a fixture type with methods `get`, `set`, `use`, `value` and `isSecure` passes, so soft keywords and `is`-prefixed names are not flagged. [D-352]",
+   "The check passes on the wave 8 API and runs in `./gradlew build`; a Kotlin test calls one method of each of `RestApp`, `Request`, `Response`, `RouteBuilder` and `WebSocketSession` without a backtick. [D-352; I-010]"
+  ]
+ },
+ {
+  "id": "FR-KT-003",
+  "acceptanceCriteria": [
+   "A reflection test over the main jar named by `naruserve.apiJar` finds every interface declared in `com.snoworca.naruserve`, `.spi` or `.routing` that is the parameter type of a public method of those packages and has exactly one abstract method (ignoring `Object` methods and `default` methods) and fails, naming it, when it lacks `@FunctionalInterface`. [D-350; I-007]",
+   "The same test fails, naming the interface, when an interface that is a callback parameter type has no abstract method or more than one, which would stop Kotlin SAM conversion. [D-350]",
+   "A Kotlin test passes a lambda to each callback parameter of the matrix: `app.get`/`post`/`route` with `RouteHandler`, `app.use(path) { req, res, next -> }` with `Middleware`, `app.onError`, `app.onStart`, `app.onStop`, `app.server`, `app.multipart`, `app.webSocket`, `app.sse`, `app.ws`, `ws.onText`, `ws.onClose { code, reason -> }` and `res.sse().onClose { }`, each without a receiver DSL, and runs a request or session through the in-memory harness that reaches the lambda. [D-350; T11]",
+   "A second Kotlin test fails the build when the Java reflection inventory of AC-1 names an interface that the Kotlin matrix of AC-3 does not list, by reading the Kotlin matrix from a `CALLBACK_TYPES` list in one shared test class that the Java inventory test compares with its reflection result, so the matrix cannot fall behind the API. [D-350; I-010]"
+  ]
+ },
+ {
+  "id": "FR-REL-002",
+  "acceptanceCriteria": [
+   "With the scanner stubbed to fail for each of four causes — no network, a missing NVD API key, a rate limit and a tool error — the report writer in `gradle/release-tools` produces a report whose status line is `pending`, whose reason line names the cause, and whose dependency list equals the sorted union of the `group:name:version` of the `runtimeClasspath` entries of the nine published modules in `dependency-graphs.txt` without the project's own `com.snoworca.naruserve:*` components and with the `com.snoworca.tinyhttpd` components kept, which a default-build test over the writer asserts without network. [D-376; r3 W2-005]",
+   "A finished scan produces the status `completed` with a findings table (dependency, identifier, CVSS score, severity), or the sentence `no findings`, and the report names the scanner version and the data timestamp. [D-376]",
+   "`docs/release/vulnerability-scan.md` exists and holds the report of the release run (`pending` with the reason, or `completed`), and the T50 vulnerability line of `docs/release/test-results.md` is `manual-pending` when the report is `pending` and `verified` when it is `completed` on the release machine, which a docs test compares. [D-376; D-381]",
+   "The report's dependency list excludes `compileOnly` and test-scope artifacts (the Servlet API, JSpecify, JUnit, Jetty) and includes the TinyHttpd components. [D-376]"
+  ],
+  "rationale": "Covers D-376, wave decision Release scan and result rows (r3 W2-005: pending for any reason the scanner cannot finish) and T50; the block on findings is FR-REL-003. Measured (2026-10-20): the Gradle plugin portal lists `org.owasp:dependency-check-gradle` up to 13.0.0; the network was reachable but a scan without an NVD API key is rate-limited and can fail partway; the shipped runtime dependencies are Gson 2.14.0 with `com.google.errorprone:error_prone_annotations:2.48.0`, `kotlin-stdlib` 2.2.0 with `org.jetbrains:annotations:13.0`, `slf4j-api` 1.7.36 and the TinyHttpd components, as `build/reports/naruserve/dependency-graphs.txt` lists them per module and configuration. Decision: the pure parts — the report writer, the pending decision and the dependency-list derivation — are plain Java 8 sources in `gradle/release-tools` (package `com.snoworca.naruserve.release`), which the root `test` source set adds as a source directory (so the unit tests compile in the default build) and which `gradle/release.gradle` compiles with its own `JavaCompile` task and runs with `JavaExec` tasks, so the script never needs compiled classes at configuration time, so the default build can test them without any plugin or network. Decision: the committed record of the release run is `docs/release/vulnerability-scan.md`, copied from the build report; the scan covers the `runtimeClasspath` of the nine published modules and excludes test scope (Jetty 9.4 of the Servlet tests); the scanner's own failure is caught by a wrapper task that writes the pending report. Pitfall: Dependency-Check fails the build on an update error by default; the wrapper converts that into `pending`, otherwise an offline release machine could not record anything. Rejected alternative: treating a pending scan as a pass; the record says `pending`, T50 stays `manual-pending` for this part and I-020 forbids promoting a requirement on a pending check."
+ },
+ {
+  "id": "FR-REL-004",
+  "acceptanceCriteria": [
+   "`releaseLicenses` writes `THIRD-PARTY-LICENSES.md` with one row per shipped dependency taken from the `runtimeClasspath` entries of `dependency-graphs.txt` — Gson 2.14.0, `error_prone_annotations` 2.48.0, `kotlin-stdlib` 2.2.0, `org.jetbrains:annotations` 13.0, `slf4j-api` 1.7.36 and the TinyHttpd components — giving license name and URL, and a section of provided artifacts that names `javax.servlet-api` as container-provided and not shipped. [D-378; T50]",
+   "The license check, exercised by a default-build test over its decision function in `gradle/release-tools` with fixtures, fails for GPL-2.0, LGPL-3.0 and AGPL-3.0 and for an unknown license, and passes for Apache-2.0, MIT, BSD-3-Clause and a dual license with one non-GPL member. [D-378]",
+   "A default-build test compares the dependency list parsed from the `runtimeClasspath` entries of `build/reports/naruserve/dependency-graphs.txt` (without the project's own `com.snoworca.naruserve:*` components, with the `com.snoworca.tinyhttpd` components kept) with the rows of `THIRD-PARTY-LICENSES.md` and fails, naming the dependency, on a missing or extra row, so the committed file cannot go stale. [D-378; I-005]",
+   "The run of `releaseLicenses` on the release machine is recorded under T50 in `docs/release/test-results.md` with its command and result. [D-378; D-381]"
+  ]
+ },
+ {
+  "id": "OPS-SVL-001",
+  "acceptanceCriteria": [
+   "`docs/api/servlet.md` holds no (미확정) marker and contains `jakarta` in a sentence that states no `jakarta.servlet` module exists in v1 and that Servlet 5+ containers are not supported, which a docs test asserts together with the unchanged OPS-BUILD-003 AC-5 assertion. [D-363; D-358; D-380]",
+   "A registration section names `ServletConfigurer`, `NaruServeInitializer`, the init-parameters `naruserve.configurer`, `naruserve.urlPattern` and `naruserve.shutdownTimeoutSeconds` (1 to 300, default 10) with their defaults, the automatic discovery through the services file, `asyncSupported=true`, and shows a `web.xml` init-parameter example, a Java `ServletConfigurer` and a Kotlin one, with the Express counterpart sentence. [D-363; IR-SVL-001]",
+   "The comparison table and sections state: the container owns the port, `ServerHandle.port()` is `0` and `ServerHandle.address()` is not the container's address (take both from the container); the container's destroy callback runs `shutdown`; the request path is the raw `getRequestURI()` minus the context path minus the url-pattern prefix, kept percent-encoded, an empty remainder is `/`, `;name=value` stays; multipart uses the core parser over the input stream, not the Servlet `Part` API; WebSocket is not supported and `app.ws` answers `501`; SSE runs under `AsyncContext` with an adapter-owned executor named `naruserve-servlet-sse-<n>`, `503` beyond `maxSseStreams`, `setTimeout(0)` and `asyncSupported`; the \"cut at timeout\" deviation; response header order is the container's; the `OPTIONS *` status observed; the Gson lookup by reflection and `Builder.jsonCodec`; only Jetty 9.4 was exercised and other containers were not; and the thread total of the embedded engine does not apply. A docs test asserts a keyword of each. [D-363; FR-SVL-001; FR-SVL-002; FR-SVL-004; FR-SVL-005; FR-SVL-006; FR-SVL-007]",
+   "The ignored and applied `ServerOptions` lists of FR-SVL-008 AC-4 are present; the root `testImplementation` gains `project(':NaruServe-servlet')` so the Java blocks of the file that name `ServletConfigurer` compile in the root docs compile test (the module's classes that the examples load reference no Servlet API type), and the `servlet.md` entries of the `SKIPS` list of `DocsExamplesCompileTest` are updated to the rewritten blocks (matched by ordinal or first line) with an `app-defined type` reason, because that test fails on a skip entry that matches no block. [D-363; I-009]",
+   "The Kotlin example of `servlet.md` is covered by the Kotlin examples test of FR-KT-004, and no line of `docs/api/sse.md` that wave 7 pinned changes: `sse.md` only gains a pointer sentence to the Servlet deviation. [D-349; I-008]"
+  ]
+ },
+ {
+  "id": "FR-SVL-001",
+  "acceptanceCriteria": [
+   "On the embedded container, context startup builds the app through the configurer and calls `app.listen(0)` before the first request: `onStart` callbacks have run once, `app.state()` is `RUNNING` and a request is served. [D-359]",
+   "Context destruction runs `app.shutdown(10, SECONDS)` (or the `naruserve.shutdownTimeoutSeconds` value): `onStop` callbacks run, the state is `TERMINATED`, `ServletAdapter.stop` and `release` have been called, `shutdown` returns within that timeout plus the margin of `docs/api/lifecycle.md`, and a second destruction is harmless. [D-359]",
+   "`ServletAdapter.boundPort()` throws `IllegalStateException` before any `bind` (the SPI contract of `HttpAdapter.boundPort`) and returns `0` after `bind`; `bind(\"127.0.0.1\", 8080, handler)` and `bind(settings, handler)` return without starting a thread or opening a socket and ignore host and port, which a test asserts for the adapter alone; `ServerHandle.port()` of the app is `0`. [D-359; D-107; r3 W2-001]",
+   "A user call of `app.listen(8080)` on an app built with a `ServletAdapter` binds nothing, runs `onStart` and reaches `RUNNING` through the same path as the initializer. [D-359; r2 W2-001]",
+   "When `com.snoworca.naruserve.gson.GsonJsonCodec` is on the web application's class path the initializer finds it by reflection and presets it as the codec; the configurer may replace it with `Builder.jsonCodec`; when neither exists startup fails with a `ServletException` whose message contains `com.snoworca.naruserve.gson.GsonJsonCodec` and `jsonCodec`. The module `runtimeClasspath` stays `NaruServe-api` only. [r5 W2-002; I-005]",
+   "The app logger is the `ConsoleLogger` that `RestApp.Builder` defaults to when the configurer does not call `Builder.logger`, and a logger that the configurer sets is the one the app keeps. [r4 W2-003; FR-ENGINE-009]",
+   "A failing `onStart` callback (an `AppStartException` from `listen`) makes context startup fail with a `ServletException` that carries it as cause, and no thread of the app remains. [D-359; I-015]",
+   "Deviation (recorded): the frozen D-416 thread total of 451 (452 with the keeper thread, PERF-APP-001 AC-2) bounds the embedded TinyHttpd app; on the Servlet adapter the threads are the container's plus at most `maxSseStreams` SSE threads (FR-SVL-005), and `docs/api/servlet.md` says so. [D-416]"
+  ]
+ },
+ {
+  "id": "OPS-REL-006",
+  "rationale": "Covers D-434 and wave decision TLS reason (r1 W1-003, W2-003), which replaces the citation of Q-3's manual device runs. Measured (2026-10-20): `docs/api/defaults.md:114` says the TinyHttpd adapter opens no TLS listener in v1 and gives as reason \"Android 5.0의 오래된 TLS 구현을 기기마다 따로 시험해야 하기 때문\"; `WaveFiveDocsTest:447` asserts that the line containing \"TLS 리스너\" also contains \"v1\" (OPS-ENGINE-002 AC-3: the TinyHttpd adapter has no TLS listener in v1); the Out of Scope list of the Engine Adapter scope document names \"A TLS listener on the TinyHttpd adapter (post-v1 under D-434)\". Decision: the line keeps the phrase \"TLS 리스너\" and the word \"v1\" (so the verified assertion stays) and replaces the reason sentence with the two reasons; the release notes carry the same two reasons. Pitfall: the old reason says devices must be tested one by one, which reads as a plan; with device verification out of v1 scope it is no longer true and must not be repeated. Rejected alternative: citing Q-3; the user's decision removed the manual device runs it relies on.",
+  "acceptanceCriteria": [
+   "`docs/api/defaults.md` keeps a TLS line that contains \"TLS 리스너\" and \"v1\", names TLS/WSS on the TinyHttpd adapter as a post-v1 item, gives the two reasons (no sub-issue of epic #20 covers it; `object.md` §14.3 and §20.3 require separate API 21 TLS provider and certificate testing, which v1 does not run because Android device verification is out of v1 scope), still names the reverse proxy and `app.trustProxy(true)`, and does not cite Q-3 or manual device runs. [D-434; r1 W1-003]",
+   "`docs/release/release-notes.md` records the same item with the same two reasons in a post-v1 list entry, and a docs test asserts both reasons in both documents and the absence of `Q-3` in both. [D-434]",
+   "The unchanged `WaveFiveDocsTest` assertion on the \"TLS 리스너\" line passes, and the other pinned `defaults.md` lines are untouched. [OPS-ENGINE-002 AC-3]"
+  ]
+ },
+ {
+  "id": "CON-BUILD-004",
+  "trace_add": [
+   {
+    "type": "Requirement",
+    "reference": "CON-BUILD-017",
+    "relation": "depends_on",
+    "notes": "re-pointed from the discarded CON-BUILD-003 by the wave 8 supersede"
+   }
+  ]
+ },
+ {
+  "id": "CON-BUILD-006",
+  "trace_add": [
+   {
+    "type": "Requirement",
+    "reference": "CON-BUILD-017",
+    "relation": "depends_on",
+    "notes": "re-pointed from the discarded CON-BUILD-003 by the wave 8 supersede"
+   }
+  ]
+ },
+ {
+  "id": "OPS-BUILD-002",
+  "trace_add": [
+   {
+    "type": "Requirement",
+    "reference": "CON-BUILD-017",
+    "relation": "depends_on",
+    "notes": "re-pointed from the discarded CON-BUILD-003 by the wave 8 supersede"
+   }
+  ]
+ },
+ {
+  "id": "FR-REL-001",
+  "acceptanceCriteria": [
+   "`./gradlew -Prelease releaseSbom` writes one CycloneDX JSON file per published module — nine files named `<module>.cdx.json` under `build/reports/naruserve/sbom/`, one for each entry of `naruModules` — each with `bomFormat` `CycloneDX` and a component for every `runtimeClasspath` dependency of that module (Gson 2.14.0 for `NaruServe-gson`, `kotlin-stdlib` for `NaruServe-kotlin`, `slf4j-api` for `NaruServe-slf4j`, the TinyHttpd components for `NaruServe-tinyhttpd`), and none for `compileOnly` or test-scope artifacts (the Servlet API and Jetty). [D-375; T50]",
+   "The run is recorded with its command, date, file list and component counts in `docs/release/test-results.md` under T50, because the plugin cannot be resolved by the default build. [D-375; D-381]",
+   "A default-build test asserts that `build.gradle` contains the conditional `apply from: 'gradle/release.gradle'` guarded by `project.hasProperty('release')`, that the strings `cyclonedx` and `dependencycheck` occur in none of `build.gradle`, `settings.gradle` and `gradle.properties` (the files it scans) but only in `gradle/release.gradle`, that `gradle/release.gradle` pins each plugin version as an exact literal, and that no release task is a dependency of `check`, `build` or `test`. [r4 W2-004; I-019]",
+   "`./gradlew build --offline` with a Gradle user home that holds every default-build dependency (Jetty 9.4 included) but neither release plugin succeeds, which a recorded run (command, date, exit code) shows for the release machine. [r4 W2-004; I-019]",
+   "The default `./gradlew build` still passes `BuildLayoutTest` with its assertions unchanged — `con_BUILD_003_AC1_rootBuildFileHoldsPluginsCompileDependenciesAndChecks` and `con_BUILD_003_AC2_noModuleBuildFile` keep their expectations and are re-pointed to CON-BUILD-017 — and one check is added to it for the conditional apply of AC-3. [CON-BUILD-017]"
+  ]
+ },
+ {
+  "id": "FR-REL-003",
+  "statement": "The release build shall define `releaseCheck` as a task that depends on `releaseScan` and `releaseLicenses` and reads the report that run wrote (`releaseSbom` runs separately), and shall fail `./gradlew -Prelease releaseCheck` while the vulnerability report shows a High or Critical finding (CVSS 7.0 or higher) for a runtime dependency of a published module that has no recorded exception in `docs/release/vulnerability-exceptions.md`, where an exception names the vulnerability id, the dependency, the reason, the approver and the date; a `pending` scan does not block the build but is shown as pending, never as passed.",
+  "acceptanceCriteria": [
+   "With the decision function of `gradle/release-tools` exercised by a default-build test, a fixture report with one High finding and no exception makes the check fail with a message naming the vulnerability id and the dependency; the same report with a complete exception row passes; a Medium finding passes; a Critical finding fails; an exception row without a reason or approver is ignored and the check still fails. [D-377]",
+   "A fixture report with the status `pending` makes the check pass and prints `scan pending: release not cleared for T50 vulnerability part`, and the release notes list the scan as pending. [D-377; r3 W2-005]",
+   "`docs/release/vulnerability-exceptions.md` exists with the table header (id, dependency, reason, approver, date) and either the recorded exceptions or `no exceptions`. [D-377]",
+   "The check reads only the runtime dependencies of the published modules, so a High finding in a test-scope artifact does not block, which a fixture asserts. [D-377]",
+   "`releaseCheck` depends on `releaseScan` and `releaseLicenses` in the task graph (a text test of `gradle/release.gradle` asserts it), reads `build/reports/naruserve/vulnerability-scan.md` of the same run, and is not a dependency of `check`, `build` or `test`. [D-377; r4 W2-004]"
+  ]
+ },
+ {
+  "id": "OPS-REL-003",
+  "acceptanceCriteria": [
+   "The document has one line for each of T01 to T50, a second line for T26 and T49 and three lines for T50, so 54 lines in all, whose test ids equal the ids of the §17.2 table of `object.md`, which a docs test parses from both files. [D-381; I-018]",
+   "Each line carries exactly one of the literals `automated` (an automated test of the default `./gradlew build` covers it), `manual-pending` (a run or check that has not happened yet), `verified` (a run on the release machine or a manual check with recorded evidence) and `out-of-v1-scope`, and the test rejects any other status word; the platform matrix of OPS-REL-004 and the scan report of FR-REL-002 use the word `pending` of D-376 and D-382 for a run that has not happened, which corresponds to the literal `manual-pending` in this document; T10, T12, T47, the T26 device line and the T49 device line carry `out-of-v1-scope` with the reason `user decision 2026-10-20`, and no other line carries it. [D-381; r1 W1-001; r2 W2-005; r3 W2-005]",
+   "Each `automated` line links a test file that exists, and when the link has a `#method` part the method exists in that file; each `manual-pending` line links a checklist item of the document; each `verified` line links the recorded evidence of a run with its command and date; the three T50 lines link their records (the SBOM run and the license run `verified` when a `-Prelease` run on the release machine is recorded and `manual-pending` otherwise, and the vulnerability scan record `manual-pending` when its status is `pending` and `verified` when `completed`). [D-381; I-018]",
+   "The document contains a post-v1 row for the low-end Android tuning of D-347 and records the date, command, commit and test count of the full-suite run of `./gradlew build` (I-019); no requirement is `verified` on the strength of a `manual-pending` line (I-020). [D-347; I-019; I-020]",
+   "`docs/release/test-results.md` states, as `README.md` does, that the Android sample build and API 21 device or emulator verification are not part of v1 and that API 21 compatibility rests on `--release 8` and the animal-sniffer `android-api-level-21` check. [r1 W1-005; D-381]"
+  ]
+ },
+ {
+  "id": "FR-REL-005",
+  "acceptanceCriteria": [
+   "The outer build generates the POM of every module with `generatePomFileForMavenPublication` and a default-build test reads those files through a system property (as `naruserve.apiJar` is passed), so no nested Gradle build runs inside the test; `./gradlew publishToMavenLocal` itself is run on the release machine and recorded (command, date, the nine `com/snoworca/naruserve/<module>/0.1.0-SNAPSHOT/` directories), without `-Prelease`. [wave decision Publishing]",
+   "The test over the generated POMs asserts: `NaruServe-tinyhttpd` declares `com.snoworca.tinyhttpd:tinyhttpd-core` and `com.snoworca.tinyhttpd:tinyhttpd-websocket` each with the non-empty version of the included build (`0.1.0-SNAPSHOT`), `NaruServe-gson` declares `com.google.code.gson:gson:2.14.0` in compile scope, `NaruServe-kotlin` declares `kotlin-stdlib` with `2.2.0`, `NaruServe-slf4j` declares `slf4j-api:1.7.36`, `NaruServe-servlet` declares `NaruServe-api` and no Servlet API, and `NaruServe` declares `NaruServe-tinyhttpd`, `NaruServe-gson` and `NaruServe-logcat` in runtime scope. [D-383]",
+   "`publishing.repositories` holds no remote repository, only the implicit `mavenLocal`, which a text test of `build.gradle` asserts; the Gradle declarations of the TinyHttpd dependencies stay versionless (CON-BUILD-006 unchanged). [wave decision Publishing; CON-BUILD-006]",
+   "`maven-publish` is applied in the root `build.gradle` itself, not in `gradle/release.gradle`, so `publishToMavenLocal` works in a default offline build. [r4 W2-004; I-019]"
+  ]
+ },
+ {
+  "id": "FR-SVL-002",
+  "acceptanceCriteria": [
+   "With context path `/app` and pattern `/api/*`, a request to `/app/api/users/%41;v=1?x=%20` reaches a route `/users/:id` with `req.rawPath()` equal to `/users/%41;v=1`, `req.param(\"id\")` equal to `A;v=1` and `req.query(\"x\")` equal to a space; with pattern `/*` or `/` the same request without `/api` reaches the same route, and a request to the bare servlet root reaches the route `/` (empty remainder is `/`). [D-363; D-399]",
+   "A request whose raw URI does not start with the context path plus the registered prefix at a segment boundary (a test sends `/app/%61pi/users` to pattern `/api/*`) is answered `404` with the standard error body and a request id, and `getServletPath()`, `getPathInfo()` and `getParameter*` are never read, which a recording `HttpServletRequest` proxy asserts. [D-363; r3 W2-004]",
+   "Headers reach `req.header(name)` and `req.headers(name)` in received order with repeated names kept, `Cookie` request headers reach the core cookie parser unchanged (`req.cookie(\"s\")` returns a NaruServe `Cookie`, never `javax.servlet.http.Cookie`), `req.remoteAddress()` is `getRemoteAddr()` and `req.isSecure()` is `isSecure()`; `app.trustProxy(true)` takes effect in the core (FR-ENGINE-008). [D-360]",
+   "A shared case suite — route parameters, query decoding, JSON body and `res.json`, cookies read and written, `404`, `405` with `Allow`, automatic `HEAD` and `OPTIONS`, middleware order, `onError` and the standard error body, `res.file` — runs on the Servlet adapter and on the in-memory adapter with identical statuses and bodies, using the same app definition code, so application code needs no change between engines. [D-360; I-021]",
+   "The path-rejection cases of D-052 (malformed percent-encoding, invalid UTF-8, an encoded `/`, an encoded or raw `NUL`, `.` and `..` segments raw and encoded) sent as raw request lines to the embedded container are answered `400`, or `404` when the container normalises the path and never reaches the servlet, and never `2xx`; the `OPTIONS *` request is sent too, and the observed status of every case is recorded in `docs/api/servlet.md`. [D-052; I-021]",
+   "Header values the framework writes never contain CR or LF on this adapter, and security-related log lines of the adapter carry no token, session id or file content. [I-016; I-017]"
+  ]
+ },
+ {
+  "id": "FR-SVL-003",
+  "acceptanceCriteria": [
+   "A handler's `res.status(201).header(\"X-A\", \"1\").send(\"ok\")` reaches the client as status `201`, header `X-A: 1` and body `ok` with the `Content-Length` the core set; a `res.stream` response of unknown length arrives with an intact body and without a `Content-Length` and `Transfer-Encoding` conflict (chunked framing is asserted only for a body larger than the container's output buffer or after a flush, because a container may buffer a small body and frame it with a length); and no error page of the container appears for a `404` or `500` the core produced, because `sendError` is never called. [D-360]",
+   "A HEAD request to a GET route returns the `Content-Length` of the GET body and no body bytes, and a `204` and a `304` carry no body, on the embedded container. [D-360; FR-HTTP-017]",
+   "After `abort()` the next body write, `commit` or `finish` throws `IOException` (a write already blocked inside the container ends only by the container's write timeout, FR-SVL-006 AC-3), `abort()` called twice is harmless and `abort()` may run on another thread than the writer; a second `commit`, `sendFile` or `eventStream` on one exchange throws `IllegalStateException`. [r2 W2-006]",
+   "`res.file` and `res.download` on a file serve the whole file, a single `Range` (`206` with `Content-Range`) and a `416`, byte for byte equal to the in-memory adapter, with `sendFile` copying in chunks of at most 64 KiB and never reading the file into memory; the class references no `java.nio.file` type. [D-360; FR-STATIC-010]",
+   "Response header order on the wire is the container's, `docs/api/servlet.md` says so, and no test of the shared case suite depends on header order. [r2 W2-006]"
+  ]
+ },
+ {
+  "id": "CON-KT-001",
+  "acceptanceCriteria": [
+   "A build check wired into `check` scans the main class output of every published module and fails, naming `Class -> kotlinx/coroutines/...`, when a constant-pool class name or descriptor starts with `kotlinx/coroutines/`, and passes on the wave 8 modules. [D-356]",
+   "The same check reads the resolved `compileClasspath` and `runtimeClasspath` of every published module and fails, naming the module and artifact, when a `kotlinx-coroutines` artifact is on either. [D-356]",
+   "A negative fixture proves both parts without any coroutines artifact in any configuration: a class file generated in the test whose constant pool names `kotlinx/coroutines/BuildersKt`, and a fixture dependency set that names `kotlinx-coroutines-core`, each make the check fail, so it cannot pass vacuously. [D-356]",
+   "The wave 1 prefix list of `checkClassReferences` and the pinned strings of `BuildLayoutTest` stay unchanged, and `./gradlew build` passes with both checks. [D-356; CON-BUILD-013]"
+  ]
+ },
+ {
+  "id": "OPS-KT-001",
+  "acceptanceCriteria": [
+   "A docs test asserts that `docs/api/kotlin.md` contains `NaruServe-kotlin` and `com.snoworca.naruserve:NaruServe-kotlin:0.1.0-SNAPSHOT`, does not contain `rest-kotlin`, and that `settings.gradle` includes `:NaruServe-kotlin`, so the doc names the module as wave 1 fixed it. [D-357; CON-BUILD-002; CON-BUILD-005]",
+   "The null-handling paragraph of `kotlin.md` names `@NullMarked` (non-null by default) and `@Nullable`, `kotlin.md` contains no `@NonNull`, and a docs test asserts both. [D-348; wave decision: Nullability check second reading]",
+   "The `NaruServe-kotlin` extension section shows the import `import com.snoworca.naruserve.kotlin.body` above the unchanged pinned lines and states that `kotlin-stdlib` is used by this module only, which otherwise depends on `NaruServe-api`. [D-354]",
+   "The Coroutine section states that `suspend` handlers are not supported in v1, that `runBlocking` holds the request thread, that the framework does not use `runBlocking` as an asynchronous adapter, and that coroutine support is a post-v1 item with its reason, and `kotlin.md` holds no (미확정) marker. [D-356; D-380]",
+   "The nullable-accessor table rows are unchanged in count (12) and Kotlin types, and the docs test of FR-KT-005 AC-4 and the annotation check of FR-KT-001 AC-2 read the same table. [D-351]"
+  ]
+ },
+ {
+  "id": "OPS-REL-002",
+  "acceptanceCriteria": [
+   "A docs test over `docs/api/*.md` finds `(미확정)` on exactly three lines, the rows starting with `| `express.Router()``, `| `res.redirect(url)`` and `| `cors()`` of `express-migration.md`, and on no other line. [D-380; r4 W2-001]",
+   "`docs/api/README.md` no longer says the document is not implemented or explains the marker: the status banner states that the document describes the v1 implementation and that the three Express-compatibility rows are the only open items, and the (미확정) legend sentence is gone. [D-380]",
+   "`response.md` holds no marker: the line on `res.redirect` states that `res.redirect` is not part of v1, why (no wave of the run owns it; Express-style helpers are out of the v1 scope), and the replacement `res.status(302).header(\"Location\", url).end()`; the `express-migration.md` rows for `res.type('png')` and `res.render(view)` and the sentence under the heading \"## Express에 있지만 아직 정해지지 않은 기능\" are rewritten as v1 exclusions with their reasons and carry no marker, while the heading text itself stays byte-identical. [D-380; r4 W2-001]",
+   "`defaults.md` keeps the heading \"저사양 Android 튜닝(수동 후속 작업)\" and rewrites the paragraph under it as a post-v1 item (Android device verification is out of v1 scope, so the low-end tuning of `maxSseStreams`, `maxUpgradedConnections` and the WebSocket and SSE `sendQueueSize` is no manual-pending release check), keeping every token that `WaveSevenDocsTest` and PERF-APP-001 AC-4 pin (the heading, `maxSseStreams`, `maxUpgradedConnections`, `sendQueueSize`, `수동 후속 작업` and `자동`), so the old and the new statement never appear side by side. [D-347; D-380; r2 W2-002]",
+   "`docs/release/release-notes.md` lists each post-v1 item with its reason: the three open Express-compatibility rows, `res.type`, `res.render`, the low-end Android tuning of D-347, TLS/WSS (OPS-REL-006), `suspend` handlers (OPS-KT-001), the `jakarta.servlet` module and WebSocket on the Servlet adapter. [D-380; D-347]",
+   "All tests that cite OPS-HTTP-007 are re-pointed to OPS-HTTP-008 and only the `response.md` expectation of its AC-8 changes; no other docs test changes its expectation. [D-380; I-013]"
+  ]
+ },
+ {
+  "id": "FR-KT-004",
+  "acceptanceCriteria": [
+   "A docs test in `NaruServe-api` enumerates every ```kotlin block of every `docs/api/*.md` and fails, naming `<file>#<n>`, when the Kotlin test sources of `NaruServe-api` and `NaruServe-kotlin` hold no `// docs-example: <file>#<n>` marker for it (the test also reads `NaruServe-servlet/src/test/kotlin`, where the Kotlin example of `servlet.md` lives), and when a marker names a block that does not exist. [D-349]",
+   "Each marked test function contains every non-blank whitespace-normalised line of its block or the comment `// adapted: <reason>`, declares the app-defined types the block uses (`User`, `UserService`, `Todo` and so on) and runs in `./gradlew build` through the in-memory harness, asserting the outcome that the surrounding docs text states. [D-349; T11]",
+   "The `kotlin.md` early-exit blocks run and are asserted: `return@get` yields `404` for an unknown user, `return@use` yields `401` without `Authorization`, and the `if/else` expression form yields the same two outcomes without `return@`. [D-349]",
+   "The docs test is a reusable function proved by negative fixtures, so an inserted block without its marker and a stale marker each make it fail, and adding a kotlin block to any `docs/api` file in a later wave fails the build until its test exists. [D-349; I-008; I-010]",
+   "Blocks that use the `NaruServe-kotlin` extension (`req.body<User>()`) are run in `NaruServe-kotlin`'s tests against the module extension of IR-KT-002; the existing docs Kotlin tests (`JsonDocsKotlinTest`, `SseDocsKotlinTest`, `WebSocketDocsKotlinTest`) gain the markers, and only the test-local copy of `body()` in `JsonDocsKotlinTest` (wave 5, OPS-JSON-001 AC-5) stays untouched. [D-349; D-354]"
+  ]
+ },
+ {
+  "id": "IR-KT-002",
+  "acceptanceCriteria": [
+   "`NaruServe-kotlin/src/main/kotlin/com/snoworca/naruserve/kotlin/RequestExtensions.kt` declares exactly the function above, and a Kotlin test in `NaruServe-kotlin` compiles `val user = req.body<User>()` with `user` of type `User` (non-null) inside an `app.post` lambda; the module's `testImplementation` gains `testFixtures(project(':NaruServe-api'))` for the in-memory harness, in the root `build.gradle` (CON-BUILD-006 AC lists main dependencies only). [D-354]",
+   "Through the in-memory harness with a test `JsonCodec`, a `POST` with `{\"name\":\"a\"}` returns the decoded instance, and a `POST` whose body is the JSON `null` answers `400` with the standard error body whose message is `JSON body is null`. [D-354; T11]",
+   "A test asserts that `req.body<List<User>>()` passes the raw class `java.util.List` to the codec (no element type), matching the sentence of `docs/api/kotlin.md` that the extension does not preserve the element type. [D-354]",
+   "`NaruServe-api` and `NaruServe-servlet` stay free of `kotlin.*` and `kotlin-stdlib` stays on the `runtimeClasspath` of `NaruServe-kotlin` only, which the wave 1 build checks assert, and the test-local copy of `body()` in `JsonDocsKotlinTest` is not edited. [D-354; CON-BUILD-007; I-002]"
+  ]
+ },
+ {
+  "id": "CON-BUILD-017",
+  "acceptanceCriteria": [
+   "The root `build.gradle` holds the plugin, compile, dependency and check configuration of every included module, and its only reference to another build script is the conditional `apply from: 'gradle/release.gradle'` guarded by `project.hasProperty('release')` for release-only tasks that no default `./gradlew build` runs or resolves. [D-003; wave decision Release plugins (r4 W2-004)] re_stated_from: CON-BUILD-003#AC1 (changed by wave 8: the release-only script exception)",
+   "No module directory of the root build contains a `build.gradle` or `build.gradle.kts` file. [D-004] re_stated_from: CON-BUILD-003#AC2",
+   "The build section of `CLAUDE.md` states the release-only script exception in one sentence, and the `BuildLayoutTest` assertions on the module line and the module names of `CLAUDE.md` still pass. [D-003; wave decision Release plugins (r4 W2-004)]"
+  ]
+ },
+ {
+  "id": "IR-SVL-001",
+  "rationale": "Covers D-358, D-363 (container registration and class names), wave decisions Servlet adapter decisions (r1 W2-007), Who builds the app on the Servlet adapter (r4 W2-003) and Servlet SSE registration (r4 W2-005); answers Q-4. Measured (2026-10-20): `NaruServe-servlet/src/main` holds only `package-info.java`; `build.gradle` declares `javax.servlet:javax.servlet-api:3.1.0` and `javax.websocket:javax.websocket-api:1.1` `compileOnly` for the module; a built `RestApp` has no adapter setter and `RestApp.Builder` takes `httpAdapter`, `jsonCodec` and `logger` (`RestApp.java:226-267`). Decision (C-07): the names are `ServletAdapter`, `ServletConfigurer`, `NaruServeInitializer` and the package-private `NaruServeServlet`; the initializer is discovered through the Servlet 3.0 service file, so an application only sets the init-parameter; `naruserve.urlPattern` defaults to `/*` and accepts `/*`, `/` or `/prefix/*`; the servlet is named `naruserve` and registered with `asyncSupported=true` and no `MultipartConfig`. Decision (C-07): the container's destroy callback calls `app.shutdown(timeout, SECONDS)` because `RestApp` has only `shutdown(long, TimeUnit)`; the timeout is `naruserve.shutdownTimeoutSeconds`, an integer from 1 to 300 with default 10 (the value `docs/api/app.md` uses; a bound exists because no limit may default to unlimited, I-012). When `naruserve.configurer` is absent the initializer does nothing, because the jar may sit in `WEB-INF/lib` of an application that does not use NaruServe. Pitfall: `@HandlesTypes` is not used, so no classpath scan runs at container start. Pitfall: `jetty-servlet` alone does not run `ServletContainerInitializer`s; the tests use a Jetty `WebAppContext` with the annotation configuration so that the services file is discovered, and containers other than Jetty 9.4 are not exercised (recorded in `docs/api/servlet.md`). Rejected alternative: a `ServletContextListener` declared in `web.xml` or by `@WebListener`; it needs the application to list it and `@WebListener` needs annotation scanning, which a jar in `WEB-INF/lib` loses when `metadata-complete=true`.",
+  "acceptanceCriteria": [
+   "Reflection finds `ServletAdapter` public, final, implementing `com.snoworca.naruserve.spi.HttpAdapter` with a public no-argument constructor; `ServletConfigurer` a public interface annotated `@FunctionalInterface` whose only abstract method is `RestApp configure(RestApp.Builder)` declared `throws Exception`; `NaruServeInitializer` a public class implementing `javax.servlet.ServletContainerInitializer`; and package `com.snoworca.naruserve.servlet` annotated `@NullMarked`. [D-358; D-363]",
+   "The built module jar holds `META-INF/services/javax.servlet.ServletContainerInitializer` whose only line is `com.snoworca.naruserve.servlet.NaruServeInitializer`, read from the jar as `DefaultAppFactoryTest` reads the bootstrap services file, through a new system property that `build.gradle` sets for `:NaruServe-servlet` tests (as it does `naruserve.bootstrapJar` for `:NaruServe`). [D-363]",
+   "On an embedded Jetty 9.4 `WebAppContext` started with its annotation configuration (the `jetty-webapp` and `jetty-annotations` test dependencies of CON-SVL-001), the initializer is discovered from the services file without any test code naming it; a web application with the init-parameter `naruserve.configurer` registers exactly one servlet named `naruserve` mapped to `/*`, with `isAsyncSupported() == true` and no multipart configuration, and a web application without the init-parameter registers nothing and every request is answered by the container (`404`). Residual gap: other Servlet 3.1 containers are not exercised and `docs/api/servlet.md` says so. [D-363; r4 W2-005]",
+   "The init-parameter `naruserve.urlPattern` accepts `/*`, `/` and `/api/*` (mapping the servlet accordingly) and any other value (`api/*`, `*.json`, an empty string) makes context startup fail with a `ServletException` whose message names the parameter and the value. [D-363]",
+   "The init-parameter `naruserve.shutdownTimeoutSeconds` is an integer from 1 to 300 with default 10 and is the timeout of the `app.shutdown(timeout, SECONDS)` call that the container's destroy callback makes; any other value (`0`, `301`, `ten`, an empty string) makes context startup fail with a `ServletException` whose message names the parameter and the value. [D-359; D-363; I-012]",
+   "The initializer instantiates the class named by `naruserve.configurer` through its public no-argument constructor and hands it a `RestApp.Builder` that already holds a `ServletAdapter`; a missing class, a class that does not implement `ServletConfigurer`, a class without a public no-argument constructor, a `configure` that throws and a `configure` that returns `null` each make context startup fail with a `ServletException` whose message names the class. [D-359; r4 W2-003]",
+   "The build adds the class-reference prefix `jakarta/servlet/` for `:NaruServe-servlet` to the `classRefPrefixes` closure of `build.gradle` as a separate `if (path == ':NaruServe-servlet')` branch, leaving the pinned `:NaruServe-api` prefix line of `BuildLayoutTest` unchanged, so the existing `checkClassReferences` task fails the build, naming `Class -> jakarta/servlet/...`, when a main class of `NaruServe-servlet` references it; a negative fixture proves the check fails, and `settings.gradle` includes no module for `jakarta.servlet`. [D-358; I-002]"
+  ]
+ }
+]

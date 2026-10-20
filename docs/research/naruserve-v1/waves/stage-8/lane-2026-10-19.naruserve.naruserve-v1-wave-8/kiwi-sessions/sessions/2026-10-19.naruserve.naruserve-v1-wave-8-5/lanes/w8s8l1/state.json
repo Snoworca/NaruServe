@@ -1,0 +1,23 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "2026-10-19.naruserve.naruserve-v1-wave-8-5",
+  "sds_path": "docs/sds/2026-10-19.naruserve.naruserve-v1-wave-8-5.sds.md",
+  "sds_sha256": "7551f86393934d044d19e060965c298dc739ba388d2219a11df1535a7103d9e7",
+  "target": "wave-8",
+  "req_ids": ["FR-SVL-002", "FR-SVL-003"],
+  "mode": "normal",
+  "flags": ["--auto", "--auto-integration", "--auto-cost-warning", "--defer-srs-mutation"],
+  "spawn_context": "pm-child",
+  "phase": "done",
+  "next_resume_hint": null,
+  "failed": false,
+  "red_evidence": {
+    "command": "./gradlew --offline :NaruServe-servlet:compileTestJava",
+    "exit_code": 1,
+    "captured_failure": "31 errors: cannot find symbol ServletPath, ServletExchange, ServletAdapter.errorRenderer(); ServletDocsTest: servlet.md has no observed-status row",
+    "timestamp": "2026-10-20T00:00:00Z"
+  },
+  "green_evidence": {"command": "./gradlew --offline build", "exit_code": 0, "timestamp": "2026-10-20T00:00:00Z"},
+  "regression_baseline": {"command": "./gradlew build", "head_sha": "48729f3", "source": "--regression-baseline"},
+  "regression_summary": {"scope": "full", "result": "BUILD SUCCESSFUL", "regressed_files": []}
+}
