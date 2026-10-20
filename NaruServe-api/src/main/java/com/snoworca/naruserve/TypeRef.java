@@ -1,6 +1,7 @@
 package com.snoworca.naruserve;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
@@ -14,6 +15,7 @@ import java.util.Arrays;
  * wildcards Kotlin writes for declaration-site variance ({@code List<? extends String>}) are dropped.
  */
 // @req IR-JSON-001
+// @req FR-DX-011
 public abstract class TypeRef<T> {
 
     private final Type type;
@@ -24,10 +26,47 @@ public abstract class TypeRef<T> {
         Type superclass = getClass().getGenericSuperclass();
         Type arg = superclass instanceof ParameterizedType
                 ? ((ParameterizedType) superclass).getActualTypeArguments()[0] : null;
-        if (arg == null || arg instanceof TypeVariable) {
+        if (arg == null || containsTypeVariable(arg)) {
             throw new IllegalStateException("TypeRef needs a concrete type argument");
         }
         this.type = isKotlin(getClass()) ? dropCovariantWildcards(arg) : arg;
+    }
+
+    // @req FR-DX-011
+    private static boolean containsTypeVariable(Type type) {
+        if (type instanceof TypeVariable) {
+            return true;
+        }
+        if (type instanceof GenericArrayType) {
+            return containsTypeVariable(((GenericArrayType) type).getGenericComponentType());
+        }
+        if (type instanceof ParameterizedType) {
+            ParameterizedType parameterized = (ParameterizedType) type;
+            Type owner = parameterized.getOwnerType();
+            if ((owner != null && containsTypeVariable(owner))
+                    || containsTypeVariable(parameterized.getRawType())) {
+                return true;
+            }
+            for (Type argument : parameterized.getActualTypeArguments()) {
+                if (containsTypeVariable(argument)) {
+                    return true;
+                }
+            }
+        }
+        if (type instanceof WildcardType) {
+            WildcardType wildcard = (WildcardType) type;
+            for (Type bound : wildcard.getUpperBounds()) {
+                if (containsTypeVariable(bound)) {
+                    return true;
+                }
+            }
+            for (Type bound : wildcard.getLowerBounds()) {
+                if (containsTypeVariable(bound)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     /** The captured type argument, such as {@code List<User>} or {@code String.class}. */
