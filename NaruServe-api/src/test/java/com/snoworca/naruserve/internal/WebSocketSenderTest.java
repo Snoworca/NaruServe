@@ -518,6 +518,9 @@ public class WebSocketSenderTest {
             assertEquals(200, sessions.size());
             WebSocketSender sender = sessions.get(0).sender();
             assertTrue("slots left: " + sender.slots(), eventually(() -> sender.slots() == 0));
+            // FR-WS-007 AC-7 through the internal session registry (docs/sds/...-wave-7-7.sds.md)
+            WebSocketRegistry registry = ((DefaultRestApp) t.app()).webSocketRegistry();
+            assertTrue("sessions left in the registry: " + registry.size(), eventually(() -> registry.size() == 0));
             for (DefaultWebSocketSession s : sessions) {
                 assertEquals(0, s.attributeCount());
                 assertEquals(0, sender.queuedBytes(s));

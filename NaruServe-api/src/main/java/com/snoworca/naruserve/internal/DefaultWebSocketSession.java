@@ -39,6 +39,7 @@ final class DefaultWebSocketSession implements WebSocketSession, WebSocketEndpoi
     private final SafeLogger log;
     private final WebSocketSender sender;
     private final WebSocketIdleScheduler idle;
+    private final WebSocketRegistry registry;
     private final int sendQueueSize;
     private final long idleTimeoutMillis;
     /** System.nanoTime() of the last text or binary message received or sent. */
@@ -72,6 +73,7 @@ final class DefaultWebSocketSession implements WebSocketSession, WebSocketEndpoi
         this.log = upgrade.log();
         this.sender = upgrade.sender();
         this.idle = upgrade.idle();
+        this.registry = upgrade.registry();
         this.sendQueueSize = upgrade.sendQueueSize();
         this.idleTimeoutMillis = upgrade.idleTimeoutMillis();
     }
@@ -89,6 +91,10 @@ final class DefaultWebSocketSession implements WebSocketSession, WebSocketEndpoi
 
     WebSocketSender sender() {
         return sender;
+    }
+
+    String requestId() {
+        return rid;
     }
 
     /** Restarts the idle clock: a text or binary message was received, or its write returned. */
@@ -141,8 +147,36 @@ final class DefaultWebSocketSession implements WebSocketSession, WebSocketEndpoi
     // @req FR-WS-008
     @Override
     public void onOpen(WebSocketChannel channel) {
+        opening(channel);
+    }
+
+    /**
+     * Stores the channel, then reads the registry state under the registry lock: OPEN starts the idle watch and runs
+     * the handler; CLOSING (the close wait runs and counts this session) hands close 1001 to the sender slot as its
+     * only task; ENDED (the wait is over) aborts at once with no close frame. The handler never runs in the last two.
+     */
+    // @req FR-WS-009
+    // @req FR-WS-010
+    void opening(WebSocketChannel channel) {
         this.channel = channel;
-        opened = true;
+        WebSocketRegistry.State state;
+        synchronized (registry) {
+            opened = true;
+            state = registry.state();
+            try {
+                if (state == WebSocketRegistry.State.CLOSING) {
+                    closeBy(1001, "server shutdown"); // queued before the wait can see this session opened
+                }
+            } finally {
+                registry.notifyAll(); // the close wait checks opened sessions
+            }
+        }
+        if (state == WebSocketRegistry.State.ENDED) {
+            abort();
+        }
+        if (state != WebSocketRegistry.State.OPEN) {
+            return;
+        }
         touch();
         idle.watch(this, idleTimeoutMillis);
         WebSocketHandler h = handler;

@@ -89,6 +89,22 @@ final class WebSocketIdleScheduler {
         }
     }
 
+    /** Cancels every check and ends the thread, waiting up to {@code waitMillis} for it; called at shutdown. */
+    // @req FR-WS-010
+    void shutdownNow(long waitMillis) {
+        synchronized (this) {
+            watches.clear();
+        }
+        exec.shutdownNow();
+        try {
+            if (!exec.awaitTermination(waitMillis, TimeUnit.MILLISECONDS)) {
+                log.warn("websocket idle thread still running " + waitMillis + " ms after shutdown");
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
     /** Aborts the socket when the session's close, or a write before it, has still not returned. */
     private void abortUnlessClosed(DefaultWebSocketSession session) {
         try {

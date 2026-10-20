@@ -128,6 +128,10 @@ public final class DefaultRestApp implements RestApp {
     private volatile boolean bindAttempted;
     /** The adapter's bound port once bind returned, 0 before; named in the WebSocket sender and idle threads. */
     private volatile int boundPort;
+    /** The WebSocket session registry; null before freeze. Guarded by this. */
+    private @Nullable WebSocketRegistry webSocketRegistry;
+    /** The deadline of the running shutdown sequence, for the before-wait participants; set as the sequence starts. */
+    private volatile long shutdownDeadlineNanos;
     // The thread inside listen() or the shutdown sequence; a shutdown() from it must not wait for itself. Each owner
     // clears only its own entry, so listen() returning never wipes the identity a racing shutdown thread just set.
     private final AtomicReference<@Nullable Thread> lifecycleThread = new AtomicReference<>();
@@ -646,6 +650,7 @@ public final class DefaultRestApp implements RestApp {
         SafeLogger log = new SafeLogger(logger);
         Thread self = Thread.currentThread();
         lifecycleThread.set(self);
+        shutdownDeadlineNanos = deadlineNanos;
         Error error = null;
         try {
             HttpAdapter a = Objects.requireNonNull(adapter, "adapter");
@@ -887,6 +892,7 @@ public final class DefaultRestApp implements RestApp {
     // @req FR-WS-001
     // @req FR-WS-007
     // @req FR-WS-008
+    // @req FR-WS-010
     public synchronized void freeze() {
         if (dispatcher != null) {
             return;
@@ -911,13 +917,29 @@ public final class DefaultRestApp implements RestApp {
         frozenWebSocketOptions = ws;
         SafeLogger safe = new SafeLogger(logger); // the logger is fixed from here: logger(...) needs an unfrozen app
         WebSocketSender.IntSupplier port = () -> boundPort; // threads are made after bind, so they see the real port
+        WebSocketSender sender = new WebSocketSender(serverOptions.maxUpgradedConnections(), port, safe);
+        WebSocketIdleScheduler idle = new WebSocketIdleScheduler(port, safe);
+        WebSocketRegistry registry = new WebSocketRegistry(sender, idle);
         dispatcher = new Dispatcher(router, pipeline, new ErrorPath(errorHandlers, safe),
                 new AccessLog(accessLogOptions, safe), context, jsonCodec(), jsonLimit(), trustProxy,
                 multipartSettings().copy(), formLimit(), spool(), new StaticHandler(staticMounts, mimeTypes, defaultCache),
-                new WebSocketUpgrade(ws, jsonCodec(), safe,
-                        new WebSocketSender(serverOptions.maxUpgradedConnections(), port, safe),
-                        new WebSocketIdleScheduler(port, safe)));
+                new WebSocketUpgrade(ws, jsonCodec(), safe, sender, idle, registry));
+        webSocketRegistry = registry;
+        // shortcut: reads the deadline field until the FR-APP-020 deadline overload of ShutdownParticipants lands
+        shutdownParticipants.add(ShutdownParticipants.Phase.BEFORE_WAIT,
+                () -> registry.closeAll(shutdownDeadlineNanos));
+        shutdownParticipants.add(ShutdownParticipants.Phase.FORCE_CLOSE, registry::terminate);
         lifecycle.markFrozen();
+    }
+
+    /** The WebSocket session registry built by a successful {@link #freeze()}; for internal tests. */
+    // @req FR-WS-010
+    synchronized WebSocketRegistry webSocketRegistry() {
+        WebSocketRegistry r = webSocketRegistry;
+        if (r == null) {
+            throw new IllegalStateException("RestApp is not frozen; call freeze() first");
+        }
+        return r;
     }
 
     /** The dispatcher built by a successful {@link #freeze()}; {@link IllegalStateException} before that. */

@@ -1,0 +1,184 @@
+package com.snoworca.naruserve.tinyhttpd;
+
+import static com.snoworca.naruserve.tinyhttpd.RawWebSocketClient.CLOSE;
+import static com.snoworca.naruserve.tinyhttpd.RawWebSocketClient.TEXT;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+import com.snoworca.naruserve.RestApp;
+import com.snoworca.naruserve.testing.RecordingLogger;
+import com.snoworca.naruserve.tinyhttpd.RawTargetSocketTest.Http;
+import java.io.IOException;
+import java.lang.reflect.Method;
+import java.net.SocketTimeoutException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Locale;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
+import org.junit.After;
+import org.junit.Test;
+
+/**
+ * The WebSocket closing participant over TinyHttpd (T21, T44). SDS-AC-n cites
+ * docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-7.sds.md.
+ */
+public class WebSocketShutdownSocketTest {
+
+    /** One stalled-session message: 512 KiB. */
+    private static final String BIG;
+
+    static {
+        char[] a = new char[512 * 1024];
+        Arrays.fill(a, 's');
+        BIG = new String(a);
+    }
+
+    private final RestApp app = Http.app(new TinyHttpdAdapter(), new RecordingLogger());
+    private final List<RawWebSocketClient> clients = new ArrayList<>();
+    /** onClose of the stalled sessions, as System.nanoTime() of the call. */
+    private final BlockingQueue<Long> stalledClosed = new LinkedBlockingQueue<>();
+    private final BlockingQueue<String> healthyClosed = new LinkedBlockingQueue<>();
+
+    @After
+    public void stop() {
+        app.shutdown(2, TimeUnit.SECONDS);
+        for (RawWebSocketClient c : clients) {
+            try {
+                c.close();
+            } catch (IOException e) {
+                // already gone
+            }
+        }
+    }
+
+    /** The internal registry size of {@code app}, read reflectively since it is package-private in the core. */
+    static int registrySize(RestApp app) throws Exception {
+        Method m = app.getClass().getDeclaredMethod("webSocketRegistry");
+        m.setAccessible(true);
+        Object registry = m.invoke(app);
+        Method size = registry.getClass().getDeclaredMethod("size");
+        size.setAccessible(true);
+        return (Integer) size.invoke(registry);
+    }
+
+    /** /stall queues 16 x 512 KiB on "stall"; /ok answers "hello" to any text. */
+    private int listen() {
+        app.webSocket(o -> o.sendQueueSize(64 * 1024 * 1024));
+        app.ws("/stall", (req, ws) -> {
+            ws.onClose((code, reason) -> stalledClosed.add(System.nanoTime()));
+            ws.onText(text -> {
+                for (int i = 0; i < 16; i++) {
+                    ws.sendText(BIG);
+                }
+            });
+        });
+        app.ws("/ok", (req, ws) -> {
+            ws.onClose((code, reason) -> healthyClosed.add(code + " " + reason));
+            ws.onText(text -> ws.sendText("hello"));
+        });
+        return app.listen(0).port();
+    }
+
+    private RawWebSocketClient open(int port, String path) throws IOException {
+        RawWebSocketClient c = RawWebSocketClient.open(port, path);
+        clients.add(c);
+        assertEquals(c.handshake, 101, c.status());
+        return c;
+    }
+
+    /** Sender threads of {@code port} now inside a socket write, which a client that stopped reading keeps blocked. */
+    private static int blockedWriters(int port) {
+        int n = 0;
+        for (Thread t : Http.threads("naruserve-" + port + "-ws-sender-")) {
+            for (StackTraceElement e : t.getStackTrace()) {
+                String c = e.getClassName();
+                if ((c.startsWith("sun.nio.ch.") || c.startsWith("java.net."))
+                        && e.getMethodName().toLowerCase(Locale.ROOT).contains("write")) {
+                    n++;
+                    break;
+                }
+            }
+        }
+        return n;
+    }
+
+    /** Reads what the server sent until end of stream or a reset; fails when the socket stays open for 5 s. */
+    private static void readToEnd(RawWebSocketClient c) throws IOException {
+        c.setReadTimeout(5000);
+        try {
+            while (true) {
+                c.readFrame();
+            }
+        } catch (SocketTimeoutException e) {
+            fail("the client socket is still open");
+        } catch (IOException endOrReset) {
+            // end of stream or reset: the server aborted the connection
+        }
+    }
+
+    // SDS-AC-9; FR-WS-010 AC-4, AC-2: with two sessions whose writes blocked on clients that stopped reading, both
+    // are aborted within 1 s plus 200 ms of the participant starting and their sockets end; a healthy session
+    // receives close 1001 and its onClose runs once with 1001, though its client never answers the close (T21, T44)
+    @Test(timeout = 60000)
+    public void sdsAc9_FR_WS_010_AC4_AC2_twoStalledSessionsAbortedWithin1200MsHealthyGets1001() throws Exception {
+        int port = listen();
+        RawWebSocketClient s1 = open(port, "/stall");
+        RawWebSocketClient s2 = open(port, "/stall");
+        s1.text("stall"); // and never reads again
+        s2.text("stall");
+        RawWebSocketClient healthy = open(port, "/ok");
+        healthy.text("hi");
+        assertEquals("hello", healthy.readFrame(TEXT).text());
+        long end = System.nanoTime() + TimeUnit.SECONDS.toNanos(10);
+        while (blockedWriters(port) < 2 && System.nanoTime() < end) {
+            Thread.sleep(5);
+        }
+        assertEquals("sender threads blocked in a write", 2, blockedWriters(port));
+        Thread stopper = new Thread(() -> app.shutdown(5, TimeUnit.SECONDS));
+        long start = System.nanoTime();
+        stopper.start();
+        for (int i = 0; i < 2; i++) {
+            Long closed = stalledClosed.poll(10, TimeUnit.SECONDS);
+            assertNotNull("stalled session " + i + " never ended", closed);
+            long ms = TimeUnit.NANOSECONDS.toMillis(closed - start);
+            assertTrue("stalled session aborted " + ms + " ms after shutdown began", ms <= 1200);
+        }
+        RawWebSocketClient.Frame close = healthy.readFrame(CLOSE);
+        assertEquals(1001, close.closeCode());
+        assertEquals("server shutdown", close.closeReason());
+        readToEnd(s1);
+        readToEnd(s2);
+        long ended = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
+        assertTrue("stalled client sockets ended " + ended + " ms after shutdown began", ended <= 1200);
+        stopper.join(10000);
+        assertTrue("shutdown did not return", !stopper.isAlive());
+        assertEquals("1001 server shutdown", healthyClosed.poll(10, TimeUnit.SECONDS));
+        assertNull("onClose ran twice", healthyClosed.poll(200, TimeUnit.MILLISECONDS));
+    }
+
+    // SDS-AC-12; FR-WS-010 AC-8: after shutdown returned no naruserve-<port>-ws- thread of the app is alive and its
+    // session registry is empty (T44)
+    @Test(timeout = 30000)
+    public void sdsAc12_FR_WS_010_AC8_noWsThreadOfThePortAndAnEmptyRegistryAfterShutdown() throws Exception {
+        int port = listen();
+        RawWebSocketClient healthy = open(port, "/ok");
+        healthy.text("hi");
+        assertEquals("hello", healthy.readFrame(TEXT).text());
+        assertTrue("no idle thread", !Http.threads("naruserve-" + port + "-ws-idle").isEmpty());
+        assertTrue("no sender thread", !Http.threads("naruserve-" + port + "-ws-sender-").isEmpty());
+        app.shutdown(2, TimeUnit.SECONDS);
+        // a thread whose executor reports terminated may still be leaving its run method
+        long end = System.nanoTime() + TimeUnit.SECONDS.toNanos(1);
+        while (!Http.threads("naruserve-" + port + "-ws-").isEmpty() && System.nanoTime() < end) {
+            Thread.sleep(5);
+        }
+        assertEquals(new ArrayList<Thread>(), Http.threads("naruserve-" + port + "-ws-"));
+        assertEquals(0, registrySize(app));
+    }
+}

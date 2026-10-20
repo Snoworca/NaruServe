@@ -61,6 +61,7 @@ public final class InMemoryHttpAdapter implements HttpAdapter {
     private int port;
     private boolean stopped;
     private @Nullable HttpException webSocketRefusal;
+    private @Nullable Runnable beforeOpen;
 
     private final LinkedBlockingQueue<InMemoryWebSocketChannel> openedChannels = new LinkedBlockingQueue<>();
 
@@ -194,6 +195,15 @@ public final class InMemoryHttpAdapter implements HttpAdapter {
     // @req IR-WS-002
     public synchronized void refuseWebSocket(@Nullable HttpException e) {
         webSocketRefusal = e;
+    }
+
+    /**
+     * Every later {@code webSocket} call runs {@code hook} on its thread after 101 is recorded and the channel is
+     * offered to {@link #nextChannel}, before {@code onOpen}; null removes it.
+     */
+    // @req FR-WS-009
+    public synchronized void beforeOpen(@Nullable Runnable hook) {
+        beforeOpen = hook;
     }
 
     /**
@@ -561,8 +571,10 @@ public final class InMemoryHttpAdapter implements HttpAdapter {
                 }
             }
             HttpException refusal;
+            Runnable hook;
             synchronized (InMemoryHttpAdapter.this) {
                 refusal = webSocketRefusal;
+                hook = beforeOpen;
             }
             if (refusal != null) {
                 throw refusal;
@@ -579,6 +591,9 @@ public final class InMemoryHttpAdapter implements HttpAdapter {
             }
             openedChannels.add(channel);
             try {
+                if (hook != null) {
+                    hook.run();
+                }
                 channel.run(endpoint);
             } catch (RuntimeException | Error e) {
                 abort();

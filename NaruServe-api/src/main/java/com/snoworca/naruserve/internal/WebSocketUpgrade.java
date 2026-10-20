@@ -29,6 +29,7 @@ final class WebSocketUpgrade {
     private final long idleTimeoutMillis;
     private final WebSocketSender sender;
     private final WebSocketIdleScheduler idle;
+    private final WebSocketRegistry registry;
 
     /**
      * For an app without server options (the Dispatcher's test constructors): the default limit of 128 sender threads
@@ -38,16 +39,25 @@ final class WebSocketUpgrade {
         this(options, codec, log, new WebSocketSender(128, () -> 0, log), new WebSocketIdleScheduler(() -> 0, log));
     }
 
+    /** With a registry of its own over {@code sender} and {@code idle}. */
+    WebSocketUpgrade(DefaultWebSocketOptions options, @Nullable JsonCodec codec, SafeLogger log,
+            WebSocketSender sender, WebSocketIdleScheduler idle) {
+        this(options, codec, log, sender, idle, new WebSocketRegistry(sender, idle));
+    }
+
     /**
-     * {@code options} must be the frozen copy; {@code sender} and {@code idle} are the app's, built at freeze. An
-     * allowlist entry that is not {@code *} or {@code scheme://host[:port]} never matches, so it gets one warning here.
+     * {@code options} must be the frozen copy; {@code sender}, {@code idle} and {@code registry} are the app's, built
+     * at freeze. An allowlist entry that is not {@code *} or {@code scheme://host[:port]} never matches, so it gets one
+     * warning here.
      */
     // @req FR-WS-001
     // @req FR-WS-003
     // @req FR-WS-007
+    // @req FR-WS-009
     WebSocketUpgrade(DefaultWebSocketOptions options, @Nullable JsonCodec codec, SafeLogger log,
-            WebSocketSender sender, WebSocketIdleScheduler idle) {
+            WebSocketSender sender, WebSocketIdleScheduler idle, WebSocketRegistry registry) {
         this.codec = codec;
+        this.registry = Objects.requireNonNull(registry, "registry");
         this.log = Objects.requireNonNull(log, "log");
         this.sender = Objects.requireNonNull(sender, "sender");
         this.idle = Objects.requireNonNull(idle, "idle");
@@ -63,11 +73,8 @@ final class WebSocketUpgrade {
     }
 
     /**
-     * Decodes the query, checks Origin (HttpException 403 before any session exists), then hands the exchange to
-     * the adapter. A failure before onOpen propagates to the error path; after onOpen the connection is upgraded,
-     * so it is logged and the exchange still ends, but only once the session's write in flight returned, so the
-     * adapter never frees the connection slot while a sender thread still writes to it. A null {@code handler}
-     * upgrades without running user code.
+     * Decodes the query, checks Origin (HttpException 403 before any session exists), then upgrades. A null
+     * {@code handler} upgrades without running user code.
      */
     // @req FR-WS-001
     // @req FR-WS-003
@@ -78,17 +85,35 @@ final class WebSocketUpgrade {
         if (!origins.admits(req.header("Origin"), req.header("Host"), req.isSecure())) {
             throw new HttpException(403);
         }
-        DefaultWebSocketSession session = new DefaultWebSocketSession(nextId(), rid, this, handler, req);
-        try {
-            ex.webSocket(settings, session);
-        } catch (IOException | RuntimeException e) {
-            if (!session.opened()) {
-                throw e;
-            }
-            log.error("websocket " + rid + " failed", e);
-        }
-        sender.awaitIdle(session);
+        upgrade(ex, new DefaultWebSocketSession(nextId(), rid, this, handler, req));
         res.upgraded();
+    }
+
+    /**
+     * Reserves the session (503 with Connection: close once the closed flag is set), then hands the exchange to the
+     * adapter. A failure before onOpen propagates to the error path; after onOpen the connection is upgraded, so it is
+     * logged and the exchange still ends, but only once the session's write in flight returned, so the adapter never
+     * frees the connection slot while a sender thread still writes to it. The reservation ends with the exchange.
+     */
+    // @req FR-WS-007
+    // @req FR-WS-009
+    void upgrade(HttpExchange ex, DefaultWebSocketSession session) throws IOException {
+        if (!registry.reserve(session)) {
+            throw new HttpException(503).withHeader("Connection", "close");
+        }
+        try {
+            try {
+                ex.webSocket(settings, session);
+            } catch (IOException | RuntimeException e) {
+                if (!session.opened()) {
+                    throw e;
+                }
+                log.error("websocket " + session.requestId() + " failed", e);
+            }
+            sender.awaitIdle(session);
+        } finally {
+            registry.remove(session);
+        }
     }
 
     /** The next session id of this app: 16 lowercase hex digits of a counter starting at 1. */
@@ -111,6 +136,10 @@ final class WebSocketUpgrade {
 
     WebSocketIdleScheduler idle() {
         return idle;
+    }
+
+    WebSocketRegistry registry() {
+        return registry;
     }
 
     int sendQueueSize() {

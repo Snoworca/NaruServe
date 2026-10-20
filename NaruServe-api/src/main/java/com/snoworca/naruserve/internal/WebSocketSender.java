@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -156,6 +157,53 @@ final class WebSocketSender {
         }
     }
 
+    /**
+     * Waits until no write of the session is running or queued, at most until {@code untilNanos}; true when idle by
+     * then. An interrupt ends the wait with the flag kept.
+     */
+    // @req FR-WS-010
+    synchronized boolean awaitIdleUntil(DefaultWebSocketSession session, long untilNanos) {
+        Slot s = slots.get(session);
+        while (s != null && s.running) {
+            long left = untilNanos - System.nanoTime();
+            if (left <= 0) {
+                return false;
+            }
+            try {
+                TimeUnit.NANOSECONDS.timedWait(this, left);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return !s.running;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Stops the executor at shutdown: interrupts its threads and waits up to {@code waitMillis} for them to end. A write
+     * started later is refused by the executor.
+     */
+    // @req FR-WS-010
+    void shutdownNow(long waitMillis) {
+        pool.shutdownNow();
+        try {
+            if (!pool.awaitTermination(waitMillis, TimeUnit.MILLISECONDS)) {
+                log.warn("websocket sender threads still running " + waitMillis + " ms after shutdown");
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+        synchronized (this) {
+            // a drain task shutdownNow dropped never marks its slot idle: do it here, so no awaitIdle waits forever
+            for (Slot s : slots.values()) {
+                s.discard();
+                s.closed = true;
+                s.running = false;
+            }
+            notifyAll();
+        }
+    }
+
     /** Drops the slot and anything still queued; a write in flight ends first and then drops the slot itself. */
     // @req FR-WS-007
     synchronized void release(DefaultWebSocketSession session) {
@@ -185,6 +233,10 @@ final class WebSocketSender {
         return pool;
     }
 
+    SafeLogger log() {
+        return log;
+    }
+
     /** Internal test hook: the time an idle sender thread waits before it ends. */
     void keepAlive(long millis) {
         pool.setKeepAliveTime(millis, TimeUnit.MILLISECONDS);
@@ -208,6 +260,10 @@ final class WebSocketSender {
                 s.bytes -= first.bytes;
                 s.discard();
                 idled(session, s);
+            }
+            if (e instanceof RejectedExecutionException) {
+                log.debug("websocket write dropped after shutdown: " + e); // the session is closing; sends return
+                return;
             }
             throw e;
         }
