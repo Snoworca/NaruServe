@@ -54,6 +54,10 @@ public class NaruServeInitializer implements ServletContainerInitializer {
             throw new ServletException("a servlet named '" + NaruServeServlet.NAME + "' is already registered");
         }
         reg.setAsyncSupported(true);
-        reg.addMapping(pattern);
+        // addMapping returns the patterns another servlet already owns; left unchecked the app would never be routed to
+        if (!reg.addMapping(pattern).isEmpty()) {
+            throw new ServletException(InitParams.URL_PATTERN + " '" + pattern
+                    + "' conflicts with a mapping of another servlet");
+        }
     }
 }

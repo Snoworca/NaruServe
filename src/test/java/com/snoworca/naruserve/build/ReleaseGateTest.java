@@ -111,4 +111,20 @@ public class ReleaseGateTest {
         Decision d = ReleaseGate.decide(report("junit:junit:4.13.2", 8.8), NO_EXCEPTIONS);
         assertTrue(d.message, d.pass);
     }
+
+    // FR-REL-003 AC-1, AC-4: the gate fails closed (review G4-001). A completed report without shipped dependencies
+    // cannot tell shipped from test scope, so it blocks; a finding whose coordinate differs from a shipped one only
+    // in the version (a normalised or related purl) blocks instead of being taken for a test-scope artifact.
+    @Test
+    public void fr_REL_003_AC1_AC4_unknownShipStatusFailsClosed() {
+        String noDeps = ScanReport.completed("OWASP Dependency-Check 13.0.0", "2026-10-20T01:02:03Z",
+                Collections.singletonList(new Finding(GSON, "CVE-2099-0001", 7.5)),
+                new java.util.TreeSet<String>());
+        Decision empty = ReleaseGate.decide(noDeps, NO_EXCEPTIONS);
+        assertFalse(empty.message, empty.pass);
+        assertTrue(empty.message, empty.message.contains("Dependencies"));
+        Decision normalised = ReleaseGate.decide(report("com.google.code.gson:gson:2.14", 7.5), NO_EXCEPTIONS);
+        assertFalse(normalised.message, normalised.pass);
+        assertTrue(normalised.message, normalised.message.contains("com.google.code.gson:gson:2.14"));
+    }
 }

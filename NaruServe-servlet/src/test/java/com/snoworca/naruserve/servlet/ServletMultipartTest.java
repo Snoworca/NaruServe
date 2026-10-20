@@ -20,7 +20,6 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 
 /**
  * Multipart, urlencoded and JSON bodies on Jetty go through the core parser over getInputStream.
@@ -30,9 +29,6 @@ public class ServletMultipartTest {
 
     @Rule
     public final ContainerRule container = new ContainerRule();
-
-    @Rule
-    public final TemporaryFolder tmp = new TemporaryFolder();
 
     private static final String B = "svl";
     private static final String MP = "multipart/form-data; boundary=" + B;
@@ -99,7 +95,7 @@ public class ServletMultipartTest {
     // SDS-AC-1; FR-SVL-004 AC-1
     @Test
     public void sdsAc1_FR_SVL_004_AC1_multipartAndFormBodiesGiveTheSameAccessorsOnJettyAndInMemory() throws Exception {
-        File dir = tmp.newFolder("spool");
+        File dir = container.uploads(); // checked again by the rule after the test (FR-SVL-006 AC-5)
         int port = jetty(app -> routes(app, dir));
         InMemoryHttpAdapter memory = new InMemoryHttpAdapter();
         SharedApp.listen(memory, app -> routes(app, dir));
@@ -121,7 +117,7 @@ public class ServletMultipartTest {
     // SDS-AC-2; FR-SVL-004 AC-2
     @Test
     public void sdsAc2_FR_SVL_004_AC2_theAdapterReadsGetInputStreamOnlyAndHoldsNoMultipartConfig() throws Exception {
-        File dir = tmp.newFolder("spool");
+        File dir = container.uploads(); // checked again by the rule after the test (FR-SVL-006 AC-5)
         List<String> calls = Collections.synchronizedList(new ArrayList<String>());
         container.filter(RecordingRequest.filter(calls));
         int port = jetty(app -> routes(app, dir));
@@ -134,6 +130,7 @@ public class ServletMultipartTest {
         for (String name : FORBIDDEN) {
             assertFalse(name + " called: " + seen, seen.contains(name));
         }
+        assertEquals("no upload file left", Collections.emptyList(), Arrays.asList(dir.list()));
 
         WebAppContext ctx = container.webApp(new HashMap<>(
                 ServletConfigurerTest.configurer(ServletConfigurerTest.Good.class)));
@@ -144,7 +141,7 @@ public class ServletMultipartTest {
     // SDS-AC-3; FR-SVL-004 AC-3
     @Test
     public void sdsAc3_FR_SVL_004_AC3_bodiesAboveTheCoreLimitsAnswer413AndLeaveNoUploadFile() throws Exception {
-        File dir = tmp.newFolder("spool");
+        File dir = container.uploads(); // checked again by the rule after the test (FR-SVL-006 AC-5)
         int port = jetty(app -> routes(app, dir));
         StringBuilder many = new StringBuilder();
         for (int i = 0; i < 6; i++) {

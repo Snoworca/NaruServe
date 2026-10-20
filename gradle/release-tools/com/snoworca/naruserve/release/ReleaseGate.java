@@ -33,7 +33,8 @@ public final class ReleaseGate {
      * Fails on a High or Critical finding (CVSS 7.0 or higher) of a dependency in the report's dependency list that
      * has no complete exception row (id, dependency, reason, approver and date all non-empty); a pending report
      * passes with {@link #PENDING_MESSAGE}. An unscored finding, and a High one named by a jar instead of a
-     * coordinate, block as well unless excepted.
+     * coordinate, block as well unless excepted, and so does any finding whose group and name match a shipped
+     * dependency of another version; a completed report with an empty dependency list blocks.
      */
     // @req FR-REL-003
     public static Decision decide(String report, String exceptions) {
@@ -45,10 +46,16 @@ public final class ReleaseGate {
             return new Decision(true, PENDING_MESSAGE);
         }
         Set<String> deps = new HashSet<>();
+        Set<String> shippedModules = new HashSet<>();
         for (String line : section(report, "## Dependencies")) {
             if (COORDINATE.matcher(line.trim()).matches()) {
                 deps.add(line.trim());
+                shippedModules.add(module(line.trim()));
             }
+        }
+        if (deps.isEmpty()) {
+            // without the shipped list no finding can be told apart from a test-scope one: fail closed
+            return new Decision(false, "release blocked: the completed vulnerability report lists no '## Dependencies'");
         }
         Set<String> excepted = new HashSet<>();
         for (List<String> row : rows(splitLines(exceptions))) {
@@ -66,7 +73,7 @@ public final class ReleaseGate {
             }
             String dependency = row.get(0);
             boolean coordinate = COORDINATE.matcher(dependency).matches();
-            if (coordinate && !deps.contains(dependency)) {
+            if (coordinate && !shippedModules.contains(module(dependency))) {
                 continue; // not shipped: test scope or compileOnly
             }
             double cvss;
@@ -88,6 +95,11 @@ public final class ReleaseGate {
             return new Decision(false, String.join("\n", blocked));
         }
         return new Decision(true, "vulnerability scan cleared: no unexcepted High or Critical finding");
+    }
+
+    /** {@code group:name} of a {@code group:name:version} coordinate; a finding of another version still blocks. */
+    private static String module(String coordinate) {
+        return coordinate.substring(0, coordinate.lastIndexOf(':'));
     }
 
     private static List<String> splitLines(String text) {

@@ -96,8 +96,14 @@ final class SseProbe implements Closeable {
      */
     // @req FR-SVL-005
     long awaitPayload(String part) throws IOException {
+        return awaitCount(part, 1);
+    }
+
+    /** As {@link #awaitPayload}, until the payload holds {@code part} at least {@code count} times. */
+    // @req FR-SVL-005
+    long awaitCount(String part, int count) throws IOException {
         long at = System.nanoTime();
-        while (!payload().contains(part)) {
+        while (count(payload(), part) < count) {
             int n;
             try {
                 n = read();
@@ -110,6 +116,15 @@ final class SseProbe implements Closeable {
             at = System.nanoTime();
         }
         return at;
+    }
+
+    /** Non-overlapping occurrences of {@code part} in {@code text}. */
+    static int count(String text, String part) {
+        int n = 0;
+        for (int i = text.indexOf(part); i >= 0; i = text.indexOf(part, i + part.length())) {
+            n++;
+        }
+        return n;
     }
 
     /** Reads until the server ends the response or closes; false when the read timeout passed first. */

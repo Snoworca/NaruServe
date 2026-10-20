@@ -112,18 +112,25 @@ public class ServletStopTest {
         AtomicReference<SharedApp.Reply> slowReply = slow(slowThread);
         assertTrue(entered.await(10, TimeUnit.SECONDS));
         long[] took = {-1};
-        Thread stopper = stopAsync(2, took);
+        // A 10 s deadline keeps "at once" and "before the deadline" apart from scheduler noise on a loaded host.
+        Thread stopper = stopAsync(10, took);
         awaitStopping();
         long at = System.nanoTime();
         assertRefused(SharedApp.http(container.port(), "GET", "/fast", null));
-        assertTrue("503 not at once", TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - at) < 1000);
+        long refusedIn = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - at);
         assertTrue("stop returned while a request was in flight", stopper.isAlive());
-        Thread.sleep(300);
+        assertTrue("503 not at once: " + refusedIn + " ms", refusedIn < 1000);
+        stopper.join(300);
+        assertTrue("stop returned while a request was in flight", stopper.isAlive());
+        long released = System.nanoTime();
         proceed.countDown();
-        stopper.join(5000);
+        stopper.join(15000);
         slowThread[0].join(5000);
         assertFalse(stopper.isAlive());
-        assertTrue("stop waited " + took[0] + " ms", took[0] >= 250 && took[0] < 1900);
+        long afterRelease = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - released);
+        // it waited for the slow request and returned as soon as it ended, far before the 10 s deadline
+        assertTrue("stop waited " + took[0] + " ms", took[0] >= 250 && took[0] < 5000);
+        assertTrue("stop returned " + afterRelease + " ms after the slow request was let go", afterRelease < 5000);
         assertEquals(200, slowReply.get().status);
         assertEquals("done", slowReply.get().text());
     }

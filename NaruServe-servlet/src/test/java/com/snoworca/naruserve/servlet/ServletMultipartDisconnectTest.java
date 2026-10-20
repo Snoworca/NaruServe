@@ -18,7 +18,6 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 
 /**
  * T17 on the Servlet adapter: a client that closes the socket halfway through a spooled part leaves no upload file
@@ -30,14 +29,11 @@ public class ServletMultipartDisconnectTest {
     @Rule
     public final ContainerRule container = new ContainerRule();
 
-    @Rule
-    public final TemporaryFolder tmp = new TemporaryFolder();
-
     // SDS-AC-4; FR-SVL-004 AC-4
     @Test(timeout = 30000)
     public void sdsAc4_FR_SVL_004_AC4_aClientCutMidUploadLeavesNoUploadFileAfterTheRequestThreadReturned()
             throws Exception {
-        File dir = tmp.newFolder("spool");
+        File dir = container.uploads(); // checked again by the rule after the test (FR-SVL-006 AC-5)
         CountDownLatch failed = new CountDownLatch(1);
         CountDownLatch returned = new CountDownLatch(1);
         // Counts down once the container's request thread is back out of the servlet.

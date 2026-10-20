@@ -16,6 +16,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
+import javax.servlet.AsyncContext;
+import javax.servlet.AsyncListener;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.WriteListener;
 import javax.servlet.http.HttpServletRequest;
@@ -163,6 +166,71 @@ public class ServletAbortTest {
         ex2.sendFile(200, headers("Content-Length", "0"), f, 0, 0);
         assertIllegalState("commit after sendFile", () -> ex2.commit(200, headers(), 0));
         assertIllegalState("second sendFile", () -> ex2.sendFile(200, headers(), f, 0, 0));
+    }
+
+    /** An AsyncContext proxy that keeps its listeners and counts complete(); any other call returns a default. */
+    static final class FakeAsync {
+        final List<AsyncListener> listeners = Collections.synchronizedList(new ArrayList<AsyncListener>());
+        final AtomicInteger completes = new AtomicInteger();
+        final AsyncContext proxy = (AsyncContext) Proxy.newProxyInstance(ServletAbortTest.class.getClassLoader(),
+                new Class<?>[] {AsyncContext.class}, (p, m, args) -> {
+                    if (m.getName().equals("addListener")) {
+                        listeners.add((AsyncListener) args[0]);
+                    } else if (m.getName().equals("complete")) {
+                        completes.incrementAndGet();
+                    }
+                    return null;
+                });
+    }
+
+    /** A started event stream exchange registered in {@code pool}, and the drain's stream over it. */
+    private static OutputStream stream(ServletEventStream.Pool pool, FakeAsync ac) throws IOException {
+        FakeResponse res = new FakeResponse();
+        ServletExchange ex = new ServletExchange(request(), res.proxy, "/");
+        ex.async(ac.proxy);
+        pool.track(ex, ac.proxy);
+        return new ServletEventStream.FlushingStream(ex, res.proxy.getOutputStream());
+    }
+
+    // FR-SVL-006 AC-3 (stop completes every open stream): a drain write after completeAll() fails, so the drain
+    // ends instead of writing to a completed and possibly recycled response (review G2-001)
+    @Test
+    public void fr_SVL_006_AC3_streamWriteAfterCompleteAllThrowsIOException() throws Exception {
+        ServletEventStream.Pool pool = new ServletEventStream.Pool(1);
+        try {
+            FakeAsync ac = new FakeAsync();
+            OutputStream out = stream(pool, ac);
+            out.write(1);
+            pool.completeAll();
+            assertEquals(1, ac.completes.get());
+            assertIOException("write after completeAll", () -> out.write(2));
+            assertIOException("flush after completeAll", out::flush);
+        } finally {
+            pool.shutdownNow();
+        }
+    }
+
+    // FR-SVL-005 AC-5 (one complete per stream): a container onError/onTimeout aborts the exchange, completes the
+    // context once and fails the drain's next write (review G2-001)
+    @Test
+    public void fr_SVL_005_AC5_containerErrorOrTimeoutAbortsAndCompletesOnce() throws Exception {
+        ServletEventStream.Pool pool = new ServletEventStream.Pool(2);
+        try {
+            FakeAsync errored = new FakeAsync();
+            OutputStream a = stream(pool, errored);
+            errored.listeners.get(0).onError(null);
+            assertEquals(1, errored.completes.get());
+            assertIOException("write after onError", () -> a.write(1));
+
+            FakeAsync timedOut = new FakeAsync();
+            OutputStream b = stream(pool, timedOut);
+            timedOut.listeners.get(0).onTimeout(null);
+            timedOut.listeners.get(0).onError(null);
+            assertEquals(1, timedOut.completes.get());
+            assertIOException("write after onTimeout", () -> b.write(1));
+        } finally {
+            pool.shutdownNow();
+        }
     }
 
     // SDS-AC-7; FR-SVL-003 AC-1 — setStatus, addHeader in order, Content-Length through setHeader, no sendError

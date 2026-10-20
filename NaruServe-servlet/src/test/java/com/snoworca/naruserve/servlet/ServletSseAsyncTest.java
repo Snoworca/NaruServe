@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import com.snoworca.naruserve.RestApp;
 import com.snoworca.naruserve.SseClient;
@@ -114,6 +115,29 @@ public class ServletSseAsyncTest {
         while (n.get() < value && System.nanoTime() < end) {
             Thread.sleep(5);
         }
+    }
+
+    /** Waits until every slot is back and no SSE thread runs drain code of the adapter any more. */
+    private static void awaitDrainEnded(ServletAdapter adapter) throws InterruptedException {
+        long end = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
+        while (System.nanoTime() < end) {
+            if (adapter.pool().open() == 0 && !inDrain()) {
+                return;
+            }
+            Thread.sleep(5);
+        }
+        fail("the drain did not end");
+    }
+
+    private static boolean inDrain() {
+        for (Thread t : ServletSseLimitTest.sseThreads(Collections.<Thread>emptySet())) {
+            for (StackTraceElement e : t.getStackTrace()) {
+                if (e.getClassName().startsWith(ServletEventStream.class.getName())) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     // SDS-AC-7; FR-SVL-005 AC-3
@@ -234,7 +258,7 @@ public class ServletSseAsyncTest {
         ex.abort();
         assertTrue(p.awaitEnd(5000));
         await(probe.completes, 1);
-        Thread.sleep(500); // the drain's own end comes after the abort and must not complete again
+        awaitDrainEnded(adapter); // the drain's own end comes after the abort and must not complete again
         assertEquals(1, probe.completes.get());
         long end = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
         while (c.isOpen() && System.nanoTime() < end) {

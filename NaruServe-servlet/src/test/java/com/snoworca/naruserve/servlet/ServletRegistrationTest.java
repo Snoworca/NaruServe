@@ -9,14 +9,18 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
 import javax.servlet.ServletRegistration;
+import javax.servlet.http.HttpServlet;
 
 import org.eclipse.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.util.MultiException;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.junit.Rule;
 import org.junit.Test;
@@ -115,6 +119,31 @@ public class ServletRegistrationTest {
             assertTrue(message, message.contains("naruserve.urlPattern"));
             assertTrue(message, message.contains("'" + pattern + "'"));
         }
+    }
+
+    // IR-SVL-001 AC-4: a url-pattern another servlet already owns fails startup naming parameter and value, instead
+    // of a started app the container never routes to (review G2-002)
+    @Test
+    public void ir_SVL_001_AC4_urlPatternOwnedByAnotherServletFailsStartup() {
+        ServletException e = null;
+        try {
+            container.webApp(params("naruserve.urlPattern", "/api/*"),
+                    ctx -> ctx.addServlet(new ServletHolder("other", new HttpServlet() {
+                    }), "/api/*"));
+        } catch (Exception thrown) {
+            for (Throwable t = thrown; t != null && e == null; t = t.getCause()) {
+                for (Throwable s : t instanceof MultiException ? ((MultiException) t).getThrowables()
+                        : Collections.singletonList(t)) {
+                    if (s instanceof ServletException) {
+                        e = (ServletException) s;
+                    }
+                }
+            }
+        }
+        assertNotNull("startup did not fail with a ServletException", e);
+        String message = String.valueOf(e.getMessage());
+        assertTrue(message, message.contains("naruserve.urlPattern"));
+        assertTrue(message, message.contains("'/api/*'"));
     }
 
     // SDS-AC-5; IR-SVL-001 AC-5

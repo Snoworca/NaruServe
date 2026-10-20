@@ -8,6 +8,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 import javax.servlet.DispatcherType;
 import javax.servlet.Filter;
@@ -54,6 +55,11 @@ class ContainerRule extends ExternalResource {
      * configuration), with the given context init-parameters; no test code names the initializer.
      */
     WebAppContext webApp(Map<String, String> initParams) throws Exception {
+        return webApp(initParams, null);
+    }
+
+    /** As {@link #webApp(Map)}, with {@code before} applied to the context before it starts. */
+    WebAppContext webApp(Map<String, String> initParams, @Nullable Consumer<WebAppContext> before) throws Exception {
         WebAppContext ctx = new WebAppContext();
         ctx.setContextPath("/");
         ctx.setResourceBase(baseDir().getAbsolutePath());
@@ -64,6 +70,9 @@ class ContainerRule extends ExternalResource {
             new MetaInfConfiguration(), new FragmentConfiguration(), new AnnotationConfiguration()});
         for (Map.Entry<String, String> e : initParams.entrySet()) {
             ctx.setInitParameter(e.getKey(), e.getValue());
+        }
+        if (before != null) {
+            before.accept(ctx);
         }
         start(ctx);
         return ctx;

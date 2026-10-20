@@ -87,6 +87,29 @@ public class ServletStopSseTest {
         assertEquals("AsyncContext.complete() calls", n, completes.completes.get());
     }
 
+    /**
+     * Waits until the stream's drain thread is parked inside a body write, so the non-reading client has filled
+     * every buffer on the way and stop cannot end the stream before the deadline; fails if that never happens.
+     */
+    private static void awaitBlockedWrite() throws InterruptedException {
+        long end = System.nanoTime() + TimeUnit.SECONDS.toNanos(10);
+        while (System.nanoTime() < end) {
+            for (Thread t : ServletSseLimitTest.sseThreads(java.util.Collections.<Thread>emptySet())) {
+                if (t.getState() == Thread.State.RUNNABLE) {
+                    continue;
+                }
+                for (StackTraceElement e : t.getStackTrace()) {
+                    if (e.getClassName().equals(ServletEventStream.FlushingStream.class.getName())
+                            && e.getMethodName().equals("write")) {
+                        return;
+                    }
+                }
+            }
+            Thread.sleep(10);
+        }
+        fail("the drain never blocked in a write: the socket buffers took the whole queue");
+    }
+
     // FR-SVL-006 AC-2 SDS-AC-2: closing notice, end of each chunked body, one complete per stream, executor down
     @Test
     public void sdsAc2_FR_SVL_006_AC2_shutdownEndsEveryOpenStream() throws Exception {
@@ -139,7 +162,7 @@ public class ServletStopSseTest {
             for (int i = 0; i < 240; i++) {
                 assertTrue("send " + i, c.send(data));
             }
-            Thread.sleep(300);
+            awaitBlockedWrite();
             awaitOpen(1);
             long at = System.nanoTime();
             adapter.stop(1, TimeUnit.SECONDS);

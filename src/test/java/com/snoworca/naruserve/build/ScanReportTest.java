@@ -205,4 +205,21 @@ public class ScanReportTest {
         assertEquals("Critical", findings.get(1).severity());
         assertTrue(Double.isNaN(findings.get(2).cvss));
     }
+
+    // FR-REL-002 AC-5 (missing findings gives pending): an empty CSV, or one whose header lacks the CVE or the
+    // Identifiers column, yields no findings list (null), so the report is pending and not "completed, no findings"
+    // (review G4-002); a header-only CSV stays a completed scan without findings.
+    @Test
+    public void fr_REL_002_AC5_emptyOrHeaderlessCsvGivesPending() {
+        SortedSet<String> deps = DependencyList.runtime(GRAPH);
+        String[] unusable = {"", "\n", "\"Project\",\"ScanDate\",\"DependencyName\"\n\"p\",\"d\",\"a.jar\"\n",
+            "\"Project\",\"Identifiers\"\n", "\"Project\",\"CVE\"\n"};
+        for (String csv : unusable) {
+            List<Finding> findings = ReleaseMain.findingsFromCsv(csv);
+            assertTrue("[" + csv + "] gave " + findings, findings == null);
+            String report = ScanReport.fromChild(0, findings, deps, "BUILD SUCCESSFUL");
+            assertTrue(report, hasLine(report, "Status: pending"));
+        }
+        assertTrue(ReleaseMain.findingsFromCsv("\"Identifiers\",\"CVE\"\n").isEmpty());
+    }
 }

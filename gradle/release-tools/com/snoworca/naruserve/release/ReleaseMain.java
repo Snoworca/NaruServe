@@ -146,14 +146,17 @@ public final class ReleaseMain {
         return new License(names.toString(), urls.toString());
     }
 
-    /** One finding per data row of a Dependency-Check CSV report; CVSS v3, else v4, else v2, else NaN. */
+    /**
+     * One finding per data row of a Dependency-Check CSV report; CVSS v3, else v4, else v2, else NaN. Null, so the
+     * report is pending, when the file has no header row or the header lacks the CVE or the Identifiers column.
+     */
     // @req FR-REL-002
     public static List<Finding> findingsFromCsv(String csv) {
         List<List<String>> rows = parseCsv(csv);
-        List<Finding> findings = new ArrayList<>();
-        if (rows.isEmpty()) {
-            return findings;
+        if (rows.isEmpty() || !rows.get(0).contains("CVE") || !rows.get(0).contains("Identifiers")) {
+            return null; // an empty or truncated report is not a scan without findings
         }
+        List<Finding> findings = new ArrayList<>();
         List<String> header = rows.get(0);
         for (List<String> row : rows.subList(1, rows.size())) {
             Matcher purl = PURL.matcher(cell(header, row, "Identifiers"));

@@ -146,11 +146,13 @@ final class ServletEventStream {
 
                 @Override
                 public void onTimeout(AsyncEvent e) {
+                    ex.abort(); // the drain's next write fails, so it ends and gives its slot back
                     streams.remove(ex);
                 }
 
                 @Override
                 public void onError(AsyncEvent e) {
+                    ex.abort();
                     streams.remove(ex);
                 }
 
@@ -161,7 +163,7 @@ final class ServletEventStream {
         }
 
         /**
-         * {@code AsyncContext.complete()} on every open stream, each failure swallowed: the container closes the
+         * Aborts every open stream, which completes its {@code AsyncContext} once, each failure swallowed: the container closes the
          * output, which frees a drain blocked in a write on Jetty at once and elsewhere at the container's own
          * write timeout. No thread is interrupted here.
          */
@@ -169,7 +171,7 @@ final class ServletEventStream {
         void completeAll() {
             for (ServletExchange ex : streams) {
                 try {
-                    ex.complete();
+                    ex.abort(); // aborted before complete, so a running drain cannot write to the ended response
                 } catch (RuntimeException e) {
                     // the container already ended this request
                 }
