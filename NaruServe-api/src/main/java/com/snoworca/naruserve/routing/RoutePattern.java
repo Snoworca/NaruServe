@@ -1,5 +1,6 @@
 package com.snoworca.naruserve.routing;
 
+import com.snoworca.naruserve.common.UnicodeCase;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -129,7 +130,7 @@ public final class RoutePattern {
         for (int i = 0; i < n; i++) {
             String seg = decodedSegments.get(i);
             if (variable[i] ? seg.isEmpty()
-                    : policy.caseInsensitive() ? !segments[i].equalsIgnoreCase(seg) : !segments[i].equals(seg)) {
+                    : policy.caseInsensitive() ? !UnicodeCase.equals(segments[i], seg) : !segments[i].equals(seg)) {
                 return false;
             }
         }
@@ -160,23 +161,10 @@ public final class RoutePattern {
             if (variable[i]) {
                 sb.append(':');
             } else {
-                sb.append(policy.caseInsensitive() ? fold(segments[i]) : segments[i]);
+                sb.append(policy.caseInsensitive() ? UnicodeCase.fold(segments[i]) : segments[i]);
             }
         }
         return sb.toString();
-    }
-
-    /**
-     * Per-char fold with exactly the equivalence of {@link String#equalsIgnoreCase} used by {@link #match}, so
-     * literals that match the same paths get the same key; locale-independent, unlike toLowerCase(Locale.ROOT)
-     * on whole strings (which maps U+0130 to two chars and leaves U+017F alone).
-     */
-    private static String fold(String s) {
-        char[] cs = s.toCharArray();
-        for (int i = 0; i < cs.length; i++) {
-            cs[i] = Character.toLowerCase(Character.toUpperCase(cs[i]));
-        }
-        return new String(cs);
     }
 
     /** The pattern as registered. */

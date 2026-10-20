@@ -1,0 +1,24 @@
+{
+  "issue": 38,
+  "title": "Unicode 경로 대소문자 매칭과 중복 충돌 검사를 일치시키기",
+  "requirements": {
+    "FR-ROUTE-006": [
+      "AC-3"
+    ],
+    "FR-ROUTE-008": [
+      "AC-4"
+    ]
+  },
+  "testReference": "NaruServe-api/src/test/java/com/snoworca/naruserve/UnicodeRoutingContractTest.java",
+  "logs": {
+    "red": "docs/release/audit-2026-10-21/38/red.log",
+    "green17": "docs/release/audit-2026-10-21/38/green17.log",
+    "green8": "docs/release/audit-2026-10-21/38/green8.log"
+  },
+  "runtimeVerification": [
+    "JDK17",
+    "OpenJDK1.8.0_504"
+  ],
+  "review": "no remaining HIGH/MEDIUM findings",
+  "integrationRegression": "epic #36 final integration gate"
+}

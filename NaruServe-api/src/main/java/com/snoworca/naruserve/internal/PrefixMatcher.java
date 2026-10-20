@@ -1,5 +1,6 @@
 package com.snoworca.naruserve.internal;
 
+import com.snoworca.naruserve.common.UnicodeCase;
 import com.snoworca.naruserve.routing.Router;
 import com.snoworca.naruserve.routing.RouterPolicy;
 import java.util.ArrayList;
@@ -35,7 +36,7 @@ final class PrefixMatcher {
         for (int i = 0; i < segments.size(); i++) {
             String p = segments.get(i);
             String s = pathSegments.get(i);
-            if (caseInsensitive ? !p.equalsIgnoreCase(s) : !p.equals(s)) {
+            if (caseInsensitive ? !UnicodeCase.equals(p, s) : !p.equals(s)) {
                 return false;
             }
         }
