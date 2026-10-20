@@ -70,8 +70,8 @@ Express 코드의 구조(라우트·미들웨어·req/res)는 대부분 그대�
 | `stream.pipe(res)` | `res.stream(in, "video/mp4")` | |
 | `res.headersSent` | `res.isCommitted()` | |
 | `res.redirect(url)` | **(미확정)** | `res.status(302).header("Location", url).end()` |
-| `res.type('png')` | **(미확정)** | `res.header("Content-Type", "image/png")` |
-| `res.render(view)` | **(미확정)** | 사양서에 없습니다. HTML은 `res.html(...)`로 직접 보냅니다. |
+| `res.type('png')` | v1에 없음 | `res.header("Content-Type", "image/png")`. 제외한 이유: Express식 편의 헬퍼는 v1 범위 밖이고 헤더 한 줄로 같은 일을 합니다. |
+| `res.render(view)` | v1에 없음 | HTML은 `res.html(...)`로 직접 보냅니다. 제외한 이유: 사양서에 템플릿 엔진이 없고 v1은 뷰 렌더링을 다루지 않습니다. |
 
 ### 미들웨어와 오류
 
@@ -303,11 +303,11 @@ app.listen(3000)
 
 ## Express에 있지만 아직 정해지지 않은 기능
 
-다음은 사양서에 없어서 **(미확정)** 입니다. 필요하면 위 표의 대체 코드를 쓰세요.
+다음은 v1에 포함되지 않는 v1 이후 항목입니다. 제외한 이유는 v1 개발 계획의 어느 단계(wave)도 이 기능을 맡지 않았기 때문이며, 항목별 이유와 대체 코드는 위 표와 [릴리스 노트](../release/release-notes.md)에 있습니다.
 
 - `express.Router()`와 라우터 마운트
 - CORS 미들웨어(`cors()`)
 - `res.redirect`, `res.type`, `res.location`, `res.format`, `res.sendStatus`
 - `req.hostname`, `req.is(type)`, `req.accepts(...)`
 - `app.param(...)`
-- 비동기 핸들러(Promise/`async`에 해당하는 것). Kotlin coroutine 지원은 별도 모듈로 검토 중입니다.
+- 비동기 핸들러(Promise/`async`에 해당하는 것). Kotlin `suspend` 핸들러도 v1 이후 항목입니다([Kotlin](kotlin.md)).

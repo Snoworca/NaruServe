@@ -649,10 +649,10 @@ public final class DocsExamplesCompileTest {
         assertEquals(Integer.valueOf(docs().get("sse.md").size() - sseSkips), compiledPerFile.get("sse.md"));
     }
 
-    // SDS-AC-13 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-13.sds.md; OPS-HTTP-007 AC-9: the middleware.md
+    // SDS-AC-13 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-13.sds.md; OPS-HTTP-008 AC-9: the middleware.md
     // block throwing HttpException(503).withHeader("Retry-After", "1") is compiled, not skipped
     @Test
-    public void wave7s13SdsAc13_OPS_HTTP_007_AC9_theWithHeaderBlockIsCompiled() throws IOException {
+    public void wave7s13SdsAc13_OPS_HTTP_008_AC9_theWithHeaderBlockIsCompiled() throws IOException {
         int found = 0;
         List<String> blocks = docs().get("middleware.md");
         for (int i = 0; i < blocks.size(); i++) {

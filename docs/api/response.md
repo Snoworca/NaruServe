@@ -138,7 +138,7 @@ res.status(404).end();
 
 ## 리다이렉트
 
-`res.redirect`는 **(미확정)** 입니다. 지금은 직접 씁니다.
+`res.redirect`는 v1에 포함되지 않습니다. v1 개발 계획의 어느 단계(wave)도 맡지 않았고 Express식 편의 헬퍼는 v1 범위 밖이기 때문입니다(v1 이후 항목). 대신 `res.status(302).header("Location", url).end()`로 직접 씁니다.
 
 ```java
 res.status(302).header("Location", "/login").end();

@@ -71,7 +71,7 @@ Pong timeout은 Ping 주기와 같습니다. TinyHttpd의 `WebSocketListener`에
 
 ## 저사양 Android 튜닝(수동 후속 작업)
 
-위 기본값은 JVM 부하 테스트(WebSocket 60개와 SSE 60개를 함께 연 T26)로 확인한 값입니다. 저사양 Android 5.0 기기에 맞춘 `maxSseStreams`, `maxUpgradedConnections`, WebSocket과 SSE의 `sendQueueSize` 조정은 릴리스 테스트의 수동 후속 작업이며, 자동 테스트가 낸 결과가 아닙니다. 기기의 메모리가 작으면 실제 기기에서 연결을 열어 보며 이 값들을 낮추세요.
+위 기본값은 JVM 부하 테스트(WebSocket 60개와 SSE 60개를 함께 연 T26)로 확인한 값입니다. 저사양 Android 5.0 기기에 맞춘 `maxSseStreams`, `maxUpgradedConnections`, WebSocket과 SSE의 `sendQueueSize` 조정은 v1 이후 항목입니다. Android 기기 검증이 v1 범위 밖이므로 이 조정은 v1 릴리스의 수동 후속 작업이 아니며, 위 기본값은 자동 테스트가 JVM에서 확인한 값이며 기기에 맞춘 값이 아닙니다. 메모리가 작은 기기에서는 이 값들을 직접 낮춰 보세요.
 
 ## 기본 보안 정책
 
@@ -111,5 +111,5 @@ TinyHttpd가 요청을 해석하는 단계에서 거부하는 `400`(잘못된 �
 - **CSRF**: 쿠키로 인증하는 API라면 미들웨어로 막으세요.
 - **WebSocket 인증**: 미들웨어로 구현하세요. 프레임워크는 Upgrade 전에 `Origin`을 검사하며, 기본값은 `Origin`이 없거나 같은 출처인 요청만 허용하고 나머지는 `403`으로 거부합니다. 다른 출처는 `app.webSocket(o -> o.allowedOrigins("https://app.example.com"))`로 허용하며, `allowedOrigins("*")`는 모든 `Origin`을 허용합니다. `Origin` 검사는 인증을 대신하지 않습니다. [WebSocket](websocket.md#인증과-origin)
 - **업로드 파일 이름·내용 검증**: [파일 업로드](multipart.md#보안)
-- **TLS**: 기본 TinyHttpd 어댑터(`NaruServe-tinyhttpd`)는 v1에서 TLS 리스너를 열지 않습니다. 인터넷에 노출하는 평문 서버는 안전하지 않으므로 TLS를 끝내는 리버스 프록시 뒤에 두고 `app.trustProxy(true)`를 켜세요. v1에서 TLS를 빼 둔 이유는 Android 5.0의 오래된 TLS 구현을 기기마다 따로 시험해야 하기 때문입니다.
+- **TLS**: 기본 TinyHttpd 어댑터(`NaruServe-tinyhttpd`)는 v1에서 TLS 리스너를 열지 않습니다. 인터넷에 노출하는 평문 서버는 안전하지 않으므로 TLS를 끝내는 리버스 프록시 뒤에 두고 `app.trustProxy(true)`를 켜세요. TinyHttpd 어댑터의 TLS/WSS는 v1 이후 항목이며, 이유는 둘입니다. v1 개발 범위를 정한 epic #20의 하위 이슈 어디에도 이 작업이 없고, `object.md` §14.3과 §20.3이 요구하는 API 21 TLS provider와 인증서 시험을 따로 해야 하는데 Android 기기 검증이 v1 범위 밖이라 v1은 이 시험을 하지 않습니다.
 - **서비스의 스레드 안전성**: [수명주기와 서비스](lifecycle.md#저장소-범위)
