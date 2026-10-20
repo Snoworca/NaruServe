@@ -1,0 +1,21 @@
+{
+  "issue": 39,
+  "title": "필수 입력 편의 함수에서 Unicode 공백만 있는 값 거부",
+  "requirements": {
+    "FR-DX-003": [
+      "AC-1"
+    ]
+  },
+  "testReference": "NaruServe-api/src/test/java/com/snoworca/naruserve/UnicodeRequiredInputTest.java",
+  "logs": {
+    "red": "docs/release/audit-2026-10-21/39/red.log",
+    "green17": "docs/release/audit-2026-10-21/39/green17.log",
+    "green8": "docs/release/audit-2026-10-21/39/green8.log"
+  },
+  "runtimeVerification": [
+    "JDK17",
+    "OpenJDK1.8.0_504"
+  ],
+  "review": "no remaining HIGH/MEDIUM findings",
+  "integrationRegression": "epic #36 final integration gate"
+}

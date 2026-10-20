@@ -8,9 +8,19 @@ import org.jspecify.annotations.Nullable;
 public final class InputValues {
     private InputValues() { }
     public static String required(@Nullable String value, String name) {
-        if (value == null || value.trim().isEmpty()) throw new HttpException(400, name + " is required");
+        if (value == null || isBlank(value)) throw new HttpException(400, name + " is required");
         return value;
     }
+    /** Required-value whitespace follows Unicode whitespace and space characters, without trimming returned data. */
+    private static boolean isBlank(String value) {
+        for (int offset = 0; offset < value.length();) {
+            int codePoint = value.codePointAt(offset);
+            if (!Character.isWhitespace(codePoint) && !Character.isSpaceChar(codePoint)) return false;
+            offset += Character.charCount(codePoint);
+        }
+        return true;
+    }
+
     public static int integer(@Nullable String value, String name, int defaultValue) {
         if (value == null) return defaultValue;
         try { return Integer.parseInt(value); }
