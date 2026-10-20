@@ -13,6 +13,11 @@ import java.util.function.Consumer;
 
 import javax.servlet.DispatcherType;
 import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServlet;
 
 import org.eclipse.jetty.annotations.AnnotationConfiguration;
@@ -88,9 +93,29 @@ class ContainerRule extends ExternalResource {
         return ctx;
     }
 
-    /** Installs {@code f} at {@code /*} in front of the context the next {@link #webApp} or {@link #servlet} starts. */
-    void filter(Filter f) {
-        filters.add(f);
+    /** A filter's {@code doFilter}; Servlet 3.1 gives {@link Filter} no default init and destroy, so they live once below. */
+    @FunctionalInterface
+    interface Body {
+        void filter(ServletRequest req, ServletResponse res, FilterChain chain) throws IOException, ServletException;
+    }
+
+    /** Installs {@code body} at {@code /*} in front of the context the next {@link #webApp} or {@link #servlet} starts. */
+    void filter(Body body) {
+        filters.add(new Filter() {
+            @Override
+            public void init(FilterConfig config) {
+            }
+
+            @Override
+            public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain)
+                    throws IOException, ServletException {
+                body.filter(req, res, chain);
+            }
+
+            @Override
+            public void destroy() {
+            }
+        });
     }
 
     int port() {

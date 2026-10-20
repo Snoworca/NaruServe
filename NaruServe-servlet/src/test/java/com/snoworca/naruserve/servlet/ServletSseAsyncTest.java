@@ -11,8 +11,6 @@ import com.snoworca.naruserve.SseClient;
 import com.snoworca.naruserve.spi.ExchangeHandler;
 import com.snoworca.naruserve.testing.RecordingLogger;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -22,9 +20,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.servlet.AsyncContext;
-import javax.servlet.Filter;
 import javax.servlet.FilterChain;
-import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
@@ -64,43 +60,29 @@ public class ServletSseAsyncTest {
      * Hands the chain a request whose {@code startAsync()} lowers the container default timeout to 1 s and returns a
      * context that counts its {@code complete()} calls; after the chain it records the async timeout in effect.
      */
-    static final class AsyncProbe implements Filter {
+    static final class AsyncProbe implements ContainerRule.Body {
         final List<Long> timeouts = Collections.synchronizedList(new ArrayList<Long>());
         final AtomicInteger completes = new AtomicInteger();
 
         @Override
-        public void init(FilterConfig config) {
-        }
-
-        @Override
-        public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain)
+        public void filter(ServletRequest req, ServletResponse res, FilterChain chain)
                 throws IOException, ServletException {
             HttpServletRequestWrapper w = new HttpServletRequestWrapper((HttpServletRequest) req) {
                 @Override
                 public AsyncContext startAsync() {
                     AsyncContext real = super.startAsync();
                     real.setTimeout(1000); // the container default, lowered for the test
-                    return (AsyncContext) Proxy.newProxyInstance(getClass().getClassLoader(),
-                            new Class<?>[] {AsyncContext.class}, (p, m, args) -> {
-                                if (m.getName().equals("complete")) {
-                                    completes.incrementAndGet();
-                                }
-                                try {
-                                    return m.invoke(real, args);
-                                } catch (InvocationTargetException e) {
-                                    throw e.getCause();
-                                }
-                            });
+                    return RecordingRequest.delegating(AsyncContext.class, real, name -> {
+                        if (name.equals("complete")) {
+                            completes.incrementAndGet();
+                        }
+                    });
                 }
             };
             chain.doFilter(w, res);
             if (w.isAsyncStarted()) {
                 timeouts.add(w.getAsyncContext().getTimeout());
             }
-        }
-
-        @Override
-        public void destroy() {
         }
     }
 

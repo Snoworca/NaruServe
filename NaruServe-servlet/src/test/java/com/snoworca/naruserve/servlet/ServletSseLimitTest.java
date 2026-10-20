@@ -20,11 +20,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.FilterConfig;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -178,21 +173,9 @@ public class ServletSseLimitTest {
     public void sdsAc6_FR_SVL_005_AC2_theDrainRunsOnABoundedDaemonExecutorAfterServiceReturned() throws Exception {
         List<String> handlerThreads = new ArrayList<>();
         CountDownLatch serviceReturned = new CountDownLatch(2);
-        container.filter(new Filter() {
-            @Override
-            public void init(FilterConfig config) {
-            }
-
-            @Override
-            public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain)
-                    throws IOException, javax.servlet.ServletException {
-                chain.doFilter(req, res);
-                serviceReturned.countDown();
-            }
-
-            @Override
-            public void destroy() {
-            }
+        container.filter((req, res, chain) -> {
+            chain.doFilter(req, res);
+            serviceReturned.countDown();
         });
         app = jetty(container, log, a -> {
             a.server(o -> o.maxSseStreams(2));

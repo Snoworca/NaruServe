@@ -11,11 +11,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.FilterConfig;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -37,23 +32,11 @@ public class ServletMultipartDisconnectTest {
         CountDownLatch failed = new CountDownLatch(1);
         CountDownLatch returned = new CountDownLatch(1);
         // Counts down once the container's request thread is back out of the servlet.
-        container.filter(new Filter() {
-            @Override
-            public void init(FilterConfig config) {
-            }
-
-            @Override
-            public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain)
-                    throws java.io.IOException, javax.servlet.ServletException {
-                try {
-                    chain.doFilter(req, res);
-                } finally {
-                    returned.countDown();
-                }
-            }
-
-            @Override
-            public void destroy() {
+        container.filter((req, res, chain) -> {
+            try {
+                chain.doFilter(req, res);
+            } finally {
+                returned.countDown();
             }
         });
         SharedApp.onJetty(container, "/*", app -> {
