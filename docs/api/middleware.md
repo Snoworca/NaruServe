@@ -87,20 +87,19 @@ app.use("/api") { req, res, next ->
 
 ### 실행 순서
 
-1. 전역 미들웨어 (`app.use(mw)`) — 등록 순서대로
-2. prefix 미들웨어 (`app.use("/api", mw)`) — 등록 순서대로
-3. 라우트 미들웨어 — 등록 순서대로
-4. 라우트 핸들러
+1. 전역 (`app.use(mw)`)과 경로에 맞는 prefix (`app.use("/api", mw)`) 미들웨어 — 두 종류를 합친 등록 순서대로
+2. 라우트 미들웨어 — 등록 순서대로
+3. 라우트 핸들러
 
-**Express와 다릅니다.** Express는 전역과 prefix를 구분하지 않고 등록 순서 하나로 실행합니다. NaruServe는 등록 위치와 상관없이 전역 미들웨어가 모두 prefix 미들웨어보다 먼저 실행됩니다.
+Express처럼 전역과 prefix를 구분하지 않고 `app.use` 등록 순서 하나로 실행합니다. prefix가 맞지 않는 항목만 건너뛰며, `/api`는 `/api/users`에 적용되고 `/apian`에는 적용되지 않습니다. 라우트 미들웨어는 모든 해당 `app.use` 미들웨어 뒤에 실행됩니다.
 
 ```java
 Middleware requestId = (req, res, next) -> next.run();   // 요청마다 ID를 붙이는 전역 미들웨어라고 합시다
-app.use("/api", auth);       // 2번째로 실행
-app.use(requestId);          // 1번째로 실행 (나중에 등록했지만 전역)
+app.use(requestId);          // 1번째로 실행
+app.use("/api", auth);       // /api 경로에서 2번째로 실행
 ```
 
-명시 라우트가 없으면 4단계에서 정적 파일, 그다음 404를 찾습니다. 404·405 응답 전에도 1·2단계 미들웨어는 실행됩니다.
+명시 라우트가 없으면 3단계에서 정적 파일, 그다음 404를 찾습니다. 404·405 응답 전에도 1단계 미들웨어는 실행됩니다.
 `app.use`는 `listen()` 전에만 부를 수 있습니다.
 
 ### next.run() 규칙

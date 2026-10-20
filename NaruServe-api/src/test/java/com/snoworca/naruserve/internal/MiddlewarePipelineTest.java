@@ -39,9 +39,9 @@ public class MiddlewarePipelineTest {
         };
     }
 
-    // SDS-AC-1; FR-APP-003 AC-1, T35
+    // FR-DX-008 AC-1, AC-3 — supersedes the former global-first grouping.
     @Test
-    public void sdsAc1_FR_APP_003_AC1_globalsThenPrefixesThenRouteMiddlewareThenHandler() {
+    public void FR_DX_008_AC1_interleavedRegistrationThenRouteMiddlewareThenHandler() {
         TestApp t = TestApp.create();
         RestApp app = t.app();
         app.use(mw("g1"));
@@ -51,10 +51,28 @@ public class MiddlewarePipelineTest {
         app.route("/api/users").use(mw("r1")).use(mw("r2")).get(h("h"));
         app.get("/b", mw("r3"), h("h2"));
         assertEquals("h", t.send("GET", "/api/users").text());
-        assertEquals(Arrays.asList("g1", "g2", "p1", "p2", "r1", "r2", "h"), calls);
+        assertEquals(Arrays.asList("g1", "p1", "g2", "p2", "r1", "r2", "h"), calls);
         calls.clear();
         assertEquals("h2", t.send("GET", "/b").text());
         assertEquals(Arrays.asList("g1", "g2", "r3", "h2"), calls);
+    }
+
+    // FR-DX-008 AC-1, AC-2, AC-3 — filter without reordering; prefix is a path segment.
+    @Test
+    public void FR_DX_008_AC2_prefixFirstAndNestedRegistrationsPreserveOrder() {
+        TestApp t = TestApp.create();
+        t.app().use("/api", mw("api"));
+        t.app().use(mw("global1"));
+        t.app().use("/api/users", mw("users"));
+        t.app().use("/ap", mw("not-a-segment-match"));
+        t.app().use(mw("global2"));
+        t.app().route("/api/users").use(mw("route")).get(h("handler"));
+        t.app().get("/apian", h("other"));
+        assertEquals(200, t.send("GET", "/api/users").status());
+        assertEquals(Arrays.asList("api", "global1", "users", "global2", "route", "handler"), calls);
+        calls.clear();
+        assertEquals(200, t.send("GET", "/apian").status());
+        assertEquals(Arrays.asList("global1", "global2", "other"), calls);
     }
 
     // SDS-AC-2; FR-APP-003 AC-1

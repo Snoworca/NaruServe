@@ -58,7 +58,7 @@ Express 코드의 구조(라우트·미들웨어·req/res)는 대부분 그대�
 | `res.status(201).json(o)` | `res.status(201).json(o)` | 같습니다. |
 | `res.send('text')` | `res.send("text")` | **`text/plain`** 입니다. Express는 `text/html`. |
 | `res.send('<p>hi</p>')` | `res.html("<p>hi</p>")` | HTML은 명시적으로 보냅니다. |
-| `res.send({a: 1})` | `res.json(map)` | `send`는 객체를 JSON으로 바꾸지 않습니다. |
+| `res.send({a: 1})` | `res.send(map)` | 객체·목록·숫자·불리언은 JSON, null은 빈 본문입니다. 명시적 JSON null은 `res.json(null)`. |
 | `res.send(buffer)` | `res.send(bytes)` | `byte[]` |
 | `res.sendStatus(204)` | `res.status(204).end()` | |
 | `res.end()` | `res.end()` | |
@@ -72,6 +72,8 @@ Express 코드의 구조(라우트·미들웨어·req/res)는 대부분 그대�
 | `res.redirect(url)` | **(미확정)** | `res.status(302).header("Location", url).end()` |
 | `res.type('png')` | v1에 없음 | `res.header("Content-Type", "image/png")`. 제외한 이유: Express식 편의 헬퍼는 v1 범위 밖이고 헤더 한 줄로 같은 일을 합니다. |
 | `res.render(view)` | v1에 없음 | HTML은 `res.html(...)`로 직접 보냅니다. 제외한 이유: 사양서에 템플릿 엔진이 없고 v1은 뷰 렌더링을 다루지 않습니다. |
+
+기존 `send(String)`·`send(byte[])` 오버로드는 `send(@Nullable Object)` 하나로 통합되었습니다. 일반 호출 코드는 그대로 다시 컴파일하면 됩니다. 직접 `Response`를 구현하는 클래스는 `send(Object)` 하나를 구현해야 하며, 이전 바이너리는 다시 빌드해야 합니다.
 
 ### 미들웨어와 오류
 
@@ -187,14 +189,14 @@ app.get("/users", (req, res) -> res.json(req.service(UserService.class).findAll(
 
 [수명주기와 서비스](lifecycle.md)
 
-### 10. 전역 미들웨어가 prefix 미들웨어보다 먼저 실행됩니다
+### 10. 전역과 prefix 미들웨어는 함께 등록 순서를 따릅니다
 
-Express는 `app.use`를 등록 순서 하나로 실행합니다. NaruServe는 **전역 → prefix → 라우트 미들웨어 → 핸들러** 순서이고, 같은 종류 안에서만 등록 순서를 따릅니다.
+Express처럼 전역과 경로에 맞는 prefix 미들웨어를 `app.use` 등록 순서 하나로 실행합니다. 그 뒤 라우트 미들웨어와 핸들러를 실행합니다. 인증보다 먼저 필요한 요청 ID나 CORS 처리는 인증 미들웨어보다 먼저 등록하세요.
 
 ```java
 Middleware requestId = (req, res, next) -> next.run();   // 요청마다 ID를 붙이는 전역 미들웨어라고 합시다
-app.use("/api", auth);   // Express: 1번째, NaruServe: 2번째
-app.use(requestId);      // Express: 2번째, NaruServe: 1번째
+app.use(requestId);      // 1번째
+app.use("/api", auth);   // /api 경로에서 2번째
 ```
 
 [미들웨어 실행 순서](middleware.md#실행-순서)

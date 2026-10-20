@@ -87,13 +87,13 @@ public final class DefaultRestApp implements RestApp {
         }
     }
 
-    /** One {@code use(prefix, mw)} call as recorded. */
+    /** One use call as recorded; a null prefix denotes global middleware. */
     // @req IR-APP-002
-    static final class PrefixMiddleware {
-        final String prefix;
+    static final class MiddlewareRegistration {
+        final @Nullable String prefix;
         final Middleware middleware;
 
-        PrefixMiddleware(String prefix, Middleware middleware) {
+        MiddlewareRegistration(@Nullable String prefix, Middleware middleware) {
             this.prefix = prefix;
             this.middleware = middleware;
         }
@@ -144,8 +144,7 @@ public final class DefaultRestApp implements RestApp {
 
     // Guarded by this.
     private final List<Registration> registrations = new ArrayList<>();
-    private final List<Middleware> globalMiddleware = new ArrayList<>();
-    private final List<PrefixMiddleware> prefixMiddleware = new ArrayList<>();
+    private final List<MiddlewareRegistration> middlewareRegistrations = new ArrayList<>();
     private final List<ErrorHandler> errorHandlers = new ArrayList<>();
     private final List<LifecycleCallback> startCallbacks = new ArrayList<>();
     private final List<LifecycleCallback> stopCallbacks = new ArrayList<>();
@@ -810,7 +809,7 @@ public final class DefaultRestApp implements RestApp {
     @Override
     public synchronized RestApp use(Middleware mw) {
         lifecycle.requireConfigurable("use");
-        globalMiddleware.add(Objects.requireNonNull(mw, "mw"));
+        middlewareRegistrations.add(new MiddlewareRegistration(null, Objects.requireNonNull(mw, "mw")));
         return this;
     }
 
@@ -830,7 +829,7 @@ public final class DefaultRestApp implements RestApp {
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("middleware prefix is not decodable: " + prefix, e);
         }
-        prefixMiddleware.add(new PrefixMiddleware(prefix, mw));
+        middlewareRegistrations.add(new MiddlewareRegistration(prefix, mw));
         return this;
     }
 
@@ -966,11 +965,12 @@ public final class DefaultRestApp implements RestApp {
         }
         router.freeze();
         MiddlewarePipeline pipeline = new MiddlewarePipeline(policy);
-        for (Middleware mw : globalMiddleware) {
-            pipeline.addGlobal(mw);
-        }
-        for (PrefixMiddleware pm : prefixMiddleware) {
-            pipeline.addPrefix(pm.prefix, pm.middleware);
+        for (MiddlewareRegistration registration : middlewareRegistrations) {
+            if (registration.prefix == null) {
+                pipeline.addGlobal(registration.middleware);
+            } else {
+                pipeline.addPrefix(registration.prefix, registration.middleware);
+            }
         }
         DefaultWebSocketOptions ws = webSocketOptions().copy();
         frozenWebSocketOptions = ws;
