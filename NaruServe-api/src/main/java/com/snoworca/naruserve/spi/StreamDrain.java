@@ -20,4 +20,12 @@ public interface StreamDrain {
     // @req IR-HTTP-007
     default void attach(OutputStream out) {
     }
+
+    /**
+     * Reports that the adapter cannot start this drain, so the core can release its stream and close listeners.
+     * Does nothing by default and leaves this interface usable as a lambda.
+     */
+    // @req IR-HTTP-007
+    default void abort() {
+    }
 }

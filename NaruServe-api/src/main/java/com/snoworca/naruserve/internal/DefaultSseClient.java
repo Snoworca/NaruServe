@@ -192,6 +192,19 @@ final class DefaultSseClient implements SseClient, StreamDrain {
         attached = Objects.requireNonNull(out, "out");
     }
 
+    /** An adapter that cannot start the drain still finishes the core response and its listeners. */
+    // @req FR-SSE-004
+    @Override
+    public void abort() {
+        endBy("client");
+        clearQueue();
+        if (res != null) {
+            res.abort(null);
+        } else {
+            runListeners();
+        }
+    }
+
     // @req FR-SSE-004
     @Override
     public void close() {

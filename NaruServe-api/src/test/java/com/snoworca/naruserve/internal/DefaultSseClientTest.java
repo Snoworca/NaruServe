@@ -25,6 +25,50 @@ import org.junit.Test;
  */
 public class DefaultSseClientTest {
 
+    // FR-SSE-004 AC-2 AC-5; FR-SSE-002 AC-7; IR-HTTP-007 AC-3
+    @Test
+    public void concurrentAdapterAbortsBeforeDrainReleaseRegistryAndListenersOnce() throws Exception {
+        RecordingExchange exchange = new RecordingExchange("GET", "/events");
+        SseRegistry streams = registry(1000);
+        DefaultResponse response = new DefaultResponse(exchange, false);
+        response.sseRegistry(streams);
+        SseClient client = response.sse();
+        AtomicInteger closed = new AtomicInteger();
+        AtomicInteger queuedAtClose = new AtomicInteger(-1);
+        client.onClose(() -> {
+            queuedAtClose.set(((DefaultSseClient) client).queuedBytes());
+            closed.incrementAndGet();
+        });
+        Thread producer = new Thread(() -> client.send("queued before abort"));
+        producer.start();
+        producer.join(5000);
+        assertTrue(((DefaultSseClient) client).queuedBytes() > 0);
+        java.util.concurrent.CountDownLatch start = new java.util.concurrent.CountDownLatch(1);
+        java.util.List<Thread> workers = new java.util.ArrayList<>();
+        for (int i = 0; i < 8; i++) {
+            Thread worker = new Thread(() -> {
+                try { start.await(); exchange.drain().abort(); }
+                catch (InterruptedException e) { Thread.currentThread().interrupt(); }
+            });
+            workers.add(worker);
+            worker.start();
+        }
+        start.countDown();
+        for (Thread worker : workers) {
+            worker.join(5000);
+            assertFalse("abort did not return", worker.isAlive());
+        }
+        assertFalse(client.isOpen());
+        assertEquals(1, closed.get());
+        assertEquals(0, streams.size());
+        assertEquals("queued payloads released before any later drain", 0, ((DefaultSseClient) client).queuedBytes());
+        assertEquals("close listener observes cleanup", 0, queuedAtClose.get());
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        exchange.drain().drain(output);
+        assertEquals(0, output.size());
+        assertEquals(1, closed.get());
+    }
+
     private static SseRegistry registry(int sendQueueSize) {
         DefaultSseOptions o = new DefaultSseOptions();
         o.sendQueueSize(sendQueueSize);

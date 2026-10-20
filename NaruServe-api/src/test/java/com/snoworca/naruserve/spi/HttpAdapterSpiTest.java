@@ -549,6 +549,7 @@ public class HttpAdapterSpiTest {
         assertEquals(Arrays.asList(
                 "HttpExchange.webSocket(com.snoworca.naruserve.spi.WebSocketSettings,"
                         + "com.snoworca.naruserve.spi.WebSocketEndpoint)->void",
+                "StreamDrain.abort()->void",
                 "StreamDrain.attach(java.io.OutputStream)->void"), added);
         java.lang.reflect.Method webSocket =
                 HttpExchange.class.getMethod("webSocket", WebSocketSettings.class, WebSocketEndpoint.class);
@@ -592,6 +593,8 @@ public class HttpAdapterSpiTest {
         assertTrue(attach.isDefault());
         assertEquals(0, attach.getExceptionTypes().length);
         StreamDrain lambda = out -> { };
+        assertTrue(StreamDrain.class.getMethod("abort").isDefault()); // IR-HTTP-007 AC-3
+        lambda.abort(); // additive no-op: existing lambda adapters remain valid
         lambda.attach(new Untouchable());
 
         AtomicReference<OutputStream> attached = new AtomicReference<>();

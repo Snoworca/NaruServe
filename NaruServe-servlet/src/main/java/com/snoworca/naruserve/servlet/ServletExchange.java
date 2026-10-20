@@ -296,7 +296,8 @@ final class ServletExchange implements HttpExchange {
     /**
      * Called once by the servlet after the core's handler returned: submits the registered drain to the pool, so
      * the container's request thread returns while the stream stays open. An event stream started later throws
-     * IllegalStateException. For an aborted stream, or once the pool was shut down, it only gives the slot back.
+     * IllegalStateException. For an aborted stream, or once the pool was shut down, it cancels the core drain and
+     * gives the slot back.
      */
     // @req FR-SVL-005
     void afterHandler() {
@@ -324,7 +325,11 @@ final class ServletExchange implements HttpExchange {
                 abort();
             }
         }
-        pool.finish(this);
+        try {
+            d.abort();
+        } finally {
+            pool.finish(this);
+        }
     }
 
     /** The pool of the adapter; IllegalStateException for an exchange without one. */

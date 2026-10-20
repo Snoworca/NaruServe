@@ -1,0 +1,33 @@
+{
+  "issue": 41,
+  "title": "Servlet SSE drain 시작 전 중단 시 세션과 종료 콜백 누수 방지",
+  "requirements": {
+    "IR-HTTP-007": [
+      "AC-3"
+    ],
+    "FR-SVL-005": [
+      "AC-5"
+    ],
+    "FR-SSE-004": [
+      "AC-2"
+    ],
+    "FR-APP-019": [
+      "AC-10"
+    ],
+    "FR-SSE-002": [
+      "AC-7"
+    ]
+  },
+  "testReference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletSsePreDrainAbortTest.java",
+  "logs": {
+    "red": "docs/release/audit-2026-10-21/41/red.log",
+    "green17": "docs/release/audit-2026-10-21/41/green17.log",
+    "green8": "docs/release/audit-2026-10-21/41/green8.log"
+  },
+  "runtimeVerification": [
+    "JDK17",
+    "OpenJDK1.8.0_504"
+  ],
+  "review": "no remaining HIGH/MEDIUM findings",
+  "integrationRegression": "epic #36 final integration gate"
+}
