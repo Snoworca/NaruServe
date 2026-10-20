@@ -87,6 +87,8 @@ app.listen(3000)
 
 The Android sample build and API 21 device or emulator verification are not part of v1.
 API 21 compatibility rests on compiling with `--release 8` and on the animal-sniffer `android-api-level-21` check that the build runs over every module marked for Android in the API documentation.
+The Android sample build, the AGP and R8 builds, StrictMode, Logcat on a device and any API 21 device or emulator run are not part of v1 by the user decision of 2026-10-20; issue #17 is closed by that decision (2026-10-20) and has no remaining deliverable.
+The third part of the API 21 basis is the D-385 rule: no module has a compile-time `android.*` reference; the build's `checkClassReferences` check fails on an `android/` class reference in `NaruServe-api` and `NaruServe-logcat`, and no module has an Android artifact on its compile classpath.
 
 - [API documentation](docs/api/README.md)
 - [Release notes](docs/release/release-notes.md)
