@@ -6,6 +6,7 @@ buildscript {
     }
     dependencies {
         classpath 'org.cyclonedx:cyclonedx-gradle-plugin:3.5.1'
+        classpath 'org.owasp:dependency-check-gradle:13.0.0'
     }
 }
 
@@ -31,4 +32,89 @@ tasks.register('releaseSbom') {
     description = 'Writes one CycloneDX JSON SBOM per published module to build/reports/naruserve/sbom.'
     group = 'release'
     dependsOn publishedModules.collect { it.tasks.named('cyclonedxDirectBom') }
+}
+
+// ---- Vulnerability scan and release gate (FR-REL-002, FR-REL-003) ----
+// The tools in gradle/release-tools are compiled by their own task and only run by JavaExec, so no tool class is
+// loaded while this script is configured.
+def releaseToolsClasses = layout.buildDirectory.dir('release-tools/classes')
+def scanDir = layout.buildDirectory.dir('reports/naruserve/dependency-check')
+def scanLog = layout.buildDirectory.file('reports/naruserve/dependency-check.log')
+def scanReport = layout.buildDirectory.file('reports/naruserve/vulnerability-scan.md')
+def graphReport = layout.buildDirectory.file('reports/naruserve/dependency-graphs.txt')
+def scannerVersion = 'OWASP Dependency-Check 13.0.0'
+
+// @req FR-REL-002
+// Only the child Gradle run of releaseScanChild applies the scanner: Dependency-Check aborts its own build on an
+// update or analysis error even with failOnError=false, so the parent turns the child's exit into a record.
+if (project.hasProperty('releaseScanChild')) {
+    pluginManager.apply(org.owasp.dependencycheck.gradle.DependencyCheckPlugin)
+    dependencyCheck {
+        formats = ['CSV']
+        scanConfigurations = ['runtimeClasspath']
+        outputDirectory = scanDir.get().asFile
+        def apiKey = System.getenv('NVD_API_KEY')
+        if (apiKey) {
+            nvd.apiKey = apiKey
+        }
+    }
+}
+
+// @req FR-REL-002
+tasks.register('compileReleaseTools', JavaCompile) {
+    description = 'Compiles the plain-Java release tools of gradle/release-tools.'
+    group = 'release'
+    source = fileTree('gradle/release-tools') { include '**/*.java' }
+    classpath = files()
+    destinationDirectory = releaseToolsClasses
+    options.release = 8
+}
+
+// @req FR-REL-002
+def releaseScanChild = tasks.register('releaseScanChild', Exec) {
+    description = 'Runs dependencyCheckAggregate in a child Gradle invocation whose exit value is recorded, not thrown.'
+    group = 'release'
+    workingDir = rootDir
+    def command = [new File(rootDir, 'gradlew').absolutePath, '-Prelease', '-PreleaseScanChild', '--no-daemon']
+    if (gradle.startParameter.offline) {
+        command << '--offline'
+    }
+    commandLine(command + ['dependencyCheckAggregate'])
+    ignoreExitValue = true
+    def logFile = scanLog.get().asFile
+    doFirst {
+        project.delete(scanDir)
+        logFile.parentFile.mkdirs()
+        standardOutput = new FileOutputStream(logFile)
+        errorOutput = standardOutput
+    }
+    doLast {
+        standardOutput.close()
+    }
+}
+
+// @req FR-REL-002
+tasks.register('releaseScan', JavaExec) {
+    description = 'Writes build/reports/naruserve/vulnerability-scan.md: completed with findings, or pending.'
+    group = 'release'
+    dependsOn 'compileReleaseTools', 'checkDependencyRules', releaseScanChild
+    classpath = files(releaseToolsClasses)
+    mainClass = 'com.snoworca.naruserve.release.ReleaseMain'
+    doFirst {
+        // -1 when the child did not run (excluded with -x), which writes the pending report as well.
+        def exit = releaseScanChild.get().executionResult.map { it.exitValue }.getOrElse(-1)
+        args('scan-report', String.valueOf(exit), scanDir.get().file('dependency-check-report.csv').asFile.absolutePath,
+                graphReport.get().asFile.absolutePath, scanReport.get().asFile.absolutePath,
+                scanLog.get().asFile.absolutePath, scannerVersion)
+    }
+}
+
+// @req FR-REL-003
+tasks.register('releaseCheck', JavaExec) {
+    description = 'Fails while the scan report shows an unexcepted High or Critical finding; pending passes as pending.'
+    group = 'release'
+    dependsOn 'releaseScan', 'releaseLicenses'
+    classpath = files(releaseToolsClasses)
+    mainClass = 'com.snoworca.naruserve.release.ReleaseMain'
+    args('gate', scanReport.get().asFile.absolutePath, file('docs/release/vulnerability-exceptions.md').absolutePath)
 }

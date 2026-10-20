@@ -416,6 +416,10 @@ configureCompile(project)
 // The servlet.md ServletConfigurer blocks compile in DocsExamplesCompileTest; the classes they load (ServletConfigurer,
 // RestApp) reference no Servlet API type, so the root test classpath needs no javax.servlet artifact.
 def rootServletTestDependency = project(':NaruServe-servlet')
+// @req FR-REL-002
+// @req FR-REL-003
+// The plain-Java release tools compile and run their unit tests in the default build; release.gradle runs them.
+sourceSets.test.java.srcDir 'gradle/release-tools'
 dependencies {
     testImplementation 'junit:junit:4.13.2'
     // docs/api type blocks such as UploadFile carry @Nullable (OPS-MULTIPART-001 AC-1).

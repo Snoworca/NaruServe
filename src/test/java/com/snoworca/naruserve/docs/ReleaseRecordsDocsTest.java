@@ -1,6 +1,7 @@
 package com.snoworca.naruserve.docs;
 
 import static com.snoworca.naruserve.docs.WaveFiveDocsTest.doc;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -83,6 +84,86 @@ public final class ReleaseRecordsDocsTest {
                     .matcher(sbom[2]);
             assertTrue("sbom result names " + module + ".cdx.json=<component count>: " + sbom[2], m.find());
         }
+    }
+
+    /** The {@code Status:} word of docs/release/vulnerability-scan.md, {@code pending} or {@code completed}. */
+    static String scanStatus() throws IOException {
+        Matcher m = Pattern.compile("(?m)^Status: (pending|completed)$").matcher(doc("../release/vulnerability-scan.md"));
+        assertTrue("vulnerability-scan.md has a 'Status: pending' or 'Status: completed' line", m.find());
+        return m.group(1);
+    }
+
+    // SDS-AC-3; FR-REL-002 AC-3
+    @Test
+    public void fr_REL_002_AC3_vulnerabilityScanRecordHasStatusAndReasonWhenPending() throws IOException {
+        String report = doc("../release/vulnerability-scan.md");
+        if ("pending".equals(scanStatus())) {
+            assertTrue(report, Pattern.compile("(?m)^Reason: (NO_NETWORK|MISSING_API_KEY|RATE_LIMIT|TOOL_ERROR)$")
+                    .matcher(report).find());
+        }
+        assertTrue(report, report.contains("\n## Dependencies\n"));
+        List<String> recorded = new java.util.ArrayList<>();
+        for (String line : report.substring(report.indexOf("\n## Dependencies\n") + 17).split("\n")) {
+            if (!line.trim().isEmpty()) {
+                recorded.add(line.trim());
+            }
+        }
+        File graph = new File(System.getProperty("naruserve.depReport"));
+        List<String> graphLines = Arrays.asList(new String(java.nio.file.Files.readAllBytes(graph.toPath()),
+                java.nio.charset.StandardCharsets.UTF_8).split("\r?\n"));
+        assertEquals("the recorded dependency list is the current runtime list; rerun releaseScan and copy the report",
+                new java.util.ArrayList<>(com.snoworca.naruserve.release.DependencyList.runtime(graphLines)), recorded);
+    }
+
+    // SDS-AC-3; FR-REL-002 AC-3
+    @Test
+    public void fr_REL_002_AC3_t50VulnerabilityLineMatchesTheScanStatus() throws IOException {
+        String root = System.getProperty("naruserve.rootDir");
+        assumeTrue("docs/release/test-results.md is written by the OPS-REL-003 fragment",
+                new File(root, "docs/release/test-results.md").isFile());
+        String expected = "pending".equals(scanStatus()) ? "manual-pending" : "verified";
+        String row = null;
+        for (String line : doc("../release/test-results.md").split("\n")) {
+            String[] cells = line.trim().split("\\s*\\|\\s*");
+            if (cells.length > 3 && "T50".equals(cells[1]) && "vulnerability".equals(cells[2])) {
+                assertTrue("one T50 vulnerability row", row == null);
+                row = line;
+                assertTrue(line + " carries " + expected, expected.equals(cells[3]));
+            }
+        }
+        assertNotNull("test-results.md has the '| T50 | vulnerability |' row", row);
+    }
+
+    // SDS-AC-7; FR-REL-003 AC-2
+    @Test
+    public void fr_REL_003_AC2_releaseNotesListThePendingScan() throws IOException {
+        String root = System.getProperty("naruserve.rootDir");
+        assumeTrue("docs/release/release-notes.md is written by the OPS-REL-007 fragment",
+                new File(root, "docs/release/release-notes.md").isFile());
+        assumeTrue("only a pending scan is an open item", "pending".equals(scanStatus()));
+        boolean listed = false;
+        for (String line : doc("../release/release-notes.md").split("\n")) {
+            String lower = line.toLowerCase(java.util.Locale.ROOT);
+            listed |= lower.contains("vulnerability scan") && lower.contains("pending");
+        }
+        assertTrue("release-notes.md has a line naming the vulnerability scan as pending", listed);
+    }
+
+    // SDS-AC-8; FR-REL-003 AC-3
+    @Test
+    public void fr_REL_003_AC3_exceptionsFileHasHeaderAndNoExceptionsOrRows() throws IOException {
+        String doc = doc("../release/vulnerability-exceptions.md");
+        assertTrue(doc, Pattern.compile("(?m)^\\| id \\| dependency \\| reason \\| approver \\| date \\|$")
+                .matcher(doc).find());
+        boolean none = Pattern.compile("(?m)^no exceptions$").matcher(doc).find();
+        int rows = 0;
+        for (String line : doc.split("\n")) {
+            String[] cells = line.trim().split("\\s*\\|\\s*", -1);
+            if (cells.length == 7 && !"id".equals(cells[1]) && !cells[1].startsWith("-")) {
+                rows++;
+            }
+        }
+        assertTrue("either 'no exceptions' or data rows, not both", none != (rows > 0));
     }
 
     // SDS-AC-4; FR-REL-001 AC-4
