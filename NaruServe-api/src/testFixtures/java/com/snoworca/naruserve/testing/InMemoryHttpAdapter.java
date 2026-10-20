@@ -64,6 +64,7 @@ public final class InMemoryHttpAdapter implements HttpAdapter {
     private @Nullable Runnable beforeOpen;
 
     private final LinkedBlockingQueue<InMemoryWebSocketChannel> openedChannels = new LinkedBlockingQueue<>();
+    private final LinkedBlockingQueue<InMemoryEventStream> eventStreams = new LinkedBlockingQueue<>();
 
     /** Remote address {@code 127.0.0.1}, not secure. */
     // @req FR-HTTP-001
@@ -224,6 +225,26 @@ public final class InMemoryHttpAdapter implements HttpAdapter {
             throw new AssertionError("no WebSocket channel opened within " + timeout + " " + unit);
         }
         return channel;
+    }
+
+    /**
+     * The next event stream started by {@code eventStream}, in start order.
+     *
+     * @throws AssertionError when none started within the timeout
+     */
+    // @req FR-SSE-002
+    public InMemoryEventStream nextEventStream(long timeout, TimeUnit unit) {
+        InMemoryEventStream stream;
+        try {
+            stream = eventStreams.poll(timeout, unit);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new AssertionError("interrupted waiting for an event stream", e);
+        }
+        if (stream == null) {
+            throw new AssertionError("no event stream started within " + timeout + " " + unit);
+        }
+        return stream;
     }
 
     /** Splits a request target into raw path and raw query (null without '?'), dropping an absolute-form prefix. */
@@ -541,8 +562,11 @@ public final class InMemoryHttpAdapter implements HttpAdapter {
         public void eventStream(int status, List<Map.Entry<String, String>> headers, StreamDrain drain)
                 throws IOException {
             start(status, headers);
-            OutputStream out = bodyStream();
+            InMemoryEventStream es = new InMemoryEventStream(bodyStream());
+            OutputStream out = es.stream();
+            eventStreams.add(es);
             try {
+                es.attachedTo(out);
                 drain.attach(out);
             } catch (RuntimeException e) {
                 abort();
@@ -550,6 +574,7 @@ public final class InMemoryHttpAdapter implements HttpAdapter {
             }
             Future<?> f = workers.submit(() -> {
                 try {
+                    es.drainedTo(out);
                     drain.drain(out);
                     finish();
                 } catch (IOException | RuntimeException e) {

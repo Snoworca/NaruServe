@@ -936,7 +936,8 @@ public final class DefaultRestApp implements RestApp {
         }
         DefaultWebSocketOptions ws = webSocketOptions().copy();
         frozenWebSocketOptions = ws;
-        frozenSseOptions = sseOptions().copy();
+        DefaultSseOptions sse = sseOptions().copy();
+        frozenSseOptions = sse;
         SafeLogger safe = new SafeLogger(logger); // the logger is fixed from here: logger(...) needs an unfrozen app
         WebSocketSender.IntSupplier port = () -> boundPort; // threads are made after bind, so they see the real port
         WebSocketSender sender = new WebSocketSender(serverOptions.maxUpgradedConnections(), port, safe);
@@ -945,7 +946,8 @@ public final class DefaultRestApp implements RestApp {
         dispatcher = new Dispatcher(router, pipeline, new ErrorPath(errorHandlers, safe),
                 new AccessLog(accessLogOptions, safe), context, jsonCodec(), jsonLimit(), trustProxy,
                 multipartSettings().copy(), formLimit(), spool(), new StaticHandler(staticMounts, mimeTypes, defaultCache),
-                new WebSocketUpgrade(ws, jsonCodec(), safe, sender, idle, registry));
+                new WebSocketUpgrade(ws, jsonCodec(), safe, sender, idle, registry),
+                new SseRegistry(sse, lifecycle, safe));
         webSocketRegistry = registry;
         // shortcut: reads the deadline field until the FR-APP-020 deadline overload of ShutdownParticipants lands
         shutdownParticipants.add(ShutdownParticipants.Phase.BEFORE_WAIT,

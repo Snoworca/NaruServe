@@ -61,6 +61,7 @@ public final class Dispatcher implements ExchangeHandler {
     private final SpoolRegistry spool;
     private final StaticHandler statics;
     private final WebSocketUpgrade upgrades;
+    private final SseRegistry sse;
 
     /**
      * Wave 3 shape: no middleware, no onError handler, access log off, a {@link ConsoleLogger}. {@code router} must
@@ -138,6 +139,17 @@ public final class Dispatcher implements ExchangeHandler {
             @Nullable ApplicationContext context, @Nullable JsonCodec codec, long jsonLimit, boolean trustProxy,
             MultipartSettings multipart, long formLimit, SpoolRegistry spool, StaticHandler statics,
             WebSocketUpgrade upgrades) {
+        this(router, pipeline, errors, accessLog, context, codec, jsonLimit, trustProxy, multipart, formLimit, spool,
+                statics, upgrades, new SseRegistry(new DefaultSseOptions(), null, errors.logger));
+    }
+
+    /** As above, with the app's SSE registry, which every response's {@code sse()} streams join. */
+    // @req FR-SSE-004
+    Dispatcher(Router<RouteHandler> router, MiddlewarePipeline pipeline, ErrorPath errors, AccessLog accessLog,
+            @Nullable ApplicationContext context, @Nullable JsonCodec codec, long jsonLimit, boolean trustProxy,
+            MultipartSettings multipart, long formLimit, SpoolRegistry spool, StaticHandler statics,
+            WebSocketUpgrade upgrades, SseRegistry sse) {
+        this.sse = Objects.requireNonNull(sse, "sse");
         this.upgrades = Objects.requireNonNull(upgrades, "upgrades");
         this.statics = Objects.requireNonNull(statics, "statics");
         this.spool = Objects.requireNonNull(spool, "spool");
@@ -185,6 +197,7 @@ public final class Dispatcher implements ExchangeHandler {
         res.resolverTap(statics.resolverTap());
         res.request(req);
         res.applyDefaultCache(statics.defaultCache());
+        res.sseRegistry(sse);
         // The request ends once the response finished (complete or abort) and the handler chain returned, so a
         // handler may still save() an upload after res.send(); whichever comes last releases the uploads.
         AtomicInteger untilEnd = new AtomicInteger(2);

@@ -14,13 +14,16 @@ import com.snoworca.naruserve.internal.DefaultRestApp;
 import com.snoworca.naruserve.routing.RoutingConfigException;
 import com.snoworca.naruserve.spi.HttpAdapter;
 import com.snoworca.naruserve.spi.HttpExchange;
+import com.snoworca.naruserve.spi.StreamDrain;
 import com.snoworca.naruserve.spi.WebSocketChannel;
 import com.snoworca.naruserve.spi.WebSocketEndpoint;
 import com.snoworca.naruserve.spi.WebSocketSettings;
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientRequest;
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientResponse;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.net.InetAddress;
+import java.nio.charset.StandardCharsets;
 import java.net.ServerSocket;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -409,5 +412,43 @@ public class InMemoryHttpAdapterTest {
         InMemoryWebSocketChannel channel = adapter.nextChannel(5, TimeUnit.SECONDS);
         channel.clientClose(1000, "");
         assertEquals(101, f.get(5, TimeUnit.SECONDS).status());
+    }
+
+    // SDS-AC-14 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-10.sds.md; FR-SSE-002 AC-2, AC-8
+    @Test(timeout = 20000)
+    public void sdsAc14_FR_SSE_002_AC2_AC8_eventStreamAttachesAndDrainsOneStreamOnAnotherThread() throws Exception {
+        AtomicReference<OutputStream> attached = new AtomicReference<>();
+        AtomicReference<OutputStream> drained = new AtomicReference<>();
+        AtomicReference<Thread> handlerThread = new AtomicReference<>();
+        InMemoryHttpAdapter adapter = new InMemoryHttpAdapter();
+        adapter.bind("127.0.0.1", 0, exchange -> {
+            handlerThread.set(Thread.currentThread());
+            try {
+                exchange.eventStream(200, Collections.<Map.Entry<String, String>>emptyList(), new StreamDrain() {
+                    @Override
+                    public void attach(OutputStream out) {
+                        attached.set(out);
+                    }
+
+                    @Override
+                    public void drain(OutputStream out) throws IOException {
+                        drained.set(out);
+                        out.write("x".getBytes(StandardCharsets.UTF_8));
+                    }
+                });
+            } catch (IOException e) {
+                throw new AssertionError(e);
+            }
+        });
+        Future<ClientResponse> f = adapter.submit(ClientRequest.of("GET", "/events"));
+        InMemoryEventStream es = adapter.nextEventStream(5, TimeUnit.SECONDS);
+        ClientResponse r = f.get(5, TimeUnit.SECONDS);
+        assertEquals("x", r.text());
+        assertEquals("x", es.text());
+        assertSame(attached.get(), es.attached());
+        assertSame(drained.get(), es.drained());
+        assertSame(es.attached(), es.drained());
+        assertEquals(1, es.writerThreads().size());
+        assertFalse(es.writerThreads().contains(handlerThread.get()));
     }
 }

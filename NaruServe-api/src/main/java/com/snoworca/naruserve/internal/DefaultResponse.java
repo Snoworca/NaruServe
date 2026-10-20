@@ -191,9 +191,10 @@ public final class DefaultResponse implements Response {
 
     /**
      * The end of an SSE stream, called by its drain: STREAMING becomes COMPLETED through {@code ex.finish()}, or
-     * ABORTED for a {@code failure}.
+     * ABORTED for a {@code failure}; either fires onDone.
      */
     // @req IR-SSE-001
+    // @req FR-SSE-004
     void sseEnded(@Nullable Throwable failure) {
         if (failure != null) {
             abort(failure);
@@ -216,6 +217,18 @@ public final class DefaultResponse implements Response {
             }
         }
         fireDone();
+    }
+
+    /** The stream of a non-HEAD {@link #sse}, or null. */
+    // @req FR-SSE-004
+    synchronized @Nullable DefaultSseClient sseClient() {
+        return sseClient;
+    }
+
+    /** Adds SSE bytes written by the client to {@link #bytesWritten}. */
+    // @req FR-SSE-002
+    void addWritten(long n) {
+        bytesWritten.addAndGet(n);
     }
 
     /** The request whose method and conditional headers {@link #file} and {@link #download} evaluate. */
@@ -659,9 +672,10 @@ public final class DefaultResponse implements Response {
     /**
      * No-op once COMPLETED or ABORTED; otherwise ABORTED, the exchange aborted and a pending stream closed. Safe from
      * any thread: a running copy keeps the input and closes it itself once its read returns, so the input is never
-     * closed under a read.
+     * closed under a read. An SSE stream ends with cause error, and runs its listeners here when no drain started.
      */
     // @req FR-HTTP-015
+    // @req FR-SSE-004
     @Override
     public void abort(@Nullable Throwable error) {
         boolean copyRunning;
@@ -682,6 +696,9 @@ public final class DefaultResponse implements Response {
             closeInput();
         }
         fireDone(); // a running copy fires it when it ends
+        if (sse != null && !sse.drainStarted()) {
+            sse.runListeners(); // no drain will run them; a later drain call returns at once
+        }
     }
 
     // @req FR-HTTP-016
