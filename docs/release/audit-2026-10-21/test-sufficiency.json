@@ -1,0 +1,1753 @@
+{
+  "scope": {
+    "target": null,
+    "ids": [
+      "CON-SVL-001",
+      "FR-APP-019",
+      "FR-DX-003",
+      "FR-JSON-001",
+      "FR-MULTIPART-002",
+      "FR-REL-002",
+      "FR-REL-003",
+      "FR-ROUTE-006",
+      "FR-ROUTE-008",
+      "FR-SSE-002",
+      "FR-SSE-004",
+      "FR-STATIC-009",
+      "FR-STATIC-010",
+      "FR-SVL-005",
+      "FR-WS-007",
+      "IR-HTTP-007",
+      "PERF-APP-001"
+    ],
+    "sds": null,
+    "testGlobs": [
+      "**/src/test/**/*.java",
+      "**/src/test/**/*.kt"
+    ]
+  },
+  "testFileCount": 286,
+  "requirements": [
+    {
+      "requirementId": "CON-SVL-001",
+      "acs": [
+        {
+          "acId": "AC-1",
+          "cited": true,
+          "citations": [
+            {
+              "file": "src/test/java/com/snoworca/naruserve/build/ServletBuildTest.java",
+              "line": 31
+            }
+          ]
+        },
+        {
+          "acId": "AC-2",
+          "cited": true,
+          "citations": [
+            {
+              "file": "src/test/java/com/snoworca/naruserve/build/ServletBuildTest.java",
+              "line": 42
+            }
+          ]
+        },
+        {
+          "acId": "AC-3",
+          "cited": true,
+          "citations": [
+            {
+              "file": "src/test/java/com/snoworca/naruserve/build/ServletBuildTest.java",
+              "line": 80
+            }
+          ]
+        },
+        {
+          "acId": "AC-4",
+          "cited": true,
+          "citations": [
+            {
+              "file": "src/test/java/com/snoworca/naruserve/build/ServletBuildTest.java",
+              "line": 112
+            },
+            {
+              "file": "src/test/java/com/snoworca/naruserve/build/ServletBuildTest.java",
+              "line": 133
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "requirementId": "FR-APP-019",
+      "acs": [
+        {
+          "acId": "AC-1",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogAcceptanceTest.java",
+              "line": 55
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AccessLogTest.java",
+              "line": 63
+            }
+          ]
+        },
+        {
+          "acId": "AC-2",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AccessLogTest.java",
+              "line": 70
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AccessLogTest.java",
+              "line": 81
+            }
+          ]
+        },
+        {
+          "acId": "AC-3",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogAcceptanceTest.java",
+              "line": 64
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogAcceptanceTest.java",
+              "line": 76
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogAcceptanceTest.java",
+              "line": 122
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StoppingGateTest.java",
+              "line": 71
+            }
+          ]
+        },
+        {
+          "acId": "AC-4",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogAcceptanceTest.java",
+              "line": 139
+            }
+          ]
+        },
+        {
+          "acId": "AC-5",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java",
+              "line": 589
+            }
+          ]
+        },
+        {
+          "acId": "AC-6",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogAcceptanceTest.java",
+              "line": 152
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogAcceptanceTest.java",
+              "line": 168
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AccessLogTest.java",
+              "line": 93
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AccessLogTest.java",
+              "line": 108
+            }
+          ]
+        },
+        {
+          "acId": "AC-7",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogAcceptanceTest.java",
+              "line": 179
+            }
+          ]
+        },
+        {
+          "acId": "AC-8",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogAcceptanceTest.java",
+              "line": 219
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java",
+              "line": 619
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java",
+              "line": 662
+            },
+            {
+              "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/WebSocketSessionSocketTest.java",
+              "line": 150
+            }
+          ]
+        },
+        {
+          "acId": "AC-9",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogAcceptanceTest.java",
+              "line": 241
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AccessLogTest.java",
+              "line": 121
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/WebSocketUpgradeFailureTest.java",
+              "line": 36
+            },
+            {
+              "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LongConnectionShutdownSocketTest.java",
+              "line": 113
+            },
+            {
+              "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/WebSocketSessionSocketTest.java",
+              "line": 150
+            }
+          ]
+        },
+        {
+          "acId": "AC-10",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogAcceptanceTest.java",
+              "line": 303
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AccessLogTest.java",
+              "line": 138
+            },
+            {
+              "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletSsePreDrainAbortTest.java",
+              "line": 15
+            },
+            {
+              "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LongConnectionShutdownSocketTest.java",
+              "line": 113
+            }
+          ]
+        },
+        {
+          "acId": "AC-11",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AccessLogTest.java",
+              "line": 154
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "requirementId": "FR-DX-003",
+      "acs": [
+        {
+          "acId": "AC-1",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/InputBoundaryTest.java",
+              "line": 38
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/InputConvenienceTest.java",
+              "line": 9
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/UnicodeRequiredInputTest.java",
+              "line": 13
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/UnicodeRequiredInputTest.java",
+              "line": 31
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/UnicodeRequiredInputTest.java",
+              "line": 42
+            }
+          ]
+        },
+        {
+          "acId": "AC-2",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/InputBoundaryTest.java",
+              "line": 12
+            }
+          ]
+        },
+        {
+          "acId": "AC-3",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/InputBoundaryTest.java",
+              "line": 12
+            }
+          ]
+        },
+        {
+          "acId": "AC-4",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/InputBoundaryTest.java",
+              "line": 12
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "requirementId": "FR-JSON-001",
+      "acs": [
+        {
+          "acId": "AC-1",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/JsonBodyAcceptanceTest.java",
+              "line": 164
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/JsonBodyAcceptanceTest.java",
+              "line": 175
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/JsonBodyReaderTest.java",
+              "line": 183
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/JsonBodyReaderTest.java",
+              "line": 195
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/JsonMediaTypeSyntaxTest.java",
+              "line": 20
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/JsonMediaTypeSyntaxTest.java",
+              "line": 32
+            }
+          ]
+        },
+        {
+          "acId": "AC-2",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/JsonBodyAcceptanceTest.java",
+              "line": 185
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/JsonBodyAcceptanceTest.java",
+              "line": 195
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/JsonBodyAcceptanceTest.java",
+              "line": 203
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/JsonBodyReaderTest.java",
+              "line": 148
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/JsonBodyReaderTest.java",
+              "line": 159
+            }
+          ]
+        },
+        {
+          "acId": "AC-3",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-gson/src/test/java/com/snoworca/naruserve/gson/GsonJsonCodecTest.java",
+              "line": 338
+            }
+          ]
+        },
+        {
+          "acId": "AC-4",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/JsonBodyAcceptanceTest.java",
+              "line": 211
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/JsonBodyAcceptanceTest.java",
+              "line": 219
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/JsonBodyAcceptanceTest.java",
+              "line": 232
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/JsonBodyReaderTest.java",
+              "line": 171
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/JsonBodyReaderTest.java",
+              "line": 183
+            }
+          ]
+        },
+        {
+          "acId": "AC-5",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-gson/src/test/java/com/snoworca/naruserve/gson/GsonJsonCodecTest.java",
+              "line": 295
+            }
+          ]
+        },
+        {
+          "acId": "AC-6",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/JsonBodyAcceptanceTest.java",
+              "line": 251
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/JsonBodyReaderTest.java",
+              "line": 124
+            }
+          ]
+        },
+        {
+          "acId": "AC-7",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-gson/src/test/java/com/snoworca/naruserve/gson/GsonJsonCodecTest.java",
+              "line": 467
+            }
+          ]
+        },
+        {
+          "acId": "AC-8",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/JsonBodyAcceptanceTest.java",
+              "line": 263
+            }
+          ]
+        },
+        {
+          "acId": "AC-9",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/JsonBodyReaderTest.java",
+              "line": 84
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/JsonBodyReaderTest.java",
+              "line": 98
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/JsonBodyReaderTest.java",
+              "line": 210
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "requirementId": "FR-MULTIPART-002",
+      "acs": [
+        {
+          "acId": "AC-1",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartLimitsTest.java",
+              "line": 151
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartLimitsTest.java",
+              "line": 166
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartLimitsTest.java",
+              "line": 184
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartLimitsTest.java",
+              "line": 194
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartLimitsTest.java",
+              "line": 309
+            },
+            {
+              "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/MultipartCrossAdapterTest.java",
+              "line": 278
+            }
+          ]
+        },
+        {
+          "acId": "AC-2",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartEpilogueLimitsTest.java",
+              "line": 18
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartEpilogueLimitsTest.java",
+              "line": 42
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartEpilogueLimitsTest.java",
+              "line": 51
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartEpilogueLimitsTest.java",
+              "line": 69
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartEpilogueLimitsTest.java",
+              "line": 78
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartLimitsTest.java",
+              "line": 205
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartLimitsTest.java",
+              "line": 219
+            },
+            {
+              "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/MultipartCrossAdapterTest.java",
+              "line": 227
+            },
+            {
+              "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/MultipartEpilogueSocketTest.java",
+              "line": 16
+            },
+            {
+              "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/MultipartEpilogueSocketTest.java",
+              "line": 21
+            }
+          ]
+        },
+        {
+          "acId": "AC-3",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartLimitsTest.java",
+              "line": 232
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartLimitsTest.java",
+              "line": 252
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "requirementId": "FR-REL-002",
+      "acs": [
+        {
+          "acId": "AC-1",
+          "cited": true,
+          "citations": [
+            {
+              "file": "src/test/java/com/snoworca/naruserve/build/ScanReportTest.java",
+              "line": 62
+            },
+            {
+              "file": "src/test/java/com/snoworca/naruserve/build/ScanReportTest.java",
+              "line": 77
+            },
+            {
+              "file": "src/test/java/com/snoworca/naruserve/build/ScanReportTest.java",
+              "line": 151
+            }
+          ]
+        },
+        {
+          "acId": "AC-2",
+          "cited": true,
+          "citations": [
+            {
+              "file": "src/test/java/com/snoworca/naruserve/build/ScanReportTest.java",
+              "line": 110
+            },
+            {
+              "file": "src/test/java/com/snoworca/naruserve/build/ScanReportTest.java",
+              "line": 126
+            },
+            {
+              "file": "src/test/java/com/snoworca/naruserve/build/ScanReportTest.java",
+              "line": 173
+            },
+            {
+              "file": "src/test/java/com/snoworca/naruserve/build/ScanReportTest.java",
+              "line": 191
+            },
+            {
+              "file": "src/test/java/com/snoworca/naruserve/build/ScanReportTest.java",
+              "line": 225
+            }
+          ]
+        },
+        {
+          "acId": "AC-3",
+          "cited": true,
+          "citations": [
+            {
+              "file": "src/test/java/com/snoworca/naruserve/docs/ReleaseRecordsDocsTest.java",
+              "line": 96
+            },
+            {
+              "file": "src/test/java/com/snoworca/naruserve/docs/ReleaseRecordsDocsTest.java",
+              "line": 111
+            }
+          ]
+        },
+        {
+          "acId": "AC-4",
+          "cited": true,
+          "citations": [
+            {
+              "file": "src/test/java/com/snoworca/naruserve/build/DependencySuppressionTest.java",
+              "line": 15
+            },
+            {
+              "file": "src/test/java/com/snoworca/naruserve/build/DependencySuppressionTest.java",
+              "line": 76
+            },
+            {
+              "file": "src/test/java/com/snoworca/naruserve/build/DependencySuppressionTest.java",
+              "line": 89
+            },
+            {
+              "file": "src/test/java/com/snoworca/naruserve/build/DependencySuppressionTest.java",
+              "line": 105
+            },
+            {
+              "file": "src/test/java/com/snoworca/naruserve/build/ScanReportTest.java",
+              "line": 97
+            }
+          ]
+        },
+        {
+          "acId": "AC-5",
+          "cited": true,
+          "citations": [
+            {
+              "file": "src/test/java/com/snoworca/naruserve/build/ReleaseScriptTextTest.java",
+              "line": 99
+            },
+            {
+              "file": "src/test/java/com/snoworca/naruserve/build/ReleaseScriptTextTest.java",
+              "line": 120
+            },
+            {
+              "file": "src/test/java/com/snoworca/naruserve/build/ScanReportTest.java",
+              "line": 136
+            },
+            {
+              "file": "src/test/java/com/snoworca/naruserve/build/ScanReportTest.java",
+              "line": 151
+            },
+            {
+              "file": "src/test/java/com/snoworca/naruserve/build/ScanReportTest.java",
+              "line": 173
+            },
+            {
+              "file": "src/test/java/com/snoworca/naruserve/build/ScanReportTest.java",
+              "line": 191
+            },
+            {
+              "file": "src/test/java/com/snoworca/naruserve/build/ScanReportTest.java",
+              "line": 209
+            },
+            {
+              "file": "src/test/java/com/snoworca/naruserve/build/ScanReportTest.java",
+              "line": 225
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "requirementId": "FR-REL-003",
+      "acs": [
+        {
+          "acId": "AC-1",
+          "cited": true,
+          "citations": [
+            {
+              "file": "src/test/java/com/snoworca/naruserve/build/ReleaseGateTest.java",
+              "line": 34
+            },
+            {
+              "file": "src/test/java/com/snoworca/naruserve/build/ReleaseGateTest.java",
+              "line": 43
+            },
+            {
+              "file": "src/test/java/com/snoworca/naruserve/build/ReleaseGateTest.java",
+              "line": 50
+            },
+            {
+              "file": "src/test/java/com/snoworca/naruserve/build/ReleaseGateTest.java",
+              "line": 57
+            },
+            {
+              "file": "src/test/java/com/snoworca/naruserve/build/ReleaseGateTest.java",
+              "line": 65
+            },
+            {
+              "file": "src/test/java/com/snoworca/naruserve/build/ReleaseGateTest.java",
+              "line": 73
+            },
+            {
+              "file": "src/test/java/com/snoworca/naruserve/build/ReleaseGateTest.java",
+              "line": 95
+            },
+            {
+              "file": "src/test/java/com/snoworca/naruserve/build/ReleaseGateTest.java",
+              "line": 115
+            },
+            {
+              "file": "src/test/java/com/snoworca/naruserve/build/ReleaseGateTest.java",
+              "line": 130
+            },
+            {
+              "file": "src/test/java/com/snoworca/naruserve/build/ReleaseGateTest.java",
+              "line": 145
+            }
+          ]
+        },
+        {
+          "acId": "AC-2",
+          "cited": true,
+          "citations": [
+            {
+              "file": "src/test/java/com/snoworca/naruserve/build/ReleaseGateTest.java",
+              "line": 80
+            },
+            {
+              "file": "src/test/java/com/snoworca/naruserve/build/ReleaseGateTest.java",
+              "line": 89
+            },
+            {
+              "file": "src/test/java/com/snoworca/naruserve/docs/ReleaseRecordsDocsTest.java",
+              "line": 129
+            }
+          ]
+        },
+        {
+          "acId": "AC-3",
+          "cited": true,
+          "citations": [
+            {
+              "file": "src/test/java/com/snoworca/naruserve/docs/ReleaseRecordsDocsTest.java",
+              "line": 151
+            }
+          ]
+        },
+        {
+          "acId": "AC-4",
+          "cited": true,
+          "citations": [
+            {
+              "file": "src/test/java/com/snoworca/naruserve/build/ReleaseGateTest.java",
+              "line": 108
+            },
+            {
+              "file": "src/test/java/com/snoworca/naruserve/build/ReleaseGateTest.java",
+              "line": 115
+            }
+          ]
+        },
+        {
+          "acId": "AC-5",
+          "cited": true,
+          "citations": [
+            {
+              "file": "src/test/java/com/snoworca/naruserve/build/ReleaseScriptTextTest.java",
+              "line": 128
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "requirementId": "FR-ROUTE-006",
+      "acs": [
+        {
+          "acId": "AC-1",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterLookupTest.java",
+              "line": 202
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterPolicyTest.java",
+              "line": 54
+            }
+          ]
+        },
+        {
+          "acId": "AC-2",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterLookupTest.java",
+              "line": 210
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterPolicyTest.java",
+              "line": 65
+            }
+          ]
+        },
+        {
+          "acId": "AC-3",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/UnicodeRoutingContractTest.java",
+              "line": 30
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterLookupTest.java",
+              "line": 223
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterPolicyTest.java",
+              "line": 26
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterPolicyTest.java",
+              "line": 39
+            }
+          ]
+        },
+        {
+          "acId": "AC-4",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/UnicodeRoutingContractTest.java",
+              "line": 44
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterPolicyTest.java",
+              "line": 82
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterPolicyTest.java",
+              "line": 102
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "requirementId": "FR-ROUTE-008",
+      "acs": [
+        {
+          "acId": "AC-1",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterFreezeTest.java",
+              "line": 26
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterFreezeTest.java",
+              "line": 114
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterFreezeTest.java",
+              "line": 159
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterFreezeTest.java",
+              "line": 174
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterFreezeTest.java",
+              "line": 185
+            }
+          ]
+        },
+        {
+          "acId": "AC-2",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterFreezeTest.java",
+              "line": 40
+            }
+          ]
+        },
+        {
+          "acId": "AC-3",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterFreezeTest.java",
+              "line": 40
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterFreezeTest.java",
+              "line": 56
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterFreezeTest.java",
+              "line": 67
+            }
+          ]
+        },
+        {
+          "acId": "AC-4",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/UnicodeRoutingContractTest.java",
+              "line": 20
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/UnicodeRoutingContractTest.java",
+              "line": 44
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterFreezeTest.java",
+              "line": 75
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterFreezeTest.java",
+              "line": 104
+            }
+          ]
+        },
+        {
+          "acId": "AC-5",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterFreezeTest.java",
+              "line": 134
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterFreezeTest.java",
+              "line": 149
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterRegistrationTest.java",
+              "line": 142
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "requirementId": "FR-SSE-002",
+      "acs": [
+        {
+          "acId": "AC-1",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/SseSocketTest.java",
+              "line": 202
+            }
+          ]
+        },
+        {
+          "acId": "AC-2",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/SseQueueTest.java",
+              "line": 179
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/testing/InMemoryHttpAdapterTest.java",
+              "line": 417
+            }
+          ]
+        },
+        {
+          "acId": "AC-3",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/SseQueueTest.java",
+              "line": 74
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/SseQueueTest.java",
+              "line": 92
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/SseQueueTest.java",
+              "line": 103
+            }
+          ]
+        },
+        {
+          "acId": "AC-4",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/SseQueueTest.java",
+              "line": 120
+            }
+          ]
+        },
+        {
+          "acId": "AC-5",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultSseClientTest.java",
+              "line": 127
+            },
+            {
+              "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/SseSocketTest.java",
+              "line": 271
+            }
+          ]
+        },
+        {
+          "acId": "AC-6",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/SseQueueTest.java",
+              "line": 155
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultSseClientTest.java",
+              "line": 127
+            }
+          ]
+        },
+        {
+          "acId": "AC-7",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultSseClientTest.java",
+              "line": 28
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultSseClientTest.java",
+              "line": 160
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultSseClientTest.java",
+              "line": 177
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultSseClientTest.java",
+              "line": 202
+            }
+          ]
+        },
+        {
+          "acId": "AC-8",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultSseClientTest.java",
+              "line": 109
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultSseClientTest.java",
+              "line": 148
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/testing/InMemoryHttpAdapterTest.java",
+              "line": 417
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "requirementId": "FR-SSE-004",
+      "acs": [
+        {
+          "acId": "AC-1",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/SseSocketTest.java",
+              "line": 271
+            },
+            {
+              "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/SseSocketTest.java",
+              "line": 302
+            }
+          ]
+        },
+        {
+          "acId": "AC-2",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultSseClientTest.java",
+              "line": 28
+            },
+            {
+              "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletSsePreDrainAbortTest.java",
+              "line": 15
+            },
+            {
+              "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/SseSocketTest.java",
+              "line": 318
+            }
+          ]
+        },
+        {
+          "acId": "AC-3",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/SseLifetimeTest.java",
+              "line": 86
+            }
+          ]
+        },
+        {
+          "acId": "AC-4",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/SseLifetimeTest.java",
+              "line": 149
+            }
+          ]
+        },
+        {
+          "acId": "AC-5",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/SseLifetimeTest.java",
+              "line": 112
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/SseLifetimeTest.java",
+              "line": 133
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultSseClientTest.java",
+              "line": 28
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultSseClientTest.java",
+              "line": 213
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultSseClientTest.java",
+              "line": 267
+            }
+          ]
+        },
+        {
+          "acId": "AC-6",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/SseLifetimeTest.java",
+              "line": 191
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultSseClientTest.java",
+              "line": 247
+            },
+            {
+              "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/SseSocketTest.java",
+              "line": 356
+            }
+          ]
+        },
+        {
+          "acId": "AC-7",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/SseLifetimeTest.java",
+              "line": 220
+            },
+            {
+              "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/SseSocketTest.java",
+              "line": 378
+            }
+          ]
+        },
+        {
+          "acId": "AC-8",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/SseLifetimeTest.java",
+              "line": 220
+            },
+            {
+              "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/SseSocketTest.java",
+              "line": 378
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "requirementId": "FR-STATIC-009",
+      "acs": [
+        {
+          "acId": "AC-1",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticConditionalTest.java",
+              "line": 53
+            }
+          ]
+        },
+        {
+          "acId": "AC-2",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/FileResponseTest.java",
+              "line": 104
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/RepeatedFileHeadersTest.java",
+              "line": 29
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticConditionalTest.java",
+              "line": 70
+            },
+            {
+              "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/StaticCrossAdapterTest.java",
+              "line": 116
+            }
+          ]
+        },
+        {
+          "acId": "AC-3",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticConditionalTest.java",
+              "line": 88
+            }
+          ]
+        },
+        {
+          "acId": "AC-4",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/RepeatedFileHeadersTest.java",
+              "line": 52
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticConditionalTest.java",
+              "line": 106
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "requirementId": "FR-STATIC-010",
+      "acs": [
+        {
+          "acId": "AC-1",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticRangeTest.java",
+              "line": 43
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticRangeTest.java",
+              "line": 80
+            }
+          ]
+        },
+        {
+          "acId": "AC-2",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticRangeTest.java",
+              "line": 53
+            }
+          ]
+        },
+        {
+          "acId": "AC-3",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/RepeatedFileHeadersTest.java",
+              "line": 51
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticRangeTest.java",
+              "line": 68
+            },
+            {
+              "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/StaticCrossAdapterTest.java",
+              "line": 117
+            }
+          ]
+        },
+        {
+          "acId": "AC-4",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticRangeTest.java",
+              "line": 91
+            }
+          ]
+        },
+        {
+          "acId": "AC-5",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticRangeTest.java",
+              "line": 106
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "requirementId": "FR-SVL-005",
+      "acs": [
+        {
+          "acId": "AC-1",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletSseLimitTest.java",
+              "line": 55
+            },
+            {
+              "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletSseLimitTest.java",
+              "line": 92
+            }
+          ]
+        },
+        {
+          "acId": "AC-2",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletSseLimitTest.java",
+              "line": 115
+            }
+          ]
+        },
+        {
+          "acId": "AC-3",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletSseAsyncTest.java",
+              "line": 85
+            }
+          ]
+        },
+        {
+          "acId": "AC-4",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletSseDeliveryTest.java",
+              "line": 35
+            }
+          ]
+        },
+        {
+          "acId": "AC-5",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletAbortTest.java",
+              "line": 271
+            },
+            {
+              "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletSseAsyncTest.java",
+              "line": 116
+            },
+            {
+              "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletSseAsyncTest.java",
+              "line": 171
+            },
+            {
+              "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletSsePreDrainAbortTest.java",
+              "line": 15
+            }
+          ]
+        },
+        {
+          "acId": "AC-6",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletSseDeliveryTest.java",
+              "line": 89
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "requirementId": "FR-WS-007",
+      "acs": [
+        {
+          "acId": "AC-1",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/WebSocketSendQueueTest.java",
+              "line": 97
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/WebSocketSenderTest.java",
+              "line": 326
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/WebSocketTaskBoundTest.java",
+              "line": 12
+            },
+            {
+              "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/WebSocketSendSocketTest.java",
+              "line": 60
+            },
+            {
+              "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/WebSocketSendSocketTest.java",
+              "line": 231
+            }
+          ]
+        },
+        {
+          "acId": "AC-2",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/WebSocketSenderTest.java",
+              "line": 361
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/WebSocketSenderTest.java",
+              "line": 392
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/WebSocketSenderTest.java",
+              "line": 418
+            },
+            {
+              "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/WebSocketThreadsSocketTest.java",
+              "line": 44
+            }
+          ]
+        },
+        {
+          "acId": "AC-3",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/WebSocketSenderTest.java",
+              "line": 438
+            }
+          ]
+        },
+        {
+          "acId": "AC-4",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/WebSocketSendSocketTest.java",
+              "line": 56
+            }
+          ]
+        },
+        {
+          "acId": "AC-5",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/WebSocketSendSocketTest.java",
+              "line": 171
+            },
+            {
+              "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/WebSocketSendSocketTest.java",
+              "line": 193
+            },
+            {
+              "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/WebSocketSendSocketTest.java",
+              "line": 231
+            }
+          ]
+        },
+        {
+          "acId": "AC-6",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/WebSocketSendQueueTest.java",
+              "line": 57
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/WebSocketSendQueueTest.java",
+              "line": 80
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/WebSocketSenderTest.java",
+              "line": 522
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/WebSocketSenderTest.java",
+              "line": 560
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/WebSocketTaskBoundTest.java",
+              "line": 12
+            },
+            {
+              "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/WebSocketSendSocketTest.java",
+              "line": 231
+            },
+            {
+              "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/WebSocketSessionSocketTest.java",
+              "line": 97
+            }
+          ]
+        },
+        {
+          "acId": "AC-7",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/WebSocketSenderTest.java",
+              "line": 462
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/WebSocketSenderTest.java",
+              "line": 509
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/WebSocketSenderTest.java",
+              "line": 522
+            }
+          ]
+        },
+        {
+          "acId": "AC-8",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/WebSocketDispatchTest.java",
+              "line": 191
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/WebSocketDispatchTest.java",
+              "line": 217
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "requirementId": "IR-HTTP-007",
+      "acs": [
+        {
+          "acId": "AC-1",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/spi/HttpAdapterSpiTest.java",
+              "line": 162
+            }
+          ]
+        },
+        {
+          "acId": "AC-2",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/spi/HttpAdapterSpiTest.java",
+              "line": 183
+            }
+          ]
+        },
+        {
+          "acId": "AC-3",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultSseClientTest.java",
+              "line": 28
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/spi/HttpAdapterSpiTest.java",
+              "line": 114
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/spi/HttpAdapterSpiTest.java",
+              "line": 596
+            },
+            {
+              "file": "src/test/java/com/snoworca/naruserve/build/ServletBuildTest.java",
+              "line": 133
+            }
+          ]
+        },
+        {
+          "acId": "AC-4",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/spi/HttpAdapterSpiTest.java",
+              "line": 298
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/spi/HttpAdapterSpiTest.java",
+              "line": 535
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/spi/HttpAdapterSpiTest.java",
+              "line": 580
+            }
+          ]
+        },
+        {
+          "acId": "AC-5",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/spi/HttpAdapterSpiTest.java",
+              "line": 210
+            }
+          ]
+        },
+        {
+          "acId": "AC-6",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/spi/HttpAdapterSpiTest.java",
+              "line": 233
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "requirementId": "PERF-APP-001",
+      "acs": [
+        {
+          "acId": "AC-1",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LoadIsolatedSocketTest.java",
+              "line": 50
+            }
+          ]
+        },
+        {
+          "acId": "AC-2",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LoadIsolatedSocketTest.java",
+              "line": 30
+            },
+            {
+              "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LoadIsolatedSocketTest.java",
+              "line": 91
+            }
+          ]
+        },
+        {
+          "acId": "AC-3",
+          "cited": true,
+          "citations": [
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/WebSocketIdleSchedulerTest.java",
+              "line": 173
+            },
+            {
+              "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/WebSocketSenderTest.java",
+              "line": 572
+            },
+            {
+              "file": "src/test/java/com/snoworca/naruserve/docs/WaveSevenDocsTest.java",
+              "line": 243
+            }
+          ]
+        },
+        {
+          "acId": "AC-4",
+          "cited": true,
+          "citations": [
+            {
+              "file": "src/test/java/com/snoworca/naruserve/docs/WaveSevenDocsTest.java",
+              "line": 243
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "sdsContracts": [],
+  "gaps": {
+    "requirements": [],
+    "sdsContracts": []
+  },
+  "passed": true
+}

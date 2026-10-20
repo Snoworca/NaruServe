@@ -50,7 +50,7 @@ The five targets of `object.md` §17.1.
 
 | target | status | notes |
 |---|---|---|
-| JVM Java 8 | verified | Zulu OpenJDK 1.8.0_504 macOS aarch64 ran all 1,649 tests with failures/errors/skipped=0: [run](test-results.md#run-java8). The default/build JDK 17 remains unchanged. Compile-time checks: `--release 8` and animal-sniffer `android-api-level-21`; actual Java 8 runtime evidence is separate. |
+| JVM Java 8 | verified | Zulu OpenJDK 1.8.0_504 macOS aarch64 ran all 1,677 tests with failures/errors/skipped=0: [run](test-results.md#run-java8). The default/build JDK 17 remains unchanged. Compile-time checks: `--release 8` and animal-sniffer `android-api-level-21`; actual Java 8 runtime evidence is separate. |
 | Android 5.0 API 21 | out-of-v1-scope | user decision 2026-10-20: no device or emulator run in v1 |
 | Latest Android API | out-of-v1-scope | user decision 2026-10-20: no regression run in v1 |
 | Kotlin Android project | out-of-v1-scope | user decision 2026-10-20: no Android sample in v1; Kotlin compile and run on the JVM are covered by T11 |

@@ -187,42 +187,44 @@ JAVA8_TEST_RUNTIME :NaruServe-gson:test /Users/beom/Library/Java/JavaVirtualMach
 > Task :NaruServe-logcat:processTestResources NO-SOURCE
 > Task :NaruServe-logcat:testClasses
 
-> Task :NaruServe-kotlin:compileTestKotlin
-w: Language version 1.9 is deprecated and its support will be removed in a future version of Kotlin
-
 > Task :NaruServe-logcat:test
 JAVA8_TEST_RUNTIME :NaruServe-logcat:test /Users/beom/Library/Java/JavaVirtualMachines/zulu8.96.0.205-ca-jdk8.0.504-macosx_aarch64/Contents/Home/bin/java
 
+> Task :NaruServe-logcat:check
+> Task :NaruServe-servlet:checkClassReferences
+> Task :NaruServe-servlet:jar
+
+> Task :NaruServe-kotlin:compileTestKotlin
+w: Language version 1.9 is deprecated and its support will be removed in a future version of Kotlin
+
 > Task :NaruServe-kotlin:compileTestJava NO-SOURCE
 > Task :NaruServe-kotlin:testClasses UP-TO-DATE
+> Task :NaruServe-servlet:compileTestKotlin
 
 > Task :NaruServe-kotlin:test
 JAVA8_TEST_RUNTIME :NaruServe-kotlin:test /Users/beom/Library/Java/JavaVirtualMachines/zulu8.96.0.205-ca-jdk8.0.504-macosx_aarch64/Contents/Home/bin/java
 
 > Task :NaruServe-kotlin:check
-> Task :NaruServe-logcat:check
-> Task :NaruServe-servlet:checkClassReferences
-> Task :NaruServe-servlet:jar
-> Task :NaruServe-servlet:processTestResources NO-SOURCE
-> Task :NaruServe-slf4j:compileTestKotlin NO-SOURCE
-> Task :NaruServe-slf4j:compileTestJava
-> Task :NaruServe-slf4j:processTestResources NO-SOURCE
-> Task :NaruServe-slf4j:testClasses
-> Task :NaruServe-servlet:compileTestKotlin
-
-> Task :NaruServe-slf4j:test
-JAVA8_TEST_RUNTIME :NaruServe-slf4j:test /Users/beom/Library/Java/JavaVirtualMachines/zulu8.96.0.205-ca-jdk8.0.504-macosx_aarch64/Contents/Home/bin/java
 
 > Task :NaruServe-servlet:compileTestJava
 warning: unknown enum constant ElementType.MODULE
 1 warning
 
+> Task :NaruServe-servlet:processTestResources NO-SOURCE
 > Task :NaruServe-servlet:testClasses
 
 > Task :NaruServe-servlet:test
 JAVA8_TEST_RUNTIME :NaruServe-servlet:test /Users/beom/Library/Java/JavaVirtualMachines/zulu8.96.0.205-ca-jdk8.0.504-macosx_aarch64/Contents/Home/bin/java
 
 > Task :NaruServe-servlet:check
+> Task :NaruServe-slf4j:compileTestKotlin NO-SOURCE
+> Task :NaruServe-slf4j:compileTestJava
+> Task :NaruServe-slf4j:processTestResources NO-SOURCE
+> Task :NaruServe-slf4j:testClasses
+
+> Task :NaruServe-slf4j:test
+JAVA8_TEST_RUNTIME :NaruServe-slf4j:test /Users/beom/Library/Java/JavaVirtualMachines/zulu8.96.0.205-ca-jdk8.0.504-macosx_aarch64/Contents/Home/bin/java
+
 > Task :NaruServe-slf4j:check
 > Task :NaruServe-tinyhttpd:animalsnifferMain
 > Task :NaruServe-tinyhttpd:checkClassReferences
@@ -277,5 +279,5 @@ JAVA8_TEST_RUNTIME :test /Users/beom/Library/Java/JavaVirtualMachines/zulu8.96.0
 
 [Incubating] Problems report is available at: file:///Users/beom/work/git/NaruServe/build/reports/problems/problems-report.html
 
-BUILD SUCCESSFUL in 1m 51s
+BUILD SUCCESSFUL in 1m 50s
 79 actionable tasks: 79 executed

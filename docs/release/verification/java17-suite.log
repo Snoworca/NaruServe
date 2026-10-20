@@ -176,15 +176,7 @@ warning: unknown enum constant ElementType.MODULE
 > Task :NaruServe-logcat:compileTestJava
 > Task :NaruServe-logcat:processTestResources NO-SOURCE
 > Task :NaruServe-logcat:testClasses
-
-> Task :NaruServe-kotlin:compileTestKotlin
-w: Language version 1.9 is deprecated and its support will be removed in a future version of Kotlin
-
 > Task :NaruServe-logcat:test
-> Task :NaruServe-kotlin:compileTestJava NO-SOURCE
-> Task :NaruServe-kotlin:testClasses UP-TO-DATE
-> Task :NaruServe-kotlin:test
-> Task :NaruServe-kotlin:check
 > Task :NaruServe-logcat:check
 > Task :NaruServe-servlet:checkClassReferences
 > Task :NaruServe-servlet:jar
@@ -193,8 +185,16 @@ w: Language version 1.9 is deprecated and its support will be removed in a futur
 > Task :NaruServe-slf4j:compileTestJava
 > Task :NaruServe-slf4j:processTestResources NO-SOURCE
 > Task :NaruServe-slf4j:testClasses
+
+> Task :NaruServe-kotlin:compileTestKotlin
+w: Language version 1.9 is deprecated and its support will be removed in a future version of Kotlin
+
 > Task :NaruServe-servlet:compileTestKotlin
 > Task :NaruServe-slf4j:test
+> Task :NaruServe-kotlin:compileTestJava NO-SOURCE
+> Task :NaruServe-kotlin:testClasses UP-TO-DATE
+> Task :NaruServe-kotlin:test
+> Task :NaruServe-kotlin:check
 
 > Task :NaruServe-servlet:compileTestJava
 warning: unknown enum constant ElementType.MODULE

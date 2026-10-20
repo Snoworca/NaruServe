@@ -92,7 +92,7 @@ No requirement is `verified` on the strength of a `manual-pending` line.
 Each line records one run on the build machine (macOS, OpenJDK 17.0.20, Gradle 8.14.3).
 
 <a id="run-full-suite"></a>
-- run full-suite: command=./gradlew build --rerun-tasks --console=plain; date=2026-10-21; result=exit=0; commit=19c366b plus requirement-backed release verification changes; tests=1649; failures=0; errors=0; skipped=0; evidence=verification/java17-suite.json
+- run full-suite: command=./gradlew build --rerun-tasks --console=plain; date=2026-10-21; result=exit=0; commit=c7f306c; tests=1677; failures=0; errors=0; skipped=0; evidence=audit-2026-10-21/full17.json
 
 <a id="run-sbom"></a>
 - run sbom: command=./gradlew -Prelease '-PnvdDatafeedUrl=https://dependency-check.github.io/DependencyCheck_Builder/nvd_cache/nvdcve-{0}.json.gz' releaseSbom releaseScan releaseLicenses releaseCheck --console=plain; date=2026-10-21; result=exit=0; NaruServe-api.cdx.json=0, NaruServe-filelog.cdx.json=1, NaruServe-gson.cdx.json=3, NaruServe-kotlin.cdx.json=3, NaruServe-logcat.cdx.json=1, NaruServe-servlet.cdx.json=1, NaruServe-slf4j.cdx.json=2, NaruServe-tinyhttpd.cdx.json=3, NaruServe.cdx.json=8
@@ -107,7 +107,7 @@ Each line records one run on the build machine (macOS, OpenJDK 17.0.20, Gradle 8
 - run licenses: command=./gradlew -Prelease '-PnvdDatafeedUrl=https://dependency-check.github.io/DependencyCheck_Builder/nvd_cache/nvdcve-{0}.json.gz' releaseSbom releaseScan releaseLicenses releaseCheck --console=plain; date=2026-10-21; result=exit=0; THIRD-PARTY-LICENSES.md: 7 shipped, 3 provided; non-GPL check passed; evidence=verification/release-check.log
 
 <a id="run-vulnerability-scan"></a>
-- run vulnerability-scan: command=./gradlew -Prelease '-PnvdDatafeedUrl=https://dependency-check.github.io/DependencyCheck_Builder/nvd_cache/nvdcve-{0}.json.gz' releaseSbom releaseScan releaseLicenses releaseCheck --console=plain; date=2026-10-21; result=exit=0; Status: completed; High=0; Critical=0; unscored=0; Medium=3; evidence=verification/scan.csv, verification/release-check.log; NVD mirror lastModifiedDate=2026-10-20T15:35:25Z
+- run vulnerability-scan: command=./gradlew -Prelease '-PnvdDatafeedUrl=https://dependency-check.github.io/DependencyCheck_Builder/nvd_cache/nvdcve-{0}.json.gz' releaseSbom releaseScan releaseLicenses releaseCheck --console=plain; date=2026-10-21; result=exit=0; Status: completed; High=0; Critical=0; unscored=0; Medium=3; evidence=audit-2026-10-21/scan.csv, audit-2026-10-21/release-check.log; NVD mirror lastModifiedDate=2026-10-20T15:35:25Z
 
 <a id="run-java8"></a>
-- run java8: command=./gradlew build --rerun-tasks --console=plain -I gradle/java8-tests.gradle -Dnaruserve.java8.home=/Users/beom/Library/Java/JavaVirtualMachines/zulu8.96.0.205-ca-jdk8.0.504-macosx_aarch64/Contents/Home; date=2026-10-21; result=exit=0; tests=1649; runtime=1.8.0_504; evidence=docs/release/verification/java8-suite.json
+- run java8: command=./gradlew build --rerun-tasks --console=plain -I gradle/java8-tests.gradle -Dnaruserve.java8.home=/Users/beom/Library/Java/JavaVirtualMachines/zulu8.96.0.205-ca-jdk8.0.504-macosx_aarch64/Contents/Home; date=2026-10-21; result=exit=0; tests=1677; runtime=1.8.0_504; evidence=docs/release/verification/java8-suite.json

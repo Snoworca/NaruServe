@@ -1,0 +1,114 @@
+{
+  "date": "2026-10-21",
+  "epic": 36,
+  "issues": [
+    {
+      "number": 37,
+      "title": "불완전한 취약점 보고서와 잘못된 CVSS 점수의 릴리스 통과 방지",
+      "reqs": [
+        "FR-REL-002",
+        "FR-REL-003"
+      ]
+    },
+    {
+      "number": 38,
+      "title": "Unicode 경로 대소문자 매칭과 중복 충돌 검사를 일치시키기",
+      "reqs": [
+        "FR-ROUTE-006",
+        "FR-ROUTE-008"
+      ]
+    },
+    {
+      "number": 39,
+      "title": "필수 입력 편의 함수에서 Unicode 공백만 있는 값 거부",
+      "reqs": [
+        "FR-DX-003"
+      ]
+    },
+    {
+      "number": 40,
+      "title": "JSON Content-Type의 토큰과 따옴표 파라미터를 올바르게 해석",
+      "reqs": [
+        "FR-JSON-001"
+      ]
+    },
+    {
+      "number": 41,
+      "title": "Servlet SSE drain 시작 전 중단 시 세션과 종료 콜백 누수 방지",
+      "reqs": [
+        "FR-SVL-005",
+        "FR-SSE-004",
+        "FR-APP-019",
+        "IR-HTTP-007",
+        "FR-SSE-002",
+        "CON-SVL-001"
+      ]
+    },
+    {
+      "number": 42,
+      "title": "빈 WebSocket 메시지와 Ping으로 송신 큐가 무제한 증가하는 문제 방지",
+      "reqs": [
+        "FR-WS-007",
+        "PERF-APP-001"
+      ]
+    },
+    {
+      "number": 43,
+      "title": "multipart 종료 boundary 뒤 epilogue의 요청 크기 한도 우회 방지",
+      "reqs": [
+        "FR-MULTIPART-002"
+      ]
+    },
+    {
+      "number": 44,
+      "title": "정적 파일의 반복 조건부 헤더와 Range 필드를 일관되게 처리",
+      "reqs": [
+        "FR-STATIC-009",
+        "FR-STATIC-010"
+      ]
+    },
+    {
+      "number": 45,
+      "title": "TinyHttpd의 요청 헤더 순서와 426 Upgrade 응답 헤더 보존",
+      "reqs": [
+        "IR-HTTP-003",
+        "FR-ENGINE-011",
+        "FR-WS-004",
+        "CON-BUILD-010"
+      ]
+    }
+  ],
+  "closedIssues": [
+    38,
+    39,
+    40,
+    43,
+    44,
+    37,
+    42,
+    41
+  ],
+  "pendingIssues": [
+    45,
+    36
+  ],
+  "blockedRequirements": [
+    "IR-HTTP-003",
+    "FR-ENGINE-011",
+    "FR-WS-004"
+  ],
+  "scope": [
+    "HTTP Request/Response, input conveniences, routing/group/prefix middleware",
+    "JSON/TypeRef/Gson and cookies",
+    "multipart/form and static/file/download cache/ranges",
+    "application/services/lifecycle and logging implementations",
+    "WebSocket/SSE limits, concurrency, shutdown",
+    "TinyHttpd/Servlet adapters, Kotlin/public nullability",
+    "bootstrap, build architecture checks and release tools"
+  ],
+  "limits": [
+    "Android device, emulator and R8 are excluded by prior user decision.",
+    "TinyHttpd external source changes and new target/SRS authoring await explicit user authorization.",
+    "Source AC citations complement actual executions and do not establish runtime correctness by themselves."
+  ]
+}

@@ -41,7 +41,7 @@ The API-usability target has 52 ACs, 50 with direct source-test citations. CON-D
 | [#15](https://github.com/Snoworca/NaruServe/issues/15) [P3] 장기 연결 종료 · backpressure · 부하 | completed after sufficient tests | Current SRS ACs and source tests reviewed; reinforced whole-suite regression passed. |
 | [#16](https://github.com/Snoworca/NaruServe/issues/16) [P4] Kotlin 호환 · NaruServe-kotlin | completed after sufficient tests | Current SRS ACs and source tests reviewed; reinforced whole-suite regression passed. |
 | [#17](https://github.com/Snoworca/NaruServe/issues/17) [P4] Android API 21 샘플 앱 · 실기기 QA · R8 | not_planned | Explicit 2026-10-20 user decision removed Android sample/device/R8 QA from v1. This closure does not claim those tests ran. |
-| [#18](https://github.com/Snoworca/NaruServe/issues/18) [P4] 릴리스 준비: SBOM · 라이선스 · 문서 정리 | eligible to close | Real NVD mirror scan completed; releaseCheck cleared without risk exceptions. Java 8 ran all 1,649 tests with zero failures/errors/skips. See the follow-up below. |
+| [#18](https://github.com/Snoworca/NaruServe/issues/18) [P4] 릴리스 준비: SBOM · 라이선스 · 문서 정리 | eligible to close | Real NVD mirror scan completed; releaseCheck cleared without risk exceptions. Java 8 ran all 1,677 tests with zero failures/errors/skips. See the follow-up below. |
 | [#19](https://github.com/Snoworca/NaruServe/issues/19) [P5 선택] Servlet 어댑터 (javax, Servlet 3.1+) | completed after sufficient tests | Current SRS ACs and source tests reviewed; reinforced whole-suite regression passed. |
 | [#20](https://github.com/Snoworca/NaruServe/issues/20) [Epic] NaruServe v1: docs/api 계약 구현 | eligible to close | Child #18 now has completed security and actual Java8 runtime evidence. Android remains excluded by the prior user decision, not recorded as passed. |
 
@@ -64,10 +64,14 @@ Requirements: OPS-BUILD-002, OPS-HTTP-004, FR-REL-002, OPS-REL-004.
 
 - Default JDK remains Homebrew OpenJDK 17.0.20.1. Zulu OpenJDK 1.8.0_504 was installed separately after verifying its official SHA-256; shell configuration was unchanged.
 - Gradle and compilation remain on JDK 17; `gradle/java8-tests.gradle` runs every Test task, including root and isolated socket tests, on Java 8. Nested TestKit builds explicitly retain the build JDK.
-- Real Java 8 full regression: **1,649 tests; failures=0; errors=0; skipped=0**. [Runtime record](verification/java8-suite.json), [individual results](verification/java8-test-results.json), [execution log](verification/java8-suite.log).
+- Real Java 8 full regression: **1,677 tests; failures=0; errors=0; skipped=0**. [Runtime record](verification/java8-suite.json), [individual results](verification/java8-test-results.json), [execution log](verification/java8-suite.log).
 - Four affected requirements / 21 acceptance criteria have source test citations with no gaps: [coverage](verification/test-sufficiency.json). Citations are supporting evidence; the real executions establish runtime results.
 - Completed OWASP scan, nine SBOMs and license/release gate passed. High/Critical/unscored=0. Three Medium TinyHttpd associations remain visible. One exact standard-library false positive was audited; no risk-acceptance exception was added. [Security review and limits](security-review.md), [raw CSV](verification/scan.csv), [gate log](verification/release-check.log).
 - TDD exposed unsupported Java8 compiler flags and a nested TestKit launcher failure before their fixes. New negative cases reject fabricated Java8 verification records and broad vulnerability suppressions. Existing invalid code, Java10 syntax, negative build fixtures and release-block tests remain enabled.
 - #17 retains its prior not-planned closure. Android device/R8 execution is outside the agreed v1 scope and is not claimed as verified.
 
-Final default JDK 17 regression also passed all 1,649 tests with failures/errors/skipped=0; [record](verification/java17-suite.json), [log](verification/java17-suite.log). Independent reviewers found no remaining HIGH/MEDIUM test-evidence gaps.
+Final default JDK 17 regression also passed all 1,677 tests with failures/errors/skipped=0; [record](verification/java17-suite.json), [log](verification/java17-suite.log). Independent reviewers found no remaining HIGH/MEDIUM test-evidence gaps.
+
+## Additional audit after this closure review
+
+The later audit reproduced nine defect groups. Eight child issues were fixed and closed after TDD and independent review; upstream issue #45 and epic #36 remain open pending explicit external TinyHttpd/SRS-target authorization. IR-HTTP-003, FR-ENGINE-011 and FR-WS-004 remain blocked, not verified. See [additional audit](additional-audit-2026-10-21.md) for the current scope and full regression evidence.

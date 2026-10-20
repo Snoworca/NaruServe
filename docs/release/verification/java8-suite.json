@@ -1,13 +1,12 @@
 {
-  "tests": 1649,
+  "tests": 1677,
   "failures": 0,
   "errors": 0,
   "skipped": 0,
-  "command": "./gradlew build --rerun-tasks --console=plain -I gradle/java8-tests.gradle -Dnaruserve.java8.home=/Users/beom/Library/Java/JavaVirtualMachines/zulu8.96.0.205-ca-jdk8.0.504-macosx_aarch64/Contents/Home",
-  "date": "2026-10-21",
   "runtime": "1.8.0_504",
+  "date": "2026-10-21",
   "exit": 0,
-  "buildJdk": "17.0.20.1",
+  "command": "./gradlew build --rerun-tasks --console=plain -I gradle/java8-tests.gradle -Dnaruserve.java8.home=/Users/beom/Library/Java/JavaVirtualMachines/zulu8.96.0.205-ca-jdk8.0.504-macosx_aarch64/Contents/Home",
   "testTasks": [
     ":NaruServe:test",
     ":NaruServe-filelog:test",
@@ -15,8 +14,8 @@
     ":NaruServe-gson:test",
     ":NaruServe-logcat:test",
     ":NaruServe-kotlin:test",
-    ":NaruServe-slf4j:test",
     ":NaruServe-servlet:test",
+    ":NaruServe-slf4j:test",
     ":NaruServe-tinyhttpd:isolatedTest",
     ":NaruServe-tinyhttpd:test",
     ":test"

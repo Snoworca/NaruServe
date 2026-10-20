@@ -43,7 +43,7 @@
   },
   {
     "file": "build/test-results/test/TEST-com.snoworca.naruserve.build.ReleaseGateTest.xml",
-    "tests": 11,
+    "tests": 13,
     "failures": 0,
     "errors": 0,
     "skipped": 0
@@ -71,7 +71,7 @@
   },
   {
     "file": "build/test-results/test/TEST-com.snoworca.naruserve.build.ScanReportTest.xml",
-    "tests": 10,
+    "tests": 11,
     "failures": 0,
     "errors": 0,
     "skipped": 0
@@ -155,7 +155,7 @@
   },
   {
     "file": "build/test-results/test/TEST-com.snoworca.naruserve.build.ServletBuildTest.xml",
-    "tests": 4,
+    "tests": 5,
     "failures": 0,
     "errors": 0,
     "skipped": 0
@@ -212,6 +212,13 @@
   {
     "file": "NaruServe-servlet/build/test-results/test/TEST-com.snoworca.naruserve.servlet.ServletRejectTest.xml",
     "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "file": "NaruServe-servlet/build/test-results/test/TEST-com.snoworca.naruserve.servlet.ServletSsePreDrainAbortTest.xml",
+    "tests": 4,
     "failures": 0,
     "errors": 0,
     "skipped": 0
@@ -567,6 +574,13 @@
     "skipped": 0
   },
   {
+    "file": "NaruServe-api/build/test-results/test/TEST-com.snoworca.naruserve.UnicodeRequiredInputTest.xml",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
     "file": "NaruServe-api/build/test-results/test/TEST-com.snoworca.naruserve.internal.CachePatternTest.xml",
     "tests": 3,
     "failures": 0,
@@ -639,6 +653,13 @@
   {
     "file": "NaruServe-api/build/test-results/test/TEST-com.snoworca.naruserve.WebSocketApiTest.xml",
     "tests": 15,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "file": "NaruServe-api/build/test-results/test/TEST-com.snoworca.naruserve.internal.WebSocketTaskBoundTest.xml",
+    "tests": 3,
     "failures": 0,
     "errors": 0,
     "skipped": 0
@@ -1092,6 +1113,13 @@
     "skipped": 0
   },
   {
+    "file": "NaruServe-api/build/test-results/test/TEST-com.snoworca.naruserve.UnicodeRoutingContractTest.xml",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
     "file": "NaruServe-api/build/test-results/test/TEST-com.snoworca.naruserve.routing.RouterFreezeTest.xml",
     "tests": 12,
     "failures": 0,
@@ -1129,6 +1157,13 @@
   {
     "file": "NaruServe-api/build/test-results/test/TEST-com.snoworca.naruserve.internal.PrefixMatcherTest.xml",
     "tests": 5,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "file": "NaruServe-api/build/test-results/test/TEST-com.snoworca.naruserve.RepeatedFileHeadersTest.xml",
+    "tests": 2,
     "failures": 0,
     "errors": 0,
     "skipped": 0
@@ -1323,6 +1358,13 @@
     "skipped": 0
   },
   {
+    "file": "NaruServe-api/build/test-results/test/TEST-com.snoworca.naruserve.internal.JsonMediaTypeSyntaxTest.xml",
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
     "file": "NaruServe-api/build/test-results/test/TEST-com.snoworca.naruserve.ResponseBoundaryTest.xml",
     "tests": 4,
     "failures": 0,
@@ -1436,7 +1478,7 @@
   },
   {
     "file": "NaruServe-api/build/test-results/test/TEST-com.snoworca.naruserve.internal.DefaultSseClientTest.xml",
-    "tests": 9,
+    "tests": 10,
     "failures": 0,
     "errors": 0,
     "skipped": 0
@@ -1486,6 +1528,13 @@
   {
     "file": "NaruServe-api/build/test-results/test/TEST-com.snoworca.naruserve.StaticSymlinkTest.xml",
     "tests": 5,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "file": "NaruServe-api/build/test-results/test/TEST-com.snoworca.naruserve.MultipartEpilogueLimitsTest.xml",
+    "tests": 4,
     "failures": 0,
     "errors": 0,
     "skipped": 0
@@ -1632,7 +1681,14 @@
   },
   {
     "file": "NaruServe-tinyhttpd/build/test-results/test/TEST-com.snoworca.naruserve.tinyhttpd.WebSocketSendSocketTest.xml",
-    "tests": 3,
+    "tests": 4,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "file": "NaruServe-tinyhttpd/build/test-results/test/TEST-com.snoworca.naruserve.tinyhttpd.MultipartEpilogueSocketTest.xml",
+    "tests": 1,
     "failures": 0,
     "errors": 0,
     "skipped": 0
