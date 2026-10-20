@@ -2,13 +2,10 @@ package com.snoworca.naruserve.servlet;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import com.snoworca.naruserve.RestApp;
 import com.snoworca.naruserve.SseClient;
-import com.snoworca.naruserve.testing.RecordingLogger;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -25,33 +22,13 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
-import org.junit.After;
-import org.junit.Rule;
 import org.junit.Test;
 
 /**
  * SSE under AsyncContext: timeout 0 against a lowered container default, and one complete() per stream.
  * SDS-AC-n cites docs/sds/2026-10-19.naruserve.naruserve-v1-wave-8-7.sds.md.
  */
-public class ServletSseAsyncTest {
-
-    @Rule
-    public final ContainerRule container = new ContainerRule();
-
-    private final RecordingLogger log = new RecordingLogger();
-    private final List<SseProbe> probes = new ArrayList<>();
-    private final BlockingQueue<SseClient> opened = new LinkedBlockingQueue<>();
-    private RestApp app;
-
-    @After
-    public void stop() throws IOException {
-        for (SseProbe p : probes) {
-            p.close();
-        }
-        if (app != null) {
-            app.shutdown(2, TimeUnit.SECONDS);
-        }
-    }
+public class ServletSseAsyncTest extends SseJettyTest {
 
     /**
      * Hands the chain a request whose {@code startAsync()} lowers the container default timeout to 1 s and returns a
@@ -83,12 +60,6 @@ public class ServletSseAsyncTest {
         }
     }
 
-    private SseClient next() throws InterruptedException {
-        SseClient c = opened.poll(10, TimeUnit.SECONDS);
-        assertNotNull("no stream opened", c);
-        return c;
-    }
-
     private static void await(AtomicInteger n, int value) throws InterruptedException {
         SharedApp.until(() -> n.get() >= value, 5, TimeUnit.SECONDS);
     }
@@ -116,7 +87,7 @@ public class ServletSseAsyncTest {
     public void sdsAc7_FR_SVL_005_AC3_everyStreamHasTimeout0AndOutlivesA1sContainerDefault() throws Exception {
         AsyncProbe probe = new AsyncProbe();
         container.filter(probe);
-        app = ServletSseLimitTest.jetty(container, log, a -> {
+        jetty(a -> {
             a.sse(o -> o.heartbeatInterval(1, TimeUnit.SECONDS));
             a.get("/events", (req, res) -> opened.add(res.sse()));
         });
@@ -149,7 +120,7 @@ public class ServletSseAsyncTest {
         container.filter(probe);
         AtomicInteger closes = new AtomicInteger();
         CountDownLatch handlerEnd = new CountDownLatch(1);
-        app = ServletSseLimitTest.jetty(container, log, a -> {
+        jetty(a -> {
             a.sse(o -> o.heartbeatInterval(1, TimeUnit.SECONDS));
             a.get("/events", (req, res) -> {
                 SseClient c = res.sse();

@@ -5,58 +5,27 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import com.snoworca.naruserve.RestApp;
 import com.snoworca.naruserve.SseClient;
 import com.snoworca.naruserve.testing.RecordingLogger;
 import com.snoworca.naruserve.testing.TestSupport;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import org.junit.After;
-import org.junit.Rule;
 import org.junit.Test;
 
 /**
  * SSE writes reach the client at once (each write flushed), and a closed client frees its stream in time.
  * SDS-AC-n cites docs/sds/2026-10-19.naruserve.naruserve-v1-wave-8-7.sds.md.
  */
-public class ServletSseDeliveryTest {
-
-    @Rule
-    public final ContainerRule container = new ContainerRule();
-
-    private final RecordingLogger log = new RecordingLogger();
-    private final List<SseProbe> probes = new ArrayList<>();
-    private final BlockingQueue<SseClient> opened = new LinkedBlockingQueue<>();
-    private RestApp app;
-
-    @After
-    public void stop() throws IOException {
-        for (SseProbe p : probes) {
-            p.close();
-        }
-        if (app != null) {
-            app.shutdown(2, TimeUnit.SECONDS);
-        }
-    }
+public class ServletSseDeliveryTest extends SseJettyTest {
 
     private SseProbe open(String path) throws IOException {
         SseProbe p = SseProbe.open(container.port(), path);
         probes.add(p);
         return p;
-    }
-
-    private SseClient next() throws InterruptedException {
-        SseClient c = opened.poll(10, TimeUnit.SECONDS);
-        assertNotNull("no stream opened", c);
-        return c;
     }
 
     private static long millisSince(long nanos, long at) {
@@ -68,7 +37,7 @@ public class ServletSseDeliveryTest {
     public void sdsAc8_FR_SVL_005_AC4_sendsAndHeartbeatsReachTheClientWithin500ms() throws Exception {
         CountDownLatch seenEarly = new CountDownLatch(1);
         AtomicBoolean earlyBeforeReturn = new AtomicBoolean();
-        app = ServletSseLimitTest.jetty(container, log, a -> {
+        jetty(a -> {
             a.sse(o -> o.heartbeatInterval(1, TimeUnit.SECONDS));
             a.get("/events", (req, res) -> opened.add(res.sse()));
             a.get("/early", (req, res) -> {
@@ -122,7 +91,7 @@ public class ServletSseDeliveryTest {
     public void sdsAc10_FR_SVL_005_AC6_aClosedClientEndsWithCauseClientAndFreesItsThreadWithin3s()
             throws Exception {
         AtomicInteger closes = new AtomicInteger();
-        app = ServletSseLimitTest.jetty(container, log, a -> {
+        jetty(a -> {
             a.server(o -> o.maxSseStreams(1));
             a.sse(o -> o.heartbeatInterval(1, TimeUnit.SECONDS));
             a.get("/events", (req, res) -> {

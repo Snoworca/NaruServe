@@ -2,14 +2,11 @@ package com.snoworca.naruserve.servlet;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import com.snoworca.naruserve.HttpException;
-import com.snoworca.naruserve.RestApp;
 import com.snoworca.naruserve.SseClient;
 import com.snoworca.naruserve.testing.LiveThreads;
-import com.snoworca.naruserve.testing.RecordingLogger;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,39 +15,13 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Consumer;
-import org.junit.After;
-import org.junit.Rule;
 import org.junit.Test;
 
 /**
  * The Servlet adapter's own SSE counter and executor. SDS-AC-n cites
  * docs/sds/2026-10-19.naruserve.naruserve-v1-wave-8-7.sds.md.
  */
-public class ServletSseLimitTest {
-
-    @Rule
-    public final ContainerRule container = new ContainerRule();
-
-    final RecordingLogger log = new RecordingLogger();
-    final List<SseProbe> probes = new ArrayList<>();
-    final BlockingQueue<SseClient> opened = new LinkedBlockingQueue<>();
-    RestApp app;
-
-    @After
-    public void stop() throws IOException {
-        for (SseProbe p : probes) {
-            p.close();
-        }
-        if (app != null) {
-            app.shutdown(2, TimeUnit.SECONDS);
-        }
-    }
-
-    /** An app with {@code routes} over a new ServletAdapter behind {@link NaruServeServlet} at {@code /*}. */
-    static RestApp jetty(ContainerRule c, RecordingLogger log, Consumer<RestApp> routes) throws Exception {
-        return SharedApp.onJetty(c, new ServletAdapter(), "/*", log, routes);
-    }
+public class ServletSseLimitTest extends SseJettyTest {
 
     /** SSE threads left alive by earlier tests in this JVM, which this test does not count. */
     final java.util.Set<Thread> earlier = new java.util.HashSet<>(sseThreads(java.util.Collections.emptySet()));
@@ -66,12 +37,6 @@ public class ServletSseLimitTest {
         SseProbe p = SseProbe.open(port, "/events");
         probes.add(p);
         return p;
-    }
-
-    SseClient next() throws InterruptedException {
-        SseClient c = opened.poll(10, TimeUnit.SECONDS);
-        assertNotNull("no stream opened", c);
-        return c;
     }
 
     /** Opens streams until one is answered 200 or 10 s passed. */
@@ -92,7 +57,7 @@ public class ServletSseLimitTest {
     public void sdsAc5_FR_SVL_005_AC1_aThirdStreamGets503UnstartedAndTheSlotIsFreedOnEndIoExceptionAndAbort()
             throws Exception {
         AtomicReference<String> refused = new AtomicReference<>();
-        app = jetty(container, log, a -> {
+        jetty(a -> {
             a.server(o -> o.maxSseStreams(2));
             a.sse(o -> o.heartbeatInterval(1, TimeUnit.SECONDS));
             a.get("/events", (req, res) -> {
@@ -156,7 +121,7 @@ public class ServletSseLimitTest {
             chain.doFilter(req, res);
             serviceReturned.countDown();
         });
-        app = jetty(container, log, a -> {
+        jetty(a -> {
             a.server(o -> o.maxSseStreams(2));
             a.get("/events", (req, res) -> {
                 synchronized (handlerThreads) {

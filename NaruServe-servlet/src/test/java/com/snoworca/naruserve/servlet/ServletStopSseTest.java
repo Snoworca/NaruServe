@@ -1,55 +1,30 @@
 package com.snoworca.naruserve.servlet;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import com.snoworca.naruserve.RestApp;
 import com.snoworca.naruserve.SseClient;
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
-import org.junit.After;
-import org.junit.Rule;
 import org.junit.Test;
 
 /**
  * Open SSE streams at shutdown: the closing notice and the end of each body, and the cut at the deadline of a
  * stream whose client stopped reading. SDS-AC-n cites docs/sds/2026-10-19.naruserve.naruserve-v1-wave-8-8.sds.md.
  */
-public class ServletStopSseTest {
-
-    @Rule
-    public final ContainerRule container = new ContainerRule();
+public class ServletStopSseTest extends SseJettyTest {
 
     /** The D-344 margin of shutdown (FR-APP-020). */
     private static final long MARGIN_MILLIS = 3000;
 
-    private final List<SseProbe> probes = new ArrayList<>();
-    private final BlockingQueue<SseClient> opened = new LinkedBlockingQueue<>();
     private final ServletSseAsyncTest.AsyncProbe completes = new ServletSseAsyncTest.AsyncProbe();
     private ServletAdapter adapter;
-    private RestApp app;
-
-    @After
-    public void shutdown() throws IOException {
-        for (SseProbe p : probes) {
-            p.close();
-        }
-        if (app != null) {
-            app.shutdown(2, TimeUnit.SECONDS);
-        }
-    }
 
     private void start() throws Exception {
         adapter = new ServletAdapter();
@@ -62,12 +37,6 @@ public class ServletStopSseTest {
                 opened.add(c);
             });
         });
-    }
-
-    private SseClient next() throws InterruptedException {
-        SseClient c = opened.poll(10, TimeUnit.SECONDS);
-        assertNotNull("no stream opened", c);
-        return c;
     }
 
     private void awaitOpen(int n) throws InterruptedException {
