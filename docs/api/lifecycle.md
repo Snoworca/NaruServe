@@ -79,7 +79,7 @@ public interface ServiceRegistry {
 
 public interface ApplicationContext extends ServiceRegistry {
     void attribute(String key, @Nullable Object value);   // null이면 키를 지움
-    <T> @Nullable T attribute(String key, Class<T> type);
+    <T> @Nullable T attributeAs(String key, Class<T> type);
     void own(AutoCloseable resource);
     Logger logger();
 }
@@ -122,11 +122,11 @@ ctx.registerExternal(ConnectionPool.class, sharedPool);   // 종료 때 닫지 �
 
 ```java
 ctx.attribute("appVersion", "1.0.0");
-String v = req.application().attribute("appVersion", String.class);
-ctx.attribute("appVersion", (Object) null);   // 지우기
+String v = req.application().attributeAs("appVersion", String.class);
+ctx.attribute("appVersion", null);   // 지우기
 ```
 
-값을 지우려면 `null`을 저장하는데, `ctx.attribute("appVersion", null)`처럼 `null` 리터럴을 쓰면 읽기 오버로드 `attribute(String, Class<T>)`가 골라져 `NullPointerException`이 나므로 `(Object) null`로 캐스팅하거나 타입이 있는 `null` 변수를 넘기세요.
+`attribute(key, null)`은 캐스팅 없이 값을 지웁니다. 명시적인 삭제는 `removeAttribute(key)`, 타입 지정 조회는 `attributeAs(key, type)`를 사용합니다.
 저장된 값이 요청한 타입이 아니면 `ClassCastException`입니다.
 
 ## 저장소 범위

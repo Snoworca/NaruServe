@@ -99,7 +99,7 @@ public final class WaveEightKotlinDocsTest {
                 "`req.cookie(name)` `Cookie?`",
                 "`req.file(name)` `UploadFile?`",
                 "`req.lastEventId()` `String?`",
-                "`req.attribute(key, type)` `T?`",
+                "`req.attributeAs(key, type)` `T?`",
                 "`req.queries(name)` `List<String>`",
                 "`req.files(name)` `List<UploadFile>`",
                 "`req.service(type)` `T`",

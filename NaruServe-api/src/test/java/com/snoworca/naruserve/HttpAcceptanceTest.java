@@ -244,13 +244,13 @@ public class HttpAcceptanceTest {
             if (!secondDone.await(5, TimeUnit.SECONDS)) {
                 throw new IllegalStateException("second request did not finish");
             }
-            res.send(String.valueOf(req.attribute("user", String.class)));
+            res.send(String.valueOf(req.attributeAs("user", String.class)));
         });
         t.app().get("/b", (req, res) -> {
             if (!firstStored.await(5, TimeUnit.SECONDS)) {
                 throw new IllegalStateException("first request did not store");
             }
-            res.send(String.valueOf(req.attribute("user", String.class)));
+            res.send(String.valueOf(req.attributeAs("user", String.class)));
             secondDone.countDown();
         });
         t.start();

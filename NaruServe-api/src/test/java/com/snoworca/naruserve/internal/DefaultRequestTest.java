@@ -240,8 +240,8 @@ public class DefaultRequestTest {
         DefaultRequest req = request("/x");
         StringBuilder u = new StringBuilder("user");
         req.attribute("user", u);
-        assertSame(u, req.attribute("user", StringBuilder.class));
-        assertNull(req.attribute("none", StringBuilder.class));
+        assertSame(u, req.attributeAs("user", StringBuilder.class));
+        assertNull(req.attributeAs("none", StringBuilder.class));
     }
 
     // SDS-AC-7; FR-HTTP-012 AC-1 - a primitive class (Kotlin's Int::class.java is int.class) reads the boxed value.
@@ -251,12 +251,12 @@ public class DefaultRequestTest {
         req.attribute("n", 5);
         req.attribute("b", true);
         req.attribute("l", 7L);
-        assertEquals(Integer.valueOf(5), req.attribute("n", int.class));
-        assertEquals(Boolean.TRUE, req.attribute("b", boolean.class));
-        assertEquals(Long.valueOf(7), req.attribute("l", long.class));
-        assertNull(req.attribute("none", int.class));
+        assertEquals(Integer.valueOf(5), req.attributeAs("n", int.class));
+        assertEquals(Boolean.TRUE, req.attributeAs("b", boolean.class));
+        assertEquals(Long.valueOf(7), req.attributeAs("l", long.class));
+        assertNull(req.attributeAs("none", int.class));
         try {
-            req.attribute("b", int.class);
+            req.attributeAs("b", int.class);
             fail("expected ClassCastException");
         } catch (ClassCastException expected) {
             // a stored Boolean is not an int
@@ -289,9 +289,9 @@ public class DefaultRequestTest {
         } finally {
             pool.shutdownNow();
         }
-        assertEquals("first", first.attribute("k", String.class));
-        assertEquals("second", second.attribute("k", String.class));
-        assertNull(first.attribute("other", String.class));
+        assertEquals("first", first.attributeAs("k", String.class));
+        assertEquals("second", second.attributeAs("k", String.class));
+        assertNull(first.attributeAs("other", String.class));
     }
 
     // SDS-AC-7; FR-HTTP-012 AC-3
@@ -321,7 +321,7 @@ public class DefaultRequestTest {
         }
         for (int t = 0; t < 8; t++) {
             for (int i = 0; i < 500; i++) {
-                assertEquals(Integer.valueOf(t * 1000 + i), req.attribute("k" + t + "-" + i, Integer.class));
+                assertEquals(Integer.valueOf(t * 1000 + i), req.attributeAs("k" + t + "-" + i, Integer.class));
             }
         }
     }
@@ -333,7 +333,7 @@ public class DefaultRequestTest {
         req.attribute("k", "v");
         Object v = null;
         req.attribute("k", v);
-        assertNull(req.attribute("k", Object.class));
+        assertNull(req.attributeAs("k", Object.class));
         java.lang.reflect.Method m = com.snoworca.naruserve.Request.class
                 .getMethod("attribute", String.class, Object.class);
         java.lang.reflect.AnnotatedType value = m.getAnnotatedParameterTypes()[1];
@@ -356,10 +356,10 @@ public class DefaultRequestTest {
         DefaultRequest req = request("/x");
         req.attribute("k", "text");
         try {
-            req.attribute("k", Integer.class);
+            req.attributeAs("k", Integer.class);
             fail("expected ClassCastException");
         } catch (ClassCastException expected) {
-            assertEquals("text", req.attribute("k", String.class));
+            assertEquals("text", req.attributeAs("k", String.class));
         }
     }
 }

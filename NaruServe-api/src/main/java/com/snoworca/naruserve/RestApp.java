@@ -64,6 +64,13 @@ public interface RestApp {
     // @req IR-HTTP-006
     RouteBuilder route(String path);
 
+    /**
+     * Configures HTTP routes under a shared prefix. Nested group middleware applies to every declared route;
+     * configuration finishes when the callback returns. Call before listen().
+     */
+    // @req FR-DX-009
+    RestApp group(String prefix, Configurer<RouteGroup> configurer);
+
     /** Sets the router policy, built with {@link RouterPolicy#builder()}. */
     RestApp routerPolicy(RouterPolicy policy);
 

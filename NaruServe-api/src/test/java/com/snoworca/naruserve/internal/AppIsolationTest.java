@@ -138,8 +138,8 @@ public class AppIsolationTest {
         assertSame(b.logger, b.ctx.get().logger());
         assertEquals("a", a.ctx.get().get(Svc.class).name);
         assertEquals("b", b.ctx.get().get(Svc.class).name);
-        assertEquals("a", a.ctx.get().attribute("owner", String.class));
-        assertEquals("b", b.ctx.get().attribute("owner", String.class));
+        assertEquals("a", a.ctx.get().attributeAs("owner", String.class));
+        assertEquals("b", b.ctx.get().attributeAs("owner", String.class));
 
         a.app.shutdown(1, TimeUnit.SECONDS);
         // The failing onStop of a is logged only by a's logger; b is still serving.

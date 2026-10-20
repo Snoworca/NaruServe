@@ -171,7 +171,7 @@ public class DefaultApplicationContextTest {
                 for (int i = 0; i < 500; i++) {
                     String key = "t" + thread + "-" + i;
                     ctx.attribute(key, i);
-                    assertEquals(Integer.valueOf(i), ctx.attribute(key, Integer.class));
+                    assertEquals(Integer.valueOf(i), ctx.attributeAs(key, Integer.class));
                 }
                 return null;
             }));
@@ -183,7 +183,7 @@ public class DefaultApplicationContextTest {
         pool.shutdown();
         for (int n = 0; n < 8; n++) {
             for (int i = 0; i < 500; i++) {
-                assertEquals(Integer.valueOf(i), ctx.attribute("t" + n + "-" + i, Integer.class));
+                assertEquals(Integer.valueOf(i), ctx.attributeAs("t" + n + "-" + i, Integer.class));
             }
         }
         app.shutdown(1, TimeUnit.SECONDS);
@@ -196,13 +196,13 @@ public class DefaultApplicationContextTest {
         DefaultRestApp app = (DefaultRestApp) t.app();
         List<Object> seen = Collections.synchronizedList(new ArrayList<Object>());
         app.onStart(ctx -> ctx.attribute("k1", "v1"));
-        app.get("/a", (req, res) -> res.send(String.valueOf(req.application().attribute("k1", String.class))));
+        app.get("/a", (req, res) -> res.send(String.valueOf(req.application().attributeAs("k1", String.class))));
         app.onStop(ctx -> {
-            seen.add(ctx.attribute("k1", String.class));
+            seen.add(ctx.attributeAs("k1", String.class));
             ctx.attribute("k2", "v2");
-            seen.add(ctx.attribute("k2", String.class));
+            seen.add(ctx.attributeAs("k2", String.class));
             ctx.attribute("k2", (Object) null);
-            seen.add(ctx.attribute("k2", String.class) == null ? "removed" : "kept");
+            seen.add(ctx.attributeAs("k2", String.class) == null ? "removed" : "kept");
         });
         assertEquals("v1", new String(t.send("GET", "/a").body(), java.nio.charset.StandardCharsets.UTF_8));
         app.shutdown(1, TimeUnit.SECONDS);

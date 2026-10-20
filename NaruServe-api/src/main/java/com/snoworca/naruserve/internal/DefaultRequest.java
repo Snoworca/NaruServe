@@ -1,5 +1,7 @@
 package com.snoworca.naruserve.internal;
 
+import com.snoworca.naruserve.common.AttributeValues;
+
 import com.snoworca.naruserve.ApplicationContext;
 import com.snoworca.naruserve.Cookie;
 import com.snoworca.naruserve.HttpException;
@@ -38,6 +40,10 @@ public final class DefaultRequest implements Request {
     private final String path;
     private final ConcurrentHashMap<String, Object> attributes = new ConcurrentHashMap<>();
     private final BodyState body = new BodyState();
+    private final Object jsonLock = new Object();
+    // Guarded by jsonLock; a non-null type distinguishes a cached JSON null from a failed parse.
+    private @Nullable Type jsonType;
+    private @Nullable Object jsonValue;
     private volatile @Nullable Map<String, List<String>> query;
     private volatile Cookie @Nullable [] cookies;
     private final @Nullable ApplicationContext context;
@@ -173,17 +179,27 @@ public final class DefaultRequest implements Request {
         return readJson(Objects.requireNonNull(type, "type").getType());
     }
 
-    /** BodyState.begin(JSON), then {@link JsonBodyReader#read}; the body ends CONSUMED whatever the outcome. */
+    /** One successful decode per request; equal types share the cached value, including JSON null. */
+    // @req FR-DX-007
+    @SuppressWarnings("unchecked")
     private <T> @Nullable T readJson(Type type) {
-        JsonCodec c = codec;
-        if (c == null) {
-            throw new IllegalStateException("this request has no JsonCodec; build the app with RestApp.builder()");
-        }
-        body.begin(BodyState.Kind.JSON);
-        try {
-            return JsonBodyReader.read(this, type, c, jsonLimit);
-        } finally {
-            body.complete();
+        synchronized (jsonLock) {
+            if (type.equals(jsonType) && body.state() == BodyState.State.CONSUMED) {
+                return (T) jsonValue;
+            }
+            JsonCodec c = codec;
+            if (c == null) {
+                throw new IllegalStateException("this request has no JsonCodec; build the app with RestApp.builder()");
+            }
+            body.begin(BodyState.Kind.JSON);
+            try {
+                T value = JsonBodyReader.read(this, type, c, jsonLimit);
+                jsonValue = value;
+                jsonType = type;
+                return value;
+            } finally {
+                body.complete();
+            }
         }
     }
 
@@ -399,43 +415,18 @@ public final class DefaultRequest implements Request {
     // @req FR-HTTP-012
     @Override
     public void attribute(String key, @Nullable Object value) {
-        if (value == null) {
-            attributes.remove(key);
-        } else {
-            attributes.put(key, value);
-        }
+        AttributeValues.put(attributes, key, value);
     }
 
     // @req FR-HTTP-012
     @Override
     @SuppressWarnings("unchecked") // a wrapper class stands for its primitive T, which is the boxed type at runtime
-    public <T> @Nullable T attribute(String key, Class<T> type) {
-        // Kotlin's Int::class.java is int.class, and Class.cast always fails for a primitive class.
-        return (T) wrapper(type).cast(attributes.get(key));
+    public <T> @Nullable T attributeAs(String key, Class<T> type) {
+        return AttributeValues.get(attributes, key, type);
     }
 
     static Class<?> wrapper(Class<?> type) {
-        if (!type.isPrimitive()) {
-            return type;
-        }
-        if (type == int.class) {
-            return Integer.class;
-        } else if (type == long.class) {
-            return Long.class;
-        } else if (type == boolean.class) {
-            return Boolean.class;
-        } else if (type == double.class) {
-            return Double.class;
-        } else if (type == float.class) {
-            return Float.class;
-        } else if (type == short.class) {
-            return Short.class;
-        } else if (type == byte.class) {
-            return Byte.class;
-        } else if (type == char.class) {
-            return Character.class;
-        }
-        return Void.class;
+        return AttributeValues.wrapper(type);
     }
 
     /** {@link PercentDecoder#decode}; IllegalArgumentException for bad %XX or invalid UTF-8. */

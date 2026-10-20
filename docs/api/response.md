@@ -16,6 +16,8 @@ res.status(201).header("X-Request-ID", id).json(created);
 | `header(name, value)` | `Response` | `res.set(name, value)` | 응답 헤더. 같은 이름(대소문자 무시)이 있으면 바꿔 씁니다. 이름이 HTTP 토큰이 아니거나(빈 이름, 공백·`:` 포함 등) 값에 CR/LF·NUL 같은 제어 문자(탭 제외)나 U+00FF를 넘는 문자(헤더는 ISO-8859-1, 한 글자 1바이트)가 있으면 `IllegalArgumentException` |
 | `addCookie(cookie)` | `Response` | `res.cookie(...)` | `Set-Cookie` 추가. [Cookie](cookie.md) |
 | `cache(policy)` | `Response` | `res.set('Cache-Control', ...)` | `Cache-Control`을 정합니다. 보내기 전에 다시 부르면 마지막 값이 이깁니다. [캐시](static.md#캐시-정책) |
+| `location(url)` | `Response` | `res.location(url)` | Location 헤더. 빈 주소나 유효하지 않은 헤더 값은 거부합니다. |
+| `type(value)` | `Response` | `res.type(value)` | MIME 문자열 또는 `png`·`.PNG` 같은 확장자. 기본 MIME 표에 없는 확장자는 `application/octet-stream`입니다. |
 | `isCommitted()` | `boolean` | `res.headersSent` | 상태·헤더를 이미 보냈는지 |
 
 ### 본문 보내기
@@ -45,6 +47,18 @@ NaruServe의 `send(Object)`는 실제 값이 문자열이면 텍스트, `byte[]`
 | HTML | `res.send('<b>ok</b>')` | `res.html("<b>ok</b>")` |
 | JSON 객체 | `res.send({ok: true})` 또는 `res.json(...)` | `res.send(map)` 또는 `res.json(map)` |
 | JSON 문자열 | `res.json('hello')` | `res.json("hello")` → 본문 `"hello"` |
+
+## 리다이렉트와 상태 응답
+
+```java
+res.redirect("/login");                    // 302, Location, 빈 본문
+res.redirect(307, "/login");               // 메서드를 유지하는 리다이렉트
+res.status(201).location("/users/7").send(user);
+res.type("png").send(new byte[] {1, 2});    // image/png
+res.sendStatus(404);                        // 404, 텍스트 Not Found
+```
+
+`redirect`는 301·302·303·307·308만 허용하며 상태와 주소를 모두 검증한 후 응답을 바꿉니다. 주소의 CR/LF 등은 기존 헤더 검증 규칙으로 거부합니다. `sendStatus`는 공유 HTTP 상태 설명을 텍스트로 보냅니다. 설명이 없는 상태는 `Error`, 204·304와 HEAD 요청은 빈 본문입니다. 이 함수들은 응답 완료 후에는 기존 쓰기 메서드와 같이 예외를 냅니다.
 
 ## json
 
@@ -132,14 +146,14 @@ Express: `fs.createReadStream(path).pipe(res)`.
 ## 상태 코드만 보내기
 
 ```java
-res.status(204).end();   // Express: res.sendStatus(204)
-res.status(404).end();
+res.sendStatus(204);   // 빈 본문
+res.sendStatus(404);   // Not Found
 ```
 
 ## 리다이렉트
 
-`res.redirect`는 v1에 포함되지 않습니다. v1 개발 계획의 어느 단계(wave)도 맡지 않았고 Express식 편의 헬퍼는 v1 범위 밖이기 때문입니다(v1 이후 항목). 대신 `res.status(302).header("Location", url).end()`로 직접 씁니다.
+`res.redirect(url)`은 기본 302 응답이며, `res.redirect(status, url)`로 상태를 지정합니다.
 
 ```java
-res.status(302).header("Location", "/login").end();
+res.redirect("/login");
 ```

@@ -55,7 +55,7 @@ class AppLifecycleKotlinTest {
         var stored: Int? = null
         val same: RestApp = app.onStart { ctx ->
             ctx.attribute("k", 1)
-            stored = ctx.attribute("k", Int::class.javaObjectType)
+            stored = ctx.attributeAs("k", Int::class.javaObjectType)
         }
         assertSame(app, same)
         val h = app.listen(0)

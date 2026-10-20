@@ -67,7 +67,7 @@ app.get("/users/:id") { req, res ->
 | `req.cookie(name)` | `Cookie?` | `null` |
 | `req.file(name)` | `UploadFile?` | `null` |
 | `req.lastEventId()` | `String?` | `null` |
-| `req.attribute(key, type)` | `T?` | `null` |
+| `req.attributeAs(key, type)` | `T?` | `null` |
 | `req.queries(name)` | `List<String>` | 빈 리스트 |
 | `req.files(name)` | `List<UploadFile>` | 빈 리스트 |
 | `req.service(type)` | `T` | 예외 |

@@ -127,8 +127,8 @@ app.ws("/chat") { req, ws ->
 | `isOpen()` | 열려 있는지 |
 | `close()` | 정상 종료 (`close(1000, "")`와 같습니다) |
 | `close(code, reason)` | 코드와 이유를 지정해 종료 (`ws.close(1000, "bye")`) |
-| `attribute(key, value)` | 이 연결에만 쓰는 값 저장. `null`은 지웁니다. Java에서 `null` 리터럴을 그대로 넘기면 읽기 오버로드 `attribute(key, Class<T>)`가 골라져 `NullPointerException`이 나므로 `attribute("k", (Object) null)`로 캐스팅하세요(Kotlin은 그대로 됩니다). |
-| `attribute(key, Class<T>)` | 값 읽기. 없으면 `null` |
+| `attribute(key, value)` | 값 저장. `null` 리터럴은 캐스팅 없이 삭제합니다. `removeAttribute(key)`로도 삭제합니다. |
+| `attributeAs(key, Class<T>)` | 값 읽기. 없으면 `null` |
 
 Express(express-ws)의 `ws.close(code, reason)`는 `ws.close(code, reason)` 그대로입니다.
 세션 속성은 요청 속성(`req.attribute`)과 별개이며 연결이 끝날 때까지 유지됩니다.

@@ -41,7 +41,7 @@ public class NullableAccessorDocsTest {
     @Test
     public void everyTableRowHasAFunction() throws IOException {
         Collection<String> keys = KotlinAccessorTable.rows().keySet();
-        assertEquals(Arrays.asList("param", "query", "form", "header", "cookie", "file", "lastEventId", "attribute",
+        assertEquals(Arrays.asList("param", "query", "form", "header", "cookie", "file", "lastEventId", "attributeAs",
                 "queries", "files", "service", "body"), new ArrayList<>(keys));
         assertEquals(Collections.emptyList(), missing(keys, kotlinSource()));
     }

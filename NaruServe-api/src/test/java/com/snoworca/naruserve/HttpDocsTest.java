@@ -19,8 +19,6 @@ public class HttpDocsTest {
 
     private static final String MARKER = "(미확정)";
 
-    /** The response.md statement that res.redirect is a post-v1 item (OPS-HTTP-008 AC-8). */
-    static final String REDIRECT_POST_V1_PHRASE = "`res.redirect`는 v1에 포함되지 않습니다";
 
     static String doc(String name) throws IOException {
         // Module tests run in NaruServe-api; the docs live at the repository root.
@@ -134,9 +132,9 @@ public class HttpDocsTest {
                 assertFalse(l, l.contains(MARKER));
             }
         }
-        assertTrue("typed null variable", s.contains("타입이 있는 `null` 변수"));
-        assertTrue("literal null picks the read overload", s.contains("`null` 리터럴"));
-        assertTrue("read overload named", s.contains("`attribute(key, Class<T> type)`"));
+        assertTrue("explicit removal", s.contains("removeAttribute(key)"));
+        assertTrue("null deletes without a cast", s.contains("캐스팅 없이 값을 지웁니다"));
+        assertTrue("read overload named", s.contains("`attributeAs(key, Class<T> type)`"));
         boolean example = false;
         for (String b : blocks(s, "java")) {
             example |= b.contains("= null;") && b.contains("req.attribute(\"user\", ");
@@ -191,8 +189,9 @@ public class HttpDocsTest {
         String d = doc("response.md");
         List<String> m = markerLines(d);
         assertTrue(m.toString(), m.isEmpty());
-        String redirect = lineContaining(d, REDIRECT_POST_V1_PHRASE);
-        assertTrue(redirect, redirect.contains("`res.status(302).header(\"Location\", url).end()`"));
+        // FR-DX-004 AC-1: redirect is now implemented and documented as a convenience helper.
+        assertFalse(d.contains("`res.redirect`는 v1에 포함되지 않습니다"));
+        assertTrue(d.contains("res.redirect(307, \"/login\");"));
         // Wave 6 decides that res.file sends no Content-Disposition (D-293).
         String file = line(d, "| `file(File)`");
         assertTrue(file, file.contains("`Content-Disposition`을 보내지 않습니다"));

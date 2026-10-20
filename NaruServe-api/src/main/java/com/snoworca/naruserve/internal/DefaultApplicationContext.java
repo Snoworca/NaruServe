@@ -1,5 +1,7 @@
 package com.snoworca.naruserve.internal;
 
+import com.snoworca.naruserve.common.AttributeValues;
+
 import com.snoworca.naruserve.AppState;
 import com.snoworca.naruserve.ApplicationContext;
 import com.snoworca.naruserve.Logger;
@@ -115,21 +117,15 @@ public final class DefaultApplicationContext implements ApplicationContext {
     @Override
     public void attribute(String key, @Nullable Object value) {
         Objects.requireNonNull(key, "key");
-        if (value == null) {
-            attributes.remove(key);
-        } else {
-            attributes.put(key, value);
-        }
+        AttributeValues.put(attributes, key, value);
     }
 
     // @req IR-APP-004
     // @req FR-APP-007
     @Override
     @SuppressWarnings("unchecked") // a wrapper class stands for its primitive T, which is the boxed type at runtime
-    public <T> @Nullable T attribute(String key, Class<T> type) {
-        Objects.requireNonNull(key, "key");
-        Objects.requireNonNull(type, "type");
-        return (T) DefaultRequest.wrapper(type).cast(attributes.get(key));
+    public <T> @Nullable T attributeAs(String key, Class<T> type) {
+        return AttributeValues.get(attributes, key, type);
     }
 
     // @req FR-APP-008

@@ -30,8 +30,30 @@ public final class StandardErrors {
     /** The RFC 9110 reason phrase of {@code status}, {@code Error} for a status that has none (418, 599). */
     // @req FR-APP-006
     // @req FR-ENGINE-005
-    static String reason(int status) {
+    public static String reason(int status) {
         switch (status) {
+            case 100: return "Continue";
+            case 101: return "Switching Protocols";
+            case 102: return "Processing";
+            case 103: return "Early Hints";
+            case 200: return "OK";
+            case 201: return "Created";
+            case 202: return "Accepted";
+            case 203: return "Non-Authoritative Information";
+            case 204: return "No Content";
+            case 205: return "Reset Content";
+            case 206: return "Partial Content";
+            case 207: return "Multi-Status";
+            case 208: return "Already Reported";
+            case 226: return "IM Used";
+            case 300: return "Multiple Choices";
+            case 301: return "Moved Permanently";
+            case 302: return "Found";
+            case 303: return "See Other";
+            case 304: return "Not Modified";
+            case 305: return "Use Proxy";
+            case 307: return "Temporary Redirect";
+            case 308: return "Permanent Redirect";
             case 400: return "Bad Request";
             case 401: return "Unauthorized";
             case 402: return "Payment Required";

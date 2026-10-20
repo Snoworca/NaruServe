@@ -82,7 +82,7 @@ final class SharedApp {
             next.run();
         });
         app.use((req, res, next) -> {
-            req.attribute("trail", req.attribute("trail", String.class) + ",m2");
+            req.attribute("trail", req.attributeAs("trail", String.class) + ",m2");
             next.run();
         });
         app.get("/users/:id", (req, res) -> res.send("user " + req.param("id") + " q=" + req.query("q")));
@@ -92,7 +92,7 @@ final class SharedApp {
             res.addCookie(new Cookie("t", "set"));
             res.send("cookie " + (c == null ? "none" : c.getValue()));
         });
-        app.get("/trail", (req, res) -> res.send(req.attribute("trail", String.class) + ",h"));
+        app.get("/trail", (req, res) -> res.send(req.attributeAs("trail", String.class) + ",h"));
         app.get("/boom", (req, res) -> {
             throw new IllegalStateException("boom");
         });

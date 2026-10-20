@@ -72,10 +72,11 @@ public class WebSocketApiTest {
         }
     }
 
-    // Compiles only when a literal null second argument resolves to the read overload (which returns a value).
+    // Compiles only when a literal null second argument resolves to deletion without a cast.
     @SuppressWarnings("unused")
     private static @Nullable Object readWithLiteralNull(WebSocketSession ws) {
-        return ws.attribute("k", null);
+        ws.attribute("k", null);
+        return ws.attributeAs("k", Object.class);
     }
 
     // IR-WS-001 AC-1
@@ -173,11 +174,11 @@ public class WebSocketApiTest {
                 "sendJson(Object)->void", "ping()->void", "close()->void", "close(int,String)->void",
                 "isOpen()->boolean", "onText(TextListener)->void", "onBinary(BinaryListener)->void",
                 "onJson(Class,JsonListener)->void", "onClose(CloseListener)->void", "onError(ErrorListener)->void",
-                "attribute(String,Object)->void", "attribute(String,Class)->Object"),
+                "removeAttribute(String)->void", "attribute(String,Object)->void", "attributeAs(String,Class)->Object"),
                 signatures(WebSocketSession.class));
         java.lang.reflect.Method write = WebSocketSession.class.getMethod("attribute", String.class, Object.class);
         assertTrue(write.getAnnotatedParameterTypes()[1].isAnnotationPresent(Nullable.class));
-        java.lang.reflect.Method read = WebSocketSession.class.getMethod("attribute", String.class, Class.class);
+        java.lang.reflect.Method read = WebSocketSession.class.getMethod("attributeAs", String.class, Class.class);
         assertEquals(1, read.getTypeParameters().length);
         assertEquals(read.getTypeParameters()[0], read.getGenericReturnType());
         assertTrue(read.getAnnotatedReturnType().isAnnotationPresent(Nullable.class));
@@ -445,7 +446,7 @@ public class WebSocketApiTest {
         }
 
         @Override
-        public <T> @Nullable T attribute(String key, Class<T> type) {
+        public <T> @Nullable T attributeAs(String key, Class<T> type) {
             return null;
         }
     }

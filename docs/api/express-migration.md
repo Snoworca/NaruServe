@@ -49,7 +49,7 @@ Express 코드의 구조(라우트·미들웨어·req/res)는 대부분 그대�
 | `req.ip` | `req.remoteAddress()` | |
 | `req.secure` | `req.isSecure()` | |
 | `req.user = u` / `res.locals.user = u` | `req.attribute("user", u)` | 요청 범위 저장소 |
-| `req.app.locals.x` | `req.application().attribute("x", String.class)` | |
+| `req.app.locals.x` | `req.application().attributeAs("x", String.class)` | |
 
 ### 응답 `res`
 

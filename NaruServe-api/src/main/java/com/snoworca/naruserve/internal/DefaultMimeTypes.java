@@ -15,7 +15,7 @@ import org.jspecify.annotations.Nullable;
  */
 // @req IR-STATIC-002
 // @req FR-STATIC-007
-final class DefaultMimeTypes implements MimeTypes {
+public final class DefaultMimeTypes implements MimeTypes {
 
     /**
      * Exactly the built-in table of docs/api/static.md as extension, type pairs. A private array, not a static map:
@@ -34,7 +34,7 @@ final class DefaultMimeTypes implements MimeTypes {
 
     /** A new unmodifiable copy of the built-in table, keyed by lower-case extension without the dot. */
     // @req FR-STATIC-007
-    static Map<String, String> builtIn() {
+    public static Map<String, String> builtIn() {
         Map<String, String> m = new HashMap<>();
         for (int i = 0; i < BUILT_IN_ROWS.length; i += 2) {
             m.put(BUILT_IN_ROWS[i], BUILT_IN_ROWS[i + 1]);

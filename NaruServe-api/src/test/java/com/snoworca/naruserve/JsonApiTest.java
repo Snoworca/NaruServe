@@ -145,20 +145,17 @@ public class JsonApiTest {
         }
     }
 
-    // IR-JSON-002 AC-6
+    // FR-DX-007 AC-1 replaces the former same-type reread rejection.
     @Test
-    public void IR_JSON_002_AC6_secondBodyCallThrowsBodyAlreadyConsumed() {
+    public void FR_DX_007_AC1_equivalentBodyClassAndTypeRefReuseValue() {
         InMemoryHttpAdapter adapter = new InMemoryHttpAdapter();
         RestApp app = app(adapter, new TextCodec());
-        AtomicReference<Throwable> second = new AtomicReference<>();
+        AtomicReference<String> second = new AtomicReference<>();
         app.post("/twice", (req, res) -> {
             String first = req.body(String.class);
-            try {
-                req.body(new TypeRef<String>() {
-                });
-            } catch (RuntimeException e) {
-                second.set(e);
-            }
+            second.set(req.body(new TypeRef<String>() {
+            }));
+            assertSame(first, second.get());
             res.send(String.valueOf(first));
         });
         app.listen(0);
@@ -166,7 +163,7 @@ public class JsonApiTest {
             ClientResponse r = post(adapter, "/twice", "\"a\"");
             assertEquals(200, r.status());
             assertNotNull(second.get());
-            assertSame(BodyAlreadyConsumedException.class, second.get().getClass());
+            assertEquals("\"a\"", second.get());
         } finally {
             app.shutdown(5, TimeUnit.SECONDS);
         }

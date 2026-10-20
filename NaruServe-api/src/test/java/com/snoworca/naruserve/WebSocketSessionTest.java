@@ -161,10 +161,10 @@ public class WebSocketSessionTest {
             ws.attribute("user", "kim");
             ws.attribute("n", 5);
             ws.attribute("gone", "x");
-            ws.attribute("gone", (Object) null);
-            ws.onText(text -> events.add(ws.attribute("user", String.class) + " "
-                    + req.attribute("user", String.class) + " " + ws.attribute("gone", String.class) + " "
-                    + ws.attribute("n", int.class)));
+            ws.attribute("gone", null);
+            ws.onText(text -> events.add(ws.attributeAs("user", String.class) + " "
+                    + req.attributeAs("user", String.class) + " " + ws.attributeAs("gone", String.class) + " "
+                    + ws.attributeAs("n", int.class)));
         });
         t.start();
         accepted(adapter, ClientRequest.upgrade("/ws"), ch -> {

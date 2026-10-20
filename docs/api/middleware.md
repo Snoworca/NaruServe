@@ -63,7 +63,7 @@ app.use("/api", (req, res, next) -> {
 });
 
 Middleware adminOnly = (req, res, next) -> {
-    User user = req.attribute("user", User.class);
+    User user = req.attributeAs("user", User.class);
     if (user == null || !user.isAdmin()) {
         res.status(403).json("Forbidden");
         return;
@@ -84,6 +84,29 @@ app.use("/api") { req, res, next ->
     next.run()
 }
 ```
+
+### 라우트 그룹
+
+반복되는 경로 prefix는 `group(prefix, configurer)`로 묶습니다. 그룹은 별도 서버가 아니며 `listen()` 같은 수명주기 메서드를 갖지 않습니다.
+
+```java
+app.group("/api", api -> {
+    api.use(auth);
+    api.get("/users", (req, res) -> res.send("users"));
+    api.group("/admin", admin -> {
+        admin.use(adminOnly);
+        admin.route("/reports").use(audit).get((req, res) -> res.send("reports"));
+    });
+});
+```
+
+`GET /api/admin/reports`는 앱 미들웨어 → `auth` → `adminOnly` → `audit` → 핸들러 순서입니다. 그룹은 GET·POST·PUT·PATCH·DELETE·HEAD·OPTIONS를 지원합니다.
+
+- 그룹 `use`는 콜백 안의 위치와 관계없이 그 그룹과 중첩 그룹의 모든 라우트에 적용됩니다. 부모 그룹 미들웨어가 자식 그룹 미들웨어보다 먼저 실행됩니다.
+- 그룹 밖에서 별도로 등록한 라우트에는 같은 prefix라도 그룹 미들웨어가 적용되지 않습니다. 모든 prefix 요청에 적용하려면 `app.use(prefix, mw)`를 사용하세요.
+- `group.route(path).use(mw)`는 기존 `RouteBuilder`처럼 그 뒤에 등록하는 메서드에만 적용됩니다.
+- 경로는 `/`로 시작해야 합니다. 경계의 슬래시는 합쳐지므로 `/api/` + `/users`는 `/api/users`, `/api` + `/`는 `/api`입니다. `..`, `.`, 쿼리, fragment, 역슬래시와 인코딩된 경로 구분자는 거부합니다.
+- 그룹과 그 라우트 빌더는 해당 설정 콜백 안에서만 사용합니다. `app.group`은 `listen()` 전에 호출해야 합니다. 설정 중 예외가 나면 그 그룹의 라우트는 등록되지 않습니다.
 
 ### 실행 순서
 

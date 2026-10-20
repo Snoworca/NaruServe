@@ -8,8 +8,7 @@ public interface ApplicationContext extends ServiceRegistry {
 
     /**
      * Stores {@code value} under {@code key}; a {@code null} value removes the key.
-     * In Java a {@code null} literal binds to the read overload and throws {@link NullPointerException}, so write
-     * {@code attribute("k", (Object) null)}.
+     * A literal {@code null} removes the value without a cast.
      */
     void attribute(String key, @Nullable Object value);
 
@@ -17,7 +16,13 @@ public interface ApplicationContext extends ServiceRegistry {
      * The value stored under {@code key} cast to {@code type}, or {@code null} when nothing is stored; throws
      * {@link ClassCastException} when the value is not a {@code type}.
      */
-    <T> @Nullable T attribute(String key, Class<T> type);
+    <T> @Nullable T attributeAs(String key, Class<T> type);
+
+    /** Removes an attribute; a missing key is harmless. */
+    // @req FR-DX-001
+    default void removeAttribute(String key) {
+        attribute(key, (Object) null);
+    }
 
     /** Closes {@code resource} at shutdown, in reverse order of ownership. */
     void own(AutoCloseable resource);

@@ -28,7 +28,7 @@ private class FixedRequest : Request {
     override fun attribute(key: String, value: Any?) {
         if (value == null) attributes.remove(key) else attributes[key] = value
     }
-    override fun <T : Any> attribute(key: String, type: Class<T>): T? = attributes[key]?.let { type.cast(it) }
+    override fun <T : Any> attributeAs(key: String, type: Class<T>): T? = attributes[key]?.let { type.cast(it) }
 }
 
 /** Response that records each call so the test can check what the Kotlin lambda did. */
@@ -60,9 +60,9 @@ class HttpApiKotlinTest {
             seen.addAll(listOf(req.method(), p, req.rawPath(), req.param("id"), q, missing, req.queries("q"),
                 req.header("host"), req.headers("HOST"), req.remoteAddress(), req.isSecure(), req.lastEventId()))
             req.attribute("user", "kim")
-            val user: String? = req.attribute("user", String::class.java)
+            val user: String? = req.attributeAs("user", String::class.java)
             req.attribute("user", null)
-            seen.addAll(listOf(user, req.attribute("user", String::class.java)))
+            seen.addAll(listOf(user, req.attributeAs("user", String::class.java)))
             val chained: Response = res.status(201).header("X-A", "1")
             chained.send("ok")
             res.send(byteArrayOf(1, 2))
@@ -128,8 +128,8 @@ class HttpApiKotlinTest {
         val t = TestApp.create()
         t.app().get("/n") { req, res ->
             req.attribute("n", 5)
-            val n: Int? = req.attribute("n", Int::class.java)
-            val none: Int? = req.attribute("none", Int::class.java)
+            val n: Int? = req.attributeAs("n", Int::class.java)
+            val none: Int? = req.attributeAs("none", Int::class.java)
             res.send("$n $none")
         }
         assertEquals("5 null", String(t.send("GET", "/n").body(), Charsets.UTF_8))
@@ -146,9 +146,9 @@ class HttpApiKotlinTest {
                 req.queries("q"), req.header("host"), req.headers("HOST"), req.remoteAddress(), req.isSecure(),
                 req.lastEventId()))
             req.attribute("user", "kim")
-            seen += req.attribute("user", String::class.java)
+            seen += req.attributeAs("user", String::class.java)
             req.attribute("user", null)
-            seen += req.attribute("user", String::class.java)
+            seen += req.attributeAs("user", String::class.java)
             seen += res.isCommitted()
             res.status(201).header("X-A", "1").send("ok")
             seen += res.isCommitted()

@@ -40,7 +40,7 @@ public class KotlinNullabilityTest {
     public void sdsAc2_FR_KT_001_AC2_accessorTableMatchesRequestReturnAnnotations() throws Exception {
         Map<String, Boolean> table = KotlinAccessorTable.rows();
         assertEquals(Boolean.TRUE, table.get("query"));
-        assertEquals(Boolean.TRUE, table.get("attribute"));
+        assertEquals(Boolean.TRUE, table.get("attributeAs"));
         assertEquals(Boolean.FALSE, table.get("param"));
         assertEquals(Boolean.FALSE, table.get("service"));
         List<Class<?>> request = Collections.<Class<?>>singletonList(jarRequest());

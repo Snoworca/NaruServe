@@ -181,12 +181,12 @@ class NullableAccessorKotlinTest {
 
     // SDS-AC-5; FR-KT-005 AC-1
     @Test
-    fun `FR-KT-005 AC-1 accessor_attribute is T? and null when unset`() {
+    fun `FR-KT-005 AC-1 accessor_attributeAs is T? and null when unset`() {
         val p = Probe("GET") { req ->
             if (req.query("set") != null) {
                 req.attribute("k", "v")
             }
-            val k: String? = req.attribute("k", String::class.java)
+            val k: String? = req.attributeAs("k", String::class.java)
             k
         }
         assertEquals(null, p.get("/r"))

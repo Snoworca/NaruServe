@@ -161,7 +161,7 @@ Express에서 `req.user = user`나 `res.locals.user = user`로 미들웨어끼�
 | 메서드 | 설명 |
 |---|---|
 | `attribute(key, value)` | 값 저장. `value`가 `null`이면 지웁니다 |
-| `attribute(key, Class<T> type)` | 값 읽기. 없으면 `null` |
+| `attributeAs(key, Class<T> type)` | 값 읽기. 없으면 `null` |
 
 ```java
 app.use((req, res, next) -> {
@@ -170,7 +170,7 @@ app.use((req, res, next) -> {
 });
 
 app.get("/me", (req, res) -> {
-    User user = req.attribute("user", User.class);
+    User user = req.attributeAs("user", User.class);
     res.json(user);
 });
 ```
@@ -178,19 +178,19 @@ app.get("/me", (req, res) -> {
 요청 속성은 그 요청이 끝나면 사라집니다. 다른 요청과 공유되지 않습니다.
 저장된 값이 `type`이 아니면 `ClassCastException`이 납니다. `int.class`나 Kotlin의 `Int::class.java` 같은 기본형 클래스는 래퍼 타입(`Integer`)으로 읽습니다.
 
-값을 지우려면 타입이 있는 `null` 변수를 저장합니다. `req.attribute("user", null)`처럼 `null` 리터럴을 넘기면 Java가 읽기 오버로드 `attribute(key, Class<T> type)`를 고르고, `type`이 `null`이라 `NullPointerException`이 납니다. `(Object) null`로 캐스팅해도 지워집니다.
+`attribute(key, null)`은 캐스팅 없이 값을 지웁니다. 명시적인 삭제는 `removeAttribute(key)`, 타입 지정 조회는 `attributeAs(key, type)`를 사용합니다.
 
 ```java
 Object none = null;
 req.attribute("user", none);                       // "user" 속성을 지웁니다
-String left = req.attribute("user", String.class); // null
+String left = req.attributeAs("user", String.class); // null
 ```
 
 Kotlin:
 
 ```kotlin
-req.attribute("user", null as Any?)                // "user" 속성을 지웁니다
-val left = req.attribute("user", String::class.java)
+req.attribute("user", null)                // "user" 속성을 지웁니다
+val left = req.attributeAs("user", String::class.java)
 ```
 
 ## 서비스와 앱 전역 값
@@ -206,7 +206,7 @@ app.get("/users", (req, res) -> {
     res.json(users.findAll());
 });
 
-String version = req.application().attribute("appVersion", String.class);
+String version = req.application().attributeAs("appVersion", String.class);
 ```
 
 모든 요청이 같은 서비스 객체를 씁니다. 서비스 안의 공유 상태는 스레드 안전해야 합니다. [수명주기와 서비스](lifecycle.md)

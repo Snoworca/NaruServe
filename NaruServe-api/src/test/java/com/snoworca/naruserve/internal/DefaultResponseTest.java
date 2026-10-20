@@ -376,7 +376,7 @@ public class DefaultResponseTest {
             seen.add(req.path());
             seen.add(req.query("q"));
             seen.add(req.header("H"));
-            seen.add(req.attribute("k", Object.class));
+            seen.add(req.attributeAs("k", Object.class));
             seen.add(res.isCommitted());
         });
         ClientResponse r = t.send("GET", "/r?q=1", "H", "h");

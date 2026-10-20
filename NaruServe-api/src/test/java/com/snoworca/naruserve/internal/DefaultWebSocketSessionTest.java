@@ -77,11 +77,11 @@ public class DefaultWebSocketSessionTest {
         }
         for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 100; j++) {
-                assertEquals(Integer.valueOf(i * 1000 + j), s.attribute("t" + i + "-" + j, Integer.class));
+                assertEquals(Integer.valueOf(i * 1000 + j), s.attributeAs("t" + i + "-" + j, Integer.class));
             }
         }
         assertEquals(800, s.attributeCount());
-        s.onClose((code, reason) -> events.add("seen " + s.attribute("t7-99", Integer.class)));
+        s.onClose((code, reason) -> events.add("seen " + s.attributeAs("t7-99", Integer.class)));
         s.onClose(1000, "");
         assertEquals("seen 7099", events.poll(5, TimeUnit.SECONDS));
         assertEquals(0, s.attributeCount());

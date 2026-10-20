@@ -1,5 +1,7 @@
 package com.snoworca.naruserve;
 
+import com.snoworca.naruserve.common.ResponseValues;
+import com.snoworca.naruserve.internal.StandardErrors;
 import java.io.File;
 import java.io.InputStream;
 import org.jspecify.annotations.Nullable;
@@ -20,6 +22,48 @@ public interface Response {
      * as Express 5 {@code res.status} throws a RangeError.
      */
     Response status(int code);
+
+    /** Sets Location after validating it; returns this response. */
+    // @req FR-DX-004
+    default Response location(String url) {
+        return header("Location", ResponseValues.location(url));
+    }
+
+    /**
+     * Sets an explicit MIME type or resolves an extension (for example png or .png) with the built-in MIME table.
+     * An unknown extension uses application/octet-stream. Returns this response.
+     */
+    // @req FR-DX-004
+    default Response type(String value) {
+        return header("Content-Type", ResponseValues.contentType(value));
+    }
+
+    /** Sends an empty 302 redirect. */
+    // @req FR-DX-004
+    default void redirect(String url) {
+        redirect(302, url);
+    }
+
+    /** Sends an empty redirect with status 301, 302, 303, 307 or 308; validates before changing the response. */
+    // @req FR-DX-004
+    default void redirect(int code, String url) {
+        ResponseValues.redirectStatus(code);
+        String target = ResponseValues.location(url);
+        header("Location", target);
+        status(code);
+        end();
+    }
+
+    /** Sends the shared HTTP reason phrase; 204, 304 and HEAD responses have no body. */
+    // @req FR-DX-004
+    default void sendStatus(int code) {
+        status(code);
+        if (code == 204 || code == 304) {
+            end();
+        } else {
+            send(StandardErrors.reason(code));
+        }
+    }
 
     /** Sets a header, replacing a same-name header as Express {@code res.set} does; returns this response. */
     Response header(String name, String value);

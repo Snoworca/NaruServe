@@ -523,7 +523,7 @@ class KotlinDocsExamplesKotlinTest {
         app.get("/a") { req, res ->
             req.attribute("user", "kim")
             req.attribute("user", null as Any?)                // "user" 속성을 지웁니다
-            val left = req.attribute("user", String::class.java)
+            val left = req.attributeAs("user", String::class.java)
             res.send("left=$left")
         }
         assertEquals("left=null", send("GET", "/a").text())
@@ -746,7 +746,7 @@ class KotlinDocsExamplesKotlinTest {
         app.ws("/session") { req, ws ->
             ws.attribute("user", req.header("X-User"))
             ws.onText { m -> if (m == "bye") ws.close(1000, "bye") }
-            user.set(ws.attribute("user", String::class.java))
+            user.set(ws.attributeAs("user", String::class.java))
         }
         val (_, channel) = ws("/session", "X-User", "kim")
         channel.clientText("bye")

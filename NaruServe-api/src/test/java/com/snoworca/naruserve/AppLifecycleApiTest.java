@@ -95,7 +95,8 @@ public class AppLifecycleApiTest {
                 "contains[class java.lang.Class]->boolean"), declared(ServiceRegistry.class));
         assertTrue(ServiceRegistry.class.isAssignableFrom(ApplicationContext.class));
         assertEquals(setOf("attribute[class java.lang.String, class java.lang.Object]->void",
-                "attribute[class java.lang.String, class java.lang.Class]->Object",
+                "attributeAs[class java.lang.String, class java.lang.Class]->Object",
+                "removeAttribute[class java.lang.String]->void",
                 "own[interface java.lang.AutoCloseable]->void", "logger[]->Logger"),
                 declared(ApplicationContext.class));
         assertTrue(RuntimeException.class.isAssignableFrom(ServiceNotFoundException.class));
@@ -141,18 +142,18 @@ public class AppLifecycleApiTest {
         expectNpe(() -> ctx.getOrNull(null));
         expectNpe(() -> ctx.contains(null));
         expectNpe(() -> ctx.attribute(null, "v"));
-        expectNpe(() -> ctx.attribute(null, String.class));
-        expectNpe(() -> ctx.attribute("k", (Class<?>) null));
+        expectNpe(() -> ctx.attributeAs(null, String.class));
+        expectNpe(() -> ctx.attributeAs("k", (Class<?>) null));
 
         ctx.attribute("k", 1);
-        assertEquals(Integer.valueOf(1), ctx.attribute("k", Integer.class));
+        assertEquals(Integer.valueOf(1), ctx.attributeAs("k", Integer.class));
         Object v = null;
         ctx.attribute("k", v);
-        assertNull(ctx.attribute("k", Integer.class));
+        assertNull(ctx.attributeAs("k", Integer.class));
 
         ctx.attribute("s", "x");
         try {
-            ctx.attribute("s", Integer.class);
+            ctx.attributeAs("s", Integer.class);
             fail("expected ClassCastException");
         } catch (ClassCastException expected) {
             // expected
@@ -168,7 +169,7 @@ public class AppLifecycleApiTest {
                 .isAnnotationPresent(Nullable.class));
         assertFalse(Request.class.getMethod("service", Class.class).getAnnotatedReturnType()
                 .isAnnotationPresent(Nullable.class));
-        assertTrue(ApplicationContext.class.getMethod("attribute", String.class, Class.class)
+        assertTrue(ApplicationContext.class.getMethod("attributeAs", String.class, Class.class)
                 .getAnnotatedReturnType().isAnnotationPresent(Nullable.class));
         assertTrue(ApplicationContext.class.getMethod("attribute", String.class, Object.class)
                 .getAnnotatedParameterTypes()[1].isAnnotationPresent(Nullable.class));

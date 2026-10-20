@@ -16,6 +16,7 @@ import com.snoworca.naruserve.Middleware;
 import com.snoworca.naruserve.MultipartOptions;
 import com.snoworca.naruserve.RestApp;
 import com.snoworca.naruserve.RouteBuilder;
+import com.snoworca.naruserve.RouteGroup;
 import com.snoworca.naruserve.RouteHandler;
 import com.snoworca.naruserve.ServerHandle;
 import com.snoworca.naruserve.ServerOptions;
@@ -802,6 +803,14 @@ public final class DefaultRestApp implements RestApp {
     @Override
     public RestApp route(MethodSet methods, String path, RouteHandler h) {
         return register("route", methods, path, null, false, h);
+    }
+
+    // @req FR-DX-009
+    @Override
+    public synchronized RestApp group(String prefix, Configurer<RouteGroup> configurer) {
+        lifecycle.requireConfigurable("group");
+        DefaultRouteGroup.configure(this, prefix, configurer);
+        return this;
     }
 
     // @req IR-APP-002

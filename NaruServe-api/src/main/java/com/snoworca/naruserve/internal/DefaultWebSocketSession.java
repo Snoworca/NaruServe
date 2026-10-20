@@ -1,5 +1,7 @@
 package com.snoworca.naruserve.internal;
 
+import com.snoworca.naruserve.common.AttributeValues;
+
 import com.snoworca.naruserve.HttpException;
 import com.snoworca.naruserve.WebSocketHandler;
 import com.snoworca.naruserve.WebSocketSession;
@@ -503,17 +505,13 @@ final class DefaultWebSocketSession implements WebSocketSession, WebSocketEndpoi
         if (closed.get()) {
             return;
         }
-        if (value == null) {
-            attributes.remove(key);
-        } else {
-            attributes.put(key, value);
-        }
+        AttributeValues.put(attributes, key, value);
     }
 
     // @req FR-WS-006
     @Override
     @SuppressWarnings("unchecked") // a wrapper class stands for its primitive T, which is the boxed type at runtime
-    public <T> @Nullable T attribute(String key, Class<T> type) {
-        return (T) DefaultRequest.wrapper(type).cast(attributes.get(Objects.requireNonNull(key, "key")));
+    public <T> @Nullable T attributeAs(String key, Class<T> type) {
+        return AttributeValues.get(attributes, key, type);
     }
 }

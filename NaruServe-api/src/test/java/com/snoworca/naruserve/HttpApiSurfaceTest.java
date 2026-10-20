@@ -72,10 +72,11 @@ public class HttpApiSurfaceTest {
         return out;
     }
 
-    // Compiles only when a literal null second argument resolves to the read overload (which returns a value).
+    // Compiles only when a literal null second argument resolves to deletion without a cast.
     @SuppressWarnings("unused")
     private static @Nullable Object readWithLiteralNull(Request req) {
-        return req.attribute("k", null);
+        req.attribute("k", null);
+        return req.attributeAs("k", Object.class);
     }
 
     // Compiles only when every RouteBuilder method returns RouteBuilder.
@@ -95,7 +96,7 @@ public class HttpApiSurfaceTest {
         assertEquals(setOf("method()->Method", "path()->String", "rawPath()->String", "param(String)->String",
                 "query(String)->String", "queries(String)->List", "header(String)->String", "headers(String)->List",
                 "remoteAddress()->String", "isSecure()->boolean", "lastEventId()->String",
-                "attribute(String,Object)->void", "attribute(String,Class)->Object",
+                "removeAttribute(String)->void", "attribute(String,Object)->void", "attributeAs(String,Class)->Object",
                 "application()->ApplicationContext", "service(Class)->Object",
                 // wave 5: IR-JSON-002 AC-8
                 "body(Class)->Object", "body(TypeRef)->Object",
@@ -117,7 +118,7 @@ public class HttpApiSurfaceTest {
         assertEquals(void.class, write.getReturnType());
         assertTrue(write.getAnnotatedParameterTypes()[1].isAnnotationPresent(Nullable.class));
 
-        java.lang.reflect.Method read = Request.class.getMethod("attribute", String.class, Class.class);
+        java.lang.reflect.Method read = Request.class.getMethod("attributeAs", String.class, Class.class);
         TypeVariable<java.lang.reflect.Method>[] tps = read.getTypeParameters();
         assertEquals(1, tps.length);
         assertEquals(tps[0], read.getGenericReturnType());
@@ -140,7 +141,10 @@ public class HttpApiSurfaceTest {
                 // wave 6: IR-STATIC-002 AC-5
                 "cache(CachePolicy)->Response", "file(File)->void", "download(File,String)->void",
                 // wave 7: IR-SSE-001 AC-1
-                "sse()->SseClient"),
+                "sse()->SseClient",
+                // FR-DX-004 AC-1 AC-2 AC-3 AC-4
+                "location(String)->Response", "type(String)->Response", "redirect(String)->void",
+                "redirect(int,String)->void", "sendStatus(int)->void"),
                 signatures(Response.class));
         assertEquals(InputStream.class, Response.class.getMethod("stream", InputStream.class, String.class)
                 .getParameterTypes()[0]);
@@ -236,7 +240,7 @@ public class HttpApiSurfaceTest {
                 "Request.query[class java.lang.String]#return",
                 "Request.header[class java.lang.String]#return",
                 "Request.lastEventId[]#return",
-                "Request.attribute[class java.lang.String, class java.lang.Class]#return",
+                "Request.attributeAs[class java.lang.String, class java.lang.Class]#return",
                 "Request.attribute[class java.lang.String, class java.lang.Object]#p1",
                 "Response.abort[class java.lang.Throwable]#p0",
                 "Response.send[class java.lang.Object]#p0",
@@ -322,6 +326,7 @@ public class HttpApiSurfaceTest {
                 "options(String,RouteHandler)->RestApp",
                 "route(Method,String,RouteHandler)->RestApp", "route(MethodSet,String,RouteHandler)->RestApp",
                 "route(String)->RouteBuilder",
+                "group(String,Configurer)->RestApp", // FR-DX-009 AC-1
                 "routerPolicy(RouterPolicy)->RestApp",
                 // wave 4: IR-APP-001, FR-APP-001
                 "builder()->Builder", "create()->RestApp",
