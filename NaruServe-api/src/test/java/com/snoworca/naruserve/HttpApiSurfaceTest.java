@@ -289,7 +289,9 @@ public class HttpApiSurfaceTest {
                 "multipart(Configurer)->RestApp", "formLimit(long)->RestApp",
                 // wave 6: IR-STATIC-001 AC-1, IR-STATIC-002 AC-2, AC-4
                 "staticFiles(String,File)->RestApp", "staticFiles(String,File,Configurer)->RestApp",
-                "mimeTypes()->MimeTypes", "defaultCache(CachePolicy)->RestApp"), signatures(RestApp.class));
+                "mimeTypes()->MimeTypes", "defaultCache(CachePolicy)->RestApp",
+                // wave 7: IR-WS-001 AC-1, AC-6
+                "ws(String,WebSocketHandler)->RestApp", "webSocket(Configurer)->RestApp"), signatures(RestApp.class));
         assertEquals(0, RestApp.class.getInterfaces().length);
         List<String> statics = new java.util.ArrayList<>();
         for (java.lang.reflect.Method m : RestApp.class.getDeclaredMethods()) {

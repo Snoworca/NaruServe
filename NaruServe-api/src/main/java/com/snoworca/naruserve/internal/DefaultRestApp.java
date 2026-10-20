@@ -20,6 +20,8 @@ import com.snoworca.naruserve.RouteHandler;
 import com.snoworca.naruserve.ServerHandle;
 import com.snoworca.naruserve.ServerOptions;
 import com.snoworca.naruserve.StaticOptions;
+import com.snoworca.naruserve.WebSocketHandler;
+import com.snoworca.naruserve.WebSocketOptions;
 import com.snoworca.naruserve.routing.RouteKind;
 import com.snoworca.naruserve.routing.RoutePattern;
 import com.snoworca.naruserve.routing.Router;
@@ -65,6 +67,7 @@ import org.jspecify.annotations.Nullable;
 // @req FR-APP-011
 // @req FR-APP-012
 // @req IR-JSON-002
+// @req IR-WS-001
 public final class DefaultRestApp implements RestApp {
 
     /** One registration call as recorded; the router is built from these at freeze. */
@@ -101,6 +104,9 @@ public final class DefaultRestApp implements RestApp {
     private volatile long jsonLimit = JsonBodyReader.DEFAULT_LIMIT;
     private volatile MultipartSettings multipartSettings = new MultipartSettings();
     private volatile long formLimit = 1048576L;
+    private volatile DefaultWebSocketOptions webSocketOptions = new DefaultWebSocketOptions();
+    /** The copy freeze took for the upgrade step; null before freeze. */
+    volatile @Nullable DefaultWebSocketOptions frozenWebSocketOptions;
     private final List<StaticMount> staticMounts = new ArrayList<>();
     private volatile @Nullable CachePolicy defaultCache;
     private volatile Logger logger;
@@ -203,6 +209,32 @@ public final class DefaultRestApp implements RestApp {
         configurer.configure(next);
         this.multipartSettings = next;
         return this;
+    }
+
+    /** The current WebSocket options; the defaults unless {@link #webSocket(Configurer)} changed them. */
+    // @req IR-WS-001
+    public DefaultWebSocketOptions webSocketOptions() {
+        return webSocketOptions;
+    }
+
+    // @req IR-WS-001
+    @Override
+    public synchronized RestApp webSocket(Configurer<WebSocketOptions> configurer) {
+        lifecycle.requireConfigurable("webSocket");
+        Objects.requireNonNull(configurer, "configurer");
+        DefaultWebSocketOptions next = webSocketOptions.copy();
+        configurer.configure(next);
+        this.webSocketOptions = next;
+        return this;
+    }
+
+    // @req IR-WS-001
+    @Override
+    public synchronized RestApp ws(String path, WebSocketHandler handler) {
+        lifecycle.requireConfigurable("ws");
+        Objects.requireNonNull(path, "path");
+        Objects.requireNonNull(handler, "handler");
+        return webSocketRoute(path, new WebSocketRoute(handler));
     }
 
     /** {@code bytes} checked against 1..{@link JsonBodyReader#MAX_LIMIT}, the range of every body limit. */
@@ -869,6 +901,7 @@ public final class DefaultRestApp implements RestApp {
         for (PrefixMiddleware pm : prefixMiddleware) {
             pipeline.addPrefix(pm.prefix, pm.middleware);
         }
+        frozenWebSocketOptions = webSocketOptions().copy();
         SafeLogger safe = new SafeLogger(logger); // the logger is fixed from here: logger(...) needs an unfrozen app
         dispatcher = new Dispatcher(router, pipeline, new ErrorPath(errorHandlers, safe),
                 new AccessLog(accessLogOptions, safe), context, jsonCodec(), jsonLimit(), trustProxy,

@@ -89,7 +89,8 @@ public final class DocsExamplesCompileTest {
             skip("json.md", "Gson gson = new GsonBuilder()", "absent type `Gson`"),
             skip("json.md", "public interface JsonCodec {",
                     "illustrative copy of `JsonCodec` (its `Type` is java.lang.reflect.Type, not imported)"),
-            skip("lifecycle.md", "RestApp app = RestApp.create();", "later-wave method `RestApp.ws`"),
+            skip("lifecycle.md", "RestApp app = RestApp.create();",
+                    "app-defined type `Database` (the block also uses `UserService`)"),
             skip("lifecycle.md", "public interface ServiceRegistry {",
                     "illustrative copy of `ServiceRegistry` and `ApplicationContext` (two public types in one unit)"),
             skip("lifecycle.md", "JdbcUserService impl = new JdbcUserService(db);", "app-defined type `JdbcUserService`"),
@@ -123,8 +124,8 @@ public final class DocsExamplesCompileTest {
             skip("sse.md", "app.get(\"/api/progress\", (req, res) -> {", "later-wave method `Response.sse()`"),
             skip("sse.md", "client.send(SseEvent.event(\"progress\")", "absent type `SseEvent`"),
             skip("sse.md", "#4", "later-wave method `Response.sse()`"),
-            skip("websocket.md", "app.ws(\"/ws\", (req, ws) -> {", "later-wave method `RestApp.ws`"),
-            skip("websocket.md", "app.ws(\"/chat\", (req, ws) -> {", "later-wave method `RestApp.ws`"),
+            skip("websocket.md", "app.ws(\"/chat\", (req, ws) -> {",
+                    "app-defined type `ChatService` (the block also uses `ChatMessage`)"),
             skip("websocket.md", "app.use(\"/ws\", (req, res, next) -> {",
                     "app-defined type `Auth` (the block calls `auth.isAuthorized(req)`)")));
 

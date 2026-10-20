@@ -348,4 +348,50 @@ public class DefaultRestAppTest {
         }
         assertEquals(1, app.registrations().size());
     }
+
+    // SDS-AC-6 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-2.sds.md; IR-WS-001 AC-6
+    @Test
+    public void sdsAc6_IR_WS_001_AC6_freezeKeepsACopyOfTheWebSocketOptionsReadBackAsSettings() {
+        DefaultRestApp app = new DefaultRestApp();
+        app.webSocket(o -> o.maxMessageSize(4096).pingInterval(2, java.util.concurrent.TimeUnit.SECONDS));
+        DefaultWebSocketOptions current = app.webSocketOptions();
+        app.freeze();
+        DefaultWebSocketOptions frozen = app.frozenWebSocketOptions;
+        assertTrue(frozen != null && frozen != current);
+        com.snoworca.naruserve.spi.WebSocketSettings s = frozen.settings();
+        assertEquals(4096, s.maxMessageBytes());
+        assertEquals(2000L, s.pingIntervalMillis());
+        current.maxMessageSize(1); // a retained options object changed after freeze does not reach the copy
+        assertEquals(4096, frozen.settings().maxMessageBytes());
+    }
+
+    // SDS-AC-1 (wave-7-2); IR-WS-001 AC-2
+    @Test
+    public void sdsAc1_IR_WS_001_AC2_wsRecordsAWebSocketRouteCarryingTheHandler() {
+        DefaultRestApp app = new DefaultRestApp();
+        com.snoworca.naruserve.WebSocketHandler wh = (req, ws) -> { };
+        assertSame(app, app.ws("/a/:id", wh));
+        DefaultRestApp.Registration r = app.registrations().get(0);
+        assertEquals(MethodSet.of(Method.GET), r.methods);
+        assertEquals("/a/:id", r.pattern);
+        assertEquals(RouteKind.WEBSOCKET, r.kind);
+        assertTrue(r.handler instanceof WebSocketRoute);
+        assertSame(wh, ((WebSocketRoute) r.handler).handler());
+        // freeze adds WEBSOCKET registrations this way; an upgrade GET then resolves the param
+        com.snoworca.naruserve.routing.Router<RouteHandler> router = new com.snoworca.naruserve.routing.Router<>(
+                RouterPolicy.strict());
+        router.addWebSocket(r.pattern, r.handler);
+        router.freeze();
+        com.snoworca.naruserve.routing.RouteMatch<RouteHandler> m = router.lookup("GET", "/a/1", true);
+        assertSame(r.handler, m.handler());
+        assertEquals("1", m.params().get("id"));
+        try {
+            r.handler.handle(null, null);
+            fail("WebSocketRoute ran as an HTTP handler");
+        } catch (IllegalStateException expected) {
+            // expected
+        } catch (Exception e) {
+            throw new AssertionError(e);
+        }
+    }
 }

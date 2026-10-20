@@ -240,11 +240,23 @@ public final class DefaultResponse implements Response {
     @Override
     public synchronized Response header(String name, String value) {
         requireNew();
+        checkHeader(name, value);
+        put(name, value);
+        return this;
+    }
+
+    /**
+     * The {@code res.header} check, shared with {@code HttpException.withHeader}: {@link NullPointerException} for a
+     * null name or value, {@link IllegalArgumentException} for a non-token name or a bad value char. Not API.
+     */
+    // @req FR-HTTP-015
+    // @req IR-HTTP-008
+    public static void checkHeader(String name, String value) {
+        Objects.requireNonNull(name, "name");
+        Objects.requireNonNull(value, "value");
         if (!isToken(name) || !isFieldValue(value)) {
             throw badHeader();
         }
-        put(name, value);
-        return this;
     }
 
     /** Appends one Set-Cookie line, never replacing an earlier one; nothing is added when validation throws. */
@@ -589,6 +601,7 @@ public final class DefaultResponse implements Response {
     // @req FR-HTTP-016
     // @req FR-APP-005
     // @req FR-HTTP-024
+    // @req IR-HTTP-008
     void afterFailure(int status, byte[] body, Throwable error) {
         Commit c;
         synchronized (this) {
@@ -602,6 +615,14 @@ public final class DefaultResponse implements Response {
                 put("Content-Type", StandardErrors.JSON_TYPE);
                 if (status == 408) {
                     put("Connection", "close"); // FR-ENGINE-005 AC-2: the adapter closes after a 408
+                }
+                if (error instanceof HttpException) {
+                    // prepare() then drops any Content-Length or Transfer-Encoding among them
+                    List<Map.Entry<String, String>> extra = ((HttpException) error).headers();
+                    for (Map.Entry<String, String> h : extra) {
+                        remove(h.getKey()); // replaces like Express setHeader; the exception's own duplicates stay
+                    }
+                    headers.addAll(extra);
                 }
                 c = prepare(body, null);
             } else {
