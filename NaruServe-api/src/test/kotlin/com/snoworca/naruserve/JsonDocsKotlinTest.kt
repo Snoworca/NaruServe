@@ -38,7 +38,7 @@ class TodoService {
 }
 
 // Test-local copy of the NaruServe-kotlin extension shown in kotlin.md (the module extension arrives in wave 8).
-inline fun <reified T : Any> Request.body(): T = body(T::class.java) ?: throw HttpException(400, "JSON body is null")
+inline fun <reified T : Any> Request.body(): T = body(object : TypeRef<T>() {}) ?: throw HttpException(400, "JSON body is null")
 
 /** `null` decodes to null; anything else to a fresh instance of the raw target (or a one-element list). */
 private class DocsCodec : JsonCodec {
@@ -128,7 +128,7 @@ class JsonDocsKotlinTest {
     @Test
     fun `SDS-AC-5 OPS-JSON-001 AC-3 reified extension answers 400 for a JSON null body`() {
         assertTrue(doc("kotlin.md").contains("inline fun <reified T : Any> Request.body(): T = "
-            + "body(T::class.java) ?: throw HttpException(400, \"JSON body is null\")"))
+            + "body(object : TypeRef<T>() {}) ?: throw HttpException(400, \"JSON body is null\")"))
         assertTrue(doc("kotlin.md").contains("val user = req.body<User>()"))
         val adapter = app { app ->
             app.post("/r") { req, res ->

@@ -111,13 +111,13 @@ implementation 'com.snoworca.naruserve:NaruServe-kotlin:0.1.0-SNAPSHOT'
 ```kotlin
 import com.snoworca.naruserve.kotlin.body
 
-inline fun <reified T : Any> Request.body(): T = body(T::class.java) ?: throw HttpException(400, "JSON body is null")
+inline fun <reified T : Any> Request.body(): T = body(object : TypeRef<T>() {}) ?: throw HttpException(400, "JSON body is null")
 
 val user = req.body<User>()
 ```
 
 이 확장은 null 불가 `T`를 돌려주고, 본문이 JSON `null`이면 `HttpException`(`400`)을 던집니다. null 불가 값을 달라고 한 호출자에게 JSON `null`은 클라이언트 오류이기 때문입니다. `null`을 받아야 하면 `req.body(User::class.java)`를 쓰세요.
-이 확장은 `List<User>`의 원소 타입을 보존하지 않습니다. 제네릭은 `TypeRef`를 쓰세요.
+이 확장은 `List<User>`와 `Map<String, List<User>>` 같은 중첩 제네릭의 원소 타입도 보존합니다. 예: `val users = req.body<List<User>>()`.
 
 ## 프로퍼티 문법
 

@@ -6,6 +6,7 @@ import com.snoworca.naruserve.testing.TestApp
 import java.io.Reader
 import java.io.Writer
 import java.lang.reflect.Type
+import java.lang.reflect.ParameterizedType
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -79,7 +80,7 @@ class RequestBodyExtensionKotlinTest {
     }
 
     @Test
-    fun `SDS-AC-8 IR-KT-002 AC-3 req body of List of User passes the raw java util List`() {
+    fun `FR-DX-006 AC-1 req body of List of User preserves its element type`() {
         start { app ->
             app.post("/many") { req, res ->
                 val users = req.body<List<User>>()
@@ -89,6 +90,8 @@ class RequestBodyExtensionKotlinTest {
         }
         assertEquals(204, post("/many", "[]").status())
         assertEquals(1, codec.types.size)
-        assertEquals("java.util.List", (codec.types[0] as Class<*>).name)
+        val type = codec.types.single() as ParameterizedType
+        assertEquals(List::class.java, type.rawType)
+        assertEquals(User::class.java, type.actualTypeArguments.single())
     }
 }

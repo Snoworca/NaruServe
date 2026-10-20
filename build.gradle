@@ -242,6 +242,7 @@ project(':NaruServe-kotlin') {
     // @req IR-KT-002
     dependencies {
         testImplementation testFixtures(project(':NaruServe-api'))
+        testImplementation project(':NaruServe-gson')
     }
 }
 
