@@ -649,6 +649,7 @@ public final class DocsExamplesCompileTest {
         assertEquals(Integer.valueOf(docs().get("sse.md").size() - sseSkips), compiledPerFile.get("sse.md"));
     }
 
+    // SDS-AC-18 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-8-12.sds.md; OPS-HTTP-008 AC-9
     // SDS-AC-13 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-13.sds.md; OPS-HTTP-008 AC-9: the middleware.md
     // block throwing HttpException(503).withHeader("Retry-After", "1") is compiled, not skipped
     @Test

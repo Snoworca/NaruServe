@@ -45,12 +45,14 @@ public final class WaveEightKotlinDocsTest {
         return end < 0 ? doc.substring(start) : doc.substring(start, end);
     }
 
+    // SDS-AC-9; IR-KT-002 AC-4
     @Test
     public void sdsAc9_IR_KT_002_AC_4_the_JsonDocsKotlinTest_body_copy_line_is_unchanged() throws IOException {
         String copy = rootFile("NaruServe-api/src/test/kotlin/com/snoworca/naruserve/JsonDocsKotlinTest.kt");
         assertTrue(Arrays.asList(copy.split("\n")).contains(EXTENSION_LINE));
     }
 
+    // SDS-AC-10; OPS-KT-001 AC-1
     @Test
     public void sdsAc10_OPS_KT_001_AC_1_kotlin_md_names_the_module_and_settings_include_it() throws IOException {
         String kotlin = doc("kotlin.md");
@@ -59,6 +61,7 @@ public final class WaveEightKotlinDocsTest {
         assertTrue(rootFile("settings.gradle").contains("include ':NaruServe-kotlin'"));
     }
 
+    // SDS-AC-11; OPS-KT-001 AC-2
     @Test
     public void sdsAc11_OPS_KT_001_AC_2_the_null_paragraph_names_NullMarked_and_no_NonNull() throws IOException {
         String kotlin = doc("kotlin.md");
@@ -66,6 +69,7 @@ public final class WaveEightKotlinDocsTest {
         assertFalse(kotlin.contains("@NonNull"));
     }
 
+    // SDS-AC-12; OPS-KT-001 AC-3
     @Test
     public void sdsAc12_OPS_KT_001_AC_3_the_extension_section_shows_the_import_above_the_pinned_lines()
             throws IOException {
@@ -77,6 +81,7 @@ public final class WaveEightKotlinDocsTest {
         assertTrue(ext, ext.contains(STDLIB_PHRASE));
     }
 
+    // SDS-AC-13; OPS-KT-001 AC-4
     @Test
     public void sdsAc13_OPS_KT_001_AC_4_the_coroutine_section_states_the_post_v1_item() throws IOException {
         String kotlin = doc("kotlin.md");
@@ -85,6 +90,7 @@ public final class WaveEightKotlinDocsTest {
         assertFalse(kotlin.contains("(미확정)"));
     }
 
+    // SDS-AC-14; OPS-KT-001 AC-5
     @Test
     public void sdsAc14_OPS_KT_001_AC_5_the_nullable_accessor_table_keeps_its_twelve_rows() throws IOException {
         List<String> lines = Arrays.asList(doc("kotlin.md").split("\n"));
@@ -114,6 +120,7 @@ public final class WaveEightKotlinDocsTest {
                 "`req.body(type)` `T?`"), rows);
     }
 
+    // SDS-AC-18; FR-KT-006 AC-4
     @Test
     public void sdsAc18_FR_KT_006_AC_4_json_md_and_kotlin_md_name_the_gson_limit() throws IOException {
         contains("json.md", doc("json.md"), "JsonIOException", "**기본 생성자**를 두세요");

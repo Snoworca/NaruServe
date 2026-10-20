@@ -81,6 +81,7 @@ public final class KotlinDocsMarkersTest {
             + "    }\n"
             + "}\n";
 
+    // SDS-AC-1; FR-KT-004 AC-1: real docs and the three Kotlin source dirs give no failure
     @Test
     public void sdsAc1_FR_KT_004_AC_1_real_docs_and_three_source_dirs_give_no_failure() throws IOException {
         Map<String, String> sources = kotlinSources();
@@ -94,6 +95,7 @@ public final class KotlinDocsMarkersTest {
         assertEquals(Collections.<String>emptyList(), KotlinDocsMarkers.failures(one("t.md", DOC), one("T.kt", SOURCE)));
     }
 
+    // SDS-AC-1; FR-KT-004 AC-1: a block without a marker is named
     @Test
     public void sdsAc1_FR_KT_004_AC_1_a_block_without_a_marker_is_named() {
         String source = SOURCE.replace("    // docs-example: t.md#2\n", "");
@@ -102,6 +104,7 @@ public final class KotlinDocsMarkersTest {
         assertTrue(failures.get(0), failures.get(0).startsWith("t.md#2"));
     }
 
+    // SDS-AC-4; FR-KT-004 AC-4: an inserted block without its marker is named
     @Test
     public void sdsAc4_FR_KT_004_AC_4_an_inserted_block_without_its_marker_is_named() {
         // A block inserted before the second shifts it to #3; the marker of #2 now meets the new block's lines.
@@ -111,6 +114,7 @@ public final class KotlinDocsMarkersTest {
         assertTrue(failures.toString(), failures.stream().anyMatch(f -> f.startsWith("t.md#2")));
     }
 
+    // SDS-AC-4; FR-KT-004 AC-4: a stale marker is named
     @Test
     public void sdsAc4_FR_KT_004_AC_4_a_stale_marker_is_named() {
         String source = SOURCE + "// docs-example: t.md#3\nfun c() {}\n// docs-example: gone.md#1\nfun d() {}\n";

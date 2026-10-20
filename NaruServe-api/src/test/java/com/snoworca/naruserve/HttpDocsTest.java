@@ -110,6 +110,7 @@ public class HttpDocsTest {
         return out;
     }
 
+    // SDS-AC-10 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-8-12.sds.md
     // OPS-HTTP-008 AC-1
     @Test
     public void OPS_HTTP_008_AC1_rawPathRowIsRawPathWithoutQuery() throws IOException {
@@ -122,6 +123,7 @@ public class HttpDocsTest {
         assertFalse(row, row.contains("originalUrl"));
     }
 
+    // SDS-AC-11 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-8-12.sds.md
     // OPS-HTTP-008 AC-2
     @Test
     public void OPS_HTTP_008_AC2_attributeTypeMismatchAndNullRemoval() throws IOException {
@@ -222,6 +224,7 @@ public class HttpDocsTest {
         assertTrue(head, head.contains("`HEAD`를 돌려줍니다"));
     }
 
+    // SDS-AC-16 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-8-12.sds.md
     // OPS-HTTP-008 AC-7
     @Test
     public void OPS_HTTP_008_AC7_expressRawPathAndRawTextMapping() throws IOException {
@@ -260,6 +263,7 @@ public class HttpDocsTest {
         assertTrue(trust, trust.contains("`app.trustProxy(true)`"));
     }
 
+    // SDS-AC-14 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-8-12.sds.md
     // OPS-HTTP-008 AC-5
     @Test
     public void OPS_HTTP_008_AC5_appListsRouterPolicy() throws IOException {
@@ -277,6 +281,7 @@ public class HttpDocsTest {
         assertTrue(kotlin.get(0), kotlin.get(0).contains("app.routerPolicy("));
     }
 
+    // SDS-AC-15 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-8-12.sds.md
     // OPS-HTTP-008 AC-6
     @Test
     public void OPS_HTTP_008_AC6_defaultsNamesTraceConnectPolicy() throws IOException {
@@ -306,6 +311,7 @@ public class HttpDocsTest {
         }
     }
 
+    // SDS-AC-18 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-8-12.sds.md; OPS-HTTP-008 AC-9
     // SDS-AC-13 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-13.sds.md; OPS-HTTP-008 AC-9: middleware.md
     // documents HttpException.withHeader and headers() beside status()/code() with Express err.headers, a Java
     // block throwing HttpException(503).withHeader("Retry-After", "1") next to a Kotlin block, without a marker
