@@ -3,12 +3,14 @@ package com.snoworca.naruserve.internal;
 import com.snoworca.naruserve.CachePolicy;
 import com.snoworca.naruserve.Method;
 import com.snoworca.naruserve.ResourceResolver;
+import com.snoworca.naruserve.common.HttpHeaderValues;
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
 import org.jspecify.annotations.Nullable;
@@ -75,16 +77,18 @@ final class FileResponder {
         int status = 200;
         long[] range = null;
         if (conditional) {
-            String inm = req.header("If-None-Match");
-            if (inm != null) {
-                status = noneMatch(inm, tag) ? 304 : 200;
+            List<String> inm = req.headers("If-None-Match");
+            if (!inm.isEmpty()) {
+                status = noneMatch(HttpHeaderValues.commaSeparated(inm), tag) ? 304 : 200;
             } else {
                 long ims = parseDate(req.header("If-Modified-Since"));
                 status = ims != Long.MIN_VALUE && ims / 1000 >= seconds ? 304 : 200;
             }
         }
         if (status == 200 && method == Method.GET && ifRangeHolds(req.header("If-Range"), tag, seconds)) {
-            range = range(req.header("Range"), length);
+            List<String> ranges = req.headers("Range");
+            // Repeated fields represent several ranges, whose documented fallback is the full response.
+            range = ranges.size() == 1 ? range(ranges.get(0), length) : null;
             if (range != null) {
                 status = range[0] < 0 ? 416 : 206;
             }

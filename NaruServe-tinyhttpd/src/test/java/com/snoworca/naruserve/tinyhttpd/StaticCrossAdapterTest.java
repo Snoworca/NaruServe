@@ -54,6 +54,24 @@ public class StaticCrossAdapterTest {
         {"HEAD", "/r"},
         {"GET", "/s/report.pdf", "Range", "bytes=-5"},
         {"GET", "/s/report.pdf", "If-None-Match", "W/" + ETAG},
+        {"GET", "/r", "If-None-Match", "\"miss\"", "if-none-match", "W/" + ETAG},
+        {"GET", "/r", "Range", "bytes=0-9", "rAnGe", "bytes=20-29"},
+        {"GET", "/r", "Range", "bytes=5000-", "Range", "bytes=20-29"},
+        {"HEAD", "/r", "If-None-Match", "\"miss\"", "if-none-match", "W/" + ETAG},
+        {"HEAD", "/r", "Range", "bytes=0-9", "rAnGe", "bytes=20-29"},
+        {"HEAD", "/r", "Range", "bytes=5000-", "Range", "bytes=20-29"},
+        {"GET", "/s/report.pdf", "If-None-Match", "\"miss\"", "if-none-match", "W/" + ETAG},
+        {"GET", "/s/report.pdf", "Range", "bytes=0-9", "rAnGe", "bytes=20-29"},
+        {"GET", "/s/report.pdf", "Range", "bytes=5000-", "Range", "bytes=20-29"},
+        {"HEAD", "/s/report.pdf", "If-None-Match", "\"miss\"", "if-none-match", "W/" + ETAG},
+        {"HEAD", "/s/report.pdf", "Range", "bytes=0-9", "rAnGe", "bytes=20-29"},
+        {"HEAD", "/s/report.pdf", "Range", "bytes=5000-", "Range", "bytes=20-29"},
+        {"GET", "/d", "If-None-Match", "\"miss\"", "if-none-match", "W/" + ETAG},
+        {"GET", "/d", "Range", "bytes=0-9", "rAnGe", "bytes=20-29"},
+        {"GET", "/d", "Range", "bytes=5000-", "Range", "bytes=20-29"},
+        {"HEAD", "/d", "If-None-Match", "\"miss\"", "if-none-match", "W/" + ETAG},
+        {"HEAD", "/d", "Range", "bytes=0-9", "rAnGe", "bytes=20-29"},
+        {"HEAD", "/d", "Range", "bytes=5000-", "Range", "bytes=20-29"},
     };
 
     private static final String[] HEADERS = {"Content-Type", "Content-Length", "Content-Range", "ETag",
@@ -74,6 +92,7 @@ public class StaticCrossAdapterTest {
 
     private static void routes(RestApp app, File f) {
         app.get("/r", (req, res) -> res.file(f));
+        app.get("/d", (req, res) -> res.download(f, "report.pdf"));
         app.staticFiles("/s", f.getParentFile());
     }
 
@@ -94,6 +113,8 @@ public class StaticCrossAdapterTest {
     }
 
     // SDS-AC-11; FR-STATIC-011 AC-1; FR-STATIC-011 AC-3
+    // FR-STATIC-009 AC-2: repeated If-None-Match weak comparison on GET/HEAD.
+    // FR-STATIC-010 AC-3: repeated Range fields fall back to the full response on real sockets.
     @Test
     public void sdsAc11_FR_STATIC_011_AC1_AC3_fileAndStaticAnswersMatchOnBothAdapters() throws IOException {
         File f = pdf();
@@ -144,6 +165,17 @@ public class StaticCrossAdapterTest {
         assertTrue(memory.get(4), memory.get(4).startsWith("304 "));
         assertTrue(memory.get(5), memory.get(5).startsWith("304 "));
         assertTrue(memory.get(7), memory.get(7).endsWith("body=0"));
+        for (int i = 10; i < CASES.length; i++) {
+            boolean matching = (i - 10) % 3 == 0;
+            String expected = matching ? "304 " : "200 ";
+            assertTrue("memory " + i + " " + memory.get(i), memory.get(i).startsWith(expected));
+            assertTrue("socket " + i + " " + socket.get(i), socket.get(i).startsWith(expected));
+            boolean head = CASES[i][0].equals("HEAD");
+            assertTrue(memory.get(i), memory.get(i).endsWith("body=" + (matching || head ? 0 : 1000)));
+            if (!matching) {
+                assertTrue(memory.get(i), memory.get(i).contains("Content-Length=1000 Content-Range=null"));
+            }
+        }
         assertEquals(memory, socket);
     }
 

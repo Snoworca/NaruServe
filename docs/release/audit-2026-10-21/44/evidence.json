@@ -1,0 +1,24 @@
+{
+  "issue": 44,
+  "title": "정적 파일의 반복 조건부 헤더와 Range 필드를 일관되게 처리",
+  "requirements": {
+    "FR-STATIC-009": [
+      "AC-2"
+    ],
+    "FR-STATIC-010": [
+      "AC-3"
+    ]
+  },
+  "testReference": "NaruServe-api/src/test/java/com/snoworca/naruserve/RepeatedFileHeadersTest.java",
+  "logs": {
+    "red": "docs/release/audit-2026-10-21/44/red.log",
+    "green17": "docs/release/audit-2026-10-21/44/green17.log",
+    "green8": "docs/release/audit-2026-10-21/44/green8.log"
+  },
+  "runtimeVerification": [
+    "JDK17",
+    "OpenJDK1.8.0_504"
+  ],
+  "review": "no remaining HIGH/MEDIUM findings",
+  "integrationRegression": "epic #36 final integration gate"
+}
