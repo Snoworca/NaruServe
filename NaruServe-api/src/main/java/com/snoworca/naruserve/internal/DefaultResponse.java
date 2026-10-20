@@ -415,20 +415,23 @@ public final class DefaultResponse implements Response {
 
     // @req FR-HTTP-014
     @Override
-    public void send(String body) {
-        write(body.getBytes(StandardCharsets.UTF_8), "text/plain; charset=UTF-8");
+    // @req FR-DX-002
+    public void send(@Nullable Object body) {
+        if (body == null) {
+            end();
+        } else if (body instanceof String) {
+            write(((String) body).getBytes(StandardCharsets.UTF_8), "text/plain; charset=UTF-8");
+        } else if (body instanceof byte[]) {
+            write((byte[]) body, "application/octet-stream");
+        } else {
+            json(body);
+        }
     }
 
     // @req FR-HTTP-014
     @Override
     public void html(String body) {
         write(body.getBytes(StandardCharsets.UTF_8), "text/html; charset=UTF-8");
-    }
-
-    // @req FR-HTTP-014
-    @Override
-    public void send(byte[] body) {
-        write(body, "application/octet-stream");
     }
 
     /**

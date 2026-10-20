@@ -167,7 +167,7 @@ public class HttpDocsTest {
     @Test
     public void OPS_HTTP_008_AC3_octetStreamAndStreamClosing() throws IOException {
         String d = doc("response.md");
-        String note = line(d, "`send(byte[])`에 `Content-Type`이 없으면");
+        String note = line(d, "`send(Object)` — 바이트 배열에 `Content-Type`이 없으면");
         assertFalse(note, note.contains(MARKER));
         assertTrue(note, note.contains("`application/octet-stream`"));
         assertTrue(note, note.contains("`stream(InputStream, contentType)`"));

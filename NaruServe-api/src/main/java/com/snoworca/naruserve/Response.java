@@ -24,11 +24,12 @@ public interface Response {
     /** Sets a header, replacing a same-name header as Express {@code res.set} does; returns this response. */
     Response header(String name, String value);
 
-    /** Sends {@code body} as the whole response body. */
-    void send(String body);
-
-    /** Sends {@code body} as the whole response body. */
-    void send(byte[] body);
+    /**
+     * Sends a string as UTF-8 text, a byte array as binary, or any other value through {@link #json}.
+     * A null value ends the response without a body. Dispatch uses the actual value, even when declared Object.
+     */
+    // @req FR-DX-002
+    void send(@Nullable Object body);
 
     /** Sends {@code body} as an HTML response body. */
     void html(String body);
@@ -79,7 +80,7 @@ public interface Response {
 
     /**
      * Sends {@code file} as the whole body with its MIME type and no {@code Content-Disposition}, like Express
-     * {@code res.sendFile}; ends the response like {@link #send(String)}. The default throws
+     * {@code res.sendFile}; ends the response like {@link #send(Object)}. The default throws
      * {@link UnsupportedOperationException}.
      */
     // @req IR-STATIC-002
@@ -89,7 +90,7 @@ public interface Response {
 
     /**
      * Sends {@code file} as an attachment named {@code filename}, like Express {@code res.download}; ends the
-     * response like {@link #send(String)}. The default throws {@link UnsupportedOperationException}.
+     * response like {@link #send(Object)}. The default throws {@link UnsupportedOperationException}.
      */
     // @req IR-STATIC-002
     default void download(File file, String filename) {

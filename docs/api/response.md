@@ -23,9 +23,9 @@ res.status(201).header("X-Request-ID", id).json(created);
 | 메서드 | Content-Type | Express | 설명 |
 |---|---|---|---|
 | `json(object)` | `application/json; charset=UTF-8` | `res.json(o)` | 설정된 `JsonCodec`으로 직렬화 |
-| `send(String)` | `text/plain; charset=UTF-8` | `res.send('text')` | 텍스트. 직접 지정한 Content-Type이 있으면 그것을 씁니다. |
+| `send(Object)` — 문자열 | `text/plain; charset=UTF-8` | `res.send('text')` | 텍스트. 직접 지정한 Content-Type이 있으면 그것을 씁니다. |
 | `html(String)` | `text/html; charset=UTF-8` | `res.send('<p>..</p>')` | HTML |
-| `send(byte[])` | 직접 지정. 없으면 `application/octet-stream` | `res.send(buffer)` | 바이트 |
+| `send(Object)` — 바이트 배열 | 직접 지정. 없으면 `application/octet-stream` | `res.send(buffer)` | 바이트 |
 | `stream(InputStream, contentType)` | 인자 | `stream.pipe(res)` | 곧바로 반환하고, 핸들러가 반환한 뒤 같은 스레드에서 끝까지 복사합니다. 성공·실패·`abort` 어느 경우든 스트림을 한 번 닫습니다(호출자가 닫지 않습니다). |
 | `file(File)` | 확장자로 결정 | `res.sendFile(path)` | 파일. Range·조건부 요청 지원. Express `res.sendFile`처럼 `Content-Disposition`을 보내지 않습니다 |
 | `download(File, filename)` | 확장자로 결정 | `res.download(path, name)` | `Content-Disposition: attachment` |
@@ -33,17 +33,17 @@ res.status(201).header("X-Request-ID", id).json(created);
 | `sse()` | `text/event-stream` | — | SSE 스트림 시작. `SseClient` 반환. [SSE](sse.md) |
 | `abort(error)` | — | `res.destroy()` | 응답을 비정상 종료합니다(연결 끊기). 이미 끝났거나 끊긴 응답에서는 아무것도 하지 않습니다. |
 
-`send(byte[])`에 `Content-Type`이 없으면 Express가 `Buffer`에 그러듯 `application/octet-stream`을 씁니다. `stream(InputStream, contentType)`은 스트림의 소유권을 가져가서 성공·실패·`abort` 어느 경우든 닫습니다. [스트림](#스트림)
+`send(Object)` — 바이트 배열에 `Content-Type`이 없으면 Express가 `Buffer`에 그러듯 `application/octet-stream`을 씁니다. `stream(InputStream, contentType)`은 스트림의 소유권을 가져가서 성공·실패·`abort` 어느 경우든 닫습니다. [스트림](#스트림)
 
-### Express와 다른 점: `send`는 텍스트만
+### 값의 타입에 따른 `send` 응답
 
-Express의 `res.send`는 인자 타입에 따라 HTML·JSON·바이너리를 알아서 고릅니다. NaruServe는 메서드로 구분합니다.
+NaruServe의 `send(Object)`는 실제 값이 문자열이면 텍스트, `byte[]`이면 바이너리, 객체·목록·숫자·불리언이면 JSON을 보냅니다. `Object` 변수에 담아도 같은 규칙입니다. `send(null)`은 빈 본문으로 끝내며, JSON `null`을 보내려면 `json(null)`을 사용합니다. HTML은 `html(...)`로 명시합니다.
 
 | 하고 싶은 것 | Express | NaruServe |
 |---|---|---|
 | 텍스트 | `res.send('ok')` (→ `text/html`) | `res.send("ok")` (→ `text/plain`) |
 | HTML | `res.send('<b>ok</b>')` | `res.html("<b>ok</b>")` |
-| JSON 객체 | `res.send({ok: true})` 또는 `res.json(...)` | `res.json(map)` |
+| JSON 객체 | `res.send({ok: true})` 또는 `res.json(...)` | `res.send(map)` 또는 `res.json(map)` |
 | JSON 문자열 | `res.json('hello')` | `res.json("hello")` → 본문 `"hello"` |
 
 ## json

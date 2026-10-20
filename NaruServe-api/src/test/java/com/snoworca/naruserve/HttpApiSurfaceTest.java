@@ -131,8 +131,7 @@ public class HttpApiSurfaceTest {
     public void sdsAc2_IR_HTTP_001_AC2_responseStatusAndHeaderReturnReceiverWritersReturnVoid() throws Exception {
         assertTrue(Response.class.isInterface());
         assertTrue(Modifier.isPublic(Response.class.getModifiers()));
-        assertEquals(setOf("status(int)->Response", "header(String,String)->Response", "send(String)->void",
-                "send(byte[])->void", "html(String)->void", "stream(InputStream,String)->void", "end()->void",
+        assertEquals(setOf("status(int)->Response", "header(String,String)->Response", "send(Object)->void", "html(String)->void", "stream(InputStream,String)->void", "end()->void",
                 "isCommitted()->boolean", "abort(Throwable)->void",
                 // wave 5: IR-JSON-002 AC-8
                 "json(Object)->void",
@@ -179,11 +178,7 @@ public class HttpApiSurfaceTest {
         }
 
         @Override
-        public void send(String body) {
-        }
-
-        @Override
-        public void send(byte[] body) {
+        public void send(@Nullable Object body) {
         }
 
         @Override
@@ -244,6 +239,7 @@ public class HttpApiSurfaceTest {
                 "Request.attribute[class java.lang.String, class java.lang.Class]#return",
                 "Request.attribute[class java.lang.String, class java.lang.Object]#p1",
                 "Response.abort[class java.lang.Throwable]#p0",
+                "Response.send[class java.lang.Object]#p0",
                 // wave 5: IR-JSON-002 AC-8
                 "Request.body[class java.lang.Class]#return",
                 "Request.body[class com.snoworca.naruserve.TypeRef]#return",

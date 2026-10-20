@@ -36,8 +36,9 @@ private class RecordingResponse : Response {
     val calls = ArrayList<String>()
     override fun status(code: Int): Response = apply { calls += "status $code" }
     override fun header(name: String, value: String): Response = apply { calls += "header $name=$value" }
-    override fun send(body: String) { calls += "send $body" }
-    override fun send(body: ByteArray) { calls += "sendBytes ${body.size}" }
+    override fun send(body: Any?) {
+        if (body is ByteArray) calls += "sendBytes ${body.size}" else calls += "send $body"
+    }
     override fun html(body: String) { calls += "html $body" }
     override fun stream(input: InputStream, contentType: String) {
         input.use { calls += "stream ${it.readBytes().size} $contentType" }
