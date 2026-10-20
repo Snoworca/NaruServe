@@ -1,0 +1,1874 @@
+{
+ "req_ac": [
+  {
+   "id": "IR-HTTP-007 AC-1",
+   "verdict": "match",
+   "pointer": "HttpAdapterSpiTest.java#sdsAc4_IR_HTTP_007_AC1_sendFileWritesExactlyTheByteRange"
+  },
+  {
+   "id": "IR-HTTP-007 AC-2",
+   "verdict": "match",
+   "pointer": "HttpAdapterSpiTest.java#sdsAc4_IR_HTTP_007_AC2_upgradeWrites101ThenHandsOverTheExchangeStreams"
+  },
+  {
+   "id": "IR-HTTP-007 AC-3",
+   "verdict": "match",
+   "pointer": "HttpAdapterSpiTest.java#sdsAc4_IR_HTTP_007_AC3_drainRunsOnAdapterThreadAndEndsOnlyWhenEndIsReported"
+  },
+  {
+   "id": "IR-HTTP-007 AC-4",
+   "verdict": "match",
+   "pointer": "HttpAdapterSpiTest.java#sdsAc1_IR_HTTP_007_AC4_IR_WS_002_AC5_wave6SpiIsKeptAndOnlyWebSocketAndAttachAreAdded; HttpAdapterSpiTest.java#sdsAc2_IR_HTTP_007_AC4_streamDrainStaysFunctionalAndEventStreamAttachesTheDrainStream"
+  },
+  {
+   "id": "IR-HTTP-007 AC-5",
+   "verdict": "match",
+   "pointer": "HttpAdapterSpiTest.java#sdsAc5_IR_HTTP_007_AC5_portZeroGetsAStablePositivePortAndAPositivePortIsKept"
+  },
+  {
+   "id": "IR-HTTP-007 AC-6",
+   "verdict": "match",
+   "pointer": "HttpAdapterSpiTest.java#sdsAc6_IR_HTTP_007_AC6_inFlightExchangeIsForceClosedAtTheDeadline"
+  },
+  {
+   "id": "IR-HTTP-008 AC-1",
+   "verdict": "match",
+   "pointer": "HttpExceptionTest.java#IR_HTTP_008_AC1_withHeaderAndHeadersAreDeclaredAndTheOldSignaturesKept"
+  },
+  {
+   "id": "IR-HTTP-008 AC-2",
+   "verdict": "match",
+   "pointer": "HttpExceptionTest.java#sdsAc8_IR_HTTP_008_AC2_headersKeepOrderAndDuplicatesAndAreUnmodifiable; HttpExceptionTest.java#sdsAc8_IR_HTTP_008_AC2_anExceptionWithHeadersSerializesAndKeepsThem"
+  },
+  {
+   "id": "IR-HTTP-008 AC-3",
+   "verdict": "match",
+   "pointer": "HttpExceptionTest.java#sdsAc7_IR_HTTP_008_AC3_aBadHeaderIsRefusedLikeResHeaderAndLeavesHeadersUnchanged"
+  },
+  {
+   "id": "IR-HTTP-008 AC-4",
+   "verdict": "match",
+   "pointer": "ErrorPathTest.java#sdsAc9_IR_HTTP_008_AC4_theExceptionHeadersReplaceTheAppSetOnesOnTheStandardError"
+  },
+  {
+   "id": "IR-HTTP-008 AC-5",
+   "verdict": "match",
+   "pointer": "ErrorPathTest.java#sdsAc9_IR_HTTP_008_AC5_onErrorLeavingNewKeepsTheExceptionHeadersAndAnAnsweringOneDropsThem"
+  },
+  {
+   "id": "IR-HTTP-008 AC-6",
+   "verdict": "match",
+   "pointer": "ErrorHeadersSocketTest.java#sdsAc9_IR_HTTP_008_AC6_a503WithRetryAfterAndConnectionCloseClosesTheConnection"
+  },
+  {
+   "id": "IR-HTTP-008 AC-7",
+   "verdict": "match",
+   "pointer": "ErrorPathTest.java#sdsAc10_IR_HTTP_008_AC7_framingHeadersFromTheExceptionAreDroppedAndTheBodyLengthIsExact"
+  },
+  {
+   "id": "IR-HTTP-008 AC-8",
+   "verdict": "match",
+   "pointer": "WebSocketKotlinTest.kt#IR-HTTP-008 AC-8 withHeader compiles inside a SAM handler and returns non-platform types"
+  },
+  {
+   "id": "OPS-HTTP-007 AC-1",
+   "verdict": "match",
+   "pointer": "HttpDocsTest.java#OPS_HTTP_007_AC1_rawPathRowIsRawPathWithoutQuery"
+  },
+  {
+   "id": "OPS-HTTP-007 AC-2",
+   "verdict": "match",
+   "pointer": "HttpDocsTest.java#OPS_HTTP_007_AC2_attributeTypeMismatchAndNullRemoval"
+  },
+  {
+   "id": "OPS-HTTP-007 AC-3",
+   "verdict": "match",
+   "pointer": "HttpDocsTest.java#OPS_HTTP_007_AC3_octetStreamAndStreamClosing"
+  },
+  {
+   "id": "OPS-HTTP-007 AC-4",
+   "verdict": "match",
+   "pointer": "HttpDocsTest.java#OPS_HTTP_007_AC4_routerPolicyDocumented"
+  },
+  {
+   "id": "OPS-HTTP-007 AC-5",
+   "verdict": "match",
+   "pointer": "HttpDocsTest.java#OPS_HTTP_007_AC5_appListsRouterPolicy"
+  },
+  {
+   "id": "OPS-HTTP-007 AC-6",
+   "verdict": "match",
+   "pointer": "HttpDocsTest.java#OPS_HTTP_007_AC6_defaultsNamesTraceConnectPolicy"
+  },
+  {
+   "id": "OPS-HTTP-007 AC-7",
+   "verdict": "match",
+   "pointer": "HttpDocsTest.java#OPS_HTTP_007_AC7_expressRawPathAndRawTextMapping"
+  },
+  {
+   "id": "OPS-HTTP-007 AC-8",
+   "verdict": "match",
+   "pointer": "HttpDocsTest.java#sdsAc6_OPS_HTTP_007_AC8_requestKeepsNoMarker; HttpDocsTest.java#sdsAc6_OPS_HTTP_007_AC8_responseKeepsOnlyRedirectMarker"
+  },
+  {
+   "id": "OPS-HTTP-007 AC-9",
+   "verdict": "match",
+   "pointer": "HttpDocsTest.java#OPS_HTTP_007_AC9_middlewareDocumentsWithHeader; DocsExamplesCompileTest.java#wave7s13SdsAc13_OPS_HTTP_007_AC9_theWithHeaderBlockIsCompiled"
+  },
+  {
+   "id": "FR-APP-019 AC-1",
+   "verdict": "match",
+   "pointer": "AccessLogAcceptanceTest.java#sdsAc4_FR_APP_019_AC1_defaultLineForGetUsers7"
+  },
+  {
+   "id": "FR-APP-019 AC-2",
+   "verdict": "match",
+   "pointer": "AccessLogTest.java#sdsAc5_FR_APP_019_AC2_levelSelectsTheLoggerMethod"
+  },
+  {
+   "id": "FR-APP-019 AC-3",
+   "verdict": "match",
+   "pointer": "AccessLogAcceptanceTest.java#sdsAc6_FR_APP_019_AC3_everyAutomaticAnswerAndRejectionWritesExactlyOneLine"
+  },
+  {
+   "id": "FR-APP-019 AC-4",
+   "verdict": "match",
+   "pointer": "AccessLogAcceptanceTest.java#sdsAc7_FR_APP_019_AC4_streamCountsCopiedBytesAndHeadCountsZero"
+  },
+  {
+   "id": "FR-APP-019 AC-5",
+   "verdict": "match",
+   "pointer": "DispatcherTest.java#sdsAc8_FR_APP_019_AC5_inCountsTheBodyBytesReadNotTheDeclaredLength"
+  },
+  {
+   "id": "FR-APP-019 AC-6",
+   "verdict": "match",
+   "pointer": "AccessLogAcceptanceTest.java#sdsAc9_FR_APP_019_AC6_excludedRawPathWritesNoLine"
+  },
+  {
+   "id": "FR-APP-019 AC-7",
+   "verdict": "match",
+   "pointer": "AccessLogAcceptanceTest.java#sdsAc10_FR_APP_019_AC7_lineRidEqualsTheErrorBodyRequestId"
+  },
+  {
+   "id": "FR-APP-019 AC-8",
+   "verdict": "match",
+   "pointer": "AccessLogAcceptanceTest.java#wave7SdsAc1_FR_APP_019_AC8_handshakeLineIsWrittenBeforeTheFirstClientFrame; DispatcherTest.java#wave7SdsAc2_FR_APP_019_AC8_oneHandshakeLinePerSessionAndRefusalsLogTheirStatusOnly"
+  },
+  {
+   "id": "FR-APP-019 AC-9",
+   "verdict": "match",
+   "pointer": "AccessLogAcceptanceTest.java#wave7SdsAc3_FR_APP_019_AC9_closeLineCarriesTheReportedCodeAndTheHandshakeRidOnce; AccessLogTest.java#wave7SdsAc3_FR_APP_019_AC9_closeLineHasTheTokenWsTheCodeTheDurationAndTheRid"
+  },
+  {
+   "id": "FR-APP-019 AC-10",
+   "verdict": "match",
+   "pointer": "AccessLogAcceptanceTest.java#wave7SdsAc4_FR_APP_019_AC10_sseLineAtStreamEndWithTheFirstRecordedCause; LongConnectionShutdownSocketTest.java#wave7SdsAc9_FR_APP_020_AC8_AC6_AC7_oneSecondShutdownClosesStalledAndHealthyConnections"
+  },
+  {
+   "id": "FR-APP-019 AC-11",
+   "verdict": "match",
+   "pointer": "AccessLogTest.java#wave7SdsAc5_FR_APP_019_AC11_closeAndSseLinesFollowExcludeEnabledAndLevel"
+  },
+  {
+   "id": "FR-APP-020 AC-1",
+   "verdict": "match",
+   "pointer": "ShutdownParticipantsTest.java#wave7SdsAc6_FR_APP_020_AC1_runnableAndDeadlineParticipantsRunInAddOrderWithTheDeadline; ShutdownSequenceTest.java#wave7SdsAc7_FR_APP_020_AC1_everyPhaseGetsTheDeadlineComputedAtShutdownEntry"
+  },
+  {
+   "id": "FR-APP-020 AC-2",
+   "verdict": "match",
+   "pointer": "LongConnectionShutdownSocketTest.java#wave7SdsAc9_FR_APP_020_AC2_halfSecondTimeoutBoundsTheCloseWaitAndTheReturn"
+  },
+  {
+   "id": "FR-APP-020 AC-3",
+   "verdict": "match",
+   "pointer": "SseShutdownTest.java#wave7SdsAc8_FR_APP_020_AC3_sseAfterTheFlagGetsTheNoticeAndEndsAtOnce; WebSocketRegistryTest.java#sdsAc2_FR_WS_009_AC3_afterTheClosedFlagAnUpgradeGets503CloseAndNoWebSocketCall"
+  },
+  {
+   "id": "FR-APP-020 AC-4",
+   "verdict": "match",
+   "pointer": "LongConnectionShutdownSocketTest.java#wave7SdsAc9_FR_APP_020_AC4_requestsDuringTheGoodbyeGet503WithConnectionClose"
+  },
+  {
+   "id": "FR-APP-020 AC-5",
+   "verdict": "match",
+   "pointer": "ShutdownSequenceTest.java#wave7SdsAc7_FR_APP_020_AC5_inFlight300MsRequestCompletesBeforeOnStop"
+  },
+  {
+   "id": "FR-APP-020 AC-6",
+   "verdict": "match",
+   "pointer": "LongConnectionShutdownSocketTest.java#wave7SdsAc9_FR_APP_020_AC8_AC6_AC7_oneSecondShutdownClosesStalledAndHealthyConnections"
+  },
+  {
+   "id": "FR-APP-020 AC-7",
+   "verdict": "match",
+   "pointer": "LongConnectionShutdownSocketTest.java#wave7SdsAc9_FR_APP_020_AC8_AC6_AC7_oneSecondShutdownClosesStalledAndHealthyConnections; AppDocsTest.java#wave7s13SdsAc10_OPS_APP_005_AC9_lifecycleStatementsAndLoggingLines"
+  },
+  {
+   "id": "FR-APP-020 AC-8",
+   "verdict": "match",
+   "pointer": "LongConnectionShutdownSocketTest.java#wave7SdsAc9_FR_APP_020_AC8_AC6_AC7_oneSecondShutdownClosesStalledAndHealthyConnections"
+  },
+  {
+   "id": "FR-APP-020 AC-9",
+   "verdict": "match",
+   "pointer": "ShutdownIsolatedSocketTest.java#wave7SdsAc9_FR_APP_020_AC9_noThreadNoRegistryEntryAndNoTempFileAfterShutdown"
+  },
+  {
+   "id": "PERF-APP-001 AC-1",
+   "verdict": "match",
+   "pointer": "LoadIsolatedSocketTest.java#sdsAc1_PERF_APP_001_AC1_120LongConnectionsStayWithinTheThreadAndHeapBounds"
+  },
+  {
+   "id": "PERF-APP-001 AC-2",
+   "verdict": "match",
+   "pointer": "LoadIsolatedSocketTest.java#sdsAc2_PERF_APP_001_AC2_theDefaultsAddUpToTheThreadBound"
+  },
+  {
+   "id": "PERF-APP-001 AC-3",
+   "verdict": "match",
+   "pointer": "WebSocketSenderTest.java#wave7s13SdsAc3_PERF_APP_001_AC3_senderThreadsRequestA256KiBStack; WebSocketIdleSchedulerTest.java#wave7s13SdsAc3_PERF_APP_001_AC3_theIdleThreadRequestsA256KiBStack"
+  },
+  {
+   "id": "PERF-APP-001 AC-4",
+   "verdict": "match",
+   "pointer": "WaveSevenDocsTest.java#wave7s13SdsAc4_PERF_APP_001_AC3_AC4_defaultsStatesThreadsStackAndTheLowEndFollowUp"
+  },
+  {
+   "id": "OPS-APP-005 AC-1",
+   "verdict": "match",
+   "pointer": "AppDocsTest.java#OPS_APP_005_AC1_builderFactoryServerHandleAndKeeperThread"
+  },
+  {
+   "id": "OPS-APP-005 AC-2",
+   "verdict": "match",
+   "pointer": "AppDocsTest.java#OPS_APP_005_AC2_middlewareAndRoutingDecisions"
+  },
+  {
+   "id": "OPS-APP-005 AC-3",
+   "verdict": "match",
+   "pointer": "AppDocsTest.java#OPS_APP_005_AC3_lifecycleStartGateAndPendingStop"
+  },
+  {
+   "id": "OPS-APP-005 AC-4",
+   "verdict": "match",
+   "pointer": "AppDocsTest.java#OPS_APP_005_AC4_loggingFormatDefaultsAndClose"
+  },
+  {
+   "id": "OPS-APP-005 AC-5",
+   "verdict": "match",
+   "pointer": "AppDocsTest.java#OPS_APP_005_AC5_expressMigrationRows"
+  },
+  {
+   "id": "OPS-APP-005 AC-6",
+   "verdict": "match",
+   "pointer": "AppDocsTest.java#sdsAc5_OPS_APP_005_AC6_decidedMarkersAreGone; AppDocsTest.java#sdsAc5_OPS_APP_005_AC6_laterWaveMarkersAreKept"
+  },
+  {
+   "id": "OPS-APP-005 AC-7",
+   "verdict": "match",
+   "pointer": "AppDocsTest.java#OPS_APP_005_AC7_decisionsCarryAReason"
+  },
+  {
+   "id": "OPS-APP-005 AC-8",
+   "verdict": "match",
+   "pointer": "AppDocsTest.java#wave7s13SdsAc9_OPS_APP_005_AC8_shutdownStepsInOrderAndTheTimeoutSentence"
+  },
+  {
+   "id": "OPS-APP-005 AC-9",
+   "verdict": "match",
+   "pointer": "AppDocsTest.java#wave7s13SdsAc10_OPS_APP_005_AC9_lifecycleStatementsAndLoggingLines"
+  },
+  {
+   "id": "FR-ENGINE-011 AC-1",
+   "verdict": "match",
+   "pointer": "AdapterSurfaceTest.java#sdsAc1_FR_ENGINE_011_AC1_noEngineTypeInAnyPublicSignature"
+  },
+  {
+   "id": "FR-ENGINE-011 AC-2",
+   "verdict": "match",
+   "pointer": "AdapterSurfaceTest.java#FR_ENGINE_011_AC2_eventStreamAndWebSocketAreFilledAndRawUpgradeNamesNoWave; AdapterSurfaceTest.java#FR_ENGINE_011_AC2_featureHooksShareTheCommitLockAbortCheckAndSingleStart"
+  },
+  {
+   "id": "FR-ENGINE-011 AC-3",
+   "verdict": "match",
+   "pointer": "AdapterSurfaceTest.java#FR_ENGINE_011_AC3_theExchangeLockIsFreeWhileTheReadLoopAndTheDrainWait"
+  },
+  {
+   "id": "FR-ENGINE-011 AC-4",
+   "verdict": "match",
+   "pointer": "ConnectionLimitsTest.java#sdsAc11_FR_ENGINE_004_AC1_defaultConnectionLimitsReachTheBuilder"
+  },
+  {
+   "id": "FR-ENGINE-011 AC-5",
+   "verdict": "match",
+   "pointer": "AdapterSurfaceTest.java#sdsAc3_FR_ENGINE_011_AC5_noClassReferencesTlsConfig"
+  },
+  {
+   "id": "FR-ENGINE-011 AC-6",
+   "verdict": "match",
+   "pointer": "RawTargetSocketTest.java#sdsAc4_FR_ENGINE_011_AC6_rawPathAndRawQueryReachTheCoreUndecoded"
+  },
+  {
+   "id": "FR-ENGINE-011 AC-7",
+   "verdict": "match",
+   "pointer": "RawTargetSocketTest.java#FR_ENGINE_011_AC7_requestLineHeadersAndRemoteAddressReachTheCoreUnchanged"
+  },
+  {
+   "id": "OPS-ENGINE-002 AC-1",
+   "verdict": "match",
+   "pointer": "WaveFiveDocsTest.java#appAndRequestNameServerTrustProxyAndKeeper"
+  },
+  {
+   "id": "OPS-ENGINE-002 AC-2",
+   "verdict": "match",
+   "pointer": "WaveFiveDocsTest.java#defaultsStatesNoUnlimitedBindProxyRejectionsAndTls; LimitsSocketTest.java#OPS_ENGINE_002_AC2_AC6_defaultHeaderLineLimitIs8190Bytes"
+  },
+  {
+   "id": "OPS-ENGINE-002 AC-3",
+   "verdict": "match",
+   "pointer": "WaveFiveDocsTest.java#defaultsStatesNoUnlimitedBindProxyRejectionsAndTls"
+  },
+  {
+   "id": "OPS-ENGINE-002 AC-4",
+   "verdict": "match",
+   "pointer": "WaveFiveDocsTest.java#appAndRequestNameServerTrustProxyAndKeeper"
+  },
+  {
+   "id": "OPS-ENGINE-002 AC-5",
+   "verdict": "match",
+   "pointer": "WaveFiveDocsTest.java#moduleCoordinates"
+  },
+  {
+   "id": "OPS-ENGINE-002 AC-6",
+   "verdict": "match",
+   "pointer": "WaveFiveDocsTest.java#defaultsMatchCode; DocsExamplesCompileTest.java#OPS_ENGINE_002_AC6_serverSettingBlocksAreCompiled"
+  },
+  {
+   "id": "OPS-ENGINE-002 AC-7",
+   "verdict": "match",
+   "pointer": "WaveFiveDocsTest.java#settledMarkerLinesAreGoneAndLaterMarkersKept"
+  },
+  {
+   "id": "IR-WS-001 AC-1",
+   "verdict": "match",
+   "pointer": "WebSocketApiTest.java#IR_WS_001_AC1_wsReturnsTheAppAndWebSocketHandlerIsASingleMethodFunctionalInterface"
+  },
+  {
+   "id": "IR-WS-001 AC-2",
+   "verdict": "match",
+   "pointer": "WebSocketApiTest.java#sdsAc1_IR_WS_001_AC2_wsPathFollowsTheRoutePatternSyntax; WebSocketApiTest.java#sdsAc1_IR_WS_001_AC2_anInvalidPatternThrowsWhatAppGetThrowsAndNullsAreRefused"
+  },
+  {
+   "id": "IR-WS-001 AC-3",
+   "verdict": "match",
+   "pointer": "WebSocketApiTest.java#sdsAc2_IR_WS_001_AC3_wsAndWebSocketAfterListenThrowIllegalStateBeforeTheNullChecks"
+  },
+  {
+   "id": "IR-WS-001 AC-4",
+   "verdict": "match",
+   "pointer": "WebSocketApiTest.java#IR_WS_001_AC4_webSocketSessionDeclaresExactlyTheListedMethods; WebSocketApiTest.java#IR_WS_001_AC4_closeWithoutArgumentsIsCloseNormal"
+  },
+  {
+   "id": "IR-WS-001 AC-5",
+   "verdict": "match",
+   "pointer": "WebSocketApiTest.java#IR_WS_001_AC5_listenersAreFunctionalInterfacesThatThrowException"
+  },
+  {
+   "id": "IR-WS-001 AC-6",
+   "verdict": "match",
+   "pointer": "WebSocketApiTest.java#IR_WS_001_AC6_webSocketReturnsTheAppAndEverySetterReturnsTheOptions; WebSocketApiTest.java#sdsAc3_IR_WS_001_AC6_aThrowingConfigurerKeepsEveryEarlierSetting"
+  },
+  {
+   "id": "IR-WS-001 AC-7",
+   "verdict": "match",
+   "pointer": "WebSocketApiTest.java#sdsAc5_IR_WS_001_AC7_defaultsAndAllowedOriginsReplacesAndResets; WebSocketApiTest.java#sdsAc5_IR_WS_001_AC7_AC8_aNullOriginKeepsThePreviousListAndTheArrayIsCopied"
+  },
+  {
+   "id": "IR-WS-001 AC-8",
+   "verdict": "match",
+   "pointer": "WebSocketApiTest.java#IR_WS_001_AC8_sizesAreBoundedWithTheSettingNameInTheMessage; WebSocketApiTest.java#sdsAc4_IR_WS_001_AC8_durationsAreBoundedWithTheCallersTimeAndUnitInTheMessage"
+  },
+  {
+   "id": "IR-WS-001 AC-9",
+   "verdict": "match",
+   "pointer": "WebSocketApiTest.java#IR_WS_001_AC9_noHandshakeOrPongTimeoutSetter"
+  },
+  {
+   "id": "IR-WS-001 AC-10",
+   "verdict": "match",
+   "pointer": "WebSocketKotlinTest.kt#IR-WS-001 AC-10 ws and webSocket compile as SAM lambdas with non-platform types"
+  },
+  {
+   "id": "IR-WS-002 AC-1",
+   "verdict": "match",
+   "pointer": "HttpAdapterSpiTest.java#sdsAc4_IR_WS_002_AC1_endpointHasTheFourCallbacksAndNoAdapterSideImplementor"
+  },
+  {
+   "id": "IR-WS-002 AC-2",
+   "verdict": "match",
+   "pointer": "HttpAdapterSpiTest.java#sdsAc3_IR_WS_002_AC2_onlyTheSendMethodsOfTheChannelThrowIOException"
+  },
+  {
+   "id": "IR-WS-002 AC-3",
+   "verdict": "match",
+   "pointer": "HttpAdapterSpiTest.java#sdsAc6_IR_WS_002_AC3_settingsIsAFinalGetterOnlyValueAndReadsBack4096And2000"
+  },
+  {
+   "id": "IR-WS-002 AC-4",
+   "verdict": "match",
+   "pointer": "HttpAdapterSpiTest.java#sdsAc5_IR_WS_002_AC4_anExchangeWithoutAnOverrideRefusesWebSocketUntouched; InMemoryHttpAdapterTest.java#sdsAc7_IR_WS_002_AC8_webSocketRecords101OpensOnTheExchangeThreadAndDeliversPeerEventsInOrder"
+  },
+  {
+   "id": "IR-WS-002 AC-5",
+   "verdict": "match",
+   "pointer": "HttpAdapterSpiTest.java#sdsAc1_IR_HTTP_007_AC4_IR_WS_002_AC5_wave6SpiIsKeptAndOnlyWebSocketAndAttachAreAdded"
+  },
+  {
+   "id": "IR-WS-002 AC-6",
+   "verdict": "match",
+   "pointer": "InMemoryHttpAdapterTest.java#sdsAc9_IR_WS_002_AC6_aRefusedHandshakeLeavesTheExchangeUnstartedForTheErrorPath"
+  },
+  {
+   "id": "IR-WS-002 AC-7",
+   "verdict": "match",
+   "pointer": "AdapterSurfaceTest.java#sdsAc10_IR_WS_002_AC7_noMainSourceOfApiOrTinyHttpdHandlesFrameOpcodesOrMasking"
+  },
+  {
+   "id": "IR-WS-002 AC-8",
+   "verdict": "match",
+   "pointer": "InMemoryHttpAdapterTest.java#sdsAc7_IR_WS_002_AC8_webSocketRecords101OpensOnTheExchangeThreadAndDeliversPeerEventsInOrder; InMemoryHttpAdapterTest.java#sdsAc8_IR_WS_002_AC8_closeIsEchoedByThePeerAndAbortGives1006"
+  },
+  {
+   "id": "FR-WS-001 AC-1",
+   "verdict": "match",
+   "pointer": "WebSocketDispatchTest.java#sdsAc1_FR_WS_001_AC1_globalAndPrefixMiddlewareReturnBeforeTheUpgrade"
+  },
+  {
+   "id": "FR-WS-001 AC-2",
+   "verdict": "match",
+   "pointer": "WebSocketOriginTest.java#sdsAc10_FR_WS_003_AC7_FR_WS_001_AC2_originCheckRunsOnlyAfterTheWholeChain"
+  },
+  {
+   "id": "FR-WS-001 AC-3",
+   "verdict": "match",
+   "pointer": "WebSocketDispatchTest.java#sdsAc2_FR_WS_001_AC3_handlerRunsOnceFromOnOpenAfter101AndNeverOnARefusal"
+  },
+  {
+   "id": "FR-WS-001 AC-4",
+   "verdict": "match",
+   "pointer": "WebSocketDispatchTest.java#FR_WS_001_AC4_sessionStaysOpenAfterTheHandlerReturned"
+  },
+  {
+   "id": "FR-WS-001 AC-5",
+   "verdict": "match",
+   "pointer": "WebSocketDispatchTest.java#FR_WS_001_AC5_noMiddlewareRunsPerMessage"
+  },
+  {
+   "id": "FR-WS-001 AC-6",
+   "verdict": "match",
+   "pointer": "WebSocketDispatchTest.java#FR_WS_001_AC6_reqServiceInTheHandlerIsTheOnStartInstance"
+  },
+  {
+   "id": "FR-WS-001 AC-7",
+   "verdict": "match",
+   "pointer": "HttpAcceptanceTest.java#sdsAc18_T06_FR_HTTP_022_AC5_AC6_webSocketOnlyHookRouteGives426; DispatcherTest.java#sdsAc18_FR_HTTP_022_AC5_AC6_webSocketOnlyRouteGives426ForPlainAndUpgradeGet"
+  },
+  {
+   "id": "FR-WS-001 AC-8",
+   "verdict": "match",
+   "pointer": "WebSocketDispatchTest.java#sdsAc4_FR_WS_001_AC8_closedUpgradeFinishesOnceWithoutAnHttpResponse; WebSocketDispatchTest.java#sdsAc5_FR_WS_001_AC8_refusalGoesToTheErrorPathAndAFailureAfterOpenIsLogged"
+  },
+  {
+   "id": "FR-WS-002 AC-1",
+   "verdict": "match",
+   "pointer": "WebSocketSocketTest.java#sdsAc7_FR_WS_002_AC1_handshakeGets101WithAcceptAndTextReachesOnText"
+  },
+  {
+   "id": "FR-WS-002 AC-2",
+   "verdict": "match",
+   "pointer": "WebSocketSocketTest.java#FR_WS_002_AC2_missingKeyGets400WithTheStandardBodyAndRequestId"
+  },
+  {
+   "id": "FR-WS-002 AC-3",
+   "verdict": "match",
+   "pointer": "WebSocketSocketTest.java#FR_WS_002_AC3_version12Gets426WithVersionHeaderAndA426AccessLine"
+  },
+  {
+   "id": "FR-WS-002 AC-4",
+   "verdict": "match",
+   "pointer": "TinyHttpdWebSocketTest.java#sdsAc2_FR_WS_002_AC4_missingKeyBecomesNaruServe400; TinyHttpdWebSocketTest.java#sdsAc2_FR_WS_002_AC4_version12BecomesNaruServe426WithTheVersionHeader"
+  },
+  {
+   "id": "FR-WS-002 AC-5",
+   "verdict": "match",
+   "pointer": "WebSocketSocketTest.java#sdsAc3_FR_WS_002_AC5_thirdUpgradeGets503WithoutAcceptHeader; WebSocketSocketTest.java#sdsAc3_FR_WS_002_AC5_oversizedUpgradeBodyGets413WithoutAcceptHeader"
+  },
+  {
+   "id": "FR-WS-002 AC-6",
+   "verdict": "match",
+   "pointer": "TinyHttpdWebSocketTest.java#sdsAc1_FR_WS_002_AC6_configureAllowsAnyOriginAndPassesTheLimitToBothLimitsAndThePingMillis; TinyHttpdWebSocketTest.java#sdsAc1_FR_WS_002_AC6_handleRunsOnTheCallingWorkerAndTheFactoryRunsNoUserCode"
+  },
+  {
+   "id": "FR-WS-002 AC-7",
+   "verdict": "match",
+   "pointer": "WebSocketSocketTest.java#sdsAc5_FR_WS_002_AC7_abortGivesTheClientEndOfStreamWithinOneSecond"
+  },
+  {
+   "id": "FR-WS-002 AC-8",
+   "verdict": "match",
+   "pointer": "TinyHttpdWebSocketTest.java#sdsAc4_FR_WS_002_AC8_onCommittedRunsOnceAfter101; TinyHttpdWebSocketTest.java#sdsAc4_FR_WS_002_AC8_errorPathCommitsOnTheSameExchangeAfterARefusedUpgrade"
+  },
+  {
+   "id": "FR-WS-002 AC-9",
+   "verdict": "match",
+   "pointer": "TinyHttpdWebSocketTest.java#sdsAc6_FR_WS_002_AC9_throwingEndpointIsCaughtAndTheChannelAborted; TinyHttpdWebSocketTest.java#sdsAc6_FR_WS_002_AC9_throwingOnTextIsCaughtAndTheChannelAborted"
+  },
+  {
+   "id": "FR-WS-002 AC-10",
+   "verdict": "match",
+   "pointer": "TinyHttpdWebSocketTest.java#FR_WS_002_AC10_framingComesFromTheTinyHttpdWebsocketArtifact"
+  },
+  {
+   "id": "FR-WS-003 AC-1",
+   "verdict": "match",
+   "pointer": "WebSocketOriginTest.java#FR_WS_003_AC1_noOriginAndSameOriginAreAdmittedByDefault"
+  },
+  {
+   "id": "FR-WS-003 AC-2",
+   "verdict": "match",
+   "pointer": "WebSocketOriginTest.java#sdsAc6_FR_WS_003_AC2_crossOriginGets403WithTheRequestIdAndNoUpgrade"
+  },
+  {
+   "id": "FR-WS-003 AC-3",
+   "verdict": "match",
+   "pointer": "WebSocketOriginTest.java#FR_WS_003_AC3_schemeFromIsSecureDefaultPortAndCaseInsensitiveHost; OriginCheckTest.java#sdsAc7_FR_WS_003_AC3_sameOriginComparesNormalisedSchemeHostAndPort"
+  },
+  {
+   "id": "FR-WS-003 AC-4",
+   "verdict": "match",
+   "pointer": "WebSocketOriginTest.java#FR_WS_003_AC4_literalNullOriginIsRefusedWithoutAStar; WebSocketOriginTest.java#FR_WS_003_AC4_literalNullOriginIsRefusedWithOnlyNamedOrigins"
+  },
+  {
+   "id": "FR-WS-003 AC-5",
+   "verdict": "match",
+   "pointer": "WebSocketOriginTest.java#sdsAc9_FR_WS_003_AC5_listedOriginIsAdmittedAfterNormalisation; OriginCheckTest.java#sdsAc9_FR_WS_003_AC5_AC6_allowlistEntriesAreNormalisedAndStarAdmitsAll"
+  },
+  {
+   "id": "FR-WS-003 AC-6",
+   "verdict": "match",
+   "pointer": "WebSocketOriginTest.java#sdsAc9_FR_WS_003_AC6_starAdmitsEveryOrigin"
+  },
+  {
+   "id": "FR-WS-003 AC-7",
+   "verdict": "match",
+   "pointer": "WebSocketOriginTest.java#sdsAc10_FR_WS_003_AC7_FR_WS_001_AC2_originCheckRunsOnlyAfterTheWholeChain"
+  },
+  {
+   "id": "FR-WS-004 AC-1",
+   "verdict": "match",
+   "pointer": "WebSocketDispatchTest.java#sdsAc11_FR_WS_004_AC1_AC4_plainGetToAWebSocketOnlyPathGets426AndAGetRouteServesIt"
+  },
+  {
+   "id": "FR-WS-004 AC-2",
+   "verdict": "match",
+   "pointer": "WebSocketOnlySocketTest.java#FR_WS_004_AC2_plainGetToAWebSocketOnlyPathGets426WithUpgradeOverTinyHttpd"
+  },
+  {
+   "id": "FR-WS-004 AC-3",
+   "verdict": "match",
+   "pointer": "WaveSevenDocsTest.java#sdsAc12_FR_WS_004_AC3_websocketMdStatesTheTinyHttpd426Gap"
+  },
+  {
+   "id": "FR-WS-004 AC-4",
+   "verdict": "match",
+   "pointer": "WebSocketDispatchTest.java#sdsAc11_FR_WS_004_AC1_AC4_plainGetToAWebSocketOnlyPathGets426AndAGetRouteServesIt"
+  },
+  {
+   "id": "FR-WS-005 AC-1",
+   "verdict": "match",
+   "pointer": "WebSocketProtocolSocketTest.java#FR_WS_005_AC1_unmaskedFrameClosesWith1002"
+  },
+  {
+   "id": "FR-WS-005 AC-2",
+   "verdict": "match",
+   "pointer": "WebSocketProtocolSocketTest.java#FR_WS_005_AC2_invalidUtf8ClosesWith1007AndNoOnText"
+  },
+  {
+   "id": "FR-WS-005 AC-3",
+   "verdict": "match",
+   "pointer": "WebSocketProtocolSocketTest.java#FR_WS_005_AC3_defaultLimitAcceptsOneMebibyteAndRefusesOneByteMore"
+  },
+  {
+   "id": "FR-WS-005 AC-4",
+   "verdict": "match",
+   "pointer": "WebSocketProtocolSocketTest.java#sdsAc11_FR_WS_005_AC4_limit4096RefusesOneFrameAndFragmentsAndJoinsFourFragments"
+  },
+  {
+   "id": "FR-WS-005 AC-5",
+   "verdict": "match",
+   "pointer": "WebSocketProtocolSocketTest.java#sdsAc11_FR_WS_005_AC5_fragmentsJoinAndAnInterleavedPingIsAnswered; WebSocketSenderTest.java#sdsAc10_FR_WS_005_AC5_tasksOfOneSessionRunOneAtATimeInSubmitOrder"
+  },
+  {
+   "id": "FR-WS-005 AC-6",
+   "verdict": "match",
+   "pointer": "WebSocketProtocolSocketTest.java#sdsAc11_FR_WS_005_AC6_oversizedOrFragmentedPingClosesWith1002"
+  },
+  {
+   "id": "FR-WS-005 AC-7",
+   "verdict": "match",
+   "pointer": "WebSocketProtocolSocketTest.java#sdsAc8_FR_WS_005_AC7_pingIsAnsweredAndWsPingSendsAPing; WebSocketSenderTest.java#sdsAc8_FR_WS_005_AC7_pingGoesThroughTheSenderSlot"
+  },
+  {
+   "id": "FR-WS-005 AC-8",
+   "verdict": "match",
+   "pointer": "WebSocketProtocolSocketTest.java#sdsAc9_FR_WS_005_AC8_closeHandshakeReportsTheSentCodeWhateverTheClientEchoes; WebSocketSenderTest.java#sdsAc9_FR_WS_005_AC8_closeIsImmediateDropsLaterPingsAndReportsTheSentPair"
+  },
+  {
+   "id": "FR-WS-006 AC-1",
+   "verdict": "match",
+   "pointer": "WebSocketSessionTest.java#sdsAc1_FR_WS_006_AC1_idsAreSixteenHexDigitsOfAnAppWideCounter; DefaultWebSocketSessionTest.java#sdsAc1_FR_WS_006_AC1_nextIdIsSixteenHexDigitsFromOne"
+  },
+  {
+   "id": "FR-WS-006 AC-2",
+   "verdict": "match",
+   "pointer": "WebSocketSessionTest.java#sdsAc2_FR_WS_006_AC2_attributesAreSeparateFromTheRequestAndNullRemoves; DefaultWebSocketSessionTest.java#sdsAc3_FR_WS_006_AC2_attributesTakeConcurrentWritesAndAreClearedAfterOnClose"
+  },
+  {
+   "id": "FR-WS-006 AC-3",
+   "verdict": "match",
+   "pointer": "DefaultWebSocketSessionTest.java#sdsAc4_FR_WS_006_AC3_onCloseListenersRunOnce; DefaultWebSocketSessionTest.java#sdsAc4_FR_WS_006_AC3_serverCloseThenAbortRunsListenersOnce"
+  },
+  {
+   "id": "FR-WS-006 AC-4",
+   "verdict": "match",
+   "pointer": "WebSocketSessionTest.java#sdsAc5_FR_WS_006_AC4_sendJsonSendsTheCodecEncodingAndACodecFailureQueuesNothing; WebSocketSessionTest.java#sdsAc6_FR_WS_006_AC4_onJsonDecodesThroughTheCodecInRegistrationOrder"
+  },
+  {
+   "id": "FR-WS-006 AC-5",
+   "verdict": "match",
+   "pointer": "WebSocketSessionTest.java#sdsAc7_FR_WS_006_AC5_decodeFailureGoesToOnErrorAndTheSessionStaysOpen"
+  },
+  {
+   "id": "FR-WS-006 AC-6",
+   "verdict": "match",
+   "pointer": "WebSocketSessionTest.java#sdsAc8_FR_WS_006_AC6_binaryAndJsonListenerExceptionsCloseWith1011; WebSocketSessionTest.java#sdsAc8_FR_WS_006_AC6_listenerExceptionClosesWith1011"
+  },
+  {
+   "id": "FR-WS-006 AC-7",
+   "verdict": "match",
+   "pointer": "WebSocketSessionTest.java#sdsAc10_FR_WS_006_AC7_sendsOnAClosedSessionAreDropped; WebSocketSessionTest.java#sdsAc10_FR_WS_006_AC7_sendsOnAnOpenSessionGoOutInOrder"
+  },
+  {
+   "id": "FR-WS-006 AC-8",
+   "verdict": "match",
+   "pointer": "DefaultWebSocketSessionTest.java#sdsAc11_FR_WS_006_AC8_closeCodeAndReasonAreChecked"
+  },
+  {
+   "id": "FR-WS-006 AC-9",
+   "verdict": "match",
+   "pointer": "DefaultWebSocketSessionTest.java#sdsAc12_FR_WS_006_AC9_onCloseReportsTheFirstCoreClose; DefaultWebSocketSessionTest.java#sdsAc12_FR_WS_006_AC9_clientCloseRacingAHeldCoreCloseReportsTheCorePair"
+  },
+  {
+   "id": "FR-WS-006 AC-10",
+   "verdict": "match",
+   "pointer": "WebSocketSessionTest.java#sdsAc13_FR_WS_006_AC10_handlerExceptionClosesWith1011After101; DefaultWebSocketSessionTest.java#sdsAc13_FR_WS_006_AC10_handlerFailureSeesOnlyEarlierOnErrorListeners"
+  },
+  {
+   "id": "FR-WS-007 AC-1",
+   "verdict": "match",
+   "pointer": "WebSocketSenderTest.java#sdsAc1_FR_WS_007_AC1_queuedBytesCountUtf8AndNeverExceedTheLimit; WebSocketSendQueueTest.java#sdsAc1_FR_WS_007_AC1_sendJsonCountsItsEncodedText"
+  },
+  {
+   "id": "FR-WS-007 AC-2",
+   "verdict": "match",
+   "pointer": "WebSocketSenderTest.java#sdsAc3_FR_WS_007_AC2_theSenderExecutorIsBoundedAndNamesItsThreadsAfterThePort; WebSocketSenderTest.java#sdsAc3_FR_WS_007_AC2_theAppsSenderHasMaxUpgradedConnectionsThreads"
+  },
+  {
+   "id": "FR-WS-007 AC-3",
+   "verdict": "match",
+   "pointer": "WebSocketSenderTest.java#sdsAc5_FR_WS_007_AC3_aHeldSendTextBlocksOnlyTheSecondOfItsSession"
+  },
+  {
+   "id": "FR-WS-007 AC-4",
+   "verdict": "match",
+   "pointer": "WebSocketSendSocketTest.java#sdsAc5_FR_WS_007_AC4_eightThreadsOf500MessagesArriveWholeAndInSendOrder"
+  },
+  {
+   "id": "FR-WS-007 AC-5",
+   "verdict": "match",
+   "pointer": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/WebSocketSendSocketTest.java#sdsAc5_FR_WS_007_AC5_writeTimeoutFreesEachStalledSessionWithinTwoSeconds (asserts ms<=2000 for the session end and for longestBlock since 6abec96; first half ms<=1000 unchanged)"
+  },
+  {
+   "id": "FR-WS-007 AC-6",
+   "verdict": "match",
+   "pointer": "WebSocketSendQueueTest.java#sdsAc2_FR_WS_007_AC6_overflowClosesWith1008AndTheSendReturnsNormally; WebSocketSendQueueTest.java#sdsAc2_FR_WS_007_AC6_aMessageAloneAboveTheLimitOverflowsAnEmptyQueue"
+  },
+  {
+   "id": "FR-WS-007 AC-7",
+   "verdict": "match",
+   "pointer": "WebSocketSenderTest.java#sdsAc6_FR_WS_007_AC7_twoHundredClosedSessionsReleaseEverySlotAndAttribute; WebSocketSenderTest.java#sdsAc2_sdsAc6_FR_WS_007_AC6_AC7_overflowAndLastEmptyTheQueueAndReleaseDropsTheSlot"
+  },
+  {
+   "id": "FR-WS-007 AC-8",
+   "verdict": "match",
+   "pointer": "WebSocketDispatchTest.java#sdsAc7_FR_WS_007_AC8_theExchangeFinishesOnlyAfterTheHeldSenderTaskEnded; WebSocketDispatchTest.java#sdsAc7_FR_WS_007_AC8_aThrowAfterOpenStillWaitsForTheHeldSenderTask"
+  },
+  {
+   "id": "FR-WS-008 AC-1",
+   "verdict": "match",
+   "pointer": "TinyHttpdWebSocketTest.java#sdsAc8_FR_WS_008_AC1_pingInterval2sReachesTinyHttpdAs2000AndNoPingThreadStarts"
+  },
+  {
+   "id": "FR-WS-008 AC-2",
+   "verdict": "match",
+   "pointer": "WebSocketTimeoutSocketTest.java#sdsAc8_FR_WS_008_AC2_aSilentClientGetsAPingThenClose1001WithinThreeSeconds"
+  },
+  {
+   "id": "FR-WS-008 AC-3",
+   "verdict": "match",
+   "pointer": "WebSocketApiTest.java#sdsAc9_FR_WS_008_AC3_AC7_noPongOrHandshakeMethodOnWebSocketOptionsOrServerOptions"
+  },
+  {
+   "id": "FR-WS-008 AC-4",
+   "verdict": "match",
+   "pointer": "WebSocketTimeoutSocketTest.java#sdsAc11_FR_WS_008_AC4_aPingingClientIsClosedByTheIdleTimeout; WebSocketIdleSchedulerTest.java#sdsAc11_FR_WS_008_AC4_checkClosesWith1001OnlyOnceIdleForTheTimeout"
+  },
+  {
+   "id": "FR-WS-008 AC-5",
+   "verdict": "match",
+   "pointer": "WebSocketIdleSchedulerTest.java#sdsAc12_FR_WS_008_AC5_aHeldCloseNeverDelaysOtherChecksAndIsAbortedAfterOneSecond; WebSocketIdleSchedulerTest.java#sdsAc12_FR_WS_008_AC5_aReturnedCloseIsNotAbortedAndOnCloseUnwatches"
+  },
+  {
+   "id": "FR-WS-008 AC-6",
+   "verdict": "match",
+   "pointer": "WebSocketIdleSchedulerTest.java#sdsAc10_FR_WS_008_AC6_textEvery500msFor3sKeepsTheSessionOpen"
+  },
+  {
+   "id": "FR-WS-008 AC-7",
+   "verdict": "match",
+   "pointer": "WebSocketTimeoutSocketTest.java#sdsAc11_FR_WS_008_AC7_headerTimeoutCutsAStalledHandshakeWithinTwoSeconds; WebSocketApiTest.java#sdsAc9_FR_WS_008_AC3_AC7_noPongOrHandshakeMethodOnWebSocketOptionsOrServerOptions"
+  },
+  {
+   "id": "FR-WS-009 AC-1",
+   "verdict": "match",
+   "pointer": "WebSocketLimitSocketTest.java#sdsAc4_FR_WS_009_AC1_thirdUpgradeBeyondTheLimitGets503RetryAfterAndNoHandler"
+  },
+  {
+   "id": "FR-WS-009 AC-2",
+   "verdict": "match",
+   "pointer": "WebSocketRegistryTest.java#sdsAc1_FR_WS_009_AC2_registrySizeIsOneInsideWebSocketBeforeOnOpen"
+  },
+  {
+   "id": "FR-WS-009 AC-3",
+   "verdict": "match",
+   "pointer": "WebSocketRegistryTest.java#sdsAc2_FR_WS_009_AC3_afterTheClosedFlagAnUpgradeGets503CloseAndNoWebSocketCall"
+  },
+  {
+   "id": "FR-WS-009 AC-4",
+   "verdict": "match",
+   "pointer": "WebSocketRegistryTest.java#sdsAc3_FR_WS_009_AC4_tenRefused426AndTenOrigin403LeaveTheSizeUnchanged"
+  },
+  {
+   "id": "FR-WS-009 AC-5",
+   "verdict": "match",
+   "pointer": "WebSocketRegistryTest.java#sdsAc5_FR_WS_009_AC5_flagSetBeforeOnOpenSendsClose1001OnlyAndSkipsTheHandler"
+  },
+  {
+   "id": "FR-WS-009 AC-6",
+   "verdict": "match",
+   "pointer": "WebSocketRegistryTest.java#sdsAc5_FR_WS_009_AC6_upgradeDuringStoppingGetsTheGate503AndNoWebSocketCall"
+  },
+  {
+   "id": "FR-WS-010 AC-1",
+   "verdict": "match",
+   "pointer": "WebSocketShutdownTest.java#sdsAc6_FR_WS_010_AC1_sessionReservedBeforeTheFlagIsInTheSnapshotAndTheNextReserveFails; WebSocketShutdownTest.java#sdsAc13_FR_WS_010_AC1_freezeTwiceRegistersOnceAndParticipantsRunInTheirPhases; WebSocketShutdownTest.java#sdsAc6_FR_WS_010_AC1_closeWaitEndsOnTheReservedSessionsCloseNotOnTheTimeout (timing half now asserts, no Assume, since 6abec96)"
+  },
+  {
+   "id": "FR-WS-010 AC-2",
+   "verdict": "match",
+   "pointer": "WebSocketShutdownSocketTest.java#sdsAc9_FR_WS_010_AC4_AC2_twoStalledSessionsAbortedWithin1200MsHealthyGets1001"
+  },
+  {
+   "id": "FR-WS-010 AC-3",
+   "verdict": "match",
+   "pointer": "WebSocketShutdownTest.java#sdsAc7_FR_WS_010_AC3_fiftyQueuedBehindAHeldWriteAreNeverSent"
+  },
+  {
+   "id": "FR-WS-010 AC-4",
+   "verdict": "match",
+   "pointer": "WebSocketShutdownSocketTest.java#sdsAc9_FR_WS_010_AC4_AC2_twoStalledSessionsAbortedWithin1200MsHealthyGets1001"
+  },
+  {
+   "id": "FR-WS-010 AC-5",
+   "verdict": "match",
+   "pointer": "WebSocketShutdownTest.java#sdsAc8_FR_WS_010_AC5_threeHundredMillisecondShutdownEndsTheCloseWaitWithin500Ms"
+  },
+  {
+   "id": "FR-WS-010 AC-6",
+   "verdict": "match",
+   "pointer": "WebSocketShutdownTest.java#sdsAc10_FR_WS_010_AC6_sessionOpeningMidWaitIsWaitedForAndNotAbortedWhenItsCloseReturned; WebSocketShutdownTest.java#sdsAc10_FR_WS_010_AC6_sessionOpeningMidWaitWithAHeldCloseIsAbortedAtTheEnd"
+  },
+  {
+   "id": "FR-WS-010 AC-7",
+   "verdict": "match",
+   "pointer": "WebSocketShutdownTest.java#sdsAc11_FR_WS_010_AC7_sessionOpeningAfterTheWaitIsAbortedWithoutAClose"
+  },
+  {
+   "id": "FR-WS-010 AC-8",
+   "verdict": "match",
+   "pointer": "WebSocketShutdownSocketTest.java#sdsAc12_FR_WS_010_AC8_noWsThreadOfThePortAndAnEmptyRegistryAfterShutdown"
+  },
+  {
+   "id": "OPS-WS-001 AC-1",
+   "verdict": "match",
+   "pointer": "WaveSevenDocsTest.java#sdsAc1_OPS_WS_001_AC1_noMarkerOnTheWebSocketLines"
+  },
+  {
+   "id": "OPS-WS-001 AC-2",
+   "verdict": "match",
+   "pointer": "WaveSevenDocsTest.java#sdsAc1_OPS_WS_001_AC2_appMdNamesRestAppAndWebSocketHandlerAndEverySessionMethodIsListed"
+  },
+  {
+   "id": "OPS-WS-001 AC-3",
+   "verdict": "match",
+   "pointer": "WaveSevenDocsTest.java#sdsAc2_OPS_WS_001_AC3_websocketMdStatesEachDecisionByItsPhrase"
+  },
+  {
+   "id": "OPS-WS-001 AC-4",
+   "verdict": "match",
+   "pointer": "WaveSevenDocsTest.java#sdsAc3_OPS_WS_001_AC4_limitsAreListedInBothFiles"
+  },
+  {
+   "id": "OPS-WS-001 AC-5",
+   "verdict": "match",
+   "pointer": "WaveSevenDocsTest.java#sdsAc4_OPS_WS_001_AC5_eachApiSectionHasExpressJavaAndKotlin"
+  },
+  {
+   "id": "OPS-WS-001 AC-6",
+   "verdict": "match",
+   "pointer": "DocsExamplesCompileTest.java#sdsAc5_OPS_WS_001_AC6_noSkipNamesAWave7MemberAsLaterWaveOrAbsentType; DocsExamplesCompileTest.java#sdsAc5_OPS_WS_001_AC6_waveSevenFilesKeepOnlyAppDefinedTypeReasons"
+  },
+  {
+   "id": "OPS-WS-001 AC-7",
+   "verdict": "match",
+   "pointer": "WebSocketDocsKotlinTest.kt#OPS-WS-001 AC-7 the echo and options examples compile and run and echo hi"
+  },
+  {
+   "id": "IR-SSE-001 AC-1",
+   "verdict": "match",
+   "pointer": "HttpApiSurfaceTest.java#sdsAc1_IR_SSE_001_AC1_sseIsADefaultMethodThatDefaultResponseOverrides; HttpApiSurfaceTest.java#sdsAc2_IR_HTTP_001_AC2_responseStatusAndHeaderReturnReceiverWritersReturnVoid"
+  },
+  {
+   "id": "IR-SSE-001 AC-2",
+   "verdict": "match",
+   "pointer": "SseApiTest.java#sdsAc2_IR_SSE_001_AC2_sseClientAndCloseListenerDeclareTheListedMethods"
+  },
+  {
+   "id": "IR-SSE-001 AC-3",
+   "verdict": "match",
+   "pointer": "SseApiTest.java#sdsAc2_IR_SSE_001_AC3_sseEventHasNoPublicConstructorAndOnlyTheFourBuilderMethods"
+  },
+  {
+   "id": "IR-SSE-001 AC-4",
+   "verdict": "match",
+   "pointer": "SseApiTest.java#sdsAc3_IR_SSE_001_AC4_sseAppliesTheConfigurerAndReturnsTheApp; SseApiTest.java#sdsAc3_IR_SSE_001_AC4_sseAfterListenThrowsBeforeTheNullCheckAndRunsNoConfigurer"
+  },
+  {
+   "id": "IR-SSE-001 AC-5",
+   "verdict": "match",
+   "pointer": "DefaultRestAppTest.java#sdsAc5_IR_SSE_001_AC5_anAppThatNeverCallsSseFreezesTheDefaultHeartbeatAndQueueSize; DefaultRestAppTest.java#sdsAc5_IR_SSE_001_AC4_AC5_freezeKeepsACopyOfTheConfiguredSseOptions"
+  },
+  {
+   "id": "IR-SSE-001 AC-6",
+   "verdict": "match",
+   "pointer": "SseApiTest.java#sdsAc4_IR_SSE_001_AC6_heartbeatIntervalAcceptsOneSecondToOneHourOnly; SseApiTest.java#sdsAc4_IR_SSE_001_AC6_sendQueueSizeAcceptsOneTo16MiBOnly"
+  },
+  {
+   "id": "IR-SSE-001 AC-7",
+   "verdict": "match",
+   "pointer": "SseKotlinTest.kt#SDS-AC-14 IR-SSE-001 AC-7 sse and onClose compile as SAM lambdas with non-platform types"
+  },
+  {
+   "id": "FR-SSE-001 AC-1",
+   "verdict": "match",
+   "pointer": "SseStreamTest.java#sdsAc6_FR_SSE_001_AC1_AC3_sseCommits200WithEachEventStreamHeaderOnceAndEntersStreaming; SseSocketTest.java#sdsAc6_FR_SSE_001_AC1_AC3_sseCommits200WithEachEventStreamHeaderOnceOverTinyHttpd"
+  },
+  {
+   "id": "FR-SSE-001 AC-2",
+   "verdict": "match",
+   "pointer": "SseStreamTest.java#sdsAc7_FR_SSE_001_AC2_sseOnACommittedResponseAndASecondSseThrowFromTheNewCheck; DefaultResponseTest.java#sdsAc7_FR_SSE_001_AC2_sseOnACommittedResponseThrowsBeforeTouchingTheExchange"
+  },
+  {
+   "id": "FR-SSE-001 AC-3",
+   "verdict": "match",
+   "pointer": "SseStreamTest.java#sdsAc6_FR_SSE_001_AC1_AC3_sseCommits200WithEachEventStreamHeaderOnceAndEntersStreaming; SseSocketTest.java#sdsAc6_FR_SSE_001_AC1_AC3_sseCommits200WithEachEventStreamHeaderOnceOverTinyHttpd"
+  },
+  {
+   "id": "FR-SSE-001 AC-4",
+   "verdict": "match",
+   "pointer": "SseWireTest.java#sdsAc9_FR_SSE_001_AC4_dataIsSplitAtCrLfCrAndLfIntoOneDataLineEach"
+  },
+  {
+   "id": "FR-SSE-001 AC-5",
+   "verdict": "match",
+   "pointer": "SseWireTest.java#sdsAc10_FR_SSE_001_AC5_fieldsAreWrittenInTheFixedOrderWhateverTheSetterOrder; SseWireTest.java#sdsAc10_FR_SSE_001_AC5_unsetIdAndRetryWriteNoLineAndNullDataWritesOneEmptyDataLine"
+  },
+  {
+   "id": "FR-SSE-001 AC-6",
+   "verdict": "match",
+   "pointer": "SseApiTest.java#sdsAc11_FR_SSE_001_AC6_crLfAndNulAreRefusedInNamesAndIdsAndNegativeRetryAndNullName; SseApiTest.java#sdsAc11_FR_SSE_001_AC6_sendWithABadNameThrowsOnTheCallerAndWritesNothing"
+  },
+  {
+   "id": "FR-SSE-001 AC-7",
+   "verdict": "match",
+   "pointer": "SseStreamTest.java#sdsAc12_FR_SSE_001_AC7_dataOnlySendWritesNoEventLineAndParsesAsMessage"
+  },
+  {
+   "id": "FR-SSE-001 AC-8",
+   "verdict": "match",
+   "pointer": "SseStreamTest.java#sdsAc13_FR_SSE_001_AC8_lastEventIdReachesTheHandlerAndTheReplaySendsOnlyLaterEvents"
+  },
+  {
+   "id": "FR-SSE-001 AC-9",
+   "verdict": "match",
+   "pointer": "SseStreamTest.java#sdsAc13_FR_SSE_001_AC9_dataIsWrittenAsUtf8; SseWireTest.java#sdsAc13_FR_SSE_001_AC9_encodedTextBecomesUtf8Bytes"
+  },
+  {
+   "id": "FR-SSE-002 AC-1",
+   "verdict": "match",
+   "pointer": "SseSocketTest.java#sdsAc1_FR_SSE_002_AC1_eightThreadsSendingConcurrentlyKeepEachEventWholeAndTheirOwnOrder"
+  },
+  {
+   "id": "FR-SSE-002 AC-2",
+   "verdict": "match",
+   "pointer": "SseQueueTest.java#sdsAc14_FR_SSE_002_AC2_aSendFromAnotherThreadIsWrittenByTheDrainOnTheAdaptersThread; InMemoryHttpAdapterTest.java#sdsAc14_FR_SSE_002_AC2_AC8_eventStreamAttachesAndDrainsOneStreamOnAnotherThread"
+  },
+  {
+   "id": "FR-SSE-002 AC-3",
+   "verdict": "match",
+   "pointer": "SseQueueTest.java#sdsAc2_FR_SSE_002_AC3_anIdleStreamGetsAPingAfterEachHeartbeatInterval; SseQueueTest.java#sdsAc2_FR_SSE_002_AC3_anEventEvery300MsKeepsThePingAwayFor3Seconds"
+  },
+  {
+   "id": "FR-SSE-002 AC-4",
+   "verdict": "match",
+   "pointer": "SseQueueTest.java#sdsAc3_FR_SSE_002_AC4_theSendThatOverflowsTheQueueReturnsFalseAndEndsTheStream"
+  },
+  {
+   "id": "FR-SSE-002 AC-5",
+   "verdict": "match",
+   "pointer": "SseSocketTest.java#sdsAc4_FR_SSE_002_AC5_handlerSendsReachTheSocketWhileTheHandlerRunsBeyondTheQueueLimit"
+  },
+  {
+   "id": "FR-SSE-002 AC-6",
+   "verdict": "match",
+   "pointer": "SseQueueTest.java#sdsAc5_FR_SSE_002_AC6_eventsQueuedByAnotherThreadPrecedeTheHandlerThreadsLaterSend; DefaultSseClientTest.java#sdsAc5_FR_SSE_002_AC6_aHandlerSendBeforeTheDrainWritesTheQueueThenItsOwnEventToTheAttachedStream"
+  },
+  {
+   "id": "FR-SSE-002 AC-7",
+   "verdict": "match",
+   "pointer": "DefaultSseClientTest.java#sdsAc7_FR_SSE_002_AC7_afterCloseSendIsFalseAndTheDrainLeavesAnEmptyQueue; DefaultSseClientTest.java#sdsAc7_FR_SSE_002_AC7_afterADisconnectSendIsFalseAndTheQueueIsEmpty"
+  },
+  {
+   "id": "FR-SSE-002 AC-8",
+   "verdict": "match",
+   "pointer": "InMemoryHttpAdapterTest.java#sdsAc14_FR_SSE_002_AC2_AC8_eventStreamAttachesAndDrainsOneStreamOnAnotherThread; DefaultSseClientTest.java#sdsAc6_FR_SSE_002_AC8_withoutAnAttachedStreamHandlerSendsAreQueuedAndDrainedInCallOrder"
+  },
+  {
+   "id": "FR-SSE-003 AC-1",
+   "verdict": "match",
+   "pointer": "SseSocketTest.java#sdsAc3_FR_SSE_003_AC1_chunkedOneCacheControlARetryEventInOneBlockAndNoStartEventStream"
+  },
+  {
+   "id": "FR-SSE-003 AC-2",
+   "verdict": "match",
+   "pointer": "SseSocketTest.java#sdsAc4_sdsAc5_FR_SSE_003_AC6_AC2_oneBodyForAttachAndDrainWrittenOnTheHandlerWorkerAfterItReturned; SseSocketTest.java#sdsAc5_FR_SSE_003_AC2_aRuntimeExceptionFromTheDrainAbortsTheExchangeAndReleasesTheSlot"
+  },
+  {
+   "id": "FR-SSE-003 AC-3",
+   "verdict": "match",
+   "pointer": "SseLimitSocketTest.java#sdsAc6_FR_SSE_003_AC7_AC3_closedClientsFreeTheirSlotsWithin3SecondsAndStreamsKeepTheHttpWorkers"
+  },
+  {
+   "id": "FR-SSE-003 AC-4",
+   "verdict": "match",
+   "pointer": "SseLimitSocketTest.java#sdsAc2_FR_SSE_003_AC4_aThirdStreamGets503WithTheRequestIdAndAFreedSlotIsReused"
+  },
+  {
+   "id": "FR-SSE-003 AC-5",
+   "verdict": "match",
+   "pointer": "ConnectionLimitsTest.java#sdsAc8_FR_SSE_003_AC5_maxEventStreamsStillMapsAndTheSseSlotsHoldMaxSseStreams"
+  },
+  {
+   "id": "FR-SSE-003 AC-6",
+   "verdict": "match",
+   "pointer": "AdapterSurfaceTest.java#sdsAc1_FR_SSE_003_AC6_eventStreamHoldsTheLockOnlyForTheChecksTheSlotAndTheStart; SseSocketTest.java#sdsAc4_sdsAc5_FR_SSE_003_AC6_AC2_oneBodyForAttachAndDrainWrittenOnTheHandlerWorkerAfterItReturned"
+  },
+  {
+   "id": "FR-SSE-003 AC-7",
+   "verdict": "match",
+   "pointer": "SseLimitSocketTest.java#sdsAc6_FR_SSE_003_AC7_AC3_closedClientsFreeTheirSlotsWithin3SecondsAndStreamsKeepTheHttpWorkers"
+  },
+  {
+   "id": "FR-SSE-003 AC-8",
+   "verdict": "match",
+   "pointer": "SseSocketTest.java#sdsAc7_FR_SSE_003_AC8_aPingWithin1500MsAndASmallEventFromAnotherThreadWithin500Ms"
+  },
+  {
+   "id": "FR-SSE-004 AC-1",
+   "verdict": "match",
+   "pointer": "SseSocketTest.java#sdsAc4_FR_SSE_002_AC5_handlerSendsReachTheSocketWhileTheHandlerRunsBeyondTheQueueLimit"
+  },
+  {
+   "id": "FR-SSE-004 AC-2",
+   "verdict": "match",
+   "pointer": "SseSocketTest.java#sdsAc9_FR_SSE_004_AC2_aClientCloseRunsOnCloseOnceWithin3sAndLogsCauseClient"
+  },
+  {
+   "id": "FR-SSE-004 AC-3",
+   "verdict": "match",
+   "pointer": "SseLifetimeTest.java#sdsAc8_FR_SSE_004_AC3_closeFromAnotherThreadWritesTheQueueEndsTheBodyAndRunsOnCloseOnce"
+  },
+  {
+   "id": "FR-SSE-004 AC-4",
+   "verdict": "match",
+   "pointer": "SseLifetimeTest.java#sdsAc10_FR_SSE_004_AC4_listenersRunOnceInOrderAThrowIsLoggedWithTheRidAndALateOneRunsAtOnce"
+  },
+  {
+   "id": "FR-SSE-004 AC-5",
+   "verdict": "match",
+   "pointer": "SseLifetimeTest.java#sdsAc9_FR_SSE_004_AC5_anIOExceptionOnTheThirdDrainWriteEndsTheStreamAndRunsOnCloseOnce; SseLifetimeTest.java#sdsAc9_FR_SSE_004_AC5_aRuntimeExceptionFromADrainWriteEndsTheStreamTheSameWay"
+  },
+  {
+   "id": "FR-SSE-004 AC-6",
+   "verdict": "match",
+   "pointer": "SseLifetimeTest.java#sdsAc11_FR_SSE_004_AC6_headOnAnSseRouteGetsTheHeadersNoBodyAndAnEndedClient; DefaultSseClientTest.java#sdsAc11_FR_SSE_004_AC6_headCommitsBodylessWithoutAnEventStreamAndKeepsSseClientNull"
+  },
+  {
+   "id": "FR-SSE-004 AC-7",
+   "verdict": "match",
+   "pointer": "SseLifetimeTest.java#sdsAc12_FR_SSE_004_AC7_AC8_shutdownFromOnCloseReturnsAtOnceAndTheAppTerminates; SseSocketTest.java#sdsAc12_FR_SSE_004_AC7_AC8_shutdownFromOnCloseReturnsAtOnceAndTheAppTerminates"
+  },
+  {
+   "id": "FR-SSE-004 AC-8",
+   "verdict": "match",
+   "pointer": "SseLifetimeTest.java#sdsAc12_FR_SSE_004_AC7_AC8_shutdownFromOnCloseReturnsAtOnceAndTheAppTerminates; SseSocketTest.java#sdsAc12_FR_SSE_004_AC7_AC8_shutdownFromOnCloseReturnsAtOnceAndTheAppTerminates"
+  },
+  {
+   "id": "FR-SSE-005 AC-1",
+   "verdict": "match",
+   "pointer": "SseShutdownTest.java#sdsAc9_FR_SSE_005_AC1_aStreamBlockedOnTheRegistryLockIsRefusedOrInTheSnapshot; SseShutdownTest.java#sdsAc13_FR_SSE_005_AC1_freezeRegistersOnceAndTheSseCloseAllRunsBeforeTheWebSocketOne"
+  },
+  {
+   "id": "FR-SSE-005 AC-2",
+   "verdict": "match",
+   "pointer": "SseShutdownTest.java#sdsAc10_FR_SSE_005_AC2_twoQueuedEventsThenTheNoticeThenTheEndAndOnCloseOnce; SseShutdownSocketTest.java#sdsAc12_FR_SSE_005_AC2_AC5_AC6_noticeThenEndForAReaderStalledClientForceClosedRegistryEmpty"
+  },
+  {
+   "id": "FR-SSE-005 AC-3",
+   "verdict": "match",
+   "pointer": "SseShutdownTest.java#sdsAc10_FR_SSE_005_AC3_tenBytesBelowTheLimitTheNoticeStillArrivesWithoutOverflow"
+  },
+  {
+   "id": "FR-SSE-005 AC-4",
+   "verdict": "match",
+   "pointer": "SseShutdownTest.java#sdsAc11_FR_SSE_005_AC4_fiftyStreamsOneHeldWriteCloseAllReturnsWithin200Ms"
+  },
+  {
+   "id": "FR-SSE-005 AC-5",
+   "verdict": "match",
+   "pointer": "SseShutdownSocketTest.java#sdsAc12_FR_SSE_005_AC2_AC5_AC6_noticeThenEndForAReaderStalledClientForceClosedRegistryEmpty"
+  },
+  {
+   "id": "FR-SSE-005 AC-6",
+   "verdict": "match",
+   "pointer": "SseShutdownTest.java#sdsAc12_FR_SSE_005_AC6_terminateLeavesAnEmptyRegistryAndNoQueuedEvent; SseShutdownTest.java#sdsAc12_FR_SSE_005_AC6_afterShutdownTheAppRegistryIsEmpty"
+  },
+  {
+   "id": "OPS-SSE-001 AC-1",
+   "verdict": "match",
+   "pointer": "WaveSevenDocsTest.java#wave7s13SdsAc5_OPS_SSE_001_AC1_noMarkerInSseMdOrTheSseRow"
+  },
+  {
+   "id": "OPS-SSE-001 AC-2",
+   "verdict": "match",
+   "pointer": "WaveSevenDocsTest.java#wave7s13SdsAc5_OPS_SSE_001_AC2_clientTableSettingsAndDefaultsRows"
+  },
+  {
+   "id": "OPS-SSE-001 AC-3",
+   "verdict": "match",
+   "pointer": "WaveSevenDocsTest.java#wave7s13SdsAc5_OPS_SSE_001_AC3_sseMdStatesEachDecisionByItsPhrase"
+  },
+  {
+   "id": "OPS-SSE-001 AC-4",
+   "verdict": "match",
+   "pointer": "WaveSevenDocsTest.java#wave7s13SdsAc6_OPS_SSE_001_AC4_eachSseSectionHasExpressJavaAndKotlin; DocsExamplesCompileTest.java#wave7s13SdsAc7_OPS_SSE_001_AC4_sseSkipsKeepOnlyAppDefinedReasonsAndTheRestCompile"
+  },
+  {
+   "id": "OPS-SSE-001 AC-5",
+   "verdict": "match",
+   "pointer": "SseDocsKotlinTest.kt#OPS-SSE-001 AC-5 the progress example compiles and runs and sends connected ready; WaveSevenDocsTest.java#wave7s13SdsAc8_OPS_SSE_001_AC5_sseMdHoldsTheKotlinProgressExample"
+  }
+ ],
+ "design": [
+  {
+   "id": "D-294",
+   "verdict": "match",
+   "pointer": "IR-WS-001 AC-1, IR-WS-001 AC-2, IR-WS-001 AC-3, IR-WS-001 AC-10, FR-WS-001 AC-7, FR-WS-004 AC-4; test WebSocketApiTest.java#IR_WS_001_AC1_wsReturnsTheAppAndWebSocketHandlerIsASingleMethodFunctionalInterface."
+  },
+  {
+   "id": "D-295",
+   "verdict": "match",
+   "pointer": "FR-WS-001 AC-3, FR-WS-001 AC-4, FR-WS-001 AC-8, FR-WS-006 AC-10; test WebSocketDispatchTest.java#sdsAc2_FR_WS_001_AC3_handlerRunsOnceFromOnOpenAfter101AndNeverOnARefusal."
+  },
+  {
+   "id": "D-296",
+   "verdict": "match",
+   "pointer": "FR-WS-001 AC-1, FR-WS-001 AC-2; test WebSocketDispatchTest.java#sdsAc1_FR_WS_001_AC1_globalAndPrefixMiddlewareReturnBeforeTheUpgrade."
+  },
+  {
+   "id": "D-429",
+   "verdict": "match",
+   "pointer": "FR-WS-001 AC-1, FR-WS-001 AC-7, FR-WS-001 AC-8, FR-WS-002 AC-6, FR-WS-003 AC-7; test WebSocketDispatchTest.java#sdsAc1_FR_WS_001_AC1_globalAndPrefixMiddlewareReturnBeforeTheUpgrade."
+  },
+  {
+   "id": "D-430",
+   "verdict": "match",
+   "pointer": "FR-APP-019 AC-8; test AccessLogAcceptanceTest.java#wave7SdsAc1_FR_APP_019_AC8_handshakeLineIsWrittenBeforeTheFirstClientFrame."
+  },
+  {
+   "id": "D-444",
+   "verdict": "match",
+   "pointer": "IR-HTTP-008 AC-4, FR-WS-002 AC-2, FR-WS-002 AC-3, FR-WS-002 AC-4, FR-WS-009 AC-1; test ErrorPathTest.java#sdsAc9_IR_HTTP_008_AC4_theExceptionHeadersReplaceTheAppSetOnesOnTheStandardError."
+  },
+  {
+   "id": "D-297",
+   "verdict": "match",
+   "pointer": "FR-WS-001 AC-5; test WebSocketDispatchTest.java#FR_WS_001_AC5_noMiddlewareRunsPerMessage."
+  },
+  {
+   "id": "D-298",
+   "verdict": "match",
+   "pointer": "FR-WS-002 AC-1; test WebSocketSocketTest.java#sdsAc7_FR_WS_002_AC1_handshakeGets101WithAcceptAndTextReachesOnText."
+  },
+  {
+   "id": "D-299",
+   "verdict": "match",
+   "pointer": "FR-WS-002 AC-2; test WebSocketSocketTest.java#FR_WS_002_AC2_missingKeyGets400WithTheStandardBodyAndRequestId."
+  },
+  {
+   "id": "D-300",
+   "verdict": "match",
+   "pointer": "FR-WS-003 AC-2, FR-WS-003 AC-4, FR-WS-003 AC-5, FR-WS-003 AC-7; test WebSocketOriginTest.java#sdsAc6_FR_WS_003_AC2_crossOriginGets403WithTheRequestIdAndNoUpgrade."
+  },
+  {
+   "id": "D-301",
+   "verdict": "match",
+   "pointer": "FR-WS-009 AC-6; test WebSocketRegistryTest.java#sdsAc5_FR_WS_009_AC6_upgradeDuringStoppingGetsTheGate503AndNoWebSocketCall."
+  },
+  {
+   "id": "D-302",
+   "verdict": "match",
+   "pointer": "IR-WS-002 AC-7, FR-WS-002 AC-10; test AdapterSurfaceTest.java#sdsAc10_IR_WS_002_AC7_noMainSourceOfApiOrTinyHttpdHandlesFrameOpcodesOrMasking."
+  },
+  {
+   "id": "D-408",
+   "verdict": "match",
+   "pointer": "FR-WS-004 AC-1, FR-WS-004 AC-2, FR-WS-004 AC-3, FR-WS-004 AC-4, OPS-WS-001 AC-3; test WebSocketDispatchTest.java#sdsAc11_FR_WS_004_AC1_AC4_plainGetToAWebSocketOnlyPathGets426AndAGetRouteServesIt. Recorded deviation (TinyHttpd drops Connection: Upgrade on 426; both headers asserted in memory, FR-WS-004 AC-1..AC-3; requirement kept below verified)."
+  },
+  {
+   "id": "D-303",
+   "verdict": "match",
+   "pointer": "OPS-HTTP-007 AC-8, OPS-APP-005 AC-6, IR-WS-001 AC-6, IR-WS-001 AC-7, FR-WS-003 AC-1, OPS-WS-001 AC-1 ...; test HttpDocsTest.java#sdsAc6_OPS_HTTP_007_AC8_requestKeepsNoMarker."
+  },
+  {
+   "id": "D-304",
+   "verdict": "match",
+   "pointer": "FR-WS-005 AC-1; test WebSocketProtocolSocketTest.java#FR_WS_005_AC1_unmaskedFrameClosesWith1002."
+  },
+  {
+   "id": "D-305",
+   "verdict": "match",
+   "pointer": "FR-WS-005 AC-2; test WebSocketProtocolSocketTest.java#FR_WS_005_AC2_invalidUtf8ClosesWith1007AndNoOnText."
+  },
+  {
+   "id": "D-306",
+   "verdict": "match",
+   "pointer": "FR-WS-005 AC-3; test WebSocketProtocolSocketTest.java#FR_WS_005_AC3_defaultLimitAcceptsOneMebibyteAndRefusesOneByteMore."
+  },
+  {
+   "id": "D-307",
+   "verdict": "match",
+   "pointer": "FR-WS-005 AC-4, FR-WS-005 AC-5; test WebSocketProtocolSocketTest.java#sdsAc11_FR_WS_005_AC4_limit4096RefusesOneFrameAndFragmentsAndJoinsFourFragments."
+  },
+  {
+   "id": "D-308",
+   "verdict": "match",
+   "pointer": "FR-WS-005 AC-6; test WebSocketProtocolSocketTest.java#sdsAc11_FR_WS_005_AC6_oversizedOrFragmentedPingClosesWith1002."
+  },
+  {
+   "id": "D-309",
+   "verdict": "match",
+   "pointer": "FR-WS-005 AC-5, FR-WS-005 AC-7; test WebSocketProtocolSocketTest.java#sdsAc11_FR_WS_005_AC5_fragmentsJoinAndAnInterleavedPingIsAnswered."
+  },
+  {
+   "id": "D-310",
+   "verdict": "match",
+   "pointer": "FR-WS-005 AC-8, FR-WS-006 AC-7, FR-WS-006 AC-8, FR-WS-006 AC-9; test WebSocketProtocolSocketTest.java#sdsAc9_FR_WS_005_AC8_closeHandshakeReportsTheSentCodeWhateverTheClientEchoes."
+  },
+  {
+   "id": "D-311",
+   "verdict": "match",
+   "pointer": "IR-WS-001 AC-4, IR-WS-001 AC-5, IR-WS-001 AC-10, FR-WS-006 AC-7; test WebSocketApiTest.java#IR_WS_001_AC4_webSocketSessionDeclaresExactlyTheListedMethods."
+  },
+  {
+   "id": "D-312",
+   "verdict": "match",
+   "pointer": "FR-WS-006 AC-1; test WebSocketSessionTest.java#sdsAc1_FR_WS_006_AC1_idsAreSixteenHexDigitsOfAnAppWideCounter."
+  },
+  {
+   "id": "D-313",
+   "verdict": "match",
+   "pointer": "FR-WS-006 AC-2; test WebSocketSessionTest.java#sdsAc2_FR_WS_006_AC2_attributesAreSeparateFromTheRequestAndNullRemoves."
+  },
+  {
+   "id": "D-314",
+   "verdict": "match",
+   "pointer": "FR-WS-006 AC-3, FR-WS-006 AC-9; test DefaultWebSocketSessionTest.java#sdsAc4_FR_WS_006_AC3_onCloseListenersRunOnce."
+  },
+  {
+   "id": "D-315",
+   "verdict": "match",
+   "pointer": "FR-WS-006 AC-4; test WebSocketSessionTest.java#sdsAc5_FR_WS_006_AC4_sendJsonSendsTheCodecEncodingAndACodecFailureQueuesNothing."
+  },
+  {
+   "id": "D-316",
+   "verdict": "match",
+   "pointer": "FR-WS-001 AC-6; test WebSocketDispatchTest.java#FR_WS_001_AC6_reqServiceInTheHandlerIsTheOnStartInstance."
+  },
+  {
+   "id": "D-317",
+   "verdict": "match",
+   "pointer": "FR-WS-006 AC-5, OPS-WS-001 AC-3; test WebSocketSessionTest.java#sdsAc7_FR_WS_006_AC5_decodeFailureGoesToOnErrorAndTheSessionStaysOpen."
+  },
+  {
+   "id": "D-318",
+   "verdict": "match",
+   "pointer": "FR-WS-007 AC-1; test WebSocketSenderTest.java#sdsAc1_FR_WS_007_AC1_queuedBytesCountUtf8AndNeverExceedTheLimit."
+  },
+  {
+   "id": "D-417",
+   "verdict": "match",
+   "pointer": "FR-WS-007 AC-2, FR-WS-007 AC-3, FR-WS-007 AC-5; test WebSocketSenderTest.java#sdsAc3_FR_WS_007_AC2_theSenderExecutorIsBoundedAndNamesItsThreadsAfterThePort. Stall-release bound of FR-WS-007 AC-5 is tested at 3 s (P1-001); structure per AC-2/AC-3 holds."
+  },
+  {
+   "id": "D-319",
+   "verdict": "match",
+   "pointer": "FR-WS-007 AC-3, FR-WS-007 AC-4; test WebSocketSenderTest.java#sdsAc5_FR_WS_007_AC3_aHeldSendTextBlocksOnlyTheSecondOfItsSession."
+  },
+  {
+   "id": "D-320",
+   "verdict": "match",
+   "pointer": "FR-WS-007 AC-5; test WebSocketSendSocketTest.java#sdsAc5_FR_WS_007_AC5_twentyStalledSessionsNeverDelayAHealthyOne."
+  },
+  {
+   "id": "D-321",
+   "verdict": "match",
+   "pointer": "FR-WS-006 AC-9, FR-WS-007 AC-6, OPS-WS-001 AC-3, OPS-WS-001 AC-4; test DefaultWebSocketSessionTest.java#sdsAc12_FR_WS_006_AC9_onCloseReportsTheFirstCoreClose."
+  },
+  {
+   "id": "D-322",
+   "verdict": "match",
+   "pointer": "FR-WS-007 AC-7; test WebSocketSenderTest.java#sdsAc6_FR_WS_007_AC7_twoHundredClosedSessionsReleaseEverySlotAndAttribute."
+  },
+  {
+   "id": "D-323",
+   "verdict": "match",
+   "pointer": "OPS-ENGINE-002 AC-7, IR-WS-001 AC-3, IR-WS-001 AC-6, IR-WS-001 AC-7, IR-WS-001 AC-8, FR-WS-008 AC-1 ...; test WaveFiveDocsTest.java#settledMarkerLinesAreGoneAndLaterMarkersKept."
+  },
+  {
+   "id": "D-419",
+   "verdict": "match",
+   "pointer": "OPS-HTTP-007 AC-8, OPS-APP-005 AC-6, IR-WS-001 AC-6, IR-WS-001 AC-7, IR-WS-001 AC-8, IR-WS-002 AC-3 ...; test HttpDocsTest.java#sdsAc6_OPS_HTTP_007_AC8_requestKeepsNoMarker."
+  },
+  {
+   "id": "D-423",
+   "verdict": "match",
+   "pointer": "IR-WS-002 AC-3, FR-WS-008 AC-1, FR-WS-008 AC-2; test HttpAdapterSpiTest.java#sdsAc6_IR_WS_002_AC3_settingsIsAFinalGetterOnlyValueAndReadsBack4096And2000."
+  },
+  {
+   "id": "D-424",
+   "verdict": "match",
+   "pointer": "OPS-ENGINE-002 AC-7, IR-WS-001 AC-9, FR-WS-008 AC-2, FR-WS-008 AC-3, OPS-WS-001 AC-3, OPS-WS-001 AC-4; test WaveFiveDocsTest.java#settledMarkerLinesAreGoneAndLaterMarkersKept."
+  },
+  {
+   "id": "D-425",
+   "verdict": "match",
+   "pointer": "FR-WS-008 AC-4, FR-WS-008 AC-5, FR-WS-008 AC-6; test WebSocketTimeoutSocketTest.java#sdsAc11_FR_WS_008_AC4_aPingingClientIsClosedByTheIdleTimeout."
+  },
+  {
+   "id": "D-324",
+   "verdict": "match",
+   "pointer": "FR-WS-009 AC-1; test WebSocketLimitSocketTest.java#sdsAc4_FR_WS_009_AC1_thirdUpgradeBeyondTheLimitGets503RetryAfterAndNoHandler."
+  },
+  {
+   "id": "D-325",
+   "verdict": "match",
+   "pointer": "FR-APP-019 AC-8, FR-APP-019 AC-9, FR-APP-019 AC-11, OPS-APP-005 AC-9, FR-WS-006 AC-9; test AccessLogAcceptanceTest.java#wave7SdsAc1_FR_APP_019_AC8_handshakeLineIsWrittenBeforeTheFirstClientFrame."
+  },
+  {
+   "id": "D-326",
+   "verdict": "match",
+   "pointer": "IR-SSE-001 AC-1, IR-SSE-001 AC-7, FR-SSE-001 AC-1, FR-SSE-001 AC-2, FR-SSE-001 AC-9; test HttpApiSurfaceTest.java#sdsAc1_IR_SSE_001_AC1_sseIsADefaultMethodThatDefaultResponseOverrides."
+  },
+  {
+   "id": "D-327",
+   "verdict": "match",
+   "pointer": "FR-SSE-004 AC-1, FR-SSE-004 AC-2, FR-SSE-004 AC-6; test SseSocketTest.java#sdsAc4_FR_SSE_002_AC5_handlerSendsReachTheSocketWhileTheHandlerRunsBeyondTheQueueLimit."
+  },
+  {
+   "id": "D-328",
+   "verdict": "match",
+   "pointer": "FR-SSE-001 AC-3; test SseStreamTest.java#sdsAc6_FR_SSE_001_AC1_AC3_sseCommits200WithEachEventStreamHeaderOnceAndEntersStreaming."
+  },
+  {
+   "id": "D-329",
+   "verdict": "match",
+   "pointer": "FR-SSE-001 AC-4; test SseWireTest.java#sdsAc9_FR_SSE_001_AC4_dataIsSplitAtCrLfCrAndLfIntoOneDataLineEach."
+  },
+  {
+   "id": "D-330",
+   "verdict": "match",
+   "pointer": "IR-SSE-001 AC-3, FR-SSE-001 AC-5; test SseApiTest.java#sdsAc2_IR_SSE_001_AC3_sseEventHasNoPublicConstructorAndOnlyTheFourBuilderMethods."
+  },
+  {
+   "id": "D-331",
+   "verdict": "match",
+   "pointer": "FR-SSE-001 AC-6; test SseApiTest.java#sdsAc11_FR_SSE_001_AC6_crLfAndNulAreRefusedInNamesAndIdsAndNegativeRetryAndNullName."
+  },
+  {
+   "id": "D-332",
+   "verdict": "match",
+   "pointer": "IR-SSE-001 AC-5, FR-SSE-002 AC-3, FR-SSE-003 AC-8, OPS-SSE-001 AC-2; test DefaultRestAppTest.java#sdsAc5_IR_SSE_001_AC5_anAppThatNeverCallsSseFreezesTheDefaultHeartbeatAndQueueSize."
+  },
+  {
+   "id": "D-333",
+   "verdict": "match",
+   "pointer": "FR-SSE-002 AC-1, FR-SSE-002 AC-6; test SseSocketTest.java#sdsAc1_FR_SSE_002_AC1_eightThreadsSendingConcurrentlyKeepEachEventWholeAndTheirOwnOrder."
+  },
+  {
+   "id": "D-334",
+   "verdict": "match",
+   "pointer": "FR-SSE-004 AC-2, FR-SSE-004 AC-3, FR-SSE-004 AC-4, FR-SSE-004 AC-5, FR-SSE-004 AC-6, FR-SSE-004 AC-8; test SseSocketTest.java#sdsAc9_FR_SSE_004_AC2_aClientCloseRunsOnCloseOnceWithin3sAndLogsCauseClient."
+  },
+  {
+   "id": "D-335",
+   "verdict": "match",
+   "pointer": "FR-SSE-003 AC-1, FR-SSE-003 AC-2, FR-SSE-003 AC-7, FR-SSE-003 AC-8; test SseSocketTest.java#sdsAc3_FR_SSE_003_AC1_chunkedOneCacheControlARetryEventInOneBlockAndNoStartEventStream."
+  },
+  {
+   "id": "D-406",
+   "verdict": "match",
+   "pointer": "FR-SSE-002 AC-1, FR-SSE-002 AC-2, FR-SSE-002 AC-4, FR-SSE-002 AC-5, FR-SSE-002 AC-7; test SseSocketTest.java#sdsAc1_FR_SSE_002_AC1_eightThreadsSendingConcurrentlyKeepEachEventWholeAndTheirOwnOrder."
+  },
+  {
+   "id": "D-336",
+   "verdict": "match",
+   "pointer": "FR-ENGINE-011 AC-4, FR-SSE-003 AC-3, FR-SSE-003 AC-4, FR-SSE-003 AC-5, FR-SSE-003 AC-7; test ConnectionLimitsTest.java#sdsAc11_FR_ENGINE_004_AC1_defaultConnectionLimitsReachTheBuilder."
+  },
+  {
+   "id": "D-337",
+   "verdict": "match",
+   "pointer": "FR-SSE-001 AC-8; test SseStreamTest.java#sdsAc13_FR_SSE_001_AC8_lastEventIdReachesTheHandlerAndTheReplaySendsOnlyLaterEvents."
+  },
+  {
+   "id": "D-338",
+   "verdict": "match",
+   "pointer": "FR-APP-019 AC-10, FR-APP-019 AC-11, OPS-APP-005 AC-9, FR-SSE-003 AC-7, FR-SSE-004 AC-2, FR-SSE-004 AC-5 ...; test AccessLogAcceptanceTest.java#wave7SdsAc4_FR_APP_019_AC10_sseLineAtStreamEndWithTheFirstRecordedCause."
+  },
+  {
+   "id": "D-339",
+   "verdict": "match",
+   "pointer": "OPS-APP-005 AC-6, IR-SSE-001 AC-2, IR-SSE-001 AC-4, IR-SSE-001 AC-5, IR-SSE-001 AC-6, FR-SSE-001 AC-7 ...; test AppDocsTest.java#sdsAc5_OPS_APP_005_AC6_decidedMarkersAreGone."
+  },
+  {
+   "id": "D-340",
+   "verdict": "match",
+   "pointer": "OPS-APP-005 AC-8, FR-WS-010 AC-2, FR-WS-010 AC-7; test AppDocsTest.java#wave7s13SdsAc9_OPS_APP_005_AC8_shutdownStepsInOrderAndTheTimeoutSentence."
+  },
+  {
+   "id": "D-341",
+   "verdict": "match",
+   "pointer": "OPS-APP-005 AC-8, FR-SSE-005 AC-2, FR-SSE-005 AC-6; test AppDocsTest.java#wave7s13SdsAc9_OPS_APP_005_AC8_shutdownStepsInOrderAndTheTimeoutSentence."
+  },
+  {
+   "id": "D-342",
+   "verdict": "match",
+   "pointer": "FR-APP-020 AC-5, OPS-APP-005 AC-8; test ShutdownSequenceTest.java#wave7SdsAc7_FR_APP_020_AC5_inFlight300MsRequestCompletesBeforeOnStop."
+  },
+  {
+   "id": "D-343",
+   "verdict": "match",
+   "pointer": "FR-APP-019 AC-10, FR-APP-020 AC-6, OPS-APP-005 AC-8, FR-WS-010 AC-4, FR-WS-010 AC-8, FR-SSE-005 AC-5 ...; test AccessLogAcceptanceTest.java#wave7SdsAc4_FR_APP_019_AC10_sseLineAtStreamEndWithTheFirstRecordedCause."
+  },
+  {
+   "id": "D-435",
+   "verdict": "match",
+   "pointer": "FR-WS-010 AC-1, FR-WS-010 AC-2, FR-WS-010 AC-3, FR-WS-010 AC-4, FR-WS-010 AC-5, FR-WS-010 AC-8; test WebSocketShutdownTest.java#sdsAc6_FR_WS_010_AC1_sessionReservedBeforeTheFlagIsInTheSnapshotAndTheNextReserveFails."
+  },
+  {
+   "id": "D-436",
+   "verdict": "match",
+   "pointer": "FR-SSE-005 AC-1, FR-SSE-005 AC-2, FR-SSE-005 AC-3, FR-SSE-005 AC-4, OPS-SSE-001 AC-3; test SseShutdownTest.java#sdsAc9_FR_SSE_005_AC1_aStreamBlockedOnTheRegistryLockIsRefusedOrInTheSnapshot."
+  },
+  {
+   "id": "D-445",
+   "verdict": "match",
+   "pointer": "IR-HTTP-008 AC-6, FR-APP-020 AC-3, FR-WS-009 AC-3, FR-WS-009 AC-5, FR-WS-010 AC-1, FR-SSE-005 AC-1; test ErrorHeadersSocketTest.java#sdsAc9_IR_HTTP_008_AC6_a503WithRetryAfterAndConnectionCloseClosesTheConnection."
+  },
+  {
+   "id": "D-446",
+   "verdict": "match",
+   "pointer": "FR-APP-020 AC-4, OPS-APP-005 AC-8, OPS-APP-005 AC-9; test LongConnectionShutdownSocketTest.java#wave7SdsAc9_FR_APP_020_AC4_requestsDuringTheGoodbyeGet503WithConnectionClose."
+  },
+  {
+   "id": "D-344",
+   "verdict": "match",
+   "pointer": "FR-APP-020 AC-2, FR-APP-020 AC-7, OPS-APP-005 AC-8, OPS-APP-005 AC-9, FR-SSE-005 AC-5; test LongConnectionShutdownSocketTest.java#wave7SdsAc9_FR_APP_020_AC2_halfSecondTimeoutBoundsTheCloseWaitAndTheReturn."
+  },
+  {
+   "id": "D-439",
+   "verdict": "match",
+   "pointer": "FR-APP-020 AC-8; test LongConnectionShutdownSocketTest.java#wave7SdsAc9_FR_APP_020_AC8_AC6_AC7_oneSecondShutdownClosesStalledAndHealthyConnections."
+  },
+  {
+   "id": "D-345",
+   "verdict": "match",
+   "pointer": "FR-APP-020 AC-9; test ShutdownIsolatedSocketTest.java#wave7SdsAc9_FR_APP_020_AC9_noThreadNoRegistryEntryAndNoTempFileAfterShutdown."
+  },
+  {
+   "id": "D-346",
+   "verdict": "match",
+   "pointer": "PERF-APP-001 AC-1; test LoadIsolatedSocketTest.java#sdsAc1_PERF_APP_001_AC1_120LongConnectionsStayWithinTheThreadAndHeapBounds."
+  },
+  {
+   "id": "D-416",
+   "verdict": "match",
+   "pointer": "PERF-APP-001 AC-2, PERF-APP-001 AC-3; test LoadIsolatedSocketTest.java#sdsAc2_PERF_APP_001_AC2_theDefaultsAddUpToTheThreadBound. Recorded deviation: 452 threads, 449 request-path threads 112.25 MiB (PERF-APP-001 AC-2, AC-3)."
+  },
+  {
+   "id": "D-347",
+   "verdict": "match",
+   "pointer": "PERF-APP-001 AC-4; test WaveSevenDocsTest.java#wave7s13SdsAc4_PERF_APP_001_AC3_AC4_defaultsStatesThreadsStackAndTheLowEndFollowUp."
+  }
+ ],
+ "constraints": [
+  {
+   "id": "C-01",
+   "verdict": "match",
+   "pointer": "build.gradle/settings.gradle only; gradlew 8.14.3 wrapper, no pom.xml; the wave 7 build.gradle change is the isolatedTest Gradle task only (build.gradle:212-222); ./gradlew build exit 0 at e25fe0d"
+  },
+  {
+   "id": "C-02",
+   "verdict": "match",
+   "pointer": "options.release=8 and animal-sniffer/checkClassReferences tasks passed in ./gradlew build at e25fe0d; grep of NaruServe-api/src/main and NaruServe-tinyhttpd/src/main finds no java.nio.file, CompletableFuture, java.net.http, android.*, servlet, Kotlin stdlib or Gson import; WebSocketSender.java:24 keeps its own IntSupplier (java.util.function.IntSupplier is API 24)"
+  },
+  {
+   "id": "C-03",
+   "verdict": "match",
+   "pointer": "WebSocketKotlinTest.kt and SseKotlinTest.kt compile and run SAM lambdas (IR-WS-001 AC-10, IR-SSE-001 AC-7); new listeners are @FunctionalInterface with @Nullable annotations (WebSocketSession.java, SseClient.java)"
+  },
+  {
+   "id": "C-04",
+   "verdict": "match",
+   "pointer": "Servlet-like API: app.ws and res.sse() on RestApp/Response; NaruServe-servlet module still in settings.gradle:5; core imports no javax.servlet"
+  },
+  {
+   "id": "C-05",
+   "verdict": "match",
+   "pointer": "docs/api websocket.md, sse.md, defaults.md, lifecycle.md, logging.md, app.md, middleware.md, express-migration.md carry Express counterparts with Java and Kotlin blocks; WaveSevenDocsTest and DocsExamplesCompileTest compile every block (OPS-WS-001, OPS-SSE-001)"
+  },
+  {
+   "id": "C-06",
+   "verdict": "match",
+   "pointer": "NaruServe-api and NaruServe-servlet both present in settings.gradle:3,5; no wave 7 change removes either"
+  },
+  {
+   "id": "C-07",
+   "verdict": "match",
+   "pointer": "no (미확정) left in docs/api websocket.md, sse.md, defaults.md, lifecycle.md, logging.md, app.md; remaining markers belong to servlet.md and later-wave express-migration.md rows (AppDocsTest KEPT); decisions recorded without asking (OPS-WS-001 AC-3, OPS-SSE-001 AC-1)"
+  },
+  {
+   "id": "C-08",
+   "verdict": "match",
+   "pointer": "no user question raised in wave 7; Intent layer has 0 open questions; decisions recorded in docs/research/naruserve-v1/waves/wave-7/design.md Wave decisions"
+  },
+  {
+   "id": "C-09",
+   "verdict": "match",
+   "pointer": "wave 7 delivers the WebSocket, SSE and long-connection shutdown parts of object.md through 29 implemented requirements; ./gradlew build exit 0, 1233 module-report tests plus 3 isolatedTest tests, 0 failures"
+  }
+ ],
+ "preservation": [
+  {
+   "item": "build.gradle",
+   "verdict": "intended-improvement",
+   "evidence": "adds the isolatedTest task for per-class JVM thread-count tests and excludes them from test (PERF-APP-001 AC-1, FR-APP-020 AC-9); check depends on it, so the pinned ./gradlew build still runs them"
+  },
+  {
+   "item": "docs/api/app.md",
+   "verdict": "intended-improvement",
+   "evidence": "shutdown steps and ws marker phrases settled (OPS-APP-005 AC-6, AC-8)"
+  },
+  {
+   "item": "docs/api/defaults.md",
+   "verdict": "intended-improvement",
+   "evidence": "WebSocket/SSE rows, 452-thread and 112.25 MiB figures, low-end follow-up (OPS-HTTP-007 AC-8, PERF-APP-001 AC-3, AC-4)"
+  },
+  {
+   "item": "docs/api/express-migration.md",
+   "verdict": "intended-improvement",
+   "evidence": "ws/sse/Origin mapping rows decided (OPS-APP-005 AC-5, AC-6); other (미확정) rows of later waves kept (AppDocsTest KEPT)"
+  },
+  {
+   "item": "docs/api/lifecycle.md",
+   "verdict": "intended-improvement",
+   "evidence": "goodbye-while-accepting deviation from object.md 11.4, 3 s margin and SSE onClose shutdown (OPS-APP-005 AC-9)"
+  },
+  {
+   "item": "docs/api/logging.md",
+   "verdict": "intended-improvement",
+   "evidence": "WebSocket 101/close lines and SSE end line (OPS-APP-005 AC-9, FR-APP-019 AC-8..AC-10)"
+  },
+  {
+   "item": "docs/api/middleware.md",
+   "verdict": "intended-improvement",
+   "evidence": "HttpException.withHeader and headers() section (OPS-HTTP-007 AC-9, IR-HTTP-008)"
+  },
+  {
+   "item": "docs/api/multipart.md",
+   "verdict": "intended-improvement",
+   "evidence": "one line saying an unusable tempDirectory or full disk answers HttpException(500) and a malformed body stays 400 (w7-S2-001)"
+  },
+  {
+   "item": "docs/api/sse.md",
+   "verdict": "intended-improvement",
+   "evidence": "SSE API contract, heartbeat, queue defaults, closing notice (OPS-SSE-001 AC-1..AC-5)"
+  },
+  {
+   "item": "docs/api/static.md",
+   "verdict": "intended-improvement",
+   "evidence": "MIME table gains the seven types of DefaultMimeTypes and the listing note says symbolic links never appear (w7-S2-002, w7-S2-003, FR-STATIC-007)"
+  },
+  {
+   "item": "docs/api/websocket.md",
+   "verdict": "intended-improvement",
+   "evidence": "WebSocket contract, Origin default, limits, TinyHttpd limitations (OPS-WS-001 AC-1..AC-7, FR-WS-004 AC-3)"
+  },
+  {
+   "item": "NaruServe-api/src/main/java/com/snoworca/naruserve/HttpException.java",
+   "verdict": "intended-improvement",
+   "evidence": "add-only withHeader(name,value) and headers() carry rejection headers (IR-HTTP-008 AC-1..AC-3, wave decision W2-002); existing constructors and accessors unchanged"
+  },
+  {
+   "item": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/AccessLog.java",
+   "verdict": "intended-improvement",
+   "evidence": "extracts the level switch unchanged into log() and adds writeClose/writeSse (FR-APP-019 AC-8..AC-11); the request line format is untouched ; wave-7 fix commits only add the private wanted() helper (enabled and not excluded), behaviour unchanged"
+  },
+  {
+   "item": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/BodyState.java",
+   "verdict": "intended-improvement",
+   "evidence": "only the @req FR-APP-015 -> FR-APP-019 trace marker rename (successor requirement)"
+  },
+  {
+   "item": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/CookieFactoryHook.java",
+   "verdict": "intended-improvement",
+   "evidence": "behaviour-preserving: the reflective lookup moved to PackageMethods.lookup (duplication audit w7-D-036, issue ledger commit 7b3ba1a); same method, same ExceptionInInitializerError on failure"
+  },
+  {
+   "item": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultAccessLogOptions.java",
+   "verdict": "intended-improvement",
+   "evidence": "only the @req FR-APP-015 -> FR-APP-019 marker rename (successor requirement)"
+  },
+  {
+   "item": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultMimeTypes.java",
+   "verdict": "intended-improvement",
+   "evidence": "adds txt, csv, xml, gif, ico, mp3, ogg to the built-in table (issue w7-S2-002, FR-STATIC-007; docs/api/static.md table extended in the same commit, DefaultMimeTypesTest#FR_STATIC_007_AC2_builtInTableIsExactlyTheDocsTable stays true); no entry removed"
+  },
+  {
+   "item": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java",
+   "verdict": "intended-improvement",
+   "evidence": "additive: startNanos for the handshake/close duration and route params for WebSocket routes (FR-WS-001 AC-3, FR-APP-019 AC-8); no behaviour removed"
+  },
+  {
+   "item": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+   "verdict": "intended-improvement",
+   "evidence": "adds sse(), upgraded(), sseEnded(); checkHeader extracted from header() with the same validation (IR-SSE-001, FR-WS-001 AC-7, IR-HTTP-008); abort() additionally ends an SSE stream (FR-SSE-004 AC-3)"
+  },
+  {
+   "item": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+   "verdict": "intended-improvement",
+   "evidence": "registers ws/webSocket/sse and the WebSocket/SSE shutdown participants and passes the deadline to participants (FR-APP-020 AC-1, IR-WS-001, FR-WS-010, FR-SSE-005) ; fix commit 0b3bec9 shares multipart/webSocket/sse configurer handling in reconfigure(), same order (NEW-state guard, null check, copy, configure, swap)"
+  },
+  {
+   "item": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultServerOptions.java",
+   "verdict": "intended-improvement",
+   "evidence": "maxUpgradedConnections also kept in a field (default 128, same as ServerSettings) so the sender pool is sized to it (FR-WS-007 AC-2); validation range unchanged ; range() made package-private for the WebSocket and SSE options, messages unchanged"
+  },
+  {
+   "item": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+   "verdict": "intended-improvement",
+   "evidence": "a WEBSOCKET route now upgrades after the chain instead of the wave 3 426 fallback (FR-WS-001 AC-7, which replaces FR-HTTP-022 AC-6 \"until wave 7\"); HTTP access line kept, SSE gets its end line and 101 sessions write their own (FR-APP-019 AC-8, AC-10)"
+  },
+  {
+   "item": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/FileResponder.java",
+   "verdict": "intended-improvement",
+   "evidence": "digits() made package-private so OriginCheck reuses it (audit w7-D-0xx, commit 0b3bec9); body unchanged"
+  },
+  {
+   "item": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/RequestIds.java",
+   "verdict": "intended-improvement",
+   "evidence": "only the @req FR-APP-015 -> FR-APP-019 marker rename ; hex16() extracted and reused by the WebSocket session id (same 16 lowercase hex digits)"
+  },
+  {
+   "item": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ShutdownParticipants.java",
+   "verdict": "intended-improvement",
+   "evidence": "add-only DeadlineParticipant and run(phase, logger, deadline) so before-wait participants receive the D-162 deadline (FR-APP-020 AC-1, residual r5 W2-003); Runnable participants still run in add order"
+  },
+  {
+   "item": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/SpoolingBuffer.java",
+   "verdict": "intended-improvement",
+   "evidence": "spool IOException becomes HttpException(500) (issue w7-S2-001, FR-MULTIPART-004); malformed body stays 400, MultipartSpoolingTest#FR_MULTIPART_004_AC1_unusableTempDirectoryAnswers500AndMalformedBodyStays400"
+  },
+  {
+   "item": "NaruServe-api/src/main/java/com/snoworca/naruserve/Response.java",
+   "verdict": "intended-improvement",
+   "evidence": "adds default sse() (IR-SSE-001 AC-1, FR-SSE-001); the removed lines are a javadoc sentence saying sse does not exist yet"
+  },
+  {
+   "item": "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java",
+   "verdict": "intended-improvement",
+   "evidence": "adds ws, webSocket and sse(Configurer) (IR-WS-001 AC-1, AC-6; IR-SSE-001 AC-4); no existing signature changed"
+  },
+  {
+   "item": "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpAdapter.java",
+   "verdict": "intended-improvement",
+   "evidence": "only @req IR-HTTP-004 -> IR-HTTP-007 marker renames"
+  },
+  {
+   "item": "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpExchange.java",
+   "verdict": "intended-improvement",
+   "evidence": "add-only default webSocket(WebSocketSettings, WebSocketEndpoint) and updated javadoc (IR-HTTP-007, IR-WS-002 AC-1..AC-3, wave decision W2-001, D-106 add-only)"
+  },
+  {
+   "item": "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/ServerSettings.java",
+   "verdict": "intended-improvement",
+   "evidence": "add-only public constant DEFAULT_MAX_UPGRADED_CONNECTIONS = 128 replacing two literals of 128 (audit commit 0b3bec9; IR-ENGINE-002 value unchanged, D-106 add-only SPI)"
+  },
+  {
+   "item": "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/StreamDrain.java",
+   "verdict": "intended-improvement",
+   "evidence": "add-only default attach(OutputStream) (IR-HTTP-007, FR-SSE-002 AC-5, committee decision StreamDrain.attach)"
+  },
+  {
+   "item": "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/UpgradeHandler.java",
+   "verdict": "intended-improvement",
+   "evidence": "only @req IR-HTTP-004 -> IR-HTTP-007 marker renames"
+  },
+  {
+   "item": "NaruServe-api/src/main/resources/META-INF/proguard/naruserve-api.pro",
+   "verdict": "intended-improvement",
+   "evidence": "adds a keep rule for SseEvent.wire reached by reflection (FR-SSE-001); existing rules intact"
+  },
+  {
+   "item": "NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogAcceptanceTest.java",
+   "verdict": "intended-improvement",
+   "evidence": "FR-APP-015 -> FR-APP-019 renames of 8 tests with assertions intact, plus new wave 7 cases (FR-APP-019 AC-8..AC-11)"
+  },
+  {
+   "item": "NaruServe-api/src/test/java/com/snoworca/naruserve/AppDocsTest.java",
+   "verdict": "intended-improvement",
+   "evidence": "OPS-APP-004 -> OPS-APP-005 renames; ws/websocket/sse phrases move from KEPT to REMOVED as wave 7 settles them (OPS-APP-005 AC-6); the ws-phrase test is rewritten stronger (also asserts no marker on the line)"
+  },
+  {
+   "item": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java",
+   "verdict": "intended-improvement",
+   "evidence": "sdsAc18 webSocket-only test keeps the plain-GET 426 case; its upgrade case moves to a 101 handshake per FR-WS-001 AC-7, which ends the wave 3 FR-HTTP-022 AC-6 fallback by that AC own wording"
+  },
+  {
+   "item": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java",
+   "verdict": "intended-improvement",
+   "evidence": "signature sets gain ws, webSocket, sse(Configurer) and Response.sse (IR-WS-001 AC-1, AC-6; IR-SSE-001 AC-1, AC-4); LATER_WAVE_NAMES empties because sse left it; no entry removed"
+  },
+  {
+   "item": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpDocsTest.java",
+   "verdict": "intended-improvement",
+   "evidence": "OPS-HTTP-006 -> OPS-HTTP-007 renames with assertions intact, plus new defaults and middleware cases (OPS-HTTP-007 AC-8, AC-9)"
+  },
+  {
+   "item": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpExceptionTest.java",
+   "verdict": "intended-improvement",
+   "evidence": "additions for withHeader/headers (IR-HTTP-008); no assertion removed"
+  },
+  {
+   "item": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AccessLogTest.java",
+   "verdict": "intended-improvement",
+   "evidence": "FR-APP-015 -> FR-APP-019 renames with assertions intact, plus close and SSE line tests (FR-APP-019 AC-9..AC-11)"
+  },
+  {
+   "item": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AppIsolationTest.java",
+   "verdict": "intended-improvement",
+   "evidence": "comment-only rename FR-APP-015 -> FR-APP-019"
+  },
+  {
+   "item": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AppLifecycleGuardTest.java",
+   "verdict": "intended-improvement",
+   "evidence": "additive guard cases for ws/webSocket/sse after listen (IR-WS-001 AC-3, IR-SSE-001 AC-4); an out-of-lease path named in the manifest; no assertion removed"
+  },
+  {
+   "item": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultMimeTypesTest.java",
+   "verdict": "intended-improvement",
+   "evidence": "add-only test FR_STATIC_007_AC1_commonTypesAreBuiltIn (w7-S2-002)"
+  },
+  {
+   "item": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultResponseTest.java",
+   "verdict": "intended-improvement",
+   "evidence": "additive SSE and upgrade response cases (IR-SSE-001, FR-WS-001 AC-7); no assertion removed"
+  },
+  {
+   "item": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRestAppTest.java",
+   "verdict": "intended-improvement",
+   "evidence": "additive freeze and registration cases (IR-WS-001 AC-2, AC-6; FR-WS-010 AC-1); no assertion removed"
+  },
+  {
+   "item": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java",
+   "verdict": "intended-improvement",
+   "evidence": "the two sdsAc18 426 tests re-point only their upgrade case to a 101 handshake per FR-WS-001 AC-7 and keep the plain-GET 426 assertions; FR-APP-015 -> FR-APP-019 rename; new access-log cases"
+  },
+  {
+   "item": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ErrorPathTest.java",
+   "verdict": "intended-improvement",
+   "evidence": "additive tests for HttpException headers on the error response (IR-HTTP-008 AC-2); no assertion removed"
+  },
+  {
+   "item": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownParticipantsTest.java",
+   "verdict": "intended-improvement",
+   "evidence": "run() calls gain the deadline argument (FR-APP-020 AC-1) with the same order assertions, plus a new deadline-participant test"
+  },
+  {
+   "item": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownSequenceTest.java",
+   "verdict": "intended-improvement",
+   "evidence": "additive: BEFORE_WAIT participants with deadline and 503-during-goodbye cases (FR-APP-020 AC-2..AC-4); earlier assertions intact"
+  },
+  {
+   "item": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StoppingGateTest.java",
+   "verdict": "intended-improvement",
+   "evidence": "a comment deferring the access line is replaced by an assertion of exactly one 503 line (FR-APP-019 AC-3) - stronger"
+  },
+  {
+   "item": "NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartLimitsTest.java",
+   "verdict": "intended-improvement",
+   "evidence": "repeat() made package-private for reuse by other tests (audit w7-D-011); no assertion changed"
+  },
+  {
+   "item": "NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartSpoolingTest.java",
+   "verdict": "intended-improvement",
+   "evidence": "add-only test for the 500 spool answer (w7-S2-001)"
+  },
+  {
+   "item": "NaruServe-api/src/test/java/com/snoworca/naruserve/spi/HttpAdapterSpiTest.java",
+   "verdict": "intended-improvement",
+   "evidence": "IR-HTTP-004 -> IR-HTTP-007 renames; allowed-types list gains the WebSocket SPI types (IR-HTTP-007, IR-WS-002); new SDS-AC cases for attach and webSocket"
+  },
+  {
+   "item": "NaruServe-api/src/test/java/com/snoworca/naruserve/testing/InMemoryHttpAdapterTest.java",
+   "verdict": "intended-improvement",
+   "evidence": "additive fixture tests for WebSocket and event-stream channels (IR-WS-002 AC-4..AC-8)"
+  },
+  {
+   "item": "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/InMemoryHttpAdapter.java",
+   "verdict": "intended-improvement",
+   "evidence": "abort() split into a locked part plus WebSocket channel abort; adds webSocket support and refuseWebSocket (IR-WS-002 AC-4..AC-8); existing behaviour kept ; ClientRequest.upgrade() added for the shared upgrade request builder (audit)"
+  },
+  {
+   "item": "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/RecordingExchange.java",
+   "verdict": "intended-improvement",
+   "evidence": "its unsupported eventStream stub now records the stream (needed by in-memory SSE tests, IR-SSE-001/FR-SSE-001); other recording unchanged ; scripted webSocket/finish and shared live-thread lookup (commit cea10fc), add-only behaviour for tests"
+  },
+  {
+   "item": "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/RecordingLogger.java",
+   "verdict": "intended-improvement",
+   "evidence": "add-only shared matchers (matching, countMatching, awaitMatching) replacing per-test copies (audit w7-D-013..019); awaitMatching fails with AssertionError when fewer than n lines match in 5 s"
+  },
+  {
+   "item": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdAdapter.java",
+   "verdict": "intended-improvement",
+   "evidence": "bind() builds the SSE Slots counter and passes it to the exchange (FR-SSE-003 AC-3..AC-5); limit mapping unchanged (ConnectionLimitsTest)"
+  },
+  {
+   "item": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdExchange.java",
+   "verdict": "intended-improvement",
+   "evidence": "fills eventStream/webSocket and runs the drain on the worker (FR-ENGINE-011 AC-2, AC-3; FR-SSE-003; FR-WS-002); commit/sendFile/abort semantics preserved, hooks keep the abort check and single-start rule"
+  },
+  {
+   "item": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdFeatures.java",
+   "verdict": "intended-improvement",
+   "evidence": "replaces the two UnsupportedOperationException stubs naming wave 7 with real hooks (FR-ENGINE-011 AC-2); sendFile copy body unchanged"
+  },
+  {
+   "item": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/AbortSocketTest.java",
+   "verdict": "intended-improvement",
+   "evidence": "comment and name rename FR-ENGINE-010 -> FR-ENGINE-011 only"
+  },
+  {
+   "item": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/AdapterSurfaceTest.java",
+   "verdict": "intended-improvement",
+   "evidence": "FR-ENGINE-010 -> FR-ENGINE-011 renames; the all-synchronized hook assertion becomes synchronizedMethod checks that invert for eventStream/webSocket, which hold the lock only for checks (FR-ENGINE-011 AC-3, wave decision W2-003); the UnsupportedOperationException-names-wave-7 assertion is replaced by assertions that the hooks work; TlsConfig and engine-type assertions kept"
+  },
+  {
+   "item": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/ConnectionLimitsTest.java",
+   "verdict": "intended-improvement",
+   "evidence": "adds the maxEventStreams mapping and SSE slot test (FR-SSE-003 AC-5); existing limits assertions intact"
+  },
+  {
+   "item": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LimitsSocketTest.java",
+   "verdict": "intended-improvement",
+   "evidence": "rename OPS-ENGINE-001 -> OPS-ENGINE-002 only"
+  },
+  {
+   "item": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/MultipartCrossAdapterTest.java",
+   "verdict": "intended-improvement",
+   "evidence": "private repeat() removed for the shared Http.repeat (audit); no assertion removed"
+  },
+  {
+   "item": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/RawTargetSocketTest.java",
+   "verdict": "intended-improvement",
+   "evidence": "renames FR-ENGINE-010 AC-n -> FR-ENGINE-011 AC-m; assertions intact"
+  },
+  {
+   "item": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/SendFileSocketTest.java",
+   "verdict": "intended-improvement",
+   "evidence": "renames FR-ENGINE-010 -> FR-ENGINE-011; assertions intact"
+  },
+  {
+   "item": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java",
+   "verdict": "intended-improvement",
+   "evidence": "removes the later-wave SKIPS entries for ws/sse blocks so those blocks are now compiled (stronger; OPS-WS-001 AC-6, OPS-SSE-001 AC-4); the OPS-ENGINE-001 AC-6 compile test is renamed to OPS-ENGINE-002"
+  },
+  {
+   "item": "src/test/java/com/snoworca/naruserve/docs/WaveFiveDocsTest.java",
+   "verdict": "intended-improvement",
+   "evidence": "OPS-ENGINE-001 -> OPS-ENGINE-002 renames; wave 7 marker phrases switch from kept() (marker must remain) to settled() (marker must be gone) as wave 7 decides them (OPS-ENGINE-002 AC-7); wave 8 markers still kept"
+  }
+ ],
+ "unit": [
+  {
+   "id": "lane-2026-10-19.naruserve.naruserve-v1-wave-7",
+   "verdict": "match",
+   "pointer": "all 16 manifest commits (3021f38..9513a1d) are ancestors of e25fe0d (git merge-base --is-ancestor, 0 unreachable), head_sha 9513a1d reachable via merge 6856cb4; ./gradlew build exit 0 at e25fe0d, 1239 tests, 0 failures, 0 skipped in build/test-results"
+  }
+ ],
+ "findings": [],
+ "roll_up": "ALL_MATCH"
+}
