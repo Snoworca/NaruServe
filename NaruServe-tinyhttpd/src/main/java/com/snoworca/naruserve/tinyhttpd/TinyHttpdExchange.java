@@ -13,9 +13,6 @@ import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.AbstractMap.SimpleImmutableEntry;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
@@ -148,17 +145,10 @@ final class TinyHttpdExchange implements HttpExchange {
         return req.getProtocol();
     }
 
-    // shortcut: grouped by first occurrence of each name (TinyHttpd exposes no ordered list), so interleaved
-    // duplicates of two names lose their relative order; upgrade if a caller needs exact arrival order.
+    // @req IR-HTTP-003
     @Override
     public List<Map.Entry<String, String>> headers() {
-        List<Map.Entry<String, String>> out = new ArrayList<>();
-        for (String name : req.getHeaderNames()) {
-            for (String value : req.getHeaders(name)) {
-                out.add(new SimpleImmutableEntry<>(name, value));
-            }
-        }
-        return Collections.unmodifiableList(out);
+        return req.getHeaderEntries();
     }
 
     @Override

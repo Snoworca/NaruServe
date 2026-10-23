@@ -27,9 +27,12 @@ public final class WaveSevenDocsTest {
 
     private static final String MARKER = "(미확정)";
 
-    /** The deferred TinyHttpd gap of the 426 answer (FR-WS-004 AC-3). */
+    /** The 426 answer over TinyHttpd carries both headers since TinyHttpd FR-HTTP-002 (FR-WS-004 AC-3). */
     static final String TINYHTTPD_426_PHRASE =
-            "over the TinyHttpd adapter the `426` answer carries `Upgrade: websocket` but not `Connection: Upgrade`";
+            "over the TinyHttpd adapter the `426` answer carries `Upgrade: websocket` and `Connection: Upgrade`";
+
+    /** The retired limitation wording of the 426 answer; it must not come back. */
+    static final String TINYHTTPD_426_OLD_PHRASE = "but not `Connection: Upgrade`";
 
     static final String HANDLER_PHRASE = "핸들러는 `101` 응답을 보낸 뒤 연결마다 한 번 실행됩니다";
     static final String ORIGIN_DEFAULT_PHRASE = "`Origin`이 없거나 같은 출처인 요청만 허용하고 나머지는 `403`으로 거부합니다";
@@ -113,9 +116,11 @@ public final class WaveSevenDocsTest {
 
     // SDS-AC-12 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-3.sds.md; FR-WS-004 AC-3
     @Test
-    public void sdsAc12_FR_WS_004_AC3_websocketMdStatesTheTinyHttpd426Gap() throws IOException {
-        contains("websocket.md", doc("websocket.md"), TINYHTTPD_426_PHRASE, "`ExchangeResponse`",
-                "deferred TinyHttpd limitation");
+    public void sdsAc12_FR_WS_004_AC3_websocketMdStatesBothHeadersOfTheTinyHttpd426() throws IOException {
+        String ws = doc("websocket.md");
+        contains("websocket.md", ws, TINYHTTPD_426_PHRASE);
+        assertFalse("websocket.md still names the retired 426 limitation", ws.contains(TINYHTTPD_426_OLD_PHRASE));
+        assertFalse("the TinyHttpd limits list still holds the 426 item", ws.contains("`426` 응답에 `Connection: Upgrade`가 실리지 않습니다"));
     }
 
     // SDS-AC-1 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-8.sds.md; OPS-WS-001 AC-1

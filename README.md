@@ -102,7 +102,7 @@ checkout in the consumer's `settings.gradle`:
 includeBuild('/path/to/TinyHttpd')
 ```
 
-NaruServe was verified against TinyHttpd commit `c000eb1` (TinyHttpd 3.0.0). Without the `includeBuild`, a build that takes
+NaruServe was verified against TinyHttpd commit `b759e2d` (TinyHttpd 3.0.0 + header contracts). Without the `includeBuild`, a build that takes
 `NaruServe-tinyhttpd` (or `NaruServe`) from `mavenLocal()` fails with an unresolved `tinyhttpd-core`.
 
 ## License

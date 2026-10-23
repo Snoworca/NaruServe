@@ -91,7 +91,7 @@ TinyHttpd checkout in the consumer's `settings.gradle`:
 includeBuild('/path/to/TinyHttpd')
 ```
 
-NaruServe was verified against TinyHttpd commit `c000eb1` (TinyHttpd 3.0.0).
+NaruServe was verified against TinyHttpd commit `b759e2d` (TinyHttpd 3.0.0 + header contracts).
 
 Recorded consumer run: after `./gradlew publishToMavenLocal`, a Gradle build in a temporary directory declared
 `mavenLocal()` and `implementation 'com.snoworca.naruserve:NaruServe-tinyhttpd:0.1.0-SNAPSHOT'` and resolved its

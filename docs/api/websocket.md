@@ -41,7 +41,7 @@ Express(express-ws)의 `app.ws('/ws', (ws, req) => ...)`에 대응합니다.
 - 경로 패턴은 HTTP 라우트와 같습니다(`/ws/rooms/:room`).
 - 같은 경로에 일반 `app.get`을 함께 둘 수 있습니다. `Upgrade: websocket` 요청만 `app.ws`로 갑니다.
 - `app.ws` 라우트만 있는 경로에 `Upgrade` 없는 요청이 오면 `426 Upgrade Required`로 답합니다. 코어는 `Upgrade: websocket`과 `Connection: Upgrade` 헤더, 표준 JSON 오류 본문을 씁니다.
-  TinyHttpd 한계: over the TinyHttpd adapter the `426` answer carries `Upgrade: websocket` but not `Connection: Upgrade`, because TinyHttpd's `ExchangeResponse` replaces the `Connection` header on non-`101` responses; this is a deferred TinyHttpd limitation (TinyHttpd가 고칠 때까지 남습니다).
+  TinyHttpd 어댑터에서도 같습니다. over the TinyHttpd adapter the `426` answer carries `Upgrade: websocket` and `Connection: Upgrade`.
 
 ```java
 app.ws("/ws/rooms/:room", (req, ws) -> {
@@ -221,8 +221,7 @@ Pong timeout은 Ping 주기와 같습니다. TinyHttpd의 `WebSocketListener`에
 프로토콜 위반(마스킹 안 된 클라이언트 프레임, 잘못된 UTF-8, 한도 초과 프레임)은 연결을 닫습니다.
 대용량 바이너리 스트리밍은 v1에서 지원하지 않습니다.
 
-TinyHttpd 어댑터의 한계 세 가지(TinyHttpd가 고칠 때까지 남습니다):
+TinyHttpd 어댑터의 한계 두 가지(TinyHttpd가 고칠 때까지 남습니다):
 
-- `426` 응답에 `Connection: Upgrade`가 실리지 않습니다([핸들러](#핸들러) 참고).
 - 별도 Pong timeout이 없습니다. Pong timeout은 Ping 주기와 같습니다.
 - 전용 handshake(upgrade) 기한이 없습니다. `headerTimeout`과 `bodyReadTimeout`이 handshake를 제한합니다.

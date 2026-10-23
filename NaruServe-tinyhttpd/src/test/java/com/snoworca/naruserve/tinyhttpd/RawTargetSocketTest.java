@@ -63,7 +63,7 @@ public class RawTargetSocketTest {
         assertEquals("/q|", seen.get());
     }
 
-    // FR-ENGINE-011 AC-7
+    // FR-ENGINE-011 AC-7; IR-HTTP-003 AC-1 (issue #45: interleaved duplicates keep their received order)
     @Test(timeout = 20000)
     public void FR_ENGINE_011_AC7_requestLineHeadersAndRemoteAddressReachTheCoreUnchanged() throws Exception {
         try {
@@ -81,16 +81,17 @@ public class RawTargetSocketTest {
         int port = adapter.boundPort();
         assertTrue(port > 0);
 
-        String raw = "PATCH /x HTTP/1.1\r\nHost: 127.0.0.1\r\nX-One: a\r\nX-One: b\r\nConnection: close\r\n\r\n";
+        // two names interleaved: the SPI promises received order with duplicates kept (IR-HTTP-003 AC-1)
+        String raw = "PATCH /x HTTP/1.1\r\nHost: 127.0.0.1\r\nX-One: a\r\nX-Two: 1\r\nx-one: b\r\nX-Two: 2\r\n"
+                + "Connection: close\r\n\r\n";
         assertEquals(200, Http.status(Http.send(port, raw)));
         assertEquals("PATCH HTTP/1.1 127.0.0.1 false", seen.get());
-        List<String> ones = new ArrayList<>();
+        List<String> received = new ArrayList<>();
         for (Map.Entry<String, String> h : headers.get()) {
-            if (h.getKey().equals("X-One")) {
-                ones.add(h.getValue());
-            }
+            received.add(h.getKey() + "=" + h.getValue());
         }
-        assertEquals(java.util.Arrays.asList("a", "b"), ones);
+        assertEquals(java.util.Arrays.asList("Host=127.0.0.1", "X-One=a", "X-Two=1", "x-one=b", "X-Two=2",
+                "Connection=close"), received);
     }
 
     // FR-ENGINE-011 AC-2 (exchange bridge)

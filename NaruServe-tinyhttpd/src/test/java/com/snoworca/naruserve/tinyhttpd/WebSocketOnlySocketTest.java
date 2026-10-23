@@ -27,7 +27,7 @@ public class WebSocketOnlySocketTest {
         app.shutdown(2, TimeUnit.SECONDS);
     }
 
-    // FR-WS-004 AC-2: TinyHttpd replaces Connection on a non-101 answer, so only 426 and Upgrade are asserted here.
+    // FR-WS-004 AC-2: the 426 answer carries Upgrade: websocket and Connection: Upgrade over TinyHttpd too.
     @Test(timeout = 20000)
     public void FR_WS_004_AC2_plainGetToAWebSocketOnlyPathGets426WithUpgradeOverTinyHttpd() throws Exception {
         AtomicInteger handled = new AtomicInteger();
@@ -36,6 +36,8 @@ public class WebSocketOnlySocketTest {
         String r = Http.send(port, Http.get("/live"));
         assertEquals(r, 426, Http.status(r));
         assertEquals(r, "websocket", Http.header(r, "Upgrade"));
+        // the connection closes after the answer, so TinyHttpd lists its own close token beside Upgrade
+        assertEquals(r, "Upgrade, close", Http.header(r, "Connection"));
         assertTrue(r, Http.body(r).contains("\"code\":\"UPGRADE_REQUIRED\""));
         assertEquals(0, handled.get());
     }

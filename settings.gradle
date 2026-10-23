@@ -23,7 +23,7 @@ gradle.ext.tinyHttpdDir = tinyHttpdDir
 includeBuild(tinyHttpdDir)
 
 // Docs cite the TinyHttpd commit this build was verified against; warn (never fail) when the checkout differs.
-def verifiedTinyHttpd = 'c000eb1' // TinyHttpd 3.0.0
+def verifiedTinyHttpd = 'b759e2d' // TinyHttpd 3.0.0 + header contracts (issue #45)
 try {
     def head = providers.exec {
         commandLine 'git', '-C', tinyHttpdDir.path, 'rev-parse', '--short=7', 'HEAD'

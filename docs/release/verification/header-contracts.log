@@ -1,0 +1,22 @@
+# Issue #45: TinyHttpd header contracts (TinyHttpd FR-HTTP-001, FR-HTTP-002), NaruServe adoption
+# 2026-10-23. TinyHttpd checkout: clean clone of /Users/beom/work/git/TinyHttpd at b759e2d
+# (the original checkout still has uncommitted docs changes, which CON-BUILD-010 tests report; they are not part of this change).
+
+## TinyHttpd side (worktree branch naruserve-header-contracts, merged fast-forward into main as b759e2d)
+SRS: docs/spec/02.http-contracts.srs.md, target naruserve-header-contracts, FR-HTTP-001 and FR-HTTP-002 verified.
+Red: HeaderContractsTest did not compile (Request.getHeaderEntries missing).
+Green: ./gradlew build in TinyHttpd: 365 tests, 0 failures (12 skipped), animal-sniffer and javadoc included.
+
+## NaruServe side, red first (against TinyHttpd c000eb1, before the adapter change)
+RawTargetSocketTest.FR_ENGINE_011_AC7_...: expected [Host, X-One=a, X-Two=1, x-one=b, X-Two=2, Connection=close] but was [Host, X-One=a, X-One=b, X-Two=1, X-Two=2, Connection=close]
+WebSocketOnlySocketTest.FR_WS_004_AC2_...: 426 answered with "Connection: close" and no Upgrade token
+WaveSevenDocsTest.sdsAc12_FR_WS_004_AC3_..., sdsAc2_OPS_WS_001_AC3_...: websocket.md lacked the new 426 phrase
+
+## NaruServe side, green
+$ ./gradlew build --rerun-tasks --continue -PtinyHttpdDir=<clean clone of b759e2d>
+BUILD SUCCESSFUL (JDK 17; the three CON-BUILD-010 / ServletBuild checkout tests pass on a clean checkout)
+$ ./gradlew build --rerun-tasks --continue -I gradle/java8-tests.gradle -Dnaruserve.java8.home=<Zulu 8> -PtinyHttpdDir=<clean clone of b759e2d>
+BUILD SUCCESSFUL (actual Java 8 runtime): 1711 tests, 0 failures, 0 errors, 0 skipped
+
+## Note
+The 426 answer over TinyHttpd carries "Connection: Upgrade, close": the NaruServe 426 closes the connection, and TinyHttpd joins its own close token to the Upgrade token. The TinyHttpd adapter now returns Request.getHeaderEntries() as IR-HTTP-003 AC-1 requires, with no shortcut left in TinyHttpdExchange.

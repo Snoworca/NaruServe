@@ -29,7 +29,7 @@ public final class ReadmeDocsTest {
 
     static final String INCLUDE_BUILD_SNIPPET = "includeBuild('/path/to/TinyHttpd')";
 
-    static final String VERIFIED_COMMIT = "c000eb1";
+    static final String VERIFIED_COMMIT = "b759e2d";
 
     private static final String MARKER = "(미확정)";
 

@@ -435,16 +435,16 @@ public class BuildLayoutTest {
     @Test
     public void sdsAc20_OPS_BUILD_003_AC1_readmeNamesTinyHttpdCommit() throws IOException {
         String readme = read(new File(ROOT, "docs/api/README.md"));
-        assertTrue(readme.contains("c000eb1"));
+        assertTrue(readme.contains("b759e2d"));
         assertFalse("the previous verified commit is gone", readme.contains("46b973e"));
     }
 
     // OPS-BUILD-003 AC-1; OPS-BUILD-001 AC-1: settings.gradle, CLAUDE.md and docs/api name one verified TinyHttpd commit
     @Test
     public void ops_BUILD_003_AC1_settingsGradleAndClaudeMdNameTheSameVerifiedCommit() throws IOException {
-        assertTrue(read(new File(ROOT, "settings.gradle")).contains("def verifiedTinyHttpd = 'c000eb1'"));
+        assertTrue(read(new File(ROOT, "settings.gradle")).contains("def verifiedTinyHttpd = 'b759e2d'"));
         String claude = read(new File(ROOT, "CLAUDE.md"));
-        assertTrue(claude.contains("c000eb1"));
+        assertTrue(claude.contains("b759e2d"));
         assertFalse("the previous verified commit is gone", claude.contains("46b973e"));
         assertFalse("settings.gradle keeps no previous commit", read(new File(ROOT, "settings.gradle")).contains("46b973e"));
     }
