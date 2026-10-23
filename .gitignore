@@ -11,3 +11,9 @@
 .agents/
 .codex/
 .mcp.json
+
+# kiwi tool run state (the committed kiwi/orchestrator/ records stay tracked)
+/kiwi/.status.json
+/kiwi/pipeline.jsonl
+/kiwi/waves.jsonl
+/docs/.kiwi/

@@ -58,7 +58,7 @@ The five targets of `object.md` §17.1.
 
 ## Open items
 
-- The vulnerability scan completed on 2026-10-21: [vulnerability-scan.md](vulnerability-scan.md) records `Status: completed`; High/Critical and unscored findings are zero. `releaseCheck` passed without risk-acceptance exceptions. Three Medium TinyHttpd associations remain visible. The exact Kotlin standard-library false positive and build tooling scope are documented in [security review](security-review.md).
+- The vulnerability scan completed on 2026-10-23 (rerun against TinyHttpd 3.0.0, `com.snoworca:tinyhttpd-*`): [vulnerability-scan.md](vulnerability-scan.md) records `Status: completed`; High/Critical and unscored findings are zero. `releaseCheck` passed without risk-acceptance exceptions. One Medium association remains visible: CVE-2002-1819 on the `NaruServe-tinyhttpd` module jar (version `0.1.0-SNAPSHOT`); the TinyHttpd 3.0.0 jars carry no finding. The exact Kotlin standard-library false positive and build tooling scope are documented in [security review](security-review.md).
 
 ## API usability update — epic #21
 
