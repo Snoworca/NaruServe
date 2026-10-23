@@ -69,6 +69,22 @@ public class WebSocketShutdownSocketTest {
         return app.listen(0).port();
     }
 
+    /**
+     * The state and top frames of the sender threads of {@code port}, for a failed wait: this wait failed once in two
+     * of four full Java 8 runs (expected 2 blocked, found 1) and never alone, so the next failure must say why.
+     */
+    private static String senderThreads(int port) {
+        StringBuilder sb = new StringBuilder(" [sender threads:");
+        for (Thread t : Http.threads("naruserve-" + port + "-ws-sender-")) {
+            StackTraceElement[] st = t.getStackTrace();
+            sb.append("\n  ").append(t.getName()).append(' ').append(t.getState());
+            for (int i = 0; i < Math.min(4, st.length); i++) {
+                sb.append("\n    at ").append(st[i]);
+            }
+        }
+        return sb.append("\n]").toString();
+    }
+
     private RawWebSocketClient open(int port, String path) throws IOException {
         RawWebSocketClient c = RawWebSocketClient.open(port, path);
         clients.add(c);
@@ -93,7 +109,7 @@ public class WebSocketShutdownSocketTest {
         while (Http.blockedThreads(port).size() < 2 && System.nanoTime() < end) {
             Thread.sleep(5);
         }
-        assertEquals("sender threads blocked in a write", 2, Http.blockedThreads(port).size());
+        assertEquals("sender threads blocked in a write" + senderThreads(port), 2, Http.blockedThreads(port).size());
         Thread stopper = new Thread(() -> app.shutdown(5, TimeUnit.SECONDS));
         long start = System.nanoTime();
         stopper.start();
