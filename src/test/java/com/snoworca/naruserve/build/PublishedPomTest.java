@@ -25,6 +25,8 @@ import org.w3c.dom.NodeList;
 public class PublishedPomTest {
 
     private static final String VERSION = "0.1.0-SNAPSHOT";
+    /** The version of the included TinyHttpd build (group com.snoworca since TinyHttpd 3.0.0). */
+    private static final String TINYHTTPD_VERSION = "3.0.0";
 
     /** One parsed dependency: version and scope. */
     static final class Dep {
@@ -102,9 +104,9 @@ public class PublishedPomTest {
         Map<String, Element> poms = poms();
         Map<String, Dep> tiny = deps(poms.get("NaruServe-tinyhttpd"));
         for (String t : new String[] {"tinyhttpd-core", "tinyhttpd-websocket"}) {
-            Dep d = tiny.get("com.snoworca.tinyhttpd:" + t);
+            Dep d = tiny.get("com.snoworca:" + t);
             assertNotNull(t + " in " + tiny, d);
-            assertEquals(t, VERSION, d.version);
+            assertEquals(t, TINYHTTPD_VERSION, d.version);
         }
         Dep gson = deps(poms.get("NaruServe-gson")).get("com.google.code.gson:gson");
         assertNotNull(gson);
@@ -163,10 +165,10 @@ public class PublishedPomTest {
         assertTrue(publishing, Pattern.compile("from\\s+(p\\.)?components\\.java").matcher(publishing).find());
         assertTrue(publishing, Pattern.compile("versionMapping\\s*\\{\\s*allVariants\\s*\\{\\s*fromResolutionResult\\(\\)")
                 .matcher(publishing).find());
-        assertTrue(build.contains("'com.snoworca.tinyhttpd:tinyhttpd-core'"));
-        assertTrue(build.contains("'com.snoworca.tinyhttpd:tinyhttpd-websocket'"));
+        assertTrue(build.contains("'com.snoworca:tinyhttpd-core'"));
+        assertTrue(build.contains("'com.snoworca:tinyhttpd-websocket'"));
         assertFalse("TinyHttpd declarations stay versionless",
-                Pattern.compile("com\\.snoworca\\.tinyhttpd:tinyhttpd-[a-z]+:").matcher(build).find());
+                Pattern.compile("com\\.snoworca:tinyhttpd-[a-z]+:").matcher(build).find());
     }
 
     // SDS-AC-8; FR-REL-005 AC-4

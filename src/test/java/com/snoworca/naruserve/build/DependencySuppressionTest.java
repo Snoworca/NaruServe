@@ -110,7 +110,7 @@ public class DependencySuppressionTest {
         assertTrue(purl.equals(PURL) && cve.equals(CVE));
         for (String other : new String[] {"pkg:maven/org.jetbrains.kotlin/kotlin-gradle-plugin@2.2.0",
                 "pkg:maven/org.jetbrains.kotlin/kotlin-stdlib@2.2.1",
-                "pkg:maven/com.snoworca.tinyhttpd/tinyhttpd-core@0.1.0-SNAPSHOT"}) {
+                "pkg:maven/com.snoworca/tinyhttpd-core@3.0.0"}) {
             assertFalse(other.equals(purl) && CVE.equals(cve));
         }
         assertFalse(PURL.equals(purl) && "CVE-2026-00000".equals(cve));

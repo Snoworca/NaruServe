@@ -98,7 +98,7 @@ The third part of the API 21 basis is the D-385 rule: no module has a compile-ti
 ## TinyHttpd
 
 TinyHttpd is not published by this repository. The POM of `NaruServe-tinyhttpd` depends on
-`com.snoworca.tinyhttpd:tinyhttpd-core:0.1.0-SNAPSHOT` and `com.snoworca.tinyhttpd:tinyhttpd-websocket:0.1.0-SNAPSHOT`,
+`com.snoworca:tinyhttpd-core:3.0.0` and `com.snoworca:tinyhttpd-websocket:3.0.0`,
 which resolve only from your own build of TinyHttpd. The one verified way is Gradle `includeBuild` of a TinyHttpd
 checkout in the consumer's `settings.gradle`:
 
@@ -106,7 +106,7 @@ checkout in the consumer's `settings.gradle`:
 includeBuild('/path/to/TinyHttpd')
 ```
 
-NaruServe was verified against TinyHttpd commit `46b973e`. Without the `includeBuild`, a build that takes
+NaruServe was verified against TinyHttpd commit `c000eb1` (TinyHttpd 3.0.0). Without the `includeBuild`, a build that takes
 `NaruServe-tinyhttpd` (or `NaruServe`) from `mavenLocal()` fails with an unresolved `tinyhttpd-core`.
 
 ## License

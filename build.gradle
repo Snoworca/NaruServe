@@ -58,10 +58,11 @@ def configureCompile = { Project p ->
 def mainDependencies = [
     ':NaruServe-api'      : [:],
     ':NaruServe-servlet'  : [api: [':NaruServe-api']],
-    // TinyHttpd stays implementation-scope and versionless: the included build substitutes the coordinates.
+    // TinyHttpd stays implementation-scope and versionless: the included build substitutes the coordinates
+    // (group com.snoworca since TinyHttpd 3.0.0; the Java package is still com.snoworca.tinyhttpd).
     ':NaruServe-tinyhttpd': [api: [':NaruServe-api'],
-                             implementation: ['com.snoworca.tinyhttpd:tinyhttpd-core',
-                                              'com.snoworca.tinyhttpd:tinyhttpd-websocket']],
+                             implementation: ['com.snoworca:tinyhttpd-core',
+                                              'com.snoworca:tinyhttpd-websocket']],
     // api scope: GsonJsonCodec takes a caller-built Gson (CON-BUILD-006 AC-9).
     ':NaruServe-gson'     : [api: [':NaruServe-api', 'com.google.code.gson:gson:2.14.0']],
     ':NaruServe'          : [api: [':NaruServe-api'],
@@ -153,7 +154,7 @@ def classRefPrefixes = { String path ->
 
 // @req FR-REL-005
 // mavenLocal only: the publishing block declares no repository. The POM takes each dependency's resolved version, so the
-// versionless TinyHttpd declarations publish as the included build's 0.1.0-SNAPSHOT.
+// versionless TinyHttpd declarations publish as the included build's version (3.0.0).
 def configurePublishing = { Project p ->
     p.apply plugin: 'maven-publish'
     p.publishing {
@@ -326,6 +327,9 @@ def checkDependencyRules = tasks.register('checkDependencyRules') {
     def reportFile = dependencyReport.get().asFile
     def modules = naruProjects
     doLast {
+        // TinyHttpd 3.0.0 publishes under group com.snoworca; the tinyhttpd- name prefix tells it from
+        // NaruServe's own group com.snoworca.naruserve (a different group string, so == cannot confuse them).
+        def isTinyHttpd = { mv -> mv.group == 'com.snoworca' && mv.name.startsWith('tinyhttpd-') }
         def lines = []
         def violations = []
         modules.each { Project p ->
@@ -337,7 +341,7 @@ def checkDependencyRules = tasks.register('checkDependencyRules') {
                         violations << "unresolved ${dep.attempted.displayName} on ${cn} of ${path}"
                     } else {
                         def mv = dep.selected.moduleVersion
-                        if (mv.group == 'com.snoworca.tinyhttpd' && path != ':NaruServe-tinyhttpd') {
+                        if (isTinyHttpd(mv) && path != ':NaruServe-tinyhttpd') {
                             violations << "${mv.group}:${mv.name} declared by ${path} (only :NaruServe-tinyhttpd may)"
                         }
                     }
@@ -353,10 +357,10 @@ def checkDependencyRules = tasks.register('checkDependencyRules') {
                     if (mv.group == 'com.google.code.gson' && mv.name == 'gson' && mv.version != '2.14.0') {
                         violations << "${coordinate} on ${cn} of ${path} (Gson must resolve to 2.14.0)"
                     }
-                    if (mv.group == 'com.snoworca.tinyhttpd' && mv.name in ['tinyhttpd-router', 'tinyhttpd-session']) {
+                    if (isTinyHttpd(mv) && mv.name in ['tinyhttpd-router', 'tinyhttpd-session']) {
                         violations << "${mv.group}:${mv.name} on ${cn} of ${path} (router and session are not used)"
                     }
-                    if (mv.group == 'com.snoworca.tinyhttpd' && path != ':NaruServe-tinyhttpd'
+                    if (isTinyHttpd(mv) && path != ':NaruServe-tinyhttpd'
                             && cn in ['compileClasspath', 'testCompileClasspath']) {
                         violations << "${mv.group}:${mv.name} on ${cn} of ${path} (TinyHttpd stays implementation-scope)"
                     }

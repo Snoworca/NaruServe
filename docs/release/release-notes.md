@@ -83,7 +83,7 @@ This update changes the public API: typed attribute reads use `attributeAs`; `at
 ## TinyHttpd for consumers
 
 TinyHttpd is not published by this repository. The POM of `NaruServe-tinyhttpd` names
-`com.snoworca.tinyhttpd:tinyhttpd-core:0.1.0-SNAPSHOT` and `com.snoworca.tinyhttpd:tinyhttpd-websocket:0.1.0-SNAPSHOT`;
+`com.snoworca:tinyhttpd-core:3.0.0` and `com.snoworca:tinyhttpd-websocket:3.0.0`;
 they resolve only from the consumer's own build of TinyHttpd. The one verified way is Gradle `includeBuild` of the
 TinyHttpd checkout in the consumer's `settings.gradle`:
 
@@ -91,13 +91,13 @@ TinyHttpd checkout in the consumer's `settings.gradle`:
 includeBuild('/path/to/TinyHttpd')
 ```
 
-NaruServe was verified against TinyHttpd commit `46b973e`.
+NaruServe was verified against TinyHttpd commit `c000eb1` (TinyHttpd 3.0.0).
 
 Recorded consumer run: after `./gradlew publishToMavenLocal`, a Gradle build in a temporary directory declared
 `mavenLocal()` and `implementation 'com.snoworca.naruserve:NaruServe-tinyhttpd:0.1.0-SNAPSHOT'` and resolved its
 `runtimeClasspath`, once with `includeBuild('/Users/beom/work/git/TinyHttpd')` in `settings.gradle` and once without.
-The TinyHttpd checkout was at `38051b6` during this run, not at the verified commit `46b973e`; the build warns about
-that difference and does not fail. The consumer build was:
+The TinyHttpd checkout was at `38051b6` during this run (TinyHttpd 0.1.0-SNAPSHOT, group `com.snoworca.tinyhttpd`), not at the
+commit that was then verified (`46b973e`); the build warns about that difference and does not fail. The consumer build was:
 
 ```groovy
 // settings.gradle (the run without includeBuild omits the second line)

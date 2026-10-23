@@ -321,11 +321,11 @@ public class BuildChecksTest {
     // SDS-AC-17; CON-BUILD-009 AC-2, CON-BUILD-009 AC-3, CON-BUILD-009 AC-4, CON-BUILD-016 AC-1
     @Test
     public void sdsAc17_CON_BUILD_009_AC2_AC3_tinyHttpdOutsideAdapterOrRouterFails() throws IOException {
-        appendBuild("project(':NaruServe-gson') { dependencies { implementation 'com.snoworca.tinyhttpd:tinyhttpd-core' } }\n"
-                + "project(':NaruServe-tinyhttpd') { dependencies { implementation 'com.snoworca.tinyhttpd:tinyhttpd-router' } }");
+        appendBuild("project(':NaruServe-gson') { dependencies { implementation 'com.snoworca:tinyhttpd-core' } }\n"
+                + "project(':NaruServe-tinyhttpd') { dependencies { implementation 'com.snoworca:tinyhttpd-router' } }");
         String out = runner(":checkDependencyRules").buildAndFail().getOutput();
-        assertTrue(out, out.contains("com.snoworca.tinyhttpd:tinyhttpd-core declared by :NaruServe-gson"));
-        assertTrue(out, out.contains("com.snoworca.tinyhttpd:tinyhttpd-router on runtimeClasspath of :NaruServe-tinyhttpd"));
+        assertTrue(out, out.contains("com.snoworca:tinyhttpd-core declared by :NaruServe-gson"));
+        assertTrue(out, out.contains("com.snoworca:tinyhttpd-router on runtimeClasspath of :NaruServe-tinyhttpd"));
     }
 
     // SDS-AC-18; CON-BUILD-012 AC-1, CON-BUILD-012 AC-2

@@ -29,7 +29,7 @@ public final class ReadmeDocsTest {
 
     static final String INCLUDE_BUILD_SNIPPET = "includeBuild('/path/to/TinyHttpd')";
 
-    static final String VERIFIED_COMMIT = "46b973e";
+    static final String VERIFIED_COMMIT = "c000eb1";
 
     private static final String MARKER = "(미확정)";
 
@@ -150,8 +150,8 @@ public final class ReadmeDocsTest {
         for (String path : new String[] {"README.md", "docs/release/release-notes.md"}) {
             String doc = read(path);
             for (String part : new String[] {NOT_PUBLISHED_PHRASE, INCLUDE_BUILD_SNIPPET,
-                    "com.snoworca.tinyhttpd:tinyhttpd-core:0.1.0-SNAPSHOT",
-                    "com.snoworca.tinyhttpd:tinyhttpd-websocket:0.1.0-SNAPSHOT", VERIFIED_COMMIT}) {
+                    "com.snoworca:tinyhttpd-core:3.0.0",
+                    "com.snoworca:tinyhttpd-websocket:3.0.0", VERIFIED_COMMIT}) {
                 assertTrue(path + " holds " + part, doc.contains(part));
             }
         }

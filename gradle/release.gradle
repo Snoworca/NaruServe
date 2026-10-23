@@ -128,7 +128,7 @@ tasks.register('releaseScan', JavaExec) {
 def pomDir = layout.buildDirectory.dir('reports/naruserve/poms')
 // The included TinyHttpd build has no POM; its checkout LICENSE opens "BSD 3-Clause License".
 def tinyHttpdLicenses = ['tinyhttpd-core', 'tinyhttpd-websocket'].collect {
-    "com.snoworca.tinyhttpd:${it}=BSD-3-Clause|https://github.com/Snoworca/TinyHttpd/blob/main/LICENSE".toString()
+    "com.snoworca:${it}=BSD-3-Clause|https://github.com/Snoworca/TinyHttpd/blob/main/LICENSE".toString()
 }
 
 // @req FR-REL-004

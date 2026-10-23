@@ -28,16 +28,16 @@ public class ScanReportTest {
             ":NaruServe-api|testRuntimeClasspath|junit:junit:4.13.2",
             ":NaruServe-servlet|compileClasspath|javax.servlet:javax.servlet-api:3.1.0",
             ":NaruServe-servlet|testRuntimeClasspath|org.eclipse.jetty:jetty-server:9.4.58.v20250814",
-            ":NaruServe-tinyhttpd|runtimeClasspath|com.snoworca.tinyhttpd:tinyhttpd-websocket:0.1.0-SNAPSHOT",
-            ":NaruServe-tinyhttpd|runtimeClasspath|com.snoworca.tinyhttpd:tinyhttpd-core:0.1.0-SNAPSHOT",
+            ":NaruServe-tinyhttpd|runtimeClasspath|com.snoworca:tinyhttpd-websocket:3.0.0",
+            ":NaruServe-tinyhttpd|runtimeClasspath|com.snoworca:tinyhttpd-core:3.0.0",
             ":NaruServe-gson|runtimeClasspath|com.google.code.gson:gson:2.14.0",
             ":NaruServe|runtimeClasspath|com.google.code.gson:gson:2.14.0",
-            ":NaruServe|runtimeClasspath|com.snoworca.tinyhttpd:tinyhttpd-core:0.1.0-SNAPSHOT",
+            ":NaruServe|runtimeClasspath|com.snoworca:tinyhttpd-core:3.0.0",
             ":NaruServe-slf4j|runtimeClasspath|org.slf4j:slf4j-api:1.7.36");
 
     static final List<String> EXPECTED = Arrays.asList("com.google.code.gson:gson:2.14.0",
-            "com.snoworca.tinyhttpd:tinyhttpd-core:0.1.0-SNAPSHOT",
-            "com.snoworca.tinyhttpd:tinyhttpd-websocket:0.1.0-SNAPSHOT", "org.slf4j:slf4j-api:1.7.36");
+            "com.snoworca:tinyhttpd-core:3.0.0",
+            "com.snoworca:tinyhttpd-websocket:3.0.0", "org.slf4j:slf4j-api:1.7.36");
 
     /** The non-empty lines after "## Dependencies". */
     public static List<String> dependencySection(String report) {
@@ -83,7 +83,7 @@ public class ScanReportTest {
         for (String expected : new String[] {"com.google.code.gson:gson:2.14.0",
                 "com.google.errorprone:error_prone_annotations:2.48.0", "org.jetbrains.kotlin:kotlin-stdlib:2.2.0",
                 "org.jetbrains:annotations:13.0", "org.slf4j:slf4j-api:1.7.36",
-                "com.snoworca.tinyhttpd:tinyhttpd-core:0.1.0-SNAPSHOT"}) {
+                "com.snoworca:tinyhttpd-core:3.0.0"}) {
             assertTrue(expected + " in " + deps, deps.contains(expected));
         }
         for (String dep : deps) {
@@ -103,8 +103,8 @@ public class ScanReportTest {
                 "com.snoworca.naruserve:NaruServe-api:0.1.0-SNAPSHOT"}) {
             assertFalse(left, deps.contains(left));
         }
-        assertTrue(deps.contains("com.snoworca.tinyhttpd:tinyhttpd-core:0.1.0-SNAPSHOT"));
-        assertTrue(deps.contains("com.snoworca.tinyhttpd:tinyhttpd-websocket:0.1.0-SNAPSHOT"));
+        assertTrue(deps.contains("com.snoworca:tinyhttpd-core:3.0.0"));
+        assertTrue(deps.contains("com.snoworca:tinyhttpd-websocket:3.0.0"));
     }
 
     // SDS-AC-2; FR-REL-002 AC-2

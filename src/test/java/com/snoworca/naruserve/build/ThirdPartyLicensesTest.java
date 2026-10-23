@@ -34,7 +34,7 @@ public class ThirdPartyLicensesTest {
         SortedMap<String, License> shipped = new TreeMap<>();
         shipped.put("com.google.code.gson:gson:2.14.0",
                 new License("Apache-2.0", "https://www.apache.org/licenses/LICENSE-2.0.txt"));
-        shipped.put("com.snoworca.tinyhttpd:tinyhttpd-core:0.1.0-SNAPSHOT",
+        shipped.put("com.snoworca:tinyhttpd-core:3.0.0",
                 new License("BSD-3-Clause", "TinyHttpd/LICENSE"));
         return shipped;
     }
@@ -49,13 +49,13 @@ public class ThirdPartyLicensesTest {
         String top = md.substring(0, provided);
         assertTrue(top, top.contains("| com.google.code.gson:gson:2.14.0 | Apache-2.0 | "
                 + "https://www.apache.org/licenses/LICENSE-2.0.txt |"));
-        assertTrue(top, top.contains("| com.snoworca.tinyhttpd:tinyhttpd-core:0.1.0-SNAPSHOT | BSD-3-Clause | "
+        assertTrue(top, top.contains("| com.snoworca:tinyhttpd-core:3.0.0 | BSD-3-Clause | "
                 + "TinyHttpd/LICENSE |"));
         assertTrue(md.substring(provided), md.substring(provided).contains(
                 "| javax.servlet:javax.servlet-api:3.1.0 | CDDL + GPLv2 with classpath exception | https://x |"));
         assertTrue("rows are diffable against the graph", ThirdPartyLicenses.diff(Arrays.asList(
                 ":NaruServe|runtimeClasspath|com.google.code.gson:gson:2.14.0",
-                ":NaruServe|runtimeClasspath|com.snoworca.tinyhttpd:tinyhttpd-core:0.1.0-SNAPSHOT",
+                ":NaruServe|runtimeClasspath|com.snoworca:tinyhttpd-core:3.0.0",
                 ":NaruServe-servlet|compileClasspath|javax.servlet:javax.servlet-api:3.1.0"), md).isEmpty());
     }
 
@@ -69,8 +69,8 @@ public class ThirdPartyLicensesTest {
         for (String dep : new String[] {"com.google.code.gson:gson:2.14.0",
                 "com.google.errorprone:error_prone_annotations:", "org.jetbrains.kotlin:kotlin-stdlib:2.2.0",
                 "org.jetbrains:annotations:", "org.slf4j:slf4j-api:1.7.36",
-                "com.snoworca.tinyhttpd:tinyhttpd-core:0.1.0-SNAPSHOT",
-                "com.snoworca.tinyhttpd:tinyhttpd-websocket:0.1.0-SNAPSHOT"}) {
+                "com.snoworca:tinyhttpd-core:3.0.0",
+                "com.snoworca:tinyhttpd-websocket:3.0.0"}) {
             String row = null;
             for (String line : top.split("\n")) {
                 if (line.startsWith("| " + dep)) {

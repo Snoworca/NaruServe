@@ -234,8 +234,8 @@ public class BuildLayoutTest {
     public void con_BUILD_006_AC1_AC4_AC6_AC7_runtimeClasspathsHoldExactlyTheDeclaredMainDependencies()
             throws IOException {
         String api = "com.snoworca.naruserve:NaruServe-api";
-        String core = "com.snoworca.tinyhttpd:tinyhttpd-core:0.1.0-SNAPSHOT";
-        String websocket = "com.snoworca.tinyhttpd:tinyhttpd-websocket:0.1.0-SNAPSHOT";
+        String core = "com.snoworca:tinyhttpd-core:3.0.0";
+        String websocket = "com.snoworca:tinyhttpd-websocket:3.0.0";
         String gson = "com.google.code.gson:gson:2.14.0";
         // Gson 2.14.0 itself brings error_prone_annotations; AC-4 limits declarations, not transitive edges.
         String gsonTransitive = "com.google.errorprone:error_prone_annotations:2.48.0";
@@ -262,7 +262,7 @@ public class BuildLayoutTest {
         Set<String> bootstrapCompile = components("NaruServe", "compileClasspath");
         assertTrue(bootstrapCompile.toString(), bootstrapCompile.contains("com.google.code.gson:gson:2.14.0"));
         for (String c : bootstrapCompile) {
-            assertFalse("TinyHttpd is implementation-scope: " + c, c.startsWith("com.snoworca.tinyhttpd:"));
+            assertFalse("TinyHttpd is implementation-scope: " + c, c.startsWith("com.snoworca:tinyhttpd-"));
         }
     }
 
@@ -434,7 +434,19 @@ public class BuildLayoutTest {
     // SDS-AC-20; OPS-BUILD-003 AC-1
     @Test
     public void sdsAc20_OPS_BUILD_003_AC1_readmeNamesTinyHttpdCommit() throws IOException {
-        assertTrue(read(new File(ROOT, "docs/api/README.md")).contains("46b973e"));
+        String readme = read(new File(ROOT, "docs/api/README.md"));
+        assertTrue(readme.contains("c000eb1"));
+        assertFalse("the previous verified commit is gone", readme.contains("46b973e"));
+    }
+
+    // OPS-BUILD-003 AC-1; OPS-BUILD-001 AC-1: settings.gradle, CLAUDE.md and docs/api name one verified TinyHttpd commit
+    @Test
+    public void ops_BUILD_003_AC1_settingsGradleAndClaudeMdNameTheSameVerifiedCommit() throws IOException {
+        assertTrue(read(new File(ROOT, "settings.gradle")).contains("def verifiedTinyHttpd = 'c000eb1'"));
+        String claude = read(new File(ROOT, "CLAUDE.md"));
+        assertTrue(claude.contains("c000eb1"));
+        assertFalse("the previous verified commit is gone", claude.contains("46b973e"));
+        assertFalse("settings.gradle keeps no previous commit", read(new File(ROOT, "settings.gradle")).contains("46b973e"));
     }
 
     // SDS-AC-20; OPS-BUILD-003 AC-2

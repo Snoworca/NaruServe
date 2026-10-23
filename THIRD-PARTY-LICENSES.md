@@ -6,8 +6,8 @@ Written by `./gradlew -Prelease releaseLicenses` from the `runtimeClasspath` of 
 |---|---|---|
 | com.google.code.gson:gson:2.14.0 | Apache-2.0 | https://www.apache.org/licenses/LICENSE-2.0.txt |
 | com.google.errorprone:error_prone_annotations:2.48.0 | Apache 2.0 | http://www.apache.org/licenses/LICENSE-2.0.txt |
-| com.snoworca.tinyhttpd:tinyhttpd-core:0.1.0-SNAPSHOT | BSD-3-Clause | https://github.com/Snoworca/TinyHttpd/blob/main/LICENSE |
-| com.snoworca.tinyhttpd:tinyhttpd-websocket:0.1.0-SNAPSHOT | BSD-3-Clause | https://github.com/Snoworca/TinyHttpd/blob/main/LICENSE |
+| com.snoworca:tinyhttpd-core:3.0.0 | BSD-3-Clause | https://github.com/Snoworca/TinyHttpd/blob/main/LICENSE |
+| com.snoworca:tinyhttpd-websocket:3.0.0 | BSD-3-Clause | https://github.com/Snoworca/TinyHttpd/blob/main/LICENSE |
 | org.jetbrains.kotlin:kotlin-stdlib:2.2.0 | The Apache License, Version 2.0 | http://www.apache.org/licenses/LICENSE-2.0.txt |
 | org.jetbrains:annotations:13.0 | The Apache Software License, Version 2.0 | http://www.apache.org/licenses/LICENSE-2.0.txt |
 | org.slf4j:slf4j-api:1.7.36 | MIT License | http://www.opensource.org/licenses/mit-license.php |
