@@ -527,6 +527,12 @@ public final class DefaultRestApp implements RestApp {
             public AppState state() {
                 return lifecycle.state();
             }
+
+            // @req FR-DX-013
+            @Override
+            public void shutdown(long timeout, TimeUnit unit) {
+                DefaultRestApp.this.shutdown(timeout, unit);
+            }
         };
     }
 

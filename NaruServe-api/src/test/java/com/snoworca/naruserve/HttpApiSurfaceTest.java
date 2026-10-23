@@ -336,6 +336,8 @@ public class HttpApiSurfaceTest {
                 "routerPolicy(RouterPolicy)->RestApp",
                 // wave 4: IR-APP-001, FR-APP-001
                 "builder()->Builder", "create()->RestApp",
+                // FR-DX-012 AC-1: the one-call entry point (IR-ENGINE-001 AC-7, IR-STATIC-002 AC-5, IR-APP-002 AC-2)
+                "start(int,Configurer)->ServerHandle",
                 // wave 4: IR-APP-002
                 "use(Middleware)->RestApp", "use(String,Middleware)->RestApp",
                 "get(String,Middleware,RouteHandler)->RestApp", "post(String,Middleware,RouteHandler)->RestApp",
@@ -374,7 +376,7 @@ public class HttpApiSurfaceTest {
             }
         }
         java.util.Collections.sort(statics);
-        assertEquals(Arrays.asList("builder", "create"), statics);
+        assertEquals(Arrays.asList("builder", "create", "start"), statics);
     }
 
     // SDS-AC-6; IR-HTTP-005 AC-3
@@ -435,9 +437,13 @@ public class HttpApiSurfaceTest {
     // SDS-AC-5 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-3.sds.md; FR-APP-002 AC-5 (re-points FR-HTTP-008 AC-6)
     @Test
     public void sdsAc5_FR_APP_002_AC5_builderAndCreateAreTheOnlyPublicStaticRestAppFactoriesOfRestApp() {
+        // FR-DX-012: start(int, Configurer) is a public static too but returns a ServerHandle, not a RestApp or its
+        // builder, so the AC (the only statics that return a RestApp or its Builder) stays true.
         Set<String> factories = new TreeSet<>();
         for (java.lang.reflect.Method m : RestApp.class.getDeclaredMethods()) {
-            if (Modifier.isPublic(m.getModifiers()) && Modifier.isStatic(m.getModifiers())) {
+            if (Modifier.isPublic(m.getModifiers()) && Modifier.isStatic(m.getModifiers())
+                    && (RestApp.class.isAssignableFrom(m.getReturnType())
+                            || RestApp.Builder.class.isAssignableFrom(m.getReturnType()))) {
                 factories.add(m.getName() + "->" + m.getReturnType().getSimpleName());
             }
         }

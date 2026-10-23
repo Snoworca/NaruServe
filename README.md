@@ -50,9 +50,7 @@ import com.snoworca.naruserve.RestApp;
 
 public class HelloServer {
     public static void main(String[] args) {
-        RestApp app = RestApp.create();
-        app.get("/hello", (req, res) -> res.send("Hello World"));
-        app.listen(3000);
+        RestApp.start(3000, app -> app.get("/hello", (req, res) -> res.send("Hello World")));
     }
 }
 ```
@@ -63,9 +61,7 @@ public class HelloServer {
 import com.snoworca.naruserve.RestApp
 
 fun main() {
-    val app = RestApp.create()
-    app.get("/hello") { _, res -> res.send("Hello World") }
-    app.listen(3000)
+    RestApp.start(3000) { app -> app.get("/hello") { _, res -> res.send("Hello World") } }
 }
 ```
 
@@ -79,7 +75,7 @@ Run the source examples from this checkout (requires a JDK and the TinyHttpd che
 ./gradlew -p examples/kotlin -PtinyHttpdDir=/absolute/path/to/TinyHttpd run
 ```
 
-In another terminal: `curl http://127.0.0.1:3000/hello`.
+In another terminal: `curl http://127.0.0.1:3000/hello`. `RestApp.start` listens on `127.0.0.1` only (this device), writes one `Listening on ...` line and stops on Ctrl+C; open the LAN inside the lambda with `app.server(o -> o.bindAddress("0.0.0.0"))`. `RestApp.create()` plus `app.listen(...)` remains the lower-level path.
 The examples use a Gradle composite build of this source checkout; they do not require local Maven publication.
 For a separate consumer project using Maven coordinates, follow Install and TinyHttpd above/below: publish NaruServe locally, add `mavenLocal()`, and include the TinyHttpd checkout. Nothing here is published to Maven Central.
 

@@ -1,0 +1,46 @@
+# RestApp.start verification (target start-api), 2026-10-23
+# TinyHttpd checkout: clean clone of /Users/beom/work/git/TinyHttpd at c000eb1 (the original checkout has uncommitted docs changes, which CON-BUILD-010 tests reject)
+
+## RED before the implementation (new tests and re-pointed surface tests written first)
+$ ./gradlew :NaruServe-api:compileTestJava -PtinyHttpdDir=<clean clone> --offline
+> Task :NaruServe-api:compileTestKotlin FAILED
+e: .../StartKotlinTest.kt:3:40 Unresolved reference 'AppStarter'.
+e: .../StartKotlinTest.kt:27:48 Unresolved reference 'start'.
+(the Java tests StartApiTest and AppStarterTest, and HttpApiSurfaceTest/AppLifecycleApiTest with the new expected sets, did not compile either: RestApp.start, ServerHandle.url, ServerHandle.shutdown and AppStarter did not exist)
+
+## GREEN JDK 17 (default)
+$ ./gradlew build --rerun-tasks --continue -PtinyHttpdDir=<clean clone of c000eb1>
+BUILD SUCCESSFUL in 1m 53s
+exit=0
+tests=1712 skipped=0 failures=0 errors=0 (sum of build/test-results/*/*.xml of all modules; wave 1 baseline 1678 + 34 new)
+New tests: StartApiTest (9), AppStarterTest (15), StartKotlinTest (2), StartDocsTest (3) in NaruServe-api; StartBootstrapTest (4, two of them child JVMs) in NaruServe; StartRunKotlinTest (1) in NaruServe-kotlin.
+The build includes animalsnifferMain (android-api-level-21) and checkClassReferences for every Android-checked module.
+
+## GREEN Java 8 runtime (11 Test tasks forked on Zulu 8.0.504)
+$ ./gradlew build --rerun-tasks --continue -I gradle/java8-tests.gradle -Dnaruserve.java8.home=<Zulu 8> -PtinyHttpdDir=<clean clone of c000eb1>
+JAVA8_TEST_RUNTIME lines: 11
+BUILD SUCCESSFUL in 1m 52s
+exit=0
+tests=1712 skipped=0 failures=0 errors=0
+Note: of four full Java 8 runs in this session (1709 tests passed first; then three runs at 1712 tests, of which the first two failed once each on NaruServe-tinyhttpd WebSocketShutdownSocketTest.sdsAc9_FR_WS_010_AC4_AC2_twoStalledSessionsAbortedWithin1200MsHealthyGets1001;
+the third passed). The failure was ("sender threads blocked in a write expected:<2> but was:<1>", cause not established: a loopback probe showed the kernel absorbs at most 3 MiB of the 8 MiB each stalled session queues, so a socket-buffer explanation is ruled out; the class then passed 15 of 15 runs on Java 8, alone, as a module and in 3 full builds under CPU load; the assertion now prints the sender threads on failure). That class passed 3 of 3 alone on Java 8 and the whole NaruServe-tinyhttpd test task passed 2 of 2 alone.
+
+## manual run, JDK 17: java -cp <jars> Hello 18431 (main only calls RestApp.start(port, app -> {get /hello; onStop prints}))
+$ curl http://127.0.0.1:18431/hello
+Hello World [http 200]
+--- child output
+2026-10-23T09:54:26.798+0900 INFO Listening on http://127.0.0.1:18431 (this device only). Press Ctrl+C to stop.
+2026-10-23T09:54:28.912+0900 INFO GET /hello 200 8ms in=0 out=11 rid=2647c935b35f27ee
+2026-10-23T09:54:28.919+0900 INFO Stopping (grace 5s)
+onStop ran
+process exited after SIGTERM
+
+## manual run, Java 8 (Zulu 8.0.504)
+$ curl http://127.0.0.1:18432/hello
+Hello World [http 200]
+--- child output
+2026-10-23T09:54:32.212+0900 INFO Listening on http://127.0.0.1:18432 (this device only). Press Ctrl+C to stop.
+2026-10-23T09:54:34.260+0900 INFO GET /hello 200 7ms in=0 out=11 rid=05c287995bf7ac5e
+2026-10-23T09:54:34.267+0900 INFO Stopping (grace 5s)
+onStop ran
+process exited after SIGTERM

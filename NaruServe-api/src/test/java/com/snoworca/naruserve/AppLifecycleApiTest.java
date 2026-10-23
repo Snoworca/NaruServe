@@ -191,10 +191,11 @@ public class AppLifecycleApiTest {
         assertEquals(RestApp.class, RestApp.class.getMethod("onStop", LifecycleCallback.class).getReturnType());
     }
 
-    // SDS-AC-5; IR-APP-005 AC-3
+    // SDS-AC-5; IR-APP-005 AC-3 (amended by FR-DX-013 AC-1: url() and shutdown(long, TimeUnit) join the three accessors)
     @Test
     public void sdsAc5_IR_APP_005_AC3_serverHandleHasPortAddressStateReadingTheLiveState() {
-        assertEquals(setOf("port[]->int", "address[]->String", "state[]->AppState"), declared(ServerHandle.class));
+        assertEquals(setOf("port[]->int", "address[]->String", "state[]->AppState", "url[]->String",
+                "shutdown[long, class java.util.concurrent.TimeUnit]->void"), declared(ServerHandle.class));
         InMemoryHttpAdapter adapter = new InMemoryHttpAdapter();
         RestApp app = newApp(adapter);
         ServerHandle h = app.listen(0);

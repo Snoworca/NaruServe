@@ -77,7 +77,7 @@ Pong timeout은 Ping 주기와 같습니다. TinyHttpd의 `WebSocketListener`에
 
 | 항목 | 기본 | 바꾸려면 |
 |---|---|---|
-| 바인딩 주소 | `127.0.0.1`(IPv4 루프백) | `app.server(options -> ...)`의 `bindAddress("0.0.0.0")`. 루프백이 아닌 주소면 `listen()`이 인증 여부와 상관없이 항상 보안 경고 로그를 남기며, 인증은 앱이 미들웨어로 직접 붙여야 합니다. 프레임워크는 앱에 인증이 있는지 알 수 없어 경고를 끄지 않습니다. |
+| 바인딩 주소 | `127.0.0.1`(IPv4 루프백). `RestApp.start(...)`도 같은 `127.0.0.1`에 바인딩합니다. | `app.server(options -> ...)`의 `bindAddress("0.0.0.0")`. 루프백이 아닌 주소면 `listen()`이 인증 여부와 상관없이 항상 보안 경고 로그를 남기며, 인증은 앱이 미들웨어로 직접 붙여야 합니다. 프레임워크는 앱에 인증이 있는지 알 수 없어 경고를 끄지 않습니다. |
 | 정적 폴더 목록 | 꺼짐 | `options.directoryListing(true)` |
 | 정적 폴더 index 파일 | `index.html` | `options.index(name)` |
 | SPA fallback | 꺼짐 | `options.spaFallback(true)`. 켜도 `/api/`, `/ws/` 아래에는 동작하지 않습니다. |

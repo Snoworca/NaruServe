@@ -181,6 +181,7 @@ app.routerPolicy(RouterPolicy.builder().ignoreTrailingSlash(true).build())
 | `onStart(ctx -> ...)` | 서버가 요청을 받기 전에 한 번 실행. 서비스 생성·등록 |
 | `onStop(ctx -> ...)` | 정상 종료 때 한 번 실행. 서비스가 아직 살아 있습니다. |
 | `listen(port)` | 서버 시작. `ServerHandle` 반환 |
+| `RestApp.start(port, app -> ...)` | `create()`·설정·`listen`을 한 번에 하고 시작 로그와 JVM 종료 훅까지 붙인 정적 진입점. `ServerHandle` 반환 ([start](#start)) |
 | `shutdown(timeout, unit)` | 정상 종료 |
 | `state()` | 현재 상태: `NEW`, `STARTING`, `RUNNING`, `STOPPING`, `FAILED`, `TERMINATED` |
 
@@ -200,7 +201,7 @@ ServerHandle server = app.listen(8080);
 - `listen()`이 반환한 뒤 `main`이 끝나도 `shutdown(...)`을 부를 때까지 프로세스가 계속 돕니다. 기본 TinyHttpd 어댑터(`NaruServe-tinyhttpd`)가 daemon이 아닌 keeper 스레드 하나를 `shutdown`까지 띄워 두기 때문이며, TinyHttpd 자체의 스레드는 daemon으로 남습니다. 이렇게 정한 이유는 Express의 `app.listen()`처럼 서버만 띄우는 `main`이 바로 끝나지 않게 하면서, 작업 스레드가 JVM 종료를 막지 않게 하려는 것입니다.
 - 바인딩 실패, `onStart` 예외, 라우트 충돌 같은 설정 오류는 **예외로 던집니다**. 이때 포트는 열려 있지 않고, 이미 만든 리소스는 정리됩니다.
 - 기본으로 **`127.0.0.1`에만** 바인딩합니다. LAN에 열려면 [서버 설정](#서버-설정)의 `options.bindAddress("0.0.0.0")`을 씁니다.
-- `ServerHandle`은 `port()`(실제 포트. `listen(0)`이면 고른 빈 포트), `address()`(바인딩에 쓴 주소. 설정값 그대로이며 기본 `127.0.0.1`), `state()`(부를 때마다 읽는 앱 상태)를 가집니다. Express의 `server.address().port` 대신 짧은 접근자를 둔 이유는 `req.path()`처럼 다른 API와 같은 이름 규칙을 쓰기 위해서입니다.
+- `ServerHandle`은 `port()`(실제 포트. `listen(0)`이면 고른 빈 포트), `address()`(바인딩에 쓴 주소. 설정값 그대로이며 기본 `127.0.0.1`), `state()`(부를 때마다 읽는 앱 상태)를 가집니다. Express의 `server.address().port` 대신 짧은 접근자를 둔 이유는 `req.path()`처럼 다른 API와 같은 이름 규칙을 쓰기 위해서입니다. `url()`은 열어 볼 주소(`http://127.0.0.1:3000`)이고 `0.0.0.0`·`::`에 바인딩했으면 `localhost`로, IPv6 주소는 대괄호로 감쌉니다. `shutdown(timeout, unit)`은 `app.shutdown`과 같은 규칙으로 앱을 끕니다(반복 호출 안전, 음수 timeout은 `IllegalArgumentException`, `null` unit은 `NullPointerException`).
 - Android에서는 메인 스레드에서 호출하지 마세요. 작업 스레드에서 호출합니다.
 
 ## shutdown
@@ -251,3 +252,50 @@ app.staticFiles("/", new File("./www"));
 ServerHandle server = app.listen(8080);
 Runtime.getRuntime().addShutdownHook(new Thread(() -> app.shutdown(10, TimeUnit.SECONDS)));
 ```
+
+## start
+
+Express의 `app.listen(3000, () => ...)`처럼 한 문장으로 서버를 띄우는 정적 진입점입니다. `app` 변수를 따로 만들지 않고 설정 람다 안에서 라우트를 등록합니다.
+
+```java
+ServerHandle handle = RestApp.start(3000, app -> {
+    app.get("/hello", (req, res) -> res.send("Hello World"));
+});
+System.out.println(handle.url());
+```
+
+Kotlin:
+
+```kotlin
+val handle = RestApp.start(3000) { app ->
+    app.get("/hello") { _, res -> res.send("Hello World") }
+}
+println(handle.url())
+```
+
+`start(int port, Configurer<RestApp> routes)`는 다음 순서로 일하고 `ServerHandle`을 돌려줍니다.
+
+1. `RestApp.create()`로 앱을 만듭니다. `NaruServe` 모듈이 없으면 `create()`의 `IllegalStateException`이 그대로 납니다.
+2. `routes`를 한 번 실행합니다. 이때 앱은 `NEW`라서 `get`, `use`, `server`, `onStart`, `onStop`, `trustProxy` 같은 설정을 모두 할 수 있습니다. Kotlin에서 람다의 마지막 식이 `app.get(...)`처럼 값을 돌려줘도 무시됩니다.
+3. `listen(port)`를 부릅니다.
+4. 시작 로그를 한 줄 남깁니다. 예: `Listening on http://127.0.0.1:3000 (this device only). Press Ctrl+C to stop.` `start(0, ...)`이면 실제 포트가 찍힙니다. `0.0.0.0`에 바인딩했으면 `localhost`와 이 기기 IP로 여는 방법을 보여 줍니다.
+5. JVM이면 JVM 종료 훅을 등록합니다. Ctrl+C나 SIGTERM이 오면 `Stopping (grace 5s)`를 남기고 `app.shutdown(5, TimeUnit.SECONDS)`를 부르므로 `onStop`이 실행됩니다. 훅은 `handle.shutdown(...)`이나 앱의 `shutdown`으로 끝날 때 다시 지워지고, 시작에 실패하면 등록하지 않습니다. 훅이 부른 종료 중 JVM이 이미 내려가는 중이면 훅 제거 실패는 무시합니다. Android에서는 훅을 등록하지 않고 시작 로그에도 `Press Ctrl+C`가 붙지 않습니다.
+
+돌려받은 `ServerHandle`의 `url()`은 열어 볼 주소(`http://127.0.0.1:3000`)를, `shutdown(timeout, unit)`은 종료를 맡습니다. `start`로 시작하면 `RestApp`을 직접 들고 있지 않으므로 종료는 이 핸들로 합니다.
+
+`start`는 블로킹하지 않습니다. `listen`처럼 바인딩이 끝나면 반환하고, `main`이 끝난 뒤에도 JVM이 계속 도는 것은 `listen`과 같은 이유입니다. `routes`나 `listen`이 예외를 던지면 앱을 `shutdown`으로 정리한 뒤 그 예외를 그대로 던집니다.
+
+| | `start(port, routes)` | `create()` + `listen(port)` |
+|---|---|---|
+| 설정하는 곳 | `routes` 람다 안(앱이 `NEW`인 동안) | `listen` 앞의 어느 코드든 |
+| 시작 로그 | `Listening on ...` 한 줄 | 없음 |
+| JVM 종료 훅 | 자동 등록(Android 제외), Ctrl+C·SIGTERM에 `onStop` 실행 | 없음. 직접 `Runtime.addShutdownHook`으로 등록 |
+| 블로킹 | 하지 않음 | 하지 않음 |
+| 기본 바인딩 | `127.0.0.1`(바꾸지 않음) | `127.0.0.1` |
+| LAN에 열기 | `routes` 안에서 `app.server(o -> o.bindAddress("0.0.0.0"))` | `listen` 전에 `app.server(...)` |
+| 예외 | `listen`의 예외를 그대로 던짐 | 같음 |
+
+`start`는 기본 포트도, `PORT` 환경변수 읽기도, 바인딩 주소를 바꾸는 인자도 없습니다. Express의 `app.listen(3000)`은 모든 인터페이스에서 받지만 `start(3000, ...)`는 `listen`처럼 이 기기에서만 받습니다. 다른 기기에서 접속하려면 람다 안에서 `app.server(o -> o.bindAddress("0.0.0.0"))`를 호출합니다(루프백이 아니면 `listen`이 보안 경고를 남기는 것도 같습니다).
+Android에서는 `start`도 메인 스레드에서 부르지 마세요. `listen`을 포함하므로 바인딩과 `onStart`가 호출 스레드에서 돕니다. Android에서는 종료 훅이 없으니 `Service.onDestroy`에서 `handle.shutdown(...)`을 부릅니다.
+테스트나 임베디드처럼 훅이 필요 없으면 `create()`와 `listen`을 그대로 쓰면 됩니다.
+

@@ -169,3 +169,8 @@ app.post("/users") { req, res ->
 ## Coroutine
 
 `suspend` 핸들러는 v1에서 지원하지 않습니다. v1 핸들러는 동기이므로 suspend 함수를 부르려면 `runBlocking`이 필요합니다. 그동안 요청 스레드를 점유하니 오래 걸리는 작업은 피하세요. 프레임워크는 `runBlocking`을 기본 비동기 어댑터로 쓰지 않습니다. Coroutine 지원은 v1 이후 항목입니다. 논블로킹 coroutine 어댑터는 별도 설계가 필요하고 v1 핸들러는 동기이기 때문입니다.
+
+## 한 줄로 시작하기
+
+`RestApp.start(3000) { app -> ... }`는 Java 정적 메서드이고 설정 람다가 마지막 인자라서 Kotlin 후행 람다로 씁니다. 람다의 마지막 식이 `app.get(...)`처럼 `RestApp`을 돌려줘도 `void` SAM이라 값은 버려지니 `Unit`을 따로 돌려줄 필요가 없습니다. 예제와 `start`와 `listen`의 차이는 [RestApp의 start](app.md#start)에 있습니다.
+

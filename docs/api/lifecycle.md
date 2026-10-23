@@ -145,9 +145,9 @@ ctx.attribute("appVersion", null);   // 지우기
 `app.state()`로 확인합니다.
 
 ```text
-NEW ──listen──> STARTING ──성공──> RUNNING ──shutdown──> STOPPING ──> TERMINATED
+NEW ──listen/start──> STARTING ──성공──> RUNNING ──shutdown──> STOPPING ──> TERMINATED
  │                 │
- │                 └──실패──> FAILED ──정리──> TERMINATED
+ │                      └──실패──> FAILED ──정리──> TERMINATED
  └──shutdown──────────────────────────────────────────> TERMINATED
 ```
 
@@ -182,6 +182,7 @@ SSE `onClose` 리스너 안에서 부른 `app.shutdown`도 요청 핸들러에�
 ## Android
 
 - `RestApp`은 Android `Service` 안에서 만들고 관리하세요.
+- `RestApp.start(...)`도 `listen()`을 포함하므로 **메인 스레드에서 부르지 마세요.** Android에서는 `start`가 JVM 종료 훅을 등록하지 않으니 `Service.onDestroy`에서 `ServerHandle.shutdown(...)`이나 `app.shutdown(...)`을 부릅니다([start](app.md#start)).
 - `listen()`과 `shutdown()`은 **메인 스레드에서 부르지 마세요.** 네트워크 작업이고, `shutdown`은 진행 중인 요청을 timeout까지 기다린 뒤 `onStop`, 리소스 닫기, 로거 flush를 시간 제한 없이 마저 실행하므로 timeout보다 오래 걸릴 수 있습니다.
 - 프로세스가 강제 종료되면 `onDestroy`도 `onStop`도 실행되지 않을 수 있습니다. 잃으면 안 되는 데이터는 요청 처리 중에 저장하세요.
 - 서비스를 다시 시작할 때는 새 `RestApp`을 만드세요.

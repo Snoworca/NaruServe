@@ -16,9 +16,7 @@ import com.snoworca.naruserve.RestApp;
 
 public class HelloServer {
     public static void main(String[] args) {
-        RestApp app = RestApp.create();
-        app.get("/hello", (req, res) -> res.send("Hello World"));
-        app.listen(3000);
+        RestApp.start(3000, app -> app.get("/hello", (req, res) -> res.send("Hello World")));
     }
 }
 ```
@@ -29,13 +27,11 @@ public class HelloServer {
 import com.snoworca.naruserve.RestApp
 
 fun main() {
-    val app = RestApp.create()
-    app.get("/hello") { _, res -> res.send("Hello World") }
-    app.listen(3000)
+    RestApp.start(3000) { app -> app.get("/hello") { _, res -> res.send("Hello World") } }
 }
 ```
 
-위 코드는 import와 실행 진입점을 포함한 최소 서버입니다. `curl http://127.0.0.1:3000/hello`로 확인하세요.
+위 코드는 import와 실행 진입점을 포함한 최소 서버입니다. `curl http://127.0.0.1:3000/hello`로 확인하세요. `RestApp.start`는 `127.0.0.1`에서만 받고(이 기기 전용) 시작 로그를 한 줄 남기며 Ctrl+C로 종료합니다. 다른 기기에 열려면 람다 안에서 `app.server(o -> o.bindAddress("0.0.0.0"))`를 호출하세요. 자세한 차이는 [start](app.md#start)에 있고, `RestApp.create()`와 `app.listen(...)`을 따로 쓰는 방법도 그대로 있습니다.
 
 DTO 검증, 스레드 안전한 사용자 서비스, 업로드, 스트림 응답까지 포함한 [Java 예제](../../examples/java)와 [Kotlin 예제](../../examples/kotlin)는 [실행 안내](../../examples/README.md)를 따라 실행할 수 있습니다. 예제는 이 소스 체크아웃을 Gradle composite build로 사용합니다. 별도 소비자 프로젝트의 로컬 Maven 설치는 [루트 README](../../README.md#install)를 참고하세요.
 

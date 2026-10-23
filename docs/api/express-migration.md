@@ -9,7 +9,7 @@ Express 코드의 구조(라우트·미들웨어·req/res)는 대부분 그대�
 | Express | NaruServe (Java) | 비고 |
 |---|---|---|
 | `const app = express()` | `RestApp app = RestApp.create();` | |
-| `app.listen(3000, () => ...)` | `ServerHandle h = app.listen(3000);` | 바인딩이 끝난 뒤 반환합니다. 콜백 없이 다음 줄이 "시작됨"입니다. 실패하면 예외를 던집니다. |
+| `app.listen(3000, () => ...)` | `ServerHandle h = app.listen(3000);` 또는 한 문장으로 `RestApp.start(3000, app -> ...)` | 바인딩이 끝난 뒤 반환합니다. 콜백 없이 다음 줄이 "시작됨"입니다. 실패하면 예외를 던집니다. `start`는 설정 람다 안에서 라우트를 등록하고 시작 로그와 JVM 종료 훅까지 붙이며, 기본 바인딩은 `listen`처럼 `127.0.0.1`입니다. [start](app.md#start) |
 | `server.close()` | `app.shutdown(10, TimeUnit.SECONDS);` | 진행 중인 요청을 기다린 뒤 종료합니다. |
 | `app.locals.x = v` | `ctx.attribute("x", v)` (`onStart` 안에서) | [수명주기](lifecycle.md) |
 | `app.set('trust proxy', ...)` | `app.trustProxy(true)` | 기본은 프록시 헤더를 믿지 않습니다. 켜면 `X-Forwarded-For`·`X-Forwarded-Proto`를 `req.remoteAddress()`·`req.isSecure()`에 씁니다. [서버 설정](app.md#서버-설정) |
@@ -149,7 +149,7 @@ List<User> users = req.body(new TypeRef<List<User>>() {}); // 제네릭
 ### 4. 기본 바인딩은 localhost입니다
 
 Express의 `app.listen(3000)`은 모든 네트워크 인터페이스에서 받습니다. NaruServe의 `app.listen(3000)`은 **localhost에서만** 받습니다.
-같은 LAN의 다른 기기에서 접속하려면 `app.server(...)`에서 `bindAddress("0.0.0.0")`로 바인딩을 명시해야 합니다([서버 설정](app.md#서버-설정)).
+같은 LAN의 다른 기기에서 접속하려면 `app.server(...)`에서 `bindAddress("0.0.0.0")`로 바인딩을 명시해야 합니다([서버 설정](app.md#서버-설정)). `RestApp.start(3000, ...)`도 마찬가지로 localhost에서만 받으므로, LAN에 열려면 설정 람다 안에서 같은 `app.server(...)`를 호출합니다([start](app.md#start)).
 LAN에 열 때는 인증 미들웨어를 함께 거세요. 루프백이 아닌 주소에 바인딩하면 인증 여부와 상관없이 보안 경고 로그를 남깁니다.
 
 ### 5. 경로 매칭이 엄격합니다
