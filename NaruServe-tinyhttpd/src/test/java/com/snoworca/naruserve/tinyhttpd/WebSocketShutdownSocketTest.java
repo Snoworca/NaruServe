@@ -85,6 +85,31 @@ public class WebSocketShutdownSocketTest {
         return sb.append("\n]").toString();
     }
 
+    /**
+     * True once two sender threads of {@code port} have been inside a socket write at every sample for {@code holdMs}
+     * in a row. While the loopback buffers still fill, a sender leaves its write between two messages, so a single
+     * sample of two blocked threads (and a second one after it) proved nothing: that raced under load.
+     */
+    private static boolean twoBlockedFor(int port, long holdMs, long timeoutMs) throws InterruptedException {
+        long end = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(timeoutMs);
+        long since = -1;
+        while (System.nanoTime() < end) {
+            if (Http.blockedThreads(port).size() >= 2) {
+                long now = System.nanoTime();
+                if (since < 0) {
+                    since = now;
+                }
+                if (TimeUnit.NANOSECONDS.toMillis(now - since) >= holdMs) {
+                    return true;
+                }
+            } else {
+                since = -1;
+            }
+            Thread.sleep(5);
+        }
+        return false;
+    }
+
     private RawWebSocketClient open(int port, String path) throws IOException {
         RawWebSocketClient c = RawWebSocketClient.open(port, path);
         clients.add(c);
@@ -105,11 +130,7 @@ public class WebSocketShutdownSocketTest {
         RawWebSocketClient healthy = open(port, "/ok");
         healthy.text("hi");
         assertEquals("hello", healthy.readFrame(TEXT).text());
-        long end = System.nanoTime() + TimeUnit.SECONDS.toNanos(10);
-        while (Http.blockedThreads(port).size() < 2 && System.nanoTime() < end) {
-            Thread.sleep(5);
-        }
-        assertEquals("sender threads blocked in a write" + senderThreads(port), 2, Http.blockedThreads(port).size());
+        assertTrue("sender threads stayed blocked in a write" + senderThreads(port), twoBlockedFor(port, 300, 10000));
         Thread stopper = new Thread(() -> app.shutdown(5, TimeUnit.SECONDS));
         long start = System.nanoTime();
         stopper.start();
