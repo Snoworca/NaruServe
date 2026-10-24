@@ -1,0 +1,30 @@
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/8.14.3/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+
+> Task :dependencyCheckAggregate
+Verifying dependencies for project NaruServe-build
+Checking for updates and analyzing dependencies for vulnerabilities
+Sonatype OSS Index Analyzer disabled due to missing credentials. Authentication with token is now required, and OSS Index is migrating to Sonatype Guide. See https://dependency-check.github.io/DependencyCheck/analyzers/oss-index-analyzer.html for more information on authentication with Sonatype Guide OSS Index.
+Generating report for project NaruServe-build
+Found 1 vulnerabilities in project NaruServe-build
+
+
+One or more dependencies were identified with known vulnerabilities in NaruServe-build:
+
+NaruServe-tinyhttpd-0.1.0-SNAPSHOT.jar (pkg:maven/com.snoworca.naruserve/NaruServe-tinyhttpd@0.1.0-SNAPSHOT, cpe:2.3:a:tinyhttpd:tinyhttpd:0.1.0:snapshot:*:*:*:*:*:*) : CVE-2002-1819
+
+
+See the dependency-check report for more details.
+
+
+
+[Incubating] Problems report is available at: file:///Users/beom/work/git/NaruServe/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.14.3/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 19s
+1 actionable task: 1 executed

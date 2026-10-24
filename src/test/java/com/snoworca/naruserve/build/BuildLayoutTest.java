@@ -234,8 +234,8 @@ public class BuildLayoutTest {
     public void con_BUILD_006_AC1_AC4_AC6_AC7_runtimeClasspathsHoldExactlyTheDeclaredMainDependencies()
             throws IOException {
         String api = "com.snoworca.naruserve:NaruServe-api";
-        String core = "com.snoworca:tinyhttpd-core:3.0.0";
-        String websocket = "com.snoworca:tinyhttpd-websocket:3.0.0";
+        String core = "com.snoworca:tinyhttpd-core:3.1.0";
+        String websocket = "com.snoworca:tinyhttpd-websocket:3.1.0";
         String gson = "com.google.code.gson:gson:2.14.0";
         // Gson 2.14.0 itself brings error_prone_annotations; AC-4 limits declarations, not transitive edges.
         String gsonTransitive = "com.google.errorprone:error_prone_annotations:2.48.0";
@@ -415,6 +415,9 @@ public class BuildLayoutTest {
 
     /** Also called after BuildChecksTest's nested builds, since test class order is not fixed. */
     static void assertTinyHttpdClean() throws Exception {
+        if (Boolean.parseBoolean(property("naruserve.tinyHttpdFromMaven"))) {
+            return; // OPS-BUILD-001 AC-4: no source checkout participates in Maven mode.
+        }
         assertEquals("", git(new File(property("naruserve.tinyHttpdDir")), "status", "--porcelain"));
     }
 
@@ -435,16 +438,16 @@ public class BuildLayoutTest {
     @Test
     public void sdsAc20_OPS_BUILD_003_AC1_readmeNamesTinyHttpdCommit() throws IOException {
         String readme = read(new File(ROOT, "docs/api/README.md"));
-        assertTrue(readme.contains("b759e2d"));
+        assertTrue(readme.contains("165f365"));
         assertFalse("the previous verified commit is gone", readme.contains("46b973e"));
     }
 
     // OPS-BUILD-003 AC-1; OPS-BUILD-001 AC-1: settings.gradle, CLAUDE.md and docs/api name one verified TinyHttpd commit
     @Test
     public void ops_BUILD_003_AC1_settingsGradleAndClaudeMdNameTheSameVerifiedCommit() throws IOException {
-        assertTrue(read(new File(ROOT, "settings.gradle")).contains("def verifiedTinyHttpd = 'b759e2d'"));
+        assertTrue(read(new File(ROOT, "settings.gradle")).contains("def verifiedTinyHttpd = '165f365'"));
         String claude = read(new File(ROOT, "CLAUDE.md"));
-        assertTrue(claude.contains("b759e2d"));
+        assertTrue(claude.contains("165f365"));
         assertFalse("the previous verified commit is gone", claude.contains("46b973e"));
         assertFalse("settings.gradle keeps no previous commit", read(new File(ROOT, "settings.gradle")).contains("46b973e"));
     }

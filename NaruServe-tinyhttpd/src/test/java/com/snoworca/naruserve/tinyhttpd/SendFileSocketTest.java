@@ -143,11 +143,8 @@ public class SendFileSocketTest {
         });
         String response = send(adapter, "/shrink");
         assertEquals("IOException", seen.get());
-        // The abort path never hands the client a complete 1000-byte 200: either the buffered head is replaced by
-        // TinyHttpd's error response or the connection closes short of the declared length.
-        boolean complete = RawTargetSocketTest.Http.status(response) == 200
-                && RawTargetSocketTest.Http.body(response).length() >= 1000;
-        assertTrue(response.substring(0, Math.min(200, response.length())), !complete);
+        // The short copy never flushed its buffered headers or body. Cancellation must discard both.
+        assertEquals("a shrinking file must not fabricate an error response or flush its partial body", "", response);
     }
 
     /** The hook copies by plain buffered reads: no zero-copy FileChannel transfer in the module. */

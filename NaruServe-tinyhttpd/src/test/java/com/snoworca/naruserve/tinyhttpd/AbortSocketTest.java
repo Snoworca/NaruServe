@@ -7,12 +7,16 @@ import static org.junit.Assert.assertTrue;
 import com.snoworca.naruserve.tinyhttpd.RawTargetSocketTest.Http;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.atomic.AtomicLong;
+import com.snoworca.naruserve.spi.HttpExchange;
 import org.junit.After;
 import org.junit.Test;
 
@@ -26,19 +30,78 @@ public class AbortSocketTest {
         Http.stopQuietly(adapter);
     }
 
-    // FR-ENGINE-011 AC-2: abort() before the response starts closes the connection abnormally, so the client never
-    // gets a complete response (no plain 500 page with a matching Content-Length)
+    // IR-HTTP-003 AC-2: a cancellation must not wait for the transport write timeout.
     @Test(timeout = 20000)
-    public void FR_ENGINE_011_AC2_abortBeforeCommitGivesATruncatedResponse() throws Exception {
+    public void IR_HTTP_003_AC2_abortUnblocksAStalledWriter() throws Exception {
+        AtomicReference<HttpExchange> exchange = new AtomicReference<>();
+        AtomicReference<Thread> writerThread = new AtomicReference<>();
+        AtomicReference<Throwable> failure = new AtomicReference<>();
+        AtomicLong written = new AtomicLong();
+        CountDownLatch started = new CountDownLatch(1);
+        CountDownLatch ended = new CountDownLatch(1);
+        adapter.bind(Http.settings().writeTimeoutMillis(10000).build(), ex -> {
+            exchange.set(ex);
+            Thread writer = new Thread(() -> {
+                writerThread.set(Thread.currentThread());
+                try {
+                    OutputStream out = ex.commit(200, Collections.emptyList(), -1);
+                    started.countDown();
+                    byte[] data = new byte[16 * 1024];
+                    for (;;) { out.write(data); written.addAndGet(data.length); }
+                } catch (Throwable problem) { failure.set(problem); }
+                finally { ended.countDown(); }
+            }, "abort-probe-writer");
+            writer.setDaemon(true);
+            writer.start();
+        });
+        try (Socket socket = new Socket("127.0.0.1", adapter.boundPort())) {
+            socket.setReceiveBufferSize(1024);
+            socket.getOutputStream().write(Http.get("/blocked").getBytes(StandardCharsets.ISO_8859_1));
+            socket.getOutputStream().flush();
+            assertTrue(started.await(3, TimeUnit.SECONDS));
+            long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
+            long since = -1;
+            long previous = -1;
+            boolean stalled = false;
+            while (System.nanoTime() < deadline) {
+                long progress = written.get();
+                assertEquals("writer ended before abort", 1, ended.getCount());
+                if (progress > 0 && progress == previous && Http.inSocketWrite(writerThread.get())) {
+                    if (since < 0) since = System.nanoTime();
+                    if (System.nanoTime() - since >= TimeUnit.MILLISECONDS.toNanos(300)) {
+                        stalled = true;
+                        break;
+                    }
+                } else { since = -1; }
+                previous = progress;
+                Thread.sleep(5);
+            }
+            assertTrue("writer must be stalled before cancellation", stalled);
+            exchange.get().abort();
+            assertTrue("writer must wake before the 10s write timeout", ended.await(1500, TimeUnit.MILLISECONDS));
+            assertTrue(String.valueOf(failure.get()), failure.get() instanceof IOException);
+        } finally {
+            assertTrue("writer must leave after socket cleanup", ended.await(3, TimeUnit.SECONDS));
+        }
+    }
+
+    // FR-ENGINE-011 AC-2, IR-HTTP-003 AC-2: HEAD also closes without a fabricated complete 500 response.
+    @Test(timeout = 20000)
+    public void FR_ENGINE_011_AC2_IR_HTTP_003_AC2_getAndHeadAbortSendNoResponse() throws Exception {
+        adapter.bind(Http.settings().build(), ex -> ex.abort());
+        for (String method : new String[] {"GET", "HEAD"}) {
+            String raw = method + " /abort HTTP/1.1\r\nHost: 127.0.0.1\r\nConnection: close\r\n\r\n";
+            assertEquals(method + " abort must not fabricate a complete response", "",
+                    Http.send(adapter.boundPort(), raw));
+        }
+    }
+
+    // FR-ENGINE-011 AC-2: cancellation closes the transport before any fabricated error response.
+    @Test(timeout = 20000)
+    public void FR_ENGINE_011_AC2_abortBeforeCommitSendsNoFabricatedResponse() throws Exception {
         adapter.bind(Http.settings().build(), ex -> ex.abort());
         String response = Http.send(adapter.boundPort(), Http.get("/abort"));
-        assertEquals(500, Http.status(response));
-        String head = response.substring(0, response.indexOf("\r\n\r\n")).toLowerCase(java.util.Locale.ROOT);
-        int at = head.indexOf("content-length: ");
-        assertTrue(head, at >= 0);
-        int end = head.indexOf("\r\n", at);
-        long declared = Long.parseLong(head.substring(at + 16, end < 0 ? head.length() : end).trim());
-        assertTrue(response, Http.body(response).length() < declared);
+        assertEquals("", response);
     }
 
     // FR-ENGINE-011 AC-2: abort() from a third thread while another thread streams the body is thread safe: the

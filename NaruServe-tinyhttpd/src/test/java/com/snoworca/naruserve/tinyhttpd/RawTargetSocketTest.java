@@ -123,7 +123,8 @@ public class RawTargetSocketTest {
         assertEquals("second-commit ", guards.get());
 
         TinyHttpdAdapter other = new TinyHttpdAdapter();
-        AtomicReference<String> afterAbort = new AtomicReference<>();
+        AtomicReference<Throwable> afterAbort = new AtomicReference<>();
+        java.util.concurrent.CountDownLatch abortHandled = new java.util.concurrent.CountDownLatch(1);
         try {
             other.bind(Http.settings().build(), ex -> {
                 try {
@@ -134,15 +135,16 @@ public class RawTargetSocketTest {
                         out.write('x');
                         Thread.sleep(10);
                     }
-                    afterAbort.set("write never failed");
-                } catch (IOException e) {
-                    afterAbort.set(e.getMessage());
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
+                    afterAbort.set(new AssertionError("write never failed"));
+                } catch (Throwable e) {
+                    afterAbort.set(e);
+                } finally {
+                    abortHandled.countDown();
                 }
             });
             Http.send(other.boundPort(), Http.get("/abort"));
-            assertEquals("exchange aborted", afterAbort.get());
+            assertTrue("handler must observe cancellation", abortHandled.await(3, TimeUnit.SECONDS));
+            assertTrue(String.valueOf(afterAbort.get()), afterAbort.get() instanceof IOException);
         } finally {
             Http.stopQuietly(other);
         }
@@ -280,16 +282,22 @@ public class RawTargetSocketTest {
         static Set<Thread> blockedThreads(int port) {
             Set<Thread> out = new HashSet<>();
             for (Thread t : threads("naruserve-" + port + "-ws-sender-")) {
-                for (StackTraceElement e : t.getStackTrace()) {
-                    String c = e.getClassName();
-                    if ((c.startsWith("sun.nio.ch.") || c.startsWith("java.net."))
-                            && e.getMethodName().toLowerCase(Locale.ROOT).contains("write")) {
-                        out.add(t);
-                        break;
-                    }
-                }
+                if (inSocketWrite(t)) out.add(t);
             }
             return out;
+        }
+
+        /** A native socket write (or its native poll), on both Java 8 and later JDKs. */
+        static boolean inSocketWrite(Thread thread) {
+            boolean nativeCall = false;
+            boolean socketWrite = false;
+            for (StackTraceElement frame : thread.getStackTrace()) {
+                nativeCall |= frame.isNativeMethod();
+                String name = frame.getClassName();
+                socketWrite |= (name.startsWith("sun.nio.ch.") || name.startsWith("java.net."))
+                        && frame.getMethodName().toLowerCase(Locale.ROOT).contains("write");
+            }
+            return nativeCall && socketWrite;
         }
 
         /** Names of the live threads of the app on {@code port}: naruserve-*, tinyhttpd-acceptor-port, tinyhttpd-watchdog. */

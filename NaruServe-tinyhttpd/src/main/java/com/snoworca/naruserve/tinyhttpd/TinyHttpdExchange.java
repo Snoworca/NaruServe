@@ -81,7 +81,6 @@ final class TinyHttpdExchange implements HttpExchange {
 
     // @req FR-SSE-003
     private static void run(TinyHttpdExchange ex, ExchangeHandler handler) throws IOException {
-        Response res = ex.res;
         handler.handle(ex);
         StreamDrain d;
         OutputStream out;
@@ -106,19 +105,11 @@ final class TinyHttpdExchange implements HttpExchange {
             Thread.currentThread().interrupt();
         }
         if (ex.aborted) {
-            // Waits for a core write still inside res (bounded by writeTimeout) before TinyHttpd takes res back.
+            // abort() already closed the transport and woke blocked writes. Wait for their buffer ownership to end
+            // before TinyHttpd reclaims the response, without manufacturing any HTTP response (including HEAD).
             synchronized (ex) {
-                res.setCloseConnection(true);
-                if (!ex.started && !res.isCommitted()) {
-                    // TinyHttpd has no abort hook: a declared byte that never comes makes it close the connection,
-                    // so the client sees a truncated response instead of a complete error page.
-                    ex.started = true;
-                    res.setStatus(500);
-                    res.setContentLengthLong(1);
-                    return;
-                }
+                return;
             }
-            throw new IOException("exchange aborted");
         }
     }
 
@@ -225,12 +216,15 @@ final class TinyHttpdExchange implements HttpExchange {
         ended.countDown();
     }
 
-    // shortcut: a body write already blocked in the socket is not woken; it fails at TinyHttpd's writeTimeout.
-    // Lock-free on purpose so abort() never waits for a writer.
+    // No exchange lock: TinyHttpd cancels the socket even while a writer owns that lock.
     @Override
     public void abort() {
         aborted = true;
-        ended.countDown();
+        try {
+            res.abort();
+        } finally {
+            ended.countDown();
+        }
     }
 
     /** The abort check and single-start rule shared by every way to start the response; caller holds this. */

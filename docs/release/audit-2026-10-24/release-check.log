@@ -1,0 +1,43 @@
+> Task :NaruServe:cyclonedxDirectBom UP-TO-DATE
+> Task :NaruServe-api:cyclonedxDirectBom UP-TO-DATE
+> Task :NaruServe-filelog:cyclonedxDirectBom UP-TO-DATE
+> Task :NaruServe-gson:cyclonedxDirectBom UP-TO-DATE
+> Task :NaruServe-kotlin:cyclonedxDirectBom UP-TO-DATE
+> Task :NaruServe-logcat:cyclonedxDirectBom UP-TO-DATE
+> Task :NaruServe-servlet:cyclonedxDirectBom UP-TO-DATE
+> Task :NaruServe-slf4j:cyclonedxDirectBom UP-TO-DATE
+> Task :NaruServe-tinyhttpd:cyclonedxDirectBom UP-TO-DATE
+> Task :releaseSbom UP-TO-DATE
+> Task :checkDependencyRules
+> Task :compileReleaseTools UP-TO-DATE
+> Task :releaseScanChild
+
+> Task :releaseScan
+# Vulnerability scan
+
+Status: completed
+Scanner: OWASP Dependency-Check 13.0.0
+Data timestamp: Sat, 24 Oct 2026 22:28:31 +0900
+
+## Findings
+
+| dependency | identifier | CVSS | severity |
+|---|---|---|---|
+| com.snoworca.naruserve:NaruServe-tinyhttpd:0.1.0-SNAPSHOT | CVE-2002-1819 | 6.4 | Medium |
+
+> Task :releaseLicenses
+THIRD-PARTY-LICENSES.md: 7 shipped, 3 provided
+
+> Task :releaseCheck
+vulnerability scan cleared: no unexcepted High or Critical finding
+
+[Incubating] Problems report is available at: file:///Users/beom/work/git/NaruServe/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.14.3/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 20s
+15 actionable tasks: 5 executed, 10 up-to-date

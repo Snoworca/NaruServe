@@ -58,11 +58,10 @@ def configureCompile = { Project p ->
 def mainDependencies = [
     ':NaruServe-api'      : [:],
     ':NaruServe-servlet'  : [api: [':NaruServe-api']],
-    // TinyHttpd stays implementation-scope and versionless: the included build substitutes the coordinates
-    // (group com.snoworca since TinyHttpd 3.0.0; the Java package is still com.snoworca.tinyhttpd).
+    // Pin the released API; the optional developer composite substitutes these exact coordinates locally.
     ':NaruServe-tinyhttpd': [api: [':NaruServe-api'],
-                             implementation: ['com.snoworca:tinyhttpd-core',
-                                              'com.snoworca:tinyhttpd-websocket']],
+                             implementation: ['com.snoworca:tinyhttpd-core:3.1.0',
+                                              'com.snoworca:tinyhttpd-websocket:3.1.0']],
     // api scope: GsonJsonCodec takes a caller-built Gson (CON-BUILD-006 AC-9).
     ':NaruServe-gson'     : [api: [':NaruServe-api', 'com.google.code.gson:gson:2.14.0']],
     ':NaruServe'          : [api: [':NaruServe-api'],
@@ -154,7 +153,7 @@ def classRefPrefixes = { String path ->
 
 // @req FR-REL-005
 // mavenLocal only: the publishing block declares no repository. The POM takes each dependency's resolved version, so the
-// versionless TinyHttpd declarations publish as the included build's version (3.0.0).
+// explicitly pinned TinyHttpd dependencies retain 3.1.0 in the published POM.
 def configurePublishing = { Project p ->
     p.apply plugin: 'maven-publish'
     p.publishing {
@@ -267,7 +266,12 @@ project(':NaruServe-tinyhttpd') {
         include '**/*IsolatedSocketTest*'
         forkEvery = 1
     }
-    tasks.named('test') { exclude '**/*IsolatedSocketTest*' }
+    tasks.named('test') {
+        exclude '**/*IsolatedSocketTest*'
+        if (!providers.gradleProperty('tinyHttpdFromMaven').getOrElse('false').toBoolean()) {
+            exclude '**/PublishedTinyHttpdCompatibilityTest*'
+        }
+    }
     tasks.named('check') { dependsOn isolatedTest }
 }
 
@@ -486,6 +490,7 @@ test {
     outputs.upToDateWhen { false }
     systemProperty 'naruserve.rootDir', rootDir.absolutePath
     systemProperty 'naruserve.tinyHttpdDir', gradle.ext.tinyHttpdDir.absolutePath
+    systemProperty 'naruserve.tinyHttpdFromMaven', providers.gradleProperty('tinyHttpdFromMaven').getOrElse('false')
     systemProperty 'naruserve.depReport', dependencyReport.get().asFile.absolutePath
     systemProperty 'naruserve.gradleHome', gradle.gradleHomeDir.absolutePath
     systemProperty 'naruserve.gradleUserHome', gradle.gradleUserHomeDir.absolutePath

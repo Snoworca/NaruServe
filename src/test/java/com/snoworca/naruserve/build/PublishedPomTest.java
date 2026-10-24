@@ -26,7 +26,7 @@ public class PublishedPomTest {
 
     private static final String VERSION = "0.1.0-SNAPSHOT";
     /** The version of the included TinyHttpd build (group com.snoworca since TinyHttpd 3.0.0). */
-    private static final String TINYHTTPD_VERSION = "3.0.0";
+    private static final String TINYHTTPD_VERSION = "3.1.0";
 
     /** One parsed dependency: version and scope. */
     static final class Dep {
@@ -157,7 +157,7 @@ public class PublishedPomTest {
 
     // SDS-AC-7; FR-REL-005 AC-3
     @Test
-    public void fr_REL_005_AC3_noPublishingRepositoryAndVersionlessTinyHttpd() throws IOException {
+    public void fr_REL_005_AC3_noPublishingRepositoryAndPinnedTinyHttpd() throws IOException {
         String build = file("build.gradle");
         String publishing = publishingBlock(build);
         assertFalse(publishing, publishing.contains("repositories"));
@@ -165,10 +165,8 @@ public class PublishedPomTest {
         assertTrue(publishing, Pattern.compile("from\\s+(p\\.)?components\\.java").matcher(publishing).find());
         assertTrue(publishing, Pattern.compile("versionMapping\\s*\\{\\s*allVariants\\s*\\{\\s*fromResolutionResult\\(\\)")
                 .matcher(publishing).find());
-        assertTrue(build.contains("'com.snoworca:tinyhttpd-core'"));
-        assertTrue(build.contains("'com.snoworca:tinyhttpd-websocket'"));
-        assertFalse("TinyHttpd declarations stay versionless",
-                Pattern.compile("com\\.snoworca:tinyhttpd-[a-z]+:").matcher(build).find());
+        assertTrue(build.contains("'com.snoworca:tinyhttpd-core:3.1.0'"));
+        assertTrue(build.contains("'com.snoworca:tinyhttpd-websocket:3.1.0'"));
     }
 
     // SDS-AC-8; FR-REL-005 AC-4

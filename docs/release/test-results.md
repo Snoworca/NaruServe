@@ -104,10 +104,14 @@ Each line records one run on the build machine (macOS, OpenJDK 17.0.20, Gradle 8
 - run publish-local: command=./gradlew publishToMavenLocal --offline; date=2026-10-20; result=exit=0; commit=ae44f5a; ~/.m2/repository: com/snoworca/naruserve/NaruServe-api/0.1.0-SNAPSHOT/, com/snoworca/naruserve/NaruServe-servlet/0.1.0-SNAPSHOT/, com/snoworca/naruserve/NaruServe-tinyhttpd/0.1.0-SNAPSHOT/, com/snoworca/naruserve/NaruServe-gson/0.1.0-SNAPSHOT/, com/snoworca/naruserve/NaruServe/0.1.0-SNAPSHOT/, com/snoworca/naruserve/NaruServe-kotlin/0.1.0-SNAPSHOT/, com/snoworca/naruserve/NaruServe-slf4j/0.1.0-SNAPSHOT/, com/snoworca/naruserve/NaruServe-filelog/0.1.0-SNAPSHOT/, com/snoworca/naruserve/NaruServe-logcat/0.1.0-SNAPSHOT/
 
 <a id="run-licenses"></a>
-- run licenses: command=./gradlew -Prelease '-PnvdDatafeedUrl=https://dependency-check.github.io/DependencyCheck_Builder/nvd_cache/nvdcve-{0}.json.gz' releaseSbom releaseScan releaseLicenses releaseCheck --console=plain; date=2026-10-21; result=exit=0; THIRD-PARTY-LICENSES.md: 7 shipped, 3 provided; non-GPL check passed; evidence=verification/release-check.log
+- historical run licenses: command=./gradlew -Prelease '-PnvdDatafeedUrl=https://dependency-check.github.io/DependencyCheck_Builder/nvd_cache/nvdcve-{0}.json.gz' releaseSbom releaseScan releaseLicenses releaseCheck --console=plain; date=2026-10-21; result=exit=0; THIRD-PARTY-LICENSES.md: 7 shipped, 3 provided; non-GPL check passed; evidence=verification/release-check.log
 
 <a id="run-vulnerability-scan"></a>
 - run vulnerability-scan: command=./gradlew -Prelease '-PnvdDatafeedUrl=https://dependency-check.github.io/DependencyCheck_Builder/nvd_cache/nvdcve-{0}.json.gz' releaseSbom releaseScan releaseLicenses releaseCheck --console=plain; date=2026-10-23; result=exit=0; Status: completed; High=0; Critical=0; unscored=0; Medium=1; TinyHttpd 3.0.0 (com.snoworca:tinyhttpd-*); evidence=audit-2026-10-23/scan.csv, audit-2026-10-23/release-check.log; NVD mirror lastModifiedDate=2026-10-22T15:44:59Z
 
 <a id="run-java8"></a>
 - run java8: command=./gradlew build --rerun-tasks --console=plain -I gradle/java8-tests.gradle -Dnaruserve.java8.home=/Users/beom/Library/Java/JavaVirtualMachines/zulu8.96.0.205-ca-jdk8.0.504-macosx_aarch64/Contents/Home; date=2026-10-21; result=exit=0; tests=1677; runtime=1.8.0_504; evidence=docs/release/verification/java8-suite.json
+
+- run licenses: command=./gradlew -Prelease releaseLicenses; date=2026-10-24; result=exit=0; THIRD-PARTY-LICENSES.md: 7 shipped, 3 provided; non-GPL check passed; TinyHttpd 3.1.0; evidence=verification/tinyhttpd-3.1.0.md
+
+TinyHttpd 3.1.0 follow-up (2026-10-24): source JDK 17 full build passed 1,718 tests; published-Maven-only full build on actual Java 8 passed 1,720 tests, zero failures/errors/skips. The source checkout path was nonexistent in Maven mode. [TDD, review and publication verification](verification/tinyhttpd-3.1.0.md).

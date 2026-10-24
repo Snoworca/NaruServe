@@ -29,7 +29,7 @@ These entries record the original v1 run. The D-380 marker exception was resolve
 
 Each entry names the frozen design wording, the deviation and the requirement that records it.
 
-- D-408: frozen: a non-upgrade request to a WebSocket-only path gets `426` with `Upgrade: websocket` and `Connection: Upgrade`; deviation: over TinyHttpd the `Connection: Upgrade` header is not asserted because TinyHttpd keeps only `Connection: close` or `keep-alive` on a non-`101` response, and FR-WS-004 stays below verified until that TinyHttpd gap closes; recorded in FR-WS-004
+- D-408: frozen: a non-upgrade request to a WebSocket-only path gets `426` with `Upgrade: websocket` and `Connection: Upgrade`; deviation: resolved in TinyHttpd 3.1.0; both headers are asserted over the TinyHttpd adapter and FR-WS-004 is verified; recorded in FR-WS-004
 - D-416: frozen: the threads of one app are bounded to 451; deviation: the bounded total is 452 because the non-daemon `naruserve-keeper` thread runs from bind to stop; recorded in PERF-APP-001
 - D-406: frozen: `SseClient.send` from any thread fills the outbound queue; deviation: until the drain loop starts, a send on the handler's own thread is written straight to the stream under the exchange lock; recorded in FR-SSE-002
 - D-323: frozen: the WebSocket handshake has a configurable timeout; deviation: on TinyHttpd the handshake is bounded only by `headerTimeout` and `bodyReadTimeout` and no separate setting exists; recorded in FR-WS-008
@@ -58,7 +58,8 @@ The five targets of `object.md` §17.1.
 
 ## Open items
 
-- The vulnerability scan completed on 2026-10-23 (rerun against TinyHttpd 3.0.0, `com.snoworca:tinyhttpd-*`): [vulnerability-scan.md](vulnerability-scan.md) records `Status: completed`; High/Critical and unscored findings are zero. `releaseCheck` passed without risk-acceptance exceptions. One Medium association remains visible: CVE-2002-1819 on the `NaruServe-tinyhttpd` module jar (version `0.1.0-SNAPSHOT`); the TinyHttpd 3.0.0 jars carry no finding. The exact Kotlin standard-library false positive and build tooling scope are documented in [security review](security-review.md).
+- The TinyHttpd 3.1.0 scan and release gate passed on 2026-10-24; High/Critical and unscored findings are zero. The existing Medium association remains visible. See the [current scan](vulnerability-scan.md) and [raw evidence](audit-2026-10-24/release-check.log).
+- Historical scan: the vulnerability scan completed on 2026-10-23 (rerun against TinyHttpd 3.0.0, `com.snoworca:tinyhttpd-*`): [vulnerability-scan.md](vulnerability-scan.md) records `Status: completed`; High/Critical and unscored findings are zero. `releaseCheck` passed without risk-acceptance exceptions. One Medium association remains visible: CVE-2002-1819 on the `NaruServe-tinyhttpd` module jar (version `0.1.0-SNAPSHOT`); the TinyHttpd 3.0.0 jars carry no finding. The exact Kotlin standard-library false positive and build tooling scope are documented in [security review](security-review.md).
 
 ## API usability update — epic #21
 
@@ -82,16 +83,27 @@ This update changes the public API: typed attribute reads use `attributeAs`; `at
 
 ## TinyHttpd for consumers
 
-TinyHttpd is not published by this repository. The POM of `NaruServe-tinyhttpd` names
-`com.snoworca:tinyhttpd-core:3.0.0` and `com.snoworca:tinyhttpd-websocket:3.0.0`;
-they resolve only from the consumer's own build of TinyHttpd. The one verified way is Gradle `includeBuild` of the
-TinyHttpd checkout in the consumer's `settings.gradle`:
+TinyHttpd is not published by this repository. The adapter uses
+`com.snoworca:tinyhttpd-core:3.1.0` and `com.snoworca:tinyhttpd-websocket:3.1.0` from Maven Central.
+Published 3.0.0 lacks `Request.getHeaderEntries()` and `Response.abort()` and cannot support this adapter.
+The repository defaults to a source composite at TinyHttpd commit `165f365` (3.1.0); use
+`./gradlew -PtinyHttpdFromMaven=true build` to test the published JARs without a source checkout.
+Consumers of the locally published NaruServe modules need `mavenLocal()` and `mavenCentral()`.
+They may optionally substitute TinyHttpd sources in their `settings.gradle`:
 
 ```groovy
 includeBuild('/path/to/TinyHttpd')
 ```
 
-NaruServe was verified against TinyHttpd commit `b759e2d` (TinyHttpd 3.0.0 + header contracts).
+Cancellation now closes the actual transport for GET and HEAD without a fabricated 500 response.
+Blocked writers wake promptly, and the adapter waits for their buffer ownership to end before returning to the engine.
+
+한국어: TinyHttpd 3.1.0을 명시적으로 사용하며 Maven Central 바이너리 빌드와 선택형 소스 빌드를 지원합니다.
+GET·HEAD 취소는 오류 응답을 만들어 보내는 대신 실제 연결을 닫고 막힌 쓰기를 깨웁니다.
+
+- consumer run: command=./gradlew -p /tmp/naruserve-tinyhttpd-310-consumer run (composite: -Pcomposite=true; binary: no includeBuild and no init script); date=2026-10-24; with includeBuild=resolved tinyhttpd-core and tinyhttpd-websocket 3.1.0 source JARs and passed ordered-header/GET/HEAD cancellation; without includeBuild=resolved tinyhttpd-core and tinyhttpd-websocket 3.1.0 published JARs from Maven Central and passed the same checks
+
+### Historical consumer run (2026-10-20)
 
 Recorded consumer run: after `./gradlew publishToMavenLocal`, a Gradle build in a temporary directory declared
 `mavenLocal()` and `implementation 'com.snoworca.naruserve:NaruServe-tinyhttpd:0.1.0-SNAPSHOT'` and resolved its
@@ -118,4 +130,4 @@ tasks.register('resolveRuntime') {
 }
 ```
 
-- consumer run: command=./gradlew -p <consumer dir> resolveRuntime (prints configurations.runtimeClasspath.files); date=2026-10-20; with includeBuild=resolved NaruServe-tinyhttpd, NaruServe-api, tinyhttpd-core and tinyhttpd-websocket 0.1.0-SNAPSHOT from the included build; without includeBuild=failed: Could not find com.snoworca.tinyhttpd:tinyhttpd-core:0.1.0-SNAPSHOT (and tinyhttpd-websocket)
+- historical consumer run: command=./gradlew -p <consumer dir> resolveRuntime (prints configurations.runtimeClasspath.files); date=2026-10-20; with includeBuild=resolved NaruServe-tinyhttpd, NaruServe-api, tinyhttpd-core and tinyhttpd-websocket 0.1.0-SNAPSHOT from the included build; without includeBuild=failed: Could not find com.snoworca.tinyhttpd:tinyhttpd-core:0.1.0-SNAPSHOT (and tinyhttpd-websocket)

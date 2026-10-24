@@ -26,7 +26,7 @@ dependencies {
 }
 ```
 
-`NaruServe` depends on the TinyHttpd engine, so the consumer build also needs the TinyHttpd checkout; see
+`NaruServe` resolves the TinyHttpd 3.1.0 engine from Maven Central; see
 [TinyHttpd](#tinyhttpd) below.
 
 | Module | Coordinates | Contents |
@@ -77,7 +77,7 @@ Run the source examples from this checkout (requires a JDK and the TinyHttpd che
 
 In another terminal: `curl http://127.0.0.1:3000/hello`. `RestApp.start` listens on `127.0.0.1` only (this device), writes one `Listening on ...` line and stops on Ctrl+C; open the LAN inside the lambda with `app.server(o -> o.bindAddress("0.0.0.0"))`. `RestApp.create()` plus `app.listen(...)` remains the lower-level path.
 The examples use a Gradle composite build of this source checkout; they do not require local Maven publication.
-For a separate consumer project using Maven coordinates, follow Install and TinyHttpd above/below: publish NaruServe locally, add `mavenLocal()`, and include the TinyHttpd checkout. Nothing here is published to Maven Central.
+For a separate consumer project using Maven coordinates, follow Install and TinyHttpd above/below: publish NaruServe locally, add `mavenLocal()` and `mavenCentral()`. NaruServe itself is not published to Maven Central.
 
 ## Scope of v1
 
@@ -93,17 +93,28 @@ The third part of the API 21 basis is the D-385 rule: no module has a compile-ti
 
 ## TinyHttpd
 
-TinyHttpd is not published by this repository. The POM of `NaruServe-tinyhttpd` depends on
-`com.snoworca:tinyhttpd-core:3.0.0` and `com.snoworca:tinyhttpd-websocket:3.0.0`,
-which resolve only from your own build of TinyHttpd. The one verified way is Gradle `includeBuild` of a TinyHttpd
-checkout in the consumer's `settings.gradle`:
+TinyHttpd is not published by this repository. The adapter pins
+`com.snoworca:tinyhttpd-core:3.1.0` and `com.snoworca:tinyhttpd-websocket:3.1.0` from Maven Central.
+Published TinyHttpd 3.0.0 lacks `Request.getHeaderEntries()` and `Response.abort()`; use 3.1.0.
+
+For a separate consumer of the locally published NaruServe modules, configure both `mavenLocal()` and
+`mavenCentral()`. No TinyHttpd source checkout is required. To build this repository using the published JARs:
+
+```bash
+./gradlew -PtinyHttpdFromMaven=true build
+```
+
+The default repository build uses a source composite at `tinyHttpdDir`. Override it with
+`-PtinyHttpdDir=/path/to/TinyHttpd`. NaruServe was verified against TinyHttpd commit `165f365` (3.1.0).
+A consumer may also opt into that source build in `settings.gradle`:
 
 ```groovy
 includeBuild('/path/to/TinyHttpd')
 ```
 
-NaruServe was verified against TinyHttpd commit `b759e2d` (TinyHttpd 3.0.0 + header contracts). Without the `includeBuild`, a build that takes
-`NaruServe-tinyhttpd` (or `NaruServe`) from `mavenLocal()` fails with an unresolved `tinyhttpd-core`.
+한국어: TinyHttpd 3.1.0의 core·websocket JAR를 Maven Central에서 가져옵니다. 저장소를 바이너리만으로
+빌드하려면 `-PtinyHttpdFromMaven=true`를 사용하십시오. 기본 빌드는 `tinyHttpdDir`의 소스를 사용합니다.
+기존 배포 버전 3.0.0에는 순서 보존 헤더와 연결 중단 API가 없으므로 사용할 수 없습니다.
 
 ## License
 

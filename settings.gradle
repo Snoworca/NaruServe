@@ -16,22 +16,27 @@ include ':NaruServe-logcat'
 def tinyHttpdPath = providers.gradleProperty('tinyHttpdDir').getOrElse('/Users/beom/work/git/TinyHttpd')
 // A relative override resolves against this directory, not the daemon's working directory.
 def tinyHttpdDir = new File(tinyHttpdPath).isAbsolute() ? new File(tinyHttpdPath) : new File(settingsDir, tinyHttpdPath)
-if (!tinyHttpdDir.isDirectory()) {
+def tinyHttpdFromMaven = providers.gradleProperty('tinyHttpdFromMaven').getOrElse('false').toBoolean()
+if (!tinyHttpdFromMaven && !tinyHttpdDir.isDirectory()) {
     throw new GradleException("tinyHttpdDir: TinyHttpd checkout not found at ${tinyHttpdDir.path}")
 }
 gradle.ext.tinyHttpdDir = tinyHttpdDir
-includeBuild(tinyHttpdDir)
+if (!tinyHttpdFromMaven) {
+    includeBuild(tinyHttpdDir)
+}
 
 // Docs cite the TinyHttpd commit this build was verified against; warn (never fail) when the checkout differs.
-def verifiedTinyHttpd = 'b759e2d' // TinyHttpd 3.0.0 + header contracts (issue #45)
-try {
-    def head = providers.exec {
-        commandLine 'git', '-C', tinyHttpdDir.path, 'rev-parse', '--short=7', 'HEAD'
-        ignoreExitValue = true
-    }.standardOutput.asText.get().trim()
-    if (head != verifiedTinyHttpd) {
-        logger.warn("tinyHttpdDir: TinyHttpd HEAD is '${head}', but NaruServe was verified against ${verifiedTinyHttpd}")
+def verifiedTinyHttpd = '165f365' // TinyHttpd 3.1.0: headers and transport abort
+if (!tinyHttpdFromMaven) {
+    try {
+        def head = providers.exec {
+            commandLine 'git', '-C', tinyHttpdDir.path, 'rev-parse', '--short=7', 'HEAD'
+            ignoreExitValue = true
+        }.standardOutput.asText.get().trim()
+        if (head != verifiedTinyHttpd) {
+            logger.warn("tinyHttpdDir: TinyHttpd HEAD is '${head}', but NaruServe was verified against ${verifiedTinyHttpd}")
+        }
+    } catch (Exception e) {
+        logger.warn("tinyHttpdDir: could not read the TinyHttpd commit (${e.message}); NaruServe was verified against ${verifiedTinyHttpd}")
     }
-} catch (Exception e) {
-    logger.warn("tinyHttpdDir: could not read the TinyHttpd commit (${e.message}); NaruServe was verified against ${verifiedTinyHttpd}")
 }

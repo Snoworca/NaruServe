@@ -29,7 +29,7 @@ public final class ReadmeDocsTest {
 
     static final String INCLUDE_BUILD_SNIPPET = "includeBuild('/path/to/TinyHttpd')";
 
-    static final String VERIFIED_COMMIT = "b759e2d";
+    static final String VERIFIED_COMMIT = "165f365";
 
     private static final String MARKER = "(미확정)";
 
@@ -150,8 +150,8 @@ public final class ReadmeDocsTest {
         for (String path : new String[] {"README.md", "docs/release/release-notes.md"}) {
             String doc = read(path);
             for (String part : new String[] {NOT_PUBLISHED_PHRASE, INCLUDE_BUILD_SNIPPET,
-                    "com.snoworca:tinyhttpd-core:3.0.0",
-                    "com.snoworca:tinyhttpd-websocket:3.0.0", VERIFIED_COMMIT}) {
+                    "com.snoworca:tinyhttpd-core:3.1.0",
+                    "com.snoworca:tinyhttpd-websocket:3.1.0", "-PtinyHttpdFromMaven=true", VERIFIED_COMMIT}) {
                 assertTrue(path + " holds " + part, doc.contains(part));
             }
         }
@@ -171,7 +171,7 @@ public final class ReadmeDocsTest {
                 run.find());
         assertTrue(run.group(1), run.group(1).contains("gradlew"));
         assertTrue(run.group(3), run.group(3).startsWith("resolved") && run.group(3).contains("tinyhttpd-core"));
-        assertTrue(run.group(4), run.group(4).startsWith("failed") && run.group(4).contains("tinyhttpd-core"));
+        assertTrue(run.group(4), run.group(4).startsWith("resolved") && run.group(4).contains("tinyhttpd-core"));
         assertTrue("the consumer depends on NaruServe-tinyhttpd from mavenLocal()",
                 section.contains("com.snoworca.naruserve:NaruServe-tinyhttpd:0.1.0-SNAPSHOT")
                         && section.contains("mavenLocal()"));
@@ -179,7 +179,11 @@ public final class ReadmeDocsTest {
 
     // SDS-AC-15; OPS-REL-005 AC-3
     @Test
-    public void ops_REL_005_AC3_noDocumentSaysToPublishTinyHttpdToMavenLocal() throws IOException {
+    public void ops_REL_005_AC3_documentsExplainPublished300ApiLimitation() throws IOException {
+        for (String path : new String[] {"README.md", "docs/release/release-notes.md"}) {
+            String doc = read(path);
+            assertTrue(path, doc.contains("3.0.0") && doc.contains("getHeaderEntries") && doc.contains("abort"));
+        }
         List<String> paths = new ArrayList<>(Arrays.asList("README.md", "docs/release/release-notes.md"));
         File[] api = new File(root(), "docs/api").listFiles((d, n) -> n.endsWith(".md"));
         assertNotNull(api);

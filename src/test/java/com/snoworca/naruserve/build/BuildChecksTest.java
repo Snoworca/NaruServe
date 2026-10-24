@@ -132,6 +132,13 @@ public class BuildChecksTest {
         if (!overridden) {
             arguments.add("-PtinyHttpdDir=" + BuildLayoutTest.property("naruserve.tinyHttpdDir"));
         }
+        boolean modeOverridden = false;
+        for (String a : args) {
+            modeOverridden |= a.startsWith("-PtinyHttpdFromMaven=");
+        }
+        if (!modeOverridden) {
+            arguments.add("-PtinyHttpdFromMaven=" + BuildLayoutTest.property("naruserve.tinyHttpdFromMaven"));
+        }
         if (Boolean.parseBoolean(BuildLayoutTest.property("naruserve.offline"))) {
             arguments.add("--offline");
         }
@@ -185,11 +192,28 @@ public class BuildChecksTest {
     @Test
     public void sdsAc4_OPS_BUILD_001_AC3_missingCheckoutFailsWhileEvaluatingSettings() {
         String missing = new File(work, "no-such-tinyhttpd").getAbsolutePath();
-        BuildResult result = runner("-PtinyHttpdDir=" + missing, "help").buildAndFail();
+        BuildResult result = runner("-PtinyHttpdDir=" + missing, "-PtinyHttpdFromMaven=false", "help").buildAndFail();
         String out = result.getOutput();
         assertTrue(out, out.contains("tinyHttpdDir: TinyHttpd checkout not found at " + missing));
         assertTrue(out, out.contains("settings.gradle"));
         assertFalse("no task ran: " + out, out.contains("> Task"));
+    }
+
+    // OPS-BUILD-001 AC-4: Maven consumers need no local engine checkout.
+    @Test
+    public void OPS_BUILD_001_AC4_mavenModeDoesNotRequireSourceCheckout() {
+        String missing = new File(work, "no-such-tinyhttpd").getAbsolutePath();
+        BuildResult result = runner("-PtinyHttpdDir=" + missing, "-PtinyHttpdFromMaven=true", "help").build();
+        assertTrue(result.getOutput(), result.getOutput().contains("BUILD SUCCESSFUL"));
+    }
+
+    // OPS-BUILD-001 AC-4: nested validation must use the outer build's dependency mode.
+    @Test
+    public void OPS_BUILD_001_AC4_nestedBuildsPreserveDependencyMode() throws IOException {
+        String mode = BuildLayoutTest.property("naruserve.tinyHttpdFromMaven");
+        appendBuild("println 'nested tinyHttpdFromMaven=' + providers.gradleProperty('tinyHttpdFromMaven').getOrElse('false')");
+        String out = runner("help").build().getOutput();
+        assertTrue(out, out.contains("nested tinyHttpdFromMaven=" + mode));
     }
 
     // SDS-AC-5; CON-BUILD-004 AC-3
@@ -321,8 +345,8 @@ public class BuildChecksTest {
     // SDS-AC-17; CON-BUILD-009 AC-2, CON-BUILD-009 AC-3, CON-BUILD-009 AC-4, CON-BUILD-016 AC-1
     @Test
     public void sdsAc17_CON_BUILD_009_AC2_AC3_tinyHttpdOutsideAdapterOrRouterFails() throws IOException {
-        appendBuild("project(':NaruServe-gson') { dependencies { implementation 'com.snoworca:tinyhttpd-core' } }\n"
-                + "project(':NaruServe-tinyhttpd') { dependencies { implementation 'com.snoworca:tinyhttpd-router' } }");
+        appendBuild("project(':NaruServe-gson') { dependencies { implementation 'com.snoworca:tinyhttpd-core:3.1.0' } }\n"
+                + "project(':NaruServe-tinyhttpd') { dependencies { implementation 'com.snoworca:tinyhttpd-router:3.1.0' } }");
         String out = runner(":checkDependencyRules").buildAndFail().getOutput();
         assertTrue(out, out.contains("com.snoworca:tinyhttpd-core declared by :NaruServe-gson"));
         assertTrue(out, out.contains("com.snoworca:tinyhttpd-router on runtimeClasspath of :NaruServe-tinyhttpd"));
