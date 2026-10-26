@@ -73,9 +73,9 @@ public final class ReadmeDocsTest {
         return api.substring(start, end < 0 ? api.length() : end);
     }
 
-    // SDS-AC-9; OPS-REL-001 AC-1
+    // SDS-AC-9; OPS-REL-001 AC-1: the nine JAR modules and NaruServe-android
     @Test
-    public void ops_REL_001_AC1_readmeListsTheNineCoordinatesOfTheApiModuleTableAndTheInstallLines()
+    public void ops_REL_001_AC1_readmeListsTheTenCoordinatesOfTheApiModuleTableAndTheInstallLines()
             throws IOException {
         Set<String> table = new TreeSet<>();
         Matcher row = Pattern.compile("(?m)^\\| `[\\w-]+` \\| `(com\\.snoworca\\.naruserve:[\\w-]+)` \\|")
@@ -83,7 +83,8 @@ public final class ReadmeDocsTest {
         while (row.find()) {
             table.add(row.group(1) + ":0.1.0-SNAPSHOT");
         }
-        assertEquals("module table rows of docs/api/README.md", 9, table.size());
+        assertEquals("module table rows of docs/api/README.md", 10, table.size());
+        assertTrue(table.toString(), table.contains("com.snoworca.naruserve:NaruServe-android:0.1.0-SNAPSHOT"));
         String readme = read("README.md");
         Set<String> listed = new TreeSet<>();
         Matcher coordinate = Pattern.compile("com\\.snoworca\\.naruserve:[\\w-]+:0\\.1\\.0-SNAPSHOT").matcher(readme);

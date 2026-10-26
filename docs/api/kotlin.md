@@ -106,7 +106,7 @@ val user = req.body(User::class.java) ?: throw HttpException(400, "JSON body is 
 
 ### NaruServe-kotlin 선택 확장
 
-`reified`를 쓰는 Kotlin 확장 함수를 선택 모듈 `NaruServe-kotlin`으로 제공합니다. `kotlin-stdlib`은 이 모듈만 사용하며 이 모듈은 `NaruServe-api`에만 의존합니다.
+`reified`를 쓰는 Kotlin 확장 함수를 선택 모듈 `NaruServe-kotlin`으로 제공합니다. `kotlin-stdlib`은 이 모듈만 사용합니다. 이 모듈은 기본 조립 모듈 `NaruServe`(TinyHttpd + Gson)를 포함하므로, Kotlin 프로젝트는 이 모듈 하나로 `RestApp.create()`까지 씁니다.
 
 ```groovy
 implementation 'com.snoworca.naruserve:NaruServe-kotlin:0.1.0-SNAPSHOT'

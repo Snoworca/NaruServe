@@ -12,7 +12,9 @@ import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.gradle.testkit.runner.BuildResult;
 import org.gradle.testkit.runner.GradleRunner;
@@ -47,6 +49,8 @@ public class BuildChecksTest {
             assertTrue(new File(work, module).mkdirs());
             copy(new File(root, module + "/src"), new File(work, module + "/src"));
         }
+        // FR-BUILD-001: the Android library module (its manifest), included when the nested build finds an SDK.
+        copy(new File(root, BuildLayoutTest.ANDROID_MODULE + "/src"), new File(work, BuildLayoutTest.ANDROID_MODULE + "/src"));
         pristineBuild = BuildLayoutTest.read(new File(work, "build.gradle"));
     }
 
@@ -262,7 +266,7 @@ public class BuildChecksTest {
             assertTrue(module + "\n" + out, out.contains(":" + module + ":animalsnifferMain"));
         }
         for (String module : BuildLayoutTest.MODULES) {
-            // OPS-BUILD-002 AC-5: the Kotlin plugin is applied to all nine modules.
+            // OPS-BUILD-002 AC-5: the Kotlin plugin is applied to all nine JAR modules (not to NaruServe-android).
             assertTrue(module + "\n" + out, out.contains(":" + module + ":compileTestKotlin"));
         }
         assertTrue(out, out.contains(":NaruServe-api:test"));
@@ -321,6 +325,47 @@ public class BuildChecksTest {
                         + "public class UsesLog { public int log() { return android.util.Log.i(\"t\", \"m\"); } }\n");
         String out = runner(":NaruServe-logcat:checkClassReferences").buildAndFail().getOutput();
         assertTrue(out, out.contains("com/snoworca/naruserve/logcat/probe/UsesLog -> android/util/Log"));
+    }
+
+    // FR-ENGINE-009 AC-6: the bootstrap reaches the Logcat logger by name only, never by a class reference
+    @Test
+    public void fr_ENGINE_009_AC6_bootstrapMainReferencingTheLogcatLoggerFails() throws IOException {
+        appendBuild("project(':NaruServe') { dependencies { compileOnly project(':NaruServe-logcat') } }");
+        addSource("NaruServe/src/main/java/com/snoworca/naruserve/bootstrap/probe/UsesLogcat.java",
+                "package com.snoworca.naruserve.bootstrap.probe;\n"
+                        + "public class UsesLogcat { public com.snoworca.naruserve.logcat.LogcatLogger logger; }\n");
+        String out = runner(":NaruServe:checkClassReferences").buildAndFail().getOutput();
+        assertTrue(out, out.contains(
+                "com/snoworca/naruserve/bootstrap/probe/UsesLogcat -> com/snoworca/naruserve/logcat/LogcatLogger"));
+    }
+
+    // FR-BUILD-001 AC-1: without an Android SDK the build warns and includes the other nine modules only
+    @Test
+    public void fr_BUILD_001_AC1_withoutAnSdkTheAndroidModuleIsSkippedWithAWarning() {
+        assertFalse("the copy has no local.properties", new File(work, "local.properties").exists());
+        Map<String, String> env = new HashMap<>(System.getenv());
+        env.remove("ANDROID_HOME");
+        env.remove("ANDROID_SDK_ROOT");
+        BuildResult result = runner("projects").withEnvironment(env).build();
+        String out = result.getOutput();
+        assertTrue(out, out.contains("NaruServe-android is not built: no Android SDK found in local.properties sdk.dir, "
+                + "ANDROID_HOME or ANDROID_SDK_ROOT"));
+        assertFalse(out, out.contains("Project ':NaruServe-android'"));
+        for (String module : BuildLayoutTest.MODULES) {
+            assertTrue(module + "\n" + out, out.contains("Project ':" + module + "'"));
+        }
+    }
+
+    // FR-BUILD-001 AC-1: an SDK named by ANDROID_HOME includes the Android module
+    @Test
+    public void fr_BUILD_001_AC1_anSdkFromAndroidHomeIncludesTheAndroidModule() {
+        org.junit.Assume.assumeTrue("no Android SDK resolved for the outer build", BuildLayoutTest.androidIncluded());
+        Map<String, String> env = new HashMap<>(System.getenv());
+        env.remove("ANDROID_SDK_ROOT");
+        env.put("ANDROID_HOME", BuildLayoutTest.property("naruserve.androidSdkDir"));
+        String out = runner("projects").withEnvironment(env).build().getOutput();
+        assertTrue(out, out.contains("Project ':NaruServe-android'"));
+        assertFalse(out, out.contains("NaruServe-android is not built"));
     }
 
     // SDS-AC-15; CON-BUILD-007 AC-3

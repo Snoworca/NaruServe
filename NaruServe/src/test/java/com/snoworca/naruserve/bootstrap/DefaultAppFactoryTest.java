@@ -93,6 +93,9 @@ public class DefaultAppFactoryTest {
             assertTrue(rules, rules.contains(
                     "-keep class com.snoworca.naruserve.bootstrap.DefaultAppFactory { public <init>(); }"));
             assertTrue(rules, rules.contains("-keepnames class com.snoworca.naruserve.spi.AppFactory"));
+            // FR-ENGINE-009 AC-4: the Logcat logger is created by name, so R8 must keep its constructor.
+            assertTrue(rules, rules.contains(
+                    "-keep class com.snoworca.naruserve.logcat.LogcatLogger { public <init>(); }"));
             assertEquals("com.snoworca.naruserve.bootstrap.DefaultAppFactory", read(zip, SERVICES).trim());
         }
     }

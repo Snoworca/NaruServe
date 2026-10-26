@@ -118,7 +118,7 @@ val line = ConsoleLogger.format(LogLevel.WARN, "disk almost full")
 | 파일 로테이션 | `NaruServe-filelog` | `com.snoworca.naruserve:NaruServe-filelog:0.1.0-SNAPSHOT` | 지원(API 21+) |
 | SLF4J 어댑터 | `NaruServe-slf4j` | `com.snoworca.naruserve:NaruServe-slf4j:0.1.0-SNAPSHOT` (`org.slf4j:slf4j-api:1.7.36`) | 미지원(JVM 전용) |
 
-`RestApp.create()`용 `NaruServe` 모듈은 `NaruServe-logcat`을 실행 시점에만 함께 가져옵니다. 로거 클래스를 코드에서 직접 쓰려면 해당 모듈을 의존성에 넣으세요.
+`RestApp.create()`용 `NaruServe` 모듈은 일반 JDK에서 쓰도록 `NaruServe-logcat`을 포함하지 않고 콘솔 로거를 씁니다. Android 앱은 `NaruServe-android`를 넣으세요. 이 모듈이 `NaruServe-logcat`을 함께 가져오고, 그때 `RestApp.create()`는 Logcat 로거를 씁니다. 로거 클래스를 코드에서 직접 쓰려면 해당 모듈을 의존성에 넣으세요.
 로그 쓰기가 실패해도 HTTP 서비스는 멈추지 않습니다.
 
 ### Logcat 로거

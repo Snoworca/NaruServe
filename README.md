@@ -7,7 +7,7 @@ The full API documentation (Korean) is in [docs/api/README.md](docs/api/README.m
 
 ## Install
 
-v1 is published to the local Maven repository only. Build and publish the nine modules from this checkout:
+v1 is published to the local Maven repository only. Build and publish the nine JAR modules (and, when an Android SDK is found, the `NaruServe-android` AAR) from this checkout:
 
 ```sh
 ./gradlew publishToMavenLocal
@@ -27,15 +27,30 @@ dependencies {
 ```
 
 `NaruServe` resolves the TinyHttpd 3.1.0 engine from Maven Central; see
-[TinyHttpd](#tinyhttpd) below.
+[TinyHttpd](#tinyhttpd) below. Kotlin projects depend on `NaruServe-kotlin`, and Android apps on
+`NaruServe-android`, each of which includes `NaruServe`.
+
+An Android app also needs the following, because the TinyHttpd 3.1.0 core and websocket JARs carry identical
+license notices at the same paths, which otherwise fails the app's resource merge; one copy keeps the notices:
+
+```groovy
+android {
+    packaging {
+        resources {
+            pickFirsts += ['META-INF/LICENSE-tinyhttpd.txt', 'META-INF/LICENSE-nanohttpd.txt', 'META-INF/NOTICE-tinyhttpd.txt']
+        }
+    }
+}
+```
 
 | Module | Coordinates | Contents |
 |---|---|---|
 | `NaruServe-api` | `com.snoworca.naruserve:NaruServe-api:0.1.0-SNAPSHOT` | Public API and SPI, no external dependency |
-| `NaruServe` | `com.snoworca.naruserve:NaruServe:0.1.0-SNAPSHOT` | `RestApp.create()` bootstrap: TinyHttpd, Gson and the Logcat logger |
+| `NaruServe` | `com.snoworca.naruserve:NaruServe:0.1.0-SNAPSHOT` | `RestApp.create()` bootstrap: TinyHttpd, Gson (`GsonJsonCodec` at compile time) and the console logger, for any JDK |
 | `NaruServe-tinyhttpd` | `com.snoworca.naruserve:NaruServe-tinyhttpd:0.1.0-SNAPSHOT` | TinyHttpd `HttpAdapter` |
 | `NaruServe-gson` | `com.snoworca.naruserve:NaruServe-gson:0.1.0-SNAPSHOT` | `GsonJsonCodec` (Gson 2.14.0) |
-| `NaruServe-kotlin` | `com.snoworca.naruserve:NaruServe-kotlin:0.1.0-SNAPSHOT` | Kotlin-only extensions; the only module that uses `kotlin-stdlib` |
+| `NaruServe-kotlin` | `com.snoworca.naruserve:NaruServe-kotlin:0.1.0-SNAPSHOT` | `NaruServe` plus Kotlin-only extensions; the only module that uses `kotlin-stdlib` |
+| `NaruServe-android` | `com.snoworca.naruserve:NaruServe-android:0.1.0-SNAPSHOT` | Android library (AAR): `NaruServe`, the Logcat logger and the `INTERNET` permission; built only when an Android SDK is found |
 | `NaruServe-logcat` | `com.snoworca.naruserve:NaruServe-logcat:0.1.0-SNAPSHOT` | Logcat `Logger` |
 | `NaruServe-filelog` | `com.snoworca.naruserve:NaruServe-filelog:0.1.0-SNAPSHOT` | Rotating file `Logger` |
 | `NaruServe-slf4j` | `com.snoworca.naruserve:NaruServe-slf4j:0.1.0-SNAPSHOT` | SLF4J `Logger` adapter (JVM only) |

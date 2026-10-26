@@ -34,6 +34,8 @@ public class BuildLayoutTest {
     public static final List<String> MODULES = Arrays.asList("NaruServe-api", "NaruServe-servlet", "NaruServe-tinyhttpd",
             "NaruServe-gson", "NaruServe", "NaruServe-kotlin", "NaruServe-slf4j", "NaruServe-filelog",
             "NaruServe-logcat");
+    /** The Android library (AAR) module, included only when an Android SDK resolves (FR-BUILD-001). */
+    public static final String ANDROID_MODULE = "NaruServe-android";
 
     private static final File ROOT = new File(property("naruserve.rootDir"));
 
@@ -80,16 +82,24 @@ public class BuildLayoutTest {
         return found;
     }
 
-    // SDS-AC-1; CON-BUILD-002 AC-1, CON-BUILD-002 AC-2, CON-BUILD-002 AC-3
+    /** Whether the root build included NaruServe-android, so its outputs exist (FR-BUILD-001 AC-1). */
+    public static boolean androidIncluded() {
+        return Boolean.parseBoolean(property("naruserve.androidIncluded"));
+    }
+
+    // SDS-AC-1; CON-BUILD-002 AC-1, CON-BUILD-002 AC-2, CON-BUILD-002 AC-3, FR-BUILD-001 AC-1
     @Test
-    public void sdsAc1_CON_BUILD_002_AC1_AC2_AC3_settingsIncludesNineModulesAndRootName() throws IOException {
+    public void sdsAc1_CON_BUILD_002_AC1_AC2_AC3_settingsIncludesTheNineModulesTheAndroidModuleAndRootName()
+            throws IOException {
         String settings = read(new File(ROOT, "settings.gradle"));
         Set<String> included = new TreeSet<>();
         Matcher m = Pattern.compile("include\\s*\\(?\\s*['\"]:([^'\"]+)['\"]").matcher(settings);
         while (m.find()) {
             included.add(m.group(1));
         }
-        assertEquals(new TreeSet<>(MODULES), included);
+        Set<String> expected = new TreeSet<>(MODULES);
+        expected.add(ANDROID_MODULE);
+        assertEquals(expected, included);
         assertTrue("rootProject.name is NaruServe-build",
                 Pattern.compile("rootProject\\.name\\s*=\\s*['\"]NaruServe-build['\"]").matcher(settings).find());
         for (String module : MODULES) {
@@ -243,10 +253,13 @@ public class BuildLayoutTest {
         assertEquals(set(api), components("NaruServe-servlet", "runtimeClasspath"));
         assertEquals(set(api, core, websocket), components("NaruServe-tinyhttpd", "runtimeClasspath"));
         assertEquals(set(api, gson, gsonTransitive), components("NaruServe-gson", "runtimeClasspath"));
-        assertEquals(set(api, "com.snoworca.naruserve:NaruServe-tinyhttpd", "com.snoworca.naruserve:NaruServe-gson",
-                "com.snoworca.naruserve:NaruServe-logcat", core, websocket, gson, gsonTransitive),
+        String tinyhttpd = "com.snoworca.naruserve:NaruServe-tinyhttpd";
+        String gsonModule = "com.snoworca.naruserve:NaruServe-gson";
+        // AC-7: the bootstrap stays general for any JDK, so no NaruServe-logcat.
+        assertEquals(set(api, tinyhttpd, gsonModule, core, websocket, gson, gsonTransitive),
                 components("NaruServe", "runtimeClasspath"));
-        assertEquals(set(api, "org.jetbrains.kotlin:kotlin-stdlib:2.2.0", "org.jetbrains:annotations:13.0"),
+        assertEquals(set(api, "com.snoworca.naruserve:NaruServe", tinyhttpd, gsonModule, core, websocket, gson,
+                gsonTransitive, "org.jetbrains.kotlin:kotlin-stdlib:2.2.0", "org.jetbrains:annotations:13.0"),
                 components("NaruServe-kotlin", "runtimeClasspath"));
         assertEquals(set(api, "org.slf4j:slf4j-api:1.7.36"), components("NaruServe-slf4j", "runtimeClasspath"));
         assertEquals(set(api), components("NaruServe-filelog", "runtimeClasspath"));
@@ -259,11 +272,108 @@ public class BuildLayoutTest {
         Set<String> servletCompile = components("NaruServe-servlet", "compileClasspath");
         assertTrue(servletCompile.toString(), servletCompile.containsAll(set(
                 "javax.servlet:javax.servlet-api:3.1.0", "javax.websocket:javax.websocket-api:1.1")));
-        Set<String> bootstrapCompile = components("NaruServe", "compileClasspath");
-        assertTrue(bootstrapCompile.toString(), bootstrapCompile.contains("com.google.code.gson:gson:2.14.0"));
-        for (String c : bootstrapCompile) {
-            assertFalse("TinyHttpd is implementation-scope: " + c, c.startsWith("com.snoworca:tinyhttpd-"));
+        // AC-9: NaruServe exposes NaruServe-gson as api, so a caller of NaruServe (here NaruServe-kotlin) compiles
+        // against GsonJsonCodec and Gson, while TinyHttpd stays out of every compile classpath but its own.
+        for (String module : new String[] {"NaruServe", "NaruServe-kotlin"}) {
+            Set<String> compile = components(module, "compileClasspath");
+            assertTrue(module + " " + compile, compile.contains("com.google.code.gson:gson:2.14.0"));
+            assertTrue(module + " " + compile, compile.contains("com.snoworca.naruserve:NaruServe-gson"));
+            assertFalse(module + " " + compile, compile.contains("com.snoworca.naruserve:NaruServe-logcat"));
+            for (String c : compile) {
+                assertFalse(module + ": TinyHttpd is implementation-scope: " + c, c.startsWith("com.snoworca:tinyhttpd-"));
+            }
         }
+        // The bootstrap compiles against its adapter module; a caller of NaruServe does not.
+        Set<String> kotlinCompile = components("NaruServe-kotlin", "compileClasspath");
+        assertTrue(kotlinCompile.toString(), kotlinCompile.contains("com.snoworca.naruserve:NaruServe"));
+        assertFalse(kotlinCompile.toString(), kotlinCompile.contains("com.snoworca.naruserve:NaruServe-tinyhttpd"));
+    }
+
+    // FR-BUILD-001 AC-4, CON-BUILD-006 AC-1, CON-BUILD-006 AC-7: NaruServe-android adds the Logcat logger to NaruServe
+    @Test
+    public void fr_BUILD_001_AC4_androidReleaseClasspathsHoldNaruServeAndTheLogcatLogger() throws IOException {
+        org.junit.Assume.assumeTrue("no Android SDK resolved, NaruServe-android is not built", androidIncluded());
+        String api = "com.snoworca.naruserve:NaruServe-api";
+        Set<String> runtime = components(ANDROID_MODULE, "releaseRuntimeClasspath");
+        assertEquals(set(api, "com.snoworca.naruserve:NaruServe", "com.snoworca.naruserve:NaruServe-tinyhttpd",
+                "com.snoworca.naruserve:NaruServe-gson", "com.snoworca.naruserve:NaruServe-logcat",
+                "com.snoworca:tinyhttpd-core:3.1.0", "com.snoworca:tinyhttpd-websocket:3.1.0",
+                "com.google.code.gson:gson:2.14.0", "com.google.errorprone:error_prone_annotations:2.48.0"), runtime);
+        Set<String> compile = components(ANDROID_MODULE, "releaseCompileClasspath");
+        assertTrue(compile.toString(), compile.contains("com.snoworca.naruserve:NaruServe-logcat"));
+        assertTrue(compile.toString(), compile.contains("com.google.code.gson:gson:2.14.0"));
+        String build = read(new File(ROOT, "build.gradle"));
+        assertTrue("NaruServe-android declares only api NaruServe and NaruServe-logcat",
+                build.contains("':NaruServe-android'  : [api: [':NaruServe', ':NaruServe-logcat']]"));
+        // AC-7: among the published modules only NaruServe-android declares the Logcat logger module.
+        for (String module : MODULES) {
+            if (!module.equals("NaruServe-logcat")) {
+                assertFalse(module + " runtime holds NaruServe-logcat", components(module, "runtimeClasspath")
+                        .contains("com.snoworca.naruserve:NaruServe-logcat"));
+            }
+        }
+    }
+
+    // FR-BUILD-001 AC-1: settings.gradle includes NaruServe-android only when an Android SDK directory resolves
+    @Test
+    public void fr_BUILD_001_AC1_settingsResolvesTheSdkFromLocalPropertiesThenAndroidHomeThenSdkRoot() throws IOException {
+        String settings = read(new File(ROOT, "settings.gradle"));
+        int local = settings.indexOf("'sdk.dir'");
+        int home = settings.indexOf("'ANDROID_HOME'");
+        int root = settings.indexOf("'ANDROID_SDK_ROOT'");
+        assertTrue(settings, local >= 0 && home > local && root > home);
+        assertTrue(settings, settings.contains("local.properties"));
+        Matcher include = Pattern.compile("if \\(androidSdk[^)]*\\) \\{\\s*include ':NaruServe-android'").matcher(settings);
+        assertTrue("the include is conditional on the resolved SDK", include.find());
+        assertTrue("the skip warning names the module and the three sources",
+                settings.contains("NaruServe-android is not built: no Android SDK found in local.properties sdk.dir, "
+                        + "ANDROID_HOME or ANDROID_SDK_ROOT"));
+    }
+
+    // FR-BUILD-001 AC-2: the root build.gradle configures the Android library; no module build file, no Kotlin, no sources
+    @Test
+    public void fr_BUILD_001_AC2_rootBuildConfiguresTheAndroidLibraryWithoutSourcesOrKotlin() throws IOException {
+        String build = read(new File(ROOT, "build.gradle"));
+        for (String part : new String[] {"id 'com.android.library' version '8.13.2' apply false",
+                "apply plugin: 'com.android.library'", "namespace = 'com.snoworca.naruserve.android'",
+                "compileSdk = 36", "minSdk = 21", "sourceCompatibility = JavaVersion.VERSION_1_8",
+                "targetCompatibility = JavaVersion.VERSION_1_8"}) {
+            assertTrue("root build.gradle holds " + part, build.contains(part));
+        }
+        assertFalse("NaruServe-android is not a Kotlin/JVM module", build.contains("':NaruServe-android', "));
+        for (String name : new String[] {"build.gradle", "build.gradle.kts"}) {
+            assertFalse(ANDROID_MODULE + "/" + name, new File(ROOT, ANDROID_MODULE + "/" + name).exists());
+        }
+        for (String dir : new String[] {"java", "kotlin"}) {
+            assertFalse(ANDROID_MODULE + "/src/main/" + dir, new File(ROOT, ANDROID_MODULE + "/src/main/" + dir).exists());
+        }
+        assertTrue(new File(ROOT, ANDROID_MODULE + "/src/main/AndroidManifest.xml").isFile());
+    }
+
+    // FR-BUILD-001 AC-3: the release AAR's manifest: package, minSdkVersion 21 and the INTERNET permission only
+    @Test
+    public void fr_BUILD_001_AC3_releaseAarManifestHoldsMinSdk21AndOnlyTheInternetPermission() throws Exception {
+        org.junit.Assume.assumeTrue("no Android SDK resolved, NaruServe-android is not built", androidIncluded());
+        File aar = new File(property("naruserve.androidAar"));
+        assertTrue("release AAR " + aar, aar.isFile());
+        org.w3c.dom.Element manifest;
+        try (java.util.zip.ZipFile zip = new java.util.zip.ZipFile(aar)) {
+            java.util.zip.ZipEntry entry = zip.getEntry("AndroidManifest.xml");
+            assertNotNull("AndroidManifest.xml in " + aar, entry);
+            javax.xml.parsers.DocumentBuilderFactory f = javax.xml.parsers.DocumentBuilderFactory.newInstance();
+            f.setNamespaceAware(true);
+            try (InputStream in = zip.getInputStream(entry)) {
+                manifest = f.newDocumentBuilder().parse(in).getDocumentElement();
+            }
+        }
+        String ns = "http://schemas.android.com/apk/res/android";
+        assertEquals("com.snoworca.naruserve.android", manifest.getAttribute("package"));
+        org.w3c.dom.NodeList sdk = manifest.getElementsByTagName("uses-sdk");
+        assertEquals(1, sdk.getLength());
+        assertEquals("21", ((org.w3c.dom.Element) sdk.item(0)).getAttributeNS(ns, "minSdkVersion"));
+        org.w3c.dom.NodeList permissions = manifest.getElementsByTagName("uses-permission");
+        assertEquals("exactly one uses-permission", 1, permissions.getLength());
+        assertEquals("android.permission.INTERNET", ((org.w3c.dom.Element) permissions.item(0)).getAttributeNS(ns, "name"));
     }
 
     // CON-BUILD-006 AC-8
@@ -456,7 +566,9 @@ public class BuildLayoutTest {
     @Test
     public void ops_BUILD_003_AC2_apiDocsNameFinalModulesWithoutUndecidedMarker() throws IOException {
         Map<String, List<String>> required = new LinkedHashMap<>();
-        required.put("README.md", MODULES);
+        List<String> readme = new ArrayList<>(MODULES);
+        readme.add(ANDROID_MODULE);
+        required.put("README.md", readme);
         required.put("app.md", Arrays.asList("com.snoworca.naruserve:NaruServe:"));
         required.put("json.md", Arrays.asList("NaruServe-gson", "com.snoworca.naruserve:NaruServe-gson:",
                 "com.google.code.gson:gson:2.14.0"));
@@ -474,6 +586,38 @@ public class BuildLayoutTest {
         }
     }
 
+    // OPS-BUILD-003 AC-6: docs/api states the android-module layout and drops the "add NaruServe-gson separately" advice
+    @Test
+    public void ops_BUILD_003_AC6_apiDocsStateTheDefaultKotlinAndAndroidModuleSets() throws IOException {
+        String readme = read(new File(ROOT, "docs/api/README.md"));
+        assertTrue(readme, readme.contains("| `NaruServe-android` | `com.snoworca.naruserve:NaruServe-android` |"));
+        assertTrue(readme, readme.contains("`NaruServe` 하나로 `GsonJsonCodec`과 Gson도 컴파일 시점에 함께 들어옵니다"));
+        assertTrue(readme, readme.contains("`NaruServe-kotlin`은 `NaruServe`를 포함합니다"));
+        assertTrue(readme, readme.contains("Android 앱은 `NaruServe-android`를 넣습니다"));
+        assertTrue(readme, readme.contains("`android.permission.INTERNET`"));
+        assertFalse(readme, readme.contains("그 모듈(NaruServe-gson 등)을 따로 넣으세요"));
+        String json = read(new File(ROOT, "docs/api/json.md"));
+        assertFalse(json, json.contains("이 모듈을 실행 시점에만 함께 가져옵니다"));
+        assertTrue(json, json.contains("`NaruServe`를 넣었다면 따로 추가할 것이 없습니다"));
+    }
+
+    // FR-BUILD-001 AC-6: the Android app keeps one copy of the identical TinyHttpd notices both TinyHttpd JARs carry
+    @Test
+    public void fr_BUILD_001_AC6_docsShowThePickFirstsOfTheTinyHttpdNotices() throws IOException {
+        String line = "pickFirsts += ['META-INF/LICENSE-tinyhttpd.txt', 'META-INF/LICENSE-nanohttpd.txt', "
+                + "'META-INF/NOTICE-tinyhttpd.txt']";
+        for (String doc : new String[] {"docs/api/README.md", "README.md"}) {
+            String text = read(new File(ROOT, doc));
+            assertTrue(doc + " shows " + line, text.contains(line));
+            int at = text.indexOf(line);
+            String before = text.substring(Math.max(0, at - 400), at);
+            assertTrue(doc + ": the line sits under packaging { resources {", before.contains("packaging {")
+                    && before.contains("resources {"));
+        }
+        assertTrue(read(new File(ROOT, "docs/api/README.md")).contains(
+                "TinyHttpd 3.1.0의 core와 websocket JAR에 같은 경로, 같은 내용의 라이선스 고지가 들어 있어"));
+    }
+
     // SDS-AC-20; OPS-BUILD-003 AC-3, OPS-BUILD-003 AC-4
     @Test
     public void ops_BUILD_003_AC3_AC4_claudeMdModuleLineAndNoRestKotlin() throws IOException {
@@ -488,6 +632,9 @@ public class BuildLayoutTest {
         for (String module : MODULES) {
             assertTrue("module line names " + module, moduleLine.contains("`" + module + "`"));
         }
+        // AC-3: the Android library module, built only when an Android SDK resolves (FR-BUILD-001).
+        assertTrue("module line names " + ANDROID_MODULE, moduleLine.contains("`" + ANDROID_MODULE + "`"));
+        assertTrue(moduleLine, moduleLine.contains("AAR") && moduleLine.contains("Android SDK"));
         assertTrue(moduleLine.contains("API 21"));
         assertTrue(moduleLine.contains("JVM 전용"));
         assertFalse(claude.contains("rest-kotlin"));

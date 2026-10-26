@@ -64,26 +64,48 @@ DTO 검증, 스레드 안전한 사용자 서비스, 업로드, 스트림 응답
 | 모듈 | 좌표 | 내용 | Android |
 |---|---|---|---|
 | `NaruServe-api` | `com.snoworca.naruserve:NaruServe-api` | 공개 API(`RestApp`, `Request`, `Response` …)와 SPI(`HttpAdapter`, `JsonCodec`, `Logger`). 외부 의존성 없음 | 지원(API 21+) |
-| `NaruServe` | `com.snoworca.naruserve:NaruServe` | `RestApp.create()` 기본 조립(TinyHttpd + Gson + Logcat 로거) | 지원(API 21+) |
+| `NaruServe` | `com.snoworca.naruserve:NaruServe` | `RestApp.create()` 기본 조립(TinyHttpd + Gson + 콘솔 로거). 일반 JDK와 Android 어디서나 씁니다 | 지원(API 21+) |
 | `NaruServe-tinyhttpd` | `com.snoworca.naruserve:NaruServe-tinyhttpd` | TinyHttpd `HttpAdapter` | 지원(API 21+) |
 | `NaruServe-gson` | `com.snoworca.naruserve:NaruServe-gson` | `GsonJsonCodec`(`com.google.code.gson:gson:2.14.0`) | 지원(API 21+) |
-| `NaruServe-kotlin` | `com.snoworca.naruserve:NaruServe-kotlin` | `reified` 등 Kotlin 전용 확장. `kotlin-stdlib`는 이 모듈만 씁니다 | 지원(API 21+) |
+| `NaruServe-kotlin` | `com.snoworca.naruserve:NaruServe-kotlin` | `NaruServe` + `reified` 등 Kotlin 전용 확장. `kotlin-stdlib`는 이 모듈만 씁니다 | 지원(API 21+) |
+| `NaruServe-android` | `com.snoworca.naruserve:NaruServe-android` | `NaruServe` + Logcat 로거 + `android.permission.INTERNET` 권한을 담은 Android 라이브러리(AAR) | 전용(API 21+) |
 | `NaruServe-logcat` | `com.snoworca.naruserve:NaruServe-logcat` | Logcat `Logger`(Android SDK 없이 빌드, 리플렉션으로 `android.util.Log` 호출) | 지원(API 21+) |
 | `NaruServe-filelog` | `com.snoworca.naruserve:NaruServe-filelog` | 파일 로테이션 `Logger` | 지원(API 21+) |
 | `NaruServe-slf4j` | `com.snoworca.naruserve:NaruServe-slf4j` | SLF4J `Logger` 어댑터(`org.slf4j:slf4j-api:1.7.36`) | 미지원(JVM 전용) |
 | `NaruServe-servlet` | `com.snoworca.naruserve:NaruServe-servlet` | Servlet 3.1+ 컨테이너 위에서 NaruServe 앱을 실행하는 어댑터 | 미지원(JVM 전용) |
 
 "지원(API 21+)" 모듈은 빌드 때 animal-sniffer `android-api-level-21` 검사를 받습니다.
+`NaruServe-android`는 Android Gradle Plugin으로 만드는 AAR이라 Android SDK가 있을 때만 빌드됩니다(`local.properties`의 `sdk.dir`, `ANDROID_HOME`, `ANDROID_SDK_ROOT` 순서로 찾습니다). SDK가 없으면 경고만 내고 나머지 아홉 모듈을 빌드합니다. 이 모듈에는 자체 코드가 없고 `minSdk`는 21입니다.
 기본 HTTP 엔진 빌드는 TinyHttpd 체크아웃을 사용하며, 커밋 `165f365`(TinyHttpd 3.1.0: 헤더 계약 및 연결 중단)에서 검증했습니다. 체크아웃 HEAD가 다르면 빌드는 실패하지 않고 경고만 냅니다. `-PtinyHttpdFromMaven=true`를 지정하면 체크아웃 없이 Maven Central의 3.1.0 JAR로 빌드합니다.
 
 `RestApp.create()`는 `NaruServe` 모듈이 기본 HTTP 엔진(TinyHttpd)과 Gson을 자동으로 조립합니다.
 엔진과 JSON 구현을 직접 고르려면 `RestApp.builder()`에 `httpAdapter`, `jsonCodec`(필수)과 `logger`(선택)를 넘기고 `build()`합니다([RestApp](app.md#앱-만들기) 참고).
 
+`NaruServe` 하나로 `GsonJsonCodec`과 Gson도 컴파일 시점에 함께 들어옵니다. TinyHttpd 엔진은 실행 시점에만 들어오고, 로그는 콘솔 로거로 남깁니다.
+`NaruServe-kotlin`은 `NaruServe`를 포함합니다. Kotlin 프로젝트는 이 모듈 하나만 넣으면 됩니다.
+Android 앱은 `NaruServe-android`를 넣습니다. `NaruServe`에 Logcat 로거와 `android.permission.INTERNET` 권한이 더해집니다.
+
 ```groovy
-// RestApp.create()로 바로 시작합니다. 컴파일 시점에는 NaruServe-api가,
-// 실행 시점에는 TinyHttpd 엔진·Gson 2.14.0·Logcat 로거가 함께 들어옵니다.
-// GsonJsonCodec이나 로거 클래스를 코드에서 직접 쓰려면 그 모듈(NaruServe-gson 등)을 따로 넣으세요.
+// 일반 JDK(Java 8+): RestApp.create()로 바로 시작합니다.
 implementation 'com.snoworca.naruserve:NaruServe:0.1.0-SNAPSHOT'
+
+// Kotlin: NaruServe와 reified 확장
+implementation 'com.snoworca.naruserve:NaruServe-kotlin:0.1.0-SNAPSHOT'
+
+// Android 앱: NaruServe와 Logcat 로거, INTERNET 권한
+implementation 'com.snoworca.naruserve:NaruServe-android:0.1.0-SNAPSHOT'
+```
+
+Android 앱 모듈의 `build.gradle`에는 아래 설정도 넣습니다. TinyHttpd 3.1.0의 core와 websocket JAR에 같은 경로, 같은 내용의 라이선스 고지가 들어 있어, 이 설정이 없으면 앱 빌드의 리소스 병합(`mergeDebugJavaResource`)이 중복 파일로 실패합니다. 두 사본의 내용이 같으므로 하나만 남겨도 고지는 그대로 APK에 들어갑니다.
+
+```groovy
+android {
+    packaging {
+        resources {
+            pickFirsts += ['META-INF/LICENSE-tinyhttpd.txt', 'META-INF/LICENSE-nanohttpd.txt', 'META-INF/NOTICE-tinyhttpd.txt']
+        }
+    }
+}
 ```
 
 ## 지원 환경

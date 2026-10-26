@@ -1,3 +1,11 @@
+// The Android Gradle Plugin of NaruServe-android resolves from Google's repository (FR-BUILD-001).
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        google()
+    }
+}
+
 // The root project is not a module: NaruServe is the bootstrap module's name (W2-001).
 rootProject.name = 'NaruServe-build'
 
@@ -10,6 +18,25 @@ include ':NaruServe-kotlin'
 include ':NaruServe-slf4j'
 include ':NaruServe-filelog'
 include ':NaruServe-logcat'
+
+// @req FR-BUILD-001
+// The Android library needs an SDK: the first existing directory of local.properties sdk.dir, ANDROID_HOME and
+// ANDROID_SDK_ROOT; without one the other nine modules still build.
+def localProperties = new Properties()
+def localPropertiesFile = new File(settingsDir, 'local.properties')
+if (localPropertiesFile.isFile()) {
+    localPropertiesFile.withInputStream { localProperties.load(it) }
+}
+def androidSdk = [localProperties.getProperty('sdk.dir'),
+                  providers.environmentVariable('ANDROID_HOME').getOrNull(),
+                  providers.environmentVariable('ANDROID_SDK_ROOT').getOrNull()]
+        .findAll { it }.collect { new File(it) }.find { it.isDirectory() }
+gradle.ext.androidSdkDir = androidSdk
+if (androidSdk != null) {
+    include ':NaruServe-android'
+} else {
+    logger.warn('NaruServe-android is not built: no Android SDK found in local.properties sdk.dir, ANDROID_HOME or ANDROID_SDK_ROOT')
+}
 
 // @req OPS-BUILD-001
 // Absolute default, so a git worktree of this repository resolves the same read-only TinyHttpd checkout.

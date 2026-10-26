@@ -153,5 +153,8 @@ public class ReleaseScriptTextTest {
         assertTrue(script.contains("reports/naruserve/sbom"));
         assertTrue(script.contains(".cdx.json"));
         assertTrue(script.contains("runtimeClasspath"));
+        // FR-REL-001 AC-1: the AAR has no runtimeClasspath; its dependencies are on the release variant's.
+        assertTrue(script, script.contains(
+                "includeConfigs = [p.path == ':NaruServe-android' ? 'releaseRuntimeClasspath' : 'runtimeClasspath']"));
     }
 }

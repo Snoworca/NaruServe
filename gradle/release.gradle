@@ -10,7 +10,8 @@ buildscript {
     }
 }
 
-// The nine published modules are the subprojects of the root build (settings.gradle includes exactly them).
+// The published modules are the subprojects of the root build: the nine JAR modules and, when settings.gradle found an
+// Android SDK, the NaruServe-android AAR (FR-BUILD-001).
 def publishedModules = subprojects as List<Project>
 def sbomDir = layout.buildDirectory.dir('reports/naruserve/sbom')
 
@@ -19,7 +20,8 @@ publishedModules.each { Project p ->
     // By class: applying by id from a subproject does not see this script's buildscript classpath.
     p.pluginManager.apply(org.cyclonedx.gradle.CyclonedxPlugin)
     p.tasks.named('cyclonedxDirectBom') {
-        includeConfigs = ['runtimeClasspath']
+        // The AAR has no runtimeClasspath; its dependencies are on the release variant's.
+        includeConfigs = [p.path == ':NaruServe-android' ? 'releaseRuntimeClasspath' : 'runtimeClasspath']
         jsonOutput = sbomDir.map { it.file("${p.name}.cdx.json") }
         xmlOutput.unsetConvention()
         // The plugin also hangs this task on assemble; with -Prelease, build still must not run it.

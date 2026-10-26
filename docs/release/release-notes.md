@@ -8,6 +8,8 @@ The Android sample build and API 21 device or emulator verification are not part
 The Android sample build, the AGP and R8 builds, StrictMode, Logcat on a device and any API 21 device or emulator run are not part of v1 by the user decision of 2026-10-20; issue #17 is closed by that decision (2026-10-20) and has no remaining deliverable.
 API 21 compatibility rests on three parts: compiling with `--release 8`, the animal-sniffer `android-api-level-21` check of the seven API 21 modules, and the D-385 rule that no module has a compile-time `android.*` reference (see [API 21 checks](#api-21-checks)).
 
+Update 2026-10-26 (target android-module, FR-BUILD-001): `NaruServe` no longer brings the Logcat logger and exposes `NaruServe-gson` as `api`; `NaruServe-kotlin` includes `NaruServe`; the new `NaruServe-android` AAR (no code of its own, `minSdk` 21) adds the Logcat logger and `android.permission.INTERNET`. The root build makes it with AGP 8.13.2 only when an Android SDK is found. A one-off consumer app built a debug APK against it (`docs/release/verification/android-module.md`), and Android apps must keep one copy of the identical TinyHttpd 3.1.0 notice files (`packaging.resources.pickFirsts`, see `docs/api/README.md`). R8 release builds, StrictMode, Logcat on a device and device or emulator runs remain not done.
+
 The Android-only design items are out of v1 scope; none of them is a manual release check:
 
 - D-364: the standalone `samples/android` Gradle build: out-of-v1-scope

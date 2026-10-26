@@ -4,6 +4,8 @@ plugins {
     id 'java'
     id 'ru.vyarus.animalsniffer' version '2.0.1' apply false
     id 'org.jetbrains.kotlin.jvm' version '2.2.0' apply false
+    // FR-BUILD-001: 8.13 is the first AGP line that supports compileSdk 36 on Gradle 8.14.
+    id 'com.android.library' version '8.13.2' apply false
 }
 
 def kotlinVersion = '2.2.0'
@@ -64,13 +66,16 @@ def mainDependencies = [
                                               'com.snoworca:tinyhttpd-websocket:3.1.0']],
     // api scope: GsonJsonCodec takes a caller-built Gson (CON-BUILD-006 AC-9).
     ':NaruServe-gson'     : [api: [':NaruServe-api', 'com.google.code.gson:gson:2.14.0']],
-    ':NaruServe'          : [api: [':NaruServe-api'],
-                             implementation: [':NaruServe-tinyhttpd', ':NaruServe-gson', ':NaruServe-logcat']],
-    ':NaruServe-kotlin'   : [api: [':NaruServe-api', "org.jetbrains.kotlin:kotlin-stdlib:${kotlinVersion}"]],
+    // api NaruServe-gson: a NaruServe caller compiles against GsonJsonCodec and Gson; no Logcat, any JDK (CON-BUILD-006 AC-9).
+    ':NaruServe'          : [api: [':NaruServe-api', ':NaruServe-gson'],
+                             implementation: [':NaruServe-tinyhttpd']],
+    ':NaruServe-kotlin'   : [api: [':NaruServe', "org.jetbrains.kotlin:kotlin-stdlib:${kotlinVersion}"]],
     // api scope: the public Slf4jLogger(org.slf4j.Logger) constructor exposes the SLF4J type.
     ':NaruServe-slf4j'    : [api: [':NaruServe-api', 'org.slf4j:slf4j-api:1.7.36']],
     ':NaruServe-filelog'  : [api: [':NaruServe-api']],
     ':NaruServe-logcat'   : [api: [':NaruServe-api']],
+    // @req FR-BUILD-001
+    ':NaruServe-android'  : [api: [':NaruServe', ':NaruServe-logcat']],
 ]
 
 // compileOnly dependencies of CON-BUILD-006 AC-2 besides the nullability library every module gets.
@@ -142,6 +147,11 @@ def classRefPrefixes = { String path ->
     }
     if (path == ':NaruServe-logcat') {
         prefixes += ['android/']
+    }
+    // @req FR-ENGINE-009
+    // The bootstrap creates the Logcat logger by name only, so it runs on any JDK without NaruServe-logcat.
+    if (path == ':NaruServe') {
+        prefixes += ['com/snoworca/naruserve/logcat/']
     }
     // @req IR-SVL-001
     // v1 is javax.servlet 3.1 only; a jakarta.servlet module is a later decision.
@@ -278,6 +288,10 @@ project(':NaruServe-tinyhttpd') {
 // DefaultAppFactoryTest reads the services file and naruserve-bootstrap.pro from the built jar (FR-ENGINE-009 AC-4).
 project(':NaruServe') {
     // @req FR-ENGINE-009
+    // DefaultLoggerTest picks the Logcat logger through a loader that sees NaruServe-logcat (FR-ENGINE-009 AC-3).
+    dependencies {
+        testImplementation project(':NaruServe-logcat')
+    }
     def bootstrapJar = tasks.named('jar').flatMap { it.archiveFile }
     tasks.named('test') {
         dependsOn tasks.named('jar')
@@ -307,6 +321,51 @@ project(':NaruServe-servlet') {
     }
 }
 
+// @req FR-BUILD-001
+// The Android library (AAR): NaruServe plus the Logcat logger and the INTERNET permission of its manifest. No main
+// sources, so no Kotlin plugin and no API 21 sniffing of its own; included only when settings.gradle found an SDK.
+def androidProject = findProject(':NaruServe-android')
+if (androidProject != null) {
+    project(':NaruServe-android') { p ->
+        repositories {
+            google()
+        }
+        apply plugin: 'com.android.library'
+        apply plugin: 'maven-publish'
+        android {
+            namespace = 'com.snoworca.naruserve.android'
+            compileSdk = 36
+            buildToolsVersion = '36.0.0'
+            defaultConfig {
+                minSdk = 21
+            }
+            compileOptions {
+                sourceCompatibility = JavaVersion.VERSION_1_8
+                targetCompatibility = JavaVersion.VERSION_1_8
+            }
+            publishing {
+                singleVariant('release')
+            }
+        }
+        mainDependencies[p.path].each { String configuration, List<String> notations ->
+            notations.each { n -> p.dependencies.add(configuration, p.project(n)) }
+        }
+        p.dependencies.add('compileOnly', 'org.jspecify:jspecify:1.0.0')
+        // AGP lint takes the module build file as an input, which CON-BUILD-017 forbids; there is no source to lint.
+        p.tasks.matching { it.name.toLowerCase().contains('lint') }.configureEach { enabled = false }
+        // FR-REL-005: mavenLocal only, as for the JAR modules; AGP creates the release component after evaluation.
+        afterEvaluate {
+            p.publishing {
+                publications {
+                    release(MavenPublication) {
+                        from p.components.release
+                    }
+                }
+            }
+        }
+    }
+}
+
 // Android 5.0 (API 21) is the minimum runtime: fail the build on any API that API 21 lacks.
 configure(androidModules.collect { project(it) }) {
     apply plugin: 'ru.vyarus.animalsniffer'
@@ -329,7 +388,14 @@ def checkDependencyRules = tasks.register('checkDependencyRules') {
     description = 'Fails on kotlin-stdlib outside NaruServe-kotlin, a Gson other than 2.14.0 or a misplaced TinyHttpd.'
     group = 'verification'
     def reportFile = dependencyReport.get().asFile
-    def modules = naruProjects
+    // FR-BUILD-001: the AAR's release classpaths fall under the same rules as the JAR modules' main ones.
+    def modules = naruProjects + (androidProject != null ? [androidProject] : [])
+    def configurationsOf = { Project p ->
+        p == androidProject ? ['releaseCompileClasspath', 'releaseRuntimeClasspath']
+                : ['compileClasspath', 'runtimeClasspath', 'testCompileClasspath', 'testRuntimeClasspath']
+    }
+    def mainConfigurations = ['compileClasspath', 'runtimeClasspath', 'releaseCompileClasspath', 'releaseRuntimeClasspath']
+    def compileConfigurations = ['compileClasspath', 'testCompileClasspath', 'releaseCompileClasspath']
     doLast {
         // TinyHttpd 3.0.0 publishes under group com.snoworca; the tinyhttpd- name prefix tells it from
         // NaruServe's own group com.snoworca.naruserve (a different group string, so == cannot confuse them).
@@ -338,7 +404,7 @@ def checkDependencyRules = tasks.register('checkDependencyRules') {
         def violations = []
         modules.each { Project p ->
             def path = p.path
-            ['compileClasspath', 'runtimeClasspath', 'testCompileClasspath', 'testRuntimeClasspath'].each { String cn ->
+            configurationsOf(p).each { String cn ->
                 def result = p.configurations.getByName(cn).incoming.resolutionResult
                 result.root.dependencies.each { dep ->
                     if (dep instanceof org.gradle.api.artifacts.result.UnresolvedDependencyResult) {
@@ -355,7 +421,7 @@ def checkDependencyRules = tasks.register('checkDependencyRules') {
                     def coordinate = "${mv.group}:${mv.name}:${mv.version}"
                     lines << "${path}|${cn}|${coordinate}"
                     if (mv.group == 'org.jetbrains.kotlin' && mv.name == 'kotlin-stdlib' && path != ':NaruServe-kotlin'
-                            && cn in ['compileClasspath', 'runtimeClasspath']) {
+                            && cn in mainConfigurations) {
                         violations << "kotlin-stdlib on ${cn} of ${path} (only :NaruServe-kotlin may ship it)"
                     }
                     if (mv.group == 'com.google.code.gson' && mv.name == 'gson' && mv.version != '2.14.0') {
@@ -365,7 +431,7 @@ def checkDependencyRules = tasks.register('checkDependencyRules') {
                         violations << "${mv.group}:${mv.name} on ${cn} of ${path} (router and session are not used)"
                     }
                     if (isTinyHttpd(mv) && path != ':NaruServe-tinyhttpd'
-                            && cn in ['compileClasspath', 'testCompileClasspath']) {
+                            && cn in compileConfigurations) {
                         violations << "${mv.group}:${mv.name} on ${cn} of ${path} (TinyHttpd stays implementation-scope)"
                     }
                     // @req CON-SVL-001
@@ -373,7 +439,7 @@ def checkDependencyRules = tasks.register('checkDependencyRules') {
                     if ((jetty || mv.group == 'javax.servlet') && path != ':NaruServe-servlet') {
                         violations << "${coordinate} on ${cn} of ${path} (Jetty and javax.servlet stay in :NaruServe-servlet)"
                     }
-                    if (jetty && path == ':NaruServe-servlet' && cn in ['compileClasspath', 'runtimeClasspath']) {
+                    if (jetty && path == ':NaruServe-servlet' && cn in mainConfigurations) {
                         violations << "${coordinate} on ${cn} of ${path} (the embedded container is test scope only)"
                     }
                     if (mv.group == 'jakarta.servlet') {
@@ -502,6 +568,17 @@ test {
             .file('publications/maven/pom-default.xml').get().asFile.absolutePath }.join(',')
     dependsOn naruModules.collect { "${it}:generatePomFileForMavenPublication" }
     systemProperty 'naruserve.pomFiles', pomFilesProperty
+    // @req FR-BUILD-001
+    // BuildLayoutTest reads the release AAR; the published AAR's POM joins the others.
+    systemProperty 'naruserve.androidIncluded', androidProject != null
+    systemProperty 'naruserve.androidSdkDir', String.valueOf(gradle.ext.androidSdkDir)
+    if (androidProject != null) {
+        dependsOn ':NaruServe-android:bundleReleaseAar', ':NaruServe-android:generatePomFileForReleasePublication'
+        def aar = androidProject.layout.buildDirectory.file('outputs/aar/NaruServe-android-release.aar').get().asFile
+        systemProperty 'naruserve.androidAar', aar.absolutePath
+        systemProperty 'naruserve.pomFiles', pomFilesProperty + ',' + androidProject.layout.buildDirectory
+                .file('publications/release/pom-default.xml').get().asFile.absolutePath
+    }
 }
 
 // @req FR-REL-001

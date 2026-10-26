@@ -87,11 +87,15 @@ public class PublishedPomTest {
         return BuildLayoutTest.read(new File(BuildLayoutTest.property("naruserve.rootDir"), path));
     }
 
-    // SDS-AC-5; FR-REL-005 AC-1
+    // SDS-AC-5; FR-REL-005 AC-1, FR-BUILD-001 AC-4
     @Test
-    public void fr_REL_005_AC1_nineGeneratedPomsWithTheModuleCoordinates() throws Exception {
+    public void fr_REL_005_AC1_generatedPomsOfTheNineJarModulesAndTheAndroidAar() throws Exception {
         Map<String, Element> poms = poms();
-        assertEquals(new java.util.TreeSet<>(BuildLayoutTest.MODULES), poms.keySet());
+        java.util.Set<String> expected = new java.util.TreeSet<>(BuildLayoutTest.MODULES);
+        if (BuildLayoutTest.androidIncluded()) {
+            expected.add(BuildLayoutTest.ANDROID_MODULE);
+        }
+        assertEquals(expected, poms.keySet());
         for (Element project : poms.values()) {
             assertEquals("com.snoworca.naruserve", text(project, "groupId"));
             assertEquals(VERSION, text(project, "version"));
@@ -112,9 +116,11 @@ public class PublishedPomTest {
         assertNotNull(gson);
         assertEquals("2.14.0", gson.version);
         assertEquals("compile", gson.scope);
-        Dep stdlib = deps(poms.get("NaruServe-kotlin")).get("org.jetbrains.kotlin:kotlin-stdlib");
+        Map<String, Dep> kotlin = deps(poms.get("NaruServe-kotlin"));
+        Dep stdlib = kotlin.get("org.jetbrains.kotlin:kotlin-stdlib");
         assertNotNull(stdlib);
         assertEquals("2.2.0", stdlib.version);
+        assertScope(kotlin, "NaruServe", "compile");
         Dep slf4j = deps(poms.get("NaruServe-slf4j")).get("org.slf4j:slf4j-api");
         assertNotNull(slf4j);
         assertEquals("1.7.36", slf4j.version);
@@ -126,11 +132,18 @@ public class PublishedPomTest {
                             || key.startsWith("javax.websocket:"));
         }
         Map<String, Dep> bootstrap = deps(poms.get("NaruServe"));
-        for (String m : new String[] {"NaruServe-tinyhttpd", "NaruServe-gson", "NaruServe-logcat"}) {
-            Dep d = bootstrap.get("com.snoworca.naruserve:" + m);
-            assertNotNull(m + " in " + bootstrap, d);
-            assertEquals(m, "runtime", d.scope);
-            assertEquals(m, VERSION, d.version);
+        assertScope(bootstrap, "NaruServe-api", "compile");
+        assertScope(bootstrap, "NaruServe-gson", "compile");
+        assertScope(bootstrap, "NaruServe-tinyhttpd", "runtime");
+        assertFalse("NaruServe stays free of the Logcat logger: " + bootstrap,
+                bootstrap.containsKey("com.snoworca.naruserve:NaruServe-logcat"));
+        if (BuildLayoutTest.androidIncluded()) {
+            Element android = poms.get(BuildLayoutTest.ANDROID_MODULE);
+            assertEquals("aar", text(android, "packaging"));
+            Map<String, Dep> androidDeps = deps(android);
+            assertEquals(androidDeps.toString(), 2, androidDeps.size());
+            assertScope(androidDeps, "NaruServe", "compile");
+            assertScope(androidDeps, "NaruServe-logcat", "compile");
         }
         for (Element project : poms.values()) {
             for (Map.Entry<String, Dep> e : deps(project).entrySet()) {
@@ -139,9 +152,21 @@ public class PublishedPomTest {
         }
     }
 
-    /** The {@code publishing { ... }} block of build.gradle, braces balanced. */
+    /** The NaruServe module {@code artifact} is in {@code deps} with this build's version and {@code scope}. */
+    private static void assertScope(Map<String, Dep> deps, String artifact, String scope) {
+        Dep d = deps.get("com.snoworca.naruserve:" + artifact);
+        assertNotNull(artifact + " in " + deps, d);
+        assertEquals(artifact + " " + d, scope, d.scope);
+        assertEquals(artifact, VERSION, d.version);
+    }
+
+    /** The {@code publishing { ... }} block of build.gradle at or after {@code from}, braces balanced. */
     static String publishingBlock(String build) {
-        int start = build.indexOf("publishing {");
+        return publishingBlock(build, 0);
+    }
+
+    static String publishingBlock(String build, int from) {
+        int start = build.indexOf("publishing {", from);
         assertTrue("build.gradle has a publishing block", start >= 0);
         int depth = 0;
         for (int i = build.indexOf('{', start); i < build.length(); i++) {
@@ -160,7 +185,11 @@ public class PublishedPomTest {
     public void fr_REL_005_AC3_noPublishingRepositoryAndPinnedTinyHttpd() throws IOException {
         String build = file("build.gradle");
         String publishing = publishingBlock(build);
-        assertFalse(publishing, publishing.contains("repositories"));
+        // Every publishing block, the AAR's included, declares no repository: mavenLocal only.
+        for (int at = build.indexOf("publishing {"); at >= 0; at = build.indexOf("publishing {", at + 1)) {
+            String block = publishingBlock(build, at);
+            assertFalse(block, block.contains("repositories"));
+        }
         assertFalse("build.gradle names no publishing repository", build.contains("publishing.repositories"));
         assertTrue(publishing, Pattern.compile("from\\s+(p\\.)?components\\.java").matcher(publishing).find());
         assertTrue(publishing, Pattern.compile("versionMapping\\s*\\{\\s*allVariants\\s*\\{\\s*fromResolutionResult\\(\\)")

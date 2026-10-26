@@ -23,7 +23,9 @@ public final class WaveEightKotlinDocsTest {
     static final String IMPORT_LINE = "import com.snoworca.naruserve.kotlin.body";
     static final String EXTENSION_LINE =
             "inline fun <reified T : Any> Request.body(): T = body(object : TypeRef<T>() {}) ?: throw HttpException(400, \"JSON body is null\")";
-    static final String STDLIB_PHRASE = "`kotlin-stdlib`은 이 모듈만 사용하며 이 모듈은 `NaruServe-api`에만 의존합니다.";
+    // OPS-KT-001 AC-3 (android-module decision 2026-10-26): the module includes the NaruServe bootstrap.
+    static final String STDLIB_PHRASE = "`kotlin-stdlib`은 이 모듈만 사용합니다. 이 모듈은 기본 조립 모듈 `NaruServe`(TinyHttpd + Gson)를 "
+            + "포함하므로, Kotlin 프로젝트는 이 모듈 하나로 `RestApp.create()`까지 씁니다.";
     static final String COROUTINE_PHRASE = "Coroutine 지원은 v1 이후 항목입니다. 논블로킹 coroutine 어댑터는 별도 설계가 필요하고 "
             + "v1 핸들러는 동기이기 때문입니다.";
     static final String GSON_KOTLIN_PHRASE = "Gson은 Kotlin의 기본 인자와 null 불가 타입을 이해하지 못합니다.";

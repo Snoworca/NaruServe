@@ -8,14 +8,14 @@
 RestApp app = RestApp.create();
 ```
 
-`create()`는 기본 HTTP 엔진(TinyHttpd)과 기본 JSON 엔진(Gson 2.14.0)을 조립합니다.
-이 조립은 기본 bootstrap 모듈 `NaruServe`가 맡습니다. `create()`를 쓰려면 이 모듈을 의존성에 넣습니다.
+`create()`는 기본 HTTP 엔진(TinyHttpd)과 기본 JSON 엔진(Gson 2.14.0)을 조립하고 로그는 콘솔 로거로 남깁니다.
+이 조립은 기본 bootstrap 모듈 `NaruServe`가 맡습니다. `create()`를 쓰려면 이 모듈을 의존성에 넣습니다. Kotlin은 `NaruServe-kotlin`, Android 앱은 `NaruServe-android`를 넣어도 이 모듈이 함께 들어옵니다. `NaruServe-android`에서는 `create()`가 Logcat 로거를 씁니다.
 
 ```groovy
 implementation 'com.snoworca.naruserve:NaruServe:0.1.0-SNAPSHOT'
 ```
 
-엔진을 직접 고를 때는 builder를 씁니다. `NaruServe-api`만 의존하는 경우에도 이 방법을 씁니다. 기본 JSON 구현을 코드에서 직접 넘기려면 Gson 모듈 `com.snoworca.naruserve:NaruServe-gson`을 넣고 `new GsonJsonCodec()`을 `jsonCodec(...)`에 넘깁니다([JSON](json.md#기본-gson-설정)).
+엔진을 직접 고를 때는 builder를 씁니다. `NaruServe-api`만 의존하는 경우에도 이 방법을 씁니다. 기본 JSON 구현을 코드에서 직접 넘기려면 `new GsonJsonCodec()`을 `jsonCodec(...)`에 넘깁니다. `GsonJsonCodec`은 `NaruServe`에 함께 들어 있고, `NaruServe-api`만 쓸 때는 Gson 모듈 `com.snoworca.naruserve:NaruServe-gson`을 넣습니다([JSON](json.md#기본-gson-설정)).
 
 ```java
 RestApp app = RestApp.builder()

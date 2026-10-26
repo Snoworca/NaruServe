@@ -34,6 +34,15 @@ public final class ReleaseRecordsDocsTest {
     /** The nine published modules, in the order of naruModules. */
     static final List<String> MODULES = BuildLayoutTest.MODULES;
 
+    /** The published modules of this build: the nine and, when an Android SDK resolved, NaruServe-android. */
+    static List<String> publishedModules() {
+        List<String> modules = new java.util.ArrayList<>(MODULES);
+        if (BuildLayoutTest.androidIncluded()) {
+            modules.add(BuildLayoutTest.ANDROID_MODULE);
+        }
+        return modules;
+    }
+
     /**
      * Run lines of the "## Recorded runs" section by name, each [command, date, result].
      * shortcut: skipped while test-results.md is absent; ReleaseResultsDocsTest (OPS-REL-003) requires the file.
@@ -79,7 +88,7 @@ public final class ReleaseRecordsDocsTest {
     public void fr_REL_001_AC2_sbomRunListsNineModuleFilesWithComponentCounts() throws IOException {
         String[] sbom = run("sbom");
         assertTrue(sbom[0], sbom[0].contains("-Prelease") && sbom[0].contains("releaseSbom"));
-        for (String module : MODULES) {
+        for (String module : publishedModules()) {
             Matcher m = Pattern.compile("(?<![\\w-])" + Pattern.quote(module + ".cdx.json") + "=(\\d+)")
                     .matcher(sbom[2]);
             assertTrue("sbom result names " + module + ".cdx.json=<component count>: " + sbom[2], m.find());
@@ -181,7 +190,7 @@ public final class ReleaseRecordsDocsTest {
         String[] publish = run("publish-local");
         assertTrue(publish[0], publish[0].contains("publishToMavenLocal"));
         assertFalse("publishToMavenLocal runs without -Prelease: " + publish[0], publish[0].contains("-Prelease"));
-        for (String module : MODULES) {
+        for (String module : publishedModules()) {
             assertTrue("publish-local result names com/snoworca/naruserve/" + module + "/0.1.0-SNAPSHOT/: " + publish[2],
                     Pattern.compile("(?<![\\w-])" + Pattern.quote("com/snoworca/naruserve/" + module + "/0.1.0-SNAPSHOT/"))
                             .matcher(publish[2]).find());
