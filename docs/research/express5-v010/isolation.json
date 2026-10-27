@@ -1,0 +1,10 @@
+{
+  "profile": "worktree-parallel",
+  "reason": "Native linked git worktree and an actual child tool invocation with explicit workdir passed; per-call MCP reads resolved that linked worktree. Root plus at most three child agents.",
+  "probe_worktree": "/Users/beom/work/git/NaruServe/.claude/worktrees/express5-v010-isolation-probe",
+  "probe_head": "274775f918d74c42a79f52e123cd2d9784666ee5",
+  "child_agent": "/root/api_core_docs",
+  "child_result": "pwd and git top-level matched the linked worktree; HEAD 274775f; clean status; no files modified",
+  "observed_before_ledger": true,
+  "judgement_recorded_now": true
+}
