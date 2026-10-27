@@ -10,7 +10,14 @@ Start with installation and the runnable example below; use the API guides for s
 
 ## Install
 
-Use these coordinates when the modules are published on Maven Central. Add `mavenCentral()` to the consumer build and choose the module you need. If `0.9.0` does not resolve, use [a source checkout](#build-from-a-source-checkout) below; a successful local staging build does not establish public availability.
+NaruServe 0.9.0 is published on Maven Central, so Gradle downloads it from `mavenCentral()` with no extra
+repository or source checkout:
+
+- Central page: [central.sonatype.com/artifact/com.snoworca.naruserve/naruserve](https://central.sonatype.com/artifact/com.snoworca.naruserve/naruserve)
+  (all modules: [namespace com.snoworca.naruserve](https://central.sonatype.com/namespace/com.snoworca.naruserve))
+- Repository path: [repo.maven.apache.org/maven2/com/snoworca/naruserve/](https://repo.maven.apache.org/maven2/com/snoworca/naruserve/)
+
+`build.gradle` (Groovy DSL):
 
 ```groovy
 repositories {
@@ -21,6 +28,29 @@ dependencies {
     implementation 'com.snoworca.naruserve:naruserve:0.9.0'
 }
 ```
+
+`build.gradle.kts` (Kotlin DSL):
+
+```kts
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation("com.snoworca.naruserve:naruserve:0.9.0")
+}
+```
+
+Pick the one line that matches the project; each brings the rest (TinyHttpd engine, Gson codec, logger) with it:
+
+| Project | Gradle dependency |
+|---|---|
+| Java application on any JDK 8+ | `implementation 'com.snoworca.naruserve:naruserve:0.9.0'` |
+| Kotlin application | `implementation 'com.snoworca.naruserve:naruserve-kotlin:0.9.0'` |
+| Android app (API 21+) | `implementation 'com.snoworca.naruserve:naruserve-android:0.9.0'` plus the `pickFirsts` setting below |
+
+An Android project that was created by Android Studio already lists `google()` and `mavenCentral()` in the
+`dependencyResolutionManagement` block of `settings.gradle`; nothing else is needed there.
 
 `NaruServe` resolves the TinyHttpd 3.1.0 engine from Maven Central; see
 [TinyHttpd](#tinyhttpd) below. Kotlin projects depend on `NaruServe-kotlin`, and Android apps on

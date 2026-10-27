@@ -10,7 +10,13 @@ Android 5.0(API 21) 이상과 Java 8 이상 JVM에서 같은 API를 사용합니
 
 ## 설치
 
-모듈이 Maven Central에 게시되면 아래 좌표로 설치합니다. 소비자 빌드에 `mavenCentral()`을 추가하고 필요한 모듈을 선택하세요. `0.9.0`을 찾지 못하면 아래 [소스 체크아웃 빌드](#소스-체크아웃-빌드)를 사용하세요. 로컬 스테이징 빌드 성공만으로 공개 저장소에서의 가용성을 입증하지는 않습니다.
+NaruServe 0.9.0은 Maven Central에 공개되어 있어, Gradle이 `mavenCentral()`에서 바로 받습니다. 별도 저장소나 소스 체크아웃은 필요 없습니다.
+
+- Central 페이지: [central.sonatype.com/artifact/com.snoworca.naruserve/naruserve](https://central.sonatype.com/artifact/com.snoworca.naruserve/naruserve)
+  (전체 모듈: [namespace com.snoworca.naruserve](https://central.sonatype.com/namespace/com.snoworca.naruserve))
+- 저장소 경로: [repo.maven.apache.org/maven2/com/snoworca/naruserve/](https://repo.maven.apache.org/maven2/com/snoworca/naruserve/)
+
+`build.gradle`(Groovy DSL):
 
 ```groovy
 repositories {
@@ -21,6 +27,28 @@ dependencies {
     implementation 'com.snoworca.naruserve:naruserve:0.9.0'
 }
 ```
+
+`build.gradle.kts`(Kotlin DSL):
+
+```kts
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation("com.snoworca.naruserve:naruserve:0.9.0")
+}
+```
+
+프로젝트 종류에 맞는 한 줄만 넣으면 나머지(TinyHttpd 엔진, Gson 코덱, 로거)는 함께 따라옵니다.
+
+| 프로젝트 | Gradle 의존성 |
+|---|---|
+| JDK 8 이상 Java 애플리케이션 | `implementation 'com.snoworca.naruserve:naruserve:0.9.0'` |
+| Kotlin 애플리케이션 | `implementation 'com.snoworca.naruserve:naruserve-kotlin:0.9.0'` |
+| Android 앱(API 21 이상) | `implementation 'com.snoworca.naruserve:naruserve-android:0.9.0'`과 아래 `pickFirsts` 설정 |
+
+Android Studio로 만든 프로젝트는 `settings.gradle`의 `dependencyResolutionManagement`에 이미 `google()`과 `mavenCentral()`이 있으므로 따로 추가할 것이 없습니다.
 
 `NaruServe`는 Maven Central에서 TinyHttpd 3.1.0 엔진을 가져옵니다. 아래 [TinyHttpd](#tinyhttpd)를 참고하세요.
 Kotlin 프로젝트는 `NaruServe-kotlin`, Android 앱은 `NaruServe-android`에 의존하면 됩니다. 두 모듈 모두 `NaruServe`를 포함합니다.
