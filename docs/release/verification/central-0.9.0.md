@@ -96,10 +96,25 @@ repository only, whose one class calls `RestApp.create()`, `app.jsonCodec(new Gs
 
 The APK was not run on a device or emulator.
 
+## Maven Central publication
+
+From the tagged commit `v0.9.0` (`2498eda`, clean tree): `./gradlew -PtinyHttpdFromMaven=true checkCentralStaging
+--rerun-tasks` restaged the ten modules (300 files). A one-off script outside the repository copied the 50 primary
+files (main, sources, javadoc, `.pom`, `.module` per module), signed each with the TinyHttpd PGP key (fingerprint
+`DD2AFA2B544F2249C97984DBF5B75792328DC16B`, no expiration, not revoked; each signature self-verified), added md5,
+sha1, sha256 and sha512, and uploaded the 300-entry bundle once to the Central Portal with `publishingType=AUTOMATIC`.
+
+- deploymentId `582f3a49-ac6f-4793-9bdb-6228b1315d73`; validation passed with no errors; state `PUBLISHED` at
+  2026-10-27 15:33:42 +0900.
+- Public check at 15:34: all 50 primary files downloaded from `https://repo.maven.apache.org/maven2/` have the
+  SHA-256 of the uploaded bytes, and their `.asc` files equal the uploaded signatures (50 identical, 0 missing,
+  0 mismatched).
+- Consumers with `mavenCentral()` only (the staging directory moved away): the Java consumer of
+  `com.snoworca.naruserve:naruserve:0.9.0` answered `status=200 body=Hello 0.9.0`; the Android consumer of
+  `naruserve-android:0.9.0` built the minified release APK (99370 bytes).
+
 ## Not done and open points
 
-- No signing, no bundle and no Central Portal upload; that step needs the Portal token and the PGP key and is run
-  only after the user confirms.
 - The JARs carry no `LICENSE` file (the POMs carry the license); Central does not require one.
 - The javadoc JARs of `naruserve-kotlin` (Kotlin sources only) and `naruserve-android` (no sources) hold only a
   manifest; Central accepts them.
