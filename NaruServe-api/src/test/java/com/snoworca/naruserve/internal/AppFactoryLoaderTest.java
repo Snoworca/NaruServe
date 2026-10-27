@@ -70,7 +70,7 @@ public class AppFactoryLoaderTest {
             AppFactoryLoader.create(loaderWith());
             fail("no provider");
         } catch (IllegalStateException e) {
-            assertTrue(e.getMessage(), e.getMessage().contains("com.snoworca.naruserve:NaruServe"));
+            assertTrue(e.getMessage(), e.getMessage().contains("com.snoworca.naruserve:naruserve"));
             assertTrue(e.getMessage(), e.getMessage().contains("RestApp.builder()"));
         }
     }
@@ -83,7 +83,7 @@ public class AppFactoryLoaderTest {
             RestApp.create();
             fail("no provider on the NaruServe-api test class path");
         } catch (IllegalStateException e) {
-            assertTrue(e.getMessage(), e.getMessage().contains("com.snoworca.naruserve:NaruServe"));
+            assertTrue(e.getMessage(), e.getMessage().contains("com.snoworca.naruserve:naruserve"));
             assertTrue(e.getMessage(), e.getMessage().contains("RestApp.builder()"));
         }
     }

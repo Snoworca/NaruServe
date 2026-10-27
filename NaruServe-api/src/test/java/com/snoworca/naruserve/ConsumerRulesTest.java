@@ -51,4 +51,11 @@ public class ConsumerRulesTest {
         }
         assertTrue("-keepclassmembers line for Cookie.unvalidated", cookie);
     }
+
+    // FR-BUILD-001 AC-7: jspecify is compileOnly, so R8 in an Android app must not fail on its missing annotations
+    @Test
+    public void fr_BUILD_001_AC7_builtJarSilencesTheCompileOnlyJspecifyAnnotations() throws Exception {
+        List<String> lines = Arrays.asList(rulesFromBuiltJar().split("\\r?\\n"));
+        assertTrue(lines.toString(), lines.contains("-dontwarn org.jspecify.annotations.**"));
+    }
 }

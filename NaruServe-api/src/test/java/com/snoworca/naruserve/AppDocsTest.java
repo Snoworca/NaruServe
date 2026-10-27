@@ -150,7 +150,7 @@ public class AppDocsTest {
         assertTrue(factory, factory.contains("`ServiceLoader`"));
         assertTrue(factory, factory.contains("`IllegalStateException`"));
         assertTrue("create() message quoted", app.contains("No com.snoworca.naruserve.spi.AppFactory provider found."
-                + " Add the com.snoworca.naruserve:NaruServe module to use RestApp.create(), or assemble the app with"
+                + " Add the com.snoworca.naruserve:naruserve module to use RestApp.create(), or assemble the app with"
                 + " RestApp.builder().httpAdapter(...).jsonCodec(...).build()"));
         String handle = lineWith(app, "`ServerHandle`은");
         for (String m : new String[] {"`port()`", "`address()`", "`state()`", "`127.0.0.1`"}) {

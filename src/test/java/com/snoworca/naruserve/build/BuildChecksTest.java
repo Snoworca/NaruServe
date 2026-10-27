@@ -356,6 +356,16 @@ public class BuildChecksTest {
         }
     }
 
+    // FR-REL-005 AC-7: without an Android SDK the staging check refuses to stage nine modules
+    @Test
+    public void fr_REL_005_AC7_checkCentralStagingFailsWithoutTheAndroidModule() {
+        Map<String, String> env = new HashMap<>(System.getenv());
+        env.remove("ANDROID_HOME");
+        env.remove("ANDROID_SDK_ROOT");
+        String out = runner("checkCentralStaging", "--dry-run").withEnvironment(env).buildAndFail().getOutput();
+        assertTrue(out, out.contains("checkCentralStaging needs NaruServe-android"));
+    }
+
     // FR-BUILD-001 AC-1: an SDK named by ANDROID_HOME includes the Android module
     @Test
     public void fr_BUILD_001_AC1_anSdkFromAndroidHomeIncludesTheAndroidModule() {

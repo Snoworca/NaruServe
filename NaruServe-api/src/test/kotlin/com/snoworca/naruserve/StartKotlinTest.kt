@@ -28,7 +28,7 @@ class StartKotlinTest {
             handle.shutdown(1, TimeUnit.SECONDS)
             fail("no AppFactory provider is on this class path")
         } catch (e: IllegalStateException) {
-            assertTrue(e.message, e.message!!.contains("com.snoworca.naruserve:NaruServe"))
+            assertTrue(e.message, e.message!!.contains("com.snoworca.naruserve:naruserve"))
         }
     }
 

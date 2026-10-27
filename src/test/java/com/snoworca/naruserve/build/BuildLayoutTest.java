@@ -379,7 +379,7 @@ public class BuildLayoutTest {
     // CON-BUILD-006 AC-8
     @Test
     public void con_BUILD_006_AC8_apiHasTestFixtures() {
-        assertTrue(new File(ROOT, "NaruServe-api/build/libs/NaruServe-api-0.1.0-SNAPSHOT-test-fixtures.jar").isFile());
+        assertTrue(new File(ROOT, "NaruServe-api/build/libs/NaruServe-api-0.9.0-test-fixtures.jar").isFile());
     }
 
     // CON-BUILD-007 AC-1, CON-BUILD-007 AC-2
@@ -569,10 +569,10 @@ public class BuildLayoutTest {
         List<String> readme = new ArrayList<>(MODULES);
         readme.add(ANDROID_MODULE);
         required.put("README.md", readme);
-        required.put("app.md", Arrays.asList("com.snoworca.naruserve:NaruServe:"));
-        required.put("json.md", Arrays.asList("NaruServe-gson", "com.snoworca.naruserve:NaruServe-gson:",
+        required.put("app.md", Arrays.asList("com.snoworca.naruserve:naruserve:"));
+        required.put("json.md", Arrays.asList("NaruServe-gson", "com.snoworca.naruserve:naruserve-gson:",
                 "com.google.code.gson:gson:2.14.0"));
-        required.put("kotlin.md", Arrays.asList("NaruServe-kotlin", "com.snoworca.naruserve:NaruServe-kotlin:"));
+        required.put("kotlin.md", Arrays.asList("NaruServe-kotlin", "com.snoworca.naruserve:naruserve-kotlin:"));
         required.put("logging.md", Arrays.asList("NaruServe-slf4j", "NaruServe-filelog", "NaruServe-logcat"));
         for (Map.Entry<String, List<String>> e : required.entrySet()) {
             String doc = read(new File(ROOT, "docs/api/" + e.getKey()));
@@ -590,7 +590,7 @@ public class BuildLayoutTest {
     @Test
     public void ops_BUILD_003_AC6_apiDocsStateTheDefaultKotlinAndAndroidModuleSets() throws IOException {
         String readme = read(new File(ROOT, "docs/api/README.md"));
-        assertTrue(readme, readme.contains("| `NaruServe-android` | `com.snoworca.naruserve:NaruServe-android` |"));
+        assertTrue(readme, readme.contains("| `NaruServe-android` | `com.snoworca.naruserve:naruserve-android` |"));
         assertTrue(readme, readme.contains("`NaruServe` 하나로 `GsonJsonCodec`과 Gson도 컴파일 시점에 함께 들어옵니다"));
         assertTrue(readme, readme.contains("`NaruServe-kotlin`은 `NaruServe`를 포함합니다"));
         assertTrue(readme, readme.contains("Android 앱은 `NaruServe-android`를 넣습니다"));

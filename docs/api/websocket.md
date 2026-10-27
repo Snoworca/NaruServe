@@ -1,5 +1,7 @@
 # WebSocket
 
+[한국어](websocket.md) | [English](en/websocket.md)
+
 HTTP와 **같은 포트**에서 WebSocket(RFC 6455)을 받습니다. Express의 `express-ws`와 비슷합니다.
 
 ```java
@@ -40,7 +42,8 @@ Express(express-ws)의 `app.ws('/ws', (ws, req) => ...)`에 대응합니다.
 - `req`는 핸들러 본문에서만 쓰세요. `onText` 같은 리스너는 핸들러가 반환한 뒤 메시지가 올 때 실행됩니다. 리스너에서 필요한 값(서비스, 파라미터)은 핸들러에서 미리 변수로 꺼내 두거나 `ws.attribute`에 저장하세요.
 - 경로 패턴은 HTTP 라우트와 같습니다(`/ws/rooms/:room`).
 - 같은 경로에 일반 `app.get`을 함께 둘 수 있습니다. `Upgrade: websocket` 요청만 `app.ws`로 갑니다.
-- `app.ws` 라우트만 있는 경로에 `Upgrade` 없는 요청이 오면 `426 Upgrade Required`로 답합니다. 코어는 `Upgrade: websocket`과 `Connection: Upgrade` 헤더, 표준 JSON 오류 본문을 씁니다.
+- `app.ws` 라우트만 있는 경로에 `Upgrade` 없는 일반 GET·HEAD 요청이 오면 `426 Upgrade Required`로 답합니다. 코어는 `Upgrade: websocket`과 `Connection: Upgrade` 헤더, 표준 JSON 오류 본문을 씁니다.
+  자동 OPTIONS는 `204`와 `Allow`로 응답합니다. 비활성화된 확장 메서드와 알 수 없는 메서드는 라우팅 전에 `501`로 거부됩니다.
   TinyHttpd 어댑터에서도 같습니다. over the TinyHttpd adapter the `426` answer carries `Upgrade: websocket` and `Connection: Upgrade`.
 
 ```java

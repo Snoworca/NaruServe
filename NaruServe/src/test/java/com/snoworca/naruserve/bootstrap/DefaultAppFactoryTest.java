@@ -91,11 +91,11 @@ public class DefaultAppFactoryTest {
         try (ZipFile zip = new ZipFile(new File(jar))) {
             String rules = read(zip, "META-INF/proguard/naruserve-bootstrap.pro");
             assertTrue(rules, rules.contains(
-                    "-keep class com.snoworca.naruserve.bootstrap.DefaultAppFactory { public <init>(); }"));
+                    "-keep class com.snoworca.naruserve.bootstrap.DefaultAppFactory { public <init>(); public com.snoworca.naruserve.RestApp create(); }"));
             assertTrue(rules, rules.contains("-keepnames class com.snoworca.naruserve.spi.AppFactory"));
-            // FR-ENGINE-009 AC-4: the Logcat logger is created by name, so R8 must keep its constructor.
+            // FR-ENGINE-009 AC-4: both classes are created by name, so R8 sees no instantiation and must keep their methods.
             assertTrue(rules, rules.contains(
-                    "-keep class com.snoworca.naruserve.logcat.LogcatLogger { public <init>(); }"));
+                    "-keep class com.snoworca.naruserve.logcat.LogcatLogger { public <init>(); public <methods>; }"));
             assertEquals("com.snoworca.naruserve.bootstrap.DefaultAppFactory", read(zip, SERVICES).trim());
         }
     }

@@ -1,8 +1,10 @@
 # Servlet 모듈 (`NaruServe-servlet`)
 
+[한국어](servlet.md) | [English](en/servlet.md)
+
 `NaruServe-servlet`은 NaruServe 앱을 Tomcat, Jetty 같은 Servlet 컨테이너(WAS) 위에서 실행하는 어댑터입니다. 내장 HTTP 엔진 대신 컨테이너가 연결을 받고, 라우트·미들웨어·`req`/`res` 코드는 **그대로** 씁니다.
 
-> 이 모듈은 사양서에서 **선택 기능(P5)** 입니다. Jetty 9.4에서만 확인했고 다른 컨테이너는 확인하지 않았습니다.
+> 이 모듈은 선택 어댑터입니다. Jetty 9.4에서만 확인했고 다른 컨테이너는 확인하지 않았습니다.
 
 ## 요구사항
 
@@ -11,15 +13,17 @@
 - v1에는 `jakarta.servlet` 모듈이 없으며, Servlet 5 이상(`jakarta.servlet`) 컨테이너는 지원하지 않습니다. `jakarta.servlet`용 모듈은 v1 이후 항목입니다.
 
 ```groovy
-// group과 버전은 임시값입니다.
-implementation 'com.snoworca.naruserve:NaruServe-servlet:0.1.0-SNAPSHOT'
+// Servlet 컨테이너를 쓰는 웹 애플리케이션의 의존성입니다.
+implementation 'com.snoworca.naruserve:naruserve-servlet:0.9.0'
 // JSON 코덱. 없으면 configurer가 Builder.jsonCodec(...)으로 직접 넣어야 합니다.
-implementation 'com.snoworca.naruserve:NaruServe-gson:0.1.0-SNAPSHOT'
+implementation 'com.snoworca.naruserve:naruserve-gson:0.9.0'
 // Servlet API는 컨테이너가 제공합니다.
 compileOnly 'javax.servlet:javax.servlet-api:3.1.0'
 ```
 
 ## 등록
+
+아래 코드는 웹 애플리케이션 설정 예제입니다. Java 코드의 `RestApp`과 `Collections`는 각각 `com.snoworca.naruserve.RestApp`, `java.util.Collections`를 import합니다.
 
 웹 애플리케이션에 `ServletConfigurer`를 구현한 클래스 하나를 두고, 컨텍스트 init-parameter `naruserve.configurer`에 그 클래스 이름을 적습니다. 나머지는 `NaruServeInitializer`가 합니다.
 
@@ -121,7 +125,7 @@ Express에는 서블릿 컨테이너에 앱을 끼워 넣는 기능이 없고, �
 
 ## 설정
 
-컨테이너가 연결·스레드·가상 호스트를 맡으므로 내장 엔진을 설정하는 `ServerOptions` 값은 이 어댑터에서 효과가 없습니다. `listen`의 포트 인자도 무시합니다.
+컨테이너가 연결·스레드·가상 호스트를 맡으므로 아래에 나열한 내장 엔진의 연결 관련 `ServerOptions` 값은 이 어댑터에서 효과가 없습니다. `maxSseStreams`는 적용됩니다. `listen`의 포트 인자는 무시합니다.
 
 - 무시하는 `ServerOptions` 설정: `bindAddress`, `allowedHosts`, `maxHeaderSize`, `maxHeaderCount`, `maxRequestLineLength`, `headerTimeout`, `bodyReadTimeout`, `writeTimeout`, `minBodyRate`, `maxWorkers`, `maxConnections`, `maxUpgradedConnections`, `maxConnectionsPerAddress`
 - 적용하는 설정: `jsonLimit`, `formLimit`, `app.multipart`, `maxSseStreams`, `app.sse`, `trustProxy`
@@ -191,7 +195,7 @@ Jetty 9.4에서 잘못된 요청 경로를 원본 요청 줄로 보내 관찰한
 Servlet 어댑터는 v1에서 WebSocket을 지원하지 않습니다. `app.ws` 라우트는 이 어댑터에서 `501`을 답하며, WebSocket은 내장 엔진(`app.listen`)이 제공합니다.
 
 - 올바른 업그레이드 요청(`Upgrade: websocket`, `Connection: Upgrade`, `Sec-WebSocket-Version: 13`, 키)은 `101`도 `500`도 아닌 표준 오류 본문과 요청 ID의 `501`을 받고, 세션은 만들어지지 않습니다.
-- 코어가 먼저 답하는 경우는 그대로입니다. `Upgrade` 없는 요청은 `Upgrade: websocket`과 함께 `426`, 허용하지 않은 `Origin`은 `403`, GET이 아닌 메서드는 내장 엔진과 같은 답입니다.
+- 코어가 먼저 답하는 경우는 그대로입니다. WebSocket 전용 경로의 일반 GET·HEAD 요청에 `Upgrade`가 없으면 `Upgrade: websocket`과 함께 `426`, 허용하지 않은 `Origin`은 `403`, GET이 아닌 메서드는 내장 엔진과 같은 답입니다.
 
 ## 쓰는 모습
 

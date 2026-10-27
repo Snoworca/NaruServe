@@ -191,9 +191,22 @@ public final class ReleaseRecordsDocsTest {
         assertTrue(publish[0], publish[0].contains("publishToMavenLocal"));
         assertFalse("publishToMavenLocal runs without -Prelease: " + publish[0], publish[0].contains("-Prelease"));
         for (String module : publishedModules()) {
-            assertTrue("publish-local result names com/snoworca/naruserve/" + module + "/0.1.0-SNAPSHOT/: " + publish[2],
-                    Pattern.compile("(?<![\\w-])" + Pattern.quote("com/snoworca/naruserve/" + module + "/0.1.0-SNAPSHOT/"))
-                            .matcher(publish[2]).find());
+            String dir = "com/snoworca/naruserve/" + module.toLowerCase(java.util.Locale.ROOT) + "/0.9.0/";
+            assertTrue("publish-local result names " + dir + ": " + publish[2],
+                    Pattern.compile("(?<![\\w-])" + Pattern.quote(dir)).matcher(publish[2]).find());
+        }
+    }
+
+    // FR-REL-005 AC-7
+    @Test
+    public void fr_REL_005_AC7_centralStagingRunLineRecordsTheCheckAndTheTenArtifactIds() throws IOException {
+        String[] staging = run("central-staging");
+        assertTrue(staging[0], staging[0].contains("checkCentralStaging"));
+        assertTrue("central-staging result: " + staging[2], staging[2].startsWith("exit=0"));
+        for (String module : publishedModules()) {
+            String id = module.toLowerCase(java.util.Locale.ROOT);
+            assertTrue("central-staging result names " + id + ": " + staging[2],
+                    Pattern.compile("(?<![\\w-])" + Pattern.quote(id) + "(?![\\w-])").matcher(staging[2]).find());
         }
     }
 

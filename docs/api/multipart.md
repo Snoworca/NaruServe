@@ -1,5 +1,7 @@
 # 파일 업로드
 
+[English](en/multipart.md) | [문서 목록](README.md)
+
 Express에서 `multer`로 하던 일을 내장 기능으로 합니다. 미들웨어를 라우트마다 붙이지 않고, 앱 전체 한도만 설정한 뒤 `req.file(...)`로 꺼냅니다.
 
 | multer | NaruServe |
@@ -115,6 +117,7 @@ public interface UploadFile extends AutoCloseable {
 | `bytes()` | 작은 파일을 메모리로. 8 MiB(8388608바이트)를 넘는 파트는 크기와 한도를 담은 `IllegalStateException` |
 
 `bytes()`의 한도를 8 MiB로 고정한 이유는 큰 파일을 실수로 힙에 통째로 올리지 않게 하려는 것입니다. 더 큰 파일은 `inputStream()`, `transferTo`, `save`로 다루세요.
+`transferTo(target)`는 대상 스트림을 flush하지만 닫지 않습니다. 대상 스트림은 호출자가 닫으세요. `save`·`close`·요청 종료 후에는 내용 접근이 막히지만 `name`·`filename`·`contentType`·`size` 메타데이터는 계속 읽을 수 있습니다.
 `req.parts()`는 텍스트 필드까지 포함한 모든 파트를 본문 순서대로 `List<UploadFile>`로 돌려줍니다. 텍스트 필드는 `filename()`이 `null`입니다.
 
 브라우저의 비어 있는 파일 입력은 `filename=""`인 파트를 보냅니다. `filename` 파라미터가 있는 파트는 모두 파일이므로, `req.file(name)`은 `null`이 아니라 `filename()`이 빈 문자열이고 `size()`가 0인 `UploadFile`을 돌려줍니다. 파일이 실제로 왔는지는 `file == null || file.size() == 0`으로 확인하세요.

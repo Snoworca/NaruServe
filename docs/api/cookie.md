@@ -1,5 +1,7 @@
 # Cookie
 
+[English](en/cookie.md) | [문서 목록](README.md)
+
 Servlet의 `javax.servlet.http.Cookie`와 비슷한 NaruServe 자체 `Cookie` 클래스를 씁니다. `cookie-parser` 없이 바로 읽습니다.
 
 ## 간단히 설정하기

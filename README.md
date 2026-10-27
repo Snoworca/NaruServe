@@ -1,28 +1,24 @@
 # NaruServe
 
+English | [한국어](README.ko.md)
+
 NaruServe is a lightweight HTTP server library for Java 8 and Kotlin that you use like Express.js.
 The same API runs on Android 5.0 (API 21) and later and on any Java 8+ JVM.
 
-The full API documentation (Korean) is in [docs/api/README.md](docs/api/README.md).
+Read the [English API guide](docs/api/en/README.md) or the [한국어 API 문서](docs/api/README.md).
+Start with installation and the runnable example below; use the API guides for signatures, defaults and error contracts.
 
 ## Install
 
-v1 is published to the local Maven repository only. Build and publish the nine JAR modules (and, when an Android SDK is found, the `NaruServe-android` AAR) from this checkout:
-
-```sh
-./gradlew publishToMavenLocal
-```
-
-Then add `mavenLocal()` to the consumer build and depend on the modules you need:
+Use these coordinates when the modules are published on Maven Central. Add `mavenCentral()` to the consumer build and choose the module you need. If `0.9.0` does not resolve, use [a source checkout](#build-from-a-source-checkout) below; a successful local staging build does not establish public availability.
 
 ```groovy
 repositories {
-    mavenLocal()
     mavenCentral()
 }
 
 dependencies {
-    implementation 'com.snoworca.naruserve:NaruServe:0.1.0-SNAPSHOT'
+    implementation 'com.snoworca.naruserve:naruserve:0.9.0'
 }
 ```
 
@@ -43,18 +39,44 @@ android {
 }
 ```
 
+Each artifactId is the module name in lower case (`NaruServe-api` is published as `naruserve-api`).
+
 | Module | Coordinates | Contents |
 |---|---|---|
-| `NaruServe-api` | `com.snoworca.naruserve:NaruServe-api:0.1.0-SNAPSHOT` | Public API and SPI, no external dependency |
-| `NaruServe` | `com.snoworca.naruserve:NaruServe:0.1.0-SNAPSHOT` | `RestApp.create()` bootstrap: TinyHttpd, Gson (`GsonJsonCodec` at compile time) and the console logger, for any JDK |
-| `NaruServe-tinyhttpd` | `com.snoworca.naruserve:NaruServe-tinyhttpd:0.1.0-SNAPSHOT` | TinyHttpd `HttpAdapter` |
-| `NaruServe-gson` | `com.snoworca.naruserve:NaruServe-gson:0.1.0-SNAPSHOT` | `GsonJsonCodec` (Gson 2.14.0) |
-| `NaruServe-kotlin` | `com.snoworca.naruserve:NaruServe-kotlin:0.1.0-SNAPSHOT` | `NaruServe` plus Kotlin-only extensions; the only module that uses `kotlin-stdlib` |
-| `NaruServe-android` | `com.snoworca.naruserve:NaruServe-android:0.1.0-SNAPSHOT` | Android library (AAR): `NaruServe`, the Logcat logger and the `INTERNET` permission; built only when an Android SDK is found |
-| `NaruServe-logcat` | `com.snoworca.naruserve:NaruServe-logcat:0.1.0-SNAPSHOT` | Logcat `Logger` |
-| `NaruServe-filelog` | `com.snoworca.naruserve:NaruServe-filelog:0.1.0-SNAPSHOT` | Rotating file `Logger` |
-| `NaruServe-slf4j` | `com.snoworca.naruserve:NaruServe-slf4j:0.1.0-SNAPSHOT` | SLF4J `Logger` adapter (JVM only) |
-| `NaruServe-servlet` | `com.snoworca.naruserve:NaruServe-servlet:0.1.0-SNAPSHOT` | Runs a NaruServe app on a Servlet 3.1+ container (JVM only) |
+| `NaruServe-api` | `com.snoworca.naruserve:naruserve-api:0.9.0` | Public API and SPI, no external runtime dependency (JSpecify annotations are compile-only) |
+| `NaruServe` | `com.snoworca.naruserve:naruserve:0.9.0` | `RestApp.create()` bootstrap: TinyHttpd, Gson (`GsonJsonCodec` at compile time) and the console logger, for any JDK |
+| `NaruServe-tinyhttpd` | `com.snoworca.naruserve:naruserve-tinyhttpd:0.9.0` | TinyHttpd `HttpAdapter` |
+| `NaruServe-gson` | `com.snoworca.naruserve:naruserve-gson:0.9.0` | `GsonJsonCodec` (Gson 2.14.0) |
+| `NaruServe-kotlin` | `com.snoworca.naruserve:naruserve-kotlin:0.9.0` | `NaruServe` plus Kotlin-only extensions; the only module that uses `kotlin-stdlib` |
+| `NaruServe-android` | `com.snoworca.naruserve:naruserve-android:0.9.0` | Android library (AAR): `NaruServe`, the Logcat logger and the `INTERNET` permission; built only when an Android SDK is found |
+| `NaruServe-logcat` | `com.snoworca.naruserve:naruserve-logcat:0.9.0` | Logcat `Logger` |
+| `NaruServe-filelog` | `com.snoworca.naruserve:naruserve-filelog:0.9.0` | Rotating file `Logger` |
+| `NaruServe-slf4j` | `com.snoworca.naruserve:naruserve-slf4j:0.9.0` | SLF4J `Logger` adapter (JVM only) |
+| `NaruServe-servlet` | `com.snoworca.naruserve:naruserve-servlet:0.9.0` | Runs a NaruServe app on a Servlet 3.1+ container (JVM only) |
+
+### Build from a source checkout
+
+Build with **JDK 17** and the supplied **Gradle 8.14.3** wrapper. Library bytecode targets Java 8; the build JDK and runtime minimum differ. Check `java -version` and `./gradlew --version`.
+
+The following commands use released TinyHttpd JARs, so no TinyHttpd checkout is needed:
+
+```bash
+./gradlew -PtinyHttpdFromMaven=true build
+./gradlew -PtinyHttpdFromMaven=true publishToMavenLocal
+```
+
+For a separate consumer of this local build, add `mavenLocal()` before `mavenCentral()`:
+
+```groovy
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+```
+
+The Android AAR is included only when an SDK directory is found in `local.properties` (`sdk.dir`), `ANDROID_HOME`, or `ANDROID_SDK_ROOT`, in that order. It uses Android Gradle Plugin 8.13.2, `compileSdk 36` and `minSdk 21`. Without an SDK, the nine JAR modules still build.
+
+To work on TinyHttpd source, replace `-PtinyHttpdFromMaven=true` with `-PtinyHttpdDir=/absolute/path/to/TinyHttpd`. The default source path is specific to the original development machine; set one of these properties explicitly on a new checkout.
 
 ## Quick start
 
@@ -82,19 +104,66 @@ fun main() {
 
 The complete [Java](examples/java) and [Kotlin](examples/kotlin) applications include DTO validation, a thread-safe user service, uploads and streaming. See [running the examples](examples/README.md).
 
-Run the source examples from this checkout (requires a JDK and the TinyHttpd checkout):
+Run one source example from this checkout with JDK 17:
 
-```sh
-./gradlew -p examples/java -PtinyHttpdDir=/absolute/path/to/TinyHttpd run
+```bash
+./gradlew -p examples/java -PtinyHttpdFromMaven=true run
 # Or Kotlin:
-./gradlew -p examples/kotlin -PtinyHttpdDir=/absolute/path/to/TinyHttpd run
+./gradlew -p examples/kotlin -PtinyHttpdFromMaven=true run
 ```
 
 In another terminal: `curl http://127.0.0.1:3000/hello`. `RestApp.start` listens on `127.0.0.1` only (this device), writes one `Listening on ...` line and stops on Ctrl+C; open the LAN inside the lambda with `app.server(o -> o.bindAddress("0.0.0.0"))`. `RestApp.create()` plus `app.listen(...)` remains the lower-level path.
 The examples use a Gradle composite build of this source checkout; they do not require local Maven publication.
-For a separate consumer project using Maven coordinates, follow Install and TinyHttpd above/below: publish NaruServe locally, add `mavenLocal()` and `mavenCentral()`. NaruServe itself is not published to Maven Central.
+A separate consumer project uses the coordinates in [Install](#install); use the source-checkout installation if the release is not available in your repository.
+
+## API map
+
+NaruServe is an embedded server library. You define your application endpoints; this repository does not provide a fixed REST service.
+
+| Task | Public API | Guide |
+|---|---|---|
+| Start or configure an app | `RestApp.start(int, Configurer<RestApp>)`, `create()`, `builder()` | [Application](docs/api/en/app.md) |
+| Register routes and groups | `get`, `post`, `route`, `group` | [Routing](docs/api/en/routing.md) |
+| Read and validate input | `Request.param`, `queryInt`, `requireQuery`, `body`, `requireFile` | [Request](docs/api/en/request.md) |
+| Send a response | `Response.status`, `send`, `json`, `file`, `stream` | [Response](docs/api/en/response.md) |
+| Handle cross-cutting behavior | `use`, `cors`, `onError`, `next.run()` | [Middleware](docs/api/en/middleware.md) |
+| Keep a connection open | `ws`, `Response.sse` | [WebSocket](docs/api/en/websocket.md), [SSE](docs/api/en/sse.md) |
+| Own application services | `onStart`, `onStop`, `ApplicationContext` | [Lifecycle](docs/api/en/lifecycle.md) |
+
+Register routes and settings before listening. Handlers run concurrently; synchronize shared mutable state. `next.run()` is synchronous and may be called at most once. After `res.stream(...)`, NaruServe owns and closes the stream; upload temporary files must be saved before the request ends. See the linked guides for the complete contracts.
+
+## Repository structure
+
+```text
+NaruServe-api/          Public interfaces, routing, common helpers, internal implementation and SPI
+NaruServe/              Default app factory (TinyHttpd + Gson)
+NaruServe-tinyhttpd/    Embedded HTTP/WebSocket engine adapter
+NaruServe-gson/         Default JSON codec
+NaruServe-kotlin/       Reified Kotlin extensions
+NaruServe-android/      Manifest-only Android AAR
+NaruServe-servlet/      Servlet 3.1 adapter
+NaruServe-{filelog,slf4j,logcat}/  Optional logger adapters
+examples/{java,kotlin}/ Runnable applications
+src/test/              Build, publication and documentation checks
+docs/api/              Korean guides; en/ contains their English counterparts
+docs/spec/             Requirements (source of truth)
+build.gradle           Shared configuration of all modules
+settings.gradle        Module inclusion and optional TinyHttpd composite
+```
+
+## Troubleshooting
+
+| Symptom | Cause and action |
+|---|---|
+| `tinyHttpdDir: TinyHttpd checkout not found` | Select published engine JARs with `-PtinyHttpdFromMaven=true`, or pass a valid `-PtinyHttpdDir` path. |
+| `Could not find com.snoworca.naruserve:...:0.9.0` | Check release availability; publish this checkout locally and add `mavenLocal()` to the consumer. |
+| `No com.snoworca.naruserve.spi.AppFactory provider found` | Add `naruserve` (or `naruserve-kotlin` / `naruserve-android`), or use `RestApp.builder()` with explicit `httpAdapter` and `jsonCodec`. `naruserve-api` alone supplies interfaces and implementation primitives. |
+| Other devices cannot connect | The default bind is `127.0.0.1`. Set `bindAddress("0.0.0.0")` inside the configuration lambda and check device network/firewall settings. |
+| Android resource merge reports duplicate TinyHttpd notices | Apply the `packaging.resources.pickFirsts` configuration from Install. |
 
 ## Scope of v1
+
+The following records the **initial v1 verification scope decided on 2026-10-20**, before the Android AAR module was added. Current source builds can build the AGP-based AAR as described above; that build and local staging checks do not establish API 21 device or emulator verification. The compile-classpath statements below describe the original Java-module baseline.
 
 The Android sample build and API 21 device or emulator verification are not part of v1.
 API 21 compatibility rests on compiling with `--release 8` and on the animal-sniffer `android-api-level-21` check that the build runs over every module marked for Android in the API documentation.
@@ -127,9 +196,6 @@ A consumer may also opt into that source build in `settings.gradle`:
 includeBuild('/path/to/TinyHttpd')
 ```
 
-한국어: TinyHttpd 3.1.0의 core·websocket JAR를 Maven Central에서 가져옵니다. 저장소를 바이너리만으로
-빌드하려면 `-PtinyHttpdFromMaven=true`를 사용하십시오. 기본 빌드는 `tinyHttpdDir`의 소스를 사용합니다.
-기존 배포 버전 3.0.0에는 순서 보존 헤더와 연결 중단 API가 없으므로 사용할 수 없습니다.
 
 ## License
 

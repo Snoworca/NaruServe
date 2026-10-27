@@ -1,5 +1,7 @@
 # 정적 파일·MIME·캐시
 
+[English](en/static.md) | [문서 목록](README.md)
+
 ## staticFiles
 
 Express의 `app.use(express.static('public'))`에 해당합니다.

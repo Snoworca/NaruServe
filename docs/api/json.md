@@ -1,5 +1,7 @@
 # JSON
 
+[English](en/json.md) | [문서 목록](README.md)
+
 Express의 `express.json()`과 `res.json()`에 해당합니다. NaruServe는 JSON 처리를 `JsonCodec` 인터페이스 뒤에 두고, 기본 구현으로 **Gson 2.14.0**을 씁니다.
 
 ## 읽기와 쓰기
@@ -47,10 +49,10 @@ Gson gson = new GsonBuilder()
 app.jsonCodec(new GsonJsonCodec(gson));
 ```
 
-`GsonJsonCodec`은 `NaruServe-api`에 들어 있지 않습니다(공개 API는 Gson에 의존하지 않습니다). `GsonJsonCodec`은 `NaruServe-gson` 모듈에 있습니다. 이 모듈은 Gson을 `api`로 노출하므로 `Gson`을 직접 만들 때 따로 의존성을 넣지 않아도 됩니다. `RestApp.create()`용 bootstrap 모듈 `com.snoworca.naruserve:NaruServe`는 이 모듈을 `api`로 함께 가져오므로, `NaruServe`를 넣었다면 따로 추가할 것이 없습니다(`NaruServe-kotlin`, `NaruServe-android`도 같습니다). `NaruServe` 없이 `RestApp.builder()`로 조립할 때만 아래 의존성을 넣으세요.
+`GsonJsonCodec`은 `NaruServe-api`에 들어 있지 않습니다(공개 API는 Gson에 의존하지 않습니다). `GsonJsonCodec`은 `NaruServe-gson` 모듈에 있습니다. 이 모듈은 Gson을 `api`로 노출하므로 `Gson`을 직접 만들 때 따로 의존성을 넣지 않아도 됩니다. `RestApp.create()`용 bootstrap 모듈 `com.snoworca.naruserve:naruserve`는 이 모듈을 `api`로 함께 가져오므로, `NaruServe`를 넣었다면 따로 추가할 것이 없습니다(`NaruServe-kotlin`, `NaruServe-android`도 같습니다). `NaruServe` 없이 `RestApp.builder()`로 조립할 때만 아래 의존성을 넣으세요.
 
 ```groovy
-implementation 'com.snoworca.naruserve:NaruServe-gson:0.1.0-SNAPSHOT'
+implementation 'com.snoworca.naruserve:naruserve-gson:0.9.0'
 // 함께 들어오는 Gson: com.google.code.gson:gson:2.14.0
 ```
 
@@ -94,14 +96,14 @@ public interface JsonCodec {
 }
 ```
 
-| 라이브러리 | Android 5.0 (API 21) | 권장 |
+| 라이브러리 | 이 프로젝트에서의 위치 | 사용 시 확인 |
 |---|---|---|
-| Gson 2.14.0 | 공식 지원 | 기본값 |
-| Moshi 1.15.x | 버전별 확인 필요 | Kotlin 앱에 유리 |
-| Jackson 2.21.x | 미지원(공식 API 26+) | JVM 전용 앱에서만 |
-| kotlinx.serialization | Kotlin 전용 | Kotlin 선택 확장 |
+| Gson 2.14.0 | 기본 구현 및 API 21 호환성 검사 기준 | 기본값 유지 |
+| Moshi | 기본 제공 코덱 없음 | 버전별 Android 최소 API·Kotlin 생성자 처리 확인 |
+| Jackson | 기본 제공 코덱 없음 | 버전별 JVM·Android 요구사항 확인 |
+| kotlinx.serialization | 기본 제공 코덱 없음 | Kotlin 플러그인·직렬화 모델·Android 요구사항 확인 |
 
-**Gson 버전을 올리지 마세요.** Gson 2.15부터는 공식 지원이 Android API 24 이상입니다.
+이 프로젝트의 API 21 기준을 유지하려면 고정된 Gson 2.14.0을 사용하세요. 코덱이나 라이브러리 버전을 바꾸면 해당 버전의 플랫폼 요구사항과 프로젝트의 호환성 검사를 다시 확인하세요.
 
 ## Kotlin 주의
 

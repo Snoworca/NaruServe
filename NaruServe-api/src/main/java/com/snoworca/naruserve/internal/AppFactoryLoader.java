@@ -22,7 +22,7 @@ public final class AppFactoryLoader {
         }
         if (found.isEmpty()) {
             throw new IllegalStateException("No " + AppFactory.class.getName() + " provider found. Add the "
-                    + "com.snoworca.naruserve:NaruServe module to use RestApp.create(), or assemble the app with "
+                    + "com.snoworca.naruserve:naruserve module to use RestApp.create(), or assemble the app with "
                     + "RestApp.builder().httpAdapter(...).jsonCodec(...).build()");
         }
         if (found.size() > 1) {

@@ -22,7 +22,7 @@ def androidModules = naruModules - [':NaruServe-servlet', ':NaruServe-slf4j']
 
 allprojects {
     group = 'com.snoworca.naruserve'
-    version = '0.1.0-SNAPSHOT'
+    version = '0.9.0'
 
     repositories {
         mavenCentral()
@@ -162,19 +162,76 @@ def classRefPrefixes = { String path ->
 }
 
 // @req FR-REL-005
-// mavenLocal only: the publishing block declares no repository. The POM takes each dependency's resolved version, so the
-// explicitly pinned TinyHttpd dependencies retain 3.1.0 in the published POM.
+// Maven Central coordinates and POM metadata: the artifactId is the project name in lower case, and the developer entry
+// is the one of the published TinyHttpd POM.
+def moduleDescriptions = [
+    'NaruServe-api'      : 'NaruServe core: the Express-style REST API and its SPI, with no external dependency.',
+    'NaruServe'          : 'NaruServe default bundle: RestApp.create() with the TinyHttpd engine, Gson JSON and the console logger.',
+    'NaruServe-tinyhttpd': 'NaruServe HTTP engine adapter for TinyHttpd.',
+    'NaruServe-gson'     : 'NaruServe JSON codec for Gson 2.14.0.',
+    'NaruServe-kotlin'   : 'NaruServe for Kotlin: the default bundle plus Kotlin-only extensions.',
+    'NaruServe-logcat'   : 'NaruServe Logger that writes to Android Logcat.',
+    'NaruServe-filelog'  : 'NaruServe Logger that writes rotating log files.',
+    'NaruServe-slf4j'    : 'NaruServe Logger adapter for SLF4J (JVM only).',
+    'NaruServe-servlet'  : 'Runs a NaruServe app on a Servlet 3.1+ container (JVM only).',
+    'NaruServe-android'  : 'NaruServe for Android: the default bundle, the Logcat logger and the INTERNET permission.',
+]
+def configurePom = { Project p, MavenPublication publication ->
+    // Not named id: developer { id = ... } below would assign that local variable instead of the POM field.
+    def artifact = p.name.toLowerCase(Locale.ROOT)
+    publication.artifactId = artifact
+    publication.pom {
+        name = artifact
+        description = moduleDescriptions[p.name]
+        url = 'https://github.com/Snoworca/NaruServe'
+        licenses {
+            license {
+                name = 'BSD 3-Clause License'
+                url = 'https://github.com/Snoworca/NaruServe/blob/main/LICENSE'
+                distribution = 'repo'
+            }
+        }
+        developers {
+            developer {
+                id = 'ice3x2'
+                name = 'snoworca222'
+                email = 'snoworca222@gmail.com'
+            }
+        }
+        scm {
+            connection = 'scm:git:https://github.com/Snoworca/NaruServe.git'
+            developerConnection = 'scm:git:ssh://git@github.com/Snoworca/NaruServe.git'
+            url = 'https://github.com/Snoworca/NaruServe'
+        }
+    }
+}
+// The only publishing repository: a local directory that checkCentralStaging verifies before any upload.
+def centralStagingRepository = { Project p ->
+    p.publishing.repositories.maven {
+        name = 'centralStaging'
+        url = rootProject.layout.buildDirectory.dir('central-staging')
+    }
+    p.tasks.withType(PublishToMavenRepository).configureEach { mustRunAfter ':cleanCentralStaging' }
+}
+
+// The POM takes each dependency's resolved version, so the explicitly pinned TinyHttpd dependencies retain 3.1.0.
 def configurePublishing = { Project p ->
     p.apply plugin: 'maven-publish'
+    p.java {
+        withSourcesJar()
+        withJavadocJar()
+    }
     p.publishing {
         publications {
             maven(MavenPublication) {
                 // p., or the closure owner (the root project, which applies 'java') would be used.
                 from p.components.java
                 versionMapping { allVariants { fromResolutionResult() } }
+                configurePom(p, delegate)
             }
         }
     }
+    centralStagingRepository(p)
     // The in-memory adapter test fixtures of NaruServe-api are for this build's tests, not for consumers.
     p.plugins.withId('java-test-fixtures') {
         ['testFixturesApiElements', 'testFixturesRuntimeElements'].each { cn ->
@@ -344,7 +401,10 @@ if (androidProject != null) {
                 targetCompatibility = JavaVersion.VERSION_1_8
             }
             publishing {
-                singleVariant('release')
+                singleVariant('release') {
+                    withSourcesJar()
+                    withJavadocJar()
+                }
             }
         }
         mainDependencies[p.path].each { String configuration, List<String> notations ->
@@ -353,15 +413,17 @@ if (androidProject != null) {
         p.dependencies.add('compileOnly', 'org.jspecify:jspecify:1.0.0')
         // AGP lint takes the module build file as an input, which CON-BUILD-017 forbids; there is no source to lint.
         p.tasks.matching { it.name.toLowerCase().contains('lint') }.configureEach { enabled = false }
-        // FR-REL-005: mavenLocal only, as for the JAR modules; AGP creates the release component after evaluation.
+        // FR-REL-005: published like the JAR modules; AGP creates the release component after evaluation.
         afterEvaluate {
             p.publishing {
                 publications {
                     release(MavenPublication) {
                         from p.components.release
+                        configurePom(p, delegate)
                     }
                 }
             }
+            centralStagingRepository(p)
         }
     }
 }
@@ -545,6 +607,44 @@ dependencies {
     // @req OPS-SVL-001
     testImplementation rootServletTestDependency
 }
+// @req FR-REL-005
+// checkCentralStaging stages all ten modules from scratch and fails rather than stage nine without the AAR.
+def centralStagingDir = layout.buildDirectory.dir('central-staging')
+def cleanCentralStaging = tasks.register('cleanCentralStaging', Delete) {
+    delete centralStagingDir
+}
+def stagedProjects = androidProject != null ? naruProjects + [androidProject] : naruProjects
+def publishToCentralStaging = stagedProjects.collect { "${it.path}:publishAllPublicationsToCentralStagingRepository" }
+tasks.register('checkCentralStaging') {
+    group = 'publishing'
+    description = 'Publishes the ten modules to build/central-staging and checks the files Maven Central needs.'
+    dependsOn cleanCentralStaging, publishToCentralStaging
+    def ids = (naruModules + [':NaruServe-android']).collect { it.substring(1).toLowerCase(Locale.ROOT) }.toSorted()
+    def stagedVersion = version
+    doLast {
+        def group = centralStagingDir.get().dir('com/snoworca/naruserve').asFile
+        def found = (group.listFiles()?.findAll { it.isDirectory() }*.name ?: []).toSorted()
+        if (found != ids) {
+            throw new GradleException("central-staging holds ${found}, expected ${ids}")
+        }
+        ids.each { id ->
+            [id == 'naruserve-android' ? '.aar' : '.jar', '-sources.jar', '-javadoc.jar', '.pom', '.module'].each { suffix ->
+                def f = new File(group, "${id}/${stagedVersion}/${id}-${stagedVersion}${suffix}")
+                if (!f.isFile()) {
+                    throw new GradleException("central-staging misses ${f}")
+                }
+            }
+        }
+        logger.lifecycle("central-staging: ${ids.size()} artifactIds at ${stagedVersion}: ${ids.join(', ')}")
+    }
+}
+gradle.taskGraph.whenReady { graph ->
+    if (androidProject == null && graph.hasTask(':checkCentralStaging')) {
+        throw new GradleException('checkCentralStaging needs NaruServe-android: no Android SDK found in '
+                + 'local.properties sdk.dir, ANDROID_HOME or ANDROID_SDK_ROOT')
+    }
+}
+
 test {
     useJUnit()
     dependsOn checkDependencyRules
@@ -568,6 +668,9 @@ test {
             .file('publications/maven/pom-default.xml').get().asFile.absolutePath }.join(',')
     dependsOn naruModules.collect { "${it}:generatePomFileForMavenPublication" }
     systemProperty 'naruserve.pomFiles', pomFilesProperty
+    // CentralStagingTest reads a freshly published staging directory.
+    dependsOn cleanCentralStaging, publishToCentralStaging
+    systemProperty 'naruserve.centralStaging', centralStagingDir.get().asFile.absolutePath
     // @req FR-BUILD-001
     // BuildLayoutTest reads the release AAR; the published AAR's POM joins the others.
     systemProperty 'naruserve.androidIncluded', androidProject != null

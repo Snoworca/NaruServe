@@ -1,5 +1,7 @@
 # 기본값과 보안
 
+[한국어](defaults.md) | [English](en/defaults.md)
+
 NaruServe는 저사양 Android 5.0 기기에서도 안전하게 돌도록 **모든 입력에 한도를 켠 채로** 시작합니다. 무제한을 기본값으로 쓰지 않고, 어떤 설정도 무제한 값을 받지 않습니다. 모든 설정에 최대값이 있고, 범위를 벗어난 값은 설정 이름과 범위를 담은 `IllegalArgumentException`으로 거부합니다. 무제한을 막은 이유는 설정 실수 하나로 저사양 기기의 메모리와 스레드가 바닥나지 않게 하려는 것입니다. 필요하면 최대값 안에서 명시적으로 올리세요.
 
 ## 크기·개수 한도
@@ -84,7 +86,7 @@ Pong timeout은 Ping 주기와 같습니다. TinyHttpd의 `WebSocketListener`에
 | 숨김 파일(`.env`, `.git`) | 차단 | — |
 | 심볼릭 링크 | 차단 | `options.allowSymlinks(true)`로 허용합니다. 허용해도 링크의 실제 대상이 마운트 루트 밖이면 `404`입니다. |
 | `Cache-Control` | 붙이지 않음 | `app.defaultCache(policy)`로 정하면 `Cache-Control`이 없는 응답에 붙습니다. `res.cache`, `res.header`, `options.cache`가 정한 값은 그대로 둡니다. |
-| `X-Content-Type-Options` | `nosniff` | — |
+| `X-Content-Type-Options` | 정적 파일·`res.file`·`res.download` 응답에 `nosniff` | 일반 `send`·JSON 응답에는 자동으로 추가하지 않음 |
 | 오류 응답의 stack trace | 보내지 않음 | — |
 | 접근 로그의 민감 값 | 기록하지 않음 | 바꾸지 않는 것을 권장 |
 | 프록시 헤더(`X-Forwarded-*`) | 믿지 않음 | `app.trustProxy(true)`. 첫 `X-Forwarded-For` 헤더의 맨 왼쪽 값과 첫 `X-Forwarded-Proto` 값을 `req.remoteAddress()`와 `req.isSecure()`에 씁니다. 값은 검증하지 않고 그대로 쓰므로 그 헤더를 덮어쓰는 리버스 프록시 뒤에서만 켜세요. `Forwarded` 헤더는 읽지 않습니다. |

@@ -10,6 +10,8 @@ API 21 compatibility rests on three parts: compiling with `--release 8`, the ani
 
 Update 2026-10-26 (target android-module, FR-BUILD-001): `NaruServe` no longer brings the Logcat logger and exposes `NaruServe-gson` as `api`; `NaruServe-kotlin` includes `NaruServe`; the new `NaruServe-android` AAR (no code of its own, `minSdk` 21) adds the Logcat logger and `android.permission.INTERNET`. The root build makes it with AGP 8.13.2 only when an Android SDK is found. A one-off consumer app built a debug APK against it (`docs/release/verification/android-module.md`), and Android apps must keep one copy of the identical TinyHttpd 3.1.0 notice files (`packaging.resources.pickFirsts`, see `docs/api/README.md`). R8 release builds, StrictMode, Logcat on a device and device or emulator runs remain not done.
 
+Update 2026-10-27 (target central-0.9.0, FR-REL-005): the version is `0.9.0` and every module is published under its lowercase artifactId (`com.snoworca.naruserve:naruserve:0.9.0`, `naruserve-api`, ..., `naruserve-android`) with sources and javadoc JARs and full POM metadata. `./gradlew checkCentralStaging` stages all ten modules in `build/central-staging` and fails without the Android module; Java and Android consumers of that directory alone built and ran (`docs/release/verification/central-0.9.0.md`). The missing-provider message of `RestApp.create()` now names `com.snoworca.naruserve:naruserve`. Signing and the Maven Central upload are not done yet.
+
 The Android-only design items are out of v1 scope; none of them is a manual release check:
 
 - D-364: the standalone `samples/android` Gradle build: out-of-v1-scope

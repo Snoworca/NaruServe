@@ -1,5 +1,7 @@
 # Express에서 오신 분께
 
+[한국어](express-migration.md) | [English](en/express-migration.md)
+
 Express 코드의 구조(라우트·미들웨어·req/res)는 대부분 그대로 옮겨지지만, 아래 "꼭 알아야 할 차이"는 반드시 확인하세요. 이 문서는 대응표와 꼭 알아야 할 차이를 정리합니다.
 
 ## 대응표
@@ -45,7 +47,7 @@ Express 코드의 구조(라우트·미들웨어·req/res)는 대부분 그대�
 | `req.method` | `req.method()` | 문자열이 아니라 `Method` enum |
 | `req.path` (디코딩 전) | `req.rawPath()` | 디코딩 전 경로. 쿼리 문자열은 들어가지 않습니다. Express `req.path`와 같은 값입니다. |
 | (없음) | `req.path()` | NaruServe가 더하는 퍼센트 디코딩한 경로입니다. Express `req.path`는 디코딩하지 않습니다. |
-| `req.originalUrl` | `req.rawPath()` + `req.query(...)` | 직접 대응하는 메서드는 없습니다. 경로는 `req.rawPath()`, 쿼리 값은 `req.query(...)`/`req.queries(...)`로 읽습니다. |
+| `req.originalUrl` | 직접 대응 없음 | 경로는 `req.rawPath()`, 해석된 쿼리 값은 `req.query(...)`/`req.queries(...)`로 읽습니다. 이 값으로 원본 URL 문자열을 그대로 복원할 수는 없습니다. |
 | `req.ip` | `req.remoteAddress()` | |
 | `req.secure` | `req.isSecure()` | |
 | `req.user = u` / `res.locals.user = u` | `req.attribute("user", u)` | 요청 범위 저장소 |
@@ -137,6 +139,8 @@ Express에서는 콜백이나 Promise로 나중에 응답할 수 있습니다. N
 
 ### 3. JSON 본문은 타입별로 성공한 결과를 재사용합니다
 
+아래 두 줄은 서로 다른 요청 본문 형태에 대한 대안입니다. 한 요청에서 연속으로 호출하지 마세요.
+
 ```java
 User user = req.body(User.class);                         // 객체
 List<User> users = req.body(new TypeRef<List<User>>() {}); // 제네릭
@@ -208,6 +212,8 @@ app.use("/api", auth);   // /api 경로에서 2번째
 [미들웨어 실행 순서](middleware.md#실행-순서)
 
 ## 전체 예제: Express 앱 옮기기
+
+아래는 라우트 구성 비교입니다. `Todo`, `TodoService`, `todos`, `auth` 등 도메인 타입과 객체는 앱에서 정의합니다. import와 실행 진입점까지 있는 예제는 [예제 실행 안내](../../examples/README.md)를 보세요.
 
 Express:
 

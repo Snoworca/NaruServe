@@ -31,7 +31,7 @@ public interface RestApp {
 
     /**
      * The app of the bootstrap {@link com.snoworca.naruserve.spi.AppFactory} on the class path (the
-     * {@code com.snoworca.naruserve:NaruServe} module). Throws {@link IllegalStateException} when none or several.
+     * {@code com.snoworca.naruserve:naruserve} module). Throws {@link IllegalStateException} when none or several.
      */
     // @req FR-APP-001
     static RestApp create() {

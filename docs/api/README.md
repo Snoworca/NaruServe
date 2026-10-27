@@ -1,11 +1,24 @@
 # NaruServe API 문서
 
+한국어 | [English](en/README.md)
+
 NaruServe는 Express.js처럼 쓰는 Java 8 / Kotlin용 경량 HTTP 서버 라이브러리입니다.
 Android 5.0(API 21)부터 최신 Android, 그리고 일반 JVM에서 같은 API로 동작합니다.
 
 > **문서 상태:** v1과 API 사용성 개선 구현을 설명합니다. Express 대응과 실행 규칙은 [Express에서 오신 분께](express-migration.md)를 참고하세요.
 
 Express를 써 봤다면 [Express에서 오신 분께](express-migration.md)부터 읽으세요.
+
+## 읽는 순서
+
+이 문서는 라이브러리를 사용하는 Java/Kotlin 개발자를 위한 가이드입니다. NaruServe에서 직접 경로를 등록하므로 고정된 REST 엔드포인트 목록은 없습니다.
+
+1. [설치와 프로젝트 구조](../../README.ko.md)를 확인하고 아래 최소 서버를 실행합니다.
+2. [RestApp](app.md)과 [라우팅](routing.md)에서 앱 조립과 경로 등록을 익힙니다.
+3. [Request](request.md), [Response](response.md), [미들웨어](middleware.md)에서 입력 검증, 응답, 오류 처리를 확인합니다.
+4. 필요에 따라 JSON, 업로드, 정적 파일, WebSocket, SSE, Kotlin, Servlet 가이드를 선택합니다.
+
+가이드의 `app`, `req`, `res`를 사용하는 코드는 기존 앱이나 핸들러 내부에 넣는 예제입니다. 인터페이스 선언은 API 설명용 발췌입니다. import와 실행 진입점을 갖춘 전체 앱은 아래 예제 링크를 사용하세요.
 
 ## 5분 시작
 
@@ -33,7 +46,7 @@ fun main() {
 
 위 코드는 import와 실행 진입점을 포함한 최소 서버입니다. `curl http://127.0.0.1:3000/hello`로 확인하세요. `RestApp.start`는 `127.0.0.1`에서만 받고(이 기기 전용) 시작 로그를 한 줄 남기며 Ctrl+C로 종료합니다. 다른 기기에 열려면 람다 안에서 `app.server(o -> o.bindAddress("0.0.0.0"))`를 호출하세요. 자세한 차이는 [start](app.md#start)에 있고, `RestApp.create()`와 `app.listen(...)`을 따로 쓰는 방법도 그대로 있습니다.
 
-DTO 검증, 스레드 안전한 사용자 서비스, 업로드, 스트림 응답까지 포함한 [Java 예제](../../examples/java)와 [Kotlin 예제](../../examples/kotlin)는 [실행 안내](../../examples/README.md)를 따라 실행할 수 있습니다. 예제는 이 소스 체크아웃을 Gradle composite build로 사용합니다. 별도 소비자 프로젝트의 로컬 Maven 설치는 [루트 README](../../README.md#install)를 참고하세요.
+DTO 검증, 스레드 안전한 사용자 서비스, 업로드, 스트림 응답까지 포함한 [Java 예제](../../examples/java)와 [Kotlin 예제](../../examples/kotlin)는 [실행 안내](../../examples/README.ko.md)를 따라 실행할 수 있습니다. 예제는 이 소스 체크아웃을 Gradle composite build로 사용합니다. 별도 소비자 프로젝트의 설치 좌표와 소스 빌드 대안은 [한국어 README](../../README.ko.md#설치)를 참고하세요. Maven Central에서 버전이 조회되지 않으면 소스 체크아웃을 로컬에 게시해 사용하세요.
 
 ## 문서 목록
 
@@ -59,20 +72,20 @@ DTO 검증, 스레드 안전한 사용자 서비스, 업로드, 스트림 응답
 
 ## 모듈
 
-모든 모듈의 Maven group은 `com.snoworca.naruserve`, 버전은 `0.1.0-SNAPSHOT`입니다.
+모든 모듈의 Maven group은 `com.snoworca.naruserve`, 버전은 `0.9.0`입니다. artifactId는 모듈 이름을 소문자로 쓴 것입니다(`NaruServe-api` → `naruserve-api`).
 
 | 모듈 | 좌표 | 내용 | Android |
 |---|---|---|---|
-| `NaruServe-api` | `com.snoworca.naruserve:NaruServe-api` | 공개 API(`RestApp`, `Request`, `Response` …)와 SPI(`HttpAdapter`, `JsonCodec`, `Logger`). 외부 의존성 없음 | 지원(API 21+) |
-| `NaruServe` | `com.snoworca.naruserve:NaruServe` | `RestApp.create()` 기본 조립(TinyHttpd + Gson + 콘솔 로거). 일반 JDK와 Android 어디서나 씁니다 | 지원(API 21+) |
-| `NaruServe-tinyhttpd` | `com.snoworca.naruserve:NaruServe-tinyhttpd` | TinyHttpd `HttpAdapter` | 지원(API 21+) |
-| `NaruServe-gson` | `com.snoworca.naruserve:NaruServe-gson` | `GsonJsonCodec`(`com.google.code.gson:gson:2.14.0`) | 지원(API 21+) |
-| `NaruServe-kotlin` | `com.snoworca.naruserve:NaruServe-kotlin` | `NaruServe` + `reified` 등 Kotlin 전용 확장. `kotlin-stdlib`는 이 모듈만 씁니다 | 지원(API 21+) |
-| `NaruServe-android` | `com.snoworca.naruserve:NaruServe-android` | `NaruServe` + Logcat 로거 + `android.permission.INTERNET` 권한을 담은 Android 라이브러리(AAR) | 전용(API 21+) |
-| `NaruServe-logcat` | `com.snoworca.naruserve:NaruServe-logcat` | Logcat `Logger`(Android SDK 없이 빌드, 리플렉션으로 `android.util.Log` 호출) | 지원(API 21+) |
-| `NaruServe-filelog` | `com.snoworca.naruserve:NaruServe-filelog` | 파일 로테이션 `Logger` | 지원(API 21+) |
-| `NaruServe-slf4j` | `com.snoworca.naruserve:NaruServe-slf4j` | SLF4J `Logger` 어댑터(`org.slf4j:slf4j-api:1.7.36`) | 미지원(JVM 전용) |
-| `NaruServe-servlet` | `com.snoworca.naruserve:NaruServe-servlet` | Servlet 3.1+ 컨테이너 위에서 NaruServe 앱을 실행하는 어댑터 | 미지원(JVM 전용) |
+| `NaruServe-api` | `com.snoworca.naruserve:naruserve-api` | 공개 API(`RestApp`, `Request`, `Response` …)와 SPI(`HttpAdapter`, `JsonCodec`, `Logger`). 외부 실행 의존성 없음(JSpecify는 compile-only) | 지원(API 21+) |
+| `NaruServe` | `com.snoworca.naruserve:naruserve` | `RestApp.create()` 기본 조립(TinyHttpd + Gson + 콘솔 로거). 일반 JDK와 Android 어디서나 씁니다 | 지원(API 21+) |
+| `NaruServe-tinyhttpd` | `com.snoworca.naruserve:naruserve-tinyhttpd` | TinyHttpd `HttpAdapter` | 지원(API 21+) |
+| `NaruServe-gson` | `com.snoworca.naruserve:naruserve-gson` | `GsonJsonCodec`(`com.google.code.gson:gson:2.14.0`) | 지원(API 21+) |
+| `NaruServe-kotlin` | `com.snoworca.naruserve:naruserve-kotlin` | `NaruServe` + `reified` 등 Kotlin 전용 확장. `kotlin-stdlib`는 이 모듈만 씁니다 | 지원(API 21+) |
+| `NaruServe-android` | `com.snoworca.naruserve:naruserve-android` | `NaruServe` + Logcat 로거 + `android.permission.INTERNET` 권한을 담은 Android 라이브러리(AAR) | 전용(API 21+) |
+| `NaruServe-logcat` | `com.snoworca.naruserve:naruserve-logcat` | Logcat `Logger`(Android SDK 없이 빌드, 리플렉션으로 `android.util.Log` 호출) | 지원(API 21+) |
+| `NaruServe-filelog` | `com.snoworca.naruserve:naruserve-filelog` | 파일 로테이션 `Logger` | 지원(API 21+) |
+| `NaruServe-slf4j` | `com.snoworca.naruserve:naruserve-slf4j` | SLF4J `Logger` 어댑터(`org.slf4j:slf4j-api:1.7.36`) | 미지원(JVM 전용) |
+| `NaruServe-servlet` | `com.snoworca.naruserve:naruserve-servlet` | Servlet 3.1+ 컨테이너 위에서 NaruServe 앱을 실행하는 어댑터 | 미지원(JVM 전용) |
 
 "지원(API 21+)" 모듈은 빌드 때 animal-sniffer `android-api-level-21` 검사를 받습니다.
 `NaruServe-android`는 Android Gradle Plugin으로 만드는 AAR이라 Android SDK가 있을 때만 빌드됩니다(`local.properties`의 `sdk.dir`, `ANDROID_HOME`, `ANDROID_SDK_ROOT` 순서로 찾습니다). SDK가 없으면 경고만 내고 나머지 아홉 모듈을 빌드합니다. 이 모듈에는 자체 코드가 없고 `minSdk`는 21입니다.
@@ -87,13 +100,13 @@ Android 앱은 `NaruServe-android`를 넣습니다. `NaruServe`에 Logcat 로거
 
 ```groovy
 // 일반 JDK(Java 8+): RestApp.create()로 바로 시작합니다.
-implementation 'com.snoworca.naruserve:NaruServe:0.1.0-SNAPSHOT'
+implementation 'com.snoworca.naruserve:naruserve:0.9.0'
 
 // Kotlin: NaruServe와 reified 확장
-implementation 'com.snoworca.naruserve:NaruServe-kotlin:0.1.0-SNAPSHOT'
+implementation 'com.snoworca.naruserve:naruserve-kotlin:0.9.0'
 
 // Android 앱: NaruServe와 Logcat 로거, INTERNET 권한
-implementation 'com.snoworca.naruserve:NaruServe-android:0.1.0-SNAPSHOT'
+implementation 'com.snoworca.naruserve:naruserve-android:0.9.0'
 ```
 
 Android 앱 모듈의 `build.gradle`에는 아래 설정도 넣습니다. TinyHttpd 3.1.0의 core와 websocket JAR에 같은 경로, 같은 내용의 라이선스 고지가 들어 있어, 이 설정이 없으면 앱 빌드의 리소스 병합(`mergeDebugJavaResource`)이 중복 파일로 실패합니다. 두 사본의 내용이 같으므로 하나만 남겨도 고지는 그대로 APK에 들어갑니다.
@@ -113,3 +126,11 @@ android {
 - Java 8 이상 JVM
 - Android 5.0(API 21) 이상
 - Kotlin(Java 람다를 그대로 씁니다. 별도 DSL이 필요 없습니다.)
+
+## 실행 계약과 문제 해결
+
+- 라우트와 설정은 `listen` 이전에 등록합니다. 핸들러가 동시에 실행되므로 공유 가변 상태를 보호하세요.
+- `next.run()`은 동기 호출이며 한 번만 호출할 수 있습니다.
+- `res.stream`에 넘긴 스트림은 프레임워크가 전송 후 닫습니다. 업로드 임시 파일은 요청이 끝나기 전에 저장하세요.
+- `naruserve-api`만으로 `RestApp.create()`를 호출하면 기본 앱 팩토리가 없습니다. 기본 조립 모듈을 추가하거나 [명시적 builder](app.md#앱-만들기)를 사용하세요.
+- 소스 빌드는 JDK 17과 Gradle 8.14.3 wrapper를 사용합니다. 실행 대상 Java 8과 빌드 JDK를 구분하세요. 설치·엔진 해석·Android 리소스 병합 문제는 [README 문제 해결](../../README.ko.md#문제-해결)을 참고하세요.

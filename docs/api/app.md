@@ -1,5 +1,7 @@
 # RestApp
 
+[English](en/app.md) | [문서 목록](README.md)
+
 `RestApp`은 Express의 `app`에 해당합니다. 라우트·미들웨어·설정을 등록하고 서버를 시작하고 끕니다.
 
 ## 앱 만들기
@@ -12,10 +14,10 @@ RestApp app = RestApp.create();
 이 조립은 기본 bootstrap 모듈 `NaruServe`가 맡습니다. `create()`를 쓰려면 이 모듈을 의존성에 넣습니다. Kotlin은 `NaruServe-kotlin`, Android 앱은 `NaruServe-android`를 넣어도 이 모듈이 함께 들어옵니다. `NaruServe-android`에서는 `create()`가 Logcat 로거를 씁니다.
 
 ```groovy
-implementation 'com.snoworca.naruserve:NaruServe:0.1.0-SNAPSHOT'
+implementation 'com.snoworca.naruserve:naruserve:0.9.0'
 ```
 
-엔진을 직접 고를 때는 builder를 씁니다. `NaruServe-api`만 의존하는 경우에도 이 방법을 씁니다. 기본 JSON 구현을 코드에서 직접 넘기려면 `new GsonJsonCodec()`을 `jsonCodec(...)`에 넘깁니다. `GsonJsonCodec`은 `NaruServe`에 함께 들어 있고, `NaruServe-api`만 쓸 때는 Gson 모듈 `com.snoworca.naruserve:NaruServe-gson`을 넣습니다([JSON](json.md#기본-gson-설정)).
+엔진을 직접 고를 때는 builder를 씁니다. `NaruServe-api`만 의존하는 경우에도 이 방법을 씁니다. 기본 JSON 구현을 코드에서 직접 넘기려면 `new GsonJsonCodec()`을 `jsonCodec(...)`에 넘깁니다. `GsonJsonCodec`은 `NaruServe`에 함께 들어 있고, `NaruServe-api`만 쓸 때는 Gson 모듈 `com.snoworca.naruserve:naruserve-gson`을 넣습니다([JSON](json.md#기본-gson-설정)).
 
 ```java
 RestApp app = RestApp.builder()
@@ -30,7 +32,7 @@ RestApp app = RestApp.builder()
 `create()`는 클래스패스에서 `com.snoworca.naruserve.spi.AppFactory` 구현을 `ServiceLoader`로 하나 찾아 그 앱을 돌려줍니다. 구현은 `NaruServe` 모듈이 TinyHttpd 어댑터, Gson 코덱과 함께 제공하며, 이 모듈이 클래스패스에 없으면 아래 예외가 납니다. 구현이 없으면 `IllegalStateException`을, 둘 이상이면 구현 클래스 이름을 담은 `IllegalStateException`을 던집니다. 없을 때의 메시지는 다음과 같습니다.
 
 ```text
-No com.snoworca.naruserve.spi.AppFactory provider found. Add the com.snoworca.naruserve:NaruServe module to use RestApp.create(), or assemble the app with RestApp.builder().httpAdapter(...).jsonCodec(...).build()
+No com.snoworca.naruserve.spi.AppFactory provider found. Add the com.snoworca.naruserve:naruserve module to use RestApp.create(), or assemble the app with RestApp.builder().httpAdapter(...).jsonCodec(...).build()
 ```
 
 `create()`가 `AppFactory` SPI를 거치는 이유는 `NaruServe-api`가 TinyHttpd와 Gson에 컴파일 의존하지 않고도 `RestApp.create()`를 제공하기 위해서입니다.
@@ -93,13 +95,18 @@ public interface RouteHandler {
 |---|---|---|
 | `jsonCodec(codec)` | JSON 엔진 교체 | [JSON](json.md) |
 | `jsonLimit(bytes)` | JSON 요청 본문 한도(기본 1 MiB, 최대 1 GiB) | [JSON](json.md#한도) |
+| `formLimit(bytes)` | urlencoded 본문 및 multipart 텍스트 필드 합계 한도(기본 1 MiB, 최대 1 GiB) | [Request](request.md#폼과-파일) |
+| `cors(options -> ...)` | HTTP CORS 허용 출처·preflight 설정 | [HTTP CORS](middleware.md#http-cors) |
+| `group(prefix, configurer)` | 공통 접두사와 미들웨어로 라우트 묶기 | [라우트 그룹](middleware.md#라우트-그룹) |
 | `server(options -> ...)` | 바인딩 주소, 허용 Host, 크기·시간·연결 한도 | [서버 설정](#서버-설정) |
 | `trustProxy(boolean)` | `X-Forwarded-For`·`X-Forwarded-Proto` 신뢰(기본 `false`) | [서버 설정](#서버-설정) |
 | `multipart(config -> ...)` | 업로드 한도·임시 폴더 | [파일 업로드](multipart.md) |
 | `webSocket(options -> ...)` | WebSocket `Origin` 허용 목록, 메시지·송신 큐 크기, Ping 주기, idle timeout | [WebSocket](websocket.md#설정) |
+| `sse(options -> ...)` | SSE heartbeat·송신 큐 설정. 재접속 지연은 이벤트별 `SseEvent.retry(millis)`로 전송 | [SSE](sse.md) |
 | `staticFiles(prefix, dir)` | 정적 파일 폴더 마운트 | [정적 파일](static.md) |
 | `staticFiles(prefix, dir, options -> ...)` | 옵션과 함께 마운트 | [정적 파일](static.md) |
 | `mimeTypes()` | 전역 MIME 등록부 | [정적 파일](static.md#mime) |
+| `defaultCache(policy)` | Cache-Control을 지정하지 않은 응답의 기본 정책. `null`이면 생략 | [정적 파일](static.md#서버-기본-정책) |
 | `accessLog(options -> ...)` | 접근 로그 설정 | [로깅](logging.md) |
 | `logger(logger)` | 앱 로거 교체 | [로깅](logging.md) |
 | `logger()` | 현재 앱 로거 | [로깅](logging.md) |
@@ -197,7 +204,7 @@ ServerHandle server = app.listen(8080);
 ```
 
 - **동기**로 동작합니다. `onStart` 실행 → 라우트 검사 → 포트 바인딩이 모두 끝난 뒤 반환합니다. Express와 달리 콜백을 받지 않습니다.
-- 반환 전에는 요청을 받지 않습니다.
+- 시작이 끝날 때까지 요청을 앱 핸들러로 전달하지 않습니다. 시작 중 연결을 수락한 경우에도 디스패치는 시작 완료를 기다립니다.
 - `listen()`이 반환한 뒤 `main`이 끝나도 `shutdown(...)`을 부를 때까지 프로세스가 계속 돕니다. 기본 TinyHttpd 어댑터(`NaruServe-tinyhttpd`)가 daemon이 아닌 keeper 스레드 하나를 `shutdown`까지 띄워 두기 때문이며, TinyHttpd 자체의 스레드는 daemon으로 남습니다. 이렇게 정한 이유는 Express의 `app.listen()`처럼 서버만 띄우는 `main`이 바로 끝나지 않게 하면서, 작업 스레드가 JVM 종료를 막지 않게 하려는 것입니다.
 - 바인딩 실패, `onStart` 예외, 라우트 충돌 같은 설정 오류는 **예외로 던집니다**. 이때 포트는 열려 있지 않고, 이미 만든 리소스는 정리됩니다.
 - 기본으로 **`127.0.0.1`에만** 바인딩합니다. LAN에 열려면 [서버 설정](#서버-설정)의 `options.bindAddress("0.0.0.0")`을 씁니다.

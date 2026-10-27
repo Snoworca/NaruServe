@@ -303,7 +303,7 @@ public class HttpAdapterSpiTest {
             String location = type.getProtectionDomain().getCodeSource().getLocation().getPath();
             // The fixtures plugin puts NaruServe-api main on the test classpath as its jar or its classes dir.
             assertTrue(type + " from " + location, location.contains("NaruServe-api/build/classes/java/main")
-                    || location.endsWith("NaruServe-api/build/libs/NaruServe-api-0.1.0-SNAPSHOT.jar"));
+                    || location.endsWith("NaruServe-api/build/libs/NaruServe-api-0.9.0.jar"));
             for (java.lang.reflect.Method m : type.getDeclaredMethods()) {
                 List<String> refs = new ArrayList<>();
                 collect(m.getGenericReturnType(), refs);

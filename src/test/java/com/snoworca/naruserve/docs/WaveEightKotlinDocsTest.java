@@ -44,7 +44,7 @@ public final class WaveEightKotlinDocsTest {
     @Test
     public void sdsAc10_OPS_KT_001_AC_1_kotlin_md_names_the_module_and_settings_include_it() throws IOException {
         String kotlin = doc("kotlin.md");
-        contains("kotlin.md", kotlin, "NaruServe-kotlin", "com.snoworca.naruserve:NaruServe-kotlin:0.1.0-SNAPSHOT");
+        contains("kotlin.md", kotlin, "NaruServe-kotlin", "com.snoworca.naruserve:naruserve-kotlin:0.9.0");
         assertFalse(kotlin.contains("rest-kotlin"));
         assertTrue(ReadmeDocsTest.read("settings.gradle").contains("include ':NaruServe-kotlin'"));
     }

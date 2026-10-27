@@ -1,3 +1,9 @@
 rootProject.name = 'naruserve-kotlin-example'
 // Source checkout build. Pass -PtinyHttpdDir=/absolute/path/to/TinyHttpd when needed.
-includeBuild('../..')
+// The published artifactIds are lower case; the source projects keep their names.
+includeBuild('../..') {
+    dependencySubstitution {
+        substitute module('com.snoworca.naruserve:naruserve') using project(':NaruServe')
+        substitute module('com.snoworca.naruserve:naruserve-kotlin') using project(':NaruServe-kotlin')
+    }
+}

@@ -138,7 +138,7 @@ public class StartApiTest {
             RestApp.start(0, app -> calls.incrementAndGet());
             fail("start worked without a provider");
         } catch (IllegalStateException e) {
-            assertTrue(e.getMessage(), e.getMessage().contains("com.snoworca.naruserve:NaruServe"));
+            assertTrue(e.getMessage(), e.getMessage().contains("com.snoworca.naruserve:naruserve"));
         }
         assertEquals(0, calls.get());
     }

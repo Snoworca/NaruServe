@@ -451,12 +451,12 @@ public final class WaveFiveDocsTest {
     // SDS-AC-3; OPS-ENGINE-002 AC-5
     @Test
     public void moduleCoordinates() throws IOException {
-        Pattern bootstrap = Pattern.compile("com\\.snoworca\\.naruserve:NaruServe(?![-\\w])");
+        Pattern bootstrap = Pattern.compile("com\\.snoworca\\.naruserve:naruserve(?![-\\w])");
         for (String f : new String[] {"README.md", "app.md", "json.md"}) {
             String d = doc(f);
-            assertTrue(f + " names com.snoworca.naruserve:NaruServe", bootstrap.matcher(d).find());
-            assertTrue(f + " names com.snoworca.naruserve:NaruServe-gson",
-                    d.contains("com.snoworca.naruserve:NaruServe-gson"));
+            assertTrue(f + " names com.snoworca.naruserve:naruserve", bootstrap.matcher(d).find());
+            assertTrue(f + " names com.snoworca.naruserve:naruserve-gson",
+                    d.contains("com.snoworca.naruserve:naruserve-gson"));
         }
     }
 

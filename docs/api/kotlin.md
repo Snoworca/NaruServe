@@ -1,5 +1,7 @@
 # Kotlin
 
+[한국어](kotlin.md) | [English](en/kotlin.md)
+
 NaruServe는 Java로 작성되었지만 Kotlin에서 별도 DSL 없이 씁니다. 콜백이 모두 Java 함수형 인터페이스(`@FunctionalInterface`)라서 Kotlin 람다가 그대로 들어갑니다.
 
 ```kotlin
@@ -25,6 +27,8 @@ app.post("/api/upload") { req, res ->
 app.staticFiles("/", File("./www"))
 app.listen(8080)
 ```
+
+위 코드와 아래 예제는 앱 구성 일부입니다. `UserService`, `users`, DTO와 `File` 등은 앱에서 정의하거나 import합니다. 전체 import와 `main`은 [Kotlin 예제](../../examples/kotlin/src/main/kotlin/example/KotlinExample.kt)를 보세요.
 
 ## 람다에서 일찍 빠져나오기
 
@@ -109,7 +113,7 @@ val user = req.body(User::class.java) ?: throw HttpException(400, "JSON body is 
 `reified`를 쓰는 Kotlin 확장 함수를 선택 모듈 `NaruServe-kotlin`으로 제공합니다. `kotlin-stdlib`은 이 모듈만 사용합니다. 이 모듈은 기본 조립 모듈 `NaruServe`(TinyHttpd + Gson)를 포함하므로, Kotlin 프로젝트는 이 모듈 하나로 `RestApp.create()`까지 씁니다.
 
 ```groovy
-implementation 'com.snoworca.naruserve:NaruServe-kotlin:0.1.0-SNAPSHOT'
+implementation 'com.snoworca.naruserve:naruserve-kotlin:0.9.0'
 ```
 
 ```kotlin

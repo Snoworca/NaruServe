@@ -1,5 +1,7 @@
 # Request
 
+[English](en/request.md) | [문서 목록](README.md)
+
 `Request`는 Express의 `req`에 해당합니다. Express는 `req.params.id`처럼 속성으로 읽지만, NaruServe는 `req.param("id")`처럼 메서드로 읽습니다.
 
 `Request` 객체는 그 요청 안에서만 씁니다. 응답이 끝난 뒤 다른 스레드에 넘겨 쓰면 안 됩니다.
@@ -26,7 +28,7 @@
 | `header(name)` | `String` | `null` | `req.get(name)` |
 | `headers(name)` | `List<String>` | 빈 리스트 | — |
 
-- 값은 모두 디코딩된 문자열입니다. 숫자가 필요하면 직접 변환합니다.
+- 경로 변수와 쿼리는 URL 디코딩된 문자열입니다. 헤더 값은 URL 디코딩하지 않습니다. 숫자는 아래의 `queryInt`·`paramInt` 등으로 읽거나 직접 검증해 변환합니다.
 - 같은 이름이 여러 번 오면 `query`/`header`는 첫 번째 값을, `queries`/`headers`는 모든 값을 돌려줍니다.
 - 헤더 이름은 대소문자를 구분하지 않습니다.
 
@@ -71,6 +73,8 @@ app.get("/users/:id/posts", (req, res) -> {
 User user = req.body(User.class);
 List<User> users = req.body(new TypeRef<List<User>>() {});
 ```
+
+위 두 줄은 서로 다른 요청 본문 타입을 읽는 대안입니다. 한 요청에서 두 줄을 연속 실행하면 두 번째 호출은 `BodyAlreadyConsumedException`을 던집니다.
 
 - `Content-Type`이 `application/json` 또는 `application/<이름>+json`(예: `application/merge-patch+json`)일 때만 읽습니다.
 - 본문은 UTF-8로만 읽습니다. `charset` 파라미터가 있으면 `utf-8`(대소문자 무관)이어야 하고, 다른 charset(예: `charset=iso-8859-1`)은 Express body-parser처럼 `415`입니다. 잘못된 UTF-8 바이트는 `400`입니다.

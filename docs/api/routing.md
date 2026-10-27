@@ -1,5 +1,7 @@
 # 라우팅
 
+[English](en/routing.md) | [문서 목록](README.md)
+
 ## 라우트 등록 세 가지 방법
 
 | 방법 | 언제 | 예 |

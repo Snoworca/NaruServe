@@ -1,5 +1,7 @@
 # 수명주기와 서비스
 
+[한국어](lifecycle.md) | [English](en/lifecycle.md)
+
 Express에서는 모듈 변수나 `app.locals`에 DB 연결 같은 공유 객체를 둡니다. NaruServe는 시작할 때 한 번 만들어 **등록**하고, 요청·WebSocket·SSE에서 **같은 객체를 꺼내 씁니다**. Servlet의 `ServletContext`(application scope)와 같은 역할입니다.
 
 Spring 같은 의존성 주입이나 자동 스캔은 없습니다. 등록과 조회를 코드로 직접 씁니다.
