@@ -1,5 +1,7 @@
 # NaruServe
 
+![NaruServe: Java·Kotlin, JVM·Android용 내장 HTTP 서버](docs/assets/naruserve-banner-features.png)
+
 [English](README.md) | 한국어
 
 NaruServe는 Express.js처럼 사용하는 Java 8·Kotlin용 경량 HTTP 서버 라이브러리입니다.
@@ -141,6 +143,76 @@ JDK 17로 이 체크아웃에서 예제 하나를 실행합니다.
 다른 터미널에서 `curl http://127.0.0.1:3000/hello`로 확인하세요. `RestApp.start`는 `127.0.0.1`에서만 요청을 받고(현재 기기 전용), `Listening on ...` 로그 한 줄을 남기며 Ctrl+C로 종료합니다. LAN에 공개하려면 설정 람다 안에서 `app.server(o -> o.bindAddress("0.0.0.0"))`를 호출하세요. `RestApp.create()`와 `app.listen(...)`을 사용하는 하위 수준 경로도 제공합니다.
 예제는 이 체크아웃을 Gradle composite build로 사용하며, 로컬 Maven 게시가 필요 없습니다.
 별도 소비자 프로젝트는 [설치](#설치)의 좌표를 사용합니다. 저장소에서 릴리스를 찾지 못하면 소스 체크아웃 설치 방법을 사용하세요.
+
+## Express와 비교
+
+NaruServe는 라우트와 미들웨어를 등록하고 요청을 읽어 응답하는 API 구조가 Express와 유사합니다. 아래 두 서버는 모두 `X-Example: demo` 헤더를 설정하고, `GET /users/42`에 `{"id":"42"}`를 반환합니다.
+
+### Express 5 (JavaScript)
+
+Node.js 18 이상과 npm이 필요합니다([Express 설치 전제조건](https://expressjs.com/en/starter/installing/)). `server.cjs`로 저장한 뒤 `npm install express@5`, `node server.cjs`를 실행하세요.
+
+```javascript
+const express = require('express');
+const app = express();
+
+app.use((req, res, next) => {
+  res.set('X-Example', 'demo');
+  next();
+});
+
+app.get('/users/:id', (req, res) => {
+  res.status(200).json({ id: req.params.id });
+});
+
+app.listen(3000, '127.0.0.1');
+```
+
+### NaruServe (Java)
+
+설치 절의 `naruserve` 의존성을 추가하고, 앱의 Java 소스 디렉터리에 `ExpressStyleServer.java`로 저장해 `main`을 실행하세요.
+
+```java
+import com.snoworca.naruserve.RestApp;
+import java.util.Collections;
+
+public class ExpressStyleServer {
+    public static void main(String[] args) {
+        RestApp app = RestApp.create();
+
+        app.use((req, res, next) -> {
+            res.header("X-Example", "demo");
+            next.run();
+        });
+
+        app.get("/users/:id", (req, res) -> {
+            res.status(200).json(Collections.singletonMap("id", req.param("id")));
+        });
+
+        app.listen(3000);
+    }
+}
+```
+
+서버는 하나씩 실행한 뒤 같은 루프백 URL로 요청하세요.
+
+```bash
+curl -i http://127.0.0.1:3000/users/42
+```
+
+두 서버 모두 HTTP 200, 위 사용자 정의 헤더와 JSON 본문을 반환합니다. Express 예제에는 `127.0.0.1`을 명시해 NaruServe의 기본 바인딩과 맞췄습니다.
+
+| 작업 | Express | NaruServe |
+|---|---|---|
+| 앱 생성 | `express()` | `RestApp.create()` |
+| GET 라우트 등록 | `app.get('/users/:id', handler)` | `app.get("/users/:id", handler)` |
+| 다음 미들웨어 실행 | `next()` | `next.run()` |
+| 경로 변수 읽기 | `req.params.id` | `req.param("id")` |
+| 상태 지정과 JSON 응답 | `res.status(200).json(value)` | `res.status(200).json(value)` |
+
+유사한 것은 프로그래밍 방식이며 중요한 차이가 있습니다. NaruServe의 핸들러와 미들웨어는 요청 스레드에서 동기로 실행됩니다. 일반 응답은 핸들러 반환 전에 끝내야 하며, 공유 가변 상태는 스레드 안전하게 관리해야 합니다. `res.send("text")`는 NaruServe에서 일반 텍스트, Express에서 HTML이 기본입니다. JSON 입력은 Express의 `express.json()` 미들웨어와 `req.body` 속성 대신 타입을 지정한 `req.body(Type.class)`로 읽습니다. 라우팅·오류·수명주기의 차이는 [전체 마이그레이션 가이드](docs/api/express-migration.md)를 참고하세요.
+
+Express 5 공식 [라우팅 가이드](https://expressjs.com/en/guide/routing/), [미들웨어 가이드](https://expressjs.com/en/guide/using-middleware/), [응답 API](https://expressjs.com/en/5x/api/response/)와 대조했습니다.
 
 ## API 안내
 

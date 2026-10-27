@@ -1,5 +1,7 @@
 # NaruServe
 
+![NaruServe: embedded HTTP for Java and Kotlin on JVM and Android](docs/assets/naruserve-banner-features.png)
+
 English | [한국어](README.ko.md)
 
 NaruServe is a lightweight HTTP server library for Java 8 and Kotlin that you use like Express.js.
@@ -145,6 +147,76 @@ Run one source example from this checkout with JDK 17:
 In another terminal: `curl http://127.0.0.1:3000/hello`. `RestApp.start` listens on `127.0.0.1` only (this device), writes one `Listening on ...` line and stops on Ctrl+C; open the LAN inside the lambda with `app.server(o -> o.bindAddress("0.0.0.0"))`. `RestApp.create()` plus `app.listen(...)` remains the lower-level path.
 The examples use a Gradle composite build of this source checkout; they do not require local Maven publication.
 A separate consumer project uses the coordinates in [Install](#install); use the source-checkout installation if the release is not available in your repository.
+
+## Coming from Express
+
+NaruServe uses a similar route-and-middleware API: register `app.get`/`app.post` handlers, read the request and write the response. Compare these complete servers; both set `X-Example: demo` and return `{"id":"42"}` for `GET /users/42`.
+
+### Express 5 (JavaScript)
+
+Requires Node.js 18 or later and npm ([Express prerequisites](https://expressjs.com/en/starter/installing/)). Save as `server.cjs`, run `npm install express@5`, then `node server.cjs`:
+
+```javascript
+const express = require('express');
+const app = express();
+
+app.use((req, res, next) => {
+  res.set('X-Example', 'demo');
+  next();
+});
+
+app.get('/users/:id', (req, res) => {
+  res.status(200).json({ id: req.params.id });
+});
+
+app.listen(3000, '127.0.0.1');
+```
+
+### NaruServe (Java)
+
+With the `naruserve` dependency from Install, save as `ExpressStyleServer.java` in your application's Java source directory and run its `main`:
+
+```java
+import com.snoworca.naruserve.RestApp;
+import java.util.Collections;
+
+public class ExpressStyleServer {
+    public static void main(String[] args) {
+        RestApp app = RestApp.create();
+
+        app.use((req, res, next) -> {
+            res.header("X-Example", "demo");
+            next.run();
+        });
+
+        app.get("/users/:id", (req, res) -> {
+            res.status(200).json(Collections.singletonMap("id", req.param("id")));
+        });
+
+        app.listen(3000);
+    }
+}
+```
+
+Run one server at a time, then request the same loopback URL:
+
+```bash
+curl -i http://127.0.0.1:3000/users/42
+```
+
+Both return HTTP 200, the custom header and the JSON body above. The examples bind `127.0.0.1` explicitly in Express to match NaruServe's default.
+
+| Task | Express | NaruServe |
+|---|---|---|
+| Create an app | `express()` | `RestApp.create()` |
+| Register a GET route | `app.get('/users/:id', handler)` | `app.get("/users/:id", handler)` |
+| Continue middleware | `next()` | `next.run()` |
+| Read a path parameter | `req.params.id` | `req.param("id")` |
+| Set status and send JSON | `res.status(200).json(value)` | `res.status(200).json(value)` |
+
+The similarity is in the programming style, with important differences: NaruServe handlers and middleware run synchronously on request threads; ordinary responses must finish before the handler returns, and shared mutable state must be thread-safe. NaruServe's `res.send("text")` defaults to plain text, while Express uses HTML for strings. JSON input uses typed `req.body(Type.class)` reads instead of Express's `express.json()` middleware and `req.body` property. See the [full migration guide](docs/api/en/express-migration.md) for routing, errors and lifecycle differences.
+
+Compared against the official Express 5 [routing guide](https://expressjs.com/en/guide/routing/), [middleware guide](https://expressjs.com/en/guide/using-middleware/) and [response API](https://expressjs.com/en/5x/api/response/).
 
 ## API map
 

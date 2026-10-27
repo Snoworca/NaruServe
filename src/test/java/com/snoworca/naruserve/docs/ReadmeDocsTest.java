@@ -132,9 +132,9 @@ public final class ReadmeDocsTest {
         String api = apiQuickStart();
         for (String lang : new String[] {"java", "kotlin"}) {
             List<String> apiBlocks = blocks(api, lang);
-            List<String> readmeBlocks = blocks(readme, lang);
+            List<String> readmeBlocks = blocks(ReleaseNotesDocsTest.section(readme, "## Quick start"), lang);
             assertEquals("one ```" + lang + " block under '5분 시작'", 1, apiBlocks.size());
-            assertEquals("one ```" + lang + " block in README.md", 1, readmeBlocks.size());
+            assertEquals("one ```" + lang + " block under README.md Quick start", 1, readmeBlocks.size());
             assertEquals(lang + " quick start", apiBlocks.get(0), readmeBlocks.get(0));
         }
         assertTrue("quick start contains an executable entrypoint", readme.contains("public static void main(String[] args)"));
