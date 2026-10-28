@@ -27,7 +27,7 @@ import org.jspecify.annotations.Nullable;
 // @req IR-STATIC-001
 // @req IR-STATIC-002
 // @req IR-WS-001
-public interface RestApp {
+public interface RestApp extends HttpRoutes<RestApp> {
 
     /**
      * The app of the bootstrap {@link com.snoworca.naruserve.spi.AppFactory} on the class path (the

@@ -62,6 +62,8 @@ public final class Dispatcher implements ExchangeHandler {
     private final StaticHandler statics;
     private final WebSocketUpgrade upgrades;
     private final SseRegistry sse;
+    private @Nullable HttpRouter http;
+    private @Nullable AppLifecycle lifecycle;
 
     /**
      * Wave 3 shape: no middleware, no onError handler, access log off, a {@link ConsoleLogger}. {@code router} must
@@ -173,6 +175,60 @@ public final class Dispatcher implements ExchangeHandler {
     // @req FR-WS-001
     // @req FR-WS-003
     public void handle(HttpExchange ex) {
+        if(http!=null) {
+            boolean upgrade=Router.isWebSocketUpgrade(ex.methodToken(),joined(ex,"Connection"),joined(ex,"Upgrade"));
+            boolean legacyUpgrade=false;
+            if(upgrade) {
+                try {
+                    RouteMatch<RouteHandler> ws=router.lookup(ex.methodToken(),ex.rawPath(),true);
+                    legacyUpgrade=ws.kind()==RouteMatch.Kind.MATCHED && ws.routeKind()==RouteKind.WEBSOCKET;
+                } catch(IllegalArgumentException invalidLegacyPath) { /* common raw HTTP still owns its own matching */ }
+            }
+            if(!legacyUpgrade) { handleHttp(ex);return; }
+        }
+        handleLegacy(ex);
+    }
+
+    void commonHttp(HttpRouter http,AppLifecycle lifecycle) { this.http=http;this.lifecycle=lifecycle; }
+
+    // @req FR-HTTP-027; FR-APP-021; FR-APP-022; FR-APP-023
+    private void handleHttp(HttpExchange ex) {
+        String rid=RequestIds.next();long start=System.nanoTime();
+        if("OPTIONS".equals(ex.methodToken()) && "*".equals(ex.rawPath())) {
+            automatic(ex,204,Method.any(),false,rid,start);return;
+        }
+        if(!ex.rawPath().startsWith("/")) { automatic(ex,400,null,false,rid,start);return; }
+        Method method=methodOf(ex.methodToken());
+        if(method==null) { automatic(ex,501,null,false,rid,start);return; }
+        DefaultRequest req=new DefaultRequest(ex,method,Collections.emptyMap(),context,codec,jsonLimit,trustProxy,multipart,formLimit,spool,true);
+        req.requestId(rid);req.startNanos(start);
+        DefaultResponse res=new DefaultResponse(ex,method==Method.HEAD,codec);
+        res.mimeTypes(statics.mimeTypes());res.resolverTap(statics.resolverTap());res.request(req);
+        res.applyDefaultCache(statics.defaultCache());res.sseRegistry(sse);
+        Runnable terminal=()->{
+            if(res.state()!=ResponseState.NEW)return;
+            try {
+                if(statics.serve(req,res,false))return;
+                RouteMatch<RouteHandler> ws;
+                try { ws=router.lookup(ex.methodToken(),ex.rawPath(),false); }
+                catch(IllegalArgumentException invalidLegacyPath) { error(res,404,rid);return; }
+                if(ws.kind()!=RouteMatch.Kind.NO_MATCH)fallback(ws,req,res,rid);
+                else error(res,404,rid);
+            } catch(Exception failure) { errors.handle(failure,req,res,rid); }
+        };
+        Runnable log=()->{
+            DefaultSseClient stream=res.sseClient();
+            if(stream!=null) {
+                String cause=stream.cause();
+                accessLog.writeSse(ex.methodToken(),ex.rawPath(),200,start,req.body().bytesRead(),res.bytesWritten(),rid,
+                        stream.startMillis(),cause!=null?cause:"error");
+            } else if(!res.upgraded101())accessLog.write(ex.methodToken(),ex.rawPath(),res.statusCode(),
+                    res.state()==ResponseState.ABORTED,start,req.body().bytesRead(),res.bytesWritten(),rid);
+        };
+        new HttpExecution(Objects.requireNonNull(http),req,res,Objects.requireNonNull(lifecycle),errors,terminal,log).start();
+    }
+
+    private void handleLegacy(HttpExchange ex) {
         String rid = RequestIds.next();
         long start = System.nanoTime();
         if (preCheck(ex, rid, start)) {

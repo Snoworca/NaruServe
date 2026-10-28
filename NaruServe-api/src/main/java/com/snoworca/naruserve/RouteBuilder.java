@@ -6,6 +6,16 @@ package com.snoworca.naruserve;
  */
 // @req IR-HTTP-006
 public interface RouteBuilder {
+    // @req FR-APP-021 AC-2; FR-APP-022 AC-6
+    default RouteBuilder method(String token,Middleware... callbacks) { throw new UnsupportedOperationException("method callbacks"); }
+    default RouteBuilder get(Middleware... callbacks) { return method("GET",callbacks); }
+    default RouteBuilder post(Middleware... callbacks) { return method("POST",callbacks); }
+    default RouteBuilder put(Middleware... callbacks) { return method("PUT",callbacks); }
+    default RouteBuilder patch(Middleware... callbacks) { return method("PATCH",callbacks); }
+    default RouteBuilder delete(Middleware... callbacks) { return method("DELETE",callbacks); }
+    default RouteBuilder head(Middleware... callbacks) { return method("HEAD",callbacks); }
+    default RouteBuilder options(Middleware... callbacks) { return method("OPTIONS",callbacks); }
+
 
     RouteBuilder get(RouteHandler h);
 

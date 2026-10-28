@@ -769,6 +769,14 @@ public final class DefaultResponse implements Response {
         return status == 204 || status == 304 || headRequest;
     }
 
+    /** A common HTTP callback returned; NEW remains pending, a queued stream may now run. */
+    // @req FR-APP-023 AC-1
+    void callbackReturned() {
+        boolean transfer;
+        synchronized(this) { handlerDone=true; transfer=state==ResponseState.STREAMING; }
+        if(transfer)runTransfer();
+    }
+
     /**
      * The Dispatcher's rule after the handler returned: NEW ends as {@link #end} does, STREAMING runs the copy.
      * Deciding and leaving NEW happen under one lock, so a late write from another thread cannot commit twice.

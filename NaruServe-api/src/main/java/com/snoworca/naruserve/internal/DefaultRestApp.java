@@ -150,6 +150,7 @@ public final class DefaultRestApp implements RestApp {
     private final List<ErrorHandler> errorHandlers = new ArrayList<>();
     private final List<LifecycleCallback> startCallbacks = new ArrayList<>();
     private final List<LifecycleCallback> stopCallbacks = new ArrayList<>();
+    private final HttpRouter http = new HttpRouter();
     private RouterPolicy policy = RouterPolicy.strict();
     private @Nullable Dispatcher dispatcher;
 
@@ -801,7 +802,6 @@ public final class DefaultRestApp implements RestApp {
     // @req FR-HTTP-008
     @Override
     public RestApp route(Method method, String path, RouteHandler h) {
-        lifecycle.requireConfigurable("route");
         return route(MethodSet.of(method), path, h);
     }
 
@@ -833,8 +833,9 @@ public final class DefaultRestApp implements RestApp {
     // @req FR-APP-003
     @Override
     public synchronized RestApp use(Middleware mw) {
-        lifecycle.requireConfigurable("use");
-        middlewareRegistrations.add(new MiddlewareRegistration(null, Objects.requireNonNull(mw, "mw")));
+        lifecycle.requireHttpRegistration("use");
+        http.use("",Objects.requireNonNull(mw,"mw"));
+        middlewareRegistrations.add(new MiddlewareRegistration(null,mw));
         return this;
     }
 
@@ -842,19 +843,9 @@ public final class DefaultRestApp implements RestApp {
     // @req FR-APP-003
     @Override
     public synchronized RestApp use(String prefix, Middleware mw) {
-        lifecycle.requireConfigurable("use");
-        Objects.requireNonNull(prefix, "prefix");
-        Objects.requireNonNull(mw, "mw");
-        if (!prefix.startsWith("/")) {
-            throw new IllegalArgumentException("middleware prefix must start with '/': " + prefix);
-        }
-        // Decoding does not depend on the policy, so a prefix that decodes now also decodes at freeze.
-        try {
-            Router.decodeSegments(prefix, policy);
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("middleware prefix is not decodable: " + prefix, e);
-        }
-        middlewareRegistrations.add(new MiddlewareRegistration(prefix, mw));
+        lifecycle.requireHttpRegistration("use");
+        http.use(prefix,mw);
+        middlewareRegistrations.add(new MiddlewareRegistration(prefix,mw));
         return this;
     }
 
@@ -896,7 +887,6 @@ public final class DefaultRestApp implements RestApp {
     // @req IR-APP-002
     @Override
     public RestApp route(Method method, String path, Middleware mw, RouteHandler h) {
-        lifecycle.requireConfigurable("route");
         Objects.requireNonNull(method, "method");
         return route(MethodSet.of(method), path, mw, h);
     }
@@ -912,10 +902,14 @@ public final class DefaultRestApp implements RestApp {
     // @req FR-APP-002
     private synchronized RestApp register(String name, MethodSet methods, String path, @Nullable Middleware mw,
             boolean withMiddleware, RouteHandler h) {
-        lifecycle.requireConfigurable(name);
-        List<Middleware> route = withMiddleware ? Collections.singletonList(Objects.requireNonNull(mw, "mw"))
-                : Collections.<Middleware>emptyList();
-        record(name, methods, path, route, h, RouteKind.HTTP);
+        lifecycle.requireHttpRegistration(name);
+        Objects.requireNonNull(methods,"methods"); Objects.requireNonNull(h,"h");
+        List<Middleware> route = withMiddleware?Collections.singletonList(Objects.requireNonNull(mw,"mw")):Collections.emptyList();
+        Middleware[] callbacks=withMiddleware?new Middleware[]{mw,com.snoworca.naruserve.HttpRoutes.terminal(h)}:
+                new Middleware[]{com.snoworca.naruserve.HttpRoutes.terminal(h)};
+        // Validate all inputs before publishing a Route layer.
+        http.methods(methods,path,callbacks);
+        registrations.add(new Registration(methods,path,route.isEmpty()?h:new MiddlewarePipeline.RouteChain(route,h),RouteKind.HTTP));
         return this;
     }
 
@@ -929,8 +923,17 @@ public final class DefaultRestApp implements RestApp {
     }
 
     @Override
-    public RouteBuilder route(String path) {
-        return new DefaultRouteBuilder(path);
+    public synchronized RouteBuilder route(String path) {
+        lifecycle.requireHttpRegistration("route");
+        return new DefaultRouteBuilder(path,http.route(path));
+    }
+
+    // @req FR-APP-021 AC-1 AC-2 AC-4; FR-ROUTE-019 AC-1
+    @Override public RouteBuilder route(Object path) {
+        lifecycle.requireHttpRegistration("route"); return http.route(path);
+    }
+    @Override public RestApp method(String token,Object path,Middleware... callbacks) {
+        lifecycle.requireHttpRegistration("method"); http.method(token,path,callbacks);return this;
     }
 
     // @req FR-HTTP-008
@@ -984,8 +987,6 @@ public final class DefaultRestApp implements RestApp {
         for (Registration r : registrations) {
             if (r.kind == RouteKind.WEBSOCKET) {
                 router.addWebSocket(r.pattern, r.handler);
-            } else {
-                router.add(r.methods, r.pattern, r.handler);
             }
         }
         router.freeze();
@@ -1013,6 +1014,7 @@ public final class DefaultRestApp implements RestApp {
                 multipartSettings().copy(), formLimit(), spool(), new StaticHandler(staticMounts, mimeTypes, defaultCache),
                 new WebSocketUpgrade(ws, jsonCodec(), safe, sender, idle, registry, accessLog),
                 streams);
+        dispatcher.commonHttp(http,lifecycle);
         webSocketRegistry = registry;
         sseRegistry = streams;
         // SSE first: its closeAll returns at once, while the WebSocket one waits for the closes.
@@ -1074,13 +1076,16 @@ public final class DefaultRestApp implements RestApp {
         // Guarded by DefaultRestApp.this; each registration snapshots it.
         private final List<Middleware> middleware = new ArrayList<>();
 
-        DefaultRouteBuilder(String path) {
-            this.path = path;
+        private final RouteBuilder delegate;
+        DefaultRouteBuilder(String path,RouteBuilder delegate) {
+            this.path=path;this.delegate=delegate;
         }
 
         private RouteBuilder add(String name, Method method, RouteHandler h) {
             synchronized (DefaultRestApp.this) {
-                record(name, MethodSet.of(method), path, middleware, h, RouteKind.HTTP);
+                lifecycle.requireHttpRegistration(name);
+                Objects.requireNonNull(h,"h"); delegate.method(method.name(),com.snoworca.naruserve.HttpRoutes.terminal(h));
+                registrations.add(new Registration(MethodSet.of(method),path,middleware.isEmpty()?h:new MiddlewarePipeline.RouteChain(middleware,h),RouteKind.HTTP));
             }
             return this;
         }
@@ -1090,10 +1095,14 @@ public final class DefaultRestApp implements RestApp {
         @Override
         public RouteBuilder use(Middleware mw) {
             synchronized (DefaultRestApp.this) {
-                lifecycle.requireConfigurable("use");
-                middleware.add(Objects.requireNonNull(mw, "mw"));
+                lifecycle.requireHttpRegistration("use");
+                delegate.use(Objects.requireNonNull(mw,"mw")); middleware.add(mw);
             }
             return this;
+        }
+
+        @Override public RouteBuilder method(String token,Middleware... callbacks) {
+            lifecycle.requireHttpRegistration("method"); delegate.method(token,callbacks);return this;
         }
 
         @Override

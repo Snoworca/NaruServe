@@ -116,6 +116,21 @@ final class AppLifecycle {
         requestThread.remove();
     }
 
+    /** Restores an existing request scope, including nested dispatch and deferred reentry. */
+    // @req FR-APP-023 AC-4
+    void withRequest(Runnable work) {
+        Boolean previous=requestThread.get(); requestThread.set(Boolean.TRUE);
+        try { work.run(); }
+        finally { if(previous==null)requestThread.remove();else requestThread.set(previous); }
+    }
+
+    // @req FR-APP-021 AC-4; CON-APP-010 AC-3
+    void requireHttpRegistration(String method) {
+        AppState s=state.get();
+        if(s==AppState.STOPPING || s==AppState.TERMINATED)
+            throw new IllegalStateException(method+" not allowed in state "+s);
+    }
+
     /** True on a thread inside one of this app's requests; a shutdown() there must not wait for that request. */
     // @req FR-APP-011
     boolean onRequestThread() {
