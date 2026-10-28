@@ -71,16 +71,18 @@ public class JsonResponseTest {
         TestApp t = TestApp.create();
         t.app().jsonCodec(new PartialCodec());
         List<Boolean> committedAtError = Collections.synchronizedList(new ArrayList<Boolean>());
-        t.app().onError((err, req, res) -> committedAtError.add(res.isCommitted()));
         t.app().get("/j", (req, res) -> res.json(Collections.singletonMap("a", 1)));
+        // CON-APP-010 AC-4 AC-5; FR-APP-024 AC-1 AC-3: error observers follow the failing layer.
+        t.app().onError((err, req, res) -> committedAtError.add(res.isCommitted()));
         ClientResponse r = t.send("GET", "/j");
         assertEquals(500, r.status());
         assertFalse(r.abnormallyClosed());
-        assertEquals("application/json; charset=UTF-8", r.header("Content-Type"));
+        JsonBodyAcceptanceTest.assertDefaultError(500, IllegalStateException.class, r);
         String body = r.text();
-        assertTrue(body, body.matches("\\{\"error\":\\{\"code\":\"INTERNAL_ERROR\",\"message\":\"Internal Server Error\","
-                + "\"requestId\":\"[0-9a-f]{16}\"}}"));
-        assertFalse(body, body.contains("partial"));
+        assertTrue(body, body.contains("IllegalStateException: encode failed half way"));
+        // The Java stack names this partial-encode test; only the encoder's actual document bytes must be absent.
+        assertFalse(body, body.contains("{\"partial\":"));
+        assertFalse(body, body.contains("{&quot;partial&quot;:"));
         assertEquals(Collections.singletonList(false), committedAtError);
     }
 

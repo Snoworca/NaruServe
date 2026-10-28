@@ -268,14 +268,13 @@ public class MultipartLimitsTest {
 
     /**
      * Posts {@code body} with {@code contentType} to an app limited by {@code config}; the handler reads
-     * req.parts() and onError records the HttpException without answering, so the default answer goes out.
+     * req.parts() and downstream onError records the HttpException without answering, so default HTML goes out.
      */
     private ClientResponse viaApp(Configurer<MultipartOptions> config, String contentType, String body,
             List<Object> seen) {
         InMemoryHttpAdapter adapter = new InMemoryHttpAdapter();
         RestApp app = RestApp.builder().httpAdapter(adapter).jsonCodec(new StubJsonCodec()).build();
         app.multipart(o -> config.configure(o.tempDirectory(tmp.getRoot())));
-        app.onError((error, req, res) -> seen.add("onError " + ((HttpException) error).status()));
         app.post("/up", (req, res) -> {
             try {
                 req.parts();
@@ -285,6 +284,8 @@ public class MultipartLimitsTest {
             }
             res.send("ok");
         });
+        // CON-APP-010 AC-4 AC-5; FR-APP-024 AC-1: observer remains exercised after the failing route.
+        app.onError((error, req, res) -> seen.add("onError " + ((HttpException) error).status()));
         app.listen(0);
         try {
             byte[] b = body.getBytes(StandardCharsets.ISO_8859_1);
@@ -301,7 +302,9 @@ public class MultipartLimitsTest {
         ClientResponse r = viaApp(config, contentType, body, seen);
         String text = new String(r.body(), StandardCharsets.UTF_8);
         assertEquals(text, status, r.status());
-        assertTrue(text, text.startsWith("{\"error\":{\"code\":\"" + code + "\""));
+        JsonBodyAcceptanceTest.assertDefaultError(status, HttpException.class, r);
+        // Retain the named standard-code utility contract separately from the changed default wire representation.
+        assertEquals(code, com.snoworca.naruserve.internal.StandardErrors.code(status));
         assertEquals(Arrays.<Object>asList("accessor " + status, "onError " + status), seen);
         assertEquals(0, tmp.getRoot().list().length);
     }
