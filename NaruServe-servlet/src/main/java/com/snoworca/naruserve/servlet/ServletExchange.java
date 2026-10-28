@@ -20,11 +20,15 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
 import javax.servlet.AsyncContext;
+import javax.servlet.AsyncEvent;
+import javax.servlet.AsyncListener;
+import java.nio.charset.StandardCharsets;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.jspecify.annotations.Nullable;
@@ -57,12 +61,15 @@ final class ServletExchange implements HttpExchange {
     // Guarded by this.
     private boolean started;
     // Guarded by this: the event-stream drain afterHandler() submits, its stream, and whether that already ran.
-    private @Nullable StreamDrain drain;
-    private @Nullable OutputStream drainOut;
+    private ServletEventStream.@Nullable DrainTask drainTask;
+    private boolean managed;
+    private boolean stopRequested;
+    private boolean asyncStarting;
+    private volatile boolean finished;
     private boolean handlerReturned;
     // Lock-free so abort() never waits for a writer.
     private volatile boolean aborted;
-    // Set once an event stream started async processing.
+    // Set once an ordinary pending request or event stream starts async processing.
     private volatile @Nullable AsyncContext async;
     private final AtomicBoolean completed = new AtomicBoolean();
     /** Held by the event stream's body stream around each write; abort() waits for it before completing. */
@@ -154,76 +161,99 @@ final class ServletExchange implements HttpExchange {
 
     /** {@code contentLength} needs no action: the core's Content-Length header is passed as given. */
     // @req FR-SVL-003
+    // @req FR-SVL-009 AC-1 AC-2 AC-4
     @Override
     public synchronized OutputStream commit(int status, List<Map.Entry<String, String>> headers, long contentLength)
             throws IOException {
         requireStartable();
         started = true;
         head(status, headers);
-        return new FilterOutputStream(res.getOutputStream()) {
-            @Override
-            public void write(int b) throws IOException {
-                checkNotAborted();
-                out.write(b);
-            }
+        try {
+            return new FilterOutputStream(res.getOutputStream()) {
+                @Override public void write(int b) throws IOException { writeBody(() -> out.write(b)); }
+                @Override public void write(byte[] b, int off, int len) throws IOException { writeBody(() -> out.write(b, off, len)); }
+                @Override public void flush() throws IOException { writeBody(() -> out.flush()); }
+                @Override public void close() { /* finish/AsyncContext owns response termination. */ }
+            };
+        } catch (IOException | RuntimeException failure) {
+            abort();
+            throw failure;
+        }
+    }
 
-            @Override
-            public void write(byte[] b, int off, int len) throws IOException {
-                checkNotAborted();
-                out.write(b, off, len);
-            }
+    private interface IoOperation { void run() throws IOException; }
 
-            @Override
-            public void flush() throws IOException {
+    private void writeBody(IoOperation operation) throws IOException {
+        writeLock.lock();
+        try {
+            synchronized (this) {
                 checkNotAborted();
-                out.flush();
+                if (finished) throw new IOException("exchange finished");
             }
-
-            @Override
-            public void close() {
-                // The container ends the body when service() returns.
-            }
-        };
+            operation.run();
+        } catch (IOException failure) {
+            abort();
+            throw failure;
+        } finally {
+            writeLock.unlock();
+        }
     }
 
     // @req FR-SVL-003
+    // @req FR-SVL-009 AC-1 AC-2 AC-4
     @Override
     public void finish() throws IOException {
-        checkNotAborted();
-        res.flushBuffer();
+        writeLock.lock();
+        try {
+            synchronized (this) {
+                checkNotAborted();
+                if (finished) return;
+            }
+            res.flushBuffer();
+            complete();
+        } catch (IOException | RuntimeException failure) {
+            abort();
+            throw failure;
+        } finally {
+            writeLock.unlock();
+        }
     }
 
-    /** True when {@link #abort} ran on an exchange that never started an event stream: the servlet then fails the request. */
+    /** A non-async abnormal response still fails the active servlet invocation. */
     // @req FR-SVL-003
     boolean abortedWithoutStream() {
         return aborted && async == null;
     }
 
-    /**
-     * Marks the exchange aborted; the container owns the socket, so nothing is called on it, except that an event
-     * stream's AsyncContext is completed (once) so the container ends the response. A drain write already running
-     * is given {@link #ABORT_WAIT_MILLIS} to return first, so complete() does not overlap it; a write blocked on a
-     * slow client is cut by complete() after that wait, which is what frees it.
-     */
-    // @req FR-SVL-003
-    // @req FR-SVL-005
+    /** Aborts without waiting indefinitely for a transport write; running drains keep their slot until exit. */
+    // @req FR-SVL-003 FR-SVL-005
+    // @req FR-SVL-009 AC-2 AC-4
     @Override
-    public void abort() {
-        aborted = true;
+    public void abort() { abort(ABORT_WAIT_MILLIS); }
+
+    private void abort(long waitMillis) {
+        ServletEventStream.DrainTask task;
+        synchronized (this) {
+            if (finished && !aborted) return;
+            aborted = true;
+            finished = true;
+            task = drainTask;
+        }
+        if (task != null) task.cancelBeforeStart();
         if (async != null) {
             boolean held = false;
             try {
-                held = writeLock.tryLock(ABORT_WAIT_MILLIS, TimeUnit.MILLISECONDS);
+                held = writeLock.tryLock(waitMillis, TimeUnit.MILLISECONDS);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
             try {
                 complete();
             } finally {
-                if (held) {
-                    writeLock.unlock();
-                }
+                if (held) writeLock.unlock();
             }
+        } else {
+            retireIfDone();
         }
     }
 
@@ -293,42 +323,118 @@ final class ServletExchange implements HttpExchange {
         ServletEventStream.start(this, status, headers, drain);
     }
 
-    /**
-     * Called once by the servlet after the core's handler returned: submits the registered drain to the pool, so
-     * the container's request thread returns while the stream stays open. An event stream started later throws
-     * IllegalStateException. For an aborted stream, or once the pool was shut down, it cancels the core drain and
-     * gives the slot back.
-     */
+    /** Initial callback return is not a terminal response: retain unfinished managed requests with AsyncContext. */
     // @req FR-SVL-005
+    // @req FR-SVL-009 AC-1 AC-2 AC-3 AC-4
     void afterHandler() {
-        StreamDrain d;
-        OutputStream out;
+        ServletEventStream.DrainTask task;
+        boolean needAsync;
         synchronized (this) {
-            if (handlerReturned) {
-                return;
-            }
+            if (handlerReturned) return;
             handlerReturned = true;
-            d = drain;
-            out = drainOut;
-            drain = null;
-            drainOut = null;
+            needAsync = managed && !finished && async == null;
+            task = drainTask;
         }
-        if (d == null || out == null) {
-            return;
-        }
-        ServletEventStream.Pool pool = pool();
-        if (!aborted) {
+        if (needAsync) {
             try {
-                pool.submit(ServletEventStream.drainTask(this, d, out));
-                return;
-            } catch (RejectedExecutionException e) {
+                ensureAsync();
+            } catch (IllegalStateException cannotDefer) {
+                // A racing normal completion already owns the terminal response.
+                if (!finished) unsupportedAsync();
+            }
+        }
+        if (stopRequested && !finished) abort();
+        if (task != null) submit(task);
+        retireIfDone();
+    }
+
+    private void submit(ServletEventStream.DrainTask task) {
+        if (aborted) { task.cancelBeforeStart(); return; }
+        try {
+            pool().submit(task);
+        } catch (RejectedExecutionException failure) {
+            abort();
+            task.cancelBeforeStart();
+        }
+    }
+
+    private void unsupportedAsync() {
+        try {
+            if (started) { abort(); return; }
+            byte[] bytes = Objects.requireNonNull(adapter).errorRenderer().render(500).getBytes(StandardCharsets.UTF_8);
+            List<Map.Entry<String,String>> headers = new ArrayList<>();
+            headers.add(new SimpleImmutableEntry<>("Content-Type", "application/json; charset=utf-8"));
+            headers.add(new SimpleImmutableEntry<>("Content-Length", String.valueOf(bytes.length)));
+            commit(500, headers, bytes.length).write(bytes);
+            finish();
+        } catch (IOException | RuntimeException failure) {
+            abort();
+        }
+    }
+
+    // @req FR-SVL-009 AC-2 AC-4
+    synchronized void managed() { managed = true; }
+
+    // @req FR-SVL-009 AC-4
+    void stopAfterReturn() {
+        boolean cut;
+        synchronized (this) { stopRequested = true; cut = handlerReturned && !finished; }
+        // SSE aborts already run in parallel in Pool.completeAll; do not add one write wait per stream.
+        if (cut && (adapter == null || adapter.pool() == null || !adapter.pool().owns(this))) abort(0);
+    }
+
+    private void retireIfDone() {
+        boolean retire;
+        synchronized (this) { retire = managed && handlerReturned && finished; }
+        if (retire && adapter != null) adapter.retire(this);
+    }
+
+    // @req FR-SVL-009 AC-1 AC-2 AC-4
+    AsyncContext ensureAsync() {
+        boolean managedRequest;
+        synchronized (this) {
+            while (asyncStarting) {
+                try { wait(); }
+                catch (InterruptedException failure) {
+                    Thread.currentThread().interrupt();
+                    throw new IllegalStateException("interrupted while starting async response", failure);
+                }
+            }
+            if (finished || aborted) throw new IllegalStateException("exchange already ended");
+            if (async != null) return async;
+            if (!req.isAsyncSupported()) throw new IllegalStateException("deferred response needs asyncSupported=true");
+            asyncStarting = true;
+            managedRequest = managed;
+        }
+        AsyncContext context = null;
+        try {
+            // Container calls and listener callbacks do not execute under the exchange monitor.
+            context = req.isAsyncStarted() ? req.getAsyncContext() : req.startAsync();
+            if (managedRequest) context.addListener(new AsyncListener() {
+                @Override public void onComplete(AsyncEvent event) {
+                    completed.set(true);
+                    synchronized (ServletExchange.this) { finished = true; }
+                    retireIfDone();
+                }
+                @Override public void onTimeout(AsyncEvent event) { abort(); }
+                @Override public void onError(AsyncEvent event) { abort(); }
+                @Override public void onStartAsync(AsyncEvent event) { event.getAsyncContext().addListener(this); }
+            });
+            boolean ended;
+            synchronized (this) { async = context; ended = finished || aborted; }
+            if (ended) {
+                complete();
+                throw new IllegalStateException("exchange ended while starting async response");
+            }
+            return context;
+        } catch (RuntimeException failure) {
+            if (context != null) {
+                synchronized (this) { async = context; }
                 abort();
             }
-        }
-        try {
-            d.abort();
+            throw failure;
         } finally {
-            pool.finish(this);
+            synchronized (this) { asyncStarting = false; notifyAll(); }
         }
     }
 
@@ -350,44 +456,46 @@ final class ServletExchange implements HttpExchange {
         return res;
     }
 
-    /** An event stream must start before the handler returns, or no drain would run it. */
-    // @req FR-SVL-005
+    /** Closed exchanges cannot be promoted; a managed pending ordinary request may become an event stream. */
+    // @req FR-SVL-005 FR-SVL-009 AC-3
     synchronized void requireDrainable() {
-        if (handlerReturned) {
-            throw new IllegalStateException("eventStream must be called before the handler returns");
+        if (handlerReturned && !managed) {
+            throw new IllegalStateException("eventStream must be called before the unmanaged handler returns");
         }
     }
 
-    /** The single start mark, set by the event stream once it holds a slot. */
     // @req FR-SVL-005
-    synchronized void markStarted() {
-        started = true;
-    }
+    synchronized void markStarted() { started = true; }
 
     // @req FR-SVL-005
-    void async(AsyncContext ac) {
-        async = ac;
+    void async(AsyncContext ac) { async = ac; }
+
+    /** Claim a drain once; late registration submits to the same bounded SSE executor immediately. */
+    // @req FR-SVL-005 FR-SVL-009 AC-3
+    void register(StreamDrain drain, OutputStream out) {
+        ServletEventStream.DrainTask task = new ServletEventStream.DrainTask(this, drain, out);
+        boolean late;
+        synchronized (this) {
+            requireDrainable();
+            drainTask = task;
+            late = handlerReturned;
+        }
+        if (late) submit(task);
     }
 
-    /** Records the drain {@link #afterHandler} submits and the stream it writes to. */
-    // @req FR-SVL-005
-    synchronized void register(StreamDrain d, OutputStream out) {
-        requireDrainable(); // afterHandler already ran, so this drain would never be submitted
-        drain = d;
-        drainOut = out;
-    }
-
-    /** Completes the event stream's AsyncContext once; later calls, or one the container refuses, do nothing. */
-    // @req FR-SVL-005
+    /** Mark terminal and complete any started AsyncContext once, then release only an admitted returned request. */
+    // @req FR-SVL-005 FR-SVL-009 AC-2 AC-4
     void complete() {
-        AsyncContext ac = async;
+        AsyncContext ac;
+        synchronized (this) { finished = true; ac = async; }
         if (ac != null && completed.compareAndSet(false, true)) {
             try {
                 ac.complete();
-            } catch (IllegalStateException e) {
-                // the container already ended the request
+            } catch (IllegalStateException ignored) {
+                // The container has already ended the request.
             }
         }
+        retireIfDone();
     }
 
     /** Status and headers: Content-Length through setHeader, every other header through addHeader, in order. */
@@ -413,6 +521,7 @@ final class ServletExchange implements HttpExchange {
     // @req FR-SVL-003
     synchronized void requireStartable() throws IOException {
         checkNotAborted();
+        if (finished) throw new IOException("exchange finished");
         if (started) {
             throw new IllegalStateException("the response was already started");
         }

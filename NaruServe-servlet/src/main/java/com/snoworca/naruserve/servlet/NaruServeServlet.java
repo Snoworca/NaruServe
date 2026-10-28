@@ -41,6 +41,7 @@ final class NaruServeServlet extends HttpServlet {
     // @req FR-SVL-002
     // @req FR-SVL-005
     // @req FR-SVL-006
+    // @req FR-SVL-009 AC-1 AC-2 AC-4
     @Override
     protected void service(HttpServletRequest req, HttpServletResponse res) throws IOException {
         ExchangeHandler handler = adapter.enter();
@@ -48,6 +49,7 @@ final class NaruServeServlet extends HttpServlet {
             reject(res, 503, true);
             return;
         }
+        boolean tracked = false;
         try {
             String path = ServletPath.remainder(req.getRequestURI(), req.getContextPath(), prefix);
             if (path == null) {
@@ -55,8 +57,13 @@ final class NaruServeServlet extends HttpServlet {
                 return;
             }
             ServletExchange ex = new ServletExchange(req, res, path, adapter);
+            adapter.track(ex);
+            tracked = true;
             try {
                 handler.handle(ex);
+            } catch (RuntimeException | Error failure) {
+                ex.abort();
+                throw failure;
             } finally {
                 ex.afterHandler(); // starts a registered event-stream drain on the adapter's pool
             }
@@ -66,7 +73,7 @@ final class NaruServeServlet extends HttpServlet {
                 throw new IOException("exchange aborted");
             }
         } finally {
-            adapter.leave();
+            if (!tracked) adapter.leave();
         }
     }
 
