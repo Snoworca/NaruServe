@@ -2,19 +2,19 @@
 
 [한국어](../routing.md) | [API index](README.md)
 
-## Three registration styles
+This reference describes the **common HTTP profile in the 0.10.0 checkout**. The retained `routing.Router` and WebSocket upgrade rules use a [separate strict profile](#legacy-router-and-websocket). Check the [installation guide](README.md) for artifact availability.
 
-| Style | Use | Example |
-|---|---|---|
-| `app.get(path, handler)` | One method, one handler | `app.get("/users", list)` |
-| `app.route(path).get(h1).delete(h2)` | Different handlers at one path | Below |
-| `app.route(MethodSet, path, handler)` | Branch on several methods in one handler | Below |
+## Registering routes
 
-Examples are API fragments: app, handlers and services must already exist. See the [quick start](README.md#quick-start) for a standalone program.
+| Call | Purpose |
+|---|---|
+| `app.get(path, handler)` | Respond with a two-argument `RouteHandler` |
+| `app.get(path, middleware...)` | Run three-argument `Middleware` callbacks in order |
+| `app.route(path)` | Create one Route at this position, then append methods/callbacks to its builder |
+| `app.route(MethodSet, path, handler)` | Existing enum-method-set convenience |
+| `app.method("COPY", path, callbacks...)` | Register a valid HTTP method outside the enum |
 
 ### Per-method handlers
-
-This is equivalent to Express's app.route:
 
 ```java
 app.route("/users/:id")
@@ -23,9 +23,11 @@ app.route("/users/:id")
    .delete(deleteUser);
 ```
 
-It equals separate app.get, app.put and app.delete registrations. RouteBuilder supports get, post, put, patch, delete, head, options and use(middleware), returning itself. `route("/admin").use(auth).use(adminOnly).get(h)` runs auth, adminOnly, h. use affects only methods registered after it. Java varargs must come last, which is why multiple middleware use a builder rather than `get(path, Middleware..., RouteHandler)`. See [middleware registration](middleware.md#registration).
+This builder shares **one Route identity and stack position**. Three independent `app.get`/`put`/`delete` registrations do not always have the same control flow. Calling `route(path)` establishes the position; appending callbacks later does not move it. `RouteBuilder.get`, `post`, `put`, `patch`, `delete`, `head`, `options`, `method(token, Middleware...)` and `use(Middleware)` return the same builder. `use` appends an all-method callback at its current position in that Route. It does not move ahead of a response handler registered earlier.
 
-### Several methods, one handler
+### Several methods in one handler
+
+The application supplies `find`, `create` and `remove`. The example explicitly chooses 405 in its `default` branch; that is not the common HTTP framework default.
 
 ```java
 app.route(Method.get().post().delete(), "/users/:id", (req, res) -> {
@@ -38,8 +40,6 @@ app.route(Method.get().post().delete(), "/users/:id", (req, res) -> {
     }
 });
 ```
-
-Kotlin:
 
 ```kotlin
 app.route(Method.get().post().delete(), "/users/:id") { req, res ->
@@ -54,39 +54,25 @@ app.route(Method.get().post().delete(), "/users/:id") { req, res ->
 
 ## Method and MethodSet
 
-Method is an enum:
-
 ```java
 public enum Method { GET, HEAD, POST, PUT, PATCH, DELETE, OPTIONS, TRACE, CONNECT }
 ```
 
-MethodSet is immutable: combination methods return a new set value.
+The existing nine `Method` constants remain. Read the actual string through `req.methodToken()`. Calling `req.method()` for an extended token such as `COPY` or `PROPFIND` throws `IllegalStateException`. `method(token, path, callbacks...)` validates token syntax and normalizes the registration name to uppercase. Invalid syntax throws `IllegalArgumentException`; null throws `NullPointerException`.
 
-| Expression | Members |
+| Expression | Set |
 |---|---|
-| `Method.get()` | GET |
 | `Method.get().post()` | GET, POST |
-| `Method.get().delete().post()` | GET, DELETE, POST |
 | `Method.of(Method.PUT, Method.PATCH)` | PUT, PATCH |
-| `Method.any()` | GET, HEAD, POST, PUT, PATCH, DELETE, OPTIONS; never TRACE/CONNECT |
-| `Method.any().except(Method.DELETE)` | All ordinary methods except DELETE |
+| `Method.any()` | GET, HEAD, POST, PUT, PATCH, DELETE, OPTIONS |
+| `Method.any().except(Method.DELETE)` | The preceding set except DELETE |
+| `set.with(Method.TRACE)` | Explicitly add TRACE |
 
-- get, any and of are static Method functions; there is no `Method.GET.delete()`.
-- MethodSet provides get, head, post, put, patch, delete, options and except(Method). with(Method) adds arbitrary enum members, including TRACE/CONNECT.
-- Adding an existing member or removing an absent member preserves the set value. Null arrays/elements in Method.of throw NullPointerException.
-- TRACE/CONNECT are disabled by default and absent from any even when policy enables them. Enable them with [router policy](#router-policy) and register explicitly.
-- Express app.all corresponds to `app.route(Method.any(), path, h)` with that exclusion.
-- For one method, pass the enum directly: `app.route(Method.GET, "/health", h)`.
+`Method.any()` does not mean every token accepted by Express `app.all`. It remains a finite-set convenience. Common HTTP TRACE/CONNECT registrations do not require the legacy WS policy switches. Transport request-target, Host and framing restrictions still apply separately.
 
-### Inspect a MethodSet
+### Inspecting MethodSet
 
-| Method | Result |
-|---|---|
-| `contains(Method)` | Membership |
-| `iterator()` | Enum declaration order; remove throws UnsupportedOperationException |
-| `size()` | Member count |
-
-MethodSet implements Iterable. Equal members mean equal sets and hash codes, irrespective of construction order. toString joins members in declaration order with comma-space, for example `GET, POST`, matching an Allow header. Express has no equivalent method-set type.
+Use `contains`, `size` and `iterator`. Iteration follows enum declaration order and does not support `remove()`. Equality/hash code use membership; `toString()` produces `GET, POST`. Composition returns immutable sets, and null arrays/elements are rejected.
 
 ```java
 MethodSet set = Method.of(Method.DELETE, Method.GET, Method.POST);
@@ -96,8 +82,6 @@ for (Method m : set) {                         // GET, POST, DELETE order
 }
 int n = set.size();                            // 3
 ```
-
-Kotlin uses contains through `in` and iterator through a for loop:
 
 ```kotlin
 val set = Method.get().post().except(Method.POST)
@@ -110,64 +94,80 @@ val n = set.size()                             // 1
 
 ## Path patterns
 
-| Pattern | Matches | Read |
-|---|---|---|
-| `/users` | `/users` | — |
-| `/users/:id` | `/users/42`, `/users/abc` | `req.param("id")` |
-| `/users/:userId/posts/:postId` | `/users/1/posts/9` | userId and postId parameters |
+Strings match the original **raw pathname**, excluding query text. The whole path is not decoded first. Only matched captures receive one strict UTF-8 decoding pass.
 
-- A parameter occupies one complete segment and never crosses `/`.
-- Names match `[A-Za-z_][A-Za-z0-9_]*`. `/:id.json`, `/:a-b` and `/:from-:to` fail at registration. Unlike Express 4, parameters cannot have a fixed suffix; accept `/files/:name` and split in the handler.
-- Write fixed segments as decoded characters, for example `/café`. Percent-encoded patterns, literal spaces, controls, # and dot/dot-dot segments fail at registration because they cannot match validated requests. Express compares encoded patterns such as `/a%20b` differently; revise them when migrating.
-- Query strings do not participate; use req.query.
-- Express ?, *, +, parentheses and regular-expression patterns are unsupported.
+| String pattern | Meaning |
+|---|---|
+| `/users/:id` | Required value that does not cross a slash |
+| `/files/*parts` | One or more segments, a `List<String>` wildcard |
+| `/files{/*parts}` | Also accepts `/files`; omitted wildcard keys are absent |
+| `/users{/:id}` | Optional whole brace group |
+| `/:file{.:ext}` | Literal delimiter and optional extension within one segment |
+| `/:"user-id"` or `/*"file-parts"` | Quoted parameter names |
 
-### Matching
+Names use the supported Unicode identifier grammar or quoted names. Escape reserved literals with `\`. Express 4 string forms such as `?`, `+` and parenthesized regex do not transfer unchanged. An unnamed `/*` is invalid; use `/*parts`. String-grammar errors throw `RoutingConfigException`, with positions counted in Unicode code points. When a name occurs repeatedly, the **last participating binding** determines both value and scalar/list shape. An omitted optional group does not erase an earlier binding.
 
-Matching distinguishes case and trailing slashes by default. `/Users` differs from `/users`; `/users/` differs from `/users`. Policy can change slash merging, trailing slashes and case. Requests decode exactly once. Invalid escapes, NUL and traversal are rejected; TinyHttpd can reject these before the app with a short plain-text 400 that bypasses onError and standard JSON. See [defaults](defaults.md).
+A literal such as `/a%20b` matches the encoded raw path. `/caf%C3%A9` and `/café` are different literals. `/literal/%ZZ` can match literally, but `/:value` capturing `%ZZ` produces a decoding error 400. Wildcards split on **literal `/` before decoding**: `/files/a%2Fb/c` yields `["a/b", "c"]`. A path capture preserves `+` as `+`. These HTTP rules do not relax static traversal/symlink checks or WS path rejection.
+
+### Matching rules
+
+Common HTTP defaults to **case-insensitive matching and one optional trailing slash**; repeated slashes remain meaningful. `use(path, ...)` matches a prefix, with string segment boundaries so `/api` does not match `/apix`. A child `Router.create(mergeParams, caseSensitive, strict)` owns its options.
 
 ### Priority
 
-Fixed segments outrank parameters regardless of registration order:
+**Registration order** governs execution. Fixed paths do not gain specificity priority. A callback that responds without continuing prevents later routes from running. Duplicate and overlapping common HTTP routes are valid; use `next.run()`/`next.route()` to reach later candidates.
 
 ```java
 app.get("/users/:id", getUser);
-app.get("/users/me", getMe);     // /users/me always selects this handler
+app.get("/users/me", getMe);     // reached only if the earlier route continues
 ```
 
-listen rejects duplicate method/path registrations and equally ranked patterns such as `/a/:x` and `/a/:y` for one method.
+This tries `getUser` first. Unless it continues, `getMe` does not run.
+
+## Java Pattern and path alternatives
+
+An `Object path` accepts a string, `java.util.regex.Pattern`, `RegexPathPattern`, or nested `Object[]`/`List<?>` alternatives of these values. The first matching alternative wins from left to right. Every alternative and callback is validated before registration, so invalid nested elements/null do not partially publish a registration. Do not express alternatives as the string `"/a|/b"`.
+
+Regex paths use **Java Pattern**. ECMAScript regex, flags and `lastIndex` are not emulated. Matching searches the original raw path with `Matcher.find()`; use explicit `^`/`$` for a full match. String case/strict settings do not override Pattern flags. For use/mount middleware, even a searched regex match must start at offset 0 and end at a segment boundary; a non-prefix match is skipped. Named groups use their Java names. Unnamed groups receive their own zero-based ordinal keys (`"0"`, `"1"`), without named groups consuming those ordinals. Nonparticipating groups are omitted; participating empty groups retain `""`.
+
+`RegexPathPattern.compile(Pattern)` supports ordinary patterns directly. Some embedded-flag combinations erase initial COMMENTS/UNIX_LINES settings from `Pattern.flags()`, making capture-name metadata ambiguous. Registration then fails clearly; pass original source and flags to `com.snoworca.naruserve.routing.RegexPathPattern.compile(source, originalFlags)`. No reflection, JNI or JavaScript engine is required.
+
+## Independent Router, mounts and param hooks
+
+`com.snoworca.naruserve.Router.create()` creates an independent HTTP stack. Import it explicitly to distinguish the retained `com.snoworca.naruserve.routing.Router`. `create()` defaults to `mergeParams=false`, `caseSensitive=false`, `strict=false`; `create(true)` merges parent captures into the child. Child values win name conflicts; contiguous unnamed numeric blocks shift on merge. For parent keys0/1 and child keys0/1, child values become2/3. Numeric shifting counts contiguous keys from0; noncanonical keys such as01 remain ordinary names. Mounting the same Router at several positions keeps request mount contexts separate. Use a library-created Router; arbitrary custom implementations are not assumed to contain its internal registry.
+
+Inside `app.use(prefix, router)`, `path()`/`url()` lose the actual matched prefix, and `baseUrl()` accumulates it. `originalUrl()`/`rawPath()` remain original. Leaving the child restores the parent views. `use(prefix, middleware)` also removes its prefix during that callback. All views share the same Request, body cache, attributes and services. See [request views](request.md#mounts-and-path-views).
+
+`app.param(name, ParamHandler)` and `router.param` preprocess present captures owned by that router. The signature is `(req, res, next, List<String> originalValue, String name)`. Change later reads with `req.param(name, value)` or `req.paramValues(name, values)`. Hooks follow actual captured-key order: canonical integer-index keys from `0` through `4294967294` sort numerically; other keys follow capture enumeration. `01` and `4294967295` are not integer-index keys.
+
+Caching is local to a request/router context. Equal decoded scalars reuse hook results; list/wildcard values use reference identity, so fresh capture lists may rerun hooks. Omitted optional captures and values merely inherited from the parent do not trigger child hooks. Route skipping, errors and router exit propagate. A hook can retain `next` and resume later.
 
 ## Automatic responses
 
-| Situation | Response |
+| Common HTTP situation | Outcome |
 |---|---|
-| No path | 404 |
-| Path exists, method missing | 405 with Allow |
-| HEAD on GET route | Run GET handler, suppress body |
-| OPTIONS without a handler on a known path | 204 with Allow |
-| Unknown/disabled method | 501 |
-| STOPPING | 503, Connection: close, standard SERVICE_UNAVAILABLE JSON |
-| Full transport queue | Plain-text 503 from TinyHttpd; no routing or middleware |
+| No callback handles the path/method before fallthrough | 404 HTML, `Cannot METHOD /raw/path` |
+| HEAD | Use GET in the first encountered Route when it has no HEAD; suppress transmitted body |
+| Automatic OPTIONS | Collect methods actually traversed in the current router;200 with `Allow` and matching plain-text body |
+| Valid extended method | Dispatch its registered token, otherwise 404 |
+| Callback returns without response or next | Remain pending |
 
-Explicit head/options handlers take priority. Automatic HEAD keeps req.method() equal to HEAD, so branch on GET and HEAD together. App-generated 404/405 use the [standard error format](middleware.md#standard-error-format).
+HEAD does not skip an earlier GET Route to find a separately registered later HEAD Route. Even when GET runs, `methodToken()`/`method()` remains HEAD. Preserve the GET Content-Length but send no body bytes. Automatic OPTIONS is router-local: a responding child does not add parent methods. It sends `Content-Type: text/plain` without charset and `X-Content-Type-Options: nosniff`; it does not unconditionally add OPTIONS to Allow. This differs from CORS preflight 204.
 
 ## Static files and WebSocket
 
-Lookups proceed through explicit routes, static mounts and finally 404. A method mismatch can still fall through to static GET/HEAD handling as described in [static files](static.md). A path may have both an ordinary GET route and app.ws. Upgrade GET selects WebSocket where available. Without Upgrade, a WebSocket-only path returns 426, except automatic OPTIONS. App middleware runs before these decisions. See [lookup outcomes](#lookup-outcomes-and-order) and [middleware](middleware.md).
+Common HTTP walks `use`, routes, static mounts and error layers in **one registration order**. A static miss continues. A static mount registered before authentication may respond first, so review ordering. See [middleware](middleware.md) and [static files](static.md).
 
 ## Router policy
 
-`RouterPolicy.builder()` controls path normalization and TRACE/CONNECT. It corresponds to Express strict-routing/case-sensitive-routing options, with stricter defaults.
+Explicit `app.routerPolicy(RouterPolicy)` applies case, trailing-slash and repeated-slash options to common HTTP too. It applies even when configured after routes but before `listen`. Omitting the call uses common HTTP defaults, which differ from `RouterPolicy.strict()`.
 
-| Builder method | Enabled behavior | Express equivalent |
-|---|---|---|
-| `mergeSlashes(boolean)` | `/a//b` becomes `/a/b` | None |
-| `ignoreTrailingSlash(boolean)` | Ignore one trailing slash; preserve root | Strict routing off |
-| `caseInsensitive(boolean)` | Compare fixed segments without case | Case-sensitive routing off |
-| `enableTrace(boolean)` | Permit explicit TRACE registration/routing | None |
-| `enableConnect(boolean)` | Permit explicit CONNECT registration/routing | None |
-
-All switches default false; RouterPolicy.strict() is the default. Configure only before listen in NEW state: later calls throw IllegalStateException and null throws NullPointerException. Later policy calls replace earlier ones. Policy applies to every route at freeze regardless of when a route was registered. RouterPolicy is immutable; build copies the current builder values.
+| Option | Explicit policy meaning |
+|---|---|
+| `mergeSlashes(true)` | Merge repeated slashes for matching; preserve raw path and actual consumed mount-prefix views |
+| `ignoreTrailingSlash(true)` | Accept string trailing slash |
+| `caseInsensitive(true)` | Compare strings without case |
+| `enableTrace` / `enableConnect` | Method gates for the retained strict router/WS profile |
 
 ```java
 app.routerPolicy(RouterPolicy.builder()
@@ -179,8 +179,6 @@ app.routerPolicy(RouterPolicy.builder()
     .build());
 ```
 
-Kotlin:
-
 ```kotlin
 app.routerPolicy(
     RouterPolicy.builder()
@@ -190,65 +188,41 @@ app.routerPolicy(
 )
 ```
 
-## Routing contract
+`RouterPolicy` is immutable. Builder switches all default false; `strict()` has those strict values. Null policy is rejected, and configuration is allowed only in NEW. A Pattern keeps its own flags.
 
-### Path-shape policy
+## Legacy router and WebSocket
 
-Each switch is independent and fixed when the route table is built.
+Direct `routing.Router`/`RoutePattern` retains its segment grammar, fixed-path priority, conflict checks and strict policy. `app.ws` path, Origin and upgrade validation is not replaced by common HTTP string grammar. Existing valid global/prefix authentication middleware still runs before WS upgrade. Advanced HTTP Pattern/alternatives, independent Router and HTTP additions after listen do not imply equivalent WS behavior.
 
-| Switch | On | Off |
-|---|---|---|
-| Merge slashes | `/a//b` matches `/a/b` | It matches neither `/a/b` nor `/a/:x/b` |
-| Ignore trailing slash | `/users` and `/users/` match each other; root stays `/`; `/users//` also needs slash merging | Exact trailing slash |
-| Ignore case | Locale-independent fixed segments; `/USERS/Bob` matches `/users/:name`, retaining Bob | `/Users` differs from `/users` |
+Ordinary GET/HEAD on a WS-only path yields 426; automatic OPTIONS is 204; existing disabled/unknown method gates yield 501. Invalid encoding, encoded slash/NUL and traversal in upgrades remain strictly rejected. Common HTTP captures and static files cannot bypass that boundary. See [WebSocket](websocket.md).
 
-Parameters retain their original once-decoded values under every policy.
+## Independent Router and alternatives example
 
-### TRACE and CONNECT
+This runs a local id hook for three path alternatives and uses the actual mounted baseUrl. X-Mode: skip leaves this Route. Patterns explicitly anchor the whole match.
 
-Both yield unsupported-method outcomes by default at every path. Enable each separately and register by enum, such as `Method.of(Method.TRACE)`; Method.any never includes them. Registering a disabled method fails when the table freezes.
+```java
+com.snoworca.naruserve.Router api = com.snoworca.naruserve.Router.create(true);
+api.param("id", (request, response, next, values, name) -> {
+    request.param(name, values.get(0).toUpperCase(java.util.Locale.ROOT));
+    next.run();
+});
+Object paths = new Object[] {
+    "/users/:id{/:tab}",
+    java.util.regex.Pattern.compile("^/legacy/(?<id>[0-9]+)$"),
+    com.snoworca.naruserve.routing.RegexPathPattern.compile("^/item/(?<id>[0-9]+)$", 0)
+};
+api.get(paths, (request, response, next) -> {
+    if ("skip".equals(request.header("X-Mode"))) {
+        next.route();
+        return;
+    }
+    response.send(request.baseUrl() + ":" + request.param("id"));
+});
+app.use("/api", api);
+```
 
-### Lookup outcomes and order
+## Low-level matcher inspection
 
-Lookup takes a method token, raw path and upgrade flag and returns the first applicable outcome:
+`com.snoworca.naruserve.routing.HttpPathPattern.compile(String path, boolean end, boolean caseSensitive, boolean trailing)` explicitly configures full versus segment-bounded prefix matching, case, and optional trailing slash. Grammar/optional-expansion errors throw `RoutingConfigException`; more than 256 optional alternatives are rejected. `match(rawPath)` returns null or immutable Match with `matchedPath()`, raw `captures(): Map<String,List<String>>` and `wildcards(): Set<String>`. Scalars are singleton lists here; wildcards split before decoding. The wildcard set reflects the last participating binding, not merely declared keys. `keys()` returns grammar-order Key metadata (`name()`, `wildcard()`), including optional/repeated declarations. This reusable engine-free matcher does not percent-decode or change legacy routing. It is an inspection/compiler API, not another accepted `Object path` registration type.
 
-| Order | Outcome | Condition |
-|---|---|---|
-| 1 | Unsupported method | Token does not exactly equal an enum name, or TRACE/CONNECT is disabled |
-| 2 | No path | No pattern of any kind matches, including OPTIONS requests |
-| 3 | Match | A route matches the request method |
-| 4 | Automatic OPTIONS | OPTIONS with no explicit OPTIONS route |
-| 5 | Automatic HEAD | HEAD with no HEAD route but a matching HTTP GET; not a WebSocket route |
-| 6 | WebSocket only | Non-upgrade GET/HEAD on a WebSocket path without HTTP GET, or only WebSocket routes match |
-| 7 | Method mismatch | Path exists but the method does not |
-
-The dispatcher maps WebSocket-only to 426 with Upgrade: websocket and Connection: Upgrade. Upgrade GET first checks WebSocket routes. If none match, it falls back to normal GET lookup, including method mismatch or no-path results. Without the upgrade flag, WebSocket patterns never directly match an HTTP request.
-
-### Allow set
-
-Automatic OPTIONS and method mismatch share an Allow set: union the methods of every matching pattern, count WebSocket as GET, add HEAD when GET exists, and always add OPTIONS. `Method.any().except(DELETE)` yields `GET, HEAD, POST, PUT, PATCH, OPTIONS`. A POST-only path yields `POST, OPTIONS`, without HEAD.
-
-### Per-method priority
-
-Compare only routes of the request method, left to right; at the first difference, fixed segments beat parameters. GET `/a/b/c` selects `/a/b/:y` over `/a/:x/c`. DELETE `/users/me` selects DELETE `/users/:id` even if a more specific GET `/users/me` exists.
-
-### Pattern validation and conflicts
-
-Registration rejects unsupported Express syntax, empty or repeated parameter names, empty segments, invalid names, percent-encoded fixed segments, spaces, fragments and dot/dot-dot segments. Root and one trailing slash are allowed. Conflicts are checked together at listen before sockets open: equal patterns or parameter-name-only differences conflict for the same route kind and method. Error messages name both registrations.
-
-Conflicts use policy-normalized patterns. Case-insensitive `/Users` and `/users`, or trailing-slash-insensitive `/a` and `/a/`, conflict; under strict defaults they do not. HTTP GET and WebSocket at the same path do not conflict.
-
-### Method tokens and upgrades
-
-Method tokens are case-sensitive: get, Get, FOO and PROPFIND are unsupported everywhere. The upgrade flag requires GET, a Connection header containing upgrade and an Upgrade header containing websocket. Both headers use comma-separated, case-insensitive tokens; `Connection: keep-alive, Upgrade` and `Upgrade: WebSocket` qualify, h2c and POST do not.
-
-### Rejected paths and decoding
-
-Before matching, validate the raw path, ignoring its query string from the first ?. Reject:
-
-- Invalid escapes (`/a%2`, `/a%zz`) and non-UTF-8 bytes (`/a%C3`, `/a%FF`).
-- Encoded slash `%2F` and literal/encoded NUL `%00`.
-- Literal/encoded dot or dot-dot segments (`/./a`, `/a/..`, `/a/%2e`, `/a/.%2e/b`); `.hidden` remains valid to the router.
-- Literal spaces, controls U+0001..U+001F/U+007F, # and non-ASCII raw characters.
-
-Then percent-decode segments exactly once as UTF-8. Plus stays plus. `/files/%252e` matched against `/files/:name` returns `%2e`; `/caf%C3%A9` matches fixed pattern `/café`.
+`RegexPathPattern.keys()` returns declared capture-key strings. Its immutable Match exposes `matchedPath()`, `start()`, `end()` and raw singleton capture lists; missing groups are absent. Matching creates a fresh Matcher each time. Integration performs the later strict decode into Request views; calling the helper directly does not. Both matcher types are immutable and shareable between requests.

@@ -4,15 +4,15 @@
 
 `Request`는 Express의 `req`에 해당합니다. Express는 `req.params.id`처럼 속성으로 읽지만, NaruServe는 `req.param("id")`처럼 메서드로 읽습니다.
 
-`Request` 객체는 그 요청 안에서만 씁니다. 응답이 끝난 뒤 다른 스레드에 넘겨 쓰면 안 됩니다.
+`Request`는 보유 중인 요청 수명 안에서만 씁니다. 저장한 콜백으로 나중에 재개할 수 있지만 조기 응답 뒤에도 요청을 쓰는 작업은 반환한 pending Deferred lease가 필요합니다. 응답 완료만으로 그런 보유가 보장되지는 않습니다.
 
 ## 요청 정보
 
 | 메서드 | 반환 | Express | 설명 |
 |---|---|---|---|
-| `method()` | `Method` | `req.method` | `Method.GET` 등 enum |
-| `path()` | `String` | `req.path` | 디코딩된 경로. 쿼리 문자열 제외 (Express `req.path`는 퍼센트 디코딩하지 않습니다) |
-| `rawPath()` | `String` | `req.path` (디코딩 전) | 디코딩 전 경로. 쿼리 문자열 제외(쿼리는 `req.query(...)`로 읽습니다). |
+| `method()` | `Method` | — | 기존 아홉 enum. 확장 토큰에서는 IllegalStateException |
+| `path()` | `String` | `req.path` | 현재 raw 경로. 쿼리 제외, 마운트 접두사는 제거 |
+| `rawPath()` | `String` | `req.path` (디코딩 전) | 원래 raw 경로. 쿼리 제외, 마운트해도 변하지 않음 |
 | `remoteAddress()` | `String` | `req.ip` | 접속한 상대 주소 |
 | `isSecure()` | `boolean` | `req.secure` | TLS 연결이면 `true` |
 
@@ -22,13 +22,13 @@
 
 | 메서드 | 반환 | 없을 때 | Express |
 |---|---|---|---|
-| `param(name)` | `String` | 예외 (패턴에 없는 이름은 프로그래밍 오류) | `req.params.name` |
+| `param(name)` | `String` | IllegalArgumentException (빠진 선택 캡처 포함) | `req.params.name` |
 | `query(name)` | `String` | `null` | `req.query.name` |
 | `queries(name)` | `List<String>` | 빈 리스트 | `req.query.name` (배열) |
 | `header(name)` | `String` | `null` | `req.get(name)` |
 | `headers(name)` | `List<String>` | 빈 리스트 | — |
 
-- 경로 변수와 쿼리는 URL 디코딩된 문자열입니다. 헤더 값은 URL 디코딩하지 않습니다. 숫자는 아래의 `queryInt`·`paramInt` 등으로 읽거나 직접 검증해 변환합니다.
+- 참여한 경로 캡처는 정확히 한 번 디코딩하지만 pathname 자체는 raw입니다. 쿼리는 별도 쿼리 디코더로 읽고 헤더 값은 URL 디코딩하지 않습니다. 숫자는 아래의 `queryInt`·`paramInt` 등으로 읽거나 직접 검증해 변환합니다.
 - 같은 이름이 여러 번 오면 `query`/`header`는 첫 번째 값을, `queries`/`headers`는 모든 값을 돌려줍니다.
 - 헤더 이름은 대소문자를 구분하지 않습니다.
 
@@ -58,7 +58,7 @@ app.get("/users/:id/posts", (req, res) -> {
 | `req.formInt("count", 1)` | 폼 필드가 없으면 1, 잘못된 숫자는 `400` |
 | `req.paramInt("id")` | 경로 변수를 정수로 읽고 잘못된 숫자는 `400` |
 
-숫자 기본값은 누락된 값에만 적용합니다. 빈 문자열, 소수, 공백이 붙은 숫자는 오류입니다. 음수는 유효한 정수이며, 양수만 허용하는 등 업무상 범위는 앱에서 검사합니다. 선언하지 않은 경로 변수 이름은 프로그래밍 오류입니다. 필수 문자열은 검사 후 원래 값을 그대로 반환합니다.
+숫자 기본값은 누락된 값에만 적용합니다. 빈 문자열, 소수, 공백이 붙은 숫자는 오류입니다. 음수는 유효한 정수이며, 양수만 허용하는 등 업무상 범위는 앱에서 검사합니다. 선언하지 않은 경로 변수 이름은 프로그래밍 오류입니다. 빠질 수 있는 선택 캡처는 paramOrNull로 확인하고 기본값을 고르세요. paramInt가 기본값을 제공하지는 않습니다. 필수 문자열은 검사 후 원래 값을 그대로 반환합니다.
 
 ## 본문
 
@@ -81,7 +81,7 @@ List<User> users = req.body(new TypeRef<List<User>>() {});
 - 본문 맨 앞의 UTF-8 BOM(`EF BB BF`) 하나는 기본 Gson 코덱이 건너뛰므로, Express body-parser처럼 BOM이 붙은 본문도 읽힙니다. BOM이 두 번 이상이면 `400`입니다. 직접 만든 `JsonCodec`에서는 BOM 처리를 그 코덱이 정합니다.
 - 본문이 JSON `null`이면 `null`을 돌려줍니다(`@Nullable`). 빈 본문은 `null`이 아니라 `400`입니다.
 - Express의 `req.body`처럼 타입 없이 아무 Map으로 바꾸지 않습니다. 필요하면 `req.body(Map.class)`를 쓰세요. 기본 Gson에서는 숫자가 `Double`(`42` → `42.0`)로, 중첩 객체가 `Map`으로 들어옵니다.
-- v1에는 `jsonTree()`/`jsonMap()`이 없습니다. 타입 없는 값은 `req.body(Map.class)`로 읽습니다. 이렇게 정한 이유는 JSON 트리 타입을 공개 API에 두면 Gson 같은 특정 JSON 라이브러리의 타입이 드러나거나 별도 트리 모델을 하나 더 만들어야 하기 때문입니다.
+- `jsonTree()`/`jsonMap()`은 없습니다. 타입 없는 값은 `req.body(Map.class)`로 읽습니다. 이렇게 정한 이유는 JSON 트리 타입을 공개 API에 두면 Gson 같은 특정 JSON 라이브러리의 타입이 드러나거나 별도 트리 모델을 하나 더 만들어야 하기 때문입니다.
 - JSON 엔진과 설정은 [JSON](json.md).
 - `req.body(...)`, `req.cookie(...)`, `req.getCookies()`와 `res.json(...)`, `res.addCookie(...)`는 인터페이스의 default 메서드입니다. 테스트용으로 `Request`/`Response`를 직접 구현하고 이 메서드를 재정의하지 않으면 `UnsupportedOperationException`을 던집니다. 이전 버전에 맞춰 만든 구현이 그대로 컴파일되게 하려는 것입니다.
 
@@ -236,3 +236,50 @@ String version = req.application().attributeAs("appVersion", String.class);
 | `lastEventId()` | `String` | `null` |
 
 `Last-Event-ID` 헤더 값입니다. EventSource가 재접속할 때 보냅니다. [SSE](sse.md)
+
+## 마운트와 경로 뷰
+
+| 메서드 | 일반 HTTP의 의미 |
+|---|---|
+| `methodToken()` | COPY/PROPFIND를 포함한 실제 메서드. 확장 토큰에서는 method() 대신 사용 |
+| `rawPath()` | 원래 raw pathname. 쿼리 제외, 마운트해도 불변 |
+| `path()` | 소비한 마운트 접두사를 뺀 현재 raw 경로 |
+| `url()` | 현재 raw 경로와 원래 raw 쿼리. 빈 쿼리는 끝의 ?도 보존 |
+| `originalUrl()` | 원래 raw 경로·쿼리. 마운트해도 불변 |
+| `baseUrl()` | 실제로 매칭한 raw 마운트 접두사의 누적. 최상위에서는 빈 문자열 |
+
+`/api/users/a%2Fb?x=%2B`를 `/api`에 마운트한 안에서는 path가 `/users/a%2Fb`, url이 `/users/a%2Fb?x=%2B`, baseUrl이 `/api`, originalUrl이 `/api/users/a%2Fb?x=%2B`입니다. 매칭한 `:id`는 `a/b`이고 원래 rawPath는 `/api/users/a%2Fb`입니다. 접두사 미들웨어도 콜백 안에서 제거된 뷰를 보고 자식에서 나가면 부모 뷰를 복원합니다. 본문 캐시·속성·쿠키·서비스는 모두 같은 요청 객체입니다. 같은 라우터에서 계속한 뒤의 뷰를 일괄 옛 상태로 되돌리지 않습니다.
+
+캡처만 디코딩하므로 리터럴 `%ZZ`는 리터럴 경로와 맞을 수 있지만 `%ZZ`를 캡처하면400입니다. 경로 캡처는 +를 유지하고 쿼리 디코딩은 +를 공백으로 봅니다. 일반 HTTP 캡처에 인코딩된 슬래시가 들어갈 수 있습니다. 정적 파일 containment·WS 업그레이드 경로 제한·전송 Host/프레이밍 검증은 별도의 엄격한 경계입니다.
+
+## 파라미터 형태와 전처리
+
+| 메서드 | 반환/동작 |
+|---|---|
+| `param(name)` | scalar/list의 첫 값. 없는 이름은 IllegalArgumentException |
+| `paramOrNull(name)` | 첫 값, 없으면 null |
+| `paramValues(name)` | 불변 scalar singleton 또는 wildcard 조각 목록. 없으면 빈 목록 |
+| `pathParams()` | 불변 Map. scalar는 String, wildcard는 불변 List<String>. 빠진 선택 값은 없음 |
+| `param(name, value)` | 디코딩된 scalar 변경. null은 삭제 |
+| `paramValues(name, values)` | 디코딩된 조각들의 불변 복사본으로 변경 |
+
+패턴에 선언된 선택 `:id`라도 실제 매칭에서 빠지면 값이 없습니다. `/files/*parts`가 `a%2Fb/c`를 잡으면 먼저 분할하므로 `["a/b", "c"]`입니다. 세그먼트 하나인 wildcard도 pathParams에서는 리스트이므로 길이로 종류를 추측하지 마세요. 중복 이름은 실제 참여한 마지막 바인딩이 형태를 정합니다. scalar 편의 조회만으로 컬렉션 관찰을 대신하지 마세요.
+
+`Router.create(true)`는 부모 파라미터를 합칩니다. 이름 충돌은 자식이 이기고 숫자 키는 라우팅 병합 규칙을 따릅니다. param 훅은 존재하는 지역 캡처에만 실행됩니다. setter로 후속 값을 전처리하세요. 훅은 원래 디코딩된 캡처 값을 받고 캐시는 변경한 값과 제어 결과를 보존합니다. [라우팅](routing.md#독립-router-마운트와-param-훅)
+
+## Deferred의 요청 보유
+
+미완료 콜백은 반환한 뒤 나중에 재개할 수 있습니다. 응답한 뒤에도 body/input/upload가 필요한 작업은 AsyncRouteHandler에서 pending Deferred를 반환하세요. 마지막 사용 뒤 결정하며 resolve는 응답을 끝내거나 계속하지 않습니다. 여러 pending 결과는 별도 lease를 보유하고 abort·timeout·종료 취소가 철회할 수 있습니다. 내장 어댑터 보유는 소유 중인 미독 입력/context를 지키며 본문을 미리 읽는 동작이 아닙니다. 사용자 어댑터의 호환용 no-op은 물리적 보유를 제공하지 않습니다. 최종 정리 뒤 관계없는 작업에 Request를 보관하지 마세요. [Deferred](middleware.md#deferred와-늦은-작업), [수명주기](lifecycle.md)
+
+## 선택 와일드카드 예제
+
+/files에서는 키가 없고 빈 목록을 응답합니다. /files/a%2Fb/c에서는 불변 목록 ["a/b", "c"]를 응답합니다. bindings는 scalar/list 형태를 관찰하는 불변 Map입니다.
+
+```java
+app.get("/files{/*parts}", (request, response) -> {
+    Map<String, Object> bindings = request.pathParams();
+    List<String> parts = request.paramValues("parts");
+    String optional = request.paramOrNull("parts");
+    response.json(parts);
+});
+```

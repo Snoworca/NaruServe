@@ -2,15 +2,15 @@
 
 [한국어](../request.md) | [API index](README.md)
 
-Request corresponds to Express's req. Use methods such as `req.param("id")` rather than properties such as req.params.id. Keep Request within its request; do not pass it to another thread after completion. Examples are API fragments with application-defined DTOs and services.
+Request corresponds to Express's req. Use methods such as `req.param("id")` rather than properties such as req.params.id. Keep Request within its owned request lifetime. Saved callbacks may resume later; work using it after an early response needs a returned pending Deferred lease. Response completion alone does not guarantee such ownership. Examples are API fragments with application-defined DTOs and services.
 
 ## Request information
 
 | Method | Returns | Express | Meaning |
 |---|---|---|---|
-| `method()` | Method | req.method | Enum such as Method.GET |
-| `path()` | String | req.path | Decoded path without query; Express req.path does not percent-decode |
-| `rawPath()` | String | Encoded req.path | Original path without query; read query values separately |
+| `method()` | Method | — | Retained nine-value enum; extended tokens throw IllegalStateException |
+| `path()` | String | req.path | Current raw path without query; matching mount prefixes are removed |
+| `rawPath()` | String | Encoded req.path | Original raw path without query; never trimmed by mounts |
 | `remoteAddress()` | String | req.ip | Peer address |
 | `isSecure()` | boolean | req.secure | Whether transport uses TLS |
 
@@ -20,13 +20,13 @@ By default, proxy headers are ignored. With app.trustProxy(true), remoteAddress 
 
 | Method | Returns | When missing | Express |
 |---|---|---|---|
-| `param(name)` | String | IllegalArgumentException: undeclared name is a programming error | req.params.name |
+| `param(name)` | String | IllegalArgumentException, including an absent optional capture | req.params.name |
 | `query(name)` | String | null | req.query.name |
 | `queries(name)` | List<String> | Empty list | Query array |
 | `header(name)` | String | null | req.get(name) |
 | `headers(name)` | List<String> | Empty list | — |
 
-Path parameters and query values are URL-decoded strings; headers are not URL-decoded. query/header return the first repeated value, queries/headers return every value as an unmodifiable list. Header names are case-insensitive. Use queryInt/paramInt or validate before converting a number.
+Participating path captures are decoded exactly once; the pathname remains raw. Query values use their query decoder; headers are not URL-decoded. query/header return the first repeated value, queries/headers return every value as an unmodifiable list. Header names are case-insensitive. Use queryInt/paramInt or validate before converting a number.
 
 ```java
 // GET /users/42/posts?page=2&tag=a&tag=b
@@ -54,7 +54,7 @@ An uncaught NumberFormatException from Integer.parseInt becomes 500. Treat inval
 | `formInt("count", 1)` | Default only if absent; invalid int gives 400 |
 | `paramInt("id")` | Integer path value; invalid int gives 400 |
 
-Empty strings, decimal fractions and surrounding whitespace are not missing numbers and produce errors. Negative integers are valid; enforce business ranges yourself. An undeclared path parameter remains a programming error. Required-string helpers return the original value after checking it.
+Empty strings, decimal fractions and surrounding whitespace are not missing numbers and produce errors. Negative integers are valid; enforce business ranges yourself. An undeclared path parameter remains a programming error. For an optional missing capture, use paramOrNull before choosing a default; paramInt does not supply one. Required-string helpers return the original value after checking it.
 
 ## Body
 
@@ -77,7 +77,7 @@ These two lines are alternatives for different body types. Running both on one r
 - Default Gson accepts one leading UTF-8 BOM (EF BB BF); repeated BOMs produce 400. A custom JsonCodec defines its own BOM handling.
 - JSON null returns @Nullable null; an empty body is 400 rather than null.
 - There is no automatically populated untyped map as in Express req.body. Use req.body(Map.class); default Gson reads numbers as Double (42 becomes 42.0) and nested objects as Map.
-- v1 has no jsonTree/jsonMap methods because they would expose library-specific tree types or require another tree model.
+- There are no jsonTree/jsonMap methods because they would expose library-specific tree types or require another tree model.
 - See [JSON](json.md) for codec configuration.
 - Body/cookie accessors and Response.json/addCookie are interface default methods. Test fakes that do not override them throw UnsupportedOperationException; this preserves compatibility with older implementations.
 
@@ -219,3 +219,50 @@ Every request uses the same service objects. Make shared service state thread-sa
 ## SSE
 
 `lastEventId()` returns the Last-Event-ID header, or null if absent. EventSource sends it on reconnection. See [SSE](sse.md).
+
+## Mounts and path views
+
+| Method | Common HTTP meaning |
+|---|---|
+| `methodToken()` | Actual wire method, including COPY/PROPFIND; use this rather than `method()` for extended tokens |
+| `rawPath()` | Original raw pathname without query, unchanged across mounts |
+| `path()` | Current raw pathname after consumed mount prefixes |
+| `url()` | Current raw path plus exact raw query; an empty query preserves trailing `?` |
+| `originalUrl()` | Original raw path/query, unchanged across mounts |
+| `baseUrl()` | Accumulated actual raw matched mount prefixes; empty at top level |
+
+For `/api/users/a%2Fb?x=%2B` inside a `/api` mount, path is `/users/a%2Fb`, url is `/users/a%2Fb?x=%2B`, baseUrl is `/api`, and originalUrl is `/api/users/a%2Fb?x=%2B`. A matching `:id` is `a/b`. The request's original rawPath is `/api/users/a%2Fb`. Prefix middleware also sees trimmed views during its callback; exiting a child restores parent views. Body cache, attributes, cookies and services belong to the same request identity throughout. Views after same-router continuation reflect the actual cursor rather than a blanket rollback.
+
+Only matched captures are decoded: literal `%ZZ` can match a literal route, while capturing `%ZZ` is 400. A path capture keeps `+`; query decoding treats `+` as space. Encoded slash can occur in a common HTTP capture. Static filesystem containment, WS upgrade path restrictions and transport Host/framing validation remain separate strict boundaries.
+
+## Parameter shape and preprocessing
+
+| Method | Result |
+|---|---|
+| `param(name)` | First scalar/list value; absent name throws IllegalArgumentException |
+| `paramOrNull(name)` | First value, null for absence |
+| `paramValues(name)` | Immutable scalar singleton or wildcard segment list; empty for absence |
+| `pathParams()` | Immutable map: String scalars and immutable List<String> wildcards; omitted optionals absent |
+| `param(name, value)` | Replace decoded scalar; null removes binding |
+| `paramValues(name, values)` | Replace with immutable snapshot of decoded segments |
+
+An optional `:id` missing from the actual match is absent even if declared in the pattern. `/files/*parts` capturing `a%2Fb/c` yields `["a/b", "c"]`, split before decoding. A one-segment wildcard remains a list in pathParams; do not infer its kind from length. Last participating duplicate binding controls shape. Request-level scalar convenience does not replace collection observation.
+
+`Router.create(true)` merges parent parameters; child values win and numeric keys follow the routing merge rules. Param hooks run only for present local captures. Use setters in hooks to preprocess downstream observations; hooks receive original decoded capture values, while cached results preserve modifications and control flow. See [routing](routing.md#independent-router-mounts-and-param-hooks).
+
+## Deferred ownership
+
+An unfinished callback may return and resume later. For work that still needs body/input/uploads after responding, return pending Deferred from an AsyncRouteHandler. Settle after last use; resolving does not end/continue a response. Multiple returned pending results hold independent leases. Abort, timeout or shutdown cancellation may revoke them. Built-in exchange retention keeps unread input/context while owned; this is not eager body parsing and a custom adapter's compatibility no-op does not provide physical retention. Never retain Request for unrelated work after final cleanup. See [Deferred](middleware.md#deferred-and-late-work) and [lifecycle](lifecycle.md).
+
+## Optional wildcard example
+
+/files has no key and responds with an empty list. /files/a%2Fb/c responds with the immutable list ["a/b", "c"]. bindings is the immutable scalar/list observation map.
+
+```java
+app.get("/files{/*parts}", (request, response) -> {
+    Map<String, Object> bindings = request.pathParams();
+    List<String> parts = request.paramValues("parts");
+    String optional = request.paramOrNull("parts");
+    response.json(parts);
+});
+```

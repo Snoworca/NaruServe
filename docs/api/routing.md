@@ -2,15 +2,19 @@
 
 [English](en/routing.md) | [문서 목록](README.md)
 
-## 라우트 등록 세 가지 방법
+이 문서는 **0.10.0 체크아웃의 일반 HTTP 프로필**을 설명합니다. 기존 `routing.Router`와 WebSocket 업그레이드의 엄격 규칙은 [별도 프로필](#기존-라우터와-websocket)로 유지합니다. 배포 좌표의 공개 여부는 [설치 안내](README.md)에서 확인하세요.
 
-| 방법 | 언제 | 예 |
-|---|---|---|
-| `app.get(path, handler)` | 메서드 하나에 핸들러 하나 | `app.get("/users", list)` |
-| `app.route(path).get(h1).delete(h2)` | 같은 경로에 메서드별로 다른 핸들러 | 아래 참고 |
-| `app.route(MethodSet, path, handler)` | 여러 메서드를 한 핸들러에서 분기 | 아래 참고 |
+## 라우트 등록
 
-### 메서드별 핸들러 (Express `app.route`와 같음)
+| 호출 | 용도 |
+|---|---|
+| `app.get(path, handler)` | 두 인자 `RouteHandler`로 응답 |
+| `app.get(path, middleware...)` | 세 인자 `Middleware` 콜백을 순서대로 실행 |
+| `app.route(path)` | 그 위치에 하나의 Route를 만들고 같은 builder에 메서드·콜백 추가 |
+| `app.route(MethodSet, path, handler)` | 기존 enum 메서드 집합 편의 API |
+| `app.method("COPY", path, callbacks...)` | enum 밖의 유효한 HTTP 메서드 등록 |
+
+### 메서드별 핸들러
 
 ```java
 app.route("/users/:id")
@@ -19,11 +23,11 @@ app.route("/users/:id")
    .delete(deleteUser);
 ```
 
-`app.get(path, getUser); app.put(path, updateUser); app.delete(path, deleteUser);`와 같습니다.
-`RouteBuilder`는 `get`, `post`, `put`, `patch`, `delete`, `head`, `options`와 `use(middleware)`를 가지며 모두 같은 `RouteBuilder`를 돌려줍니다. `use(middleware)`는 라우트 미들웨어를 여러 개 붙이는 방법으로, `app.route("/admin").use(auth).use(adminOnly).get(h)`는 `auth` → `adminOnly` → `h` 순서로 실행하고 `use` 뒤에 등록하는 메서드에만 적용됩니다. [미들웨어](middleware.md#등록)
-가변 인자 오버로드 대신 `RouteBuilder.use`를 고른 이유는 Java의 가변 인자가 맨 끝에만 올 수 있어 `get(path, Middleware..., RouteHandler)`를 만들 수 없기 때문입니다.
+이 builder는 **하나의 Route 식별자와 스택 위치**를 공유합니다. 세 번의 독립 `app.get`/`put`/`delete` 등록과 항상 같은 제어 흐름은 아닙니다. `route(path)`를 호출한 시점에 위치가 정해지고, 나중에 builder에 콜백을 더해도 위치는 옮겨지지 않습니다. `RouteBuilder`의 `get`, `post`, `put`, `patch`, `delete`, `head`, `options`, `method(token, Middleware...)`, `use(Middleware)`는 같은 builder를 반환합니다. `use`는 그 Route의 모든 메서드에 적용되는 콜백을 현재 위치에 추가합니다. 앞서 등록한 응답 핸들러보다 먼저 실행되도록 재정렬하지 않습니다.
 
 ### 한 핸들러로 여러 메서드
+
+아래 `find`, `create`, `remove`는 앱 메서드입니다. `default`의 405는 이 예제가 직접 선택한 응답이며 프레임워크의 일반 HTTP 기본값이 아닙니다.
 
 ```java
 app.route(Method.get().post().delete(), "/users/:id", (req, res) -> {
@@ -36,8 +40,6 @@ app.route(Method.get().post().delete(), "/users/:id", (req, res) -> {
     }
 });
 ```
-
-Kotlin:
 
 ```kotlin
 app.route(Method.get().post().delete(), "/users/:id") { req, res ->
@@ -52,42 +54,25 @@ app.route(Method.get().post().delete(), "/users/:id") { req, res ->
 
 ## Method와 MethodSet
 
-`Method`는 HTTP 메서드 enum입니다.
-
 ```java
 public enum Method { GET, HEAD, POST, PUT, PATCH, DELETE, OPTIONS, TRACE, CONNECT }
 ```
 
-`MethodSet`은 메서드의 **불변** 집합입니다. 조합 메서드는 항상 새 집합을 돌려줍니다.
+`Method`의 기존 아홉 상수는 유지합니다. `req.methodToken()`으로 실제 문자열을 읽으세요. `COPY`, `PROPFIND`처럼 enum에 없는 토큰에서 `req.method()`를 부르면 `IllegalStateException`입니다. `method(token, path, callbacks...)`는 토큰 문법을 검사하고 등록 이름을 대문자로 정규화합니다. 잘못된 토큰은 `IllegalArgumentException`, null은 `NullPointerException`입니다.
 
-| 코드 | 집합 |
+| 표현 | 집합 |
 |---|---|
-| `Method.get()` | `{GET}` |
-| `Method.get().post()` | `{GET, POST}` |
-| `Method.get().delete().post()` | `{GET, DELETE, POST}` |
-| `Method.of(Method.PUT, Method.PATCH)` | `{PUT, PATCH}` |
-| `Method.any()` | `{GET, HEAD, POST, PUT, PATCH, DELETE, OPTIONS}` (`TRACE`/`CONNECT`는 정책으로 켜도 빠짐) |
-| `Method.any().except(Method.DELETE)` | DELETE를 뺀 나머지 |
+| `Method.get().post()` | GET, POST |
+| `Method.of(Method.PUT, Method.PATCH)` | PUT, PATCH |
+| `Method.any()` | GET, HEAD, POST, PUT, PATCH, DELETE, OPTIONS |
+| `Method.any().except(Method.DELETE)` | 위 집합에서 DELETE 제외 |
+| `set.with(Method.TRACE)` | TRACE를 명시적으로 추가 |
 
-- `Method.get()`, `Method.any()`, `Method.of(...)`는 `Method`의 **정적** 메서드입니다. `Method.GET.delete()` 같은 인스턴스 메서드는 없습니다.
-- `MethodSet`에는 `get()`, `head()`, `post()`, `put()`, `patch()`, `delete()`, `options()`, `except(Method)`가 있습니다. `with(Method)`는 임의의 메서드(`TRACE`, `CONNECT` 포함)를 더한 새 집합을 돌려줍니다.
-- 이미 들어 있는 메서드를 더하거나 없는 메서드를 빼면 같은 값의 집합이 돌아옵니다. `Method.of(...)`에 `null` 배열이나 `null` 원소를 넘기면 `NullPointerException`입니다.
-- `TRACE`, `CONNECT`는 기본으로 라우팅에 열리지 않습니다. `Method.any()`에도 들어가지 않습니다. 열려면 [`app.routerPolicy(...)`](#라우터-정책)에서 `enableTrace(true)`/`enableConnect(true)`를 켭니다.
-- Express `app.all(path, h)`는 `app.route(Method.any(), path, h)`입니다(`TRACE`/`CONNECT` 제외).
-- 메서드 하나만 쓸 때는 `app.route(Method.GET, "/health", h)`처럼 enum을 바로 넘깁니다.
+`Method.any()`는 Express `app.all`의 모든 토큰을 뜻하지 않습니다. 기존 유한 집합 편의 API입니다. 일반 HTTP에서 TRACE/CONNECT 등록을 위해 기존 WS용 정책 스위치를 켤 필요는 없습니다. 전송 계층에서 받는 request-target·Host·프레이밍 제약은 별개입니다.
 
 ### MethodSet 조회
 
-| 메서드 | 돌려주는 값 |
-|---|---|
-| `contains(Method)` | 그 메서드가 집합에 있으면 `true` |
-| `iterator()` | 멤버를 `Method` 선언 순서(`ordinal()`)로 돌려주는 반복자. `remove()`는 `UnsupportedOperationException` |
-| `size()` | 멤버 수 |
-
-- `MethodSet`은 `Iterable<Method>`라서 for 문에 바로 씁니다.
-- 같은 멤버를 가진 두 집합은 `equals`가 `true`이고 `hashCode`가 같습니다. `Method.get().post()`와 `Method.of(Method.POST, Method.GET)`은 같습니다.
-- `toString()`은 멤버를 선언 순서로 `", "`로 이어 붙입니다(`"GET, POST"`). `Allow` 헤더 값과 같은 형태입니다.
-- Express에는 대응하는 API가 없습니다. Express는 메서드 집합 타입을 두지 않습니다.
+`contains`, `size`, `iterator`를 제공합니다. 반복 순서는 enum 선언 순서이며 `remove()`는 지원하지 않습니다. `equals`/`hashCode`는 멤버로 비교하고 `toString()`은 `GET, POST` 형태입니다. 조합은 불변 집합을 반환하고 null 배열·원소는 거부합니다.
 
 ```java
 MethodSet set = Method.of(Method.DELETE, Method.GET, Method.POST);
@@ -97,8 +82,6 @@ for (Method m : set) {                         // GET, POST, DELETE 순서
 }
 int n = set.size();                            // 3
 ```
-
-Kotlin (`contains`는 `in` 연산자로, `iterator()`는 for 문으로 씁니다):
 
 ```kotlin
 val set = Method.get().post().except(Method.POST)
@@ -111,78 +94,80 @@ val n = set.size()                             // 1
 
 ## 경로 패턴
 
-| 패턴 | 맞는 요청 | 꺼내기 |
-|---|---|---|
-| `/users` | `/users` | |
-| `/users/:id` | `/users/42`, `/users/abc` | `req.param("id")` → `"42"` |
-| `/users/:userId/posts/:postId` | `/users/1/posts/9` | `req.param("userId")`, `req.param("postId")` |
+문자열은 원래 **raw pathname**에 맞춥니다. 쿼리는 제외합니다. 전체 경로를 미리 디코딩하지 않으며, 매칭한 캡처만 엄격한 UTF-8로 한 번 디코딩합니다.
 
-- 변수는 `:이름` 한 세그먼트입니다. `/`를 넘지 않습니다.
-- 변수 이름은 `[A-Za-z_][A-Za-z0-9_]*`이고 세그먼트 전체를 차지해야 합니다. `/:id.json`, `/:a-b`, `/:from-:to`는 등록할 때 설정 오류입니다. Express 4는 `/:id.json`처럼 변수 뒤에 고정 글자를 붙일 수 있지만 NaruServe는 허용하지 않습니다. `/files/:name`으로 받아 핸들러에서 나누세요.
-- 고정 세그먼트는 디코딩된 글자로 씁니다(`/café`). 퍼센트 인코딩(`/a%20b`), 그대로인 공백, 제어 문자, `#`, `.`·`..` 세그먼트는 어떤 요청에도 맞을 수 없으므로 등록할 때 설정 오류입니다. Express는 `/a%20b`를 인코딩된 경로와 비교하므로 옮길 때 고쳐야 합니다.
-- 쿼리 문자열은 경로 매칭에 쓰지 않습니다. `req.query(...)`로 읽습니다.
-- Express의 `?`, `*`, `+`, `()`, 정규식 경로는 지원하지 않습니다.
+| 문자열 패턴 | 의미 |
+|---|---|
+| `/users/:id` | 슬래시 하나를 넘지 않는 필수 값 |
+| `/files/*parts` | 하나 이상의 세그먼트, `List<String>` 와일드카드 |
+| `/files{/*parts}` | `/files`도 허용, 빠진 와일드카드 키는 생략 |
+| `/users{/:id}` | 중괄호 그룹 전체가 선택적 |
+| `/:file{.:ext}` | 같은 세그먼트 안의 리터럴 구분자와 선택적 확장자 |
+| `/:"user-id"` 또는 `/*"file-parts"` | 따옴표로 감싼 이름 |
+
+이름은 지원되는 Unicode 식별자 또는 따옴표 이름입니다. `\`로 예약 문자를 리터럴로 이스케이프합니다. Express 4의 `?`, `+`, 괄호 내 정규식 같은 문자열 문법은 그대로 쓰지 않습니다. `/*`는 이름이 없어 오류이고 `/*parts`처럼 씁니다. 문자열 문법 오류는 등록 시 `RoutingConfigException`이며 위치 정보는 Unicode 코드 포인트 기준입니다. 동일 이름을 여러 번 캡처하면 **실제로 참여한 마지막 바인딩**이 값과 scalar/list 형태를 정합니다. 생략된 선택 그룹이 앞의 값을 지우지 않습니다.
+
+`/a%20b` 같은 리터럴은 인코딩된 raw 경로와 비교합니다. `/caf%C3%A9`와 `/café`는 같은 리터럴이 아닙니다. `/literal/%ZZ`는 리터럴로 매칭할 수 있지만 `/:value`가 `%ZZ`를 캡처하면 디코딩 오류 400입니다. 와일드카드는 **리터럴 `/`로 먼저 나눈 뒤** 각 조각을 디코딩하므로 `/files/a%2Fb/c`의 값은 `["a/b", "c"]`입니다. 경로 캡처의 `+`는 그대로 `+`입니다. 정적 파일의 경로 이탈·심볼릭 링크 검사와 WS 경로 거부는 이 HTTP 캡처 규칙으로 완화되지 않습니다.
 
 ### 매칭 규칙
 
-- **대소문자를 구분합니다.** `/Users`는 `/users`에 맞지 않습니다.
-- **끝 슬래시를 구분합니다.** `/users/`는 `/users`에 맞지 않습니다.
-- `//` 처리, 끝 슬래시, 대소문자 정책은 [`app.routerPolicy(RouterPolicy)`](#라우터-정책)로 바꿉니다.
-- URL은 **정확히 한 번** 디코딩합니다. 잘못된 퍼센트 인코딩, `NUL`, 경로 이탈(`..`)이 있는 요청은 거부합니다. 기본 TinyHttpd 어댑터에서는 이 `400`이 엔진의 짧은 평문 응답이라 `onError`와 표준 오류 JSON을 거치지 않습니다([기본값](defaults.md)).
+일반 HTTP 기본은 **대소문자 무시, 끝 슬래시 하나 허용**이며 반복 슬래시는 의미가 있습니다. `use(path, ...)`는 접두사를 매칭하되 문자열 경로의 세그먼트 경계를 지켜 `/api`가 `/apix`를 잡지 않습니다. 자식 `Router.create(mergeParams, caseSensitive, strict)`는 자기 옵션을 가집니다.
 
 ### 우선순위
 
-고정 세그먼트가 변수보다 먼저 맞습니다. 등록 순서와 상관없습니다.
+**등록 순서**로 처리합니다. 더 구체적인 고정 경로를 앞세우지 않습니다. 앞 콜백이 응답하고 계속하지 않으면 뒤 라우트는 실행되지 않습니다. 중복·겹치는 일반 HTTP 라우트는 합법이며 `next.run()`/`next.route()`로 다음 후보를 선택합니다.
 
 ```java
 app.get("/users/:id", getUser);
-app.get("/users/me", getMe);     // /users/me 요청은 항상 여기로
+app.get("/users/me", getMe);     // reached only if the earlier route continues
 ```
 
-다음과 같은 등록은 `listen()`할 때 **설정 오류**입니다.
+위 코드는 `getUser`를 먼저 시도합니다. `getUser`가 계속하지 않으면 `getMe`는 실행되지 않습니다.
 
-- 같은 메서드 + 같은 경로를 두 번 등록
-- 우선순위가 같아서 어느 쪽인지 정할 수 없는 패턴 (`/a/:x`와 `/a/:y`를 같은 메서드로)
+## Java Pattern과 경로 대안
+
+`Object path`에는 문자열, `java.util.regex.Pattern`, `RegexPathPattern`, 이 값들의 중첩 `Object[]`·`List<?>`를 넘길 수 있습니다. 대안은 왼쪽부터 첫 매칭을 선택합니다. 모든 대안과 콜백을 검증한 뒤 등록하므로 잘못된 중첩 원소나 null 때문에 일부만 등록되지 않습니다. 문자열에 `"/a|/b"`를 써서 대안을 표현하지 않습니다.
+
+정규식은 **Java Pattern**입니다. ECMAScript 정규식, 플래그, `lastIndex`를 에뮬레이션하지 않습니다. 원래 raw 경로에서 `Matcher.find()`로 검색하므로 전체 매칭이 필요하면 `^`·`$`를 명시하세요. 문자열의 case/strict 정책은 Pattern 플래그를 덮어쓰지 않습니다. use/마운트에서는 검색된 정규식도 위치0에서 시작해 세그먼트 경계에서 끝나는 실제 접두사여야 하며 그렇지 않으면 건너뜁니다. 이름 있는 그룹은 Java 이름을, 이름 없는 그룹은 이름 없는 그룹끼리의 0부터 시작하는 번호(`"0"`, `"1"`)를 키로 씁니다. 비참여 그룹은 생략하고 참여한 빈 그룹은 `""`로 남깁니다.
+
+`RegexPathPattern.compile(Pattern)`은 보통의 Pattern을 그대로 지원합니다. 일부 내장 플래그 조합은 `Pattern.flags()`가 최초 COMMENTS/UNIX_LINES 설정을 잃어 캡처 이름 메타데이터가 모호할 수 있습니다. 이때 등록을 명확한 오류로 거부하며 `com.snoworca.naruserve.routing.RegexPathPattern.compile(source, originalFlags)`로 최초 소스와 플래그를 넘기세요. 리플렉션·JNI나 JavaScript 엔진은 필요 없습니다.
+
+## 독립 Router, 마운트와 param 훅
+
+`com.snoworca.naruserve.Router.create()`는 독립된 HTTP 스택입니다. 기존 `com.snoworca.naruserve.routing.Router`와 패키지가 다르므로 import를 명시하세요. `create()`는 `mergeParams=false`, `caseSensitive=false`, `strict=false`이고 `create(true)`는 부모 캡처를 자식에 합칩니다. 충돌한 이름은 자식 값이 이기며 연속된 이름 없는 숫자 키 묶음은 병합 시 이동합니다. 부모0/1·자식0/1이면 자식 값은2/3이 됩니다. 이동량은0부터 이어진 숫자 키를 세며01 같은 비정규 키는 보통 이름입니다. 같은 Router를 여러 위치에 마운트해도 요청의 마운트 문맥은 분리됩니다. 라이브러리가 만든 Router를 쓰세요. 임의의 사용자 구현을 내부 Router로 간주하지 않습니다.
+
+`app.use(prefix, router)` 안에서는 `path()`·`url()`에서 실제 매칭 접두사가 빠지고 `baseUrl()`에 누적됩니다. `originalUrl()`·`rawPath()`는 원래 값입니다. 자식이 나가면 부모 뷰를 복원합니다. `use(prefix, middleware)`도 현재 콜백 안에서 접두사를 제거하며, 같은 Request·본문 캐시·속성·서비스를 공유합니다. 자세한 값은 [Request](request.md#마운트와-경로-뷰)를 보세요.
+
+`app.param(name, ParamHandler)`와 `router.param`은 현재 라우터의 존재하는 캡처만 전처리합니다. 콜백은 `(req, res, next, List<String> originalValue, String name)`입니다. `req.param(name, value)` 또는 `req.paramValues(name, values)`로 후속 조회를 바꿀 수 있습니다. 실제 캡처 키 순서로 훅을 실행하며, 정수 인덱스 키 `0`부터 `4294967294`는 숫자 순, 나머지는 캡처 열거 순입니다. `01`·`4294967295`는 정수 인덱스가 아닙니다.
+
+캐시는 요청·라우터 문맥별입니다. 같은 디코딩 scalar는 훅 결과를 재사용하고 list/wildcard는 참조 식별자를 비교하므로 새 캡처 리스트는 훅을 다시 실행할 수 있습니다. 생략된 선택 캡처와 부모에서 합친 값만으로 자식 훅을 실행하지 않습니다. 라우트 건너뛰기·오류·라우터 이탈 결과도 전파합니다. 훅이 저장한 `next`는 나중에 재개할 수 있습니다.
 
 ## 자동 응답
 
-| 상황 | 응답 |
+| 일반 HTTP 상황 | 결과 |
 |---|---|
-| 맞는 경로가 없음 | `404` |
-| 경로는 있지만 메서드가 없음 | `405` + `Allow` 헤더 |
-| `GET` 라우트에 `HEAD` 요청 | GET 핸들러를 실행하고 본문은 보내지 않음 |
-| `OPTIONS` 요청 (핸들러 없음) | `204` + `Allow` 헤더 |
-| 서버가 모르는 메서드 | `501` |
-| 앱이 종료 중(`STOPPING`) | `503` + `Connection: close`, 본문은 [표준 오류 형식](middleware.md#표준-오류-형식)(`SERVICE_UNAVAILABLE`) |
-| 대기 큐가 가득 참(과부하) | `503`. TinyHttpd가 전송 계층에서 바로 보내는 평문 본문이며 라우팅·미들웨어를 거치지 않습니다 |
+| 경로·메서드에 처리할 콜백이 없고 끝까지 진행 | 404 HTML, `Cannot METHOD /raw/path` |
+| HEAD | 먼저 만난 Route 안에 HEAD가 없고 GET이 있으면 GET 사용; 전송 본문은 비움 |
+| 자동 OPTIONS | 실제 순회한 현재 라우터의 메서드를 모아 200, `Allow`와 같은 평문 본문 |
+| 유효한 확장 메서드 | 등록된 토큰으로 처리, 처리되지 않으면 404 |
+| 응답·next 없이 콜백 반환 | 미완료 상태로 대기 |
 
-명시한 `head(...)`, `options(...)` 핸들러가 있으면 자동 응답보다 우선합니다.
-자동 HEAD 처리 때 `req.method()`는 `HEAD`를 돌려줍니다. GET 핸들러가 실행되더라도 `GET`이 아닙니다. 메서드로 분기하는 핸들러는 위 예제처럼 `HEAD`를 `GET`과 함께 처리하세요.
-`404`/`405` 응답 본문은 [표준 오류 형식](middleware.md#표준-오류-형식)입니다.
+HEAD는 뒤에 등록한 별도 HEAD 라우트가 앞의 GET Route를 뛰어넘지 않습니다. GET을 실행해도 `methodToken()`/`method()`는 HEAD입니다. GET과 같은 Content-Length를 유지하되 본문 바이트는 보내지 않습니다. 자동 OPTIONS는 router-local이며 자식에서 응답하면 부모 메서드를 더하지 않습니다. `Content-Type: text/plain`(charset 없음), `X-Content-Type-Options: nosniff`이고 OPTIONS를 무조건 Allow에 더하지 않습니다. CORS preflight의 204와는 다릅니다.
 
 ## 정적 파일·WebSocket과의 관계
 
-- 요청은 **명시 라우트 → 정적 파일 마운트 → 404** 순서로 찾습니다. [정적 파일](static.md)
-- WebSocket은 `GET` + `Upgrade: websocket` 요청으로 구분합니다. 같은 경로에 일반 `GET` 라우트와 `app.ws`를 함께 둘 수 있습니다.
-- `app.ws`만 있는 경로에 `Upgrade` 없이 오면 `426 Upgrade Required`입니다(`OPTIONS`는 자동 OPTIONS 응답). 자세한 순서는 [찾기 결과와 순서](#찾기-결과와-순서)를 보세요.
-- 전역 미들웨어는 이 모두보다 먼저 실행됩니다. [미들웨어](middleware.md)
+일반 HTTP는 `use`, 라우트, 정적 마운트, 오류 레이어를 **같은 등록 순서**로 순회합니다. 정적 파일 미스는 뒤로 계속합니다. 인증보다 앞에 등록한 정적 마운트는 먼저 응답할 수 있으므로 순서를 점검하세요. [미들웨어](middleware.md), [정적 파일](static.md)
 
 ## 라우터 정책
 
-`app.routerPolicy(RouterPolicy)`로 경로 형태 정책과 `TRACE`/`CONNECT`를 켭니다. 정책은 `RouterPolicy.builder()`로 만듭니다. Express의 `app.set('strict routing', ...)`, `app.set('case sensitive routing', ...)`에 해당하지만 기본값이 다릅니다(NaruServe는 끝 슬래시와 대소문자를 모두 구분하는 엄격 기본값).
+기존 `app.routerPolicy(RouterPolicy)`를 명시하면 일반 HTTP에도 case·끝 슬래시·반복 슬래시 설정을 적용합니다. 라우트 등록 뒤라도 `listen` 전이면 적용됩니다. 이 호출을 생략한 일반 HTTP 기본과 `RouterPolicy.strict()`는 다릅니다.
 
-| builder 메서드 | 켜면 | Express |
-|---|---|---|
-| `mergeSlashes(boolean)` | `/a//b`를 `/a/b`로 봅니다 | (없음) |
-| `ignoreTrailingSlash(boolean)` | 끝 슬래시 하나를 무시합니다. `/`는 그대로 | `strict routing` 꺼짐(Express 기본) |
-| `caseInsensitive(boolean)` | 고정 세그먼트를 대소문자 없이 비교합니다 | `case sensitive routing` 꺼짐(Express 기본) |
-| `enableTrace(boolean)` | `TRACE` 라우트를 등록하고 라우팅합니다 | (없음) |
-| `enableConnect(boolean)` | `CONNECT` 라우트를 등록하고 라우팅합니다 | (없음) |
-
-- 모든 스위치의 기본은 꺼짐입니다. `RouterPolicy.strict()`는 모두 꺼진 정책이고, `routerPolicy`를 부르지 않은 앱의 정책입니다.
-- 다른 설정처럼 앱 상태가 `NEW`일 때(`listen()` 전)만 부를 수 있습니다. 라우트 테이블을 고정한 뒤(`listen()` 뒤)에 부르면 `IllegalStateException`입니다. `null`을 넘기면 `NullPointerException`입니다.
-- 다시 부르면 앞의 정책을 바꿉니다. 정책은 라우트 테이블을 고정할 때 모든 라우트에 적용되므로 라우트 등록 전후 어디서 불러도 같습니다.
-- `RouterPolicy`는 불변입니다. `build()`는 그때까지 정한 값을 복사합니다.
+| 옵션 | 명시 정책의 의미 |
+|---|---|
+| `mergeSlashes(true)` | 매칭에서 반복 슬래시 합침; raw 경로·실제 마운트 접두사 뷰는 보존 |
+| `ignoreTrailingSlash(true)` | 문자열 끝 슬래시 허용 |
+| `caseInsensitive(true)` | 문자열 대소문자 무시 |
+| `enableTrace` / `enableConnect` | 기존 엄격 라우터·WS 프로필의 메서드 게이트 |
 
 ```java
 app.routerPolicy(RouterPolicy.builder()
@@ -194,8 +179,6 @@ app.routerPolicy(RouterPolicy.builder()
     .build());
 ```
 
-Kotlin:
-
 ```kotlin
 app.routerPolicy(
     RouterPolicy.builder()
@@ -205,78 +188,41 @@ app.routerPolicy(
 )
 ```
 
-## 라우팅 규칙 (wave 2 결정)
+`RouterPolicy`는 불변입니다. builder 스위치는 모두 false이며 `strict()`도 같은 엄격 값입니다. `routerPolicy(null)`은 null 오류이고 설정은 NEW에서만 바꿉니다. Pattern의 자체 플래그는 바꾸지 않습니다.
 
-라우터가 지키는 규칙을 모았습니다. 정책은 `app.routerPolicy(RouterPolicy)`로 켜고 끕니다([라우터 정책](#라우터-정책)).
+## 기존 라우터와 WebSocket
 
-### 경로 형태 정책
+직접 사용하는 `routing.Router`/`RoutePattern`은 기존 세그먼트 문법·고정 경로 우선·충돌 검사·엄격 정책을 유지합니다. `app.ws`의 경로·Origin·업그레이드 검증도 일반 HTTP 문자열 문법으로 교체하지 않습니다. 유효한 기존 전역·접두사 인증 미들웨어는 WS 업그레이드 전에 계속 실행됩니다. 고급 HTTP Pattern·대안·독립 Router·listen 이후의 HTTP 추가가 WS에 같은 동작을 제공한다는 뜻은 아닙니다.
 
-세 가지 정책 스위치가 있고, 모두 기본으로 꺼져 있습니다(**엄격 기본값**). 각각 따로 켤 수 있고 라우터를 만들 때 고정됩니다.
+WS 전용 경로의 보통 GET/HEAD는 426, 자동 OPTIONS는 204이며 기존 비활성/알 수 없는 메서드 게이트는 501입니다. 잘못된 인코딩·인코딩된 슬래시/NUL·경로 이탈을 가진 업그레이드는 엄격하게 거부합니다. 일반 HTTP 캡처 규칙이나 정적 파일이 이 경계를 우회하지 않습니다. [WebSocket](websocket.md)
 
-| 스위치 | 켜면 | 기본(꺼짐) |
-|---|---|---|
-| 반복 슬래시 합치기 | `/a//b`가 `/a/b`에 맞음 | `/a//b`는 `/a/:x/b`에도 `/a/b`에도 맞지 않음 |
-| 끝 슬래시 무시 | `/users/`가 `/users`에, `/users`가 `/users/` 패턴에 맞음. 루트 `/`는 빈 경로로 줄이지 않음. `/users//`는 반복 슬래시 합치기도 켜야 `/users`에 맞음 | `/users/`는 `/users/` 패턴에만 맞음 |
-| 대소문자 무시 | 고정 세그먼트를 로캘과 무관하게 비교(`/USERS/Bob`이 `/users/:name`에 맞고 `name` = `Bob`) | `/Users`는 `/users`에 맞지 않음 |
+## 독립 Router와 대안 예제
 
-경로 변수 값은 어느 스위치에서도 받은 그대로(한 번 디코딩한 값) 돌려줍니다.
+이 예제는 세 경로 대안에서 지역 id 훅을 실행하고 마운트한 실제 baseUrl을 사용합니다. X-Mode: skip은 그 Route를 건너뜁니다. Pattern에는 전체 매칭 anchor를 명시합니다.
 
-### TRACE와 CONNECT
+```java
+com.snoworca.naruserve.Router api = com.snoworca.naruserve.Router.create(true);
+api.param("id", (request, response, next, values, name) -> {
+    request.param(name, values.get(0).toUpperCase(java.util.Locale.ROOT));
+    next.run();
+});
+Object paths = new Object[] {
+    "/users/:id{/:tab}",
+    java.util.regex.Pattern.compile("^/legacy/(?<id>[0-9]+)$"),
+    com.snoworca.naruserve.routing.RegexPathPattern.compile("^/item/(?<id>[0-9]+)$", 0)
+};
+api.get(paths, (request, response, next) -> {
+    if ("skip".equals(request.header("X-Mode"))) {
+        next.route();
+        return;
+    }
+    response.send(request.baseUrl() + ":" + request.param("id"));
+});
+app.use("/api", api);
+```
 
-- 기본으로 `TRACE`, `CONNECT`는 경로와 상관없이 **지원하지 않는 메서드** 결과입니다.
-- 정책으로 각각 따로 켭니다. 켠 메서드는 다른 메서드처럼 라우팅되지만 이름으로 등록해야만 들어갑니다(`Method.of(Method.TRACE)`). `Method.any()`로 등록한 라우트는 켠 `TRACE`/`CONNECT`를 처리하지 않습니다.
-- 꺼진 상태에서 `TRACE`/`CONNECT` 라우트를 등록하면 라우트 테이블을 고정할 때 설정 오류입니다.
+## 저수준 매처 조회
 
-### 찾기 결과와 순서
+`com.snoworca.naruserve.routing.HttpPathPattern.compile(String path, boolean end, boolean caseSensitive, boolean trailing)`는 전체/세그먼트 경계 접두사·대소문자·선택 끝 슬래시를 명시합니다. 문법/선택 그룹 확장 오류는 `RoutingConfigException`이고 선택 대안 256개를 넘으면 거부합니다. `match(rawPath)`는 null 또는 불변 Match를 반환하며 `matchedPath()`, raw `captures(): Map<String,List<String>>`, `wildcards(): Set<String>`를 제공합니다. 여기의 scalar는 singleton 목록이고 wildcard는 디코딩 전에 나눕니다. wildcard 집합은 선언된 키만이 아니라 마지막 참여 바인딩을 반영합니다. `keys()`는 선택/반복 선언도 포함한 문법 순서 Key 메타데이터(`name()`, `wildcard()`)입니다. 이 재사용 가능한 엔진 독립 매처는 퍼센트 디코딩이나 기존 라우터 변경을 하지 않습니다. 조회/컴파일 API이며 등록 `Object path`가 받는 추가 타입은 아닙니다.
 
-찾기는 메서드 토큰, 원래(디코딩 전) 경로, 업그레이드 표시를 받아 다음 중 **하나**를 돌려줍니다. 위에서부터 먼저 해당하는 것이 이깁니다.
-
-| 순서 | 결과 | 언제 |
-|---|---|---|
-| 1 | 지원하지 않는 메서드 | 토큰이 `Method` 상수 이름과 정확히 같지 않음, 또는 꺼진 `TRACE`/`CONNECT` |
-| 2 | 맞는 경로 없음 | 어떤 종류의 패턴도 경로에 맞지 않음(`OPTIONS`도 이 결과) |
-| 3 | 매칭 | 요청 메서드의 라우트가 맞음 |
-| 4 | 자동 OPTIONS | `OPTIONS` 요청인데 `OPTIONS` 라우트가 없음 |
-| 5 | 자동 HEAD | `HEAD` 요청인데 `HEAD` 라우트가 없고 HTTP `GET` 라우트가 맞음(WebSocket 라우트는 쓰지 않음) |
-| 6 | WebSocket 전용 | 업그레이드 표시 없는 `GET`/`HEAD`인데 맞는 라우트에 WebSocket은 있고 HTTP `GET`은 없음, 또는 맞는 라우트가 WebSocket뿐 |
-| 7 | 메서드 불일치 | 경로는 맞지만 요청 메서드의 라우트가 없음 |
-
-- WebSocket 전용 결과는 wave 3 디스패처가 `426 Upgrade Required`(`Upgrade: websocket`, `Connection: Upgrade`)로 응답합니다.
-- 업그레이드 표시가 있는 `GET`은 WebSocket 라우트를 먼저 찾습니다. 맞는 WebSocket 패턴이 없으면 업그레이드 없이 보통 `GET`으로 찾습니다(`GET` 라우트, 아니면 메서드 불일치나 맞는 경로 없음). 업그레이드 표시가 없으면 WebSocket 패턴은 매칭되지 않습니다.
-
-### Allow 집합
-
-메서드 불일치와 자동 OPTIONS 결과는 같은 `Allow` 집합을 가집니다.
-
-- 경로에 맞는 모든 라우트의 메서드 합집합입니다. WebSocket 라우트는 `GET`으로 셉니다.
-- `GET`이 있으면 `HEAD`를 더하고, `OPTIONS`는 항상 더합니다.
-- 예: `Method.any().except(Method.DELETE)`를 `/r`에 등록하면 `DELETE /r`의 `Allow`는 `GET, HEAD, POST, PUT, PATCH, OPTIONS`입니다. `POST /p`만 있으면 `GET /p`의 `Allow`는 `POST, OPTIONS`입니다(`HEAD` 없음).
-
-### 메서드별 우선순위
-
-- 우선순위는 **요청 메서드의 라우트끼리만** 비교합니다. 왼쪽부터 세그먼트를 비교해 처음 다른 세그먼트에서 고정 세그먼트가 변수를 이깁니다. 등록 순서와 상관없습니다.
-- `GET /a/:x/c`와 `GET /a/b/:y`가 있으면 `GET /a/b/c`는 `/a/b/:y`로 갑니다.
-- `GET /users/me`와 `DELETE /users/:id`가 있으면 `DELETE /users/me`는 `DELETE /users/:id`로 갑니다. 다른 메서드의 더 구체적인 패턴은 고려하지 않습니다.
-
-### 패턴 검사와 충돌
-
-- 등록할 때 패턴을 검사합니다. Express 문법(`?`, `*`, `+`, `(`, `)`), 빈 변수 이름(`/a/:`), 한 패턴 안에서 반복한 변수 이름(`/a/:id/:id`), 빈 세그먼트(`/a//b`), 규칙에 맞지 않는 변수 이름(`/:id.json`), 맞을 수 없는 고정 세그먼트(`/a%20b`, `/a b`, `/a#b`, `/a/..`)는 그 자리에서 설정 오류입니다. `/`와 끝 슬래시 하나(`/users/`)는 허용합니다.
-- 충돌은 라우트 테이블을 고정할 때(`listen()` 안, 소켓을 열기 전) 한꺼번에 검사합니다. 같은 라우트 종류, 같은 메서드에서 패턴이 같거나 변수 이름만 다르면 충돌이고, 오류 메시지는 충돌한 두 등록의 메서드와 패턴을 모두 적습니다.
-- 충돌은 켜진 정책으로 정규화한 패턴으로 비교합니다. 대소문자 무시가 켜지면 `GET /Users`와 `GET /users`가, 끝 슬래시 무시가 켜지면 `GET /a`와 `GET /a/`가 충돌합니다. 엄격 기본값에서는 둘 다 충돌이 아닙니다.
-- 같은 경로의 WebSocket 라우트와 `GET` 라우트는 충돌이 아닙니다.
-
-### 메서드 토큰과 업그레이드 표시
-
-- 메서드 토큰은 `Method` 상수 이름과 대소문자까지 정확히 비교합니다. `get`, `Get`, `FOO`, `PROPFIND`는 경로와 상관없이 지원하지 않는 메서드입니다.
-- 업그레이드 표시는 `GET` 요청이고, `Connection` 헤더에 `upgrade` 토큰이, `Upgrade` 헤더에 `websocket` 토큰이 있을 때만 켜집니다. 두 헤더 모두 쉼표로 나눈 목록 안에서 대소문자 없이 비교합니다(`Connection: keep-alive, Upgrade`와 `Upgrade: WebSocket`은 켜짐, `Upgrade: h2c`나 `POST`는 꺼짐).
-
-### 경로 거부와 디코딩
-
-찾기 전에 원래 경로를 검사하고, 아래에 해당하면 요청을 거부합니다. 쿼리 문자열(첫 `?`부터)은 검사와 매칭에 쓰지 않습니다.
-
-- 잘못된 퍼센트 인코딩(`/a%2`, `/a%zz`), UTF-8이 아닌 인코딩 바이트(`/a%C3`, `/a%FF`)
-- 인코딩된 `/`(`%2F`, `%2f`), 인코딩되거나 그대로인 `NUL`(`%00`)
-- 그대로 또는 인코딩된 `.`, `..` 세그먼트(`/./a`, `/a/..`, `/a/%2e`, `/a/.%2e/b`). `/a/.hidden`은 허용합니다.
-- 그대로인 공백, 제어 문자(U+0001..U+001F, U+007F), `#`, U+007F보다 큰 문자
-
-통과한 경로는 세그먼트마다 UTF-8로 **정확히 한 번** 퍼센트 디코딩합니다. `+`는 `+` 그대로입니다. `/files/%252e`를 `/files/:name`에 맞추면 `name`은 `%2e`이고, `/caf%C3%A9`는 고정 패턴 `/café`에 맞습니다.
+`RegexPathPattern.keys()`는 선언된 캡처 키 문자열을 반환합니다. 불변 Match는 `matchedPath()`, `start()`, `end()`와 raw singleton 캡처 목록을 제공하고 비참여 그룹은 없습니다. 매칭마다 새 Matcher를 만듭니다. 통합 경로가 그 뒤 Request 뷰로 엄격 디코딩하며 helper를 직접 부르는 것만으로 디코딩하지 않습니다. 두 매처 모두 불변이며 요청 간 공유할 수 있습니다.

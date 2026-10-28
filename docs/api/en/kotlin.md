@@ -4,6 +4,8 @@
 
 NaruServe is written in Java. Use it from Kotlin without a separate DSL: all callbacks are Java functional interfaces (`@FunctionalInterface`), so Kotlin lambdas work directly.
 
+This guide describes the 0.10.0 checkout. The 0.9.0 dependency example below identifies the previous release; it does not provide the new 0.10.0 APIs. Use the [current installation procedure](README.md). Core remains Java 8/API 21-compatible; Kotlin libraries belong to the optional Kotlin module.
+
 ```kotlin
 val app = RestApp.create()
 
@@ -68,7 +70,9 @@ The public API is `@NullMarked` (non-null by default); values that can be absent
 
 | Java | Kotlin type | When absent |
 |---|---|---|
-| `req.param("id")` | `String` | Exception for a name missing from the route pattern |
+| `req.param("id")` | `String` | Exception when absent from the actual match, including an omitted optional |
+| `req.paramOrNull("id")` | `String?` | null |
+| `req.paramValues("parts")` | `List<String>` | Empty list |
 | `req.query("page")` | `String?` | `null` |
 | `req.form(name)` | `String?` | `null` |
 | `req.header(name)` | `String?` | `null` |
@@ -173,8 +177,45 @@ app.post("/users") { req, res ->
 
 ## Coroutines
 
-v1 does not support `suspend` handlers. Handlers are synchronous; calling a suspend function requires a bridge such as `runBlocking`, which occupies the request thread. Avoid long work there. NaruServe does not use `runBlocking` as its default asynchronous adapter. Coroutine support is a post-v1 item because a nonblocking coroutine adapter needs a separate design.
+There is no native `suspend` handler or required coroutine dependency. The 0.10.0 common HTTP profile supports later Next callbacks and three-argument AsyncRouteHandler returning Deferred. You may bridge an application-owned coroutine/executor explicitly; completion, cancellation and the returned Deferred lease must follow the request lifetime. `runBlocking` occupies its calling thread and is not the framework's asynchronous adapter.
 
 ## Start with one call
 
 `RestApp.start(3000) { app -> ... }` is a Java static method. Its configuration callback is the last parameter, so Kotlin trailing-lambda syntax works. The callback is a `void` SAM; a final expression such as `app.get(...)` has its value discarded, so you do not need an explicit `Unit`. See [RestApp start](app.md#start) for examples and the differences from `listen`.
+
+## Deferred work and request retention
+
+The new Java functional interfaces also support Kotlin SAM conversion: `AsyncRouteHandler(req, res, next) -> Deferred`, `ErrorMiddleware(error, req, res, next)`, `ParamHandler(req, res, next, values, name)` and `Deferred.FailureHandler(error)`. Three-argument HTTP route callbacks have fixed-arity overloads for trailing lambdas; existing two-argument callbacks and explicit callback arrays remain available. Qualify/import the public Router to avoid the retained `routing.Router` name.
+
+The following configuration mounts a router with optional `:tab`, then demonstrates an early 202 before the **first JSON body read**. POST `/work` with JSON `"hello"` is read as a typed String while its returned pending result owns the request. Resolution occurs after the last request access; it does not send another response or call next. The Thread is a small demonstration; production scheduling should use an application-managed bounded executor and an explicit cancellation policy.
+
+```kotlin
+val api = com.snoworca.naruserve.Router.create(true)
+api.param("id") { req, res, next, values, name ->
+    req.attribute("seenId", values[0])
+    next.run()
+}
+api.get("/users/:id{/:tab}") { req, res ->
+    res.send(req.baseUrl() + ":" + req.param("id"))
+}
+app.use("/api", api)
+
+app.methodAsync("POST", "/work") { req, res, next ->
+    val work = Deferred.pending()
+    res.status(202).send("accepted")
+    Thread({
+        try {
+            val value = req.body(String::class.java)
+            req.attribute("processed", value)
+            work.resolve()
+        } catch (error: Throwable) {
+            work.reject(error)
+        }
+    }, "retained-work-example").start()
+    work
+}
+```
+
+`Router.create(true)` merges parent captures; local captures drive param hooks. Inside `/api`, path/url are trimmed and baseUrl contains `/api`; originalUrl/rawPath remain original. `next.route()` skips the current Route and `next.router()` exits the nearest router. Four-argument error middleware occupies its registration position; `next.run()` there clears the error, whereas `next.error(error)` propagates/replaces it.
+
+A pending returned Deferred lease keeps request body/uploads/context until last use or terminal cancellation. A custom adapter must implement physical retainRequest semantics; its default no-op is only compatibility. Nothing promises prefetch of a body before the producer reads it. `resolve`/`reject` settle once; subscribe through `onRejected`/`onSettled`, outside internal locks. Merely starting a thread or storing Request does not create a lease. See [middleware](middleware.md#deferred-and-late-work), [request views](request.md#mounts-and-path-views) and [lifecycle](lifecycle.md).

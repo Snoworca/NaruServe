@@ -1,130 +1,70 @@
-# Express에서 오신 분께
+# Express에서 옮기기
 
-[한국어](express-migration.md) | [English](en/express-migration.md)
+[English](en/express-migration.md) | [문서 목록](README.md)
 
-Express 코드의 구조(라우트·미들웨어·req/res)는 대부분 그대로 옮겨지지만, 아래 "꼭 알아야 할 차이"는 반드시 확인하세요. 이 문서는 대응표와 꼭 알아야 할 차이를 정리합니다.
+**0.10.0 체크아웃의 일반 HTTP 라우팅 프로필**은 Express5의 흔한 문자열 경로·등록 순서·Router·param·next·오류 흐름을 Java API로 제공합니다. Express 전체, Node 런타임, 모든 미들웨어, JavaScript 정규식 호환을 주장하지 않습니다. NaruServe의 타입 지정 본문·text/plain 문자열 응답·기존 WS/SSE/파일·보안 확장은 유지합니다. 현재 아티팩트 사용법은 [설치 안내](README.md)를 보세요.
 
-## 대응표
+## API 대응
 
-### 앱
+### 앱과 라우팅
 
-| Express | NaruServe (Java) | 비고 |
+| Express | NaruServe | 경계 |
 |---|---|---|
-| `const app = express()` | `RestApp app = RestApp.create();` | |
-| `app.listen(3000, () => ...)` | `ServerHandle h = app.listen(3000);` 또는 한 문장으로 `RestApp.start(3000, app -> ...)` | 바인딩이 끝난 뒤 반환합니다. 콜백 없이 다음 줄이 "시작됨"입니다. 실패하면 예외를 던집니다. `start`는 설정 람다 안에서 라우트를 등록하고 시작 로그와 JVM 종료 훅까지 붙이며, 기본 바인딩은 `listen`처럼 `127.0.0.1`입니다. [start](app.md#start) |
-| `server.close()` | `app.shutdown(10, TimeUnit.SECONDS);` | 진행 중인 요청을 기다린 뒤 종료합니다. |
-| `app.locals.x = v` | `ctx.attribute("x", v)` (`onStart` 안에서) | [수명주기](lifecycle.md) |
-| `app.set('trust proxy', ...)` | `app.trustProxy(true)` | 기본은 프록시 헤더를 믿지 않습니다. 켜면 `X-Forwarded-For`·`X-Forwarded-Proto`를 `req.remoteAddress()`·`req.isSecure()`에 씁니다. [서버 설정](app.md#서버-설정) |
-| `app.listen(3000, '0.0.0.0')` | `app.server(o -> o.bindAddress("0.0.0.0"))` 뒤 `app.listen(3000)` | 기본 바인딩은 `127.0.0.1`입니다. [4. 기본 바인딩은 localhost입니다](#4-기본-바인딩은-localhost입니다) |
+| `express()` | `RestApp.create()` | 기본 TinyHttpd 3.1.1 RAW + Gson 2.14.0 + 콘솔 로거 |
+| `app.listen(port, callback)` | `app.listen(port)` / `RestApp.start(port, routes)` | 바인딩 완료 후 반환, 실패는 예외. 기본 127.0.0.1 |
+| `server.close()` | `app.shutdown(timeout, unit)` | 활성 작업·리소스 정리와 deadline |
+| `app.get/post/...` | 같은 이름의 두 인자 handler 또는 세 인자 Middleware 콜백 | 가변 콜백·Kotlin 고정 인자 오버로드 |
+| `app.route(path)` | `app.route(path)` | 호출 시점에 하나의 Route 식별자·위치 생성 |
+| `express.Router(options)` | `com.snoworca.naruserve.Router.create(mergeParams, caseSensitive, strict)` | 기본 false,false,false |
+| `app.use('/api', router)` | `app.use("/api", router)` | 접두사 제거·baseUrl 누적·복원, 같은 Router 재마운트 |
+| `app.param(name, callback)` | `app.param(name, ParamHandler)` / `router.param` | 원래 디코딩 캡처를 List<String>으로 받음 |
+| `app.all`/확장 메서드 등록 | `app.method("COPY", path, callbacks...)` 등 토큰별 등록 | `Method.any()`는 기존7개 집합, 모든 메서드가 아님 |
+| 경로 배열 | 문자열·Pattern·RegexPathPattern의 중첩 Object[]/List | 원소 전체 검증 후 첫 매칭 선택 |
+| Express5 `/:id`, `/*parts`, `{/:id}` | 같은 문자열 형태 | raw 매칭 후 참여 캡처만 한 번 디코딩 |
+| JavaScript RegExp | Java Pattern / RegexPathPattern | 검색 매칭, Java 플래그. ECMAScript/lastIndex 에뮬레이션 없음 |
+| `app.use('/api', mw)` | `app.use("/api", mw)` | 콜백 안의 path/url은 제거된 뷰 |
+| `next()`, `next(err)` | `next.run()`, `next.error(err)` | Java에서는 null 오류 거부 |
+| `next('route')`, `next('router')` | `next.route()`, `next.router()` | Route 건너뛰기 / 가까운 Router 이탈 |
+| 오류 미들웨어 | 네 인자 ErrorMiddleware를 `use` | 등록 위치, next로 전파·교체·정상 재개 |
+| 기존 편의 오류 핸들러 | `onError(error, req, res)` | 세 인자, listen 전 구성 |
 
-### 라우팅
+### 요청과 응답
 
-| Express | NaruServe (Java) | 비고 |
+| Express | NaruServe | 차이 |
 |---|---|---|
-| `app.get('/u/:id', h)` | `app.get("/u/:id", h)` | `post`, `put`, `patch`, `delete`, `head`, `options`도 같습니다. |
-| `app.all('/x', h)` | `app.route(Method.any(), "/x", h)` | |
-| `app.route('/b').get(h1).post(h2)` | `app.route("/b").get(h1).post(h2)` | 같습니다. |
-| (없음) | `app.route(Method.get().post(), "/x", h)` | 여러 메서드를 한 핸들러로 받습니다. |
-| (없음) | `app.route(Method.any().except(Method.DELETE), "/x", h)` | 특정 메서드만 뺍니다. |
-| `app.get('/x', auth, h)` | `app.get("/x", auth, h)` | 라우트 미들웨어 하나. 여러 개(`auth, admin, h`)는 `app.route("/x").use(auth).use(admin).get(h)`로 붙입니다. Java 가변 인자는 맨 끝에만 올 수 있어 `RouteBuilder.use`로 정했습니다. |
-| `express.Router()` + `app.use('/api', router)` | `app.group("/api", api -> { ... })` | 경로 그룹으로 나눕니다. 독립 Express Router 객체와 동일한 API는 아닙니다. 그룹 `use`는 해당 그룹의 모든 라우트에 적용됩니다. |
-| `'/ab?cd'`, `'/a*'`, 정규식 경로 (Express 4) / `{/:opt}`, `/*splat` (Express 5) | 지원하지 않음 | `:name` 변수와 고정 세그먼트만 씁니다. |
+| `req.params.id` | `param`, `paramOrNull`, `paramValues`, `pathParams` | Map의 scalar는 String, wildcard는 불변 List |
+| `req.method` | `methodToken()` | 기존 enum `method()`는 확장 메서드에서 예외 |
+| `req.path`, `req.url`, `req.originalUrl`, `req.baseUrl` | `path()`, `url()`, `originalUrl()`, `baseUrl()` | raw 뷰. 원래 rawPath는 별도 유지 |
+| `req.query.page/tag` | `query`, `queries`, `queryInt`, `requireQuery` | 평평한 문자열/반복 값, 명시 입력 검증 |
+| `req.get` | `header`, `headers`, `requireHeader` | 대소문자 무시, 중복 보존 |
+| `req.body` | `body(User.class)` / `body(TypeRef)` | 타입 지정·on-demand 파싱. null 반환 가능 |
+| 폼·multer 파일 | `form`, `file`, `files`, `parts`, `requireFile` | multipart·임시 파일·크기 제한 내장 |
+| `req.cookies` | `cookie`, `getCookies` | Cookie 방어적 복사, signed cookie 없음 |
+| `req.user` / `res.locals` | `attribute`, `attributeAs`, `removeAttribute` | 요청 범위 |
+| `res.send('text')` | `res.send("text")` | **text/plain**, Express의 기본 HTML과 다름 |
+| `res.send('<p>hi</p>')` | `res.html("<p>hi</p>")` | HTML은 명시 |
+| 객체·리스트·숫자·boolean 전송 | `send(Object)` / `json(Object)` | null send는 빈 본문, json(null)은 JSON null |
+| `status`, `end`, `set`, `headersSent` | `status`, `end`, `header`, `isCommitted` | CR/LF·framing 안전성 유지 |
+| `sendStatus`, `redirect`, `type`, `location` | 같은 편의 메서드 | redirect 기본302, 원하는 status 명시 가능 |
+| `cookie`, `clearCookie` | 같은 이름 | 삭제 시 기존 Path/Domain 일치 필요 |
+| `sendFile`, `download`, stream pipe | `file`, `download`, `stream` | java.io.File/InputStream 소유·안전 규칙 |
 
-### 요청 `req`
+`Request`는 같은 타입의 성공한 본문 결과를 캐시합니다. 다른 타입·JSON/폼 혼용·실패 후 재시도는 `BodyAlreadyConsumedException`입니다. 기본 UTF-8 JSON 한도1 MiB, 깊이64와 엄격한 문법·trailing data 검사를 유지합니다. [Request](request.md), [JSON](json.md), [응답](response.md)
 
-| Express | NaruServe (Java) | 비고 |
-|---|---|---|
-| `req.params.id` | `req.param("id")` | |
-| `req.query.page` | `req.query("page")` | 없으면 `null` |
-| `req.query.tag` (배열) | `req.queries("tag")` | `List<String>`, 없으면 빈 리스트 |
-| `req.body` | `req.body(User.class)` | 타입을 지정합니다. |
-| `req.body` (배열) | `req.body(new TypeRef<List<User>>() {})` | 제네릭 타입 |
-| `req.body.name` (form) | `req.form("name")` | urlencoded와 multipart 텍스트 필드 |
-| `req.get('Authorization')` | `req.header("Authorization")` | 대소문자 무시 |
-| `req.cookies.session` | `req.cookie("session")` | `Cookie` 객체를 돌려줍니다. 값은 `.getValue()`. |
-| `req.file` (multer) | `req.file("avatar")` | `UploadFile` |
-| `req.files` (multer) | `req.files("attachments")` | `List<UploadFile>` |
-| `req.method` | `req.method()` | 문자열이 아니라 `Method` enum |
-| `req.path` (디코딩 전) | `req.rawPath()` | 디코딩 전 경로. 쿼리 문자열은 들어가지 않습니다. Express `req.path`와 같은 값입니다. |
-| (없음) | `req.path()` | NaruServe가 더하는 퍼센트 디코딩한 경로입니다. Express `req.path`는 디코딩하지 않습니다. |
-| `req.originalUrl` | 직접 대응 없음 | 경로는 `req.rawPath()`, 해석된 쿼리 값은 `req.query(...)`/`req.queries(...)`로 읽습니다. 이 값으로 원본 URL 문자열을 그대로 복원할 수는 없습니다. |
-| `req.ip` | `req.remoteAddress()` | |
-| `req.secure` | `req.isSecure()` | |
-| `req.user = u` / `res.locals.user = u` | `req.attribute("user", u)` | 요청 범위 저장소 |
-| `req.app.locals.x` | `req.application().attributeAs("x", String.class)` | |
+### 내장 확장과 보안
 
-### 응답 `res`
+- `express.json()`/`urlencoded()` 미들웨어 설치 대신 `body(...)`/`form(...)`이 필요할 때 읽습니다. `jsonLimit`, `formLimit`, `multipart`로 제한합니다. `express.raw()`/`text()`에 해당하는 별도 공개 raw/text 본문 파서는 없습니다. JSON 문자열은 `body(String.class)`로 읽을 수 있습니다.
+- `cors()` 대신 명시 `app.cors(...)`를 사용합니다. preflight204와 일반 OPTIONS200을 구분하고 WS Origin은 별도로 설정합니다. CORS 오류는 추적한 grant/Vary만 남기고 앱 헤더를 지우는 개인정보 보호 확장을 유지합니다.
+- `express.static`은 `staticFiles`입니다. 이제 일반 HTTP 등록 순서에 참여합니다. 정적 파일 canonical containment·symlink 거부·Range/조건부 응답은 유지합니다. cache(pattern, policy)는 먼저 맞는 정책을 씁니다.
+- multipart 기본 한도는 파일32 MiB·요청64 MiB·파트20개·메모리 임계64 KiB이며 무제한 설정을 추가하지 않습니다. `file.save(...)`로 보존하지 않은 임시 파일은 보유 중인 요청 작업이 끝난 뒤 정리합니다.
+- `accessLog`와 등록 서비스의 로깅·종료 소유권은 유지합니다. [로깅](logging.md), [수명주기](lifecycle.md)
+- WS의 `(req, ws)` 인자 순서는 express-ws의 `(ws, req)`와 다릅니다. onText/onBinary/onJson·close·Origin·큐/크기·Ping/idle 제한은 그대로입니다. WS 라우트에 일반 HTTP 고급 경로 문법을 적용하지 않습니다. SSE는 `res.sse()`와 `SseEvent`를 사용합니다.
 
-| Express | NaruServe (Java) | 비고 |
-|---|---|---|
-| `res.status(201).json(o)` | `res.status(201).json(o)` | 같습니다. |
-| `res.send('text')` | `res.send("text")` | **`text/plain`** 입니다. Express는 `text/html`. |
-| `res.send('<p>hi</p>')` | `res.html("<p>hi</p>")` | HTML은 명시적으로 보냅니다. |
-| `res.send({a: 1})` | `res.send(map)` | 객체·목록·숫자·불리언은 JSON, null은 빈 본문입니다. 명시적 JSON null은 `res.json(null)`. |
-| `res.send(buffer)` | `res.send(bytes)` | `byte[]` |
-| `res.sendStatus(204)` | `res.status(204).end()` | |
-| `res.end()` | `res.end()` | |
-| `res.set('X-A', 'b')` | `res.header("X-A", "b")` | |
-| `res.cookie('s', 'v', {httpOnly: true})` | `res.cookie("s", "v", o -> o.httpOnly(true))` | [Cookie](cookie.md) |
-| `res.clearCookie('s')` | `res.clearCookie("s")` | 설정 시 사용한 Path·Domain이 있다면 같은 옵션을 지정합니다. |
-| `res.sendFile(path)` | `res.file(file)` | `java.io.File`. Express처럼 `Content-Disposition`을 보내지 않습니다. 브라우저가 내용을 그대로 보여 주게 하려는 Express 동작을 그대로 따랐습니다. |
-| `res.download(path, name)` | `res.download(file, name)` | `Content-Disposition: attachment`. 넘긴 파일이 심볼릭 링크이거나 일반 파일이 아니면 `404`입니다. |
-| `stream.pipe(res)` | `res.stream(in, "video/mp4")` | |
-| `res.headersSent` | `res.isCommitted()` | |
-| `res.redirect(url)` | `res.redirect(url)` | 기본 302, `res.redirect(307, url)`로 상태 지정 |
-| `res.type('png')` | `res.type("png")` | 내장 MIME 표를 사용합니다. |
-| `res.render(view)` | v1에 없음 | HTML은 `res.html(...)`로 직접 보냅니다. 제외한 이유: 사양서에 템플릿 엔진이 없고 v1은 뷰 렌더링을 다루지 않습니다. |
+## 옮길 때 확인할 동작
 
-기존 `send(String)`·`send(byte[])` 오버로드는 `send(@Nullable Object)` 하나로 통합되었습니다. 일반 호출 코드는 그대로 다시 컴파일하면 됩니다. 직접 `Response`를 구현하는 클래스는 `send(Object)` 하나를 구현해야 하며, 이전 바이너리는 다시 빌드해야 합니다.
+### 1. 요청은 여러 스레드에서 실행됩니다
 
-### 미들웨어와 오류
-
-| Express | NaruServe (Java) | 비고 |
-|---|---|---|
-| `app.use((req, res, next) => { ...; next() })` | `app.use((req, res, next) -> { ...; next.run(); })` | |
-| `app.use('/api', mw)` | `app.use("/api", mw)` | Express는 마운트된 미들웨어 안에서 `req.path`에서 prefix를 뺍니다(`req.baseUrl`). NaruServe의 `req.path()`는 prefix를 빼지 않고 전체 경로(`/api/users`)를 돌려주므로 전체 경로로 비교하세요. 이렇게 정한 이유는 같은 요청에서 미들웨어와 핸들러가 늘 같은 경로를 보게 하려는 것입니다. |
-| `next(err)` | `next.error(err)` 또는 `throw` | |
-| `app.use((err, req, res, next) => ...)` | `app.onError((err, req, res) -> ...)` | 인자 3개(`next` 없음), 순서는 Express와 같음 |
-| 마지막 404 미들웨어 | 필요 없음 | 기본 404/405를 [표준 오류 형식](middleware.md#표준-오류-형식)으로 보냅니다. v1에서는 이 본문을 바꿀 수 없습니다. |
-| `express.json()`, `express.urlencoded()` | 필요 없음 | `req.body(...)`, `req.form(...)`이 읽습니다. `express.json({ limit })`의 한도는 `app.jsonLimit(bytes)`입니다. |
-| `express.urlencoded({ limit })` | `app.formLimit(bytes)` | 기본 1 MiB. 한 요청의 multipart 텍스트 필드 합계에도 같은 한도를 씁니다. 텍스트 필드는 메모리에 두므로 urlencoded 본문과 같은 한도로 묶었습니다. |
-| `express.raw()`, `express.text()` | 없음 | v1에는 원본·텍스트 본문을 읽는 API가 없습니다. 본문은 `req.body(...)`(JSON), `req.form(...)`, `req.file(...)`로 읽습니다. |
-| `cors()` | `app.cors(o -> o.allowedOrigins("https://app.example.com"))` | 인증 미들웨어보다 먼저 등록합니다. HTTP preflight를 처리하며 WebSocket Origin 설정과는 별개입니다. |
-| `cookie-parser` | 필요 없음 | 내장. v1은 서명 쿠키(`secret`)와 값 자동 인코딩을 제공하지 않습니다. 값은 그대로 쓰고 읽습니다. [Cookie](cookie.md#값-인코딩) |
-| `multer` | `app.multipart(config -> ...)` | 한도 설정만 합니다. 파일은 핸들러에서 `req.file(...)`로 꺼냅니다. 미들웨어 대신 앱 설정으로 둔 이유는 본문을 한 번만 파싱해 모든 라우트가 같은 한도를 쓰게 하려는 것입니다. |
-| `multer({ limits: { fileSize, files, parts } })` | `app.multipart(c -> c.maxFileSize(...).maxParts(...))` | `maxFileSize`, `maxRequestSize`, `maxParts`, `memoryThreshold`. 기본값(32 MiB, 64 MiB, 20, 64 KiB)은 저사양 기기를 기준으로 잡았고, 무제한 값은 받지 않습니다. 설정 실수로 저장 공간이 바닥나지 않게 하려는 것입니다. |
-| `multer({ dest })` | `c.tempDirectory(dir)` + `file.save(...)` | 기본 임시 폴더는 `java.io.tmpdir`(Android에서는 앱 캐시 폴더)입니다. 설정 없이도 쓸 수 있는 폴더라 기본값으로 골랐습니다. 임시 파일은 요청이 끝나면 지워집니다. |
-| `express.static('public')`, `serve-static` | `app.staticFiles("/", new File("public"))` | 명시 라우트 다음에 찾습니다. 슬래시 없는 폴더 요청은 Express처럼 `301`입니다. |
-| `serve-static`의 `setHeaders`로 `Cache-Control` 설정 | `options.cache(pattern, policy)` | 예: `options.cache("/assets/**", CachePolicy.publicFor(365, TimeUnit.DAYS).immutable())`. 패턴을 먼저 등록한 것이 이깁니다. 헤더 콜백 대신 패턴으로 둔 이유는 흔한 캐시 설정을 코드 없이 선언하게 하려는 것입니다. |
-| `morgan('combined')` | `app.accessLog(o -> o.enabled(true))` | |
-
-### WebSocket·SSE
-
-| Express | NaruServe (Java) | 비고 |
-|---|---|---|
-| `app.ws('/ws', (ws, req) => ...)` (express-ws) | `app.ws("/ws", (req, ws) -> ...)` | **인자 순서가 반대**입니다. |
-| `ws.on('message', m => ...)` | `ws.onText(m -> ...)` | 바이너리는 `onBinary`, JSON은 `onJson` |
-| `ws.send(text)` | `ws.sendText(text)` | |
-| `ws.on('close', ...)` | `ws.onClose((code, reason) -> ...)` | |
-| `ws.close(code, reason)` | `ws.close(code, reason)` | 인자 없는 `ws.close()`는 `close(1000, "")`와 같습니다. |
-| `ws.on('error', ...)` | `ws.onError(error -> ...)` | |
-| `new WebSocket.Server({ maxPayload })` 옵션 | `app.webSocket(o -> o.maxMessageSize(bytes))` | `Origin` 허용 목록, 송신 큐, Ping 주기, idle timeout도 여기서 정합니다. [WebSocket](websocket.md#설정) |
-| `res.writeHead(200, {'Content-Type': 'text/event-stream'})` + `res.write(...)` | `SseClient sse = res.sse(); sse.send("event", "data");` | |
-
-## 이전 NaruServe 코드에서 옮기기
-
-타입 지정 속성 조회는 `attribute(key, Type.class)`에서 `attributeAs(key, Type.class)`로 이름이 바뀌었습니다. 요청·앱·WebSocket 세 저장소에 동일하게 적용됩니다. 쓰기와 삭제는 `attribute(key, value)`와 `attribute(key, null)`이며, 명시적으로 `removeAttribute(key)`를 사용할 수도 있습니다. 직접 인터페이스를 구현한 클래스도 조회 메서드 이름을 변경하고 다시 컴파일하세요.
-
-JSON 본문은 같은 타입이면 성공한 결과를 재사용합니다. 미들웨어에서 검증하고 핸들러에서 조회할 때 다시 파싱하지 않습니다. 전역·prefix 미들웨어는 이제 두 종류를 합친 등록 순서대로 실행되므로, 기존 앱의 인증·CORS 등록 순서를 확인하세요.
-
-## 꼭 알아야 할 차이
-
-### 1. 핸들러는 여러 스레드에서 동시에 실행됩니다
-
-Node.js는 이벤트 루프 하나에서 콜백을 차례로 실행합니다. NaruServe는 요청을 **스레드 풀**에서 동시에 처리합니다.
-
-- 여러 요청이 공유하는 객체(서비스, 캐시, 카운터)는 스레드 안전해야 합니다. `ConcurrentHashMap`, `AtomicLong`, `synchronized` 등을 씁니다.
-- 핸들러 안에서 DB 조회 같은 **블로킹 호출을 해도 됩니다**. 콜백이나 `await`가 필요 없습니다. 다만 스레드 풀 크기는 정해져 있으므로 오래 걸리는 작업은 피합니다.
+Node의 단일 event loop와 달리 요청들이 병행합니다. 공유 서비스·카운터·캐시는 동기화가 필요합니다. 작업 스레드 수는 제한되어 있습니다.
 
 ```java
 // Express: let count = 0; 은 안전하지만 Java에서는 아닙니다.
@@ -132,76 +72,55 @@ AtomicLong count = new AtomicLong();
 app.get("/count", (req, res) -> res.json(count.incrementAndGet()));
 ```
 
-### 2. 응답은 핸들러가 반환하기 전에 끝냅니다
+### 2. 응답과 next를 나중에 호출할 수 있습니다
 
-Express에서는 콜백이나 Promise로 나중에 응답할 수 있습니다. NaruServe v1의 핸들러와 미들웨어는 **동기**입니다. 핸들러 안에서 응답을 끝내고 반환하세요.
-예외는 SSE(`res.sse()`), WebSocket, 파일 스트리밍처럼 반환 뒤에도 계속 보내는 응답뿐입니다.
+반환만 하면 자동으로 empty200을 보내지 않습니다. saved Next로 재개하거나 나중에 응답하세요. 세 인자 AsyncRouteHandler가 반환한 pending Deferred는 조기 응답 뒤에도 요청 작업 lease를 유지합니다. 성공 resolve는 next/end를 자동 호출하지 않고 rejection은 뒤 오류 레이어로 갑니다. 단순히 스레드를 만들거나 Request를 저장한 것은 lease가 아닙니다. 본문 선읽기를 보장하지 않습니다. [Deferred](middleware.md#deferred와-늦은-작업), [Kotlin 예제](kotlin.md#deferred-작업과-요청-보유)
 
-### 3. JSON 본문은 타입별로 성공한 결과를 재사용합니다
+### 3. JSON은 타입을 명시합니다
 
-아래 두 줄은 서로 다른 요청 본문 형태에 대한 대안입니다. 한 요청에서 연속으로 호출하지 마세요.
+다음은 서로 다른 본문 형태의 **대안**입니다. 한 요청에서 연속 호출하지 마세요.
 
 ```java
 User user = req.body(User.class);                         // 객체
 List<User> users = req.body(new TypeRef<List<User>>() {}); // 제네릭
 ```
 
-- `Content-Type`이 JSON일 때만 읽습니다. 다른 타입이면 `415`입니다.
-- 본문 스트림은 한 번 읽고, 성공한 JSON 결과는 같은 타입으로 다시 조회할 수 있습니다. 다른 타입 재조회나 JSON·폼 혼용은 `BodyAlreadyConsumedException`입니다.
-- 크기 한도가 기본으로 켜져 있습니다(JSON 1 MiB). Express `express.json()`의 기본은 100 KB입니다.
+Java의 body(Class/TypeRef)는 JSON null을 null로 돌려줍니다. 선택 Kotlin `body<T>()`는 non-null T를 요구하므로 JSON null이면400입니다. Gson은 Kotlin 기본 인자·null 제약을 이해하지 못하며 기본 codec은 Unsafe 할당을 끕니다. 필드가 nullable인 기본 생성자 DTO를 검증해서 사용하세요.
 
-### 4. 기본 바인딩은 localhost입니다
+### 4. 바인딩과 검증 기본값은 유지합니다
 
-Express의 `app.listen(3000)`은 모든 네트워크 인터페이스에서 받습니다. NaruServe의 `app.listen(3000)`은 **localhost에서만** 받습니다.
-같은 LAN의 다른 기기에서 접속하려면 `app.server(...)`에서 `bindAddress("0.0.0.0")`로 바인딩을 명시해야 합니다([서버 설정](app.md#서버-설정)). `RestApp.start(3000, ...)`도 마찬가지로 localhost에서만 받으므로, LAN에 열려면 설정 람다 안에서 같은 `app.server(...)`를 호출합니다([start](app.md#start)).
-LAN에 열 때는 인증 미들웨어를 함께 거세요. 루프백이 아닌 주소에 바인딩하면 인증 여부와 상관없이 보안 경고 로그를 남깁니다.
+기본은127.0.0.1입니다. LAN은 `app.server(o -> o.bindAddress("0.0.0.0"))`를 명시하고 인증을 설치하세요. 루프백 밖은 보안 경고를 남깁니다. proxy 신뢰 기본 false이며 `trustProxy(true)`는 검증되지 않은 첫 X-Forwarded-For/Proto 값을 사용하므로 헤더를 덮어쓰는 신뢰 프록시 뒤에서만 켭니다. Host·request-line·프레이밍 제한은 별개로 유지합니다.
 
-### 5. 경로 매칭이 엄격합니다
+### 5. 문자열 기본은 case-insensitive·non-strict, 등록 순서입니다
 
-| 항목 | Express 기본 | NaruServe 기본 |
-|---|---|---|
-| 대소문자 | 구분 안 함 (`/Users` = `/users`) | **구분함** |
-| 끝 슬래시 | 구분 안 함 (`/users/` = `/users`) | **구분함** |
-| 패턴 | `?`, `*`, `+`, 정규식 (Express 4), `{}` 선택 구간·`*name` (Express 5) | `:name`과 고정 세그먼트만 |
-| 우선순위 | 등록 순서 | 고정 세그먼트가 변수보다 먼저 (`/users/me` > `/users/:id`) |
-| 같은 경로 중복 등록 | 먼저 등록한 것이 이김 | 시작할 때 **설정 오류** |
+중복·겹치는 라우트는 합법이고 더 구체적인 경로가 먼저 오지 않습니다. 한 Route 안의 HEAD 존재 여부와 앞 Route의 GET fallback을 구분하세요. live HTTP 등록·기존 builder 추가는 RUNNING에서도 가능하지만 server·codecs·CORS·groups·static·onError·WS 설정은 NEW에서만 바꿉니다. 종료된 앱은 재시작/추가하지 않습니다.
 
-### 6. 404, 405, HEAD, OPTIONS를 자동으로 처리합니다
+### 6. 일반 최종 응답은404·HTML·OPTIONS200입니다
 
-- 경로가 없으면 `404`, 경로는 있는데 메서드가 없으면 `405`와 `Allow` 헤더.
-- `GET`을 등록하면 `HEAD`도 받습니다(본문 없이).
-- `OPTIONS`는 `Allow` 헤더와 함께 `204`로 답합니다(Express는 `200`).
-- 정적 파일 마운트가 있으면 명시 라우트 → 정적 파일 → 404 순서로 찾습니다.
+메서드만 다른 경로도 미처리이면404입니다. 자동 OPTIONS는 실제 순회한 현재 라우터의 메서드만 모아200·Allow·같은 평문 본문을 보내며 Content-Type은 charset 없는 text/plain입니다. CORS preflight 204·OPTIONS *·WS legacy 프로필과 구분하세요. HEAD는 GET 길이를 유지하고 본문 바이트를 보내지 않습니다.
 
-### 7. 오류 응답은 정해진 JSON입니다
+### 7. 기본 오류는 HTML이고 Java stack이 보일 수 있습니다
 
-처리되지 않은 예외와 파싱 오류는 stack trace 없이 이 형식으로 나갑니다. 아래는 JSON 파싱 오류(`400`) 예시이며, `500`의 `code` 값은 `INTERNAL_ERROR`입니다(상태별 값은 [표준 오류 형식](middleware.md#표준-오류-형식)).
+오류는 등록 위치 뒤의 ErrorMiddleware/onError로 진행합니다. 미처리 오류는 HTML 이스케이프한 Java 예외 표현이며 기본적으로 내부 stack이 보일 수 있습니다. 안전한 공개 오류는 앱이 JSON/평문으로 명시 처리하세요. 이미 보낸 응답에 두 번째 오류 본문을 commit하지 않습니다.
+
+아래는 보존된 **표준 JSON 확장**의 형식 예입니다. 일반 HTTP 기본 오류라고 해석하지 마세요. pre-request·수명주기·WS/legacy 경로에서 이 프로필이 남습니다.
 
 ```json
 {"error":{"code":"BAD_REQUEST","message":"Invalid JSON request","requestId":"..."}}
 ```
 
-`app.onError`로 바꿀 수 있습니다. [미들웨어와 오류 처리](middleware.md#오류-처리)
+### 8. 서비스는 명시 등록합니다
 
-### 8. 설정은 `listen` 전에 끝냅니다
-
-라우트, 미들웨어, 정적 마운트는 `listen()` 전에만 등록합니다. 서비스는 `onStart` 콜백 안(`listen()` 실행 중)에서만 `ctx.register`할 수 있습니다. 실행 중에 라우트를 추가할 수 없습니다.
-종료한 앱은 다시 시작할 수 없습니다. 새 `RestApp`을 만드세요.
-
-### 9. 의존성 주입 대신 서비스 등록을 씁니다
-
-Express에서 모듈 변수나 `app.locals`에 두던 공유 객체는 `onStart`에서 등록하고 `req.service(...)`로 꺼냅니다.
+서비스 등록은 onStart에서 하고 요청에서 같은 객체를 조회합니다. 소유한 AutoCloseable은 종료 때 역순으로 닫습니다.
 
 ```java
 app.onStart(ctx -> ctx.register(UserService.class, new UserService()));
 app.get("/users", (req, res) -> res.json(req.service(UserService.class).findAll()));
 ```
 
-[수명주기와 서비스](lifecycle.md)
+### 9. 인증·CORS·정적 파일 순서를 점검합니다
 
-### 10. 전역과 prefix 미들웨어는 함께 등록 순서를 따릅니다
-
-Express처럼 전역과 경로에 맞는 prefix 미들웨어를 `app.use` 등록 순서 하나로 실행합니다. 그 뒤 라우트 미들웨어와 핸들러를 실행합니다. 인증보다 먼저 필요한 요청 ID나 CORS 처리는 인증 미들웨어보다 먼저 등록하세요.
+use와 라우트/마운트/오류 레이어 전체가 하나의 순서입니다. 정적 파일을 인증보다 먼저 등록하면 인증 없이 응답할 수 있습니다. 뒤에 등록한 전역 미들웨어가 앞 라우트보다 먼저 실행되지는 않습니다.
 
 ```java
 Middleware requestId = (req, res, next) -> next.run();   // 요청마다 ID를 붙이는 전역 미들웨어라고 합시다
@@ -209,13 +128,9 @@ app.use(requestId);      // 1번째
 app.use("/api", auth);   // /api 경로에서 2번째
 ```
 
-[미들웨어 실행 순서](middleware.md#실행-순서)
+## 예: Express 앱 옮기기
 
-## 전체 예제: Express 앱 옮기기
-
-아래는 라우트 구성 비교입니다. `Todo`, `TodoService`, `todos`, `auth` 등 도메인 타입과 객체는 앱에서 정의합니다. import와 실행 진입점까지 있는 예제는 [예제 실행 안내](../../examples/README.md)를 보세요.
-
-Express:
+아래는 앱 구성 조각입니다. Todo·TodoService·todos·auth와 import는 앱에서 제공합니다. [실행 가능한 예제](../../examples/README.md)는 완전한 진입점과 실제 서비스를 포함합니다. Java와 Kotlin의 body null 처리 차이도 확인하세요.
 
 ```javascript
 const express = require('express');
@@ -236,8 +151,6 @@ app.delete('/api/todos/:id', (req, res) => { todos.delete(req.params.id); res.se
 app.use((err, req, res, next) => res.status(500).json('Internal Server Error'));
 app.listen(3000);
 ```
-
-NaruServe (Java):
 
 ```java
 RestApp app = RestApp.create();
@@ -276,8 +189,6 @@ app.onError((err, req, res) -> {
 app.listen(3000);
 ```
 
-NaruServe (Kotlin):
-
 ```kotlin
 val app = RestApp.create()
 
@@ -315,13 +226,6 @@ app.onError { err, req, res ->
 app.listen(3000)
 ```
 
-## Express에 있지만 아직 정해지지 않은 기능
+## 범위 밖의 기능
 
-다음은 v1에 포함되지 않는 v1 이후 항목입니다. 제외한 이유는 v1 개발 계획의 어느 단계(wave)도 이 기능을 맡지 않았기 때문이며, 항목별 이유와 대체 코드는 위 표와 [릴리스 노트](../release/release-notes.md)에 있습니다.
-
-- 독립 `express.Router()` 객체의 재마운트는 지원하지 않습니다. 경로 분리는 `app.group(...)`을 사용합니다.
-- HTTP CORS는 `app.cors(...)`로 제공합니다. WebSocket 허용 출처는 별도 설정입니다.
-- `res.format`은 지원하지 않습니다. `redirect`, `type`, `location`, `sendStatus`는 제공합니다.
-- `req.hostname`, `req.is(type)`, `req.accepts(...)`
-- `app.param(...)`
-- 비동기 핸들러(Promise/`async`에 해당하는 것). Kotlin `suspend` 핸들러도 v1 이후 항목입니다([Kotlin](kotlin.md)).
+템플릿 엔진/`res.render`, `res.format`, `req.hostname`·`req.is`·`req.accepts`, signed cookie, 별도 raw/text 본문 파서, 네이티브 Kotlin suspend handler는 제공하지 않습니다. 공개된 API·기존 확장의 범위로 비교하세요. Java Pattern은 Java 의미이고 WS는 기존 엄격 프로필이며, 문자열 `send`·타입 본문·보안 기본값도 Express와 동일하다고 주장하지 않습니다.
