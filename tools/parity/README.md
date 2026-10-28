@@ -26,11 +26,27 @@ cmp src/test/resources/parity/express5.json /tmp/express5-second.json
 
 Java-specific regex controls are in `JavaPatternBoundaryTest`. A mismatch elsewhere cannot be relabeled as the Java regex exception after a failing comparison.
 
+## Narrow language error counterparts
+
+`LanguageErrorCounterparts` compares a copy of the reference expectation and retains both raw records in failure diagnostics. It does not change `ParityCorpus` or the committed Express observations.
+
+| Scenario | Reference error | Accepted Java error |
+|---|---|---|
+| The two invalid route registrations | `TypeError` | Exact `RoutingConfigException` |
+| `raw.malformed-escape` | `URIError` | Decode-specific `HttpException` with status 400 |
+| `error.thrown`, `async.rejected` | `Error` | The scenario's deliberately thrown exact `RuntimeException` |
+
+Only the terminal `; visit https://git.new/pathToRegexpError for info` suffix may be absent from Java registration messages. Reason, source, index, raw malformed value, response status/body/headers and every trace field remain exact. Captured Java class/message metadata must agree with the observed Throwable. Unrelated subclasses, other HTTP statuses, changed error messages and fabricated names fail the comparison. Negative controls verify these boundaries and preserve raw input records.
+
 ## Runtime coverage is explicit
 
-`BasicRuntimeParityTest` currently executes **three** cases against the actual NaruServe in-memory adapter: `literal.get`, `literal.post`, and `param.basic`. The other **27 reference observations are not a claim of current runtime support**. They supply expected results for feature owners to integrate as ordered routing, grammar, mounts, hooks, HEAD/OPTIONS, errors and async behavior land. There are no ignored, assumed, expected-failure, or disabled parity tests. Future owners add real runtime adapters/tests before claiming those features complete.
+`FullRuntimeParityTest` executes all **30** committed reference scenarios using real Java registrations, request handlers and the NaruServe in-memory adapter. It reads only scenario IDs/features and request inputs from the fixture; handlers compute actual response and request-view observations. Registration-error scenarios never manufacture a request.
 
-Transport normalization and socket behavior need separate actual TinyHttpd/Servlet evidence; passing the in-memory adapter cannot establish those claims. The supplied basic fixtures are unmounted and query-free, so their empty base URL and original path map directly to the current request. Mounted/query views require actual new runtime accessors rather than inferred fallback values.
+The Stage 2 baseline (`d84ca92`) passes **25 of 30** runtime comparisons. Five tests remain real failures while later core features are implemented: `head.order-false`, `options.automatic`, `error.thrown`, `async.rejected` and `raw.malformed-escape`. The first two expose response/trace mismatches; the latter three report the missing future error/async API. This is integration work in progress, not evidence of completed parity. No test is ignored, disabled, assumed or marked expected-failure. Existing basic runtime and deliberate mismatch controls remain active.
+
+Every observation uses actual `path()`, `url()`, `baseUrl()`, `originalUrl()` and `pathParams()` values. Java's single-callback prefix `use` overload maps the Express two-callback `use` scenario to adjacent prefix layers. The async rejection scenario invokes the public Deferred API through reflection until its implementation is integrated; API absence fails the test. Ordinary delayed `next()` uses an owned callback worker. The runner waits for the initial exchange callback and joins every owned continuation before collecting the trace, including middleware after response completion. Bounded latches/futures replace timing sleeps.
+
+Transport normalization and socket behavior require separate actual TinyHttpd/Servlet evidence. Passing this in-memory replay cannot establish those claims.
 
 Targeted root invocation (the leading colon avoids applying `--tests` to unrelated module tasks):
 
