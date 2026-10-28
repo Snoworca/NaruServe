@@ -362,7 +362,11 @@ final class TinyHttpdExchange implements HttpExchange {
         OutputStream output;
         DrainTask(StreamDrain callback) { this.callback = callback; }
         void cancelBeforeStart() {
-            if (claimed.compareAndSet(false, true)) callback.abort();
+            if (claimed.compareAndSet(false, true)) {
+                // FR-APP-023 AC-3/6; IR-HTTP-009 AC-3: cancellation is untrusted user
+                // code. Its failure cannot bypass the active setup owner's wait or stop cleanup.
+                try { callback.abort(); } catch (Throwable ignored) { }
+            }
         }
     }
 
