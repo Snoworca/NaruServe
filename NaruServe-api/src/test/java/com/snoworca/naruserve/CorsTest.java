@@ -140,6 +140,20 @@ public class CorsTest {
         assertNull(response.header("Access-Control-Allow-Origin"));
     }
 
+    // FR-DX-010 AC-1 AC-2 AC-6; CON-APP-010 AC-4: error helpers cannot replace the configured grant decision.
+    @Test public void exceptionHeadersCannotOverrideFrameworkCorsGrantOrCreateADeniedGrant() {
+        TestApp t=TestApp.create();t.app().cors(o->o.allowedOrigins(ORIGIN).credentials(true));
+        t.app().get("/spoof",(req,res)->{throw new HttpException(400,"bad")
+                .withHeader("Access-Control-Allow-Origin","*").withHeader("Access-Control-Allow-Credentials","false")
+                .withHeader("Vary","X-Unrelated");});
+        ClientResponse allowed=t.send("GET","/spoof","Origin",ORIGIN);
+        assertEquals(400,allowed.status());assertEquals(ORIGIN,allowed.header("Access-Control-Allow-Origin"));
+        assertEquals("true",allowed.header("Access-Control-Allow-Credentials"));assertEquals("Origin",allowed.header("Vary"));
+        ClientResponse denied=t.send("GET","/spoof","Origin","https://evil.example");
+        assertEquals(400,denied.status());assertNull(denied.header("Access-Control-Allow-Origin"));
+        assertNull(denied.header("Access-Control-Allow-Credentials"));assertEquals("Origin",denied.header("Vary"));
+    }
+
     // FR-DX-010 AC-1, AC-2 — only framework CORS metadata survives standard error reset.
     @Test public void standardErrorsPreserveCorsMetadataWithoutPreservingApplicationHeaders() { // FR-DX-010 AC-6
         TestApp t = TestApp.create();
