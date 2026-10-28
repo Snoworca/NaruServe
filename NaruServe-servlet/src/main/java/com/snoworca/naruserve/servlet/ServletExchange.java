@@ -1,6 +1,7 @@
 package com.snoworca.naruserve.servlet;
 
 import com.snoworca.naruserve.HttpException;
+import com.snoworca.naruserve.common.AbortListeners;
 import com.snoworca.naruserve.spi.HttpExchange;
 import com.snoworca.naruserve.spi.StreamDrain;
 import com.snoworca.naruserve.spi.UpgradeHandler;
@@ -9,6 +10,7 @@ import com.snoworca.naruserve.spi.WebSocketSettings;
 import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FilterInputStream;
 import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -72,6 +74,7 @@ final class ServletExchange implements HttpExchange {
     // Set once an ordinary pending request or event stream starts async processing.
     private volatile @Nullable AsyncContext async;
     private final AtomicBoolean completed = new AtomicBoolean();
+    private final AbortListeners abortListeners = new AbortListeners();
     /** Held by the event stream's body stream around each write; abort() waits for it before completing. */
     final ReentrantLock writeLock = new ReentrantLock();
 
@@ -141,8 +144,19 @@ final class ServletExchange implements HttpExchange {
     @Override
     public InputStream requestBody() {
         try {
-            return req.getInputStream();
+            return new FilterInputStream(req.getInputStream()) {
+                @Override public int read() throws IOException {
+                    try { return in.read(); } catch (IOException failure) { abort(); throw failure; }
+                }
+                @Override public int read(byte[] bytes, int offset, int length) throws IOException {
+                    try { return in.read(bytes, offset, length); } catch (IOException failure) { abort(); throw failure; }
+                }
+                @Override public long skip(long length) throws IOException {
+                    try { return in.skip(length); } catch (IOException failure) { abort(); throw failure; }
+                }
+            };
         } catch (IOException e) {
+            abort();
             throw new UncheckedIOException("request body unavailable", e);
         }
     }
@@ -163,20 +177,30 @@ final class ServletExchange implements HttpExchange {
     // @req FR-SVL-003
     // @req FR-SVL-009 AC-1 AC-2 AC-4
     @Override
-    public synchronized OutputStream commit(int status, List<Map.Entry<String, String>> headers, long contentLength)
+    public OutputStream commit(int status, List<Map.Entry<String, String>> headers, long contentLength)
             throws IOException {
-        requireStartable();
-        started = true;
-        head(status, headers);
+        boolean claimed = false;
         try {
-            return new FilterOutputStream(res.getOutputStream()) {
-                @Override public void write(int b) throws IOException { writeBody(() -> out.write(b)); }
-                @Override public void write(byte[] b, int off, int len) throws IOException { writeBody(() -> out.write(b, off, len)); }
-                @Override public void flush() throws IOException { writeBody(() -> out.flush()); }
-                @Override public void close() { /* finish/AsyncContext owns response termination. */ }
-            };
+            writeLock.lock();
+            try {
+                synchronized (this) {
+                    requireStartable();
+                    started = true;
+                    claimed = true;
+                }
+                head(status, headers);
+                return new FilterOutputStream(res.getOutputStream()) {
+                    @Override public void write(int b) throws IOException { writeBody(() -> out.write(b)); }
+                    @Override public void write(byte[] b, int off, int len) throws IOException { writeBody(() -> out.write(b, off, len)); }
+                    @Override public void flush() throws IOException { writeBody(() -> out.flush()); }
+                    @Override public void close() { /* finish/AsyncContext owns response termination. */ }
+                };
+            } finally {
+                writeLock.unlock();
+            }
         } catch (IOException | RuntimeException failure) {
-            abort();
+            // A rejected second start is validation, not a detected transport failure.
+            if (claimed) abort();
             throw failure;
         }
     }
@@ -184,18 +208,21 @@ final class ServletExchange implements HttpExchange {
     private interface IoOperation { void run() throws IOException; }
 
     private void writeBody(IoOperation operation) throws IOException {
-        writeLock.lock();
         try {
-            synchronized (this) {
-                checkNotAborted();
-                if (finished) throw new IOException("exchange finished");
+            writeLock.lock();
+            try {
+                synchronized (this) {
+                    checkNotAborted();
+                    if (finished) throw new IOException("exchange finished");
+                }
+                operation.run();
+            } finally {
+                writeLock.unlock();
             }
-            operation.run();
-        } catch (IOException failure) {
+        } catch (IOException | RuntimeException failure) {
+            // Abort callbacks may enter the core; never notify while the transport write lock is held.
             abort();
             throw failure;
-        } finally {
-            writeLock.unlock();
         }
     }
 
@@ -203,20 +230,28 @@ final class ServletExchange implements HttpExchange {
     // @req FR-SVL-009 AC-1 AC-2 AC-4
     @Override
     public void finish() throws IOException {
-        writeLock.lock();
         try {
-            synchronized (this) {
-                checkNotAborted();
-                if (finished) return;
+            writeLock.lock();
+            try {
+                synchronized (this) {
+                    checkNotAborted();
+                    if (finished) return;
+                }
+                res.flushBuffer();
+                complete();
+            } finally {
+                writeLock.unlock();
             }
-            res.flushBuffer();
-            complete();
         } catch (IOException | RuntimeException failure) {
             abort();
             throw failure;
-        } finally {
-            writeLock.unlock();
         }
+    }
+
+    // @req IR-HTTP-009 AC-1 AC-2 AC-3
+    @Override
+    public void onAbort(Runnable listener) {
+        abortListeners.onAbort(listener);
     }
 
     /** A non-async abnormal response still fails the active servlet invocation. */
@@ -239,6 +274,8 @@ final class ServletExchange implements HttpExchange {
             finished = true;
             task = drainTask;
         }
+        // The shared registry isolates listener failures and invokes callbacks outside both exchange locks.
+        abortListeners.abort();
         if (task != null) task.cancelBeforeStart();
         if (async != null) {
             boolean held = false;
