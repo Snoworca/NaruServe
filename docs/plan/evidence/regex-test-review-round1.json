@@ -1,0 +1,55 @@
+{
+  "review": "independent-test-sufficiency",
+  "round": 1,
+  "requirement": "FR-ROUTE-019",
+  "scope": "Standalone Java Pattern helper AC2-4 and lexical metadata/source+flags helper partAC6; alternative/registration/decoding and AC5 overload integration remain pending.",
+  "reviewed_at": "2026-10-28T05:23:22.504283+00:00",
+  "worktree": "/Users/beom/work/git/NaruServe/.claude/worktrees/v010-regex-path",
+  "head": "73d728b6c044896b08880c5b083e4318a2c3818a",
+  "ready_uncommitted_implementation_reviewed": true,
+  "red_commit": "73d728b",
+  "verdict": "PASS",
+  "findings": [],
+  "material_implementation_defects_noticed": [],
+  "coverage": [
+    "Actual raw SEARCH with substring and UTF16 offsets, absent no-match and independent Matcher per invocation",
+    "Ordered numeric/named captures with named groups not consuming unnamedordinal; actual numeric indices handle interleaved groups",
+    "Nonparticipating versus participating-empty captures and raw percent/NUL/malformed-escape retention for later decode",
+    "Case/DOTALL/MULTILINE/LITERAL, Java-only escape/class-intersection and no ECMAScript translation",
+    "Quoted escapes, escaped parens/backslash/control escape, leading class closing bracket and nested intersection scanning",
+    "Positive/negative lookaround, capturing inside lookbehind, atomic/noncapture groups and named backreferences",
+    "Global/scoped COMMENTS and removal; comments inside classes/groupnames; UNIX_LINES comment termination",
+    "Two genuine initialflag states with identical public Pattern metadata rejected clearly; source+initialflags path preserves both exact named-capture outcomes",
+    "Group-count disambiguation accepts ordinary unambiguous precompiled patterns",
+    "Deep immutable snapshots;200concurrent matches;null/invalid source/invalidflags registration failures"
+  ],
+  "execution": {
+    "command": "JAVA_HOME=/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home ANDROID_HOME=/opt/homebrew/share/android-commandlinetools ./gradlew -PtinyHttpdFromMaven=true :NaruServe-api:test --tests 'com.snoworca.naruserve.routing.RegexPathPatternTest'",
+    "exit_code": 0,
+    "log": "/tmp/naru-v010-regex-review1-run.log",
+    "task_executed": true,
+    "tests": 22,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "reference_evidence_inspected": [
+    "/tmp/naru-v010-regex-red.log:22actualRED failures",
+    "/tmp/naru-v010-regex-control-reference.log: Java8 control escape firstCode8 false versus firstCode104 true",
+    "/tmp/naru-v010-regex-metadata-probe.log:2692valid lexical patterns,0preciseFailures/0precompiledWrong"
+  ],
+  "api21_assessment": "Implementation uses numeric Matcher.group(int), own lexical scan and numeric Unicode-character-class flag bit instead of unavailable Matcher.group(String)/new flag field. Existing dependency/class-reference checks remain host-run evidence; no Android device execution was performed in this review.",
+  "artifact_sha256": {
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RegexPathPattern.java": "4c68f93b0e602a53ab51f771bf313c3ea18b72e2583bbec51c6c0b9108428c8f",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RegexPathPatternTest.java": "f602b77c474369368556b82f55b4cea9bf22f8dc417cddde8a9ce1bc6cdf95d6"
+  },
+  "remaining_obligations": [
+    "Public common registration must accept Pattern and explicit RegexPathPattern source+flags inputs; AC5 Java/Kotlin ambiguity/nullness tests remain mandatory.",
+    "Path alternatives/nested alternatives atomic registration and first-match choice are later integration work.",
+    "Strict participating-capture percent decode and malformedHTTP400 behavior are later core integration work.",
+    "Real Java8/API21 and final entire routing/adapter regression after integration remain mandatory."
+  ],
+  "repository_source_edits": false,
+  "implementation_approval": false,
+  "loop_policy": "Foundation sufficiency PASS at round1. Stop immediately; no round2 orround3 for this helper foundation."
+}

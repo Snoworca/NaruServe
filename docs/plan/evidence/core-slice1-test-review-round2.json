@@ -1,0 +1,48 @@
+{
+  "review": "independent-test-sufficiency",
+  "round": 2,
+  "scope": "INITIAL CORE SLICE ONLY, same explicit exclusions as round1",
+  "requirements": [
+    "FR-HTTP-027",
+    "FR-APP-021",
+    "FR-APP-022",
+    "FR-APP-023 pending-return portion",
+    "CON-APP-010"
+  ],
+  "reviewed_head": "87373f9",
+  "worktree": "/Users/beom/work/git/NaruServe/.claude/worktrees/v010-http-core",
+  "reviewed_at": "2026-10-28T05:15:44.259542+00:00",
+  "verdict": "PASS",
+  "findings": [],
+  "resolved_findings": [
+    {
+      "id": "CORE1-TEST-001",
+      "resolution": "Actual app.listen(0) through SettingsCapturingAdapter, explicit RUNNING assertion, late app route and pre-created builder attachment verified through bound gated handler; jsonLimit remains refused; shutdown in finally."
+    },
+    {
+      "id": "CORE1-TEST-002",
+      "resolution": "Actual app duplicate captures /:x{/*x} absent/present and /*x/:x assert String versus List winners and paramOrNull/paramValues values."
+    },
+    {
+      "id": "CORE1-TEST-003",
+      "resolution": "Actual InMemoryHttpAdapter exchanges distinguish nonempty raw query, empty trailing question mark and query absence; raw path/path remain pathname-only and url/originalUrl retain exact raw query."
+    }
+  ],
+  "red_evidence": {
+    "log": "/tmp/naru-http-core/red-review1-complete.log",
+    "tests": 17,
+    "failures": 17,
+    "interpretation": "Expected test-first RED; implementation not yet written. Sufficiency PASS authorizes green work for this slice, not runtime correctness."
+  },
+  "artifact_sha256": "7b565b7f0154fd076c78062830091e2e81bc518f8aef9d50ee9c1ef0381b6571",
+  "repository_edits": false,
+  "implementation_approved": false,
+  "out_of_scope_pending": [
+    "Full mounts/router exit/mergeParams and hooks",
+    "Full HTTP methods/HEAD/OPTIONS/errors",
+    "Deferred object/rejection, streams/SSE/resources/shutdown",
+    "Java/Kotlin overloads/nullability and final Java8/API21 checks",
+    "Entire core/Tiny/Servlet integration and unchanged WS/extensions regression"
+  ],
+  "loop": "PASS round2; stop immediately, no round3 for this initial slice."
+}

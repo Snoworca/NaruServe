@@ -1,0 +1,53 @@
+{
+  "review_type": "independent-test-sufficiency",
+  "round": 2,
+  "reviewer": "/root/release_dependency_audit",
+  "author": "/root/transport_dependency_audit",
+  "head": "d1a0f8992db9c5d98acc08ed6973e64a5efdc323",
+  "requirement": "FR-SVL-009",
+  "scope": "StandaloneSPI ordinary deferred/lateSSE ownership tests; fullcore routing/rawURI matrix remainfutureAC6 obligations",
+  "reviewed_at": "2026-10-28T05:29:11.285516+00:00",
+  "verdict": "PASS",
+  "findings": [],
+  "resolved_findings": [
+    {
+      "id": "SVL-TEST-001",
+      "status": "closed",
+      "evidence": "lateDrainFailuresAbortAndReleaseContextInflightAndSlotOnce covers both IOException and RuntimeException from lateadapter-owneddrain, checksoneexecution, abortedexchange, completedcontextcount, inFlight0/pool0, repeatedabortidempotence andclosedcommitguard."
+    },
+    {
+      "id": "SVL-TEST-002",
+      "status": "closed",
+      "evidence": "secondLateSseIsRejectedWithoutTakingOrLeakingTheOccupiedSlot holdsfirstlateSSEwithlatch, rejectssecondwith503beforedrain, proveswritable503body, no rejectdrainexecution, firstslot/inflightremain1, thenfirstcompletionyields0ownership andexacttwo contexts."
+    }
+  ],
+  "contract_clarification": "Round1 mentionedabortcallbackcount broadly. ExistingStreamDrain.abort reports cannot-start cancellation of an accepteddrain; it is not the post-start drainfailure notification nor a required duplicate callback on pre-admission503refusal. Newtests correctly assertactualexchangeabortedandcleanup forpost-start failure; existingpre-drain cancellation testsretainthatdistinctcallback contract. No incorrect new abortcallback obligation imposed.",
+  "red_proof": {
+    "log": "/tmp/naru-v010-servlet-red-round1-additions.log",
+    "xml": "/Users/beom/work/git/NaruServe/.claude/worktrees/v010-servlet-deferred/NaruServe-servlet/build/test-results/test/TEST-com.snoworca.naruserve.servlet.ServletDeferredSpiTest.xml",
+    "tests": 14,
+    "failures": 13,
+    "errors": 0,
+    "skipped": 0,
+    "sync_baseline_passed": 1,
+    "new_late_failure_case_failed": "request ended before its SPI completion",
+    "new_late_capacity_case_failed": "eventStream must be called before the handler returns"
+  },
+  "checks_passed": [
+    "Original12testguardsretainedandnoexistingassertionsweakened",
+    "NewtestsuseactualJetty requests andobserveinitialservice return before lateoperation",
+    "Bothcheckedanduncheckedlatefailurepathsareexplicit",
+    "Capacity rejection preservesfirststream andallowsnormalerrorbody completion",
+    "Completion/inflight/SSEslot/noresurrection assertionsareconcrete",
+    "Boundedexecutor/latchcleanup remains",
+    "ExistingServlet/WS/SSE regressionsremainmandatoryaftergreen",
+    "No dependency,abstractSPI,orSRSmutation inreviewedtestscommit"
+  ],
+  "artifact_sha256": {
+    "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletDeferredSpiTest.java": "e311e763b2562b5343e99a2479d21a8844b673400f5bd1e2aa97ac7bda131bd9"
+  },
+  "repository_edits": false,
+  "production_implementation_verified": false,
+  "test_rerun": "Notrerun: stabletests-onlyHEAD andcurrentrecorded14test/13RED XML+log inspected; noproductionimplementationexistsyet.",
+  "loop_policy": "Round2 PASS; stopreviewloop, no round3. Host may releasegreen implementation andrun targeted/fullregressions."
+}

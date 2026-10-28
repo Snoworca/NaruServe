@@ -1,0 +1,46 @@
+{
+  "review_type": "independent-test-sufficiency",
+  "round": 1,
+  "reviewer": "/root/release_dependency_audit",
+  "author": "/root/transport_dependency_audit",
+  "head": "4c4b565056cbcaff1151e0ba98a4feb455b45d72",
+  "requirement": "FR-SVL-009",
+  "scope": "Standalone SPI ordinary deferred response and late SSE ownership tests; no production implementation or full HTTP routing/transport conformance claim",
+  "verdict": "CHANGES_REQUIRED",
+  "red_evidence": {"path": "/tmp/naru-v010-servlet-red.log", "tests": 12, "failed": 11, "passed_sync_baseline": 1},
+  "findings": [
+    {
+      "id": "SVL-TEST-001",
+      "severity": "HIGH",
+      "covers": ["AC-3", "AC-4", "AC-5"],
+      "path": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletDeferredSpiTest.java",
+      "problem": "The new late eventStream path is exercised only with a successful drain. It does not prove ownership cleanup when the adapter-owned drain throws after initial service return and promotion to SSE.",
+      "why_existing_checks_are_insufficient": "A successful late drain and an ordinary-client write failure do not execute the late-SSE error path. Existing pre-return SSE error tests cannot establish that promotion leaves no duplicate AsyncContext ownership or stream slot after a failing late drain.",
+      "required_test": "After observing the initial service return and pending client, register a late StreamDrain that writes or throws IOException/RuntimeException. Assert the error/abort outcome, abort callback count, exactly one AsyncContext completion, zero inFlight/pool ownership, and rejection of later finish/commit resurrection. Cover both checked and unchecked drain failures where adapter code has distinct catch paths."
+    },
+    {
+      "id": "SVL-TEST-002",
+      "severity": "HIGH",
+      "covers": ["AC-3", "AC-4", "AC-5"],
+      "path": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletDeferredSpiTest.java",
+      "problem": "The late-stream capacity test observes one occupied SSE slot but never attempts another late SSE registration while that configured single slot remains occupied.",
+      "why_existing_checks_are_insufficient": "The new ordinary-to-SSE promotion could bypass or mishandle stream admission rejection while still passing all successful one-slot assertions. Earlier synchronous SSE limit tests do not exercise late promotion rejection.",
+      "required_test": "Keep one late SSE drain blocked with a latch, then convert a second already-returned pending ordinary exchange into an SSE. Assert the existing configured rejection outcome/abort callback and exactly-once cleanup for that rejected exchange, while the first stream remains live and owns exactly one slot. Release the first stream, verify both requests terminate without leaked inflight/slots, and prove later ordinary admission remains usable."
+    }
+  ],
+  "checks_passed": [
+    "Actual Jetty/Servlet requests demonstrate pending ownership after service return rather than mocking only AsyncListener callbacks",
+    "Delayed text/JSON byte streams, synchronous unsupported-async baseline, timeout, client reset, graceful stop, deadline abort, unsupported configuration and finish/abort race have concrete assertions",
+    "Tests observe response bytes, inFlight, SSE pool occupancy and complete() call counts rather than only waiting for no exception",
+    "Executors/latches have cleanup and bounded waits",
+    "Current suite fails before implementation; no ignored/expected-failure test is being claimed as completed feature evidence",
+    "Dependencies and SPI remain unchanged in the reviewed test commit",
+    "Full core-routing integration and raw URI matrix remain explicitly outside this foundation's completion claim"
+  ],
+  "suggestions_not_blocking": [
+    "Record forced before-return and after-return completion schedules if the implementation introduces a distinct ownership transfer window; existing manual after-return and synchronous-before-return cases already establish endpoints, while the30-iteration race provides stress coverage"
+  ],
+  "repository_edits": false,
+  "production_behavior_verified": false,
+  "next": "Author adds the missing negative late-SSE cases, then host requests round2. Maximum3 rounds; stop on first PASS."
+}

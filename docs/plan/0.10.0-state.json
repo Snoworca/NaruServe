@@ -4,7 +4,7 @@
   "plan": "docs/plan/0.10.0-parallel-plan.md",
   "dependencies": "unchanged versions/types/scopes; existing toolchain reused",
   "regex": "Java Pattern",
-  "status": "parallel-core-pattern-and-servlet-foundation",
+  "status": "core-and-servlet-in-progress-regex-ready",
   "issues": [
     {
       "id": "T00",
@@ -314,7 +314,8 @@
   "requirements": {
     "harness": "OPS-ROUTE-004",
     "http_compiler": "FR-ROUTE-018",
-    "profile": "CON-APP-010"
+    "profile": "CON-APP-010",
+    "abort_notification": "IR-HTTP-009"
   },
   "lanes": {
     "harness": {
@@ -352,6 +353,65 @@
       "worktree": ".claude/worktrees/v010-servlet-deferred",
       "branch": "kiwi/v010/servlet-deferred",
       "agent": "/root/transport_dependency_audit"
+    }
+  },
+  "review_units": {
+    "core-slice1": {
+      "rounds": [
+        {
+          "round": 1,
+          "verdict": "changes_required"
+        },
+        {
+          "round": 2,
+          "verdict": "pass"
+        }
+      ],
+      "green_commit": "31c8643",
+      "full_api_regression": "pending later contract stages; diagnostic71failures are notgreen"
+    },
+    "core-stage2": {
+      "rounds": [
+        {
+          "round": 1,
+          "verdict": "changes_required"
+        }
+      ],
+      "tests_commit": "351b387",
+      "implementation_started": false
+    },
+    "regex-foundation": {
+      "rounds": [
+        {
+          "round": 1,
+          "verdict": "pass"
+        }
+      ],
+      "green_commit": "1df895c",
+      "java8_tests": 23,
+      "full_api_jdk17_tests": 1206,
+      "integration_pending": true
+    },
+    "servlet-spi-foundation": {
+      "rounds": [
+        {
+          "round": 1,
+          "verdict": "changes_required"
+        },
+        {
+          "round": 2,
+          "verdict": "pass"
+        }
+      ],
+      "target_tests_green": 14,
+      "full_regression": "verification in progress",
+      "abort_hook_pending": true
+    },
+    "abort-spi-component": {
+      "tests_commit": "f361b20",
+      "red_dedicated_tests": 7,
+      "rounds": [],
+      "implementation_started": false
     }
   }
 }

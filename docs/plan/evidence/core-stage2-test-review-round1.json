@@ -1,0 +1,113 @@
+{
+  "review_type": "independent-test-sufficiency",
+  "round": 1,
+  "reviewer": "/root/release_dependency_audit",
+  "author": "/root/api_core_docs",
+  "reviewed_at": "2026-10-28T05:37:08.347619+00:00",
+  "worktree": "/Users/beom/work/git/NaruServe/.claude/worktrees/v010-http-core",
+  "tests_commit": "351b387",
+  "observed_head": "9260e11",
+  "requirements": [
+    "FR-ROUTE-020",
+    "FR-ROUTE-021",
+    "FR-ROUTE-019",
+    "FR-HTTP-027"
+  ],
+  "latest_requirement_source": "Read root SpecKiwi MCP with an explicit workspaceRoot. The latest FR-ROUTE-021 AC-1 canonical integer-key order and AC-2 wildcard reference identity amendments were included.",
+  "scope": "Stage 2 mounted routers, parameter hooks, and Pattern/alternative integration. General HTTP methods, later error recovery, and resource lifetime are outside this review.",
+  "verdict": "CHANGES_REQUIRED",
+  "findings": [
+    {
+      "id": "CORE-ST2-TEST-001",
+      "severity": "HIGH",
+      "covers": [
+        "FR-ROUTE-021 AC-1",
+        "FR-ROUTE-021 AC-2"
+      ],
+      "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/HttpMountAndParamContractTest.java",
+      "problem": "Parameter-hook tests omit optional absence, scalar equality across different raw encodings, and canonical integer-key boundary cases.",
+      "why_material": "Hooks could run for absent optional captures; a cache keyed by raw capture or String identity could fail equal decoded values; numeric sorting could incorrectly classify 01 or 4294967295. Current assertions would not reliably reject those implementations.",
+      "required_controls": [
+        "Register an id hook with /users{/:id}; requesting /users must respond without invoking that hook.",
+        "Match /:id/:other and then /:other/:id against /x/%78. Both id values decode to x; the hook runs once and its transformed result is restored for the second layer.",
+        "For quoted capture names 01, 4294967295, 4294967294, 2, a, assert the observed order 2, 4294967294, 01, 4294967295, a. Leading-zero names and 2^32-1 are not canonical integer indices."
+      ],
+      "oracle_cases": [
+        "absent-hook",
+        "scalar-equal-distinct-raw",
+        "canonical-key-boundaries"
+      ]
+    },
+    {
+      "id": "CORE-ST2-TEST-002",
+      "severity": "HIGH",
+      "covers": [
+        "FR-ROUTE-020 AC-4",
+        "FR-ROUTE-021 AC-4",
+        "FR-HTTP-027 AC-3",
+        "FR-HTTP-027 AC-4"
+      ],
+      "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/HttpMountAndParamContractTest.java",
+      "problem": "Mount exits are inline, while the delayed parameter-hook case is root-scoped. There is no delayed child parameter callback that exits its router and restores parent request views.",
+      "why_material": "A held continuation can lose the child URL/base URL/query or resume the wrong router even when inline mount exits and root-level delayed hooks pass.",
+      "required_controls": [
+        "Capture Next inside a child id hook without continuing. Confirm dispatch remains uncommitted and the parent after-next observer still sees the child URL/base URL.",
+        "Invoke the captured next.router later. Confirm the child route handler is skipped and the parent receives the original pathname/query with the parent base URL restored.",
+        "Assert the before/hold/after/resume/parent trace and the same Request identity. No new resource-lifetime scope is required."
+      ],
+      "oracle_cases": [
+        "delayed-child-param-router-exit"
+      ]
+    },
+    {
+      "id": "CORE-ST2-TEST-003",
+      "severity": "HIGH",
+      "covers": [
+        "FR-ROUTE-019 AC-1",
+        "FR-ROUTE-019 AC-6"
+      ],
+      "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/HttpMountAndParamContractTest.java",
+      "problem": "Nested alternative registration has only positive first-match tests. Invalid parameter callback registration does not prove invalid path alternatives are atomic.",
+      "why_material": "Incremental registration can leave an earlier valid alternative active when a later nested malformed or null leaf fails.",
+      "required_controls": [
+        "Register a valid first alternative followed by a malformed nested string. Assert rejection, then add a fallback at the first path and prove the rejected handler was never installed.",
+        "Test a null leaf according to the explicit Java SRS nullness contract.",
+        "An ambiguous precompiled Pattern may also serve as a rejected later leaf; its precise source-plus-flags form should remain valid."
+      ],
+      "oracle_cases": [
+        "nested-invalid-registration-atomic"
+      ],
+      "oracle_boundary": "The pinned Express version accepts null path alternatives in this configuration. Null rejection is the explicit Java SRS registration contract, not an Express observation. A malformed nested string independently threw TypeError and did not leak the first route."
+    }
+  ],
+  "checks_passed": [
+    "The recorded run contains 18 real RED failures before Stage 2 implementation; no passing behavior is claimed.",
+    "The current 2/10/a order matches the latest SRS amendment, and fresh wildcard arrays rerun hooks despite equal contents.",
+    "Mount raw text, query/original URL, root/empty/repeated/trailing separators, child options, mergeParams, numeric capture merging, and non-prefix regex skipping have concrete checks.",
+    "Router-local cache isolation, inherited undeclared names, transformed cached values, last-value recurrence, delayed hooks, cached route skip, thrown/explicit hook errors, and invalid callback registration are covered.",
+    "Advanced RegexPathPattern input and capture decoding are exercised through the public application dispatcher."
+  ],
+  "nonblocking_suggestions": [
+    "Add a case-insensitive/non-strict sibling literal and an uppercase parent mount request to strengthen option locality.",
+    "Verify cached hook errors after ordered error recovery in the later error stage; the current 403 checks do not prove that future obligation."
+  ],
+  "red_evidence": {
+    "log": "/tmp/naru-http-core/red-mounts-params.log",
+    "tests": 18,
+    "failures": 18
+  },
+  "independent_reference_checks": {
+    "node": "22.22.0",
+    "express": "5.1.0",
+    "router": "2.2.0",
+    "pathToRegexp": "8.4.2",
+    "script": "/tmp/naru-v010-core-stage2-review-oracle.cjs",
+    "observations": "/tmp/naru-v010-core-stage2-review-oracle.jsonl",
+    "cases": 5
+  },
+  "source_sha256": "4345a9fa269df891b52908efa235d18c6f1007f84135e76454ad37e67698a3ad",
+  "gradle_invoked": false,
+  "repository_edits": false,
+  "production_implementation_reviewed": false,
+  "next": "Add these scoped boundary/negative cases, confirm RED, then request round 2. Maximum three rounds; stop on the first PASS."
+}

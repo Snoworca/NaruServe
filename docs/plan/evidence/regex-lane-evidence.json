@@ -1,0 +1,70 @@
+{
+  "requirement": "FR-ROUTE-019",
+  "issue": 51,
+  "scope": "Standalone immutableJavaPatternhelper; publicregistration/alternative/strictdecode/core integration remainpending",
+  "red_commit": "73d728b",
+  "additional_tests_first_commit": "9309497",
+  "initial_red": {
+    "tests": 22,
+    "failed": 22,
+    "log": "/tmp/naru-v010-regex-red.log"
+  },
+  "java8_portability_red": {
+    "tests": 23,
+    "failed": 2,
+    "log": "/tmp/naru-v010-regex-java8-flags-red.log"
+  },
+  "full_api_jdk17": {
+    "suites": 168,
+    "counts": {
+      "tests": 1206,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "xml_directory": "/tmp/naru-v010-regex-api-regression-results/xml",
+    "log": "/tmp/naru-v010-regex-api-final-regression.log"
+  },
+  "actual_java8": {
+    "counts": {
+      "tests": 23,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "xml_directory": "/tmp/naru-v010-regex-java8-results/xml",
+    "log": "/tmp/naru-v010-regex-java8-green.log",
+    "runtime": "1.8.0_504"
+  },
+  "api21": {
+    "animal_sniffer": "passed",
+    "class_references": "passed",
+    "bytecode_major": 52,
+    "matcher_group_string_reference": false,
+    "device_execution": false
+  },
+  "independent_test_sufficiency": {
+    "round": 1,
+    "verdict": "PASS",
+    "report": "/tmp/naru-v010-regex-test-review-round1.json",
+    "post_pass_actual_java8_bug": "Unknownflagsbits accepted byJava8Pattern; explicit0x1ffmaskvalidated with unchangedoriginaltest andaddedcontrols. Hostinspectsminimaldiff, no2ndcoverageaudit."
+  },
+  "scanner_diagnostic_probe": {
+    "valid_java8_patterns": 2692,
+    "precise_failures": 0,
+    "precompiled_wrong_metadata": 0,
+    "log": "/tmp/naru-v010-regex-metadata-probe.log",
+    "uses_private_metadata_for_external_java8_oracle_only": true,
+    "reflection_in_helper": false
+  },
+  "fixture_correction": {
+    "reason": "Java control escape \\c( representsASCII104(h), notbackspace; directJava8 referenceverified both inputs beforecorrecting test input",
+    "log": "/tmp/naru-v010-regex-control-reference.log"
+  },
+  "artifact_sha256": {
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RegexPathPattern.java": "bd6bb2d10dc129c33d5efc90f1f09ebf49489be95af31b1ed3567d1b9ee6d5b4",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RegexPathPatternTest.java": "81d09d785e9d04ccb54ef3a40f7ff22b28e8fa67f8b9e3175bb70c662a3539e8"
+  },
+  "dependencies_changed": false,
+  "runtime_issue_closed": false
+}

@@ -1,0 +1,94 @@
+{
+  "review": "independent-test-sufficiency",
+  "round": 1,
+  "scope": "INITIAL coherent core slice only: ordered stack/duplicates/Routeidentity, unmounted Request capture/views, normal/route-skip/repeated/postresponse/joinedcross-thread Next, initial pending return and late publication. Not full mounts/hooks/methods/errors/Deferred/resource/shutdown or Java/Kotlin overloads.",
+  "requirements": [
+    "FR-HTTP-027",
+    "FR-APP-021",
+    "FR-APP-022",
+    "FR-APP-023 (pending-return portion)",
+    "CON-APP-010"
+  ],
+  "reviewed_head": "790b0f4253b5c7067ec9bc0a99d267d7bc0921b3",
+  "worktree": "/Users/beom/work/git/NaruServe/.claude/worktrees/v010-http-core",
+  "reviewed_at": "2026-10-28T05:13:45.230577+00:00",
+  "verdict": "CHANGES_REQUIRED",
+  "repository_edits": false,
+  "implementation_review": false,
+  "red_evidence": {
+    "path": "/tmp/naru-http-core/red-initial.log",
+    "actual_tests": 15,
+    "actual_failures": 15,
+    "failure_modes": [
+      "missing new public APIs",
+      "new grammar rejected by old registration",
+      "old separated middleware execution",
+      "old frozen registration guard",
+      "old initial-return auto completion",
+      "off-thread continuation rejection"
+    ],
+    "verification": "Inspected actual log and committed tests; did not run tests again against intentionally unchanged RED implementation."
+  },
+  "findings": [
+    {
+      "id": "CORE1-TEST-001",
+      "severity": "HIGH",
+      "ac": [
+        "FR-APP-021 AC-4"
+      ],
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/HttpExecutionContractTest.java",
+      "method": "lateRegistrationAndBuilderAttachmentArePublished",
+      "problem": "Test calls app.freeze while lifecycle remains NEW; it never listens or enters RUNNING. An implementation that allows additions after freeze but keeps the old state!=NEW registration ban could pass, contradicting explicitly scoped after-listen behavior.",
+      "new_test_needed": "Use existing in-memory/test adapter to actually listen and verify RUNNING, register a new route and attach a handler to a pre-created RouteBuilder, issue requests through that running app, and assert both succeed. Keep server/config-only mutation such as jsonLimit rejected and shutdown the app in finally. A direct app.freeze test may remain as a separate case."
+    },
+    {
+      "id": "CORE1-TEST-002",
+      "severity": "MEDIUM",
+      "ac": [
+        "FR-HTTP-027 AC-1"
+      ],
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/HttpExecutionContractTest.java",
+      "methods": [
+        "listScalarOptionalRawViewsAndDecodeExactlyOnce",
+        "absentOptionalAndOneSegmentWildcardRetainShape"
+      ],
+      "problem": "Actual app tests cover independent scalar/list values but not duplicate-name scalar/wildcard winners. Foundation matcher tests cover Match.wildcards, yet a Request integration that derives shape from static declaration metadata rather than the actual participating winner could still pass all initial app tests.",
+      "new_test_needed": "Dispatch /:x{/*x} with /one and /one/two, then /*x/:x with /one/two/three. Assert pathParams.x is respectively String one, List[two], String three; assert paramValues/paramOrNull documented behavior and optional nonparticipant does not overwrite an earlier participating value."
+    },
+    {
+      "id": "CORE1-TEST-003",
+      "severity": "MEDIUM",
+      "ac": [
+        "FR-HTTP-027 AC-3"
+      ],
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/HttpExecutionContractTest.java",
+      "method": "listScalarOptionalRawViewsAndDecodeExactlyOnce",
+      "problem": "All view assertions use a query-free RecordingExchange whose rawQuery always returns null. A new url/originalUrl accessor implemented as pathname-only would pass. Basic unmounted query preservation is independent of the expressly deferred mount stage.",
+      "new_test_needed": "Send unmounted raw target /x/a%2Fb?q=%252F&v=1 (using existing in-memory adapter or suitable SPI exchange) and assert path/rawPath remain pathname-only while url and originalUrl include exact raw query; also distinguish rawQuery=null from rawQuery=\"\" so a trailing question mark is retained. Mount restoration can stay deferred."
+    }
+  ],
+  "covered_well": [
+    "Actual public app dispatch rather than helper-only assertions",
+    "Shared registration interleaving, overlapping routes and duplicate route continuation",
+    "Route insertion at builder creation and skip across one identity",
+    "Same Request object and same-Router after-next parameter observation",
+    "Raw percent preservation and single capture decoding, malformed escape/overlongUTF8 and NUL",
+    "Immutable map/list and wildcard one-segment shape",
+    "Case/trailing defaults and repeated delimiter significance",
+    "Repeated next after response with exactlyone commit/finish",
+    "Initial handler return leaves no commit/finish then captured next resumes",
+    "Cross-thread next joined inside user callback proves no blocking requestwide user-code lock",
+    "Same-request append visibility, use-level route skip and invalid alternative registration atomicity"
+  ],
+  "pending_outside_this_slice": [
+    "Full mounts/router exit/mergeParams",
+    "Param hooks and router-local cache",
+    "All HTTP methods/HEAD/OPTIONS and final errors",
+    "Returned Deferred rejection/resolve and late streams/SSE",
+    "Exactlyonce cleanup/logging/inflight, bodycache/uploads/shutdown and adapter lifecycle",
+    "Java/Kotlin overload/nullability compatibility and final API21/Java8 checks",
+    "Independent regression review when old current-runtime tests are updated under CON-APP-010"
+  ],
+  "artifact_sha256": "e3cf91874d921c1d3520f35de01695fe34f65251cd77a49d921863424147d103",
+  "loop_policy": "Up to3 rounds; stop immediately on first PASS. Only concrete current-slice test gaps requested."
+}
