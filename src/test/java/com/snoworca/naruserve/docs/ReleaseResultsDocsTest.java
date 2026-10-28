@@ -123,10 +123,9 @@ public final class ReleaseResultsDocsTest {
                 for (String link : evidence.split(", ")) {
                     int hash = link.indexOf('#');
                     assertTrue(id + " evidence is path#method: " + link, hash > 0);
-                    String path = link.substring(0, hash);
-                    File f = new File(root, path);
-                    assertTrue(id + " test file exists: " + path, f.isFile());
-                    assertTrue(id + " declares " + link.substring(hash + 1), declares(read(path), link.substring(hash + 1)));
+                    // OPS-REL-008 AC-2: this unchanged0.9 record refers to its actual source snapshot.
+                    try { ReleaseEvidenceSnapshots.method(new File(root), RESULTS, ReleaseEvidenceSnapshots.PIN, link); }
+                    catch (Exception failure) { throw new AssertionError(id + " historical evidence", failure); }
                 }
             } else if ("manual-pending".equals(row[2])) {
                 Matcher m = Pattern.compile("^\\[[^\\]]+\\]\\(#(checklist-\\d+)\\)$").matcher(evidence);

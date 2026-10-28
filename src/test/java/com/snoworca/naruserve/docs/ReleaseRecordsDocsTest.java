@@ -113,8 +113,13 @@ public final class ReleaseRecordsDocsTest {
         List<String> recorded = ScanReportTest.dependencySection(report);
         File graph = new File(System.getProperty("naruserve.depReport"));
         List<String> graphLines = com.snoworca.naruserve.release.ReleaseMain.graphLines(graph);
-        assertEquals("the recorded dependency list is the current runtime list; rerun releaseScan and copy the report",
-                new java.util.ArrayList<>(com.snoworca.naruserve.release.DependencyList.runtime(graphLines)), recorded);
+        // OPS-REL-008 AC-2; OPS-REL-009 AC-1 AC-2: never relabel the dated3.1.0 scan as current3.1.1 clearance.
+        try {
+            File root = new File(System.getProperty("naruserve.rootDir"));
+            List<String> runtime = new java.util.ArrayList<>(com.snoworca.naruserve.release.DependencyList.runtime(graphLines));
+            ReleaseEvidenceSnapshots.scan(root, ReleaseEvidenceSnapshots.HISTORICAL_SCAN, ReleaseEvidenceSnapshots.PIN, runtime);
+            ReleaseEvidenceSnapshots.current(root, runtime);
+        } catch (Exception failure) { throw new AssertionError("versioned release evidence", failure); }
     }
 
     // SDS-AC-3; FR-REL-002 AC-3
