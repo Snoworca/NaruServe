@@ -63,8 +63,8 @@ public class HttpPathPatternTest {
         assertNotNull(match(compile("/literal\\:colon\\*star\\{brace\\}\\?",true,true,false),"/literal:colon*star{brace}?"));
     }
     @Test public void errorsUseActualCodePointOffsets() throws Exception { // FR-ROUTE-018 AC-2
-        String[] patterns={"/:x:y","/😀/:","/a\\","/{a","/:\"\"","/:\"bad","/*","/a?"};
-        int[] offsets={3,4,3,3,4,2,2,2};
+        String[] patterns={"/:x:y","/😀/:","/a\\","/{a","/:\"\"","/:\"bad","/*","/a?","/𐐀?"};
+        int[] offsets={3,4,3,3,4,2,2,2,2};
         for(int i=0;i<patterns.length;i++) {
             try { compile(patterns[i],true,false,true); fail(patterns[i]); }
             catch(RoutingConfigException e) {
@@ -87,6 +87,23 @@ public class HttpPathPatternTest {
         assertNull(match(compile("/s",true,false,false),"/ſ"));
         assertNull(match(compile("/𐐀",true,false,false),"/𐐨"));
         assertNull(match(compile("/é",true,true,false),"/É"));
+    }
+    @SuppressWarnings("unchecked") static Set<String> wildcards(Object m) throws Exception {
+        return (Set<String>) m.getClass().getMethod("wildcards").invoke(m);
+    }
+    @Test public void participatingCaptureKindsFollowDuplicateWinner() throws Exception { // FR-ROUTE-018 AC-1; FR-HTTP-027 AC-1
+        Object optional=compile("/:x{/*x}",true,true,false);
+        Object scalar=match(optional,"/one");
+        assertEquals(Collections.emptySet(),wildcards(scalar));
+        assertEquals(Arrays.asList("one"),captures(scalar).get("x"));
+        Object wildcard=match(optional,"/one/two");
+        assertEquals(Collections.singleton("x"),wildcards(wildcard));
+        assertEquals(Arrays.asList("two"),captures(wildcard).get("x"));
+        Object overwritten=match(compile("/*x/:x",true,true,false),"/one/two/three");
+        assertEquals(Collections.emptySet(),wildcards(overwritten));
+        assertEquals(Arrays.asList("three"),captures(overwritten).get("x"));
+        assertEquals(Collections.singleton("x"),wildcards(match(compile("/*x",true,true,false),"/one")));
+        try { wildcards(wildcard).add("other"); fail(); } catch(UnsupportedOperationException expected) { }
     }
     @Test public void rawWildcardsAndImmutableResults() throws Exception { // FR-ROUTE-018 AC-1 AC-4 AC-6
         Object p=compile("/files/*parts",true,true,true);
