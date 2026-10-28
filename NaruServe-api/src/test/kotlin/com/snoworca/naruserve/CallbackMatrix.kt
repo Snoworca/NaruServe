@@ -13,6 +13,10 @@ import com.snoworca.naruserve.spi.UpgradeHandler
 object CallbackMatrix {
     @JvmField
     val CALLBACK_TYPES: List<String> = listOf(
+        AsyncRouteHandler::class.java,
+        Deferred.FailureHandler::class.java,
+        ErrorMiddleware::class.java,
+        ParamHandler::class.java,
         Configurer::class.java,
         ErrorHandler::class.java,
         LifecycleCallback::class.java,
