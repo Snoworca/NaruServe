@@ -56,6 +56,26 @@ public class HttpDeferredLifetimeContractTest {
         LifecycleExchange ex=new LifecycleExchange("GET","/x");start(app,ex);assertEquals(0,ex.recording.commits.get());
         saved.get().run();assertEquals("next",body(ex));ended(ex);
     }
+    @Test(timeout=15000) public void settlementBeforeAndDuringCallbackReturnCannotLoseTheCleanupLease() throws Exception { // FR-APP-023 AC-3 AC-5 AC-7
+        ExecutorService producer=Executors.newSingleThreadExecutor();
+        try {
+            for(boolean beforeReturn:Arrays.asList(true,false))for(int round=0;round<20;round++) {
+                DefaultRestApp app=new DefaultRestApp();Object result=pending();CyclicBarrier returning=new CyclicBarrier(2);
+                AtomicReference<Future<?>> settlement=new AtomicReference<>();AtomicInteger callbacks=new AtomicInteger();
+                async(app,"getAsync","/x",(q,s,n)->{
+                    callbacks.incrementAndGet();s.send("done");
+                    settlement.set(producer.submit(()->{awaitRace(returning);assertTrue(resolve(result));}));
+                    awaitRace(returning);
+                    if(beforeReturn)settlement.get().get(3,TimeUnit.SECONDS);
+                    return result;
+                });
+                LifecycleExchange ex=new LifecycleExchange("GET","/x");start(app,ex);
+                settlement.get().get(3,TimeUnit.SECONDS);
+                assertEquals("done",body(ex));assertEquals(1,callbacks.get());ended(ex);
+                assertFalse(resolve(result));assertFalse(reject(result,new IllegalStateException("late")));ended(ex);
+            }
+        } finally {producer.shutdownNow();assertTrue(producer.awaitTermination(3,TimeUnit.SECONDS));}
+    }
     @Test public void delayedAndAlreadyRejectedResultsReachOnlyDownstreamErrorLayers() { // FR-APP-023 AC-1; FR-APP-024 AC-1
         for(boolean immediate:Arrays.asList(false,true)) {
             DefaultRestApp app=new DefaultRestApp();Throwable failure=new IllegalStateException("async");Object result=immediate?rejected(failure):pending();List<String> trace=new ArrayList<>();AtomicReference<Request> identity=new AtomicReference<>();

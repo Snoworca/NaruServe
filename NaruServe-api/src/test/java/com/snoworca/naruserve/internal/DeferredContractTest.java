@@ -65,6 +65,47 @@ public class DeferredContractTest {
             }finally{pool.shutdownNow();}
         }
     }
+    @Test(timeout=15000) public void observerRegistrationsRaceBothSettlementsWithoutLossOrDuplication() throws Exception { // FR-APP-023 AC-3 AC-5 AC-7
+        ExecutorService pool=Executors.newFixedThreadPool(10);
+        try {
+            // Exercise guaranteed resolve, guaranteed reject, and competing outcomes.
+            for(int mode=0;mode<3;mode++)for(int round=0;round<20;round++) {
+                Object result=pending();CyclicBarrier go=new CyclicBarrier(10);
+                AtomicIntegerArray settlements=new AtomicIntegerArray(4),failures=new AtomicIntegerArray(4);
+                AtomicReferenceArray<Throwable> observed=new AtomicReferenceArray<>(4);
+                AtomicReference<Throwable> winningError=new AtomicReference<>();AtomicInteger winner=new AtomicInteger(),wins=new AtomicInteger();
+                List<Future<?>> futures=new ArrayList<>();
+                for(int i=0;i<4;i++) {
+                    final int listener=i;
+                    futures.add(pool.submit(()->{awaitRace(go);settled(result,()->settlements.incrementAndGet(listener));}));
+                    futures.add(pool.submit(()->{awaitRace(go);failure(result,error->{observed.set(listener,error);failures.incrementAndGet(listener);});}));
+                }
+                for(int i=0;i<2;i++) {
+                    final boolean rejecting=mode==1||(mode==2&&i==1);
+                    final Throwable error=new IllegalStateException("race-"+mode+"-"+round+"-"+i);
+                    futures.add(pool.submit(()->{awaitRace(go);boolean won=rejecting?reject(result,error):resolve(result);
+                        if(won){winningError.set(rejecting?error:null);winner.set(rejecting?2:1);wins.incrementAndGet();}}));
+                }
+                for(Future<?> future:futures)future.get(3,TimeUnit.SECONDS);
+                assertEquals(1,wins.get());assertTrue(done(result));assertTrue(winner.get()==1||winner.get()==2);
+                if(mode<2)assertEquals(mode==0?1:2,winner.get());
+                for(int i=0;i<4;i++) {
+                    assertEquals("settlement listener "+i,1,settlements.get(i));
+                    assertEquals("rejection listener "+i,winner.get()==2?1:0,failures.get(i));
+                    assertSame(winningError.get(),observed.get(i));
+                }
+                assertFalse(resolve(result));assertFalse(reject(result,new IllegalStateException("repeat")));
+                AtomicInteger lateSettled=new AtomicInteger(),lateRejected=new AtomicInteger();AtomicReference<Throwable> lateError=new AtomicReference<>();
+                settled(result,lateSettled::incrementAndGet);failure(result,error->{lateError.set(error);lateRejected.incrementAndGet();});
+                assertEquals(1,lateSettled.get());assertEquals(winner.get()==2?1:0,lateRejected.get());assertSame(winningError.get(),lateError.get());
+                // Verify callbacks again after repeated settlement and late subscription.
+                for(int i=0;i<4;i++){assertEquals(1,settlements.get(i));assertEquals(winner.get()==2?1:0,failures.get(i));}
+            }
+        } finally {pool.shutdownNow();assertTrue(pool.awaitTermination(3,TimeUnit.SECONDS));}
+    }
+    static void awaitRace(CyclicBarrier barrier) {
+        try{barrier.await(3,TimeUnit.SECONDS);}catch(Exception error){throw new AssertionError(error);}
+    }
     @Test public void nullReasonsAndObserversAreRejectedInEveryState() throws Exception { // FR-APP-023 AC-2; FR-APP-022 AC-6
         Class<?> failureType=Class.forName("com.snoworca.naruserve.Deferred$FailureHandler");
         for(Object result:Arrays.asList(pending(),resolved(),rejected(new IllegalStateException("done")))) {
