@@ -4,6 +4,8 @@
 
 NaruServe는 Java로 작성되었지만 Kotlin에서 별도 DSL 없이 씁니다. 콜백이 모두 Java 함수형 인터페이스(`@FunctionalInterface`)라서 Kotlin 람다가 그대로 들어갑니다.
 
+이 문서는 0.10.0 체크아웃을 설명합니다. 아래 0.9.0 의존성은 이전 배포 예제이며 새 0.10.0 API를 제공하지 않습니다. [현재 설치 절차](README.md)를 따르세요. 코어는 Java 8/API 21 호환이며 Kotlin 라이브러리는 선택 Kotlin 모듈에 둡니다.
+
 ```kotlin
 val app = RestApp.create()
 
@@ -68,7 +70,9 @@ app.get("/users/:id") { req, res ->
 
 | Java | Kotlin 타입 | 없을 때 |
 |---|---|---|
-| `req.param("id")` | `String` | 예외 (패턴에 없는 이름) |
+| `req.param("id")` | `String` | 실제 매칭에서 빠진 선택 값도 예외 |
+| `req.paramOrNull("id")` | `String?` | null |
+| `req.paramValues("parts")` | `List<String>` | 빈 리스트 |
 | `req.query("page")` | `String?` | `null` |
 | `req.form(name)` | `String?` | `null` |
 | `req.header(name)` | `String?` | `null` |
@@ -172,9 +176,46 @@ app.post("/users") { req, res ->
 
 ## Coroutine
 
-`suspend` 핸들러는 v1에서 지원하지 않습니다. v1 핸들러는 동기이므로 suspend 함수를 부르려면 `runBlocking`이 필요합니다. 그동안 요청 스레드를 점유하니 오래 걸리는 작업은 피하세요. 프레임워크는 `runBlocking`을 기본 비동기 어댑터로 쓰지 않습니다. Coroutine 지원은 v1 이후 항목입니다. 논블로킹 coroutine 어댑터는 별도 설계가 필요하고 v1 핸들러는 동기이기 때문입니다.
+네이티브 `suspend` 핸들러나 필수 coroutine 의존성은 없습니다. 0.10.0 일반 HTTP는 늦은 Next 콜백과 Deferred를 반환하는 세 인자 AsyncRouteHandler를 지원합니다. 앱이 관리하는 coroutine/executor에 연결하려면 완료·취소·반환한 Deferred lease를 요청 수명에 맞춰 연결하세요. `runBlocking`은 호출 스레드를 점유하며 프레임워크의 비동기 어댑터가 아닙니다.
 
 ## 한 줄로 시작하기
 
 `RestApp.start(3000) { app -> ... }`는 Java 정적 메서드이고 설정 람다가 마지막 인자라서 Kotlin 후행 람다로 씁니다. 람다의 마지막 식이 `app.get(...)`처럼 `RestApp`을 돌려줘도 `void` SAM이라 값은 버려지니 `Unit`을 따로 돌려줄 필요가 없습니다. 예제와 `start`와 `listen`의 차이는 [RestApp의 start](app.md#start)에 있습니다.
 
+
+## Deferred 작업과 요청 보유
+
+새 Java 함수형 인터페이스도 Kotlin SAM 변환을 지원합니다. `AsyncRouteHandler(req, res, next) -> Deferred`, `ErrorMiddleware(error, req, res, next)`, `ParamHandler(req, res, next, values, name)`, `Deferred.FailureHandler(error)`입니다. 세 인자 HTTP 라우트 콜백은 후행 람다용 고정 인자 오버로드를 가지며 기존 두 인자 콜백과 명시 콜백 배열도 유지합니다. 기존 `routing.Router`와 이름이 겹치지 않도록 공개 Router를 명시하거나 import하세요.
+
+아래 구성은 선택 `:tab`이 있는 Router를 마운트하고 **첫 JSON 본문 읽기보다 먼저202를 보내는** 작업을 보여 줍니다. POST `/work`에 JSON `"hello"`를 보내면 반환한 pending 결과가 요청을 보유하는 동안 타입 지정 String으로 읽습니다. 마지막 요청 접근 뒤 resolve하며 다른 응답이나 next를 자동 실행하지 않습니다. Thread는 작은 설명용 예제입니다. 실제 부하에는 앱이 관리하는 제한된 executor와 명시 취소 정책을 사용하세요.
+
+```kotlin
+val api = com.snoworca.naruserve.Router.create(true)
+api.param("id") { req, res, next, values, name ->
+    req.attribute("seenId", values[0])
+    next.run()
+}
+api.get("/users/:id{/:tab}") { req, res ->
+    res.send(req.baseUrl() + ":" + req.param("id"))
+}
+app.use("/api", api)
+
+app.methodAsync("POST", "/work") { req, res, next ->
+    val work = Deferred.pending()
+    res.status(202).send("accepted")
+    Thread({
+        try {
+            val value = req.body(String::class.java)
+            req.attribute("processed", value)
+            work.resolve()
+        } catch (error: Throwable) {
+            work.reject(error)
+        }
+    }, "retained-work-example").start()
+    work
+}
+```
+
+`Router.create(true)`는 부모 캡처를 합치며 지역 캡처가 param 훅을 실행합니다. `/api` 안의 path/url은 접두사를 뺀 값이고 baseUrl은 `/api`, originalUrl/rawPath는 원래 값입니다. `next.route()`는 현재 Route를 건너뛰고 `next.router()`는 가까운 Router를 나갑니다. 네 인자 오류 미들웨어는 등록 위치에서 처리하고 거기의 `next.run()`은 오류를 해제하며 `next.error(error)`는 전파/교체합니다.
+
+반환한 pending Deferred lease는 마지막 사용이나 terminal 취소까지 본문·업로드·context를 보유합니다. 사용자 어댑터는 물리적인 retainRequest 동작을 구현해야 하며 기본 no-op은 호환용입니다. producer가 읽기 전 본문을 미리 파싱한다는 약속은 없습니다. resolve/reject는 한 번만 결정하고 onRejected/onSettled observer는 내부 잠금 밖에서 실행됩니다. 스레드를 시작하거나 Request를 저장하는 것만으로 lease가 생기지 않습니다. [미들웨어](middleware.md#deferred와-늦은-작업), [요청 뷰](request.md#마운트와-경로-뷰), [수명주기](lifecycle.md)

@@ -2,9 +2,11 @@
 
 [한국어](../middleware.md) | [API index](README.md)
 
+This is the common HTTP stack in the 0.10.0 checkout. Callbacks, responses and errors work on Java 8/API 21 without a mandatory Promise or coroutine library.
+
 ## Middleware
 
-This corresponds to Express's (req, res, next) callback. Call next.run() instead of next(). Examples are fragments; auth, services and DTO types stand for application code.
+The retained core signatures are below. The actual `Next` also has default `route()`/`router()` methods described later.
 
 ```java
 @FunctionalInterface
@@ -20,14 +22,15 @@ public interface Next {
 
 ### Registration
 
-| Registration | Scope |
+| Call | Behavior |
 |---|---|
-| `app.use(mw)` | Every request |
-| `app.use("/api", mw)` | /api and descendants such as /api/users; excludes /apix |
-| `app.get("/admin", mw, handler)` | One middleware for this route |
-| `app.route("/admin").use(m1).use(m2).get(h)` | In use order, for methods registered after use |
+| `app.use(mw)` | Append global middleware at the current position |
+| `app.use("/api", mw)` | Run on matching prefixes, removing the consumed prefix during the callback |
+| `app.get(path, mw1, mw2, ...)` | Append three-argument callbacks in order |
+| `app.get(path, mw, handler)` | Existing middleware plus two-argument terminal-handler convenience |
+| `app.route(path).use(mw).get(handler)` | Append callbacks to one Route |
 
-RouteBuilder.use is the way to attach multiple middleware. A later use does not modify an earlier get registration. This avoids Java's requirement that varargs come last and keeps Kotlin trailing-lambda syntax usable.
+`get(path, Middleware...)` and fixed-arity overloads also support Kotlin trailing lambdas. Null/empty callback arrays are rejected before registration. A Route's `use` applies across its methods but keeps its registration position. It does not automatically run after an earlier handler ends the request.
 
 ```java
 Middleware adminOnly = (req, res, next) -> next.run();   // placeholder adminOnly middleware for this example
@@ -38,8 +41,6 @@ app.route("/api/admin")
    .get((req, res) -> res.send("admin"));
 ```
 
-Kotlin:
-
 ```kotlin
 app.route("/api/admin")
     .use(auth)
@@ -48,6 +49,8 @@ app.route("/api/admin")
 ```
 
 ### Request ID and authentication
+
+The application supplies `auth`, `admin` and `User`. After responding, return without `next.run()` unless continuation is intentional.
 
 ```java
 app.use((req, res, next) -> {
@@ -74,8 +77,6 @@ Middleware adminOnly = (req, res, next) -> {
 app.get("/api/admin", adminOnly, (req, res) -> res.json(admin.status()));
 ```
 
-Use a labelled return to leave a Kotlin middleware lambda early:
-
 ```kotlin
 app.use("/api") { req, res, next ->
     if (!auth.isAuthorized(req)) {
@@ -88,7 +89,7 @@ app.use("/api") { req, res, next ->
 
 ### HTTP CORS
 
-Register CORS before authentication to allow browser requests from another origin:
+Register CORS before authentication so browser preflight can complete first.
 
 ```java
 app.cors(cors -> cors
@@ -100,17 +101,18 @@ app.cors(cors -> cors
 app.use(auth);
 ```
 
-- allowedOrigins takes exact HTTP(S) origins without paths or trailing slashes, such as https://app.example. Default: no origins. `*` allows any origin; literal `null` allows opaque origins.
-- Default methods are GET, HEAD and POST. allowedMethods replaces the set; allowedHeaders replaces a case-insensitive list, empty by default.
-- credentials defaults false. Combining credentials(true) with wildcard origin throws during registration. maxAge uses nonnegative seconds; default zero omits caching metadata.
-- Allowed origin requests receive Access-Control-Allow-Origin and merge Origin into Vary. Disallowed ordinary requests continue without CORS allow headers. CORS does not authenticate requests.
-- OPTIONS with Origin and Access-Control-Request-Method is preflight. An allowed origin, method and header list yields empty 204 before auth; malformed or disallowed preflight yields 403. Existing Vary values, including `*`, remain, with preflight method/header dimensions added.
-- Even requests without Origin add Vary: Origin for cache separation, while body and routing stay unchanged. Ordinary non-preflight OPTIONS proceeds. Framework-generated 400/401/500 responses retain framework CORS and Vary metadata for allowed origins. Options are copied at registration, so later mutation of a retained options object does not change policy. Configure before listen.
-- WebSocket Upgrade is excluded: configure its separate Origin policy with app.webSocket(o -> o.allowedOrigins(...)).
+- `allowedOrigins` contains exact HTTP(S) origins without paths/trailing slashes. Default: none. `*` allows every origin; the string `null` allows opaque origins.
+- Default methods are GET, HEAD, POST. `allowedMethods` replaces the set; `allowedHeaders` replaces a case-insensitive allowlist, empty by default.
+- `credentials` defaults false. Combining `credentials(true)` and `*` fails registration. `maxAge` uses nonnegative seconds; default 0 omits caching metadata.
+- Allowed origins receive `Access-Control-Allow-Origin` and, when enabled, `Access-Control-Allow-Credentials: true`. Disallowed ordinary origins continue without grants. CORS does not authenticate.
+- OPTIONS with `Origin` and `Access-Control-Request-Method` is preflight. Allowed method/headers produce empty 204 before authentication. Invalid/disallowed preflight produces 403. Distinguish this from ordinary automatic OPTIONS 200.
+- Requests without Origin still set `Vary: Origin`. Ordinary response Vary values, including `*`, are merged; preflight adds method/request-header dimensions.
+- **Error fallback with this explicit CORS extension** clears ordinary application headers and restores only tracked framework CORS grants/Vary. Credentials survive; app/`HttpException` headers cannot override the grant. Common HTTP errors without installed CORS retain ordinary app headers.
+- Options are copied, and `cors` is configured before listen. WS Upgrade uses the separate `app.webSocket(o -> o.allowedOrigins(...))` policy.
 
 ### Route groups
 
-group(prefix, configurer) removes repeated prefixes. A group is not another server and has no listen/lifecycle methods.
+`group(prefix, configurer)` retains safe string-prefix joining and common middleware. Distinguish this convenience from remountable independent Router/Pattern APIs.
 
 ```java
 Middleware adminOnly = (req, res, next) -> {
@@ -134,21 +136,13 @@ app.group("/api", api -> {
 });
 ```
 
-GET /api/admin/reports runs app middleware, auth, adminOnly, audit, then handler. Groups support GET/POST/PUT/PATCH/DELETE/HEAD/OPTIONS.
+The example `/api/admin/reports` runs group auth, adminOnly, audit, then handler. Group `use` applies before routes in the group and descendants regardless of where it appears in the configuration callback. Parent middleware precedes child middleware. Separate routes outside the group do not inherit it merely by sharing a prefix.
 
-- Group use applies to every route in that group and descendants, regardless of its position inside the callback. Parent middleware precedes child middleware.
-- A separately registered route outside the group does not inherit group middleware even with the same prefix. Use app.use(prefix, mw) for all matching requests.
-- group.route(path).use(mw), like RouteBuilder, affects only later method registrations.
-- Paths must start with /. Boundary slashes join: /api/ + /users becomes /api/users; /api + / becomes /api. Dot/dot-dot, query, fragment, backslash and encoded path separators are rejected.
-- Use groups/builders only within their configuration callback and call app.group before listen. A throwing callback does not register its group routes.
+A group's `route(path)` also has one persistent Route builder; its `.use`/method callbacks retain order. Paths start with `/`; boundary slashes join (`/api/` + `/users` → `/api/users`, `/api` + `/` → `/api`). Dot/dot-dot, query, fragment, backslash and encoded separators are rejected. Call `group` before listen and use groups/group builders only inside their configuration callbacks. A throwing callback does not partially publish that group's routes.
 
 ### Execution order
 
-1. Global and matching prefix middleware in one shared registration order.
-2. Route middleware in registration order.
-3. Route handler.
-
-Global and prefix middleware follow the same app.use order, as in Express. Only nonmatching prefixes are skipped. /api matches /api/users but not /apian. Route middleware follows all applicable app.use middleware.
+Common HTTP global/prefix `use`, Routes, mounted Routers, static files and error layers follow **one registration order**. Later global middleware is not moved ahead of earlier routes. The next layer runs only when the previous one continues. Static misses and final 404 use this same sequence.
 
 ```java
 Middleware requestId = (req, res, next) -> next.run();   // placeholder global request-ID middleware
@@ -156,12 +150,9 @@ app.use(requestId);          // runs first
 app.use("/api", auth);       // runs second for /api paths
 ```
 
-If there is no explicit route, step 3 checks static files then 404. App middleware still executes before 404/405. Call app.use only before listen.
-
 ### next.run rules
 
-- Call it once. Repeated calls, calls after the response has finished, or calls after the request has ended throw.
-- It is synchronous: downstream middleware and the handler finish before it returns, allowing before/after work.
+On the execution thread, `next.run()` usually invokes downstream callbacks before returning, allowing before/after work. Deep chains may yield for bounded stack use; calls from other threads enter a safe queue. User callbacks never execute under a request-wide monitor. A callback that joins a child thread invoking Next does not deadlock merely for that reason.
 
 ```java
 app.use((req, res, next) -> {
@@ -172,19 +163,28 @@ app.use((req, res, next) -> {
 });
 ```
 
-SSE, WebSocket and file transfers can continue after next.run returns. This measures handler execution, not completed transmission.
+This measures callback work rather than total network transmission. Streams, SSE and WS can continue afterward. Repeated next and explicit next after a response are not categorically rejected. They advance the actual cursor; do not use repeated invocation as a deduplication mechanism. Calls after terminal abort/cancellation/shutdown cannot resurrect closed resources or application services.
 
-Returning without either a response or next.run logs one warning containing the method and path, such as `response not finished by the handler: GET /x`, then ends with the selected status and headers. This avoids retaining a connection until timeout while exposing the mistake. Asynchronous middleware that saves next for later is unsupported in v1.
+| Call | Common HTTP meaning |
+|---|---|
+| `next.run()` | Continue normal flow; in error middleware, clear the error and resume normal flow |
+| `next.error(error)` | Pass to later error layers; null is rejected |
+| `next.route()` | Skip the rest of the current Route; ordinary use continues normally |
+| `next.router()` | Exit the nearest Router; at top level, leave the app stack |
+
+Captures after continuing in the same router are not blindly reset to earlier values. Exiting a mounted child restores parent path/url/baseUrl/params views. `next.route()` does not rewrite the URL or select a named route.
+
+Returning without response or next **leaves the request pending**, rather than logging a warning and automatically ending empty 200. A saved callback can later next, send, stream or start SSE. The application must provide completion, timeout and cancellation paths.
 
 ### WebSocket
 
-app.use("/ws", auth) runs on the HTTP Upgrade request, not every later WebSocket message. Authenticate the upgrade there. See [WebSocket](websocket.md).
+Existing `app.use("/ws", auth)` authenticates the HTTP Upgrade, not every message afterward. Existing valid global/string-prefix middleware and strict WS path/Origin rules remain. Do not generalize advanced HTTP paths or HTTP layers appended after listen to WS behavior. See [WebSocket](websocket.md).
 
 ## Error handling
 
 ### Throw an exception
 
-Thrown middleware/handler exceptions and next.error(e) enter the error path:
+Synchronous exceptions, `next.error(e)` and rejection of a returned Deferred proceed to error layers **after the current position**, skipping normal layers without restarting earlier error handlers.
 
 ```java
 app.get("/users/:id", (req, res) -> {
@@ -196,7 +196,7 @@ app.get("/users/:id", (req, res) -> {
 
 ### app.onError
 
-This corresponds to Express error middleware with the same argument order but no next: (error, req, res). ErrorHandler permits checked exceptions without wrappers.
+The retained three-argument `ErrorHandler` permits checked exceptions.
 
 ```java
 @FunctionalInterface
@@ -221,16 +221,13 @@ app.onError((error, req, res) -> {
 });
 ```
 
-- Once committed, the framework never appends a 500 JSON body. A custom handler must abort instead of overwriting it.
-- Without a registered handler, the standard format below applies.
-- Framework errors use unchecked HttpException: status() is 400..599 and code() is a standard code. Applications may throw new HttpException(404, "User not found"), similar to Express err.status.
-- UnsupportedMediaTypeException is the 415 subclass. If a handler treats every exception as 500 without checking HttpException first, it converts those 4xx errors too.
-- Multiple onError callbacks form a registration-order chain. The first always runs; later callbacks run only until a response begins. This replaces Express next(err) with the simpler rule that a response stops the chain.
-- If no callback starts a response, standard JSON answers. A callback exception stops the chain and produces standard 500 if still uncommitted. A callback that starts a stream on an initially uncommitted response supplies the response and that stream completes normally. Errors on an already-started response abort the connection.
+Configure `onError` before listen. It occupies **its registration position** in the error stack. A response stops automatic propagation; if it leaves the response unstarted, the same error continues. A new exception thrown by the callback advances to later error layers. The example's explicit application logging is additional to the framework's once-only 500 logging.
+
+Alternatively register four-argument `ErrorMiddleware` with `app.use((error, req, res, next) -> ...)` or `app.use(path, errorMiddleware)`. `next.error(e)` propagates/replaces; `next.run()` resumes normal flow. A committed response never receives a second error body. Late errors enter logging/abort handling without a second commit.
 
 ### Rejection headers
 
-HttpException.withHeader(name, value) adds a header and returns the same exception. headers() returns an insertion-ordered, read-only list, empty by default. It corresponds to Express err.headers propagated through finalhandler.
+`HttpException.status()` is 400..599; `code()` retains standard-code convenience values. `UnsupportedMediaTypeException` is the 415 subclass. Do not turn every error into 500 without inspecting status. `withHeader(name, value)` appends to the same exception; `headers()` is an ordered read-only list.
 
 ```java
 app.get("/api/busy", (req, res) -> {
@@ -238,40 +235,76 @@ app.get("/api/busy", (req, res) -> {
 });
 ```
 
-Kotlin:
-
 ```kotlin
 app.get("/api/busy") { req, res ->
     throw HttpException(503).withHeader("Retry-After", "1")
 }
 ```
 
-- The error path resets prior application response headers. If onError does not respond, standard errors add exception headers. A responding custom onError controls its own headers. Framework-owned CORS metadata is preserved as described above.
-- Invalid names/values, including CR/LF, throw IllegalArgumentException as in res.header. Content-Length and Transfer-Encoding are controlled by the body writer rather than copied from exception metadata.
-- Repeated same-name additions are sent separately. Create a fresh exception for every throw.
+Common HTTP final handling applies exception headers and removes Content-Encoding, Content-Language and Content-Range to suit the generated body. Explicit CORS retains its privacy rules above. Invalid headers, including CR/LF, throw `IllegalArgumentException`; the response writer controls framing headers. Duplicate names can be appended, so create a new exception for each request.
 
 ### Standard error format
+
+The common HTTP default is **HTML**. A 404 uses `Cannot METHOD /raw/path`. Errors use the `HttpException` status, otherwise an already-selected valid 400..599 response status, otherwise 500, with an HTML-escaped Java exception/stack representation. Responses include `Content-Type: text/html; charset=utf-8`, `Content-Security-Policy: default-src 'none'`, `X-Content-Type-Options: nosniff` and the UTF-8 byte length. HEAD retains that length without transmitting body bytes. Default errors can expose stack traces to clients; public services that need to hide internals should send a safe application error response explicitly.
+
+The following JSON is an **example of the retained standard-error extension format**, not the common HTTP default. Pre-request validation, lifecycle rejection and retained WS/legacy paths may still use it. `HttpException.code()` does not make the default HTML become JSON. Do not assume an unspecified public standard-JSON renderer exists; send `res.json(...)` explicitly in your `onError`/`ErrorMiddleware`.
 
 ```json
 {"error":{"code":"BAD_REQUEST","message":"Invalid JSON request","requestId":"..."}}
 ```
 
-This is a 400 example. No stack trace reaches the client. message uses the HttpException message, falling back to the reason phrase; 500 always says Internal Server Error. The framework writes this JSON without invoking the app codec.
+| Cause | Status |
+|---|---|
+| Invalid participating capture/query/JSON/form | 400 |
+| Body/upload over limit | 413 |
+| Unsupported Content-Type/charset | 415 |
+| Common HTTP final path/method miss | 404 |
+| Unhandled server exception | 500 |
+| App lifecycle rejection | 503 with `Connection: close`, retained error profile |
 
-v1 does not offer a custom 404/405 body setting, keeping a consistent format across apps/codecs. Global/prefix middleware still runs before those responses, and its headers remain.
+Host, framing and overload rejections before application dispatch can instead be transport plain text or connection closure. Not every 400 is generated by this HTML handler or application `onError`. See [defaults and security](defaults.md).
 
-| Situation | Status | code |
-|---|---|---|
-| JSON/form parse failure, malformed path/query reaching the app | 400 | BAD_REQUEST |
-| App validation failure | 400 or explicitly 422 | BAD_REQUEST / UNPROCESSABLE_ENTITY |
-| No route | 404 | NOT_FOUND |
-| No method | 405 | METHOD_NOT_ALLOWED |
-| Body/upload above limit | 413 | PAYLOAD_TOO_LARGE |
-| Unsupported Content-Type | 415 | UNSUPPORTED_MEDIA_TYPE |
-| Ordinary request on WebSocket-only path | 426 | UPGRADE_REQUIRED |
-| Other exception | 500 | INTERNAL_ERROR |
-| Unsupported method | 501 | NOT_IMPLEMENTED |
-| STOPPING or failed startup | 503, Connection: close | SERVICE_UNAVAILABLE |
-| Unlisted status, such as HttpException(418) | That status | HTTP_<status>, for example HTTP_418 |
+## Deferred and late work
 
-A full transport queue also yields 503, but TinyHttpd writes it as text/plain without standard JSON or onError: no app worker is available. Likewise, transport validation can reject requests before the app; see [defaults](defaults.md). application/problem+json (RFC 9457) is not a v1 response option.
+`AsyncRouteHandler` is `Deferred handle(Request, Response, Next) throws Exception`. Use `getAsync(path, handler)`, `methodAsync(token, path, handler)` or `useAsync(path, handler)`. A returned pending Deferred holds an explicit request work lease even if the response finishes first. Merely saving Request or starting an arbitrary thread does not create this lease.
+
+| Deferred API | Contract |
+|---|---|
+| `new Deferred()` / `Deferred.pending()` | Pending result |
+| `Deferred.resolved()` / `Deferred.rejected(error)` | Already settled result |
+| `resolve()` / `reject(error)` | First outcome returns true; later attempts false; null errors rejected |
+| `onRejected(FailureHandler)` | Observe original failure, including late registration |
+| `onSettled(Runnable)` | Observe successful/failed settlement, including late registration |
+| `isDone()` | Whether settled |
+
+Resolution **never automatically calls next or ends a response**. Settle after the producer's last request/upload access. Multiple leases delay cleanup until all settle or terminal cancellation occurs. Observers run outside internal locks; one throwing observer cannot prevent others. Settlement observers registered before rejection run after the captured rejection observers; late rejection observers may run concurrently.
+
+Built-in adapters and core use `HttpExchange.retainRequest()` to separate wire-response finish from request input/context release. This does not promise body prefetch. Work needing its first `req.body(...)` after an early response must remain inside a **returned pending Deferred** and settle after last use. A custom exchange's default retainRequest is a compatibility no-op; its implementation must supply physical input/context retention. Forced cancellation/timeouts may revoke holds, and closed input is never reopened. See [lifecycle](lifecycle.md) and the [Kotlin example](kotlin.md#deferred-work-and-request-retention).
+
+## First body read after an early response
+
+POST the JSON string "hello" to /work. The demonstration Thread first reads the body after early 202 and settles after last request access. Use an application-managed bounded executor and cancellation policy for production load. A rejection after commitment passes onward without writing a second JSON response.
+
+```java
+app.methodAsync("POST", "/work", (request, response, next) -> {
+    Deferred work = Deferred.pending();
+    response.status(202).send("accepted");
+    new Thread(() -> {
+        try {
+            String value = request.body(String.class);
+            request.attribute("processed", value);
+            work.resolve();
+        } catch (Throwable error) {
+            work.reject(error);
+        }
+    }, "retained-work-example").start();
+    return work;
+});
+app.use((error, request, response, next) -> {
+    if (response.isCommitted()) {
+        next.error(error);
+        return;
+    }
+    response.status(500).json(Collections.singletonMap("error", "Request failed"));
+});
+```

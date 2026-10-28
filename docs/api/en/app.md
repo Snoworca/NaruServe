@@ -4,6 +4,8 @@
 
 `RestApp` corresponds to Express's `app`. Use it to register routes, middleware and configuration, then start and stop a server. Examples below are API fragments; use the [quick start](README.md#quick-start) for imports and an executable entry point. Application-specific types such as `Database` and `UserService` stand for your own implementations.
 
+This page describes common HTTP in the **0.10.0 checkout**. The 0.9.0 dependency below identifies the previous release, not availability of these new APIs. Follow the [installation guide](README.md) for the current checkout/artifact procedure. TinyHttpd is pinned to 3.1.1 with raw request-target delivery; default Gson remains 2.14.0. Core APIs target Java 8/API 21; this is not a device performance claim.
+
 ## Create an app
 
 ```java
@@ -54,7 +56,7 @@ One `RestApp` represents one server. Multiple apps in a process do not share fra
 | `put(path, handler)` | PUT route |
 | `patch(path, handler)` | PATCH route |
 | `delete(path, handler)` | DELETE route |
-| `head(path, handler)` | Explicit HEAD handler, before automatic HEAD |
+| `head(path, handler)` | Explicit HEAD; separately registered Routes still follow order |
 | `options(path, handler)` | Explicit OPTIONS handler, before automatic OPTIONS |
 | `get(path, middleware, handler)` and peers | One route-specific middleware |
 | `route(Method, path, handler)` | One method |
@@ -102,7 +104,7 @@ See [middleware and errors](middleware.md).
 | `defaultCache(policy)` | Policy for responses without Cache-Control; null omits it | [Default policy](static.md#default-server-policy) |
 | `accessLog(options -> ...)` | Access logging | [Logging](logging.md) |
 | `logger(logger)` / `logger()` | Replace / retrieve the app logger | [Logging](logging.md) |
-| `routerPolicy(RouterPolicy)` | Slash, case, TRACE and CONNECT policy | [Router policy](routing.md#router-policy) |
+| `routerPolicy(RouterPolicy)` | Explicit string slash/case policy; retained WS TRACE/CONNECT gates | [Router policy](routing.md#router-policy) |
 
 ### Server options
 
@@ -161,7 +163,7 @@ app.trustProxy(true)
 
 ### Router policy
 
-`routerPolicy(RouterPolicy)` returns `RestApp`. The default is strict, with all switches off. It corresponds to Express's strict-routing and case-sensitive-routing settings, but the defaults differ.
+`routerPolicy(RouterPolicy)` returns `RestApp`. Without an explicit policy, common HTTP is case-insensitive and non-strict, with meaningful repeated slashes. An explicit policy applies its own case/trailing/slash settings, including all-false strict values. The retained strict router/WS method gates remain separate. See [router policy](routing.md#router-policy).
 
 ```java
 app.routerPolicy(RouterPolicy.builder().ignoreTrailingSlash(true).build())
@@ -196,7 +198,7 @@ ServerHandle server = app.listen(8080);
 
 - Startup is synchronous: onStart, route validation and binding finish before return. Unlike Express, it accepts no callback. Requests are not dispatched to application handlers until startup completes; connections accepted during startup wait for that transition.
 - After return, the process remains alive even after main ends. The TinyHttpd adapter holds one non-daemon keeper thread until shutdown; the engine's other threads remain daemon threads. This gives the usual standalone-server behavior without making worker threads prevent JVM exit.
-- Binding failure, onStart exceptions and conflicting routes throw exceptions, with no open port and cleanup of resources already created.
+- Binding failure, onStart exceptions and invalid configuration throw exceptions, with no open port and cleanup of resources already created. Common HTTP duplicate/overlapping routes are valid ordered registrations; retained WS conflicts still fail startup.
 - The default bind address is **127.0.0.1 only**. Set `bindAddress("0.0.0.0")` for LAN access.
 - `ServerHandle.port()` returns the actual port, including a selected ephemeral port for `listen(0)`. `address()` returns the configured bind address; `state()` reads the current app state. These short names follow other accessors such as req.path(). `url()` returns a browsable address, substitutes localhost for wildcard binds, and brackets IPv6. `shutdown(timeout, unit)` follows app shutdown: repeated calls are safe, negative timeout throws IllegalArgumentException, and null unit throws NullPointerException.
 - On Android, call from a worker thread.
@@ -217,9 +219,9 @@ app.shutdown(10, TimeUnit.SECONDS);
 
 Repeated shutdown is safe; a terminated app cannot listen again. On Android, call from a worker thread. Steps 2–4 share one timeout; goodbye uses at most one second or the remaining time. onStop, resource closing and logger flush have no time limit and can extend the total duration. See [lifecycle](lifecycle.md) for the rationale and the three-second transport return allowance.
 
-## Configure before listen
+## Registration and configuration lifecycle
 
-Routes, middleware, static mounts, multipart and codecs may change only in NEW state. Later configuration throws. listen validates duplicate method/path pairs and equally ranked conflicting patterns before opening a socket.
+Common HTTP route/middleware/Router registration and existing RouteBuilder callbacks may be appended while RUNNING. Their position/order remains stable; a terminated app rejects them. Configuration such as server, codecs, multipart, typed CORS, groups, onError, static mounts and WS registrations still requires NEW. Validate a complete alternative/callback tree before publication. Common HTTP duplicate paths are not startup conflicts; direct legacy/WS rules remain strict.
 
 ## Example
 
@@ -291,3 +293,11 @@ Use the handle's url and shutdown methods when start creates the app. Startup re
 There is no default port, PORT environment lookup or bind-address argument. Express listens on all interfaces by default; NaruServe keeps loopback unless you explicitly configure otherwise. Non-loopback binding retains the same warning.
 
 On Android, start includes synchronous binding and onStart work, so call it on a worker thread and call handle.shutdown from your Service lifecycle. Use create/listen for tests or embedding when you do not want an automatic JVM hook.
+
+## Common HTTP registration surface
+
+`RestApp` and independent `com.snoworca.naruserve.Router` share `HttpRoutes<T>`. `route(Object)` accepts strings, Java Pattern, `RegexPathPattern` and nested array/list alternatives. `method(String, Object, Middleware...)` registers extended method tokens. Fixed-arity three-argument overloads support Kotlin trailing lambdas while retained two-argument `RouteHandler` calls remain usable.
+
+`use(path, router)` mounts a live independent Router; `param(name, ParamHandler)` preprocesses captures; four-argument `ErrorMiddleware` participates at its registration position. `getAsync`/`methodAsync`/`useAsync` take three-argument `AsyncRouteHandler` returning Deferred. Resolving does not implicitly next/end, and a returned pending result retains request resources after an early response. See [routing](routing.md), [request views](request.md#mounts-and-path-views) and [Deferred](middleware.md#deferred-and-late-work).
+
+`send("text")` stays text/plain, JSON request bodies stay typed/on-demand, and static/WS/Host/framing security remains enforced. This common HTTP profile does not claim every Express or third-party middleware API. Hand-written RestApp implementations must account for the expanded registration interface; default Request/Next/exchange hooks do not add mandatory abstract methods.

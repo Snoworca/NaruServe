@@ -4,6 +4,8 @@
 
 `RestApp`은 Express의 `app`에 해당합니다. 라우트·미들웨어·설정을 등록하고 서버를 시작하고 끕니다.
 
+이 페이지는 **0.10.0 체크아웃**의 일반 HTTP를 설명합니다. 아래 0.9.0 의존성은 이전 배포 좌표이며 새 API의 배포 완료를 뜻하지 않습니다. 현재 체크아웃/아티팩트 사용법은 [설치 안내](README.md)를 따르세요. TinyHttpd는 raw request-target 전달을 사용하는3.1.1, 기본 Gson은2.14.0입니다. 코어 API는 Java 8/API 21을 대상으로 하며 기기 성능 검증을 뜻하지 않습니다.
+
 ## 앱 만들기
 
 ```java
@@ -56,7 +58,7 @@ public interface AppFactory {   // com.snoworca.naruserve.spi
 | `put(path, handler)` | PUT 라우트 |
 | `patch(path, handler)` | PATCH 라우트 |
 | `delete(path, handler)` | DELETE 라우트 |
-| `head(path, handler)` | HEAD 라우트(자동 HEAD보다 우선) |
+| `head(path, handler)` | HEAD 라우트. 별도 Route끼리는 등록 순서 적용 |
 | `options(path, handler)` | OPTIONS 라우트(자동 OPTIONS보다 우선) |
 | `get(path, middleware, handler)` 등 | 이 라우트에만 적용할 미들웨어를 붙입니다. |
 | `route(Method, path, handler)` | 메서드 하나 |
@@ -110,7 +112,7 @@ public interface RouteHandler {
 | `accessLog(options -> ...)` | 접근 로그 설정 | [로깅](logging.md) |
 | `logger(logger)` | 앱 로거 교체 | [로깅](logging.md) |
 | `logger()` | 현재 앱 로거 | [로깅](logging.md) |
-| `routerPolicy(RouterPolicy)` | `//`·끝 슬래시·대소문자 정책과 `TRACE`/`CONNECT` 켜기 | [라우팅](routing.md#라우터-정책) |
+| `routerPolicy(RouterPolicy)` | 명시한 문자열 슬래시·대소문자 정책과 기존 WS 메서드 게이트 | [라우팅](routing.md#라우터-정책) |
 
 ### 서버 설정
 
@@ -167,7 +169,7 @@ app.trustProxy(true)
 
 ### 라우터 정책
 
-`routerPolicy(RouterPolicy)`는 `RestApp`을 돌려줍니다. 기본은 모든 스위치가 꺼진 엄격 정책입니다. Express의 `app.set('strict routing', ...)`, `app.set('case sensitive routing', ...)`에 해당합니다.
+`routerPolicy(RouterPolicy)`는 `RestApp`을 돌려줍니다. 명시하지 않은 일반 HTTP 기본은 대소문자 무시·끝 슬래시 허용이고 반복 슬래시는 의미가 있습니다. 명시한 정책은 자기 case·끝 슬래시·반복 슬래시 값을 적용하며, 모두 false인 정책은 엄격합니다. 기존 라우터/WS의 메서드 게이트는 별개입니다. [라우터 정책](routing.md#라우터-정책)
 
 ```java
 app.routerPolicy(RouterPolicy.builder().ignoreTrailingSlash(true).build())
@@ -206,7 +208,7 @@ ServerHandle server = app.listen(8080);
 - **동기**로 동작합니다. `onStart` 실행 → 라우트 검사 → 포트 바인딩이 모두 끝난 뒤 반환합니다. Express와 달리 콜백을 받지 않습니다.
 - 시작이 끝날 때까지 요청을 앱 핸들러로 전달하지 않습니다. 시작 중 연결을 수락한 경우에도 디스패치는 시작 완료를 기다립니다.
 - `listen()`이 반환한 뒤 `main`이 끝나도 `shutdown(...)`을 부를 때까지 프로세스가 계속 돕니다. 기본 TinyHttpd 어댑터(`NaruServe-tinyhttpd`)가 daemon이 아닌 keeper 스레드 하나를 `shutdown`까지 띄워 두기 때문이며, TinyHttpd 자체의 스레드는 daemon으로 남습니다. 이렇게 정한 이유는 Express의 `app.listen()`처럼 서버만 띄우는 `main`이 바로 끝나지 않게 하면서, 작업 스레드가 JVM 종료를 막지 않게 하려는 것입니다.
-- 바인딩 실패, `onStart` 예외, 라우트 충돌 같은 설정 오류는 **예외로 던집니다**. 이때 포트는 열려 있지 않고, 이미 만든 리소스는 정리됩니다.
+- 바인딩 실패, `onStart` 예외, 잘못된 설정은 **예외로 던집니다**. 이때 포트는 열려 있지 않고, 이미 만든 리소스는 정리됩니다. 일반 HTTP의 중복·겹치는 라우트는 합법적인 순서 등록이고, 기존 WS 충돌은 여전히 시작 오류입니다.
 - 기본으로 **`127.0.0.1`에만** 바인딩합니다. LAN에 열려면 [서버 설정](#서버-설정)의 `options.bindAddress("0.0.0.0")`을 씁니다.
 - `ServerHandle`은 `port()`(실제 포트. `listen(0)`이면 고른 빈 포트), `address()`(바인딩에 쓴 주소. 설정값 그대로이며 기본 `127.0.0.1`), `state()`(부를 때마다 읽는 앱 상태)를 가집니다. Express의 `server.address().port` 대신 짧은 접근자를 둔 이유는 `req.path()`처럼 다른 API와 같은 이름 규칙을 쓰기 위해서입니다. `url()`은 열어 볼 주소(`http://127.0.0.1:3000`)이고 `0.0.0.0`·`::`에 바인딩했으면 `localhost`로, IPv6 주소는 대괄호로 감쌉니다. `shutdown(timeout, unit)`은 `app.shutdown`과 같은 규칙으로 앱을 끕니다(반복 호출 안전, 음수 timeout은 `IllegalArgumentException`, `null` unit은 `NullPointerException`).
 - Android에서는 메인 스레드에서 호출하지 마세요. 작업 스레드에서 호출합니다.
@@ -228,10 +230,10 @@ app.shutdown(10, TimeUnit.SECONDS);
 여러 번 불러도 안전합니다. 종료된 앱은 다시 `listen`할 수 없습니다.
 Android에서는 메인 스레드에서 호출하지 마세요. timeout은 2~4단계(최대 1초 또는 남은 시간까지 걸리는 작별 인사, 진행 중인 요청 대기, timeout 때의 강제 종료)가 함께 나눠 쓰는 하나의 시간이고, 그 뒤의 `onStop`, 리소스 닫기, 로거 flush에는 시간 제한이 없어 timeout보다 오래 막힐 수 있습니다. 작별 인사를 연결을 받는 동안 하는 이유와 반환 시간의 3초 여유는 [수명주기](lifecycle.md#종료-순서)에 있습니다.
 
-## 설정은 listen 전에
+## 등록과 설정의 수명주기
 
-라우트, 미들웨어, 정적 마운트, `multipart`, `jsonCodec` 같은 설정은 상태가 `NEW`일 때만 바꿀 수 있습니다. `listen()` 뒤에 호출하면 예외가 납니다.
-`listen()`할 때 같은 메서드+경로 중복, 우선순위가 같은 충돌 패턴 같은 문제를 검사해 설정 오류로 알려 줍니다.
+일반 HTTP 라우트·미들웨어·Router 등록과 기존 RouteBuilder 콜백은 RUNNING에서도 추가할 수 있습니다. 등록 위치와 순서는 유지하며 종료된 앱에서는 거부합니다. server·코덱·multipart·명시 CORS·group·onError·정적 마운트·WS 같은 설정은 여전히 NEW에서만 바꿉니다. 전체 경로 대안·콜백을 검증한 뒤 등록합니다.
+일반 HTTP 중복 경로는 시작 충돌이 아닙니다. 직접 쓰는 기존 라우터·WS의 엄격 충돌 규칙은 유지합니다.
 
 ## 예제
 
@@ -306,3 +308,11 @@ println(handle.url())
 Android에서는 `start`도 메인 스레드에서 부르지 마세요. `listen`을 포함하므로 바인딩과 `onStart`가 호출 스레드에서 돕니다. Android에서는 종료 훅이 없으니 `Service.onDestroy`에서 `handle.shutdown(...)`을 부릅니다.
 테스트나 임베디드처럼 훅이 필요 없으면 `create()`와 `listen`을 그대로 쓰면 됩니다.
 
+
+## 일반 HTTP 등록 API
+
+`RestApp`과 독립 `com.snoworca.naruserve.Router`는 `HttpRoutes<T>`를 공유합니다. `route(Object)`는 문자열·Java Pattern·`RegexPathPattern`·중첩 배열/리스트 대안을 받습니다. `method(String, Object, Middleware...)`는 확장 메서드 토큰을 등록합니다. 고정 인자 세 인자 콜백 오버로드는 Kotlin 후행 람다를 지원하고 기존 두 인자 `RouteHandler`도 유지합니다.
+
+`use(path, router)`는 live Router 마운트, `param(name, ParamHandler)`는 캡처 전처리, 네 인자 `ErrorMiddleware`는 등록 위치의 오류 처리입니다. `getAsync`·`methodAsync`·`useAsync`는 세 인자 `AsyncRouteHandler`가 Deferred를 반환하는 API입니다. resolve가 next/end를 자동 호출하지 않으며 반환한 pending 결과가 조기 응답 뒤 요청 리소스를 보유합니다. [라우팅](routing.md), [요청 뷰](request.md#마운트와-경로-뷰), [Deferred](middleware.md#deferred와-늦은-작업)를 보세요.
+
+`send("text")`는 계속 text/plain이고 JSON 요청은 타입 지정·지연 파싱을 사용하며 정적 파일·WS·Host·프레이밍 보안은 유지합니다. 이 일반 HTTP 프로필이 Express 전체나 서드파티 미들웨어 API 전체를 뜻하지는 않습니다. RestApp을 직접 구현한 경우 확장된 등록 인터페이스를 반영해야 합니다. Request/Next/exchange의 추가 기본 메서드는 새 abstract 구현 의무를 만들지 않습니다.

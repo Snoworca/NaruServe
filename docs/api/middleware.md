@@ -2,9 +2,11 @@
 
 [English](en/middleware.md) | [문서 목록](README.md)
 
+0.10.0 체크아웃의 일반 HTTP 스택입니다. 콜백·응답·오류를 Java 8/API 21에서 사용하며 Promise·Coroutine 라이브러리를 필수로 요구하지 않습니다.
+
 ## 미들웨어
 
-Express의 `(req, res, next) => {}`와 같습니다. 다음으로 넘길 때 `next()` 대신 `next.run()`을 부릅니다.
+기존 핵심 시그니처는 다음과 같습니다. 실제 `Next`에는 아래에서 설명하는 기본 메서드 `route()`·`router()`도 있습니다.
 
 ```java
 @FunctionalInterface
@@ -20,15 +22,15 @@ public interface Next {
 
 ### 등록
 
-| 코드 | 적용 범위 |
+| 호출 | 동작 |
 |---|---|
-| `app.use(mw)` | 모든 요청 |
-| `app.use("/api", mw)` | `/api`와 그 아래 경로 (`/api`, `/api/users`). `/apix`에는 적용되지 않습니다. |
-| `app.get("/admin", mw, handler)` | 이 라우트만. 미들웨어는 하나를 받습니다. |
-| `app.route("/admin").use(mw1).use(mw2).get(handler)` | 이 경로에서 `use` 다음에 등록하는 메서드. `use` 순서대로 실행합니다. |
+| `app.use(mw)` | 현재 위치에 전역 미들웨어 추가 |
+| `app.use("/api", mw)` | 접두사가 맞을 때 실행. 콜백 안에서 매칭 접두사를 제거 |
+| `app.get(path, mw1, mw2, ...)` | 세 인자 콜백들을 순서대로 추가 |
+| `app.get(path, mw, handler)` | 기존 미들웨어 + 두 인자 최종 핸들러 편의 API |
+| `app.route(path).use(mw).get(handler)` | 같은 Route에 콜백을 차례로 추가 |
 
-라우트 미들웨어를 여러 개 붙이는 방법은 `RouteBuilder.use(middleware)`입니다. `app.route(path).use(auth).use(adminOnly).get(handler)`는 `auth` → `adminOnly` → `handler` 순서로 실행하고, `use`는 그 뒤에 등록하는 메서드에만 적용됩니다(앞에 등록한 `.get(...)`에는 붙지 않습니다).
-가변 인자 오버로드 대신 `RouteBuilder.use`를 고른 이유는 Java의 가변 인자는 맨 끝에만 올 수 있어 `get(path, Middleware..., RouteHandler)`를 만들 수 없고, Kotlin의 끝 람다 문법(`app.get("/x", auth) { req, res -> }`)과도 맞지 않기 때문입니다.
+`get(path, Middleware...)`와 고정 인자 오버로드는 Kotlin 후행 람다도 받습니다. null·빈 콜백 배열은 등록 전에 거부합니다. Route 안의 `use`는 모든 메서드에 적용되는 콜백이지만 등록 순서는 그대로입니다. 앞 핸들러가 끝내면 뒤에 붙인 `use`가 자동으로 실행되지 않습니다.
 
 ```java
 Middleware adminOnly = (req, res, next) -> next.run();   // 위 예제의 adminOnly 자리
@@ -39,8 +41,6 @@ app.route("/api/admin")
    .get((req, res) -> res.send("admin"));
 ```
 
-Kotlin:
-
 ```kotlin
 app.route("/api/admin")
     .use(auth)
@@ -48,7 +48,9 @@ app.route("/api/admin")
     .get { req, res -> res.send("admin") }
 ```
 
-### 예: 요청 ID와 인증
+### 요청 ID와 인증
+
+아래 `auth`, `admin`, `User`는 앱에서 제공합니다. 응답한 뒤 계속할 의도가 없으면 `return`하고 `next.run()`을 부르지 않습니다.
 
 ```java
 app.use((req, res, next) -> {
@@ -75,8 +77,6 @@ Middleware adminOnly = (req, res, next) -> {
 app.get("/api/admin", adminOnly, (req, res) -> res.json(admin.status()));
 ```
 
-Kotlin에서 람다 중간에 빠져나올 때는 `return@use`를 씁니다.
-
 ```kotlin
 app.use("/api") { req, res, next ->
     if (!auth.isAuthorized(req)) {
@@ -89,7 +89,7 @@ app.use("/api") { req, res, next ->
 
 ### HTTP CORS
 
-브라우저에서 다른 출처의 API를 호출하도록 허용하려면 인증 미들웨어보다 먼저 CORS를 등록합니다.
+브라우저 preflight를 인증보다 먼저 처리하려면 CORS를 먼저 등록합니다.
 
 ```java
 app.cors(cors -> cors
@@ -101,17 +101,18 @@ app.cors(cors -> cors
 app.use(auth);
 ```
 
-- `allowedOrigins`는 정확한 HTTP(S) 출처 문자열을 지정합니다. 경로와 끝 슬래시 없이 `https://app.example`처럼 작성합니다. 기본값은 허용 출처 없음입니다. `*`는 모든 출처, 문자열 `null`은 opaque 출처를 지정합니다.
-- 기본 메서드는 GET·HEAD·POST이며 `allowedMethods`가 목록을 교체합니다. `allowedHeaders`도 목록을 교체하며 이름의 대소문자를 구분하지 않습니다. 기본 허용 요청 헤더는 없습니다.
-- `credentials(true)`와 와일드카드 출처 `*`를 함께 설정하면 등록 시 예외가 납니다. 기본 credentials는 false입니다. `maxAge`는 0 이상의 초이며 기본 0은 캐시 헤더를 생략합니다.
-- Origin이 있는 허용 요청은 `Access-Control-Allow-Origin`을 받고 기존 `Vary`에 `Origin`을 합칩니다. 허용되지 않은 일반 요청은 CORS 허용 헤더 없이 다음 미들웨어로 진행합니다. CORS는 서버 인증을 대신하지 않습니다.
-- `OPTIONS` + `Origin` + `Access-Control-Request-Method` 요청은 preflight입니다. 출처·메서드·요청 헤더가 모두 허용되면 인증 전에 빈 본문 204로 끝나고, 잘못되거나 허용되지 않으면 403으로 끝납니다. 기존 `Vary`와 `*`를 보존하며 preflight의 메서드·헤더 차원도 추가합니다.
-- Origin이 없는 요청도 캐시 구분을 위해 `Vary: Origin`을 추가하며, CORS 허용 헤더와 본문·라우팅은 바꾸지 않습니다. preflight가 아닌 OPTIONS도 그대로 진행합니다. 허용 출처의 표준 400·401·500 오류 응답에도 프레임워크 CORS 허용 헤더와 Vary가 유지됩니다. 옵션은 등록 시 복사하므로 보관한 설정 객체를 나중에 바꿔도 서버 정책은 바뀌지 않습니다. `app.cors`는 `listen()` 전에 등록합니다.
-- WebSocket Upgrade는 이 미들웨어가 처리하지 않습니다. WebSocket 출처는 `app.webSocket(o -> o.allowedOrigins(...))`로 별도 설정합니다.
+- `allowedOrigins`는 경로·끝 슬래시 없는 정확한 HTTP(S) origin 목록입니다. 기본은 없음이며 `*`는 모든 origin, 문자열 `null`은 opaque origin을 허용합니다.
+- 기본 메서드는 GET, HEAD, POST입니다. `allowedMethods`는 집합을 바꾸고 `allowedHeaders`는 대소문자를 구분하지 않는 허용 목록(기본 빈 목록)을 바꿉니다.
+- `credentials` 기본은 false입니다. `credentials(true)`와 `*`를 함께 쓰면 등록 오류입니다. `maxAge`는 0 이상의 초이며 기본0은 캐시 헤더를 생략합니다.
+- 허용 origin에는 `Access-Control-Allow-Origin`을, credentials를 켰으면 `Access-Control-Allow-Credentials: true`를 붙입니다. 보통 요청의 비허용 origin은 grant 없이 계속합니다. CORS 자체가 인증은 아닙니다.
+- `Origin`과 `Access-Control-Request-Method`가 있는 OPTIONS는 preflight입니다. 허용 메서드·헤더이면 본문 없는204로 종료하고 인증 콜백은 실행하지 않습니다. 잘못되거나 비허용이면403입니다. 일반 자동 OPTIONS200과 구분하세요.
+- Origin이 없는 요청도 `Vary: Origin`을 설정합니다. 보통 응답의 기존 Vary(`*` 포함)는 합치며 preflight는 메서드·요청 헤더 차원도 더합니다.
+- **이 명시적 CORS 확장의 오류 응답**은 앱의 일반 헤더를 지우고 프레임워크가 추적한 CORS grant·Vary만 복원합니다. credentials도 유지하며 앱/`HttpException`의 헤더가 grant를 덮어쓰지 못합니다. CORS를 설치하지 않은 일반 HTTP 오류는 보통 앱 헤더를 유지합니다.
+- 옵션은 복사하며 `cors`는 listen 전에 설정합니다. WS Upgrade에는 이 정책 대신 `app.webSocket(o -> o.allowedOrigins(...))`를 씁니다.
 
 ### 라우트 그룹
 
-반복되는 경로 prefix는 `group(prefix, configurer)`로 묶습니다. 그룹은 별도 서버가 아니며 `listen()` 같은 수명주기 메서드를 갖지 않습니다.
+`group(prefix, configurer)`는 안전한 문자열 접두사와 공통 미들웨어를 묶는 기존 편의 API입니다. 독립 `Router`의 재마운트·Pattern 경로 API와 구분하세요.
 
 ```java
 Middleware adminOnly = (req, res, next) -> {
@@ -135,21 +136,13 @@ app.group("/api", api -> {
 });
 ```
 
-`GET /api/admin/reports`는 앱 미들웨어 → `auth` → `adminOnly` → `audit` → 핸들러 순서입니다. 그룹은 GET·POST·PUT·PATCH·DELETE·HEAD·OPTIONS를 지원합니다.
+위 `/api/admin/reports`는 그룹 auth → adminOnly → audit → handler 순서입니다. 그룹의 `use`는 구성 콜백 안의 위치와 무관하게 그 그룹·하위 그룹 라우트 앞에 적용됩니다. 부모 미들웨어가 자식보다 먼저입니다. 그룹 밖의 같은 접두사 라우트에는 자동으로 붙지 않습니다.
 
-- 그룹 `use`는 콜백 안의 위치와 관계없이 그 그룹과 중첩 그룹의 모든 라우트에 적용됩니다. 부모 그룹 미들웨어가 자식 그룹 미들웨어보다 먼저 실행됩니다.
-- 그룹 밖에서 별도로 등록한 라우트에는 같은 prefix라도 그룹 미들웨어가 적용되지 않습니다. 모든 prefix 요청에 적용하려면 `app.use(prefix, mw)`를 사용하세요.
-- `group.route(path).use(mw)`는 기존 `RouteBuilder`처럼 그 뒤에 등록하는 메서드에만 적용됩니다.
-- 경로는 `/`로 시작해야 합니다. 경계의 슬래시는 합쳐지므로 `/api/` + `/users`는 `/api/users`, `/api` + `/`는 `/api`입니다. `..`, `.`, 쿼리, fragment, 역슬래시와 인코딩된 경로 구분자는 거부합니다.
-- 그룹과 그 라우트 빌더는 해당 설정 콜백 안에서만 사용합니다. `app.group`은 `listen()` 전에 호출해야 합니다. 설정 중 예외가 나면 그 그룹의 라우트는 등록되지 않습니다.
+그룹의 `route(path)`도 하나의 지속적인 Route builder이며 `.use`·메서드 콜백은 그 안에서 등록 순서대로 실행됩니다. 경로는 `/`로 시작하고 경계 슬래시를 합칩니다(`/api/` + `/users` → `/api/users`, `/api` + `/` → `/api`). dot/dot-dot, 쿼리, fragment, 역슬래시와 인코딩된 구분자를 거부합니다. `group`는 listen 전에 부르고, 그룹·그룹 builder는 구성 콜백 안에서만 사용하세요. 콜백이 실패하면 그 그룹의 라우트를 일부만 등록하지 않습니다.
 
 ### 실행 순서
 
-1. 전역 (`app.use(mw)`)과 경로에 맞는 prefix (`app.use("/api", mw)`) 미들웨어 — 두 종류를 합친 등록 순서대로
-2. 라우트 미들웨어 — 등록 순서대로
-3. 라우트 핸들러
-
-Express처럼 전역과 prefix를 구분하지 않고 `app.use` 등록 순서 하나로 실행합니다. prefix가 맞지 않는 항목만 건너뛰며, `/api`는 `/api/users`에 적용되고 `/apian`에는 적용되지 않습니다. 라우트 미들웨어는 모든 해당 `app.use` 미들웨어 뒤에 실행됩니다.
+일반 HTTP의 전역/prefix `use`, Route, 마운트 Router, 정적 파일, 오류 레이어는 **하나의 등록 순서**를 따릅니다. 뒤에 등록한 전역 미들웨어를 앞으로 옮기지 않습니다. 앞 레이어가 계속할 때만 다음으로 갑니다. 정적 파일 미스와 전체 스택 종료의404도 이 순서를 따릅니다.
 
 ```java
 Middleware requestId = (req, res, next) -> next.run();   // 요청마다 ID를 붙이는 전역 미들웨어라고 합시다
@@ -157,13 +150,9 @@ app.use(requestId);          // 1번째로 실행
 app.use("/api", auth);       // /api 경로에서 2번째로 실행
 ```
 
-명시 라우트가 없으면 3단계에서 정적 파일, 그다음 404를 찾습니다. 404·405 응답 전에도 1단계 미들웨어는 실행됩니다.
-`app.use`는 `listen()` 전에만 부를 수 있습니다.
+### next.run 규칙
 
-### next.run() 규칙
-
-- **한 번만** 부릅니다. 두 번 부르거나, 응답이 끝난 뒤나 요청이 끝난 뒤에 부르면 예외가 납니다.
-- `next.run()`은 **동기**입니다. 반환되면 뒤쪽 미들웨어와 핸들러가 모두 실행된 뒤입니다. 그래서 앞뒤 처리를 한곳에 쓸 수 있습니다.
+같은 실행 스레드의 `next.run()`은 일반적으로 후속 콜백을 실행하고 돌아오므로 전후 코드를 둘 수 있습니다. 깊은 체인은 스택 한도를 위해 실행을 넘길 수 있고 다른 스레드의 호출은 안전하게 큐에 들어갑니다. 어떤 경우에도 사용자 콜백을 요청 모니터 안에서 실행하지 않습니다. `next`를 호출한 자식 스레드를 원래 콜백이 기다린다는 이유만으로 교착하지 않습니다.
 
 ```java
 app.use((req, res, next) -> {
@@ -174,20 +163,28 @@ app.use((req, res, next) -> {
 });
 ```
 
-단, SSE·WebSocket·파일 스트리밍은 `next.run()`이 반환된 뒤에도 전송이 이어집니다. 위 시간은 전송 완료 시간이 아닙니다.
+이 시간은 전체 네트워크 전송 시간이 아닙니다. 스트림·SSE·WS 작업은 뒤에 계속될 수 있습니다. 반복된 `next`나 응답 후 명시적 `next`를 일괄 금지하지 않습니다. 실제 커서의 다음 단계로 진행하므로 여러 호출을 중복 작업 방지 수단으로 사용하지 마세요. 중단·강제 취소·종료 후 호출은 닫힌 리소스나 앱 서비스를 되살리지 않습니다.
 
-- 응답도 `next.run()`도 없이 반환하면 프레임워크가 메서드와 경로를 담은 경고(`response not finished by the handler: GET /x`)를 앱 로거에 한 번 남기고, 그때까지 정한 상태 코드와 헤더로 `end()`해서 요청을 끝냅니다. 이렇게 정한 이유는 timeout까지 연결을 붙잡지 않으면서 실수를 로그로 알리려는 것입니다.
-- 비동기 미들웨어(나중에 `next`를 부르는 방식)는 v1에서 지원하지 않습니다.
+| 호출 | 일반 HTTP에서의 의미 |
+|---|---|
+| `next.run()` | 정상 흐름 계속; 오류 미들웨어 안에서는 오류를 해제하고 정상 흐름 재개 |
+| `next.error(error)` | 뒤의 오류 레이어로 전달. null은 허용하지 않음 |
+| `next.route()` | 현재 Route의 나머지 콜백을 건너뜀. 일반 use에서는 정상 계속 |
+| `next.router()` | 가장 가까운 Router를 나감. 최상위에서는 앱 스택을 나감 |
+
+같은 라우터에서 다음으로 진행한 뒤의 캡처를 무조건 옛 값으로 되돌리지 않습니다. 자식 마운트를 나갈 때는 부모의 path/url/baseUrl/params 뷰를 복원합니다. `next.route()`는 경로를 바꾸거나 특정 라우트를 이름으로 선택하는 API가 아닙니다.
+
+응답도 next도 없이 반환하면 **경고 후 자동 empty200으로 끝내지 않고 대기**합니다. 저장한 콜백에서 나중에 next·send·stream·SSE를 시작할 수 있습니다. 앱이 완결·시간 제한·취소 경로를 책임지세요.
 
 ### WebSocket과 미들웨어
 
-`app.use("/ws", auth)`는 WebSocket **Upgrade 요청**(HTTP)에 실행됩니다. 연결된 뒤 오가는 메시지마다 실행되지는 않습니다. 인증은 여기서 하세요. [WebSocket](websocket.md)
+기존 `app.use("/ws", auth)`는 HTTP Upgrade 인증에 쓰며 연결 뒤의 매 메시지에는 실행되지 않습니다. 유효한 기존 전역/문자열 접두사 미들웨어와 WS 엄격 경로·Origin 규칙은 유지합니다. HTTP 전용 고급 경로나 listen 이후 추가한 HTTP 레이어의 동작을 WS로 일반화하지 마세요. [WebSocket](websocket.md)
 
 ## 오류 처리
 
 ### 예외를 던지면
 
-핸들러나 미들웨어에서 던진 예외, `next.error(e)`로 넘긴 예외는 모두 오류 처리로 갑니다.
+동기 예외·`next.error(e)`·반환한 Deferred의 rejection은 현재 위치 **뒤**의 오류 레이어로 진행합니다. 일반 레이어를 건너뛰고 앞의 오류 핸들러를 다시 시작하지 않습니다.
 
 ```java
 app.get("/users/:id", (req, res) -> {
@@ -199,8 +196,7 @@ app.get("/users/:id", (req, res) -> {
 
 ### app.onError
 
-Express의 오류 미들웨어 `(err, req, res, next)`에 해당합니다. 인자는 `(error, req, res)` 세 개입니다. 순서는 Express와 같고 `next`만 없습니다.
-콜백은 `ErrorHandler`입니다. `throws Exception`을 허용하므로 핸들러 안에서 checked exception을 그대로 던질 수 있습니다.
+기존 `ErrorHandler`는 세 인자이고 checked exception을 허용합니다.
 
 ```java
 @FunctionalInterface
@@ -225,17 +221,13 @@ app.onError((error, req, res) -> {
 });
 ```
 
-- 이미 응답을 보내기 시작했다면(`isCommitted()`) 프레임워크는 500 JSON을 덧쓰지 않습니다. 직접 처리할 때도 위처럼 `abort`하세요.
-- `onError`를 등록하지 않으면 아래 표준 오류 형식으로 답합니다.
-- 프레임워크가 상태를 정해 던지는 오류(잘못된 쿼리 문자열의 `400` 등)는 unchecked 예외 `HttpException`으로 `onError`에 옵니다. `status()`가 상태 코드(`400`~`599`), `code()`가 아래 표의 표준 `code` 값입니다. 앱도 `throw new HttpException(404, "User not found")`처럼 던질 수 있고, `HttpException`으로 상태를 알리는 이유는 Express의 `err.status`처럼 예외 하나로 상태와 메시지를 함께 넘기기 위해서입니다.
-- `415`는 그 하위 클래스 `UnsupportedMediaTypeException`입니다. 위 예제처럼 `HttpException`을 먼저 확인하지 않고 모든 예외를 `500`으로 보내면 이런 `4xx`도 `500`이 됩니다.
-- 여러 번 등록하면 등록 순서대로 하나의 체인이 되며, 첫 핸들러는 항상 실행되고 다음 핸들러는 앞 핸들러가 응답을 시작하지 않았을 때만 실행되는데, 이 규칙을 고른 이유는 Express의 `next(err)` 없이도 "응답했으면 끝"이라는 규칙 하나로 체인을 읽게 하려는 것입니다.
-- 체인이 끝나도 응답이 시작되지 않았으면 표준 오류 형식으로 답합니다. 핸들러가 예외를 던지면 체인을 멈추고 `500` 표준 오류로 답합니다. 응답이 처음 상태로 도착했고 핸들러가 `stream(...)`을 시작했다면 그 스트림이 답이며 끝까지 보냅니다(중단하지 않습니다). 이미 보내기 시작한 응답에 오류가 나면 연결을 끊습니다(`abort`).
+`onError`는 listen 전에 설정하며 **등록된 위치**의 오류 레이어로 작동합니다. 이미 응답했으면 뒤 오류 핸들러를 자동 실행하지 않고, 응답하지 않으면 같은 오류를 계속 전달합니다. 콜백이 새 예외를 던지면 뒤의 오류 레이어로 그 예외가 갑니다. 위 예제의 앱 로깅은 앱이 추가한 로깅이며 프레임워크의 한 번500 로깅과 별개입니다.
+
+세 인자 `onError` 대신 네 인자 `ErrorMiddleware`를 `app.use((error, req, res, next) -> ...)` 또는 `app.use(path, errorMiddleware)`로 등록할 수 있습니다. `next.error(e)`는 전파/교체, `next.run()`은 정상 흐름 재개입니다. 이미 보낸 응답에 다른 오류 본문을 덧쓰지 않습니다. 늦은 오류는 로그·중단 경로로 가고 두 번째 commit을 하지 않습니다.
 
 ### 거부 응답 헤더
 
-`HttpException`에는 `status()`/`code()` 옆에 `withHeader(name, value)`와 `headers()`가 있습니다. `withHeader(name, value)`는 오류 응답에 실을 헤더를 더하고 같은 예외를 돌려주며, `headers()`는 더한 순서대로의 읽기 전용 목록입니다(없으면 빈 목록).
-Express에서 `err.headers`를 붙여 `next(err)`하면 `finalhandler`가 그 헤더를 오류 응답에 붙이는 것과 같습니다.
+`HttpException.status()`는400..599이고 `code()`는 기존 표준 코드 편의 값입니다. `UnsupportedMediaTypeException`은415 하위 타입입니다. 상태를 구분하지 않고 모두500으로 바꾸지 마세요. `withHeader(name, value)`는 같은 예외에 헤더를 추가하고 `headers()`는 순서 있는 읽기 전용 목록입니다.
 
 ```java
 app.get("/api/busy", (req, res) -> {
@@ -249,33 +241,70 @@ app.get("/api/busy") { req, res ->
 }
 ```
 
-- 오류 응답은 앱이 그 전에 정한 헤더를 지우고 예외의 헤더를 붙입니다. `onError`가 응답을 시작하지 않으면 표준 오류 응답이 예외의 헤더를 싣고, `onError`가 직접 답하면 그 핸들러가 정한 헤더만 갑니다.
-- 이름이나 값에 CR/LF가 있으면 `res.header`처럼 `IllegalArgumentException`입니다. `Content-Length`, `Transfer-Encoding`은 본문을 쓰는 쪽이 정하므로 쓰지 않습니다.
-- 같은 이름을 두 번 더하면 둘 다 보냅니다. 예외 객체는 던질 때마다 새로 만드세요.
+일반 HTTP 최종 처리에서는 예외 헤더를 적용하고, 본문에 맞춰 Content-Encoding·Content-Language·Content-Range를 제거합니다. 명시 CORS의 개인정보 보호 규칙은 위와 같습니다. 이름/값 CR·LF 등 잘못된 헤더는 `IllegalArgumentException`이고 framing 헤더는 응답 작성자가 정합니다. 같은 이름을 여러 번 추가할 수 있으므로 매 요청 새 예외를 만드세요.
 
 ### 표준 오류 형식
+
+일반 HTTP 기본은 **HTML**입니다. 404는 `Cannot METHOD /raw/path`, 오류는 `HttpException` 상태를, 그 외에는 이미 선택된 유효한400..599 응답 상태를, 모두 아니면500을 사용하고 Java 예외/stack trace를 HTML 이스케이프합니다. `Content-Type: text/html; charset=utf-8`, `Content-Security-Policy: default-src 'none'`, `X-Content-Type-Options: nosniff`와 UTF-8 바이트 길이를 보냅니다. HEAD는 같은 길이를 유지하고 본문을 보내지 않습니다. 기본 오류가 stack trace를 클라이언트에 노출할 수 있으므로 공개 서비스에서 내부 오류를 감추려면 앱 오류 핸들러로 안전한 응답을 직접 보내세요.
+
+다음 JSON은 **기존 표준 오류 확장 형식의 예**이며 일반 HTTP의 기본 응답 예가 아닙니다. pre-request 검증·수명주기 거부·보존된 WS/legacy 경로에서 이 형식이 남을 수 있습니다. `HttpException.code()`도 이 기본 HTML을 JSON으로 바꾸지 않습니다. 임의의 공개 표준 JSON 렌더러 API가 있다고 가정하지 말고 앱의 `onError`/`ErrorMiddleware`에서 `res.json(...)`을 명시하세요.
 
 ```json
 {"error":{"code":"BAD_REQUEST","message":"Invalid JSON request","requestId":"..."}}
 ```
 
-stack trace는 클라이언트에 보내지 않습니다. 위는 `400` 예시입니다. `message`는 `HttpException`의 메시지(없으면 상태 문구)이고, `500`은 항상 `Internal Server Error`입니다. 본문은 프레임워크가 앱의 JSON 엔진 없이 직접 만듭니다.
-`404`/`405` 본문은 v1에서 바꿀 수 없으며, 그 이유는 프레임워크가 앱의 JSON 엔진 없이 직접 만드는 본문이라 어느 앱에서나 같은 모양을 보장하기 위해서입니다. 다만 전역·prefix 미들웨어는 404·405 전에도 실행되고, 거기서 정한 헤더는 남습니다.
+| 원인 | 상태 |
+|---|---|
+| 잘못된 참여 캡처·쿼리·JSON/폼 | 400 |
+| 본문/업로드 한도 초과 | 413 |
+| 지원하지 않는 Content-Type/charset | 415 |
+| 일반 HTTP 최종 경로·메서드 미스 | 404 |
+| 미처리 서버 예외 | 500 |
+| 앱 수명주기 거부 | 503 + `Connection: close`, 기존 오류 프로필 |
 
-| 상황 | 상태 | `code` |
-|---|---|---|
-| JSON·폼 파싱 실패, 잘못된 경로·쿼리 | `400` | `BAD_REQUEST` |
-| 유효성 검증 실패 | `400` 또는 명시하면 `422` | `BAD_REQUEST` / `UNPROCESSABLE_ENTITY` |
-| 경로 없음 | `404` | `NOT_FOUND` |
-| 메서드 없음 | `405` | `METHOD_NOT_ALLOWED` |
-| 본문·업로드 크기 초과 | `413` | `PAYLOAD_TOO_LARGE` |
-| 지원하지 않는 Content-Type | `415` | `UNSUPPORTED_MEDIA_TYPE` |
-| WebSocket 전용 경로에 일반 요청 | `426` | `UPGRADE_REQUIRED` |
-| 그 밖의 예외 | `500` | `INTERNAL_ERROR` |
-| 서버가 모르는 메서드 | `501` | `NOT_IMPLEMENTED` |
-| 앱이 종료 중(`STOPPING`)이거나 시작에 실패함 | `503` + `Connection: close` | `SERVICE_UNAVAILABLE` |
-| 표에 없는 상태(`HttpException(418)` 등) | 그 상태 | `HTTP_<status>` (예: `HTTP_418`) |
+전송 계층이 앱에 도달하기 전에 거부한 Host·프레이밍·과부하는 별도 평문/연결 종료 결과일 수 있습니다. 모든400을 위 HTML이나 앱 `onError`가 만들지는 않습니다. [기본값과 보안](defaults.md)
 
-서버 과부하로 대기 큐가 가득 차면 `503`이지만, 이 응답은 TinyHttpd가 전송 계층에서 바로 보내는 평문(`text/plain`) 본문이라 위 JSON 형식도 `onError`도 거치지 않습니다. 큐가 가득 찬 순간에는 앱 코드를 돌릴 스레드가 없기 때문입니다.
+## Deferred와 늦은 작업
 
-`application/problem+json`(RFC 9457) 형식은 나중에 선택 기능으로 검토합니다.
+`AsyncRouteHandler`는 `Deferred handle(Request, Response, Next) throws Exception`입니다. `getAsync(path, handler)`, `methodAsync(token, path, handler)`, `useAsync(path, handler)`를 사용합니다. 반환한 pending Deferred는 응답이 먼저 끝나도 명시적 요청 작업 lease를 보유합니다. 단순히 저장한 Request나 임의 스레드 자체가 이 lease를 만들지는 않습니다.
+
+| Deferred API | 계약 |
+|---|---|
+| `new Deferred()` / `Deferred.pending()` | 미완료 결과 |
+| `Deferred.resolved()` / `Deferred.rejected(error)` | 이미 결정된 결과 |
+| `resolve()` / `reject(error)` | 최초 결정만 true. 이후 호출 false. null 오류는 거부 |
+| `onRejected(FailureHandler)` | 원래 오류 관찰. 늦은 등록도 통지 |
+| `onSettled(Runnable)` | 성공·실패 결정 관찰. 늦은 등록도 통지 |
+| `isDone()` | 결정 여부 |
+
+resolve는 **next나 응답 종료를 자동 호출하지 않습니다**. producer의 마지막 요청·업로드 접근이 끝난 뒤 결정하세요. 여러 lease는 모두 결정되거나 terminal 취소될 때까지 정리를 늦춥니다. observer는 내부 잠금 밖에서 실행되며 하나의 observer 예외가 나머지를 막지 않습니다. 결정 전에 등록된 rejection observer 뒤에 settlement observer가 실행되고, 늦은 rejection observer는 병행할 수 있습니다.
+
+내장 어댑터와 코어는 `HttpExchange.retainRequest()`로 응답 전송 완료와 요청 입력/context 해제를 분리합니다. 요청 본문을 미리 읽겠다는 약속은 아닙니다. 조기 응답 뒤 첫 `req.body(...)`가 필요한 작업은 **반환한 pending Deferred** 안에서 보유하고 마지막 사용 후 결정하세요. 사용자 어댑터의 기본 retainRequest는 호환용 no-op이므로, 물리적 입력/context 보유는 사용자 구현이 제공해야 합니다. 강제 취소·timeout은 보유를 철회할 수 있고 종료된 입력을 다시 열지 않습니다. [수명주기](lifecycle.md), [Kotlin 예제](kotlin.md#deferred-작업과-요청-보유)
+
+## 조기 응답 뒤 첫 본문 읽기
+
+POST /work에 JSON 문자열 "hello"를 보냅니다. 설명용 Thread는 조기202 뒤 본문을 처음 읽고 마지막 요청 접근 후 결정합니다. 실제 부하에서는 제한된 앱 관리 executor와 취소 정책을 쓰세요. 이미 보낸 응답의 rejection은 뒤 오류 처리로 넘기고 두 번째 JSON을 쓰지 않습니다.
+
+```java
+app.methodAsync("POST", "/work", (request, response, next) -> {
+    Deferred work = Deferred.pending();
+    response.status(202).send("accepted");
+    new Thread(() -> {
+        try {
+            String value = request.body(String.class);
+            request.attribute("processed", value);
+            work.resolve();
+        } catch (Throwable error) {
+            work.reject(error);
+        }
+    }, "retained-work-example").start();
+    return work;
+});
+app.use((error, request, response, next) -> {
+    if (response.isCommitted()) {
+        next.error(error);
+        return;
+    }
+    response.status(500).json(Collections.singletonMap("error", "Request failed"));
+});
+```
