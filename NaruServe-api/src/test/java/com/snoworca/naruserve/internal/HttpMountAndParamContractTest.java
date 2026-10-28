@@ -2,6 +2,7 @@ package com.snoworca.naruserve.internal;
 
 import com.snoworca.naruserve.*;
 import com.snoworca.naruserve.testing.*;
+import com.snoworca.naruserve.spi.HttpExchange;
 import org.junit.Test;
 import java.lang.reflect.Proxy;
 import java.util.*;
@@ -120,6 +121,72 @@ public class HttpMountAndParamContractTest {
         for(String name:Arrays.asList("10","2","a"))hook(order,name,(q,s,n,v,k)->{names.add(k);n.run();});
         order.get("/:\"10\"/:a/:\"2\"",(q,s)->s.end());send(order,"GET","/ten/A/two");
         assertEquals(Arrays.asList("2","10","a"),names);
+    }
+    @Test public void absentOptionalDoesNotInvokeItsRegisteredHook() { // FR-ROUTE-021 AC-1; FR-HTTP-027 AC-1
+        DefaultRestApp app=new DefaultRestApp();AtomicInteger hooks=new AtomicInteger();
+        hook(app,"id",(q,s,n,v,k)->{hooks.incrementAndGet();n.run();});
+        app.get("/users{/:id}",(q,s)->{
+            assertNull(parameter(q,"paramOrNull","id"));
+            assertEquals(Collections.emptyList(),parameter(q,"paramValues","id"));
+            s.send("absent");
+        });
+        assertEquals("absent",send(app,"GET","/users").text());assertEquals(0,hooks.get());
+    }
+    @Test public void scalarCacheUsesDecodedEqualityAcrossDifferentRawEncodings() { // FR-ROUTE-021 AC-2
+        DefaultRestApp app=new DefaultRestApp();AtomicInteger hooks=new AtomicInteger();List<String> observed=new ArrayList<>();
+        hook(app,"id",(q,s,n,v,k)->{assertEquals(Collections.singletonList("x"),v);hooks.incrementAndGet();set(q,k,"changed");n.run();});
+        on(app,"GET","/:id/:other",(q,s,n)->{observed.add(q.param("id"));n.run();});
+        on(app,"GET","/:other/:id",(q,s,n)->{observed.add(q.param("id"));s.send("cached");});
+        assertEquals("cached",send(app,"GET","/x/%78").text());
+        assertEquals(1,hooks.get());assertEquals(Arrays.asList("changed","changed"),observed);
+    }
+    @Test public void canonicalIntegerKeyBoundariesDoNotSortNonIndices() { // FR-ROUTE-021 AC-1
+        DefaultRestApp app=new DefaultRestApp();List<String> keys=new ArrayList<>();
+        for(String key:Arrays.asList("01","4294967295","4294967294","2","a"))
+            hook(app,key,(q,s,n,v,k)->{keys.add(k);n.run();});
+        app.get("/:\"01\"/:\"4294967295\"/:\"4294967294\"/:\"2\"/:a",(q,s)->s.send("ordered"));
+        assertEquals("ordered",send(app,"GET","/leading/max/index/two/A").text());
+        assertEquals(Arrays.asList("2","4294967294","01","4294967295","a"),keys);
+    }
+    @Test public void heldChildParameterCanExitLaterAndRestoreParentViews() throws Exception { // FR-ROUTE-020 AC-4; FR-ROUTE-021 AC-4; FR-HTTP-027 AC-3 AC-4
+        DefaultRestApp app=new DefaultRestApp();Object child=router(false);List<String> trace=new ArrayList<>();
+        AtomicReference<Request> identity=new AtomicReference<>();AtomicReference<Next> held=new AtomicReference<>();
+        app.use((q,s,n)->{
+            identity.set(q);trace.add("before "+view(q,"url"));n.run();
+            assertSame(identity.get(),q);trace.add("after "+view(q,"url")+" "+view(q,"baseUrl"));
+        });
+        hook(child,"id",(q,s,n,v,k)->{
+            assertSame(identity.get(),q);assertEquals(Collections.singletonList("x"),v);
+            trace.add("hold "+view(q,"url")+" "+view(q,"baseUrl"));held.set(n);
+        });
+        on(child,"GET","/:id",(q,s,n)->fail("child handler ran after router exit"));mount(app,"/api",child);
+        app.use((q,s,n)->{
+            assertSame(identity.get(),q);assertEquals("/api/x",q.path());assertEquals("/api/x",q.rawPath());
+            assertEquals("/api/x?q=%252F",view(q,"originalUrl"));
+            trace.add("parent "+view(q,"url")+" "+view(q,"baseUrl"));s.send("parent");
+        });
+        RecordingExchange recording=new RecordingExchange("GET","/api/x");
+        // Existing SPI fake with a real nonempty raw query, retaining observable pending transport state.
+        HttpExchange exchange=(HttpExchange)Proxy.newProxyInstance(HttpExchange.class.getClassLoader(),new Class<?>[]{HttpExchange.class},
+                (proxy,method,args)->method.getName().equals("rawQuery")?"q=%252F":method.invoke(recording,args));
+        app.freeze();app.dispatcher().handle(exchange);
+        assertEquals(0,recording.commits.get());assertEquals(0,recording.finishes.get());
+        assertEquals(Arrays.asList("before /api/x?q=%252F","hold /x?q=%252F /api","after /x?q=%252F /api"),trace);
+        trace.add("resume");signal(held.get(),"router");
+        assertEquals("parent",text(recording));assertEquals(1,recording.finishes.get());
+        assertEquals(Arrays.asList("before /api/x?q=%252F","hold /x?q=%252F /api","after /x?q=%252F /api","resume","parent /api/x?q=%252F "),trace);
+    }
+    @Test public void malformedAndNullNestedAlternativesRejectAtomically() { // FR-ROUTE-019 AC-1 AC-6
+        // Null rejection is the explicit Java registration contract, rather than a Node oracle result.
+        for(Object invalid:new Object[]{"/:",null}) {
+            DefaultRestApp app=new DefaultRestApp();AtomicInteger rejected=new AtomicInteger();
+            Object input=new Object[]{"/first",Arrays.asList(Arrays.asList(invalid))};
+            try{on(app,"GET",input,(q,s,n)->{rejected.incrementAndGet();s.send("leaked");});fail("invalid leaf accepted");}
+            catch(com.snoworca.naruserve.routing.RoutingConfigException expected){assertNotNull(invalid);}
+            catch(NullPointerException expected){assertNull(invalid);}
+            app.get("/first",(q,s)->s.send("fallback"));
+            assertEquals("fallback",send(app,"GET","/first").text());assertEquals(0,rejected.get());
+        }
     }
     @Test public void lastValueCacheRerunsWhenValueChangesAndRecurs() { // FR-ROUTE-021 AC-2
         DefaultRestApp app=new DefaultRestApp();List<String> calls=new ArrayList<>();
