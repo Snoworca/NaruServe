@@ -269,4 +269,23 @@ public class AppLifecycleGuardTest {
         }
         app.shutdown(1, TimeUnit.SECONDS);
     }
+    // CON-APP-010 AC-3 AC-5; FR-APP-021 AC-4: advanced path builders retain application shutdown guards.
+    @Test
+    public void advancedAndStringBuildersRejectCallbacksAfterApplicationTermination() {
+        DefaultRestApp app = newApp();
+        RouteBuilder stringBuilder = app.route("/string");
+        RouteBuilder advancedBuilder = app.route((Object) new String[]{"/advanced"});
+        app.listen(0);
+        app.shutdown(1, TimeUnit.SECONDS);
+        assertEquals(AppState.TERMINATED, app.state());
+        for (RouteBuilder builder : new RouteBuilder[]{stringBuilder, advancedBuilder}) {
+            try {
+                builder.get((req, res) -> res.send("late"));
+                fail(builder.getClass().getName() + " accepted callback after TERMINATED");
+            } catch (IllegalStateException expected) {
+                assertTrue(expected.getMessage(), expected.getMessage().contains("TERMINATED"));
+            }
+        }
+    }
+
 }
