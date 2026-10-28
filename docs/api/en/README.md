@@ -89,7 +89,7 @@ All modules use Maven group `com.snoworca.naruserve` and version `0.9.0`. The ar
 
 Modules marked “Supported (API 21+)” undergo the animal-sniffer `android-api-level-21` check at build time.
 `NaruServe-android` is an Android Gradle Plugin AAR and builds only when an Android SDK is available. The build searches `local.properties` `sdk.dir`, `ANDROID_HOME` and `ANDROID_SDK_ROOT`, in that order. Without an SDK, it warns and builds the other nine modules. This module has no code of its own and uses `minSdk 21`.
-The default HTTP engine build uses a TinyHttpd checkout, verified at commit `165f365` (TinyHttpd 3.1.0: header contracts and transport abort). A different checkout HEAD produces a warning rather than a build failure. Set `-PtinyHttpdFromMaven=true` to use the 3.1.0 JARs from Maven Central without a checkout.
+The default HTTP engine build uses a TinyHttpd checkout, verified at commit `e73cd5d` (TinyHttpd 3.1.1, tag `v3.1.1`: RAW request-target policy). A different checkout HEAD produces a warning rather than a build failure. Set `-PtinyHttpdFromMaven=true` to use the 3.1.1 JARs from Maven Central without a checkout. The adapter selects `RequestTargetPolicy.RAW` to preserve encoded paths and raw queries; HTTP syntax, Host, framing and WebSocket path checks remain active.
 
 `RestApp.create()` uses `NaruServe` to assemble the default HTTP engine (TinyHttpd) and Gson.
 To choose the engine and JSON implementation explicitly, set the required `httpAdapter` and `jsonCodec` and optional `logger` on `RestApp.builder()`, then call `build()` (see [RestApp](app.md)).
@@ -109,7 +109,7 @@ implementation 'com.snoworca.naruserve:naruserve-kotlin:0.9.0'
 implementation 'com.snoworca.naruserve:naruserve-android:0.9.0'
 ```
 
-Also add the following to the Android app module's `build.gradle`. The TinyHttpd 3.1.0 core and websocket JARs contain identical license notices at the same paths. Without this configuration, the app's resource merge (`mergeDebugJavaResource`) fails on duplicate files. Keeping one copy preserves the notices in the APK because both copies have the same contents.
+Also add the following to the Android app module's `build.gradle`. The TinyHttpd 3.1.1 core and websocket JARs contain identical license notices at the same paths. Without this configuration, the app's resource merge (`mergeDebugJavaResource`) fails on duplicate files. Keeping one copy preserves the notices in the APK because both copies have the same contents.
 
 ```groovy
 android {

@@ -62,8 +62,8 @@ def mainDependencies = [
     ':NaruServe-servlet'  : [api: [':NaruServe-api']],
     // Pin the released API; the optional developer composite substitutes these exact coordinates locally.
     ':NaruServe-tinyhttpd': [api: [':NaruServe-api'],
-                             implementation: ['com.snoworca:tinyhttpd-core:3.1.0',
-                                              'com.snoworca:tinyhttpd-websocket:3.1.0']],
+                             implementation: ['com.snoworca:tinyhttpd-core:3.1.1',
+                                              'com.snoworca:tinyhttpd-websocket:3.1.1']],
     // api scope: GsonJsonCodec takes a caller-built Gson (CON-BUILD-006 AC-9).
     ':NaruServe-gson'     : [api: [':NaruServe-api', 'com.google.code.gson:gson:2.14.0']],
     // api NaruServe-gson: a NaruServe caller compiles against GsonJsonCodec and Gson; no Logcat, any JDK (CON-BUILD-006 AC-9).
@@ -214,7 +214,7 @@ def centralStagingRepository = { Project p ->
     p.tasks.withType(PublishToMavenRepository).configureEach { mustRunAfter ':cleanCentralStaging' }
 }
 
-// The POM takes each dependency's resolved version, so the explicitly pinned TinyHttpd dependencies retain 3.1.0.
+// The POM takes each dependency's resolved version, so the explicitly pinned TinyHttpd dependencies retain 3.1.1.
 def configurePublishing = { Project p ->
     p.apply plugin: 'maven-publish'
     p.java {

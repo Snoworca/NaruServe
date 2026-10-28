@@ -89,7 +89,7 @@ DTO 검증, 스레드 안전한 사용자 서비스, 업로드, 스트림 응답
 
 "지원(API 21+)" 모듈은 빌드 때 animal-sniffer `android-api-level-21` 검사를 받습니다.
 `NaruServe-android`는 Android Gradle Plugin으로 만드는 AAR이라 Android SDK가 있을 때만 빌드됩니다(`local.properties`의 `sdk.dir`, `ANDROID_HOME`, `ANDROID_SDK_ROOT` 순서로 찾습니다). SDK가 없으면 경고만 내고 나머지 아홉 모듈을 빌드합니다. 이 모듈에는 자체 코드가 없고 `minSdk`는 21입니다.
-기본 HTTP 엔진 빌드는 TinyHttpd 체크아웃을 사용하며, 커밋 `165f365`(TinyHttpd 3.1.0: 헤더 계약 및 연결 중단)에서 검증했습니다. 체크아웃 HEAD가 다르면 빌드는 실패하지 않고 경고만 냅니다. `-PtinyHttpdFromMaven=true`를 지정하면 체크아웃 없이 Maven Central의 3.1.0 JAR로 빌드합니다.
+기본 HTTP 엔진 빌드는 TinyHttpd 체크아웃을 사용하며, 커밋 `e73cd5d`(TinyHttpd 3.1.1, 태그 `v3.1.1`: RAW 요청 대상 정책)에서 검증했습니다. 체크아웃 HEAD가 다르면 빌드는 실패하지 않고 경고만 냅니다. `-PtinyHttpdFromMaven=true`를 지정하면 체크아웃 없이 Maven Central의 3.1.1 JAR로 빌드합니다. 어댑터는 `RequestTargetPolicy.RAW`로 인코딩된 경로와 원본 쿼리를 보존합니다. HTTP 구문·Host·프레이밍 검사와 WebSocket 경로 검사는 유지됩니다.
 
 `RestApp.create()`는 `NaruServe` 모듈이 기본 HTTP 엔진(TinyHttpd)과 Gson을 자동으로 조립합니다.
 엔진과 JSON 구현을 직접 고르려면 `RestApp.builder()`에 `httpAdapter`, `jsonCodec`(필수)과 `logger`(선택)를 넘기고 `build()`합니다([RestApp](app.md#앱-만들기) 참고).
@@ -109,7 +109,7 @@ implementation 'com.snoworca.naruserve:naruserve-kotlin:0.9.0'
 implementation 'com.snoworca.naruserve:naruserve-android:0.9.0'
 ```
 
-Android 앱 모듈의 `build.gradle`에는 아래 설정도 넣습니다. TinyHttpd 3.1.0의 core와 websocket JAR에 같은 경로, 같은 내용의 라이선스 고지가 들어 있어, 이 설정이 없으면 앱 빌드의 리소스 병합(`mergeDebugJavaResource`)이 중복 파일로 실패합니다. 두 사본의 내용이 같으므로 하나만 남겨도 고지는 그대로 APK에 들어갑니다.
+Android 앱 모듈의 `build.gradle`에는 아래 설정도 넣습니다. TinyHttpd 3.1.1의 core와 websocket JAR에 같은 경로, 같은 내용의 라이선스 고지가 들어 있어, 이 설정이 없으면 앱 빌드의 리소스 병합(`mergeDebugJavaResource`)이 중복 파일로 실패합니다. 두 사본의 내용이 같으므로 하나만 남겨도 고지는 그대로 APK에 들어갑니다.
 
 ```groovy
 android {
