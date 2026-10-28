@@ -4,7 +4,7 @@
   "plan": "docs/plan/0.10.0-parallel-plan.md",
   "dependencies": "unchanged versions/types/scopes; existing toolchain reused",
   "regex": "Java Pattern",
-  "status": "core-method-error-green-in-progress-parity-runtime-and-servlet-completion",
+  "status": "tiny-3.1.1-raw-tdd-and-core-deferred-review",
   "issues": [
     {
       "id": "T00",
@@ -193,32 +193,36 @@
     {
       "id": "T12",
       "number": 59,
-      "status": "open",
+      "status": "approved-3.1.1-raw-tdd",
       "depends_on": [
         "T00",
         "T01"
       ],
-      "req_ids": [],
+      "req_ids": [
+        "FR-ENGINE-012"
+      ],
       "test_review_rounds": [],
       "completed": false
     },
     {
       "id": "T13",
       "number": 60,
-      "status": "open",
+      "status": "approved-3.1.1-pin-tdd",
       "depends_on": [
         "T03",
         "T11",
         "T12"
       ],
-      "req_ids": [],
+      "req_ids": [
+        "CON-BUILD-018"
+      ],
       "test_review_rounds": [],
       "completed": false
     },
     {
       "id": "T14",
       "number": 61,
-      "status": "standalone-spi-foundation-ready-integration-pending",
+      "status": "standalone130-green-core-integration-pending",
       "depends_on": [
         "T03",
         "T11"
@@ -300,14 +304,13 @@
     "stop_on_first_pass": true,
     "independent": true
   },
-  "pending_local_decisions": [
-    "Tiny3.1.0 transport raw-path boundary versus explicit version-change authorization"
-  ],
+  "pending_local_decisions": [],
   "authorization": {
     "commit_push": true,
     "version": "0.10.0",
     "maven_publication": true,
-    "new_dependencies": false
+    "new_dependencies": false,
+    "tinyhttpd_patch_update": "3.1.0 -> 3.1.1 user approved 2026-10-29; no other pin changes"
   },
   "history": "Earlier research/orchestrator artifacts retained; latest user goal drives this issue-based plan.",
   "srs_mode": "sdd with mandatory behavior TDD",
@@ -315,7 +318,9 @@
     "harness": "OPS-ROUTE-004",
     "http_compiler": "FR-ROUTE-018",
     "profile": "CON-APP-010",
-    "abort_notification": "IR-HTTP-009"
+    "abort_notification": "IR-HTTP-009",
+    "tiny_raw": "FR-ENGINE-012",
+    "tiny_patch_pins": "CON-BUILD-018"
   },
   "lanes": {
     "harness": {
@@ -451,7 +456,7 @@
       ],
       "green_commit": "226a118",
       "full_servlet_tests": 127,
-      "integration_pending": true
+      "integration_pending": false
     },
     "core-method-error": {
       "tests_commit": "e209b0f",
@@ -467,20 +472,58 @@
           "verdict": "pass"
         }
       ],
-      "implementation_status": "approved-to-green"
+      "implementation_status": "targeted-green-full-regression-pending",
+      "green_commit": "e03439e"
+    },
+    "servlet-sse-setup": {
+      "rounds": [
+        {
+          "round": 1,
+          "verdict": "pass"
+        }
+      ],
+      "green_commit": "1112df4",
+      "full_servlet_tests": 130,
+      "integration_pending": false
+    },
+    "core-deferred-lifetime": {
+      "tests_commit": "54b5159",
+      "tests": 32,
+      "red_tests": 32,
+      "status": "round1-changes-required-registration-race-tests",
+      "rounds": [
+        {
+          "round": 1,
+          "verdict": "changes_required",
+          "finding": "observer-registration versus settlement race"
+        }
+      ]
     }
   },
   "runtime_parity_lane": {
     "worktree": ".claude/worktrees/v010-runtime-parity",
     "branch": "kiwi/v010/runtime-parity",
     "base": "d84ca92",
-    "status": "subagent-implementing-all30-cases",
-    "agent": "/root/release_dependency_audit"
+    "status": "29-of30-actual-runtime-match-async-pending",
+    "agent": "/root/release_dependency_audit",
+    "head": "4e5ce51",
+    "tests": 54,
+    "passed": 53,
+    "failed": 1
   },
   "reported_progress": {
     "estimate_percent": 40,
     "basis": "Work-volume estimate only; no claim that40%ofissuesareclosed",
     "issues_closed": 0,
     "issues_total": 19
+  },
+  "tiny_raw_lane": {
+    "worktree": ".claude/worktrees/v010-tiny-raw",
+    "branch": "kiwi/v010/tiny-raw",
+    "status": "tests-first",
+    "requirements": [
+      "FR-ENGINE-012",
+      "CON-BUILD-018"
+    ]
   }
 }

@@ -1,0 +1,49 @@
+{
+  "verdict": "PASS",
+  "round": 1,
+  "scope": "Independent test-sufficiency review of all-30 runtime replay and narrow language error counterparts; not completed feature or production approval",
+  "requirement": "OPS-ROUTE-004",
+  "acceptanceCriteria": [
+    "AC-2",
+    "AC-3",
+    "AC-4",
+    "AC-6",
+    "AC-7"
+  ],
+  "reviewedHead": "3e381de",
+  "workspace": "/Users/beom/work/git/NaruServe/.claude/worktrees/v010-runtime-parity",
+  "mcpWorkspace": {
+    "workspaceRoot": "/Users/beom/work/git/NaruServe",
+    "rootSource": "per-call-workspace-root"
+  },
+  "stability": "evolving",
+  "findings": [],
+  "evidence": {
+    "log": "/tmp/naru-runtime-parity-implemented-stage2.log",
+    "xml": "/tmp/naru-runtime-parity-red/xml",
+    "tests": 54,
+    "passed": 49,
+    "failures": 5,
+    "errors": 0,
+    "skipped": 0,
+    "fullRuntimeCases": 30,
+    "fullRuntimePassing": 25,
+    "counterpartControls": 8
+  },
+  "assessment": [
+    "All thirty immutable reference IDs are parameterized, with exhaustive actual Java setup and a failing default for unknown IDs; no ignored or expected-failure cases. Inputs alone are read from reference for execution.",
+    "RuntimeReplay records actual response, essential headers, handler order, pathParams, path/url/baseUrl/originalUrl, completion state and handled Throwables. Initial handler return and owned callback futures are joined before snapshots, avoiding lost after-response trace.",
+    "The two registration error cases execute real registration and compare failures without manufacturing requests. Missing future APIs throw explicit AssertionErrors rather than synthetic success.",
+    "Counterparts are restricted by case ID and actual Throwable family; only exact terminal help URL omission is allowed for registration. Raw Throwable class/message JSON is cross-checked. Decode status400/raw value and deliberately thrown exact RuntimeException messages remain checked.",
+    "Strict comparator retains response/body/header/trace/parameter/completion comparisons. Negative controls cover wrong error families, meaningful reason/index/source/message/raw-value changes, wrong status, forged error metadata, body/header/status/trace differences, parameter absence/null/list shape, and stale provenance.",
+    "Diff from d84ca92 changes six parity tests/docs files only; raw generator, corpus, lock, dependencies and production source remain unchanged."
+  ],
+  "remainingHonestFeatureGaps": [
+    "head.order-false: actual HEAD precedence differs",
+    "options.automatic: actual response differs",
+    "error.thrown: ErrorMiddleware API absent",
+    "async.rejected: AsyncRouteHandler API absent",
+    "raw.malformed-escape: ErrorMiddleware API absent"
+  ],
+  "limitations": "In-memory replay does not establish TinyHttpd/Servlet socket normalization. Five actual runtime failures must be resolved by relevant core implementation before whole-feature parity is claimed. Review stops at first PASS; no additional Gradle execution needed for the preserved stable evidence."
+}

@@ -1,0 +1,39 @@
+{
+  "verdict": "PASS",
+  "round": 1,
+  "scope": "Accepted Servlet SSE setup failure abort notification only; test sufficiency, not production approval",
+  "requirement": "IR-HTTP-009",
+  "acceptanceCriteria": [
+    "AC-2",
+    "AC-3",
+    "AC-6"
+  ],
+  "workspace": "/Users/beom/work/git/NaruServe/.claude/worktrees/v010-servlet-deferred",
+  "reviewedHead": "382a5c5",
+  "mcpWorkspace": {
+    "workspaceRoot": "/Users/beom/work/git/NaruServe",
+    "rootSource": "per-call-workspace-root"
+  },
+  "workMode": "sdd",
+  "stability": "evolving",
+  "findings": [],
+  "evidence": {
+    "testFile": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletDeferredSpiTest.java",
+    "lines": "298-326",
+    "redXml": "/tmp/naru-v010-servlet-sse-setup-red.xml",
+    "redLog": "/tmp/naru-v010-servlet-sse-setup-red.log",
+    "tests": 23,
+    "failures": 3,
+    "errors": 0,
+    "skipped": 0,
+    "failureReason": "All three failures assert accepted failed setup must report detected abort: expected 1, actual 0 at line 316."
+  },
+  "assessment": [
+    "Real Jetty lifecycle plus response wrapper injects flushBuffer and output acquisition IOExceptions only after ordinary request deferral; attach RuntimeException covers accepted user setup failure.",
+    "Production ServletEventStream.start acquires pool admission before each injection; accepted drain abort once and zero drain executions are asserted before the missing-notification RED assertion.",
+    "Tests assert exception propagation, async completion once, no retained in-flight exchange or SSE slot, fail-soft throwing listener, early and late notifications outside exchange/write locks, repeated abort idempotence and terminal non-resurrection.",
+    "Normal successful SSE and pre-admission 503 controls pass and assert zero abort notifications.",
+    "HEAD changes only the test file; production/dependency paths unchanged from 226a118. No additional Gradle run required because preserved RED artifacts establish the scoped failure."
+  ],
+  "limitations": "Late listener/repeated-abort checks occur after the intentional RED assertion and must execute in the subsequent GREEN run. Existing unrelated review loops and broader core/raw transport features are outside scope."
+}
