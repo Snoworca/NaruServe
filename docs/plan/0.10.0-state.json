@@ -342,7 +342,7 @@
       "authors_own_tests": false
     }
   },
-  "integrated_head": "ab9b9c09f41d9c4ad7f7e7b417e2ae48e7372734",
+  "integrated_head": "df50e4c3c8152eaca7b79401f8daed890933a0fa",
   "next_lanes": {
     "core": {
       "worktree": ".claude/worktrees/v010-http-core",
@@ -487,17 +487,34 @@
       "integration_pending": false
     },
     "core-deferred-lifetime": {
-      "tests_commit": "54b5159",
-      "tests": 32,
-      "red_tests": 32,
-      "status": "round1-changes-required-registration-race-tests",
+      "tests_commit": "ad925de",
+      "tests": 34,
+      "red_tests": 34,
+      "status": "round2-pass-implementation",
       "rounds": [
         {
           "round": 1,
-          "verdict": "changes_required",
-          "finding": "observer-registration versus settlement race"
+          "verdict": "changes_required"
+        },
+        {
+          "round": 2,
+          "verdict": "pass"
         }
       ]
+    },
+    "tiny-raw-pins": {
+      "tests_commit": "ae40850",
+      "rounds": [
+        {
+          "round": 1,
+          "verdict": "pass"
+        }
+      ],
+      "adapter_tests": 42,
+      "adapter_red": 32,
+      "build_tests": 40,
+      "build_red": 8,
+      "status": "approved-green-implementation"
     }
   },
   "runtime_parity_lane": {
@@ -520,7 +537,7 @@
   "tiny_raw_lane": {
     "worktree": ".claude/worktrees/v010-tiny-raw",
     "branch": "kiwi/v010/tiny-raw",
-    "status": "tests-first",
+    "status": "round1-pass-implementation",
     "requirements": [
       "FR-ENGINE-012",
       "CON-BUILD-018"

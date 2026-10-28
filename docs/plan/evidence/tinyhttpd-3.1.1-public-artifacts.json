@@ -1,0 +1,24 @@
+{
+  "requirements": [
+    "CON-BUILD-018",
+    "FR-ENGINE-012"
+  ],
+  "date": "2026-10-29",
+  "verification": "Independent HTTPS download from Maven Central; not a NaruServe integration test",
+  "artifacts": [
+    {
+      "artifact": "tinyhttpd-core",
+      "version": "3.1.1",
+      "httpStatus": 200,
+      "bytes": 167080,
+      "sha256": "53cdfdf16427d65ed50257d1f5d880ab6781160d2caf551b9c6150266971351c"
+    },
+    {
+      "artifact": "tinyhttpd-websocket",
+      "version": "3.1.1",
+      "httpStatus": 200,
+      "bytes": 17546,
+      "sha256": "3634d26a4f18cada39135cb25f443d2bd27807f19955222b56d1f8309cba87b9"
+    }
+  ]
+}

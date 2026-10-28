@@ -1,0 +1,45 @@
+{
+  "verdict": "changes_required",
+  "round": 1,
+  "reviewedCommit": "54b51595bbd8cfa737dc0ed00c519660cc530148",
+  "scope": "Core Deferred/lifetime test sufficiency only; read-only review before implementation",
+  "requirements": [
+    "FR-APP-023",
+    "IR-HTTP-009"
+  ],
+  "mcpWorkspace": {
+    "workspaceRoot": "/Users/beom/work/git/NaruServe",
+    "rootSource": "per-call-workspace-root"
+  },
+  "findings": [
+    {
+      "id": "R1-1",
+      "severity": "MEDIUM",
+      "requirement": "FR-APP-023",
+      "acceptanceCriteria": [
+        "AC-3",
+        "AC-5",
+        "AC-6",
+        "AC-7"
+      ],
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DeferredContractTest.java",
+      "line": 55,
+      "title": "Observer registration never races settlement, leaving the cleanup lease subscription race untested",
+      "evidence": "concurrentResolveRejectAndLateSubscriptionSettleOnce registers its initial onSettled/onRejected callbacks before submitting settlement tasks; the late onSettled callback is registered only after all resolve/reject futures have joined. The join-other-subscriber test registers only after settlement notification has begun. A check-then-register implementation can lose an observer between reading pending state and insertion yet pass these tests. Core request ownership relies on settlement notification to release pending work, so this is a meaningful leak path rather than an extra feature.",
+      "requestedChange": "Add bounded barrier-started concurrent registrations of onSettled and onRejected against resolve/reject, retaining per-listener counters and the actual winning outcome/error identity. After joining every future, assert every settlement observer ran exactly once; rejection observers ran exactly once iff reject won, and never for resolve. Include repeated settlement and late registrations to verify no loss or duplication. Keep callbacks observable outside fail-soft observer assertions (capture callback failures for final assertion). A core test settling returned Deferred on another thread during callback return is a useful integration counterpart, but is not required to close this finding if the public primitive race is directly covered."
+    }
+  ],
+  "positiveAssessment": [
+    "Preserved RED log shows all32 tests executed and failed: absent Deferred/AsyncRouteHandler APIs and actual existing cleanup/lifecycle/StackOverflow defects, without skipped tests or fabricated success.",
+    "Explicit ownership tests require response finish to retain pending Deferred resources, multiple results to retain independent leases, and resolution alone to avoid implicit next/end.",
+    "Active and queued callbacks retain upload ownership, abort cancels pending leases, repeated/late actions cannot double-clean, and normal completion is distinguished from detected abort.",
+    "Tests cover failure identity/error cursor, fail-soft observers, late callbacks, mounted request identity, JSON/stream/SSE completion, service shutdown, grace/deadline and restored lifecycle request context.",
+    "Concurrent completion/abort, cross-thread next joins and deep synchronous chain provide meaningful bounded execution checks."
+  ],
+  "evidence": {
+    "redLog": "/tmp/naru-http-core/red-deferred-lifetime.log",
+    "tests": 32,
+    "failures": 32
+  },
+  "actions": "No repository/source/test/SRS/git mutations. No builds run. Only this tmp review artifact written."
+}

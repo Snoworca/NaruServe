@@ -1,0 +1,49 @@
+{
+  "verdict": "PASS",
+  "round": 1,
+  "scope": "Independent test sufficiency for Tiny RAW adapter bridge/security controls and published3.1.1 pin migration; not production approval or framework-decoder completion",
+  "reviewedCommit": "ae40850755cea1ba2e775d3f1a117831337092cf",
+  "workspace": "/Users/beom/work/git/NaruServe/.claude/worktrees/v010-tiny-raw",
+  "requirements": [
+    "FR-ENGINE-012",
+    "CON-BUILD-018"
+  ],
+  "mcpWorkspace": {
+    "workspaceRoot": "/Users/beom/work/git/NaruServe",
+    "rootSource": "per-call-workspace-root"
+  },
+  "stability": "evolving",
+  "findings": [],
+  "evidence": {
+    "adapterLog": "/tmp/naru-v010-tiny-raw-red-final.log",
+    "adapterXml": "/tmp/naru-v010-tiny-raw-red-final-results",
+    "adapterCounts": {
+      "tests": 42,
+      "failures": 32,
+      "errors": 0,
+      "skipped": 0
+    },
+    "pinsLog": "/tmp/naru-v010-tiny-pins-red-final.log",
+    "pinsXml": "/tmp/naru-v010-tiny-pins-red-final-results",
+    "pinsCounts": {
+      "tests": 40,
+      "failures": 8,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "assessment": [
+    "36 real-socket vectors span12 encoded/slash/malformed path forms times absent/empty/complex raw query; actual SPI observations must match exactly and body must be ok, preventing the shared probe helper from masking accessor exceptions.",
+    "Malformed request-line, Host and framing vectors require400,Connection close, zero dispatched handlers and a single response even with an appended healthy request. A fresh healthy request verifies listener availability.",
+    "Host allowlist rejects a malformed RAW target with421 before SPI, independently distinguishing old engine decode rejection400 from configured Host enforcement.",
+    "Static tests use a real outside sentinel and healthy inside control; literal/encoded/double-encoded traversal cannot expose it. Invalid decoded WebSocket targets require400 and zero opens, alongside positive101 handshake.",
+    "Published compatibility verifies both actual JAR origins at3.1.1, required policy/builder APIs and upstream STRICT default. Existing runtime graph set equality, compile exposure checks, resolved POM version/runtime scope and licensing/provenance checks enforce the limited pin migration.",
+    "Stable RED proves30/36 RAW path/query vectors fail, published-origin check detects3.1.0, and allowlist order differs; security controls otherwise pass. Root checks separately produce8 meaningful old-version/provenance failures.",
+    "All changes in reviewed commit are tests; production/build dependency declarations remain unchanged. Tests reuse existing socket/framework/test helpers instead of introducing alternate infrastructure."
+  ],
+  "limitations": [
+    "FR-ENGINE-012 AC-2 common-dispatch malformed-escape400 remains an explicit later integration gate: adapter-only200 is solely a raw transport observation.",
+    "Java8/API21 and final exact-artifact whole-suite validation remain subsequent GREEN/release gates, not established by this RED review."
+  ],
+  "actions": "No repository/source/test/SRS/git mutations or builds. Only this tmp report written. Stop review at first PASS."
+}
