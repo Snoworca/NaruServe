@@ -4,7 +4,7 @@
   "plan": "docs/plan/0.10.0-parallel-plan.md",
   "dependencies": "unchanged versions/types/scopes; existing toolchain reused",
   "regex": "Java Pattern",
-  "status": "parity30-pass-adapter-lifetime-and-retained-extension-regressions",
+  "status": "api-full-validation-transport-retention-and-independent-http-audit-fixes",
   "issues": [
     {
       "id": "T00",
@@ -536,7 +536,54 @@
           "verdict": "pass"
         }
       ],
-      "status": "approved-green-implementation"
+      "status": "green-integrated",
+      "green_commit": "9cc8071"
+    },
+    "core-group-identity": {
+      "tests_commit": "a2a1fc1",
+      "green_commit": "d2f3604",
+      "rounds": [
+        {
+          "round": 1,
+          "verdict": "pass"
+        }
+      ],
+      "status": "integrated"
+    },
+    "kotlin-http": {
+      "tests_commits": [
+        "c9ce105",
+        "4a0c736"
+      ],
+      "green_commit": "e835485",
+      "rounds": [
+        {
+          "round": 1,
+          "verdict": "pass"
+        }
+      ],
+      "status": "integrated"
+    },
+    "tiny-lifetime": {
+      "tests_commit": "384aa4f",
+      "additional_regression_commits": [
+        "0264c0a",
+        "de23a76",
+        "14a3bf0",
+        "7a4b8c0"
+      ],
+      "green_commit": "d213614",
+      "targeted_pass": 23,
+      "actual_java8_scoped_pass": 143,
+      "full_tests": 203,
+      "full_failures": 12,
+      "status": "source-integrated-checkpoint-migrations-pending",
+      "rounds": [
+        {
+          "round": 1,
+          "verdict": "pass"
+        }
+      ]
     }
   },
   "runtime_parity_lane": {
@@ -582,7 +629,34 @@
       "AppEntryApiTest",
       "InMemoryHttpAdapterTest"
     ],
-    "status": "tests-only-migrations",
+    "status": "all-4-batches-independent-round1-pass-integrated",
     "independent_bug_red": "6f4d874"
+  },
+  "transport_input_retention": {
+    "requirement": "FR-APP-023 AC-8",
+    "tiny_actual_red": "96896aa",
+    "helper_worktree": ".claude/worktrees/v010-request-retention",
+    "helper_agent": "/root/release_dependency_audit",
+    "core_owner": "/root/api_core_docs",
+    "adapter_owner": "/root/transport_dependency_audit",
+    "status": "shared-component-tests-first-and-servlet-repro"
+  },
+  "http_implementation_review": {
+    "status": "changes-required",
+    "report": "docs/plan/evidence/http-implementation-review-round1.json",
+    "findings": [
+      "savedNext after cleaned request and app termination",
+      "global64 depth differs from pinned per-router/per-route100 yields"
+    ],
+    "owner": "/root/api_core_docs",
+    "next": "actual Java RED and independent sufficiency review before fixes"
+  },
+  "api_full_diagnostic": {
+    "head": "e0a9da6",
+    "tests": 1342,
+    "failures": 22,
+    "errors": 0,
+    "skipped": 0,
+    "note": "Before final Kotlin and safety/remaining fixture merges; not latest full API result."
   }
 }

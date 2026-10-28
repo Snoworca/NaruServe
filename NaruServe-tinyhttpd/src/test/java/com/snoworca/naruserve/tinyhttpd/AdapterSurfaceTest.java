@@ -152,31 +152,11 @@ public class AdapterSurfaceTest {
         return sb.toString();
     }
 
-    /** Whether every declared method of TinyHttpdExchange named {@code name} is synchronized; fails when none. */
-    private static boolean synchronizedMethod(String name) {
-        Boolean all = null;
-        for (Method m : TinyHttpdExchange.class.getDeclaredMethods()) {
-            if (m.getName().equals(name) && !m.isSynthetic()) {
-                all = (all == null || all) && Modifier.isSynchronized(m.getModifiers());
-            }
-        }
-        if (all == null) {
-            throw new AssertionError("TinyHttpdExchange declares no " + name);
-        }
-        return all;
-    }
-
     // FR-ENGINE-011 AC-2, AC-3; SDS-AC-9 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-8.sds.md: the feature
-    // hooks share commit()'s abort check and single-start rule; commit, sendFile and upgrade hold the lock, while
-    // eventStream and webSocket take it only for the checks, so their loops run outside it
+    // hooks share the abort check and single-start claim. IR-HTTP-009 AC-3 requires
+    // callbacks outside IO/lifecycle locks; method modifiers are not the concurrency contract.
     @Test(timeout = 20000)
     public void FR_ENGINE_011_AC2_featureHooksShareTheCommitLockAbortCheckAndSingleStart() throws Exception {
-        for (String name : new String[] {"commit", "sendFile", "upgrade"}) {
-            assertTrue(name, synchronizedMethod(name));
-        }
-        for (String name : new String[] {"eventStream", "webSocket"}) {
-            assertFalse(name, synchronizedMethod(name));
-        }
         AtomicReference<String> afterCommit = new AtomicReference<>();
         adapter.bind(RawTargetSocketTest.Http.settings().build(), ex -> {
             try {
@@ -311,43 +291,84 @@ public class AdapterSurfaceTest {
         return entered.await(100, TimeUnit.MILLISECONDS);
     }
 
-    // FR-ENGINE-011 AC-3: the drain runs on the worker after the handler returned, so an eventStream started on
-    // another thread after that throws instead of leaving a stream nobody drains
+    // FR-APP-023 AC-1/6 supersedes FR-ENGINE-011 AC-3's historical late-start rejection.
     @Test(timeout = 20000)
-    public void FR_ENGINE_011_AC3_eventStreamAfterTheHandlerReturnedThrows() throws Exception {
+    public void FR_APP_023_lateEventStreamAfterHandlerReturnIsActuallyDrained() throws Exception {
         AtomicReference<HttpExchange> exchange = new AtomicReference<>();
-        CountDownLatch handled = new CountDownLatch(1);
+        CountDownLatch handled = new CountDownLatch(1), drained = new CountDownLatch(1);
         adapter.bind(RawTargetSocketTest.Http.settings().build(), ex -> {
             exchange.set(ex);
             handled.countDown();
         });
-        try (Socket s = new Socket("127.0.0.1", adapter.boundPort())) {
-            s.setSoTimeout(10000);
-            s.getOutputStream().write(RawTargetSocketTest.Http.get("/late").getBytes(StandardCharsets.ISO_8859_1));
-            s.getOutputStream().flush();
+        try (Socket socket = new Socket("127.0.0.1", adapter.boundPort())) {
+            socket.setSoTimeout(10000);
+            socket.getOutputStream().write(RawTargetSocketTest.Http.get("/late").getBytes(StandardCharsets.ISO_8859_1));
+            socket.getOutputStream().flush();
             assertTrue(handled.await(5, TimeUnit.SECONDS));
             HttpExchange ex = exchange.get();
-            // run() marks the handler returned right after handle; wait until a drain could no longer be taken.
-            String failure = null;
             long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
-            while (failure == null && System.nanoTime() < deadline) {
-                synchronized (ex) {
-                    if (((TinyHttpdExchange) ex).handlerReturned()) {
-                        try {
-                            ex.eventStream(200, Collections.<Map.Entry<String, String>>emptyList(), out -> { });
-                            failure = "none";
-                        } catch (IllegalStateException e) {
-                            failure = e.getMessage();
-                        }
-                    }
-                }
-                if (failure == null) {
-                    Thread.sleep(5);
-                }
-            }
-            ex.abort();
-            assertEquals("eventStream must be called before the handler returns", failure);
+            while (!((TinyHttpdExchange) ex).handlerReturned() && System.nanoTime() < deadline) Thread.sleep(5);
+            assertTrue(((TinyHttpdExchange) ex).handlerReturned());
+            ex.eventStream(200, Collections.emptyList(), out -> {
+                out.write("data: late\n\n".getBytes(StandardCharsets.UTF_8));
+                out.flush();
+                drained.countDown();
+                ex.finish();
+            });
+            String reply = RawTargetSocketTest.Http.readAll(socket.getInputStream());
+            assertEquals(200, RawTargetSocketTest.Http.status(reply));
+            assertTrue(reply, reply.contains("data: late\n\n"));
+            assertTrue(drained.await(5, TimeUnit.SECONDS));
         }
+    }
+
+    // IR-HTTP-009 AC-3/5; FR-APP-022 AC-3: commit is an atomic claim, actual writes
+    // retain the IO monitor, and a competing claim cannot emit another response.
+    @Test(timeout = 20000)
+    public void concurrentCommitHasOneWinnerAndWritesWaitForTheIoOwner() throws Exception {
+        AtomicReference<Throwable> failure = new AtomicReference<>();
+        java.util.concurrent.atomic.AtomicInteger winners = new java.util.concurrent.atomic.AtomicInteger();
+        java.util.concurrent.atomic.AtomicInteger rejected = new java.util.concurrent.atomic.AtomicInteger();
+        CountDownLatch writesAttempted = new CountDownLatch(1), written = new CountDownLatch(1);
+        adapter.bind(RawTargetSocketTest.Http.settings().build(), ex -> {
+            CountDownLatch go = new CountDownLatch(1);
+            AtomicReference<java.io.OutputStream> body = new AtomicReference<>();
+            Runnable claim = () -> {
+                try {
+                    go.await();
+                    body.set(ex.commit(200, Collections.singletonList(new SimpleEntry<>("Content-Length", "2")), 2));
+                    winners.incrementAndGet();
+                } catch (IllegalStateException expected) {
+                    rejected.incrementAndGet();
+                } catch (Throwable unexpected) { failure.compareAndSet(null, unexpected); }
+            };
+            Thread one = new Thread(claim), two = new Thread(claim);
+            one.start(); two.start(); go.countDown();
+            try {
+                one.join(5000); two.join(5000);
+                assertFalse(one.isAlive()); assertFalse(two.isAlive());
+                assertEquals(1, winners.get()); assertEquals(1, rejected.get());
+                Thread writer = new Thread(() -> {
+                    writesAttempted.countDown();
+                    try { body.get().write(new byte[] {'o', 'k'}); }
+                    catch (Throwable unexpected) { failure.compareAndSet(null, unexpected); }
+                    finally { written.countDown(); }
+                });
+                synchronized (ex) {
+                    writer.start();
+                    assertTrue(writesAttempted.await(5, TimeUnit.SECONDS));
+                    assertFalse("body writer bypassed current IO owner", written.await(100, TimeUnit.MILLISECONDS));
+                }
+                assertTrue(written.await(5, TimeUnit.SECONDS));
+                writer.join(5000);
+                ex.finish();
+            } catch (Throwable unexpected) { failure.compareAndSet(null, unexpected); ex.abort(); }
+        });
+        String reply = RawTargetSocketTest.Http.send(adapter.boundPort(), RawTargetSocketTest.Http.get("/race"));
+        assertEquals(reply, 200, RawTargetSocketTest.Http.status(reply));
+        assertEquals("ok", RawTargetSocketTest.Http.body(reply));
+        assertEquals(1, winners.get()); assertEquals(1, rejected.get());
+        assertEquals(null, failure.get());
     }
 
     // FR-ENGINE-011 AC-3; SDS-AC-9 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-8.sds.md: a test thread enters

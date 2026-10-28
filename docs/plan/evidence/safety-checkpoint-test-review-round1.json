@@ -1,0 +1,42 @@
+{
+  "verdict": "PASS",
+  "round": 1,
+  "reviewedHead": "4e19c87ff8884cc0ecdf3fe7f3cdf824d02aa8d3",
+  "scope": "Assigned safety checkpoint fixtures: five classes changed; FileResourceResolverTest retained unchanged",
+  "requirements": [
+    "CON-APP-010 AC-1/2/4/5",
+    "FR-APP-019",
+    "FR-APP-021",
+    "FR-APP-024",
+    "FR-APP-005 AC-8",
+    "FR-HTTP-027/028",
+    "FR-STATIC-006/011"
+  ],
+  "findings": [],
+  "evidence": {
+    "baselineLog": "/tmp/naru-safety-checkpoints-baseline.log",
+    "baselineCounts": {
+      "tests": 41,
+      "failures": 11
+    },
+    "jdk17Log": "/tmp/naru-safety-checkpoints-migrated.log",
+    "actualJava8Log": "/tmp/naru-safety-checkpoints-java8.log",
+    "eachGreenCounts": {
+      "tests": 42,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "assessment": [
+    "Real standardJSON pre-request400 still requires body/log requestId equality, byte Content-Length and JSON content type; retained lifecycle503 correlation remains unchanged. CommonHTML404 separately requires exact finalhandler document and valid log RID without inventing a response RID.",
+    "Throwing-logger isolation strengthens loose lower bounds into exact four access WARN plus one server ERROR, checks actual500/400 complete responses, and retains no4xxERROR while asserting original500 Throwable class/message. Access-log privacy/counter controls are untouched.",
+    "File response denial retains symlink/directory/missing404 semantics, now checking HTML metadata and additionally excluding real file data/disposition. Download error callback remains positively exercised downstream; header reset and file/Range resource guards remain intact.",
+    "Static-versus-route ordering tests contain both actual static-first400/no route and route-first200/single capture decode controls. Static405 verifies exact GET,HEAD Allow and absence of file data; no-serving fallthrough requires exact common404. Retained WS-only footprint tests remain unchanged.",
+    "Legacy Unicode authorization/capture behavior now runs through actual in-memory WS upgrade and closes/joins each bounded response; prefix counters and captured original supplementary characters remain asserted. Direct strict legacy Unicode routes are separately checked.",
+    "Common Unicode tests distinguish raw literal matching, percent-encoded literal matching and decoded capture data, with an encoded path404 control proving a different decoded authorization prefix does not run.",
+    "Scoped diff touches only the five assigned classes, preserves already-green FileResourceResolverTest and other fixture families, and contains no source/SRS/dependency mutation. Preserved XML confirms42/42 on both JDK17 and actualJava8 with zero errors/skips."
+  ],
+  "limitations": "This fixture migration review is not final release acceptance; full retained socket/WS/static/security suites remain required.",
+  "actions": "No repository edits or builds; only tmp review report written. Stop on first PASS."
+}

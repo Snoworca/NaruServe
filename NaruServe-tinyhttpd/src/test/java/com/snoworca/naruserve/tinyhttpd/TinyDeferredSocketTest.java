@@ -139,4 +139,170 @@ public class TinyDeferredSocketTest {
         until(()->((TinyHttpdExchange)ex).slots().open()==0,"completed setup did not release slot");assertEquals(0,drained.get());assertEquals(1,cancelled.get());closed(ex);
     }
 
+    private static void cancellationUnlocked(HttpExchange ex, AtomicReference<Throwable> failure) {
+        try {
+            java.lang.reflect.Field field = TinyHttpdExchange.class.getDeclaredField("state");
+            field.setAccessible(true);
+            assertFalse("cancellation holds IO monitor", Thread.holdsLock(ex));
+            assertFalse("cancellation holds lifecycle monitor", Thread.holdsLock(field.get(ex)));
+        } catch (Throwable problem) { failure.compareAndSet(null, problem); }
+    }
+    private static void brokenCancellation(boolean error) {
+        if (error) throw new AssertionError("broken drain cancellation");
+        throw new IllegalStateException("broken drain cancellation");
+    }
+    private void throwingCancellationDuringLateAttach(boolean error) throws Exception {
+        start(ex -> {});
+        Future<String> reply = get("/throwing-attach");
+        HttpExchange ex = returned();
+        AtomicInteger notices = new AtomicInteger(), otherNotices = new AtomicInteger();
+        AtomicReference<Throwable> lockFailure = new AtomicReference<>();
+        ex.onAbort(() -> { cancellationUnlocked(ex, lockFailure); notices.incrementAndGet(); });
+        Future<String> otherReply = get("/other-pending");
+        HttpExchange other = returned();
+        other.onAbort(() -> { cancellationUnlocked(other, lockFailure); otherNotices.incrementAndGet(); });
+        CountDownLatch attaching = new CountDownLatch(1), release = new CountDownLatch(1);
+        releases.add(release);
+        AtomicInteger cancelled = new AtomicInteger(), drained = new AtomicInteger();
+        AtomicReference<Throwable> setupFailure = new AtomicReference<>(), stopFailure = new AtomicReference<>();
+        Future<?> setup = clients.submit(() -> {
+            try {
+                ex.eventStream(200, Collections.emptyList(), new StreamDrain() {
+                    public void attach(OutputStream out) {
+                        attaching.countDown();
+                        while (release.getCount() > 0) try { release.await(); } catch (InterruptedException ignored) { }
+                    }
+                    public void drain(OutputStream out) { drained.incrementAndGet(); }
+                    public void abort() {
+                        cancellationUnlocked(ex, lockFailure);
+                        cancelled.incrementAndGet();
+                        brokenCancellation(error);
+                    }
+                });
+            } catch (Throwable problem) { setupFailure.set(problem); }
+        });
+        assertTrue(attaching.await(5, TimeUnit.SECONDS));
+        long begin = System.nanoTime();
+        try { engine.stop(100, TimeUnit.MILLISECONDS); } catch (Throwable problem) { stopFailure.set(problem); }
+        assertTrue("throwing cancellation exceeded stop deadline",
+                TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - begin) < 1500);
+        until(() -> cancelled.get() == 1, "accepted drain was not cancelled");
+        assertFalse("attach unexpectedly stopped owning response", setup.isDone());
+        // Wait for the interrupted worker's exceptional unwind to become observable, keeping attach blocked.
+        long observationEnd = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(150);
+        while (((TinyHttpdExchange) ex).slots().open() == 1 && System.nanoTime() < observationEnd) Thread.sleep(5);
+        assertEquals("throwing cancellation released the still-owned attach slot", 1,
+                ((TinyHttpdExchange) ex).slots().open());
+        assertNull("user cancellation escaped adapter stop", stopFailure.get());
+        assertEquals(1, notices.get());
+        assertEquals("stop skipped another active exchange", 1, otherNotices.get());
+        assertNull(lockFailure.get());
+        release.countDown();
+        setup.get(5, TimeUnit.SECONDS);
+        assertTrue(String.valueOf(setupFailure.get()), setupFailure.get() instanceof IOException);
+        reply.get(5, TimeUnit.SECONDS);
+        otherReply.get(5, TimeUnit.SECONDS);
+        until(() -> ((TinyHttpdExchange) ex).slots().open() == 0, "slot retained after setup exited");
+        assertEquals(1, cancelled.get()); assertEquals(0, drained.get());
+        ex.abort(); other.abort();
+        assertEquals(1, cancelled.get()); assertEquals(1, notices.get()); assertEquals(1, otherNotices.get());
+        closed(ex); closed(other);
+    }
+    // FR-APP-023 AC-3/6; IR-HTTP-009 AC-3: user cancellation exceptions cannot
+    // release a slot or engine response before an accepted late attach actually exits.
+    @Test(timeout=20000) public void runtimeThrowingCancellationKeepsLateAttachOwnership() throws Exception {
+        throwingCancellationDuringLateAttach(false);
+    }
+    // FR-APP-023 AC-3/6; IR-HTTP-009 AC-3: Error is contained at the same ownership boundary.
+    @Test(timeout=20000) public void errorThrowingCancellationKeepsLateAttachOwnership() throws Exception {
+        throwingCancellationDuringLateAttach(true);
+    }
+    private void throwingCancellationCannotBreakStopLoop(boolean error) throws Exception {
+        CountDownLatch keepHandler = new CountDownLatch(1), accepted = new CountDownLatch(1);
+        releases.add(keepHandler);
+        AtomicInteger cancelled = new AtomicInteger(), notices = new AtomicInteger(), otherNotices = new AtomicInteger(),
+                drained = new AtomicInteger();
+        AtomicReference<Throwable> lockFailure = new AtomicReference<>();
+        start(ex -> {
+            if (ex.rawPath().equals("/owned-in-handler")) {
+                ex.onAbort(() -> { cancellationUnlocked(ex, lockFailure); notices.incrementAndGet(); });
+                try {
+                    ex.eventStream(200, Collections.emptyList(), new StreamDrain() {
+                        public void drain(OutputStream out) { drained.incrementAndGet(); }
+                        public void abort() {
+                            cancellationUnlocked(ex, lockFailure);
+                            cancelled.incrementAndGet();
+                            brokenCancellation(error);
+                        }
+                    });
+                } catch (IOException problem) { throw new UncheckedIOException(problem); }
+                accepted.countDown();
+            } else {
+                ex.onAbort(() -> { cancellationUnlocked(ex, lockFailure); otherNotices.incrementAndGet(); });
+            }
+            // Keep workers in user callbacks so engine interruption cannot claim cancellation first.
+            while (keepHandler.getCount() > 0) try { keepHandler.await(); } catch (InterruptedException ignored) { }
+        });
+        Future<String> reply = get("/owned-in-handler");
+        HttpExchange ex = entered.poll(5, TimeUnit.SECONDS);
+        assertNotNull(ex); assertTrue(accepted.await(5, TimeUnit.SECONDS));
+        Future<String> otherReply = get("/ordinary");
+        HttpExchange other = entered.poll(5, TimeUnit.SECONDS);
+        assertNotNull(other);
+        // Capture happens before callback registration; install an additional late-safe observer ourselves.
+        AtomicInteger observedOther = new AtomicInteger();
+        other.onAbort(observedOther::incrementAndGet);
+        AtomicReference<Throwable> stopFailure = new AtomicReference<>();
+        long begin = System.nanoTime();
+        try { engine.stop(100, TimeUnit.MILLISECONDS); } catch (Throwable problem) { stopFailure.set(problem); }
+        assertTrue(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - begin) < 1500);
+        assertNull("cancellation escaped stop and can truncate the active-exchange loop", stopFailure.get());
+        assertEquals(1, cancelled.get()); assertEquals(1, notices.get());
+        assertEquals("stop did not abort remaining ordinary exchange", 1, observedOther.get());
+        assertNull(lockFailure.get());
+        keepHandler.countDown();
+        reply.get(5, TimeUnit.SECONDS); otherReply.get(5, TimeUnit.SECONDS);
+        until(() -> ((TinyHttpdExchange) ex).slots().open() == 0, "cancelled slot leaked");
+        assertEquals("cancelled drain was started", 0, drained.get());
+        ex.abort(); other.abort();
+        assertEquals(1, cancelled.get()); assertEquals(1, notices.get()); assertEquals(1, observedOther.get());
+    }
+    // FR-APP-023 AC-3/6; IR-HTTP-009 AC-3: adapter-wide abort must survive a user RuntimeException.
+    @Test(timeout=20000) public void runtimeThrowingCancellationCannotEscapeStopOrSkipOtherExchanges() throws Exception {
+        throwingCancellationCannotBreakStopLoop(false);
+    }
+    // FR-APP-023 AC-3/6; IR-HTTP-009 AC-3: adapter-wide abort must survive a user Error.
+    @Test(timeout=20000) public void errorThrowingCancellationCannotEscapeStopOrSkipOtherExchanges() throws Exception {
+        throwingCancellationCannotBreakStopLoop(true);
+    }
+
+    private static String fixedResponse(InputStream input)throws IOException{
+        ByteArrayOutputStream bytes=new ByteArrayOutputStream();int tail=0;
+        while(tail!=0x0d0a0d0a){int b=input.read();if(b<0)throw new EOFException("response head ended");bytes.write(b);tail=(tail<<8)|b;}
+        String head=new String(bytes.toByteArray(),StandardCharsets.ISO_8859_1);String length=Http.header(head,"Content-Length");if(length==null)throw new IOException("fixed response length missing");
+        for(int remaining=Integer.parseInt(length);remaining>0;remaining--){int b=input.read();if(b<0)throw new EOFException("fixed response body ended");bytes.write(b);}
+        return new String(bytes.toByteArray(),StandardCharsets.ISO_8859_1);
+    }
+    // FR-APP-023 AC-3 AC-7: an unread request input remains owned by a pending producer after response bytes finish.
+    @Test(timeout=20000) public void pendingDeferredCanFirstReadJsonAfterClientObservesCompletedResponse()throws Exception{
+        RestApp a=core();AtomicInteger decodes=new AtomicInteger();a.jsonCodec(new JsonCodec(){
+            @SuppressWarnings("unchecked") public <T>T decode(Reader reader,java.lang.reflect.Type type)throws IOException{decodes.incrementAndGet();StringBuilder raw=new StringBuilder();for(int c;(c=reader.read())!=-1;)raw.append((char)c);if(raw.length()<2||raw.charAt(0)!='"'||raw.charAt(raw.length()-1)!='"')throw new IOException("expected JSON string");return (T)raw.substring(1,raw.length()-1);}
+            public void encode(Object value,Writer writer)throws IOException{throw new UnsupportedOperationException();}
+        });
+        Deferred work=Deferred.pending();AtomicReference<Request> request=new AtomicReference<>();
+        a.post("/control",(q,s)->s.send(q.body(String.class)));
+        a.methodAsync("POST","/unread",(q,s,n)->{request.set(q);s.send("ack");return work;});a.listen(0);
+        String payload="\"delayed-payload\"";
+        String control=Http.send(engine.boundPort(),"POST /control HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\nContent-Type: application/json\r\nContent-Length: "+payload.length()+"\r\n\r\n"+payload);
+        assertEquals(control,200,Http.status(control));assertEquals("delayed-payload",Http.body(control));returned();assertEquals(1,decodes.get());decodes.set(0);
+        try(Socket socket=new Socket("127.0.0.1",engine.boundPort())){
+            socket.setSoTimeout(5000);socket.getOutputStream().write(("POST /unread HTTP/1.1\r\nHost: localhost\r\nConnection: keep-alive\r\nContent-Type: application/json\r\nContent-Length: "+payload.length()+"\r\n\r\n"+payload).getBytes(StandardCharsets.UTF_8));socket.getOutputStream().flush();
+            String observed=fixedResponse(socket.getInputStream());assertEquals(200,Http.status(observed));assertEquals("ack",Http.body(observed));returned();assertFalse(work.isDone());assertEquals(0,decodes.get());
+            CountDownLatch responseObserved=new CountDownLatch(1);AtomicReference<String> value=new AtomicReference<>();AtomicReference<Throwable> failure=new AtomicReference<>();
+            Future<?> producer=clients.submit(()->{try{responseObserved.await();Thread.sleep(150);value.set(request.get().body(String.class));}catch(Throwable problem){failure.set(problem);}finally{work.resolve();}});
+            responseObserved.countDown();producer.get(5,TimeUnit.SECONDS);assertNull("first body read after completed response lost its pending lease: "+failure.get()+", status="+(failure.get() instanceof HttpException?((HttpException)failure.get()).status():"none")+", decoderCalls="+decodes.get(),failure.get());
+            assertEquals("delayed-payload",value.get());assertEquals(1,decodes.get());assertEquals(2,log.info().size());
+        }
+    }
+
 }

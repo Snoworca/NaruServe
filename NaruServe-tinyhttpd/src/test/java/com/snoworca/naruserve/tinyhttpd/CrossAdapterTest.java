@@ -154,6 +154,67 @@ public class CrossAdapterTest {
         };
     }
 
+    // FR-APP-024 AC-3; CON-APP-010 AC-4/5: inspect each Java error representation before
+    // comparing adapter-independent information; call frames are deliberately not compared byte-for-byte.
+    static String htmlError(int status, Header header, String body, String reason) {
+        assertEquals("text/html; charset=utf-8", header.get("Content-Type"));
+        assertEquals("nosniff", header.get("X-Content-Type-Options"));
+        assertEquals("default-src 'none'", header.get("Content-Security-Policy"));
+        assertEquals(Integer.toString(body.getBytes(StandardCharsets.UTF_8).length), header.get("Content-Length"));
+        assertTrue(body, body.startsWith("<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>"));
+        assertTrue(body, body.endsWith("</pre>\n</body>\n</html>\n"));
+        assertTrue(body, body.contains(reason));
+        return status + " " + body.substring(body.indexOf("<pre>") + 5, body.indexOf("<br>") >= 0
+                ? body.indexOf("<br>") : body.indexOf("</pre>"));
+    }
+
+    static String htmlError(String response, String reason) {
+        byte[] bytes = RawTargetSocketTest.Http.body(response).getBytes(StandardCharsets.ISO_8859_1);
+        return htmlError(RawTargetSocketTest.Http.status(response),
+                name -> RawTargetSocketTest.Http.header(response, name),
+                new String(bytes, StandardCharsets.UTF_8), reason);
+    }
+
+    // FR-HTTP-027 AC-2; FR-ENGINE-012 AC-3: literal high bytes are an HTTP parser
+    // boundary; Java's in-memory target is already text, and common HTTP accepts that text.
+    @Test(timeout = 20000)
+    public void literalUnicodeHasSeparateCommonAndTransportBoundaries() throws Exception {
+        {
+            InMemoryRun memory = new InMemoryRun();
+            SocketRun socket = new SocketRun();
+            try {
+                RestApp a = memory.newApp(), b = socket.newApp();
+                a.get("/:x", (q, r) -> r.send(q.param("x")));
+                b.get("/:x", (q, r) -> r.send(q.param("x")));
+                BothAdaptersCases.Reply common = memory.send(a, "GET", "/Ã©");
+                assertEquals(200, common.status());
+                assertEquals("Ã©", common.body());
+                assertEquals(400, socket.send(b, "GET", "/Ã©").status());
+                assertEquals("é", memory.send(a, "GET", "/%C3%A9").body());
+                assertEquals("é", socket.send(b, "GET", "/%C3%A9").body());
+            } finally {
+                memory.close();
+                socket.close();
+            }
+        }
+    }
+
+    // CON-APP-010 AC-1/2: old global guards still apply to the retained Router/WS profile.
+    @Test
+    public void legacyRouterStillRejectsItsOriginalUnsafePathMatrix() {
+        com.snoworca.naruserve.routing.Router<String> legacy =
+                new com.snoworca.naruserve.routing.Router<>(com.snoworca.naruserve.routing.RouterPolicy.strict());
+        legacy.add(com.snoworca.naruserve.Method.GET, "/:x", "handler");
+        legacy.freeze();
+        for (String path : new String[] {"/%zz", "/%E0%A4", "/%C3%28", "/Ã©", "/a%2Fb", "/a%2fb",
+                "/a%00b", "/a\u0000b", "/.", "/..", "/a/./b", "/a/../b", "/%2e", "/%2e%2e", "/a/%2E/b", "/a/%2E%2E/b"}) {
+            try {
+                legacy.lookup("GET", path, false);
+                org.junit.Assert.fail("legacy profile accepted " + path);
+            } catch (IllegalArgumentException expected) { }
+        }
+    }
+
     interface Cases {
         void run(BothAdaptersCases c) throws Exception;
     }
