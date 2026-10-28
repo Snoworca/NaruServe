@@ -168,6 +168,10 @@ public final class DefaultRequest implements Request {
         return body;
     }
 
+    /** Called once by the common HTTP ownership gate after callbacks and work leases release. */
+    // @req FR-APP-023 AC-3
+    void closeBody() throws java.io.IOException { body.close();ex.requestBody().close(); }
+
     /** The exchange body counted by {@link #body()}; only a reader that took the body calls this. */
     // @req FR-JSON-001
     InputStream bodyStream() {

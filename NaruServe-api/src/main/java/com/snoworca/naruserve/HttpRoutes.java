@@ -15,6 +15,14 @@ public interface HttpRoutes<T> {
     default T use(ErrorMiddleware callback) { return use("",callback); }
     default T param(String name,ParamHandler callback) { throw new UnsupportedOperationException("parameter callback"); }
 
+    // @req FR-APP-023 AC-1 AC-2 AC-7
+    default T methodAsync(String methodToken,Object path,AsyncRouteHandler callback) {
+        return method(methodToken,path,new com.snoworca.naruserve.internal.AsyncMiddleware(callback));
+    }
+    default T getAsync(Object path,AsyncRouteHandler callback) { return methodAsync("GET",path,callback); }
+    default T useAsync(Object path,AsyncRouteHandler callback) { return use(path,new com.snoworca.naruserve.internal.AsyncMiddleware(callback)); }
+    default T useAsync(AsyncRouteHandler callback) { return useAsync("",callback); }
+
     default T get(Object path,Middleware... callbacks) { return method("GET",path,callbacks); }
     default T post(Object path,Middleware... callbacks) { return method("POST",path,callbacks); }
     default T put(Object path,Middleware... callbacks) { return method("PUT",path,callbacks); }

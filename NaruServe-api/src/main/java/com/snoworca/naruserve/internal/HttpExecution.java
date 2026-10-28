@@ -15,7 +15,9 @@ final class HttpExecution {
     private final Object state=new Object();
     private final Deque<Runnable> queued=new ArrayDeque<>();
     private @Nullable Thread owner;
-    private boolean terminal,cleaned;
+    private boolean terminal,cleaned,cancelled;
+    private int depth;
+    private final Set<Object> leases=Collections.newSetFromMap(new IdentityHashMap<Object,Boolean>());
     private final RouterCursor root;
 
     HttpExecution(HttpRouter router,DefaultRequest request,DefaultResponse response,AppLifecycle lifecycle,
@@ -24,27 +26,46 @@ final class HttpExecution {
         this.finalHandler=finalHandler; this.terminalLog=terminalLog; this.root=new RouterCursor(router,null,null);
         response.onDone(this::responseDone);
     }
-    void start() { submit(()->root.advance(null)); }
+    void start(com.snoworca.naruserve.spi.HttpExchange exchange) {
+        if(!lifecycle.registerHttp(this)) { cancel();return; }
+        exchange.onAbort(this::cancel);
+        submit(()->root.advance(null));
+    }
+    /** Terminal cancellation revokes leases and queued callbacks; active user code keeps its ownership. */
+    void cancel() {
+        synchronized(state) { if(cancelled)return;cancelled=true;leases.clear();queued.clear(); }
+        try { response.abort(null); } finally { cleanupIfIdle(); }
+    }
     private void responseDone() {
-        synchronized(state) { if(terminal)return; terminal=true; }
+        synchronized(state) {
+            if(terminal)return;terminal=true;
+            if(response.state()==ResponseState.ABORTED){cancelled=true;leases.clear();queued.clear();}
+        }
         try { terminalLog.run(); } finally { cleanupIfIdle(); }
     }
     private void cleanupIfIdle() {
         synchronized(state) {
-            if(!terminal || owner!=null || !queued.isEmpty() || cleaned)return;
+            if(!terminal || owner!=null || !queued.isEmpty() || !leases.isEmpty() || cleaned)return;
             cleaned=true;
         }
-        request.releaseUploads();
+        try {
+            request.releaseUploads();
+            try { request.closeBody(); } catch(Exception failure) { errors.logger.error("request input close failed",failure); }
+        } finally { lifecycle.releaseHttp(this); }
     }
     private void submit(Runnable task) {
         boolean nested;
         synchronized(state) {
-            if(response.state()==ResponseState.ABORTED)return;
-            if(owner!=null && owner!=Thread.currentThread()) { queued.add(task);return; }
+            if(cancelled || response.state()==ResponseState.ABORTED)return;
+            if(owner!=null && (owner!=Thread.currentThread() || depth>=64)) { queued.add(task);return; }
             nested=owner!=null;
             if(!nested)owner=Thread.currentThread();
         }
-        if(nested) { lifecycle.withRequest(task);return; }
+        if(nested) {
+            depth++;
+            try { lifecycle.withRequest(task); } finally { depth--; }
+            return;
+        }
         try {
             Runnable next=task;
             for(;;) {
@@ -67,8 +88,18 @@ final class HttpExecution {
         }
     }
     private void callback(Middleware callback,Next next) {
-        try { callback.handle(request,response,next); }
-        catch(Exception failure) { next.error(failure); }
+        try {
+            if(callback instanceof AsyncMiddleware) {
+                Deferred result=Objects.requireNonNull(((AsyncMiddleware)callback).handler.handle(request,response,next),"async result");
+                Object lease=new Object();
+                synchronized(state) { if(cancelled)return;leases.add(lease); }
+                result.onRejected(next::error);
+                result.onSettled(()->{
+                    synchronized(state) { leases.remove(lease); }
+                    cleanupIfIdle();
+                });
+            } else callback.handle(request,response,next);
+        } catch(Exception failure) { next.error(failure); }
     }
     private void errorCallback(ErrorMiddleware callback,Throwable error,Next next) {
         try { callback.handle(error,request,response,next); }
