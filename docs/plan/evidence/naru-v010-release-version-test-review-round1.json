@@ -1,0 +1,25 @@
+{
+  "review_type": "Independent release version TEST SUFFICIENCY",
+  "round": 1,
+  "decision": "PASS",
+  "reviewed_commit": "70201350d9fc136c9276f9295d949ad44812eaa8",
+  "reviewer": "release_dependency_audit",
+  "independent": true,
+  "repo_edits": false,
+  "builds_run": false,
+  "network_activity": false,
+  "requirement": "OPS-REL-009 AC-1",
+  "findings": [],
+  "checks": [
+    "Diff changes only two expected publicationVERSION constants0.9.0->0.10.0 and APItest-fixture JAR expected path; no assertion deleted or loosened.",
+    "All10artifactIds and5primary-file types each remain required (50primary files), existing md5/sha1 sidecar presence, exclusion of test-fixtures, source/javadoc content and artifactId inventory guards retained.",
+    "POM group/artifact/version checks and every internal dependency edge require0.10.0; Tiny3.1.1 runtime pin and all Gson/Kotlin/SLF4J/Servlet exclusion/scopes/Android packaging guards retained.",
+    "License/developer/project/SCM metadata checks unchanged. Build implementation/version, external dependencies, prose and historical evidence unchanged.",
+    "Supplied38tests/6actualRED/32positive controls/0errors/skips correspond to existing0.9.0 output rejected before implementation."
+  ],
+  "evidence": "/tmp/naru-v010-release-version-red-evidence.json",
+  "scope_limits": [
+    "Version expectation migration only; this does not establish all module metadata/signature/checksum byte correctness or completed publication.",
+    "Stop sufficiency loop at first PASS; no round2/3."
+  ]
+}

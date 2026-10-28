@@ -1,0 +1,47 @@
+Starting a Gradle Daemon, 1 busy and 8 stopped Daemons could not be reused, use --status for details
+Configuration 'releaseRuntimeClasspath' was resolved during configuration time.
+This is a build performance and scalability issue.
+See https://github.com/gradle/gradle/issues/2298
+Run with --info for a stacktrace.
+> Task :NaruServe:cyclonedxDirectBom
+> Task :NaruServe-android:cyclonedxDirectBom
+> Task :NaruServe-api:cyclonedxDirectBom
+> Task :NaruServe-filelog:cyclonedxDirectBom
+> Task :NaruServe-gson:cyclonedxDirectBom
+> Task :NaruServe-kotlin:cyclonedxDirectBom
+> Task :NaruServe-logcat:cyclonedxDirectBom
+> Task :NaruServe-servlet:cyclonedxDirectBom
+> Task :NaruServe-slf4j:cyclonedxDirectBom
+> Task :NaruServe-tinyhttpd:cyclonedxDirectBom
+> Task :releaseSbom
+> Task :checkDependencyRules
+> Task :compileReleaseTools UP-TO-DATE
+> Task :releaseScanChild
+
+> Task :releaseScan
+# Vulnerability scan
+
+Status: completed
+Scanner: OWASP Dependency-Check 13.0.0
+Data timestamp: 2026-10-28T20:15:56Z
+
+## Findings
+
+no findings
+
+> Task :releaseLicenses
+THIRD-PARTY-LICENSES.md: 7 shipped, 3 provided
+
+> Task :releaseCheck
+vulnerability scan cleared: no unexcepted High or Critical finding
+
+[Incubating] Problems report is available at: file:///Users/beom/work/git/NaruServe/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.14.3/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 35s
+16 actionable tasks: 15 executed, 1 up-to-date

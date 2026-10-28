@@ -1,0 +1,407 @@
+{
+  "reviewType": "Overall 0.10.0 behavioral TEST SUFFICIENCY, read-only",
+  "round": 1,
+  "verdict": "PASS",
+  "stopReviewLoop": true,
+  "scope": "Integrated common HTTP and cross-feature behavioral acceptance, with author separation and pending documentation/release gates explicitly excluded",
+  "reviewedIntegration": "95f9dca6d72eb1972af6a2f92b348ca1b90b8eea (includes2863790 Servlet fixture migration); subsequent06b9ed5 is documentation evidence only",
+  "workspaceRoot": "/Users/beom/work/git/NaruServe",
+  "mcpIdentity": {
+    "rootSource": "per-call-workspace-root",
+    "target": "0.10.0"
+  },
+  "independence": {
+    "reviewer": "transport_dependency_audit",
+    "excludedSelfAuthored": "Tiny adapter main/tests/pin work is not newly self-approved; prior independently authored review reports supply those lane approvals. Earlier Servlet foundation coverage references prior independent reports rather than a new self-approval.",
+    "tinyIndependentReports": [
+      "docs/plan/evidence/tiny-lifetime-test-review-round1.json",
+      "docs/plan/evidence/naru-v010-tiny-request-retention-test-review-round1.json",
+      "docs/plan/evidence/naru-v010-tiny-implementation-review-round2.json",
+      "docs/plan/evidence/naru-v010-tiny-retention-implementation-review-round1.json"
+    ]
+  },
+  "repoEdits": false,
+  "buildsRun": false,
+  "findings": [],
+  "requirementCoverage": [
+    {
+      "id": "CON-APP-010",
+      "ACs": [
+        "AC-1",
+        "AC-2",
+        "AC-3",
+        "AC-4",
+        "AC-5",
+        "AC-6",
+        "AC-7"
+      ],
+      "status": "SUFFICIENT_FOR_BEHAVIORAL_GATE",
+      "tests": [
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/HttpExtensionRegressionContractTest.java",
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterLookupTest.java",
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterWebSocketTest.java",
+        "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRawTargetTest.java",
+        "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/CorsServletTest.java"
+      ],
+      "assessment": "Common/retained profile differences have positive and negative controls. Explicit CORS privacy and file/WS safety remain tested; historical evidence is not relabeled."
+    },
+    {
+      "id": "CON-BUILD-018",
+      "ACs": [
+        "AC-1",
+        "AC-2",
+        "AC-3"
+      ],
+      "status": "PRIOR_INDEPENDENT_LANE_EVIDENCE",
+      "priorIndependentEvidence": [
+        "docs/plan/evidence/tiny-raw-test-review-round1.json",
+        "docs/plan/evidence/tiny-pins-diff-proof.json",
+        "docs/release/verification/tinyhttpd-3.1.1.md"
+      ],
+      "assessment": "Author-owned pin lane not independently reassessed here. Previously independent acceptance exists; final release must use exact published3.1.1 artifacts."
+    },
+    {
+      "id": "FR-APP-021",
+      "ACs": [
+        "AC-1",
+        "AC-2",
+        "AC-3",
+        "AC-4",
+        "AC-5",
+        "AC-6"
+      ],
+      "status": "SUFFICIENT_FOR_BEHAVIORAL_GATE",
+      "tests": [
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/HttpExecutionContractTest.java#registrationOrderInterleavesUseAndRoutes",
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/HttpExecutionContractTest.java#lateRegistrationAndBuilderAttachmentArePublished",
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/HttpExecutionContractTest.java#invalidRegistrationIsAtomicAndDoesNotHideValidRoute",
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/HttpGroupIdentityContractTest.java",
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/WebSocketApiTest.java"
+      ],
+      "assessment": "Ordered overlaps/duplicates, insertion-time identity, builders/groups, actual RUNNING registration, atomic invalid alternatives and separate WS/configuration guards are observed rather than inferred from internals."
+    },
+    {
+      "id": "FR-APP-022",
+      "ACs": [
+        "AC-1",
+        "AC-2",
+        "AC-3",
+        "AC-4",
+        "AC-5",
+        "AC-6"
+      ],
+      "status": "SUFFICIENT_FOR_BEHAVIORAL_GATE",
+      "tests": [
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/HttpExecutionContractTest.java#explicitNextAfterResponseAndRepeatedNextStillAdvance",
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/HttpExecutionContractTest.java#offThreadNextCanBeJoinedAndIsQueuedUntilCallbackReturns",
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/HttpMountAndParamContractTest.java#childRouterExitDefersParentAndRestoresViews",
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/HttpMethodAndErrorContractTest.java#errorNextRunClearsErrorAndPreservesSynchronousAfterNextOrder",
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/HttpContinuationDepthContractTest.java"
+      ],
+      "assessment": "Cursor progression, route/router exits, after-next views, joined off-thread Next and exact11 pinned depth traces include every before/after event and exactly-one commit/finish/input-close."
+    },
+    {
+      "id": "FR-APP-023",
+      "ACs": [
+        "AC-1",
+        "AC-2",
+        "AC-3",
+        "AC-4",
+        "AC-5",
+        "AC-6",
+        "AC-7",
+        "AC-8"
+      ],
+      "status": "SUFFICIENT_FOR_BEHAVIORAL_GATE",
+      "tests": [
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/HttpDeferredLifetimeContractTest.java",
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/HttpTransportRetentionContractTest.java",
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/HttpCleanupAdmissionContractTest.java",
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DeferredContractTest.java",
+        "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRequestRetentionTest.java",
+        "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletTransportRetentionTest.java"
+      ],
+      "assessment": "Late JSON/stream/SSE; success/reject/no implicit next; active/queued callback ownership; upload/body identity; settlement races; lifecycle reentry/shutdown; cleanup/admission race; transport subscription/release ordering are tested. Actual Servlet POST is acknowledged before its first deferred body read, with codec positive control. Tiny is covered only by prior independent reports below."
+    },
+    {
+      "id": "FR-APP-024",
+      "ACs": [
+        "AC-1",
+        "AC-2",
+        "AC-3",
+        "AC-4",
+        "AC-5"
+      ],
+      "status": "SUFFICIENT_FOR_BEHAVIORAL_GATE",
+      "tests": [
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/HttpMethodAndErrorContractTest.java#unhandledRuntimeExceptionUsesDeclaredJavaInformationInExact500Html",
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/HttpMethodAndErrorContractTest.java#replacementAndThrownErrorAdvanceWithoutRestartOrDoubleFinalization",
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/HttpMethodAndErrorContractTest.java#errorAfterSendRunsDownstreamHandlerButCannotCommitAgain",
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/HttpExtensionRegressionContractTest.java#lateServerFailureRemainsObservableWithoutASecondCommitOrDuplicateLog",
+        "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletCasesTest.java"
+      ],
+      "assessment": "Status/HTML scaffolding/escaping/headers/framing and original Throwable identity are asserted. Late errors require observable log or abort and no second commit; Java-stack differences are not blanket body waivers."
+    },
+    {
+      "id": "FR-ENGINE-012",
+      "ACs": [
+        "AC-1",
+        "AC-2",
+        "AC-3"
+      ],
+      "status": "PRIOR_INDEPENDENT_LANE_EVIDENCE",
+      "priorIndependentEvidence": [
+        "docs/plan/evidence/tiny-raw-test-review-round1.json",
+        "docs/plan/evidence/tiny-framework-integration-counts.json",
+        "docs/plan/evidence/naru-v010-tiny-retention-implementation-review-round1.json"
+      ],
+      "assessment": "Tiny author exclusion applies. No new independent approval of Tiny-owned matrix/implementation from this reviewer; use independent lane review and actual framework integration evidence."
+    },
+    {
+      "id": "FR-HTTP-027",
+      "ACs": [
+        "AC-1",
+        "AC-2",
+        "AC-3",
+        "AC-4",
+        "AC-5",
+        "AC-6"
+      ],
+      "status": "SUFFICIENT_FOR_BEHAVIORAL_GATE",
+      "tests": [
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/HttpExecutionContractTest.java#listScalarOptionalRawViewsAndDecodeExactlyOnce",
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/HttpExecutionContractTest.java#actualDuplicateWinnerDeterminesScalarOrWildcardShape",
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/HttpMountAndParamContractTest.java#mountedRawViewsAndOriginalQueryUseActualMatchedText",
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/HttpDeferredLifetimeContractTest.java#sameBodyCacheCookieAttributesAndServicesSurviveDeferredMountedLayers",
+        "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRequestMetadataTest.java"
+      ],
+      "assessment": "Scalar/list/absence/empty and duplicate shape, strict one decode, current/original query views and same identity are exercised. Servlet tests force actual container recycling and a following pending request on the same keepalive connection, then verify old savedNext still sees original method/path/headers/duplicates/remote/security/lastEventId."
+    },
+    {
+      "id": "FR-HTTP-028",
+      "ACs": [
+        "AC-1",
+        "AC-2",
+        "AC-3",
+        "AC-4",
+        "AC-5",
+        "AC-6"
+      ],
+      "status": "SUFFICIENT_FOR_BEHAVIORAL_GATE",
+      "tests": [
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/HttpMethodAndErrorContractTest.java",
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/HttpExtensionRegressionContractTest.java#implicitCommonDefaultsRemainSeparateFromExplicitStrictPolicy",
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpCallbackCompatibilityContractTest.java"
+      ],
+      "assessment": "Extended/case-sensitive methods and legacyAny, HEAD local ordering and exact GET/HEAD representation lengths, router-local traversed OPTIONS with precise Allow/type/nosniff,404fallthrough and explicit extensions have boundary controls."
+    },
+    {
+      "id": "FR-ROUTE-018",
+      "ACs": [
+        "AC-1",
+        "AC-2",
+        "AC-3",
+        "AC-4",
+        "AC-5",
+        "AC-6",
+        "AC-7"
+      ],
+      "status": "SUFFICIENT_FOR_BEHAVIORAL_GATE",
+      "tests": [
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/HttpPathPatternTest.java",
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/HttpExecutionContractTest.java",
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/HttpMountAndParamContractTest.java",
+        "src/test/java/com/snoworca/naruserve/parity/FullRuntimeParityTest.java"
+      ],
+      "assessment": "Pinned257 compiler vectors, code-point syntax offsets, escapes/quotes/Unicode duplicates, wildcard type, optional expansion boundary, shared compiler concurrency and adversarial subprocess deadline are supplemented by actual registration/runtime replay, satisfying helper-to-runtime AC7."
+    },
+    {
+      "id": "FR-ROUTE-019",
+      "ACs": [
+        "AC-1",
+        "AC-2",
+        "AC-3",
+        "AC-4",
+        "AC-5",
+        "AC-6"
+      ],
+      "status": "SUFFICIENT_FOR_BEHAVIORAL_GATE",
+      "tests": [
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RegexPathPatternTest.java",
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/HttpMountAndParamContractTest.java#orderedNestedAlternativesAndJavaPatternSearchIntegrate",
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/HttpMountAndParamContractTest.java#regexMountBoundarySearchAndNumericMerge",
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/HttpMountAndParamContractTest.java#advancedCompiledRegexPathInputIsAccepted",
+        "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/HttpCallbackTrailingLambdaTest.kt",
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpCallbackCompatibilityContractTest.java"
+      ],
+      "assessment": "Actual Java Pattern lexical metadata, fresh search Matchers, scoped flags/comments/classes/quotes/lookarounds, numeric/name absence, source-plus-flags ambiguity rejection, shared Pattern concurrency, alternative atomicity and Java/Kotlin registration overloads have dedicated tests; no JS engine parity claim."
+    },
+    {
+      "id": "FR-ROUTE-020",
+      "ACs": [
+        "AC-1",
+        "AC-2",
+        "AC-3",
+        "AC-4",
+        "AC-5"
+      ],
+      "status": "SUFFICIENT_FOR_BEHAVIORAL_GATE",
+      "tests": [
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/HttpMountAndParamContractTest.java",
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/HttpDeferredLifetimeContractTest.java#asyncMiddlewareRetainsPrefixViewUntilExplicitNextRestoresIt",
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/HttpGroupIdentityContractTest.java",
+        "src/test/java/com/snoworca/naruserve/parity/FullRuntimeParityTest.java"
+      ],
+      "assessment": "String/Pattern/alternative prefix semantics, delimiter boundary, root/empty/repeated slash/query/raw mount views, local options and numeric merge, child exit/error/delayed restoration and retained group behavior are observed."
+    },
+    {
+      "id": "FR-ROUTE-021",
+      "ACs": [
+        "AC-1",
+        "AC-2",
+        "AC-3",
+        "AC-4",
+        "AC-5"
+      ],
+      "status": "SUFFICIENT_FOR_BEHAVIORAL_GATE",
+      "tests": [
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/HttpMountAndParamContractTest.java#canonicalIntegerKeyBoundariesDoNotSortNonIndices",
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/HttpMountAndParamContractTest.java#lastValueCacheRerunsWhenValueChangesAndRecurs",
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/HttpMountAndParamContractTest.java#wildcardArraysUseIdentityRatherThanScalarValueCache",
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/HttpMountAndParamContractTest.java#hooksAreRouterLocalAndInheritedParamsDoNotTriggerUndeclaredChildHook",
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/HttpMountAndParamContractTest.java#delayedMultipleHooksAndRouteSkipUseSharedCursor",
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/HttpMountAndParamContractTest.java#hookThrowAndExplicitErrorReachErrorHandling",
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/HttpMountAndParamContractTest.java#invalidParameterRegistrationsAreAtomic"
+      ],
+      "assessment": "Last-value versus recurring values, scalar decoded equality/list reference identity, integer key boundaries, separate router caches, omitted optionals, multiple delayed hooks, errors/skips and atomic validation are specifically covered."
+    },
+    {
+      "id": "FR-SVL-009",
+      "ACs": [
+        "AC-1",
+        "AC-2",
+        "AC-3",
+        "AC-4",
+        "AC-5",
+        "AC-6"
+      ],
+      "status": "SUFFICIENT_FOR_BEHAVIORAL_GATE",
+      "tests": [
+        "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletDeferredSpiTest.java",
+        "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRequestRetentionTest.java",
+        "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletTransportRetentionTest.java",
+        "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRequestMetadataTest.java",
+        "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRawTargetTest.java"
+      ],
+      "priorIndependentEvidence": [
+        "docs/plan/evidence/servlet-test-review-round2.json",
+        "docs/plan/evidence/naru-v010-servlet-retention-test-review-round1.json",
+        "docs/plan/evidence/naru-v010-servlet-retention-implementation-review-round2.json",
+        "docs/plan/evidence/naru-v010-servlet-fixture-migration-review-round1.json"
+      ],
+      "assessment": "Actual Jetty late completion, AsyncContext attach/finish races, late SSE and slots, timeout/abort/stop, no-async support failure and no premature reuse are present. Raw matrix explicitly distinguishes container rejection without dispatch, framework400/404 and accepted encodedslash; no universal rawNUL/malformed escape support claim."
+    },
+    {
+      "id": "IR-HTTP-009",
+      "ACs": [
+        "AC-1",
+        "AC-2",
+        "AC-3",
+        "AC-4",
+        "AC-5",
+        "AC-6",
+        "AC-7"
+      ],
+      "status": "SUFFICIENT_FOR_BEHAVIORAL_GATE",
+      "tests": [
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/common/AbortListenersTest.java",
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/common/SafeCallbacksTest.java",
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/common/RequestRetentionsTest.java",
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/HttpDeferredLifetimeContractTest.java",
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/HttpTransportRetentionContractTest.java",
+        "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletAbortConnectionTest.java",
+        "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletDeferredSpiTest.java",
+        "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletTransportRetentionTest.java"
+      ],
+      "assessment": "Non-null default compatibility, early/late/concurrent/fail-soft once notifications, no normal-finish notification, cleanup under abort registration, detected IO/timeout/stop and actual lock-exit ownership are covered. Recoverable body400/408/413 remains distinct from terminal transport abort; Tiny-specific controls use independent prior evidence."
+    },
+    {
+      "id": "OPS-REL-008",
+      "ACs": [
+        "AC-1",
+        "AC-2",
+        "AC-3"
+      ],
+      "status": "PENDING_SEPARATE_GATE",
+      "assessment": "Future documentation phase: bilingual current guides/navigation and Java8/Kotlin compile-and-execute examples still require their own tests and independent prose review; this audit does not pass that gate."
+    },
+    {
+      "id": "OPS-REL-009",
+      "ACs": [
+        "AC-1",
+        "AC-2",
+        "AC-3"
+      ],
+      "status": "PENDING_SEPARATE_GATE",
+      "assessment": "Future release phase: version metadata/staging/signatures/public bytes/PUBLISHED evidence and final whole Java17/Java8/API21 release gates remain pending. This review is only the independent behavioral sufficiency component of AC-2."
+    },
+    {
+      "id": "OPS-ROUTE-004",
+      "ACs": [
+        "AC-1",
+        "AC-2",
+        "AC-3",
+        "AC-4",
+        "AC-5",
+        "AC-6",
+        "AC-7"
+      ],
+      "status": "SUFFICIENT_FOR_BEHAVIORAL_GATE",
+      "tests": [
+        "src/test/java/com/snoworca/naruserve/parity/FullRuntimeParityTest.java",
+        "src/test/java/com/snoworca/naruserve/parity/BasicRuntimeParityTest.java",
+        "src/test/java/com/snoworca/naruserve/parity/ParityCorpusTest.java",
+        "src/test/java/com/snoworca/naruserve/parity/LanguageErrorCounterpartsTest.java",
+        "src/test/java/com/snoworca/naruserve/parity/JavaPatternBoundaryTest.java",
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/HttpContinuationDepthContractTest.java"
+      ],
+      "assessment": "30actual Java/Express replays plus comparator/provenance/counterpart controls (54parity tests overall), pinned257compiler vectors and11depth traces. Observations come from real Java runtime, and deliberate same-adapter mismatch is detected. Poisoned matching lock+corpus SHA/Node/JNI metadata, scalar/list/absence, response fields and meaningful error family/message/source/index remain strict. Reproducible generator evidence is historical/frozen, not rerun by this review."
+    }
+  ],
+  "observedHostValidation": {
+    "log": "/tmp/naru-v010-integrated-code-j17.log",
+    "result": "Host check finished FAIL from four known documentation/release assertions; no overall whole-build PASS is claimed.",
+    "rootTests": {
+      "tests": 305,
+      "failures": 4,
+      "errors": 0,
+      "skipped": 0
+    },
+    "apiTests": {
+      "tests": 1397,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "servletTests": {
+      "tests": 158,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "remainingFailures": [
+      "ReadmeDocsTest.ops_REL_005_AC1_readmeAndReleaseNotesHoldTheTinyHttpdInstruction",
+      "ReadmeDocsTest.ops_REL_005_AC3_documentsExplainPublished300ApiLimitation",
+      "ReleaseRecordsDocsTest.fr_REL_002_AC3_vulnerabilityScanRecordHasStatusAndReasonWhenPending",
+      "ReleaseResultsDocsTest.ops_REL_003_AC3_everyEvidenceLinkResolves"
+    ],
+    "note": "Read frozen/current XML after host log finished; no Gradle or report writer started by reviewer."
+  },
+  "limitations": [
+    "Sufficiency is risk-based acceptance, not proof of every possible route/regex/concurrency interleaving.",
+    "Pinned Servlet container restrictions are explicit and tested; tests do not promise universal raw target acceptance.",
+    "No new benchmark or exact same-environment generator rerun was performed; bounded adversarial process/concurrency tests and retained provenance were inspected.",
+    "No target/requirement status promotion, publication approval, or final documentation approval is issued.",
+    "First PASS ends this sufficiency review loop; do not run rounds2/3 absent a new material change."
+  ]
+}

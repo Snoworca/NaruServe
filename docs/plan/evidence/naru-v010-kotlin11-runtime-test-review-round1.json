@@ -1,0 +1,36 @@
+{
+  "verdict": "PASS",
+  "round": 1,
+  "reviewedCommit": "0054ab57432bc2536158f11cd1d58c7a1bf47206",
+  "scope": "New runtime execution test for exact bilingual kotlin.md#11 fence; prose and prior harness reviews remain closed",
+  "requirements": [
+    "OPS-REL-008 AC-3",
+    "FR-HTTP-027 AC-3/5",
+    "FR-ROUTE-020 AC-1/3",
+    "FR-ROUTE-021 AC-1",
+    "FR-APP-023 AC-3/7/8"
+  ],
+  "findings": [],
+  "evidence": {
+    "manifest": "/tmp/naru-v010-kotlin11-runtime-evidence.json",
+    "eachJdk17AndActualJava8": {
+      "compilerTests": 27,
+      "markerTests": 13,
+      "realHttpRuntimeTests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "assessment": [
+    "One new Kotlin test contains the actual documentation fence with its exact ordinal marker and no adapted waiver. Existing bilingual marker/compiler checks validate executable parity on both language guides.",
+    "Actual RestApp.create bootstrap uses TinyHttpd/Gson, ephemeral loopback port and finite HTTP timeouts. GET asserts exact mounted URL output/status/content type/length and captured seenId7, proving mounted route and param preprocessing execute.",
+    "POST sends actualJSON stringhello, requires202accepted with exact content type/length, then normal shutdown requires TERMINATED/onStop1 and processedhello on the original captured Request. This checks producer effect rather than response-only success.",
+    "Finally invokes bounded forced shutdown on incomplete test paths. No mocked transport, conditional pass, arbitrary sleep or new dependency replaces execution.",
+    "Exact same source executes on JDK17 and actualJava8 alongside27 compiler and13 marker tests, all41 pass without errors/skips. Only one test file added; no example/prose/production edits."
+  ],
+  "limitations": [
+    "This runtime example test does not prove a controlled client-observed-response-before-first-body-read interleaving or that shutdown definitely waited on a still-pending producer. Existing dedicated AC-8 core/Tiny/Servlet latch-based tests establish those races; no such claim is inferred here."
+  ],
+  "actions": "Read-only pinned test/evidence review, no edits/builds/network. Only tmp artifact written. First PASS ends loop."
+}

@@ -1,0 +1,13 @@
+{
+  "tests": 38,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "requirement": "OPS-REL-009 AC-1",
+  "red": "7020135",
+  "green": "a1dd06a",
+  "review": "/tmp/naru-v010-release-version-test-review-round1.json",
+  "java17_log": "/tmp/naru-v010-release-version-green-j17.log",
+  "actual_java8_log": "/tmp/naru-v010-release-version-green-java8.log",
+  "scope": "Private bounded coordinate/metadata validation only, not final release bytes or publication"
+}

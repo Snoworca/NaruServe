@@ -1,0 +1,30 @@
+{
+  "verdict": "PASS",
+  "round": 1,
+  "reviewedCommit": "66795cf",
+  "scope": "Core owned input handle cleanup versus terminal adapter reacquisition regression tests",
+  "requirements": [
+    "FR-APP-023 AC-3/8",
+    "IR-HTTP-009 AC-2"
+  ],
+  "findings": [],
+  "evidence": {
+    "log": "/tmp/naru-v010-input-cleanup-red.log",
+    "tests": 3,
+    "failures": 2,
+    "passingControls": 1,
+    "redReasons": [
+      "Terminal abort leaves previously acquired original input unclosed",
+      "Normal body-read completion reacquires adapter handle instead of reusing original"
+    ]
+  },
+  "assessment": [
+    "GuardedExchange reuses existing lifecycle fixture and returns a real counted InputStream; after transport abort its requestBody accessor explicitly rejects a recycled container. The application positively decodes exact original bytes before abort, establishing an owned handle whose close is required independently of later accessor availability.",
+    "Abort case requires original input close1 and total adapter access1, followed by late Deferred settlement/repeated abort still close1. It therefore distinguishes a leak, reacquisition and duplicate cleanup.",
+    "Normal-read case requires exact echoed original payload, close1 and getter1, preventing a fix limited to exception suppression or cancellation only.",
+    "Unread normal positive checks getter0 while callback runs, input still open after send within the active callback, then one lazy getter/close after unwind. This protects no-eager-acquisition and active ownership.",
+    "Preserved actual RED reaches the intended two cleanup assertions while the unread control passes. Only one new test class changes; no production/dependency/test weakening."
+  ],
+  "limitations": "Production input-cache synchronization and full body/abort/retention regressions still require GREEN/source review. Existing actual Servlet fallback tests provide complementary real-container evidence.",
+  "actions": "Read-only pinned test/evidence review; no edits/builds/network. Wrote tmp report only; first PASS ends loop."
+}

@@ -274,6 +274,8 @@ API 21 호환성의 근거는 `--release 8` 컴파일과, API 문서에서 Andro
 API 21 근거의 세 번째 부분은 D-385 규칙입니다. 어떤 모듈도 컴파일 시점의 `android.*` 참조를 갖지 않으며, 빌드의 `checkClassReferences` 검사는 `NaruServe-api`와 `NaruServe-logcat`의 `android/` 클래스 참조를 거부합니다. 어떤 모듈의 컴파일 클래스패스에도 Android 아티팩트를 넣지 않습니다.
 
 - [API 문서](docs/api/README.md)
+- [0.10.0 릴리스 노트](docs/release/0.10.0-release-notes.ko.md)
+- [0.10.0 검증 결과](docs/release/0.10.0-test-results.md)
 - [릴리스 노트](docs/release/release-notes.md)
 - [테스트 결과](docs/release/test-results.md)
 - [서드파티 라이선스](THIRD-PARTY-LICENSES.md)

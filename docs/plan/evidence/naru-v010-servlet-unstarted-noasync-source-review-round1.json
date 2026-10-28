@@ -1,0 +1,52 @@
+{
+  "verdict": "CHANGES_REQUIRED",
+  "round": 1,
+  "reviewType": "Independent Servlet unstarted noAsync fallback source review",
+  "reviewedCommit": "a14fcce1b2a0f714dc5437d15859ca41f3ad599c",
+  "scope": "Synthetic fallback500 followed by cancellation; root-owned input cleanup dependency71b8f4e already reviewed separately",
+  "requirements": [
+    "FR-SVL-009 AC-4",
+    "FR-APP-023 AC-3/8",
+    "IR-HTTP-009 AC-2",
+    "FR-APP-019 AC-3"
+  ],
+  "findings": [
+    {
+      "id": "SVL-NOASYNC-SRC-R1-1",
+      "severity": "MEDIUM",
+      "confidence": 0.99,
+      "file": "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/ServletExchange.java",
+      "line": 487,
+      "title": "Synthetic adapter500 cancellation logs a different committed status in the core access record",
+      "requirement": "FR-APP-019 AC-3",
+      "mechanism": "unsupportedAsync commits and flushes wire500 directly through ServletExchange, bypassing DefaultResponse. The new abort notification enters HttpExecution.cancel and DefaultResponse.abort, which preserves DefaultResponse initial status200. Dispatcher common terminal logger reads res.statusCode, so the actual POST receiving500 is recorded as200 aborted. This is the concrete observation supplied with the review and follows the pinned source path, not a hypothetical new configuration.",
+      "relatedLocations": [
+        "DefaultResponse.java:64 initializes status200",
+        "HttpExecution.java:34 onAbort -> cancel; responseDone -> terminalLog",
+        "Dispatcher.java:237 logs res.statusCode rather than direct adapter commit status"
+      ],
+      "candidateRed": [
+        "Extend either existing actual unstarted noAsync core test after its fixedJSON500/EOF and cleanup assertions: inspect the single access line and require status500 followed by aborted (retaining one-record, input/upload/admission and no-second-response checks).",
+        "Current line reports initial200 aborted. Keep ordinary synchronous asyncUnsupported completion200/no-abort positive and completed200ack cancellation case logging its committed200."
+      ],
+      "whyMaterial": "Access logging explicitly requires committed status. The path is uncommon/default asyncSupported=true, but unsupported async configuration is an explicit tested outcome under FR-SVL-009 AC-4, so incorrect status cannot be dismissed solely because it is a configuration error. SeverityMEDIUM reflects limited reachability and correct wire/resource outcome.",
+      "minimalFixDirection": "Preserve actual committed transport outcome in the core terminal observation for this adapter-generated fallback, or route the failure through an appropriate core response/error boundary before committing. Keep one response and existing outside-lock cancellation/resource cleanup. Do not simply relabel all aborts500 or weaken the access-log contract."
+    }
+  ],
+  "positiveAssessment": [
+    "finish then abort correctly cancels retained core work after the complete syntheticJSON500, without another protocol response. Existingabort checks preserve unretained normal completion; caller holds no exchange/write lock while abort observers execute.",
+    "Root-owned input cleanup dependency closes original acquired source once, without reopening cancelled Servlet input. Pending producer stays unsettled while core/adapter ownership and upload resources are reclaimed.",
+    "Full160 tests pass on JDK17 and actualJava8; focused56 pass; API21/class-reference checks pass. These tests currently assert access-log count but not fallback committed status, so green does not resolve the identified observation mismatch."
+  ],
+  "evidence": {
+    "manifest": "/tmp/naru-v010-servlet-unstarted-noasync-green-evidence.json",
+    "fullEach": {
+      "tests": 160,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "notClaimed": "No additional unproven RID/output-count defect is asserted here; the concrete required finding concerns wire500 versus logged200.",
+  "actions": "Read-only source/requirements/evidence inspection, no edits/builds/network. Only tmp review artifact written."
+}

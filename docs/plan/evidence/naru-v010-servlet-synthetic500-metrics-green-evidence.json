@@ -1,0 +1,69 @@
+{
+  "servletSourceCommit": "aa69e1d722e65ad9c3cdd3e9e5dfa9de631f048e",
+  "testCommit": "ec3fc1db295a867af103b81f6542d4578d31c259",
+  "coreSourceDependency": {
+    "rootCommit": "309cc86",
+    "isolatedCherry": "4c93fdf",
+    "authoredByServletOwner": false
+  },
+  "requirements": [
+    "IR-HTTP-009 AC-8",
+    "FR-APP-019 AC-3 AC-5",
+    "FR-SVL-009"
+  ],
+  "red": {
+    "tests": 2,
+    "failures": 2,
+    "snapshot": "actualwireJSON500 but logPOST/pending200aborted/in140/out0",
+    "log": "/tmp/naru-v010-servlet-synthetic500-metrics-red.log",
+    "xml": "/tmp/naru-v010-servlet-synthetic500-metrics-red-results"
+  },
+  "independentTestReview": "/tmp/naru-v010-servlet-synthetic-metrics-test-review-round1.json PASS loopclosed",
+  "implementation": "ServletExchangeonly: two volatile synthetic-only metrics fields default0/-1, twoSPIoverrides, publish500/0 aftercommit beforebodywrite; publishlength onlyafterwrite returns; finish+abortownershipunchanged; all normalcore/SSEmetrics unknown/fallback; callback/IOoutside locks unchanged",
+  "green": {
+    "focusedJ17": {
+      "tests": 56,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "log": "/tmp/naru-v010-servlet-synthetic500-metrics-green-j17-target.log"
+    },
+    "focusedActualJava8": {
+      "tests": 56,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "log": "/tmp/naru-v010-servlet-synthetic500-metrics-green-java8-target.log"
+    },
+    "fullJ17": {
+      "task": ":NaruServe-servlet:check",
+      "tests": 160,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "log": "/tmp/naru-v010-servlet-synthetic500-metrics-full-j17.log",
+      "xml": "/tmp/naru-v010-servlet-synthetic500-metrics-full-j17-results"
+    },
+    "fullActualJava8": {
+      "task": ":NaruServe-servlet:check",
+      "tests": 160,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "runtime": "Zulu8u504aarch64",
+      "log": "/tmp/naru-v010-servlet-synthetic500-metrics-full-java8.log",
+      "xml": "/tmp/naru-v010-servlet-synthetic500-metrics-full-java8-results"
+    },
+    "sharedApi21": "PASS",
+    "servletClassReferences": "PASS",
+    "diffCheck": "PASS"
+  },
+  "assertionsPreserved": [
+    "wire500fixedJSONContentLength/EOF/nosecondresponse",
+    "INFOonce/500aborted/in140/outactualJSONbytes/laterrecordunchanged",
+    "coreactiveHttp0/adapteradmission0/uploaddeletion/originalinputclose1/partstreamclosed",
+    "lateNext/error/producerresolve/transportrelease/abortnoresurrection",
+    "normalfinish/noasyncpositive/SSEcause/cancelonce/outsideinternalLocks/poolownership/deadlineguards"
+  ],
+  "pending": "Independent Servlet source rereviewround2 oldcleanup+newmetrics before hostharvest; no rootbuild/APIauthorship/docs changes"
+}

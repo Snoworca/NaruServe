@@ -1,0 +1,72 @@
+{
+  "requirements": [
+    "OPS-REL-008 AC-2",
+    "OPS-REL-009 AC-1"
+  ],
+  "workspace": "/Users/beom/work/git/NaruServe/.claude/worktrees/v010-version-docs",
+  "base": "a0920aa",
+  "tests_first": "b96a8fe",
+  "docs_commit": "dfab5074ffed435f38369f1aa45d8ab51f420a73",
+  "status": "READY_FOR_INDEPENDENT_REVIEW; focusedREADMEGREEN, separatecouplingfailuresrecorded",
+  "scope": [
+    "ReadmeDocsTest expected coordinate0.10 literals/escapedregex +coordinate/fallback assertion instead of unverifiedpublicationassertion",
+    "20currentREADME/APIguide/examplesREADME files coordinate/scope-note changes only"
+  ],
+  "notes_replaced": [
+    "READMEEN/KR previouspublished0.9/newcheckoutpending banner ->0.10guide scope",
+    "READMEInstall0.9already-published claim ->0.10MavenCentralcoordinates with unavailable-version sourcefallback",
+    "APIindexpaired previous0.9/unverifiedMavenbanner ->0.10scope/currentinstallation fallback, original statusheadinglabels preserved",
+    "app andKotlinpaired prior-release disclaimers removed while Java8/API21/engine/capability content preserved",
+    "JSONpaired priorpublished0.9 trailing sentence removed; typedbody/orderedHTML/explicitJSON behavior unchanged",
+    "response/multipartpaired temporary0.9coordinate note ->0.10scope",
+    "loggingpaired published0.9note ->0.10coordinate/behavior scope and installation pointer",
+    "Servletpaired pre-versionbump0.9note ->0.10documentation scope/installation pointer",
+    "Current20files remaining0.9refs zero; allcoordinateexamples/tables includingexamplesREADME become0.10"
+  ],
+  "preservation": {
+    "all10module_table": true,
+    "publicationlinks": true,
+    "Java8_J17_API21_scope": true,
+    "images": true,
+    "quickstart_and_Express_server_code": true,
+    "checked_fenced_blocks": 175,
+    "unexpected_fence_changes": 0,
+    "allowed_fence_change": "0.9.0->0.10.0 dependency coordinate versions only",
+    "local_links_files_anchors": "PASS",
+    "historical_release_SRS_research_thirdparty_build_settings_main_bytes": "No gitdiff"
+  },
+  "red": {
+    "tests": 8,
+    "failures": 2,
+    "errors": 0,
+    "skipped": 0,
+    "log": "/tmp/naru-version-docs-red.log",
+    "counts": "/tmp/naru-version-docs-red-counts.json"
+  },
+  "focused": {
+    "jdk17": {
+      "ReadmeDocsTest": "8/8PASS",
+      "ApiMarkersDocsTest": "7/8PASS; existingapp.group historicalanchor failure"
+    },
+    "actual_java8": {
+      "ReadmeDocsTest": "8/8PASS",
+      "ApiMarkersDocsTest": "7/8PASS; sameexistingfailure"
+    },
+    "paths": [
+      "/tmp/naru-version-docs-readme-markers.log",
+      "/tmp/naru-version-docs-green-selected-counts.json",
+      "/tmp/naru-version-docs-java8.log",
+      "/tmp/naru-version-docs-java8-selected-counts.json"
+    ]
+  },
+  "coupling": {
+    "log": "/tmp/naru-version-docs-green.log",
+    "counts": "/tmp/naru-version-docs-green-counts.json",
+    "DocsExamplesCompileTest": "27tests12failures on old3translatedSKIPanchors andServletmethodsnippetwrapper, ownedbyothercheckpointlane; noSKIPedits/exclusionsmade",
+    "ApiMarkersDocsTest": "Finalonlyapp.group staleanchor remains; ownbannerstatusheadinglabels retained toavoidincidentalregression"
+  },
+  "publication_completed_claim": false,
+  "no_version_build_dependencies_SRS_main_changes": true,
+  "no_network_or_upload": true,
+  "independent_review": "Pending; no selfapproval"
+}

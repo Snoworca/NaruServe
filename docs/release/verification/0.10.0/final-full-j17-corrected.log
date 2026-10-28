@@ -1,0 +1,335 @@
+> Task :compileJava NO-SOURCE
+> Task :processResources NO-SOURCE
+> Task :classes UP-TO-DATE
+> Task :jar UP-TO-DATE
+> Task :assemble UP-TO-DATE
+> Task :checkDependencyRules
+> Task :NaruServe-api:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :NaruServe-api:compileKotlin NO-SOURCE
+> Task :NaruServe-api:compileJava UP-TO-DATE
+> Task :NaruServe-api:processResources UP-TO-DATE
+> Task :NaruServe-api:classes UP-TO-DATE
+> Task :NaruServe-api:jar UP-TO-DATE
+> Task :NaruServe-filelog:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :NaruServe-filelog:compileKotlin NO-SOURCE
+> Task :NaruServe-filelog:compileJava UP-TO-DATE
+> Task :NaruServe-filelog:processResources NO-SOURCE
+> Task :NaruServe-filelog:classes UP-TO-DATE
+> Task :NaruServe-filelog:jar UP-TO-DATE
+> Task :NaruServe-logcat:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :NaruServe-logcat:compileKotlin NO-SOURCE
+> Task :NaruServe-logcat:compileJava UP-TO-DATE
+> Task :NaruServe-logcat:processResources NO-SOURCE
+> Task :NaruServe-logcat:classes UP-TO-DATE
+> Task :NaruServe-logcat:jar UP-TO-DATE
+> Task :NaruServe-slf4j:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :NaruServe-slf4j:compileKotlin NO-SOURCE
+> Task :NaruServe-slf4j:compileJava UP-TO-DATE
+> Task :NaruServe-slf4j:processResources NO-SOURCE
+> Task :NaruServe-slf4j:classes UP-TO-DATE
+> Task :NaruServe-slf4j:jar UP-TO-DATE
+> Task :checkLoggerPlacement
+> Task :NaruServe:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :NaruServe-gson:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :NaruServe-gson:compileKotlin NO-SOURCE
+> Task :NaruServe-gson:compileJava UP-TO-DATE
+> Task :NaruServe-tinyhttpd:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :NaruServe-tinyhttpd:compileKotlin NO-SOURCE
+> Task :NaruServe-tinyhttpd:compileJava UP-TO-DATE
+> Task :NaruServe:compileKotlin NO-SOURCE
+> Task :NaruServe:compileJava UP-TO-DATE
+> Task :NaruServe:processResources UP-TO-DATE
+> Task :NaruServe:classes UP-TO-DATE
+> Task :NaruServe-gson:processResources NO-SOURCE
+> Task :NaruServe-gson:classes UP-TO-DATE
+> Task :NaruServe-kotlin:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :NaruServe-kotlin:compileKotlin UP-TO-DATE
+> Task :NaruServe-kotlin:compileJava NO-SOURCE
+> Task :NaruServe-kotlin:processResources NO-SOURCE
+> Task :NaruServe-kotlin:classes UP-TO-DATE
+> Task :NaruServe-servlet:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :NaruServe-servlet:compileKotlin NO-SOURCE
+> Task :NaruServe-servlet:compileJava UP-TO-DATE
+> Task :NaruServe-servlet:processResources UP-TO-DATE
+> Task :NaruServe-servlet:classes UP-TO-DATE
+> Task :NaruServe-tinyhttpd:processResources NO-SOURCE
+> Task :NaruServe-tinyhttpd:classes UP-TO-DATE
+> Task :checkNoCoroutines
+> Task :NaruServe:animalsnifferMain UP-TO-DATE
+> Task :NaruServe:checkClassReferences
+> Task :NaruServe:jar UP-TO-DATE
+> Task :NaruServe:javadoc UP-TO-DATE
+> Task :NaruServe:javadocJar UP-TO-DATE
+> Task :NaruServe:sourcesJar UP-TO-DATE
+> Task :NaruServe:compileTestKotlin NO-SOURCE
+> Task :NaruServe:compileTestJava UP-TO-DATE
+> Task :NaruServe:processTestResources NO-SOURCE
+> Task :NaruServe:testClasses UP-TO-DATE
+> Task :NaruServe-gson:jar UP-TO-DATE
+> Task :NaruServe-tinyhttpd:jar UP-TO-DATE
+> Task :NaruServe:test UP-TO-DATE
+> Task :NaruServe:check
+> Task :NaruServe-api:animalsnifferMain UP-TO-DATE
+> Task :NaruServe-api:checkClassReferences
+> Task :NaruServe-api:javadoc UP-TO-DATE
+> Task :NaruServe-api:javadocJar UP-TO-DATE
+> Task :NaruServe-api:sourcesJar UP-TO-DATE
+> Task :NaruServe-api:compileTestFixturesKotlin NO-SOURCE
+> Task :NaruServe-api:compileTestFixturesJava UP-TO-DATE
+> Task :NaruServe-api:processTestFixturesResources NO-SOURCE
+> Task :NaruServe-api:testFixturesClasses UP-TO-DATE
+> Task :NaruServe-api:testFixturesJar UP-TO-DATE
+> Task :NaruServe-api:compileTestKotlin UP-TO-DATE
+> Task :NaruServe-api:compileTestJava UP-TO-DATE
+> Task :NaruServe-api:processTestResources UP-TO-DATE
+> Task :NaruServe-api:testClasses UP-TO-DATE
+> Task :NaruServe-api:test UP-TO-DATE
+> Task :NaruServe-api:check
+> Task :NaruServe-filelog:animalsnifferMain UP-TO-DATE
+> Task :NaruServe-filelog:checkClassReferences
+> Task :NaruServe-filelog:javadoc UP-TO-DATE
+> Task :NaruServe-filelog:javadocJar UP-TO-DATE
+> Task :NaruServe-filelog:sourcesJar UP-TO-DATE
+> Task :NaruServe-filelog:compileTestKotlin NO-SOURCE
+> Task :NaruServe-filelog:compileTestJava UP-TO-DATE
+> Task :NaruServe-filelog:processTestResources NO-SOURCE
+> Task :NaruServe-filelog:testClasses UP-TO-DATE
+> Task :NaruServe-filelog:test UP-TO-DATE
+> Task :NaruServe-filelog:check
+> Task :NaruServe-gson:animalsnifferMain UP-TO-DATE
+> Task :NaruServe-gson:checkClassReferences
+> Task :NaruServe-gson:javadoc UP-TO-DATE
+> Task :NaruServe-gson:javadocJar UP-TO-DATE
+> Task :NaruServe-gson:sourcesJar UP-TO-DATE
+> Task :NaruServe-gson:compileTestKotlin UP-TO-DATE
+> Task :NaruServe-gson:compileTestJava UP-TO-DATE
+> Task :NaruServe-gson:processTestResources NO-SOURCE
+> Task :NaruServe-gson:testClasses UP-TO-DATE
+> Task :NaruServe-gson:test UP-TO-DATE
+> Task :NaruServe-gson:check
+> Task :NaruServe-kotlin:animalsnifferMain UP-TO-DATE
+> Task :NaruServe-kotlin:checkClassReferences
+> Task :NaruServe-kotlin:jar UP-TO-DATE
+> Task :NaruServe-kotlin:javadoc NO-SOURCE
+> Task :NaruServe-kotlin:javadocJar UP-TO-DATE
+> Task :NaruServe-kotlin:sourcesJar UP-TO-DATE
+> Task :NaruServe-kotlin:compileTestKotlin UP-TO-DATE
+> Task :NaruServe-kotlin:compileTestJava NO-SOURCE
+> Task :NaruServe-kotlin:processTestResources NO-SOURCE
+> Task :NaruServe-kotlin:testClasses UP-TO-DATE
+> Task :NaruServe-kotlin:test UP-TO-DATE
+> Task :NaruServe-kotlin:check
+> Task :NaruServe-logcat:animalsnifferMain UP-TO-DATE
+> Task :NaruServe-logcat:checkClassReferences
+> Task :NaruServe-logcat:javadoc UP-TO-DATE
+> Task :NaruServe-logcat:javadocJar UP-TO-DATE
+> Task :NaruServe-logcat:sourcesJar UP-TO-DATE
+> Task :NaruServe-logcat:compileTestKotlin NO-SOURCE
+> Task :NaruServe-logcat:compileTestJava UP-TO-DATE
+> Task :NaruServe-logcat:processTestResources NO-SOURCE
+> Task :NaruServe-logcat:testClasses UP-TO-DATE
+> Task :NaruServe-logcat:test UP-TO-DATE
+> Task :NaruServe-logcat:check
+> Task :NaruServe-servlet:checkClassReferences
+> Task :NaruServe-servlet:jar UP-TO-DATE
+> Task :NaruServe-servlet:javadoc UP-TO-DATE
+> Task :NaruServe-servlet:javadocJar UP-TO-DATE
+> Task :NaruServe-servlet:sourcesJar UP-TO-DATE
+> Task :NaruServe-servlet:compileTestKotlin UP-TO-DATE
+> Task :NaruServe-servlet:compileTestJava UP-TO-DATE
+> Task :NaruServe-servlet:processTestResources NO-SOURCE
+> Task :NaruServe-servlet:testClasses UP-TO-DATE
+> Task :NaruServe-servlet:test UP-TO-DATE
+> Task :NaruServe-servlet:check
+> Task :NaruServe-slf4j:javadoc UP-TO-DATE
+> Task :NaruServe-slf4j:javadocJar UP-TO-DATE
+> Task :NaruServe-slf4j:sourcesJar UP-TO-DATE
+> Task :NaruServe-slf4j:compileTestKotlin NO-SOURCE
+> Task :NaruServe-slf4j:compileTestJava UP-TO-DATE
+> Task :NaruServe-slf4j:processTestResources NO-SOURCE
+> Task :NaruServe-slf4j:testClasses UP-TO-DATE
+> Task :NaruServe-slf4j:test UP-TO-DATE
+> Task :NaruServe-slf4j:check UP-TO-DATE
+> Task :NaruServe-tinyhttpd:animalsnifferMain UP-TO-DATE
+> Task :NaruServe-tinyhttpd:checkClassReferences
+> Task :NaruServe-tinyhttpd:javadoc UP-TO-DATE
+> Task :NaruServe-tinyhttpd:javadocJar UP-TO-DATE
+> Task :NaruServe-tinyhttpd:sourcesJar UP-TO-DATE
+> Task :NaruServe-tinyhttpd:compileTestKotlin NO-SOURCE
+> Task :NaruServe-tinyhttpd:compileTestJava UP-TO-DATE
+> Task :NaruServe-tinyhttpd:processTestResources NO-SOURCE
+> Task :NaruServe-tinyhttpd:testClasses UP-TO-DATE
+> Task :NaruServe-tinyhttpd:isolatedTest UP-TO-DATE
+> Task :NaruServe-tinyhttpd:test UP-TO-DATE
+> Task :NaruServe-tinyhttpd:check
+> Task :cleanCentralStaging
+> Task :compileTestJava
+> Task :processTestResources UP-TO-DATE
+> Task :testClasses
+> Task :NaruServe:generatePomFileForMavenPublication
+> Task :NaruServe:generateMetadataFileForMavenPublication
+> Task :NaruServe:publishMavenPublicationToCentralStagingRepository
+> Task :NaruServe:publishAllPublicationsToCentralStagingRepository
+> Task :NaruServe-android:preBuild UP-TO-DATE
+> Task :NaruServe-android:preReleaseBuild UP-TO-DATE
+> Task :NaruServe-android:checkReleaseAarMetadata UP-TO-DATE
+> Task :NaruServe-android:mergeReleaseJniLibFolders UP-TO-DATE
+> Task :NaruServe-android:mergeReleaseNativeLibs NO-SOURCE
+> Task :NaruServe-android:stripReleaseDebugSymbols NO-SOURCE
+> Task :NaruServe-android:copyReleaseJniLibsProjectAndLocalJars UP-TO-DATE
+> Task :NaruServe-android:generateReleaseResValues UP-TO-DATE
+> Task :NaruServe-android:extractDeepLinksForAarRelease UP-TO-DATE
+> Task :NaruServe-android:generateReleaseResources UP-TO-DATE
+> Task :NaruServe-android:packageReleaseResources UP-TO-DATE
+> Task :NaruServe-android:processReleaseNavigationResources UP-TO-DATE
+> Task :NaruServe-android:parseReleaseLocalResources UP-TO-DATE
+> Task :NaruServe-android:generateReleaseRFile UP-TO-DATE
+> Task :NaruServe-android:extractReleaseAnnotations UP-TO-DATE
+> Task :NaruServe-android:mergeReleaseShaders UP-TO-DATE
+> Task :NaruServe-android:compileReleaseShaders NO-SOURCE
+> Task :NaruServe-android:generateReleaseAssets UP-TO-DATE
+> Task :NaruServe-android:mergeReleaseAssets UP-TO-DATE
+> Task :NaruServe-android:javaPreCompileRelease UP-TO-DATE
+> Task :NaruServe-android:compileReleaseJavaWithJavac NO-SOURCE
+> Task :NaruServe-android:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :NaruServe-android:mergeReleaseConsumerProguardFiles UP-TO-DATE
+> Task :NaruServe-android:prepareLintJarForPublish SKIPPED
+> Task :NaruServe-android:prepareReleaseArtProfile UP-TO-DATE
+> Task :NaruServe-android:processReleaseManifest UP-TO-DATE
+> Task :NaruServe-android:processReleaseJavaRes NO-SOURCE
+> Task :NaruServe-android:mergeReleaseJavaResource UP-TO-DATE
+> Task :NaruServe-android:syncReleaseLibJars UP-TO-DATE
+> Task :NaruServe-android:writeReleaseAarMetadata UP-TO-DATE
+> Task :NaruServe-android:bundleReleaseAar UP-TO-DATE
+> Task :NaruServe-android:generatePomFileForReleasePublication
+> Task :NaruServe-android:javaDocReleaseGeneration UP-TO-DATE
+> Task :NaruServe-android:javaDocReleaseJar UP-TO-DATE
+> Task :NaruServe-android:sourceReleaseJar UP-TO-DATE
+> Task :NaruServe-android:generateMetadataFileForReleasePublication
+> Task :NaruServe-android:publishReleasePublicationToCentralStagingRepository
+> Task :NaruServe-android:publishAllPublicationsToCentralStagingRepository
+> Task :NaruServe-api:generatePomFileForMavenPublication
+> Task :NaruServe-api:generateMetadataFileForMavenPublication
+> Task :NaruServe-api:publishMavenPublicationToCentralStagingRepository
+> Task :NaruServe-api:publishAllPublicationsToCentralStagingRepository
+> Task :NaruServe-filelog:generatePomFileForMavenPublication
+> Task :NaruServe-filelog:generateMetadataFileForMavenPublication
+> Task :NaruServe-filelog:publishMavenPublicationToCentralStagingRepository
+> Task :NaruServe-filelog:publishAllPublicationsToCentralStagingRepository
+> Task :NaruServe-gson:generatePomFileForMavenPublication
+> Task :NaruServe-gson:generateMetadataFileForMavenPublication
+> Task :NaruServe-gson:publishMavenPublicationToCentralStagingRepository
+> Task :NaruServe-gson:publishAllPublicationsToCentralStagingRepository
+> Task :NaruServe-kotlin:generatePomFileForMavenPublication
+> Task :NaruServe-kotlin:generateMetadataFileForMavenPublication
+> Task :NaruServe-kotlin:publishMavenPublicationToCentralStagingRepository
+> Task :NaruServe-kotlin:publishAllPublicationsToCentralStagingRepository
+> Task :NaruServe-logcat:generatePomFileForMavenPublication
+> Task :NaruServe-logcat:generateMetadataFileForMavenPublication
+> Task :NaruServe-logcat:publishMavenPublicationToCentralStagingRepository
+> Task :NaruServe-logcat:publishAllPublicationsToCentralStagingRepository
+> Task :NaruServe-servlet:generatePomFileForMavenPublication
+> Task :NaruServe-servlet:generateMetadataFileForMavenPublication
+> Task :NaruServe-servlet:publishMavenPublicationToCentralStagingRepository
+> Task :NaruServe-servlet:publishAllPublicationsToCentralStagingRepository
+> Task :NaruServe-slf4j:generatePomFileForMavenPublication
+> Task :NaruServe-slf4j:generateMetadataFileForMavenPublication
+> Task :NaruServe-slf4j:publishMavenPublicationToCentralStagingRepository
+> Task :NaruServe-slf4j:publishAllPublicationsToCentralStagingRepository
+> Task :NaruServe-tinyhttpd:generatePomFileForMavenPublication
+> Task :NaruServe-tinyhttpd:generateMetadataFileForMavenPublication
+> Task :NaruServe-tinyhttpd:publishMavenPublicationToCentralStagingRepository
+> Task :NaruServe-tinyhttpd:publishAllPublicationsToCentralStagingRepository
+> Task :test
+> Task :check
+> Task :build
+> Task :NaruServe:assemble UP-TO-DATE
+> Task :NaruServe:build
+> Task :NaruServe-android:preDebugBuild UP-TO-DATE
+> Task :NaruServe-android:checkDebugAarMetadata UP-TO-DATE
+> Task :NaruServe-android:mergeDebugJniLibFolders UP-TO-DATE
+> Task :NaruServe-android:mergeDebugNativeLibs NO-SOURCE
+> Task :NaruServe-android:stripDebugDebugSymbols NO-SOURCE
+> Task :NaruServe-android:copyDebugJniLibsProjectAndLocalJars UP-TO-DATE
+> Task :NaruServe-android:generateDebugResValues UP-TO-DATE
+> Task :NaruServe-android:generateDebugResources UP-TO-DATE
+> Task :NaruServe-android:packageDebugResources UP-TO-DATE
+> Task :NaruServe-android:processDebugNavigationResources UP-TO-DATE
+> Task :NaruServe-android:parseDebugLocalResources UP-TO-DATE
+> Task :NaruServe-android:generateDebugRFile UP-TO-DATE
+> Task :NaruServe-android:extractDebugAnnotations UP-TO-DATE
+> Task :NaruServe-android:extractDeepLinksForAarDebug UP-TO-DATE
+> Task :NaruServe-android:mergeDebugShaders UP-TO-DATE
+> Task :NaruServe-android:compileDebugShaders NO-SOURCE
+> Task :NaruServe-android:generateDebugAssets UP-TO-DATE
+> Task :NaruServe-android:mergeDebugAssets UP-TO-DATE
+> Task :NaruServe-android:javaPreCompileDebug UP-TO-DATE
+> Task :NaruServe-android:compileDebugJavaWithJavac NO-SOURCE
+> Task :NaruServe-android:mergeDebugGeneratedProguardFiles UP-TO-DATE
+> Task :NaruServe-android:mergeDebugConsumerProguardFiles UP-TO-DATE
+> Task :NaruServe-android:prepareDebugArtProfile UP-TO-DATE
+> Task :NaruServe-android:processDebugManifest UP-TO-DATE
+> Task :NaruServe-android:processDebugJavaRes NO-SOURCE
+> Task :NaruServe-android:mergeDebugJavaResource UP-TO-DATE
+> Task :NaruServe-android:syncDebugLibJars UP-TO-DATE
+> Task :NaruServe-android:writeDebugAarMetadata UP-TO-DATE
+> Task :NaruServe-android:bundleDebugAar UP-TO-DATE
+> Task :NaruServe-android:assembleDebug UP-TO-DATE
+> Task :NaruServe-android:mapReleaseSourceSetPaths UP-TO-DATE
+> Task :NaruServe-android:mergeReleaseResources UP-TO-DATE
+> Task :NaruServe-android:verifyReleaseResources UP-TO-DATE
+> Task :NaruServe-android:assembleRelease UP-TO-DATE
+> Task :NaruServe-android:assemble UP-TO-DATE
+> Task :NaruServe-android:bundleDebugLocalLintAar SKIPPED
+> Task :NaruServe-android:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :NaruServe-android:createFullJarDebug UP-TO-DATE
+> Task :NaruServe-android:preDebugAndroidTestBuild UP-TO-DATE
+> Task :NaruServe-android:generateDebugAndroidTestResValues UP-TO-DATE
+> Task :NaruServe-android:writeDebugLintModelMetadata SKIPPED
+> Task :NaruServe-android:generateDebugAndroidTestLintModel SKIPPED
+> Task :NaruServe-android:extractProguardFiles UP-TO-DATE
+> Task :NaruServe-android:generateDebugLintReportModel SKIPPED
+> Task :NaruServe-android:preDebugUnitTestBuild UP-TO-DATE
+> Task :NaruServe-android:generateDebugUnitTestLintModel SKIPPED
+> Task :NaruServe-android:lintAnalyzeDebug SKIPPED
+> Task :NaruServe-android:lintAnalyzeDebugAndroidTest SKIPPED
+> Task :NaruServe-android:lintAnalyzeDebugUnitTest SKIPPED
+> Task :NaruServe-android:lintReportDebug SKIPPED
+> Task :NaruServe-android:lintDebug SKIPPED
+> Task :NaruServe-android:lint SKIPPED
+> Task :NaruServe-android:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :NaruServe-android:generateDebugUnitTestStubRFile UP-TO-DATE
+> Task :NaruServe-android:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :NaruServe-android:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :NaruServe-android:processDebugUnitTestJavaRes NO-SOURCE
+> Task :NaruServe-android:testDebugUnitTest NO-SOURCE
+> Task :NaruServe-android:bundleLibRuntimeToJarRelease UP-TO-DATE
+> Task :NaruServe-android:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :NaruServe-android:preReleaseUnitTestBuild UP-TO-DATE
+> Task :NaruServe-android:generateReleaseUnitTestStubRFile UP-TO-DATE
+> Task :NaruServe-android:javaPreCompileReleaseUnitTest UP-TO-DATE
+> Task :NaruServe-android:compileReleaseUnitTestJavaWithJavac NO-SOURCE
+> Task :NaruServe-android:processReleaseUnitTestJavaRes NO-SOURCE
+> Task :NaruServe-android:testReleaseUnitTest NO-SOURCE
+> Task :NaruServe-android:test UP-TO-DATE
+> Task :NaruServe-android:check UP-TO-DATE
+> Task :NaruServe-android:build UP-TO-DATE
+> Task :NaruServe-api:assemble UP-TO-DATE
+> Task :NaruServe-api:build
+> Task :NaruServe-filelog:assemble UP-TO-DATE
+> Task :NaruServe-filelog:build
+> Task :NaruServe-gson:assemble UP-TO-DATE
+> Task :NaruServe-gson:build
+> Task :NaruServe-kotlin:assemble UP-TO-DATE
+> Task :NaruServe-kotlin:build
+> Task :NaruServe-logcat:assemble UP-TO-DATE
+> Task :NaruServe-logcat:build
+> Task :NaruServe-servlet:assemble UP-TO-DATE
+> Task :NaruServe-servlet:build
+> Task :NaruServe-slf4j:assemble UP-TO-DATE
+> Task :NaruServe-slf4j:build UP-TO-DATE
+> Task :NaruServe-tinyhttpd:assemble UP-TO-DATE
+> Task :NaruServe-tinyhttpd:build
+
+BUILD SUCCESSFUL in 24s
+186 actionable tasks: 44 executed, 142 up-to-date

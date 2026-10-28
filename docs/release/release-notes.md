@@ -1,6 +1,6 @@
 # NaruServe 0.1.0-SNAPSHOT release notes
 
-Update 2026-10-29 (FR-ENGINE-012, CON-BUILD-018): TinyHttpd core/websocket are pinned to 3.1.1. The adapter selects the public RAW request-target policy; transport syntax, Host and framing checks remain active. Published/source, Java8/API21 and security regression evidence is in [the integration record](verification/tinyhttpd-3.1.1.md). Common-dispatcher AC-2 integration and the new full-release scan remain pending.
+Historical v1/0.9.0 notes follow. For the current release, see [0.10.0 notes](0.10.0-release-notes.md), [한국어](0.10.0-release-notes.ko.md), [current tests](0.10.0-test-results.md) and [publication verification](verification/central-0.10.0.md). TinyHttpd 3.1.1 common-dispatcher integration and the current runtime scan are complete; public 0.10.0 publication is tracked in that verification record.
 
 Test results: [test-results.md](test-results.md).
 

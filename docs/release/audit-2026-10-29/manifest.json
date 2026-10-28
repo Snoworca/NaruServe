@@ -1,0 +1,84 @@
+{
+  "requirements": [
+    "OPS-REL-009",
+    "FR-REL-001",
+    "FR-REL-002",
+    "FR-REL-003",
+    "FR-REL-004",
+    "CON-BUILD-018"
+  ],
+  "source_commit": "400c0b94772d6cec7febc0fa6629155ea61a7896",
+  "status": "completed",
+  "unsuppressed_findings": 0,
+  "existing_exact_false_positive_suppressions": 1,
+  "files": {
+    "dependency-graphs.txt": {
+      "bytes": 22388,
+      "sha256": "e72c7279476610817d79b582d5023c9779e70aba2c726f601febed5836377cb0"
+    },
+    "release-check.log": {
+      "bytes": 1777,
+      "sha256": "2786594610befc1f4953da8b2ec9ecc9ba23dc73e73bd13626bc89e127884edb"
+    },
+    "sbom/NaruServe-android.cdx.json": {
+      "bytes": 14436,
+      "sha256": "ab16a69d29b41cdc7c402bc8c070def8b62f08e127f6890ab27754d66ee84201"
+    },
+    "sbom/NaruServe-api.cdx.json": {
+      "bytes": 1116,
+      "sha256": "7ed62eb07d67b449f5f5679a58f6a7167ea94aa99ba0d842e3432fbcf1602af5"
+    },
+    "sbom/NaruServe-filelog.cdx.json": {
+      "bytes": 1903,
+      "sha256": "588d3a7dbeb670e2bc0eb3cbbc65f7a043b264b3bb9a6ab5ec71a1727a0b95bb"
+    },
+    "sbom/NaruServe-gson.cdx.json": {
+      "bytes": 6018,
+      "sha256": "66a2987175fb40aa09853f5bf5e7c8f9d3c214b234f6d41d1cef3bca89398dab"
+    },
+    "sbom/NaruServe-kotlin.cdx.json": {
+      "bytes": 18155,
+      "sha256": "57111cc6e7ad17023493234faba221a491a987b45dc3f8ab5fb6349e4417b542"
+    },
+    "sbom/NaruServe-logcat.cdx.json": {
+      "bytes": 1896,
+      "sha256": "c77520488a564b7f73eb4bc70504ed137d067d3f56b44fabc486b3ae7b0f568d"
+    },
+    "sbom/NaruServe-servlet.cdx.json": {
+      "bytes": 1903,
+      "sha256": "741f2f454e318d67be07d9598ae9cdcd40c3ba7ed2ecf2703f5e67999d77ed8a"
+    },
+    "sbom/NaruServe-slf4j.cdx.json": {
+      "bytes": 3932,
+      "sha256": "d88cec5ee12548e5dd140d2cc3a7339222286d34f3a36f8cef8e8dc7dc46ed08"
+    },
+    "sbom/NaruServe-tinyhttpd.cdx.json": {
+      "bytes": 7031,
+      "sha256": "3a34c8ebc27ebb173f70d2eedf79f7f4c75603b253d1aebfe5d6990e97960695"
+    },
+    "sbom/NaruServe.cdx.json": {
+      "bytes": 12822,
+      "sha256": "e10ef692c9e20fe6311776db89b7ba38240922cefc0b869d968b63bfe664651e"
+    },
+    "scan-review.json": {
+      "bytes": 10706,
+      "sha256": "a40ff66bfca02a7e366489b1dde75598346b88cafb67775a06196a98efb3baf7"
+    },
+    "scan.csv": {
+      "bytes": 424,
+      "sha256": "f34619e9151c186c4c6799fd1a9cb336692dc2a09832bcb7b801bc823794101e"
+    },
+    "scan.html": {
+      "bytes": 197055,
+      "sha256": "205034218aecdcd6d292c0f1c8cf007f05cecac7e4d5339201f76c1546405e2c"
+    },
+    "scan.log": {
+      "bytes": 1420,
+      "sha256": "88b5497f5b8dfefacefa1655392ba04de433ff12be300a90d60a49add07f5b2e"
+    },
+    "vulnerability-scan.md": {
+      "bytes": 418,
+      "sha256": "1165d3f25e5438a803572f0c1cc2e263d5f818110fc18f300cb2d7e2e6d20721"
+    }
+  }
+}

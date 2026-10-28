@@ -1,0 +1,59 @@
+{
+  "review_type": "Independent API documentation/SPI checkpoint TEST SUFFICIENCY",
+  "round": 1,
+  "decision": "PASS",
+  "reviewed_commit": "5811c4d47b71cd6f1f0e87b2c1f816496cbefcb7",
+  "reviewer": "release_dependency_audit",
+  "independent": true,
+  "requirements": [
+    "OPS-REL-008 AC-1 AC-2 AC-3",
+    "OPS-REL-009 AC-1",
+    "IR-HTTP-009 AC-8",
+    "FR-HTTP-027 AC-1 AC-2 AC-3 AC-6",
+    "FR-KT-005 AC-4",
+    "CON-APP-010"
+  ],
+  "findings": [],
+  "checks": [
+    "Seven files only: sixAPIJava doc/SPI checkpoints plus authorized NullableAccessorKotlinTest. No authored main/build/SRS/prose/dependency mutation; duplicate approvedversionharvests excluded from reviewedunit.",
+    "Old twelve Kotlin accessor functions remain unchanged; explicit table now requires all14 names and actual source functions. Synthetic missingrow and file-versus-files name-boundary negatives retained.",
+    "Two additive Kotlin tests use actual InMemory adapter/probe and explicit String? /List<String> compilation. Runtime assertions cover absent optional/undeclared names, once-decoded a%2Fb scalar, absent wildcard, multi/single wildcard and scalar singleton, map String-versusList shape, mutationUnsupportedOperationException and stable rereads; addedapps shutdown in finally.",
+    "Document contract migrations explicitly separate common raw/mount views/order/HTML/methods from strictlegacyWS/security; retained status-code extension now exercised at runtime for11 statuses rather than relying on deleted prose table.",
+    "RouterPolicy switches/examples/NEW guard and Pattern flag boundary retained; startup loopback/LAN warning/Android scheduling and error withHeader Java/Kotlin fence checks remain.",
+    "SPI type-reference allowlist and historicalabstract inventory unchanged. Exactly responseStatus()->int and responseBytesWritten()->long added to optionaldefault inventory; no checkedthrows, inheritedby unchanged Wave3Exchange, sentinel0/-1 checked. Actual0.10JAR origin accepted; old0.9JAR path removed rather than waived."
+  ],
+  "evidence": {
+    "report": "/tmp/naru-v010-docs-checkpoints-api-evidence.json",
+    "baseline": {
+      "tests": 1410,
+      "failures": 16,
+      "errors": 0,
+      "skipped": 0
+    },
+    "actual_010_jdk17": {
+      "tests": 1412,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "actual_010_java8": {
+      "tests": 1412,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "logs": [
+      "/tmp/naru-v010-docs-checkpoints-api010-green-j17.log",
+      "/tmp/naru-v010-docs-checkpoints-api010-green-j8-official.log"
+    ],
+    "java8_runtime": "Zulu8u504 confirmed via JAVA8_TEST_RUNTIME taskline"
+  },
+  "repo_edits": false,
+  "builds_run": false,
+  "network_activity": false,
+  "scope_limits": [
+    "Bounded sevenfile test migration only; separate root10file migration not reviewed here.",
+    "No fullROOT0.10pass or publication clearance claim; current evidence/finalwholeproject gates remain parent-owned.",
+    "FirstPASS closes this sufficiencyloop; no round2/3."
+  ]
+}

@@ -1,0 +1,64 @@
+{
+  "servletSourceCommit": "a14fcce1b2a0f714dc5437d15859ca41f3ad599c",
+  "testCommit": "1e50312efb1b49197c9c828c0c454671f440ddd7",
+  "diagnosticOnlyTestCommit": "5e919ac",
+  "coreSourceDependency": {
+    "rootCommit": "71b8f4e",
+    "isolatedCherryPick": "5616999",
+    "authoredByServletOwner": false
+  },
+  "requirements": [
+    "FR-SVL-009 AC-1 AC-2 AC-4",
+    "FR-APP-023 AC-3 AC-5 AC-7 AC-8",
+    "IR-HTTP-009 AC-2"
+  ],
+  "red": {
+    "tests": 3,
+    "failures": 2,
+    "positiveControls": 1,
+    "log": "/tmp/naru-v010-servlet-unstarted-noasync-red.log",
+    "snapshot": "both actualRestApp paths receiveJSON500 but core1/adapter1/uploads1/inputClose0/abort0 before shutdown"
+  },
+  "followupInputCloseRed": {
+    "log": "/tmp/naru-v010-servlet-unstarted-input-close-followup-red.log",
+    "snapshot": "Servlet abort draft releasescore/admission/uploads but originalinputclose0; root core source fix closes acquiredsource respectingowner"
+  },
+  "green": {
+    "focusedJ17": {
+      "tests": 56,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "log": "/tmp/naru-v010-servlet-unstarted-noasync-coreinput-green-j17-target.log"
+    },
+    "focusedActualJava8": {
+      "tests": 56,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "log": "/tmp/naru-v010-servlet-unstarted-noasync-coreinput-green-java8-target.log"
+    },
+    "fullJ17": {
+      "task": ":NaruServe-servlet:check",
+      "tests": 160,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "log": "/tmp/naru-v010-servlet-unstarted-noasync-coreinput-full-j17.log",
+      "xml": "/tmp/naru-v010-servlet-unstarted-noasync-coreinput-full-j17-results"
+    },
+    "fullActualJava8": {
+      "task": ":NaruServe-servlet:check",
+      "tests": 160,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "log": "/tmp/naru-v010-servlet-unstarted-noasync-coreinput-full-java8.log",
+      "xml": "/tmp/naru-v010-servlet-unstarted-noasync-coreinput-full-java8-results"
+    },
+    "sharedApi21": "PASS",
+    "servletClassReferences": "PASS"
+  },
+  "scope": "Servlet-only2line productionfix; callabort after successful syntheticJSON500 finish. Normal responseselsewhereunchanged. Allcounts/exceptions/file+stream/no2ndresponse/lateaction assertionspreserved. Core dependency rootowned.",
+  "pending": "Independent Servlet source review before host harvest; no rootbuilds/mutations"
+}

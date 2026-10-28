@@ -1,0 +1,28 @@
+{
+  "verdict": "PASS",
+  "round": 1,
+  "reviewedCommit": "7d8db79",
+  "scope": "New fourth test only: input acquisition overlapping terminal cancellation; prior three-test review remains closed",
+  "requirements": [
+    "FR-APP-023 AC-5/8",
+    "IR-HTTP-009"
+  ],
+  "findings": [],
+  "evidence": {
+    "log": "/tmp/naru-v010-input-acquisition-race-red.log",
+    "combinedTests": 4,
+    "combinedFailures": 3,
+    "newRaceFailures": 1,
+    "unreadPositiveControl": 1,
+    "actualNewFailure": "cancelled acquisition returned live body: original"
+  },
+  "assessment": [
+    "Adapter requestBody acquires the actual original source then signals acquiring and blocks before publication. Main thread waits this latch, aborts, then releases producer, so terminal cancellation causally precedes acquisition publication without sleeps.",
+    "Producer captures either decoded value or Throwable and the test thread asserts exact BodyAlreadyConsumedException. Preserved XML confirms current failure returns actual original body after cancellation, not a fixture timeout/assertion exception.",
+    "Close1/getter1 require closing the late original handle rather than reopening a cancelled adapter or leaking it. Late resolution/repeated abort must leave close1.",
+    "Finally releases the blocked adapter getter and joins the producer with a bounded wait; leaked thread is explicitly rejected. No assertion is hidden in a fail-soft user callback.",
+    "Only the new test and fixture extensibility change appear; original three tests remain intact, including the no-eager-acquisition positive."
+  ],
+  "limitations": "Production solution must avoid blocking cancellation behind adapter acquisition and retain body/JSON cache/abort compatibility; subsequent GREEN and source review remain required.",
+  "actions": "No edits/builds/network; read-only pinned delta, source context and RED XML/log inspection. Wrote tmp report only. First PASS ends this new race unit."
+}

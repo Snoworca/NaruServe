@@ -1,0 +1,79 @@
+{
+  "status": "SIGNED_VERIFIED_NOT_UPLOADED",
+  "requirement": "OPS-REL-009",
+  "build_source_commit": "daf908cdc4468d67609f8e5cceaaad0174ce9a8b",
+  "bundle_sha256": "50573182ec0efe671189969afa4c7a30ef5767b40d1c84875faf9a28cbe2a57c",
+  "archive_policy": "Selected public-safe evidence copied byte-for-byte. Original absolute paths inside records identify local provenance, not public endpoints. No private keys, credentials, consumer APK or release bundle archived here.",
+  "files": {
+    "final-full-j17-counts.json": {
+      "bytes": 1603,
+      "sha256": "1652cb7ddf8b86d6bef0eca3682319a957742f176a40a1680c897e9d737b0df2",
+      "original_filename": "naru-v010-final-full-j17-counts.json"
+    },
+    "final-full-java8-counts.json": {
+      "bytes": 3245,
+      "sha256": "371294e937fbaf99dbb24338ca5defc9eabb0b8e34130ffcf9b2f2465367de29",
+      "original_filename": "naru-v010-final-full-java8-counts.json"
+    },
+    "final-full-j17-corrected.log": {
+      "bytes": 17517,
+      "sha256": "84f01ec29017066d9c5cebb3f9b1ee22e10573f95bf509cae01b85e737309279",
+      "original_filename": "naru-v010-final-full-j17-corrected.log"
+    },
+    "final-full-java8.log": {
+      "bytes": 44662,
+      "sha256": "08b78b85501708eb9328f3fd64e03d59989dbe72f3a601f297c3a8667c79a14b",
+      "original_filename": "naru-v010-final-full-java8.log"
+    },
+    "final-integrated-review-round1.json": {
+      "bytes": 3646,
+      "sha256": "cf60eb536f58cc8a238810fbbf97d672a923470c75364b3b825fbd1bae580b78",
+      "original_filename": "naru-v010-final-integrated-review-round1.json"
+    },
+    "overall-test-sufficiency-review-round1.json": {
+      "bytes": 22014,
+      "sha256": "7aa4894176ce4f4692aef9434b73e0f1a374d5048de0a28e94e6bc6372668f4c",
+      "original_filename": "naru-v010-overall-test-sufficiency-review-round1.json"
+    },
+    "root-docs-review-round2.json": {
+      "bytes": 1463,
+      "sha256": "e48ea80588d6a4ef04ad8c68d99127bfa2ef0bb2028165baf1a3c9a16964cc4b",
+      "original_filename": "naru-v010-root-docs-review-round2.json"
+    },
+    "release-scan-review.json": {
+      "bytes": 10706,
+      "sha256": "a40ff66bfca02a7e366489b1dde75598346b88cafb67775a06196a98efb3baf7",
+      "original_filename": "naru-v010-release-scan-review.json"
+    },
+    "staging-consumer-evidence.json": {
+      "bytes": 25542,
+      "sha256": "b31e36bbb53a128a11c08b4b94bfcad29e5c8782dbd00ebc4a26d0ca9aa9c4d9",
+      "original_filename": "naru-v010-staging-consumer-evidence.json"
+    },
+    "signed-bundle-review.json": {
+      "bytes": 9853,
+      "sha256": "0ebfe4330cd4d0c2c267b545394432c9e37bdbdb3d81421711ec51e40e795f27",
+      "original_filename": "naru-v010-signed-bundle-review.json"
+    },
+    "signed-bundle-structural-audit.json": {
+      "bytes": 3378,
+      "sha256": "4a46c43535ecaa8f70287ab661033aaa19f92d66aeb6d28317aa15fee973813d",
+      "original_filename": "naru-v010-signed-bundle-structural-audit.json"
+    },
+    "signed-manifest.json": {
+      "bytes": 60599,
+      "sha256": "3afeb9ed6eebe1c38d901b1b0159021ef3ab4e1c5fcdbf651932438ac7760677",
+      "original_filename": "signed-manifest.json"
+    },
+    "public-signing-key.asc": {
+      "bytes": 1690,
+      "sha256": "76bc6572a23c470d106b6f5e4041ec271fe213ddf1a5334420d4d755a881f12f",
+      "original_filename": "public-signing-key.asc"
+    },
+    "signature-verification.log": {
+      "bytes": 57,
+      "sha256": "941ec3d23cf7383b54249e3456cdbf61283f083b51c5dafb5f697fb3cd0fc086",
+      "original_filename": "signature-verification.log"
+    }
+  }
+}

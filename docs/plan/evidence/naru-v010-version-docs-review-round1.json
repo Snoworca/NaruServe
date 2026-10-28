@@ -1,0 +1,41 @@
+{
+  "verdict": "PASS",
+  "round": 1,
+  "reviewType": "Independent version documentation and focused test migration review",
+  "reviewedCommit": "dfab5074ffed435f38369f1aa45d8ab51f420a73",
+  "testsFirstCommit": "b96a8fe",
+  "scope": "20 current README/API/example README files plus ReadmeDocsTest coordinate expectations; not build version or publication approval",
+  "requirements": [
+    "OPS-REL-008 AC-2",
+    "OPS-REL-009 AC-1/2/3"
+  ],
+  "mcpWorkspace": {
+    "workspaceRoot": "/Users/beom/work/git/NaruServe",
+    "rootSource": "per-call-workspace-root"
+  },
+  "findings": [],
+  "assessment": [
+    "Current Korean/English installation coordinates and all10 module tables consistently name0.10.0. Previous-release scope notes are replaced with current guide scope and explicit repository-unavailable source fallback, without claiming publication completed.",
+    "ReadmeDocsTest retains MavenCentral repository placement, source-onlymavenLocal setup, all10 modules, quickstart/artwork/API21/buildJDK evidence; replacing unverified already-published prose assertion with coordinates/fallback matches separate actualpublication gateOPS-REL-009.",
+    "Independent read-only comparison checked all20 files and175 fenced blocks: fence counts/order/content are unchanged except0.9.0->0.10.0 literals. Current changed files contain no0.9.0 reference. Runtime behavior prose, Java/Kotlin snippets and engine/external dependency pins are otherwise unchanged.",
+    "Paired installation/version narratives remain aligned; installation/guide navigation paths resolve by directory structure. Historical SRS/release records and source/build bytes are untouched.",
+    "Focused tests show actual8tests/2RED before prose and8GREEN on JDK17/actualJava8. Other stale marker/compiler-anchor failures are recorded under another lane rather than skipped or waived."
+  ],
+  "evidence": {
+    "manifest": "/tmp/naru-v010-version-docs-evidence.json",
+    "independentFenceComparison": {
+      "files": 20,
+      "fences": 175,
+      "unexpectedChanges": 0
+    },
+    "eachFocusedJdk17ActualJava8": {
+      "ReadmeDocsTest": 8,
+      "failures": 0
+    }
+  },
+  "integrationPrerequisites": [
+    "Isolated build.gradle still declares0.9.0. The separately owned version bump must land before the documented publishToMavenLocal fallback can produce0.10.0 coordinates; this docs-unit PASS does not certify current artifact availability.",
+    "Actual staged/published Maven metadata/bytes and repository availability remain OPS-REL-009 gates; known unrelated docs marker/compiler failures remain separate unresolved work."
+  ],
+  "actions": "Read-only pinned diff/test/requirements/evidence inspection; no edits/builds/network. Only tmp artifact written. First PASS ends this scoped loop."
+}

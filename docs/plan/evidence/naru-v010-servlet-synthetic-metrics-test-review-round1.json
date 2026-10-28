@@ -1,0 +1,31 @@
+{
+  "verdict": "PASS",
+  "round": 1,
+  "reviewedCommit": "ec3fc1db295a867af103b81f6542d4578d31c259",
+  "scope": "Additional real Servlet synthetic500 access metrics assertions only; earlier cancellation/resource test reviews remain closed",
+  "requirements": [
+    "FR-APP-019 AC-3/5",
+    "IR-HTTP-009 AC-8"
+  ],
+  "mcpWorkspace": {
+    "workspaceRoot": "/Users/beom/work/git/NaruServe",
+    "rootSource": "per-call-workspace-root"
+  },
+  "findings": [],
+  "evidence": {
+    "log": "/tmp/naru-v010-servlet-synthetic500-metrics-red.log",
+    "failures": "/tmp/naru-v010-servlet-synthetic500-metrics-red-results/failures.json",
+    "tests": 2,
+    "failuresCount": 2,
+    "actual": "Both tests log POST /pending200aborted in140out0 despite wire500 and nonempty fixedJSON."
+  },
+  "assessment": [
+    "Existing actual Jetty savedNext and pendingDeferred noAsync cases first establish exact syntheticJSON500/framing and successful core/admission/upload/input cleanup. New assertions are reached only after those original guards pass.",
+    "Expected access line derives output length from actual responseUTF8 bytes and input length from actual multipart payload; status500aborted, finite duration, one INFO record and validRID format are explicit. No invented body/logRID equality is assumed.",
+    "Existing late continuation/settlement/retain/abort actions must preserve the exact original terminal access record as well as its count, preventing delayed overwrite or second logging.",
+    "Pinned delta adds only meaningful assertions; no source/API/dependency changes or prior guard weakening. API/core invalid-observation fallback tests are separate, avoiding duplicate implementation-mirroring in this socket unit.",
+    "Actual two-test RED reports concrete200/out0 mismatch at the new assertion, not fixture/setup/resource failure."
+  ],
+  "limitations": "Optional SPI/core/Servlet observation implementation and separate source review/whole relevant GREEN remain required. This PASS covers socket metrics assertions, not the pending optional-default API tests.",
+  "actions": "Read-only pinned delta/requirements/evidence inspection; no edits/builds/network. Only tmp artifact written. First PASS ends loop."
+}

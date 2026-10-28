@@ -1,0 +1,40 @@
+{
+  "verdict": "PASS",
+  "round": 2,
+  "reviewType": "Independent Servlet unstarted noAsync source rereview",
+  "reviewedCommit": "aa69e1d722e65ad9c3cdd3e9e5dfa9de631f048e",
+  "scope": "Original a14fcce cancellation plus synthetic-only response metrics publication",
+  "requirements": [
+    "IR-HTTP-009 AC-8",
+    "FR-APP-019 AC-3/5",
+    "FR-SVL-009",
+    "FR-APP-023 AC-8"
+  ],
+  "findings": [],
+  "resolvedFindings": [
+    {
+      "id": "SVL-NOASYNC-SRC-R1-1",
+      "resolution": "Servlet publishes optional synthetic500status and successfully completed write length before finish/abort terminal notification; core approved309cc86 observes these independently, yielding actual500aborted/outJSONbytes instead of200/out0."
+    }
+  ],
+  "assessment": [
+    "Two volatile snapshot fields default0/-1 and remain untouched for normal core responses and SSE, preserving core fallback/status/byte semantics. Getter overrides do not touch recycled container state or invoke callbacks/locks.",
+    "Synthetic status500/bytes0 publish after successful commit setup and before body write; body length publishes only after write returns. Write failure therefore cannot falsely advertise a fully successful payload. Existing output failure handler aborts outside writeLock and exposes the already-published fallback status/zero successful bytes.",
+    "finish then abort ownership sequence remains unchanged: complete fixedJSON500 is retained, core cancellation revokes leases and cleans original input/uploads, and no second response is attempted. No new lock or user callback introduced by the metrics assignments.",
+    "Actual two-case strengthened socket regression now checks original wire framing/EOF plus exact500aborted/input/output counters and unchanged terminal record after late actions. Existing ordinary finish/noAsync success and SSE cause/cancel/ownership controls pass.",
+    "Preserved full160 tests and focused56 pass on JDK17 and actualJava8, zero errors/skips, with API21/class-reference checks passing. Core/SPI implementation dependency was independently reviewed separately."
+  ],
+  "evidence": {
+    "manifest": "/tmp/naru-v010-servlet-synthetic500-metrics-green-evidence.json",
+    "testCommit": "ec3fc1db295a867af103b81f6542d4578d31c259",
+    "coreDependency": "309cc86 (isolated4c93fdf)",
+    "fullEachJdk17ActualJava8": {
+      "tests": 160,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "limitations": "This closes the identified Servlet source finding; fresh host integrated validation/final release evidence remain coordinator work.",
+  "actions": "Read-only pinned source/evidence review; no edits/builds/network. Only tmp report written. First PASS ends source rereview loop; no extra round."
+}

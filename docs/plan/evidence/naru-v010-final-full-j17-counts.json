@@ -1,0 +1,73 @@
+{
+  "tests": 2183,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "source_commit": "daf908cdc4468d67609f8e5cceaaad0174ce9a8b",
+  "command": "./gradlew -PtinyHttpdFromMaven=true build --continue --console=plain",
+  "modules": {
+    "build": {
+      "tests": 319,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "NaruServe-slf4j": {
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "NaruServe-servlet": {
+      "tests": 160,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "NaruServe-kotlin": {
+      "tests": 11,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "NaruServe-api": {
+      "tests": 1412,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "NaruServe-filelog": {
+      "tests": 15,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "NaruServe-tinyhttpd": {
+      "tests": 218,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "NaruServe-gson": {
+      "tests": 31,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "NaruServe-logcat": {
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "NaruServe": {
+      "tests": 11,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "initial_uncached_run": "/tmp/naru-v010-final-full-j17.log",
+  "initial_failure": "One stale Kotlin0.9coordinate assertion; fixedonlythatfixturethenfullbuildSUCCESSFUL withunchangedmoduleoutputsretained",
+  "successful_run": "/tmp/naru-v010-final-full-j17-corrected.log"
+}

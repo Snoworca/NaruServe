@@ -1,0 +1,28 @@
+{
+  "verdict": "PASS",
+  "round": 1,
+  "reviewType": "Independent optional adapter response metrics implementation source review",
+  "reviewedCommit": "309cc86",
+  "scope": "HttpExchange additive defaults and Dispatcher common terminal metrics only",
+  "requirements": [
+    "IR-HTTP-009 AC-8",
+    "FR-APP-019 AC-3/5"
+  ],
+  "findings": [],
+  "assessment": [
+    "New defaultint/long methods return unknown0/-1 with no abstract implementation obligation, added dependency or new callback type. Documentation requires side-effect-free snapshots published before terminal notification and avoids recycled container reads.",
+    "Terminal common-response log resolves status and bytes independently through sharedSafeCallbacks. Unknown/invalid status outside100..999 and negativebytes retain existing core values; one throwing observation cannot suppress the other or abort cleanup.",
+    "ResponseMetrics is local to the synchronous terminal callback; primitive assignments require no shared storage/lock. Existing fireDone releases response monitor before invoking callback, and HttpExecution responseDone releases state monitor before terminalLog and finally performs cleanup. No new user hook is invoked under those locks.",
+    "Metrics observation does not call commit/finish/abort, change response state or emit another terminal event; normal logging once-state remains in existing coordinator. SSE and successful upgrade branches remain unchanged.",
+    "Source diff is confined to the two intended files. Affected JDK17 tests/API21/class references pass, including actual adapter metrics, invalid fallback and RuntimeException/Error observer controls."
+  ],
+  "evidence": {
+    "testCommit": "c198fa0",
+    "testReview": "/tmp/naru-v010-adapter-response-metrics-test-review-round1.json",
+    "affectedJdk17": "PASS",
+    "api21": "PASS",
+    "classReferences": "PASS"
+  },
+  "limitations": "Servlet snapshot publication is a separate implementation review. FullAPI actualJava8/root results remain pending coordinator verification; this is not whole-project completion.",
+  "actions": "Read-only pinned diff/callback context review; no edits/builds/network. Only tmp review artifact written."
+}

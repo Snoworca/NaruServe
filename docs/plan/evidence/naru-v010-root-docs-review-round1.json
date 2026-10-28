@@ -1,0 +1,58 @@
+{
+  "verdict": "CHANGES_REQUIRED",
+  "round": 1,
+  "reviewType": "Independent final root README/API-index and new optional-metrics paragraph review",
+  "reviewedCommit": "84489ac",
+  "scope": [
+    "README.md",
+    "README.ko.md",
+    "docs/api/README.md",
+    "docs/api/en/README.md",
+    "only new metrics paragraph in docs/api/lifecycle.md and docs/api/en/lifecycle.md"
+  ],
+  "requirements": [
+    "OPS-REL-008 AC-1/2/3",
+    "FR-APP-021 AC-4",
+    "FR-APP-022 AC-1/3",
+    "FR-APP-023",
+    "IR-HTTP-009 AC-8"
+  ],
+  "findings": [
+    {
+      "id": "ROOT-DOC-R1-1",
+      "severity": "MEDIUM",
+      "files": [
+        {
+          "path": "docs/api/README.md",
+          "line": 132
+        },
+        {
+          "path": "docs/api/en/README.md",
+          "line": 132
+        }
+      ],
+      "title": "Both API index execution summaries still advertise universal pre-listen registration and once-only synchronous Next",
+      "evidence": "Lines132-133 of both languages say all routes/settings must be registered beforelisten and next.run is synchronous/may be called only once. The same current README pages identify the0.10.0 common profile, while rootREADME.md:240 and README.ko.md:236 correctly allow live ordinary HTTP registration and deferred continuation. These are conflicting public behavior instructions, not historical labelled text.",
+      "sourceProof": [
+        "AppLifecycle.java:153-156 requireHttpRegistration permits RUNNING and rejects STOPPING/TERMINATED.",
+        "HttpExecution.java:332 Continue.run submits cursor work without a once-only guard.",
+        "HttpExecutionContractTest.java:128 explicitNextAfterResponseAndRepeatedNextStillAdvance; :139 saved delayedNext; :153 lateRegistrationAndBuilderAttachmentArePublished."
+      ],
+      "requirements": [
+        "FR-APP-021 AC-4",
+        "FR-APP-022 AC-3",
+        "FR-APP-023 AC-1",
+        "OPS-REL-008 AC-1/2"
+      ],
+      "requestedChange": "Update these two bilingual execution-contract bullets to distinguish pre-listen server/service/WS configuration from live ordinary HTTP registration, and describe saved/repeated continuation according to the pinned shared-cursor/lifetime contract. Preserve concurrency/shared-state guidance and response one-commit/resource ownership boundaries. No source/API change needed."
+    }
+  ],
+  "positiveAssessment": [
+    "Root Java/Kotlin quickstarts and complete Java/Express comparison use actual public APIs with coherent middleware order, JSON output and loopback binding; actual example runtime and Java8/Kotlin compiler evidence were independently reviewed earlier.",
+    "Root API map correctly covers live routes, savedNext/Deferred, no implicit next/end on resolve, shared mutable-state protection, stream ownership, producer-last-access settlement and cancellation. JavaPattern and retained extensions boundary is explicit.",
+    "Current0.10.0 coordinates/all10 modules, source fallback, buildJDK17 versus runtimeJava8/API21, historical device-verification limits, artwork and paired navigation remain coherent; no publication-complete claim added. Prior major/version review scopes are not reopened.",
+    "The two new lifecycle metrics paragraphs match approved309cc86/Servletaa69 source: unknown0/-1 defaults, independent fail-soft fallback, synthetic500actual metrics and snapshots before terminal notification without recycled-container access. Languages agree."
+  ],
+  "limitations": "Scoped README tests do not exercise these stale prose bullets, so their prior8GREEN does not establish full behavior-summary correctness. Separate build-version/publication/final integrated gates remain outside this docs review.",
+  "actions": "Read-only pinned documents/source/test context; no edits/builds/network/publication. Only tmp artifact written."
+}

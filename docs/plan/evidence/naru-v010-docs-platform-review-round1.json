@@ -1,0 +1,61 @@
+{
+  "review_type": "Independent bilingual technical prose review",
+  "round": 1,
+  "reviewer": "release_dependency_audit",
+  "independent": true,
+  "skill": "/Users/beom/.codex/skills/technical-writer/SKILL.md",
+  "requirement": "OPS-REL-008 AC-1 AC-2 AC-3",
+  "repo_edits": false,
+  "builds_or_runtime_tests_run": false,
+  "network_activity": false,
+  "source_basis": [
+    "Current root commonHTTP including71b8f4e acquired-input terminal fix",
+    "Tiny6c539 request retention and approved cancellation fix",
+    "Servleta14fcce request retention/metadata/async ownership"
+  ],
+  "scope_limits": [
+    "Prose/signatures/behavior/translation/link review only; root-owned integrated compiler/runtime gates remain separate.",
+    "Known Kotlin#11 runtime marker addition is separately assigned and not treated as a prose failure.",
+    "No old0.9 JSON/freeze/priority checkpoint is imposed on new common HTTP. No whole-project release/completion claim."
+  ],
+  "decision": "CHANGES_REQUIRED",
+  "reviewed_commit": "9176b0c",
+  "files": [
+    "docs/api/defaults.md",
+    "docs/api/servlet.md",
+    "docs/api/static.md",
+    "docs/api/websocket.md",
+    "docs/api/en/defaults.md",
+    "docs/api/en/servlet.md",
+    "docs/api/en/static.md",
+    "docs/api/en/websocket.md"
+  ],
+  "findings": [
+    {
+      "id": "DOC-C-01",
+      "severity": "MEDIUM",
+      "confidence": 1.0,
+      "files": [
+        "docs/api/servlet.md:201",
+        "docs/api/en/servlet.md:201"
+      ],
+      "title": "Servlet SSE capacity description promises503HTML even for a late common response start",
+      "claim": "Both languages say a common HTTP res.sse capacity failure enters503 error handling before response start, HTML by default; following line explicitly allows starting after initial servlet return.",
+      "source_evidence": [
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java:169-185 catches RuntimeException from eventStream; reopens NEW only if !handlerDone; otherwise abort(e), then rethrows.",
+        "DefaultResponse.callbackReturned marks handlerDone before deferred/late response work. ServletEventStream capacity refusal throws HttpException503, but the late common res.sse call cannot reset the response to NEW and therefore cannot generate freshHTML503.",
+        "Approved pairedSSEguide docs/api/en/sse.md late-start section already explains this distinction accurately. Direct HttpExchange.eventStream capacity tests retaining writable503 do not override common Response.sse late-abort behavior."
+      ],
+      "required_change": "Qualify503HTML as initial callback-chain capacity failure. Explicitly state that after initial return, common res.sse may abort and does not guarantee a fresh503 body; link to same-language SSE late-start section. Preserve directadapter preadmission semantics and once slot ownership description.",
+      "requirement": "OPS-REL-008 AC-1 AC-2; FR-APP-023 late response/SSE; FR-APP-024 singlecommit"
+    }
+  ],
+  "checks": [
+    "Jetty9.4.58/Servlet3.1 raw URI matrix distinguishes container rejection versus unmatchedrawpath404 versus participatingcapture400/encodedslash200; container-specific support boundaries explicit.",
+    "Servlet snapshot/lazyinput/returnedDeferred/asyncRequired/unsupportedasync500-beforecommit-vs-abort-afterack behavior matches source.",
+    "Static service registration order/miss, SPA realfileprecedence/reservedWSnamespace, root/symlink/traversal/method405 boundaries match Dispatcher/StaticHandler source.",
+    "StrictWSgrammar/upgradeauthentication/frozenlegacy middleware, Origin and Servlet501 boundaries accurate. DefaultHost/framing/limit/security and HTMLstackexposure remain coherent.",
+    "26 executable blocks per language exactly match rawlanguage/bodyorder; all local link target files and heading anchors resolve."
+  ],
+  "next_action": "Author fixes focused bilingual capacity statement, then independent round2; maximum3 stop first PASS. No code change requested."
+}

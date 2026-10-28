@@ -278,6 +278,8 @@ The Android sample build, the AGP and R8 builds, StrictMode, Logcat on a device 
 The third part of the API 21 basis is the D-385 rule: no module has a compile-time `android.*` reference; the build's `checkClassReferences` check fails on an `android/` class reference in `NaruServe-api` and `NaruServe-logcat`, and no module has an Android artifact on its compile classpath.
 
 - [API documentation](docs/api/README.md)
+- [0.10.0 release notes](docs/release/0.10.0-release-notes.md)
+- [0.10.0 verification](docs/release/0.10.0-test-results.md)
 - [Release notes](docs/release/release-notes.md)
 - [Test results](docs/release/test-results.md)
 - [Third-party licenses](THIRD-PARTY-LICENSES.md)

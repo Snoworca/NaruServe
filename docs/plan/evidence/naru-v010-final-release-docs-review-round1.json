@@ -1,0 +1,57 @@
+{
+  "verdict": "PASS",
+  "round": 1,
+  "reviewType": "Independent final release documentation prepublication review",
+  "reviewer": "api_core_docs",
+  "scope": [
+    "docs/release/0.10.0-release-notes.md",
+    "docs/release/0.10.0-release-notes.ko.md",
+    "docs/release/0.10.0-test-results.md",
+    "README.md",
+    "README.ko.md",
+    "docs/release/release-notes.md",
+    "docs/release/verification/tinyhttpd-3.1.1.md",
+    "docs/release/verification/central-0.10.0.md"
+  ],
+  "requirements": [
+    "OPS-REL-008 AC-1 AC-2 AC-3",
+    "OPS-REL-009 AC-1 AC-2 AC-3"
+  ],
+  "mcpWorkspace": {
+    "workspaceRoot": "/Users/beom/work/git/NaruServe",
+    "rootSource": "per-call-workspace-root"
+  },
+  "requirementStatus": "Both evolving/in_progress; read-only lookup, no mutations",
+  "findings": [],
+  "resolvedDuringReview": [
+    {
+      "id": "RELEASE-DOC-PRECISION-001",
+      "detail": "Both release-note languages now name the actual public RouteBuilder return type; internal Route identity remains correctly described by creation-time position."
+    }
+  ],
+  "checks": [
+    "Release notes English/Korean preserve the common HTTP profile, Java Pattern limitation, strict WS/extensions and Java8/API21/build-versus-device boundaries.",
+    "HttpRouter.route creates/appends its layer immediately; later RouteBuilder callbacks retain identity and position. DefaultRestApp returns lifecycle-aware RouteBuilder wrappers.",
+    "HttpRoutes getAsync/methodAsync/useAsync signatures, Deferred lease versus automatic next/end semantics, HttpExchange onAbort/retainRequest and optional metrics0/-1 defaults agree with source.",
+    "All local Markdown link targets in eight reviewed files exist; installation anchor headings Install/설치 exist.",
+    "All19 representative test file/method references exist. No representative test is asserted to cover an entire issue.",
+    "Both2183-test full-build manifests and Tiny218 totals match archived evidence for daf908cdc4468d67609f8e5cceaaad0174ce9a8b. CorrectedJ17 reused unchanged module outputs; official actualJava8 reran186tasks, as stated in central record.",
+    "Archived14 evidence files independently match recorded byte lengths and SHA256 hashes. Signed bundle50primary/50signature/200checksum identity agrees with independent signed-bundle review.",
+    "Staging consumer evidence establishes actualJava8/Kotlin runtime and Android minSdk21 R8/static evidence only; unsigned APK/no device run/private repository boundaries are explicit.",
+    "Central record explicitly SIGNED_VERIFIED_NOT_UPLOADED. No deploymentID, PUBLISHED, public byte comparison or Central-only consumer success asserted. Historical release/Tiny diagnostic paragraphs are identified as historical and link current evidence."
+  ],
+  "reviewed_sha256": {
+    "docs/release/0.10.0-release-notes.md": "7e265a223440876ff2a559158befbc22a9f92d7569b447aaf9a1b34add4f257c",
+    "docs/release/0.10.0-release-notes.ko.md": "72d1d9ddbc1a35ab7244bc8740425d6da1fcaaca0956113dc7a34f0e79078370",
+    "docs/release/0.10.0-test-results.md": "4a4a2544bdfb794e67357a1985aa0d4893678c4d7d312abffdf9fc9db277666e",
+    "README.md": "1752c90e2a42312ba817dd7400c3999f9a14c0a330bb1fd99557172853b6d688",
+    "README.ko.md": "5551d169b7210347ae65b92d3a2c3ea926a3963fad1e4895a157ffcc2837f12e",
+    "docs/release/release-notes.md": "0f45a16a63985a17b5a130a0919ac109a473121cc1d8450b0d0abce154fd851c",
+    "docs/release/verification/tinyhttpd-3.1.1.md": "0bc306688d4eaf3496f3d2cf00f5e9dddb40c7497030ba1640100f9493c7dad2",
+    "docs/release/verification/central-0.10.0.md": "8fcd48db716dc7683ef82293e78bec4198f00e91d7dcc7b955e9d32bd0854a51"
+  },
+  "limitations": [
+    "No build or publication operation performed by this read-only reviewer.",
+    "This PASS is a documentation gate only. OPS-REL-009 publication remains pending actual committed/pushed source/tag, upload/deploymentID/PUBLISHED/public bytes and fresh Central-only consumers."
+  ]
+}

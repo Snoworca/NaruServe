@@ -1,0 +1,28 @@
+{
+  "verdict": "PASS",
+  "round": 1,
+  "reviewedCommit": "c198fa0",
+  "scope": "Optional adapter response metrics SPI/core tests",
+  "requirements": [
+    "IR-HTTP-009 AC-8",
+    "FR-APP-019 AC-3/5"
+  ],
+  "findings": [],
+  "evidence": {
+    "log": "/tmp/naru-v010-adapter-response-metrics-red.log",
+    "tests": 4,
+    "failures": 3,
+    "positiveControls": 1,
+    "errors": 0,
+    "skipped": 0
+  },
+  "assessment": [
+    "Legacy exchange compiles unchanged; reflection requires default int/long methods with unknown0/-1. Missing methods generate actual RED.",
+    "Synthetic exchange actually commits500 and writes exactJSON bytes while core requested207. Test checks wire status/body, exact terminal metrics, input close/finish/abort once and late-settlement no-double-log.",
+    "Invalid statuses0/99/1000 and negativebytes retain core metrics; valid500/nonzero bytes prove observations are used.",
+    "Status Error, bytes RuntimeException and both failing require independent fail-soft fallback, correct surviving counterpart metric, cleanup and one terminal record. Assertions are outside observer callbacks.",
+    "Actual4tests produce3 intendedRED and1 fallbackpositive with zero errors/skips. One new test class; no source/API/dependency changes."
+  ],
+  "limitations": "Implementation validation/shared SafeCallbacks reuse and fullSPI/core GREEN remain required. ActualServlet synthetic500socket tests provide complementary evidence.",
+  "actions": "Read-only review; no edits/builds/network. Tmp report only. First PASS ends loop."
+}

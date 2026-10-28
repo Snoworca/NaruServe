@@ -1,0 +1,502 @@
+{
+  "status": "PASS_PRIVATE_STAGING_CONSUMERS",
+  "recordedUtc": "2026-10-28T21:07:08.730726+00:00",
+  "requirement": "OPS-REL-009 AC-2 AC-3",
+  "sourceCommit": "daf908cdc4468d67609f8e5cceaaad0174ce9a8b",
+  "version": "0.10.0",
+  "snapshot": {
+    "manifest": "/var/folders/gh/cnsd22nd1811wg27_ws2gc800000gn/T/naru-v010-release-f44rsscc/manifest.json",
+    "manifestSha256": "6eed7d003323e103ba2890cdf1059f93a9c81b39d490715d1e104233f83f5380",
+    "sourceCommit": "daf908cdc4468d67609f8e5cceaaad0174ce9a8b",
+    "version": "0.10.0",
+    "primaryVerified": 50,
+    "checksumsVerified": 200,
+    "signatures": 0,
+    "repository": "/var/folders/gh/cnsd22nd1811wg27_ws2gc800000gn/T/naru-v010-release-f44rsscc/repository",
+    "primaryHashesUnchangedAfterConsumers": true,
+    "manifestUnchangedAfterConsumers": true
+  },
+  "noRootBuildOrRepositoryChanges": true,
+  "noMavenLocalOrComposite": true,
+  "noPublicationOrSigning": true,
+  "commands": [
+    {
+      "cwd": "/tmp/naru-v010-consumers/java8",
+      "command": "JAVA_HOME=/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home ./gradlew --no-daemon -PstagingRepo=/var/folders/gh/cnsd22nd1811wg27_ws2gc800000gn/T/naru-v010-release-f44rsscc/repository clean run consumerArtifactReport",
+      "log": "/tmp/naru-v010-staging-consumer-java8.log",
+      "exitCode": 0
+    },
+    {
+      "cwd": "/tmp/naru-v010-consumers/android",
+      "command": "JAVA_HOME=/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home ANDROID_HOME=/opt/homebrew/share/android-commandlinetools ./gradlew --no-daemon -PstagingRepo=/var/folders/gh/cnsd22nd1811wg27_ws2gc800000gn/T/naru-v010-release-f44rsscc/repository clean :app:assembleRelease :app:consumerArtifactReport",
+      "log": "/tmp/naru-v010-staging-consumer-android.log",
+      "exitCode": 0
+    },
+    {
+      "cwd": "/tmp/naru-v010-consumers/android",
+      "command": "JAVA_HOME=/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home ANDROID_HOME=/opt/homebrew/share/android-commandlinetools python3 /tmp/naru-v010-consumers/inspect_android.py",
+      "log": "/tmp/naru-v010-staging-consumer-android-inspection.log",
+      "exitCode": 0
+    },
+    {
+      "cwd": "/tmp/naru-v010-consumers/kotlin",
+      "command": "JAVA_HOME=/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home ./gradlew --no-daemon -PstagingRepo=/var/folders/gh/cnsd22nd1811wg27_ws2gc800000gn/T/naru-v010-release-f44rsscc/repository clean run consumerArtifactReport",
+      "log": "/tmp/naru-v010-staging-consumer-kotlin.log",
+      "exitCode": 0
+    }
+  ],
+  "java": {
+    "javaVersion": "1.8.0_504",
+    "javaHome": "/Users/beom/Library/Java/JavaVirtualMachines/zulu8.96.0.205-ca-jdk8.0.504-macosx_aarch64/Contents/Home/jre",
+    "serviceFactories": [
+      "com.snoworca.naruserve.bootstrap.DefaultAppFactory"
+    ],
+    "logger": "com.snoworca.naruserve.ConsoleLogger",
+    "checks": [
+      "RestApp.create actual HTTP",
+      "mounted Router named wildcard and encoded slash",
+      "getAsync returned Deferred and later response",
+      "first JSON body read after completed wire ack with pending Deferred",
+      "same-Type JSON cache",
+      "common wrong-method HTML404"
+    ],
+    "passed": true,
+    "classMajor": 52,
+    "buildJdk": "17",
+    "compileRelease": 8,
+    "producerSafety": "Mainfinally settles work, closes all sockets via try-with-resources, shutdown2s and producer await5s; returnednormally so those assertions passed",
+    "runtimeEvidence": "/tmp/naru-v010-consumers/java8/build/evidence/runtime.json"
+  },
+  "android": {
+    "apk": "/private/tmp/naru-v010-consumers/android/app/build/outputs/apk/release/app-release-unsigned.apk",
+    "sha256": "888b1245ae1fb0df9d84fbd79d18bd3cc4708d2c290c755de94d4492f625967d",
+    "minSdk": 21,
+    "targetSdk": 36,
+    "internetPermissionInherited": true,
+    "serviceProvider": "com.snoworca.naruserve.bootstrap.DefaultAppFactory",
+    "R8RetainedClasses": {
+      "com.snoworca.naruserve.bootstrap.DefaultAppFactory": "com.snoworca.naruserve.bootstrap.DefaultAppFactory",
+      "com.snoworca.naruserve.logcat.LogcatLogger": "com.snoworca.naruserve.logcat.LogcatLogger",
+      "com.snoworca.naruserve.gson.GsonJsonCodec": "l.a",
+      "com.google.gson.Gson": "a.k"
+    },
+    "factoryConstructorAndCreateRetained": true,
+    "appKeepRules": "own ServerEntry only",
+    "tinyNoticesSha256": {
+      "META-INF/LICENSE-tinyhttpd.txt": "8250ab3c4f7b9b85eb6aacaca0c03dbce335ba4df760faf2f44f3bd992eedeb9",
+      "META-INF/LICENSE-nanohttpd.txt": "a0ada3797d7ff576a77f892c7cd5e7910e0fffb56efa9cf2a295cbf596706185",
+      "META-INF/NOTICE-tinyhttpd.txt": "5a4121f985d0ec8466eb1abf9fcf8acc4f4c0f90e2ac555d068576cd27555122"
+    },
+    "deviceOrEmulatorRun": false,
+    "signed": false,
+    "AGP": "8.13.2",
+    "gradle": "8.14.3",
+    "buildJdk": "17",
+    "compileSdk": 36,
+    "buildTools": "36.0.0",
+    "R8Task": "minifyReleaseWithR8 executed",
+    "internetPermissionSource": "manifest merger ADDED from com.snoworca.naruserve:naruserve-android:0.10.0, not own manifest",
+    "consumerRulesSource": "configuration.txt identifies naruserve-bootstrap.pro from dependency transform; app rules keep own ServerEntry only",
+    "signatureCheck": {
+      "exitCode": 1,
+      "expectedUnsigned": true,
+      "output": "DOES NOT VERIFY\nERROR: Missing META-INF/MANIFEST.MF\n",
+      "log": "/tmp/naru-v010-staging-consumer-android-signature-check.log"
+    },
+    "proofLimit": "minified APK/static manifest+mapping+DEX/service resource proof only; no device/emulator AndroidHTTP/Logcat execution"
+  },
+  "resolvedArtifacts": {
+    "java8": [
+      {
+        "coordinate": "com.google.code.gson:gson:2.14.0",
+        "artifact": "gson-2.14.0.jar",
+        "file": "/Users/beom/.gradle/caches/modules-2/files-2.1/com.google.code.gson/gson/2.14.0/efc0e34ede4e3204eaefb84a00e55e8c86634382/gson-2.14.0.jar",
+        "sha256": "2cbd119bf1961c28788310963dc80ba65f58cdeec1dd139c8bdb1240faa2c36f"
+      },
+      {
+        "coordinate": "com.google.errorprone:error_prone_annotations:2.48.0",
+        "artifact": "error_prone_annotations-2.48.0.jar",
+        "file": "/Users/beom/.gradle/caches/modules-2/files-2.1/com.google.errorprone/error_prone_annotations/2.48.0/bbe30942a31d1778c74cb272321267eca82dc708/error_prone_annotations-2.48.0.jar",
+        "sha256": "b49c5c958316ed67a09c699dda9aa749caf434d51d863dea599ef36a49b9c855"
+      },
+      {
+        "coordinate": "com.snoworca.naruserve:naruserve-api:0.10.0",
+        "artifact": "naruserve-api-0.10.0.jar",
+        "file": "/private/var/folders/gh/cnsd22nd1811wg27_ws2gc800000gn/T/naru-v010-release-f44rsscc/repository/com/snoworca/naruserve/naruserve-api/0.10.0/naruserve-api-0.10.0.jar",
+        "sha256": "ea577d834391867803fb7886a3f6c30327aaeee59b7408622a47123445575dec"
+      },
+      {
+        "coordinate": "com.snoworca.naruserve:naruserve-gson:0.10.0",
+        "artifact": "naruserve-gson-0.10.0.jar",
+        "file": "/private/var/folders/gh/cnsd22nd1811wg27_ws2gc800000gn/T/naru-v010-release-f44rsscc/repository/com/snoworca/naruserve/naruserve-gson/0.10.0/naruserve-gson-0.10.0.jar",
+        "sha256": "5c20324e749a38db73ed447cd49684e337b011fc4ac0562046fd3e7f2b9369ae"
+      },
+      {
+        "coordinate": "com.snoworca.naruserve:naruserve-tinyhttpd:0.10.0",
+        "artifact": "naruserve-tinyhttpd-0.10.0.jar",
+        "file": "/private/var/folders/gh/cnsd22nd1811wg27_ws2gc800000gn/T/naru-v010-release-f44rsscc/repository/com/snoworca/naruserve/naruserve-tinyhttpd/0.10.0/naruserve-tinyhttpd-0.10.0.jar",
+        "sha256": "a3ee4cd37adad7fb3f651a28f2539dd846362a506bc2d8fbd6435b30640ab03e"
+      },
+      {
+        "coordinate": "com.snoworca.naruserve:naruserve:0.10.0",
+        "artifact": "naruserve-0.10.0.jar",
+        "file": "/private/var/folders/gh/cnsd22nd1811wg27_ws2gc800000gn/T/naru-v010-release-f44rsscc/repository/com/snoworca/naruserve/naruserve/0.10.0/naruserve-0.10.0.jar",
+        "sha256": "b2425153a8d13a5e54d8e6253adbb52c5af58b0576c8698f8f0f92a04dbacc5b"
+      },
+      {
+        "coordinate": "com.snoworca:tinyhttpd-core:3.1.1",
+        "artifact": "tinyhttpd-core-3.1.1.jar",
+        "file": "/Users/beom/.gradle/caches/modules-2/files-2.1/com.snoworca/tinyhttpd-core/3.1.1/7fdff152b94b996c6edfe0a2f27f8a125346c3cc/tinyhttpd-core-3.1.1.jar",
+        "sha256": "53cdfdf16427d65ed50257d1f5d880ab6781160d2caf551b9c6150266971351c"
+      },
+      {
+        "coordinate": "com.snoworca:tinyhttpd-websocket:3.1.1",
+        "artifact": "tinyhttpd-websocket-3.1.1.jar",
+        "file": "/Users/beom/.gradle/caches/modules-2/files-2.1/com.snoworca/tinyhttpd-websocket/3.1.1/fbf3c25e15b1e52953995d784fe08d4538c1deea/tinyhttpd-websocket-3.1.1.jar",
+        "sha256": "3634d26a4f18cada39135cb25f443d2bd27807f19955222b56d1f8309cba87b9"
+      }
+    ],
+    "android": [
+      {
+        "coordinate": "com.google.code.gson:gson:2.14.0",
+        "artifact": "gson-2.14.0.jar",
+        "file": "/Users/beom/.gradle/caches/modules-2/files-2.1/com.google.code.gson/gson/2.14.0/efc0e34ede4e3204eaefb84a00e55e8c86634382/gson-2.14.0.jar",
+        "sha256": "2cbd119bf1961c28788310963dc80ba65f58cdeec1dd139c8bdb1240faa2c36f"
+      },
+      {
+        "coordinate": "com.google.errorprone:error_prone_annotations:2.48.0",
+        "artifact": "error_prone_annotations-2.48.0.jar",
+        "file": "/Users/beom/.gradle/caches/modules-2/files-2.1/com.google.errorprone/error_prone_annotations/2.48.0/bbe30942a31d1778c74cb272321267eca82dc708/error_prone_annotations-2.48.0.jar",
+        "sha256": "b49c5c958316ed67a09c699dda9aa749caf434d51d863dea599ef36a49b9c855"
+      },
+      {
+        "coordinate": "com.snoworca.naruserve:naruserve-android:0.10.0",
+        "artifact": "naruserve-android-0.10.0.aar",
+        "file": "/private/var/folders/gh/cnsd22nd1811wg27_ws2gc800000gn/T/naru-v010-release-f44rsscc/repository/com/snoworca/naruserve/naruserve-android/0.10.0/naruserve-android-0.10.0.aar",
+        "sha256": "cba0f5b3e0b5e82cf365237918e160eaf2d514a92c160aad970682c317a4a490"
+      },
+      {
+        "coordinate": "com.snoworca.naruserve:naruserve-api:0.10.0",
+        "artifact": "naruserve-api-0.10.0.jar",
+        "file": "/private/var/folders/gh/cnsd22nd1811wg27_ws2gc800000gn/T/naru-v010-release-f44rsscc/repository/com/snoworca/naruserve/naruserve-api/0.10.0/naruserve-api-0.10.0.jar",
+        "sha256": "ea577d834391867803fb7886a3f6c30327aaeee59b7408622a47123445575dec"
+      },
+      {
+        "coordinate": "com.snoworca.naruserve:naruserve-gson:0.10.0",
+        "artifact": "naruserve-gson-0.10.0.jar",
+        "file": "/private/var/folders/gh/cnsd22nd1811wg27_ws2gc800000gn/T/naru-v010-release-f44rsscc/repository/com/snoworca/naruserve/naruserve-gson/0.10.0/naruserve-gson-0.10.0.jar",
+        "sha256": "5c20324e749a38db73ed447cd49684e337b011fc4ac0562046fd3e7f2b9369ae"
+      },
+      {
+        "coordinate": "com.snoworca.naruserve:naruserve-logcat:0.10.0",
+        "artifact": "naruserve-logcat-0.10.0.jar",
+        "file": "/private/var/folders/gh/cnsd22nd1811wg27_ws2gc800000gn/T/naru-v010-release-f44rsscc/repository/com/snoworca/naruserve/naruserve-logcat/0.10.0/naruserve-logcat-0.10.0.jar",
+        "sha256": "c386c5a6cda135cb55482e230fa7dc808450d062a412b9fb2fa25822617a8094"
+      },
+      {
+        "coordinate": "com.snoworca.naruserve:naruserve-tinyhttpd:0.10.0",
+        "artifact": "naruserve-tinyhttpd-0.10.0.jar",
+        "file": "/private/var/folders/gh/cnsd22nd1811wg27_ws2gc800000gn/T/naru-v010-release-f44rsscc/repository/com/snoworca/naruserve/naruserve-tinyhttpd/0.10.0/naruserve-tinyhttpd-0.10.0.jar",
+        "sha256": "a3ee4cd37adad7fb3f651a28f2539dd846362a506bc2d8fbd6435b30640ab03e"
+      },
+      {
+        "coordinate": "com.snoworca.naruserve:naruserve:0.10.0",
+        "artifact": "naruserve-0.10.0.jar",
+        "file": "/private/var/folders/gh/cnsd22nd1811wg27_ws2gc800000gn/T/naru-v010-release-f44rsscc/repository/com/snoworca/naruserve/naruserve/0.10.0/naruserve-0.10.0.jar",
+        "sha256": "b2425153a8d13a5e54d8e6253adbb52c5af58b0576c8698f8f0f92a04dbacc5b"
+      },
+      {
+        "coordinate": "com.snoworca:tinyhttpd-core:3.1.1",
+        "artifact": "tinyhttpd-core-3.1.1.jar",
+        "file": "/Users/beom/.gradle/caches/modules-2/files-2.1/com.snoworca/tinyhttpd-core/3.1.1/7fdff152b94b996c6edfe0a2f27f8a125346c3cc/tinyhttpd-core-3.1.1.jar",
+        "sha256": "53cdfdf16427d65ed50257d1f5d880ab6781160d2caf551b9c6150266971351c"
+      },
+      {
+        "coordinate": "com.snoworca:tinyhttpd-websocket:3.1.1",
+        "artifact": "tinyhttpd-websocket-3.1.1.jar",
+        "file": "/Users/beom/.gradle/caches/modules-2/files-2.1/com.snoworca/tinyhttpd-websocket/3.1.1/fbf3c25e15b1e52953995d784fe08d4538c1deea/tinyhttpd-websocket-3.1.1.jar",
+        "sha256": "3634d26a4f18cada39135cb25f443d2bd27807f19955222b56d1f8309cba87b9"
+      }
+    ],
+    "kotlin": [
+      {
+        "coordinate": "com.google.code.gson:gson:2.14.0",
+        "artifact": "gson-2.14.0.jar",
+        "file": "/Users/beom/.gradle/caches/modules-2/files-2.1/com.google.code.gson/gson/2.14.0/efc0e34ede4e3204eaefb84a00e55e8c86634382/gson-2.14.0.jar",
+        "sha256": "2cbd119bf1961c28788310963dc80ba65f58cdeec1dd139c8bdb1240faa2c36f"
+      },
+      {
+        "coordinate": "com.google.errorprone:error_prone_annotations:2.48.0",
+        "artifact": "error_prone_annotations-2.48.0.jar",
+        "file": "/Users/beom/.gradle/caches/modules-2/files-2.1/com.google.errorprone/error_prone_annotations/2.48.0/bbe30942a31d1778c74cb272321267eca82dc708/error_prone_annotations-2.48.0.jar",
+        "sha256": "b49c5c958316ed67a09c699dda9aa749caf434d51d863dea599ef36a49b9c855"
+      },
+      {
+        "coordinate": "com.snoworca.naruserve:naruserve-api:0.10.0",
+        "artifact": "naruserve-api-0.10.0.jar",
+        "file": "/private/var/folders/gh/cnsd22nd1811wg27_ws2gc800000gn/T/naru-v010-release-f44rsscc/repository/com/snoworca/naruserve/naruserve-api/0.10.0/naruserve-api-0.10.0.jar",
+        "sha256": "ea577d834391867803fb7886a3f6c30327aaeee59b7408622a47123445575dec"
+      },
+      {
+        "coordinate": "com.snoworca.naruserve:naruserve-gson:0.10.0",
+        "artifact": "naruserve-gson-0.10.0.jar",
+        "file": "/private/var/folders/gh/cnsd22nd1811wg27_ws2gc800000gn/T/naru-v010-release-f44rsscc/repository/com/snoworca/naruserve/naruserve-gson/0.10.0/naruserve-gson-0.10.0.jar",
+        "sha256": "5c20324e749a38db73ed447cd49684e337b011fc4ac0562046fd3e7f2b9369ae"
+      },
+      {
+        "coordinate": "com.snoworca.naruserve:naruserve-kotlin:0.10.0",
+        "artifact": "naruserve-kotlin-0.10.0.jar",
+        "file": "/private/var/folders/gh/cnsd22nd1811wg27_ws2gc800000gn/T/naru-v010-release-f44rsscc/repository/com/snoworca/naruserve/naruserve-kotlin/0.10.0/naruserve-kotlin-0.10.0.jar",
+        "sha256": "bd9b1f60aef23a0f240addcbe0a523928f03b0f940686cccb58a23ff3a992e9f"
+      },
+      {
+        "coordinate": "com.snoworca.naruserve:naruserve-tinyhttpd:0.10.0",
+        "artifact": "naruserve-tinyhttpd-0.10.0.jar",
+        "file": "/private/var/folders/gh/cnsd22nd1811wg27_ws2gc800000gn/T/naru-v010-release-f44rsscc/repository/com/snoworca/naruserve/naruserve-tinyhttpd/0.10.0/naruserve-tinyhttpd-0.10.0.jar",
+        "sha256": "a3ee4cd37adad7fb3f651a28f2539dd846362a506bc2d8fbd6435b30640ab03e"
+      },
+      {
+        "coordinate": "com.snoworca.naruserve:naruserve:0.10.0",
+        "artifact": "naruserve-0.10.0.jar",
+        "file": "/private/var/folders/gh/cnsd22nd1811wg27_ws2gc800000gn/T/naru-v010-release-f44rsscc/repository/com/snoworca/naruserve/naruserve/0.10.0/naruserve-0.10.0.jar",
+        "sha256": "b2425153a8d13a5e54d8e6253adbb52c5af58b0576c8698f8f0f92a04dbacc5b"
+      },
+      {
+        "coordinate": "com.snoworca:tinyhttpd-core:3.1.1",
+        "artifact": "tinyhttpd-core-3.1.1.jar",
+        "file": "/Users/beom/.gradle/caches/modules-2/files-2.1/com.snoworca/tinyhttpd-core/3.1.1/7fdff152b94b996c6edfe0a2f27f8a125346c3cc/tinyhttpd-core-3.1.1.jar",
+        "sha256": "53cdfdf16427d65ed50257d1f5d880ab6781160d2caf551b9c6150266971351c"
+      },
+      {
+        "coordinate": "com.snoworca:tinyhttpd-websocket:3.1.1",
+        "artifact": "tinyhttpd-websocket-3.1.1.jar",
+        "file": "/Users/beom/.gradle/caches/modules-2/files-2.1/com.snoworca/tinyhttpd-websocket/3.1.1/fbf3c25e15b1e52953995d784fe08d4538c1deea/tinyhttpd-websocket-3.1.1.jar",
+        "sha256": "3634d26a4f18cada39135cb25f443d2bd27807f19955222b56d1f8309cba87b9"
+      },
+      {
+        "coordinate": "org.jetbrains.kotlin:kotlin-stdlib:2.2.0",
+        "artifact": "kotlin-stdlib-2.2.0.jar",
+        "file": "/Users/beom/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib/2.2.0/fdfc65fbc42fda253a26f61dac3c0aca335fae96/kotlin-stdlib-2.2.0.jar",
+        "sha256": "65d12d85a3b865c160db9147851712a64b10dadd68b22eea22a95bf8a8670dca"
+      },
+      {
+        "coordinate": "org.jetbrains:annotations:13.0",
+        "artifact": "annotations-13.0.jar",
+        "file": "/Users/beom/.gradle/caches/modules-2/files-2.1/org.jetbrains/annotations/13.0/919f0dfe192fb4e063e7dacadee7f8bb9a2672a9/annotations-13.0.jar",
+        "sha256": "ace2a10dc8e2d5fd34925ecac03e4988b2c0f851650c94b8cef49ba1bd111478"
+      }
+    ]
+  },
+  "proofFiles": [
+    {
+      "path": "/tmp/naru-v010-consumers/java8/build/classes/java/main/consumer/Main.class",
+      "bytes": 15007,
+      "sha256": "486cc9dc9bfdc6e902a4b5cf3fcceb75dfaf476b05ac67a1edb8f396252e9778"
+    },
+    {
+      "path": "/tmp/naru-v010-consumers/java8/build/evidence/runtime.json",
+      "bytes": 544,
+      "sha256": "35b6d7ec94834615cc77ed79c3bc04ab8410c37d6c8a8d5b5b204f64549869d0"
+    },
+    {
+      "path": "/tmp/naru-v010-consumers/java8/build/evidence/artifacts.json",
+      "bytes": 3148,
+      "sha256": "97c9094c5a8b6183d507857471b5e8ce0970bcee66bfd8acd79e53d075984612"
+    },
+    {
+      "path": "/private/tmp/naru-v010-consumers/android/app/build/outputs/apk/release/app-release-unsigned.apk",
+      "bytes": 139629,
+      "sha256": "888b1245ae1fb0df9d84fbd79d18bd3cc4708d2c290c755de94d4492f625967d"
+    },
+    {
+      "path": "/tmp/naru-v010-consumers/android/app/build/outputs/mapping/release/mapping.txt",
+      "bytes": 1525731,
+      "sha256": "729ef9b10c3f938566370645ae8b62f53c263e59c0fd5c1b774f2f317b5ff43e"
+    },
+    {
+      "path": "/tmp/naru-v010-consumers/android/app/build/outputs/mapping/release/configuration.txt",
+      "bytes": 10133,
+      "sha256": "0dea3f6978eabf2ce1cf8f968f99403a5210d1043be30e8ba5799db9092bd1f5"
+    },
+    {
+      "path": "/tmp/naru-v010-consumers/android/app/build/evidence/manifest.xml",
+      "bytes": 662,
+      "sha256": "152660caa08242aea8b6a653a1a20f6ce54813b8ac4af4e045cf2a6d2cb386c8"
+    },
+    {
+      "path": "/tmp/naru-v010-consumers/android/app/build/evidence/service-provider.txt",
+      "bytes": 51,
+      "sha256": "4b855c98789b82eb918c31b413945964ed852de15bde43d00c9cf904cbdcaf8c"
+    },
+    {
+      "path": "/tmp/naru-v010-consumers/android/app/build/evidence/classes.dex",
+      "bytes": 271144,
+      "sha256": "c0293184734f25d728919fc4cc41284810f50bf3e98c7fe2dab99a8256c06f07"
+    },
+    {
+      "path": "/tmp/naru-v010-consumers/android/app/build/evidence/android-proof.json",
+      "bytes": 1153,
+      "sha256": "0eced3ffebc65359647436332f72b8c5118932b945d38594f740c770c96ceedf"
+    },
+    {
+      "path": "/tmp/naru-v010-consumers/android/app/build/evidence/artifacts.json",
+      "bytes": 3972,
+      "sha256": "fd687620fc3c6df7d1c37ab13b9bc4a5ff11921da6bab5d1e701bf7f6dc12432"
+    },
+    {
+      "path": "/tmp/naru-v010-consumers/android/app/build/outputs/logs/manifest-merger-release-report.txt",
+      "bytes": 2904,
+      "sha256": "a5197526fcee5f98122a0423edb8ee26a685d72974dfe4a8c2c4be46364c87cd"
+    },
+    {
+      "path": "/tmp/naru-v010-consumers/kotlin/build/classes/kotlin/main/consumer/kotlin/MainKt.class",
+      "bytes": 20710,
+      "sha256": "507f7f23598daa7665ba0e6571e15289c580548e3f1d4a27e5cdda105ef0aed4"
+    },
+    {
+      "path": "/tmp/naru-v010-consumers/kotlin/build/evidence/runtime.json",
+      "bytes": 565,
+      "sha256": "6d1391cc9d46f1d0b8052dcdcb1dfd66a97794794f85196b88d21f9bec47ee27"
+    },
+    {
+      "path": "/tmp/naru-v010-consumers/kotlin/build/evidence/artifacts.json",
+      "bytes": 4298,
+      "sha256": "ed908db0e4faaa874fbb20ff99e36cf8097d85ab7269f005c7dbbf012b608e0a"
+    },
+    {
+      "path": "/tmp/naru-v010-consumers/kotlin/build/evidence/published-kotlin-metadata.txt",
+      "bytes": 7721,
+      "sha256": "c324c3b4e8ad4ad3a180cf8f84615ad31c136da52823d3cefdc3a3428645981d"
+    },
+    {
+      "path": "/var/folders/gh/cnsd22nd1811wg27_ws2gc800000gn/T/naru-v010-release-f44rsscc/repository/com/snoworca/naruserve/naruserve-kotlin/0.10.0/naruserve-kotlin-0.10.0.pom",
+      "bytes": 1971,
+      "sha256": "1476f694839cab93f085732818e027d21f5849ca793909996f29f88d191a7234"
+    },
+    {
+      "path": "/var/folders/gh/cnsd22nd1811wg27_ws2gc800000gn/T/naru-v010-release-f44rsscc/repository/com/snoworca/naruserve/naruserve-kotlin/0.10.0/naruserve-kotlin-0.10.0.module",
+      "bytes": 4477,
+      "sha256": "1f3613ae608335c61ca434122181518d12a612ff8966db28aee51c183c2c1316"
+    },
+    {
+      "path": "/tmp/naru-v010-consumers/kotlin/build.gradle",
+      "bytes": 2147,
+      "sha256": "b6847b09e473e06a6dacc55f5415ed2775e8cc2b0abbed1b96f439f7b6074761"
+    },
+    {
+      "path": "/tmp/naru-v010-consumers/kotlin/settings.gradle",
+      "bytes": 990,
+      "sha256": "aeac2e36315f2d724af9b5ddcc4a9adc1b80ca421191faaa86353872a7f9fb4b"
+    },
+    {
+      "path": "/tmp/naru-v010-consumers/kotlin/gradle.properties",
+      "bytes": 139,
+      "sha256": "4819c0a65b102c1785b2940b22d51f6f120c0886b6540eb215cc93761542b17b"
+    },
+    {
+      "path": "/tmp/naru-v010-consumers/kotlin/src/main/kotlin/consumer/kotlin/Main.kt",
+      "bytes": 6393,
+      "sha256": "12ef3a5ffe39a2299ef9777887baa8e880742ebf98e00dbb733f0d026308aec7"
+    }
+  ],
+  "publicPublication": "Not attempted. All3projects support publicConsumertrue+freshGradlehome/--refresh-dependencies after publication; stagingfile repo disabled entirely.",
+  "kotlin": {
+    "javaVersion": "1.8.0_504",
+    "javaHome": "/Users/beom/Library/Java/JavaVirtualMachines/zulu8.96.0.205-ca-jdk8.0.504-macosx_aarch64/Contents/Home/jre",
+    "kotlinVersion": "2.2.0",
+    "checks": [
+      "published Kotlin reified body metadata",
+      "mounted Router named wildcard and decoded segment list",
+      "typed List<String> and nullable String? absent capture",
+      "three-argument Middleware",
+      "getAsync returned Deferred and late HTTP response",
+      "typed generic Gson List<Payload>",
+      "first typed body read after wire202 with pending Deferred and cache identity"
+    ],
+    "passed": true,
+    "plugin": "2.2.0",
+    "buildJdk": "17",
+    "jvmTarget": 8,
+    "classMajor": 52,
+    "compilerFlags": [
+      "-Xjspecify-annotations=strict"
+    ],
+    "directDependencyOnly": "com.snoworca.naruserve:naruserve-kotlin:0.10.0",
+    "autoStdlibInjection": false,
+    "autoStdlibReason": "Do not let the plugin mask the published POM/module transitive dependency; existing2.2.0 supplied by published metadata, no override/new pin",
+    "pomDependencies": [
+      {
+        "group": "com.snoworca.naruserve",
+        "module": "naruserve",
+        "version": "0.10.0"
+      },
+      {
+        "group": "org.jetbrains.kotlin",
+        "module": "kotlin-stdlib",
+        "version": "2.2.0"
+      }
+    ],
+    "moduleVariants": [
+      {
+        "name": "apiElements",
+        "attributes": {
+          "org.gradle.category": "library",
+          "org.gradle.dependency.bundling": "external",
+          "org.gradle.jvm.environment": "standard-jvm",
+          "org.gradle.jvm.version": 8,
+          "org.gradle.libraryelements": "jar",
+          "org.gradle.usage": "java-api",
+          "org.jetbrains.kotlin.platform.type": "jvm"
+        },
+        "dependencies": [
+          {
+            "group": "com.snoworca.naruserve",
+            "module": "naruserve",
+            "version": {
+              "requires": "0.10.0"
+            }
+          },
+          {
+            "group": "org.jetbrains.kotlin",
+            "module": "kotlin-stdlib",
+            "version": {
+              "requires": "2.2.0"
+            }
+          }
+        ]
+      },
+      {
+        "name": "runtimeElements",
+        "attributes": {
+          "org.gradle.category": "library",
+          "org.gradle.dependency.bundling": "external",
+          "org.gradle.jvm.environment": "standard-jvm",
+          "org.gradle.jvm.version": 8,
+          "org.gradle.libraryelements": "jar",
+          "org.gradle.usage": "java-runtime",
+          "org.jetbrains.kotlin.platform.type": "jvm"
+        },
+        "dependencies": [
+          {
+            "group": "com.snoworca.naruserve",
+            "module": "naruserve",
+            "version": {
+              "requires": "0.10.0"
+            }
+          },
+          {
+            "group": "org.jetbrains.kotlin",
+            "module": "kotlin-stdlib",
+            "version": {
+              "requires": "2.2.0"
+            }
+          }
+        ]
+      }
+    ],
+    "publishedInlineMetadataProof": "/tmp/naru-v010-consumers/kotlin/build/evidence/published-kotlin-metadata.txt",
+    "producerSafety": "finally settles pendingwork, closes all sockets, shuts down server2s and awaits producer5s; normal return confirms assertions passed",
+    "log": "/tmp/naru-v010-staging-consumer-kotlin.log",
+    "earlierWrongCwdLaunch": "Java consumer rerununchangedPASS; log preserved at /tmp/naru-v010-staging-consumer-kotlin-launch-java-directory.log"
+  }
+}

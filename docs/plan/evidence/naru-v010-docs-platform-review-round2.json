@@ -1,0 +1,38 @@
+{
+  "review_type": "Independent bilingual platform prose re-review",
+  "round": 2,
+  "decision": "PASS",
+  "reviewed_commit": "29714d1c41c12c452ad8c1611b6509fc128de4a7",
+  "reviewer": "release_dependency_audit",
+  "independent": true,
+  "requirements": [
+    "OPS-REL-008 AC-1 AC-2 AC-3",
+    "FR-APP-023",
+    "FR-APP-024"
+  ],
+  "findings": [],
+  "resolved": [
+    {
+      "id": "DOC-C-01",
+      "files": [
+        "docs/api/servlet.md:201",
+        "docs/api/en/servlet.md:201"
+      ],
+      "evidence": "Both languages now distinguish adapter preadmission HttpException503, initial callback-chain common error503HTML and late startup abort/rethrow without fresh503 guarantee. This matches DefaultResponse169-185 handlerDone-dependent reopening. Drain slot ownership and cancellation once semantics unchanged."
+    }
+  ],
+  "checks": [
+    "Diff changes only paired Servlet capacity prose; no code/fence/signature alteration.",
+    "All26 prior executable blocks per language remain byte-identical to9176b0c in same order.",
+    "Same-language SSE late-start anchor links resolve to approved integratedBpages.",
+    "No new material inconsistency introduced; remaining rawURI/retention/static/WS/security findings remain zero from boundedround1."
+  ],
+  "repo_edits": false,
+  "builds_run": false,
+  "network_activity": false,
+  "scope_limits": [
+    "Focused prose fix only; A/B PASS loops not reopened.",
+    "Integrated compiler/runtime and final release gates remain parent-owned.",
+    "Stop loop at first PASS; no round3."
+  ]
+}

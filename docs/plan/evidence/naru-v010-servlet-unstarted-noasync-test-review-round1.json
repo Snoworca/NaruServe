@@ -1,0 +1,33 @@
+{
+  "verdict": "PASS",
+  "round": 1,
+  "reviewedCommit": "1e50312efb1b49197c9c828c0c454671f440ddd7",
+  "scope": "New actual core unstarted noAsync fallback cancellation leak RED tests; previous reviewed retained-finished noAsync unit remains closed",
+  "requirements": [
+    "FR-SVL-009 AC-1/2/4",
+    "FR-APP-023 AC-3/5/7/8",
+    "IR-HTTP-009 AC-2"
+  ],
+  "findings": [],
+  "evidence": {
+    "log": "/tmp/naru-v010-servlet-unstarted-noasync-red.log",
+    "counts": "/tmp/naru-v010-servlet-unstarted-noasync-red-results/counts.json",
+    "failures": "/tmp/naru-v010-servlet-unstarted-noasync-red-results/failures.json",
+    "tests": 3,
+    "failuresCount": 2,
+    "positiveControls": 1,
+    "errors": 0,
+    "skipped": 0,
+    "actualRed": "Both core savedNext and pendingDeferred cases reach adapter500 with core1,adapter1,upload1,inputCloses0 and abort0."
+  },
+  "assessment": [
+    "Both tests use actual RestApp/Jetty asyncUnsupported initial request, covering unstarted savedNext and unstarted pendingDeferred ownership independently. Existing directSPI unsupported500 positive remains separate.",
+    "Client observes full standardJSON500 with requestId shape, actual UTF8 Content-Length and explicit content type, then waits Servlet return and EOF/no second response. Terminal cancellation assertions execute before shutdown, producer settlement or late continuation.",
+    "Real multipart64-byte upload must spool once before cancellation; input open count1 proves the handler actually consumed the original request. Expected cancellation then closes input/upload stream once, deletes temp data, releases adapter and core tracked ownership and emits one access record.",
+    "No-resurrection negatives exercise upload/core/transport body reopening, savedNext normal/error, late Deferred resolution and transport retain/release/abort while retaining exact opens/closes/admission/log counters.",
+    "Assertions run on the test thread; wrapper callbacks only capture counters. No forced timeout/cancel or sleeps manufacture cleanup, and the exact leak state is included in the RED diagnostic. Existing independent outside-lock abort/retention tests remain applicable to the source fix.",
+    "Commit adds only focused test code; prior assertion/cancellation/security controls remain unchanged. Preserved evidence confirms two intended leak failures and one positive control with zero errors/skips."
+  ],
+  "limitations": "New source fix must preserve the adapter standard500 wire response while notifying core cancellation outside locks; focused and full regression GREEN plus independent source review remain required.",
+  "actions": "Read-only pinned diff/evidence review; no edits/builds/network. Only tmp report written. Stop at first PASS."
+}

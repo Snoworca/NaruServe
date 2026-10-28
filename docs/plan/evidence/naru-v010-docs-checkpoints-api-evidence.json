@@ -1,0 +1,205 @@
+{
+  "scope": "6APIJavadoc/SPIcheckpointclasses+authorizedNullableAccessorKotlinTest2newfunctionsONLY",
+  "base": "309cc860a1099face262970e681673671adbaaea",
+  "root_checkpoint_commit": "a4f2c73",
+  "approved_version_harvests": [
+    {
+      "original": "7020135",
+      "local": "be3db29"
+    },
+    {
+      "original": "a1dd06a",
+      "local": "4e57fd1"
+    }
+  ],
+  "requirements": [
+    "OPS-REL-008 AC-1 AC-2 AC-3",
+    "OPS-REL-009 AC-1",
+    "IR-HTTP-009 AC-8",
+    "FR-HTTP-027 AC-1 AC-2 AC-3 AC-6",
+    "FR-ROUTE-018",
+    "FR-ROUTE-019",
+    "FR-ROUTE-020",
+    "FR-ROUTE-021",
+    "FR-APP-021",
+    "FR-APP-022",
+    "FR-APP-023",
+    "FR-APP-024",
+    "CON-APP-010 AC-1 AC-2 AC-3 AC-4 AC-5",
+    "FR-KT-005 AC-4"
+  ],
+  "baseline_api": {
+    "counts": {
+      "tests": 1410,
+      "failures": 16,
+      "errors": 0,
+      "skipped": 0
+    },
+    "failures": [
+      {
+        "class": "com.snoworca.naruserve.AppDocsTest",
+        "test": "OPS_APP_005_AC2_middlewareAndRoutingDecisions",
+        "message": "java.lang.AssertionError: no line holds `RouteBuilder.use(middleware)`"
+      },
+      {
+        "class": "com.snoworca.naruserve.AppDocsTest",
+        "test": "sdsAc5_OPS_APP_005_AC6_decidedMarkersAreGone",
+        "message": "java.lang.AssertionError: middleware.md lacks `RouteBuilder.use(middleware)`"
+      },
+      {
+        "class": "com.snoworca.naruserve.AppDocsTest",
+        "test": "OPS_APP_005_AC7_decisionsCarryAReason",
+        "message": "java.lang.AssertionError: no line holds 가변 인자 오버로드 대신 `RouteBuilder.use`"
+      },
+      {
+        "class": "com.snoworca.naruserve.AppDocsTest",
+        "test": "OPS_APP_005_AC5_expressMigrationRows",
+        "message": "java.lang.AssertionError: no line holds | `app.get('/x', auth, h)`"
+      },
+      {
+        "class": "com.snoworca.naruserve.NullableAccessorDocsTest",
+        "test": "everyTableRowHasAFunction",
+        "message": "java.lang.AssertionError: expected:<[param, query, form, header, cookie, file, lastEventId, attributeAs, queries, files, service, body]> but was:<[param, paramOrNull, paramValues, query, form, header, cookie, file, lastEventId, attributeAs, queries, files, service, body]>"
+      },
+      {
+        "class": "com.snoworca.naruserve.NullableAccessorDocsTest",
+        "test": "sdsAc8_FR_KT_005_AC4_syntheticMissingRowIsNamed",
+        "message": "java.lang.AssertionError: expected:<[kotlin.md row cookies has no test function]> but was:<[kotlin.md row paramOrNull has no test function, kotlin.md row paramValues has no test function, kotlin.md row cookies has no test function]>"
+      },
+      {
+        "class": "com.snoworca.naruserve.HttpDocsTest",
+        "test": "OPS_HTTP_008_AC1_rawPathRowIsRawPathWithoutQuery",
+        "message": "java.lang.AssertionError: two lines start with | `rawPath()`"
+      },
+      {
+        "class": "com.snoworca.naruserve.HttpDocsTest",
+        "test": "OPS_HTTP_008_AC7_expressRawPathAndRawTextMapping",
+        "message": "java.lang.AssertionError: no line starts with | `req.originalUrl`"
+      },
+      {
+        "class": "com.snoworca.naruserve.HttpDocsTest",
+        "test": "OPS_HTTP_008_AC6_defaultsNamesTraceConnectPolicy",
+        "message": "java.lang.AssertionError: | `TRACE`, `CONNECT` 메서드 | 공통 HTTP는 `app.method(...)`로 명시 등록 가능. 전송 계층의 제한은 별도 | `routerPolicy`의 확장 메서드 가드는 유지되는 엄격/WS 프로필에 적용되며 공통 메서드 등록을 차단하지 않습니다 |"
+      },
+      {
+        "class": "com.snoworca.naruserve.HttpDocsTest",
+        "test": "OPS_HTTP_008_AC9_middlewareDocumentsWithHeader",
+        "message": "java.lang.AssertionError: `status()` in `HttpException.status()`는400..599이고 `code()`는 기존 표준 코드 편의 값입니다. `UnsupportedMediaTypeException`은415 하위 타입입니다. 상태를 구분하지 않고 모두500으로 바꾸지 마세요. `withHeader(name, value)`는 같은 예외에 헤더를 추가하고 `headers()`는 순서 있는 읽기 전용 목록입니다."
+      },
+      {
+        "class": "com.snoworca.naruserve.HttpDocsTest",
+        "test": "OPS_HTTP_008_AC4_routerPolicyDocumented",
+        "message": "java.lang.AssertionError: switch mergeSlashes"
+      },
+      {
+        "class": "com.snoworca.naruserve.HttpDocsTest",
+        "test": "sdsAc6_OPS_HTTP_008_AC8_expressKeepsOtherIssuesMarkers",
+        "message": "java.lang.AssertionError: no line starts with | `express.Router()`"
+      },
+      {
+        "class": "com.snoworca.naruserve.RoutingDocsTest",
+        "test": "sdsAc10_OPS_ROUTE_003_AC2_accessorsNamedWithJavaKotlinAndExpressNote",
+        "message": "java.lang.AssertionError: accessor contains(Method)"
+      },
+      {
+        "class": "com.snoworca.naruserve.RoutingDocsTest",
+        "test": "sdsAc10_OPS_ROUTE_003_AC1_routingRulesSectionPresent",
+        "message": "java.lang.AssertionError: missing heading ## 라우팅 규칙 (wave 2 결정)"
+      },
+      {
+        "class": "com.snoworca.naruserve.spi.HttpAdapterSpiTest",
+        "test": "sdsAc1_IR_HTTP_007_AC4_IR_WS_002_AC5_wave6SpiIsKeptAndOnlyWebSocketAndAttachAreAdded",
+        "message": "java.lang.AssertionError: expected:<[HttpExchange.onAbort(java.lang.Runnable)->void, HttpExchange.retainRequest()->java.lang.Runnable, HttpExchange.webSocket(com.snoworca.naruserve.spi.WebSocketSettings,com.snoworca.naruserve.spi.WebSocketEndpoint)->void, StreamDrain.abort()->void, StreamDrain.attach(java.io.OutputStream)->void]> but was:<[HttpExchange.onAbort(java.lang.Runnable)->void, HttpExchange.responseBytesWritten()->long, HttpExchange.responseStatus()->int, HttpExchange.retainRequest()->java.lang.Runnable, HttpExchange.webSocket(com.snoworca.naruserve.spi.WebSocketSettings,com.snoworca.naruserve.spi.WebSocketEndpoint)->void, StreamDrain.abort()->void, StreamDrain.attach(java.io.OutputStream)->void]>"
+      },
+      {
+        "class": "com.snoworca.naruserve.StartDocsTest",
+        "test": "OPS_DX_003_AC2_lifecycleExpressDefaultsAndKotlinNameStartWithoutChangingTheBind",
+        "message": "java.lang.AssertionError"
+      }
+    ]
+  },
+  "version009_full_regression": {
+    "jdk17": {
+      "api": {
+        "tests": 1412,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "root": {
+        "tests": 319,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      }
+    },
+    "official_java8": {
+      "api": {
+        "tests": 1412,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "root": {
+        "tests": 319,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      }
+    }
+  },
+  "version010_full_api": {
+    "jdk17": {
+      "tests": 1412,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "official_java8": {
+      "tests": 1412,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "version_boundary": "FullROOT319/0 was established at0.9beforeapprovedversionbump. HardcurrentSPIjarallowlistwasthenchangedto0.10; actual0.9jarFAILED1guard, provingnooldjarwaiver. Approved2versioncommitswereharvested; fullAPI1412passesbothVMsagainstactual0.10jar. ROOT0.10finalreleaseguardremainsPENDINGauthoritative0.10scan+results; no0.10ROOT319claim/exclusion/weakening. Rootownerwillrunfinalwholebuild.",
+  "preserved": {
+    "skip_count": 32,
+    "unchanged_skip_file_reasons": true,
+    "changed_comment_selectors_only": [
+      {
+        "file": "json.md",
+        "old": "User user = req.body(User.class);                          // 요청 → 객체",
+        "new": "User user = req.body(User.class);                          // request to object"
+      },
+      {
+        "file": "lifecycle.md",
+        "old": "ctx.registerExternal(ConnectionPool.class, sharedPool);   // 종료 때 닫지 않음",
+        "new": "ctx.registerExternal(ConnectionPool.class, sharedPool);   // Not closed on shutdown"
+      },
+      {
+        "file": "servlet.md",
+        "old": "// 앱 구성: 내장 엔진과 같은 코드",
+        "new": "// Same application configuration as with the embedded engine"
+      }
+    ],
+    "old_nullable_kotlin_functions": 12,
+    "new_total_nullable_kotlin_functions": 14,
+    "kotlin_lines_removed": 0,
+    "spi_allowed_type_function_unchanged": true,
+    "SPI_defaults": "OnlyexactresponseStatus()->int DEFAULTunknown0,responseBytesWritten()->long DEFAULTunknown-1added; oldWave3Exchangeinheritsmethods, noexceptions, alloldsignaturespreserved",
+    "other_guards": "All14rowsmusthaveactualKotlinfunctions;syntheticmissingfile/filesboundariesretained; optionalabsent+decodedscalar and scalar/wildcard immutablelist values tested; headerJava/Kotlinfences unchanged/compiled, static/root/WS/Host/rawquery/error profilechecks retained perowningguide; startuphostloopback/Androidscheduling/limitsbodyownershipandCORSretained."
+  },
+  "logs": [
+    "/tmp/naru-v010-docs-checkpoints-api-baseline.log",
+    "/tmp/naru-v010-docs-checkpoints-all-green-j17.log",
+    "/tmp/naru-v010-docs-checkpoints-all-green-j8-official.log",
+    "/tmp/naru-v010-docs-checkpoints-api010-green-j17.log",
+    "/tmp/naru-v010-docs-checkpoints-api010-green-j8-official.log"
+  ],
+  "root_evidence": "/tmp/naru-v010-docs-checkpoints-root-evidence.json",
+  "review": "AwaitindependenttestmigrationR1; noauthorapproval",
+  "edits": "Noauthoredmain/prose/build/dependency/SRS/versionchange; approvedupstream6fileversioncommitsisolated fromtest-onlycommits.",
+  "test_migration_commit": "5811c4d",
+  "root_test_migration_commit": "a4f2c73"
+}

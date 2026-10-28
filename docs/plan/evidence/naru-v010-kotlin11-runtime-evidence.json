@@ -1,0 +1,66 @@
+{
+  "jdk17": {
+    "root": {
+      "tests": 27,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "api": {
+      "tests": 13,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "kotlin": {
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "actual_java8": {
+    "root": {
+      "tests": 27,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "api": {
+      "tests": 13,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "kotlin": {
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "requirement": "OPS-REL-008 AC-3",
+  "behavior_requirements": [
+    "FR-HTTP-027 AC-3 AC-5",
+    "FR-ROUTE-020 AC-1 AC-3",
+    "FR-ROUTE-021 AC-1",
+    "FR-APP-023 AC-3 AC-7 AC-8"
+  ],
+  "base_guide_commit": "8329585d7d53a49e9b6353b7348b446a5718f4e9",
+  "red_evidence": "/tmp/naru-v010-docs-core-evidence.json:actualexistingmarker13/1FAIL for newkotlin.md#11 beforetest authored",
+  "scope": "OneNEW NaruServe-kotlin/src/test/kotlin/com/snoworca/naruserve/kotlin/CommonHttpDocsKotlinTest.kt; exactfence body unchanged, single // docs-example: kotlin.md#11, noadaptedwaiver",
+  "runtime": "RestApp.create defaultTinyHttpd3.1.1+Gson; ephemeralloopback; finiteconnect/readtimeouts; normal5secondshutdown+finallycleanup; no main/example/doc/SRS/dependency/build edits",
+  "assertions": [
+    "GET/api/users/7/profile actual200 /api:7 text/plainUTF-8 length6",
+    "CapturedsameRequestseenId7 provesparamhookexecuted",
+    "POST/work actualJSONstringhello ->202accepted text/plainUTF-8 length8",
+    "NormalshutdownTERMINATED/onStoponce then capturedRequest.processedhello provesproducer effect succeeded; no conditionalskip orresponse-onlysuccess"
+  ],
+  "limits": "Does not add a new timing-controlled deferred lease race test; existingFR-APP-023AC8 core/Tinytests provide that coverage. Executes exactpublishedsnippetsource and checks producer effect after normalshutdown.",
+  "logs": [
+    "/tmp/naru-v010-kotlin11-runtime-j17.log",
+    "/tmp/naru-v010-kotlin11-runtime-j8.log"
+  ],
+  "review": "Independent review pending; no author sufficiency approval",
+  "commit": "0054ab57432bc2536158f11cd1d58c7a1bf47206"
+}

@@ -1,0 +1,87 @@
+{
+  "review_type": "Independent bilingual lifecycle/response prose review",
+  "round": 1,
+  "decision": "PASS",
+  "reviewed_docs_commit": "0fd8c83600af75ecfb6bcf2f32f42747b31fb3a7",
+  "current_code_includes": "71b8f4e3b44d026ce16b1507a20a1b72716bbed8",
+  "reviewer": "release_dependency_audit",
+  "independent": true,
+  "skill": "/Users/beom/.codex/skills/technical-writer/SKILL.md",
+  "requirements": [
+    "OPS-REL-008 AC-1 AC-2 AC-3",
+    "FR-APP-023 AC-1 AC-3 AC-7 AC-8",
+    "FR-APP-024",
+    "IR-HTTP-009",
+    "CON-APP-010"
+  ],
+  "files": [
+    "docs/api/response.md",
+    "docs/api/lifecycle.md",
+    "docs/api/json.md",
+    "docs/api/multipart.md",
+    "docs/api/logging.md",
+    "docs/api/sse.md",
+    "docs/api/en/response.md",
+    "docs/api/en/lifecycle.md",
+    "docs/api/en/json.md",
+    "docs/api/en/multipart.md",
+    "docs/api/en/logging.md",
+    "docs/api/en/sse.md"
+  ],
+  "findings": [],
+  "source_checks": [
+    {
+      "topic": "Ordered error HTML and retained JSON boundary",
+      "evidence": "FinalHandler.finish uses escaped Throwable.printStackTrace, HTML scaffold/CSP/nosniff and aborts only unfinished committed responses; completed errors still log. Explicit json remains supported. Docs accurately distinguish common HTTP from retained standard JSON; no invented HTML requestId."
+    },
+    {
+      "topic": "Lifetime and unread body ownership",
+      "evidence": "HttpExecution acquires exchange retention before callbacks, adds returned Deferred lease before owner exits, cleans only after terminal/owner/queue/lease idle; cancellation revokes pending leases. DefaultRequest input coordinator at71b8f4e closes acquired input without reopening after cancellation. Both languages require settling only after final producer access and explain that detached/unreturned Deferred does not retain."
+    },
+    {
+      "topic": "Deferred semantics and context",
+      "evidence": "Deferred first settlement, late onSettled and no implicit next/end match source. Request reentry uses lifecycle.withRequest; active callback/drain ownership versus terminal revocation bounds accurately qualified."
+    },
+    {
+      "topic": "Live HTTP registration versus frozen configuration",
+      "evidence": "AppLifecycle HTTP registration guard and service configuration guard are separate; pages restrict service/options/WS setup while describing ordinary HTTP live appends."
+    },
+    {
+      "topic": "Streaming and late SSE",
+      "evidence": "DefaultResponse.startBody/callbackReturned permits initial deferred copy and later calling-thread copy; sse capacity refusal reopens only before handlerDone, otherwise aborts. DefaultSseClient.offer uses creator thread and !draining direct-send shortcut, bounded queue afterward. Both languages preserve first termination cause, capacity and running-drain ownership."
+    },
+    {
+      "topic": "Logging and privacy",
+      "evidence": "DefaultRequest.logFailure classifies via StandardErrors.statusOf==500 and identity-set once; access completion and resource cleanup separate. Docs preserve log exclusion rules and warn that application-supplied exception details are not scrubbed automatically."
+    },
+    {
+      "topic": "Retained security and APIs",
+      "evidence": "Multipart/FileResponse ownership, safe server-generated filenames, limits, symlink/root boundaries, immutable startup options, JsonCodec/default strict Gson signatures and Custom SPI no-op compatibility defaults remain coherent."
+    }
+  ],
+  "read_only_validation": {
+    "executable_pairs": 6,
+    "identical_blocks_per_language": 49,
+    "blocks_by_pair": {
+      "response": 11,
+      "lifecycle": 7,
+      "json": 8,
+      "multipart": 5,
+      "logging": 6,
+      "sse": 12
+    },
+    "block_language_order_and_raw_bodies_equal": true,
+    "local_link_files_and_heading_anchors": "PASS across12scopefiles",
+    "bilingual_meaning": "No material divergence found",
+    "repo_edits": false,
+    "builds_or_runtime_tests_run": false,
+    "network_activity": false
+  },
+  "supplied_evidence": "/tmp/naru-v010-docs-lifecycle-evidence.json",
+  "scope_limits": [
+    "Prose/signature/source correspondence review; root-owned integrated compilation and execution of all representative examples remains pending.",
+    "Published0.9 coordinates are explicitly separated from0.10 checkout semantics until final release versioning.",
+    "No whole-project completion, release clearance or requirement verification promotion claimed.",
+    "First prose-review PASS closes this loop; no round2/3."
+  ]
+}

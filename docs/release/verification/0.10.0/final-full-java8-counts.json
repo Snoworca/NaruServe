@@ -1,0 +1,84 @@
+{
+  "tests": 2183,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "source_commit": "daf908cdc4468d67609f8e5cceaaad0174ce9a8b",
+  "modules": {
+    "build": {
+      "tests": 319,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "NaruServe-slf4j": {
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "NaruServe-servlet": {
+      "tests": 160,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "NaruServe-kotlin": {
+      "tests": 11,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "NaruServe-api": {
+      "tests": 1412,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "NaruServe-filelog": {
+      "tests": 15,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "NaruServe-tinyhttpd": {
+      "tests": 218,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "NaruServe-gson": {
+      "tests": 31,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "NaruServe-logcat": {
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "NaruServe": {
+      "tests": 11,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "java8_runtime_tasks": [
+    "JAVA8_TEST_RUNTIME :NaruServe:test /Users/beom/Library/Java/JavaVirtualMachines/zulu8.96.0.205-ca-jdk8.0.504-macosx_aarch64/Contents/Home/bin/java",
+    "JAVA8_TEST_RUNTIME :NaruServe-filelog:test /Users/beom/Library/Java/JavaVirtualMachines/zulu8.96.0.205-ca-jdk8.0.504-macosx_aarch64/Contents/Home/bin/java",
+    "JAVA8_TEST_RUNTIME :NaruServe-api:test /Users/beom/Library/Java/JavaVirtualMachines/zulu8.96.0.205-ca-jdk8.0.504-macosx_aarch64/Contents/Home/bin/java",
+    "JAVA8_TEST_RUNTIME :NaruServe-gson:test /Users/beom/Library/Java/JavaVirtualMachines/zulu8.96.0.205-ca-jdk8.0.504-macosx_aarch64/Contents/Home/bin/java",
+    "JAVA8_TEST_RUNTIME :NaruServe-kotlin:test /Users/beom/Library/Java/JavaVirtualMachines/zulu8.96.0.205-ca-jdk8.0.504-macosx_aarch64/Contents/Home/bin/java",
+    "JAVA8_TEST_RUNTIME :NaruServe-logcat:test /Users/beom/Library/Java/JavaVirtualMachines/zulu8.96.0.205-ca-jdk8.0.504-macosx_aarch64/Contents/Home/bin/java",
+    "JAVA8_TEST_RUNTIME :NaruServe-servlet:test /Users/beom/Library/Java/JavaVirtualMachines/zulu8.96.0.205-ca-jdk8.0.504-macosx_aarch64/Contents/Home/bin/java",
+    "JAVA8_TEST_RUNTIME :NaruServe-slf4j:test /Users/beom/Library/Java/JavaVirtualMachines/zulu8.96.0.205-ca-jdk8.0.504-macosx_aarch64/Contents/Home/bin/java",
+    "JAVA8_TEST_RUNTIME :NaruServe-tinyhttpd:isolatedTest /Users/beom/Library/Java/JavaVirtualMachines/zulu8.96.0.205-ca-jdk8.0.504-macosx_aarch64/Contents/Home/bin/java",
+    "JAVA8_TEST_RUNTIME :NaruServe-tinyhttpd:test /Users/beom/Library/Java/JavaVirtualMachines/zulu8.96.0.205-ca-jdk8.0.504-macosx_aarch64/Contents/Home/bin/java",
+    "JAVA8_TEST_RUNTIME :test /Users/beom/Library/Java/JavaVirtualMachines/zulu8.96.0.205-ca-jdk8.0.504-macosx_aarch64/Contents/Home/bin/java"
+  ],
+  "log": "/tmp/naru-v010-final-full-java8.log",
+  "command": "./gradlew -PtinyHttpdFromMaven=true build --rerun-tasks --continue --console=plain -I gradle/java8-tests.gradle -Dnaruserve.java8.home=<actualZulu8>"
+}

@@ -1,0 +1,424 @@
+{
+  "bomFormat" : "CycloneDX",
+  "specVersion" : "1.6",
+  "serialNumber" : "urn:uuid:68e01dad-c337-4cca-9dc6-6fc9b629d00c",
+  "version" : 1,
+  "metadata" : {
+    "timestamp" : "2026-10-28T20:15:28Z",
+    "tools" : {
+      "components" : [
+        {
+          "type" : "application",
+          "author" : "CycloneDX",
+          "name" : "cyclonedx-gradle-plugin",
+          "version" : "3.5.1"
+        }
+      ]
+    },
+    "component" : {
+      "type" : "library",
+      "bom-ref" : "pkg:maven/com.snoworca.naruserve/NaruServe-android@0.10.0?project_path=%3ANaruServe-android",
+      "group" : "com.snoworca.naruserve",
+      "name" : "NaruServe-android",
+      "version" : "0.10.0",
+      "purl" : "pkg:maven/com.snoworca.naruserve/NaruServe-android@0.10.0?project_path=%3ANaruServe-android",
+      "modified" : false,
+      "externalReferences" : [
+        {
+          "type" : "vcs",
+          "url" : "https://github.com/Snoworca/NaruServe"
+        }
+      ]
+    }
+  },
+  "components" : [
+    {
+      "type" : "library",
+      "bom-ref" : "pkg:maven/com.google.code.gson/gson@2.14.0?type=jar",
+      "group" : "com.google.code.gson",
+      "name" : "gson",
+      "version" : "2.14.0",
+      "hashes" : [
+        {
+          "alg" : "MD5",
+          "content" : "43b20830936ec97d8df6b174e3509d9e"
+        },
+        {
+          "alg" : "SHA-1",
+          "content" : "efc0e34ede4e3204eaefb84a00e55e8c86634382"
+        },
+        {
+          "alg" : "SHA-256",
+          "content" : "2cbd119bf1961c28788310963dc80ba65f58cdeec1dd139c8bdb1240faa2c36f"
+        },
+        {
+          "alg" : "SHA-512",
+          "content" : "d040d19a47ca2df33365493f9813a1d0a40b91685f7d87ca445b98d37b4c1b801314aef87940dc8b43dd1b0b96f6d5e6e4296778bf1af8dbfb1091425b37da21"
+        },
+        {
+          "alg" : "SHA3-256",
+          "content" : "46eafa830748a2fde4dc595d2aaf94417bc2956570f8406dc000b323738f8764"
+        },
+        {
+          "alg" : "SHA3-512",
+          "content" : "ba3abdb15073b5159782f05dbc440b76139d1d129d80a5cf98b035c399a405dec39b9c7fa7e6d8e5a2676f10fda63ed8b817538a8504ef381992a91fa1832b68"
+        },
+        {
+          "alg" : "SHA-384",
+          "content" : "fb3f4db322b691e37e48df3eda60b8a216d1136619f9e354aa5e3ee7aa0b4afab985ae9510c16a6fe05ea674417b4cd6"
+        },
+        {
+          "alg" : "SHA3-384",
+          "content" : "7943b642d76b35f1e322ec7753c4de85cecc233d4cbd79582e93cf3551896c436f3bcc1166f51789470dec715f515312"
+        }
+      ],
+      "licenses" : [
+        {
+          "license" : {
+            "id" : "Apache-2.0",
+            "url" : "https://www.apache.org/licenses/LICENSE-2.0"
+          }
+        }
+      ],
+      "purl" : "pkg:maven/com.google.code.gson/gson@2.14.0?type=jar",
+      "modified" : false,
+      "properties" : [
+        {
+          "name" : "cdx:maven:package:test",
+          "value" : "false"
+        }
+      ]
+    },
+    {
+      "type" : "library",
+      "bom-ref" : "pkg:maven/com.google.errorprone/error_prone_annotations@2.48.0?type=jar",
+      "group" : "com.google.errorprone",
+      "name" : "error_prone_annotations",
+      "version" : "2.48.0",
+      "hashes" : [
+        {
+          "alg" : "MD5",
+          "content" : "5eba47749e8c9d5335cbbc5963300607"
+        },
+        {
+          "alg" : "SHA-1",
+          "content" : "bbe30942a31d1778c74cb272321267eca82dc708"
+        },
+        {
+          "alg" : "SHA-256",
+          "content" : "b49c5c958316ed67a09c699dda9aa749caf434d51d863dea599ef36a49b9c855"
+        },
+        {
+          "alg" : "SHA-512",
+          "content" : "1692b210d2b4c1d446da1d86ee787be1c3be56ee8c5f4274f20ef126b57c444a403464df7b9dfdf10bccbe7e0432247ecffe615fbc30d16be7a3282cb2556d34"
+        },
+        {
+          "alg" : "SHA3-256",
+          "content" : "b8d212a5aa490597dfc742a2d230fc089761ab28ef6498496ed3343103317fe1"
+        },
+        {
+          "alg" : "SHA3-512",
+          "content" : "dd19d297d326c72c3a0285cba46b88946e2c1700cb1d992b3d5ce182bc9aa3722206c8c74ba14768140b6148c8656b5b500517eb201ba270d46a3fb2020d04dd"
+        },
+        {
+          "alg" : "SHA-384",
+          "content" : "efea2f0806b5bb5cb92ed9f8988e76fbd643868d4d722eca33973c84630ea0f388448c4045534f6216804ac4e71ff5da"
+        },
+        {
+          "alg" : "SHA3-384",
+          "content" : "1f65eda335a3f951f586df57e9f40040c9bfc3a864a1121441de4fd990de7cc12aec90bedc5dffcf722fb3a69f7300d6"
+        }
+      ],
+      "licenses" : [
+        {
+          "license" : {
+            "id" : "Apache-2.0"
+          }
+        }
+      ],
+      "purl" : "pkg:maven/com.google.errorprone/error_prone_annotations@2.48.0?type=jar",
+      "modified" : false,
+      "properties" : [
+        {
+          "name" : "cdx:maven:package:test",
+          "value" : "false"
+        }
+      ]
+    },
+    {
+      "type" : "library",
+      "bom-ref" : "pkg:maven/com.snoworca.naruserve/NaruServe-api@0.10.0?project_path=%3ANaruServe-api",
+      "group" : "com.snoworca.naruserve",
+      "name" : "NaruServe-api",
+      "version" : "0.10.0",
+      "purl" : "pkg:maven/com.snoworca.naruserve/NaruServe-api@0.10.0?project_path=%3ANaruServe-api",
+      "modified" : false,
+      "properties" : [
+        {
+          "name" : "cdx:maven:package:test",
+          "value" : "false"
+        }
+      ]
+    },
+    {
+      "type" : "library",
+      "bom-ref" : "pkg:maven/com.snoworca.naruserve/NaruServe-gson@0.10.0?project_path=%3ANaruServe-gson",
+      "group" : "com.snoworca.naruserve",
+      "name" : "NaruServe-gson",
+      "version" : "0.10.0",
+      "purl" : "pkg:maven/com.snoworca.naruserve/NaruServe-gson@0.10.0?project_path=%3ANaruServe-gson",
+      "modified" : false,
+      "properties" : [
+        {
+          "name" : "cdx:maven:package:test",
+          "value" : "false"
+        }
+      ]
+    },
+    {
+      "type" : "library",
+      "bom-ref" : "pkg:maven/com.snoworca.naruserve/NaruServe-logcat@0.10.0?project_path=%3ANaruServe-logcat",
+      "group" : "com.snoworca.naruserve",
+      "name" : "NaruServe-logcat",
+      "version" : "0.10.0",
+      "purl" : "pkg:maven/com.snoworca.naruserve/NaruServe-logcat@0.10.0?project_path=%3ANaruServe-logcat",
+      "modified" : false,
+      "properties" : [
+        {
+          "name" : "cdx:maven:package:test",
+          "value" : "false"
+        }
+      ]
+    },
+    {
+      "type" : "library",
+      "bom-ref" : "pkg:maven/com.snoworca.naruserve/NaruServe-tinyhttpd@0.10.0?project_path=%3ANaruServe-tinyhttpd",
+      "group" : "com.snoworca.naruserve",
+      "name" : "NaruServe-tinyhttpd",
+      "version" : "0.10.0",
+      "purl" : "pkg:maven/com.snoworca.naruserve/NaruServe-tinyhttpd@0.10.0?project_path=%3ANaruServe-tinyhttpd",
+      "modified" : false,
+      "properties" : [
+        {
+          "name" : "cdx:maven:package:test",
+          "value" : "false"
+        }
+      ]
+    },
+    {
+      "type" : "library",
+      "bom-ref" : "pkg:maven/com.snoworca.naruserve/NaruServe@0.10.0?project_path=%3ANaruServe",
+      "group" : "com.snoworca.naruserve",
+      "name" : "NaruServe",
+      "version" : "0.10.0",
+      "purl" : "pkg:maven/com.snoworca.naruserve/NaruServe@0.10.0?project_path=%3ANaruServe",
+      "modified" : false,
+      "properties" : [
+        {
+          "name" : "cdx:maven:package:test",
+          "value" : "false"
+        }
+      ]
+    },
+    {
+      "type" : "library",
+      "bom-ref" : "pkg:maven/com.snoworca/tinyhttpd-core@3.1.1?type=jar",
+      "group" : "com.snoworca",
+      "name" : "tinyhttpd-core",
+      "version" : "3.1.1",
+      "description" : "A lightweight embedded HTTP server for Java and Android, based on NanoHttpd with a redesigned engine and public API.",
+      "hashes" : [
+        {
+          "alg" : "MD5",
+          "content" : "2ee0c334d611d35ec650d73d2e48aee0"
+        },
+        {
+          "alg" : "SHA-1",
+          "content" : "7fdff152b94b996c6edfe0a2f27f8a125346c3cc"
+        },
+        {
+          "alg" : "SHA-256",
+          "content" : "53cdfdf16427d65ed50257d1f5d880ab6781160d2caf551b9c6150266971351c"
+        },
+        {
+          "alg" : "SHA-512",
+          "content" : "6ec6efb4e112252eff6b7ba2ba841ac12900189b7b39422dc4ca13211f7a9087545eb184249c02671182a13aa9292dd17a00b65bfb1488a70ee58b9a0bf320f3"
+        },
+        {
+          "alg" : "SHA3-256",
+          "content" : "7ee5ae1c3048dc549189651209daf369cf78fc60b3925661f182feb2f73baa91"
+        },
+        {
+          "alg" : "SHA3-512",
+          "content" : "f97ea081eec8f902f8219e7eae35df0899f8f921febe077ec86ad5de3d87ed9fac867118b7ccfa011f3046952721f236ba6af1a560026cf10643db2d34305864"
+        },
+        {
+          "alg" : "SHA-384",
+          "content" : "9c2a1a3e0a6d7583a0fe96a2f5351c070b12d1ea06dfd76cceabf2bac37fff0fe78a1e4f0b2bf310da317fe97e86bd1f"
+        },
+        {
+          "alg" : "SHA3-384",
+          "content" : "f896dd1143c50dce00e933545bf977328496a7bdee5372b0ece9d720e50f08461c3bd6f665f1f4d93584b7aef59c6801"
+        }
+      ],
+      "licenses" : [
+        {
+          "license" : {
+            "id" : "BSD-3-Clause"
+          }
+        },
+        {
+          "license" : {
+            "name" : "NanoHttpd BSD 3-Clause License (original notice)",
+            "url" : "https://github.com/Snoworca/TinyHttpd/blob/main/docs/licenses/NanoHttpd-LICENSE.md"
+          }
+        }
+      ],
+      "purl" : "pkg:maven/com.snoworca/tinyhttpd-core@3.1.1?type=jar",
+      "modified" : false,
+      "externalReferences" : [
+        {
+          "type" : "vcs",
+          "url" : "https://github.com/Snoworca/TinyHttpd"
+        }
+      ],
+      "properties" : [
+        {
+          "name" : "cdx:maven:package:test",
+          "value" : "false"
+        }
+      ]
+    },
+    {
+      "type" : "library",
+      "bom-ref" : "pkg:maven/com.snoworca/tinyhttpd-websocket@3.1.1?type=jar",
+      "group" : "com.snoworca",
+      "name" : "tinyhttpd-websocket",
+      "version" : "3.1.1",
+      "description" : "A lightweight embedded HTTP server for Java and Android, based on NanoHttpd with a redesigned engine and public API.",
+      "hashes" : [
+        {
+          "alg" : "MD5",
+          "content" : "0d761893e9a9c5df364d94ad1b1e384f"
+        },
+        {
+          "alg" : "SHA-1",
+          "content" : "fbf3c25e15b1e52953995d784fe08d4538c1deea"
+        },
+        {
+          "alg" : "SHA-256",
+          "content" : "3634d26a4f18cada39135cb25f443d2bd27807f19955222b56d1f8309cba87b9"
+        },
+        {
+          "alg" : "SHA-512",
+          "content" : "c21f4ead6b50c817b5ca8438e35bd3731c95b26748e81b71b3834a38043ea23da87c92def463cfea62890bd8fd075dc646ff897a7faa57948a5adf91081a7472"
+        },
+        {
+          "alg" : "SHA3-256",
+          "content" : "327210f326d5c7f095fce60c64263973dcb7b61a010dc2e53fee00c2193da985"
+        },
+        {
+          "alg" : "SHA3-512",
+          "content" : "ce33d08d5b9d170d7df3fb648eac0cb76901d9d6585f9bedb03612503a53af49ef1712d2ceb017eb2f6942b7d12600667f54a59fec165311da1ed7e3c2eb7168"
+        },
+        {
+          "alg" : "SHA-384",
+          "content" : "3c1981afa3c67b176e7141bad2abda85e5a7769efcc72cdc0b031868a1d24f9c8ec75e216a3e610b4778af4ac49a3fd5"
+        },
+        {
+          "alg" : "SHA3-384",
+          "content" : "5b5995cdbbd6b177e664572813b55a8d674209e0229409c3e561bcbe5f7075404fca6f64bf46f84917849de45ae3d586"
+        }
+      ],
+      "licenses" : [
+        {
+          "license" : {
+            "id" : "BSD-3-Clause"
+          }
+        },
+        {
+          "license" : {
+            "name" : "NanoHttpd BSD 3-Clause License (original notice)",
+            "url" : "https://github.com/Snoworca/TinyHttpd/blob/main/docs/licenses/NanoHttpd-LICENSE.md"
+          }
+        }
+      ],
+      "purl" : "pkg:maven/com.snoworca/tinyhttpd-websocket@3.1.1?type=jar",
+      "modified" : false,
+      "externalReferences" : [
+        {
+          "type" : "vcs",
+          "url" : "https://github.com/Snoworca/TinyHttpd"
+        }
+      ],
+      "properties" : [
+        {
+          "name" : "cdx:maven:package:test",
+          "value" : "false"
+        }
+      ]
+    }
+  ],
+  "dependencies" : [
+    {
+      "ref" : "pkg:maven/com.google.code.gson/gson@2.14.0?type=jar",
+      "dependsOn" : [
+        "pkg:maven/com.google.errorprone/error_prone_annotations@2.48.0?type=jar"
+      ]
+    },
+    {
+      "ref" : "pkg:maven/com.google.errorprone/error_prone_annotations@2.48.0?type=jar",
+      "dependsOn" : [ ]
+    },
+    {
+      "ref" : "pkg:maven/com.snoworca.naruserve/NaruServe-android@0.10.0?project_path=%3ANaruServe-android",
+      "dependsOn" : [
+        "pkg:maven/com.snoworca.naruserve/NaruServe@0.10.0?project_path=%3ANaruServe",
+        "pkg:maven/com.snoworca.naruserve/NaruServe-logcat@0.10.0?project_path=%3ANaruServe-logcat"
+      ]
+    },
+    {
+      "ref" : "pkg:maven/com.snoworca.naruserve/NaruServe-api@0.10.0?project_path=%3ANaruServe-api",
+      "dependsOn" : [ ]
+    },
+    {
+      "ref" : "pkg:maven/com.snoworca.naruserve/NaruServe-gson@0.10.0?project_path=%3ANaruServe-gson",
+      "dependsOn" : [
+        "pkg:maven/com.google.code.gson/gson@2.14.0?type=jar",
+        "pkg:maven/com.snoworca.naruserve/NaruServe-api@0.10.0?project_path=%3ANaruServe-api"
+      ]
+    },
+    {
+      "ref" : "pkg:maven/com.snoworca.naruserve/NaruServe-logcat@0.10.0?project_path=%3ANaruServe-logcat",
+      "dependsOn" : [
+        "pkg:maven/com.snoworca.naruserve/NaruServe-api@0.10.0?project_path=%3ANaruServe-api"
+      ]
+    },
+    {
+      "ref" : "pkg:maven/com.snoworca.naruserve/NaruServe-tinyhttpd@0.10.0?project_path=%3ANaruServe-tinyhttpd",
+      "dependsOn" : [
+        "pkg:maven/com.snoworca/tinyhttpd-core@3.1.1?type=jar",
+        "pkg:maven/com.snoworca/tinyhttpd-websocket@3.1.1?type=jar",
+        "pkg:maven/com.snoworca.naruserve/NaruServe-api@0.10.0?project_path=%3ANaruServe-api"
+      ]
+    },
+    {
+      "ref" : "pkg:maven/com.snoworca.naruserve/NaruServe@0.10.0?project_path=%3ANaruServe",
+      "dependsOn" : [
+        "pkg:maven/com.snoworca.naruserve/NaruServe-gson@0.10.0?project_path=%3ANaruServe-gson",
+        "pkg:maven/com.snoworca.naruserve/NaruServe-tinyhttpd@0.10.0?project_path=%3ANaruServe-tinyhttpd",
+        "pkg:maven/com.snoworca.naruserve/NaruServe-api@0.10.0?project_path=%3ANaruServe-api"
+      ]
+    },
+    {
+      "ref" : "pkg:maven/com.snoworca/tinyhttpd-core@3.1.1?type=jar",
+      "dependsOn" : [ ]
+    },
+    {
+      "ref" : "pkg:maven/com.snoworca/tinyhttpd-websocket@3.1.1?type=jar",
+      "dependsOn" : [
+        "pkg:maven/com.snoworca/tinyhttpd-core@3.1.1?type=jar"
+      ]
+    }
+  ]
+}

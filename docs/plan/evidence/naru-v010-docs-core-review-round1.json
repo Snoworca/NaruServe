@@ -1,0 +1,48 @@
+{
+  "review_type": "Independent bilingual technical prose review",
+  "round": 1,
+  "reviewer": "release_dependency_audit",
+  "independent": true,
+  "skill": "/Users/beom/.codex/skills/technical-writer/SKILL.md",
+  "requirement": "OPS-REL-008 AC-1 AC-2 AC-3",
+  "repo_edits": false,
+  "builds_or_runtime_tests_run": false,
+  "network_activity": false,
+  "source_basis": [
+    "Current root commonHTTP including71b8f4e acquired-input terminal fix",
+    "Tiny6c539 request retention and approved cancellation fix",
+    "Servleta14fcce request retention/metadata/async ownership"
+  ],
+  "scope_limits": [
+    "Prose/signatures/behavior/translation/link review only; root-owned integrated compiler/runtime gates remain separate.",
+    "Known Kotlin#11 runtime marker addition is separately assigned and not treated as a prose failure.",
+    "No old0.9 JSON/freeze/priority checkpoint is imposed on new common HTTP. No whole-project release/completion claim."
+  ],
+  "decision": "PASS",
+  "reviewed_commit": "8329585d7d53a49e9b6353b7348b446a5718f4e9",
+  "findings": [],
+  "files": [
+    "docs/api/app.md",
+    "docs/api/routing.md",
+    "docs/api/request.md",
+    "docs/api/middleware.md",
+    "docs/api/express-migration.md",
+    "docs/api/kotlin.md",
+    "docs/api/en/app.md",
+    "docs/api/en/routing.md",
+    "docs/api/en/request.md",
+    "docs/api/en/middleware.md",
+    "docs/api/en/express-migration.md",
+    "docs/api/en/kotlin.md"
+  ],
+  "checks": [
+    "Public HttpRoutes/RestApp/Router/builder, Middleware/Next/Error/Param/AsyncRouteHandler and Deferred signatures match current code; optional Kotlin SAM/trailing lambda distinctions clear.",
+    "Raw string grammar, quoted/Unicode names, optional absence and last participating scalar/list binding, strict single decode, wildcard split-before-decode and JavaPattern source+originalflags boundary accurate.",
+    "Route identity/position and live append, orderedmiddleware/static/error, mount views/restoration, local param-hook cache/scalar equality/list identity/numeric Object.keys order and merged blocks described consistently.",
+    "PerRouteHEAD, router-local sorted OPTIONS200/plain/nocharset/nosniff, CORS204 and retainedWS204/strict namespace boundaries accurate.",
+    "DefaultHTML Throwable/stack/security headers and explicit/retainedJSON boundary, errorposition/clear/replace and pending/settlement/returnedlease cancellation rules coherent with current implementation.",
+    "KR/EN mean the same;71 executable blocks per language have same language/order/code, differences confined to equivalent translated comments. NewKotlin async example explicitly returns pendingwork and settles after finalrequestaccess.",
+    "All local link target files and heading anchors resolve with approved A/C document overlays."
+  ],
+  "loop": "Stop at first PASS; no round2/3."
+}

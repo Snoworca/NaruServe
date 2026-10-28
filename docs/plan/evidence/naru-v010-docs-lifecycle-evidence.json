@@ -1,0 +1,115 @@
+{
+  "requirement": "OPS-REL-008 AC-1 AC-2 AC-3",
+  "relatedRequirements": [
+    "FR-APP-023 AC-1 AC-3 AC-7 AC-8",
+    "FR-APP-024 AC-1 AC-3 AC-4 AC-5",
+    "IR-HTTP-009 AC-1 AC-2 AC-3 AC-5",
+    "FR-HTTP-027 AC-5",
+    "CON-APP-010"
+  ],
+  "commit": "0fd8c83600af75ecfb6bcf2f32f42747b31fb3a7",
+  "base": "db72f7b79d233e8bf8b444078f0941971ac219fb",
+  "workspace": "/Users/beom/work/git/NaruServe/.claude/worktrees/v010-docs-lifecycle",
+  "skill": "/Users/beom/.codex/skills/technical-writer/SKILL.md",
+  "scope": "ONLY12response/lifecycle/json/multipart/logging/sseKR/ENguides; no main/tests/build/dependencies/version/SRS edits",
+  "audience": "Java8/Kotlin app developers and custom adapter authors",
+  "sourceReferences": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/Deferred.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpExchange.java#retainRequest/onAbort",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/HttpExecution.java#submit/callback/cleanupIfIdle",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java#startBody/callbackReturned/sse",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/FinalHandler.java#finish",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java#logFailure",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultSseClient.java#offer",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/RequestIds.java"
+  ],
+  "changes": [
+    "Returning without response/continuation leaves commonHTTP pending; laterJSON/stream/SSE and explicitend/next",
+    "OrderedHTML error finalhandler with escapedJavaThrowable/stack,lateerror logging/abort and no secondcommit; explicitJSON remains",
+    "ReturnedpendingDeferred retainsinput/uploads beyondwirecompletion; settleafterlastaccess,noimplicitnext/end,cancelnoreopen",
+    "Services frozenafterstartup whileordinaryHTTP stackliveappend;customSPIcompatdefaultnoop andactualretention/abort duties",
+    "Streaminitialchain deferredcopy versuslatecalling-threadcopy;lateSSEcapacityfailurecanabort ratherthanfresh503body",
+    "Accesslogrid absentdefaultHTML but retainedJSONcompatible;classified500Throwableidentityonce inclhandled/late;privacy unchanged",
+    "Existinglimits/filepathsecurity/SSEfirstcause/streamownership/shutdownbounds retained;published0.9coordsnot0.10publicationclaim"
+  ],
+  "validation": {
+    "bilingualPairs": 6,
+    "identicalExecutableBlocksPerLanguage": 49,
+    "executableLanguages": [
+      "java",
+      "kotlin",
+      "javascript",
+      "groovy"
+    ],
+    "countsAndLanguageOrderUnchanged": true,
+    "rawBodiesIdenticalIncludingCommentsLiteralsNewlines": true,
+    "addedExecutableFences": 0,
+    "localLinkTargetFilesExist": true,
+    "gitDiffCheck": "PASS",
+    "buildsOrRuntimeTestsRun": false,
+    "runtimeGate": "Root-owned integrated bilingual Java8/Kotlin compile/run gate and independent prose review pending"
+  },
+  "files": [
+    {
+      "path": "docs/api/response.md",
+      "sha256": "d0b9971e798cd2a886f8774439f25790a74807b5754e8ae5ac8e5222366bee22",
+      "executableBlocks": 11
+    },
+    {
+      "path": "docs/api/en/response.md",
+      "sha256": "eeafc5148eaa3fe9c1fd310287b9c22e8ed8d888ec819347e3d838585f46876a",
+      "executableBlocks": 11
+    },
+    {
+      "path": "docs/api/lifecycle.md",
+      "sha256": "a5191b1f3cadbed90cc7628101f6b7378bafa5b869dfaee00df909845f5b6de8",
+      "executableBlocks": 7
+    },
+    {
+      "path": "docs/api/en/lifecycle.md",
+      "sha256": "0fef10b66f8f72a7122c7b53d15bfeaaca1fe14a7c335f5629d87674db9035e5",
+      "executableBlocks": 7
+    },
+    {
+      "path": "docs/api/json.md",
+      "sha256": "8b1968a5fd2e19dc7589216b95b72ed5702fff6d3f7f6c11bbcb85289434da67",
+      "executableBlocks": 8
+    },
+    {
+      "path": "docs/api/en/json.md",
+      "sha256": "0acb96612ad59cabdc00f3836ca2a7bf4a07809a68b6c6498b40b2b9a43ae962",
+      "executableBlocks": 8
+    },
+    {
+      "path": "docs/api/multipart.md",
+      "sha256": "8eb703db600bdf6764d5d98a8aeba43307226159e2cedf1bad874a3be45b8b56",
+      "executableBlocks": 5
+    },
+    {
+      "path": "docs/api/en/multipart.md",
+      "sha256": "b1992b5d805e7479a8c62ae5b0edfa74059ce2c53ef0d744c9ad015874ee7057",
+      "executableBlocks": 5
+    },
+    {
+      "path": "docs/api/logging.md",
+      "sha256": "7c4e3c5554136ff4f07872689c4c41be8d7c72d00d0c4fcb97e4ddc16c3c68fd",
+      "executableBlocks": 6
+    },
+    {
+      "path": "docs/api/en/logging.md",
+      "sha256": "75738150f976741e67891ff35c66915bedbfe3b87e1aeebc3c009bb005797537",
+      "executableBlocks": 6
+    },
+    {
+      "path": "docs/api/sse.md",
+      "sha256": "8beed18224dbf485137de62a6a01f84f3f47cdfd4f5565f5ffde6d1cc2fc02e5",
+      "executableBlocks": 12
+    },
+    {
+      "path": "docs/api/en/sse.md",
+      "sha256": "91265db9a8d4e1bfcac7e7157adfd1b34aa7c00bec0665d65b35ac1d2241bf0a",
+      "executableBlocks": 12
+    }
+  ],
+  "status": "READY_FOR_INDEPENDENT_REVIEW"
+}

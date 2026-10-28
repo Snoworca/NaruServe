@@ -1,0 +1,34 @@
+{
+  "verdict": "PASS",
+  "round": 1,
+  "reviewType": "Independent core request input ownership implementation source review",
+  "reviewedCommit": "71b8f4e",
+  "scope": "DefaultRequest owned input acquisition/publication/cleanup only; prior test reviews remain closed",
+  "requirements": [
+    "FR-APP-023 AC-3/5/8",
+    "IR-HTTP-009",
+    "FR-HTTP-019",
+    "FR-JSON-001"
+  ],
+  "findings": [],
+  "assessment": [
+    "Previously acquired adapter source is retained and closed directly, avoiding a second accessor after adapter terminal cancellation. Unread normal cleanup still acquires lazily after callbacks, preserving the old release behavior.",
+    "inputClosed/ownedInput/inputAcquiring updates share a focused inputLock. Cleanup atomically claims closure and detaches ownership; later duplicate cleanup returns without acquiring or closing again.",
+    "Adapter getter and underlying close execute outside inputLock. Cancellation during a pending acquisition marks closed without waiting; a returned late handle is closed and BodyAlreadyConsumedException is thrown before publication, with IO/runtime close failure retained as suppressed evidence.",
+    "Exclusive reader ownership remains controlled by existing BodyState.begin/sharedParse and jsonLock. The new cache neither changes body kind/decode limits/parser behavior nor permits concurrent independent readers. JSON/form cache and byte-count wrappers remain unchanged.",
+    "Already-published input can be closed concurrently with terminal cancellation according to the existing active-read contract; cleanup never reopens the body. Source inspection found no new lock inversion or user/container callback executed under inputLock.",
+    "Pinned source diff is confined to DefaultRequest; no API/dependency/adapter changes. Actual affected59 tests and API21/class-reference checks pass. Full API JDK17 check log now ends BUILD SUCCESSFUL; actualJava8 full run remains separate validation."
+  ],
+  "evidence": {
+    "affectedTests": 59,
+    "focusedChecks": "PASS",
+    "fullJdk17Log": "/tmp/naru-v010-input-cleanup-full-j17.log",
+    "fullJdk17Result": "BUILD SUCCESSFUL",
+    "redCommits": [
+      "66795cf",
+      "7d8db79"
+    ]
+  },
+  "limitations": "ActualJava8 full results and Servlet fallback regression GREEN must still be reported by the coordinator. This source PASS is not whole-project completion.",
+  "actions": "Read-only pinned source/context/log inspection; no edits/builds/network. Only tmp review artifact written."
+}

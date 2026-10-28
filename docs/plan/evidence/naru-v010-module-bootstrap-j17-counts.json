@@ -1,0 +1,65 @@
+{
+  "tests": 1864,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "source_commit": "ec64fca2b4d1627398afd8ff5b845df29bfdf99e",
+  "scope": "All module checks; ROOT :test is a separate final gate, not included in this bootstrap run.",
+  "modules": {
+    "NaruServe-slf4j": {
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "NaruServe-servlet": {
+      "tests": 160,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "NaruServe-kotlin": {
+      "tests": 11,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "NaruServe-api": {
+      "tests": 1412,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "NaruServe-filelog": {
+      "tests": 15,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "NaruServe-tinyhttpd": {
+      "tests": 218,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "NaruServe-gson": {
+      "tests": 31,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "NaruServe-logcat": {
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "NaruServe": {
+      "tests": 11,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "command": "./gradlew -PtinyHttpdFromMaven=true --continue check -x :test"
+}

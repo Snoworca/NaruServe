@@ -1,0 +1,260 @@
+{
+  "base": "db72f7b79d233e8bf8b444078f0941971ac219fb",
+  "branch": "kiwi/v010/docs-core",
+  "worktree": "/Users/beom/work/git/NaruServe/.claude/worktrees/v010-docs-core",
+  "skill": "/Users/beom/.codex/skills/technical-writer/SKILL.md",
+  "requirement": "OPS-REL-008 AC-1 AC-2 AC-3",
+  "requirements_consulted": [
+    "FR-ROUTE-018",
+    "FR-ROUTE-019",
+    "FR-ROUTE-020",
+    "FR-ROUTE-021",
+    "FR-HTTP-027",
+    "FR-HTTP-028",
+    "FR-APP-021",
+    "FR-APP-022",
+    "FR-APP-023",
+    "FR-APP-024"
+  ],
+  "mcpWorkspace": {
+    "workspaceRoot": "/Users/beom/work/git/NaruServe/.claude/worktrees/v010-docs-core",
+    "rootSource": "per-call-workspace-root"
+  },
+  "mode": "sdd",
+  "stability": "evolving",
+  "scope": [
+    {
+      "file": "docs/api/app.md",
+      "fences": {
+        "java": {
+          "before": 11,
+          "after": 11
+        },
+        "kotlin": {
+          "before": 4,
+          "after": 4
+        }
+      },
+      "existing_kotlin_fences_identical": true
+    },
+    {
+      "file": "docs/api/en/app.md",
+      "fences": {
+        "java": {
+          "before": 11,
+          "after": 11
+        },
+        "kotlin": {
+          "before": 4,
+          "after": 4
+        }
+      },
+      "existing_kotlin_fences_identical": true
+    },
+    {
+      "file": "docs/api/routing.md",
+      "fences": {
+        "java": {
+          "before": 6,
+          "after": 7
+        },
+        "kotlin": {
+          "before": 3,
+          "after": 3
+        }
+      },
+      "existing_kotlin_fences_identical": true
+    },
+    {
+      "file": "docs/api/en/routing.md",
+      "fences": {
+        "java": {
+          "before": 6,
+          "after": 7
+        },
+        "kotlin": {
+          "before": 3,
+          "after": 3
+        }
+      },
+      "existing_kotlin_fences_identical": true
+    },
+    {
+      "file": "docs/api/request.md",
+      "fences": {
+        "java": {
+          "before": 8,
+          "after": 9
+        },
+        "kotlin": {
+          "before": 2,
+          "after": 2
+        }
+      },
+      "existing_kotlin_fences_identical": true
+    },
+    {
+      "file": "docs/api/en/request.md",
+      "fences": {
+        "java": {
+          "before": 8,
+          "after": 9
+        },
+        "kotlin": {
+          "before": 2,
+          "after": 2
+        }
+      },
+      "existing_kotlin_fences_identical": true
+    },
+    {
+      "file": "docs/api/middleware.md",
+      "fences": {
+        "java": {
+          "before": 11,
+          "after": 12
+        },
+        "kotlin": {
+          "before": 3,
+          "after": 3
+        }
+      },
+      "existing_kotlin_fences_identical": true
+    },
+    {
+      "file": "docs/api/en/middleware.md",
+      "fences": {
+        "java": {
+          "before": 11,
+          "after": 12
+        },
+        "kotlin": {
+          "before": 3,
+          "after": 3
+        }
+      },
+      "existing_kotlin_fences_identical": true
+    },
+    {
+      "file": "docs/api/express-migration.md",
+      "fences": {
+        "java": {
+          "before": 5,
+          "after": 5
+        },
+        "kotlin": {
+          "before": 1,
+          "after": 1
+        }
+      },
+      "existing_kotlin_fences_identical": true
+    },
+    {
+      "file": "docs/api/en/express-migration.md",
+      "fences": {
+        "java": {
+          "before": 5,
+          "after": 5
+        },
+        "kotlin": {
+          "before": 1,
+          "after": 1
+        }
+      },
+      "existing_kotlin_fences_identical": true
+    },
+    {
+      "file": "docs/api/kotlin.md",
+      "fences": {
+        "java": {
+          "before": 0,
+          "after": 0
+        },
+        "kotlin": {
+          "before": 10,
+          "after": 11
+        }
+      },
+      "existing_kotlin_fences_identical": true
+    },
+    {
+      "file": "docs/api/en/kotlin.md",
+      "fences": {
+        "java": {
+          "before": 0,
+          "after": 0
+        },
+        "kotlin": {
+          "before": 10,
+          "after": 11
+        }
+      },
+      "existing_kotlin_fences_identical": true
+    }
+  ],
+  "new_examples": [
+    "routing.md Java#7: publicRouter/localparam/nestedpathalternatives/Pattern+originalflagshelper/routeSkip",
+    "request.md Java#9: optionalwildcard/map/list/scalar-observation",
+    "middleware.md Java#12: early202+firsttypedbodyread/pendingDeferred/rejection-positionederror",
+    "kotlin.md Kotlin#11: actualRouter/param+early202beforefirstJSONbodyread; pairedexecutableidentical"
+  ],
+  "checks": {
+    "java17_compiler": {
+      "tests": 27,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "actual_java8_compiler": {
+      "tests": 27,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "kotlin_marker_expected_pending": {
+      "tests": 13,
+      "failures": 1,
+      "errors": 0,
+      "skipped": 0
+    },
+    "links": {
+      "checked": 405,
+      "errors": 0
+    },
+    "code_parity_errors": 0
+  },
+  "known_pending": [
+    "ROOT must add actual runtime marker/test for kotlin.md#11 and aliasENpair; exactlyoneexisting marker test currentlyfails on KR+ENnewfence. No newskip/waiver introduced. Exactsnippet /tmp/naru-docs-core-kotlin11.kt.",
+    "ROOT owns final0.10version bump/publication;0.9Groovy dependencyexamples explicitlylabelpreviousrelease, newAPIrequires0.10checkout.",
+    "Independent documentation review and integratedall-lanevalidation pending."
+  ],
+  "source_evidence": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/HttpRoutes.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/Router.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/Next.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/Deferred.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/AsyncRouteHandler.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/HttpPathPattern.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RegexPathPattern.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/HttpPathSpec.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/HttpRouter.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/HttpExecution.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/HttpParameters.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRouteGroup.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/FinalHandler.java"
+  ],
+  "logs": [
+    "/tmp/naru-v010-docs-core-compile.log",
+    "/tmp/naru-v010-docs-core-java8.log"
+  ],
+  "edits": "Only12ownedMarkdownguides; no main/test/build/SRS/version/dependency edits. NoCentral0.10publicationclaim orbodyprefetch/publicstandardJSONhelperclaim.",
+  "commit": "8329585d7d53a49e9b6353b7348b446a5718f4e9",
+  "runtime_followup": {
+    "commit": "0054ab57432bc2536158f11cd1d58c7a1bf47206",
+    "marker_gap": "closed",
+    "evidence": "/tmp/naru-v010-kotlin11-runtime-evidence.json",
+    "jdk17_and_actual_java8": "each41PASS (compiler27+markers13+actualHTTP1)"
+  }
+}

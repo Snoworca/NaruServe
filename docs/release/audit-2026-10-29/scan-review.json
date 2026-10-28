@@ -1,0 +1,252 @@
+{
+  "review_type": "Independent actual0.10.0 scan/SBOM scope audit",
+  "decision": "PASS_WITH_DECLARED_SCOPE_LIMITS",
+  "reviewer": "release_dependency_audit",
+  "independent": true,
+  "requirements": [
+    "OPS-REL-009 AC-1 AC-2",
+    "FR-REL-001",
+    "FR-REL-002",
+    "FR-REL-003",
+    "FR-REL-004",
+    "CON-BUILD-018"
+  ],
+  "scan_source_commit": "400c0b9",
+  "observed_head": "84489ac54eaa063f1788f4b09ccf95afbb9f4266",
+  "production_or_scanconfig_diff_from_scan_commit": "none in inspectedbuild/settings/release/suppression/API/Tiny/Servletmainpaths",
+  "repo_or_generated_report_edits": false,
+  "build_scan_reruns": false,
+  "network_activity": false,
+  "secrets_read_or_output": false,
+  "findings": [],
+  "actual_status": {
+    "report": "Status: completed",
+    "scanner": "OWASP Dependency-Check13.0.0",
+    "child": "dependencyCheckAggregate BUILD SUCCESSFUL; Found0vulnerabilities",
+    "gate": "vulnerability scan cleared:no unexceptedHighorCriticalfinding; parentBUILD SUCCESSFUL",
+    "not_pending": true,
+    "dependencies_scanned_unique": 7,
+    "vulnerable_dependencies_unsuppressed": 0,
+    "vulnerabilities_found_unsuppressed": 0,
+    "suppressed_vulnerabilities": 1,
+    "license_result": "7shipped,3provided"
+  },
+  "freshness": {
+    "scan_execution_utc": "2026-10-28T20:15:56Z",
+    "scan_execution_local": "2026-10-29T05:15:56+09:00",
+    "nvd_api_last_checked": "2026-10-28T20:15:36Z",
+    "nvd_api_last_modified": "2026-10-28T16:57:05Z",
+    "nvd_cache_last_checked": "2026-10-28T20:15:36Z",
+    "nvd_cache_last_modified": "2026-10-28T16:57:05Z",
+    "source": "dependency-check-report.html scaninformation",
+    "important": "Generatedmarkdown Data timestamp is report/CSVmtime executiontimestamp, not NVDdatabase freshness; archive separate actualHTMLmetadata. Data was about3h19mold at scan."
+  },
+  "coverage": {
+    "external_coordinates": [
+      "com.google.code.gson:gson:2.14.0",
+      "com.google.errorprone:error_prone_annotations:2.48.0",
+      "com.snoworca:tinyhttpd-core:3.1.1",
+      "com.snoworca:tinyhttpd-websocket:3.1.1",
+      "org.jetbrains.kotlin:kotlin-stdlib:2.2.0",
+      "org.jetbrains:annotations:13.0",
+      "org.slf4j:slf4j-api:1.7.36"
+    ],
+    "report_dependency_list_equals_actual_resolved_main_runtime_union": true,
+    "scanner_HTML_actual_jar_names_match_all7_coordinates": true,
+    "sbom_count": 10,
+    "sbom_permodule_external_components_equal_each_actual_runtime_graph": true,
+    "sbom_external_union_equals_scanned7": true,
+    "all_project_internal_versions": "0.10.0",
+    "dangling_SBOM_dependency_refs": 0,
+    "android": {
+      "sbom_config": "releaseRuntimeClasspath explicitlyselected",
+      "resolved_external_coordinates": [
+        "com.google.code.gson:gson:2.14.0",
+        "com.google.errorprone:error_prone_annotations:2.48.0",
+        "com.snoworca:tinyhttpd-core:3.1.1",
+        "com.snoworca:tinyhttpd-websocket:3.1.1"
+      ],
+      "unique_unscanned_external_dependencies": 0,
+      "qualification": "DependencyCheck scanConfigurations only selects runtimeClasspath, not Android releaseRuntimeClasspath directly. Android coverage here is proven external-dependency coverage because its complete releaseexternalset equals already-scanned4subset. It is not an AndroidAAR/device/embeddedbinarybehavioranalysis."
+    },
+    "source_SBOM_identity": "CycloneDX projectnames retainNaruServe-* withproject_path qualifiers; they identify sourceprojects, not a claim ofuppercaseMavenpublicationartifactIds. Internalversions/edges are0.10.0."
+  },
+  "suppression_and_exceptions": {
+    "existing_exact_suppression": "pkg:maven/org.jetbrains.kotlin/kotlin-stdlib@2.2.0 AND CVE-2026-53914",
+    "HTML_suppressed_IDs": [
+      "CVE-2026-53914"
+    ],
+    "new_or_broadened_repo_suppressions": false,
+    "risk_acceptance_rows": 0,
+    "exceptions_file": "no exceptions",
+    "suppression_and_exception_files_unchanged_since_e6de9ab": true,
+    "meaning": "Zero unsuppressedfindings under existingauditedfalsepositive rule, notzero allrawassociations. BuildpluginKAPTscope remainsseparate/unsuppressed."
+  },
+  "declared_limits": [
+    "SonatypeOSSIndex analyzer disabled for missingcredentials; no authenticatedOSSIndex/Guidecoverage claimed.",
+    "Publishedmodule runtime dependencies only; Gradle/AGP/Kotlinbuildplugins, Java/JDK/container deployment, applicationcustomdeps and test-onlyJetty/JUnit are not partofthisruntimeclearance.",
+    "No Androidphysicaldevice/emulator/runtimeperformanceproof or wholeapplication code/security audit implied.",
+    "No network availability/auth/upload/publicationperformedbyreviewer. PUBLISHED/publicbyteverification remains laterreleasegate.",
+    "DependencyCheck13 plus existingfalsepositive rules define currentmatchinglimits; no blanket assertionthatartifacts arevulnerabilityfree."
+  ],
+  "sbom_components": [
+    {
+      "module": "NaruServe-android",
+      "component_count": 9,
+      "metadata_version": "0.10.0",
+      "all_internal_components_version010": true
+    },
+    {
+      "module": "NaruServe-api",
+      "component_count": 0,
+      "metadata_version": "0.10.0",
+      "all_internal_components_version010": true
+    },
+    {
+      "module": "NaruServe-filelog",
+      "component_count": 1,
+      "metadata_version": "0.10.0",
+      "all_internal_components_version010": true
+    },
+    {
+      "module": "NaruServe-gson",
+      "component_count": 3,
+      "metadata_version": "0.10.0",
+      "all_internal_components_version010": true
+    },
+    {
+      "module": "NaruServe-kotlin",
+      "component_count": 10,
+      "metadata_version": "0.10.0",
+      "all_internal_components_version010": true
+    },
+    {
+      "module": "NaruServe-logcat",
+      "component_count": 1,
+      "metadata_version": "0.10.0",
+      "all_internal_components_version010": true
+    },
+    {
+      "module": "NaruServe-servlet",
+      "component_count": 1,
+      "metadata_version": "0.10.0",
+      "all_internal_components_version010": true
+    },
+    {
+      "module": "NaruServe-slf4j",
+      "component_count": 2,
+      "metadata_version": "0.10.0",
+      "all_internal_components_version010": true
+    },
+    {
+      "module": "NaruServe-tinyhttpd",
+      "component_count": 3,
+      "metadata_version": "0.10.0",
+      "all_internal_components_version010": true
+    },
+    {
+      "module": "NaruServe",
+      "component_count": 7,
+      "metadata_version": "0.10.0",
+      "all_internal_components_version010": true
+    }
+  ],
+  "artifact_hashes": {
+    "build/reports/naruserve/vulnerability-scan.md": {
+      "bytes": 418,
+      "sha256": "1165d3f25e5438a803572f0c1cc2e263d5f818110fc18f300cb2d7e2e6d20721"
+    },
+    "build/reports/naruserve/dependency-graphs.txt": {
+      "bytes": 22388,
+      "sha256": "e72c7279476610817d79b582d5023c9779e70aba2c726f601febed5836377cb0"
+    },
+    "build/reports/naruserve/dependency-check.log": {
+      "bytes": 1420,
+      "sha256": "88b5497f5b8dfefacefa1655392ba04de433ff12be300a90d60a49add07f5b2e"
+    },
+    "build/reports/naruserve/dependency-check/dependency-check-report.csv": {
+      "bytes": 424,
+      "sha256": "f34619e9151c186c4c6799fd1a9cb336692dc2a09832bcb7b801bc823794101e"
+    },
+    "build/reports/naruserve/dependency-check/dependency-check-report.html": {
+      "bytes": 197055,
+      "sha256": "205034218aecdcd6d292c0f1c8cf007f05cecac7e4d5339201f76c1546405e2c"
+    },
+    "/tmp/naru-v010-release-check.log": {
+      "bytes": 1777,
+      "sha256": "2786594610befc1f4953da8b2ec9ecc9ba23dc73e73bd13626bc89e127884edb"
+    },
+    "gradle/dependency-check-suppressions.xml": {
+      "bytes": 771,
+      "sha256": "0ae1bb8f4fca07ec898a9211106b83a6b1b06502cb7c64592f87b09bbed156b3"
+    },
+    "docs/release/vulnerability-exceptions.md": {
+      "bytes": 452,
+      "sha256": "b6c12f004ad1056dda1459a508bc759cfb91e73937f590fd2cf0b7b949f78504"
+    },
+    "THIRD-PARTY-LICENSES.md": {
+      "bytes": 1689,
+      "sha256": "a7b7a4938fc2bd6619de9da864652d309f153874f8a6002dc9b48ce4fbe22fbc"
+    },
+    "build/reports/naruserve/sbom/NaruServe-android.cdx.json": {
+      "bytes": 14436,
+      "sha256": "ab16a69d29b41cdc7c402bc8c070def8b62f08e127f6890ab27754d66ee84201"
+    },
+    "build/reports/naruserve/sbom/NaruServe-api.cdx.json": {
+      "bytes": 1116,
+      "sha256": "7ed62eb07d67b449f5f5679a58f6a7167ea94aa99ba0d842e3432fbcf1602af5"
+    },
+    "build/reports/naruserve/sbom/NaruServe-filelog.cdx.json": {
+      "bytes": 1903,
+      "sha256": "588d3a7dbeb670e2bc0eb3cbbc65f7a043b264b3bb9a6ab5ec71a1727a0b95bb"
+    },
+    "build/reports/naruserve/sbom/NaruServe-gson.cdx.json": {
+      "bytes": 6018,
+      "sha256": "66a2987175fb40aa09853f5bf5e7c8f9d3c214b234f6d41d1cef3bca89398dab"
+    },
+    "build/reports/naruserve/sbom/NaruServe-kotlin.cdx.json": {
+      "bytes": 18155,
+      "sha256": "57111cc6e7ad17023493234faba221a491a987b45dc3f8ab5fb6349e4417b542"
+    },
+    "build/reports/naruserve/sbom/NaruServe-logcat.cdx.json": {
+      "bytes": 1896,
+      "sha256": "c77520488a564b7f73eb4bc70504ed137d067d3f56b44fabc486b3ae7b0f568d"
+    },
+    "build/reports/naruserve/sbom/NaruServe-servlet.cdx.json": {
+      "bytes": 1903,
+      "sha256": "741f2f454e318d67be07d9598ae9cdcd40c3ba7ed2ecf2703f5e67999d77ed8a"
+    },
+    "build/reports/naruserve/sbom/NaruServe-slf4j.cdx.json": {
+      "bytes": 3932,
+      "sha256": "d88cec5ee12548e5dd140d2cc3a7339222286d34f3a36f8cef8e8dc7dc46ed08"
+    },
+    "build/reports/naruserve/sbom/NaruServe-tinyhttpd.cdx.json": {
+      "bytes": 7031,
+      "sha256": "3a34c8ebc27ebb173f70d2eedf79f7f4c75603b253d1aebfe5d6990e97960695"
+    },
+    "build/reports/naruserve/sbom/NaruServe.cdx.json": {
+      "bytes": 12822,
+      "sha256": "e10ef692c9e20fe6311776db89b7ba38240922cefc0b869d968b63bfe664651e"
+    }
+  },
+  "needed_archival_paths": {
+    "new_version_record": "docs/release/0.10.0-vulnerability-scan.md copiedfromgeneratedreport, withseparateactualsource/datafreshness/scope evidence",
+    "raw_audit_dir": "docs/release/audit-2026-10-29-0.10.0/",
+    "preserve_in_raw_dir": [
+      "parentrelease-check.log",
+      "childdependency-check.log",
+      "dependency-check-report.csv",
+      "dependency-check-report.html (requiredforactualNVDfreshness+7jaridentities+suppressed1)",
+      "dependency-graphs.txt",
+      "all10sbom/*.cdx.json",
+      "exactexisting suppression/exception hashes",
+      "manifestwithsourcecommit/command/environment/toolversions/SHA256"
+    ],
+    "other_current_record": "docs/release/0.10.0-test-results.md records actualsuccessfulrun andlinks to thisnewaudit",
+    "preserve_historical_bytes": [
+      "docs/release/vulnerability-scan.md",
+      "docs/release/test-results.md",
+      "allprioraudit-2026-10-21/23/24andcentral-0.9.0evidence"
+    ]
+  }
+}

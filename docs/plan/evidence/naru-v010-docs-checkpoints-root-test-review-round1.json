@@ -1,0 +1,38 @@
+{
+  "verdict": "PASS",
+  "round": 1,
+  "reviewedCommit": "a4f2c73",
+  "scope": "10 root documentation/SPI checkpoint test files only; excludes separate later API checkpoint unit and publication/version proof",
+  "requirements": [
+    "OPS-REL-008 AC-1/2/3",
+    "CON-APP-010 AC-5",
+    "IR-HTTP-009 AC-8",
+    "FR-HTTP-027",
+    "CON-SVL-001"
+  ],
+  "findings": [],
+  "evidence": {
+    "manifest": "/tmp/naru-v010-docs-checkpoints-root-evidence.json",
+    "baseline": {
+      "tests": 318,
+      "failures": 28
+    },
+    "eachJdk17OfficialJava8": {
+      "tests": 319,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "assessment": [
+    "All32 named skip reasons/ordinals remain unchanged. Only three exact translated-comment selectors move to current comments; changed-comment control now explicitly proves its fixture differs, while executable mismatch/file/ordinal/compiler accounting controls remain.",
+    "OptionalSPI allowances are restricted to the two correctly typed zero-arg default metrics on HttpExchange. Actual inherited defaults0/-1 are checked; new negatives reject abstract/wrongreturn/extraarg/unrelateddefault and wrong-owner changes. Existing signature/defaultbody/literal-token guards remain intact.",
+    "HistoricalSSE assertion reads exact fixed2498edaa...:docs/api/sse.md with no caller path/commit or current fallback. Original SHA256 remains unchanged and still validated. CurrentSSE pointer and example/compiler/runtime obligations are checked separately; no historical hash is relabelled as current evidence.",
+    "Current Servlet status table requires exact pinned12case statuses plusOPTIONS* and retained strict rejection for all historical targets. This strengthens the former any400/404 guard without dropping transport/security controls.",
+    "Nullable table retains all12 rows plus two new accessors; coroutine docs distinguish native suspend absence from returnedDeferred support. Static/auth ordering, WS reservation, bodylimit/cache/file/CORS/encoding semantics remain checked at current owning guides.",
+    "Migration summary anchors move to new compact table with owning-guide assertions rather than deleting API coverage. No production/prose/version/dependency change in scoped commit and no blanket skip/fallback appears.",
+    "Full root319GREEN under JDK17 and official actualJava8 invocation is preserved; earlier incorrect Java8-buildJDK attempt is honestly recorded and replaced with canonical supported build17/test8 split."
+  ],
+  "limitations": "These are pre-version-bump0.9 root results, not final0.10 publication or post-version full-release evidence. Separate API checkpoint unit and fresh integrated/release gates remain coordinator work.",
+  "actions": "Read-only pinned diff/helper/evidence review; no edits/builds/network. Only tmp artifact written. First PASS ends scoped loop."
+}

@@ -1,0 +1,171 @@
+{
+  "primary_files": 50,
+  "checksums_recomputed": 200,
+  "signatures": 50,
+  "zip_entries": 300,
+  "bundle_bytes": 1965911,
+  "bundle_sha256": "50573182ec0efe671189969afa4c7a30ef5767b40d1c84875faf9a28cbe2a57c",
+  "source_files_exact_commit_match": 196,
+  "all_committed_main_sources_present": true,
+  "resources_exact_commit_match": 6,
+  "class_major52_count": 300,
+  "javadocs": [
+    {
+      "artifact": "naruserve",
+      "entries": 38,
+      "index_html": true
+    },
+    {
+      "artifact": "naruserve-api",
+      "entries": 181,
+      "index_html": true
+    },
+    {
+      "artifact": "naruserve-servlet",
+      "entries": 40,
+      "index_html": true
+    },
+    {
+      "artifact": "naruserve-tinyhttpd",
+      "entries": 38,
+      "index_html": true
+    },
+    {
+      "artifact": "naruserve-gson",
+      "entries": 38,
+      "index_html": true
+    },
+    {
+      "artifact": "naruserve-kotlin",
+      "entries": 2,
+      "index_html": false
+    },
+    {
+      "artifact": "naruserve-slf4j",
+      "entries": 38,
+      "index_html": true
+    },
+    {
+      "artifact": "naruserve-filelog",
+      "entries": 39,
+      "index_html": true
+    },
+    {
+      "artifact": "naruserve-logcat",
+      "entries": 38,
+      "index_html": true
+    },
+    {
+      "artifact": "naruserve-android",
+      "entries": 2,
+      "index_html": false
+    }
+  ],
+  "pom_dependencies": {
+    "naruserve": [
+      [
+        "com.snoworca.naruserve:naruserve-api",
+        "0.10.0",
+        "compile"
+      ],
+      [
+        "com.snoworca.naruserve:naruserve-gson",
+        "0.10.0",
+        "compile"
+      ],
+      [
+        "com.snoworca.naruserve:naruserve-tinyhttpd",
+        "0.10.0",
+        "runtime"
+      ]
+    ],
+    "naruserve-api": [],
+    "naruserve-servlet": [
+      [
+        "com.snoworca.naruserve:naruserve-api",
+        "0.10.0",
+        "compile"
+      ]
+    ],
+    "naruserve-tinyhttpd": [
+      [
+        "com.snoworca.naruserve:naruserve-api",
+        "0.10.0",
+        "compile"
+      ],
+      [
+        "com.snoworca:tinyhttpd-core",
+        "3.1.1",
+        "runtime"
+      ],
+      [
+        "com.snoworca:tinyhttpd-websocket",
+        "3.1.1",
+        "runtime"
+      ]
+    ],
+    "naruserve-gson": [
+      [
+        "com.snoworca.naruserve:naruserve-api",
+        "0.10.0",
+        "compile"
+      ],
+      [
+        "com.google.code.gson:gson",
+        "2.14.0",
+        "compile"
+      ]
+    ],
+    "naruserve-kotlin": [
+      [
+        "com.snoworca.naruserve:naruserve",
+        "0.10.0",
+        "compile"
+      ],
+      [
+        "org.jetbrains.kotlin:kotlin-stdlib",
+        "2.2.0",
+        "compile"
+      ]
+    ],
+    "naruserve-slf4j": [
+      [
+        "com.snoworca.naruserve:naruserve-api",
+        "0.10.0",
+        "compile"
+      ],
+      [
+        "org.slf4j:slf4j-api",
+        "1.7.36",
+        "compile"
+      ]
+    ],
+    "naruserve-filelog": [
+      [
+        "com.snoworca.naruserve:naruserve-api",
+        "0.10.0",
+        "compile"
+      ]
+    ],
+    "naruserve-logcat": [
+      [
+        "com.snoworca.naruserve:naruserve-api",
+        "0.10.0",
+        "compile"
+      ]
+    ],
+    "naruserve-android": [
+      [
+        "com.snoworca.naruserve:naruserve",
+        "0.10.0",
+        "compile"
+      ],
+      [
+        "com.snoworca.naruserve:naruserve-logcat",
+        "0.10.0",
+        "compile"
+      ]
+    ]
+  },
+  "errors": []
+}

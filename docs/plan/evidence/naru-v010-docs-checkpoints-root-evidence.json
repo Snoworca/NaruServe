@@ -1,0 +1,198 @@
+{
+  "base": "309cc860a1099face262970e681673671adbaaea",
+  "scope": "ROOTdocumentationtests+exactServletBuildTestSPIallowlistonly",
+  "requirements": [
+    "OPS-REL-008 AC-1 AC-2 AC-3",
+    "CON-APP-010 AC-1 AC-2 AC-4 AC-5",
+    "IR-HTTP-009 AC-8",
+    "FR-APP-023 AC-1 AC-6 AC-8",
+    "FR-HTTP-027 AC-1 AC-2 AC-6"
+  ],
+  "baseline": {
+    "counts": {
+      "tests": 318,
+      "failures": 28,
+      "errors": 0,
+      "skipped": 0
+    },
+    "failures": [
+      {
+        "class": "com.snoworca.naruserve.docs.WaveFiveDocsTest",
+        "test": "settledMarkerLinesAreGoneAndLaterMarkersKept",
+        "message": "java.lang.AssertionError: express-migration.md lacks | `app.set('trust proxy', ...)`"
+      },
+      {
+        "class": "com.snoworca.naruserve.docs.WaveFiveDocsTest",
+        "test": "defaultsStatesNoUnlimitedBindProxyRejectionsAndTls",
+        "message": "java.lang.AssertionError: \uc624\ub958 JSON in defaults.md: TinyHttpd\uac00 \uc694\uccad\uc744 \ud574\uc11d\ud558\uae30 \uc804\uc5d0 \uac70\ubd80\ud558\ub294 `400`(\uc694\uccad \ud615\uc2dd), `408`(\ud5e4\ub354 \uc2dc\uac04 \ucd08\uacfc), `414`(\uc694\uccad \uc904), `417`(`Expect`), `431`(\ud5e4\ub354), `501`(`Transfer-Encoding`), `505`(HTTP \ubc84\uc804)\uc640 \uc18c\ucf13 \uc6a9\ub7c9 `503`\uc740 \uc9e7\uc740 \ud3c9\ubb38\uc785\ub2c8\ub2e4. \uc544\uc9c1 \uc571 `Request`\uac00 \uc5c6\uc5b4 `onError`\u00b7\uacf5\ud1b5 HTML\u00b7\uc811\uadfc \ub85c\uadf8\ub97c \uac70\uce58\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4."
+      },
+      {
+        "class": "com.snoworca.naruserve.docs.WaveFiveDocsTest",
+        "test": "cookieDocsHaveNoMarker",
+        "message": "java.lang.AssertionError: no line holds | `cookie-parser`"
+      },
+      {
+        "class": "com.snoworca.naruserve.docs.UsabilityDocsTest",
+        "test": "migrationGuideUsesImplementedApiAndCachedBodies",
+        "message": "java.lang.AssertionError"
+      },
+      {
+        "class": "com.snoworca.naruserve.docs.WaveSevenDocsTest",
+        "test": "sdsAc4_OPS_WS_001_AC5_eachApiSectionHasExpressJavaAndKotlin",
+        "message": "java.lang.AssertionError: no line holds | `app.ws('/ws'"
+      },
+      {
+        "class": "com.snoworca.naruserve.docs.WaveSevenDocsTest",
+        "test": "wave7s13SdsAc5_OPS_SSE_001_AC3_sseMdStatesEachDecisionByItsPhrase",
+        "message": "java.lang.AssertionError: \ud578\ub4e4\ub7ec \uc2a4\ub808\ub4dc\uac00 \ubc18\ud658 \uc804\uc5d0 \ubcf4\ub0b8 \uc774\ubca4\ud2b8\ub294 \uc18c\ucf13\uc5d0 \ubc14\ub85c \uc4f0\uba70 \uc1a1\uc2e0 \ud050 \ud55c\ub3c4\ub97c \ubc1b\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4 in sse.md: # SSE (Server-Sent Events)\n\n[English](en/sse.md) | [\ubb38\uc11c \ubaa9\ub85d](README.md)\n\n\ube0c\ub77c\uc6b0\uc800 `EventSource`\ub85c \ubc1b\ub294 \uc11c\ubc84 \u2192 \ud074\ub77c\uc774\uc5b8\ud2b8 \ub2e8\ubc29\ud5a5 \uc2a4\ud2b8\ub9bc\uc785\ub2c8\ub2e4. Express\uc5d0\uc11c\ub294 \ud5e4\ub354\ub97c \uc9c1\uc811 \uc4f0\uace0 `res.write`\ub85c \ud615\uc2dd\uc744 \ub9de\ucdb0\uc57c \ud588\uc9c0\ub9cc, NaruServe\ub294 `res.sse()` \ud558\ub098\ub85c \uc2dc\uc791\ud569\ub2c8\ub2e4.\n\n```java\napp.get(\"/api/events\", (req, res) -> {\n    SseClient client = res.sse();\n    client.send(\"connected\", \"ready\");\n    client.onClose(() -> app.logger().info(\"SSE closed\"));\n});\n```\n\nExpress\ub77c\uba74:\n\n```javascript\napp.get('/api/events', (req, res) => {\n  res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache' });\n  res.write('event: connected\\ndata: ready\\n\\n');\n  req.on('close', () => console.log('SSE closed'));\n});\n```\n\n## res.sse()\n\nExpress\uc758 `res.writeHead(200, { 'Content-Type': 'text/event-stream' })` + `res.write(...)`\uc5d0 \ud574\ub2f9\ud569\ub2c8\ub2e4.\n\n- `Content-Type: text/event-stream; charset=UTF-8`, `Cache-Control: no-cache, no-transform`\uc744 \ubcf4\ub0b4\uace0 \uc2a4\ud2b8\ub9ac\ubc0d \ubaa8\ub4dc\ub85c \ubc14\uafc9\ub2c8\ub2e4.\n- **\ud578\ub4e4\ub7ec\uac00 \ubc18\ud658\ud574\ub3c4 \uc5f0\uacb0\uc740 \uc5f4\ub824 \uc788\uc2b5\ub2c8\ub2e4.** `SseClient`\ub97c \uc11c\ube44\uc2a4\uc5d0 \ub118\uaca8 \ub450\uace0 \ub2e4\ub978 \uc2a4\ub808\ub4dc\uc5d0\uc11c `send`\ud558\uba74 \ub429\ub2c8\ub2e4.\n- \uc5f0\uacb0\uc774 \ub05d\ub098\uba74 `onClose` \ub9ac\uc2a4\ub108\uac00 \uc2e4\ud589\ub429\ub2c8\ub2e4. Express\uc758 `req.on('close')`\uc640 \ub2ec\ub9ac \ud074\ub77c\uc774\uc5b8\ud2b8\uac00 \ub5a0\ub09c \uc989\uc2dc \uc2e4\ud589\ub418\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4. \ucf54\uc5b4\ub294 \uc4f0\uae30\uc5d0\uc11c\ub9cc \ub04a\uae40\uc744 \uc54c\uc544\ucc28\ub9ac\ubbc0\ub85c, \ud074\ub77c\uc774\uc5b8\ud2b8\uac00 \ub5a0\ub09c \ub4a4 \ucd5c\ub300 heartbeat \uc8fc\uae30\uc758 \ub450 \ubc30\uc5d0 1\ucd08\ub97c \ub354\ud55c \uc2dc\uac04(\uae30\ubcf8\uac12\uc774\uba74 \uc57d 31\ucd08)\uc774 \uc9c0\ub098\uc11c \uc2e4\ud589\ub420 \uc218 \uc788\uc2b5\ub2c8\ub2e4. \uad6c\ub3c5 \ud574\uc81c\ub098 \uc790\uc6d0 \ubc18\ud658\uc744 `onClose`\uc5d0\uc11c \ud558\ub418 \uc989\uc2dc \uc2e4\ud589\ub41c\ub2e4\uace0 \uac00\uc815\ud558\uc9c0 \ub9d0\uace0, \ub354 \ube68\ub9ac \uc54c\uc544\uc57c \ud558\uba74 `heartbeatInterval`\uc744 \uc904\uc774\uc138\uc694. \uc774\ubbf8 \ub05d\ub09c \ub4a4 \ub4f1\ub85d\ud55c `onClose`\ub294 \uc989\uc2dc \uc2e4\ud589\ub429\ub2c8\ub2e4. `close()`\ub098 \uc1a1\uc2e0 \ud050 \ucd08\uacfc\ub85c \ub05d\ub098\ub294 \uc911\uc774\ub77c \ub9ac\uc2a4\ub108\uac00 \uc544\uc9c1 \uc2e4\ud589\ub418\uc9c0 \uc54a\uc558\ub2e4\uba74, \uc0c8 \ub9ac\uc2a4\ub108\ub3c4 \ub05d\ub098\ub294 \uc21c\uac04 \ub2e4\ub978 \ub9ac\uc2a4\ub108\uc640 \ud568\uaed8 \uc2e4\ud589\ub429\ub2c8\ub2e4.\n- drain\uc774 \uc2dc\uc791\ub418\uae30 \uc804, \ud074\ub77c\uc774\uc5b8\ud2b8\ub97c \ub9cc\ub4e0 \uc2a4\ub808\ub4dc\uc758 send\ub294 \uc5f0\uacb0\ub41c \ucd9c\ub825\uc5d0 \uc9c1\uc811 \uc4f8 \uc218 \uc788\uc73c\uba70 \uc1a1\uc2e0 \ud050 \ud55c\ub3c4\ub97c \ubc1b\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4. \uc55e"
+      },
+      {
+        "class": "com.snoworca.naruserve.docs.DocsExamplesCompileTest",
+        "test": "wave7s13SdsAc13_OPS_HTTP_008_AC9_theWithHeaderBlockIsCompiled",
+        "message": "java.lang.AssertionError: en/servlet.md #2 (// Same application configuration as with the embedded engine) line 22: illegal start of expression\nen/servlet.md #2 (// Same application configuration as with the embedded engine) line 27: class, interface, or enum expected\nservlet.md #2 (// Same application configuration as with the embedded engine) line 22: illegal start of expression\nservlet.md #2 (// Same application configuration as with the embedded engine) line 27: class, interface, or enum expected"
+      },
+      {
+        "class": "com.snoworca.naruserve.docs.DocsExamplesCompileTest",
+        "test": "sdsAc12_OPS_HTTP_004_AC6_noStaleSkip",
+        "message": "java.lang.AssertionError: expected:<[]> but was:<[stale skip, matches no block: json.md User user = req.body(User.class);                          // \uc694\uccad \u2192 \uac1d\uccb4 (app-defined type `User`), stale skip, matches no block: lifecycle.md ctx.registerExternal(ConnectionPool.class, sharedPool);   // \uc885\ub8cc \ub54c \ub2eb\uc9c0 \uc54a\uc74c (app-defined type `ConnectionPool`), stale skip, matches no block: servlet.md // \uc571 \uad6c\uc131: \ub0b4\uc7a5 \uc5d4\uc9c4\uacfc \uac19\uc740 \ucf54\ub4dc (app-defined type `UserService` (the block is a method declaration, not statements))]>"
+      },
+      {
+        "class": "com.snoworca.naruserve.docs.DocsExamplesCompileTest",
+        "test": "sdsAc5_OPS_WS_001_AC6_waveSevenFilesKeepOnlyAppDefinedTypeReasons",
+        "message": "java.lang.AssertionError: en/servlet.md #2 (// Same application configuration as with the embedded engine) line 22: illegal start of expression\nen/servlet.md #2 (// Same application configuration as with the embedded engine) line 27: class, interface, or enum expected\nservlet.md #2 (// Same application configuration as with the embedded engine) line 22: illegal start of expression\nservlet.md #2 (// Same application configuration as with the embedded engine) line 27: class, interface, or enum expected"
+      },
+      {
+        "class": "com.snoworca.naruserve.docs.DocsExamplesCompileTest",
+        "test": "sdsAc11_OPS_HTTP_004_AC3_everyNonSkippedDocsBlockCompiles",
+        "message": "java.lang.AssertionError: docs/api java blocks do not compile:\nen/servlet.md #2 (// Same application configuration as with the embedded engine) line 22: illegal start of expression\nen/servlet.md #2 (// Same application configuration as with the embedded engine) line 27: class, interface, or enum expected\nservlet.md #2 (// Same application configuration as with the embedded engine) line 22: illegal start of expression\nservlet.md #2 (// Same application configuration as with the embedded engine) line 27: class, interface, or enum expected"
+      },
+      {
+        "class": "com.snoworca.naruserve.docs.DocsExamplesCompileTest",
+        "test": "OPS_ENGINE_002_AC6_serverSettingBlocksAreCompiled",
+        "message": "java.lang.AssertionError: en/servlet.md #2 (// Same application configuration as with the embedded engine) line 22: illegal start of expression\nen/servlet.md #2 (// Same application configuration as with the embedded engine) line 27: class, interface, or enum expected\nservlet.md #2 (// Same application configuration as with the embedded engine) line 22: illegal start of expression\nservlet.md #2 (// Same application configuration as with the embedded engine) line 27: class, interface, or enum expected"
+      },
+      {
+        "class": "com.snoworca.naruserve.docs.DocsExamplesCompileTest",
+        "test": "sdsAc11_OPS_HTTP_004_AC7_responseAndRoutingBlocksAreCompiled",
+        "message": "java.lang.AssertionError: en/servlet.md #2 (// Same application configuration as with the embedded engine) line 22: illegal start of expression\nen/servlet.md #2 (// Same application configuration as with the embedded engine) line 27: class, interface, or enum expected\nservlet.md #2 (// Same application configuration as with the embedded engine) line 22: illegal start of expression\nservlet.md #2 (// Same application configuration as with the embedded engine) line 27: class, interface, or enum expected"
+      },
+      {
+        "class": "com.snoworca.naruserve.docs.DocsExamplesCompileTest",
+        "test": "OPS_REL_008_AC3_englishNamedSkipRequiresMatchingExecutablePair",
+        "message": "java.lang.AssertionError"
+      },
+      {
+        "class": "com.snoworca.naruserve.docs.DocsExamplesCompileTest",
+        "test": "wave8s8SdsAc9_OPS_SVL_001_AC4_servletConfigurerBlocksCompile",
+        "message": "java.lang.AssertionError: en/servlet.md #2 (// Same application configuration as with the embedded engine) line 22: illegal start of expression\nen/servlet.md #2 (// Same application configuration as with the embedded engine) line 27: class, interface, or enum expected\nservlet.md #2 (// Same application configuration as with the embedded engine) line 22: illegal start of expression\nservlet.md #2 (// Same application configuration as with the embedded engine) line 27: class, interface, or enum expected"
+      },
+      {
+        "class": "com.snoworca.naruserve.docs.DocsExamplesCompileTest",
+        "test": "sdsAc6_OPS_COOKIE_001_AC5_cookieBlocksCompileWithoutSkips",
+        "message": "java.lang.AssertionError: en/servlet.md #2 (// Same application configuration as with the embedded engine) line 22: illegal start of expression\nen/servlet.md #2 (// Same application configuration as with the embedded engine) line 27: class, interface, or enum expected\nservlet.md #2 (// Same application configuration as with the embedded engine) line 22: illegal start of expression\nservlet.md #2 (// Same application configuration as with the embedded engine) line 27: class, interface, or enum expected"
+      },
+      {
+        "class": "com.snoworca.naruserve.docs.DocsExamplesCompileTest",
+        "test": "wave7s13SdsAc7_OPS_SSE_001_AC4_sseSkipsKeepOnlyAppDefinedReasonsAndTheRestCompile",
+        "message": "java.lang.AssertionError: en/servlet.md #2 (// Same application configuration as with the embedded engine) line 22: illegal start of expression\nen/servlet.md #2 (// Same application configuration as with the embedded engine) line 27: class, interface, or enum expected\nservlet.md #2 (// Same application configuration as with the embedded engine) line 22: illegal start of expression\nservlet.md #2 (// Same application configuration as with the embedded engine) line 27: class, interface, or enum expected"
+      },
+      {
+        "class": "com.snoworca.naruserve.docs.DocsExamplesCompileTest",
+        "test": "OPS_REL_008_AC3_bothLanguageJavaCorporaAreDiscoveredAndCompiled",
+        "message": "java.lang.AssertionError: en/servlet.md #2 (// Same application configuration as with the embedded engine) line 22: illegal start of expression\nen/servlet.md #2 (// Same application configuration as with the embedded engine) line 27: class, interface, or enum expected\nservlet.md #2 (// Same application configuration as with the embedded engine) line 22: illegal start of expression\nservlet.md #2 (// Same application configuration as with the embedded engine) line 27: class, interface, or enum expected"
+      },
+      {
+        "class": "com.snoworca.naruserve.docs.DocsExamplesCompileTest",
+        "test": "sdsAc3_OPS_MULTIPART_001_AC5_waveSixBlocksAreCompiled",
+        "message": "java.lang.AssertionError: en/servlet.md #2 (// Same application configuration as with the embedded engine) line 22: illegal start of expression\nen/servlet.md #2 (// Same application configuration as with the embedded engine) line 27: class, interface, or enum expected\nservlet.md #2 (// Same application configuration as with the embedded engine) line 22: illegal start of expression\nservlet.md #2 (// Same application configuration as with the embedded engine) line 27: class, interface, or enum expected"
+      },
+      {
+        "class": "com.snoworca.naruserve.docs.ServletDocsTest",
+        "test": "websocketNotSupportedSentence",
+        "message": "java.lang.AssertionError"
+      },
+      {
+        "class": "com.snoworca.naruserve.docs.ServletDocsTest",
+        "test": "sdsAc5_FR_SVL_002_AC5_observedStatuses",
+        "message": "java.lang.AssertionError: GET /./a -> 200"
+      },
+      {
+        "class": "com.snoworca.naruserve.docs.ServletDocsTest",
+        "test": "sectionKeywords",
+        "message": "java.lang.AssertionError: Servlet \uc5b4\ub311\ud130\ub294 v1\uc5d0\uc11c WebSocket\uc744 \uc9c0\uc6d0\ud558\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4. `app.ws` \ub77c\uc6b0\ud2b8\ub294 \uc774 \uc5b4\ub311\ud130\uc5d0\uc11c `501`\uc744 \ub2f5\ud558\uba70, WebSocket\uc740 \ub0b4\uc7a5 \uc5d4\uc9c4(`app.listen`)\uc774 \uc81c\uacf5\ud569\ub2c8\ub2e4 in servlet.md: # Servlet \ubaa8\ub4c8 (`NaruServe-servlet`)\n\n[\ud55c\uad6d\uc5b4](servlet.md) | [English](en/servlet.md)\n\n> **\ubc84\uc804 \ubc94\uc704:** \uc774 \ubb38\uc11c\ub294 0.10.0 \ub300\uc0c1 \uccb4\ud06c\uc544\uc6c3\uc758 \ub3d9\uc791\uc744 \uc124\uba85\ud558\uba70 Maven \ubc30\ud3ec \uc644\ub8cc\ub97c \ub73b\ud558\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4. \uc758\uc874\uc131 \uc608\uc81c\ub294 \ub9b4\ub9ac\uc2a4 \ubc84\uc804 \ubcc0\uacbd \uc804\uc758 \ud504\ub85c\uc81d\ud2b8 \ubc84\uc804 `0.9.0`\uc744 \uc720\uc9c0\ud569\ub2c8\ub2e4. \uc544\ub798 \ub3d9\uc791\uc744 \ud655\uc778\ud558\ub824\uba74 \ub300\uc0c1 \uccb4\ud06c\uc544\uc6c3\uc758 \ube4c\ub4dc\ub97c \uc0ac\uc6a9\ud558\uc138\uc694.\n\n`NaruServe-servlet`\uc740 NaruServe \uc571\uc744 Tomcat, Jetty \uac19\uc740 Servlet \ucee8\ud14c\uc774\ub108(WAS) \uc704\uc5d0\uc11c \uc2e4\ud589\ud558\ub294 \uc5b4\ub311\ud130\uc785\ub2c8\ub2e4. \ub0b4\uc7a5 HTTP \uc5d4\uc9c4 \ub300\uc2e0 \ucee8\ud14c\uc774\ub108\uac00 \uc5f0\uacb0\uc744 \ubc1b\uace0, \ub77c\uc6b0\ud2b8\u00b7\ubbf8\ub4e4\uc6e8\uc5b4\u00b7`req`/`res` \ucf54\ub4dc\ub294 **\uadf8\ub300\ub85c** \uc501\ub2c8\ub2e4.\n\n> \uc774 \ubaa8\ub4c8\uc740 \uc120\ud0dd \uc5b4\ub311\ud130\uc785\ub2c8\ub2e4. Jetty 9.4\uc5d0\uc11c\ub9cc \ud655\uc778\ud588\uace0 \ub2e4\ub978 \ucee8\ud14c\uc774\ub108\ub294 \ud655\uc778\ud558\uc9c0 \uc54a\uc558\uc2b5\ub2c8\ub2e4.\n\n## \uc694\uad6c\uc0ac\ud56d\n\n- Servlet **3.1 \uc774\uc0c1** (`javax.servlet`)\n- JVM \uc804\uc6a9. Android\uc5d0\uc11c\ub294 \uc4f0\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4.\n- v1\uc5d0\ub294 `jakarta.servlet` \ubaa8\ub4c8\uc774 \uc5c6\uc73c\uba70, Servlet 5 \uc774\uc0c1(`jakarta.servlet`) \ucee8\ud14c\uc774\ub108\ub294 \uc9c0\uc6d0\ud558\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4. `jakarta.servlet`\uc6a9 \ubaa8\ub4c8\uc740 v1 \uc774\ud6c4 \ud56d\ubaa9\uc785\ub2c8\ub2e4.\n\n```groovy\n// Dependencies for a web application running in a Servlet container.\nimplementation 'com.snoworca.naruserve:naruserve-servlet:0.9.0'\n// JSON codec; otherwise configure Builder.jsonCodec(...) yourself.\nimplementation 'com.snoworca.naruserve:naruserve-gson:0.9.0'\n// The container provides the Servlet API.\ncompileOnly 'javax.servlet:javax.servlet-api:3.1.0'\n```\n\n## \ub4f1\ub85d\n\n\uc544\ub798 \ucf54\ub4dc\ub294 \uc6f9 \uc560\ud50c\ub9ac\ucf00\uc774\uc158 \uc124\uc815 \uc608\uc81c\uc785\ub2c8\ub2e4. Java \ucf54\ub4dc\uc758 `RestApp`\uacfc `Collections`\ub294 \uac01\uac01 `com.snoworca.naruserve.RestApp`, `java.util.Collections`\ub97c import\ud569\ub2c8\ub2e4.\n\n\uc6f9 \uc560\ud50c\ub9ac\ucf00\uc774\uc158\uc5d0 `ServletConfigurer`\ub97c \uad6c\ud604\ud55c \ud074\ub798\uc2a4 \ud558\ub098\ub97c \ub450\uace0, \ucee8\ud14d\uc2a4\ud2b8 init-parameter `naruserve.configurer`\uc5d0 \uadf8 \ud074\ub798\uc2a4 \uc774\ub984\uc744 \uc801\uc2b5\ub2c8\ub2e4. \ub098\uba38\uc9c0\ub294 `NaruServeInitializer`\uac00 \ud569\ub2c8\ub2e4.\n\n- `NaruServeInitializer`\ub294 jar\uc758 `META-INF/services/ja"
+      },
+      {
+        "class": "com.snoworca.naruserve.docs.ServletDocsTest",
+        "test": "sseDocOnlyGainsPointer",
+        "message": "org.junit.ComparisonFailure: sse.md changed beyond the pointer line expected:<[6941670375a472139ae110a283f2030baaa20606ee05a44b06dd5586cc6d9921]> but was:<[5465364c4b0ae4c124eda704bcc32a55fc311ea756707b397bfce1c9f57afac6]>"
+      },
+      {
+        "class": "com.snoworca.naruserve.docs.WaveSixDocsTest",
+        "test": "staticDecisions",
+        "message": "java.lang.AssertionError: no line holds **\uba85\uc2dc \ub77c\uc6b0\ud2b8\uac00 \uba3c\uc800**"
+      },
+      {
+        "class": "com.snoworca.naruserve.docs.WaveSixDocsTest",
+        "test": "expressMigrationRows",
+        "message": "java.lang.AssertionError: no line holds | `express.urlencoded({ limit })`"
+      },
+      {
+        "class": "com.snoworca.naruserve.docs.WaveEightKotlinDocsTest",
+        "test": "sdsAc13_OPS_KT_001_AC_4_the_coroutine_section_states_the_post_v1_item",
+        "message": "java.lang.AssertionError: Coroutine \uc9c0\uc6d0\uc740 v1 \uc774\ud6c4 \ud56d\ubaa9\uc785\ub2c8\ub2e4. \ub17c\ube14\ub85c\ud0b9 coroutine \uc5b4\ub311\ud130\ub294 \ubcc4\ub3c4 \uc124\uacc4\uac00 \ud544\uc694\ud558\uace0 v1 \ud578\ub4e4\ub7ec\ub294 \ub3d9\uae30\uc774\uae30 \ub54c\ubb38\uc785\ub2c8\ub2e4. in kotlin.md Coroutine: ## Coroutine\n\n\ub124\uc774\ud2f0\ube0c `suspend` \ud578\ub4e4\ub7ec\ub098 \ud544\uc218 coroutine \uc758\uc874\uc131\uc740 \uc5c6\uc2b5\ub2c8\ub2e4. 0.10.0 \uc77c\ubc18 HTTP\ub294 \ub2a6\uc740 Next \ucf5c\ubc31\uacfc Deferred\ub97c \ubc18\ud658\ud558\ub294 \uc138 \uc778\uc790 AsyncRouteHandler\ub97c \uc9c0\uc6d0\ud569\ub2c8\ub2e4. \uc571\uc774 \uad00\ub9ac\ud558\ub294 coroutine/executor\uc5d0 \uc5f0\uacb0\ud558\ub824\uba74 \uc644\ub8cc\u00b7\ucde8\uc18c\u00b7\ubc18\ud658\ud55c Deferred lease\ub97c \uc694\uccad \uc218\uba85\uc5d0 \ub9de\ucdb0 \uc5f0\uacb0\ud558\uc138\uc694. `runBlocking`\uc740 \ud638\ucd9c \uc2a4\ub808\ub4dc\ub97c \uc810\uc720\ud558\uba70 \ud504\ub808\uc784\uc6cc\ud06c\uc758 \ube44\ub3d9\uae30 \uc5b4\ub311\ud130\uac00 \uc544\ub2d9\ub2c8\ub2e4.\n\n"
+      },
+      {
+        "class": "com.snoworca.naruserve.docs.WaveEightKotlinDocsTest",
+        "test": "sdsAc14_OPS_KT_001_AC_5_the_nullable_accessor_table_keeps_its_twelve_rows",
+        "message": "java.lang.AssertionError: expected:<[`req.param(\"id\")` `String`, `req.query(\"page\")` `String?`, `req.form(name)` `String?`, `req.header(name)` `String?`, `req.cookie(name)` `Cookie?`, `req.file(name)` `UploadFile?`, `req.lastEventId()` `String?`, `req.attributeAs(key, type)` `T?`, `req.queries(name)` `List<String>`, `req.files(name)` `List<UploadFile>`, `req.service(type)` `T`, `req.body(type)` `T?`]> but was:<[`req.param(\"id\")` `String`, `req.paramOrNull(\"id\")` `String?`, `req.paramValues(\"parts\")` `List<String>`, `req.query(\"page\")` `String?`, `req.form(name)` `String?`, `req.header(name)` `String?`, `req.cookie(name)` `Cookie?`, `req.file(name)` `UploadFile?`, `req.lastEventId()` `String?`, `req.attributeAs(key, type)` `T?`, `req.queries(name)` `List<String>`, `req.files(name)` `List<UploadFile>`, `req.service(type)` `T`, `req.body(type)` `T?`]>"
+      },
+      {
+        "class": "com.snoworca.naruserve.build.ServletBuildTest",
+        "test": "originalSpiDeclarationsAndIsolationSurviveOptionalLifetimeHooks",
+        "message": "org.junit.ComparisonFailure: all original SPI declarations/signatures retained: NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpExchange.java expected:<...OException; default []void webSocket(WebSo...> but was:<...OException; default [int responseStatus() { return 0; } default long responseBytesWritten() { return -1; } default ]void webSocket(WebSo...>"
+      },
+      {
+        "class": "com.snoworca.naruserve.docs.ApiMarkersDocsTest",
+        "test": "sdsAc3_OPS_REL_002_AC3_responseRedirectLineAndExpressExclusions",
+        "message": "java.lang.AssertionError: app.group in express-migration.md: # Express\uc5d0\uc11c \uc62e\uae30\uae30\n\n[English](en/express-migration.md) | [\ubb38\uc11c \ubaa9\ub85d](README.md)\n\n**0.10.0 \uccb4\ud06c\uc544\uc6c3\uc758 \uc77c\ubc18 HTTP \ub77c\uc6b0\ud305 \ud504\ub85c\ud544**\uc740 Express5\uc758 \ud754\ud55c \ubb38\uc790\uc5f4 \uacbd\ub85c\u00b7\ub4f1\ub85d \uc21c\uc11c\u00b7Router\u00b7param\u00b7next\u00b7\uc624\ub958 \ud750\ub984\uc744 Java API\ub85c \uc81c\uacf5\ud569\ub2c8\ub2e4. Express \uc804\uccb4, Node \ub7f0\ud0c0\uc784, \ubaa8\ub4e0 \ubbf8\ub4e4\uc6e8\uc5b4, JavaScript \uc815\uaddc\uc2dd \ud638\ud658\uc744 \uc8fc\uc7a5\ud558\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4. NaruServe\uc758 \ud0c0\uc785 \uc9c0\uc815 \ubcf8\ubb38\u00b7text/plain \ubb38\uc790\uc5f4 \uc751\ub2f5\u00b7\uae30\uc874 WS/SSE/\ud30c\uc77c\u00b7\ubcf4\uc548 \ud655\uc7a5\uc740 \uc720\uc9c0\ud569\ub2c8\ub2e4. \ud604\uc7ac \uc544\ud2f0\ud329\ud2b8 \uc0ac\uc6a9\ubc95\uc740 [\uc124\uce58 \uc548\ub0b4](README.md)\ub97c \ubcf4\uc138\uc694.\n\n## API \ub300\uc751\n\n### \uc571\uacfc \ub77c\uc6b0\ud305\n\n| Express | NaruServe | \uacbd\uacc4 |\n|---|---|---|\n| `express()` | `RestApp.create()` | \uae30\ubcf8 TinyHttpd 3.1.1 RAW + Gson 2.14.0 + \ucf58\uc194 \ub85c\uac70 |\n| `app.listen(port, callback)` | `app.listen(port)` / `RestApp.start(port, routes)` | \ubc14\uc778\ub529 \uc644\ub8cc \ud6c4 \ubc18\ud658, \uc2e4\ud328\ub294 \uc608\uc678. \uae30\ubcf8 127.0.0.1 |\n| `server.close()` | `app.shutdown(timeout, unit)` | \ud65c\uc131 \uc791\uc5c5\u00b7\ub9ac\uc18c\uc2a4 \uc815\ub9ac\uc640 deadline |\n| `app.get/post/...` | \uac19\uc740 \uc774\ub984\uc758 \ub450 \uc778\uc790 handler \ub610\ub294 \uc138 \uc778\uc790 Middleware \ucf5c\ubc31 | \uac00\ubcc0 \ucf5c\ubc31\u00b7Kotlin \uace0\uc815 \uc778\uc790 \uc624\ubc84\ub85c\ub4dc |\n| `app.route(path)` | `app.route(path)` | \ud638\ucd9c \uc2dc\uc810\uc5d0 \ud558\ub098\uc758 Route \uc2dd\ubcc4\uc790\u00b7\uc704\uce58 \uc0dd\uc131 |\n| `express.Router(options)` | `com.snoworca.naruserve.Router.create(mergeParams, caseSensitive, strict)` | \uae30\ubcf8 false,false,false |\n| `app.use('/api', router)` | `app.use(\"/api\", router)` | \uc811\ub450\uc0ac \uc81c\uac70\u00b7baseUrl \ub204\uc801\u00b7\ubcf5\uc6d0, \uac19\uc740 Router \uc7ac\ub9c8\uc6b4\ud2b8 |\n| `app.param(name, callback)` | `app.param(name, ParamHandler)` / `router.param` | \uc6d0\ub798 \ub514\ucf54\ub529 \ucea1\ucc98\ub97c List<String>\uc73c\ub85c \ubc1b\uc74c |\n| `app.all`/\ud655\uc7a5 \uba54\uc11c\ub4dc \ub4f1\ub85d | `app.method(\"COPY\", path, callbacks...)` \ub4f1 \ud1a0\ud070\ubcc4 \ub4f1\ub85d | `Method.any()`\ub294 \uae30\uc8747\uac1c \uc9d1\ud569, \ubaa8\ub4e0 \uba54\uc11c\ub4dc\uac00 \uc544\ub2d8 |\n| \uacbd\ub85c \ubc30\uc5f4 | \ubb38\uc790\uc5f4\u00b7Pattern\u00b7RegexPathPattern\uc758 \uc911\ucca9 Object[]/List | \uc6d0\uc18c \uc804\uccb4 \uac80\uc99d \ud6c4 \uccab \ub9e4\uce6d \uc120\ud0dd |\n| Express5 `/:id`, `/*parts`, `{/:id}` | \uac19\uc740 \ubb38\uc790\uc5f4 \ud615"
+      }
+    ]
+  },
+  "jdk17": {
+    "tests": 319,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "official_java8": {
+    "tests": 319,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "historical_SSE": {
+    "fixed_pin": "2498edaa643593474f830259b8cf3c31a9590702",
+    "preserved_wave7_sha256": "6941670375a472139ae110a283f2030baaa20606ee05a44b06dd5586cc6d9921",
+    "getter": "ReleaseEvidenceSnapshots.historicalSse():fixedpath/pin,noarbitraryinput,currentfallbacknone"
+  },
+  "preservation": "32namedskipreasons/ordinalsunchanged;only3exacttranslatedcommentselectorsupdated;translationnegativefixturechangescomment;all13originalSPIfile/bodiespreservedandonly2ownedtypeddefaultobservationsadded;actuallegacydefaults0/-1+8signature/3wrongownernegatives;alloldliteral/token/mandatory/extra guardskept;Servletmatrixexactstatusesplusall12legacystrictpathrejections;nullableall12oldrows+2newrows;existinglimits/headers/WS/CORS/compile/version assertionskept",
+  "java8_attempts": [
+    {
+      "log": "/tmp/naru-v010-docs-checkpoints-green-j8.log",
+      "outcome": "25BuildChecksTestinfraFAIL:custominitonlysettestexecutable;unsupportedJava8selectedforAGPnestedbuilds",
+      "xml": "/tmp/naru-v010-docs-checkpoints-j8-wrong-build-jdk-xml"
+    },
+    {
+      "log": "/tmp/naru-v010-docs-checkpoints-green-j8-build17.log",
+      "outcome": "319PASS:custominitsetexistingsupportednaruserve.buildJavaHome17withtestexe8",
+      "xml": "/tmp/naru-v010-docs-checkpoints-j8-custom-correct-split-xml"
+    },
+    {
+      "log": "/tmp/naru-v010-docs-checkpoints-green-j8-official.log",
+      "outcome": "canonical319PASS:officialgradle/java8-tests.gradle handlesruntime/buildsplit;JAVA8_TEST_RUNTIMEprinted",
+      "xml": "/tmp/naru-v010-docs-checkpoints-j8-official-xml"
+    }
+  ],
+  "official_command": "JAVA_HOME=/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home ANDROID_HOME=/opt/homebrew/share/android-commandlinetools ./gradlew -PtinyHttpdFromMaven=true -I gradle/java8-tests.gradle -Dnaruserve.java8.home=/Users/beom/Library/Java/JavaVirtualMachines/zulu8.96.0.205-ca-jdk8.0.504-macosx_aarch64/Contents/Home :test",
+  "review": "pendingindependentreview;API6additionalcheckpointunitnext;noauthorselfapproval"
+}

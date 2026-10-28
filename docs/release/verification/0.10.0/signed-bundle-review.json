@@ -1,0 +1,246 @@
+{
+  "review_type": "Independent final signed-bundle PRE-UPLOAD audit",
+  "decision": "PASS_PREUPLOAD_ARTIFACT_GATE",
+  "reviewer": "release_dependency_audit",
+  "independent": true,
+  "requirement": "OPS-REL-009 AC-3",
+  "operation": "/var/folders/gh/cnsd22nd1811wg27_ws2gc800000gn/T/naru-v010-release-f44rsscc",
+  "artifact_source_commit": "daf908cdc4468d67609f8e5cceaaad0174ce9a8b",
+  "observed_head": "daf908cdc4468d67609f8e5cceaaad0174ce9a8b",
+  "publication_status": "SIGNED_VERIFIED_NOT_UPLOADED",
+  "findings": [],
+  "concrete_identity": {
+    "primary_count": 50,
+    "signature_count": 50,
+    "checksum_count": 200,
+    "zip_entries": 300,
+    "bundle_bytes": 1965911,
+    "bundle_sha256": "50573182ec0efe671189969afa4c7a30ef5767b40d1c84875faf9a28cbe2a57c",
+    "unsigned_manifest_sha256": "6eed7d003323e103ba2890cdf1059f93a9c81b39d490715d1e104233f83f5380",
+    "signed_manifest_sha256": "3afeb9ed6eebe1c38d901b1b0159021ef3ab4e1c5fcdbf651932438ac7760677",
+    "public_certificate_sha256": "76bc6572a23c470d106b6f5e4041ec271fe213ddf1a5334420d4d755a881f12f",
+    "public_fingerprint": "DD2AFA2B544F2249C97984DBF5B75792328DC16B"
+  },
+  "independent_checks": [
+    "All300signedrepositoryfiles match exact signedmanifest bytes/SHA256 and closedworldexpected50primaries+50asc+200checksumset; no symlinks/extra/unversionedmetadata/testfixtures/othercoordinates.",
+    "All50primaries byte-identical to frozen unsignedrepository and source-manifesthashes; all200MD5/SHA1/SHA256/SHA512 checksum contents independently recomputed.",
+    "Bundle size/SHA256 recomputed; all300ZIPnames unique, relative, no parent traversal/backslashes/symlinks and exactrepositorypathset; everyZIPentry byte-identical to signedrepository.",
+    "Existing operational VerifySignedArtifacts run independently with PUBLICcertificate only and explicit50signedrepositoryprimarypaths. Verified50detachedSHA256signatures; firstprimarybitflip rejected. No signing/privatekey/password/export mode used.",
+    "PublicOpenPGPv4certificate packet fingerprint independently recomputed; onepublickeypacket, noexpiration subpacket orrevocation-signaturepacket in suppliedcertificate. This is localcertificate observation, notonlinekeyserverrevocationlookup.",
+    "All10POM group/artifact/version and project/name/description/URL/BSD3/developer/SCM metadata present; lowercaseartifactids0.10.0, correctJAR/AAR artifacts.",
+    "AllPOMinternaledges0.10.0 and compile/runtime types valid; externaldirectpins/scopes exactlyTinycore+websocket3.1.1runtime,Gson2.14.0compile,Kotlinstdlib2.2.0compile,SLF4J1.7.36compile. Servlet/providedJSpecify APIs notleaked asruntime dependencies.",
+    "All10modulemetadata components/variantdependencyversions checked; everyvariantfile size/hash matches correspondingstagedprimary.",
+    "All196committedJava/Kotlin main sourcefiles present exactly once in corresponding sourceJARs and byte-identical to gitshow daf908c; all6committedmainresources byte-identical in runtimeJARs, including AppFactory/Servletinitializer services, consumerProGuard and bothHTTPMITlicense notices. No untrackedworkspace material included.",
+    "All300projectclassfiles inspected, major52; mainJAR/AAR/nestedJARentries freeof nativeextensions/jni/META-INFnative.",
+    "All10sourcesandjavadoc artifacts present. EightJava-containingmodules have javadocindex.html. Kotlin/Android javadocJARs are manifest-only under existing noDokka/noJavaAndroid configuration; AndroidsourcesJAR manifest-only because modulehasnoJava/Kotlinsource. No falseclaimofrenderedKotlinAPIjavadoc."
+  ],
+  "structural_details": {
+    "primary_files": 50,
+    "checksums_recomputed": 200,
+    "signatures": 50,
+    "zip_entries": 300,
+    "bundle_bytes": 1965911,
+    "bundle_sha256": "50573182ec0efe671189969afa4c7a30ef5767b40d1c84875faf9a28cbe2a57c",
+    "source_files_exact_commit_match": 196,
+    "all_committed_main_sources_present": true,
+    "resources_exact_commit_match": 6,
+    "class_major52_count": 300,
+    "javadocs": [
+      {
+        "artifact": "naruserve",
+        "entries": 38,
+        "index_html": true
+      },
+      {
+        "artifact": "naruserve-api",
+        "entries": 181,
+        "index_html": true
+      },
+      {
+        "artifact": "naruserve-servlet",
+        "entries": 40,
+        "index_html": true
+      },
+      {
+        "artifact": "naruserve-tinyhttpd",
+        "entries": 38,
+        "index_html": true
+      },
+      {
+        "artifact": "naruserve-gson",
+        "entries": 38,
+        "index_html": true
+      },
+      {
+        "artifact": "naruserve-kotlin",
+        "entries": 2,
+        "index_html": false
+      },
+      {
+        "artifact": "naruserve-slf4j",
+        "entries": 38,
+        "index_html": true
+      },
+      {
+        "artifact": "naruserve-filelog",
+        "entries": 39,
+        "index_html": true
+      },
+      {
+        "artifact": "naruserve-logcat",
+        "entries": 38,
+        "index_html": true
+      },
+      {
+        "artifact": "naruserve-android",
+        "entries": 2,
+        "index_html": false
+      }
+    ],
+    "pom_dependencies": {
+      "naruserve": [
+        [
+          "com.snoworca.naruserve:naruserve-api",
+          "0.10.0",
+          "compile"
+        ],
+        [
+          "com.snoworca.naruserve:naruserve-gson",
+          "0.10.0",
+          "compile"
+        ],
+        [
+          "com.snoworca.naruserve:naruserve-tinyhttpd",
+          "0.10.0",
+          "runtime"
+        ]
+      ],
+      "naruserve-api": [],
+      "naruserve-servlet": [
+        [
+          "com.snoworca.naruserve:naruserve-api",
+          "0.10.0",
+          "compile"
+        ]
+      ],
+      "naruserve-tinyhttpd": [
+        [
+          "com.snoworca.naruserve:naruserve-api",
+          "0.10.0",
+          "compile"
+        ],
+        [
+          "com.snoworca:tinyhttpd-core",
+          "3.1.1",
+          "runtime"
+        ],
+        [
+          "com.snoworca:tinyhttpd-websocket",
+          "3.1.1",
+          "runtime"
+        ]
+      ],
+      "naruserve-gson": [
+        [
+          "com.snoworca.naruserve:naruserve-api",
+          "0.10.0",
+          "compile"
+        ],
+        [
+          "com.google.code.gson:gson",
+          "2.14.0",
+          "compile"
+        ]
+      ],
+      "naruserve-kotlin": [
+        [
+          "com.snoworca.naruserve:naruserve",
+          "0.10.0",
+          "compile"
+        ],
+        [
+          "org.jetbrains.kotlin:kotlin-stdlib",
+          "2.2.0",
+          "compile"
+        ]
+      ],
+      "naruserve-slf4j": [
+        [
+          "com.snoworca.naruserve:naruserve-api",
+          "0.10.0",
+          "compile"
+        ],
+        [
+          "org.slf4j:slf4j-api",
+          "1.7.36",
+          "compile"
+        ]
+      ],
+      "naruserve-filelog": [
+        [
+          "com.snoworca.naruserve:naruserve-api",
+          "0.10.0",
+          "compile"
+        ]
+      ],
+      "naruserve-logcat": [
+        [
+          "com.snoworca.naruserve:naruserve-api",
+          "0.10.0",
+          "compile"
+        ]
+      ],
+      "naruserve-android": [
+        [
+          "com.snoworca.naruserve:naruserve",
+          "0.10.0",
+          "compile"
+        ],
+        [
+          "com.snoworca.naruserve:naruserve-logcat",
+          "0.10.0",
+          "compile"
+        ]
+      ]
+    },
+    "errors": []
+  },
+  "consumer_evidence": {
+    "path": "/tmp/naru-v010-staging-consumer-evidence.json",
+    "status": "PASS_PRIVATE_STAGING_CONSUMERS",
+    "snapshot_manifest_sha256_matches": true,
+    "all22prooffiles_independently_rehashed": true,
+    "15resolvedprojectartifactlinks_to_frozenmanifest_verified": true,
+    "java": "ActualZuluJava8u504 HTTP/Router/Deferred/earlyackfirstbody/cache/error runtimePASS; major52",
+    "kotlin": "ActualJava8u504+Kotlin2.2 strictJSpecify, inlinepublishedmetadata/transitiveKotlinPOM/module, Router/nullable/list/Deferred/firstbodyruntimePASS",
+    "android": "AGP8.13.2/minSdk21/compileSdk36 minifiedR8releaseconsumerPASS; INTERNET/services/factorycreate/Logcat/consumer rules/Tinynotices verified; APKunsigned, noactualdevice/emulatorrun",
+    "repository_isolation": "Staging-onlyprojectcoordinates, noMavenLocal/composite per suppliedcommands/records; postpublicationCentral-only consumers stillrequired"
+  },
+  "prior_full_verification": {
+    "java17": 2183,
+    "actual_java8": 2183,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "reviewer_actions": {
+    "read_private_cfg_or_key_or_password": false,
+    "secrets_output": false,
+    "signing": false,
+    "upload_or_network_or_publication": false,
+    "repo_or_frozenartifact_edits": false,
+    "rebuild": false,
+    "public_signature_verifier_executed": true
+  },
+  "remaining_preupload_tasks": [
+    "Commit/push finalreviewed docs/evidence/SRS status artifacts and record exactrelease source/tag; rootowns thispendingstep. If finalcommitdescendsfromdaf908c with onlydocs/evidence/SRS changes, prove unchanged production/build inputs rather than relabeling a regeneratedartifact.",
+    "Preserve frozenbundle/hash/manifests and thisreport in immutableversionedreceipt; do not rebuild/restage/signchangedbytes underalreadyacceptedmanifest.",
+    "Root verifies finalallrequiredperREQ/finalwholeproject/docs/scan/licensing gates andpush/tagidentity before invoking authorizedupload."
+  ],
+  "remaining_publication_tasks": [
+    "Upload this exactbundle ONCE, persist deploymentID beforepolling, resume sameID onobservationaltimeout.",
+    "Obtain actualPUBLISHEDterminalstatus; currentPASS doesnotestablishpublication.",
+    "Fetch all50publicprimaries+50signatures+200checksums fromMavenCentral and compareexactbytes/hash/metadata to frozenbundle; run freshCentral-onlyJava8/Kotlin/Android consumers with no staging/mavenLocal/composite.",
+    "Record publicreceipt/sourcecommit/tag/deploymentID and close release gates onlywithactualevidence."
+  ]
+}

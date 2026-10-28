@@ -1,0 +1,187 @@
+{
+  "commit": "29714d1c41c12c452ad8c1611b6509fc128de4a7",
+  "base": "8c756fb51c771ab95d262210d3250dd3022854a9",
+  "worktree": "/Users/beom/work/git/NaruServe/.claude/worktrees/v010-docs-platform",
+  "branch": "kiwi/v010/docs-platform",
+  "skill": "/Users/beom/.codex/skills/technical-writer/SKILL.md",
+  "audience": "Java8/Kotlin application authors and Servlet deployers",
+  "documentTypes": [
+    "API reference",
+    "configuration guide",
+    "compatibility explanation"
+  ],
+  "requirementsWorkspace": {
+    "workspaceRoot": "/Users/beom/work/git/NaruServe",
+    "rootSource": "per-call-workspace-root",
+    "mode": "sdd",
+    "activeTarget": "0.10.0",
+    "mutation": false
+  },
+  "requirements": [
+    "OPS-REL-008 AC-1 AC-2 AC-3",
+    "CON-APP-010",
+    "FR-SVL-009",
+    "FR-APP-023",
+    "FR-APP-024",
+    "FR-HTTP-027",
+    "FR-HTTP-028",
+    "FR-STATIC-001",
+    "FR-STATIC-002",
+    "FR-STATIC-004",
+    "FR-STATIC-006",
+    "FR-STATIC-011",
+    "FR-WS-001",
+    "FR-WS-002",
+    "FR-WS-003",
+    "FR-WS-004"
+  ],
+  "files": [
+    "docs/api/defaults.md",
+    "docs/api/en/defaults.md",
+    "docs/api/servlet.md",
+    "docs/api/en/servlet.md",
+    "docs/api/static.md",
+    "docs/api/en/static.md",
+    "docs/api/websocket.md",
+    "docs/api/en/websocket.md"
+  ],
+  "changes": [
+    "0.10target scope without claiming Maven publication; current0.9coordinates unchanged",
+    "Common case/trailing-slash/order/method/HEAD/OPTIONS/404 defaults; Java Pattern boundary",
+    "Finalhandler HTML with Java Throwable class/message/stack, CSP/nosniff/byteLength; retained adapter/WS/staticJSON boundaries",
+    "Actual12target+OPTIONS Jetty9.4.58/Servlet3.1 matrix, captureinvalidUTF8 vs rawunmatched404, encodedslash capture positive/querycontrol, retainedstrictnegativeprofile",
+    "Deferred AsyncContext attachment, container timeout vs SSEzero timeout, lazyinput/immutablehead/normalhold vs terminalrevocation; asyncfalse500cleanup and ackabort/no2ndresponse",
+    "Static registrationposition, misses/latererrorlayers/currentprefix, preserved filesystem400/405 and WSnamespace protection; SPAorder/exclusions",
+    "Retained WSstrict grammar/configuration/limits/security, synchronousUpgradeauth beforelisten; latercommonmiddleware not partoffrozenWS pipeline"
+  ],
+  "sourceEvidence": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/FinalHandler.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/HttpExecution.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StaticHandler.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RoutePattern.java",
+    "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdAdapter.java",
+    "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/ServletExchange.java",
+    "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/ServletEventStream.java"
+  ],
+  "runtimeEvidence": [
+    "/tmp/naru-v010-servlet-loopback-fixture-full-j17-results",
+    "/tmp/naru-v010-servlet-loopback-fixture-full-java8-results",
+    "/tmp/naru-v010-servlet-unstarted-noasync-coreinput-full-j17-results",
+    "/tmp/naru-v010-servlet-unstarted-noasync-coreinput-full-java8-results"
+  ],
+  "newAsyncFallbackSourceDependency": "a14fcce1b2a0f714dc5437d15859ca41f3ad599c plus root71b8f4e; source review pending at authoring",
+  "localChecks": {
+    "defaults": {
+      "pairedFenceBytesEqual": true,
+      "englishExecutableFencesUnchanged": true,
+      "languagesAndOrdinalsUnchanged": true,
+      "javaFences": 0,
+      "kotlinFences": 0
+    },
+    "servlet": {
+      "pairedFenceBytesEqual": true,
+      "englishExecutableFencesUnchanged": true,
+      "languagesAndOrdinalsUnchanged": true,
+      "javaFences": 2,
+      "kotlinFences": 1
+    },
+    "static": {
+      "pairedFenceBytesEqual": true,
+      "englishExecutableFencesUnchanged": true,
+      "languagesAndOrdinalsUnchanged": true,
+      "javaFences": 5,
+      "kotlinFences": 1
+    },
+    "websocket": {
+      "pairedFenceBytesEqual": true,
+      "englishExecutableFencesUnchanged": true,
+      "languagesAndOrdinalsUnchanged": true,
+      "javaFences": 8,
+      "kotlinFences": 7
+    },
+    "servletRawMatrix": {
+      "rows": [
+        [
+          "GET /a%zz",
+          400
+        ],
+        [
+          "GET /a%2",
+          400
+        ],
+        [
+          "GET /a%C3%28",
+          404
+        ],
+        [
+          "GET /a%2Fb",
+          404
+        ],
+        [
+          "GET /a%00b",
+          400
+        ],
+        [
+          "GET /a<NUL>b",
+          400
+        ],
+        [
+          "GET /./a",
+          200
+        ],
+        [
+          "GET /../a",
+          400
+        ],
+        [
+          "GET /a/../b",
+          404
+        ],
+        [
+          "GET /%2e/a",
+          200
+        ],
+        [
+          "GET /%2e%2e/a",
+          400
+        ],
+        [
+          "GET /a/%2e%2e/b",
+          404
+        ],
+        [
+          "OPTIONS *",
+          404
+        ]
+      ],
+      "languagesMatch": true
+    },
+    "relativeLinkFiles": {
+      "errors": []
+    }
+  },
+  "executableFences": {
+    "new": 0,
+    "englishFenceBytesChanged": 0,
+    "kotlinCountChanged": false,
+    "javaCountChanged": false,
+    "ordinalChanged": false,
+    "koreanFenceCommentsAlignedToEnglish": true,
+    "newCompilerCoverageRequired": false
+  },
+  "validationLimits": "No Gradle invocation in root or docs worktree. Existing executable fences unchanged; host runs final bilingual compiler/runtime/docs tests after harvest. Historical doc assertions for global staticpriority/pathrejection/defaultJSON must migrate under new requirements.",
+  "pending": "Independent round2 recheck of DOC-C-01; stop on first PASS. Original signatures/source/runtime compilation scope unchanged.",
+  "initialCommit": "9176b0c0ad428dfba2eb65b7b697b8799e1f1132",
+  "reviewRound1": "/tmp/naru-v010-docs-platform-review-round1.json",
+  "reviewFix": {
+    "finding": "DOC-C-01 MEDIUM",
+    "files": [
+      "docs/api/servlet.md",
+      "docs/api/en/servlet.md"
+    ],
+    "change": "Qualify initial callback chain capacity503HTML vs late common startup abort/rethrow without fresh503. Keep adapter preadmission+drainownership. Same-language links to approved laneB SSEownership anchors verified in host checkout.",
+    "newExecutableFenceChanges": 0
+  }
+}

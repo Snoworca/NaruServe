@@ -1,0 +1,26 @@
+{
+  "verdict": "PASS",
+  "round": 2,
+  "reviewType": "Focused final root-documentation rereview",
+  "reviewedCommit": "e7b1001",
+  "scope": "Only two paired API-index execution-contract bullet repairs; prior rootREADME/metrics/version scopes remain closed",
+  "requirements": [
+    "OPS-REL-008 AC-1/2",
+    "FR-APP-021 AC-4",
+    "FR-APP-022 AC-3",
+    "FR-APP-023 AC-1/7"
+  ],
+  "findings": [],
+  "resolvedFindings": [
+    {
+      "id": "ROOT-DOC-R1-1",
+      "resolution": "Both languages now distinguish pre-listen server/service/WS configuration from live ordinaryHTTP registration, allow savedNext after callback return, identify repeated calls as shared cursor advancement rather than retry, and state Deferred resolution neither advances routing nor ends response."
+    }
+  ],
+  "assessment": [
+    "Korean/English semantics agree and align with approved public API implementation/tests. Shared mutable-state guidance remains, and direct middleware/request-ownership links provide complete limits.",
+    "Pinned diff changes four prose bullets across two indexes only. No code fence, source, dependency or previously approved rootREADME/newmetrics paragraph changed.",
+    "No additional material inconsistency introduced; original once-only/synchronous/universal-freeze claim is removed."
+  ],
+  "actions": "Read-only pinned diff review; no edits/builds/network/publication. Only tmp artifact written. First PASS closes this loop; no round3 required."
+}

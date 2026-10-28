@@ -4,7 +4,7 @@
   "plan": "docs/plan/0.10.0-parallel-plan.md",
   "dependencies": "Preserve external versions/types/scopes except explicitly approved TinyHttpd core/websocket3.1.0→3.1.1",
   "regex": "Java Pattern",
-  "status": "bilingual-doc-authoring-with-additional-servlet-noasync-repro",
+  "status": "final0.10globalbuilds-and-immutable-publication-preparation",
   "issues": [
     {
       "id": "T00",
@@ -346,7 +346,7 @@
       "authors_own_tests": false
     }
   },
-  "integrated_head": "e6de9ab",
+  "integrated_head": "daf908c",
   "next_lanes": {
     "core": {
       "worktree": ".claude/worktrees/v010-http-core",
@@ -602,8 +602,8 @@
     "failed": 0
   },
   "reported_progress": {
-    "estimate_percent": 40,
-    "basis": "Work-volume estimate only; no claim that40%ofissuesareclosed",
+    "estimate_percent": null,
+    "basis": "No newpercentageclaim; exactcomponent/globalvalidationstates used",
     "issues_closed": 0,
     "issues_total": 19
   },
@@ -693,8 +693,8 @@
       "java17": "PASS",
       "java8": "PASS"
     },
-    "release": "not bumped, pushed or published",
-    "remaining_root_checks": "Versioned docs and historical release-record assertions pending",
+    "release": "0.10.0 signed and independently audited; source push/tag and public publication pending",
+    "remaining_root_checks": "PASS; versioned docs and historical release assertions corrected without weakening retained guards",
     "integrated_java17": {
       "tests": 2151,
       "failures": 4,
@@ -718,6 +718,40 @@
         "log": "/tmp/naru-v010-integrated-servlet-loopback-java8.log",
         "note": "All module cases passed across originalrun+targetedfullServletrecheck;finalsinglewholebuildpendingdocs/release"
       }
+    },
+    "java17_full": {
+      "tests": 2183,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "log": "/tmp/naru-v010-final-full-j17-corrected.log",
+      "initial_uncached_failure": "One staleKotlin0.9doccoordinate expectation fixedthenrootrerun; unchangedmodulechecks retained"
+    },
+    "java8_full": {
+      "tests": 2183,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "runtime": "actualJava8",
+      "tasks_executed": 186,
+      "runtime_markers": 11,
+      "log": "/tmp/naru-v010-final-full-java8.log"
+    },
+    "scan": {
+      "status": "completed",
+      "runtime_coordinates": 7,
+      "sboms": 10,
+      "unsuppressed_findings": 0,
+      "existing_exact_false_positive_suppressions": 1,
+      "review": "docs/release/audit-2026-10-29/scan-review.json"
+    },
+    "final_release_docs_gate": {
+      "tests": 43,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "log": "/tmp/naru-v010-final-release-docs-gate.log",
+      "note": "Root :test explicit selection; initial unqualified test selector was rejected by Android aggregate task before any tests, corrected to :test."
     }
   },
   "docs_release_lanes": {
@@ -742,23 +776,12 @@
     "green_commit": "70c7e50"
   },
   "docs_lanes": {
-    "platform": {
-      "agent": "/root/servlet_retention",
-      "worktree": ".claude/worktrees/v010-docs-platform",
-      "files": "defaults,servlet,static,websocket bothlanguages",
-      "status": "prosepausedfornewServletrepro"
-    },
-    "root": "RootREADMEs/apiREADMEindices currentcontractupdated b4c70ad;versionstill0.9pendingrelease",
-    "core": {
-      "agent": "/root/api_core_docs",
-      "worktree": ".claude/worktrees/v010-docs-core",
-      "status": "authoring"
-    },
-    "lifecycle": {
-      "agent": "/root/transport_dependency_audit",
-      "worktree": ".claude/worktrees/v010-docs-lifecycle",
-      "status": "authoring"
-    }
+    "core": "8329585R1PASS+0054runtimeR1PASS",
+    "lifecycle": "0fd8R1PASS",
+    "platform": "29714R2PASS",
+    "root": "e7b1001R2PASS",
+    "version": "dfab507R1PASS",
+    "checkpoints": "26502d8/ec64fcaR1PASS"
   },
   "release_record_tests": {
     "red": "de8a2e8",
@@ -769,13 +792,20 @@
     "status": "integrated"
   },
   "additional_servlet_repro": {
-    "status": "testfirstactualframeworkreproongoing",
-    "description": "unsupportedAsync sendsadapter500withoutnotifyingcoreterminalcancellation;uncommittedDeferredhold mayleak",
-    "requirements": [
-      "FR-SVL-009",
-      "FR-APP-023",
-      "IR-HTTP-009"
-    ],
-    "production_fix": "notstarted"
+    "status": "fixedandindependentlyreviewed",
+    "core": "71b8f4e",
+    "servlet": "bf739a4",
+    "core_counts": 1406,
+    "servlet_counts": 160,
+    "metrics": "309cc86/defaultSPIplusbf739a4syntheticstats",
+    "metrics_source_review": "R1corePASS/R2ServletPASS"
+  },
+  "publication": {
+    "version": "0.10.0",
+    "uploaded": false,
+    "signed": true,
+    "staging_consumers": "PASS Java8/Kotlin/Android immutable snapshot",
+    "published": false,
+    "bundle_sha256": "50573182ec0efe671189969afa4c7a30ef5767b40d1c84875faf9a28cbe2a57c"
   }
 }

@@ -2,7 +2,9 @@
 
 Requirements: FR-ENGINE-012, CON-BUILD-018. Recorded 2026-10-29.
 
-Current integration status: the bounded dependency/adapter checks below passed at `62f1e12`. Subsequent common-core integration tests at `8c5630a` passed four tests covering 27 socket requests, including typed framework decoding errors and exact scalar, wildcard, mount and query views. This completes the focused AC-2 observation. The subsequent full Tiny run reported 182 tests and 11 failures; WebSocket invalid-path status and explicit merge-slash policy are retained-contract regressions under repair. The other failures require explicit versioned-checkpoint review. This record does not establish a green integrated release.
+Final 0.10.0 source integration: Java 17 and actual Java 8 each pass 2,183 tests with zero failures/errors/skips, including 218 TinyHttpd tests. The initial failures documented below are historical diagnostics resolved before this final run. See [current results](../0.10.0-test-results.md) and [release verification](central-0.10.0.md) for publication status.
+
+Historical integration diagnostics: the bounded dependency/adapter checks below passed at `62f1e12`. Subsequent common-core integration tests at `8c5630a` passed four tests covering 27 socket requests, including typed framework decoding errors and exact scalar, wildcard, mount and query views. This completes the focused AC-2 observation. The subsequent full Tiny run reported 182 tests and 11 failures; WebSocket invalid-path status and explicit merge-slash policy are retained-contract regressions under repair. The other failures require explicit versioned-checkpoint review. This record does not establish a green integrated release.
 
 ## Scope and provenance
 

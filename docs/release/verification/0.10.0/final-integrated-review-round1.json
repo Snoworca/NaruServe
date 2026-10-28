@@ -1,0 +1,46 @@
+{
+  "verdict": "PASS",
+  "round": 1,
+  "reviewType": "Final independent integrated test-evidence and new source-delta gate",
+  "reviewedSourceCommit": "daf908cdc4468d67609f8e5cceaaad0174ce9a8b",
+  "lastProductionDelta": "1be4d7e",
+  "scope": "Integration of independently reviewed input cancellation/retention/metrics/docs tests plus pure shared status predicate; no repeated closed behavior/fixture loops",
+  "requirements": [
+    "FR-APP-023 AC-3/5/7/8",
+    "IR-HTTP-009 AC-8",
+    "FR-HTTP-028",
+    "OPS-REL-008",
+    "OPS-REL-009 AC-1/2"
+  ],
+  "findings": [],
+  "evidence": {
+    "jdk17Counts": "/tmp/naru-v010-final-full-j17-counts.json",
+    "actualJava8Counts": "/tmp/naru-v010-final-full-java8-counts.json",
+    "each": {
+      "tests": 2183,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "sourceCommitMatches": true,
+    "moduleSumsIndependentlyVerified": true,
+    "java8RuntimeMarkers": 11,
+    "java8TasksExecuted": 186,
+    "jdk17CorrectedLog": "/tmp/naru-v010-final-full-j17-corrected.log",
+    "java8Log": "/tmp/naru-v010-final-full-java8.log"
+  },
+  "assessment": [
+    "Both manifests identify the same0.10.0source daf908c and sum consistently across root plus nine executable module suites to2183. AndroidAAR has no runtime test class and is not misrepresented as device coverage.",
+    "Actual officialJava8 build reruns all186tasks and records11 JAVA8_TEST_RUNTIME lines including root, all executable modules and Tinyisolated test. Log ends BUILD SUCCESSFUL with no failed tasks; API21/class-reference checks execute. No focused --tests selection or test exclusion command is used.",
+    "JDK17 first rerun had exactly one stale0.9Kotlin docs assertion. Finaldaf changes only its literal/requirement comment; corrected fullbuild succeeds with root319 rerun and unchanged module outputs reused. Evidence accurately states44executed/142up-to-date rather than claiming another uncached run.",
+    "Fresh currentXML includes all4 input cleanup/acquisition tests,4 optional response metrics tests and4 actualServlet retention/fallback cases with zero errors/skips. Thus the new lifecycle/metrics regressions are in the integrated run rather than only earlier focused manifests.",
+    "Last production delta extracts the exact existing100..999range into ResponseValues.isStatus and uses it in DefaultResponse and Dispatcher. Predicates are logically identical for everyint, validation order/message remains unchanged, and shared lowest-module utility follows reuse rules. No new behavior/dependency risk identified.",
+    "Current release record accurately reports completed source builds and keeps immutable staging consumers/signing/publicMaven verification pending. It does not turn bootstrap test success, localgeneratedstaging or codeGREEN into publication clearance.",
+    "New typed nullable/SPI/documentation checkpoint and runtime example units retain their prior independent approvals; version literal correction adds no skip or broad behavioral waiver. No remaining material test gap found within this final integration delta."
+  ],
+  "limitations": [
+    "PASS establishes integrated source/tests gate only. Immutable staged artifact consumer verification, signing/upload/publicPUBLISHED byte proof and final release traceability remain required and pending.",
+    "Working tree contains coordinator-owned evidence/state/release records and unrelated existing untracked assets; no review action changes them."
+  ],
+  "actions": "Read-only source/log/manifest/currentXML verification; no edits/builds/signing/upload/network. Only tmp report written. First PASS ends this final review loop."
+}
