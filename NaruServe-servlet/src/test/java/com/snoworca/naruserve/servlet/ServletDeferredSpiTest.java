@@ -27,6 +27,7 @@ public class ServletDeferredSpiTest {
     private final BlockingQueue<String> returned = new LinkedBlockingQueue<>();
     private final AtomicInteger starts = new AtomicInteger(), completes = new AtomicInteger();
     private volatile long ordinaryTimeout;
+    private final AtomicReference<Runnable> asyncStartHook = new AtomicReference<>();
     private final List<CountDownLatch> releases = new ArrayList<>();
 
     @After public void cleanup() throws Exception {
@@ -45,7 +46,9 @@ public class ServletDeferredSpiTest {
                 @Override public AsyncContext startAsync() {
                     AsyncContext real=super.startAsync();starts.incrementAndGet();
                     if(ordinaryTimeout>0) real.setTimeout(ordinaryTimeout);
-                    return RecordingRequest.delegating(AsyncContext.class,real,name->{if(name.equals("complete"))completes.incrementAndGet();});
+                    AsyncContext tracked=RecordingRequest.delegating(AsyncContext.class,real,name->{if(name.equals("complete"))completes.incrementAndGet();});
+                    Runnable hook=asyncStartHook.getAndSet(null);if(hook!=null)hook.run();
+                    return tracked;
                 }
             };
             try {chain.doFilter(wrapper,response);} finally {returned.offer(wrapper.getRequestURI());}
@@ -199,6 +202,25 @@ public class ServletDeferredSpiTest {
         SharedApp.Reply rejection=second.get(5,TimeUnit.SECONDS);assertEquals(503,rejection.status);assertEquals("full",rejection.text());
         assertEquals(0,rejectedDrains.get());assertEquals(1,adapter.pool().open());assertEquals(1,inFlight());
         release.countDown();assertEquals("done",first.get(5,TimeUnit.SECONDS).text());completeOnce(2);idle();closed(rejected);
+    }
+
+    // FR-SVL-009 AC-2 AC-3 AC-4: abort between container context creation and exchange publication cannot resurrect it.
+    @Test(timeout=20000) public void abortDuringAsyncCreationCancelsAcceptedDrainBeforeAttach() throws Exception {
+        AtomicInteger attached=new AtomicInteger(),drained=new AtomicInteger(),cancelled=new AtomicInteger(),rejected=new AtomicInteger();
+        AtomicReference<HttpExchange> captured=new AtomicReference<>();
+        start(ex->{
+            captured.set(ex);asyncStartHook.set(ex::abort);
+            try {
+                ex.eventStream(200,Collections.emptyList(),new StreamDrain(){
+                    @Override public void attach(OutputStream out){attached.incrementAndGet();}
+                    @Override public void drain(OutputStream out){drained.incrementAndGet();}
+                    @Override public void abort(){cancelled.incrementAndGet();}
+                });
+            } catch(IOException|IllegalStateException expected){rejected.incrementAndGet();}
+        });
+        request("/creation-race").get(5,TimeUnit.SECONDS);returned();
+        assertEquals(1,rejected.get());assertEquals(0,attached.get());assertEquals(0,drained.get());assertEquals(1,cancelled.get());
+        completeOnce(1);idle();closed(captured.get());
     }
 
 }
