@@ -33,11 +33,12 @@ final class AppLifecycle {
     private volatile boolean pendingStop;
 
     private final java.util.Set<HttpExecution> executions=java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<HttpExecution,Boolean>());
-    private boolean httpClosed;
+    private volatile boolean httpClosed;
     // @req FR-APP-023 AC-3 AC-5 AC-6
     boolean registerHttp(HttpExecution execution) {
-        synchronized(executions) { if(httpClosed)return false;executions.add(execution);return true; }
+        synchronized(executions) { if(httpClosed())return false;executions.add(execution);return true; }
     }
+    boolean httpClosed() { return httpClosed || state.get()==AppState.TERMINATED; }
     void releaseHttp(HttpExecution execution) {
         synchronized(executions) { executions.remove(execution);executions.notifyAll(); }
     }

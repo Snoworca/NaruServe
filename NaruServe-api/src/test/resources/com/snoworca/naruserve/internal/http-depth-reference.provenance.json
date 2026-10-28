@@ -1,0 +1,25 @@
+{
+  "node": "22.22.0",
+  "express": "5.1.0",
+  "router": "2.2.0",
+  "sourceHashes": {
+    "router/index.js": "fcc39d49329e5701e3fbd195060834398434b8e136a59949a654f6f402f6e31b",
+    "router/lib/route.js": "77e83b1ceca13bdbdaf42b79d90527489c46249db2ad4226e328352dfe68f83d"
+  },
+  "cases": 11,
+  "requirements": [
+    "FR-APP-022 AC-1 AC-5",
+    "FR-APP-023 AC-5"
+  ],
+  "capture": "Actual loopback HTTP requests against the pinned reference, capturing every before/after-next event, including terminal response and the next setImmediate turn.",
+  "originalOracleSha256": "3ffcc213771a76265a2ef07bd9adaf98b68ba8113d293249bca4d4dc751357d1",
+  "originalCaptureSha256": "9234d1b97282b32d9c498f91d27dc89f927b2245bb7e903061099c93446ea998",
+  "fixtureSha256": "7711a4baeddb5e729846770f2446a8f0d7eda333d04a8496fa762732a3ee6356",
+  "reproduction": {
+    "nodeBinary": "/opt/homebrew/opt/node@22/bin/node",
+    "node": "22.22.0",
+    "exactlyMatchesOriginalCapture": true,
+    "capturedCases": 11,
+    "reproducedCaptureSha256": "9234d1b97282b32d9c498f91d27dc89f927b2245bb7e903061099c93446ea998"
+  }
+}

@@ -1,0 +1,136 @@
+{
+  "review": "remaining Kotlin/startup/group/response fixture sufficiency",
+  "round": 1,
+  "decision": "PASS",
+  "stop_review_loop": true,
+  "max_rounds": 3,
+  "reviewed_commit": "14df60477e3474f5c7fe8a8258ee20e4cd6e1cd5",
+  "author": "api_core_docs",
+  "reviewer": "release_dependency_audit",
+  "independent": true,
+  "requirements": [
+    "CON-APP-010 AC-1 AC-3 AC-5",
+    "FR-APP-021 AC-1 AC-2 AC-6",
+    "FR-APP-023 AC-1",
+    "FR-HTTP-028 AC-3 AC-4 AC-5",
+    "FR-DX-009 AC-1 AC-2 AC-3 AC-4",
+    "FR-DX-012 AC-5",
+    "IR-WS-001 AC-2 AC-3",
+    "FR-COOKIE-001 AC-7",
+    "FR-COOKIE-002 AC-7",
+    "FR-KT-003",
+    "FR-KT-004"
+  ],
+  "evidence": {
+    "jdk17_log": "/tmp/naru-http-core/green-remaining-core-kotlin-fixtures.log",
+    "jdk17_exact_suite_xml_counts": {
+      "tests": 122,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "suites": [
+      {
+        "name": "com.snoworca.naruserve.internal.AppStarterTest",
+        "tests": 17,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.snoworca.naruserve.WebSocketApiTest",
+        "tests": 15,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.snoworca.naruserve.RouteGroupTest",
+        "tests": 5,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.snoworca.naruserve.HttpApiKotlinTest",
+        "tests": 6,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.snoworca.naruserve.internal.ListenStartupTest",
+        "tests": 7,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.snoworca.naruserve.KotlinDocsExamplesKotlinTest",
+        "tests": 40,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.snoworca.naruserve.internal.DefaultResponseTest",
+        "tests": 30,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.snoworca.naruserve.CookieKotlinTest",
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      }
+    ],
+    "actual_java8_log": "/tmp/naru-http-core/java8-remaining-core-kotlin-fixtures.log",
+    "actual_java8_result": "OK (122 tests)",
+    "new_build_run": false
+  },
+  "checks": [
+    {
+      "area": "cookie completion and Kotlin SAM",
+      "result": "PASS",
+      "detail": "CookieKotlinTest adds explicit end only; exact Set-Cookie deletion and nullable cookie/read counts remain. Kotlin method examples keep positive selected-method execution and ordinary404/Allow absence."
+    },
+    {
+      "area": "group verbs and HEAD",
+      "result": "PASS",
+      "detail": "All seven verbs remain exercised. HEAD to earlier GET checks200, zero body, GET Content-Length3 and absent explicitHEAD marker; laterHEAD callback fails if wrongly selected. Separate /head positively observes explicitHEAD marker."
+    },
+    {
+      "area": "OPTIONS profiles",
+      "result": "PASS",
+      "detail": "Ordinary OPTIONS asserts200, exact Allow/body GET,HEAD and plain Content-Type/nosniff; Kotlin POST-only OPTIONS asserts exactPOST body/Allow. Separate OPTIONS* still asserts204/body0. Existing response status/HEAD/no-body controls retained."
+    },
+    {
+      "area": "duplicate stack order",
+      "result": "PASS",
+      "detail": "HTTP/group duplicate test observes exact app->group trace and selected response; AppStarter migration includes a legal duplicate continuation positive. Strict WS identical and parameter-shape collisions remain RoutingConfigException at freeze."
+    },
+    {
+      "area": "startup and validation",
+      "result": "PASS",
+      "detail": "ListenStartup preserves onStart event before freeze failure and no bind; AppStarter preserves exact exception type, TERMINATED cleanup, bind exception identity, hook/log guards. WS duplicate parameter names fail at registration, HTTP last capture succeeds, genuinely missing parameter names fail independently and both WS null checks remain."
+    },
+    {
+      "area": "group safety and ownership",
+      "result": "PASS",
+      "detail": "Unsafe joins, throwing configuration atomicity, parent/sibling middleware isolation, retained group/builder mutation refusal and after-listen no-configurer-run guards remain unchanged."
+    },
+    {
+      "area": "scope and omissions",
+      "result": "PASS",
+      "detail": "Commit changes eight tests only; no production/build/dependency/SRS changes, ignores, disabled tests, status-only replacement of cookie/header/trace guards or blanket error waivers found."
+    }
+  ],
+  "findings": [],
+  "limitations": [
+    "Scoped approval of this fixture migration; not a new claim that every routing/release requirement is verified.",
+    "No redundant build was invoked; stable supplied Gradle XML/log and actualJava8 JUnit122 evidence inspected."
+  ]
+}

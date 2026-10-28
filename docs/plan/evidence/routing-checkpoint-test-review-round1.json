@@ -1,0 +1,42 @@
+{
+  "verdict": "PASS",
+  "round": 1,
+  "reviewedHead": "10fadcd3fb61f91d592a049dbf81bc386e0c0b16",
+  "scope": "HttpAcceptanceTest, DispatcherTest, MiddlewarePipelineTest and DefaultRestAppTest checkpoint migration only",
+  "requirements": [
+    "CON-APP-010 AC-1/2/3/4/5",
+    "FR-APP-021",
+    "FR-APP-023 AC-1",
+    "FR-APP-024 AC-1/3",
+    "FR-HTTP-027",
+    "FR-HTTP-028"
+  ],
+  "findings": [],
+  "evidence": {
+    "baselineLog": "/tmp/naru-routing-checkpoints-baseline.log",
+    "baselineCounts": {
+      "tests": 75,
+      "failures": 22
+    },
+    "jdk17Log": "/tmp/naru-routing-checkpoints-migrated.log",
+    "actualJava8Log": "/tmp/naru-routing-checkpoints-java8.log",
+    "eachGreenCounts": {
+      "tests": 75,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "assessment": [
+    "Only four authorized test classes changed. The sole DispatcherTest edit ends an app-owned common callback explicitly; direct retained legacy dispatcher tests are unchanged.",
+    "Common404 helper checks exact document, status, UTF8 byte Content-Length, content type,CSP/nosniff,no Allow and normal finish. OPTIONS requires200, sorted exact Allow/body, plain text and exact length without invoking handlers.",
+    "Prior HTTP duplicate/freeze/method-denial assertions are replaced with actual ordered duplicate traces, live registrations serving each old verb/builder overload, and explicit configuration/WS rejection plus unchanged registration counts.",
+    "WS duplicate freeze failures retain exact exception/no cause, failed-freeze retry and no dispatcher publication. Registration grammar errors retain atomic zero published registrations, now using actually invalid common grammar.",
+    "Explicit merge policy retains both repeated-slash rejection and configured successful match plus hit count. Existing direct legacy case/policy tests remain untouched.",
+    "Raw current path/prefix views replace obsolete whole-path decoded assertions while captures/query decoding remain checked separately. Invalid transport targets still bypass all layers, whereas unknown/common method fallthrough and encoded-dot captures run exact expected traces.",
+    "Ordered error observers remain downstream and are positively exercised; no-error fallback traces retain negative onError evidence.",
+    "Bodyless recorder callbacks now explicitly end, respecting FR-APP-023 rather than relying on removed implicit completion. Preserved baseline and both current XML sets establish75 executed tests with zero skips; no assertion-only deletion or blanket waiver observed."
+  ],
+  "limitations": "This scoped checkpoint migration does not replace full retained WS/static/security/adapter regression gates. HTML helper inputs here are unescaped safe paths; dedicated finalhandler escaping tests remain responsible for escaping cases.",
+  "actions": "No repository edits or builds; only tmp review artifact written. First PASS ends review loop."
+}
