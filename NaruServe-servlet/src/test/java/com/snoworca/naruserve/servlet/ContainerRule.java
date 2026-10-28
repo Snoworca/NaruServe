@@ -91,9 +91,17 @@ class ContainerRule extends ExternalResource {
 
     /** As {@link #servlet(HttpServlet, String)}, with the context path {@code contextPath}. */
     ServletContextHandler servlet(HttpServlet s, String pattern, String contextPath) throws Exception {
+        return servlet(s, pattern, contextPath, holder -> { });
+    }
+
+    /** Configure a holder before startup; changing async support after start does not reconfigure Jetty's chain. */
+    ServletContextHandler servlet(HttpServlet s, String pattern, String contextPath,
+            Consumer<ServletHolder> configure) throws Exception {
         ServletContextHandler ctx = new ServletContextHandler();
         ctx.setContextPath(contextPath);
-        ctx.addServlet(new ServletHolder(s), pattern);
+        ServletHolder holder = new ServletHolder(s);
+        configure.accept(holder);
+        ctx.addServlet(holder, pattern);
         start(ctx);
         return ctx;
     }

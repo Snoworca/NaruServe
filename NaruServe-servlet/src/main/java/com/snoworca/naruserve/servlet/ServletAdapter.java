@@ -5,6 +5,10 @@ import com.snoworca.naruserve.spi.ExchangeHandler;
 import com.snoworca.naruserve.spi.HttpAdapter;
 import com.snoworca.naruserve.spi.ServerSettings;
 import java.util.Objects;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
@@ -27,6 +31,9 @@ public final class ServletAdapter implements HttpAdapter {
     private final ReentrantLock lock = new ReentrantLock();
     private final Condition changed = lock.newCondition();
     private int inFlight;
+    // Managed requests retain their admission until response terminal and the initial callback returned.
+    private final Set<ServletExchange> exchanges = new HashSet<>();
+    private boolean forceStopped;
 
     private volatile @Nullable ExchangeHandler handler;
     private volatile @Nullable ServerSettings settings;
@@ -124,6 +131,33 @@ public final class ServletAdapter implements HttpAdapter {
         }
     }
 
+    // @req FR-SVL-009 AC-2 AC-4
+    void track(ServletExchange exchange) {
+        boolean stopped;
+        lock.lock();
+        try {
+            exchanges.add(exchange);
+            stopped = forceStopped;
+        } finally {
+            lock.unlock();
+        }
+        exchange.managed();
+        if (stopped) exchange.stopAfterReturn();
+    }
+
+    // @req FR-SVL-009 AC-2 AC-4
+    void retire(ServletExchange exchange) {
+        lock.lock();
+        try {
+            if (exchanges.remove(exchange)) {
+                inFlight--;
+                changed.signalAll();
+            }
+        } finally {
+            lock.unlock();
+        }
+    }
+
     /**
      * Refuses new requests at once, waits until no request is in flight and no stream is open or the deadline
      * passed, then completes the AsyncContext of every stream still open and stops the SSE executor. Idempotent and
@@ -137,6 +171,7 @@ public final class ServletAdapter implements HttpAdapter {
     public void stop(long timeout, TimeUnit unit) {
         long deadline = System.nanoTime() + Math.max(0, unit.toNanos(timeout));
         boolean interrupted = false;
+        List<ServletExchange> pending;
         lock.lock();
         try {
             stopping = true;
@@ -152,9 +187,12 @@ public final class ServletAdapter implements HttpAdapter {
                     break;
                 }
             }
+            forceStopped = true;
+            pending = new ArrayList<>(exchanges);
         } finally {
             lock.unlock();
         }
+        for (ServletExchange exchange : pending) exchange.stopAfterReturn();
         ServletEventStream.Pool p = pool;
         if (p != null) {
             p.completeAll();
@@ -180,16 +218,21 @@ public final class ServletAdapter implements HttpAdapter {
     // @req FR-SVL-006
     @Override
     public void release() {
+        List<ServletExchange> pending;
         lock.lock();
         try {
             handler = null;
+            forceStopped = true;
+            pending = new ArrayList<>(exchanges);
             changed.signalAll();
         } finally {
             lock.unlock();
         }
+        for (ServletExchange exchange : pending) exchange.stopAfterReturn();
         ServletEventStream.Pool p = pool;
         if (p != null) {
-            p.shutdown();
+            p.completeAll();
+            p.shutdownNow();
             try {
                 p.awaitTermination(1, TimeUnit.SECONDS);
             } catch (InterruptedException e) {

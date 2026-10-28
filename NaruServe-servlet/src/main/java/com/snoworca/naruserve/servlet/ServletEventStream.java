@@ -15,6 +15,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicBoolean;
 import javax.servlet.AsyncContext;
 import javax.servlet.AsyncEvent;
 import javax.servlet.AsyncListener;
@@ -48,14 +49,14 @@ final class ServletEventStream {
                 // a filter or servlet registered without asyncSupported: refuse while the exchange is unstarted
                 throw new IllegalStateException("SSE needs asyncSupported=true on every filter and servlet in the chain");
             }
-            if (!pool.tryAcquire()) {
+            if (!pool.tryAcquire(ex)) {
                 throw new HttpException(503);
             }
             ex.markStarted();
         }
         boolean registered = false;
         try {
-            AsyncContext ac = ex.request().startAsync();
+            AsyncContext ac = ex.ensureAsync();
             ac.setTimeout(0); // a container default (30 s on Jetty 9.4) would end a long stream
             ex.async(ac);
             pool.track(ex, ac);
@@ -67,7 +68,11 @@ final class ServletEventStream {
             registered = true;
         } finally {
             if (!registered) {
-                pool.finish(ex); // an AsyncContext already started would otherwise never end
+                try {
+                    if (pool.owns(ex)) drain.abort(); // accepted but never attached/submitted
+                } finally {
+                    pool.finish(ex);
+                }
             }
         }
     }
@@ -83,6 +88,8 @@ final class ServletEventStream {
         private final AtomicInteger open = new AtomicInteger();
         private final ThreadPoolExecutor executor;
         /** The exchanges whose AsyncContext started and has not completed yet. */
+        private final Set<ServletExchange> owners =
+                Collections.newSetFromMap(new ConcurrentHashMap<ServletExchange, Boolean>());
         private final Set<ServletExchange> streams =
                 Collections.newSetFromMap(new ConcurrentHashMap<ServletExchange, Boolean>());
 
@@ -103,13 +110,15 @@ final class ServletEventStream {
 
         /** Takes a slot when fewer than {@code max} are open. */
         // @req FR-SVL-005
-        boolean tryAcquire() {
+        boolean tryAcquire(ServletExchange exchange) {
             while (true) {
+                if (executor.isShutdown()) return false;
                 int n = open.get();
                 if (n >= max) {
                     return false;
                 }
                 if (open.compareAndSet(n, n + 1)) {
+                    owners.add(exchange);
                     return true;
                 }
             }
@@ -123,8 +132,10 @@ final class ServletEventStream {
 
         /** Ends one stream: gives its slot back, completes its AsyncContext once and untracks the exchange. */
         // @req FR-SVL-005
+        boolean owns(ServletExchange ex) { return owners.contains(ex); }
+
         void finish(ServletExchange ex) {
-            release();
+            if (owners.remove(ex)) release();
             ex.complete();
             streams.remove(ex);
         }
@@ -134,6 +145,8 @@ final class ServletEventStream {
         void submit(Runnable task) {
             executor.execute(task);
         }
+
+        void remove(Runnable task) { executor.remove(task); }
 
         /** Lets running drains finish and their threads end; no new drain is accepted. */
         // @req FR-SVL-005
@@ -209,7 +222,9 @@ final class ServletEventStream {
         /** Stops the executor and interrupts its own drain threads, never a container thread. */
         // @req FR-SVL-006
         void shutdownNow() {
-            executor.shutdownNow();
+            for (Runnable task : executor.shutdownNow()) {
+                if (task instanceof DrainTask) ((DrainTask) task).cancelBeforeStart();
+            }
         }
 
         /** Waits up to {@code timeout} for the drain threads to end; false when some are still running. */
@@ -274,20 +289,49 @@ final class ServletEventStream {
         }
     }
 
-    /**
-     * Runs {@code drain}; an IOException or RuntimeException aborts the exchange. Either way the slot is released
-     * once and the AsyncContext completed once.
-     */
-    // @req FR-SVL-005
-    static Runnable drainTask(ServletExchange ex, StreamDrain drain, OutputStream out) {
-        return () -> {
+    /** One drain owns its slot until it actually exits, or until cancelled before it started. */
+    // @req FR-SVL-005 FR-SVL-009 AC-3 AC-4
+    static final class DrainTask implements Runnable {
+        private final ServletExchange exchange;
+        private final StreamDrain drain;
+        private final OutputStream out;
+        private final AtomicBoolean claimed = new AtomicBoolean();
+
+        DrainTask(ServletExchange exchange, StreamDrain drain, OutputStream out) {
+            this.exchange = exchange;
+            this.drain = drain;
+            this.out = out;
+        }
+
+        @Override public void run() {
+            if (!claimed.compareAndSet(false, true)) return;
             try {
+                try {
+                    exchange.checkNotAborted();
+                } catch (IOException cancelled) {
+                    drain.abort();
+                    return;
+                }
                 drain.drain(out);
-            } catch (IOException | RuntimeException e) {
-                ex.abort();
+            } catch (IOException | RuntimeException failure) {
+                exchange.abort();
             } finally {
-                ex.pool().finish(ex);
+                exchange.pool().finish(exchange);
             }
-        };
+        }
+
+        void cancelBeforeStart() {
+            if (!claimed.compareAndSet(false, true)) return;
+            exchange.pool().remove(this);
+            try {
+                drain.abort();
+            } finally {
+                exchange.pool().finish(exchange);
+            }
+        }
+    }
+
+    static Runnable drainTask(ServletExchange ex, StreamDrain drain, OutputStream out) {
+        return new DrainTask(ex, drain, out);
     }
 }
