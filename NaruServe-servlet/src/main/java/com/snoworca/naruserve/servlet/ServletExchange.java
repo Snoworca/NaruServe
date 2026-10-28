@@ -455,8 +455,8 @@ final class ServletExchange implements HttpExchange {
             try {
                 ensureAsync();
             } catch (IllegalStateException cannotDefer) {
-                // A racing normal completion already owns the terminal response.
-                if (!finished) unsupportedAsync();
+                // A completed wire response can still own input; failed retention must cancel that work.
+                if (!finished || retentions.isRetained()) unsupportedAsync();
             }
         }
         if (stopRequested && (!finished || retentions.isRetained())) abort();
