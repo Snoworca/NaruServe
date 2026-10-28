@@ -198,7 +198,7 @@ Application code needs no `javax.servlet` types. `Cookie` is NaruServe's type, n
 ## SSE
 
 - `res.sse()` starts asynchronous processing with `startAsync()` and `AsyncContext.setTimeout(0)`, avoiding the container's default async timeout (30 seconds on Jetty 9.4). The servlet and any preceding filters must have `asyncSupported=true`.
-- The adapter enforces `maxSseStreams` (default 128). At capacity, a common HTTP `res.sse()` failure enters error handling with `503` before starting the response (HTML by default). A running drain keeps its slot through completion or abort until it actually exits; setup failures and never-started cancellations release it once.
+- The adapter enforces `maxSseStreams` (default 128). A capacity refusal before admission throws `HttpException(503)` without starting the adapter response. During the initial callback chain, common HTTP error handling can send `503` (HTML by default unless handled). After that chain returns, a late `res.sse()` failure can abort and rethrow rather than produce a fresh `503` body; see [late start and request ownership](sse.md#late-start-and-request-ownership). A running drain keeps its slot through completion or abort until it actually exits; setup failures and never-started cancellations release it once.
 - SSE may start after the initial servlet invocation returns; it reuses the existing async context and bounded writer ownership.
 - Adapter daemon threads named `naruserve-servlet-sse-<n>` run the loops, up to `maxSseStreams`. The container request thread returns as soon as the handler finishes.
 - Events and `: ping` heartbeats flush on every write. Events sent by the handler before the loop starts also write immediately.
