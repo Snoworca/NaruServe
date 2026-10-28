@@ -549,6 +549,8 @@ public class HttpAdapterSpiTest {
         assertEquals(Arrays.asList(
                 // IR-HTTP-009 AC-1: additive default preserves all historical abstract SPI members.
                 "HttpExchange.onAbort(java.lang.Runnable)->void",
+                // FR-APP-023 AC-8: additive request ownership adds no abstract obligation.
+                "HttpExchange.retainRequest()->java.lang.Runnable",
                 "HttpExchange.webSocket(com.snoworca.naruserve.spi.WebSocketSettings,"
                         + "com.snoworca.naruserve.spi.WebSocketEndpoint)->void",
                 "StreamDrain.abort()->void",
@@ -559,6 +561,23 @@ public class HttpAdapterSpiTest {
         assertEquals(Collections.<Class<?>>singletonList(IOException.class),
                 Arrays.asList(webSocket.getExceptionTypes()));
         assertTrue(StreamDrain.class.getMethod("attach", OutputStream.class).isDefault());
+    }
+
+    // FR-APP-023 AC-8: the existing old-style implementation compiles unchanged; its default touches no transport method.
+    @Test
+    public void defaultRequestRetentionIsAnIdempotentNoOpForLegacyCustomExchange() throws Exception {
+        java.lang.reflect.Method retain;
+        try { retain = HttpExchange.class.getMethod("retainRequest"); }
+        catch (NoSuchMethodException missing) { throw new AssertionError("FR-APP-023 AC-8 requires default retainRequest", missing); }
+        assertTrue(retain.isDefault());
+        assertEquals(Runnable.class, retain.getReturnType());
+        assertEquals(0, retain.getParameterTypes().length);
+        assertEquals(0, retain.getExceptionTypes().length);
+        assertEquals(HttpExchange.class, Wave3Exchange.class.getMethod("retainRequest").getDeclaringClass());
+        Wave3Exchange legacy = new Wave3Exchange();
+        Runnable first = (Runnable) retain.invoke(legacy), second = (Runnable) retain.invoke(legacy);
+        assertNotNull(first); assertNotNull(second);
+        first.run(); first.run(); second.run(); second.run(); first.run();
     }
 
     /** An output stream that fails the test on any call. */
