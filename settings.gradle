@@ -53,7 +53,7 @@ if (!tinyHttpdFromMaven) {
 }
 
 // Docs cite the TinyHttpd commit this build was verified against; warn (never fail) when the checkout differs.
-def verifiedTinyHttpd = '165f365' // TinyHttpd 3.1.0: headers and transport abort
+def verifiedTinyHttpd = 'e73cd5d' // TinyHttpd 3.1.1 (v3.1.1): explicit RAW request-target policy
 if (!tinyHttpdFromMaven) {
     try {
         def head = providers.exec {

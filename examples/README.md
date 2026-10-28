@@ -51,7 +51,7 @@ If the version does not resolve, publish this checkout locally from the NaruServ
 ./gradlew -PtinyHttpdFromMaven=true publishToMavenLocal
 ```
 
-Then add `mavenLocal()` before `mavenCentral()` in the separate consumer. NaruServe publishes nine JAR modules and, when an Android SDK is present, the Android AAR. It does not publish TinyHttpd; the TinyHttpd 3.1.0 core and websocket dependencies resolve from Maven Central without a source checkout. See the [root README](../README.md#tinyhttpd) for the verified TinyHttpd commit and limitations.
+Then add `mavenLocal()` before `mavenCentral()` in the separate consumer. NaruServe publishes nine JAR modules and, when an Android SDK is present, the Android AAR. It does not publish TinyHttpd; the TinyHttpd 3.1.1 core and websocket dependencies resolve from Maven Central without a source checkout. See the [root README](../README.md#tinyhttpd) for the verified TinyHttpd commit and limitations.
 
 ## Troubleshooting
 

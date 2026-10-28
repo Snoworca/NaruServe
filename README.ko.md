@@ -52,10 +52,10 @@ dependencies {
 
 Android Studio로 만든 프로젝트는 `settings.gradle`의 `dependencyResolutionManagement`에 이미 `google()`과 `mavenCentral()`이 있으므로 따로 추가할 것이 없습니다.
 
-`NaruServe`는 Maven Central에서 TinyHttpd 3.1.0 엔진을 가져옵니다. 아래 [TinyHttpd](#tinyhttpd)를 참고하세요.
+`NaruServe`는 Maven Central에서 TinyHttpd 3.1.1 엔진을 가져옵니다. 아래 [TinyHttpd](#tinyhttpd)를 참고하세요.
 Kotlin 프로젝트는 `NaruServe-kotlin`, Android 앱은 `NaruServe-android`에 의존하면 됩니다. 두 모듈 모두 `NaruServe`를 포함합니다.
 
-Android 앱에는 아래 설정도 필요합니다. TinyHttpd 3.1.0의 core·websocket JAR에 같은 경로와 내용의 라이선스 고지가 있어, 이 설정이 없으면 앱의 리소스 병합이 실패합니다. 한 사본을 남겨도 라이선스 고지는 유지됩니다.
+Android 앱에는 아래 설정도 필요합니다. TinyHttpd 3.1.1의 core·websocket JAR에 같은 경로와 내용의 라이선스 고지가 있어, 이 설정이 없으면 앱의 리소스 병합이 실패합니다. 한 사본을 남겨도 라이선스 고지는 유지됩니다.
 
 ```groovy
 android {
@@ -275,8 +275,8 @@ API 21 근거의 세 번째 부분은 D-385 규칙입니다. 어떤 모듈도 �
 
 ## TinyHttpd
 
-이 저장소는 TinyHttpd를 게시하지 않습니다. 어댑터는 Maven Central의 `com.snoworca:tinyhttpd-core:3.1.0`과 `com.snoworca:tinyhttpd-websocket:3.1.0`으로 버전을 고정합니다.
-배포된 TinyHttpd 3.0.0에는 `Request.getHeaderEntries()`와 `Response.abort()`가 없으므로 3.1.0을 사용하세요.
+이 저장소는 TinyHttpd를 게시하지 않습니다. 어댑터는 Maven Central의 `com.snoworca:tinyhttpd-core:3.1.1`과 `com.snoworca:tinyhttpd-websocket:3.1.1`으로 버전을 고정합니다.
+이 어댑터는 TinyHttpd 3.1.1에 추가된 `RequestTargetPolicy.RAW` API를 사용합니다. 두 아티팩트 모두 3.1.1을 사용하세요. 3.1.0에는 이 정책이 없습니다.
 
 로컬에 게시한 NaruServe 모듈을 별도 소비자에서 쓰려면 `mavenLocal()`과 `mavenCentral()`을 함께 설정하세요. TinyHttpd 소스 체크아웃은 필요 없습니다. 배포된 JAR로 이 저장소를 빌드하는 명령은 다음과 같습니다.
 
@@ -284,7 +284,10 @@ API 21 근거의 세 번째 부분은 D-385 규칙입니다. 어떤 모듈도 �
 ./gradlew -PtinyHttpdFromMaven=true build
 ```
 
-기본 저장소 빌드는 `tinyHttpdDir`의 소스 composite를 사용합니다. `-PtinyHttpdDir=/path/to/TinyHttpd`로 경로를 바꾸세요. NaruServe는 TinyHttpd 커밋 `165f365`(3.1.0)에서 검증했습니다.
+기본 저장소 빌드는 `tinyHttpdDir`의 소스 composite를 사용합니다. `-PtinyHttpdDir=/path/to/TinyHttpd`로 경로를 바꾸세요. NaruServe는 TinyHttpd 커밋 `e73cd5d`(태그 `v3.1.1`, 버전 3.1.1)를 사용합니다.
+어댑터는 `RequestTargetPolicy.RAW`를 선택하여 인코딩된 경로와 원본 쿼리를 프레임워크 라우팅에 전달합니다.
+TinyHttpd의 HTTP 구문·Host·프레이밍 검사는 유지되며, 단독 사용 시 기본 정책은 `STRICT`입니다.
+검증 범위는 [통합 검증 기록](docs/release/verification/tinyhttpd-3.1.1.md)을 참고하세요.
 소비자도 `settings.gradle`에서 소스 빌드를 선택할 수 있습니다.
 
 ```groovy

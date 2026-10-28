@@ -1,5 +1,7 @@
 # NaruServe 0.1.0-SNAPSHOT release notes
 
+Update 2026-10-29 (FR-ENGINE-012, CON-BUILD-018): TinyHttpd core/websocket are pinned to 3.1.1. The adapter selects the public RAW request-target policy; transport syntax, Host and framing checks remain active. Published/source, Java8/API21 and security regression evidence is in [the integration record](verification/tinyhttpd-3.1.1.md). Common-dispatcher AC-2 integration and the new full-release scan remain pending.
+
 Test results: [test-results.md](test-results.md).
 
 ## Android scope
@@ -88,9 +90,9 @@ This update changes the public API: typed attribute reads use `attributeAs`; `at
 ## TinyHttpd for consumers
 
 TinyHttpd is not published by this repository. The adapter uses
-`com.snoworca:tinyhttpd-core:3.1.0` and `com.snoworca:tinyhttpd-websocket:3.1.0` from Maven Central.
-Published 3.0.0 lacks `Request.getHeaderEntries()` and `Response.abort()` and cannot support this adapter.
-The repository defaults to a source composite at TinyHttpd commit `165f365` (3.1.0); use
+`com.snoworca:tinyhttpd-core:3.1.1` and `com.snoworca:tinyhttpd-websocket:3.1.1` from Maven Central.
+Version 3.1.1 supplies the adapter’s `RequestTargetPolicy.RAW` API; 3.1.0 lacks this policy. HTTP syntax, Host and framing validation remain active.
+The repository defaults to a source composite at TinyHttpd commit `e73cd5d` (3.1.1); use
 `./gradlew -PtinyHttpdFromMaven=true build` to test the published JARs without a source checkout.
 Consumers of the locally published NaruServe modules need `mavenLocal()` and `mavenCentral()`.
 They may optionally substitute TinyHttpd sources in their `settings.gradle`:
@@ -102,7 +104,7 @@ includeBuild('/path/to/TinyHttpd')
 Cancellation now closes the actual transport for GET and HEAD without a fabricated 500 response.
 Blocked writers wake promptly, and the adapter waits for their buffer ownership to end before returning to the engine.
 
-한국어: TinyHttpd 3.1.0을 명시적으로 사용하며 Maven Central 바이너리 빌드와 선택형 소스 빌드를 지원합니다.
+한국어: TinyHttpd 3.1.1을 명시적으로 사용하며 Maven Central 바이너리 빌드와 선택형 소스 빌드를 지원합니다.
 GET·HEAD 취소는 오류 응답을 만들어 보내는 대신 실제 연결을 닫고 막힌 쓰기를 깨웁니다.
 
 - consumer run: command=./gradlew -p /tmp/naruserve-tinyhttpd-310-consumer run (composite: -Pcomposite=true; binary: no includeBuild and no init script); date=2026-10-24; with includeBuild=resolved tinyhttpd-core and tinyhttpd-websocket 3.1.0 source JARs and passed ordered-header/GET/HEAD cancellation; without includeBuild=resolved tinyhttpd-core and tinyhttpd-websocket 3.1.0 published JARs from Maven Central and passed the same checks

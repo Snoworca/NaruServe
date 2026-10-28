@@ -7,6 +7,7 @@ import com.snoworca.naruserve.spi.HttpAdapter;
 import com.snoworca.naruserve.spi.ServerSettings;
 import com.snoworca.tinyhttpd.ServerConfig;
 import com.snoworca.tinyhttpd.TinyHttpd;
+import com.snoworca.tinyhttpd.RequestTargetPolicy;
 import com.snoworca.tinyhttpd.http.Handler;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -95,7 +96,9 @@ public final class TinyHttpdAdapter implements HttpAdapter {
     static TinyHttpd.Builder configure(ServerSettings s, Handler h) throws UnknownHostException {
         int line = s.maxRequestLineLength();
         // maxRequestBodyBytes and maxDrainBytes stay at TinyHttpd's defaults: the core answers body limits.
+        // @req FR-ENGINE-012 AC-1 AC-2: framework routing owns decoding; transport syntax/Host/framing stay checked.
         TinyHttpd.Builder b = TinyHttpd.builder()
+                .requestTargetPolicy(RequestTargetPolicy.RAW)
                 .port(s.port())
                 .bindAddress(InetAddress.getByName(s.bindAddress()))
                 .handler(h)

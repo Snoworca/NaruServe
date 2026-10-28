@@ -51,7 +51,7 @@ Kotlin 요청 DTO는 Unsafe를 사용하지 않는 기본 Gson에 맞춰 nullabl
 ./gradlew -PtinyHttpdFromMaven=true publishToMavenLocal
 ```
 
-그런 다음 별도 소비자의 `mavenCentral()` 앞에 `mavenLocal()`을 추가하세요. NaruServe는 아홉 JAR 모듈과, Android SDK가 있으면 Android AAR를 게시합니다. TinyHttpd 자체는 게시하지 않습니다. TinyHttpd 3.1.0 core·websocket 의존성은 소스 체크아웃 없이 Maven Central에서 가져옵니다. 검증한 TinyHttpd 커밋과 제약은 [루트 README](../README.ko.md#tinyhttpd)를 참고하세요.
+그런 다음 별도 소비자의 `mavenCentral()` 앞에 `mavenLocal()`을 추가하세요. NaruServe는 아홉 JAR 모듈과, Android SDK가 있으면 Android AAR를 게시합니다. TinyHttpd 자체는 게시하지 않습니다. TinyHttpd 3.1.1 core·websocket 의존성은 소스 체크아웃 없이 Maven Central에서 가져옵니다. 검증한 TinyHttpd 커밋과 제약은 [루트 README](../README.ko.md#tinyhttpd)를 참고하세요.
 
 ## 문제 해결
 

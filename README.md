@@ -54,11 +54,11 @@ Pick the one line that matches the project; each brings the rest (TinyHttpd engi
 An Android project that was created by Android Studio already lists `google()` and `mavenCentral()` in the
 `dependencyResolutionManagement` block of `settings.gradle`; nothing else is needed there.
 
-`NaruServe` resolves the TinyHttpd 3.1.0 engine from Maven Central; see
+`NaruServe` resolves the TinyHttpd 3.1.1 engine from Maven Central; see
 [TinyHttpd](#tinyhttpd) below. Kotlin projects depend on `NaruServe-kotlin`, and Android apps on
 `NaruServe-android`, each of which includes `NaruServe`.
 
-An Android app also needs the following, because the TinyHttpd 3.1.0 core and websocket JARs carry identical
+An Android app also needs the following, because the TinyHttpd 3.1.1 core and websocket JARs carry identical
 license notices at the same paths, which otherwise fails the app's resource merge; one copy keeps the notices:
 
 ```groovy
@@ -280,8 +280,8 @@ The third part of the API 21 basis is the D-385 rule: no module has a compile-ti
 ## TinyHttpd
 
 TinyHttpd is not published by this repository. The adapter pins
-`com.snoworca:tinyhttpd-core:3.1.0` and `com.snoworca:tinyhttpd-websocket:3.1.0` from Maven Central.
-Published TinyHttpd 3.0.0 lacks `Request.getHeaderEntries()` and `Response.abort()`; use 3.1.0.
+`com.snoworca:tinyhttpd-core:3.1.1` and `com.snoworca:tinyhttpd-websocket:3.1.1` from Maven Central.
+TinyHttpd 3.1.1 adds the `RequestTargetPolicy.RAW` API used by this adapter. Use both 3.1.1 artifacts; 3.1.0 lacks this policy.
 
 For a separate consumer of the locally published NaruServe modules, configure both `mavenLocal()` and
 `mavenCentral()`. No TinyHttpd source checkout is required. To build this repository using the published JARs:
@@ -291,7 +291,10 @@ For a separate consumer of the locally published NaruServe modules, configure bo
 ```
 
 The default repository build uses a source composite at `tinyHttpdDir`. Override it with
-`-PtinyHttpdDir=/path/to/TinyHttpd`. NaruServe was verified against TinyHttpd commit `165f365` (3.1.0).
+`-PtinyHttpdDir=/path/to/TinyHttpd`. NaruServe uses TinyHttpd commit `e73cd5d` (tag `v3.1.1`, version 3.1.1).
+The adapter selects `RequestTargetPolicy.RAW` to preserve encoded paths and raw queries for framework routing.
+TinyHttpd still checks HTTP syntax, Host and framing; its standalone default remains `STRICT`.
+See [integration verification](docs/release/verification/tinyhttpd-3.1.1.md) for the tested boundary.
 A consumer may also opt into that source build in `settings.gradle`:
 
 ```groovy
