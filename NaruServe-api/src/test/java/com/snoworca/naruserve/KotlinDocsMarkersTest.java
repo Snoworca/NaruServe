@@ -1,6 +1,7 @@
 package com.snoworca.naruserve;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
@@ -32,9 +33,10 @@ public final class KotlinDocsMarkersTest {
 
     private static Map<String, String> docs() throws IOException {
         Map<String, String> docs = new TreeMap<>();
-        File[] files = new File(root(), "docs/api").listFiles((d, n) -> n.endsWith(".md"));
-        for (File f : files) {
-            docs.put(f.getName(), read(f));
+        for (String prefix : new String[] {"", "en/"}) {
+            File[] files = new File(root(), "docs/api/" + prefix).listFiles((d, n) -> n.endsWith(".md"));
+            assertTrue("guide directory " + prefix, files != null);
+            for (File f : files) docs.put(prefix + f.getName(), read(f));
         }
         return docs;
     }
@@ -113,6 +115,12 @@ public final class KotlinDocsMarkersTest {
         paired.put("en/t.md", DOC.replace("val b =   2\n\nval c = 3", "val c = 3\nval b = 2"));
         assertTrue("statement reordering changes executable parity",
                 KotlinDocsMarkers.failures(paired, one("T.kt", SOURCE)).stream().anyMatch(f -> f.contains("executable")));
+        assertFalse("Kotlin newline can change return semantics",
+                com.snoworca.naruserve.testing.common.ExampleCodeTokens.kotlinTokens("return value")
+                        .equals(com.snoworca.naruserve.testing.common.ExampleCodeTokens.kotlinTokens("return\nvalue")));
+        assertFalse("Kotlin raw-string content stays exact",
+                com.snoworca.naruserve.testing.common.ExampleCodeTokens.kotlinTokens("val x = \"\"\"a  b\"\"\"")
+                        .equals(com.snoworca.naruserve.testing.common.ExampleCodeTokens.kotlinTokens("val x = \"\"\"a b\"\"\"")));
     }
 
     // OPS-REL-008 AC-3; FR-KT-004 AC-2: even existing marker checks retain literal content.

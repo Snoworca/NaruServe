@@ -6,6 +6,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import com.snoworca.naruserve.testing.common.ExampleCodeTokens;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -308,11 +309,11 @@ public final class DocsExamplesCompileTest {
 
     private static synchronized Map<String, List<String>> docs() throws IOException {
         if (docs == null) {
-            File[] mds = docsDir().listFiles((d, n) -> n.endsWith(".md"));
-            assertNotNull(mds);
             Map<String, List<String>> m = new TreeMap<>();
-            for (File md : mds) {
-                m.put(md.getName(), extractJavaBlocks(md));
+            for (String prefix : new String[] {"", "en/"}) {
+                File[] mds = new File(docsDir(), prefix).listFiles((d, n) -> n.endsWith(".md"));
+                assertNotNull("guide directory " + prefix, mds);
+                for (File md : mds) m.put(prefix + md.getName(), extractJavaBlocks(md));
             }
             docs = m;
         }
@@ -320,6 +321,16 @@ public final class DocsExamplesCompileTest {
     }
 
     private static Skip skipFor(String file, int ordinal, String body) {
+        if (file.startsWith("en/")) {
+            String paired = file.substring(3);
+            try {
+                List<String> blocks = docs().get(paired);
+                if (blocks == null || ordinal < 1 || ordinal > blocks.size()) return null;
+                String original = blocks.get(ordinal - 1);
+                if (!ExampleCodeTokens.javaTokens(original).equals(ExampleCodeTokens.javaTokens(body))) return null;
+                return skipFor(paired, ordinal, original);
+            } catch (IOException e) { throw new IllegalStateException("cannot read paired guide " + paired, e); }
+        }
         for (Skip s : SKIPS) {
             if (s.file.equals(file) && s.matches(ordinal, body)) {
                 return s;
@@ -410,6 +421,14 @@ public final class DocsExamplesCompileTest {
         assertEquals("every actual guide is compiler input", expected, docs());
         assertTrue(String.join("\n", docsDiagnostics()), docsDiagnostics().isEmpty());
         for (Map.Entry<String, List<String>> entry : expected.entrySet()) {
+            String paired = entry.getKey().startsWith("en/") ? entry.getKey().substring(3) : "en/" + entry.getKey();
+            assertNotNull("paired guide " + paired, expected.get(paired));
+            assertEquals("paired Java fence count " + entry.getKey(), entry.getValue().size(), expected.get(paired).size());
+            for (int i = 0; i < entry.getValue().size(); i++) {
+                assertEquals("paired Java executable code " + entry.getKey() + "#" + (i + 1),
+                        ExampleCodeTokens.javaTokens(entry.getValue().get(i)),
+                        ExampleCodeTokens.javaTokens(expected.get(paired).get(i)));
+            }
             int skipped = 0;
             for (int i = 0; i < entry.getValue().size(); i++) {
                 if (skipFor(entry.getKey(), i + 1, entry.getValue().get(i)) != null) skipped++;
@@ -446,6 +465,13 @@ public final class DocsExamplesCompileTest {
     // accepts representative current APIs under Java8, rather than testing documentation keywords.
     @Test
     public void OPS_REL_008_AC3_englishCompilerLabelsRejectBrokenCurrentApiCalls() throws IOException {
+        assertFalse("operator token boundaries", ExampleCodeTokens.javaTokens("a+ ++b")
+                .equals(ExampleCodeTokens.javaTokens("a++ +b")));
+        assertFalse("literal whitespace", ExampleCodeTokens.javaTokens("String x = \"a  b\";")
+                .equals(ExampleCodeTokens.javaTokens("String x = \"a b\";")));
+        String quoted = "String x = \"http://host/a /* literal */ // text\"; char c = ' ';";
+        assertEquals(ExampleCodeTokens.javaTokens(quoted),
+                ExampleCodeTokens.javaTokens("// translated comment\n" + quoted + " /* outside */"));
         String sample = "com.snoworca.naruserve.Router child = com.snoworca.naruserve.Router.create(true);\n"
                 + "child.param(\"id\", (request, response, next, values, name) -> next.run());\n"
                 + "child.route(\"/users/:id{/:tab}\").get((request, response, next) -> {\n"

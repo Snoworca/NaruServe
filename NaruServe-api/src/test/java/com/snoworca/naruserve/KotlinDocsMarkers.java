@@ -1,5 +1,6 @@
 package com.snoworca.naruserve;
 
+import com.snoworca.naruserve.testing.common.ExampleCodeTokens;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -34,8 +35,8 @@ final class KotlinDocsMarkers {
     /**
      * {@code <file>#<n>: ...} for every block without a marker, every marker found more than once, every block line
      * missing from its marker's extent when the extent has no {@code // adapted: <reason>} comment, and every marker
-     * that names no block. Lines are compared blank-dropped and whitespace-normalised; a block line matches an
-     * equal extent line.
+     * that names no block. Executable line tokens retain literals and operators; translated comments do not
+     * count as code. English ordinals reuse a Korean runtime marker only after whole-block executable parity.
      */
     // @req FR-KT-004
     static List<String> failures(Map<String, String> docsByFile, Map<String, String> kotlinByPath) {
@@ -51,7 +52,7 @@ final class KotlinDocsMarkers {
                 } else if (block != null && trimmed.startsWith("```")) {
                     block = null;
                 } else if (block != null && !trimmed.isEmpty()) {
-                    block.add(normalise(line));
+                    block.add(line);
                 }
             }
         }
@@ -73,7 +74,21 @@ final class KotlinDocsMarkers {
         List<String> failures = new ArrayList<>();
         for (Map.Entry<String, List<String>> block : blocks.entrySet()) {
             String key = block.getKey();
-            List<Marker> found = markers.get(key);
+            String markerKey = key;
+            if (key.startsWith("en/")) {
+                markerKey = key.substring(3);
+                List<String> paired = blocks.get(markerKey);
+                if (paired == null) {
+                    failures.add(key + ": no paired Korean executable block for runtime coverage");
+                    continue;
+                }
+                if (!ExampleCodeTokens.kotlinTokens(String.join("\n", paired))
+                        .equals(ExampleCodeTokens.kotlinTokens(String.join("\n", block.getValue())))) {
+                    failures.add(key + ": executable code differs from " + markerKey);
+                    continue;
+                }
+            }
+            List<Marker> found = markers.get(markerKey);
             if (found == null) {
                 failures.add(key + ": no // docs-example: " + key + " marker in the Kotlin test sources");
             } else if (found.size() > 1) {
@@ -107,12 +122,14 @@ final class KotlinDocsMarkers {
             if (ADAPTED.matcher(line).matches()) {
                 return null;
             }
-            extent.add(normalise(line));
+            extent.add(line);
         }
         for (String wanted : block) {
+            List<String> wantedTokens = ExampleCodeTokens.javaTokens(wanted);
+            if (wantedTokens.isEmpty()) continue;
             boolean seen = false;
             for (String line : extent) {
-                if (line.equals(wanted)) {
+                if (ExampleCodeTokens.javaTokens(line).equals(wantedTokens)) {
                     seen = true;
                     break;
                 }
@@ -124,7 +141,4 @@ final class KotlinDocsMarkers {
         return null;
     }
 
-    private static String normalise(String line) {
-        return line.trim().replaceAll("\\s+", " ");
-    }
 }
