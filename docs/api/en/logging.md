@@ -1,6 +1,6 @@
 # Logging
 
-[한국어](../logging.md) | [English](logging.md)
+[한국어](../logging.md) | [API index](README.md)
 
 NaruServe provides two kinds of logs:
 
@@ -41,13 +41,13 @@ Repeated `accessLog(...)` calls update the same application's options in order. 
 Each request produces one line: `<method> <path> <status>[ aborted][ <n>ms][ in=<i> out=<o>][ rid=<id>]`. Optional fields appear when enabled; `aborted` appears when the response aborts. Field order stays fixed for text processing.
 
 ```text
-GET /api/users/42 200 3ms in=0 out=27 rid=5f2c9a1e
-POST /upload 413 aborted 12ms in=1048576 out=0 rid=5f2c9a1f
+GET /api/users/42 200 3ms in=0 out=27 rid=000000005f2c9a1e
+POST /upload 413 aborted 12ms in=1048576 out=0 rid=000000005f2c9a1f
 ```
 
 - `<path>` is the original path without its query string.
 - `in` and `out` count body bytes actually read or written, excluding headers.
-- `rid` matches the request's application log and standard error body's `requestId`.
+- `rid` identifies the request and matches a retained standard JSON error envelope's `requestId` when that explicit error representation is used. Default common HTTP HTML errors do not contain a `requestId` field; correlate them with the access/application log instead.
 
 ### When a line is written
 
@@ -57,12 +57,12 @@ POST /upload 413 aborted 12ms in=1048576 out=0 rid=5f2c9a1f
 | WebSocket | One line at upgrade (`101`), then one close line with code and connection duration |
 | SSE | One line when the stream finishes or fails; no initial line |
 
-A WebSocket handshake line uses the HTTP format (`GET /ws 101 2ms in=0 out=0 rid=5f2c9a20`). It is written after `101` and before reading the first frame. The close line is `WS <path> <closeCode>[ <n>ms][ rid=<id>]`, with the same request ID and the duration from open to close. Codes include `1000` for `ws.close()`, `1001` for shutdown, `1008` for send queue overflow, the peer's code for a peer close, and `1006` for disconnect without a close frame. Rejected upgrades (`403`, `426`, `503`) produce only the ordinary HTTP line.
+A WebSocket handshake line uses the HTTP format (`GET /ws 101 2ms in=0 out=0 rid=000000005f2c9a20`). It is written after `101` and before reading the first frame. The close line is `WS <path> <closeCode>[ <n>ms][ rid=<id>]`, with the same request ID and the duration from open to close. Codes include `1000` for `ws.close()`, `1001` for shutdown, `1008` for send queue overflow, the peer's code for a peer close, and `1006` for disconnect without a close frame. Rejected upgrades (`403`, `426`, `503`) produce only the ordinary HTTP line.
 
 SSE appends ` sse start=<epochMillis> cause=<client|app|overflow|shutdown|error>` to the request line:
 
 ```text
-GET /events 200 30512ms in=0 out=812 rid=5f2c9a21 sse start=1760918400000 cause=client
+GET /events 200 30512ms in=0 out=812 rid=000000005f2c9a21 sse start=1760918400000 cause=client
 ```
 
 Duration covers the whole stream; `out` counts streamed bytes; `start` is epoch milliseconds. The first recorded termination cause wins: `app` for `close()`, `overflow` for queue overflow, `shutdown` for server shutdown, `client` for a peer disconnect detected during a write, and `error` otherwise. `HEAD` produces an ordinary line without the SSE suffix. Exclusions, enablement and log level also apply to these lines.
@@ -75,6 +75,14 @@ Duration covers the whole stream; `out` counts streamed bytes; `start` is epoch 
 - Full query strings
 
 Newlines and similar characters in logged values are escaped to prevent log forgery.
+
+### Common HTTP error records
+
+Ordered error handlers do not suppress the original failure record. An error whose internal `StandardErrors.statusOf` classification is 500 is passed once per request and `Throwable` identity to `logger.error(message, throwable)`, including an error that is handled later or occurs after a successful response. Re-propagating the same object does not duplicate that record; distinct server failures may each be recorded. Client errors are not promoted to ERROR merely because the default body is HTML. The response remains single-commit.
+
+Access logging and request cleanup are separate. A returned pending `Deferred` can keep input/uploads alive after the response's one access line has been written; settlement does not add another line. Existing access-log privacy exclusions remain unchanged. Exception messages and Java stack details in application logs/default error HTML are not an automatic scrubber for application-supplied secrets.
+
+The module coordinates below remain the published 0.9.0 coordinates; this page's common HTTP behavior describes the 0.10.0 checkout.
 
 ## Application logger
 

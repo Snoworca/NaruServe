@@ -13,6 +13,8 @@ Express에서 `multer`로 하던 일을 내장 기능으로 합니다. 미들웨
 | `limits: { fileSize }` | `app.multipart(c -> c.maxFileSize(...))` |
 | `dest: 'uploads/'` | `c.tempDirectory(...)` (임시 폴더) + `file.save(...)` |
 
+아래 공통 HTTP 동작은 0.10.0 체크아웃 기준입니다. 새 릴리스 전까지 공개 모듈 좌표는 0.9.0입니다.
+
 ## 예제
 
 서버 시작 전에 저장 폴더를 준비합니다. 전체 import와 main이 있는 [Java](../../examples/java/src/main/java/example/JavaExample.java)·[Kotlin](../../examples/kotlin/src/main/kotlin/example/KotlinExample.kt) 예제도 있습니다.
@@ -26,11 +28,11 @@ if (!uploadDir.isDirectory() && !uploadDir.mkdirs() && !uploadDir.isDirectory())
 app.post("/api/upload", (req, res) -> {
     String title = req.form("title");
     UploadFile file = req.file("file");
-    if (file == null || file.size() == 0) {  // 브라우저의 빈 파일 입력은 크기 0인 파일로 옵니다
+    if (file == null || file.size() == 0) {  // an empty browser file input produces a zero-byte file
         res.status(400).json("Missing file");
         return;
     }
-    File dest = new File(uploadDir, UUID.randomUUID() + ".bin");  // 서버가 만든 이름
+    File dest = new File(uploadDir, UUID.randomUUID() + ".bin");  // server-generated filename
     file.save(dest);
     res.status(201).json(Collections.singletonMap("size", file.size()));
 });
@@ -44,7 +46,7 @@ check(uploadDir.isDirectory || uploadDir.mkdirs()) { "Cannot create upload direc
 
 app.post("/api/upload") { req, res ->
     val file = req.file("file")
-    if (file == null || file.size() == 0L) {  // 브라우저의 빈 파일 입력은 크기 0인 파일로 옵니다
+    if (file == null || file.size() == 0L) {  // an empty browser file input produces a zero-byte file
         res.status(400).json("Missing file")
         return@post
     }
@@ -57,10 +59,10 @@ app.post("/api/upload") { req, res ->
 
 ```java
 app.multipart(config -> {
-    config.maxFileSize(100L * 1024 * 1024);    // 파일 하나 100 MiB
-    config.maxRequestSize(200L * 1024 * 1024); // 요청 전체 200 MiB
-    config.maxParts(50);                       // 파트 수
-    config.memoryThreshold(64 * 1024);         // 이보다 크면 디스크로
+    config.maxFileSize(100L * 1024 * 1024);    // 100 MiB per file
+    config.maxRequestSize(200L * 1024 * 1024); // 200 MiB for the whole request
+    config.maxParts(50);                       // part count
+    config.memoryThreshold(64 * 1024);         // spill larger files to disk
     config.tempDirectory(new File("./temp"));
 });
 ```
@@ -87,7 +89,7 @@ app.multipart(config -> {
 - 파트 헤더는 한 줄 8192바이트, 파트 하나의 헤더 합계 16384바이트로 고정되어 있고, 넘으면 `413`입니다. 이 두 값을 설정으로 열지 않은 이유는 정상 업로드의 파트 헤더가 이 한도에 가까이 가지 않기 때문입니다.
 
 ```java
-app.formLimit(2L * 1024 * 1024);   // urlencoded 본문과 multipart 텍스트 필드 합계 2 MiB
+app.formLimit(2L * 1024 * 1024);   // 2 MiB for urlencoded bodies and aggregate multipart text fields
 ```
 
 ## UploadFile
@@ -96,16 +98,16 @@ app.formLimit(2L * 1024 * 1024);   // urlencoded 본문과 multipart 텍스트 �
 import org.jspecify.annotations.Nullable;
 
 public interface UploadFile extends AutoCloseable {
-    String name();                     // form 필드 이름
-    @Nullable String filename();       // 클라이언트가 보낸 파일 이름 — 믿지 마세요. 없으면 null
-    @Nullable String contentType();    // 클라이언트가 보낸 타입 — 믿지 마세요. 없으면 null
+    String name();                     // form field name
+    @Nullable String filename();       // untrusted client filename; null if absent
+    @Nullable String contentType();    // untrusted client type; null if absent
     long size();
     InputStream inputStream() throws IOException;
     void save(File destination) throws IOException;
     void transferTo(OutputStream target) throws IOException;
-    byte[] bytes() throws IOException; // 8 MiB까지만
+    byte[] bytes() throws IOException; // at most 8 MiB
     @Override
-    void close();                      // checked 예외 없음
+    void close();                      // no checked exception
 }
 ```
 
@@ -124,6 +126,8 @@ public interface UploadFile extends AutoCloseable {
 
 `java.nio.file.Path`는 Android 5.0에 없어서 받지 않습니다. `File`과 스트림을 씁니다.
 
+잘못된 multipart·한도·저장소 오류는 공통 오류 경로의 등록 순서를 따릅니다. 처리되지 않은 기본 응답은 HTML이며 명시적으로 설정한 JSON 오류도 사용할 수 있습니다. 한도·파트 소유권·파일 경로 안전성은 유지됩니다.
+
 ## 보안
 
 - `filename()`은 클라이언트 값을 그대로 돌려줍니다. 브라우저처럼 역슬래시를 그대로 보낸 이름(`C:\fakepath\a.txt`)도 바뀌지 않고, 따옴표 안의 `\"`와 `\\`만 이스케이프로 풉니다.
@@ -134,7 +138,7 @@ public interface UploadFile extends AutoCloseable {
 
 - 업로드 파일은 `memoryThreshold`를 넘으면 임시 폴더에 저장됩니다. 요청 전체를 메모리에 올리지 않습니다.
 - 임시 파일은 요청이 끝날 때, `save()`가 성공한 뒤, 한도를 넘어 `413`으로 답한 뒤, 클라이언트가 중간에 끊었을 때, 앱을 `shutdown`할 때 지워집니다.
-- 요청은 응답이 끝나고 **그리고** 핸들러가 반환했을 때 끝납니다. 그래서 `res.status(202).send("queued")`로 먼저 답한 뒤 같은 핸들러 안에서 `file.save(dest)`해도 됩니다. 이렇게 정한 이유는 먼저 답하고 나중에 처리하는 Express/multer 패턴을 그대로 쓰게 하려는 것입니다.
-- 그래서 **요청이 끝난 뒤에는 `UploadFile`을 쓸 수 없습니다.** `inputStream()`을 다른 스레드에 넘겨 나중에 읽지 마세요. 나중에 처리할 파일은 핸들러 안에서 `save()`하세요.
+- 정상 요청 정리는 응답 완료·활성 콜백·대기 중인 continuation·async 콜백이 반환한 모든 미완료 `Deferred`를 기다립니다. 먼저 `202`로 응답해도 작업이 소유한 업로드를 바로 해제하지 않습니다. 활성 핸들러 안이나 반환한 결과의 보유권으로 보호되는 생산자 안에서 저장할 수 있습니다.
+- 미완료 결과를 `app.getAsync`/`app.methodAsync`로 반환하고 생산자의 마지막 업로드·입력 접근을 마친 뒤 확정하세요. 따로 시작한 스레드나 변수에만 저장한 `Deferred`는 보유권을 얻지 않습니다. 정리 후에는 내용 접근이 실패하므로 이후에도 쓸 데이터는 `save`로 영구 저장하세요. abort·timeout·shutdown은 미완료 보유권을 취소할 수 있고 늦은 결과 확정으로 다시 열 수 없습니다. [수명주기](lifecycle.md#지연-콜백과-요청-자원)를 참고하세요.
 - `save()`나 `close()`는 그 파트의 `inputStream()`으로 받은 스트림을 먼저 닫고 임시 파일을 지웁니다. 열린 스트림이 Windows에서 삭제를 막지 않게 하려는 것입니다. 삭제가 실패한 임시 파일은 계속 추적해 `shutdown` 때 다시 지웁니다.
 - 이미 쓸 수 없게 된 파트에 `save(dest)`를 부르면 `dest`를 건드리지 않고 `IllegalStateException`을 던집니다. 앞서 저장한 파일이 지워지지 않습니다.

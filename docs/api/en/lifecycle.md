@@ -1,6 +1,6 @@
 # Lifecycle and services
 
-[한국어](../lifecycle.md) | [English](lifecycle.md)
+[한국어](../lifecycle.md) | [API index](README.md)
 
 Express applications put shared objects such as database connections in module variables or `app.locals`. NaruServe creates and registers them once at startup, then lets HTTP, WebSocket and SSE handlers retrieve the same objects. This resembles application-scoped Servlet `ServletContext` storage.
 
@@ -93,7 +93,7 @@ public interface ApplicationContext extends ServiceRegistry {
 
 ### register
 
-- Call only inside `onStart`. Once the app becomes `RUNNING`, the registry is frozen, so request threads can read it concurrently.
+- Call only inside `onStart`. Once the app becomes `RUNNING`, the service registry is frozen, so request threads can read it concurrently. This freeze does not apply to ordinary common HTTP layers: route/middleware registration and existing RouteBuilder callbacks can be appended after listen. Server options, lifecycle callbacks and WebSocket configuration retain their separate startup guards.
 - Registering the same `Class` twice is a configuration error; it never overwrites.
 - Registering one object under its interface and implementation class is allowed; it closes only once.
 
@@ -155,7 +155,7 @@ NEW --listen/start--> STARTING --success--> RUNNING --shutdown--> STOPPING --> T
 
 | State | Meaning |
 |---|---|
-| `NEW` | Configuration; the only state allowing route, middleware and option changes |
+| `NEW` | Initial configuration; server options, services and WebSocket configuration must respect startup guards |
 | `STARTING` | Callbacks, validation and binding. Requests arriving after binding wait for `RUNNING`; if startup fails, they receive `503` and `Connection: close`. If stop was already requested, they receive `503` immediately |
 | `RUNNING` | Serving requests |
 | `STOPPING` | Reject new requests/upgrades with `503`, `Connection: close` and the standard error body |
@@ -181,6 +181,25 @@ A route or middleware calling `shutdown(timeout, unit)` starts shutdown on a sep
 On keep-alive requests, TinyHttpd may wait about two seconds before closing that connection, delaying `TERMINATED`; this is a connection-close grace period separate from the shutdown timeout. A handler calling shutdown during an existing `STOPPING` also returns immediately. If the shutdown thread cannot be created, such as under memory pressure, cleanup runs on the request thread; it may wait for that request until timeout, but still reaches `TERMINATED`.
 
 Calling shutdown from an SSE `onClose` listener also returns immediately and runs shutdown separately, because shutdown otherwise waits for that stream to terminate.
+
+## Deferred callbacks and request resources
+
+The 0.10.0 common HTTP checkout separates callback return, response completion and request cleanup. An ordinary callback that returns without responding or continuing leaves the request pending. A later callback can call `next.run()`, send JSON, or start a stream/SSE. Fulfillment does not implicitly continue or end a response.
+
+Use `app.getAsync` or `app.methodAsync` when background work must retain request resources after an early response. Return that work's pending `Deferred`; creating one without returning it does not acquire a request lease. Schedule work with an executor owned by your application. No new executor or `CompletionStage` dependency is required by the core.
+
+1. Create `Deferred.pending()`, arrange the producer, and return that result from the async callback.
+2. While its lease is active, the producer may read the same request body or upload, even after an earlier `res.send("ack")`. Built-in Tiny/Servlet adapters retain unread input without eagerly reading it.
+3. If no response was sent, explicitly send or end it. If an early response already finished, do not send a second response. Call `work.resolve()` only after the producer's last request/upload access; use `work.reject(error)` to enter the downstream error path. Rejection after commit cannot create a second error response.
+4. Each result settles once. `onSettled(Runnable)` observes success or rejection once, including late registration; it does not continue or end the response. Normal cleanup waits for active callbacks, queued continuations and every pending lease. Save data needed beyond cleanup to application-owned storage.
+
+Terminal abort, async timeout or forced shutdown can revoke pending ownership. Late settlement or continuation cannot reopen a cancelled input or recycle a completed exchange into a new request. An actually running callback/drain still owns its active resources until it exits; do not assume forced shutdown can stop arbitrary user code. A deferred reentry restores the request lifecycle context, so calling shutdown inside that callback does not wait on itself.
+
+### Custom HTTP adapters
+
+`HttpExchange.onAbort(Runnable)` and `Runnable retainRequest()` are additive defaults for existing adapters. The default abort hook validates a nonnull listener and otherwise does nothing; the default retention returns a no-op release action. Compatibility defaults alone do not give a custom adapter the built-in deferred transport guarantees.
+
+An adapter implementing retention must keep request input/container state valid until all normal holds are released, separately from `finish()` sending the response. Each returned release action must be thread-safe and idempotent. Implement detected abnormal abort notification once per registration, including late registration, outside adapter locks; listener failure must not skip cleanup. Normal `finish()` must not signal abort. Idle peer closure need not be detected before I/O. Terminal cancellation may revoke holds, with harmless late release and no resurrection; maintain bounded stop and preserve active I/O/drain ownership. Reuse `common.RequestRetentions`, `common.AbortListeners` and `common.SafeCallbacks` when implementing these contracts.
 
 ## Android
 
