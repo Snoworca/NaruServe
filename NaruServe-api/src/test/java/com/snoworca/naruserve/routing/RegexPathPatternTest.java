@@ -60,7 +60,7 @@ public class RegexPathPatternTest {
     @Test public void escapedParensBackslashAndControlEscapeDoNotInventGroups() {
         RegexPathPattern escaped=RegexPathPattern.compile(Pattern.compile("\\((?<real>a)\\)"));assertEquals(list("real"),escaped.keys());value(matched(escaped,"(a)"),"real","a");
         RegexPathPattern slash=RegexPathPattern.compile(Pattern.compile("\\\\(a)"));assertEquals(list("0"),slash.keys());value(matched(slash,"\\a"),"0","a");
-        RegexPathPattern control=RegexPathPattern.compile(Pattern.compile("\\c((a)"));assertEquals(list("0"),control.keys());value(matched(control,"\ba"),"0","a");
+        RegexPathPattern control=RegexPathPattern.compile(Pattern.compile("\\c((a)"));assertEquals(list("0"),control.keys());assertTrue(Pattern.compile("\\c((a)").matcher("ha").find());assertFalse(Pattern.compile("\\c((a)").matcher("\ba").find());value(matched(control,"ha"),"0","a");
     }
     // FR-ROUTE-019 AC-3
     @Test public void characterClassFirstClosingBracketAndIntersectionsHideParens() {
@@ -133,4 +133,12 @@ public class RegexPathPatternTest {
         try{RegexPathPattern.compile("a",Integer.MIN_VALUE);fail("invalid flags accepted");}catch(IllegalArgumentException expected){}
         RegexPathPattern p=RegexPathPattern.compile("a",0);try{p.match(null);fail("null path accepted");}catch(NullPointerException expected){}
     }
+    // FR-ROUTE-019 AC-1 AC-2 AC-6: Java8 Pattern itself accepts unknown flag bits, so registration validates them.
+    @Test public void unknownFlagBitsAreRejectedForSourceAndPrecompiledPatterns() {
+        for(int flags:new int[]{0x200,0x400,Integer.MIN_VALUE}) {
+            try {RegexPathPattern.compile("a",flags);fail("unknown source flags accepted");}catch(IllegalArgumentException expected){}
+            try {Pattern invalid=Pattern.compile("a",flags);RegexPathPattern.compile(invalid);fail("unknown precompiled flags accepted");}catch(IllegalArgumentException expected){}
+        }
+    }
+
 }
