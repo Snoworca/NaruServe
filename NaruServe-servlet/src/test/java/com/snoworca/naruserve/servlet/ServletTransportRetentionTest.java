@@ -82,6 +82,26 @@ public class ServletTransportRetentionTest {
         finish(ex);assertEquals("ack",reply.get(5,TimeUnit.SECONDS).text());one.run();one.run();assertEquals(0,completes.get());assertEquals(1,inFlight());
         two.run();two.run();once(1);idle();assertEquals(0,aborts.get());assertNull(lockFailure.get());closed(ex);
     }
+    // FR-APP-023 AC-8; IR-HTTP-009 AC-1: a rejected write after normal finish is not a new transport failure.
+    @Test(timeout=20000) public void rejectedLateBodyWriteDoesNotAbortStillRetainedRequest()throws Exception{
+        start();Future<SharedApp.Reply> reply=get("/late-write");HttpExchange ex=next();returned();Runnable release=retain(ex);
+        OutputStream out=ex.commit(200,Arrays.asList(new AbstractMap.SimpleImmutableEntry<>("Content-Length","3")),3);out.write("ack".getBytes(StandardCharsets.UTF_8));ex.finish();
+        assertEquals("ack",reply.get(5,TimeUnit.SECONDS).text());assertEquals(0,completes.get());
+        try{out.write('x');fail("closed body accepted another write");}catch(IOException expected){}
+        assertEquals("validation failure notified abort",0,aborts.get());assertEquals(0,completes.get());assertEquals(1,inFlight());release.run();once(1);idle();
+    }
+    // FR-APP-023 AC-5 AC-8: keeping request input alive does not reopen a completed SSE output.
+    @Test(timeout=20000) public void completedSseDrainOutputRejectsLateWritesWhileInputRemainsRetained()throws Exception{
+        AtomicReference<Runnable> release=new AtomicReference<>();AtomicReference<OutputStream> output=new AtomicReference<>();CountDownLatch drained=new CountDownLatch(1);
+        start(ex->{release.set(ex.retainRequest());try{ex.eventStream(200,Arrays.asList(new AbstractMap.SimpleImmutableEntry<>("Content-Type","text/event-stream")),new StreamDrain(){
+            @Override public void attach(OutputStream out){output.set(out);}
+            @Override public void drain(OutputStream out)throws IOException{out.write("data: first\n\n".getBytes(StandardCharsets.UTF_8));drained.countDown();}
+        });}catch(IOException e){throw new UncheckedIOException(e);}});
+        Future<SharedApp.Reply> reply=get("/late-sse-write");HttpExchange ex=next();returned();releases.add(release.get());assertTrue(drained.await(5,TimeUnit.SECONDS));ex.finish();
+        assertTrue("drain slot was not released",SharedApp.until(()->adapter.pool().open()==0,5,TimeUnit.SECONDS));assertEquals(0,completes.get());assertEquals(1,inFlight());
+        try{output.get().write('x');fail("completed SSE body accepted another write");}catch(IOException expected){}
+        assertEquals(0,aborts.get());assertEquals(0,completes.get());release.get().run();assertEquals("data: first\n\n",reply.get(5,TimeUnit.SECONDS).text());once(1);idle();
+    }
     // FR-APP-023 AC-8: pending retained input remains readable after the client observes a full response.
     @Test(timeout=20000) public void directSpiCanFirstReadOriginalInputAfterWireFinish()throws Exception{
         start();String payload="original unread bytes";
