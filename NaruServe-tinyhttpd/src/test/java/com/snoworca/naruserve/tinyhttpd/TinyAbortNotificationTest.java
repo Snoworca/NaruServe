@@ -46,7 +46,11 @@ public class TinyAbortNotificationTest {
     private Future<String> get(){return clients.submit(()->Http.send(server.getPort(),Http.get("/pending")));}
     private HttpExchange next()throws Exception{HttpExchange ex=exchanges.poll(5,TimeUnit.SECONDS);assertNotNull(ex);return ex;}
     private static void until(Callable<Boolean> condition,String message)throws Exception{long end=System.nanoTime()+TimeUnit.SECONDS.toNanos(5);while(!condition.call()&&System.nanoTime()<end)Thread.sleep(5);assertTrue(message,condition.call());}
-    private static void unlocked(HttpExchange ex,AtomicReference<Throwable> failure){try{assertFalse("abort listener ran under exchange lock",Thread.holdsLock(ex));}catch(Throwable e){failure.compareAndSet(null,e);}}
+    private static void unlocked(HttpExchange ex,AtomicReference<Throwable> failure){try{
+        assertFalse("abort listener ran under response IO monitor",Thread.holdsLock(ex));
+        java.lang.reflect.Field state=TinyHttpdExchange.class.getDeclaredField("state");state.setAccessible(true);
+        assertFalse("abort listener ran under lifecycle state monitor",Thread.holdsLock(state.get(ex)));
+    }catch(Throwable e){failure.compareAndSet(null,e);}}
     private void terminal(Future<String> reply)throws Exception{try{reply.get(5,TimeUnit.SECONDS);}catch(ExecutionException e){assertTrue(e.getCause() instanceof IOException);}until(()->exited.get()==1,"Tiny run still owns worker after terminal event");assertEquals(0,slots.open());}
     private static void failsIo(Io action)throws Exception{try{action.run();fail("transport operation did not fail");}catch(IOException expected){}}
     interface Io{void run()throws IOException;}
