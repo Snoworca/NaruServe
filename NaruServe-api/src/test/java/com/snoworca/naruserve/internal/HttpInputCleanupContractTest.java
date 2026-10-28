@@ -4,12 +4,15 @@ import com.snoworca.naruserve.Deferred;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
 /** A terminal adapter may reject body access while its already acquired input still needs cleanup. */
 public class HttpInputCleanupContractTest {
-    private static final class GuardedExchange extends LifecycleExchange {
+    private static class GuardedExchange extends LifecycleExchange {
         final AtomicInteger bodyAccesses = new AtomicInteger();
         GuardedExchange() {
             super("POST", "/input", "original".getBytes(StandardCharsets.UTF_8),
@@ -64,6 +67,43 @@ public class HttpInputCleanupContractTest {
         });
         app.freeze(); app.dispatcher().handle(exchange);
         assertEquals(1, exchange.bodyAccesses.get());
+        assertEquals(1, exchange.input.closes.get());
+    }
+
+    // FR-APP-023 AC-5 AC-8: acquisition started before cancellation must not publish a late live input.
+    @Test(timeout=10000) public void cancellationDuringInputAcquisitionClosesTheLateHandleWithoutReopening() throws Exception {
+        CountDownLatch acquiring = new CountDownLatch(1), resume = new CountDownLatch(1);
+        GuardedExchange exchange = new GuardedExchange() {
+            @Override public InputStream requestBody() {
+                InputStream original = super.requestBody();
+                acquiring.countDown();
+                try { assertTrue(resume.await(5, TimeUnit.SECONDS)); }
+                catch (InterruptedException failure) { throw new AssertionError(failure); }
+                return original;
+            }
+        };
+        DefaultRestApp app = new DefaultRestApp();
+        app.jsonCodec(new HttpTransportRetentionContractTest.BodyCodec());
+        Deferred pending = Deferred.pending();
+        AtomicReference<com.snoworca.naruserve.Request> saved = new AtomicReference<>();
+        AtomicReference<Object> outcome = new AtomicReference<>();
+        app.methodAsync("POST", "/input", (request, response, next) -> { saved.set(request); return pending; });
+        app.freeze(); app.dispatcher().handle(exchange);
+        Thread producer = new Thread(() -> {
+            try { outcome.set(saved.get().body(String.class)); }
+            catch (Throwable failure) { outcome.set(failure); }
+        }, "input-acquisition-control");
+        producer.start();
+        try {
+            assertTrue(acquiring.await(5, TimeUnit.SECONDS));
+            exchange.abort();
+        } finally { resume.countDown(); producer.join(5000); }
+        assertFalse("cancelled producer failed to return", producer.isAlive());
+        assertTrue("cancelled acquisition returned live body: " + outcome.get(),
+                outcome.get() instanceof com.snoworca.naruserve.BodyAlreadyConsumedException);
+        assertEquals(1, exchange.input.closes.get());
+        assertEquals("cancellation reacquired the adapter", 1, exchange.bodyAccesses.get());
+        pending.resolve(); exchange.abort();
         assertEquals(1, exchange.input.closes.get());
     }
 }
