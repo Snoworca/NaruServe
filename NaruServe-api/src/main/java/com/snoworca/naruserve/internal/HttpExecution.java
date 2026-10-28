@@ -5,7 +5,7 @@ import java.util.*;
 import org.jspecify.annotations.Nullable;
 
 /** Per-request cursors and execution ownership. User callbacks and IO run outside the state monitor. */
-// @req FR-APP-022 AC-1 AC-2 AC-3 AC-5; FR-APP-023 AC-1 AC-3 AC-4 AC-5
+// @req FR-APP-022 AC-1 AC-2 AC-3 AC-5; FR-APP-023 AC-1 AC-3 AC-4 AC-5 AC-7 AC-8
 final class HttpExecution {
     private final DefaultRequest request;
     private final DefaultResponse response;
@@ -15,7 +15,8 @@ final class HttpExecution {
     private final Object state=new Object();
     private final Deque<Runnable> queued=new ArrayDeque<>();
     private @Nullable Thread owner;
-    private boolean terminal,cleaned,cancelled;
+    private boolean terminal,cleaned,cancelled,cleaning,registered,releasing,transportReleased;
+    private Runnable releaseRequest=()->{};
     private final Set<Object> leases=Collections.newSetFromMap(new IdentityHashMap<Object,Boolean>());
     private final RouterCursor root;
 
@@ -26,7 +27,10 @@ final class HttpExecution {
         response.onDone(this::responseDone);
     }
     void start(com.snoworca.naruserve.spi.HttpExchange exchange) {
-        if(!lifecycle.registerHttp(this)) { cancel();return; }
+        // Adapter/user-provided hooks run outside our monitor. Even an already-closed lifecycle releases this hold.
+        releaseRequest=Objects.requireNonNull(exchange.retainRequest(),"request retention release");
+        synchronized(state) { registered=lifecycle.registerHttp(this); }
+        if(!registered) { cancel();return; }
         exchange.onAbort(this::cancel);
         submit(()->root.advance(null));
     }
@@ -42,18 +46,47 @@ final class HttpExecution {
         }
         try { terminalLog.run(); } finally { cleanupIfIdle(); }
     }
+    /** Caller holds state; adapter/user callbacks and physical resource cleanup never run there. */
+    private boolean idle() { return terminal && owner==null && queued.isEmpty() && leases.isEmpty(); }
     private void cleanupIfIdle() {
         boolean releaseResources;
         synchronized(state) {
-            if(!terminal || owner!=null || !queued.isEmpty() || !leases.isEmpty())return;
-            releaseResources=!cleaned;cleaned=true;
+            if(!idle() || cleaning || releasing)return;
+            releaseResources=!cleaned;
+            if(releaseResources) { cleaned=true;cleaning=true; }
         }
-        try {
-            if(releaseResources) {
-                request.releaseUploads();
-                try { request.closeBody(); } catch(Exception failure) { errors.logger.error("request input close failed",failure); }
+        if(releaseResources) {
+            try {
+                try { request.releaseUploads(); }
+                finally {
+                    try { request.closeBody(); }
+                    catch(Exception failure) { errors.logger.error("request input close failed",failure); }
+                }
+            } finally {
+                synchronized(state) { cleaning=false; }
+                releaseIfIdle();
             }
-        } finally { lifecycle.releaseHttp(this); }
+        } else releaseIfIdle();
+    }
+    /** Input cleanup, adapter release, and new callback admission share one app-ownership registration. */
+    private void releaseIfIdle() {
+        synchronized(state) {
+            if(!idle() || cleaning || releasing)return;
+            if(transportReleased) { unregister();return; }
+            releasing=true;
+        }
+        try { releaseRequest.run(); }
+        catch(Throwable failure) { errors.logger.error("request retention release failed",failure); }
+        finally {
+            synchronized(state) {
+                transportReleased=true;releasing=false;
+                if(idle() && !cleaning)unregister();
+            }
+        }
+    }
+    /** Caller holds state; lifecycle set bookkeeping invokes no adapter/user code and acquires no request lock. */
+    private void unregister() {
+        if(registered) { registered=false;lifecycle.releaseHttp(this); }
     }
     private void submit(Runnable task) {
         boolean nested;
@@ -63,7 +96,10 @@ final class HttpExecution {
             nested=owner!=null;
             if(!nested) {
                 // A valid post-response continuation owns app lifetime again, without resurrecting closed input.
-                if(cleaned && !lifecycle.registerHttp(this))return;
+                if(!registered) {
+                    if(!lifecycle.registerHttp(this))return;
+                    registered=true;
+                }
                 owner=Thread.currentThread();
             }
         }
