@@ -18,6 +18,7 @@ import org.junit.Test;
  * Wave 4 decisions recorded in docs/api with the wave 7 marker set (OPS-APP-005, successor of OPS-APP-004). The
  * wave7s13 cases cite SDS-AC-n of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-13.sds.md.
  */
+// @req OPS-REL-008 AC-1 AC-2 AC-3
 public class AppDocsTest {
 
     private static final String MARKER = "(미확정)";
@@ -48,13 +49,13 @@ public class AppDocsTest {
         r.put("app.md", Arrays.asList("`RestApp.builder()`", "`AppFactory`", "라우트 미들웨어 오버로드",
                 "`LifecycleCallback`", "`ErrorHandler`", "daemon", "`ServerHandle`은", "LAN"));
         r.put("README.md", Arrays.asList("`RestApp.builder()`"));
-        r.put("middleware.md", Arrays.asList("`RouteBuilder.use(middleware)`", "응답도 `next.run()`도 없이",
-                "`ErrorHandler`", "`HttpException`", "`UnsupportedMediaTypeException`", "체인", "`404`/`405` 본문"));
-        r.put("routing.md", Arrays.asList("`use(middleware)`"));
+        r.put("middleware.md", Arrays.asList("`get(path, Middleware...)`", "응답도 next도 없이",
+                "`ErrorHandler`", "`HttpException`", "`UnsupportedMediaTypeException`", "등록된 위치", "HTML"));
+        r.put("routing.md", Arrays.asList("`use(Middleware)`"));
         r.put("lifecycle.md", Arrays.asList("`registerExternal`", "`AppStartException`"));
         r.put("logging.md", Arrays.asList("rid=<id>"));
-        r.put("express-migration.md", Arrays.asList("`auth, admin, h`", "`req.path()`", "`INTERNAL_ERROR`",
-                "| 마지막 404 미들웨어", "| `app.set('trust proxy', ...)`", "0.0.0.0", "| `cookie-parser`"));
+        r.put("express-migration.md", Arrays.asList("`app.get/post/...`", "`path()`", "표준 JSON 확장",
+                "일반 최종 응답", "`trustProxy(true)`", "0.0.0.0", "`req.cookies`"));
         r.put("cookie.md", Arrays.asList("| `getMaxAge()`", "`Expires`"));
         r.put("defaults.md", Arrays.asList("| 바인딩 주소", "| 프록시 헤더", "| 심볼릭 링크"));
         r.put("static.md", Arrays.asList("SPA fallback은", "`/docs/`로 301", "`cache(pattern, policy)`",
@@ -254,54 +255,52 @@ public class AppDocsTest {
     // OPS-APP-005 AC-2
     @Test
     public void OPS_APP_005_AC2_middlewareAndRoutingDecisions() throws IOException {
+        // OPS-REL-008 AC-1 AC-3; CON-APP-010 AC-3 AC-4 AC-5: retain API extensions,
+        // version the old automatic-end/global-JSON/static-fallback checkpoints explicitly.
         String mw = doc("middleware.md");
-        String use = lineWith(mw, "`RouteBuilder.use(middleware)`");
-        assertTrue(use, use.contains(".use(") && use.contains("여러"));
-        String finish = lineWith(mw, "응답도 `next.run()`도 없이");
-        assertTrue(finish, finish.contains("경고"));
-        assertTrue(finish, finish.contains("`end()`"));
-        String http = lineWith(mw, "`HttpException`");
-        assertTrue(http, http.contains("`status()`") && http.contains("`code()`"));
+        assertTrue(mw.contains("`get(path, Middleware...)`"));
+        String finish = lineWith(mw, "응답도 next도 없이");
+        assertTrue(finish, finish.contains("대기") && finish.contains("나중에"));
+        String http = lineWith(mw, "`HttpException.status()`");
+        assertTrue(http, http.contains("`code()`") && http.contains("`headers()`"));
         assertTrue(lineWith(mw, "`UnsupportedMediaTypeException`").contains("415"));
-        String chain = lineWith(mw, "체인");
-        assertTrue(chain, chain.contains("등록 순서"));
-        assertTrue(chain, chain.contains("응답을 시작"));
-        for (String code : new String[] {"BAD_REQUEST", "NOT_FOUND", "METHOD_NOT_ALLOWED", "PAYLOAD_TOO_LARGE",
+        String chain = lineWith(mw, "등록된 위치");
+        assertTrue(chain, chain.contains("오류 레이어") && chain.contains("응답"));
+        int[] statuses = {400, 404, 405, 413, 415, 422, 426, 500, 501, 503, 418};
+        String[] codes = {"BAD_REQUEST", "NOT_FOUND", "METHOD_NOT_ALLOWED", "PAYLOAD_TOO_LARGE",
                 "UNSUPPORTED_MEDIA_TYPE", "UNPROCESSABLE_ENTITY", "UPGRADE_REQUIRED", "INTERNAL_ERROR",
-                "NOT_IMPLEMENTED", "SERVICE_UNAVAILABLE", "HTTP_<status>"}) {
-            assertTrue("code " + code, mw.contains("`" + code + "`"));
+                "NOT_IMPLEMENTED", "SERVICE_UNAVAILABLE", "HTTP_418"};
+        for (int i = 0; i < statuses.length; i++) {
+            assertEquals("retained HttpException.code extension " + statuses[i], codes[i], new HttpException(statuses[i]).code());
         }
-        assertTrue(lineWith(mw, "`404`/`405` 본문").contains("v1"));
-        String stopping = lineWith(mw, "`STOPPING`");
-        assertTrue(stopping, stopping.contains("`503`") && stopping.contains("`SERVICE_UNAVAILABLE`"));
-        String queue = lineWith(mw, "대기 큐가 가득");
-        assertTrue(queue, queue.contains("`503`") && queue.contains("TinyHttpd") && queue.contains("평문"));
-
+        assertTrue(mw.contains("**HTML**") && mw.contains("표준 오류 확장"));
+        String stopping = lineWith(doc("lifecycle.md"), "| `STOPPING`");
+        assertTrue(stopping, stopping.contains("`503`") && stopping.contains("`Connection: close`") && stopping.contains("표준 오류"));
+        String queue = lineWith(doc("defaults.md"), "소켓 용량 `503`");
+        assertTrue(queue, queue.contains("TinyHttpd") && queue.contains("평문"));
         String routing = doc("routing.md");
-        String routeUse = lineWith(routing, "`use(middleware)`");
-        assertTrue(routeUse, routeUse.contains("여러"));
-        String rStopping = lineWith(routing, "`STOPPING`");
-        assertTrue(rStopping, rStopping.contains("`503`") && rStopping.contains("표준 오류 형식"));
-        String rQueue = lineWith(routing, "대기 큐가 가득");
-        assertTrue(rQueue, rQueue.contains("`503`") && rQueue.contains("TinyHttpd") && rQueue.contains("평문"));
+        String routeUse = lineWith(routing, "`use(Middleware)`");
+        assertTrue(routeUse, routeUse.contains("Route") && routeUse.contains("현재 위치") && routeUse.contains("재정렬하지 않습니다"));
+        assertTrue(routing.contains("미완료 상태로 대기"));
     }
 
     // OPS-APP-005 AC-7; CON-APP-009 AC-1
     @Test
     public void OPS_APP_005_AC7_decisionsCarryAReason() throws IOException {
+        // OPS-REL-008 AC-1 AC-2 AC-3: new callback/Route/ownership decisions supersede old varargs/auto-end rationale.
         String mw = doc("middleware.md");
-        String use = lineWith(mw, "가변 인자 오버로드 대신 `RouteBuilder.use`");
-        assertTrue(use, use.contains("이유"));
-        String routing = lineWith(doc("routing.md"), "가변 인자 오버로드 대신 `RouteBuilder.use`");
-        assertTrue(routing, routing.contains("이유"));
+        String use = lineWith(mw, "고정 인자 오버로드");
+        assertTrue(use, use.contains("Kotlin 후행 람다") && use.contains("등록 순서"));
+        String routing = lineWith(doc("routing.md"), "하나의 Route 식별자");
+        assertTrue(routing, routing.contains("위치") && routing.contains("등록"));
         String app = doc("app.md");
         assertTrue(lineWith(app, "`builder()`라는 이름").contains("이유"));
         assertTrue(lineWith(app, "`create()`가 `AppFactory`").contains("이유"));
         assertTrue(lineWith(app, "daemon").contains("이유"));
         assertTrue(lineWith(app, "`LifecycleCallback`").contains("이유"));
-        assertTrue(lineWith(mw, "체인").contains("이유"));
-        assertTrue(lineWith(mw, "`404`/`405` 본문").contains("이유"));
-        assertTrue(lineWith(mw, "응답도 `next.run()`도 없이").contains("이유"));
+        assertTrue(lineWith(mw, "등록된 위치").contains("오류 레이어"));
+        assertTrue(lineWith(mw, "일반 HTTP 기본은 **HTML**").contains("이스케이프"));
+        assertTrue(lineWith(mw, "응답도 next도 없이").contains("대기"));
         String lifecycle = doc("lifecycle.md");
         assertTrue(lineWith(lifecycle, "`registerExternal`").contains("이유"));
         assertTrue(lineWith(lifecycle, "`AppStartException`").contains("이유"));
@@ -309,7 +308,7 @@ public class AppDocsTest {
         String logging = doc("logging.md");
         assertTrue(lineWith(logging, "rid=<id>").contains("이유"));
         assertTrue(lineWith(logging, "`context.getFilesDir()`").contains("이유"));
-        assertTrue(lineWith(doc("express-migration.md"), "| `app.use('/api', mw)`").contains("이유"));
+        assertTrue(lineWith(doc("express-migration.md"), "| `app.use('/api', mw)`").contains("제거된 뷰"));
     }
 
     // OPS-APP-005 AC-3
@@ -356,17 +355,16 @@ public class AppDocsTest {
     // OPS-APP-005 AC-5
     @Test
     public void OPS_APP_005_AC5_expressMigrationRows() throws IOException {
+        // OPS-REL-008 AC-1 AC-3: varargs/Router/prefix views and HTML replace the old finite mapping rows.
         String d = doc("express-migration.md");
-        String route = lineWith(d, "| `app.get('/x', auth, h)`");
+        String route = lineWith(d, "| `app.get/post/...`");
         assertFalse(route, route.contains(MARKER));
-        assertTrue(route, route.contains(".use(auth).use(admin).get(h)"));
+        assertTrue(route, route.contains("세 인자 Middleware") && route.contains("가변 콜백"));
+        assertTrue(doc("middleware.md").contains("app.route(path).use(mw).get(handler)"));
         String prefix = lineWith(d, "| `app.use('/api', mw)`");
         assertFalse(prefix, prefix.contains(MARKER));
-        assertTrue(prefix, prefix.contains("전체 경로"));
-        String errors = lineWith(d, "`500`의 `code`");
-        assertFalse(errors, errors.contains(MARKER));
-        assertTrue(errors, errors.contains("`INTERNAL_ERROR`"));
-        String notFound = lineWith(d, "| 마지막 404 미들웨어");
-        assertTrue(notFound, notFound.contains("v1"));
+        assertTrue(prefix, prefix.contains("제거된 뷰"));
+        assertTrue(d.contains("표준 JSON 확장") && d.contains("일반 HTTP 기본"));
+        assertTrue(d.contains("##") && d.contains("일반 최종 응답은404"));
     }
 }

@@ -15,6 +15,7 @@ import java.util.List;
 import org.junit.Test;
 
 /** Wave 3 decisions recorded in docs/api (OPS-HTTP-008); routing.md keeps no marker, checked by RoutingDocsTest. */
+// @req OPS-REL-008 AC-1 AC-2 AC-3
 public class HttpDocsTest {
 
     private static final String MARKER = "(미확정)";
@@ -112,13 +113,17 @@ public class HttpDocsTest {
     // OPS-HTTP-008 AC-1
     @Test
     public void OPS_HTTP_008_AC1_rawPathRowIsRawPathWithoutQuery() throws IOException {
-        String row = line(doc("request.md"), "| `rawPath()`");
+        // OPS-REL-008 AC-1 AC-3; FR-HTTP-027 AC-2 AC-3: distinguish the overview row from mount-view details.
+        String d = doc("request.md");
+        String row = line(section(d, "## 요청 정보"), "| `rawPath()`");
         assertFalse(row, row.contains(MARKER));
-        assertTrue(row, row.contains("`req.path`"));
-        assertTrue(row, row.contains("디코딩 전"));
-        assertTrue(row, row.contains("쿼리 문자열 제외"));
-        assertTrue(row, row.contains("req.query(...)"));
-        assertFalse(row, row.contains("originalUrl"));
+        assertTrue(row, row.contains("raw 경로") && row.contains("쿼리 제외") && row.contains("변하지 않음"));
+        String views = section(d, "## 마운트와 경로 뷰");
+        for (String key : new String[] {"methodToken()", "rawPath()", "path()", "url()", "originalUrl()", "baseUrl()"})
+            assertTrue("current request view " + key, views.contains("`" + key + "`"));
+        assertTrue(views.contains("/api/users/a%2Fb?x=%2B"));
+        assertTrue(views.contains("/users/a%2Fb?x=%2B"));
+        assertTrue(views.contains("빈 쿼리") && views.contains("캡처"));
     }
 
     // SDS-AC-11 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-8-12.sds.md
@@ -201,65 +206,55 @@ public class HttpDocsTest {
     // OPS-HTTP-008 AC-4
     @Test
     public void OPS_HTTP_008_AC4_routerPolicyDocumented() throws IOException {
+        // OPS-REL-008 AC-1 AC-3; FR-APP-021 AC-5; CON-APP-010 AC-1:
+        // explicit string policy remains, while implicit common HTTP and legacy WS profiles differ.
         String d = doc("routing.md");
         String s = section(d, "## 라우터 정책");
         boolean java = false;
-        for (String b : blocks(s, "java")) {
-            java |= b.contains("app.routerPolicy(RouterPolicy.builder()") && b.contains(".build());");
-        }
+        for (String b : blocks(s, "java")) java |= b.contains("app.routerPolicy(RouterPolicy.builder()") && b.contains(".build());");
         assertTrue("java example", java);
         assertFalse("kotlin example", blocks(s, "kotlin").isEmpty());
-        for (String sw : new String[] {"mergeSlashes", "ignoreTrailingSlash", "caseInsensitive", "enableTrace",
-                "enableConnect"}) {
-            assertTrue("switch " + sw, s.contains("`" + sw + "(boolean)`"));
-        }
-        assertTrue(s.contains("`NEW`"));
-        assertTrue(s.contains("`listen()`"));
-        assertTrue(s.contains("`IllegalStateException`"));
-        String rules = section(d, "## 라우팅 규칙 (wave 2 결정)");
-        assertFalse(rules, rules.contains("정하지 않았"));
-        assertTrue(rules, rules.contains("`app.routerPolicy(RouterPolicy)`"));
-        String head = line(d, "자동 HEAD 처리 때 `req.method()`");
-        assertTrue(head, head.contains("`HEAD`를 돌려줍니다"));
+        for (String sw : new String[] {"mergeSlashes", "ignoreTrailingSlash", "caseInsensitive", "enableTrace", "enableConnect"})
+            assertTrue("switch " + sw, s.contains(sw));
+        assertTrue(s.contains("NEW") && s.contains("listen") && s.contains("strict()"));
+        assertTrue(s.contains("Pattern") && s.contains("플래그"));
+        String matching = section(d, "### 매칭 규칙");
+        assertTrue(matching.contains("대소문자 무시") && matching.contains("끝 슬래시"));
+        String automatic = section(d, "## 자동 응답");
+        assertTrue(automatic.contains("HEAD") && automatic.contains("Content-Length"));
+        assertTrue(automatic.contains("OPTIONS") && automatic.contains("200") && automatic.contains("router-local"));
     }
 
     // SDS-AC-16 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-8-12.sds.md
     // OPS-HTTP-008 AC-7
     @Test
     public void OPS_HTTP_008_AC7_expressRawPathAndRawTextMapping() throws IOException {
+        // OPS-REL-008 AC-1 AC-3; FR-HTTP-027 AC-3: current raw/current/original URL views are public APIs.
         String d = doc("express-migration.md");
-        String original = line(d, "| `req.originalUrl`");
-        assertFalse(original, original.contains(MARKER));
-        assertTrue(original, original.contains("`req.rawPath()`"));
-        assertTrue(original, original.contains("`req.query(...)`"));
-        String raw = line(d, "| `req.path` (디코딩 전)");
-        assertFalse(raw, raw.contains(MARKER));
-        assertTrue(raw, raw.contains("| `req.rawPath()` |"));
-        String rawText = line(d, "| `express.raw()`, `express.text()`");
+        String views = line(d, "| `req.path`, `req.url`, `req.originalUrl`, `req.baseUrl`");
+        assertFalse(views, views.contains(MARKER));
+        for (String api : new String[] {"path()", "url()", "originalUrl()", "baseUrl()"}) assertTrue(views, views.contains(api));
+        assertTrue(views, views.contains("rawPath") && views.contains("raw"));
+        String rawText = lineContaining(d, "express.raw()");
         assertFalse(rawText, rawText.contains(MARKER));
-        assertTrue(rawText, rawText.contains("v1에는 원본·텍스트 본문을 읽는 API가 없습니다"));
+        assertTrue(rawText, rawText.contains("별도 공개 raw/text 본문 파서는 없습니다"));
+        assertTrue(rawText, rawText.contains("body(String.class)"));
         int statements = 0;
-        for (String l : d.split("\n")) {
-            if (l.contains("express.raw()")) {
-                assertFalse(l, l.contains(MARKER));
-                statements++;
-            }
-        }
-        assertEquals("raw/text stated once", 1, statements);
-        String undecided = section(d, "## Express에 있지만 아직 정해지지 않은 기능");
-        assertFalse(undecided, undecided.contains("express.raw"));
+        for (String l : d.split("\n")) if (l.contains("express.raw()")) { assertFalse(l, l.contains(MARKER)); statements++; }
+        assertEquals("raw/text comparison stated once", 1, statements);
+        assertFalse(section(d, "## 범위 밖의 기능").contains("구현 예정"));
     }
 
     // SDS-AC-6; OPS-HTTP-008 AC-8
     @Test
     public void sdsAc6_OPS_HTTP_008_AC8_expressKeepsOtherIssuesMarkers() throws IOException {
+        // OPS-REL-008 AC-1 AC-2: implemented Router/redirect/CORS/proxy are not undecided future work.
         String d = doc("express-migration.md");
-        for (String prefix : new String[] {"| `express.Router()`", "| `res.redirect(url)`", "| `cors()`"}) {
-            assertFalse(prefix, line(d, prefix).contains(MARKER));
+        for (String token : new String[] {"Router.create", "`redirect`", "`app.cors(...)`", "`trustProxy(true)`"}) {
+            String current = lineContaining(d, token);
+            assertFalse(current, current.contains(MARKER));
         }
-        String trust = line(d, "| `app.set('trust proxy', ...)`");
-        assertFalse(trust, trust.contains(MARKER));
-        assertTrue(trust, trust.contains("`app.trustProxy(true)`"));
+        assertTrue(doc("app.md").contains("app.trustProxy(true)"));
     }
 
     // SDS-AC-14 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-8-12.sds.md
@@ -284,11 +279,13 @@ public class HttpDocsTest {
     // OPS-HTTP-008 AC-6
     @Test
     public void OPS_HTTP_008_AC6_defaultsNamesTraceConnectPolicy() throws IOException {
+        // OPS-REL-008 AC-1 AC-3; FR-HTTP-028 AC-1; CON-APP-010 AC-1 AC-3:
         String row = line(doc("defaults.md"), "| `TRACE`, `CONNECT` 메서드");
         assertFalse(row, row.contains(MARKER));
-        assertTrue(row, row.contains("`app.routerPolicy(...)`"));
-        assertTrue(row, row.contains("`enableTrace`"));
-        assertTrue(row, row.contains("`enableConnect`"));
+        assertTrue(row, row.contains("app.method(...)") && row.contains("공통 HTTP"));
+        assertTrue(row, row.contains("엄격/WS") && row.contains("차단하지 않습니다"));
+        String policy = section(doc("routing.md"), "## 라우터 정책");
+        assertTrue(policy.contains("enableTrace") && policy.contains("enableConnect"));
     }
 
     // SDS-AC-6; OPS-HTTP-008 AC-8
@@ -319,11 +316,12 @@ public class HttpDocsTest {
         String s = section(doc("middleware.md"), "### 거부 응답 헤더");
         assertTrue(s, markerLines(s).isEmpty());
         String api = lineContaining(s, "`withHeader(name, value)`");
-        for (String part : new String[] {"`headers()`", "`status()`", "`code()`"}) {
+        for (String part : new String[] {"`headers()`", "`HttpException.status()`", "`code()`"}) {
             assertTrue(part + " in " + api, api.contains(part));
         }
-        String express = lineContaining(s, "`err.headers`");
-        assertTrue(express, express.contains("`finalhandler`"));
+        // OPS-REL-008 AC-1 AC-3: retained rejection headers, common HTML/CORS rules, not a universal JSON path.
+        assertTrue(s.contains("예외 헤더") && s.contains("CORS") && s.contains("framing"));
+        assertEquals(HttpException.class, new HttpException(503).withHeader("Retry-After", "1").getClass());
         List<String> java = blocks(s, "java");
         List<String> kotlin = blocks(s, "kotlin");
         assertEquals(1, java.size());

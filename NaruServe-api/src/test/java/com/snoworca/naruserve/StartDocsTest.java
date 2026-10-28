@@ -15,6 +15,7 @@ import java.util.List;
 import org.junit.Test;
 
 /** OPS-DX-003: the docs of RestApp.start, ServerHandle.url and shutdown, and the Quick start of both READMEs. */
+// @req OPS-REL-008 AC-1 AC-2 AC-3
 public class StartDocsTest {
 
     private static String root(String path) throws IOException {
@@ -80,10 +81,13 @@ public class StartDocsTest {
         assertTrue(lifecycle.contains("NEW ──listen/start──> STARTING"));
         assertTrue(lifecycle.contains("`RestApp.start(...)`도 `listen()`을 포함하므로 **메인 스레드에서 부르지 마세요.**"));
         String express = doc("express-migration.md");
-        assertTrue(express.contains("`RestApp.start(3000, app -> ...)`"));
-        assertTrue(express.contains("기본 바인딩은 `127.0.0.1`입니다."));
-        assertTrue(express.contains("### 4. 기본 바인딩은 localhost입니다"));
-        assertTrue(express.contains("`RestApp.start(3000, ...)`도 마찬가지로 localhost에서만 받으므로"));
+        // OPS-REL-008 AC-1 AC-3: start entry point and unchanged loopback live in current comparison sections.
+        assertTrue(express.contains("`RestApp.start(port, routes)`"));
+        assertTrue(express.contains("기본 127.0.0.1"));
+        String binding = section(express, "### 4. 바인딩과 검증 기본값은 유지합니다");
+        assertTrue(binding.contains("127.0.0.1") && binding.contains("0.0.0.0"));
+        assertTrue(binding.contains("인증") && binding.contains("보안 경고"));
+        assertTrue(doc("app.md").contains("`start(3000, ...)`는 `listen`처럼 이 기기에서만 받습니다"));
         String defaults = doc("defaults.md");
         assertTrue(defaults.contains("`RestApp.start(...)`도 같은 `127.0.0.1`에 바인딩합니다."));
         assertTrue(doc("kotlin.md").contains("`RestApp.start(3000) { app -> ... }`는 Java 정적 메서드"));

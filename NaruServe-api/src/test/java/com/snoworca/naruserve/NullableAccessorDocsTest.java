@@ -16,6 +16,7 @@ import java.util.regex.Pattern;
 import org.junit.Test;
 
 /** Every row of the nullable-accessor table of docs/api/kotlin.md has a Kotlin test function (FR-KT-005 AC-4). */
+// @req OPS-REL-008 AC-1 AC-2 AC-3
 public class NullableAccessorDocsTest {
 
     private static String kotlinSource() throws IOException {
@@ -41,7 +42,7 @@ public class NullableAccessorDocsTest {
     @Test
     public void everyTableRowHasAFunction() throws IOException {
         Collection<String> keys = KotlinAccessorTable.rows().keySet();
-        assertEquals(Arrays.asList("param", "query", "form", "header", "cookie", "file", "lastEventId", "attributeAs",
+        assertEquals(Arrays.asList("param", "paramOrNull", "paramValues", "query", "form", "header", "cookie", "file", "lastEventId", "attributeAs",
                 "queries", "files", "service", "body"), new ArrayList<>(keys));
         assertEquals(Collections.emptyList(), missing(keys, kotlinSource()));
     }

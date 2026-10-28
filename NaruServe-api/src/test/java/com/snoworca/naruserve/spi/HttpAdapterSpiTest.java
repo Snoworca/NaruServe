@@ -36,6 +36,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.Test;
 
+// @req OPS-REL-008 AC-1 AC-2 AC-3; IR-HTTP-009 AC-8
 public class HttpAdapterSpiTest {
 
     private static final List<Class<?>> SPI_TYPES = Arrays.<Class<?>>asList(HttpAdapter.class, ExchangeHandler.class,
@@ -301,9 +302,9 @@ public class HttpAdapterSpiTest {
         for (Class<?> type : SPI_TYPES) {
             assertTrue(type + " is an interface", type.isInterface());
             String location = type.getProtectionDomain().getCodeSource().getLocation().getPath();
-            // The fixtures plugin puts NaruServe-api main on the test classpath as its jar or its classes dir.
+            // OPS-REL-009 AC-1: current0.10.0 jar or classes directory; historical signature snapshots stay untouched.
             assertTrue(type + " from " + location, location.contains("NaruServe-api/build/classes/java/main")
-                    || location.endsWith("NaruServe-api/build/libs/NaruServe-api-0.9.0.jar"));
+                    || location.endsWith("NaruServe-api/build/libs/NaruServe-api-0.10.0.jar"));
             for (java.lang.reflect.Method m : type.getDeclaredMethods()) {
                 List<String> refs = new ArrayList<>();
                 collect(m.getGenericReturnType(), refs);
@@ -549,6 +550,9 @@ public class HttpAdapterSpiTest {
         assertEquals(Arrays.asList(
                 // IR-HTTP-009 AC-1: additive default preserves all historical abstract SPI members.
                 "HttpExchange.onAbort(java.lang.Runnable)->void",
+                // IR-HTTP-009 AC-8: exactly typed optional adapter-owned observations.
+                "HttpExchange.responseBytesWritten()->long",
+                "HttpExchange.responseStatus()->int",
                 // FR-APP-023 AC-8: additive request ownership adds no abstract obligation.
                 "HttpExchange.retainRequest()->java.lang.Runnable",
                 "HttpExchange.webSocket(com.snoworca.naruserve.spi.WebSocketSettings,"
@@ -561,6 +565,16 @@ public class HttpAdapterSpiTest {
         assertEquals(Collections.<Class<?>>singletonList(IOException.class),
                 Arrays.asList(webSocket.getExceptionTypes()));
         assertTrue(StreamDrain.class.getMethod("attach", OutputStream.class).isDefault());
+        java.lang.reflect.Method status = HttpExchange.class.getMethod("responseStatus");
+        java.lang.reflect.Method bytes = HttpExchange.class.getMethod("responseBytesWritten");
+        assertTrue(status.isDefault()); assertEquals(int.class, status.getReturnType());
+        assertTrue(bytes.isDefault()); assertEquals(long.class, bytes.getReturnType());
+        assertEquals(Collections.emptyList(), Arrays.asList(status.getExceptionTypes()));
+        assertEquals(Collections.emptyList(), Arrays.asList(bytes.getExceptionTypes()));
+        assertEquals(HttpExchange.class, Wave3Exchange.class.getMethod("responseStatus").getDeclaringClass());
+        assertEquals(HttpExchange.class, Wave3Exchange.class.getMethod("responseBytesWritten").getDeclaringClass());
+        Wave3Exchange legacy = new Wave3Exchange();
+        assertEquals(0, status.invoke(legacy)); assertEquals(-1L, bytes.invoke(legacy));
     }
 
     // FR-APP-023 AC-8: the existing old-style implementation compiles unchanged; its default touches no transport method.

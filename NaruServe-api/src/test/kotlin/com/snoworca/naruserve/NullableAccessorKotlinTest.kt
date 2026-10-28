@@ -10,6 +10,7 @@ import java.io.Writer
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
 import java.nio.file.Files
+import java.util.concurrent.TimeUnit
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -99,6 +100,54 @@ class NullableAccessorKotlinTest {
             listOf(id, missing?.javaClass)
         }
         assertEquals(listOf("7", IllegalArgumentException::class.java), p.get("/u/7"))
+    }
+
+    // OPS-REL-008 AC-3; FR-HTTP-027 AC-1 AC-6; FR-KT-005 AC-4.
+    @Test
+    fun `accessor_paramOrNull is String nullable for absent optionals and a decoded scalar when present`() {
+        val absent = Probe("GET", "/optional{/:id}") { req ->
+            val value: String? = req.paramOrNull("id")
+            val undeclared: String? = req.paramOrNull("missing")
+            listOf(value, undeclared)
+        }
+        try {
+            assertEquals(listOf(null, null), absent.get("/optional"))
+        } finally {
+            absent.t.app().shutdown(0, TimeUnit.SECONDS)
+        }
+        val present = Probe("GET", "/optional{/:id}") { req ->
+            val value: String? = req.paramOrNull("id")
+            value
+        }
+        try {
+            assertEquals("a/b", present.get("/optional/a%2Fb"))
+        } finally {
+            present.t.app().shutdown(0, TimeUnit.SECONDS)
+        }
+    }
+
+    // OPS-REL-008 AC-3; FR-HTTP-027 AC-1 AC-6; FR-KT-005 AC-4.
+    @Test
+    fun `accessor_paramValues is immutable List String for absent scalar and wildcard captures`() {
+        val cases = listOf(
+            Triple("/files{/*parts}", "/files", Pair(emptyList<String>(), false)),
+            Triple("/files{/*parts}", "/files/a%2Fb/c", Pair(listOf("a/b", "c"), true)),
+            Triple("/files{/*parts}", "/files/one", Pair(listOf("one"), true)),
+            Triple("/scalar/:parts", "/scalar/one", Pair(listOf("one"), false))
+        )
+        for ((path, target, expected) in cases) {
+            val probe = Probe("GET", path) { req ->
+                val values: List<String> = req.paramValues("parts")
+                val mutation = runCatching { (values as MutableList<String>).add("mutated") }.exceptionOrNull()
+                listOf(values, mutation?.javaClass, req.paramValues("parts"), req.pathParams()["parts"] is List<*>)
+            }
+            try {
+                assertEquals(target, listOf(expected.first, UnsupportedOperationException::class.java,
+                    expected.first, expected.second), probe.get(target))
+            } finally {
+                probe.t.app().shutdown(0, TimeUnit.SECONDS)
+            }
+        }
     }
 
     // SDS-AC-5; FR-KT-005 AC-1

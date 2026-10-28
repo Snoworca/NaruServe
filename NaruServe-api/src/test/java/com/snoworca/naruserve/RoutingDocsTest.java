@@ -10,6 +10,7 @@ import java.util.List;
 import org.junit.Test;
 
 /** Routing semantics in docs/api/routing.md with no marker left (OPS-ROUTE-003). */
+// @req OPS-REL-008 AC-1 AC-2 AC-3
 public class RoutingDocsTest {
 
     private static final String MARKER = "(미확정)";
@@ -39,12 +40,12 @@ public class RoutingDocsTest {
     @Test
     public void sdsAc10_OPS_ROUTE_003_AC2_accessorsNamedWithJavaKotlinAndExpressNote() throws IOException {
         String s = section(doc("routing.md"), "### MethodSet 조회");
-        for (String name : new String[] {"contains(Method)", "iterator()", "size()"}) {
-            assertTrue("accessor " + name, s.contains("`" + name + "`"));
-        }
+        // OPS-REL-008 AC-1 AC-3: compact accessor reference plus executable examples preserve this extension.
+        for (String name : new String[] {"contains", "iterator", "size"}) assertTrue("accessor " + name, s.contains("`" + name + "`"));
+        assertTrue(s.contains("불변") && s.contains("remove()"));
         assertTrue("java fence", s.contains("```java"));
         assertTrue("kotlin fence", s.contains("```kotlin"));
-        assertTrue("Express note", s.contains("Express에는 대응하는 API가 없습니다"));
+        assertTrue("finite-set/all-method boundary", doc("routing.md").contains("Express `app.all`의 모든 토큰을 뜻하지 않습니다"));
     }
 
     // SDS-AC-10; OPS-ROUTE-003 AC-3
@@ -62,14 +63,16 @@ public class RoutingDocsTest {
     // SDS-AC-10; OPS-ROUTE-003 AC-1
     @Test
     public void sdsAc10_OPS_ROUTE_003_AC1_routingRulesSectionPresent() throws IOException {
-        String s = section(doc("routing.md"), "## 라우팅 규칙 (wave 2 결정)");
-        String[] required = {
-            "엄격", "TRACE", "CONNECT", "Allow", "HEAD", "OPTIONS", "WebSocket", "426",
-            "DELETE /users/me", "/a/:", "/a/:id/:id", "/a//b", "`get`", "Connection", "Upgrade",
-            "%2F", "%00", "..", "%252e", "%2e"
-        };
-        for (String r : required) {
-            assertTrue("routing rules mention " + r, s.contains(r));
-        }
+        // OPS-REL-008 AC-1 AC-3; CON-APP-010 AC-1 AC-2: common HTTP rules and retained strict WS are explicit.
+        String d = doc("routing.md");
+        for (String value : new String[] {"/*parts", "{/:id}", "RoutingConfigException", "등록 순서", "Route 식별자",
+                "Java Pattern", "Matcher.find()", "originalFlags", "mergeParams",
+                "HEAD", "OPTIONS", "Allow", "200", "404", "%2F", "%ZZ"})
+            assertTrue("common routing fact " + value, d.contains(value));
+        assertTrue(doc("request.md").contains("paramOrNull") && doc("request.md").contains("paramValues"));
+        String strict = section(d, "## 기존 라우터와 WebSocket");
+        for (String value : new String[] {"엄격", "경로", "Origin", "고정 경로 우선", "충돌", "426", "204", "501", "슬래시/NUL", "경로 이탈"})
+            assertTrue("retained strict/WS fact " + value, strict.contains(value));
+        assertTrue(section(d, "## 자동 응답").contains("등록"));
     }
 }
