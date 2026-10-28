@@ -139,4 +139,33 @@ public class TinyDeferredSocketTest {
         until(()->((TinyHttpdExchange)ex).slots().open()==0,"completed setup did not release slot");assertEquals(0,drained.get());assertEquals(1,cancelled.get());closed(ex);
     }
 
+    private static String fixedResponse(InputStream input)throws IOException{
+        ByteArrayOutputStream bytes=new ByteArrayOutputStream();int tail=0;
+        while(tail!=0x0d0a0d0a){int b=input.read();if(b<0)throw new EOFException("response head ended");bytes.write(b);tail=(tail<<8)|b;}
+        String head=new String(bytes.toByteArray(),StandardCharsets.ISO_8859_1);String length=Http.header(head,"Content-Length");if(length==null)throw new IOException("fixed response length missing");
+        for(int remaining=Integer.parseInt(length);remaining>0;remaining--){int b=input.read();if(b<0)throw new EOFException("fixed response body ended");bytes.write(b);}
+        return new String(bytes.toByteArray(),StandardCharsets.ISO_8859_1);
+    }
+    // FR-APP-023 AC-3 AC-7: an unread request input remains owned by a pending producer after response bytes finish.
+    @Test(timeout=20000) public void pendingDeferredCanFirstReadJsonAfterClientObservesCompletedResponse()throws Exception{
+        RestApp a=core();AtomicInteger decodes=new AtomicInteger();a.jsonCodec(new JsonCodec(){
+            @SuppressWarnings("unchecked") public <T>T decode(Reader reader,java.lang.reflect.Type type)throws IOException{decodes.incrementAndGet();StringBuilder raw=new StringBuilder();for(int c;(c=reader.read())!=-1;)raw.append((char)c);if(raw.length()<2||raw.charAt(0)!='"'||raw.charAt(raw.length()-1)!='"')throw new IOException("expected JSON string");return (T)raw.substring(1,raw.length()-1);}
+            public void encode(Object value,Writer writer)throws IOException{throw new UnsupportedOperationException();}
+        });
+        Deferred work=Deferred.pending();AtomicReference<Request> request=new AtomicReference<>();
+        a.post("/control",(q,s)->s.send(q.body(String.class)));
+        a.methodAsync("POST","/unread",(q,s,n)->{request.set(q);s.send("ack");return work;});a.listen(0);
+        String payload="\"delayed-payload\"";
+        String control=Http.send(engine.boundPort(),"POST /control HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\nContent-Type: application/json\r\nContent-Length: "+payload.length()+"\r\n\r\n"+payload);
+        assertEquals(control,200,Http.status(control));assertEquals("delayed-payload",Http.body(control));returned();assertEquals(1,decodes.get());decodes.set(0);
+        try(Socket socket=new Socket("127.0.0.1",engine.boundPort())){
+            socket.setSoTimeout(5000);socket.getOutputStream().write(("POST /unread HTTP/1.1\r\nHost: localhost\r\nConnection: keep-alive\r\nContent-Type: application/json\r\nContent-Length: "+payload.length()+"\r\n\r\n"+payload).getBytes(StandardCharsets.UTF_8));socket.getOutputStream().flush();
+            String observed=fixedResponse(socket.getInputStream());assertEquals(200,Http.status(observed));assertEquals("ack",Http.body(observed));returned();assertFalse(work.isDone());assertEquals(0,decodes.get());
+            CountDownLatch responseObserved=new CountDownLatch(1);AtomicReference<String> value=new AtomicReference<>();AtomicReference<Throwable> failure=new AtomicReference<>();
+            Future<?> producer=clients.submit(()->{try{responseObserved.await();Thread.sleep(150);value.set(request.get().body(String.class));}catch(Throwable problem){failure.set(problem);}finally{work.resolve();}});
+            responseObserved.countDown();producer.get(5,TimeUnit.SECONDS);assertNull("first body read after completed response lost its pending lease: "+failure.get()+", status="+(failure.get() instanceof HttpException?((HttpException)failure.get()).status():"none")+", decoderCalls="+decodes.get(),failure.get());
+            assertEquals("delayed-payload",value.get());assertEquals(1,decodes.get());assertEquals(2,log.info().size());
+        }
+    }
+
 }
