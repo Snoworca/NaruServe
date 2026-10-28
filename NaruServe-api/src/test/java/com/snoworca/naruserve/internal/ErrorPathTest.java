@@ -150,15 +150,12 @@ public class ErrorPathTest {
     private static ClientResponse failureAnswer(com.snoworca.naruserve.spi.JsonCodec codec, RouteHandler handler) {
         com.snoworca.naruserve.testing.InMemoryHttpAdapter adapter =
                 new com.snoworca.naruserve.testing.InMemoryHttpAdapter();
-        com.snoworca.naruserve.RestApp app = com.snoworca.naruserve.RestApp.builder().httpAdapter(adapter)
-                .jsonCodec(codec).logger(new RecordingLogger()).build();
-        app.get("/f", handler);
-        app.listen(0);
-        try {
-            return adapter.send(com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientRequest.of("GET", "/f"));
-        } finally {
-            app.shutdown(1, java.util.concurrent.TimeUnit.SECONDS);
-        }
+        // CON-APP-010 AC-5: this component test intentionally exercises the retained JSON ErrorPath profile.
+        Router<RouteHandler> router=new Router<>(RouterPolicy.strict());router.add(Method.GET,"/f",handler);router.freeze();
+        Dispatcher dispatcher=new Dispatcher(router,new MiddlewarePipeline(RouterPolicy.strict()),
+                new ErrorPath(Collections.emptyList(),new SafeLogger(new RecordingLogger())),new AccessLog(),null,codec,JsonBodyReader.DEFAULT_LIMIT);
+        adapter.bind("127.0.0.1",0,dispatcher);
+        return adapter.send(com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientRequest.of("GET","/f"));
     }
 
     private static String withoutRequestId(ClientResponse r) {

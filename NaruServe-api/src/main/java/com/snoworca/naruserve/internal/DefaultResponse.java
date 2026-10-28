@@ -64,6 +64,7 @@ public final class DefaultResponse implements Response {
     private int status = 200;
     private final List<Map.Entry<String, String>> headers = new ArrayList<>();
     private final List<Map.Entry<String, String>> corsHeaders = new ArrayList<>();
+    private boolean corsApplied;
     private @Nullable InputStream pendingIn;
     private @Nullable OutputStream pendingOut;
     private boolean copying;
@@ -389,6 +390,7 @@ public final class DefaultResponse implements Response {
     /** Records only framework CORS grants, which the standard error response must keep. */
     // @req FR-DX-010
     synchronized void corsHeader(String name, String value) {
+        corsApplied=true;
         header(name, value);
         for (Iterator<Map.Entry<String, String>> it = corsHeaders.iterator(); it.hasNext();) {
             if (it.next().getKey().equalsIgnoreCase(name)) it.remove();
@@ -399,6 +401,7 @@ public final class DefaultResponse implements Response {
     /** A framework cache dimension, also restored if normal error handling clears application headers. */
     // @req FR-DX-010
     synchronized void corsVary(String field) {
+        corsApplied=true;
         vary(field);
         String dimensions = null;
         for (Map.Entry<String, String> header : corsHeaders) {
@@ -769,6 +772,35 @@ public final class DefaultResponse implements Response {
         return status == 204 || status == 304 || headRequest;
     }
 
+    /** Configured CORS decisions remain an extension boundary across either finalhandler profile. */
+    // @req FR-DX-010 AC-1 AC-2 AC-6
+    synchronized void restoreCorsHeaders() {
+        if(!corsApplied)return;
+        for(java.util.Iterator<Map.Entry<String,String>> it=headers.iterator();it.hasNext();) {
+            String name=it.next().getKey();
+            if(name.regionMatches(true,0,"Access-Control-",0,15))it.remove();
+        }
+        for(Map.Entry<String,String> header:corsHeaders)put(header.getKey(),header.getValue());
+    }
+
+    // @req FR-APP-024 AC-3; FR-DX-010 AC-6; CON-APP-010 AC-7
+    synchronized void prepareFinalErrorHeaders(@Nullable Throwable error) {
+        requireNew();
+        if(corsApplied)headers.clear();
+        remove("Content-Encoding");remove("Content-Language");remove("Content-Range");
+        applyErrorHeaders(error);
+    }
+
+    /** One exception-header/CORS policy shared by retained JSON and common HTML final responses. */
+    private void applyErrorHeaders(@Nullable Throwable error) {
+        if(error instanceof HttpException) {
+            List<Map.Entry<String,String>> extra=((HttpException)error).headers();
+            for(Map.Entry<String,String> header:extra)remove(header.getKey());
+            headers.addAll(extra);
+        }
+        restoreCorsHeaders();
+    }
+
     /** A common HTTP callback returned; NEW remains pending, a queued stream may now run. */
     // @req FR-APP-023 AC-1
     void callbackReturned() {
@@ -858,16 +890,7 @@ public final class DefaultResponse implements Response {
                 if (status == 408) {
                     put("Connection", "close"); // FR-ENGINE-005 AC-2: the adapter closes after a 408
                 }
-                if (error instanceof HttpException) {
-                    // prepare() then drops any Content-Length or Transfer-Encoding among them
-                    List<Map.Entry<String, String>> extra = ((HttpException) error).headers();
-                    for (Map.Entry<String, String> h : extra) {
-                        remove(h.getKey()); // replaces like Express setHeader; the exception's own duplicates stay
-                    }
-                    headers.addAll(extra);
-                }
-                // HTTP exceptions and ordinary application headers cannot replace framework CORS decisions.
-                for (Map.Entry<String, String> header : corsHeaders) put(header.getKey(), header.getValue());
+                applyErrorHeaders(error);
                 c = prepare(body, null);
             } else {
                 return;

@@ -1,7 +1,6 @@
 package com.snoworca.naruserve.internal;
 
 import com.snoworca.naruserve.CachePolicy;
-import com.snoworca.naruserve.Method;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -73,8 +72,8 @@ final class StaticHandler {
                 return true;
             }
         }
-        Method method = req.method();
-        if (method != Method.GET && method != Method.HEAD) {
+        String method = req.methodToken();
+        if (!"GET".equals(method) && !"HEAD".equals(method)) {
             if (!wouldServeGet(rawPath)) {
                 return false;
             }

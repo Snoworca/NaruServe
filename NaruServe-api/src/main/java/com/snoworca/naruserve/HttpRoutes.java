@@ -10,6 +10,9 @@ public interface HttpRoutes<T> {
     default T use(Middleware callback) { return use("",callback); }
     default T use(Object path,Router child) { throw new UnsupportedOperationException("mounted router"); }
     default T use(Router child) { return use("",child); }
+    // @req FR-APP-024 AC-1 AC-2
+    default T use(Object path,ErrorMiddleware callback) { throw new UnsupportedOperationException("error middleware"); }
+    default T use(ErrorMiddleware callback) { return use("",callback); }
     default T param(String name,ParamHandler callback) { throw new UnsupportedOperationException("parameter callback"); }
 
     default T get(Object path,Middleware... callbacks) { return method("GET",path,callbacks); }

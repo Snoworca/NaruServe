@@ -35,7 +35,7 @@ public final class DefaultRequest implements Request {
     private final HttpExchange ex;
     private volatile String requestId = "";
     private volatile long startNanos = System.nanoTime();
-    private final Method method;
+    private final @Nullable Method method;
     private volatile RequestView view;
     private final String originalUrl;
     private final ConcurrentHashMap<String, Object> attributes = new ConcurrentHashMap<>();
@@ -95,7 +95,7 @@ public final class DefaultRequest implements Request {
     }
 
     // @req FR-HTTP-027 AC-1 AC-2 AC-3 AC-5
-    DefaultRequest(HttpExchange ex, Method method, Map<String,String> params,
+    DefaultRequest(HttpExchange ex, @Nullable Method method, Map<String,String> params,
             @Nullable ApplicationContext context, @Nullable JsonCodec codec,long jsonLimit,boolean trustProxy,
             MultipartSettings multipart,long formLimit,SpoolRegistry spool,boolean commonHttp) {
         this.multipart = Objects.requireNonNull(multipart, "multipart");
@@ -312,6 +312,7 @@ public final class DefaultRequest implements Request {
 
     @Override
     public Method method() {
+        if(method==null)throw new IllegalStateException("use methodToken() for extended HTTP method "+ex.methodToken());
         return method;
     }
 
