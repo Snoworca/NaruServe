@@ -28,6 +28,7 @@ public class ServletDeferredSpiTest {
     private final AtomicInteger starts = new AtomicInteger(), completes = new AtomicInteger();
     private volatile long ordinaryTimeout;
     private final AtomicReference<Runnable> asyncStartHook = new AtomicReference<>();
+    private final AtomicReference<String> setupIoFailure = new AtomicReference<>();
     private final List<CountDownLatch> releases = new ArrayList<>();
 
     @After public void cleanup() throws Exception {
@@ -51,7 +52,17 @@ public class ServletDeferredSpiTest {
                     return tracked;
                 }
             };
-            try {chain.doFilter(wrapper,response);} finally {returned.offer(wrapper.getRequestURI());}
+            HttpServletResponseWrapper responseWrapper=new HttpServletResponseWrapper((HttpServletResponse)response) {
+                @Override public void flushBuffer() throws IOException {
+                    if(setupIoFailure.compareAndSet("flush",null))throw new IOException("injected SSE setup flush failure");
+                    super.flushBuffer();
+                }
+                @Override public ServletOutputStream getOutputStream() throws IOException {
+                    if(setupIoFailure.compareAndSet("output",null))throw new IOException("injected SSE setup output acquisition failure");
+                    return super.getOutputStream();
+                }
+            };
+            try {chain.doFilter(wrapper,responseWrapper);} finally {returned.offer(wrapper.getRequestURI());}
         });
         container.servlet(new NaruServeServlet(adapter,""),"/*","/",holder -> holder.setAsyncSupported(asyncSupported));
     }
@@ -111,13 +122,14 @@ public class ServletDeferredSpiTest {
     // FR-SVL-009 AC-3 AC-5
     @Test(timeout=20000) public void eventStreamRegisteredAfterInitialReturnDrainsAndReleasesSlot() throws Exception {
         start(exchanges::add);Future<SharedApp.Reply> reply=request("/events");HttpExchange ex=next();returned();pending(reply);
-        AtomicInteger drainCalls=new AtomicInteger(),abortCalls=new AtomicInteger();AtomicReference<String> thread=new AtomicReference<>();
+        AtomicInteger drainCalls=new AtomicInteger(),abortCalls=new AtomicInteger(),notifications=new AtomicInteger();AtomicReference<String> thread=new AtomicReference<>();
+        ex.onAbort(notifications::incrementAndGet);
         ex.eventStream(200,Collections.singletonList(new AbstractMap.SimpleImmutableEntry<>("Content-Type","text/event-stream")),new StreamDrain(){
             @Override public void drain(OutputStream out)throws IOException{drainCalls.incrementAndGet();thread.set(Thread.currentThread().getName());out.write("data: later\n\n".getBytes(StandardCharsets.UTF_8));}
             @Override public void abort(){abortCalls.incrementAndGet();}
         });
         assertEquals("data: later\n\n",reply.get(5,TimeUnit.SECONDS).text());assertEquals(1,drainCalls.get());assertEquals(0,abortCalls.get());
-        assertTrue(thread.get(),thread.get().startsWith("naruserve-servlet-sse-"));completeOnce(1);idle();
+        assertTrue(thread.get(),thread.get().startsWith("naruserve-servlet-sse-"));completeOnce(1);idle();assertEquals(0,notifications.get());
     }
     // FR-SVL-009 AC-1 AC-3 AC-4: ordinary pending requests do not consume the single configured SSE slot.
     @Test(timeout=20000) public void ordinaryPendingAndLateStreamHaveSeparateCapacityOwnership() throws Exception {
@@ -196,13 +208,14 @@ public class ServletDeferredSpiTest {
         CountDownLatch release=new CountDownLatch(1),draining=new CountDownLatch(1);releases.add(release);
         open.eventStream(200,Collections.emptyList(),out->{draining.countDown();out.write("done".getBytes(StandardCharsets.UTF_8));try{release.await(5,TimeUnit.SECONDS);}catch(InterruptedException e){Thread.currentThread().interrupt();}});
         assertTrue(draining.await(5,TimeUnit.SECONDS));assertEquals(1,adapter.pool().open());
-        Future<SharedApp.Reply> second=request("/stream-two");HttpExchange rejected=next();returned();AtomicInteger rejectedDrains=new AtomicInteger();
+        Future<SharedApp.Reply> second=request("/stream-two");HttpExchange rejected=next();returned();AtomicInteger rejectedDrains=new AtomicInteger(),rejectedNotifications=new AtomicInteger();
+        rejected.onAbort(rejectedNotifications::incrementAndGet);
         try {rejected.eventStream(200,Collections.emptyList(),out->rejectedDrains.incrementAndGet());fail("second late stream exceeded capacity");}
         catch(com.snoworca.naruserve.HttpException expected){assertEquals(503,expected.status());}
         byte[] body="full".getBytes(StandardCharsets.UTF_8);rejected.commit(503,Collections.emptyList(),body.length).write(body);rejected.finish();
         SharedApp.Reply rejection=second.get(5,TimeUnit.SECONDS);assertEquals(503,rejection.status);assertEquals("full",rejection.text());
-        assertEquals(0,rejectedDrains.get());assertEquals(1,adapter.pool().open());assertEquals(1,inFlight());
-        release.countDown();assertEquals("done",first.get(5,TimeUnit.SECONDS).text());completeOnce(2);idle();closed(rejected);
+        assertEquals(0,rejectedDrains.get());assertEquals(0,rejectedNotifications.get());assertEquals(1,adapter.pool().open());assertEquals(1,inFlight());
+        release.countDown();assertEquals("done",first.get(5,TimeUnit.SECONDS).text());completeOnce(2);idle();closed(rejected);assertEquals(0,rejectedNotifications.get());
     }
 
     // FR-SVL-009 AC-2 AC-3 AC-4: abort between container context creation and exchange publication cannot resurrect it.
@@ -281,5 +294,35 @@ public class ServletDeferredSpiTest {
             assertEquals(1,calls.get());assertNull(callbackFailure.get());idle();closed(ex);
         }
     }
+
+    private void acceptedSetupFailure(String point) throws Exception {
+        start(exchanges::add);Future<SharedApp.Reply> reply=request("/setup-failure");HttpExchange ex=next();returned();
+        AtomicInteger notifications=new AtomicInteger(),attached=new AtomicInteger(),drained=new AtomicInteger(),cancelled=new AtomicInteger();
+        AtomicReference<Throwable> callbackFailure=new AtomicReference<>();
+        ex.onAbort(()->{throw new AssertionError("listener must not block setup cleanup");});
+        ex.onAbort(()->{try{assertCallbackUnlocked(ex);}catch(Throwable e){callbackFailure.set(e);}notifications.incrementAndGet();});
+        if(!point.equals("attach"))setupIoFailure.set(point);
+        try {
+            ex.eventStream(200,Collections.emptyList(),new StreamDrain(){
+                @Override public void attach(OutputStream out){attached.incrementAndGet();if(point.equals("attach"))throw new IllegalStateException("injected attach failure");}
+                @Override public void drain(OutputStream out){drained.incrementAndGet();}
+                @Override public void abort(){cancelled.incrementAndGet();}
+            });
+            fail("setup failure did not propagate");
+        } catch(IOException failure){assertFalse(point.equals("attach"));assertTrue(failure.getMessage(),failure.getMessage().contains("injected SSE setup"));}
+        catch(IllegalStateException failure){assertEquals("attach",point);assertEquals("injected attach failure",failure.getMessage());}
+        try{reply.get(5,TimeUnit.SECONDS);}catch(ExecutionException ended){assertTrue(ended.getCause() instanceof IOException);}
+        completeOnce(1);idle();assertEquals(point.equals("attach")?1:0,attached.get());assertEquals(0,drained.get());assertEquals(1,cancelled.get());
+        assertEquals("accepted failed setup must report detected abort",1,notifications.get());assertNull(callbackFailure.get());
+        ex.onAbort(()->{try{assertCallbackUnlocked(ex);}catch(Throwable e){callbackFailure.set(e);}notifications.incrementAndGet();});
+        assertNull("late setup-failure listener held a lock",callbackFailure.get());assertEquals(2,notifications.get());
+        ex.abort();ex.abort();assertEquals(2,notifications.get());assertEquals(1,cancelled.get());completeOnce(1);idle();closed(ex);
+    }
+    // IR-HTTP-009 AC-2 AC-3 AC-6; FR-SVL-009 AC-3 AC-4: admitted late SSE cannot turn setup IO into success.
+    @Test(timeout=20000) public void acceptedSseFlushFailureNotifiesAbortAndCancelsDrainOnce() throws Exception {acceptedSetupFailure("flush");}
+    // IR-HTTP-009 AC-2 AC-3 AC-6; FR-SVL-009 AC-3 AC-4: output acquisition fails before attach/drain.
+    @Test(timeout=20000) public void acceptedSseOutputAcquisitionFailureNotifiesAbortAndCancelsDrainOnce() throws Exception {acceptedSetupFailure("output");}
+    // IR-HTTP-009 AC-2 AC-3 AC-6; FR-SVL-009 AC-3 AC-4: accepted user attach RuntimeException remains abnormal.
+    @Test(timeout=20000) public void acceptedSseAttachFailureNotifiesAbortAndCancelsDrainOnce() throws Exception {acceptedSetupFailure("attach");}
 
 }
