@@ -91,8 +91,25 @@ public class HttpMethodAndErrorContractTest {
         on(app,"COPY","/x",(q,s,n)->fail());app.put("/other",(q,s)->fail());
         RecordingExchange ex=dispatch(app,"OPTIONS","/x");String allow="COPY, GET, HEAD, POST";
         assertEquals(200,ex.status);assertEquals(Collections.singletonList(allow),ex.committed("Allow"));assertEquals(allow,text(ex));
-        assertEquals("text/plain; charset=utf-8",ex.committed("Content-Type").get(0).toLowerCase(Locale.ROOT));
+        // Pinned router sendOptionsResponse writes exactly text/plain, without a charset parameter.
+        assertEquals(Collections.singletonList("text/plain"),ex.committed("Content-Type"));
+        assertEquals(Collections.singletonList("nosniff"),ex.committed("X-Content-Type-Options"));
         assertEquals(Collections.singletonList(Integer.toString(allow.length())),ex.committed("Content-Length"));
+    }
+    @Test public void optionsStayRouterLocalAndOnlyIncludeActuallyTraversedRouteLayers() { // FR-HTTP-028 AC-4
+        for(boolean exit:Arrays.asList(false,true)) {
+            DefaultRestApp app=new DefaultRestApp();Object child=router(false);List<String> trace=new ArrayList<>();
+            Middleware first=(q,s,n)->{trace.add("child-use");if(exit)signal(n,"router");else n.run();};
+            invoke(child,"use",new Class<?>[]{Middleware.class},first);
+            on(child,"GET","/x",(q,s,n)->fail("OPTIONS ran child GET callback"));
+            Middleware after=(q,s,n)->{trace.add("child-after");n.run();};
+            invoke(child,"use",new Class<?>[]{Middleware.class},after);
+            mount(app,"/api",child);app.post("/api/x",(q,s)->fail("OPTIONS ran parent POST callback"));
+            app.use((q,s,n)->{trace.add("parent-use");n.run();});
+            RecordingExchange ex=dispatch(app,"OPTIONS","/api/x");String expected=exit?"POST":"GET, HEAD";
+            assertEquals(200,ex.status);assertEquals(expected,text(ex));assertEquals(Collections.singletonList(expected),ex.committed("Allow"));
+            assertEquals(exit?Arrays.asList("child-use","parent-use"):Arrays.asList("child-use","child-after"),trace);
+        }
     }
     @Test public void downstreamMiddlewareCanAnswerOptionsBeforeAutomaticResponse() { // FR-HTTP-028 AC-4
         DefaultRestApp app=new DefaultRestApp();app.get("/x",(q,s)->fail());
@@ -112,6 +129,36 @@ public class HttpMethodAndErrorContractTest {
         assertEquals(Collections.singletonList("nosniff"),missing.committed("X-Content-Type-Options"));
         assertEquals(Collections.singletonList(Integer.toString(NOT_FOUND.length())),missing.committed("Content-Length"));
         RecordingExchange mismatch=dispatch(app,"GET","/x");assertEquals(404,mismatch.status);assertEquals(Collections.emptyList(),mismatch.committed("Allow"));assertTrue(text(mismatch),text(mismatch).contains("Cannot GET /x"));
+    }
+    @Test public void unhandledRuntimeExceptionUsesDeclaredJavaInformationInExact500Html() { // FR-APP-024 AC-3
+        DefaultRestApp app=new DefaultRestApp();RuntimeException failure=new RuntimeException("boom<>&");
+        // A fixed Java stack makes its declared representation deterministic on Java8/newer JVMs.
+        failure.setStackTrace(new StackTraceElement[]{new StackTraceElement("example.Handler","run","Handler.java",7)});
+        app.get("/error",(q,s)->{throw failure;});
+        String expected=NOT_FOUND.replace("Cannot GET /missing","java.lang.RuntimeException: boom&lt;&gt;&amp;<br>\tat example.Handler.run(Handler.java:7)<br>");
+        RecordingExchange ex=dispatch(app,"GET","/error");assertEquals(500,ex.status);assertEquals(expected,text(ex));
+        assertEquals(Collections.singletonList(Integer.toString(expected.length())),ex.committed("Content-Length"));
+        assertEquals("text/html; charset=utf-8",ex.committed("Content-Type").get(0).toLowerCase(Locale.ROOT));
+        assertEquals(Collections.singletonList("default-src 'none'"),ex.committed("Content-Security-Policy"));
+        assertEquals(Collections.singletonList("nosniff"),ex.committed("X-Content-Type-Options"));
+        assertEquals(1,ex.commits.get());assertEquals(1,ex.finishes.get());
+    }
+    @Test public void headFinalhandlerSuppressesMissAndErrorBytesWithCorrectRepresentationLengths() { // FR-HTTP-028 AC-3 AC-5; FR-APP-024 AC-3
+        DefaultRestApp app=new DefaultRestApp();RuntimeException failure=new RuntimeException("boom");
+        failure.setStackTrace(new StackTraceElement[0]);app.get("/error",(q,s)->{throw failure;});
+        RecordingExchange getMiss=dispatch(app,"GET","/missing"),headMiss=dispatch(app,"HEAD","/missing");
+        assertEquals(404,headMiss.status);assertEquals(0,headMiss.body.size());
+        assertEquals(Collections.singletonList(Integer.toString(NOT_FOUND.length())),getMiss.committed("Content-Length"));
+        // Express's hypothetical404 HEAD body says Cannot HEAD, adding one byte compared with GET.
+        assertEquals(Collections.singletonList(Integer.toString(NOT_FOUND.replace("Cannot GET","Cannot HEAD").length())),headMiss.committed("Content-Length"));
+        assertEquals(getMiss.committed("Content-Type"),headMiss.committed("Content-Type"));
+        RecordingExchange getError=dispatch(app,"GET","/error"),headError=dispatch(app,"HEAD","/error");
+        assertEquals(500,headError.status);assertEquals(0,headError.body.size());
+        assertEquals(getError.committed("Content-Length"),headError.committed("Content-Length"));
+        assertEquals(getError.committed("Content-Type"),headError.committed("Content-Type"));
+        assertEquals(Collections.singletonList("nosniff"),headError.committed("X-Content-Type-Options"));
+        assertEquals(1,headMiss.commits.get());assertEquals(1,headMiss.finishes.get());
+        assertEquals(1,headError.commits.get());assertEquals(1,headError.finishes.get());
     }
     @Test public void final404UsesOriginalPathWithoutQueryAndEscapesUrlForHtml() { // FR-APP-024 AC-3
         DefaultRestApp app=new DefaultRestApp();
@@ -191,10 +238,13 @@ public class HttpMethodAndErrorContractTest {
         assertEquals("ok",text(dispatch(app,"GET","/x")));assertEquals(Arrays.asList("bridge","ordered"),trace);
     }
     @Test public void errorAfterSendRunsDownstreamHandlerButCannotCommitAgain() { // FR-APP-024 AC-4
-        DefaultRestApp app=new DefaultRestApp();AtomicInteger seen=new AtomicInteger();
-        on(app,"GET","/x",(q,s,n)->{s.send("first");n.error(new IllegalStateException("late"));});
+        DefaultRestApp app=new DefaultRestApp();AtomicInteger seen=new AtomicInteger();RecordingLogger log=new RecordingLogger();app.logger(log);
+        Throwable failure=new IllegalStateException("late");
+        on(app,"GET","/x",(q,s,n)->{s.send("first");n.error(failure);});
         error(app,(e,q,s,n)->{assertTrue(s.isCommitted());seen.incrementAndGet();n.error(e);});
         RecordingExchange ex=dispatch(app,"GET","/x");assertEquals(1,seen.get());assertEquals("first",text(ex));assertEquals(1,ex.commits.get());assertEquals(1,ex.finishes.get());
+        int recorded=Collections.frequency(log.errors,failure),aborted=ex.aborts.get();
+        assertEquals("late unhandled failure must be observed once by error log or transport abort",1,Math.max(recorded,aborted));
     }
     @Test public void defaultHttpExceptionPreservesStatusHeadersAndEscapesErrorDetails() { // FR-APP-024 AC-3 AC-5
         DefaultRestApp app=new DefaultRestApp();app.get("/x",(q,s)->{throw new HttpException(422,"<bad>&value").withHeader("Retry-After","3");});
