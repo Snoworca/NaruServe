@@ -1,0 +1,39 @@
+FR-ROUTE-018 — pinned HTTP string compiler source provenance
+
+The matching corpus is derived from pillarjs/path-to-regexp v8.4.2,
+https://github.com/pillarjs/path-to-regexp/tree/v8.4.2
+src/cases.spec.ts, src/index.ts (grammar and regex safety algorithm).
+The TSV contains raw-value oracle results from path-to-regexp 8.4.2 match(),
+with decode: value => value and end/sensitive/trailing from each case.
+Only string patterns with the default delimiter and no encodePath hook are included.
+TokenData, path arrays and path generation are outside this string compiler API.
+257 vectors; generated with Node v22.22.0 (Unicode 16.0).
+Columns: base64(pattern), end, sensitive, trailing, base64(input), matches,
+base64(matchedPath), captures (base64(name):base64(value),...;...).
+All strings use UTF8. Empty capture values are significant.
+
+Source SHA-256:
+upstream-index.ts f55bd527a48e0a3ef304a4ac6c36009da2b61f367d8dcb4edd49e3cce7e634fa
+upstream-cases.spec.ts cd863d79e5d4ff19e5ee938c116ad39d7bd9947ea80f7d13378714c3df9c3d5c
+
+The MIT License (MIT)
+
+Copyright (c) 2014 Blake Embrey (hello@blakeembrey.com)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
