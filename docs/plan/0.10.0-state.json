@@ -4,7 +4,7 @@
   "plan": "docs/plan/0.10.0-parallel-plan.md",
   "dependencies": "unchanged versions/types/scopes; existing toolchain reused",
   "regex": "Java Pattern",
-  "status": "tiny-3.1.1-raw-tdd-and-core-deferred-review",
+  "status": "api-full-validation-transport-retention-and-independent-http-audit-fixes",
   "issues": [
     {
       "id": "T00",
@@ -490,7 +490,7 @@
       "tests_commit": "ad925de",
       "tests": 34,
       "red_tests": 34,
-      "status": "round2-pass-implementation",
+      "status": "core-green-adapter-integration-pending",
       "rounds": [
         {
           "round": 1,
@@ -500,7 +500,9 @@
           "round": 2,
           "verdict": "pass"
         }
-      ]
+      ],
+      "green_commit": "9dbd88c",
+      "java8_targeted_pass": 112
     },
     "tiny-raw-pins": {
       "tests_commit": "ae40850",
@@ -514,19 +516,86 @@
       "adapter_red": 32,
       "build_tests": 40,
       "build_red": 8,
-      "status": "approved-green-implementation"
+      "status": "bounded-green-integrated",
+      "green_commit": "62f1e12",
+      "java17_full": 178,
+      "java8_full": 178,
+      "framework_tests": 4,
+      "framework_socket_requests": 27,
+      "framework_test_commit": "8c5630a",
+      "integrated_newcore_tests": 182,
+      "integrated_newcore_failures": 11
+    },
+    "core-extension-regressions": {
+      "tests_commit": "44256a5",
+      "tests": 16,
+      "red_tests": 12,
+      "rounds": [
+        {
+          "round": 1,
+          "verdict": "pass"
+        }
+      ],
+      "status": "green-integrated",
+      "green_commit": "9cc8071"
+    },
+    "core-group-identity": {
+      "tests_commit": "a2a1fc1",
+      "green_commit": "d2f3604",
+      "rounds": [
+        {
+          "round": 1,
+          "verdict": "pass"
+        }
+      ],
+      "status": "integrated"
+    },
+    "kotlin-http": {
+      "tests_commits": [
+        "c9ce105",
+        "4a0c736"
+      ],
+      "green_commit": "e835485",
+      "rounds": [
+        {
+          "round": 1,
+          "verdict": "pass"
+        }
+      ],
+      "status": "integrated"
+    },
+    "tiny-lifetime": {
+      "tests_commit": "384aa4f",
+      "additional_regression_commits": [
+        "0264c0a",
+        "de23a76",
+        "14a3bf0",
+        "7a4b8c0"
+      ],
+      "green_commit": "d213614",
+      "targeted_pass": 23,
+      "actual_java8_scoped_pass": 143,
+      "full_tests": 203,
+      "full_failures": 12,
+      "status": "source-integrated-checkpoint-migrations-pending",
+      "rounds": [
+        {
+          "round": 1,
+          "verdict": "pass"
+        }
+      ]
     }
   },
   "runtime_parity_lane": {
     "worktree": ".claude/worktrees/v010-runtime-parity",
     "branch": "kiwi/v010/runtime-parity",
     "base": "d84ca92",
-    "status": "29-of30-actual-runtime-match-async-pending",
+    "status": "all30-runtime-pass-jdk17-and-actualjava8",
     "agent": "/root/release_dependency_audit",
-    "head": "4e5ce51",
+    "head": "d2e1c25",
     "tests": 54,
-    "passed": 53,
-    "failed": 1
+    "passed": 54,
+    "failed": 0
   },
   "reported_progress": {
     "estimate_percent": 40,
@@ -537,10 +606,57 @@
   "tiny_raw_lane": {
     "worktree": ".claude/worktrees/v010-tiny-raw",
     "branch": "kiwi/v010/tiny-raw",
-    "status": "round1-pass-implementation",
+    "status": "raw-green-commoncore-guard-fixes-and-deferred-pending",
     "requirements": [
       "FR-ENGINE-012",
       "CON-BUILD-018"
     ]
+  },
+  "tiny_deferred_lane": {
+    "worktree": ".claude/worktrees/v010-tiny-raw",
+    "base": "ac58c70",
+    "status": "authoring-red-tests",
+    "requirements": [
+      "FR-APP-023",
+      "IR-HTTP-009"
+    ]
+  },
+  "api_checkpoint_lane": {
+    "worktree": ".claude/worktrees/v010-api-checkpoints",
+    "owned_classes": [
+      "HttpApiSurfaceTest",
+      "AppLifecycleGuardTest",
+      "AppEntryApiTest",
+      "InMemoryHttpAdapterTest"
+    ],
+    "status": "all-4-batches-independent-round1-pass-integrated",
+    "independent_bug_red": "6f4d874"
+  },
+  "transport_input_retention": {
+    "requirement": "FR-APP-023 AC-8",
+    "tiny_actual_red": "96896aa",
+    "helper_worktree": ".claude/worktrees/v010-request-retention",
+    "helper_agent": "/root/release_dependency_audit",
+    "core_owner": "/root/api_core_docs",
+    "adapter_owner": "/root/transport_dependency_audit",
+    "status": "shared-component-tests-first-and-servlet-repro"
+  },
+  "http_implementation_review": {
+    "status": "changes-required",
+    "report": "docs/plan/evidence/http-implementation-review-round1.json",
+    "findings": [
+      "savedNext after cleaned request and app termination",
+      "global64 depth differs from pinned per-router/per-route100 yields"
+    ],
+    "owner": "/root/api_core_docs",
+    "next": "actual Java RED and independent sufficiency review before fixes"
+  },
+  "api_full_diagnostic": {
+    "head": "e0a9da6",
+    "tests": 1342,
+    "failures": 22,
+    "errors": 0,
+    "skipped": 0,
+    "note": "Before final Kotlin and safety/remaining fixture merges; not latest full API result."
   }
 }

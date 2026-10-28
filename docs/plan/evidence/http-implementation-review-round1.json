@@ -1,0 +1,200 @@
+{
+  "review_type": "Independent HTTP implementation correctness audit (not a repeated fixture/test-sufficiency review)",
+  "round": 1,
+  "decision": "CHANGES_REQUIRED",
+  "reviewed_commit": "3d64605aec3276610e622787f39def599b043f35",
+  "author": "api_core_docs",
+  "reviewer": "release_dependency_audit",
+  "independent": true,
+  "repo_edits": false,
+  "builds_run": false,
+  "requirements": [
+    "FR-APP-021",
+    "FR-APP-022",
+    "FR-APP-023",
+    "FR-APP-024",
+    "FR-ROUTE-020",
+    "FR-ROUTE-021",
+    "FR-HTTP-027",
+    "FR-HTTP-028",
+    "CON-APP-010"
+  ],
+  "scope": [
+    "HttpExecution",
+    "HttpRouter",
+    "HttpPathSpec",
+    "DefaultRouteGroup",
+    "DefaultRestApp common registration APIs",
+    "Dispatcher common/legacy selection and static layers"
+  ],
+  "findings": [
+    {
+      "id": "HTTP-IMPL-01",
+      "severity": "HIGH",
+      "confidence": 0.99,
+      "title": "A saved continuation from a normally completed request can execute application callbacks after shutdown",
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/HttpExecution.java",
+      "line": 59,
+      "related_locations": [
+        "HttpExecution.java:46-54 removes a completed/idle execution from lifecycle tracking",
+        "HttpExecution.java:287-292 saved Next delegates directly to submit",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/AppLifecycle.java:38-56 shutdown cancels only currently tracked executions"
+      ],
+      "violated_requirements": [
+        "FR-APP-023 AC-3",
+        "FR-APP-023 AC-5",
+        "CON-APP-010 AC-3"
+      ],
+      "mechanism": "submit rejects cancelled/ABORTED only. A normally COMPLETED execution is cleaned and removed from AppLifecycle.executions, so later shutdown never cancels that object. Its retained Continue remains callable and submit establishes a new owner and enters user callbacks without checking the lifecycle closed state. Those callbacks can access services and other app resources already closed during shutdown.",
+      "shortest_deterministic_candidate_red": [
+        "Register GET /x as Middleware: save Next to AtomicReference, send(\"ok\"), return without continuing. Register a downstream middleware that increments a counter.",
+        "Complete one request and wait for normal response completion/initial callback return so the execution is removed from lifecycle tracking. Assert downstream counter0.",
+        "Call app.shutdown(0, SECONDS) and wait for TERMINATED, then invoke savedNext.run().",
+        "Assert downstream counter remains0, no extra access/completion record or resource resurrection. Current source admits the saved continuation and increments the counter. Add a separate RUNNING post-response continuation control so the fix does not restore the prohibited universal completed-response guard."
+      ],
+      "runtime_evidence": "Static implementation finding; candidate Java RED intentionally not executed because this audit forbids builds. Core owner must confirm via TDD.",
+      "minimal_fix_direction": "Gate new continuation work against the lifecycle terminal cancellation/closed state even after request deregistration, retaining already-owned callback cleanup and valid RUNNING post-response continuation semantics."
+    },
+    {
+      "id": "HTTP-IMPL-02",
+      "severity": "HIGH",
+      "confidence": 0.99,
+      "title": "The global depth64 trampoline changes observable after-next order before the pinned router yields",
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/HttpExecution.java",
+      "line": 60,
+      "related_locations": [
+        "HttpExecution.java:64-78 queued work runs after the current user callback unwinds",
+        "/tmp/naruserve-parity-research.KkcjUP/e5fixed/node_modules/router/index.js:218-220 router-local ++sync>100 defer",
+        "/tmp/naruserve-parity-research.KkcjUP/e5fixed/node_modules/router/lib/route.js:135-137 separate Route-local ++sync>100 defer"
+      ],
+      "violated_requirements": [
+        "FR-APP-022 AC-1",
+        "FR-APP-022 AC-5",
+        "FR-APP-023 AC-5",
+        "CON-APP-010 AC-5"
+      ],
+      "mechanism": "At depth64 a same-thread Next queues its task and returns, so application after-next statements execute before downstream callbacks. Pinned Express router2.2.0 remains synchronous for65-99 middleware/Route callbacks. It also maintains independent router and Route sync counters; simply changing the one global limit to100 would still mishandle a70-layer+70-Route-callback chain. This can run application cleanup/transaction after-next code before the downstream handler that relies on it.",
+      "shortest_deterministic_candidate_red": [
+        "Register65 normal use callbacks that record before<i>, call Next.run(), then record after<i>; register a final GET /x that records terminal and sends ok.",
+        "Send GET /x and await initial callback/all owned work; compare the full trace to the pinned reference. The reference terminal index65 is before after0 index130. Source depth64 queues the terminal before the65th middleware can advance, yielding after0 before terminal.",
+        "Add separate65/99/100/101 Route-callback and middleware boundaries and a mixed70-use+70-Route-callback trace to preserve the two independent reference yielding policies; keep the existing1500-callback stack-safety test."
+      ],
+      "runtime_evidence": {
+        "reference_script": "/tmp/naru-http-depth-reference-audit.cjs",
+        "reference_observations": "/tmp/naru-http-depth-reference-audit.json",
+        "node": "22.22.0",
+        "express": "5.1.0",
+        "router": "2.2.0",
+        "source_hashes": {
+          "router/index.js": "fcc39d49329e5701e3fbd195060834398434b8e136a59949a654f6f402f6e31b",
+          "router/lib/route.js": "77e83b1ceca13bdbdaf42b79d90527489c46249db2ad4226e328352dfe68f83d"
+        },
+        "actual_reference_summary": [
+          {
+            "kind": "use layers",
+            "layers": 64,
+            "callbacks": 0,
+            "terminalIndex": 64,
+            "afterFirstIndex": 128,
+            "terminalBeforeAfterFirst": true
+          },
+          {
+            "kind": "use layers",
+            "layers": 65,
+            "callbacks": 0,
+            "terminalIndex": 65,
+            "afterFirstIndex": 130,
+            "terminalBeforeAfterFirst": true
+          },
+          {
+            "kind": "use layers",
+            "layers": 70,
+            "callbacks": 0,
+            "terminalIndex": 70,
+            "afterFirstIndex": 140,
+            "terminalBeforeAfterFirst": true
+          },
+          {
+            "kind": "use layers",
+            "layers": 99,
+            "callbacks": 0,
+            "terminalIndex": 99,
+            "afterFirstIndex": 198,
+            "terminalBeforeAfterFirst": true
+          },
+          {
+            "kind": "use layers",
+            "layers": 100,
+            "callbacks": 0,
+            "terminalIndex": 200,
+            "afterFirstIndex": 199,
+            "terminalBeforeAfterFirst": false
+          },
+          {
+            "kind": "use layers",
+            "layers": 101,
+            "callbacks": 0,
+            "terminalIndex": 201,
+            "afterFirstIndex": 199,
+            "terminalBeforeAfterFirst": false
+          },
+          {
+            "kind": "route callbacks",
+            "layers": 0,
+            "callbacks": 65,
+            "terminalIndex": 65,
+            "afterFirstIndex": 130,
+            "terminalBeforeAfterFirst": true
+          },
+          {
+            "kind": "route callbacks",
+            "layers": 0,
+            "callbacks": 99,
+            "terminalIndex": 99,
+            "afterFirstIndex": 198,
+            "terminalBeforeAfterFirst": true
+          },
+          {
+            "kind": "route callbacks",
+            "layers": 0,
+            "callbacks": 100,
+            "terminalIndex": 200,
+            "afterFirstIndex": 199,
+            "terminalBeforeAfterFirst": false
+          },
+          {
+            "kind": "route callbacks",
+            "layers": 0,
+            "callbacks": 101,
+            "terminalIndex": 201,
+            "afterFirstIndex": 199,
+            "terminalBeforeAfterFirst": false
+          },
+          {
+            "kind": "mixed independent cursors",
+            "layers": 70,
+            "callbacks": 70,
+            "terminalIndex": 140,
+            "afterFirstIndex": 280,
+            "terminalBeforeAfterFirst": true
+          }
+        ],
+        "java_result": "Predicted from pinned Java control flow; no Java build/repro run by reviewer."
+      },
+      "minimal_fix_direction": "Implement bounded scheduling without prematurely changing the pinned router/Route continuation boundaries or after-next order; do not weaken trace comparison or delete the deep-stack safety guard."
+    }
+  ],
+  "other_inspected_areas": [
+    "Whole alternative-tree validation and immutable matcher/callback publication",
+    "Route identity retained under policy replacement and handler append",
+    "Buffered group declarations, failure rollback and group middleware inheritance",
+    "Mounted raw path/base URL restoration and router-local parameter cache ownership",
+    "Error-layer position, error propagation and static/WS dispatch separation",
+    "Pending Deferred lease addition/settlement and cancellation cleanup ownership"
+  ],
+  "exclusions": [
+    "Java Pattern implementation/ECMAScript equivalence boundary is not reopened.",
+    "No previous PASS fixture sufficiency loop is reopened.",
+    "This is bounded implementation review, not whole-project completion or final sufficiency approval."
+  ]
+}

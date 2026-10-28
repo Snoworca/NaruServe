@@ -105,26 +105,22 @@ public class WebSocketApiTest {
         assertEquals(404, t.send("GET", "/a").status());
     }
 
-    // SDS-AC-1; IR-WS-001 AC-2
+    // IR-WS-001 AC-2; CON-APP-010 AC-1 AC-5; FR-APP-021 AC-6; FR-ROUTE-018 AC-1
     @Test
-    public void sdsAc1_IR_WS_001_AC2_anInvalidPatternThrowsWhatAppGetThrowsAndNullsAreRefused() {
-        String bad = "/a/:id/:id";
-        Class<?> fromGet = null;
-        try {
-            TestApp.create().app().get(bad, (req, res) -> { });
-            fail("app.get accepted " + bad);
-        } catch (RuntimeException e) {
-            fromGet = e.getClass();
+    public void strictWsRejectsDuplicateCaptureNamesWhileCommonHttpKeepsTheLastBinding() {
+        String duplicate="/a/:id/:id";TestApp http=TestApp.create();
+        http.app().get(duplicate,(req,res)->res.send(req.param("id")));
+        assertEquals("last",http.send("GET","/a/first/last").text());
+        try { TestApp.create().app().ws(duplicate,h);fail("WS accepted duplicate names"); }
+        catch(com.snoworca.naruserve.routing.RoutingConfigException expected) {
+            assertEquals(com.snoworca.naruserve.routing.RoutingConfigException.class,expected.getClass());
         }
-        try {
-            TestApp.create().app().ws(bad, h);
-            fail("app.ws accepted " + bad);
-        } catch (RuntimeException e) {
-            assertEquals(fromGet, e.getClass());
-        }
-        RestApp app = TestApp.create().app();
-        assertNpe(() -> app.ws(null, h));
-        assertNpe(() -> app.ws("/a", null));
+        // A genuinely missing parameter name remains invalid in both independently governed grammars.
+        try { TestApp.create().app().get("/a/:",(req,res)->res.end());fail("HTTP accepted missing name"); }
+        catch(com.snoworca.naruserve.routing.RoutingConfigException expected) { assertTrue(expected.getMessage().contains("Missing parameter name")); }
+        try { TestApp.create().app().ws("/a/:",h);fail("WS accepted missing name"); }
+        catch(com.snoworca.naruserve.routing.RoutingConfigException expected) {}
+        RestApp app=TestApp.create().app();assertNpe(()->app.ws(null,h));assertNpe(()->app.ws("/a",null));
     }
 
     // SDS-AC-2; IR-WS-001 AC-3

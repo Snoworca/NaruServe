@@ -191,14 +191,20 @@ public class AppStarterTest {
         RestApp conflict = app();
         try {
             AppStarter.start(conflict, 0, a -> {
-                a.get("/x", (req, res) -> { });
-                a.get("/x", (req, res) -> { });
+                // CON-APP-010 AC-1 AC-5; FR-APP-021 AC-6: the strict WS profile still conflicts at freeze.
+                a.ws("/ws/:id", (req, session) -> { });
+                a.ws("/ws/:name", (req, session) -> { });
             }, JVM, hooks);
-            fail("duplicate route accepted");
+            fail("duplicate WebSocket route accepted");
         } catch (RoutingConfigException expected) {
             assertEquals(RoutingConfigException.class, expected.getClass());
         }
         assertEquals(AppState.TERMINATED, conflict.state());
+        // FR-APP-021 AC-1: common HTTP duplicate registrations remain separate ordered Routes.
+        com.snoworca.naruserve.testing.TestApp http=com.snoworca.naruserve.testing.TestApp.create();
+        http.app().get("/x",(req,res,next)->next.run());http.app().get("/x",(req,res)->res.send("second"));
+        assertEquals("second",http.send("GET","/x").text());
+
 
         IllegalStateException boom = new IllegalStateException("boom");
         RestApp failing = RestApp.builder().httpAdapter(new SettingsCapturingAdapter() {

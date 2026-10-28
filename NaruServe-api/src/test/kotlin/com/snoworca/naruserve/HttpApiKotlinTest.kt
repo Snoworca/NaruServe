@@ -117,10 +117,16 @@ class HttpApiKotlinTest {
         app.route("/u/:id").post { _, res -> res.end() }
         // Automatic replies only; the next test routes requests into the Kotlin handlers.
         val mismatch = t.send("DELETE", "/x")
-        assertEquals(405, mismatch.status())
-        assertEquals("GET, HEAD, OPTIONS", mismatch.header("Allow"))
+        // CON-APP-010 AC-3 AC-5; FR-HTTP-028 AC-4 AC-5: ordinary method misses fall through;
+        // automatic OPTIONS observes only traversed common HTTP declarations.
+        assertEquals(404, mismatch.status())
+        assertEquals(null, mismatch.header("Allow"))
+        assertEquals("ok", t.send("GET", "/x").text())
         assertEquals(404, t.send("GET", "/none").status())
-        assertEquals("POST, OPTIONS", t.send("OPTIONS", "/u/1").header("Allow"))
+        val options = t.send("OPTIONS", "/u/1")
+        assertEquals(200, options.status())
+        assertEquals("POST", options.header("Allow"))
+        assertEquals("POST", options.text())
     }
 
     @Test

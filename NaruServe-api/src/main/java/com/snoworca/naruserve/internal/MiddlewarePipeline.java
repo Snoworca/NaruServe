@@ -66,6 +66,19 @@ public final class MiddlewarePipeline {
     }
 
     /**
+     * Common HTTP prefixes have their own raw grammar. Only prefixes representable by the strict WS decoded
+     * profile join its retained authentication pipeline: an undecodable prefix cannot match a valid WS target.
+     * Existing representable prefixes retain the identical matcher and registration order.
+     */
+    // @req FR-HTTP-027 AC-2; FR-APP-021 AC-6; CON-APP-010 AC-1 AC-2
+    void addCommonPrefix(String prefix,Middleware middleware) {
+        PrefixMatcher matcher;
+        try { matcher=new PrefixMatcher(prefix,policy); }
+        catch(IllegalArgumentException unrepresentableDecodedPrefix) { return; }
+        registrations.add(new Registration(matcher,middleware));
+    }
+
+    /**
      * Runs globals and matching prefixes in registration order, {@code route}, then {@code terminal}. An exception
      * propagates unchanged unless next.error(e) already routed this request. Every continuation of this request
      * throws once this returns.

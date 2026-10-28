@@ -147,12 +147,17 @@ public class JsonBodyAcceptanceTest {
         return post(t, adapter, "/b", contentType, body.getBytes(StandardCharsets.UTF_8), true);
     }
 
-    static void assertError(int status, String code, ClientResponse r) {
-        assertEquals(r.text(), status, r.status());
-        assertEquals("application/json; charset=UTF-8", r.header("Content-Type"));
-        String body = r.text();
-        assertTrue(body, body.matches("\\{\"error\":\\{\"code\":\"" + code
-                + "\",\"message\":\"[^\"]*\",\"requestId\":\"[0-9a-f]{16}\"}}"));
+    // CON-APP-010 AC-4 AC-5; FR-APP-024 AC-3: shared common-HTTP default error checks, not a JSON/RID waiver.
+    static void assertDefaultError(int status, Class<? extends Throwable> errorType, ClientResponse response) {
+        String body = response.text();
+        assertEquals(body, status, response.status());
+        assertEquals("text/html; charset=utf-8", response.header("Content-Type"));
+        assertEquals(String.valueOf(response.body().length), response.header("Content-Length"));
+        assertEquals("default-src 'none'", response.header("Content-Security-Policy"));
+        assertEquals("nosniff", response.header("X-Content-Type-Options"));
+        assertTrue(body, body.startsWith("<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>" + errorType.getName()));
+        assertTrue(body, body.endsWith("</pre>\n</body>\n</html>\n"));
+        assertTrue("final response must complete", !response.abnormallyClosed());
     }
 
     private static byte[] repeat(char c, int n) {
@@ -177,7 +182,7 @@ public class JsonBodyAcceptanceTest {
     public void sdsAc7_FR_JSON_001_AC1_otherMediaTypesGive415WithoutCallingTheCodec() {
         for (String ct : new String[] {"text/plain", "application/x-www-form-urlencoded", "application/jsonx",
                 "application/json; charset=iso-8859-1", "application/+json", null}) {
-            assertError(415, "UNSUPPORTED_MEDIA_TYPE", post(ct, "\"x\""));
+            assertDefaultError(415, UnsupportedMediaTypeException.class, post(ct, "\"x\""));
         }
         assertEquals(0, codec.decodes.get());
     }
@@ -185,9 +190,9 @@ public class JsonBodyAcceptanceTest {
     // SDS-AC-8; FR-JSON-001 AC-2
     @Test
     public void sdsAc8_FR_JSON_001_AC2_emptyAndWhitespaceBodiesGive400WithoutCallingTheCodec() {
-        assertError(400, "BAD_REQUEST", post("application/json", ""));
-        assertError(400, "BAD_REQUEST", post("application/json", "  \n\r\n\t "));
-        assertError(400, "BAD_REQUEST",
+        assertDefaultError(400, HttpException.class, post("application/json", ""));
+        assertDefaultError(400, HttpException.class, post("application/json", "  \n\r\n\t "));
+        assertDefaultError(400, HttpException.class,
                 post(t, adapter, "/b", "application/json", "   ".getBytes(StandardCharsets.UTF_8), false));
         assertEquals(0, codec.decodes.get());
     }
@@ -195,8 +200,8 @@ public class JsonBodyAcceptanceTest {
     // SDS-AC-8; FR-JSON-001 AC-2
     @Test
     public void sdsAc8_FR_JSON_001_AC2_codecIOExceptionGives400() {
-        assertError(400, "BAD_REQUEST", post("application/json", "{\"a\":"));
-        assertError(400, "BAD_REQUEST", post("application/json", "[1,]"));
+        assertDefaultError(400, HttpException.class, post("application/json", "{\"a\":"));
+        assertDefaultError(400, HttpException.class, post("application/json", "[1,]"));
         assertEquals(2, codec.decodes.get());
     }
 
@@ -212,7 +217,7 @@ public class JsonBodyAcceptanceTest {
     @Test
     public void sdsAc9_FR_JSON_001_AC4_contentLengthOverTheDefaultLimitGives413BeforeTheCodec() {
         ClientResponse r = post(t, adapter, "/b", "application/json", repeat(' ', 1048577), true);
-        assertError(413, "PAYLOAD_TOO_LARGE", r);
+        assertDefaultError(413, HttpException.class, r);
         assertEquals(0, codec.decodes.get());
     }
 
@@ -225,7 +230,7 @@ public class JsonBodyAcceptanceTest {
             app.app().jsonCodec(new WrappingCodec(unchecked));
             app.app().post("/b", (req, res) -> res.send(String.valueOf(req.body(String.class))));
             byte[] body = repeat('1', 1048578);
-            assertError(413, "PAYLOAD_TOO_LARGE", post(app, a, "/b", "application/json", body, false));
+            assertDefaultError(413, HttpException.class, post(app, a, "/b", "application/json", body, false));
         }
     }
 
@@ -239,8 +244,8 @@ public class JsonBodyAcceptanceTest {
         byte[] ten = "\"12345678\"".getBytes(StandardCharsets.UTF_8);
         byte[] eleven = "\"123456789\"".getBytes(StandardCharsets.UTF_8);
         assertEquals(10, ten.length);
-        assertError(413, "PAYLOAD_TOO_LARGE", post(app, a, "/b", "application/json", eleven, true));
-        assertError(413, "PAYLOAD_TOO_LARGE", post(app, a, "/b", "application/json", eleven, false));
+        assertDefaultError(413, HttpException.class, post(app, a, "/b", "application/json", eleven, true));
+        assertDefaultError(413, HttpException.class, post(app, a, "/b", "application/json", eleven, false));
         for (boolean length : new boolean[] {true, false}) {
             ClientResponse r = post(app, a, "/b", "application/json", ten, length);
             assertEquals(200, r.status());
@@ -255,9 +260,9 @@ public class JsonBodyAcceptanceTest {
         bad.write("{\"a\":\"".getBytes(StandardCharsets.UTF_8));
         bad.write(new byte[] {(byte) 0xC3, 0x28});
         bad.write("\"}".getBytes(StandardCharsets.UTF_8));
-        assertError(400, "BAD_REQUEST", post(t, adapter, "/b", "application/json", bad.toByteArray(), true));
+        assertDefaultError(400, HttpException.class, post(t, adapter, "/b", "application/json", bad.toByteArray(), true));
         byte[] truncated = {'"', 'a', (byte) 0xE2, (byte) 0x82};
-        assertError(400, "BAD_REQUEST", post(t, adapter, "/b", "application/json", truncated, true));
+        assertDefaultError(400, HttpException.class, post(t, adapter, "/b", "application/json", truncated, true));
     }
 
     // FR-JSON-001 AC-8

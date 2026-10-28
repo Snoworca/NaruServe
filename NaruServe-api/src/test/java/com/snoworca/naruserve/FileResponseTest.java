@@ -60,7 +60,10 @@ public class FileResponseTest {
         for (String p : new String[] {"/link", "/dir", "/missing"}) {
             ClientResponse r = t.send("GET", p);
             assertEquals(p, 404, r.status());
-            assertTrue(p + ": " + r.text(), r.text().startsWith("{\"error\":{\"code\":\"NOT_FOUND\""));
+            // CON-APP-010 AC-4 AC-5; FR-APP-024 AC-3: final rendering changes, file safety never does.
+            JsonBodyAcceptanceTest.assertDefaultError(404, HttpException.class, r);
+            assertFalse(p, r.text().contains("REAL"));
+            assertNull(r.header("Content-Disposition"));
         }
     }
 
@@ -93,8 +96,9 @@ public class FileResponseTest {
     public void FR_STATIC_011_AC2_failedDownloadDropsDispositionBeforeOnError() {
         File missing = new File(tmp.getRoot(), "missing.pdf");
         TestApp t = TestApp.create();
-        t.app().onError((error, req, res) -> res.status(((HttpException) error).status()).send("gone"));
         t.app().get("/d", (req, res) -> res.download(missing, "x.pdf"));
+        // CON-APP-010 AC-4 AC-5; FR-APP-024 AC-1 AC-5: configured error body remains, at its ordered position.
+        t.app().onError((error, req, res) -> res.status(((HttpException) error).status()).send("gone"));
         ClientResponse r = t.send("GET", "/d");
         assertEquals(404, r.status());
         assertEquals("gone", r.text());

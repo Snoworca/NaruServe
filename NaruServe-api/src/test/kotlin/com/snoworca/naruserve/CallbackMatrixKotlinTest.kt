@@ -184,6 +184,39 @@ class CallbackMatrixKotlinTest {
         }
     }
 
+    // FR-KT-003 AC-3 AC-4; FR-ROUTE-021 AC-1; FR-APP-023 AC-1 AC-7; FR-APP-024 AC-1
+    @Test
+    fun `FR-KT-003 AC-3 h common routing callback lambdas run on the actual request`() {
+        val t = TestApp.create()
+        val app = t.app()
+        val trace = ArrayList<String>()
+        app.param("id") { request, _, next, values, name ->
+            hit(ParamHandler::class.java)
+            request.param(name, values[0] + "!")
+            trace += "param"
+            next.run()
+        }
+        app.getAsync("/async/:id") { request, _, _ ->
+            hit(AsyncRouteHandler::class.java)
+            val result = Deferred.pending()
+            result.onRejected { failure ->
+                hit(Deferred.FailureHandler::class.java)
+                trace += "rejected " + failure.message
+            }
+            result.reject(IllegalStateException(request.param("id")))
+            result
+        }
+        app.use { failure, _, response, _ ->
+            hit(ErrorMiddleware::class.java)
+            trace += "error"
+            response.status(409).send(failure.message!!)
+        }
+        val response = t.send("GET", "/async/value")
+        assertEquals(409, response.status())
+        assertEquals("value!", response.text())
+        assertEquals(listOf("param", "rejected value!", "error"), trace)
+    }
+
     // SDS-AC-3; FR-KT-003 AC-3
     @Test
     fun `FR-KT-003 AC-3 z every CALLBACK_TYPES interface was exercised`() {

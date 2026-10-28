@@ -576,7 +576,9 @@ public class DispatcherTest {
     @Test
     public void sdsAc13_FR_APP_009_AC8_dispatcherBoundWithoutListenDispatchesUngatedInNew() {
         DefaultRestApp app = new DefaultRestApp();
-        app.get("/g", recording);
+        // CON-APP-010 AC-3 AC-5; FR-APP-023 AC-1: bare legacy dispatcher tests keep their old recorder;
+        // this app-owned common HTTP callback ends explicitly while retaining ungated NEW dispatch evidence.
+        app.get("/g", (req, res) -> { calls.incrementAndGet(); res.end(); });
         app.freeze();
         assertEquals(com.snoworca.naruserve.AppState.NEW, app.state());
         assertTrue(app.dispatcher() instanceof Dispatcher);

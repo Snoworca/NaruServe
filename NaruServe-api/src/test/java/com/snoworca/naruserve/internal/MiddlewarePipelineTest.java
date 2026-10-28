@@ -5,6 +5,7 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import com.snoworca.naruserve.Method;
+import com.snoworca.naruserve.HttpAcceptanceTest;
 import com.snoworca.naruserve.Middleware;
 import com.snoworca.naruserve.RestApp;
 import com.snoworca.naruserve.RouteHandler;
@@ -111,7 +112,7 @@ public class MiddlewarePipelineTest {
 
     // SDS-AC-5; FR-APP-003 AC-4
     @Test
-    public void sdsAc5_FR_APP_003_AC4_prefixMiddlewareAndHandlerSeeTheFullPath() {
+    public void prefixMiddlewareSeesTrimmedRawPathAndRouteSeesItsCurrentFullPath() {
         TestApp t = TestApp.create();
         t.app().use("/api", (req, res, next) -> {
             calls.add("p " + req.path());
@@ -123,7 +124,8 @@ public class MiddlewarePipelineTest {
         });
         t.send("GET", "/api/users");
         t.send("GET", "/api/a%20b");
-        assertEquals(Arrays.asList("p /api/users", "h /api/users", "p /api/a b", "h /api/a b"), calls);
+        // CON-APP-010 AC-2 AC-5; FR-HTTP-027 AC-2 AC-3 AC-4: prefix trim and raw escapes remain layer-specific.
+        assertEquals(Arrays.asList("p /users", "h /api/users", "p /a%20b", "h /api/a%20b"), calls);
     }
 
     // SDS-AC-6; FR-APP-003 AC-5
@@ -140,7 +142,8 @@ public class MiddlewarePipelineTest {
         t.app().onError((error, req, res) -> calls.add("onError"));
         ClientResponse r = t.send("GET", "/api/missing");
         assertEquals(404, r.status());
-        assertTrue(r.text(), r.text().startsWith("{\"error\":{\"code\":\"NOT_FOUND\""));
+        // CON-APP-010 AC-4 AC-5; FR-APP-024 AC-3: no-route final handling does not synthesize an error callback.
+        HttpAcceptanceTest.assertCommon404("GET", "/api/missing", r);
         assertEquals(Arrays.asList("g", "p"), calls);
         // Control (FR-APP-005 AC-7): the recording onError is wired, so the empty call lists above are meaningful.
         calls.clear();
@@ -170,24 +173,25 @@ public class MiddlewarePipelineTest {
 
     // SDS-AC-7; FR-APP-003 AC-7, FR-HTTP-021 AC-4; CON-HTTP-007 AC-1, CON-HTTP-010 AC-1
     @Test
-    public void sdsAc7_FR_APP_003_AC7_FR_HTTP_021_AC4_preRequestRejectionsRunNoMiddlewareHandlerOrOnError() {
+    public void transportRejectionsBypassLayersWhileCommonMethodsAndDecodedCapturesTraverseThem() {
+        // CON-APP-010 AC-2 AC-3 AC-5; FR-HTTP-027 AC-2; FR-HTTP-028 AC-1 AC-5
         TestApp t = TestApp.create();
-        t.app().use(mw("g"));
-        t.app().use("/", mw("p"));
-        t.app().onError((error, req, res) -> calls.add("onError"));
+        t.app().use(mw("g")); t.app().use("/", mw("p"));
         t.app().route(Method.any(), "/", h("h")).route(Method.any(), "/:x", h("h"));
-        t.app().get("/boom/now", (req, res) -> {
-            throw new IllegalStateException("boom");
-        });
-        assertEquals(501, t.send("FOO", "/x").status());
+        t.app().get("/boom/now", (req, res) -> { throw new IllegalStateException("boom"); });
+        // FR-APP-024 AC-1 AC-5: retain the onError control downstream of the actual failure.
+        t.app().onError((error, req, res) -> calls.add("onError"));
         assertEquals(400, t.send("GET", "abc").status());
-        assertEquals(400, t.send("GET", "/%2e%2e").status());
         assertEquals(204, t.send("OPTIONS", "*").status());
         assertEquals(new ArrayList<String>(), calls);
-        // Control (FR-APP-005 AC-7): the recording onError is wired, so the empty call lists above are meaningful.
+        HttpAcceptanceTest.assertCommon404("FOO", "/x", t.send("FOO", "/x"));
+        assertEquals(Arrays.asList("g", "p"), calls);
+        calls.clear();
+        assertEquals(200, t.send("GET", "/%2e%2e").status());
+        assertEquals(Arrays.asList("g", "p", "h"), calls);
         calls.clear();
         assertEquals(500, t.send("GET", "/boom/now").status());
-        assertTrue(calls.toString(), calls.contains("onError"));
+        assertEquals(Arrays.asList("g", "p", "onError"), calls);
     }
 
     // SDS-AC-8; FR-APP-003 AC-8, FR-APP-004 AC-6
@@ -215,33 +219,34 @@ public class MiddlewarePipelineTest {
 
     // SDS-AC-17; FR-HTTP-022 AC-8, FR-APP-003 AC-6, FR-HTTP-022 AC-4, FR-HTTP-026 AC-8, FR-HTTP-026 AC-4
     @Test
-    public void sdsAc17_FR_HTTP_022_AC8_globalRunsOnceForEveryFallbackAnswerButNotTheUnknownToken() {
+    public void globalsRunOnceForCommonFallbacksAndRetainedWebSocket426WithOrderedErrorObserver() {
+        // CON-APP-010 AC-3 AC-5; FR-HTTP-028 AC-1 AC-4 AC-5; FR-APP-021 AC-6
         TestApp t = TestApp.create().webSocketRoute("/ws");
         t.app().use(mw("g"));
-        t.app().onError((error, req, res) -> calls.add("onError"));
         t.app().get("/r", h("h")).post("/r", h("h"));
-        t.app().get("/boom/now", (req, res) -> {
-            throw new IllegalStateException("boom");
-        });
-        String[][] cases = {{"GET", "/missing", "404"}, {"DELETE", "/r", "405"}, {"GET", "/ws", "426"},
-            {"OPTIONS", "/r", "204"}, {"TRACE", "/x", "501"}, {"CONNECT", "/", "501"}};
+        t.app().get("/boom/now", (req, res) -> { throw new IllegalStateException("boom"); });
+        t.app().onError((error, req, res) -> calls.add("onError"));
+        String[][] cases = {{"GET", "/missing", "404"}, {"DELETE", "/r", "404"}, {"GET", "/ws", "426"},
+            {"OPTIONS", "/r", "200"}, {"TRACE", "/x", "404"}, {"CONNECT", "/", "404"}, {"BREW", "/r", "404"}};
         for (String[] c : cases) {
             calls.clear();
-            assertEquals(c[0] + " " + c[1], Integer.parseInt(c[2]), t.send(c[0], c[1]).status());
+            ClientResponse response = t.send(c[0], c[1]);
+            assertEquals(c[0] + " " + c[1], Integer.parseInt(c[2]), response.status());
             assertEquals(c[0] + " " + c[1], Collections.singletonList("g"), calls);
+            if (response.status() == 404) HttpAcceptanceTest.assertCommon404(c[0], c[1], response);
+            if (c[0].equals("OPTIONS")) {
+                assertEquals("GET, HEAD, POST", response.header("Allow"));
+                assertEquals("GET, HEAD, POST", response.text());
+            }
         }
         calls.clear();
-        assertEquals(501, t.send("BREW", "/r").status());
-        assertEquals(new ArrayList<String>(), calls);
-        // Control (FR-APP-005 AC-7): the recording onError is wired, so the empty call lists above are meaningful.
-        calls.clear();
         assertEquals(500, t.send("GET", "/boom/now").status());
-        assertTrue(calls.toString(), calls.contains("onError"));
+        assertEquals(Arrays.asList("g", "onError"), calls);
     }
 
     // SDS-AC-17; FR-HTTP-022 AC-4, FR-HTTP-026 AC-4
     @Test
-    public void sdsAc17_FR_HTTP_022_AC4_disabledTraceRequestSeesTheTraceMethod() {
+    public void commonTraceFallthroughMiddlewareSeesTheActualTraceMethod() {
         List<Method> seen = new ArrayList<>();
         TestApp t = TestApp.create();
         t.app().use((req, res, next) -> {
@@ -249,8 +254,8 @@ public class MiddlewarePipelineTest {
             next.run();
         });
         ClientResponse r = t.send("TRACE", "/x");
-        assertEquals(501, r.status());
-        assertTrue(r.text(), r.text().startsWith("{\"error\":{\"code\":\"NOT_IMPLEMENTED\""));
+        // CON-APP-010 AC-3 AC-5; FR-HTTP-028 AC-1 AC-5: TRACE is registrable, an unmatched TRACE is404.
+        HttpAcceptanceTest.assertCommon404("TRACE", "/x", r);
         assertEquals(Collections.singletonList(Method.TRACE), seen);
     }
 }

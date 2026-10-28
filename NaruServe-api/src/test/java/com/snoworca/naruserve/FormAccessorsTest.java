@@ -192,7 +192,8 @@ public class FormAccessorsTest {
         System.arraycopy(tail, 0, body, head.length + 2, tail.length);
         ClientResponse r = post(MP, body);
         assertEquals(400, r.status());
-        assertTrue(new String(r.body(), StandardCharsets.UTF_8).contains("\"code\":\"BAD_REQUEST\""));
+        // CON-APP-010 AC-4 AC-5; FR-APP-024 AC-3: default errors are HTML; malformed UTF8 remains400.
+        JsonBodyAcceptanceTest.assertDefaultError(400, HttpException.class, r);
         assertEquals(Arrays.<Object>asList("handler"), seen);
     }
 
@@ -200,20 +201,21 @@ public class FormAccessorsTest {
     @Test
     public void FR_MULTIPART_003_AC1_urlencodedValuesDecodeAndMalformedEncodingGives400ThroughOnError() {
         RestApp a = app();
-        a.onError((error, req, res) -> seen.add("onError " + ((HttpException) error).status()));
         a.post("/f", (req, res) -> {
             seen.add(req.form("name"));
             seen.add(req.form("city"));
             seen.add(String.valueOf(req.form("zip")));
             res.send("ok");
         });
+        // CON-APP-010 AC-4 AC-5; FR-APP-024 AC-1: preserve the observer in downstream registration order.
+        a.onError((error, req, res) -> seen.add("onError " + ((HttpException) error).status()));
         assertEquals(200, post(URL, utf8("name=Kim+Lee&name=x&city=%EC%84%9C%EC%9A%B8")).status());
         assertEquals(Arrays.<Object>asList("Kim Lee", "서울", "null"), seen);
         for (String bad : new String[] {"a=%G1", "a=%4", "a=%FF"}) {
             seen.clear();
             ClientResponse r = post(URL, utf8(bad));
             assertEquals(bad, 400, r.status());
-            assertTrue(bad, new String(r.body(), StandardCharsets.UTF_8).contains("\"code\":\"BAD_REQUEST\""));
+            JsonBodyAcceptanceTest.assertDefaultError(400, HttpException.class, r);
             assertEquals(bad, Arrays.<Object>asList("onError 400"), seen);
         }
     }

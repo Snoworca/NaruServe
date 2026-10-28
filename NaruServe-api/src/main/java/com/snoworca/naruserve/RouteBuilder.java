@@ -8,6 +8,16 @@ package com.snoworca.naruserve;
 public interface RouteBuilder {
     // @req FR-APP-021 AC-2; FR-APP-022 AC-6
     default RouteBuilder method(String token,Middleware... callbacks) { throw new UnsupportedOperationException("method callbacks"); }
+    // @req FR-KT-003 AC-3; FR-APP-021 AC-3
+    default RouteBuilder method(String token,Middleware callback) { return method(token,new Middleware[]{callback}); }
+    default RouteBuilder get(Middleware callback) { return method("GET",new Middleware[]{callback}); }
+    default RouteBuilder post(Middleware callback) { return method("POST",new Middleware[]{callback}); }
+    default RouteBuilder put(Middleware callback) { return method("PUT",new Middleware[]{callback}); }
+    default RouteBuilder patch(Middleware callback) { return method("PATCH",new Middleware[]{callback}); }
+    default RouteBuilder delete(Middleware callback) { return method("DELETE",new Middleware[]{callback}); }
+    default RouteBuilder head(Middleware callback) { return method("HEAD",new Middleware[]{callback}); }
+    default RouteBuilder options(Middleware callback) { return method("OPTIONS",new Middleware[]{callback}); }
+
     default RouteBuilder get(Middleware... callbacks) { return method("GET",callbacks); }
     default RouteBuilder post(Middleware... callbacks) { return method("POST",callbacks); }
     default RouteBuilder put(Middleware... callbacks) { return method("PUT",callbacks); }

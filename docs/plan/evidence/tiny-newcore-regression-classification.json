@@ -1,0 +1,146 @@
+{
+  "head": "8c5630a",
+  "approvedCoreMerge": "9ed8aa5620f5a081280285ad894d335e92a924ac",
+  "full_check": {
+    "tests": 182,
+    "failures": 11,
+    "errors": 0,
+    "skipped": 0
+  },
+  "integration_gate": {
+    "tests": 4,
+    "failures": 0,
+    "actualSocketRequests": 27,
+    "log": "/tmp/naru-v010-tiny-framework-integration.log"
+  },
+  "failures": [
+    {
+      "class": "com.snoworca.naruserve.tinyhttpd.SseLimitSocketTest",
+      "test": "sdsAc2_FR_SSE_003_AC4_aThirdStreamGets503WithTheRequestIdAndAFreedSlotIsReused",
+      "classification": "legacy error-body/checkpoint assertion",
+      "requirements": [
+        "FR-APP-024 AC-3"
+      ],
+      "production_fix_proposed": false,
+      "note": "Observed required400/413/503 status retained; legacy standardizedJSON body checkpoint now sees agreed HTML finalhandler. Keep capacity/disconnect/cleanup checks when migrating fixture.",
+      "message_excerpt": "java.lang.AssertionError: HTTP/1.1 503 Service Unavailable\r\nDate: Wed, 28 Oct 2026 16:27:24 GMT\r\nContent-Security-Policy: default-src 'none'\r\nX-Content-Type-Options: nosniff\r\nContent-Type: text/html; charset=utf-8\r\nContent-Length: 3159\r\nCon"
+    },
+    {
+      "class": "com.snoworca.naruserve.tinyhttpd.MultipartCrossAdapterTest",
+      "test": "FR_MULTIPART_001_AC2_malformedBodiesGiveTheSame400OnBothAdapters",
+      "classification": "legacy error-body/checkpoint assertion",
+      "requirements": [
+        "FR-APP-024 AC-3"
+      ],
+      "production_fix_proposed": false,
+      "note": "Expected failure statuses/limits continue; equality compares complete defaultJavaHTML stack traces including adapter-specific call frames. Review any fixture migration under the new finalhandler contract while preserving limits and temp-file assertions.",
+      "message_excerpt": "org.junit.ComparisonFailure: expected:<...snoworca.naruserve.t[esting.InMemoryHttpAdapter.send(InMemoryHttpAdapter.java:170)<br>\tat com.snoworca.naruserve.tinyhttpd.MultipartCrossAdapterTest.inMemory(MultipartCrossAdapterTest.java:110)<br>\t"
+    },
+    {
+      "class": "com.snoworca.naruserve.tinyhttpd.MultipartCrossAdapterTest",
+      "test": "sdsAc4_FR_MULTIPART_001_AC4_partHeaderLimitsGiveTheSameResultsOnBothAdapters",
+      "classification": "legacy error-body/checkpoint assertion",
+      "requirements": [
+        "FR-APP-024 AC-3"
+      ],
+      "production_fix_proposed": false,
+      "note": "Expected failure statuses/limits continue; equality compares complete defaultJavaHTML stack traces including adapter-specific call frames. Review any fixture migration under the new finalhandler contract while preserving limits and temp-file assertions.",
+      "message_excerpt": "java.lang.AssertionError: expected:<[200 a=1;, 413 <!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>com.snoworca.naruserve.HttpException: multipart part header line too long<br>\tat com."
+    },
+    {
+      "class": "com.snoworca.naruserve.tinyhttpd.MultipartCrossAdapterTest",
+      "test": "FR_MULTIPART_001_AC1_limitsGiveTheSame413OnBothAdapters",
+      "classification": "legacy error-body/checkpoint assertion",
+      "requirements": [
+        "FR-APP-024 AC-3"
+      ],
+      "production_fix_proposed": false,
+      "note": "Expected failure statuses/limits continue; equality compares complete defaultJavaHTML stack traces including adapter-specific call frames. Review any fixture migration under the new finalhandler contract while preserving limits and temp-file assertions.",
+      "message_excerpt": "org.junit.ComparisonFailure: expected:<...snoworca.naruserve.t[esting.InMemoryHttpAdapter.send(InMemoryHttpAdapter.java:170)<br>\tat com.snoworca.naruserve.tinyhttpd.MultipartCrossAdapterTest.inMemory(MultipartCrossAdapterTest.java:110)<br>\t"
+    },
+    {
+      "class": "com.snoworca.naruserve.tinyhttpd.TransportRejectionTest",
+      "test": "sdsAc5_FR_ENGINE_005_AC5_originFormConnectIsDispatchedAuthorityFormIsNot",
+      "classification": "common unknown method/path404 versus old501 default",
+      "requirements": [
+        "FR-HTTP-028 AC-5"
+      ],
+      "production_fix_proposed": false,
+      "note": "Authority-form transport rejection must remain separately asserted; only origin-form default differs.",
+      "message_excerpt": "java.lang.AssertionError: HTTP/1.1 404 Not Found\r\nDate: Wed, 28 Oct 2026 16:27:34 GMT\r\nContent-Security-Policy: default-src 'none'\r\nX-Content-Type-Options: nosniff\r\nContent-Type: text/html; charset=utf-8\r\nContent-Length: 143\r\nConnection: cl"
+    },
+    {
+      "class": "com.snoworca.naruserve.tinyhttpd.MultipartEpilogueSocketTest",
+      "test": "chunkedOversizedEpilogueRejectsAndLeavesNoTemporaryFile",
+      "classification": "legacy error-body/checkpoint assertion",
+      "requirements": [
+        "FR-APP-024 AC-3"
+      ],
+      "production_fix_proposed": false,
+      "note": "Observed required400/413/503 status retained; legacy standardizedJSON body checkpoint now sees agreed HTML finalhandler. Keep capacity/disconnect/cleanup checks when migrating fixture.",
+      "message_excerpt": "java.lang.AssertionError: HTTP/1.1 413 Content Too Large\r\nDate: Wed, 28 Oct 2026 16:27:19 GMT\r\nContent-Security-Policy: default-src 'none'\r\nX-Content-Type-Options: nosniff\r\nContent-Type: text/html; charset=utf-8\r\nContent-Length: 3912\r\nConne"
+    },
+    {
+      "class": "com.snoworca.naruserve.tinyhttpd.CrossAdapterTest",
+      "test": "sdsAc3_FR_ENGINE_007_AC3_handlerReachingPathsGiveTheSameRawPathAndDecodedValuesOnBoth",
+      "classification": "explicit mergeSlashes policy compatibility concern; not waived",
+      "requirements": [
+        "FR-HTTP-028 AC-2",
+        "FR-APP-021 AC-5"
+      ],
+      "production_fix_proposed": false,
+      "note": "Fails earlier explicit mergeSlashes(true)200 expectation with404. Host core owner should assess promised strict/extension profile; this worker does not edit or relax it.",
+      "message_excerpt": "java.lang.AssertionError: expected:<200> but was:<404>"
+    },
+    {
+      "class": "com.snoworca.naruserve.tinyhttpd.CrossAdapterTest",
+      "test": "sdsAc1_FR_ENGINE_007_AC1_t07RunsOnBothAdaptersWithTheSameResults",
+      "classification": "legacy error-body/checkpoint assertion",
+      "requirements": [
+        "FR-APP-024 AC-3"
+      ],
+      "production_fix_proposed": false,
+      "note": "Observed required400/413/503 status retained; legacy standardizedJSON body checkpoint now sees agreed HTML finalhandler. Keep capacity/disconnect/cleanup checks when migrating fixture.",
+      "message_excerpt": "java.lang.AssertionError: ?x=%zz"
+    },
+    {
+      "class": "com.snoworca.naruserve.tinyhttpd.CrossAdapterTest",
+      "test": "sdsAc2_FR_ENGINE_007_AC2_pathRejectionsAndOptionsStarGiveTheSameStatusOnBoth",
+      "classification": "common raw path versus old strict and transport boundary",
+      "requirements": [
+        "FR-ENGINE-012 AC-1 AC-2 AC-3",
+        "FR-HTTP-027 AC-2"
+      ],
+      "production_fix_proposed": false,
+      "note": "First observed failure is in-memory literal Unicode path200 versus old400. Actual transport still rejects raw high bytes. Remaining encoded slash/NUL/dot/OPTIONS expectations belong to declared legacy profile and need deliberate migration, not blanket status relaxation.",
+      "message_excerpt": "java.lang.AssertionError: /\u00c3\u00a9 expected:<400> but was:<200>"
+    },
+    {
+      "class": "com.snoworca.naruserve.tinyhttpd.RawPolicyGuardTest",
+      "test": "invalidDecodedWebSocketTargetsNeverUpgrade",
+      "classification": "actual preserved WS400 regression",
+      "requirements": [
+        "FR-ENGINE-012 AC-3"
+      ],
+      "production_fix_proposed": false,
+      "note": "Observed404, not101. Dispatcher catches invalid legacy upgrade-path lookup and falls back to common HTTP. Host API/core owner is fixing; unchanged guard remains RED.",
+      "message_excerpt": "java.lang.AssertionError: HTTP/1.1 404 Not Found\r\nDate: Wed, 28 Oct 2026 16:27:19 GMT\r\nContent-Security-Policy: default-src 'none'\r\nX-Content-Type-Options: nosniff\r\nContent-Type: text/html; charset=utf-8\r\nContent-Length: 147\r\n\r\n expected:<4"
+    },
+    {
+      "class": "com.snoworca.naruserve.tinyhttpd.TinyHttpdBodyStreamTest",
+      "test": "sdsAc1_FR_ENGINE_005_AC1_truncatedBodyOverTheSocketGives400",
+      "classification": "legacy error-body/checkpoint assertion",
+      "requirements": [
+        "FR-APP-024 AC-3"
+      ],
+      "production_fix_proposed": false,
+      "note": "Observed required400/413/503 status retained; legacy standardizedJSON body checkpoint now sees agreed HTML finalhandler. Keep capacity/disconnect/cleanup checks when migrating fixture.",
+      "message_excerpt": "java.lang.AssertionError: HTTP/1.1 400 Bad Request\r\nDate: Wed, 28 Oct 2026 16:27:30 GMT\r\nContent-Security-Policy: default-src 'none'\r\nX-Content-Type-Options: nosniff\r\nContent-Type: text/html; charset=utf-8\r\nContent-Length: 4477\r\nConnection:"
+    }
+  ],
+  "noAssertionsChanged": true,
+  "noProductionChange": true,
+  "fullSuiteGreen": false,
+  "evidence": "/tmp/naru-v010-tiny-newcore-regression-results",
+  "next": "Host owns API/core policy corrections and checkpoint migration decisions. Await exact approved next pin before deferred/onAbort lane."
+}

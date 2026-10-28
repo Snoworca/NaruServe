@@ -31,7 +31,8 @@ class CookieKotlinTest {
             val all: Array<Cookie> = req.getCookies()
             seen += token
             seen += all.size
-            res.addCookie(Cookie("s", "").apply { maxAge = 0; path = "/" })
+            // FR-APP-023 AC-1; CON-APP-010 AC-3: callback return leaves the response pending, so finish explicitly.
+            res.addCookie(Cookie("s", "").apply { maxAge = 0; path = "/" }).end()
         }
         val r = t.send("GET", "/c", "Cookie", "session=abc; x=1")
         assertEquals(listOf<Any?>("abc", 2), seen)
