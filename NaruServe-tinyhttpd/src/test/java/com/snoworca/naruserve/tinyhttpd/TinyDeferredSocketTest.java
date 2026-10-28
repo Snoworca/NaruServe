@@ -96,11 +96,26 @@ public class TinyDeferredSocketTest {
         assertTrue("stop exceeded bounded deadline",TimeUnit.NANOSECONDS.toMillis(System.nanoTime()-begin)<1500);assertEquals(1,notices.get());assertEquals(1,((TinyHttpdExchange)ex).slots().open());
         release.countDown();reply.get(5,TimeUnit.SECONDS);until(()->((TinyHttpdExchange)ex).slots().open()==0,"running drain did not retire");ex.abort();assertEquals(1,notices.get());closed(ex);
     }
-    private Future<String> upload(){String body="--b\r\nContent-Disposition: form-data; name=\"file\"; filename=\"x.bin\"\r\n\r\npayload\r\n--b--\r\n";return clients.submit(()->Http.send(engine.boundPort(),"POST /upload HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\nContent-Type: multipart/form-data; boundary=b\r\nContent-Length: "+body.length()+"\r\n\r\n"+body));}
+    private Future<String> upload(){return upload(false);}
+    // FR-APP-023 AC-8: a completed fixed-length frame is observable before retained input
+    // permits engine return/EOF. Only the success-with-pending-lease case uses this client.
+    private Future<String> upload(boolean framed){
+        String body="--b\r\nContent-Disposition: form-data; name=\"file\"; filename=\"x.bin\"\r\n\r\npayload\r\n--b--\r\n";
+        String raw="POST /upload HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\nContent-Type: multipart/form-data; boundary=b\r\nContent-Length: "+body.length()+"\r\n\r\n"+body;
+        return clients.submit(()->{
+            if(!framed)return Http.send(engine.boundPort(),raw);
+            try(Socket socket=new Socket("127.0.0.1",engine.boundPort())){
+                socket.setSoTimeout(5000);
+                socket.getOutputStream().write(raw.getBytes(StandardCharsets.ISO_8859_1));
+                socket.getOutputStream().flush();
+                return fixedResponse(socket.getInputStream());
+            }
+        });
+    }
     // FR-APP-023 AC-1 AC-3 AC-6: response completion cannot revoke a pending producer's upload lease.
     @Test(timeout=20000) public void deferredSuccessKeepsUploadUntilSettlementAfterResponse() throws Exception {
         File dir=temporary.newFolder("success");RestApp a=core();a.multipart(o->o.memoryThreshold(1).tempDirectory(dir));Deferred work=Deferred.pending();AtomicReference<Response> response=new AtomicReference<>();AtomicReference<UploadFile> file=new AtomicReference<>();
-        a.methodAsync("POST","/upload",(q,s,n)->{file.set(q.requireFile("file"));response.set(s);return work;});a.listen(0);Future<String> reply=upload();returned();pending(reply);assertEquals(1,dir.list().length);
+        a.methodAsync("POST","/upload",(q,s,n)->{file.set(q.requireFile("file"));response.set(s);return work;});a.listen(0);Future<String> reply=upload(true);returned();pending(reply);assertEquals(1,dir.list().length);
         response.get().send("done");assertEquals("done",Http.body(reply.get(5,TimeUnit.SECONDS)));assertEquals("payload",new String(file.get().bytes(),StandardCharsets.UTF_8));assertEquals(1,dir.list().length);assertEquals(1,log.info().size());
         assertTrue(work.resolve());assertFalse(work.resolve());until(()->dir.list().length==0,"settled upload not removed");released(file.get());until(()->log.info().size()==1,"settled completion log missing");
     }
