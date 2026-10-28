@@ -147,18 +147,19 @@ public class ServletBuildTest {
     }
 
     private static String originalSpiDeclarations(String source, String fileName) {
-        String stripped = source.replaceAll("(?s)/\\*.*?\\*/|//[^\\r\\n]*", "");
+        String stripped = normalizedJavaSource(source);
         if (fileName.equals("HttpExchange.java")) {
             stripped = removeOptionalDefault(stripped, "default\\s+void\\s+onAbort\\s*\\(\\s*Runnable\\s+listener\\s*\\)");
             stripped = removeOptionalDefault(stripped, "default\\s+Runnable\\s+retainRequest\\s*\\(\\s*\\)");
         }
         return fileName.equals("StreamDrain.java") ? originalDrainDeclarations(stripped)
-                : stripped.replaceAll("\\s+", "");
+                : normalizedJavaSource(stripped);
     }
 
     private static String removeOptionalDefault(String source, String signature) {
         java.util.regex.Matcher matcher = java.util.regex.Pattern.compile(signature + "\\s*\\{").matcher(source);
-        if (!matcher.find()) return source;
+        while (matcher.find() && insideLiteral(source, matcher.start())) { /* declarations only */ }
+        if (matcher.hitEnd()) return source;
         int start = matcher.start(), end = matcher.end(), depth = 1;
         char quote = 0;
         boolean escaped = false;
@@ -216,19 +217,78 @@ public class ServletBuildTest {
                         .equals(originalSpiDeclarations(changed, "ServerSettings.java")));
         String literalSource = "interface Values { String url = \"http://host/a /* literal */ // path\"; char space = ' '; "
                 + "String escaped = \"a\\\" b\\\\ c\"; }";
-        String expected = "interfaceValues{Stringurl=\"http://host/a /* literal */ // path\";charspace=' ';"
-                + "Stringescaped=\"a\\\" b\\\\ c\";}";
+        String expected = literalSource;
         assertEquals(expected, originalSpiDeclarations(literalSource, "ServerSettings.java"));
         assertEquals(expected, originalSpiDeclarations("/* outside */\n" + literalSource + " // outside\n", "ServerSettings.java"));
+        assertFalse("operator token boundaries retained", originalSpiDeclarations("int x = a+ ++b;", "ServerSettings.java")
+                .equals(originalSpiDeclarations("int x = a++ +b;", "ServerSettings.java")));
         assertFalse(originalSpiDeclarations("interface Values { char space = ' '; }", "ServerSettings.java")
                 .equals(originalSpiDeclarations("interface Values { char space = '\\t'; }", "ServerSettings.java")));
     }
 
-    /** Removes comments, whitespace and only the explicitly permitted empty default cancellation callback. */
+    /** Remove only the permitted empty cancellation default, preserving all original bodies. */
     private static String originalDrainDeclarations(String source) {
-        return source.replaceAll("(?s)/\\*.*?\\*/|//[^\\r\\n]*", "")
-                .replaceAll("default\\s+void\\s+abort\\s*\\(\\s*\\)\\s*\\{\\s*\\}", "")
-                .replaceAll("\\s+", "");
+        String normalized = normalizedJavaSource(source);
+        java.util.regex.Matcher matcher = java.util.regex.Pattern.compile(
+                "default\\s+void\\s+abort\\s*\\(\\s*\\)\\s*\\{\\s*\\}").matcher(normalized);
+        while (matcher.find()) {
+            if (!insideLiteral(normalized, matcher.start())) {
+                return normalizedJavaSource(normalized.substring(0, matcher.start()) + normalized.substring(matcher.end()));
+            }
+        }
+        return normalized;
+    }
+
+    private static boolean insideLiteral(String source, int offset) {
+        char quote = 0;
+        boolean escaped = false;
+        for (int i = 0; i < offset; i++) {
+            char c = source.charAt(i);
+            if (quote != 0) {
+                if (escaped) escaped = false;
+                else if (c == '\\') escaped = true;
+                else if (c == quote) quote = 0;
+            } else if (c == '"' || c == '\'') quote = c;
+        }
+        return quote != 0;
+    }
+
+    // Preserve literal contents/escapes and token boundaries. Outside literals, comments count
+    // as whitespace and runs of whitespace become ONE space, never zero (a+ ++b != a++ +b).
+    // Old declarations retain their original formatting; arbitrary reformatting need not compare equal.
+    private static String normalizedJavaSource(String source) {
+        StringBuilder result = new StringBuilder();
+        char quote = 0;
+        boolean escaped = false, space = false;
+        for (int i = 0; i < source.length(); i++) {
+            char c = source.charAt(i);
+            if (quote != 0) {
+                result.append(c);
+                if (escaped) escaped = false;
+                else if (c == '\\') escaped = true;
+                else if (c == quote) quote = 0;
+                continue;
+            }
+            if (c == '/' && i + 1 < source.length() && source.charAt(i + 1) == '/') {
+                i += 2;
+                while (i < source.length() && source.charAt(i) != '\n' && source.charAt(i) != '\r') i++;
+                space = true;
+            } else if (c == '/' && i + 1 < source.length() && source.charAt(i + 1) == '*') {
+                int end = source.indexOf("*/", i + 2);
+                assertTrue("terminated source comment", end >= 0);
+                i = end + 1;
+                space = true;
+            } else if (Character.isWhitespace(c)) {
+                space = true;
+            } else {
+                if (space && result.length() > 0) result.append(' ');
+                space = false;
+                result.append(c);
+                if (c == '"' || c == '\'') quote = c;
+            }
+        }
+        assertEquals("terminated source literal", 0, (int) quote);
+        return result.toString();
     }
 
     // CON-SVL-001 AC-4; IR-HTTP-007 AC-3: the exception must not permit unrelated or mandatory SPI changes.
