@@ -88,7 +88,7 @@ public class ServletDeferredSpiTest {
         ex.commit(200,headers,bytes.length).write(bytes);ex.finish();
     }
     private int inFlight() throws Exception {Field field=ServletAdapter.class.getDeclaredField("inFlight");field.setAccessible(true);return field.getInt(adapter);}
-    private void idle() throws Exception {assertTrue("in-flight exchange not released",SharedApp.until(()->{try{return inFlight()==0;}catch(Exception e){throw new AssertionError(e);}},5,TimeUnit.SECONDS));assertEquals(0,adapter.pool().open());}
+    private void idle() throws Exception {assertTrue("in-flight exchange not released",SharedApp.until(()->{try{return inFlight()==0 && adapter.pool().open()==0;}catch(Exception e){throw new AssertionError(e);}},5,TimeUnit.SECONDS));assertEquals(0,inFlight());assertEquals(0,adapter.pool().open());}
     private void completeOnce(int expected) throws Exception {assertTrue("async completion not observed",SharedApp.until(()->completes.get()==expected,5,TimeUnit.SECONDS));assertEquals(expected,completes.get());}
     private static void closed(HttpExchange ex) throws Exception {
         try {ex.commit(200,Collections.emptyList(),0);fail("closed exchange resurrected");}

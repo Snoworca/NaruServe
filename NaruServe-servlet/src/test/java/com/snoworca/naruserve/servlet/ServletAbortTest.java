@@ -74,6 +74,16 @@ public class ServletAbortTest {
     static HttpServletRequest request() {
         return (HttpServletRequest) Proxy.newProxyInstance(ServletAbortTest.class.getClassLoader(),
                 new Class<?>[] {HttpServletRequest.class}, (p, m, args) -> {
+                    // FR-HTTP-027/011; FR-APP-023 AC-8: immutable head is captured before container reuse.
+                    switch (m.getName()) {
+                        case "getMethod": return "GET";
+                        case "getQueryString": return null;
+                        case "getProtocol": return "HTTP/1.1";
+                        case "getRemoteAddr": return "127.0.0.1";
+                        case "isSecure": return false;
+                        case "getHeaderNames": return Collections.enumeration(Collections.<String>emptyList());
+                    }
+                    // Still reject input/parameters/parts and decoded servlet/path-info access.
                     throw new AssertionError("request." + m.getName() + " was not expected");
                 });
     }

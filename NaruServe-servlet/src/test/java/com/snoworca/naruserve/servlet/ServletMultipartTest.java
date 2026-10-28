@@ -149,17 +149,16 @@ public class ServletMultipartTest {
             many.append(part("p" + i, null, "v"));
         }
         String[][] cases = {
-            {MP, part("doc", "big.bin", repeat('x', 1025)) + close()},
-            {MP, many + close()},
-            {FORM, "t=" + repeat('f', 300)},
-            {"application/json", "\"" + repeat('j', 300) + "\""},
+            {MP, part("doc", "big.bin", repeat('x', 1025)) + close(), "com.snoworca.naruserve.HttpException: multipart part exceeds maxFileSize<br>"},
+            {MP, many + close(), "com.snoworca.naruserve.HttpException: more than 5 multipart parts<br>"},
+            {FORM, "t=" + repeat('f', 300), "com.snoworca.naruserve.HttpException<br>"},
+            {"application/json", "\"" + repeat('j', 300) + "\"", "com.snoworca.naruserve.HttpException<br>"},
         };
         for (String[] c : cases) {
-            String r = masked(SharedApp.http(port, "POST", c[0].equals("application/json") ? "/json" : "/up",
-                    bytes(c[1]), "Content-Type", c[0]));
-            assertTrue(c[0] + ": " + r, r.startsWith(
-                    "413 {\"error\":{\"code\":\"PAYLOAD_TOO_LARGE\",\"message\":\""));
-            assertTrue(r, r.endsWith("\"requestId\":\"*\"}}"));
+            SharedApp.Reply r = SharedApp.http(port, "POST", c[0].equals("application/json") ? "/json" : "/up",
+                    bytes(c[1]), "Content-Type", c[0]);
+            // IR-HTTP-009 AC-7; CON-APP-010 AC-5: size rejection remains a writable HTTP413 with cleanup.
+            SharedApp.assertHtmlError(r, 413, c[2]);
             assertEquals(c[0], Collections.emptyList(), Arrays.asList(dir.list()));
         }
     }

@@ -39,6 +39,19 @@ import org.jspecify.annotations.Nullable;
  */
 final class SharedApp {
 
+    /** FR-APP-024/HTTP-028; CON-APP-010 AC-5: common finalhandler HTML, never an arbitrary container page. */
+    static void assertHtmlError(Reply reply, int status, String firstLine) {
+        org.junit.Assert.assertEquals(reply.text(), status, reply.status);
+        org.junit.Assert.assertEquals("text/html;charset=utf-8", reply.header("Content-Type").replace(" ", "").toLowerCase(java.util.Locale.ROOT));
+        org.junit.Assert.assertEquals("default-src 'none'", reply.header("Content-Security-Policy"));
+        org.junit.Assert.assertEquals("nosniff", reply.header("X-Content-Type-Options"));
+        org.junit.Assert.assertEquals(Integer.toString(reply.body.length), reply.header("Content-Length"));
+        String prefix="<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>";
+        org.junit.Assert.assertTrue(reply.text(), reply.text().startsWith(prefix+firstLine));
+        org.junit.Assert.assertTrue(reply.text(), reply.text().endsWith("</pre>\n</body>\n</html>\n"));
+        org.junit.Assert.assertFalse(reply.text(), reply.text().contains("\r"));
+    }
+
     /** The bytes {@code /file} serves: 100000 bytes of a repeating pattern. */
     static final byte[] FILE_BYTES = pattern(100000);
 
