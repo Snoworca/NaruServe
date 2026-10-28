@@ -6,6 +6,7 @@ import com.google.gson.JsonParser;
 import com.snoworca.naruserve.*;
 import com.snoworca.naruserve.common.RealHttpTestSupport.Reply;
 import com.snoworca.naruserve.spi.JsonCodec;
+import com.snoworca.naruserve.testing.common.RunnableExampleContract;
 import java.io.*;
 import java.lang.reflect.Type;
 import java.util.*;
@@ -44,23 +45,23 @@ public class RuntimeHttpUsabilityTest {
         } finally {app.shutdown(0,TimeUnit.SECONDS);}
     }
 
-    // FR-DX-002 AC-5
+    // FR-DX-002 AC-5; CON-APP-010 AC-4 AC-5; FR-APP-024 AC-3
     @Test public void jsonEncodingFailureCannotLeakPartialBodyOrSuccessStatus() throws Exception {
         RestApp app=RestApp.create();
         app.jsonCodec(new JsonCodec(){
             public <T>T decode(Reader reader,Type type){throw new UnsupportedOperationException();}
-            public void encode(Object value,Writer writer)throws IOException{writer.write("partial-secret");throw new IOException("encoding failed");}
+            public void encode(Object value,Writer writer)throws IOException{writer.write("{\"partial-secret\":\"<secret>&\"}");throw new IOException("encoding failed");}
         });
         app.get("/fail",(req,res)->res.status(201).send(new User()));
         int port=app.listen(0).port();
-        try {Reply r=send(port,"GET","/fail",null);assertEquals(500,r.status);assertFalse(r.text().contains("partial-secret"));assertEquals("INTERNAL_ERROR",JsonParser.parseString(r.text()).getAsJsonObject().getAsJsonObject("error").get("code").getAsString());}
+        try {Reply r=send(port,"GET","/fail",null);assertEquals(500,r.status);assertFalse(r.text().contains("partial-secret"));assertFalse(r.text().contains("{\"partial-secret\":\"<secret>&\"}"));assertFalse(r.text().contains("&quot;partial-secret&quot;"));htmlError(r,"java.io.IOException: encoding failed");}
         finally {app.shutdown(0,TimeUnit.SECONDS);}
     }
 
-    // FR-DX-010 AC-1 AC-2 AC-3 AC-4 AC-5
+    // FR-DX-010 AC-1 AC-2 AC-3 AC-4 AC-5 AC-6; CON-APP-010 AC-4 AC-5 AC-7; FR-APP-024 AC-3
     @Test public void corsActualAndPreflightAndErrorsPreserveExpectedWireHeaders() throws Exception {
         RestApp app=RestApp.create();AtomicInteger calls=new AtomicInteger();
-        app.use((req,res,next)->{res.header("Vary","Accept-Encoding");next.run();});
+        app.use((req,res,next)->{res.header("Vary","Accept-Encoding");res.header("X-Leak","private");next.run();});
         app.cors(o->o.allowedOrigins(ORIGIN).allowedMethods(Method.GET,Method.POST).allowedHeaders("X-Token").credentials(true));
         app.get("/ok",(req,res)->{calls.incrementAndGet();res.send("ok");});
         app.get("/bad",(req,res)->{throw new HttpException(400,"bad");});
@@ -74,8 +75,9 @@ public class RuntimeHttpUsabilityTest {
             int before=calls.get();Reply preflight=send(port,"OPTIONS","/ok",null,"Origin",ORIGIN,"Access-Control-Request-Method","POST","Access-Control-Request-Headers","X-Token");assertEquals(204,preflight.status);assertEquals(0,preflight.bytes.length);grant(preflight);assertEquals(before,calls.get());assertTrue(preflight.header("Access-Control-Allow-Methods").contains("POST"));assertTrue(preflight.header("Access-Control-Allow-Headers").equalsIgnoreCase("X-Token"));assertTrue(preflight.header("Vary").contains("Access-Control-Request-Headers"));
             Reply rejected=send(port,"OPTIONS","/ok",null,"Origin","https://evil.example","Access-Control-Request-Method","POST");assertEquals(403,rejected.status);assertNull(rejected.header("Access-Control-Allow-Origin"));assertEquals(before,calls.get());
             String[] paths={"/bad","/auth","/error"};int[] statuses={400,401,500};
-            for(int i=0;i<paths.length;i++){Reply error=send(port,"GET",paths[i],null,"Origin",ORIGIN);assertEquals(statuses[i],error.status);grant(error);assertTrue(JsonParser.parseString(error.text()).getAsJsonObject().getAsJsonObject("error").has("code"));}
+            for(int i=0;i<paths.length;i++){Reply error=send(port,"GET",paths[i],null,"Origin",ORIGIN);assertEquals(statuses[i],error.status);grant(error);htmlError(error,i==2?"java.lang.IllegalStateException: failure":"com.snoworca.naruserve.HttpException: "+(i==0?"bad":"auth"));assertNull(error.header("X-Leak"));assertEquals("Origin",error.header("Vary"));}
         } finally {app.shutdown(0,TimeUnit.SECONDS);}
     }
+    private static void htmlError(Reply reply,String expectedInfo){RunnableExampleContract.assertCommonHtmlError(reply.text(),reply.bytes.length,reply::header,expectedInfo);}
     private static void grant(Reply reply){assertEquals(ORIGIN,reply.header("Access-Control-Allow-Origin"));assertEquals("true",reply.header("Access-Control-Allow-Credentials"));assertTrue(reply.header("Vary").toLowerCase(Locale.ROOT).contains("origin"));}
 }

@@ -3,6 +3,7 @@ package com.snoworca.naruserve.kotlin
 import com.snoworca.naruserve.spi.JsonCodec
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter
 import com.snoworca.naruserve.testing.TestApp
+import com.snoworca.naruserve.testing.common.RunnableExampleContract
 import java.io.Reader
 import java.io.Writer
 import java.lang.reflect.Type
@@ -74,8 +75,9 @@ class RequestBodyExtensionKotlinTest {
 
         val rejected = post("/users", "null")
         assertEquals(400, rejected.status())
-        assertTrue(rejected.text(), rejected.text().contains("\"code\":\"BAD_REQUEST\""))
-        assertTrue(rejected.text(), rejected.text().contains("\"message\":\"JSON body is null\""))
+        // CON-APP-010 AC-4 AC-5; FR-APP-024 AC-3 versions the old error envelope only.
+        RunnableExampleContract.assertCommonHtmlError(rejected.text(), rejected.body().size,
+            rejected::header, "com.snoworca.naruserve.HttpException: JSON body is null")
         assertEquals(1, decoded.size)
     }
 
