@@ -1,6 +1,6 @@
 {
   "requirement": "OPS-ROUTE-004",
-  "scope": "All 30 actual Java scenarios wired; Stage2 baseline has five explicit pending-feature failures",
+  "scope": "All 30 actual Java scenarios wired; method/error core integrated, only async.rejected remains RED",
   "tdd": {
     "red_commit": "3d86599",
     "red_tests": 7,
@@ -53,6 +53,20 @@
       "full_runtime_cases": 30,
       "full_runtime_passing": 25,
       "counterpart_controls": 8
+    },
+    "method_error_runtime_integration": {
+      "tests": 54,
+      "failures": 1,
+      "errors": 0,
+      "skipped": 0,
+      "source_commit": "1497ddbd91d35e659a8b4d5514e1e1248bab8850",
+      "approved_core_commit": "e03439e5da4612449795cb592a8b6d6d15009e1c",
+      "log": "/tmp/naru-runtime-parity-method-error.log",
+      "xml": "/tmp/naru-runtime-parity-method-error/xml",
+      "counts": "/tmp/naru-runtime-parity-method-error-counts.json",
+      "full_runtime_cases": 30,
+      "full_runtime_passing": 29,
+      "counterpart_controls": 8
     }
   },
   "corpus": {
@@ -97,17 +111,13 @@
       "registration.inline-regex"
     ],
     "failing_runtime_case_ids": [
-      "head.order-false",
-      "options.automatic",
-      "error.thrown",
-      "async.rejected",
-      "raw.malformed-escape"
+      "async.rejected"
     ]
   },
   "normalization_source": "https://www.rfc-editor.org/rfc/rfc9110.html#section-8.3.2",
   "dependencies_changed": false,
   "node_or_network_used_by_gradle": false,
-  "independent_sufficiency": "Host-controlled review; not self-certified by this report.",
+  "independent_sufficiency": "Round1 PASS /tmp/naru-v010-runtime-parity-test-review-round1.json; stopped without round2/3; no self-certification",
   "runtime_tdd": {
     "tests_first_commit": "fddba28",
     "scenario_adapter_commit": "2edcfbe",
