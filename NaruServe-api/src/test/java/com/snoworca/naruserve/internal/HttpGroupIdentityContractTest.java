@@ -33,11 +33,11 @@ public class HttpGroupIdentityContractTest {
         });
         assertEquals("copied",text(dispatch(app,"COPY","/api/x")));assertEquals(Arrays.asList("first","second"),trace);
     }
-    @Test public void explicitHeadOnTheSameGroupBuilderSuppressesItsGetFallback() { // FR-APP-021 AC-2 AC-3; FR-HTTP-028 AC-2
+    @Test public void explicitHeadOnTheSameGroupBuilderSuppressesItsGetFallback() { // FR-APP-021 AC-2 AC-3; FR-HTTP-028 AC-3
         DefaultRestApp app=new DefaultRestApp();app.group("/api",group->group.route("/x").get((q,s)->fail("GET fallback ignored same-Route HEAD")).head((q,s)->s.header("X-Head","same-route").end()));
         RecordingExchange ex=dispatch(app,"HEAD","/api/x");assertEquals(200,ex.status);assertEquals(Collections.singletonList("same-route"),ex.committed("X-Head"));assertEquals(0,ex.body.size());
     }
-    @Test public void laterSeparateGroupHeadDoesNotOverrideEarlierGetFallback() { // FR-APP-021 AC-1; FR-HTTP-028 AC-2
+    @Test public void laterSeparateGroupHeadDoesNotOverrideEarlierGetFallback() { // FR-APP-021 AC-1; FR-HTTP-028 AC-3
         DefaultRestApp app=new DefaultRestApp();app.group("/api",group->{group.get("/x",(q,s)->s.header("X-Route","get").send("get"));group.head("/x",(q,s)->fail("later separate HEAD displaced earlier GET"));});
         RecordingExchange ex=dispatch(app,"HEAD","/api/x");assertEquals(Collections.singletonList("get"),ex.committed("X-Route"));assertEquals(Collections.singletonList("3"),ex.committed("Content-Length"));assertEquals(0,ex.body.size());
     }
