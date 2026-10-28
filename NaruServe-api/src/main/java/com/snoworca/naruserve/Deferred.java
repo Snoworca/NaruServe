@@ -1,5 +1,6 @@
 package com.snoworca.naruserve;
 
+import com.snoworca.naruserve.common.SafeCallbacks;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -54,9 +55,9 @@ public final class Deferred {
         return true;
     }
     private static void notifyFailure(FailureHandler listener,Throwable failure) {
-        try{listener.rejected(failure);}catch(Throwable ignored){ /* observers cannot prevent release */ }
+        SafeCallbacks.run(()->listener.rejected(failure));
     }
     private static void notifySettled(Runnable listener) {
-        try{listener.run();}catch(Throwable ignored){ /* independent cleanup observers still run */ }
+        SafeCallbacks.run(listener);
     }
 }

@@ -1,0 +1,21 @@
+{
+  "requirements": [
+    "FR-APP-023 AC-7",
+    "IR-HTTP-009 AC-3"
+  ],
+  "change": "Deferred observers reuse SafeCallbacks; behavior unchanged",
+  "java17": {
+    "result": "PASS",
+    "log": "/tmp/naru-v010-shared-callback-reuse.log",
+    "api21_classrefs": "PASS"
+  },
+  "actualJava8": {
+    "tests": 59,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "log": "/tmp/naru-v010-shared-callback-reuse-java8.log",
+    "xml": "/tmp/naru-v010-shared-callback-reuse-java8-xml"
+  },
+  "scope": "Deferred/lifetime/AbortListeners/RequestRetentions/SafeCallbacks affected tests only; not a whole-project result"
+}
