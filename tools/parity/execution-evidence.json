@@ -1,0 +1,93 @@
+{
+  "requirement": "OPS-ROUTE-004",
+  "scope": "Harness foundation; no full routing completion claim",
+  "tdd": {
+    "red_commit": "3d86599",
+    "red_tests": 7,
+    "red_log": "/tmp/naru-v010-harness-red.log",
+    "additional_provenance_red_log": "/tmp/naru-v010-harness-provenance-red.log",
+    "additional_provenance_red_tests": {
+      "run": 8,
+      "failed": 1
+    },
+    "runtime_red_log": "/tmp/naru-v010-harness-runtime-red.log",
+    "runtime_red_reason": "Standards-equivalent UTF-8 charset token case differed; declared normalization before final corpus regeneration."
+  },
+  "verification": {
+    "jdk17": {
+      "tests": 16,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "log": "/tmp/naru-v010-harness-green.log"
+    },
+    "actualJava8": {
+      "tests": 16,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "runtime": "1.8.0_504",
+      "log": "/tmp/naru-v010-harness-java8.log"
+    },
+    "generator_twice_identical": true,
+    "generator_negative_controls": [
+      {
+        "control": "wrong-node",
+        "exit": 1,
+        "output_created": false
+      },
+      {
+        "control": "stale-lock",
+        "exit": 1,
+        "output_created": false
+      }
+    ]
+  },
+  "corpus": {
+    "reference_cases": 30,
+    "runtime_replayed_cases": [
+      "literal.get",
+      "literal.post",
+      "param.basic"
+    ],
+    "pending_runtime_case_ids": [
+      "optional.absent",
+      "optional.present",
+      "wildcard.list",
+      "param.duplicate",
+      "param.quoted",
+      "registration.unnamed-wildcard",
+      "registration.inline-regex",
+      "array.alternative",
+      "order.parameter-before-literal",
+      "route.next",
+      "route.skip",
+      "use.route-skip-continues",
+      "mount.layer-views",
+      "mount.merge-false",
+      "mount.merge-true",
+      "router.exit",
+      "param.callback-cache",
+      "head.order-false",
+      "head.order-true",
+      "options.automatic",
+      "options.middleware-fallthrough",
+      "error.thrown",
+      "async.delayed-next",
+      "async.rejected",
+      "continuation.after-response",
+      "raw.encoded-slash",
+      "raw.malformed-escape"
+    ],
+    "fixture_sha256": "0e9e11fb6be87146eb83bc6aed2ee1fbf8e22435c9acdc36a7868a8e9725c39f",
+    "generator_sha256": "7d4bb62086464bc8681d3ff3f7022573f2f3903a7696609e0fd6f01ca314f026",
+    "registration_error_cases": [
+      "registration.unnamed-wildcard",
+      "registration.inline-regex"
+    ]
+  },
+  "normalization_source": "https://www.rfc-editor.org/rfc/rfc9110.html#section-8.3.2",
+  "dependencies_changed": false,
+  "node_or_network_used_by_gradle": false,
+  "independent_sufficiency": "Host-controlled review; not self-certified by this report."
+}

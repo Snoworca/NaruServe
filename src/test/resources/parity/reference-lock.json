@@ -1,0 +1,30 @@
+{
+  "node": "22.22.0",
+  "express": "5.1.0",
+  "router": "2.2.0",
+  "pathToRegexp": "8.4.2",
+  "packages": {
+    "express": {
+      "version": "5.1.0",
+      "packageSha256": "0ca5c69a8c6647bd6c8b7d9ee3451e0eefce551304f6bfeb57f8df3ab79823e1",
+      "entrySha256": "4d2f5afc192178c5b0dc418d2da5826d52a8b6998771b011aede7fdba9118140"
+    },
+    "router": {
+      "version": "2.2.0",
+      "packageSha256": "b77062595f89476fab6acbcde5fa8dfac3be7d7b9b0b0b69d48c84ebc13c9a06",
+      "entrySha256": "fcc39d49329e5701e3fbd195060834398434b8e136a59949a654f6f402f6e31b"
+    },
+    "path-to-regexp": {
+      "version": "8.4.2",
+      "packageSha256": "3c37dce1e0587231f7c9f63e137dd0ed4d6f25552c89b5b5939c6a3d36113634",
+      "entrySha256": "f8e7946ca3a4dcc2ed1ea46e3bcffaef014e4abc359a7469a16817f1f79df62f"
+    }
+  },
+  "sources": {
+    "express/lib/application.js": "f907fbf24306e0a5ed9d526c7804903d556b51e91c295e6ec65842a8343c9644",
+    "router/index.js": "fcc39d49329e5701e3fbd195060834398434b8e136a59949a654f6f402f6e31b",
+    "router/lib/layer.js": "569771db2d3ade3d695ae9259063e8b685ed734e78c2e0ff7648e0a6bf436119",
+    "router/lib/route.js": "77e83b1ceca13bdbdaf42b79d90527489c46249db2ad4226e328352dfe68f83d",
+    "path-to-regexp/dist/index.js": "f8e7946ca3a4dcc2ed1ea46e3bcffaef014e4abc359a7469a16817f1f79df62f"
+  }
+}
