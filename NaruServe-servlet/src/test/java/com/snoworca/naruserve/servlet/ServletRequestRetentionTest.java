@@ -90,7 +90,7 @@ public class ServletRequestRetentionTest {
             assertEquals("upload positive control did not spool",1,spooled.get());assertEquals(64,upload.get().size());assertEquals(1,opens.get());
             Field inFlight=ServletAdapter.class.getDeclaredField("inFlight");inFlight.setAccessible(true);
             assertEquals("adapter500 failed terminal cancellation: core="+activeCoreHttp()+", adapter="+inFlight.getInt(adapter)+", uploads="+uploads.list().length+", inputCloses="+closes.get(),1,aborts.get());
-            assertEquals(0,activeCoreHttp());assertEquals(0,inFlight.getInt(adapter));assertEquals(0,uploads.list().length);assertEquals(1,closes.get());assertEquals(1,log.info().size());
+            assertEquals("core request registration",0,activeCoreHttp());assertEquals("adapter request admission",0,inFlight.getInt(adapter));assertEquals("upload cleanup",0,uploads.list().length);assertEquals("original request input close",1,closes.get());assertEquals("access log once",1,log.info().size());
             try{partInput.get().read();fail("upload input remained open after cancellation");}catch(IOException expected){}
             try{upload.get().inputStream();fail("upload reopened after cancellation");}catch(IllegalStateException expected){}
             try{request.get().body(String.class);fail("core body reopened after cancellation");}catch(BodyAlreadyConsumedException expected){}
