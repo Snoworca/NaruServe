@@ -136,10 +136,28 @@ public class HttpExecutionContractTest {
         assertEquals(Arrays.asList("before","queued","return","route"),trace);
     }
     @Test public void lateRegistrationAndBuilderAttachmentArePublished() { // FR-APP-021 AC-4
-        DefaultRestApp app=new DefaultRestApp(); RouteBuilder b=app.route("/builder"); app.freeze();
-        app.get("/late",(q,s)->s.send("late")); b.get((q,s)->s.send("attached"));
-        assertEquals("late",text(dispatch(app,"GET","/late"))); assertEquals("attached",text(dispatch(app,"GET","/builder")));
-        try{app.jsonLimit(32);fail("configuration freeze removed");}catch(IllegalStateException expected){}
+        SettingsCapturingAdapter adapter=new SettingsCapturingAdapter();
+        DefaultRestApp app=new DefaultRestApp(adapter,new StubJsonCodec(),new ConsoleLogger());
+        RouteBuilder b=app.route("/builder"); app.listen(0);
+        try {
+            assertEquals(AppState.RUNNING,app.state());
+            app.get("/late",(q,s)->s.send("late")); b.get((q,s)->s.send("attached"));
+            RecordingExchange first=new RecordingExchange("GET","/late"), second=new RecordingExchange("GET","/builder");
+            adapter.handler.handle(first); adapter.handler.handle(second);
+            assertEquals("late",text(first)); assertEquals("attached",text(second));
+            try{app.jsonLimit(32);fail("configuration freeze removed");}catch(IllegalStateException expected){}
+        } finally { app.shutdown(0,TimeUnit.SECONDS); }
+    }
+    @Test public void actualDuplicateWinnerDeterminesScalarOrWildcardShape() { // FR-HTTP-027 AC-1
+        DefaultRestApp optional=new DefaultRestApp(); List<Object> seen=new ArrayList<>();
+        optional.get("/:x{/*x}",(q,s)->{seen.add(view(q,"pathParams"));s.end();});
+        dispatch(optional,"GET","/one"); dispatch(optional,"GET","/one/two");
+        assertEquals(Collections.singletonMap("x","one"),seen.get(0));
+        assertEquals(Collections.singletonMap("x",Collections.singletonList("two")),seen.get(1));
+        DefaultRestApp scalar=new DefaultRestApp();
+        scalar.get("/*x/:x",(q,s)->{seen.add(view(q,"pathParams"));s.end();});
+        dispatch(scalar,"GET","/one/two/three");
+        assertEquals(Collections.singletonMap("x","three"),seen.get(2));
     }
     @Test public void continuationCanObserveAtomicallyAppendedLayer() { // FR-APP-021 AC-4; FR-APP-022 AC-1
         DefaultRestApp app=new DefaultRestApp();
