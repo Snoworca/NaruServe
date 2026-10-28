@@ -199,6 +199,8 @@ Terminal abort, async timeout or forced shutdown can revoke pending ownership. L
 
 `HttpExchange.onAbort(Runnable)` and `Runnable retainRequest()` are additive defaults for existing adapters. The default abort hook validates a nonnull listener and otherwise does nothing; the default retention returns a no-op release action. Compatibility defaults alone do not give a custom adapter the built-in deferred transport guarantees.
 
+An adapter that generates an error response outside the core can report its status and successfully written body-byte count through `responseStatus()` and `responseBytesWritten()`. Their defaults, `0` and `-1`, mean unknown, so logging uses the core's metrics. This includes the Servlet adapter's synthetic 500 for unsupported asynchronous configuration. Publish snapshots before terminal notification, without consulting a recycled container. Invalid values or observer failures neither block cleanup nor cause a second response write.
+
 An adapter implementing retention must keep request input/container state valid until all normal holds are released, separately from `finish()` sending the response. Each returned release action must be thread-safe and idempotent. Implement detected abnormal abort notification once per registration, including late registration, outside adapter locks; listener failure must not skip cleanup. Normal `finish()` must not signal abort. Idle peer closure need not be detected before I/O. Terminal cancellation may revoke holds, with harmless late release and no resurrection; maintain bounded stop and preserve active I/O/drain ownership. Reuse `common.RequestRetentions`, `common.AbortListeners` and `common.SafeCallbacks` when implementing these contracts.
 
 ## Android
