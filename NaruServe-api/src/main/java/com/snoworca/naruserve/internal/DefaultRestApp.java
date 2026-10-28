@@ -719,6 +719,8 @@ public final class DefaultRestApp implements RestApp {
                 log.error("adapter stop failed", e);
                 error = firstError(error, e);
             }
+            lifecycle.awaitHttp(deadlineNanos);
+            lifecycle.cancelHttp();
             error = firstError(error, shutdownParticipants.run(ShutdownParticipants.Phase.FORCE_CLOSE, log, deadlineNanos));
             List<LifecycleCallback> callbacks;
             synchronized (this) {

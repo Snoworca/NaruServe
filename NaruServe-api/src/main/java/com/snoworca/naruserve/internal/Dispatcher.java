@@ -226,7 +226,7 @@ public final class Dispatcher implements ExchangeHandler {
             } else if(!res.upgraded101())accessLog.write(ex.methodToken(),ex.rawPath(),res.statusCode(),
                     res.state()==ResponseState.ABORTED,start,req.body().bytesRead(),res.bytesWritten(),rid);
         };
-        new HttpExecution(Objects.requireNonNull(http),req,res,Objects.requireNonNull(lifecycle),errors,terminal,log).start();
+        new HttpExecution(Objects.requireNonNull(http),req,res,Objects.requireNonNull(lifecycle),errors,terminal,log).start(ex);
     }
 
     private void handleLegacy(HttpExchange ex) {
