@@ -33,7 +33,7 @@ class GsonDataClassLimitKotlinTest {
     }
 
     @Test
-    fun `SDS-AC-16 FR-KT-006 AC-2 req body of a data class answers 500 INTERNAL_ERROR`() {
+    fun `FR-KT-006 AC-2 CON-APP-010 AC-4 data class failure answers 500 common HTML`() {
         val adapter = InMemoryHttpAdapter()
         val t = TestApp.create(adapter)
         t.app().jsonCodec(GsonJsonCodec())
@@ -44,7 +44,19 @@ class GsonDataClassLimitKotlinTest {
         t.start()
         val response = adapter.send(InMemoryHttpAdapter.ClientRequest.json("POST", "/users", "{\"name\":\"a\"}"))
         assertEquals(500, response.status())
-        assertTrue(response.text(), response.text().contains("\"code\":\"INTERNAL_ERROR\""))
+        // FR-APP-024 AC-3; CON-APP-010 AC-4 AC-5 versions the old JSON envelope only.
+        // The unchecked JsonIOException and disabled Unsafe allocation remain server failures.
+        assertEquals("text/html; charset=utf-8", response.header("Content-Type"))
+        assertEquals("default-src 'none'", response.header("Content-Security-Policy"))
+        assertEquals("nosniff", response.header("X-Content-Type-Options"))
+        val body = response.text()
+        assertTrue(body, body.startsWith("<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n" +
+            "<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>"))
+        assertTrue(body, body.contains(JsonIOException::class.java.name))
+        assertTrue(body, body.contains(User::class.java.name))
+        assertTrue(body, body.contains("usage of JDK Unsafe is disabled"))
+        assertTrue(body, body.endsWith("</pre>\n</body>\n</html>\n"))
+        assertEquals(body.toByteArray(Charsets.UTF_8).size.toString(), response.header("Content-Length"))
     }
 
     @Test
