@@ -1,0 +1,208 @@
+> Task :checkDependencyRules
+> Task :compileJava NO-SOURCE
+> Task :processResources NO-SOURCE
+> Task :classes UP-TO-DATE
+> Task :cleanCentralStaging
+> Task :NaruServe-api:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :NaruServe-api:compileKotlin NO-SOURCE
+> Task :NaruServe-api:compileJava UP-TO-DATE
+> Task :NaruServe-api:processResources UP-TO-DATE
+> Task :NaruServe-api:classes UP-TO-DATE
+> Task :NaruServe-api:jar UP-TO-DATE
+> Task :NaruServe-api:compileTestFixturesKotlin NO-SOURCE
+> Task :NaruServe-api:compileTestFixturesJava UP-TO-DATE
+> Task :NaruServe-gson:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :NaruServe-gson:compileKotlin NO-SOURCE
+> Task :NaruServe-gson:compileJava UP-TO-DATE
+> Task :NaruServe-servlet:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :NaruServe-servlet:compileKotlin NO-SOURCE
+> Task :NaruServe-servlet:compileJava UP-TO-DATE
+> Task :compileTestJava UP-TO-DATE
+> Task :processTestResources UP-TO-DATE
+> Task :testClasses UP-TO-DATE
+> Task :NaruServe:generatePomFileForMavenPublication
+> Task :NaruServe:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :NaruServe-tinyhttpd:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :NaruServe-tinyhttpd:compileKotlin NO-SOURCE
+> Task :NaruServe-tinyhttpd:compileJava UP-TO-DATE
+> Task :NaruServe:compileKotlin NO-SOURCE
+> Task :NaruServe:compileJava UP-TO-DATE
+> Task :NaruServe:processResources UP-TO-DATE
+> Task :NaruServe:classes UP-TO-DATE
+> Task :NaruServe:jar UP-TO-DATE
+> Task :NaruServe:javadoc UP-TO-DATE
+> Task :NaruServe:javadocJar UP-TO-DATE
+> Task :NaruServe:sourcesJar UP-TO-DATE
+> Task :NaruServe:generateMetadataFileForMavenPublication
+> Task :NaruServe:publishMavenPublicationToCentralStagingRepository
+> Task :NaruServe:publishAllPublicationsToCentralStagingRepository
+> Task :NaruServe-logcat:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :NaruServe-logcat:compileKotlin NO-SOURCE
+> Task :NaruServe-logcat:compileJava UP-TO-DATE
+> Task :NaruServe:compileTestKotlin NO-SOURCE
+> Task :NaruServe:compileTestJava UP-TO-DATE
+> Task :NaruServe:processTestResources NO-SOURCE
+> Task :NaruServe:testClasses UP-TO-DATE
+> Task :NaruServe-android:preBuild UP-TO-DATE
+> Task :NaruServe-android:preReleaseBuild UP-TO-DATE
+> Task :NaruServe-android:checkReleaseAarMetadata UP-TO-DATE
+> Task :NaruServe-android:mergeReleaseJniLibFolders UP-TO-DATE
+> Task :NaruServe-android:mergeReleaseNativeLibs NO-SOURCE
+> Task :NaruServe-android:stripReleaseDebugSymbols NO-SOURCE
+> Task :NaruServe-android:copyReleaseJniLibsProjectAndLocalJars UP-TO-DATE
+> Task :NaruServe-android:generateReleaseResValues UP-TO-DATE
+> Task :NaruServe-android:extractDeepLinksForAarRelease UP-TO-DATE
+> Task :NaruServe-logcat:processResources NO-SOURCE
+> Task :NaruServe-logcat:classes UP-TO-DATE
+> Task :NaruServe-logcat:jar UP-TO-DATE
+> Task :NaruServe-gson:processResources NO-SOURCE
+> Task :NaruServe-gson:classes UP-TO-DATE
+> Task :NaruServe-gson:jar UP-TO-DATE
+> Task :NaruServe-android:generateReleaseResources UP-TO-DATE
+> Task :NaruServe-android:packageReleaseResources UP-TO-DATE
+> Task :NaruServe-android:processReleaseNavigationResources UP-TO-DATE
+> Task :NaruServe-android:parseReleaseLocalResources UP-TO-DATE
+> Task :NaruServe-android:generateReleaseRFile UP-TO-DATE
+> Task :NaruServe-android:extractReleaseAnnotations UP-TO-DATE
+> Task :NaruServe-android:mergeReleaseShaders UP-TO-DATE
+> Task :NaruServe-android:compileReleaseShaders NO-SOURCE
+> Task :NaruServe-android:generateReleaseAssets UP-TO-DATE
+> Task :NaruServe-android:mergeReleaseAssets UP-TO-DATE
+> Task :NaruServe-android:javaPreCompileRelease UP-TO-DATE
+> Task :NaruServe-android:compileReleaseJavaWithJavac NO-SOURCE
+> Task :NaruServe-android:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :NaruServe-android:mergeReleaseConsumerProguardFiles UP-TO-DATE
+> Task :NaruServe-android:prepareLintJarForPublish SKIPPED
+> Task :NaruServe-android:prepareReleaseArtProfile UP-TO-DATE
+> Task :NaruServe-android:processReleaseManifest UP-TO-DATE
+> Task :NaruServe-android:processReleaseJavaRes NO-SOURCE
+> Task :NaruServe-android:mergeReleaseJavaResource UP-TO-DATE
+> Task :NaruServe-android:syncReleaseLibJars UP-TO-DATE
+> Task :NaruServe-android:writeReleaseAarMetadata UP-TO-DATE
+> Task :NaruServe-android:bundleReleaseAar UP-TO-DATE
+> Task :NaruServe-android:generatePomFileForReleasePublication
+> Task :NaruServe-android:javaDocReleaseGeneration UP-TO-DATE
+> Task :NaruServe-android:javaDocReleaseJar UP-TO-DATE
+> Task :NaruServe-android:sourceReleaseJar UP-TO-DATE
+> Task :NaruServe-android:generateMetadataFileForReleasePublication
+> Task :NaruServe-android:publishReleasePublicationToCentralStagingRepository
+> Task :NaruServe-android:publishAllPublicationsToCentralStagingRepository
+> Task :NaruServe-api:generatePomFileForMavenPublication
+> Task :NaruServe-api:javadoc UP-TO-DATE
+> Task :NaruServe-api:javadocJar UP-TO-DATE
+> Task :NaruServe-api:sourcesJar UP-TO-DATE
+> Task :NaruServe-api:generateMetadataFileForMavenPublication
+> Task :NaruServe-api:publishMavenPublicationToCentralStagingRepository
+> Task :NaruServe-api:publishAllPublicationsToCentralStagingRepository
+> Task :NaruServe-api:processTestFixturesResources NO-SOURCE
+> Task :NaruServe-api:testFixturesClasses UP-TO-DATE
+> Task :NaruServe-api:testFixturesJar UP-TO-DATE
+> Task :NaruServe-api:compileTestKotlin UP-TO-DATE
+> Task :NaruServe-api:compileTestJava UP-TO-DATE
+> Task :NaruServe-api:processTestResources UP-TO-DATE
+> Task :NaruServe-api:testClasses UP-TO-DATE
+> Task :NaruServe-filelog:generatePomFileForMavenPublication
+> Task :NaruServe-filelog:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :NaruServe-filelog:compileKotlin NO-SOURCE
+> Task :NaruServe-filelog:compileJava UP-TO-DATE
+> Task :NaruServe-filelog:processResources NO-SOURCE
+> Task :NaruServe-filelog:classes UP-TO-DATE
+> Task :NaruServe-filelog:jar UP-TO-DATE
+> Task :NaruServe-filelog:javadoc UP-TO-DATE
+> Task :NaruServe-filelog:javadocJar UP-TO-DATE
+> Task :NaruServe-filelog:sourcesJar UP-TO-DATE
+> Task :NaruServe-filelog:generateMetadataFileForMavenPublication
+> Task :NaruServe-filelog:publishMavenPublicationToCentralStagingRepository
+> Task :NaruServe-filelog:publishAllPublicationsToCentralStagingRepository
+> Task :NaruServe-filelog:compileTestKotlin NO-SOURCE
+> Task :NaruServe-filelog:compileTestJava UP-TO-DATE
+> Task :NaruServe-filelog:processTestResources NO-SOURCE
+> Task :NaruServe-filelog:testClasses UP-TO-DATE
+> Task :NaruServe-gson:generatePomFileForMavenPublication
+> Task :NaruServe-gson:javadoc UP-TO-DATE
+> Task :NaruServe-gson:javadocJar UP-TO-DATE
+> Task :NaruServe-gson:sourcesJar UP-TO-DATE
+> Task :NaruServe-gson:generateMetadataFileForMavenPublication
+> Task :NaruServe-gson:publishMavenPublicationToCentralStagingRepository
+> Task :NaruServe-gson:publishAllPublicationsToCentralStagingRepository
+> Task :NaruServe-gson:compileTestKotlin UP-TO-DATE
+> Task :NaruServe-gson:compileTestJava UP-TO-DATE
+> Task :NaruServe-gson:processTestResources NO-SOURCE
+> Task :NaruServe-gson:testClasses UP-TO-DATE
+> Task :NaruServe-kotlin:generatePomFileForMavenPublication
+> Task :NaruServe-kotlin:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :NaruServe-kotlin:compileKotlin UP-TO-DATE
+> Task :NaruServe-kotlin:compileJava NO-SOURCE
+> Task :NaruServe-kotlin:processResources NO-SOURCE
+> Task :NaruServe-kotlin:classes UP-TO-DATE
+> Task :NaruServe-kotlin:jar UP-TO-DATE
+> Task :NaruServe-kotlin:javadoc NO-SOURCE
+> Task :NaruServe-kotlin:javadocJar UP-TO-DATE
+> Task :NaruServe-kotlin:sourcesJar UP-TO-DATE
+> Task :NaruServe-kotlin:generateMetadataFileForMavenPublication
+> Task :NaruServe-kotlin:publishMavenPublicationToCentralStagingRepository
+> Task :NaruServe-kotlin:publishAllPublicationsToCentralStagingRepository
+> Task :NaruServe-kotlin:compileTestKotlin UP-TO-DATE
+> Task :NaruServe-kotlin:compileTestJava NO-SOURCE
+> Task :NaruServe-kotlin:processTestResources NO-SOURCE
+> Task :NaruServe-kotlin:testClasses UP-TO-DATE
+> Task :NaruServe-logcat:generatePomFileForMavenPublication
+> Task :NaruServe-logcat:javadoc UP-TO-DATE
+> Task :NaruServe-logcat:javadocJar UP-TO-DATE
+> Task :NaruServe-logcat:sourcesJar UP-TO-DATE
+> Task :NaruServe-logcat:generateMetadataFileForMavenPublication
+> Task :NaruServe-logcat:publishMavenPublicationToCentralStagingRepository
+> Task :NaruServe-logcat:publishAllPublicationsToCentralStagingRepository
+> Task :NaruServe-logcat:compileTestKotlin NO-SOURCE
+> Task :NaruServe-logcat:compileTestJava UP-TO-DATE
+> Task :NaruServe-logcat:processTestResources NO-SOURCE
+> Task :NaruServe-logcat:testClasses UP-TO-DATE
+> Task :NaruServe-servlet:generatePomFileForMavenPublication
+> Task :NaruServe-servlet:processResources UP-TO-DATE
+> Task :NaruServe-servlet:classes UP-TO-DATE
+> Task :NaruServe-servlet:jar UP-TO-DATE
+> Task :NaruServe-servlet:javadoc UP-TO-DATE
+> Task :NaruServe-servlet:javadocJar UP-TO-DATE
+> Task :NaruServe-servlet:sourcesJar UP-TO-DATE
+> Task :NaruServe-servlet:generateMetadataFileForMavenPublication
+> Task :NaruServe-servlet:publishMavenPublicationToCentralStagingRepository
+> Task :NaruServe-servlet:publishAllPublicationsToCentralStagingRepository
+> Task :NaruServe-servlet:compileTestKotlin UP-TO-DATE
+> Task :NaruServe-servlet:compileTestJava UP-TO-DATE
+> Task :NaruServe-servlet:processTestResources NO-SOURCE
+> Task :NaruServe-servlet:testClasses UP-TO-DATE
+> Task :NaruServe-slf4j:generatePomFileForMavenPublication
+> Task :NaruServe-slf4j:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :NaruServe-slf4j:compileKotlin NO-SOURCE
+> Task :NaruServe-slf4j:compileJava UP-TO-DATE
+> Task :NaruServe-slf4j:processResources NO-SOURCE
+> Task :NaruServe-slf4j:classes UP-TO-DATE
+> Task :NaruServe-slf4j:jar UP-TO-DATE
+> Task :NaruServe-slf4j:javadoc UP-TO-DATE
+> Task :NaruServe-slf4j:javadocJar UP-TO-DATE
+> Task :NaruServe-slf4j:sourcesJar UP-TO-DATE
+> Task :NaruServe-slf4j:generateMetadataFileForMavenPublication
+> Task :NaruServe-slf4j:publishMavenPublicationToCentralStagingRepository
+> Task :NaruServe-slf4j:publishAllPublicationsToCentralStagingRepository
+> Task :NaruServe-slf4j:compileTestKotlin NO-SOURCE
+> Task :NaruServe-slf4j:compileTestJava UP-TO-DATE
+> Task :NaruServe-slf4j:processTestResources NO-SOURCE
+> Task :NaruServe-slf4j:testClasses UP-TO-DATE
+> Task :NaruServe-tinyhttpd:generatePomFileForMavenPublication
+> Task :NaruServe-tinyhttpd:processResources NO-SOURCE
+> Task :NaruServe-tinyhttpd:classes UP-TO-DATE
+> Task :NaruServe-tinyhttpd:jar UP-TO-DATE
+> Task :NaruServe-tinyhttpd:javadoc UP-TO-DATE
+> Task :NaruServe-tinyhttpd:javadocJar UP-TO-DATE
+> Task :NaruServe-tinyhttpd:sourcesJar UP-TO-DATE
+> Task :NaruServe-tinyhttpd:generateMetadataFileForMavenPublication
+> Task :NaruServe-tinyhttpd:publishMavenPublicationToCentralStagingRepository
+> Task :NaruServe-tinyhttpd:publishAllPublicationsToCentralStagingRepository
+> Task :NaruServe-tinyhttpd:compileTestKotlin NO-SOURCE
+> Task :NaruServe-tinyhttpd:compileTestJava UP-TO-DATE
+> Task :NaruServe-tinyhttpd:processTestResources NO-SOURCE
+> Task :NaruServe-tinyhttpd:testClasses UP-TO-DATE
+> Task :test
+
+BUILD SUCCESSFUL in 3s
+122 actionable tasks: 33 executed, 89 up-to-date

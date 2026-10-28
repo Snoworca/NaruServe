@@ -1,5 +1,5 @@
 {
-  "status": "SIGNED_VERIFIED_NOT_UPLOADED",
+  "status": "PUBLISHED_AND_PUBLICLY_VERIFIED",
   "requirement": "OPS-REL-009",
   "build_source_commit": "daf908cdc4468d67609f8e5cceaaad0174ce9a8b",
   "bundle_sha256": "50573182ec0efe671189969afa4c7a30ef5767b40d1c84875faf9a28cbe2a57c",
@@ -74,6 +74,50 @@
       "bytes": 57,
       "sha256": "941ec3d23cf7383b54249e3456cdbf61283f083b51c5dafb5f697fb3cd0fc086",
       "original_filename": "signature-verification.log"
+    },
+    "central-helper-evidence.json": {
+      "bytes": 2701,
+      "sha256": "925cb74ca18b05072ebaf80ca9b311c3ea82468ebda51b64c321522d9c92aa94"
+    },
+    "central-publication-evidence.json": {
+      "bytes": 4375,
+      "sha256": "57419a3acaa23478b8db70fed3db53186be070552e6d0527bc59f1c2ef5ab229"
+    },
+    "central-published-status.json": {
+      "bytes": 316,
+      "sha256": "6802905d1d9a80a5ce9006a1337f4f5d72fbf70b4092d486e1620833a580a315"
+    },
+    "central-receipt.json": {
+      "bytes": 1870,
+      "sha256": "0a919dacfc6c87ce4017c58be5770e41cb75189b516946bc02346946e849506f"
+    },
+    "final-release-docs-gate.log": {
+      "bytes": 11208,
+      "sha256": "d089304fd740a905462f73ca70fe284dbbe60065e41b5b68236c949e3137bf61"
+    },
+    "final-release-docs-review-round1.json": {
+      "bytes": 3941,
+      "sha256": "3763f629466597be15562e9548555b8f48cc727d39ef6611c177ed7a3ab55fd9"
+    },
+    "public-verification.json": {
+      "bytes": 60949,
+      "sha256": "9947163c910c1bb6ad2f0378f9355739bbfed177c1eb5e76052037549fb9b0c1"
+    },
+    "source-traceability.json": {
+      "bytes": 1073,
+      "sha256": "31ecf3f1b886de7de797e1feea22ea99f59209b0009033b3cb4bce7fa872ffb6"
+    },
+    "final-publication-review-round1.json": {
+      "bytes": 5377,
+      "sha256": "4cf74cbdc1432116429ac51cdf14cdf4e1f42e5d7399144eafa21daa49d8ec63"
+    },
+    "final-srs-validation.json": {
+      "bytes": 6957,
+      "sha256": "12ffa1962ad3ed10e26a3a38e63779a5aa58a0ae287bad2a5e793554272838ca"
+    },
+    "independent-public-bytes.json": {
+      "bytes": 158,
+      "sha256": "63f829f2d1954e0e276ae7bf7edb5f4a9b75d877eb77f8b363a1adde11586f36"
     }
   }
 }

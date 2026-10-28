@@ -1,0 +1,237 @@
+{
+  "recordedDate": "2026-10-29",
+  "requirements": [
+    "CON-APP-010",
+    "CON-BUILD-018",
+    "OPS-ROUTE-004",
+    "FR-ROUTE-018",
+    "FR-HTTP-027",
+    "FR-ROUTE-019",
+    "FR-APP-021",
+    "FR-APP-022",
+    "FR-ROUTE-020",
+    "FR-ROUTE-021",
+    "FR-HTTP-028",
+    "FR-APP-024",
+    "FR-APP-023",
+    "IR-HTTP-009",
+    "FR-ENGINE-012",
+    "FR-SVL-009",
+    "OPS-REL-008",
+    "OPS-REL-009"
+  ],
+  "workspace": {
+    "workspaceRoot": "/Users/beom/work/git/NaruServe",
+    "rootSource": "per-call-workspace-root",
+    "indexPath": "docs/spec/00.index.md",
+    "packageVersion": "4.0.0"
+  },
+  "target": "0.10.0",
+  "countsByStatus": {
+    "verified": 18
+  },
+  "countsByStability": {
+    "evolving": 18
+  },
+  "missingEvidence": [],
+  "stabilityBlockers": [],
+  "newWorkCandidates": [],
+  "validation": {
+    "errors": 0,
+    "warnings": 22,
+    "byCode": {
+      "SRS-W015": 22
+    }
+  },
+  "historicalWarnings": [
+    {
+      "code": "SRS-W015",
+      "severity": "warning",
+      "message": "Completed Work Log requirement is not completed: CON-BUILD-003",
+      "filePath": "docs/spec/91.completed-work-log.md",
+      "line": 7
+    },
+    {
+      "code": "SRS-W015",
+      "severity": "warning",
+      "message": "Completed Work Log requirement is not completed: OPS-ROUTE-001",
+      "filePath": "docs/spec/91.completed-work-log.md",
+      "line": 8
+    },
+    {
+      "code": "SRS-W015",
+      "severity": "warning",
+      "message": "Completed Work Log requirement is not completed: CON-ROUTE-001",
+      "filePath": "docs/spec/91.completed-work-log.md",
+      "line": 9
+    },
+    {
+      "code": "SRS-W015",
+      "severity": "warning",
+      "message": "Completed Work Log requirement is not completed: FR-HTTP-002",
+      "filePath": "docs/spec/91.completed-work-log.md",
+      "line": 11
+    },
+    {
+      "code": "SRS-W015",
+      "severity": "warning",
+      "message": "Completed Work Log requirement is not completed: FR-HTTP-003",
+      "filePath": "docs/spec/91.completed-work-log.md",
+      "line": 11
+    },
+    {
+      "code": "SRS-W015",
+      "severity": "warning",
+      "message": "Completed Work Log requirement is not completed: FR-HTTP-005",
+      "filePath": "docs/spec/91.completed-work-log.md",
+      "line": 11
+    },
+    {
+      "code": "SRS-W015",
+      "severity": "warning",
+      "message": "Completed Work Log requirement is not completed: FR-HTTP-006",
+      "filePath": "docs/spec/91.completed-work-log.md",
+      "line": 11
+    },
+    {
+      "code": "SRS-W015",
+      "severity": "warning",
+      "message": "Completed Work Log requirement is not completed: FR-HTTP-010",
+      "filePath": "docs/spec/91.completed-work-log.md",
+      "line": 12
+    },
+    {
+      "code": "SRS-W015",
+      "severity": "warning",
+      "message": "Completed Work Log requirement is not completed: FR-HTTP-006",
+      "filePath": "docs/spec/91.completed-work-log.md",
+      "line": 13
+    },
+    {
+      "code": "SRS-W015",
+      "severity": "warning",
+      "message": "Completed Work Log requirement is not completed: OPS-HTTP-001",
+      "filePath": "docs/spec/91.completed-work-log.md",
+      "line": 14
+    },
+    {
+      "code": "SRS-W015",
+      "severity": "warning",
+      "message": "Completed Work Log requirement is not completed: OPS-HTTP-002",
+      "filePath": "docs/spec/91.completed-work-log.md",
+      "line": 14
+    },
+    {
+      "code": "SRS-W015",
+      "severity": "warning",
+      "message": "Completed Work Log requirement is not completed: OPS-ROUTE-002",
+      "filePath": "docs/spec/91.completed-work-log.md",
+      "line": 14
+    },
+    {
+      "code": "SRS-W015",
+      "severity": "warning",
+      "message": "Completed Work Log requirement is not completed: FR-APP-015",
+      "filePath": "docs/spec/91.completed-work-log.md",
+      "line": 16
+    },
+    {
+      "code": "SRS-W015",
+      "severity": "warning",
+      "message": "Completed Work Log requirement is not completed: OPS-APP-001",
+      "filePath": "docs/spec/91.completed-work-log.md",
+      "line": 18
+    },
+    {
+      "code": "SRS-W015",
+      "severity": "warning",
+      "message": "Completed Work Log requirement is not completed: OPS-HTTP-003",
+      "filePath": "docs/spec/91.completed-work-log.md",
+      "line": 18
+    },
+    {
+      "code": "SRS-W015",
+      "severity": "warning",
+      "message": "Completed Work Log requirement is not completed: FR-ENGINE-001",
+      "filePath": "docs/spec/91.completed-work-log.md",
+      "line": 23
+    },
+    {
+      "code": "SRS-W015",
+      "severity": "warning",
+      "message": "Completed Work Log requirement is not completed: OPS-ENGINE-001",
+      "filePath": "docs/spec/91.completed-work-log.md",
+      "line": 26
+    },
+    {
+      "code": "SRS-W015",
+      "severity": "warning",
+      "message": "Completed Work Log requirement is not completed: OPS-APP-003",
+      "filePath": "docs/spec/91.completed-work-log.md",
+      "line": 26
+    },
+    {
+      "code": "SRS-W015",
+      "severity": "warning",
+      "message": "Completed Work Log requirement is not completed: OPS-HTTP-005",
+      "filePath": "docs/spec/91.completed-work-log.md",
+      "line": 26
+    },
+    {
+      "code": "SRS-W015",
+      "severity": "warning",
+      "message": "Completed Work Log requirement is not completed: FR-ENGINE-010",
+      "filePath": "docs/spec/91.completed-work-log.md",
+      "line": 31
+    },
+    {
+      "code": "SRS-W015",
+      "severity": "warning",
+      "message": "Completed Work Log requirement is not completed: OPS-HTTP-006",
+      "filePath": "docs/spec/91.completed-work-log.md",
+      "line": 32
+    },
+    {
+      "code": "SRS-W015",
+      "severity": "warning",
+      "message": "Completed Work Log requirement is not completed: OPS-APP-004",
+      "filePath": "docs/spec/91.completed-work-log.md",
+      "line": 32
+    }
+  ],
+  "completedWork": [
+    {
+      "date": "2026-10-29",
+      "target": "0.10.0",
+      "scope": "Release",
+      "requirementIds": [
+        "CON-APP-010",
+        "CON-BUILD-018",
+        "OPS-ROUTE-004",
+        "FR-ROUTE-018",
+        "FR-HTTP-027",
+        "FR-ROUTE-019",
+        "FR-APP-021",
+        "FR-APP-022",
+        "FR-ROUTE-020",
+        "FR-ROUTE-021",
+        "FR-HTTP-028",
+        "FR-APP-024",
+        "FR-APP-023",
+        "IR-HTTP-009",
+        "FR-ENGINE-012",
+        "FR-SVL-009",
+        "OPS-REL-008",
+        "OPS-REL-009"
+      ],
+      "summary": "Delivered0.10.0 commonExpress5HTTP/JavaPattern with retainedextensions/WS, Deferred/transportretention, bilingualAPI docs; requirementTDD+independentreviews; Java17/actualJava8 each2183PASS; CentralPUBLISHED402c85ed-99e2-4dad-bd20-311b880eb973;300publicfiles and3freshconsumers PASS.",
+      "reportPaths": [
+        "docs/release/verification/central-0.10.0.md",
+        "docs/release/0.10.0-test-results.md",
+        "docs/plan/0.10.0-contract-matrix.md"
+      ],
+      "filePath": "docs/spec/91.completed-work-log.md",
+      "line": 46
+    }
+  ]
+}

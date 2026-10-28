@@ -1,0 +1,41 @@
+plugins { id 'com.android.application' }
+android {
+    namespace 'consumer.android'
+    compileSdk 36
+    buildToolsVersion '36.0.0'
+    defaultConfig { applicationId 'consumer.android.naruserve010'; minSdk 21; targetSdk 36; versionCode 1; versionName '0.10.0-consumer' }
+    packaging {
+        resources {
+            pickFirsts += ['META-INF/LICENSE-tinyhttpd.txt', 'META-INF/LICENSE-nanohttpd.txt', 'META-INF/NOTICE-tinyhttpd.txt']
+        }
+    }
+    buildTypes {
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'app-rules.pro'
+        }
+    }
+    compileOptions { sourceCompatibility JavaVersion.VERSION_1_8; targetCompatibility JavaVersion.VERSION_1_8 }
+}
+dependencies { implementation 'com.snoworca.naruserve:naruserve-android:0.10.0' }
+configurations.configureEach {
+    resolutionStrategy.eachDependency { details ->
+        if (details.requested.group == 'com.snoworca.naruserve' && details.requested.version != '0.10.0') {
+            throw new GradleException("Unexpected NaruServe version: ${details.requested}")
+        }
+        if (details.requested.group == 'com.snoworca' && details.requested.name.startsWith('tinyhttpd-') && details.requested.version != '3.1.1') {
+            throw new GradleException("Unexpected TinyHttpd version: ${details.requested}")
+        }
+    }
+}
+tasks.register('consumerArtifactReport') {
+    doLast {
+        def resolved = configurations.getByName('releaseRuntimeClasspath').resolvedConfiguration.resolvedArtifacts
+        def records = resolved.collect { artifact ->
+            def digest = java.security.MessageDigest.getInstance('SHA-256').digest(artifact.file.bytes).encodeHex().toString()
+            [coordinate: artifact.moduleVersion.id.toString(), artifact: artifact.file.name, file: artifact.file.canonicalPath, sha256: digest]
+        }.sort { it.coordinate }
+        def target = file('build/evidence/artifacts.json'); target.parentFile.mkdirs()
+        target.text = groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(records))
+    }
+}

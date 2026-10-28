@@ -1,0 +1,56 @@
+{
+  "verdict": "PASS",
+  "round": 1,
+  "reviewType": "Independent final publication delta and delivery proof review",
+  "scope": "New actual publication/public bytes/fresh consumers/source traceability/final receipt only; closed source and guide reviews not repeated",
+  "requirement": "OPS-REL-009 AC-1 AC-2 AC-3",
+  "deploymentId": "402c85ed-99e2-4dad-bd20-311b880eb973",
+  "publicationStatus": "PUBLISHED_AND_PUBLICLY_VERIFIED",
+  "findings": [],
+  "identity": {
+    "frozenBuildSource": "daf908cdc4468d67609f8e5cceaaad0174ce9a8b",
+    "pushedReleaseSource": "ad1a40df235b68509d8dcf42b8fa89f1fab6104f",
+    "annotatedTag": "v0.10.0",
+    "remoteTagObject": "8c44955c76e8fda0a19e7f21bef4e0cbb24bcaea",
+    "remotePeeledCommit": "ad1a40df235b68509d8dcf42b8fa89f1fab6104f",
+    "bundleSha256": "50573182ec0efe671189969afa4c7a30ef5767b40d1c84875faf9a28cbe2a57c"
+  },
+  "independentChecks": [
+    "Actual PUBLISHED receipt, durable PUBLIC_VERIFIED receipt, one-upload aggregate and publicmanifest share deploymentUUID/bundlehash/source identity. Publication timestamps precede fresh consumer execution.",
+    "Live git ls-remote origin v0.10.0 and peeled annotatedtag match archived source proof. Independently gitdiff all ten modules src/main/build.gradle and rootbuild/settings/gradle/wrapper/LICENSE inputs from frozenbuild to pushedrelease is empty.",
+    "Independently downloaded all300publicfiles from repo.maven.apache.org; every bytecount and SHA256 matches signedmanifest, whose exactfiles map also equals publicverification manifest. Zero mismatches.",
+    "50primary+50detachedsignature+200checksum inventory and public PGP50/tamper rejection records agree with independently reviewed signedbundle. Public bytes identical to those approved signedbytes; private signing was not repeated by this reviewer.",
+    "Top22 archived evidence file lengths/hashes and consumer40 archived proof file lengths/hashes independently verified.",
+    "Three separate fresh Gradle homes, publicConsumer=true disables staging branch, FAIL_ON_PROJECT_REPOS, no MavenLocal/includeBuild. Explicit public execution refreshes dependencies; Google/PluginPortal only serve build/Android tooling. Prewarm help-only record is distinguished from actual consumer runs.",
+    "Independently read all15 resolved projectartifact cache files from three fresh homes and recomputed SHA256 against frozenmanifest and recorded artifacts. Java/Kotlin actual8u504 runtime passed; Kotlin2.2 strictJSpecify and typedgeneric/Deferred/wildcard controls retained.",
+    "Android build log successful; minSdk21 R8 manifest/service/bootstrap/Logcat/codec/notices inspection passed. Unsigned APK/staticbuild only, no device/emulator execution claimed.",
+    "Final central/testresults assertions match actual PUBLISHED/publicbytes/threeconsumers rather than historical prepublication reports. All links in final central/testresults/matrix resolve locally.",
+    "Contract matrix rows are consistent with existing CON-APP-010 AC1-7 mappings and preserve explicit legacy/WS/CORS/static/resource guards without introducing new requirements.",
+    "Public evidence tree scan found no privatekey blocks, Authorization credential material or signing/Central secrets. Private operational paths remain provenance; no APK/releaseZIP/privatekey archived."
+  ],
+  "independentPublicDownloadProof": "/tmp/naru-v010-independent-public-bytes.json",
+  "mcpRead": {
+    "workspaceRoot": "/Users/beom/work/git/NaruServe",
+    "rootSource": "per-call-workspace-root",
+    "id": "OPS-REL-009",
+    "status": "implemented",
+    "stability": "evolving",
+    "allAcceptanceCriteriaChecked": true
+  },
+  "reviewed_sha256": {
+    "docs/release/verification/central-0.10.0.md": "4624aa3fb1a2fd9355daccce99cb36e375e15e1f0f0d7d9e678e527a4254fce8",
+    "docs/release/0.10.0-test-results.md": "f4f4bb6013954d4a981bae7e894a20d09fbb24a34c80e19c14344ba7bfac19e6",
+    "docs/plan/0.10.0-contract-matrix.md": "da7a754a44701e94285e3c40cdd5eaf957cca0b7aa34783d84607be3c03bbf7c",
+    "docs/release/verification/0.10.0/central-published-status.json": "6802905d1d9a80a5ce9006a1337f4f5d72fbf70b4092d486e1620833a580a315",
+    "docs/release/verification/0.10.0/central-receipt.json": "0a919dacfc6c87ce4017c58be5770e41cb75189b516946bc02346946e849506f",
+    "docs/release/verification/0.10.0/public-verification.json": "9947163c910c1bb6ad2f0378f9355739bbfed177c1eb5e76052037549fb9b0c1",
+    "docs/release/verification/0.10.0/central-publication-evidence.json": "57419a3acaa23478b8db70fed3db53186be070552e6d0527bc59f1c2ef5ab229",
+    "docs/release/verification/0.10.0/evidence-manifest.json": "99dc3fac6fd73136e535945e2c213f1d66c540fa6b84f0e1727c66cd354937a0",
+    "docs/release/verification/0.10.0/public-consumers/evidence-manifest.json": "3e406f2da42f99c8a44e66b4dd75b469d2a0809bf4407314874aa258dd0950b8"
+  },
+  "limitations": [
+    "No authenticated Central operation, upload, signing, code change or SRS mutation by this reviewer. ActualPUBLISHED is observed through archived authenticated receipt; public availability independently confirmed directly.",
+    "Review does not claim Android device execution, certificate online revocation assurance or rendered Kotlin/Androidjavadoc.",
+    "Final evidence commit/push and requirement promotion remain coordinator bookkeeping; release tag already points to immutable pushed build-equivalent source."
+  ]
+}

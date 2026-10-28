@@ -1,0 +1,48 @@
+{
+  "private_operational_helper": "/tmp/naru-v010-central-release.py",
+  "sha256": "dd197c66ce574aefb5c663fa9a16cd6297d4989845d5abf7f3b635cae9c4381e",
+  "offline_tests": "/tmp/naru-v010-central-helper-tests.log",
+  "offline_tests_passed": 6,
+  "offline_test_UUIDs_are_mock_fixture_values_not_real_deployments": true,
+  "local_prepare": "Frozen300files/ZIP/manifest validated withoutcredentials/network",
+  "actual_deploymentId": "402c85ed-99e2-4dad-bd20-311b880eb973",
+  "actual_upload_attempts": 1,
+  "receipt_path": "/var/folders/gh/cnsd22nd1811wg27_ws2gc800000gn/T/naru-v010-release-f44rsscc/central-receipt.json",
+  "current_state": "PUBLIC_VERIFIED",
+  "pushed_source": {
+    "pushedSourceCommit": "ad1a40df235b68509d8dcf42b8fa89f1fab6104f",
+    "pushedTag": "v0.10.0",
+    "remoteTagCommit": "ad1a40df235b68509d8dcf42b8fa89f1fab6104f",
+    "artifactSourceCommit": "daf908cdc4468d67609f8e5cceaaad0174ce9a8b",
+    "unchangedArtifactBuildInputs": true,
+    "checkedUtc": "2026-10-28T21:27:11Z"
+  },
+  "public_preupload_absence": {
+    "checkedUtc": "2026-10-28T21:27:14Z",
+    "allTenPomsHttp404": true,
+    "paths": [
+      "com/snoworca/naruserve/naruserve/0.10.0/naruserve-0.10.0.pom",
+      "com/snoworca/naruserve/naruserve-api/0.10.0/naruserve-api-0.10.0.pom",
+      "com/snoworca/naruserve/naruserve-servlet/0.10.0/naruserve-servlet-0.10.0.pom",
+      "com/snoworca/naruserve/naruserve-tinyhttpd/0.10.0/naruserve-tinyhttpd-0.10.0.pom",
+      "com/snoworca/naruserve/naruserve-gson/0.10.0/naruserve-gson-0.10.0.pom",
+      "com/snoworca/naruserve/naruserve-kotlin/0.10.0/naruserve-kotlin-0.10.0.pom",
+      "com/snoworca/naruserve/naruserve-slf4j/0.10.0/naruserve-slf4j-0.10.0.pom",
+      "com/snoworca/naruserve/naruserve-filelog/0.10.0/naruserve-filelog-0.10.0.pom",
+      "com/snoworca/naruserve/naruserve-logcat/0.10.0/naruserve-logcat-0.10.0.pom",
+      "com/snoworca/naruserve/naruserve-android/0.10.0/naruserve-android-0.10.0.pom"
+    ]
+  },
+  "safety": [
+    "fsync/atomicintent BEFOREsingleuploadPOST",
+    "Uncertainuploadoutcome failsclosed; no automaticreupload",
+    "ExistingUUID reused forpoll/resume; statusPOSTonly",
+    "Remoteannotatedtagproof/buildinputsunchangedfromfrozenartifactsource",
+    "No authredirects; credentialsneverlog/argv/output; no signing/privatekey use",
+    "All300publicfiles exacthash/bytecount plus200checksums+publiccert50signature/tamperverification beforePUBLIC_VERIFIED"
+  ],
+  "remaining": "Root-owned3freshCentral-onlyconsumers and finalrequirements/evidence archive/push",
+  "publishedObservedUtc": "2026-10-28T21:38:35Z",
+  "publicVerifiedUtc": "2026-10-28T21:40:10Z",
+  "finalEvidence": "/tmp/naru-v010-central-publication-evidence.json"
+}

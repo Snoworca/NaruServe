@@ -1,0 +1,36 @@
+{
+  "version": "0.10.0",
+  "bundleSha256": "50573182ec0efe671189969afa4c7a30ef5767b40d1c84875faf9a28cbe2a57c",
+  "signedManifestSha256": "3afeb9ed6eebe1c38d901b1b0159021ef3ab4e1c5fcdbf651932438ac7760677",
+  "source": {
+    "pushedSourceCommit": "ad1a40df235b68509d8dcf42b8fa89f1fab6104f",
+    "pushedTag": "v0.10.0",
+    "remoteTagCommit": "ad1a40df235b68509d8dcf42b8fa89f1fab6104f",
+    "artifactSourceCommit": "daf908cdc4468d67609f8e5cceaaad0174ce9a8b",
+    "unchangedArtifactBuildInputs": true,
+    "checkedUtc": "2026-10-28T21:27:11Z"
+  },
+  "publicAbsence": {
+    "checkedUtc": "2026-10-28T21:27:14Z",
+    "allTenPomsHttp404": true,
+    "paths": [
+      "com/snoworca/naruserve/naruserve/0.10.0/naruserve-0.10.0.pom",
+      "com/snoworca/naruserve/naruserve-api/0.10.0/naruserve-api-0.10.0.pom",
+      "com/snoworca/naruserve/naruserve-servlet/0.10.0/naruserve-servlet-0.10.0.pom",
+      "com/snoworca/naruserve/naruserve-tinyhttpd/0.10.0/naruserve-tinyhttpd-0.10.0.pom",
+      "com/snoworca/naruserve/naruserve-gson/0.10.0/naruserve-gson-0.10.0.pom",
+      "com/snoworca/naruserve/naruserve-kotlin/0.10.0/naruserve-kotlin-0.10.0.pom",
+      "com/snoworca/naruserve/naruserve-slf4j/0.10.0/naruserve-slf4j-0.10.0.pom",
+      "com/snoworca/naruserve/naruserve-filelog/0.10.0/naruserve-filelog-0.10.0.pom",
+      "com/snoworca/naruserve/naruserve-logcat/0.10.0/naruserve-logcat-0.10.0.pom",
+      "com/snoworca/naruserve/naruserve-android/0.10.0/naruserve-android-0.10.0.pom"
+    ]
+  },
+  "uploadAttemptStartedUtc": "2026-10-28T21:27:14Z",
+  "state": "PUBLIC_VERIFIED",
+  "deploymentId": "402c85ed-99e2-4dad-bd20-311b880eb973",
+  "uploadAcknowledgedUtc": "2026-10-28T21:27:16Z",
+  "statusObservedUtc": "2026-10-28T21:38:35Z",
+  "statusResponseSha256": "8c5914e8bc21bb637113f26c2aa0ccc9439d9029e840866cfa2cb6d78ed41869",
+  "publicVerifiedUtc": "2026-10-28T21:40:10Z"
+}

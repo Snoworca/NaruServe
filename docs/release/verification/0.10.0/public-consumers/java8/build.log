@@ -1,0 +1,19 @@
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/8.14.3/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+> Task :clean
+> Task :compileJava
+> Task :processResources NO-SOURCE
+> Task :classes
+
+> Task :run
+2026-10-29T06:39:12.490+0900 INFO GET /hello 200 14ms in=0 out=5 rid=38d5eb6536596eb4
+2026-10-29T06:39:12.497+0900 INFO GET /API/files/a%2Fb/c 200 7ms in=0 out=21 rid=6608aa32d58d041f
+2026-10-29T06:39:12.499+0900 INFO GET /later 200 0ms in=0 out=5 rid=de7eb4e629bdaeb4
+2026-10-29T06:39:12.500+0900 INFO POST /retained 200 0ms in=0 out=3 rid=53c3a835a4fc7b37
+2026-10-29T06:39:12.504+0900 INFO DELETE /hello 404 0ms in=0 out=147 rid=e392e845be1ab2ee
+{"javaVersion":"1.8.0_504","javaHome":"/Users/beom/Library/Java/JavaVirtualMachines/zulu8.96.0.205-ca-jdk8.0.504-macosx_aarch64/Contents/Home/jre","serviceFactories":["com.snoworca.naruserve.bootstrap.DefaultAppFactory"],"logger":"com.snoworca.naruserve.ConsoleLogger","checks":["RestApp.create actual HTTP","mounted Router named wildcard and encoded slash","getAsync returned Deferred and later response","first JSON body read after completed wire ack with pending Deferred","same-Type JSON cache","common wrong-method HTML404"],"passed":true}
+
+> Task :consumerArtifactReport
+
+BUILD SUCCESSFUL in 5s
+4 actionable tasks: 4 executed

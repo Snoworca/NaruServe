@@ -1,0 +1,136 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "group": "com.snoworca.naruserve",
+    "module": "naruserve-kotlin",
+    "version": "0.10.0",
+    "attributes": {
+      "org.gradle.status": "release"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "8.14.3"
+    }
+  },
+  "variants": [
+    {
+      "name": "apiElements",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.jvm.environment": "standard-jvm",
+        "org.gradle.jvm.version": 8,
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-api",
+        "org.jetbrains.kotlin.platform.type": "jvm"
+      },
+      "dependencies": [
+        {
+          "group": "com.snoworca.naruserve",
+          "module": "naruserve",
+          "version": {
+            "requires": "0.10.0"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "2.2.0"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "naruserve-kotlin-0.10.0.jar",
+          "url": "naruserve-kotlin-0.10.0.jar",
+          "size": 3393,
+          "sha512": "62d4758132df2e99ed8ecb27675196e616ebd2c836ef19f2a8efc9efe87861bd65b14bde31728e7ab94f147da91b08eb1a9cf9ffd861bf51799313b5abeb478a",
+          "sha256": "bd9b1f60aef23a0f240addcbe0a523928f03b0f940686cccb58a23ff3a992e9f",
+          "sha1": "53fc900292eef289c92784c44c418af8f20f196b",
+          "md5": "81e286c4a22f6c5f393d05ae89aaeaa0"
+        }
+      ]
+    },
+    {
+      "name": "runtimeElements",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.jvm.environment": "standard-jvm",
+        "org.gradle.jvm.version": 8,
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-runtime",
+        "org.jetbrains.kotlin.platform.type": "jvm"
+      },
+      "dependencies": [
+        {
+          "group": "com.snoworca.naruserve",
+          "module": "naruserve",
+          "version": {
+            "requires": "0.10.0"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "2.2.0"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "naruserve-kotlin-0.10.0.jar",
+          "url": "naruserve-kotlin-0.10.0.jar",
+          "size": 3393,
+          "sha512": "62d4758132df2e99ed8ecb27675196e616ebd2c836ef19f2a8efc9efe87861bd65b14bde31728e7ab94f147da91b08eb1a9cf9ffd861bf51799313b5abeb478a",
+          "sha256": "bd9b1f60aef23a0f240addcbe0a523928f03b0f940686cccb58a23ff3a992e9f",
+          "sha1": "53fc900292eef289c92784c44c418af8f20f196b",
+          "md5": "81e286c4a22f6c5f393d05ae89aaeaa0"
+        }
+      ]
+    },
+    {
+      "name": "sourcesElements",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "sources",
+        "org.gradle.usage": "java-runtime"
+      },
+      "files": [
+        {
+          "name": "naruserve-kotlin-0.10.0-sources.jar",
+          "url": "naruserve-kotlin-0.10.0-sources.jar",
+          "size": 1553,
+          "sha512": "93e1e5ff59e44cb0dcb05e2742fd577a60d64ed8dddf8157d559ccc6e03895f46d29b5c085b33f9cb8b2885550fa6055f9f18df4bacc4c81d443acff9971dd4e",
+          "sha256": "c300cd031aafb7337c507cdd2874689be2b7ce590da6b15b42955b92ca5a52ff",
+          "sha1": "4eec54aa785251861ec979572058ef19418ec572",
+          "md5": "3faa616523fc7d41172edc8404fc02f1"
+        }
+      ]
+    },
+    {
+      "name": "javadocElements",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "javadoc",
+        "org.gradle.usage": "java-runtime"
+      },
+      "files": [
+        {
+          "name": "naruserve-kotlin-0.10.0-javadoc.jar",
+          "url": "naruserve-kotlin-0.10.0-javadoc.jar",
+          "size": 261,
+          "sha512": "b500d68b102c383e808ce758f2f4d974b9bcfb36720d6af9cc3911a245ec1acb66f35d86a33d1b8c7304e5bbcb5822da616f5cded141c896a5bc066589d298bb",
+          "sha256": "47da1df984aec399f6134009feef89a4b802371fb2f5a8f9f221430bcd0792db",
+          "sha1": "66932e278e8f53867d655994bcd1a9bbbdab57c1",
+          "md5": "76402e6b25a5aeafd8a24fff7c598a8a"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "apk": "/private/tmp/naru-v010-consumers/android/app/build/outputs/apk/release/app-release-unsigned.apk",
+  "sha256": "888b1245ae1fb0df9d84fbd79d18bd3cc4708d2c290c755de94d4492f625967d",
+  "minSdk": 21,
+  "targetSdk": 36,
+  "internetPermissionInherited": true,
+  "serviceProvider": "com.snoworca.naruserve.bootstrap.DefaultAppFactory",
+  "R8RetainedClasses": {
+    "com.snoworca.naruserve.bootstrap.DefaultAppFactory": "com.snoworca.naruserve.bootstrap.DefaultAppFactory",
+    "com.snoworca.naruserve.logcat.LogcatLogger": "com.snoworca.naruserve.logcat.LogcatLogger",
+    "com.snoworca.naruserve.gson.GsonJsonCodec": "l.a",
+    "com.google.gson.Gson": "a.k"
+  },
+  "factoryConstructorAndCreateRetained": true,
+  "appKeepRules": "own ServerEntry only",
+  "tinyNoticesSha256": {
+    "META-INF/LICENSE-tinyhttpd.txt": "8250ab3c4f7b9b85eb6aacaca0c03dbce335ba4df760faf2f44f3bd992eedeb9",
+    "META-INF/LICENSE-nanohttpd.txt": "a0ada3797d7ff576a77f892c7cd5e7910e0fffb56efa9cf2a295cbf596706185",
+    "META-INF/NOTICE-tinyhttpd.txt": "5a4121f985d0ec8466eb1abf9fcf8acc4f4c0f90e2ac555d068576cd27555122"
+  },
+  "deviceOrEmulatorRun": false,
+  "signed": false
+}

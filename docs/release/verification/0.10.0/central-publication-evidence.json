@@ -1,0 +1,93 @@
+{
+  "status": "PUBLISHED_AND_PUBLIC_ARTIFACTS_VERIFIED",
+  "requirement": "OPS-REL-009 AC-3",
+  "deploymentId": "402c85ed-99e2-4dad-bd20-311b880eb973",
+  "publishingType": "AUTOMATIC",
+  "uploadAttemptCount": 1,
+  "uploadStartedUtc": "2026-10-28T21:27:14Z",
+  "uploadAcknowledgedUtc": "2026-10-28T21:27:16Z",
+  "publishedObservation": {
+    "deploymentId": "402c85ed-99e2-4dad-bd20-311b880eb973",
+    "deploymentState": "PUBLISHED",
+    "observedUtc": "2026-10-28T21:38:35Z",
+    "statusResponseSha256": "8c5914e8bc21bb637113f26c2aa0ccc9439d9029e840866cfa2cb6d78ed41869",
+    "bundleSha256": "50573182ec0efe671189969afa4c7a30ef5767b40d1c84875faf9a28cbe2a57c"
+  },
+  "publicVerifiedUtc": "2026-10-28T21:40:10Z",
+  "version": "0.10.0",
+  "artifactSourceCommit": "daf908cdc4468d67609f8e5cceaaad0174ce9a8b",
+  "pushedSourceCommit": "ad1a40df235b68509d8dcf42b8fa89f1fab6104f",
+  "pushedTag": "v0.10.0",
+  "remoteTagCommit": "ad1a40df235b68509d8dcf42b8fa89f1fab6104f",
+  "artifactBuildInputsUnchangedThroughPushedReleaseCommit": true,
+  "publicRepository": "https://repo.maven.apache.org/maven2/",
+  "publicArtifactBase": "https://repo.maven.apache.org/maven2/com/snoworca/naruserve/",
+  "primaryFiles": 50,
+  "signatures": 50,
+  "checksumFiles": 200,
+  "publicFilesVerified": 300,
+  "all300BytesExactlyMatchFrozenSignedManifest": true,
+  "all200ChecksumValuesIndependentlyRecomputed": true,
+  "publicCertificateDetachedSignatures": {
+    "verified": 50,
+    "digest": "SHA256",
+    "tamperControlRejected": true,
+    "fingerprint": "DD2AFA2B544F2249C97984DBF5B75792328DC16B"
+  },
+  "bundle": {
+    "bytes": 1965911,
+    "sha256": "50573182ec0efe671189969afa4c7a30ef5767b40d1c84875faf9a28cbe2a57c"
+  },
+  "proofFiles": {
+    "manifest.json": {
+      "path": "/var/folders/gh/cnsd22nd1811wg27_ws2gc800000gn/T/naru-v010-release-f44rsscc/manifest.json",
+      "bytes": 14571,
+      "sha256": "6eed7d003323e103ba2890cdf1059f93a9c81b39d490715d1e104233f83f5380"
+    },
+    "signed-manifest.json": {
+      "path": "/var/folders/gh/cnsd22nd1811wg27_ws2gc800000gn/T/naru-v010-release-f44rsscc/signed-manifest.json",
+      "bytes": 60599,
+      "sha256": "3afeb9ed6eebe1c38d901b1b0159021ef3ab4e1c5fcdbf651932438ac7760677"
+    },
+    "central-receipt.json": {
+      "path": "/var/folders/gh/cnsd22nd1811wg27_ws2gc800000gn/T/naru-v010-release-f44rsscc/central-receipt.json",
+      "bytes": 1870,
+      "sha256": "0a919dacfc6c87ce4017c58be5770e41cb75189b516946bc02346946e849506f"
+    },
+    "central-published-status.json": {
+      "path": "/var/folders/gh/cnsd22nd1811wg27_ws2gc800000gn/T/naru-v010-release-f44rsscc/central-published-status.json",
+      "bytes": 316,
+      "sha256": "6802905d1d9a80a5ce9006a1337f4f5d72fbf70b4092d486e1620833a580a315"
+    },
+    "public-verification.json": {
+      "path": "/var/folders/gh/cnsd22nd1811wg27_ws2gc800000gn/T/naru-v010-release-f44rsscc/public-verification.json",
+      "bytes": 60949,
+      "sha256": "9947163c910c1bb6ad2f0378f9355739bbfed177c1eb5e76052037549fb9b0c1"
+    },
+    "naruserve-0.10.0.zip": {
+      "path": "/var/folders/gh/cnsd22nd1811wg27_ws2gc800000gn/T/naru-v010-release-f44rsscc/naruserve-0.10.0.zip",
+      "bytes": 1965911,
+      "sha256": "50573182ec0efe671189969afa4c7a30ef5767b40d1c84875faf9a28cbe2a57c"
+    },
+    "public-signing-key.asc": {
+      "path": "/var/folders/gh/cnsd22nd1811wg27_ws2gc800000gn/T/naru-v010-release-f44rsscc/public-signing-key.asc",
+      "bytes": 1690,
+      "sha256": "76bc6572a23c470d106b6f5e4041ec271fe213ddf1a5334420d4d755a881f12f"
+    }
+  },
+  "signedPreuploadReview": "/tmp/naru-v010-signed-bundle-review.json",
+  "privateHelper": "/tmp/naru-v010-central-release.py",
+  "offlineHelperSafetyTests": {
+    "count": 6,
+    "log": "/tmp/naru-v010-central-helper-tests.log",
+    "allUUIDsInTestLogMockOnly": true
+  },
+  "noPrivateCredentialValuesLoggedOrCommitted": true,
+  "noPrivateSigningKeyOrPasswordUsedByUploadHelper": true,
+  "noSigningOrRebuildOrRepositoryEditsDuringPublication": true,
+  "remainingRootGates": [
+    "Root-owned freshMavenCentral-only Java8/Kotlin/AndroidR8consumer results; do not substitute private-staging consumer results.",
+    "Archive exactPUBLISHED/publicverificationreceipt+manifest/hash evidence in repository, promoteOPS-REL-009 with actualperrequirementevidence, closeauthorizedissues and pushfinalverificationevidence."
+  ],
+  "noDeviceRuntimeClaim": true
+}

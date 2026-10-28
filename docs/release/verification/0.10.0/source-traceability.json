@@ -1,0 +1,24 @@
+{
+  "requirement": "OPS-REL-009",
+  "build_source_commit": "daf908cdc4468d67609f8e5cceaaad0174ce9a8b",
+  "pushed_source_commit": "ad1a40df235b68509d8dcf42b8fa89f1fab6104f",
+  "tag": "v0.10.0",
+  "remote": "https://github.com/Snoworca/NaruServe",
+  "source_and_build_inputs_unchanged": true,
+  "comparison": [
+    "build.gradle",
+    "settings.gradle",
+    "gradle",
+    "gradlew",
+    "gradlew.bat",
+    "LICENSE",
+    "all ten modules src/main and build.gradle"
+  ],
+  "prepared_release_commit_changes": "documentation, requirements and archived verification evidence only",
+  "independent_upload_preflight_rechecks_remote_tag": true,
+  "historical_records_preserved": {
+    "docs/release/test-results.md": "3967de2e93e404f17a77256142b5a757c1db97e0b4c7f4bbd817d670c380815c",
+    "docs/release/vulnerability-scan.md": "6be28b3355d9e90fe36eb9ff7c681ac0cd33e967dc96793c98751e3918b9840b"
+  },
+  "raw_evidence_whitespace": "Generated raw scan.html/scan.log retain original trailing whitespace so archived hashes remain reproducible. No hand-authored diff whitespace issues."
+}

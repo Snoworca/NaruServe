@@ -1,0 +1,25 @@
+{
+  "status": "PREWARM_HELP_ONLY_PASS",
+  "recordedUtc": "2026-10-28T21:36:26.618935+00:00",
+  "publicConsumerRunsStarted": false,
+  "consumers": {
+    "java8": {
+      "gradleUserHome": "/var/folders/gh/cnsd22nd1811wg27_ws2gc800000gn/T/naru-v010-public-java8-qw24my4a",
+      "task": "help",
+      "log": "/tmp/naru-v010-public-prewarm-java8.log",
+      "naruArtifactsCached": false
+    },
+    "kotlin": {
+      "gradleUserHome": "/var/folders/gh/cnsd22nd1811wg27_ws2gc800000gn/T/naru-v010-public-kotlin-oc5z04bt",
+      "task": "help",
+      "log": "/tmp/naru-v010-public-prewarm-kotlin.log",
+      "naruArtifactsCached": false
+    },
+    "android": {
+      "gradleUserHome": "/var/folders/gh/cnsd22nd1811wg27_ws2gc800000gn/T/naru-v010-public-android-7ukke7p9",
+      "task": "help",
+      "log": "/tmp/naru-v010-public-prewarm-android.log",
+      "naruArtifactsCached": false
+    }
+  }
+}

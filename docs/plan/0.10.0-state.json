@@ -653,7 +653,7 @@
       "global64 depth differs from pinned per-router/per-route100 yields"
     ],
     "owner": "/root/api_core_docs",
-    "next": "actual Java RED and independent sufficiency review before fixes",
+    "next": "complete; final integrated build and publication verified",
     "green_commit": "4f001f4"
   },
   "api_full_diagnostic": {
@@ -666,59 +666,45 @@
   },
   "latest_validation": {
     "api": {
-      "commit": "4f001f4",
-      "java17": 1392,
-      "java8": 1392,
+      "commit": "daf908cdc4468d67609f8e5cceaaad0174ce9a8b",
+      "java17": 1412,
+      "java8": 1412,
       "failures": 0,
-      "note": "Later SafeCallbacks additions need final full rerun"
+      "note": "Final complete integrated0.10.0 build PASS onbothactualruntimes; detailedmanifests under docs/release/verification/0.10.0.",
+      "tests": 1412,
+      "errors": 0,
+      "skipped": 0
     },
     "tiny": {
-      "commit": "6c53951",
+      "commit": "daf908cdc4468d67609f8e5cceaaad0174ce9a8b",
       "java17": 218,
       "java8": 218,
       "failures": 0,
-      "note": "Later pure SafeCallbacks refactor focused45 both runtimes passed"
+      "note": "Final complete integrated0.10.0 build PASS onbothactualruntimes; detailedmanifests under docs/release/verification/0.10.0.",
+      "tests": 218,
+      "errors": 0,
+      "skipped": 0
     },
     "servlet": {
-      "commit": "2863790",
-      "java17": 158,
-      "java8": 158,
+      "commit": "daf908cdc4468d67609f8e5cceaaad0174ce9a8b",
+      "java17": 160,
+      "java8": 160,
       "failures": 0,
       "source_review": "round2 PASS",
       "fixture_review": "round1 PASS",
-      "integrated": true
+      "integrated": true,
+      "tests": 160,
+      "errors": 0,
+      "skipped": 0,
+      "note": "Final complete integrated0.10.0 build PASS onbothactualruntimes; detailedmanifests under docs/release/verification/0.10.0."
     },
     "parity": {
       "tests": 54,
       "java17": "PASS",
       "java8": "PASS"
     },
-    "release": "0.10.0 signed and independently audited; source push/tag and public publication pending",
+    "release": "COMPLETE: source/tag pushed, single Central deployment PUBLISHED,300publicbytes/signatures/checksums and3freshpublicconsumers PASS",
     "remaining_root_checks": "PASS; versioned docs and historical release assertions corrected without weakening retained guards",
-    "integrated_java17": {
-      "tests": 2151,
-      "failures": 4,
-      "errors": 0,
-      "skipped": 0,
-      "scope": "All module checks PASS;4old docs/release assertions pendingOPSREL008/009"
-    },
-    "integrated_java8": {
-      "tests": 1846,
-      "failures": 2,
-      "errors": 0,
-      "skipped": 0,
-      "scope": "Module checks only;2Servlet predispatch socket failures;exactmacOSloopback/wildcardcollisionreproduced;fixturefixpending",
-      "followup": {
-        "fixture_commit": "8c756fb",
-        "servlet_full_tests": 158,
-        "failures": 0,
-        "errors": 0,
-        "skipped": 0,
-        "runtime": "actualJava8",
-        "log": "/tmp/naru-v010-integrated-servlet-loopback-java8.log",
-        "note": "All module cases passed across originalrun+targetedfullServletrecheck;finalsinglewholebuildpendingdocs/release"
-      }
-    },
     "java17_full": {
       "tests": 2183,
       "failures": 0,
@@ -752,6 +738,30 @@
       "skipped": 0,
       "log": "/tmp/naru-v010-final-release-docs-gate.log",
       "note": "Root :test explicit selection; initial unqualified test selector was rejected by Android aggregate task before any tests, corrected to :test."
+    },
+    "historical_integrated_java17": {
+      "tests": 2151,
+      "failures": 4,
+      "errors": 0,
+      "skipped": 0,
+      "scope": "All module checks PASS;4old docs/release assertions pendingOPSREL008/009"
+    },
+    "historical_integrated_java8": {
+      "tests": 1846,
+      "failures": 2,
+      "errors": 0,
+      "skipped": 0,
+      "scope": "Module checks only;2Servlet predispatch socket failures;exactmacOSloopback/wildcardcollisionreproduced;fixturefixpending",
+      "followup": {
+        "fixture_commit": "8c756fb",
+        "servlet_full_tests": 158,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "runtime": "actualJava8",
+        "log": "/tmp/naru-v010-integrated-servlet-loopback-java8.log",
+        "note": "All module cases passed across originalrun+targetedfullServletrecheck;finalsinglewholebuildpendingdocs/release"
+      }
     }
   },
   "docs_release_lanes": {
@@ -802,10 +812,31 @@
   },
   "publication": {
     "version": "0.10.0",
-    "uploaded": false,
+    "uploaded": true,
     "signed": true,
     "staging_consumers": "PASS Java8/Kotlin/Android immutable snapshot",
-    "published": false,
-    "bundle_sha256": "50573182ec0efe671189969afa4c7a30ef5767b40d1c84875faf9a28cbe2a57c"
+    "published": true,
+    "bundle_sha256": "50573182ec0efe671189969afa4c7a30ef5767b40d1c84875faf9a28cbe2a57c",
+    "deployment_id": "402c85ed-99e2-4dad-bd20-311b880eb973",
+    "source_commit": "ad1a40df235b68509d8dcf42b8fa89f1fab6104f",
+    "tag": "v0.10.0",
+    "status": "PUBLISHED_AND_PUBLICLY_VERIFIED",
+    "public_artifacts": {
+      "primary": 50,
+      "signatures": 50,
+      "checksums": 200,
+      "all_exact_bytes": true
+    },
+    "public_consumers": "PASS Java8/Kotlin/Android fresh homes, public repositories only",
+    "independent_final_review": "round1PASS; all300publicfiles independently redownloaded"
+  },
+  "completion": {
+    "requirements_verified": 18,
+    "missing_evidence": 0,
+    "stability_blockers": 0,
+    "final_review": "PASS round1",
+    "delivery": "PUBLISHED_AND_PUBLICLY_VERIFIED",
+    "release_source_commit": "ad1a40df235b68509d8dcf42b8fa89f1fab6104f",
+    "tag": "v0.10.0"
   }
 }

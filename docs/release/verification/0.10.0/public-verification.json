@@ -1,0 +1,1222 @@
+{
+  "version": "0.10.0",
+  "deploymentId": "402c85ed-99e2-4dad-bd20-311b880eb973",
+  "verifiedUtc": "2026-10-28T21:40:10Z",
+  "bundleSha256": "50573182ec0efe671189969afa4c7a30ef5767b40d1c84875faf9a28cbe2a57c",
+  "source": {
+    "pushedSourceCommit": "ad1a40df235b68509d8dcf42b8fa89f1fab6104f",
+    "pushedTag": "v0.10.0",
+    "remoteTagCommit": "ad1a40df235b68509d8dcf42b8fa89f1fab6104f",
+    "artifactSourceCommit": "daf908cdc4468d67609f8e5cceaaad0174ce9a8b",
+    "unchangedArtifactBuildInputs": true,
+    "checkedUtc": "2026-10-28T21:27:11Z"
+  },
+  "repository": "https://repo.maven.apache.org/maven2/",
+  "primaryFiles": 50,
+  "signatures": 50,
+  "checksums": 200,
+  "all300ExactFrozenBytes": true,
+  "publicSignaturesAndTamperControl": "PASS",
+  "files": {
+    "com/snoworca/naruserve/naruserve/0.10.0/naruserve-0.10.0.jar": {
+      "bytes": 3383,
+      "sha256": "b2425153a8d13a5e54d8e6253adbb52c5af58b0576c8698f8f0f92a04dbacc5b"
+    },
+    "com/snoworca/naruserve/naruserve/0.10.0/naruserve-0.10.0.jar.asc": {
+      "bytes": 831,
+      "sha256": "fe1588c8dfc9c429a55e8e9759896b40888ee982cff38571e2898788f1d99cb1"
+    },
+    "com/snoworca/naruserve/naruserve/0.10.0/naruserve-0.10.0.jar.md5": {
+      "bytes": 32,
+      "sha256": "e63675def632eca47e70894f13f0928f1e083fe8cd04a057d71ac63797241ed6"
+    },
+    "com/snoworca/naruserve/naruserve/0.10.0/naruserve-0.10.0.jar.sha1": {
+      "bytes": 40,
+      "sha256": "9c392acc460c7705f482bdad9a1aef5d33eae77cf85076535ea826236d37af01"
+    },
+    "com/snoworca/naruserve/naruserve/0.10.0/naruserve-0.10.0.jar.sha256": {
+      "bytes": 64,
+      "sha256": "a2ca1f2f869a02c539f975ebb77841e13b4038f4c31c78cd47e0acace6f49286"
+    },
+    "com/snoworca/naruserve/naruserve/0.10.0/naruserve-0.10.0.jar.sha512": {
+      "bytes": 128,
+      "sha256": "233eac6c8171db94e72d6c5b253447da791ddbe6feb2667fbdb092237a2080a3"
+    },
+    "com/snoworca/naruserve/naruserve/0.10.0/naruserve-0.10.0-sources.jar": {
+      "bytes": 3098,
+      "sha256": "b27d97ca50377829fb73df674a4ee626f5ae45802472f0b08e1a5ed7a370100f"
+    },
+    "com/snoworca/naruserve/naruserve/0.10.0/naruserve-0.10.0-sources.jar.asc": {
+      "bytes": 831,
+      "sha256": "1ce0c2403b5c7838947c36437281ca2612ac78137756ea771fd244fccb9ecc90"
+    },
+    "com/snoworca/naruserve/naruserve/0.10.0/naruserve-0.10.0-sources.jar.md5": {
+      "bytes": 32,
+      "sha256": "e280873b6ffc06ea7805414f23a02c3d2daba7223c0c40974f26a3f2b5b123e2"
+    },
+    "com/snoworca/naruserve/naruserve/0.10.0/naruserve-0.10.0-sources.jar.sha1": {
+      "bytes": 40,
+      "sha256": "490f0b3e1372028234bbdf87b67e38cba2b1f442ebad01f912553773c454bbd2"
+    },
+    "com/snoworca/naruserve/naruserve/0.10.0/naruserve-0.10.0-sources.jar.sha256": {
+      "bytes": 64,
+      "sha256": "eb76d207e141addd5e4426e013e8a49fd2485c0323aaab595fd87ce56fda0a02"
+    },
+    "com/snoworca/naruserve/naruserve/0.10.0/naruserve-0.10.0-sources.jar.sha512": {
+      "bytes": 128,
+      "sha256": "42a72a9b6188789811bc11d87bf5b1d40c5a1d13ea4d716eea93f5d27790d3aa"
+    },
+    "com/snoworca/naruserve/naruserve/0.10.0/naruserve-0.10.0-javadoc.jar": {
+      "bytes": 81303,
+      "sha256": "02d41b166f0bcbba0efb48c030901dacb45417f9dd29087a34db9d367a22b357"
+    },
+    "com/snoworca/naruserve/naruserve/0.10.0/naruserve-0.10.0-javadoc.jar.asc": {
+      "bytes": 831,
+      "sha256": "e1846ae890631feacf55384228bc36c2568bbf1ae0035120c229793e78fe4e4f"
+    },
+    "com/snoworca/naruserve/naruserve/0.10.0/naruserve-0.10.0-javadoc.jar.md5": {
+      "bytes": 32,
+      "sha256": "ecea054628962eaa2bf88ed5a08b9c1d01c2179994476cec7954aeb5f37e908f"
+    },
+    "com/snoworca/naruserve/naruserve/0.10.0/naruserve-0.10.0-javadoc.jar.sha1": {
+      "bytes": 40,
+      "sha256": "edfd3fd64b382ba5781119959da2b26ef1272aa2e998f2856bd705d315e4a399"
+    },
+    "com/snoworca/naruserve/naruserve/0.10.0/naruserve-0.10.0-javadoc.jar.sha256": {
+      "bytes": 64,
+      "sha256": "56a4b6bc4ae1874cc7be140f4186a562573538213cca9685431ec3c70dcebe54"
+    },
+    "com/snoworca/naruserve/naruserve/0.10.0/naruserve-0.10.0-javadoc.jar.sha512": {
+      "bytes": 128,
+      "sha256": "c47798229301b73c697831b5bdd8077e7bad800591f56464ca4ace525233d1b4"
+    },
+    "com/snoworca/naruserve/naruserve/0.10.0/naruserve-0.10.0.pom": {
+      "bytes": 2194,
+      "sha256": "26f662ad3f6e390ee7bd8e1ea9cb3d01d43aec479558b5364db28f193fea58f6"
+    },
+    "com/snoworca/naruserve/naruserve/0.10.0/naruserve-0.10.0.pom.asc": {
+      "bytes": 831,
+      "sha256": "c9a25d2561641124041fd921af9f5e9ca3859926c1075063ec09ee80857bcbd4"
+    },
+    "com/snoworca/naruserve/naruserve/0.10.0/naruserve-0.10.0.pom.md5": {
+      "bytes": 32,
+      "sha256": "c61820676b28a97b9bd8d6173715c938801cf0f6b50a415e090e180809a08109"
+    },
+    "com/snoworca/naruserve/naruserve/0.10.0/naruserve-0.10.0.pom.sha1": {
+      "bytes": 40,
+      "sha256": "ada2ac73bff7786a621784d212196302ef61495d0a4bbef00ad9620000f53e8e"
+    },
+    "com/snoworca/naruserve/naruserve/0.10.0/naruserve-0.10.0.pom.sha256": {
+      "bytes": 64,
+      "sha256": "cf174f499c02bbe8d1fb36ee498ef411f4a6e54c694f65eaaa3edcd780b5a932"
+    },
+    "com/snoworca/naruserve/naruserve/0.10.0/naruserve-0.10.0.pom.sha512": {
+      "bytes": 128,
+      "sha256": "b638edd307e85f81cc92a0a7fc024931ff19eea56941901e37c095e937bba68c"
+    },
+    "com/snoworca/naruserve/naruserve/0.10.0/naruserve-0.10.0.module": {
+      "bytes": 4609,
+      "sha256": "a3e7592e18c839f9e9f43a087ffb649615504f2121701d979220d790d3e87329"
+    },
+    "com/snoworca/naruserve/naruserve/0.10.0/naruserve-0.10.0.module.asc": {
+      "bytes": 831,
+      "sha256": "cdcc7dc4c8262abc09e937b60469c0396d759b0091004b3f6c1802389bff0594"
+    },
+    "com/snoworca/naruserve/naruserve/0.10.0/naruserve-0.10.0.module.md5": {
+      "bytes": 32,
+      "sha256": "a5185a0b004bb173dafc4722825d3f7d07c644a4b21d6865e6a4a7d6a3de4690"
+    },
+    "com/snoworca/naruserve/naruserve/0.10.0/naruserve-0.10.0.module.sha1": {
+      "bytes": 40,
+      "sha256": "7890acb7539207504911b535135f60ab5fb80edc4b1b67e0144c8cad44291555"
+    },
+    "com/snoworca/naruserve/naruserve/0.10.0/naruserve-0.10.0.module.sha256": {
+      "bytes": 64,
+      "sha256": "482002ab484d94b06eef9396b2557cde3bcdf786376b07b92738a3c915a63251"
+    },
+    "com/snoworca/naruserve/naruserve/0.10.0/naruserve-0.10.0.module.sha512": {
+      "bytes": 128,
+      "sha256": "15b5740e2541fa8216e05143427074e9f48c52bcff36127c9be1bedd8d7d10ed"
+    },
+    "com/snoworca/naruserve/naruserve-api/0.10.0/naruserve-api-0.10.0.jar": {
+      "bytes": 403660,
+      "sha256": "ea577d834391867803fb7886a3f6c30327aaeee59b7408622a47123445575dec"
+    },
+    "com/snoworca/naruserve/naruserve-api/0.10.0/naruserve-api-0.10.0.jar.asc": {
+      "bytes": 831,
+      "sha256": "dcc24aad5934c056d134b2cb06e024fcbeb567a2c7f27f48cdd167a8d05c2117"
+    },
+    "com/snoworca/naruserve/naruserve-api/0.10.0/naruserve-api-0.10.0.jar.md5": {
+      "bytes": 32,
+      "sha256": "d7f80dd398c74d80ec87634fa2c34adc83af5fd836103cea54ad271cd73baf73"
+    },
+    "com/snoworca/naruserve/naruserve-api/0.10.0/naruserve-api-0.10.0.jar.sha1": {
+      "bytes": 40,
+      "sha256": "fd4683f43524f50840a9fc2a24302d9be697cab0a63445143a7ae9f65c10c17d"
+    },
+    "com/snoworca/naruserve/naruserve-api/0.10.0/naruserve-api-0.10.0.jar.sha256": {
+      "bytes": 64,
+      "sha256": "659f133f10b971cd0970226359327f5be7223ececf1d6fac60f2c3682c2de7fa"
+    },
+    "com/snoworca/naruserve/naruserve-api/0.10.0/naruserve-api-0.10.0.jar.sha512": {
+      "bytes": 128,
+      "sha256": "2d19e7d9e2e395a18e0a0e670e5c7a50743cf20f7279185959926c58ff72b319"
+    },
+    "com/snoworca/naruserve/naruserve-api/0.10.0/naruserve-api-0.10.0-sources.jar": {
+      "bytes": 239444,
+      "sha256": "2a72ce2d4e615433ab0630c13c8d23ab8b42c4b4618fd238c7f8eb91475e75c0"
+    },
+    "com/snoworca/naruserve/naruserve-api/0.10.0/naruserve-api-0.10.0-sources.jar.asc": {
+      "bytes": 831,
+      "sha256": "51f19fe2a3d79aa8e6f5b696aecc55c5de85b2eaaca2c05c6899222363990374"
+    },
+    "com/snoworca/naruserve/naruserve-api/0.10.0/naruserve-api-0.10.0-sources.jar.md5": {
+      "bytes": 32,
+      "sha256": "8ceada06ee1817630a028c3b67379a9978f523a1ded3ebc3ba31abe0a91e9a89"
+    },
+    "com/snoworca/naruserve/naruserve-api/0.10.0/naruserve-api-0.10.0-sources.jar.sha1": {
+      "bytes": 40,
+      "sha256": "fbcc5607ed792c9e2a9a1cf35e9a62806781da5a1fe0a10a941d46fa290c943d"
+    },
+    "com/snoworca/naruserve/naruserve-api/0.10.0/naruserve-api-0.10.0-sources.jar.sha256": {
+      "bytes": 64,
+      "sha256": "68662d237d006814b6b46fe7ad855f34c8a5f945d3c337bf082f9eab638dd6ce"
+    },
+    "com/snoworca/naruserve/naruserve-api/0.10.0/naruserve-api-0.10.0-sources.jar.sha512": {
+      "bytes": 128,
+      "sha256": "91dd249084253394361fe916988ebc11630546a037bf2fc8b3af8ea499cb9389"
+    },
+    "com/snoworca/naruserve/naruserve-api/0.10.0/naruserve-api-0.10.0-javadoc.jar": {
+      "bytes": 560538,
+      "sha256": "84d13f697e63b5ae09333b404b08f2b0ea50453a64371ff387bae0024492c3a5"
+    },
+    "com/snoworca/naruserve/naruserve-api/0.10.0/naruserve-api-0.10.0-javadoc.jar.asc": {
+      "bytes": 831,
+      "sha256": "e23e8e6eedfda6cf4f1c83526c4efcc5debb99e58bbec356f974b1ba80690983"
+    },
+    "com/snoworca/naruserve/naruserve-api/0.10.0/naruserve-api-0.10.0-javadoc.jar.md5": {
+      "bytes": 32,
+      "sha256": "5949f1c392dc62edc7573b4b533771e5f78d300e9d3244ba5ad7baacdedde769"
+    },
+    "com/snoworca/naruserve/naruserve-api/0.10.0/naruserve-api-0.10.0-javadoc.jar.sha1": {
+      "bytes": 40,
+      "sha256": "50ba377a11ca0f6402b08918bbda336f4930fa4e497b9f1065234febb90f1fc9"
+    },
+    "com/snoworca/naruserve/naruserve-api/0.10.0/naruserve-api-0.10.0-javadoc.jar.sha256": {
+      "bytes": 64,
+      "sha256": "20a38a5529712c73389bbede08842f284ca92058e6b8883ca5b2c552524e9ce7"
+    },
+    "com/snoworca/naruserve/naruserve-api/0.10.0/naruserve-api-0.10.0-javadoc.jar.sha512": {
+      "bytes": 128,
+      "sha256": "b7604dcb56792c33d4b6cfc93d61c720cf1e0433c061f42dbc3dc85763622b9d"
+    },
+    "com/snoworca/naruserve/naruserve-api/0.10.0/naruserve-api-0.10.0.pom": {
+      "bytes": 1574,
+      "sha256": "e5777851feb6c8c0ead43531ae1c985a4b323f4dc7fc4fe55901e941291d01ca"
+    },
+    "com/snoworca/naruserve/naruserve-api/0.10.0/naruserve-api-0.10.0.pom.asc": {
+      "bytes": 831,
+      "sha256": "79cde6b9ae8acb97a8950311328f0539b78fb71757279c59cb897123a1046d4b"
+    },
+    "com/snoworca/naruserve/naruserve-api/0.10.0/naruserve-api-0.10.0.pom.md5": {
+      "bytes": 32,
+      "sha256": "9824df03313845781040f8152d9d349cb45dc573ca0c66738f24afb688b51e1e"
+    },
+    "com/snoworca/naruserve/naruserve-api/0.10.0/naruserve-api-0.10.0.pom.sha1": {
+      "bytes": 40,
+      "sha256": "ad70fa24ab64b12e2fc6ab20c5cb29e5cd3b6eac56400459e35b3f1b276de8e3"
+    },
+    "com/snoworca/naruserve/naruserve-api/0.10.0/naruserve-api-0.10.0.pom.sha256": {
+      "bytes": 64,
+      "sha256": "c61f6d95a7e9c9ae85f59dc1f666b2601ac286cecbeda584954062a97c146afe"
+    },
+    "com/snoworca/naruserve/naruserve-api/0.10.0/naruserve-api-0.10.0.pom.sha512": {
+      "bytes": 128,
+      "sha256": "992c34280f127b90e2d3d3cdf1070979470d78e7c6ba4c2cd1e4adb8bcd45d31"
+    },
+    "com/snoworca/naruserve/naruserve-api/0.10.0/naruserve-api-0.10.0.module": {
+      "bytes": 3725,
+      "sha256": "5fbbff1e13bf125d7335efe581ed1d0b649feb340562d217fee60e878519c4b7"
+    },
+    "com/snoworca/naruserve/naruserve-api/0.10.0/naruserve-api-0.10.0.module.asc": {
+      "bytes": 831,
+      "sha256": "19bfe1bda479fd6cdcdd24c5277f9cfde9bacf296477232129fe4b51836c70bd"
+    },
+    "com/snoworca/naruserve/naruserve-api/0.10.0/naruserve-api-0.10.0.module.md5": {
+      "bytes": 32,
+      "sha256": "ba63fc113b648ee68e54d912c6deef64ee8d1273f44404cf0cd097ab3fa25a56"
+    },
+    "com/snoworca/naruserve/naruserve-api/0.10.0/naruserve-api-0.10.0.module.sha1": {
+      "bytes": 40,
+      "sha256": "5b8c8b6284b16c2864a87adeb8bf93d4fa591bac5288156c7ee3a84b3acde3aa"
+    },
+    "com/snoworca/naruserve/naruserve-api/0.10.0/naruserve-api-0.10.0.module.sha256": {
+      "bytes": 64,
+      "sha256": "4268d824c0f5b7a9e4a25b24c2dcfa89d88d55681368a3687948ab8add197fab"
+    },
+    "com/snoworca/naruserve/naruserve-api/0.10.0/naruserve-api-0.10.0.module.sha512": {
+      "bytes": 128,
+      "sha256": "13ee3aacd412208c696ebcee42cbcd8f7e944b87246fe31506e9680923ae79dc"
+    },
+    "com/snoworca/naruserve/naruserve-servlet/0.10.0/naruserve-servlet-0.10.0.jar": {
+      "bytes": 38922,
+      "sha256": "7cb67eb3efbec4f1076b21910c379877ae7d59cb1e4f2a96e6b6e4c37f906448"
+    },
+    "com/snoworca/naruserve/naruserve-servlet/0.10.0/naruserve-servlet-0.10.0.jar.asc": {
+      "bytes": 831,
+      "sha256": "daed076bc645196a35ddb5ed9ce835f8288da879f2e9c49c7a24be81bafd8110"
+    },
+    "com/snoworca/naruserve/naruserve-servlet/0.10.0/naruserve-servlet-0.10.0.jar.md5": {
+      "bytes": 32,
+      "sha256": "2aafd8e43a5d632d16ca8f73439bb33027ec16d4afecd5d92bfe422a3f560c1e"
+    },
+    "com/snoworca/naruserve/naruserve-servlet/0.10.0/naruserve-servlet-0.10.0.jar.sha1": {
+      "bytes": 40,
+      "sha256": "fbb3a9b5e8b2420ec00a407d1af7356f2ce5062679cf2203d07f19cb415e636e"
+    },
+    "com/snoworca/naruserve/naruserve-servlet/0.10.0/naruserve-servlet-0.10.0.jar.sha256": {
+      "bytes": 64,
+      "sha256": "74367ff3b5c545b1854953b5aa39d93180935370c3aabd1ab4e93c1f625da304"
+    },
+    "com/snoworca/naruserve/naruserve-servlet/0.10.0/naruserve-servlet-0.10.0.jar.sha512": {
+      "bytes": 128,
+      "sha256": "a6a160ee1eb19ceee0c24e72972f4e207d9b3da1e6663e666c6731ac00a0789d"
+    },
+    "com/snoworca/naruserve/naruserve-servlet/0.10.0/naruserve-servlet-0.10.0-sources.jar": {
+      "bytes": 22357,
+      "sha256": "68fd87f8e034679b4dc644f1748371a17077c6b215e9c4d199a8e61cf5b73d80"
+    },
+    "com/snoworca/naruserve/naruserve-servlet/0.10.0/naruserve-servlet-0.10.0-sources.jar.asc": {
+      "bytes": 831,
+      "sha256": "a6dac35791947a186296c465b10aa0406602ef7871163ca99c6c73f3ce22cd45"
+    },
+    "com/snoworca/naruserve/naruserve-servlet/0.10.0/naruserve-servlet-0.10.0-sources.jar.md5": {
+      "bytes": 32,
+      "sha256": "2491923ecbbc65dd621d93caafad4306ac874de278d796f4718d0f458489940d"
+    },
+    "com/snoworca/naruserve/naruserve-servlet/0.10.0/naruserve-servlet-0.10.0-sources.jar.sha1": {
+      "bytes": 40,
+      "sha256": "c939eba241acd6a5e4411a284538fda0abd3bfce885cb60895f47aa51d774050"
+    },
+    "com/snoworca/naruserve/naruserve-servlet/0.10.0/naruserve-servlet-0.10.0-sources.jar.sha256": {
+      "bytes": 64,
+      "sha256": "28f72b692a3f7258a90ff3945f1350607a192f6a9e8fa961e7e7f87fefe23098"
+    },
+    "com/snoworca/naruserve/naruserve-servlet/0.10.0/naruserve-servlet-0.10.0-sources.jar.sha512": {
+      "bytes": 128,
+      "sha256": "6ec0bfb1ce35e0b1aaa751aa6342743a30d0240c09ababe20209f4edb5f9b37c"
+    },
+    "com/snoworca/naruserve/naruserve-servlet/0.10.0/naruserve-servlet-0.10.0-javadoc.jar": {
+      "bytes": 88632,
+      "sha256": "44aee2911abd64a5fba1badb46137070f81dfc574195dfa0f06f171cca3fc929"
+    },
+    "com/snoworca/naruserve/naruserve-servlet/0.10.0/naruserve-servlet-0.10.0-javadoc.jar.asc": {
+      "bytes": 831,
+      "sha256": "2acd13613caca51966c990664c78a33dcd531ec4e6972b28475ad6dd37133449"
+    },
+    "com/snoworca/naruserve/naruserve-servlet/0.10.0/naruserve-servlet-0.10.0-javadoc.jar.md5": {
+      "bytes": 32,
+      "sha256": "645f61b1b7d2f2e6e9fc00a26f7cbc0ac628a12039f36d32236c9eba0f21cee3"
+    },
+    "com/snoworca/naruserve/naruserve-servlet/0.10.0/naruserve-servlet-0.10.0-javadoc.jar.sha1": {
+      "bytes": 40,
+      "sha256": "03a7f44b40bfe31d8b90379310651b7d8002a61748a88f7977c3788e35f93a65"
+    },
+    "com/snoworca/naruserve/naruserve-servlet/0.10.0/naruserve-servlet-0.10.0-javadoc.jar.sha256": {
+      "bytes": 64,
+      "sha256": "a431a96221692c6ea56152146b397eda5405a248af713d7a10fedc834f910e58"
+    },
+    "com/snoworca/naruserve/naruserve-servlet/0.10.0/naruserve-servlet-0.10.0-javadoc.jar.sha512": {
+      "bytes": 128,
+      "sha256": "968bb4aedb589996349a356bb26e30295a0f2251672f866f7b8c1676d9603d80"
+    },
+    "com/snoworca/naruserve/naruserve-servlet/0.10.0/naruserve-servlet-0.10.0.pom": {
+      "bytes": 1782,
+      "sha256": "b1a1159ac6df92e29fb0ff983240ab31baa3dd37c0a9f86f95f8ad067c46e2c3"
+    },
+    "com/snoworca/naruserve/naruserve-servlet/0.10.0/naruserve-servlet-0.10.0.pom.asc": {
+      "bytes": 831,
+      "sha256": "be572cae0e0206a0768a6605f9e053638995f3d5f5a571163f753243c25e3965"
+    },
+    "com/snoworca/naruserve/naruserve-servlet/0.10.0/naruserve-servlet-0.10.0.pom.md5": {
+      "bytes": 32,
+      "sha256": "2eb1f73bdbcfed1bb1073293fa89a766145baa12d579655f871571f0195a7fca"
+    },
+    "com/snoworca/naruserve/naruserve-servlet/0.10.0/naruserve-servlet-0.10.0.pom.sha1": {
+      "bytes": 40,
+      "sha256": "6486ab647cb737a1a3d96b16e46cbda2f37fe589ed6a94ad1fed3de5ac46f59a"
+    },
+    "com/snoworca/naruserve/naruserve-servlet/0.10.0/naruserve-servlet-0.10.0.pom.sha256": {
+      "bytes": 64,
+      "sha256": "b4ba227ad751f406cddfc6058748239e5c69053c91a4f2765529f0524e26d976"
+    },
+    "com/snoworca/naruserve/naruserve-servlet/0.10.0/naruserve-servlet-0.10.0.pom.sha512": {
+      "bytes": 128,
+      "sha256": "989cc3dda11305e8150642709cbe5ab414d2d0e36a6ca329ae8ef3fc82210e95"
+    },
+    "com/snoworca/naruserve/naruserve-servlet/0.10.0/naruserve-servlet-0.10.0.module": {
+      "bytes": 4163,
+      "sha256": "e9ba8d4ae00bb553cd39a24a05ec7d452ca18cdad5ac2b63ab5e9d0c731f601e"
+    },
+    "com/snoworca/naruserve/naruserve-servlet/0.10.0/naruserve-servlet-0.10.0.module.asc": {
+      "bytes": 831,
+      "sha256": "05c9db2410c46e4c961b0824aef3d658f011360b15d1fb73f6607fb89093c2b1"
+    },
+    "com/snoworca/naruserve/naruserve-servlet/0.10.0/naruserve-servlet-0.10.0.module.md5": {
+      "bytes": 32,
+      "sha256": "60351bf7e425f5747c2c713e75fe1b6c2d4b8870840f5487d52fde3383a90a92"
+    },
+    "com/snoworca/naruserve/naruserve-servlet/0.10.0/naruserve-servlet-0.10.0.module.sha1": {
+      "bytes": 40,
+      "sha256": "c48d641acd752b08716a36f16850b240b7c9863a02b25d4caa7436571b7e0a78"
+    },
+    "com/snoworca/naruserve/naruserve-servlet/0.10.0/naruserve-servlet-0.10.0.module.sha256": {
+      "bytes": 64,
+      "sha256": "4829cf9c65517beeb5baff5a11744a57fa638a45851f3f6a1fe70b923a4af204"
+    },
+    "com/snoworca/naruserve/naruserve-servlet/0.10.0/naruserve-servlet-0.10.0.module.sha512": {
+      "bytes": 128,
+      "sha256": "f1d35b642ec61bf82da065f9789556ab00154a303cae61126453facca5392f45"
+    },
+    "com/snoworca/naruserve/naruserve-tinyhttpd/0.10.0/naruserve-tinyhttpd-0.10.0.jar": {
+      "bytes": 35790,
+      "sha256": "a3ee4cd37adad7fb3f651a28f2539dd846362a506bc2d8fbd6435b30640ab03e"
+    },
+    "com/snoworca/naruserve/naruserve-tinyhttpd/0.10.0/naruserve-tinyhttpd-0.10.0.jar.asc": {
+      "bytes": 831,
+      "sha256": "54f4a5de40a4eb19a13aa7fd819a05e99b6d498f982d0d7dd879e7c11ce5e454"
+    },
+    "com/snoworca/naruserve/naruserve-tinyhttpd/0.10.0/naruserve-tinyhttpd-0.10.0.jar.md5": {
+      "bytes": 32,
+      "sha256": "3ea1a1dbf834c7f216f0c3d321ac13184931bed1c6b53e75b2530a3d84f612d6"
+    },
+    "com/snoworca/naruserve/naruserve-tinyhttpd/0.10.0/naruserve-tinyhttpd-0.10.0.jar.sha1": {
+      "bytes": 40,
+      "sha256": "1faf3b7a247a3f561327cf765507ca08f7151da2a11901fbcbb3f6b73edf72fb"
+    },
+    "com/snoworca/naruserve/naruserve-tinyhttpd/0.10.0/naruserve-tinyhttpd-0.10.0.jar.sha256": {
+      "bytes": 64,
+      "sha256": "773b8708e31b466215d9353620d612a74ad83eedd28ec9b081d17c8f74d70ab0"
+    },
+    "com/snoworca/naruserve/naruserve-tinyhttpd/0.10.0/naruserve-tinyhttpd-0.10.0.jar.sha512": {
+      "bytes": 128,
+      "sha256": "0b5726c5deeee3b55a4e9e2ce188ed9893ea59490d50a242146108d5295db46a"
+    },
+    "com/snoworca/naruserve/naruserve-tinyhttpd/0.10.0/naruserve-tinyhttpd-0.10.0-sources.jar": {
+      "bytes": 18947,
+      "sha256": "e014291970e20ced4f2253ecff70e4d056c82549cedb9bb28fa82caa9a7a306b"
+    },
+    "com/snoworca/naruserve/naruserve-tinyhttpd/0.10.0/naruserve-tinyhttpd-0.10.0-sources.jar.asc": {
+      "bytes": 831,
+      "sha256": "bc8120ea00b2e86b9ac19e2fe54b942499297f227e997e32ec4281a8622028e3"
+    },
+    "com/snoworca/naruserve/naruserve-tinyhttpd/0.10.0/naruserve-tinyhttpd-0.10.0-sources.jar.md5": {
+      "bytes": 32,
+      "sha256": "12601abf99cc7a043dec14c678d3b4517698d4c2e267fe1ed60a63499a465437"
+    },
+    "com/snoworca/naruserve/naruserve-tinyhttpd/0.10.0/naruserve-tinyhttpd-0.10.0-sources.jar.sha1": {
+      "bytes": 40,
+      "sha256": "73e0d1ea73b6085488c447d3dee4fab2f0a1b451a1494a0446aca7627eff0246"
+    },
+    "com/snoworca/naruserve/naruserve-tinyhttpd/0.10.0/naruserve-tinyhttpd-0.10.0-sources.jar.sha256": {
+      "bytes": 64,
+      "sha256": "9ac20199069ec8a6e93d1b56c287c45c9975caaa2a446960c1e2194171bc3b7d"
+    },
+    "com/snoworca/naruserve/naruserve-tinyhttpd/0.10.0/naruserve-tinyhttpd-0.10.0-sources.jar.sha512": {
+      "bytes": 128,
+      "sha256": "a0c4198eb7d695bdea541aba6af337f8d8ae98743aa18cf9b814185b631066b8"
+    },
+    "com/snoworca/naruserve/naruserve-tinyhttpd/0.10.0/naruserve-tinyhttpd-0.10.0-javadoc.jar": {
+      "bytes": 82215,
+      "sha256": "e01a1196070206b0525d462a0d163e6bbd14e75766062c3747f6b445fb9b8f48"
+    },
+    "com/snoworca/naruserve/naruserve-tinyhttpd/0.10.0/naruserve-tinyhttpd-0.10.0-javadoc.jar.asc": {
+      "bytes": 831,
+      "sha256": "03f071882cc972e7c533338fd4e9e2b72067d908e944d7efa46a6f471d9d947e"
+    },
+    "com/snoworca/naruserve/naruserve-tinyhttpd/0.10.0/naruserve-tinyhttpd-0.10.0-javadoc.jar.md5": {
+      "bytes": 32,
+      "sha256": "f07a4abed7efa37e5a89b961b14993108052c49204598232929aac67f48deabb"
+    },
+    "com/snoworca/naruserve/naruserve-tinyhttpd/0.10.0/naruserve-tinyhttpd-0.10.0-javadoc.jar.sha1": {
+      "bytes": 40,
+      "sha256": "2942d1738997416be9d2dae7a4660bd31a88a26a01b4b1dea2591b106373b723"
+    },
+    "com/snoworca/naruserve/naruserve-tinyhttpd/0.10.0/naruserve-tinyhttpd-0.10.0-javadoc.jar.sha256": {
+      "bytes": 64,
+      "sha256": "c942b40cd0d044c5743386ed4ff3f10b7e88bc85ed6e45f8b6b1b304646d755b"
+    },
+    "com/snoworca/naruserve/naruserve-tinyhttpd/0.10.0/naruserve-tinyhttpd-0.10.0-javadoc.jar.sha512": {
+      "bytes": 128,
+      "sha256": "dc16fee6f8740e1b60e393aa41d2ae9b63ba481159ee36d8a38b6d35782506c2"
+    },
+    "com/snoworca/naruserve/naruserve-tinyhttpd/0.10.0/naruserve-tinyhttpd-0.10.0.pom": {
+      "bytes": 2133,
+      "sha256": "09fed7fe625d91f7628d90928a06ad36fcaf1b50329308150286cf8456bb73b8"
+    },
+    "com/snoworca/naruserve/naruserve-tinyhttpd/0.10.0/naruserve-tinyhttpd-0.10.0.pom.asc": {
+      "bytes": 831,
+      "sha256": "efc16184a967906e18442c7e169934602f87995b76b8df3fe3e157acce1d0c42"
+    },
+    "com/snoworca/naruserve/naruserve-tinyhttpd/0.10.0/naruserve-tinyhttpd-0.10.0.pom.md5": {
+      "bytes": 32,
+      "sha256": "64636ffe639ce8459acb29656eea8bd218944001b109aba91bf4b0a9a4265382"
+    },
+    "com/snoworca/naruserve/naruserve-tinyhttpd/0.10.0/naruserve-tinyhttpd-0.10.0.pom.sha1": {
+      "bytes": 40,
+      "sha256": "f1e46fbfe19c14aba735560c8e869f0c937e609185ec22cb69b542daa018c071"
+    },
+    "com/snoworca/naruserve/naruserve-tinyhttpd/0.10.0/naruserve-tinyhttpd-0.10.0.pom.sha256": {
+      "bytes": 64,
+      "sha256": "7b64756ebbc7ecdb70e56aed143e2cfe1f1a033fe3dacad14541af17dbe45d31"
+    },
+    "com/snoworca/naruserve/naruserve-tinyhttpd/0.10.0/naruserve-tinyhttpd-0.10.0.pom.sha512": {
+      "bytes": 128,
+      "sha256": "eadc13df47fd1937d14b9293e5ac9cd66524ae4b1725c9cd02ade0346a1d46b9"
+    },
+    "com/snoworca/naruserve/naruserve-tinyhttpd/0.10.0/naruserve-tinyhttpd-0.10.0.module": {
+      "bytes": 4508,
+      "sha256": "c2751b15cca5017bfd1f248fbe14f219f131fe5f98c3a771ee260fcd71875384"
+    },
+    "com/snoworca/naruserve/naruserve-tinyhttpd/0.10.0/naruserve-tinyhttpd-0.10.0.module.asc": {
+      "bytes": 831,
+      "sha256": "8dfacbc54fd08b645534d5699629c9068301979b4e46d4bcb2bdc088a4728dc1"
+    },
+    "com/snoworca/naruserve/naruserve-tinyhttpd/0.10.0/naruserve-tinyhttpd-0.10.0.module.md5": {
+      "bytes": 32,
+      "sha256": "b8ff48e399c6a3dd18b16675081a0d3ff38483269a79ff1f64b56e5394621677"
+    },
+    "com/snoworca/naruserve/naruserve-tinyhttpd/0.10.0/naruserve-tinyhttpd-0.10.0.module.sha1": {
+      "bytes": 40,
+      "sha256": "b299a8fe34c775afefbdc6d41addeafb847548ed9713e6854f9007cc8e884298"
+    },
+    "com/snoworca/naruserve/naruserve-tinyhttpd/0.10.0/naruserve-tinyhttpd-0.10.0.module.sha256": {
+      "bytes": 64,
+      "sha256": "94d6efc96549997a73cdabc02e0ba6b69cbb5b6b938ff4433e18357a86eca0ba"
+    },
+    "com/snoworca/naruserve/naruserve-tinyhttpd/0.10.0/naruserve-tinyhttpd-0.10.0.module.sha512": {
+      "bytes": 128,
+      "sha256": "896201f6a82a888dc1d0787e01c68be92c52092711edbdca6573a42c8d7f4ae5"
+    },
+    "com/snoworca/naruserve/naruserve-gson/0.10.0/naruserve-gson-0.10.0.jar": {
+      "bytes": 3262,
+      "sha256": "5c20324e749a38db73ed447cd49684e337b011fc4ac0562046fd3e7f2b9369ae"
+    },
+    "com/snoworca/naruserve/naruserve-gson/0.10.0/naruserve-gson-0.10.0.jar.asc": {
+      "bytes": 831,
+      "sha256": "1468fad921a67633dbde4eb6f8d055a19fdd0c760f75186c6d09c95799e68288"
+    },
+    "com/snoworca/naruserve/naruserve-gson/0.10.0/naruserve-gson-0.10.0.jar.md5": {
+      "bytes": 32,
+      "sha256": "7c15f23fb09408781e4094cd4e1ad8e1e906fb025feb8ca0d9f024da970cd822"
+    },
+    "com/snoworca/naruserve/naruserve-gson/0.10.0/naruserve-gson-0.10.0.jar.sha1": {
+      "bytes": 40,
+      "sha256": "b3016dc523860742449630e3fd3aeaebfd050c0f450d28bc467ccd5a19bc74a9"
+    },
+    "com/snoworca/naruserve/naruserve-gson/0.10.0/naruserve-gson-0.10.0.jar.sha256": {
+      "bytes": 64,
+      "sha256": "4202082f3a544bd8b23af707a503f815bb9dee8c6bed09c09973805f732fa766"
+    },
+    "com/snoworca/naruserve/naruserve-gson/0.10.0/naruserve-gson-0.10.0.jar.sha512": {
+      "bytes": 128,
+      "sha256": "00bbd7ec4cc29d3282b803f66a0abca10df74e752722944a22fad81a3c9f5679"
+    },
+    "com/snoworca/naruserve/naruserve-gson/0.10.0/naruserve-gson-0.10.0-sources.jar": {
+      "bytes": 2668,
+      "sha256": "7b04cf2234a0e549336f8351c8417cae658054eba70a16d9c651e7d48bf36b49"
+    },
+    "com/snoworca/naruserve/naruserve-gson/0.10.0/naruserve-gson-0.10.0-sources.jar.asc": {
+      "bytes": 831,
+      "sha256": "6e9faf66692d01e688fc9671bae0635038b04caa6001bb96ba53a7ddf95e3624"
+    },
+    "com/snoworca/naruserve/naruserve-gson/0.10.0/naruserve-gson-0.10.0-sources.jar.md5": {
+      "bytes": 32,
+      "sha256": "ed63afa54257fa06a70b60689bca745281771ed04deda4c4be837e01c618561d"
+    },
+    "com/snoworca/naruserve/naruserve-gson/0.10.0/naruserve-gson-0.10.0-sources.jar.sha1": {
+      "bytes": 40,
+      "sha256": "75f74cdfa565cd0e6e6e82433e2ff124506232e9989c665d0d0a4cc10d91663b"
+    },
+    "com/snoworca/naruserve/naruserve-gson/0.10.0/naruserve-gson-0.10.0-sources.jar.sha256": {
+      "bytes": 64,
+      "sha256": "6f6bcf593a91b91072f20ae95846800e341cbdfe6163ea7c76c8c270e6f7a669"
+    },
+    "com/snoworca/naruserve/naruserve-gson/0.10.0/naruserve-gson-0.10.0-sources.jar.sha512": {
+      "bytes": 128,
+      "sha256": "51d7a8822a30260c24ee2fd4aa2f9449d3beafeeef9865a0c77dfe416db3d1d7"
+    },
+    "com/snoworca/naruserve/naruserve-gson/0.10.0/naruserve-gson-0.10.0-javadoc.jar": {
+      "bytes": 81607,
+      "sha256": "f95a909282a5bae090ff96921d08000ee7f0ed8037e92c79001adcededf60b2a"
+    },
+    "com/snoworca/naruserve/naruserve-gson/0.10.0/naruserve-gson-0.10.0-javadoc.jar.asc": {
+      "bytes": 831,
+      "sha256": "9747039f0fda9b7970a1482eb844e991003e471a60396d49796de07d6ef92b9b"
+    },
+    "com/snoworca/naruserve/naruserve-gson/0.10.0/naruserve-gson-0.10.0-javadoc.jar.md5": {
+      "bytes": 32,
+      "sha256": "8a8b40bf3e3389222baafc3335d733261edabccbfd48d8befe9f7f39957fab34"
+    },
+    "com/snoworca/naruserve/naruserve-gson/0.10.0/naruserve-gson-0.10.0-javadoc.jar.sha1": {
+      "bytes": 40,
+      "sha256": "7e4d24bf255150ab285ccfbc7cfc8cec6779074b05bc390df3a11b46c9794a79"
+    },
+    "com/snoworca/naruserve/naruserve-gson/0.10.0/naruserve-gson-0.10.0-javadoc.jar.sha256": {
+      "bytes": 64,
+      "sha256": "2dc88dadd5fc0ef5343cd836869a3ede7789b7cac43acb146fead8f9784bd984"
+    },
+    "com/snoworca/naruserve/naruserve-gson/0.10.0/naruserve-gson-0.10.0-javadoc.jar.sha512": {
+      "bytes": 128,
+      "sha256": "2f8e20091dbb0756209894ebf4a62c04f98b8faa6f9b6a0514e07a295c997bae"
+    },
+    "com/snoworca/naruserve/naruserve-gson/0.10.0/naruserve-gson-0.10.0.pom": {
+      "bytes": 1931,
+      "sha256": "2b9cd8a96abde0fe0dfcbfc48fff6ca53fd7cd4cefa094094a4dca8d9bee8198"
+    },
+    "com/snoworca/naruserve/naruserve-gson/0.10.0/naruserve-gson-0.10.0.pom.asc": {
+      "bytes": 831,
+      "sha256": "0af4fbc218d1df6c519d6bda8f33ac97c52adaa7f355fa6e2cac7d15c5e81d10"
+    },
+    "com/snoworca/naruserve/naruserve-gson/0.10.0/naruserve-gson-0.10.0.pom.md5": {
+      "bytes": 32,
+      "sha256": "689f1592cf3e7ae9961f9eeeafa16f43437d0e959254d9ca8087104db890d6a5"
+    },
+    "com/snoworca/naruserve/naruserve-gson/0.10.0/naruserve-gson-0.10.0.pom.sha1": {
+      "bytes": 40,
+      "sha256": "0f28a2efdbb2f1203e72dde5faa524bbc87fe22f1c27e19287b40459b9740b4f"
+    },
+    "com/snoworca/naruserve/naruserve-gson/0.10.0/naruserve-gson-0.10.0.pom.sha256": {
+      "bytes": 64,
+      "sha256": "2f77b626fabe207c2c96838a7110500bcdd6f8818c19d2bf2c93d41ea23b93e8"
+    },
+    "com/snoworca/naruserve/naruserve-gson/0.10.0/naruserve-gson-0.10.0.pom.sha512": {
+      "bytes": 128,
+      "sha256": "e2e1defbdc552a35507e4a38284c8eb42ce08dad428b6d983b25e08a7afed1d0"
+    },
+    "com/snoworca/naruserve/naruserve-gson/0.10.0/naruserve-gson-0.10.0.module": {
+      "bytes": 4453,
+      "sha256": "e89246066c06110a477741e2858d1b75e31f107e5b6efd6b4b21199a956b0073"
+    },
+    "com/snoworca/naruserve/naruserve-gson/0.10.0/naruserve-gson-0.10.0.module.asc": {
+      "bytes": 831,
+      "sha256": "cebbf8a7093c6c0e3267513f919f9f509f81bd9657b68a2e9b31b3f10994e7d8"
+    },
+    "com/snoworca/naruserve/naruserve-gson/0.10.0/naruserve-gson-0.10.0.module.md5": {
+      "bytes": 32,
+      "sha256": "820272d2cba387affa82914d174d08ef56ec8e322cc2c8f0df5006e9d58f8604"
+    },
+    "com/snoworca/naruserve/naruserve-gson/0.10.0/naruserve-gson-0.10.0.module.sha1": {
+      "bytes": 40,
+      "sha256": "2cd674b2aa8a9fa96d77ebfbc4ec6db3bbfb28559b864c4616b8da737075d3fb"
+    },
+    "com/snoworca/naruserve/naruserve-gson/0.10.0/naruserve-gson-0.10.0.module.sha256": {
+      "bytes": 64,
+      "sha256": "64f55b52c61b39f071911a4b7b0d87a6c30bb9611ebafbc620d511d79e46e793"
+    },
+    "com/snoworca/naruserve/naruserve-gson/0.10.0/naruserve-gson-0.10.0.module.sha512": {
+      "bytes": 128,
+      "sha256": "7f6c18dcf30360759153f89f93c7db80977de2cb273e5fa7b77e211d5c9e96a0"
+    },
+    "com/snoworca/naruserve/naruserve-kotlin/0.10.0/naruserve-kotlin-0.10.0.jar": {
+      "bytes": 3393,
+      "sha256": "bd9b1f60aef23a0f240addcbe0a523928f03b0f940686cccb58a23ff3a992e9f"
+    },
+    "com/snoworca/naruserve/naruserve-kotlin/0.10.0/naruserve-kotlin-0.10.0.jar.asc": {
+      "bytes": 831,
+      "sha256": "f3353e3a28a9ecc4c86ee84c64291d92d92ad519e64b91750bbf20fea5d69c4b"
+    },
+    "com/snoworca/naruserve/naruserve-kotlin/0.10.0/naruserve-kotlin-0.10.0.jar.md5": {
+      "bytes": 32,
+      "sha256": "32e0ee571e03d1ef1863743e8b5b0a61bf22d6d3e299c009986bd0828a819c75"
+    },
+    "com/snoworca/naruserve/naruserve-kotlin/0.10.0/naruserve-kotlin-0.10.0.jar.sha1": {
+      "bytes": 40,
+      "sha256": "dbc9b130d8fe2d1340fbe8af9e39fb1657ce1660215b69f4e84642f5e682909c"
+    },
+    "com/snoworca/naruserve/naruserve-kotlin/0.10.0/naruserve-kotlin-0.10.0.jar.sha256": {
+      "bytes": 64,
+      "sha256": "9268ebe43ca93bb428286459cfeeeae4f18a4d1bf6699b882f45ecf6a7c2cd1a"
+    },
+    "com/snoworca/naruserve/naruserve-kotlin/0.10.0/naruserve-kotlin-0.10.0.jar.sha512": {
+      "bytes": 128,
+      "sha256": "76696c2710faf3116357a56f396b2552672966434fdbedab53485cedcf6426e8"
+    },
+    "com/snoworca/naruserve/naruserve-kotlin/0.10.0/naruserve-kotlin-0.10.0-sources.jar": {
+      "bytes": 1553,
+      "sha256": "c300cd031aafb7337c507cdd2874689be2b7ce590da6b15b42955b92ca5a52ff"
+    },
+    "com/snoworca/naruserve/naruserve-kotlin/0.10.0/naruserve-kotlin-0.10.0-sources.jar.asc": {
+      "bytes": 831,
+      "sha256": "e577c0a247650a81af43a525d9b52be5b7b5f98558f62466e9b4ce0a549d6a59"
+    },
+    "com/snoworca/naruserve/naruserve-kotlin/0.10.0/naruserve-kotlin-0.10.0-sources.jar.md5": {
+      "bytes": 32,
+      "sha256": "ad92a70e7fe6ae8ff106e31fd6243bbea0ffea1e38fc1b47adf1073905206447"
+    },
+    "com/snoworca/naruserve/naruserve-kotlin/0.10.0/naruserve-kotlin-0.10.0-sources.jar.sha1": {
+      "bytes": 40,
+      "sha256": "73bd396c3a5eb07acc6e359d787971bfe0d63324caef2979f00523c14cad30d6"
+    },
+    "com/snoworca/naruserve/naruserve-kotlin/0.10.0/naruserve-kotlin-0.10.0-sources.jar.sha256": {
+      "bytes": 64,
+      "sha256": "f153366af11efec8d0085d65e98a7f0c4d39b94b8a8e47cce9d3ba3eb7d4d222"
+    },
+    "com/snoworca/naruserve/naruserve-kotlin/0.10.0/naruserve-kotlin-0.10.0-sources.jar.sha512": {
+      "bytes": 128,
+      "sha256": "9017cd5af492e70ea6556751916e48d872ff0662f9dbb14b68fbb3ffd933c48a"
+    },
+    "com/snoworca/naruserve/naruserve-kotlin/0.10.0/naruserve-kotlin-0.10.0-javadoc.jar": {
+      "bytes": 261,
+      "sha256": "47da1df984aec399f6134009feef89a4b802371fb2f5a8f9f221430bcd0792db"
+    },
+    "com/snoworca/naruserve/naruserve-kotlin/0.10.0/naruserve-kotlin-0.10.0-javadoc.jar.asc": {
+      "bytes": 831,
+      "sha256": "7f6c89004bfeacfff6630803d5685dd27b0bf0b7665182173b0ff3e56f8f322a"
+    },
+    "com/snoworca/naruserve/naruserve-kotlin/0.10.0/naruserve-kotlin-0.10.0-javadoc.jar.md5": {
+      "bytes": 32,
+      "sha256": "a193939d76cf88c3b975c6ddad67b34eee3aa16b69073d82d5209d3fbd19a525"
+    },
+    "com/snoworca/naruserve/naruserve-kotlin/0.10.0/naruserve-kotlin-0.10.0-javadoc.jar.sha1": {
+      "bytes": 40,
+      "sha256": "e4291ecff089d0b0a09b9c141797025863badcaaf69ba700d9946dcb1a433cdf"
+    },
+    "com/snoworca/naruserve/naruserve-kotlin/0.10.0/naruserve-kotlin-0.10.0-javadoc.jar.sha256": {
+      "bytes": 64,
+      "sha256": "2d70921e32081d2a95620e89c8845028fcfe447ef4dff3139cbd76c6a5aaafc3"
+    },
+    "com/snoworca/naruserve/naruserve-kotlin/0.10.0/naruserve-kotlin-0.10.0-javadoc.jar.sha512": {
+      "bytes": 128,
+      "sha256": "b2daf677aaaa068ae7b574ca1fa9a4f5bb86773d742abaff225eda51d1008432"
+    },
+    "com/snoworca/naruserve/naruserve-kotlin/0.10.0/naruserve-kotlin-0.10.0.pom": {
+      "bytes": 1971,
+      "sha256": "1476f694839cab93f085732818e027d21f5849ca793909996f29f88d191a7234"
+    },
+    "com/snoworca/naruserve/naruserve-kotlin/0.10.0/naruserve-kotlin-0.10.0.pom.asc": {
+      "bytes": 831,
+      "sha256": "d071c07703e9b549eaf3f475f10694adc02b2a64915a933d0878ccb234344dc1"
+    },
+    "com/snoworca/naruserve/naruserve-kotlin/0.10.0/naruserve-kotlin-0.10.0.pom.md5": {
+      "bytes": 32,
+      "sha256": "ff1eed0881e15eb8dc4d1af229faff7765512e50887e9f69f0b95566af71d90b"
+    },
+    "com/snoworca/naruserve/naruserve-kotlin/0.10.0/naruserve-kotlin-0.10.0.pom.sha1": {
+      "bytes": 40,
+      "sha256": "900d8d8234bb612c2efa1e25eaf397934dc5fd851394a21a1eb1434c3ed3baea"
+    },
+    "com/snoworca/naruserve/naruserve-kotlin/0.10.0/naruserve-kotlin-0.10.0.pom.sha256": {
+      "bytes": 64,
+      "sha256": "33b4fd7762c0d86f0bb201cb7b8f5a5ecc9691b932066e15036d5c7510da9148"
+    },
+    "com/snoworca/naruserve/naruserve-kotlin/0.10.0/naruserve-kotlin-0.10.0.pom.sha512": {
+      "bytes": 128,
+      "sha256": "a2254ec35966e77f11c84bd4bdcc87f132c1477a3b65fa54b64df7fbf9d6ef1c"
+    },
+    "com/snoworca/naruserve/naruserve-kotlin/0.10.0/naruserve-kotlin-0.10.0.module": {
+      "bytes": 4477,
+      "sha256": "1f3613ae608335c61ca434122181518d12a612ff8966db28aee51c183c2c1316"
+    },
+    "com/snoworca/naruserve/naruserve-kotlin/0.10.0/naruserve-kotlin-0.10.0.module.asc": {
+      "bytes": 831,
+      "sha256": "85be3fb2436bf563fa26f0ac250a42b0861a6bc959cbbfe740590f613256aabe"
+    },
+    "com/snoworca/naruserve/naruserve-kotlin/0.10.0/naruserve-kotlin-0.10.0.module.md5": {
+      "bytes": 32,
+      "sha256": "18669d14a0d633918b4780be94f05fcd76b4b1cf1bf4a419822e7b54784b6cc3"
+    },
+    "com/snoworca/naruserve/naruserve-kotlin/0.10.0/naruserve-kotlin-0.10.0.module.sha1": {
+      "bytes": 40,
+      "sha256": "e19ea5f073eca1d393461739454befa6822ed9856ddd0baea0ff3ed284cb90ae"
+    },
+    "com/snoworca/naruserve/naruserve-kotlin/0.10.0/naruserve-kotlin-0.10.0.module.sha256": {
+      "bytes": 64,
+      "sha256": "0d9bee905f811044356686d1ebe5d7afe4c7de60fe0e71516cb3ed0dc17d787e"
+    },
+    "com/snoworca/naruserve/naruserve-kotlin/0.10.0/naruserve-kotlin-0.10.0.module.sha512": {
+      "bytes": 128,
+      "sha256": "8d43a119de989781717e9a8fa5eb4cbb2a76ae85481a43b5dcce2d32bb82c2a4"
+    },
+    "com/snoworca/naruserve/naruserve-slf4j/0.10.0/naruserve-slf4j-0.10.0.jar": {
+      "bytes": 1603,
+      "sha256": "65afc9e37c26a7a43fedd285075e574b2b8ed931649912c4206374eacaaa2867"
+    },
+    "com/snoworca/naruserve/naruserve-slf4j/0.10.0/naruserve-slf4j-0.10.0.jar.asc": {
+      "bytes": 831,
+      "sha256": "bf6f5a5d11b6aad3e0c9cf3c993ed8031ae9394c3d257818847f08f6dd59a8c2"
+    },
+    "com/snoworca/naruserve/naruserve-slf4j/0.10.0/naruserve-slf4j-0.10.0.jar.md5": {
+      "bytes": 32,
+      "sha256": "fa8694d477af4a89ed6ffaa750035ebe0237b697b42202dafa7bb47722e23cc2"
+    },
+    "com/snoworca/naruserve/naruserve-slf4j/0.10.0/naruserve-slf4j-0.10.0.jar.sha1": {
+      "bytes": 40,
+      "sha256": "8c3437dbf687108f52c8874915289b94f24d07bc77d33f9d4456618274bc2d83"
+    },
+    "com/snoworca/naruserve/naruserve-slf4j/0.10.0/naruserve-slf4j-0.10.0.jar.sha256": {
+      "bytes": 64,
+      "sha256": "b73079fa74fa318261c9e367eddea479d72e067945b45d05b68238d44a23c4f0"
+    },
+    "com/snoworca/naruserve/naruserve-slf4j/0.10.0/naruserve-slf4j-0.10.0.jar.sha512": {
+      "bytes": 128,
+      "sha256": "bc8d7fe7bc399638a291e539507fe94e9572eb4e6061cad10087501b1e6c8216"
+    },
+    "com/snoworca/naruserve/naruserve-slf4j/0.10.0/naruserve-slf4j-0.10.0-sources.jar": {
+      "bytes": 1580,
+      "sha256": "43c46234d685d29178e814180b35fcddd2b44ebfd2b090c52b9f27ecce3402f5"
+    },
+    "com/snoworca/naruserve/naruserve-slf4j/0.10.0/naruserve-slf4j-0.10.0-sources.jar.asc": {
+      "bytes": 831,
+      "sha256": "84133046d8f5c7c65e9c803bcdefdc19b3e86a51c76e7d6380cca68df0d7f2a8"
+    },
+    "com/snoworca/naruserve/naruserve-slf4j/0.10.0/naruserve-slf4j-0.10.0-sources.jar.md5": {
+      "bytes": 32,
+      "sha256": "65b2c987853349a870fb173c5d59e3fe375f7e70ed32de08cf3f9c21daf2a7a1"
+    },
+    "com/snoworca/naruserve/naruserve-slf4j/0.10.0/naruserve-slf4j-0.10.0-sources.jar.sha1": {
+      "bytes": 40,
+      "sha256": "31375d31077fdad90f84669ce219037580fa051af2fc6ec02b121a06a92f372f"
+    },
+    "com/snoworca/naruserve/naruserve-slf4j/0.10.0/naruserve-slf4j-0.10.0-sources.jar.sha256": {
+      "bytes": 64,
+      "sha256": "bc8012bff7e293df554471770829aeb319887042fa3aa463cb4e247cfdd321cc"
+    },
+    "com/snoworca/naruserve/naruserve-slf4j/0.10.0/naruserve-slf4j-0.10.0-sources.jar.sha512": {
+      "bytes": 128,
+      "sha256": "a82a04cc7d36cb264d961182c6eae55f8ef9623beb6d8097636764c4ba87de56"
+    },
+    "com/snoworca/naruserve/naruserve-slf4j/0.10.0/naruserve-slf4j-0.10.0-javadoc.jar": {
+      "bytes": 81192,
+      "sha256": "078e5d966f0333a141eddf8bc90c33813e59f4ddb23de6b234bb80123c8d719d"
+    },
+    "com/snoworca/naruserve/naruserve-slf4j/0.10.0/naruserve-slf4j-0.10.0-javadoc.jar.asc": {
+      "bytes": 831,
+      "sha256": "f7d7ea0d0201f8039b46ff95de945af3c2f97d076267dd33522656c9d07b9ed8"
+    },
+    "com/snoworca/naruserve/naruserve-slf4j/0.10.0/naruserve-slf4j-0.10.0-javadoc.jar.md5": {
+      "bytes": 32,
+      "sha256": "f2d4f9c91805354a6e2653ed2d257584cc375a1a5920dc1370f7ff0e9947a53c"
+    },
+    "com/snoworca/naruserve/naruserve-slf4j/0.10.0/naruserve-slf4j-0.10.0-javadoc.jar.sha1": {
+      "bytes": 40,
+      "sha256": "ac8bc28000309d2f2fde041aff70dbd0be703f842d8d4bf2f58a38bc2be4ac66"
+    },
+    "com/snoworca/naruserve/naruserve-slf4j/0.10.0/naruserve-slf4j-0.10.0-javadoc.jar.sha256": {
+      "bytes": 64,
+      "sha256": "967aafb5d734c1ce95c9c1ae562ba7c0bed6dbf320488f22572f0e20317ee4c7"
+    },
+    "com/snoworca/naruserve/naruserve-slf4j/0.10.0/naruserve-slf4j-0.10.0-javadoc.jar.sha512": {
+      "bytes": 128,
+      "sha256": "9aabfdd75fd0af8c62a4c651a6518ea8c2558b600e983dcd1ae2e3847b6c9c9d"
+    },
+    "com/snoworca/naruserve/naruserve-slf4j/0.10.0/naruserve-slf4j-0.10.0.pom": {
+      "bytes": 1936,
+      "sha256": "0484774b9b3e6bb63a8b9d75bb707613da5e6cf2de3e7c95fdae62fd5fc4c4c0"
+    },
+    "com/snoworca/naruserve/naruserve-slf4j/0.10.0/naruserve-slf4j-0.10.0.pom.asc": {
+      "bytes": 831,
+      "sha256": "df6004df283e5c5c4f5b70c31c4923ec59784115862bee541ba41db19eedace2"
+    },
+    "com/snoworca/naruserve/naruserve-slf4j/0.10.0/naruserve-slf4j-0.10.0.pom.md5": {
+      "bytes": 32,
+      "sha256": "773adb3aa629f5e6a5dcff085dc61928171c366eee1683e4c70d6c9af5069906"
+    },
+    "com/snoworca/naruserve/naruserve-slf4j/0.10.0/naruserve-slf4j-0.10.0.pom.sha1": {
+      "bytes": 40,
+      "sha256": "4606dfc0c8a4e629027b7177c7d26c773b0604fc1f8feaec4400d982ca7a9b5f"
+    },
+    "com/snoworca/naruserve/naruserve-slf4j/0.10.0/naruserve-slf4j-0.10.0.pom.sha256": {
+      "bytes": 64,
+      "sha256": "b872f17543a71027b1014114a2c6db8af616c8305ef48f609c804c5257485c43"
+    },
+    "com/snoworca/naruserve/naruserve-slf4j/0.10.0/naruserve-slf4j-0.10.0.pom.sha512": {
+      "bytes": 128,
+      "sha256": "09e7fc6696a300a056bfb6cb89442ecccc32a05b739fd64388da0d562fb0b486"
+    },
+    "com/snoworca/naruserve/naruserve-slf4j/0.10.0/naruserve-slf4j-0.10.0.module": {
+      "bytes": 4450,
+      "sha256": "a44aa1f2fa6e0e9f9e000d20e969fd8229d1b960c00928c902faeb54772b5e7c"
+    },
+    "com/snoworca/naruserve/naruserve-slf4j/0.10.0/naruserve-slf4j-0.10.0.module.asc": {
+      "bytes": 831,
+      "sha256": "f7ebbec7e1bed0094cb2679066e3d40e99f14e111e9014f2da9bec971064f35b"
+    },
+    "com/snoworca/naruserve/naruserve-slf4j/0.10.0/naruserve-slf4j-0.10.0.module.md5": {
+      "bytes": 32,
+      "sha256": "4b853c91df2f7ce215c241b2a5e6ae123ec662d6f10c88399f4524002a83aa01"
+    },
+    "com/snoworca/naruserve/naruserve-slf4j/0.10.0/naruserve-slf4j-0.10.0.module.sha1": {
+      "bytes": 40,
+      "sha256": "f582afa564fb1f971bcfb4dc7f03b86675924ff63235f1220284af3dae7288d9"
+    },
+    "com/snoworca/naruserve/naruserve-slf4j/0.10.0/naruserve-slf4j-0.10.0.module.sha256": {
+      "bytes": 64,
+      "sha256": "544bc8939ea2ecf7c3df7eec383f0096c0b36896e9089960dcc73f514962cffe"
+    },
+    "com/snoworca/naruserve/naruserve-slf4j/0.10.0/naruserve-slf4j-0.10.0.module.sha512": {
+      "bytes": 128,
+      "sha256": "eee782826caf6a85cd9ff4a557e900eded3857903118b5ad790becc7a053d79c"
+    },
+    "com/snoworca/naruserve/naruserve-filelog/0.10.0/naruserve-filelog-0.10.0.jar": {
+      "bytes": 8519,
+      "sha256": "4e03f5e86c0b6a65c1691ca0af64392ed2abe5e735bc95aeff82a8313a719de8"
+    },
+    "com/snoworca/naruserve/naruserve-filelog/0.10.0/naruserve-filelog-0.10.0.jar.asc": {
+      "bytes": 831,
+      "sha256": "4af5ef1674661be0938bfc7e39c507f7c456985b47274549d048d703fa126e6b"
+    },
+    "com/snoworca/naruserve/naruserve-filelog/0.10.0/naruserve-filelog-0.10.0.jar.md5": {
+      "bytes": 32,
+      "sha256": "5db17540ae425af1d9d4ddb0869ac8f963d73082743570cf726f2bbae021c217"
+    },
+    "com/snoworca/naruserve/naruserve-filelog/0.10.0/naruserve-filelog-0.10.0.jar.sha1": {
+      "bytes": 40,
+      "sha256": "a0f323851e20567a776aa614323bb2ad5a1bfbdd868aa619f0b0ae8db94cc377"
+    },
+    "com/snoworca/naruserve/naruserve-filelog/0.10.0/naruserve-filelog-0.10.0.jar.sha256": {
+      "bytes": 64,
+      "sha256": "307e3af65b863f6b3ad15d1d58a4cec0e8802c5ec718a3fd0e3953293115e1d6"
+    },
+    "com/snoworca/naruserve/naruserve-filelog/0.10.0/naruserve-filelog-0.10.0.jar.sha512": {
+      "bytes": 128,
+      "sha256": "91d332e04bfc78fca2cda05e8545e1dbe651e7f07339f5de56124af4daa5cc7e"
+    },
+    "com/snoworca/naruserve/naruserve-filelog/0.10.0/naruserve-filelog-0.10.0-sources.jar": {
+      "bytes": 5134,
+      "sha256": "93589dd2d9b3124b103781e1b0c1f7494aa2cfd5805c6aed380b56485e77a1b1"
+    },
+    "com/snoworca/naruserve/naruserve-filelog/0.10.0/naruserve-filelog-0.10.0-sources.jar.asc": {
+      "bytes": 831,
+      "sha256": "41714a6cd9ee515ef3501096147a99b0bd9651e162e563f20eb8e7627be6942a"
+    },
+    "com/snoworca/naruserve/naruserve-filelog/0.10.0/naruserve-filelog-0.10.0-sources.jar.md5": {
+      "bytes": 32,
+      "sha256": "5ad5345bb8fbee50f730564e9b745953601a829c6f864c6652dec1b523a434cc"
+    },
+    "com/snoworca/naruserve/naruserve-filelog/0.10.0/naruserve-filelog-0.10.0-sources.jar.sha1": {
+      "bytes": 40,
+      "sha256": "ffbcb0bed3e631e9ca1b7259e4bc1d742cb4c8d78a9e40a76e4275218611c4c6"
+    },
+    "com/snoworca/naruserve/naruserve-filelog/0.10.0/naruserve-filelog-0.10.0-sources.jar.sha256": {
+      "bytes": 64,
+      "sha256": "c55a6e2e4a71e4be4094c191cd9160949bb974dc9feb422fe8de161e4d07f855"
+    },
+    "com/snoworca/naruserve/naruserve-filelog/0.10.0/naruserve-filelog-0.10.0-sources.jar.sha512": {
+      "bytes": 128,
+      "sha256": "1f14b8591cc5e45e9f83c4afec416e0d87149ac28a8df58c0a1f7156f6fbf298"
+    },
+    "com/snoworca/naruserve/naruserve-filelog/0.10.0/naruserve-filelog-0.10.0-javadoc.jar": {
+      "bytes": 86169,
+      "sha256": "1c058bf5affe61a11d1bd52f061857dcee4aede4719950acaba372deddb95e9d"
+    },
+    "com/snoworca/naruserve/naruserve-filelog/0.10.0/naruserve-filelog-0.10.0-javadoc.jar.asc": {
+      "bytes": 831,
+      "sha256": "7b03a6fc02ccb7ba3bf6cd3cb1112e9210bc5101381de2034a9de9aef2af80a3"
+    },
+    "com/snoworca/naruserve/naruserve-filelog/0.10.0/naruserve-filelog-0.10.0-javadoc.jar.md5": {
+      "bytes": 32,
+      "sha256": "2a03312d63e6285f2a4f4b9a244bb75cfc1bd81ebbe31813d697ed49105b892e"
+    },
+    "com/snoworca/naruserve/naruserve-filelog/0.10.0/naruserve-filelog-0.10.0-javadoc.jar.sha1": {
+      "bytes": 40,
+      "sha256": "58b6d9383f666421216f0b6326ef84b62833b6b797069201c6b5c8ff1005c970"
+    },
+    "com/snoworca/naruserve/naruserve-filelog/0.10.0/naruserve-filelog-0.10.0-javadoc.jar.sha256": {
+      "bytes": 64,
+      "sha256": "1a6f1b3d913baf8c9a462e11de1a6dd9b46bfb039a0f9261a34024e82f9d3fc0"
+    },
+    "com/snoworca/naruserve/naruserve-filelog/0.10.0/naruserve-filelog-0.10.0-javadoc.jar.sha512": {
+      "bytes": 128,
+      "sha256": "f5738f1f110bea2ed77c9255d3296bf99c6e48f6ba093a02108c9810a1a19607"
+    },
+    "com/snoworca/naruserve/naruserve-filelog/0.10.0/naruserve-filelog-0.10.0.pom": {
+      "bytes": 1770,
+      "sha256": "13e78575c311ea9c64fccc352b9309aa17e909fbf0a558b8e30a54ef9ec72d67"
+    },
+    "com/snoworca/naruserve/naruserve-filelog/0.10.0/naruserve-filelog-0.10.0.pom.asc": {
+      "bytes": 831,
+      "sha256": "6b7222533eda40ee5f473d9e2ccc88739204756ae9705a5534f50052e367d89e"
+    },
+    "com/snoworca/naruserve/naruserve-filelog/0.10.0/naruserve-filelog-0.10.0.pom.md5": {
+      "bytes": 32,
+      "sha256": "4519117ca460480ffa579981a1ddb3b8faee37fc7aa3014685fa35ea5ff356da"
+    },
+    "com/snoworca/naruserve/naruserve-filelog/0.10.0/naruserve-filelog-0.10.0.pom.sha1": {
+      "bytes": 40,
+      "sha256": "74246706b34395fa8d3433cadca37d2308c26eaedfcb377529927c7637ba3127"
+    },
+    "com/snoworca/naruserve/naruserve-filelog/0.10.0/naruserve-filelog-0.10.0.pom.sha256": {
+      "bytes": 64,
+      "sha256": "ba7684fe6d1decbe26c6f5753c21e1a175622c5925f3c9cfe1f751034f76e119"
+    },
+    "com/snoworca/naruserve/naruserve-filelog/0.10.0/naruserve-filelog-0.10.0.pom.sha512": {
+      "bytes": 128,
+      "sha256": "f094230159a662af608250f2431e72041d7d41b7f37103f181ad3c00a9218159"
+    },
+    "com/snoworca/naruserve/naruserve-filelog/0.10.0/naruserve-filelog-0.10.0.module": {
+      "bytes": 4160,
+      "sha256": "e306750327d7421920dc3c211bcd011d62359a80fdff9eac36f6002b0787a3f0"
+    },
+    "com/snoworca/naruserve/naruserve-filelog/0.10.0/naruserve-filelog-0.10.0.module.asc": {
+      "bytes": 831,
+      "sha256": "78d7ccebdb865975c0714dbb1be8d81b46482449ba5cac75a54786cdf982f574"
+    },
+    "com/snoworca/naruserve/naruserve-filelog/0.10.0/naruserve-filelog-0.10.0.module.md5": {
+      "bytes": 32,
+      "sha256": "f575818c594df80fe0956309be8f09ea4bbd6c65f33484dd2c788703eb656af3"
+    },
+    "com/snoworca/naruserve/naruserve-filelog/0.10.0/naruserve-filelog-0.10.0.module.sha1": {
+      "bytes": 40,
+      "sha256": "60b56ab9e9367b529400f76c4faa1d34c7df59a08ec8f5dc7801060020b6e6b4"
+    },
+    "com/snoworca/naruserve/naruserve-filelog/0.10.0/naruserve-filelog-0.10.0.module.sha256": {
+      "bytes": 64,
+      "sha256": "bd887a9cfc71c27c2438007049b96c8be260a36e0e07038ca43905aaecbeb65a"
+    },
+    "com/snoworca/naruserve/naruserve-filelog/0.10.0/naruserve-filelog-0.10.0.module.sha512": {
+      "bytes": 128,
+      "sha256": "51d27a3b76cad78fc1807e91e865512a6bc922c1d826a90ff668305fb4f5794b"
+    },
+    "com/snoworca/naruserve/naruserve-logcat/0.10.0/naruserve-logcat-0.10.0.jar": {
+      "bytes": 2251,
+      "sha256": "c386c5a6cda135cb55482e230fa7dc808450d062a412b9fb2fa25822617a8094"
+    },
+    "com/snoworca/naruserve/naruserve-logcat/0.10.0/naruserve-logcat-0.10.0.jar.asc": {
+      "bytes": 831,
+      "sha256": "24570e7214b382723bc70d22d716d3031bd3afeb8956f7109df4ab3854297f15"
+    },
+    "com/snoworca/naruserve/naruserve-logcat/0.10.0/naruserve-logcat-0.10.0.jar.md5": {
+      "bytes": 32,
+      "sha256": "fc52505963a4caa0c189135594f92a3e246f724ab34a4a547ee30e475ca8384c"
+    },
+    "com/snoworca/naruserve/naruserve-logcat/0.10.0/naruserve-logcat-0.10.0.jar.sha1": {
+      "bytes": 40,
+      "sha256": "56a77cc6367d1b1501298d50c52436d0b1259b026398ef6907a9843a4891f7e1"
+    },
+    "com/snoworca/naruserve/naruserve-logcat/0.10.0/naruserve-logcat-0.10.0.jar.sha256": {
+      "bytes": 64,
+      "sha256": "b00275e423b0465827d6a7441b70390da8d9d100343f1a5862914a4d73c3776d"
+    },
+    "com/snoworca/naruserve/naruserve-logcat/0.10.0/naruserve-logcat-0.10.0.jar.sha512": {
+      "bytes": 128,
+      "sha256": "8f23e50b21d556317d3145141dd1c100f43e4a322dcda04f52d7fc9a0aaa4b27"
+    },
+    "com/snoworca/naruserve/naruserve-logcat/0.10.0/naruserve-logcat-0.10.0-sources.jar": {
+      "bytes": 2107,
+      "sha256": "307a3bbed513496f5f93f2c6fa4e6b35a3a7aa3b2f9208ea65d3c34b2f29872a"
+    },
+    "com/snoworca/naruserve/naruserve-logcat/0.10.0/naruserve-logcat-0.10.0-sources.jar.asc": {
+      "bytes": 831,
+      "sha256": "1e081af8e1696c4099782b5a824c6c8e38b5c050817d3fd5edd5aa7e772e2133"
+    },
+    "com/snoworca/naruserve/naruserve-logcat/0.10.0/naruserve-logcat-0.10.0-sources.jar.md5": {
+      "bytes": 32,
+      "sha256": "484c4f928254c83574ca5e33495ac2c5093dd63efbd0e4c20b85739e7de378df"
+    },
+    "com/snoworca/naruserve/naruserve-logcat/0.10.0/naruserve-logcat-0.10.0-sources.jar.sha1": {
+      "bytes": 40,
+      "sha256": "ededdc26596d1a45cf16bc4be3507f56b8bf5d15251f0cc641109072b78d0b48"
+    },
+    "com/snoworca/naruserve/naruserve-logcat/0.10.0/naruserve-logcat-0.10.0-sources.jar.sha256": {
+      "bytes": 64,
+      "sha256": "2950d07719668276e2a4b37dad7c829791c50e4331fa6ca153376fc210bcca90"
+    },
+    "com/snoworca/naruserve/naruserve-logcat/0.10.0/naruserve-logcat-0.10.0-sources.jar.sha512": {
+      "bytes": 128,
+      "sha256": "e3cbe4d1cd447c5c100c4a567271be005aa06ee25ce7f96bbbdf1bcefbd47c28"
+    },
+    "com/snoworca/naruserve/naruserve-logcat/0.10.0/naruserve-logcat-0.10.0-javadoc.jar": {
+      "bytes": 81607,
+      "sha256": "261f890688596e9a21b060a0f6ad6d5f50f43508b61bcfe823406fce0fe982cd"
+    },
+    "com/snoworca/naruserve/naruserve-logcat/0.10.0/naruserve-logcat-0.10.0-javadoc.jar.asc": {
+      "bytes": 831,
+      "sha256": "8d3c614c5f895f657a900b4f20c764441ff690135b38c8b8911ad89ea60d2407"
+    },
+    "com/snoworca/naruserve/naruserve-logcat/0.10.0/naruserve-logcat-0.10.0-javadoc.jar.md5": {
+      "bytes": 32,
+      "sha256": "cee50cc13ab9ea0e13a863ba58bf973f8ff8c9e987b268e6b5c6ee7095c7d02a"
+    },
+    "com/snoworca/naruserve/naruserve-logcat/0.10.0/naruserve-logcat-0.10.0-javadoc.jar.sha1": {
+      "bytes": 40,
+      "sha256": "84224520eb6c2d9a79c49652abba2a904ac9483955f6e81dfc1d545cc061202e"
+    },
+    "com/snoworca/naruserve/naruserve-logcat/0.10.0/naruserve-logcat-0.10.0-javadoc.jar.sha256": {
+      "bytes": 64,
+      "sha256": "074804917f30862332f01ba5b0e32f81614f18aab7343cd9fa32c722cf19fff6"
+    },
+    "com/snoworca/naruserve/naruserve-logcat/0.10.0/naruserve-logcat-0.10.0-javadoc.jar.sha512": {
+      "bytes": 128,
+      "sha256": "9bca6f1e384a75d47ad2efca5614f13602270c4afe711c58c4455d4ebbf258aa"
+    },
+    "com/snoworca/naruserve/naruserve-logcat/0.10.0/naruserve-logcat-0.10.0.pom": {
+      "bytes": 1767,
+      "sha256": "abed4ba317b4ea00b49df0ae4ac3b3d66ca5dbedb14ded243ba91f87f93333f9"
+    },
+    "com/snoworca/naruserve/naruserve-logcat/0.10.0/naruserve-logcat-0.10.0.pom.asc": {
+      "bytes": 831,
+      "sha256": "485ca8b37e4d39ba17e76a192254166bcfe13c315ed20c6f1942286287f5f373"
+    },
+    "com/snoworca/naruserve/naruserve-logcat/0.10.0/naruserve-logcat-0.10.0.pom.md5": {
+      "bytes": 32,
+      "sha256": "0fd484abccf3de3663726eb04f524c670a94b5980b1a4bbbeb98739b5fd85bd4"
+    },
+    "com/snoworca/naruserve/naruserve-logcat/0.10.0/naruserve-logcat-0.10.0.pom.sha1": {
+      "bytes": 40,
+      "sha256": "146e6d74a00c207e99776bbeb5fd84f5d583aadb8315c8248b7aad929ac2a276"
+    },
+    "com/snoworca/naruserve/naruserve-logcat/0.10.0/naruserve-logcat-0.10.0.pom.sha256": {
+      "bytes": 64,
+      "sha256": "64d5bbc94ff5fe3a1fdf55d6dd9afeb7d6fe21e763cab3fe6fa3d972f3f7b179"
+    },
+    "com/snoworca/naruserve/naruserve-logcat/0.10.0/naruserve-logcat-0.10.0.pom.sha512": {
+      "bytes": 128,
+      "sha256": "dd32d277195218d0847fa1e68f5e3e252cfc050d2ef88bc3efae788298429f10"
+    },
+    "com/snoworca/naruserve/naruserve-logcat/0.10.0/naruserve-logcat-0.10.0.module": {
+      "bytes": 4151,
+      "sha256": "e340a2f605f979a69d8ad2df6dc1dd53d1cd617c0992c41587082189b151e6ea"
+    },
+    "com/snoworca/naruserve/naruserve-logcat/0.10.0/naruserve-logcat-0.10.0.module.asc": {
+      "bytes": 831,
+      "sha256": "a1620c0737cdddd2ba0699f7527a689632d221ef8fb11c51124b9429d374c840"
+    },
+    "com/snoworca/naruserve/naruserve-logcat/0.10.0/naruserve-logcat-0.10.0.module.md5": {
+      "bytes": 32,
+      "sha256": "a83785d38a8e5ab99ae3bf2d4ff6fccf20e68c8f6f092f13652940b2effcfe34"
+    },
+    "com/snoworca/naruserve/naruserve-logcat/0.10.0/naruserve-logcat-0.10.0.module.sha1": {
+      "bytes": 40,
+      "sha256": "d5b9215ca6596c6fb93b4b91703ee3e6e3c9436137a47bfa00bc1a6f0ee9fa57"
+    },
+    "com/snoworca/naruserve/naruserve-logcat/0.10.0/naruserve-logcat-0.10.0.module.sha256": {
+      "bytes": 64,
+      "sha256": "7df4e89012c6d5bc877af558749d8e6644ac98930e31436bcbf783093b5d7f04"
+    },
+    "com/snoworca/naruserve/naruserve-logcat/0.10.0/naruserve-logcat-0.10.0.module.sha512": {
+      "bytes": 128,
+      "sha256": "09e0325dc7ed5b1178273f28f91d05eb412415548f1d8598646ff2083cdc313a"
+    },
+    "com/snoworca/naruserve/naruserve-android/0.10.0/naruserve-android-0.10.0.aar": {
+      "bytes": 884,
+      "sha256": "cba0f5b3e0b5e82cf365237918e160eaf2d514a92c160aad970682c317a4a490"
+    },
+    "com/snoworca/naruserve/naruserve-android/0.10.0/naruserve-android-0.10.0.aar.asc": {
+      "bytes": 831,
+      "sha256": "821e74eaf49fa137b3bd5b4aeab0f25de0efd829fefc2da3100b8a1167da268d"
+    },
+    "com/snoworca/naruserve/naruserve-android/0.10.0/naruserve-android-0.10.0.aar.md5": {
+      "bytes": 32,
+      "sha256": "4457ac808de1c62fcd2c01b470caf74ca02880d67d5e4f2174e9f663c603960e"
+    },
+    "com/snoworca/naruserve/naruserve-android/0.10.0/naruserve-android-0.10.0.aar.sha1": {
+      "bytes": 40,
+      "sha256": "9f5c42afe69a450be2488843980da46850e903a8a7854117800eb634e77ee388"
+    },
+    "com/snoworca/naruserve/naruserve-android/0.10.0/naruserve-android-0.10.0.aar.sha256": {
+      "bytes": 64,
+      "sha256": "74b7a8ea83dc8b8c0ea37ee9cb53e59dc9c8e4c570c3e9fcb044e67762be3593"
+    },
+    "com/snoworca/naruserve/naruserve-android/0.10.0/naruserve-android-0.10.0.aar.sha512": {
+      "bytes": 128,
+      "sha256": "b9f2a3f8d513dc7940af411a8c39550bb89ce5a429c9b09ed58fc94ee879d913"
+    },
+    "com/snoworca/naruserve/naruserve-android/0.10.0/naruserve-android-0.10.0-sources.jar": {
+      "bytes": 261,
+      "sha256": "c6deada2fac53b8ea6523dbda77597b128006674616f140f04df23264c6d1aa3"
+    },
+    "com/snoworca/naruserve/naruserve-android/0.10.0/naruserve-android-0.10.0-sources.jar.asc": {
+      "bytes": 831,
+      "sha256": "49cfaf35b1a319b8460f2d5033f0c463d675dcd6f1e4e06027df15cec240be6c"
+    },
+    "com/snoworca/naruserve/naruserve-android/0.10.0/naruserve-android-0.10.0-sources.jar.md5": {
+      "bytes": 32,
+      "sha256": "aef896b3476cf66865fd1a6294915cce131676af3f9f3009768713d38b1d4848"
+    },
+    "com/snoworca/naruserve/naruserve-android/0.10.0/naruserve-android-0.10.0-sources.jar.sha1": {
+      "bytes": 40,
+      "sha256": "9a959c6250226137c3491830a5bb813dc68b49e301daa1bb7328a3cebeb40a74"
+    },
+    "com/snoworca/naruserve/naruserve-android/0.10.0/naruserve-android-0.10.0-sources.jar.sha256": {
+      "bytes": 64,
+      "sha256": "bf761eec0d61a176ed94f10872ef7a91487daf0400d1364646f7a8375d17702b"
+    },
+    "com/snoworca/naruserve/naruserve-android/0.10.0/naruserve-android-0.10.0-sources.jar.sha512": {
+      "bytes": 128,
+      "sha256": "49d0c173f7c7f11986339da9c80d220f943d0a242de5192a7f06d42a0d1c486c"
+    },
+    "com/snoworca/naruserve/naruserve-android/0.10.0/naruserve-android-0.10.0-javadoc.jar": {
+      "bytes": 261,
+      "sha256": "c6deada2fac53b8ea6523dbda77597b128006674616f140f04df23264c6d1aa3"
+    },
+    "com/snoworca/naruserve/naruserve-android/0.10.0/naruserve-android-0.10.0-javadoc.jar.asc": {
+      "bytes": 831,
+      "sha256": "49cfaf35b1a319b8460f2d5033f0c463d675dcd6f1e4e06027df15cec240be6c"
+    },
+    "com/snoworca/naruserve/naruserve-android/0.10.0/naruserve-android-0.10.0-javadoc.jar.md5": {
+      "bytes": 32,
+      "sha256": "aef896b3476cf66865fd1a6294915cce131676af3f9f3009768713d38b1d4848"
+    },
+    "com/snoworca/naruserve/naruserve-android/0.10.0/naruserve-android-0.10.0-javadoc.jar.sha1": {
+      "bytes": 40,
+      "sha256": "9a959c6250226137c3491830a5bb813dc68b49e301daa1bb7328a3cebeb40a74"
+    },
+    "com/snoworca/naruserve/naruserve-android/0.10.0/naruserve-android-0.10.0-javadoc.jar.sha256": {
+      "bytes": 64,
+      "sha256": "bf761eec0d61a176ed94f10872ef7a91487daf0400d1364646f7a8375d17702b"
+    },
+    "com/snoworca/naruserve/naruserve-android/0.10.0/naruserve-android-0.10.0-javadoc.jar.sha512": {
+      "bytes": 128,
+      "sha256": "49d0c173f7c7f11986339da9c80d220f943d0a242de5192a7f06d42a0d1c486c"
+    },
+    "com/snoworca/naruserve/naruserve-android/0.10.0/naruserve-android-0.10.0.pom": {
+      "bytes": 2032,
+      "sha256": "0a2ac0bc5a1dd063e1e31cea0dc72755e77ab16616df62cff813be135d7bac56"
+    },
+    "com/snoworca/naruserve/naruserve-android/0.10.0/naruserve-android-0.10.0.pom.asc": {
+      "bytes": 831,
+      "sha256": "b685a780a22af61fe5b42e95bb591cefbde9e01cfed22e90b6f5568dc93a5645"
+    },
+    "com/snoworca/naruserve/naruserve-android/0.10.0/naruserve-android-0.10.0.pom.md5": {
+      "bytes": 32,
+      "sha256": "7bdbdff15ba3b919b05c5256c51bc7ac3f8ab0a0788c76ef82d4ff0dea08129c"
+    },
+    "com/snoworca/naruserve/naruserve-android/0.10.0/naruserve-android-0.10.0.pom.sha1": {
+      "bytes": 40,
+      "sha256": "0aee9f438f2af69e5893ba6fb57dd7f6deff8b1ac968b9ff7df68e230113526c"
+    },
+    "com/snoworca/naruserve/naruserve-android/0.10.0/naruserve-android-0.10.0.pom.sha256": {
+      "bytes": 64,
+      "sha256": "6b2ce61527767afcb55676f6114bc069292a21c5b4d9c8b75027a1228f122591"
+    },
+    "com/snoworca/naruserve/naruserve-android/0.10.0/naruserve-android-0.10.0.pom.sha512": {
+      "bytes": 128,
+      "sha256": "f70825bde788d64dec28ecc19def72c53b5324532120e21de8d1bcec817191d4"
+    },
+    "com/snoworca/naruserve/naruserve-android/0.10.0/naruserve-android-0.10.0.module": {
+      "bytes": 4302,
+      "sha256": "99b95c38a60d0a18d27b0e1d53569574995cba0b920e29f6abc2221830d90e80"
+    },
+    "com/snoworca/naruserve/naruserve-android/0.10.0/naruserve-android-0.10.0.module.asc": {
+      "bytes": 831,
+      "sha256": "7196d562d7fff2b39b2885a2bd7c19cccaf9f82f74cf3f4810a3cd40c6c9b397"
+    },
+    "com/snoworca/naruserve/naruserve-android/0.10.0/naruserve-android-0.10.0.module.md5": {
+      "bytes": 32,
+      "sha256": "f8a0565f86023270ca9168bb3480515471f6f59aa4007a4cf959ba49e48094fb"
+    },
+    "com/snoworca/naruserve/naruserve-android/0.10.0/naruserve-android-0.10.0.module.sha1": {
+      "bytes": 40,
+      "sha256": "41d5d921dc97b9de4714f1651c2458a26e8679fc60c2a3d1cf631f11d0a4d6a2"
+    },
+    "com/snoworca/naruserve/naruserve-android/0.10.0/naruserve-android-0.10.0.module.sha256": {
+      "bytes": 64,
+      "sha256": "c747e4442aca92f3be00bdf1913c5c0201a9f8620ee519bfb2ca41a801645e96"
+    },
+    "com/snoworca/naruserve/naruserve-android/0.10.0/naruserve-android-0.10.0.module.sha512": {
+      "bytes": 128,
+      "sha256": "d7e6480908c2e8e19ef2e245466101136094386420330278685043b6b48de836"
+    }
+  }
+}

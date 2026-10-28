@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:versionCode="1"
+    android:versionName="0.10.0-consumer"
+    android:compileSdkVersion="36"
+    android:compileSdkVersionCodename="16"
+    package="consumer.android.naruserve010"
+    platformBuildVersionCode="36"
+    platformBuildVersionName="16">
+
+    <uses-sdk
+        android:minSdkVersion="21"
+        android:targetSdkVersion="36" />
+
+    <uses-permission
+        android:name="android.permission.INTERNET" />
+
+    <application
+        android:label="NaruServe 0.10 consumer"
+        android:extractNativeLibs="true" />
+</manifest>

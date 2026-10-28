@@ -1,0 +1,21 @@
+pluginManagement { repositories { google(); mavenCentral(); gradlePluginPortal() } }
+def publicMode = providers.gradleProperty('publicConsumer').map { it.toBoolean() }.getOrElse(false)
+def snapshot = providers.gradleProperty('stagingRepo').orNull
+if (!publicMode && (snapshot == null || !new File(snapshot).isAbsolute() || !new File(snapshot).isDirectory())) {
+    throw new GradleException('Private verification requires -PstagingRepo=/absolute/immutable/snapshot/repository; no mutable source build or mavenLocal fallback is configured')
+}
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        if (!publicMode) {
+            exclusiveContent {
+                forRepository { maven { name = 'immutableStaging'; url = uri(snapshot) } }
+                filter { includeGroup('com.snoworca.naruserve') }
+            }
+        }
+        
+        mavenCentral()
+    }
+}
+rootProject.name = 'naruserve-010-kotlin-consumer'
+

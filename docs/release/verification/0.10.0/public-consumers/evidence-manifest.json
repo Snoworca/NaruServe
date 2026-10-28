@@ -1,0 +1,165 @@
+{
+  "status": "PASS_PUBLIC_MAVEN_CONSUMERS",
+  "files": {
+    "android/android-proof.json": {
+      "bytes": 1153,
+      "sha256": "0eced3ffebc65359647436332f72b8c5118932b945d38594f740c770c96ceedf"
+    },
+    "android/artifacts.json": {
+      "bytes": 4640,
+      "sha256": "64d63744014af5cae5280334172187e85e4300431ff80cb0d55d3f822f0006d2"
+    },
+    "android/build.log": {
+      "bytes": 3272,
+      "sha256": "ffaa354c96d7062fcf2408b6ecff147e183f2f0e728cf6e16b26dd5919802009"
+    },
+    "android/configuration.txt": {
+      "bytes": 10559,
+      "sha256": "74a1749f3a10f2bc5edcbf165c0413e11f228f22e3236e630b6b70435c35a31b"
+    },
+    "android/inspection.log": {
+      "bytes": 1154,
+      "sha256": "f5588a585f66c9fe5797fbb34c9af94bf0ee9aeba7c3f7835497282fa6a274d8"
+    },
+    "android/manifest-merger-release-report.txt": {
+      "bytes": 3259,
+      "sha256": "7b9af3991a650e0636189151ef7ca88afcd8b66d73d7793a76daa7bf1011d369"
+    },
+    "android/manifest.xml": {
+      "bytes": 662,
+      "sha256": "152660caa08242aea8b6a653a1a20f6ce54813b8ac4af4e045cf2a6d2cb386c8"
+    },
+    "android/mapping.txt": {
+      "bytes": 1525731,
+      "sha256": "729ef9b10c3f938566370645ae8b62f53c263e59c0fd5c1b774f2f317b5ff43e"
+    },
+    "android/project/app/app-rules.pro": {
+      "bytes": 48,
+      "sha256": "44f0df3ef8ab47e3c04d4b8415b8ce4e8abb8c06ffe92d83d741c3f91a7b716d"
+    },
+    "android/project/app/build.gradle": {
+      "bytes": 2099,
+      "sha256": "a1ddbdfa90387a5565a67b5a87412d703cd1f8abb1defb5e7f7ba00f850c6802"
+    },
+    "android/project/app/src/main/AndroidManifest.xml": {
+      "bytes": 142,
+      "sha256": "d48b8c0bfe84876c56d80e399c2e825c6e3baba555174135561bddf8ddd46714"
+    },
+    "android/project/app/src/main/java/consumer/android/ServerEntry.java": {
+      "bytes": 1496,
+      "sha256": "7b7a4f89919f97285f608608777d5079f6b2c13e29ee030ae0c030e7c8a7371b"
+    },
+    "android/project/build.gradle": {
+      "bytes": 70,
+      "sha256": "96a33edb21d173da2c36f5312f50cdfb9f71d9f5078c081c81f2d029547f6cb9"
+    },
+    "android/project/gradle/wrapper/gradle-wrapper.properties": {
+      "bytes": 253,
+      "sha256": "7e0821d895908883350587c74476b717016ab416320c44dc82a10def916c6fb5"
+    },
+    "android/project/gradle.properties": {
+      "bytes": 100,
+      "sha256": "4f14310a7c588e6c1377947c96f9db65682902aaec00580e5c4c38305bc4cf7b"
+    },
+    "android/project/settings.gradle": {
+      "bytes": 1013,
+      "sha256": "14c66d8b613f642e9053075517c9ab5f5839b0b9140e45ec0f2bc00b7c8e9fcc"
+    },
+    "android/service-provider.txt": {
+      "bytes": 51,
+      "sha256": "4b855c98789b82eb918c31b413945964ed852de15bde43d00c9cf904cbdcaf8c"
+    },
+    "central-published-status.json": {
+      "bytes": 316,
+      "sha256": "6802905d1d9a80a5ce9006a1337f4f5d72fbf70b4092d486e1620833a580a315"
+    },
+    "inspect_android.py": {
+      "bytes": 3395,
+      "sha256": "f1e10a3db05aa0869003623d750ecff47198566d5a179ce243a6debce529564d"
+    },
+    "java8/artifacts.json": {
+      "bytes": 3672,
+      "sha256": "e39839ad8ccdb2925b86cda15fbe611dd2dc17eb25d9a50c3bbcb55d55aeba1a"
+    },
+    "java8/build.log": {
+      "bytes": 1460,
+      "sha256": "91a35d0c615394c5a5f12e460c5e4f72d667b53b65a9b07feba4223be9ea480b"
+    },
+    "java8/project/build.gradle": {
+      "bytes": 1815,
+      "sha256": "27a19b383d1d5d6b8fd69ac1c8a79494e4487de4889fcc196ae0a5027e2e114c"
+    },
+    "java8/project/gradle/wrapper/gradle-wrapper.properties": {
+      "bytes": 253,
+      "sha256": "7e0821d895908883350587c74476b717016ab416320c44dc82a10def916c6fb5"
+    },
+    "java8/project/gradle.properties": {
+      "bytes": 100,
+      "sha256": "4f14310a7c588e6c1377947c96f9db65682902aaec00580e5c4c38305bc4cf7b"
+    },
+    "java8/project/settings.gradle": {
+      "bytes": 989,
+      "sha256": "84a31d9420a8a9bdbfa536b02dd1407981394bc8bf007c4ef1c008c60764c748"
+    },
+    "java8/project/src/main/java/consumer/Main.java": {
+      "bytes": 7733,
+      "sha256": "69d9d67dff73fff19b568b1d0473a807ff1311c55f00d80df2c8c6a78c3fc250"
+    },
+    "java8/runtime.json": {
+      "bytes": 544,
+      "sha256": "35b6d7ec94834615cc77ed79c3bc04ab8410c37d6c8a8d5b5b204f64549869d0"
+    },
+    "kotlin/artifacts.json": {
+      "bytes": 5033,
+      "sha256": "a0151cbb983dd6ef258cf84f9075458c6eb88227a050018a0d1202d9e896be8e"
+    },
+    "kotlin/build.log": {
+      "bytes": 1585,
+      "sha256": "b3f335eb0c7832014576e907bb264a03b5eb0a3417b196248151be5f05389fde"
+    },
+    "kotlin/naruserve-kotlin-0.10.0.module": {
+      "bytes": 4477,
+      "sha256": "1f3613ae608335c61ca434122181518d12a612ff8966db28aee51c183c2c1316"
+    },
+    "kotlin/naruserve-kotlin-0.10.0.pom": {
+      "bytes": 1971,
+      "sha256": "1476f694839cab93f085732818e027d21f5849ca793909996f29f88d191a7234"
+    },
+    "kotlin/project/build.gradle": {
+      "bytes": 2147,
+      "sha256": "b6847b09e473e06a6dacc55f5415ed2775e8cc2b0abbed1b96f439f7b6074761"
+    },
+    "kotlin/project/gradle/wrapper/gradle-wrapper.properties": {
+      "bytes": 253,
+      "sha256": "7e0821d895908883350587c74476b717016ab416320c44dc82a10def916c6fb5"
+    },
+    "kotlin/project/gradle.properties": {
+      "bytes": 139,
+      "sha256": "4819c0a65b102c1785b2940b22d51f6f120c0886b6540eb215cc93761542b17b"
+    },
+    "kotlin/project/settings.gradle": {
+      "bytes": 990,
+      "sha256": "aeac2e36315f2d724af9b5ddcc4a9adc1b80ca421191faaa86353872a7f9fb4b"
+    },
+    "kotlin/project/src/main/kotlin/consumer/kotlin/Main.kt": {
+      "bytes": 6393,
+      "sha256": "12ef3a5ffe39a2299ef9777887baa8e880742ebf98e00dbb733f0d026308aec7"
+    },
+    "kotlin/published-kotlin-metadata.txt": {
+      "bytes": 7792,
+      "sha256": "78b6810159157f7913a07169fe90fdc5208149d74e31848725a412b5c8dbfe2d"
+    },
+    "kotlin/runtime.json": {
+      "bytes": 565,
+      "sha256": "6d1391cc9d46f1d0b8052dcdcb1dfd66a97794794f85196b88d21f9bec47ee27"
+    },
+    "prewarm.json": {
+      "bytes": 890,
+      "sha256": "d63a109beea2ee893c3d1c82bb4bf4eaf1dd5a03a23afcbb2e256b2424be4ce3"
+    },
+    "public-consumer-evidence.json": {
+      "bytes": 9784,
+      "sha256": "d479a07287759228369eaafabd2f7a34db15ef73fac4840e7c1c99f5e9f5413b"
+    }
+  }
+}

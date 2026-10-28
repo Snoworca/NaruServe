@@ -1,0 +1,20 @@
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/8.14.3/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+> Task :clean
+> Task :checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :processResources NO-SOURCE
+> Task :consumerArtifactReport
+> Task :compileKotlin
+> Task :compileJava NO-SOURCE
+> Task :classes UP-TO-DATE
+
+> Task :run
+2026-10-29T06:39:19.837+0900 INFO GET /API/files/a%2Fb/c 200 20ms in=0 out=11 rid=a5ef6e89a5d8a750
+2026-10-29T06:39:19.842+0900 INFO GET /api/files 200 0ms in=0 out=2 rid=91960af30b10645b
+2026-10-29T06:39:19.848+0900 INFO POST /typed 200 5ms in=26 out=14 rid=31ae819a3baa4384
+2026-10-29T06:39:19.849+0900 INFO GET /later 200 0ms in=0 out=5 rid=431bd1409e7c71c9
+2026-10-29T06:39:19.849+0900 INFO POST /retained 202 0ms in=0 out=3 rid=105f38b08ac9ad84
+{"javaVersion":"1.8.0_504","javaHome":"/Users/beom/Library/Java/JavaVirtualMachines/zulu8.96.0.205-ca-jdk8.0.504-macosx_aarch64/Contents/Home/jre","kotlinVersion":"2.2.0","checks":["published Kotlin reified body metadata","mounted Router named wildcard and decoded segment list","typed List\u003cString\u003e and nullable String? absent capture","three-argument Middleware","getAsync returned Deferred and late HTTP response","typed generic Gson List\u003cPayload\u003e","first typed body read after wire202 with pending Deferred and cache identity"],"passed":true}
+
+BUILD SUCCESSFUL in 13s
+4 actionable tasks: 4 executed
