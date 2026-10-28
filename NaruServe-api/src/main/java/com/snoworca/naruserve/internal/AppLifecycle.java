@@ -32,6 +32,30 @@ final class AppLifecycle {
     // Written under this; read without it by the gate and by listen.
     private volatile boolean pendingStop;
 
+    private final java.util.Set<HttpExecution> executions=java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<HttpExecution,Boolean>());
+    private boolean httpClosed;
+    // @req FR-APP-023 AC-3 AC-5 AC-6
+    boolean registerHttp(HttpExecution execution) {
+        synchronized(executions) { if(httpClosed)return false;executions.add(execution);return true; }
+    }
+    void releaseHttp(HttpExecution execution) {
+        synchronized(executions) { executions.remove(execution);executions.notifyAll(); }
+    }
+    void awaitHttp(long deadline) {
+        synchronized(executions) {
+            while(!executions.isEmpty()) {
+                long left=deadline-System.nanoTime();if(left<=0)return;
+                try { TimeUnit.NANOSECONDS.timedWait(executions,left); }
+                catch(InterruptedException interrupted) { Thread.currentThread().interrupt();return; }
+            }
+        }
+    }
+    void cancelHttp() {
+        java.util.List<HttpExecution> pending;
+        synchronized(executions) { httpClosed=true;pending=new java.util.ArrayList<>(executions); }
+        for(HttpExecution execution:pending)execution.cancel();
+    }
+
     /** Throws {@code "<method> not allowed in state <state>"} unless NEW with the route table not frozen. */
     // @req FR-APP-002
     void requireConfigurable(String method) {
