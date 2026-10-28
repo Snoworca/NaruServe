@@ -1,0 +1,915 @@
+{
+  "requirement": "CON-APP-010",
+  "research_only": true,
+  "builds_run": false,
+  "repository_mutations": false,
+  "diagnostic_source": "/tmp/naru-http-core/full-module-after-methods.json",
+  "diagnostic_totals": {
+    "tests": 1282,
+    "failures": 73,
+    "errors": 0,
+    "skipped": 0
+  },
+  "core_commit": "e03439e5da4612449795cb592a8b6d6d15009e1c",
+  "latest_host_srs_root": "/Users/beom/work/git/NaruServe",
+  "classification_counts": {
+    "approved_checkpoint_migration": 67,
+    "retained_contract_bug_or_coverage_gap": 3,
+    "contract_decision_required": 3
+  },
+  "scope_notes": [
+    "All73 failures mapped exactly once; categories do not claim current green.",
+    "Historical verified checkpoint evidence stays historical. Each migration needs cited successor requirement, concrete positive/negative evidence and independent review.",
+    "Preserve CORS tracked-only grants/headers, root/traversal/symlink/file access boundaries, temp-resource cleanup, callback SAM coverage, configuration/WS lifecycle guards and logging privacy.",
+    "No API/test/source/dependency change or build was performed by this triage."
+  ],
+  "cross_cutting_retained_risks": [
+    {
+      "req": "FR-APP-005 AC-8; CON-APP-010",
+      "evidence": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/FinalHandler.java:24 logs any nonnull Throwable at ERROR; HttpExecution error handler can end without reaching FinalHandler.",
+      "minimal_next_action": "Add common-runtime tests for handled/unhandled500 exactly-one ERROR Throwable and400/404/422 no ERROR; preserve SafeLogger isolation. Fix shared logging ownership if red, rather than weakening old logging policy."
+    },
+    {
+      "req": "FR-APP-024 AC-3; CON-APP-010 AC-4; FR-APP-006",
+      "evidence": "FinalHandler serializes Throwable.printStackTrace into default HTML; default error format is versioned, but production exposure/sanitization and public explicit standard-JSON helper need an explicit documented setup.",
+      "minimal_next_action": "Host/core must document declared Java error information profile and retained safe JSON extension. Preserve no partial codec bytes and CORS privacy; do not treat changed body assertions as permission to expose unrelated request/header/body secrets."
+    },
+    {
+      "req": "FR-APP-021 AC-1; FR-STATIC-011; CON-APP-010 AC-4",
+      "evidence": "Dispatcher.handleHttp terminal static failure invokes FinalHandler directly; addStatic stores mounts outside HttpRouter.",
+      "minimal_next_action": "Integrate static services at registered position and route precommit failures through later error layers; retain file-header scrubbing and resource/conditional/Range semantics."
+    }
+  ],
+  "failures": [
+    {
+      "number": 1,
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/LoggerIsolationTest.java",
+      "test": "sdsAc1_FR_APP_014_AC1_AC3_throwingLoggerChangesNoResponse",
+      "req": [
+        "CON-APP-010 AC-3/4",
+        "FR-APP-014 AC-1/3",
+        "FR-APP-024 AC-3"
+      ],
+      "category": "approved_checkpoint_migration",
+      "minimal_next_action": "Separate default HTML error assertions from throwing-logger isolation; explicitly finish the unfinished route or use a bounded pending/abort test. Retain logger call, error/warn, listen/shutdown and no-escape assertions."
+    },
+    {
+      "number": 2,
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AppLifecycleGuardTest.java",
+      "test": "sdsAc3_FR_APP_002_AC3_everyConfigurationMethodIsRefusedOutsideNewNamingMethodAndState",
+      "req": [
+        "CON-APP-010 AC-3/5",
+        "FR-APP-021 AC-4",
+        "FR-APP-002 AC-3/4"
+      ],
+      "category": "approved_checkpoint_migration",
+      "minimal_next_action": "Split valid ordinary HTTP registration from frozen configuration/WS guards; provide nonnull Middleware arrays/new callback arguments in reflection fixtures. Keep configuration rejection and STOPPING/TERMINATED checks, atomic null rejection and unchanged-state assertions."
+    },
+    {
+      "number": 3,
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AppLifecycleGuardTest.java",
+      "test": "sdsAc4_FR_APP_002_AC4_reflectionFindsEveryRestAppAndRouteBuilderRegistrationRefusedInRunning",
+      "req": [
+        "CON-APP-010 AC-3/5",
+        "FR-APP-021 AC-4",
+        "FR-APP-002 AC-3/4"
+      ],
+      "category": "approved_checkpoint_migration",
+      "minimal_next_action": "Split valid ordinary HTTP registration from frozen configuration/WS guards; provide nonnull Middleware arrays/new callback arguments in reflection fixtures. Keep configuration rejection and STOPPING/TERMINATED checks, atomic null rejection and unchanged-state assertions."
+    },
+    {
+      "number": 4,
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartLimitsTest.java",
+      "test": "FR_MULTIPART_001_AC2_malformedBodyAnswers400StandardBodyThroughOnError",
+      "req": [
+        "CON-APP-010 AC-4/5",
+        "FR-APP-024 AC-1/3/5",
+        "FR-MULTIPART-001/002"
+      ],
+      "category": "approved_checkpoint_migration",
+      "minimal_next_action": "Register the onError observer downstream of upload route; assert new default final error representation or explicitly configure the retained JSON renderer. Keep exact 400/413 limits, callback order and empty-temp-directory cleanup guards."
+    },
+    {
+      "number": 5,
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartLimitsTest.java",
+      "test": "FR_MULTIPART_002_AC1_limitsAnswer413StandardBodyThroughOnError",
+      "req": [
+        "CON-APP-010 AC-4/5",
+        "FR-APP-024 AC-1/3/5",
+        "FR-MULTIPART-001/002"
+      ],
+      "category": "approved_checkpoint_migration",
+      "minimal_next_action": "Register the onError observer downstream of upload route; assert new default final error representation or explicitly configure the retained JSON renderer. Keep exact 400/413 limits, callback order and empty-temp-directory cleanup guards."
+    },
+    {
+      "number": 6,
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AppStarterTest.java",
+      "test": "FR_DX_012_AC5_routeConflictAndBindFailureKeepTheirTypes",
+      "req": [
+        "CON-APP-010 AC-1/5",
+        "FR-APP-021 AC-1"
+      ],
+      "category": "approved_checkpoint_migration",
+      "minimal_next_action": "Replace duplicate-HTTP freeze rejection with ordered duplicate route/Route-identity evidence; retain independent strict legacy/WS duplicate rejection and startup/bind exception-type/unwrapped-error checks using a genuinely invalid registration or retained profile."
+    },
+    {
+      "number": 7,
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/FormAccessorsTest.java",
+      "test": "sdsAc2_FR_MULTIPART_003_AC1_multipartTextPartWithMalformedUtf8Gives400",
+      "req": [
+        "CON-APP-010 AC-4/5",
+        "FR-APP-024 AC-3",
+        "FR-MULTIPART-003 AC-1"
+      ],
+      "category": "approved_checkpoint_migration",
+      "minimal_next_action": "Update default error rendering only; retain malformed UTF8 status400, handler count and no successful form value."
+    },
+    {
+      "number": 8,
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/FormAccessorsTest.java",
+      "test": "FR_MULTIPART_003_AC1_urlencodedValuesDecodeAndMalformedEncodingGives400ThroughOnError",
+      "req": [
+        "CON-APP-010 AC-4/5",
+        "FR-APP-024 AC-1/3/5",
+        "FR-MULTIPART-003 AC-1"
+      ],
+      "category": "approved_checkpoint_migration",
+      "minimal_next_action": "Move onError observer after route; update HTML/default-vs-explicit-JSON assertion while retaining malformed percent/UTF8 cases, exact400 and callback/caching behavior."
+    },
+    {
+      "number": 9,
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/CallbackInventoryTest.java",
+      "test": "sdsAc4_FR_KT_003_AC4_inventoryEqualsCallbackTypes",
+      "req": [
+        "FR-KT-003 AC-3/4",
+        "FR-APP-022 AC-6",
+        "FR-ROUTE-021"
+      ],
+      "category": "retained_contract_bug_or_coverage_gap",
+      "minimal_next_action": "Extend shared CALLBACK_TYPES and actual Kotlin invocation matrix for ParamHandler/ErrorMiddleware (and later async types when introduced); update exact negative-control expected difference. Do not drop inventory discovery or annotation/SAM checks.",
+      "note": "Existing contract intentionally fails when new public callback types have no Kotlin matrix coverage."
+    },
+    {
+      "number": 10,
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/CallbackInventoryTest.java",
+      "test": "sdsAc4_FR_KT_003_AC4_removedEntryShowsAsDifference",
+      "req": [
+        "FR-KT-003 AC-3/4",
+        "FR-APP-022 AC-6",
+        "FR-ROUTE-021"
+      ],
+      "category": "retained_contract_bug_or_coverage_gap",
+      "minimal_next_action": "Extend shared CALLBACK_TYPES and actual Kotlin invocation matrix for ParamHandler/ErrorMiddleware (and later async types when introduced); update exact negative-control expected difference. Do not drop inventory discovery or annotation/SAM checks.",
+      "note": "Existing contract intentionally fails when new public callback types have no Kotlin matrix coverage."
+    },
+    {
+      "number": 11,
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/WebSocketApiTest.java",
+      "test": "sdsAc1_IR_WS_001_AC2_anInvalidPatternThrowsWhatAppGetThrowsAndNullsAreRefused",
+      "req": [
+        "CON-APP-010 AC-1/5",
+        "FR-APP-021 AC-6",
+        "IR-WS-001 AC-2"
+      ],
+      "category": "approved_checkpoint_migration",
+      "minimal_next_action": "Stop using common app.get as the strict WS grammar oracle; retain WS duplicate-name/null rejection against direct legacy RoutePattern/Router and add common-HTTP repeated-capture acceptance separately."
+    },
+    {
+      "number": 12,
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java",
+      "test": "sdsAc13_FR_APP_009_AC8_dispatcherBoundWithoutListenDispatchesUngatedInNew",
+      "req": [
+        "CON-APP-010 AC-3",
+        "FR-APP-022 AC-1",
+        "FR-APP-023"
+      ],
+      "category": "approved_checkpoint_migration",
+      "minimal_next_action": "Recording-only handlers must explicitly end the response before expecting200; keep the real ungated NEW dispatcher assertion and actual PATCH method observation. Pending responses must be tested with bounded lifecycle/abort evidence instead of automatic completion."
+    },
+    {
+      "number": 13,
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MiddlewarePipelineTest.java",
+      "test": "sdsAc17_FR_HTTP_022_AC8_globalRunsOnceForEveryFallbackAnswerButNotTheUnknownToken",
+      "req": [
+        "CON-APP-010 AC-3/5",
+        "FR-HTTP-028 AC-1/5/6"
+      ],
+      "category": "approved_checkpoint_migration",
+      "minimal_next_action": "Replace historical ordinary method-miss405/global unknown-or-disabled501 with common HTTP fallthrough404 or explicit registered-method outcomes; retain MethodSet/any-except selection, actual Kotlin SAM invocation, middleware count and separate legacy/WS rejection coverage."
+    },
+    {
+      "number": 14,
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MiddlewarePipelineTest.java",
+      "test": "sdsAc4_FR_APP_003_AC3_prefixFollowsTheMergeSlashesPolicy",
+      "req": [
+        "CON-APP-010 AC-1/3",
+        "FR-HTTP-028 AC-2",
+        "FR-APP-021 AC-5"
+      ],
+      "category": "contract_decision_required",
+      "minimal_next_action": "Resolve whether existing app.routerPolicy(mergeSlashes/case flags) is an effective common-HTTP extension or explicitly legacy-only. Currently accepted settings silently do not change HttpRouter. Then either wire the named extension with TDD or relocate strict legacy tests and document the boundary; do not merely change200 to404.",
+      "note": "New Router.create flags exist, but public app.routerPolicy is still accepted; explicit policy semantics need an unambiguous supported replacement."
+    },
+    {
+      "number": 15,
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MiddlewarePipelineTest.java",
+      "test": "sdsAc17_FR_HTTP_022_AC4_disabledTraceRequestSeesTheTraceMethod",
+      "req": [
+        "CON-APP-010 AC-3/5",
+        "FR-HTTP-028 AC-1/5/6"
+      ],
+      "category": "approved_checkpoint_migration",
+      "minimal_next_action": "Replace historical ordinary method-miss405/global unknown-or-disabled501 with common HTTP fallthrough404 or explicit registered-method outcomes; retain MethodSet/any-except selection, actual Kotlin SAM invocation, middleware count and separate legacy/WS rejection coverage."
+    },
+    {
+      "number": 16,
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MiddlewarePipelineTest.java",
+      "test": "sdsAc7_FR_APP_003_AC7_FR_HTTP_021_AC4_preRequestRejectionsRunNoMiddlewareHandlerOrOnError",
+      "req": [
+        "CON-APP-010 AC-2/3/5",
+        "FR-HTTP-027 AC-2",
+        "FR-HTTP-028 AC-1/5"
+      ],
+      "category": "approved_checkpoint_migration",
+      "minimal_next_action": "Split historical no-middleware pre-rejection expectations: common TRACE/CONNECT and captured raw values follow new stack/error rules; retain actual transport malformed-target rejection and no-unintended-handler guards."
+    },
+    {
+      "number": 17,
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MiddlewarePipelineTest.java",
+      "test": "sdsAc5_FR_APP_003_AC4_prefixMiddlewareAndHandlerSeeTheFullPath",
+      "req": [
+        "CON-APP-010 AC-2",
+        "FR-HTTP-027 AC-2/3/4"
+      ],
+      "category": "approved_checkpoint_migration",
+      "minimal_next_action": "Assert current raw pathname, actual mount trimming/url/base/original views and once-decoded capture values separately; retain same-request, middleware ordering and rawPath/query evidence."
+    },
+    {
+      "number": 18,
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MiddlewarePipelineTest.java",
+      "test": "sdsAc6_FR_APP_003_AC5_noMatchRunsGlobalsAndPrefixThenThe404",
+      "req": [
+        "CON-APP-010 AC-3/4",
+        "FR-APP-024 AC-3",
+        "FR-HTTP-028 AC-5"
+      ],
+      "category": "approved_checkpoint_migration",
+      "minimal_next_action": "Update default404/finalhandler HTML and changed method fallthrough outcomes; retain globals/prefix/final handler order, exact status/headers/escaping and no double completion."
+    },
+    {
+      "number": 19,
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/AppEntryApiTest.java",
+      "test": "IR_APP_002_AC4_undecodablePrefixIsRefusedAtRegistration",
+      "req": [
+        "CON-APP-010 AC-1/2",
+        "FR-ROUTE-018",
+        "FR-APP-021 AC-3/5"
+      ],
+      "category": "approved_checkpoint_migration",
+      "minimal_next_action": "Replace obsolete segment-only invalid examples with actual new grammar errors; accepted relative/literal repeated-slash/percent strings need pinned input behavior. Keep null checks and atomic publication, plus direct legacy strict grammar tests."
+    },
+    {
+      "number": 20,
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/AppEntryApiTest.java",
+      "test": "sdsAc7_IR_APP_002_AC4_nullArgumentsAndRelativePrefixAreRefused",
+      "req": [
+        "CON-APP-010 AC-1/2",
+        "FR-ROUTE-018",
+        "FR-APP-021 AC-3/5"
+      ],
+      "category": "approved_checkpoint_migration",
+      "minimal_next_action": "Replace obsolete segment-only invalid examples with actual new grammar errors; accepted relative/literal repeated-slash/percent strings need pinned input behavior. Keep null checks and atomic publication, plus direct legacy strict grammar tests."
+    },
+    {
+      "number": 21,
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/AppEntryApiTest.java",
+      "test": "sdsAc5_IR_APP_002_AC1_middlewareIsFunctionalAndNextHasExactlyRunAndError",
+      "req": [
+        "CON-APP-010 AC-3",
+        "FR-APP-022 AC-6"
+      ],
+      "category": "approved_checkpoint_migration",
+      "minimal_next_action": "Update Next API inventory to run/error/route/router and retain FunctionalInterface Middleware signature, default error propagation and source-compatible lambda checks."
+    },
+    {
+      "number": 22,
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/AppEntryApiTest.java",
+      "test": "sdsAc11_IR_APP_003_AC5_onErrorNullThrowsAndOnErrorIsRefusedAfterFreeze",
+      "req": [
+        "CON-APP-010 AC-3/5",
+        "FR-APP-021 AC-3/4"
+      ],
+      "category": "approved_checkpoint_migration",
+      "minimal_next_action": "Allow ordinary HTTP/RouteBuilder append after freeze/listen with positive request observation and atomic snapshot controls; keep onError/configuration/server/WS guards and invalid/null registration tests separately."
+    },
+    {
+      "number": 23,
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/RouteGroupTest.java",
+      "test": "sevenVerbsAndGroupRootRegisterNormally",
+      "req": [
+        "FR-HTTP-028 AC-3",
+        "CON-APP-010 AC-3",
+        "FR-DX-009"
+      ],
+      "category": "approved_checkpoint_migration",
+      "minimal_next_action": "Group GET registered before HEAD wins that earlier Route; reorder explicit HEAD before GET when testing the group HEAD callback, and keep a separate GET-first local fallback assertion and group root/ownership guards."
+    },
+    {
+      "number": 24,
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/RouteGroupTest.java",
+      "test": "groupsDoNotHideDuplicateRoutes",
+      "req": [
+        "FR-APP-021 AC-1/3",
+        "CON-APP-010 AC-1",
+        "FR-DX-009"
+      ],
+      "category": "approved_checkpoint_migration",
+      "minimal_next_action": "Retain group atomic/ownership/path-safety tests; replace duplicate HTTP conflict assertion with ordered grouped-vs-parent route continuation. Keep strict duplicates on retained legacy/WS profile."
+    },
+    {
+      "number": 25,
+      "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/HttpApiKotlinTest.kt",
+      "test": "SDS-AC-4 IR-HTTP-005 AC-6 Kotlin trailing lambdas register on the real app and route through TestApp",
+      "req": [
+        "CON-APP-010 AC-3/5",
+        "FR-HTTP-028 AC-1/5/6"
+      ],
+      "category": "approved_checkpoint_migration",
+      "minimal_next_action": "Replace historical ordinary method-miss405/global unknown-or-disabled501 with common HTTP fallthrough404 or explicit registered-method outcomes; retain MethodSet/any-except selection, actual Kotlin SAM invocation, middleware count and separate legacy/WS rejection coverage."
+    },
+    {
+      "number": 26,
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/JsonResponseTest.java",
+      "test": "sdsAc12_FR_JSON_002_AC4_partialEncodeFailureGivesTheStandard500AndNoPartialBytes",
+      "req": [
+        "CON-APP-010 AC-4",
+        "FR-APP-024 AC-1/3/5",
+        "FR-JSON-002 AC-4"
+      ],
+      "category": "approved_checkpoint_migration",
+      "minimal_next_action": "Move commit observer downstream of failing JSON route; use new default HTML or explicit retained JSON renderer while preserving before-commit=false, no partially encoded document bytes,500 and non-aborted error response. Do not replace no-partial-byte checks with a status-only assertion."
+    },
+    {
+      "number": 27,
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java",
+      "test": "sdsAc16_T05_FR_HTTP_022_AC3_automaticOptionsListsAllowWithoutBody",
+      "req": [
+        "CON-APP-010 AC-3",
+        "FR-HTTP-028 AC-4"
+      ],
+      "category": "approved_checkpoint_migration",
+      "minimal_next_action": "Distinguish ordinary automatic OPTIONS200 with exact sorted Allow/text body/type/length from separately retained OPTIONS*204 no-body; preserve explicit204 suppression controls."
+    },
+    {
+      "number": 28,
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java",
+      "test": "sdsAc19_FR_HTTP_023_AC1_AC2_AC3_AC4_asteriskAndNonSlashTargets",
+      "req": [
+        "CON-APP-010 AC-2/3",
+        "FR-HTTP-027 AC-2",
+        "FR-HTTP-028 AC-5",
+        "FR-HTTP-023"
+      ],
+      "category": "approved_checkpoint_migration",
+      "minimal_next_action": "Retain OPTIONS* transport contract and non-slash target400; remove recording handler auto-finish dependency by explicit response completion. Split encoded-dot capture acceptance from static traversal rejection; do not waive static root/symlink protection."
+    },
+    {
+      "number": 29,
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java",
+      "test": "sdsAc15_T06_FR_HTTP_022_AC1_AC2_AC4_noPathNoMethodUnknownMethod",
+      "req": [
+        "CON-APP-010 AC-3/4",
+        "FR-APP-024 AC-3",
+        "FR-HTTP-028 AC-5"
+      ],
+      "category": "approved_checkpoint_migration",
+      "minimal_next_action": "Update default404/finalhandler HTML and changed method fallthrough outcomes; retain globals/prefix/final handler order, exact status/headers/escaping and no double completion."
+    },
+    {
+      "number": 30,
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java",
+      "test": "sdsAc11_T03_IR_HTTP_006_AC3_duplicateBuilderAndAppGetFailsTheHarnessFreeze",
+      "req": [
+        "CON-APP-010 AC-1/5",
+        "FR-APP-021 AC-1"
+      ],
+      "category": "approved_checkpoint_migration",
+      "minimal_next_action": "Replace duplicate-HTTP freeze rejection with ordered duplicate route/Route-identity evidence; retain independent strict legacy/WS duplicate rejection and startup/bind exception-type/unwrapped-error checks using a genuinely invalid registration or retained profile."
+    },
+    {
+      "number": 31,
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java",
+      "test": "sds3Ac11_T01_FR_HTTP_007_AC1_AC2_AC4_oneHandlerForAMethodSetSeesTheActualMethod",
+      "req": [
+        "CON-APP-010 AC-3/5",
+        "FR-HTTP-028 AC-1/5/6"
+      ],
+      "category": "approved_checkpoint_migration",
+      "minimal_next_action": "Replace historical ordinary method-miss405/global unknown-or-disabled501 with common HTTP fallthrough404 or explicit registered-method outcomes; retain MethodSet/any-except selection, actual Kotlin SAM invocation, middleware count and separate legacy/WS rejection coverage."
+    },
+    {
+      "number": 32,
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java",
+      "test": "sds3Ac11_FR_HTTP_007_AC3_patchRouteSeesPatch",
+      "req": [
+        "CON-APP-010 AC-3",
+        "FR-APP-022 AC-1",
+        "FR-APP-023"
+      ],
+      "category": "approved_checkpoint_migration",
+      "minimal_next_action": "Recording-only handlers must explicitly end the response before expecting200; keep the real ungated NEW dispatcher assertion and actual PATCH method observation. Pending responses must be tested with bounded lifecycle/abort evidence instead of automatic completion."
+    },
+    {
+      "number": 33,
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java",
+      "test": "sds3Ac14_FR_HTTP_001_AC4_rawPathAndQueryReachTheRequestUndecoded",
+      "req": [
+        "CON-APP-010 AC-2",
+        "FR-HTTP-027 AC-2/3/4"
+      ],
+      "category": "approved_checkpoint_migration",
+      "minimal_next_action": "Assert current raw pathname, actual mount trimming/url/base/original views and once-decoded capture values separately; retain same-request, middleware ordering and rawPath/query evidence."
+    },
+    {
+      "number": 34,
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java",
+      "test": "FR_HTTP_009_AC1_AC2_AC3_decodedParamInsideTheHandler",
+      "req": [
+        "CON-APP-010 AC-2/3",
+        "FR-HTTP-027 AC-2/3",
+        "FR-APP-022 AC-1"
+      ],
+      "category": "approved_checkpoint_migration",
+      "minimal_next_action": "Explicitly finish handler and assert raw current path/rawPath with decoded parameter, rather than historical decoded entire path and auto-empty response."
+    },
+    {
+      "number": 35,
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java",
+      "test": "sdsAc15_T02_FR_HTTP_022_AC7_anyExceptDeleteAnswersDelete405",
+      "req": [
+        "CON-APP-010 AC-3/5",
+        "FR-HTTP-028 AC-1/5/6"
+      ],
+      "category": "approved_checkpoint_migration",
+      "minimal_next_action": "Replace historical ordinary method-miss405/global unknown-or-disabled501 with common HTTP fallthrough404 or explicit registered-method outcomes; retain MethodSet/any-except selection, actual Kotlin SAM invocation, middleware count and separate legacy/WS rejection coverage."
+    },
+    {
+      "number": 36,
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ListenStartupTest.java",
+      "test": "sdsAc8_FR_APP_009_AC3_duplicateRouteThrowsTheFreezeExceptionAfterOnStartAndBeforeBind",
+      "req": [
+        "CON-APP-010 AC-1/5",
+        "FR-APP-021 AC-1"
+      ],
+      "category": "approved_checkpoint_migration",
+      "minimal_next_action": "Replace duplicate-HTTP freeze rejection with ordered duplicate route/Route-identity evidence; retain independent strict legacy/WS duplicate rejection and startup/bind exception-type/unwrapped-error checks using a genuinely invalid registration or retained profile."
+    },
+    {
+      "number": 37,
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/FileResourceResolverTest.java",
+      "test": "FR_STATIC_011_failureBeforeCommitDropsFileHeadersForOnErrorAnswer",
+      "req": [
+        "CON-APP-010 AC-4",
+        "FR-APP-021 AC-1",
+        "FR-APP-024 AC-1/5",
+        "FR-STATIC-011"
+      ],
+      "category": "retained_contract_bug_or_coverage_gap",
+      "minimal_next_action": "TDD fix static-service errors entering downstream ordered error flow: static registered before onError must reach that handler. Keep precommit Range-open failure and removal of all file/cache/disposition headers; do not replace expected handler body with generic HTML.",
+      "note": "Dispatcher.handleHttp terminal catches static failure and calls FinalHandler directly; static mounts are not yet actual ordered layers."
+    },
+    {
+      "number": 38,
+      "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/KotlinDocsExamplesKotlinTest.kt",
+      "test": "SDS-AC-2 FR-KT-004 AC-2 routing md one handler branches on the method",
+      "req": [
+        "CON-APP-010 AC-3/5",
+        "FR-HTTP-028 AC-1/5/6"
+      ],
+      "category": "approved_checkpoint_migration",
+      "minimal_next_action": "Replace historical ordinary method-miss405/global unknown-or-disabled501 with common HTTP fallthrough404 or explicit registered-method outcomes; retain MethodSet/any-except selection, actual Kotlin SAM invocation, middleware count and separate legacy/WS rejection coverage."
+    },
+    {
+      "number": 39,
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultResponseTest.java",
+      "test": "sdsAc12_FR_HTTP_017_AC4_automatic204AnswersCarryNoBody",
+      "req": [
+        "CON-APP-010 AC-3",
+        "FR-HTTP-028 AC-4"
+      ],
+      "category": "approved_checkpoint_migration",
+      "minimal_next_action": "Distinguish ordinary automatic OPTIONS200 with exact sorted Allow/text body/type/length from separately retained OPTIONS*204 no-body; preserve explicit204 suppression controls."
+    },
+    {
+      "number": 40,
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/UnicodeRoutingContractTest.java",
+      "test": "supplementaryRouteAndPrefixMatchAndPreserveOriginalParam",
+      "req": [
+        "CON-APP-010 AC-1/2",
+        "FR-ROUTE-006/008",
+        "FR-HTTP-027 AC-2",
+        "FR-APP-021 AC-5/6"
+      ],
+      "category": "approved_checkpoint_migration",
+      "minimal_next_action": "Relocate historical decoded-literal/strict Unicode contracts to explicit legacy Router/RoutePattern profile, preserving prefix/route authorization equivalence there. Add common raw-percent/literal matching and explicit caseSensitive Router tests; do not weaken authorization consistency."
+    },
+    {
+      "number": 41,
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/UnicodeRoutingContractTest.java",
+      "test": "strictRoutesRemainDistinct",
+      "req": [
+        "CON-APP-010 AC-1/2",
+        "FR-ROUTE-006/008",
+        "FR-HTTP-027 AC-2",
+        "FR-APP-021 AC-5/6"
+      ],
+      "category": "approved_checkpoint_migration",
+      "minimal_next_action": "Relocate historical decoded-literal/strict Unicode contracts to explicit legacy Router/RoutePattern profile, preserving prefix/route authorization equivalence there. Add common raw-percent/literal matching and explicit caseSensitive Router tests; do not weaken authorization consistency."
+    },
+    {
+      "number": 42,
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMethodTest.java",
+      "test": "sdsAc9_FR_STATIC_002_AC3_getAfterRouteMethodMismatchFallsThroughPutKeepsRouteAllow",
+      "req": [
+        "CON-APP-010 AC-4",
+        "FR-APP-021 AC-1",
+        "FR-HTTP-028 AC-1/5",
+        "FR-STATIC-002"
+      ],
+      "category": "approved_checkpoint_migration",
+      "minimal_next_action": "Replace obsolete route-global405/Allow and universal501 with ordered common fallthrough plus documented static-service extension outcomes; preserve actual static405 GET/HEAD Allow, refusal-before-read, SPA exclusions and explicit common method routing."
+    },
+    {
+      "number": 43,
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMethodTest.java",
+      "test": "sdsAc9_FR_STATIC_002_AC3_spaAfterMismatchAndRoute405WhenNoMountServes",
+      "req": [
+        "CON-APP-010 AC-4",
+        "FR-APP-021 AC-1",
+        "FR-HTTP-028 AC-1/5",
+        "FR-STATIC-002"
+      ],
+      "category": "approved_checkpoint_migration",
+      "minimal_next_action": "Replace obsolete route-global405/Allow and universal501 with ordered common fallthrough plus documented static-service extension outcomes; preserve actual static405 GET/HEAD Allow, refusal-before-read, SPA exclusions and explicit common method routing."
+    },
+    {
+      "number": 44,
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMethodTest.java",
+      "test": "FR_STATIC_002_AC2_unknownOrDisabledMethodIs501BeforeStatic",
+      "req": [
+        "CON-APP-010 AC-4",
+        "FR-APP-021 AC-1",
+        "FR-HTTP-028 AC-1/5",
+        "FR-STATIC-002"
+      ],
+      "category": "approved_checkpoint_migration",
+      "minimal_next_action": "Replace obsolete route-global405/Allow and universal501 with ordered common fallthrough plus documented static-service extension outcomes; preserve actual static405 GET/HEAD Allow, refusal-before-read, SPA exclusions and explicit common method routing."
+    },
+    {
+      "number": 45,
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogAcceptanceTest.java",
+      "test": "sdsAc10_FR_APP_019_AC7_lineRidEqualsTheErrorBodyRequestId",
+      "req": [
+        "FR-APP-019 AC-7",
+        "CON-APP-010 AC-4",
+        "FR-APP-024 AC-3/5"
+      ],
+      "category": "contract_decision_required",
+      "minimal_next_action": "Exercise RID equality through an explicit retained standard-JSON error response and preserve exact requestId/access-log correlation; separately test HTML default404 without inventing a JSON requestId. Resolve/document public helper setup if unavailable.",
+      "note": "FR-APP-019 AC7 still names standard error body; new common default HTML has no requestId. Retained extension proof must replace the old default-only fixture, not delete the correlation assertion."
+    },
+    {
+      "number": 46,
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogAcceptanceTest.java",
+      "test": "sdsAc6_FR_APP_019_AC3_everyAutomaticAnswerAndRejectionWritesExactlyOneLine",
+      "req": [
+        "CON-APP-010 AC-2/3",
+        "FR-HTTP-027/028",
+        "FR-APP-019 AC-3",
+        "SEC-APP-001"
+      ],
+      "category": "approved_checkpoint_migration",
+      "minimal_next_action": "Update versioned status/input matrix (method404, captured raw values) but preserve exactly-one access line per actual completion/abort, OPTIONS* and lifecycle503, secret exclusion and control-character escaping."
+    },
+    {
+      "number": 47,
+      "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/CookieKotlinTest.kt",
+      "test": "FR-COOKIE-001 AC-7 FR-COOKIE-002 AC-7 Kotlin reads and writes cookies in a route lambda",
+      "req": [
+        "CON-APP-010 AC-3",
+        "FR-APP-022 AC-1",
+        "FR-COOKIE-001 AC-7",
+        "FR-COOKIE-002 AC-7"
+      ],
+      "category": "approved_checkpoint_migration",
+      "minimal_next_action": "Explicitly end/send after setting the cookie so headers commit; retain exact deletion Set-Cookie and Kotlin nullable/read-cache observations on both requests. Null header is currently pending response, not evidence cookie serialization changed."
+    },
+    {
+      "number": 48,
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRestAppTest.java",
+      "test": "sdsAc12_FR_HTTP_008_AC2_badPatternThrowsAtTheRegistrationCall",
+      "req": [
+        "CON-APP-010 AC-1/2",
+        "FR-ROUTE-018",
+        "FR-APP-021 AC-3/5"
+      ],
+      "category": "approved_checkpoint_migration",
+      "minimal_next_action": "Replace obsolete segment-only invalid examples with actual new grammar errors; accepted relative/literal repeated-slash/percent strings need pinned input behavior. Keep null checks and atomic publication, plus direct legacy strict grammar tests."
+    },
+    {
+      "number": 49,
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRestAppTest.java",
+      "test": "sdsAc11_FR_HTTP_007_AC1_unregisteredMethodOfAMethodSetRouteIs405",
+      "req": [
+        "CON-APP-010 AC-3/5",
+        "FR-HTTP-028 AC-1/5/6"
+      ],
+      "category": "approved_checkpoint_migration",
+      "minimal_next_action": "Replace historical ordinary method-miss405/global unknown-or-disabled501 with common HTTP fallthrough404 or explicit registered-method outcomes; retain MethodSet/any-except selection, actual Kotlin SAM invocation, middleware count and separate legacy/WS rejection coverage."
+    },
+    {
+      "number": 50,
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRestAppTest.java",
+      "test": "sdsAc5_FR_APP_002_AC5_freezeInNewRejectsThroughTheOneGuardNamingTheMethod",
+      "req": [
+        "CON-APP-010 AC-3/5",
+        "FR-APP-021 AC-3/4"
+      ],
+      "category": "approved_checkpoint_migration",
+      "minimal_next_action": "Allow ordinary HTTP/RouteBuilder append after freeze/listen with positive request observation and atomic snapshot controls; keep onError/configuration/server/WS guards and invalid/null registration tests separately."
+    },
+    {
+      "number": 51,
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRestAppTest.java",
+      "test": "sdsAc11_IR_HTTP_006_AC3_appGetPlusBuilderGetIsADuplicateAtFreeze",
+      "req": [
+        "CON-APP-010 AC-1/5",
+        "FR-APP-021 AC-1"
+      ],
+      "category": "approved_checkpoint_migration",
+      "minimal_next_action": "Replace duplicate-HTTP freeze rejection with ordered duplicate route/Route-identity evidence; retain independent strict legacy/WS duplicate rejection and startup/bind exception-type/unwrapped-error checks using a genuinely invalid registration or retained profile."
+    },
+    {
+      "number": 52,
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRestAppTest.java",
+      "test": "sdsAc13_FR_HTTP_008_AC5_everyCallAfterFreezeThrowsAndRecordsNothing",
+      "req": [
+        "CON-APP-010 AC-3/5",
+        "FR-APP-021 AC-3/4"
+      ],
+      "category": "approved_checkpoint_migration",
+      "minimal_next_action": "Allow ordinary HTTP/RouteBuilder append after freeze/listen with positive request observation and atomic snapshot controls; keep onError/configuration/server/WS guards and invalid/null registration tests separately."
+    },
+    {
+      "number": 53,
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRestAppTest.java",
+      "test": "sdsAc13_FR_HTTP_008_AC3_policySetAfterGetAppliesToIt",
+      "req": [
+        "CON-APP-010 AC-1/3",
+        "FR-HTTP-028 AC-2",
+        "FR-APP-021 AC-5"
+      ],
+      "category": "contract_decision_required",
+      "minimal_next_action": "Resolve whether existing app.routerPolicy(mergeSlashes/case flags) is an effective common-HTTP extension or explicitly legacy-only. Currently accepted settings silently do not change HttpRouter. Then either wire the named extension with TDD or relocate strict legacy tests and document the boundary; do not merely change200 to404.",
+      "note": "New Router.create flags exist, but public app.routerPolicy is still accepted; explicit policy semantics need an unambiguous supported replacement."
+    },
+    {
+      "number": 54,
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRestAppTest.java",
+      "test": "sdsAc12_FR_HTTP_008_AC4_duplicateThrowsOnlyAtFreezeAndLeavesTheAppUnfrozen",
+      "req": [
+        "CON-APP-010 AC-1/5",
+        "FR-APP-021 AC-1"
+      ],
+      "category": "approved_checkpoint_migration",
+      "minimal_next_action": "Replace duplicate-HTTP freeze rejection with ordered duplicate route/Route-identity evidence; retain independent strict legacy/WS duplicate rejection and startup/bind exception-type/unwrapped-error checks using a genuinely invalid registration or retained profile."
+    },
+    {
+      "number": 55,
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/MultipartSpoolingTest.java",
+      "test": "FR_MULTIPART_004_AC5_textPartTotalIsCappedByFormLimit",
+      "req": [
+        "CON-APP-010 AC-4",
+        "FR-APP-024 AC-3",
+        "FR-MULTIPART-004 AC-5"
+      ],
+      "category": "approved_checkpoint_migration",
+      "minimal_next_action": "Update default error representation only or explicitly select standard JSON; keep text total limit, exact413 and zero leaked temporary files."
+    },
+    {
+      "number": 56,
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java",
+      "test": "sdsAc6_IR_HTTP_005_AC1_AC2_AC3_AC5_IR_APP_002_AC2_restAppDeclaresExactlyTheWave4Methods",
+      "req": [
+        "CON-APP-010 AC-5",
+        "FR-APP-021/022",
+        "FR-HTTP-027 AC-1/6",
+        "IR-HTTP-001/005/006"
+      ],
+      "category": "approved_checkpoint_migration",
+      "minimal_next_action": "Update exact public/nullability snapshots for additive routing/path/error API, retaining old required signatures, nullable positions and Java/Kotlin compilation checks. New methods must be explicitly enumerated, not excluded from reflection."
+    },
+    {
+      "number": 57,
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java",
+      "test": "sdsAc7_IR_HTTP_006_AC1_routeBuilderMethodsTakeAHandlerAndReturnTheBuilder",
+      "req": [
+        "CON-APP-010 AC-5",
+        "FR-APP-021/022",
+        "FR-HTTP-027 AC-1/6",
+        "IR-HTTP-001/005/006"
+      ],
+      "category": "approved_checkpoint_migration",
+      "minimal_next_action": "Update exact public/nullability snapshots for additive routing/path/error API, retaining old required signatures, nullable positions and Java/Kotlin compilation checks. New methods must be explicitly enumerated, not excluded from reflection."
+    },
+    {
+      "number": 58,
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java",
+      "test": "IR_HTTP_006_AC2_routeBuilderHandlersEachReachOnlyTheirOwnMethod",
+      "req": [
+        "CON-APP-010 AC-3/5",
+        "FR-HTTP-028 AC-1/5/6"
+      ],
+      "category": "approved_checkpoint_migration",
+      "minimal_next_action": "Replace historical ordinary method-miss405/global unknown-or-disabled501 with common HTTP fallthrough404 or explicit registered-method outcomes; retain MethodSet/any-except selection, actual Kotlin SAM invocation, middleware count and separate legacy/WS rejection coverage."
+    },
+    {
+      "number": 59,
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java",
+      "test": "sdsAc1_IR_HTTP_001_AC1_requestDeclaresTheWave3Methods",
+      "req": [
+        "CON-APP-010 AC-5",
+        "FR-APP-021/022",
+        "FR-HTTP-027 AC-1/6",
+        "IR-HTTP-001/005/006"
+      ],
+      "category": "approved_checkpoint_migration",
+      "minimal_next_action": "Update exact public/nullability snapshots for additive routing/path/error API, retaining old required signatures, nullable positions and Java/Kotlin compilation checks. New methods must be explicitly enumerated, not excluded from reflection."
+    },
+    {
+      "number": 60,
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java",
+      "test": "sdsAc3_IR_HTTP_001_AC4_packageNullMarkedAndNullableOnlyOnListedPositions",
+      "req": [
+        "CON-APP-010 AC-5",
+        "FR-APP-021/022",
+        "FR-HTTP-027 AC-1/6",
+        "IR-HTTP-001/005/006"
+      ],
+      "category": "approved_checkpoint_migration",
+      "minimal_next_action": "Update exact public/nullability snapshots for additive routing/path/error API, retaining old required signatures, nullable positions and Java/Kotlin compilation checks. New methods must be explicitly enumerated, not excluded from reflection."
+    },
+    {
+      "number": 61,
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/JsonBodyAcceptanceTest.java",
+      "test": "sdsAc7_FR_JSON_001_AC1_otherMediaTypesGive415WithoutCallingTheCodec",
+      "req": [
+        "CON-APP-010 AC-4",
+        "FR-APP-024 AC-3",
+        "FR-JSON-001"
+      ],
+      "category": "approved_checkpoint_migration",
+      "minimal_next_action": "Update final default content-type/body expectation or explicitly choose preserved JSON error extension; retain exact415/400/413, codec invocation counts, UTF8 rejection and byte-limit boundary/overrun behavior."
+    },
+    {
+      "number": 62,
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/JsonBodyAcceptanceTest.java",
+      "test": "sdsAc8_FR_JSON_001_AC2_emptyAndWhitespaceBodiesGive400WithoutCallingTheCodec",
+      "req": [
+        "CON-APP-010 AC-4",
+        "FR-APP-024 AC-3",
+        "FR-JSON-001"
+      ],
+      "category": "approved_checkpoint_migration",
+      "minimal_next_action": "Update final default content-type/body expectation or explicitly choose preserved JSON error extension; retain exact415/400/413, codec invocation counts, UTF8 rejection and byte-limit boundary/overrun behavior."
+    },
+    {
+      "number": 63,
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/JsonBodyAcceptanceTest.java",
+      "test": "sdsAc10_FR_JSON_001_AC6_invalidUtf8Gives400",
+      "req": [
+        "CON-APP-010 AC-4",
+        "FR-APP-024 AC-3",
+        "FR-JSON-001"
+      ],
+      "category": "approved_checkpoint_migration",
+      "minimal_next_action": "Update final default content-type/body expectation or explicitly choose preserved JSON error extension; retain exact415/400/413, codec invocation counts, UTF8 rejection and byte-limit boundary/overrun behavior."
+    },
+    {
+      "number": 64,
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/JsonBodyAcceptanceTest.java",
+      "test": "sdsAc8_FR_JSON_001_AC2_codecIOExceptionGives400",
+      "req": [
+        "CON-APP-010 AC-4",
+        "FR-APP-024 AC-3",
+        "FR-JSON-001"
+      ],
+      "category": "approved_checkpoint_migration",
+      "minimal_next_action": "Update final default content-type/body expectation or explicitly choose preserved JSON error extension; retain exact415/400/413, codec invocation counts, UTF8 rejection and byte-limit boundary/overrun behavior."
+    },
+    {
+      "number": 65,
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/JsonBodyAcceptanceTest.java",
+      "test": "sdsAc9_FR_JSON_001_AC4_contentLengthOverTheDefaultLimitGives413BeforeTheCodec",
+      "req": [
+        "CON-APP-010 AC-4",
+        "FR-APP-024 AC-3",
+        "FR-JSON-001"
+      ],
+      "category": "approved_checkpoint_migration",
+      "minimal_next_action": "Update final default content-type/body expectation or explicitly choose preserved JSON error extension; retain exact415/400/413, codec invocation counts, UTF8 rejection and byte-limit boundary/overrun behavior."
+    },
+    {
+      "number": 66,
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/JsonBodyAcceptanceTest.java",
+      "test": "sdsAc9_FR_JSON_001_AC4_chunkedOverrunWrappedByTheCodecGives413",
+      "req": [
+        "CON-APP-010 AC-4",
+        "FR-APP-024 AC-3",
+        "FR-JSON-001"
+      ],
+      "category": "approved_checkpoint_migration",
+      "minimal_next_action": "Update final default content-type/body expectation or explicitly choose preserved JSON error extension; retain exact415/400/413, codec invocation counts, UTF8 rejection and byte-limit boundary/overrun behavior."
+    },
+    {
+      "number": 67,
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/JsonBodyAcceptanceTest.java",
+      "test": "sdsAc9_FR_JSON_001_AC4_jsonLimit10Gives413For11BytesAndDecodes10",
+      "req": [
+        "CON-APP-010 AC-4",
+        "FR-APP-024 AC-3",
+        "FR-JSON-001"
+      ],
+      "category": "approved_checkpoint_migration",
+      "minimal_next_action": "Update final default content-type/body expectation or explicitly choose preserved JSON error extension; retain exact415/400/413, codec invocation counts, UTF8 rejection and byte-limit boundary/overrun behavior."
+    },
+    {
+      "number": 68,
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/FileResponseTest.java",
+      "test": "sdsAc4_FR_STATIC_006_AC5_resFileOnLinkDirectoryOrMissingIs404StandardBody",
+      "req": [
+        "CON-APP-010 AC-4",
+        "FR-APP-024 AC-3",
+        "FR-STATIC-006 AC-5"
+      ],
+      "category": "approved_checkpoint_migration",
+      "minimal_next_action": "Update default404 format only; retain real/link/directory/missing distinctions, no symlink/file content disclosure and safe file/resource closure."
+    },
+    {
+      "number": 69,
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/FileResponseTest.java",
+      "test": "FR_STATIC_011_AC2_failedDownloadDropsDispositionBeforeOnError",
+      "req": [
+        "CON-APP-010 AC-4",
+        "FR-APP-024 AC-1/5",
+        "FR-STATIC-011 AC-2"
+      ],
+      "category": "approved_checkpoint_migration",
+      "minimal_next_action": "Register explicit onError bridge after the failing download route; retain configured body/status and mandatory Content-Disposition removal. Do not generalize this to the static-before-handler failure, which is a real bypass bug."
+    },
+    {
+      "number": 70,
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/testing/InMemoryHttpAdapterTest.java",
+      "test": "sdsAc12_FR_APP_009_AC7_harnessBuildsThroughTheBuilderWithStubCodecAndStartsByListen",
+      "req": [
+        "CON-APP-010 AC-1/5",
+        "FR-APP-021 AC-1"
+      ],
+      "category": "approved_checkpoint_migration",
+      "minimal_next_action": "Replace duplicate-HTTP freeze rejection with ordered duplicate route/Route-identity evidence; retain independent strict legacy/WS duplicate rejection and startup/bind exception-type/unwrapped-error checks using a genuinely invalid registration or retained profile."
+    },
+    {
+      "number": 71,
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/testing/InMemoryHttpAdapterTest.java",
+      "test": "sdsAc8_FR_HTTP_001_AC3_startIsIdempotentAndThenRefusesRegistration",
+      "req": [
+        "CON-APP-010 AC-3/5",
+        "FR-APP-021 AC-3/4"
+      ],
+      "category": "approved_checkpoint_migration",
+      "minimal_next_action": "Allow ordinary HTTP/RouteBuilder append after freeze/listen with positive request observation and atomic snapshot controls; keep onError/configuration/server/WS guards and invalid/null registration tests separately."
+    },
+    {
+      "number": 72,
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/testing/InMemoryHttpAdapterTest.java",
+      "test": "sdsAc8_FR_HTTP_001_AC2_requestsRunThroughTheAppDispatcherOnTheInMemoryAdapter",
+      "req": [
+        "CON-APP-010 AC-3/5",
+        "FR-HTTP-028 AC-1/5/6"
+      ],
+      "category": "approved_checkpoint_migration",
+      "minimal_next_action": "Replace historical ordinary method-miss405/global unknown-or-disabled501 with common HTTP fallthrough404 or explicit registered-method outcomes; retain MethodSet/any-except selection, actual Kotlin SAM invocation, middleware count and separate legacy/WS rejection coverage."
+    },
+    {
+      "number": 73,
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/testing/InMemoryHttpAdapterTest.java",
+      "test": "sdsAc8_FR_HTTP_001_AC3_freezeErrorReachesTheCallerUnwrapped",
+      "req": [
+        "CON-APP-010 AC-1/5",
+        "FR-APP-021 AC-1"
+      ],
+      "category": "approved_checkpoint_migration",
+      "minimal_next_action": "Replace duplicate-HTTP freeze rejection with ordered duplicate route/Route-identity evidence; retain independent strict legacy/WS duplicate rejection and startup/bind exception-type/unwrapped-error checks using a genuinely invalid registration or retained profile."
+    }
+  ]
+}

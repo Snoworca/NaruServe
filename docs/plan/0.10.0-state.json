@@ -4,7 +4,7 @@
   "plan": "docs/plan/0.10.0-parallel-plan.md",
   "dependencies": "unchanged versions/types/scopes; existing toolchain reused",
   "regex": "Java Pattern",
-  "status": "tiny-3.1.1-raw-tdd-and-core-deferred-review",
+  "status": "parity30-pass-adapter-lifetime-and-retained-extension-regressions",
   "issues": [
     {
       "id": "T00",
@@ -490,7 +490,7 @@
       "tests_commit": "ad925de",
       "tests": 34,
       "red_tests": 34,
-      "status": "round2-pass-implementation",
+      "status": "core-green-adapter-integration-pending",
       "rounds": [
         {
           "round": 1,
@@ -500,7 +500,9 @@
           "round": 2,
           "verdict": "pass"
         }
-      ]
+      ],
+      "green_commit": "9dbd88c",
+      "java8_targeted_pass": 112
     },
     "tiny-raw-pins": {
       "tests_commit": "ae40850",
@@ -514,6 +516,26 @@
       "adapter_red": 32,
       "build_tests": 40,
       "build_red": 8,
+      "status": "bounded-green-integrated",
+      "green_commit": "62f1e12",
+      "java17_full": 178,
+      "java8_full": 178,
+      "framework_tests": 4,
+      "framework_socket_requests": 27,
+      "framework_test_commit": "8c5630a",
+      "integrated_newcore_tests": 182,
+      "integrated_newcore_failures": 11
+    },
+    "core-extension-regressions": {
+      "tests_commit": "44256a5",
+      "tests": 16,
+      "red_tests": 12,
+      "rounds": [
+        {
+          "round": 1,
+          "verdict": "pass"
+        }
+      ],
       "status": "approved-green-implementation"
     }
   },
@@ -521,12 +543,12 @@
     "worktree": ".claude/worktrees/v010-runtime-parity",
     "branch": "kiwi/v010/runtime-parity",
     "base": "d84ca92",
-    "status": "29-of30-actual-runtime-match-async-pending",
+    "status": "all30-runtime-pass-jdk17-and-actualjava8",
     "agent": "/root/release_dependency_audit",
-    "head": "4e5ce51",
+    "head": "d2e1c25",
     "tests": 54,
-    "passed": 53,
-    "failed": 1
+    "passed": 54,
+    "failed": 0
   },
   "reported_progress": {
     "estimate_percent": 40,
@@ -537,10 +559,30 @@
   "tiny_raw_lane": {
     "worktree": ".claude/worktrees/v010-tiny-raw",
     "branch": "kiwi/v010/tiny-raw",
-    "status": "round1-pass-implementation",
+    "status": "raw-green-commoncore-guard-fixes-and-deferred-pending",
     "requirements": [
       "FR-ENGINE-012",
       "CON-BUILD-018"
     ]
+  },
+  "tiny_deferred_lane": {
+    "worktree": ".claude/worktrees/v010-tiny-raw",
+    "base": "ac58c70",
+    "status": "authoring-red-tests",
+    "requirements": [
+      "FR-APP-023",
+      "IR-HTTP-009"
+    ]
+  },
+  "api_checkpoint_lane": {
+    "worktree": ".claude/worktrees/v010-api-checkpoints",
+    "owned_classes": [
+      "HttpApiSurfaceTest",
+      "AppLifecycleGuardTest",
+      "AppEntryApiTest",
+      "InMemoryHttpAdapterTest"
+    ],
+    "status": "tests-only-migrations",
+    "independent_bug_red": "6f4d874"
   }
 }
