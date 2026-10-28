@@ -5,7 +5,7 @@ import java.util.*;
 import org.jspecify.annotations.Nullable;
 
 /** Per-request cursors and execution ownership. User callbacks and IO run outside the state monitor. */
-// @req FR-APP-022 AC-1 AC-2 AC-3 AC-5; FR-APP-023 AC-1 AC-3 AC-4 AC-5
+// @req FR-APP-022 AC-1 AC-2 AC-3 AC-5; FR-APP-023 AC-1 AC-3 AC-4 AC-5 AC-7 AC-8
 final class HttpExecution {
     private final DefaultRequest request;
     private final DefaultResponse response;
@@ -15,8 +15,8 @@ final class HttpExecution {
     private final Object state=new Object();
     private final Deque<Runnable> queued=new ArrayDeque<>();
     private @Nullable Thread owner;
-    private boolean terminal,cleaned,cancelled;
-    private int depth;
+    private boolean terminal,cleaned,cancelled,cleaning,registered,releasing,transportReleased;
+    private Runnable releaseRequest=()->{};
     private final Set<Object> leases=Collections.newSetFromMap(new IdentityHashMap<Object,Boolean>());
     private final RouterCursor root;
 
@@ -27,7 +27,10 @@ final class HttpExecution {
         response.onDone(this::responseDone);
     }
     void start(com.snoworca.naruserve.spi.HttpExchange exchange) {
-        if(!lifecycle.registerHttp(this)) { cancel();return; }
+        // Adapter/user-provided hooks run outside our monitor. Even an already-closed lifecycle releases this hold.
+        releaseRequest=Objects.requireNonNull(exchange.retainRequest(),"request retention release");
+        synchronized(state) { registered=lifecycle.registerHttp(this); }
+        if(!registered) { cancel();return; }
         exchange.onAbort(this::cancel);
         submit(()->root.advance(null));
     }
@@ -43,29 +46,64 @@ final class HttpExecution {
         }
         try { terminalLog.run(); } finally { cleanupIfIdle(); }
     }
+    /** Caller holds state; adapter/user callbacks and physical resource cleanup never run there. */
+    private boolean idle() { return terminal && owner==null && queued.isEmpty() && leases.isEmpty(); }
     private void cleanupIfIdle() {
+        boolean releaseResources;
         synchronized(state) {
-            if(!terminal || owner!=null || !queued.isEmpty() || !leases.isEmpty() || cleaned)return;
-            cleaned=true;
+            if(!idle() || cleaning || releasing)return;
+            releaseResources=!cleaned;
+            if(releaseResources) { cleaned=true;cleaning=true; }
         }
-        try {
-            request.releaseUploads();
-            try { request.closeBody(); } catch(Exception failure) { errors.logger.error("request input close failed",failure); }
-        } finally { lifecycle.releaseHttp(this); }
+        if(releaseResources) {
+            try {
+                try { request.releaseUploads(); }
+                finally {
+                    try { request.closeBody(); }
+                    catch(Exception failure) { errors.logger.error("request input close failed",failure); }
+                }
+            } finally {
+                synchronized(state) { cleaning=false; }
+                releaseIfIdle();
+            }
+        } else releaseIfIdle();
+    }
+    /** Input cleanup, adapter release, and new callback admission share one app-ownership registration. */
+    private void releaseIfIdle() {
+        synchronized(state) {
+            if(!idle() || cleaning || releasing)return;
+            if(transportReleased) { unregister();return; }
+            releasing=true;
+        }
+        try { releaseRequest.run(); }
+        catch(Throwable failure) { errors.logger.error("request retention release failed",failure); }
+        finally {
+            synchronized(state) {
+                transportReleased=true;releasing=false;
+                if(idle() && !cleaning)unregister();
+            }
+        }
+    }
+    /** Caller holds state; lifecycle set bookkeeping invokes no adapter/user code and acquires no request lock. */
+    private void unregister() {
+        if(registered) { registered=false;lifecycle.releaseHttp(this); }
     }
     private void submit(Runnable task) {
         boolean nested;
         synchronized(state) {
-            if(cancelled || response.state()==ResponseState.ABORTED)return;
-            if(owner!=null && (owner!=Thread.currentThread() || depth>=64)) { queued.add(task);return; }
+            if(cancelled || lifecycle.httpClosed() || response.state()==ResponseState.ABORTED)return;
+            if(owner!=null && owner!=Thread.currentThread()) { queued.add(task);return; }
             nested=owner!=null;
-            if(!nested)owner=Thread.currentThread();
+            if(!nested) {
+                // A valid post-response continuation owns app lifetime again, without resurrecting closed input.
+                if(!registered) {
+                    if(!lifecycle.registerHttp(this))return;
+                    registered=true;
+                }
+                owner=Thread.currentThread();
+            }
         }
-        if(nested) {
-            depth++;
-            try { lifecycle.withRequest(task); } finally { depth--; }
-            return;
-        }
+        if(nested) { lifecycle.withRequest(task);return; }
         try {
             Runnable next=task;
             for(;;) {
@@ -131,7 +169,7 @@ final class HttpExecution {
         final Map<String,Object> inherited;
         final Map<String,ParamRecord> paramCache=new HashMap<>();
         final Set<String> options=new TreeSet<>();
-        int index;
+        int index,sync;
         RouterCursor(HttpRouter router,@Nullable RouterCursor parent,@Nullable RequestView savedMount) {
             this.router=router;this.parent=parent;this.savedMount=savedMount;
             inherited=savedMount==null?Collections.emptyMap():savedMount.params;
@@ -151,6 +189,8 @@ final class HttpExecution {
             });
         }
         void advance(@Nullable Throwable error) {
+            if(index>=router.layers.length) { exit(error);return; }
+            if(++sync>100) { defer(()->advance(error));return; }
             if(error!=null)request.logFailure(error,errors.logger);
             Throwable pending=error;
             for(;;) {
@@ -170,7 +210,9 @@ final class HttpExecution {
                 Map<String,Object> params=router.mergeParams?HttpParameters.merge(matched.params,inherited):matched.params;
                 request.applyView(new RequestView(request.path(),request.baseUrl(),params));
                 Throwable layerError=pending;
-                new Parameters(this,new ArrayList<>(matched.params.keySet()),layerError,()->dispatch(layer,matched,layerError)).advance(RUN);
+                new Parameters(this,new ArrayList<>(matched.params.keySet()),layerError,()->{
+                    try { dispatch(layer,matched,layerError); } finally { sync=0; }
+                }).advance(RUN);
                 return;
             }
         }
@@ -256,7 +298,7 @@ final class HttpExecution {
         final RouterCursor parent;
         final HttpRouter.Route route;
         final String effectiveMethod;
-        int index;
+        int index,sync;
         RouteCursor(RouterCursor parent,HttpRouter.Route route) {
             this.parent=parent;this.route=route;
             effectiveMethod=request.methodToken().equals("HEAD") && !route.has("HEAD")?"GET":request.methodToken();
@@ -264,12 +306,15 @@ final class HttpExecution {
         void advance(@Nullable Throwable error) {
             if(error!=null) { parent.advance(error);return; }
             HttpRouter.Handler[] handlers=route.handlers;
+            if(index>=handlers.length) { parent.advance(null);return; }
+            if(++sync>100) { defer(()->advance(null));return; }
             while(index<handlers.length) {
                 HttpRouter.Handler handler=handlers[index++];
                 if(!handler.method.isEmpty() && !handler.method.equals("*") && !handler.method.equals(effectiveMethod))continue;
                 try { request.decodeQuery(); }
                 catch(Exception failure) { parent.advance(failure);return; }
-                callback(handler.callback,new Continue(parent,this,null));return;
+                try { callback(handler.callback,new Continue(parent,this,null)); } finally { sync=0; }
+                return;
             }
             parent.advance(null);
         }
