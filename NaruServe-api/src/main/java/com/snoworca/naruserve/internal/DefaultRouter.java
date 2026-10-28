@@ -25,6 +25,9 @@ public final class DefaultRouter implements com.snoworca.naruserve.Router {
     @Override public com.snoworca.naruserve.Router use(Object path,com.snoworca.naruserve.Router child) {
         registry.mount(path,unwrap(child));return this;
     }
+    @Override public com.snoworca.naruserve.Router use(Object path,ErrorMiddleware callback) {
+        registry.error(path,callback);return this;
+    }
     @Override public com.snoworca.naruserve.Router param(String name,ParamHandler callback) {
         registry.param(name,callback);return this;
     }

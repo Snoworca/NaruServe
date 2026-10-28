@@ -1,7 +1,6 @@
 package com.snoworca.naruserve.internal;
 
 import com.snoworca.naruserve.CachePolicy;
-import com.snoworca.naruserve.Method;
 import com.snoworca.naruserve.ResourceResolver;
 import com.snoworca.naruserve.common.HttpHeaderValues;
 import java.io.IOException;
@@ -71,8 +70,8 @@ final class FileResponder {
             modified = r.modified(path);
         }
         long seconds = modified / 1000;
-        Method method = req.method();
-        boolean conditional = method == Method.GET || method == Method.HEAD;
+        String method = req.methodToken();
+        boolean conditional = "GET".equals(method) || "HEAD".equals(method);
 
         int status = 200;
         long[] range = null;
@@ -85,7 +84,7 @@ final class FileResponder {
                 status = ims != Long.MIN_VALUE && ims / 1000 >= seconds ? 304 : 200;
             }
         }
-        if (status == 200 && method == Method.GET && ifRangeHolds(req.header("If-Range"), tag, seconds)) {
+        if (status == 200 && "GET".equals(method) && ifRangeHolds(req.header("If-Range"), tag, seconds)) {
             List<String> ranges = req.headers("Range");
             // Repeated fields represent several ranges, whose documented fallback is the full response.
             range = ranges.size() == 1 ? range(ranges.get(0), length) : null;

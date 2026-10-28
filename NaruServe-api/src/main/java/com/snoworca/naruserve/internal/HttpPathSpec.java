@@ -1,6 +1,5 @@
 package com.snoworca.naruserve.internal;
 
-import com.snoworca.naruserve.HttpException;
 import com.snoworca.naruserve.routing.HttpPathPattern;
 import com.snoworca.naruserve.routing.RegexPathPattern;
 import java.util.*;
@@ -56,7 +55,7 @@ final class HttpPathSpec {
                 List<String> values=new ArrayList<>();
                 for(String rawValue:entry.getValue()) {
                     String value=PercentDecoder.decode(rawValue,false);
-                    if(value==null)throw new HttpException(400,"Failed to decode path parameter");
+                    if(value==null)throw new PathDecodeException(rawValue);
                     values.add(value);
                 }
                 decoded.put(entry.getKey(),wildcards.contains(entry.getKey())?values:values.get(0));

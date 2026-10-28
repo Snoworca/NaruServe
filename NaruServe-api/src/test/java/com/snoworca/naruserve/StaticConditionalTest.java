@@ -147,7 +147,9 @@ public class StaticConditionalTest {
         t.app().staticFiles("/", tmp.getRoot());
         ClientResponse r = t.send("GET", "/empty/");
         assertEquals(404, r.status());
-        assertTrue(new String(r.body(), StandardCharsets.UTF_8).startsWith("{\"error\":{\"code\":\"NOT_FOUND\""));
+        // CON-APP-010 AC-4; FR-APP-024 AC-3: a static miss reaches the new common HTML finalhandler.
+        assertTrue(r.text(),r.text().contains("<pre>Cannot GET /empty/</pre>"));
+        assertEquals("text/html; charset=utf-8",r.header("Content-Type"));
     }
 
     // FR-STATIC-003 AC-2

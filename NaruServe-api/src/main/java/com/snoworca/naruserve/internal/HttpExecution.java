@@ -70,6 +70,10 @@ final class HttpExecution {
         try { callback.handle(request,response,next); }
         catch(Exception failure) { next.error(failure); }
     }
+    private void errorCallback(ErrorMiddleware callback,Throwable error,Next next) {
+        try { callback.handle(error,request,response,next); }
+        catch(Exception failure) { next.error(failure); }
+    }
     /** Router completion is deferred like the pinned router's setImmediate(done). */
     private void defer(Runnable task) {
         synchronized(state) {
@@ -95,6 +99,7 @@ final class HttpExecution {
         final @Nullable RequestView savedMount;
         final Map<String,Object> inherited;
         final Map<String,ParamRecord> paramCache=new HashMap<>();
+        final Set<String> options=new TreeSet<>();
         int index;
         RouterCursor(HttpRouter router,@Nullable RouterCursor parent,@Nullable RequestView savedMount) {
             this.router=router;this.parent=parent;this.savedMount=savedMount;
@@ -102,32 +107,42 @@ final class HttpExecution {
         }
         void exit(@Nullable Throwable error) {
             defer(()->{
+                if(error==null && request.methodToken().equals("OPTIONS") && !options.isEmpty() && response.state()==ResponseState.NEW) {
+                    String allow=com.snoworca.naruserve.common.HttpHeaderValues.commaSeparated(options);
+                    response.header("Allow",allow).header("Content-Type","text/plain").header("X-Content-Type-Options","nosniff");
+                    response.send(allow.getBytes(java.nio.charset.StandardCharsets.UTF_8));return;
+                }
                 if(parent==null) {
-                    if(error==null)finalHandler.run();else errors.handle(error,request,response,request.requestId());
+                    if(error==null)finalHandler.run();else FinalHandler.finish(request,response,error,errors.logger);
                 }else{
                     request.applyView(Objects.requireNonNull(savedMount));parent.advance(error);
                 }
             });
         }
         void advance(@Nullable Throwable error) {
-            if(error!=null) { exit(error);return; }
+            Throwable pending=error;
             for(;;) {
                 HttpRouter.Layer[] layers=router.layers;
-                if(index>=layers.length) { exit(null);return; }
+                if(index>=layers.length) { exit(pending);return; }
                 HttpRouter.Layer layer=layers[index++];HttpPathSpec.Match matched;
                 try { matched=layer.path.match(request.path()); }
-                catch(Exception failure) { advance(failure);return; }
+                catch(Exception failure) { if(pending==null)pending=failure;continue; }
                 if(matched==null)continue;
-                if(layer.route!=null && !layer.route.handles(request.methodToken()))continue;
+                if(pending!=null && layer.error==null || pending==null && layer.error!=null)continue;
+                if(layer.route!=null && !layer.route.handles(request.methodToken())) {
+                    if(request.methodToken().equals("OPTIONS"))options.addAll(layer.route.methods());
+                    if(!request.methodToken().equals("HEAD"))continue;
+                }
                 // Search regex routes are allowed; a use/mount must still be an actual prefix.
                 if(layer.route==null && (matched.start!=0 || matched.end<request.path().length() && request.path().charAt(matched.end)!='/'))continue;
                 Map<String,Object> params=router.mergeParams?HttpParameters.merge(matched.params,inherited):matched.params;
                 request.applyView(new RequestView(request.path(),request.baseUrl(),params));
-                new Parameters(this,new ArrayList<>(matched.params.keySet()),()->dispatch(layer,matched)).advance(RUN);
+                Throwable layerError=pending;
+                new Parameters(this,new ArrayList<>(matched.params.keySet()),layerError,()->dispatch(layer,matched,layerError)).advance(RUN);
                 return;
             }
         }
-        void dispatch(HttpRouter.Layer layer,HttpPathSpec.Match matched) {
+        void dispatch(HttpRouter.Layer layer,HttpPathSpec.Match matched,@Nullable Throwable layerError) {
             if(layer.route!=null) { new RouteCursor(this,layer.route).advance(null);return; }
             RequestView saved=request.view();RequestView prefix=null;
             if(!matched.matchedPath.isEmpty()) {
@@ -140,7 +155,9 @@ final class HttpExecution {
             if(layer.child!=null) {
                 new RouterCursor(layer.child,this,saved).advance(null);return;
             }
-            callback(layer.middleware,new Continue(this,null,prefix));
+            Next next=new Continue(this,null,prefix);
+            if(layer.error!=null)errorCallback(layer.error,Objects.requireNonNull(layerError),next);
+            else callback(layer.middleware,next);
         }
     }
     /** One layer's ordered preprocessing cursor. Its cache belongs to this router invocation. */
@@ -148,11 +165,14 @@ final class HttpExecution {
         final RouterCursor router;
         final List<String> keys;
         final Runnable complete;
+        final @Nullable Throwable layerError;
         int keyIndex,hookIndex;
         String name="";
         @Nullable ParamHandler[] hooks;
         @Nullable ParamRecord record;
-        Parameters(RouterCursor router,List<String> keys,Runnable complete) { this.router=router;this.keys=keys;this.complete=complete; }
+        Parameters(RouterCursor router,List<String> keys,@Nullable Throwable layerError,Runnable complete) {
+            this.router=router;this.keys=keys;this.layerError=layerError;this.complete=complete;
+        }
         void restore(@Nullable Object value) {
             if(value instanceof List<?>)request.paramValues(name,HttpParameters.values(value));
             else request.param(name,(String)value);
@@ -195,21 +215,26 @@ final class HttpExecution {
             }
         }
         void finish(Flow flow) {
-            if(flow.kind==ROUTER)router.exit(null);
+            if(layerError!=null)router.advance(layerError);
+            else if(flow.kind==ROUTER)router.exit(null);
             else router.advance(flow.error);
         }
     }
     private final class RouteCursor {
         final RouterCursor parent;
         final HttpRouter.Route route;
+        final String effectiveMethod;
         int index;
-        RouteCursor(RouterCursor parent,HttpRouter.Route route) { this.parent=parent;this.route=route; }
+        RouteCursor(RouterCursor parent,HttpRouter.Route route) {
+            this.parent=parent;this.route=route;
+            effectiveMethod=request.methodToken().equals("HEAD") && !route.has("HEAD")?"GET":request.methodToken();
+        }
         void advance(@Nullable Throwable error) {
             if(error!=null) { parent.advance(error);return; }
             HttpRouter.Handler[] handlers=route.handlers;
             while(index<handlers.length) {
                 HttpRouter.Handler handler=handlers[index++];
-                if(!handler.method.isEmpty() && !handler.method.equals("*") && !handler.method.equals(request.methodToken()))continue;
+                if(!handler.method.isEmpty() && !handler.method.equals("*") && !handler.method.equals(effectiveMethod))continue;
                 try { request.decodeQuery(); }
                 catch(Exception failure) { parent.advance(failure);return; }
                 callback(handler.callback,new Continue(parent,this,null));return;

@@ -14,7 +14,7 @@ import org.jspecify.annotations.Nullable;
 // @req IR-MULTIPART-002
 public interface Request {
 
-    /** The actual request method. */
+    /** Legacy enum representation; extended wire tokens use methodToken() and throw here rather than inventing a Method. */
     Method method();
 
     /** Current raw pathname in common HTTP routing; legacy dispatcher views retain their historical contract. */

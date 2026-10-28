@@ -21,6 +21,10 @@ public final class HttpRouter {
         ParamHandler[] next=Arrays.copyOf(old,old.length+1);next[old.length]=callback;copy.put(name,next);
         paramHooks=Collections.unmodifiableMap(copy);
     }
+    public void error(Object path,ErrorMiddleware callback) {
+        Objects.requireNonNull(callback,"callback");
+        append(new Layer(new HttpPathSpec(path,false,caseSensitive,false),callback));
+    }
     public void mount(Object path,HttpRouter child) {
         Objects.requireNonNull(child,"router");
         append(new Layer(new HttpPathSpec(path,false,caseSensitive,false),null,null,child));
@@ -60,9 +64,13 @@ public final class HttpRouter {
     }
     static final class Layer {
         final HttpPathSpec path; final Route route; final Middleware middleware; final HttpRouter child;
+        final ErrorMiddleware error;
         Layer(HttpPathSpec path,Route route,Middleware middleware) { this(path,route,middleware,null); }
         Layer(HttpPathSpec path,Route route,Middleware middleware,HttpRouter child) {
-            this.path=path;this.route=route;this.middleware=middleware;this.child=child;
+            this.path=path;this.route=route;this.middleware=middleware;this.child=child;this.error=null;
+        }
+        Layer(HttpPathSpec path,ErrorMiddleware error) {
+            this.path=path;this.route=null;this.middleware=null;this.child=null;this.error=error;
         }
     }
     static final class Handler {
@@ -77,7 +85,13 @@ public final class HttpRouter {
             for(int i=0;i<callbacks.length;i++) copy[handlers.length+i]=new Handler(token,callbacks[i]);
             handlers=copy;
         }
-        boolean handles(String token) { for(Handler handler:handlers) if(handler.method.equals(token)||handler.method.equals("*"))return true; return false; }
+        boolean handles(String token) { return has(token) || token.equals("HEAD") && !has("HEAD") && has("GET"); }
+        boolean has(String token) { for(Handler handler:handlers)if(handler.method.equals(token)||handler.method.equals("*"))return true;return false; }
+        Set<String> methods() {
+            Set<String> result=new TreeSet<>();
+            for(Handler handler:handlers)if(!handler.method.isEmpty() && !handler.method.equals("*"))result.add(handler.method);
+            if(result.contains("GET"))result.add("HEAD");return result;
+        }
     }
     private static final class Builder implements RouteBuilder {
         final Route route;

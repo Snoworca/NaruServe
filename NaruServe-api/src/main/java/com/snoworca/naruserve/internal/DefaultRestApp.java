@@ -920,6 +920,9 @@ public final class DefaultRestApp implements RestApp {
     @Override public RestApp use(Object path,com.snoworca.naruserve.Router child) {
         lifecycle.requireHttpRegistration("use");http.mount(path,DefaultRouter.unwrap(child));return this;
     }
+    @Override public RestApp use(Object path,com.snoworca.naruserve.ErrorMiddleware callback) {
+        lifecycle.requireHttpRegistration("use");http.error(path,callback);return this;
+    }
     @Override public RestApp param(String name,com.snoworca.naruserve.ParamHandler callback) {
         lifecycle.requireHttpRegistration("param");http.param(name,callback);return this;
     }
@@ -929,7 +932,12 @@ public final class DefaultRestApp implements RestApp {
     @Override
     public synchronized RestApp onError(ErrorHandler handler) {
         lifecycle.requireConfigurable("onError");
-        errorHandlers.add(Objects.requireNonNull(handler, "handler"));
+        Objects.requireNonNull(handler,"handler");
+        http.error("",(error,request,response,next)->{
+            handler.handle(error,request,response);
+            if(((DefaultResponse)response).state()==ResponseState.NEW)next.error(error);
+        });
+        errorHandlers.add(handler);
         return this;
     }
 

@@ -199,7 +199,6 @@ public final class Dispatcher implements ExchangeHandler {
         }
         if(!ex.rawPath().startsWith("/")) { automatic(ex,400,null,false,rid,start);return; }
         Method method=methodOf(ex.methodToken());
-        if(method==null) { automatic(ex,501,null,false,rid,start);return; }
         DefaultRequest req=new DefaultRequest(ex,method,Collections.emptyMap(),context,codec,jsonLimit,trustProxy,multipart,formLimit,spool,true);
         req.requestId(rid);req.startNanos(start);
         DefaultResponse res=new DefaultResponse(ex,method==Method.HEAD,codec);
@@ -208,13 +207,15 @@ public final class Dispatcher implements ExchangeHandler {
         Runnable terminal=()->{
             if(res.state()!=ResponseState.NEW)return;
             try {
-                if(statics.serve(req,res,false))return;
-                RouteMatch<RouteHandler> ws;
-                try { ws=router.lookup(ex.methodToken(),ex.rawPath(),false); }
-                catch(IllegalArgumentException invalidLegacyPath) { error(res,404,rid);return; }
-                if(ws.kind()!=RouteMatch.Kind.NO_MATCH)fallback(ws,req,res,rid);
-                else error(res,404,rid);
-            } catch(Exception failure) { errors.handle(failure,req,res,rid); }
+                // A real legacy WS-only footprint retains its separate426/OPTIONS/method profile.
+                RouteMatch<RouteHandler> wsPath=null;
+                try { wsPath=router.lookup("GET",ex.rawPath(),false); }
+                catch(IllegalArgumentException invalidLegacyPath) { /* common raw HTTP still owns this path */ }
+                if(wsPath!=null && wsPath.kind()==RouteMatch.Kind.WEBSOCKET_ONLY) {
+                    fallback(router.lookup(ex.methodToken(),ex.rawPath(),false),req,res,rid);return;
+                }
+                if(!statics.serve(req,res,false))FinalHandler.finish(req,res,null,errors.logger);
+            } catch(Exception failure) { FinalHandler.finish(req,res,failure,errors.logger); }
         };
         Runnable log=()->{
             DefaultSseClient stream=res.sseClient();
