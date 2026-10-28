@@ -23,6 +23,8 @@ public class TinyAbortNotificationTest {
     private final ExecutorService clients=Executors.newFixedThreadPool(4),races=Executors.newFixedThreadPool(4);
     private final AtomicInteger transportAborts=new AtomicInteger(),exited=new AtomicInteger();
     private final AtomicReference<String> fault=new AtomicReference<>();
+    private final AtomicReference<IOException> injected=new AtomicReference<>();
+    private IOException injected(String point){IOException failure=new IOException("injected "+point+" IO");injected.set(failure);return failure;}
     @After public void cleanup()throws Exception{for(HttpExchange ex:all)ex.abort();if(server!=null)server.stop(0);clients.shutdownNow();races.shutdownNow();assertTrue(clients.awaitTermination(12,TimeUnit.SECONDS));assertTrue(races.awaitTermination(5,TimeUnit.SECONDS));}
     private void start(ExchangeHandler callback)throws Exception{
         server=TinyHttpdAdapter.configure(Http.settings().bodyReadTimeoutMillis(200).build(),(request,response)->{
@@ -30,8 +32,8 @@ public class TinyAbortNotificationTest {
                 @Override public OutputStream getOutputStream()throws IOException{
                     if(fault.compareAndSet("commit",null))throw new IOException("injected commit IO");
                     return new FilterOutputStream(super.getOutputStream()){
-                        @Override public void write(int b)throws IOException{if(fault.compareAndSet("write",null))throw new IOException("injected write IO");out.write(b);}
-                        @Override public void write(byte[] b,int off,int len)throws IOException{if(fault.compareAndSet("write",null))throw new IOException("injected write IO");out.write(b,off,len);}
+                        @Override public void write(int b)throws IOException{if(fault.compareAndSet("write",null))throw injected("write");out.write(b);}
+                        @Override public void write(byte[] b,int off,int len)throws IOException{if(fault.compareAndSet("write",null))throw injected("write");out.write(b,off,len);}
                         @Override public void flush()throws IOException{if(fault.compareAndSet("flush",null))throw new IOException("injected flush IO");out.flush();}
                     };
                 }
@@ -107,6 +109,13 @@ public class TinyAbortNotificationTest {
             catch(IOException expected){setupFailed.countDown();}});
         Future<String> reply=get();HttpExchange ex=next();assertTrue(setupFailed.await(5,TimeUnit.SECONDS));
         assertEquals(0,attached.get());assertEquals(0,drained.get());assertEquals(1,cancelled.get());assertEquals(1,notices.get());assertNull(lockFailure.get());assertEquals(0,slots.open());terminal(reply);ex.abort();assertEquals(1,cancelled.get());assertEquals(1,notices.get());assertEquals(1,transportAborts.get());
+    }
+
+    // IR-HTTP-009 AC-2 AC-3; FR-APP-023 AC-3: swallowing a body IO must not convert known failure to normal completion.
+    @Test(timeout=20000) public void customDrainCatchingIoStillNotifiesAtOwnershipUnwind()throws Exception{
+        AtomicInteger notices=new AtomicInteger();AtomicReference<IOException> caught=new AtomicReference<>();AtomicReference<Throwable> lockFailure=new AtomicReference<>();
+        start(ex->{ex.onAbort(()->{unlocked(ex,lockFailure);notices.incrementAndGet();});try{ex.eventStream(200,Collections.emptyList(),out->{fault.set("write");try{out.write('x');}catch(IOException original){caught.set(original);}});}catch(IOException failure){throw new UncheckedIOException(failure);}});
+        Future<String> reply=get();next();terminal(reply);assertNotNull(caught.get());assertSame(injected.get(),caught.get());assertEquals(1,notices.get());assertNull(lockFailure.get());assertEquals(1,transportAborts.get());
     }
 
 }
