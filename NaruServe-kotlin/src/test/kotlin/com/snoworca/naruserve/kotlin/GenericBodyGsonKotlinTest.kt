@@ -3,6 +3,7 @@ package com.snoworca.naruserve.kotlin
 import com.snoworca.naruserve.gson.GsonJsonCodec
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter
 import com.snoworca.naruserve.testing.TestApp
+import com.snoworca.naruserve.testing.common.RunnableExampleContract
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -72,7 +73,9 @@ class GenericBodyGsonKotlinTest {
         try {
             val response = adapter.send(InMemoryHttpAdapter.ClientRequest.json("POST", "/users", "null"))
             assertEquals(400, response.status())
-            assertTrue(response.text().contains("\"code\":\"BAD_REQUEST\""))
+            // CON-APP-010 AC-4 AC-5; FR-APP-024 AC-3: null remains 400, current envelope is HTML.
+            RunnableExampleContract.assertCommonHtmlError(response.text(), response.body().size,
+                response::header, "com.snoworca.naruserve.HttpException: JSON body is null")
         } finally {
             testApp.app().shutdown(0, java.util.concurrent.TimeUnit.SECONDS)
         }

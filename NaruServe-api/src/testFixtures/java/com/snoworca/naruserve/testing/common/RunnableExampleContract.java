@@ -11,6 +11,21 @@ import java.util.concurrent.TimeUnit;
 /** Real HTTP contract shared by the Java and Kotlin source examples. @req OPS-DX-001 */
 public final class RunnableExampleContract {
     public interface Factory { RestApp create(File uploads) throws Exception; }
+    public interface Headers { String get(String name); }
+
+    // FR-APP-024 AC-3; CON-APP-010 AC-4 AC-5: shared by actual Java/Kotlin HTTP
+    // examples and runtime checkpoints; never parse the common HTML error as JSON.
+    public static void assertCommonHtmlError(String text, int bodyBytes, Headers headers, String expectedInfo) {
+        check("text/html; charset=utf-8".equals(headers.get("Content-Type")), "HTML error Content-Type");
+        check("default-src 'none'".equals(headers.get("Content-Security-Policy")), "HTML error CSP");
+        check("nosniff".equals(headers.get("X-Content-Type-Options")), "HTML error nosniff");
+        check(text.startsWith("<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n"
+                + "<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>"), "HTML error scaffold: " + text);
+        check(text.endsWith("</pre>\n</body>\n</html>\n"), "complete HTML error scaffold: " + text);
+        check(text.contains(expectedInfo), "HTML error information " + expectedInfo + ": " + text);
+        check(bodyBytes == text.getBytes(StandardCharsets.UTF_8).length, "error UTF-8 bytes");
+        check(Integer.toString(bodyBytes).equals(headers.get("Content-Length")), "error Content-Length");
+    }
     private RunnableExampleContract() {}
 
     public static void verify(Factory factory) throws Exception {
@@ -23,9 +38,9 @@ public final class RunnableExampleContract {
             int port = app.listen(0).port();
             request(port, "GET", "/hello", null, null, 200, "Hello World");
             request(port, "GET", "/page", null, null, 200, "1");
-            request(port, "GET", "/page?page=abc", null, null, 400, "BAD_REQUEST");
+            request(port, "GET", "/page?page=abc", null, null, 400, "page must be a 32-bit integer");
             request(port, "POST", "/users", "application/json", "{}", 400, "name is required");
-            request(port, "POST", "/users", "application/json", "null", 400, "BAD_REQUEST");
+            request(port, "POST", "/users", "application/json", "null", 400, "JSON body is null");
             request(port, "POST", "/users", "application/json", "{\"name\":null}", 400, "name is required");
             request(port, "POST", "/users", "application/json", "{\"name\":\"Ada\"}", 201, "Ada");
             request(port, "GET", "/users/1", null, null, 200, "Ada");
@@ -70,6 +85,10 @@ public final class RunnableExampleContract {
             String text = new String(result.toByteArray(), StandardCharsets.UTF_8);
             check(status == expectedStatus, method + " " + path + " status " + status + ": " + text);
             check(text.contains(expectedText), method + " " + path + " body: " + text);
+            if (status >= 400) {
+                assertCommonHtmlError(text, result.size(), connection::getHeaderField,
+                        "com.snoworca.naruserve.HttpException");
+            }
         } finally {
             connection.disconnect();
         }
