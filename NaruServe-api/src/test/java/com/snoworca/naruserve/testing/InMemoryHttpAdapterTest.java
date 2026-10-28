@@ -10,6 +10,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.snoworca.naruserve.HttpException;
+import com.snoworca.naruserve.Middleware;
 import com.snoworca.naruserve.internal.DefaultRestApp;
 import com.snoworca.naruserve.routing.RoutingConfigException;
 import com.snoworca.naruserve.spi.HttpAdapter;
@@ -88,26 +89,26 @@ public class InMemoryHttpAdapterTest {
         assertTrue(location, location.contains("testFixtures") || location.contains("test-fixtures"));
     }
 
-    // SDS-AC-8; FR-HTTP-001 AC-3
+    // CON-APP-010 AC-1 AC-5; FR-APP-021 AC-6; FR-HTTP-001 AC-3: retained WS still has strict freeze conflicts.
     @Test
-    public void sdsAc8_FR_HTTP_001_AC3_freezeErrorReachesTheCallerUnwrapped() {
+    public void retainedWebSocketFreezeErrorReachesStartAndLazySendUnwrapped() {
         TestApp t = TestApp.create();
-        t.app().get("/x", (req, res) -> { });
-        t.app().get("/x", (req, res) -> { });
+        t.app().ws("/x", (req, ws) -> { });
+        t.app().ws("/x", (req, ws) -> { });
         try {
             t.start();
-            fail("duplicate GET /x accepted");
+            fail("duplicate retained WS /x accepted");
         } catch (RoutingConfigException e) {
             assertEquals(RoutingConfigException.class, e.getClass());
             assertNull(e.getCause());
             assertTrue(e.getMessage(), e.getMessage().contains("GET /x conflicts with GET /x"));
         }
         TestApp lazy = TestApp.create();
-        lazy.app().get("/y", (req, res) -> { });
-        lazy.app().get("/y", (req, res) -> { });
+        lazy.app().ws("/y", (req, ws) -> { });
+        lazy.app().ws("/y", (req, ws) -> { });
         try {
             lazy.send("GET", "/y");
-            fail("send started a conflicting table");
+            fail("send started a conflicting retained WS table");
         } catch (RoutingConfigException e) {
             assertEquals(RoutingConfigException.class, e.getClass());
         }
@@ -115,16 +116,16 @@ public class InMemoryHttpAdapterTest {
 
     // SDS-AC-8; FR-HTTP-001 AC-3
     @Test
-    public void sdsAc8_FR_HTTP_001_AC3_startIsIdempotentAndThenRefusesRegistration() {
+    public void startIsIdempotentAndThenPublishesOrdinaryHttpRegistrations() {
+        // CON-APP-010 AC-3 AC-5; FR-APP-021 AC-4: HTTP append differs from guarded configuration/WS.
         TestApp t = TestApp.create();
-        assertSame(t, t.start());
-        assertSame(t, t.start());
-        try {
-            t.app().get("/late", (req, res) -> { });
-            fail("registration after start");
-        } catch (IllegalStateException expected) {
-            // frozen by start
-        }
+        assertSame(t, t.start()); assertSame(t, t.start());
+        t.app().get("/late", (req, res) -> res.send("late"));
+        assertEquals("late", t.send("GET", "/late").text());
+        try { t.app().ws("/late-ws", (req, ws) -> { }); fail("WS registration after start"); }
+        catch (IllegalStateException expected) { assertTrue(expected.getMessage().contains("RUNNING")); }
+        try { t.app().server(options -> { }); fail("server configuration after start"); }
+        catch (IllegalStateException expected) { assertTrue(expected.getMessage().contains("RUNNING")); }
     }
 
     // SDS-AC-8; FR-HTTP-001 AC-2
@@ -132,16 +133,18 @@ public class InMemoryHttpAdapterTest {
     public void sdsAc8_FR_HTTP_001_AC2_requestsRunThroughTheAppDispatcherOnTheInMemoryAdapter() throws IOException {
         InMemoryHttpAdapter adapter = new InMemoryHttpAdapter();
         TestApp t = TestApp.create(adapter);
-        t.app().post("/p", (req, res) -> { });
+        // CON-APP-010 AC-3 AC-5; FR-HTTP-028 AC-5: ordinary method miss is the exact common finalhandler profile.
+        t.app().post("/p", (req, res) -> res.send("post"));
         ClientResponse viaHarness = t.send("GET", "/p");
-        assertEquals(405, viaHarness.status());
-        assertEquals("POST, OPTIONS", viaHarness.header("Allow"));
-        // FR-HTTP-022 AC-2 (wave 4 successor of FR-HTTP-003): the 405 carries the standard error body.
+        assertEquals(404, viaHarness.status());
+        assertNull(viaHarness.header("Allow"));
         assertEquals(String.valueOf(viaHarness.body().length), viaHarness.header("Content-Length"));
-        assertEquals("application/json; charset=UTF-8", viaHarness.header("Content-Type"));
-        String body = new String(viaHarness.body(), java.nio.charset.StandardCharsets.UTF_8);
-        assertTrue(body, body.matches("\\{\"error\":\\{\"code\":\"METHOD_NOT_ALLOWED\","
-                + "\"message\":\"Method Not Allowed\",\"requestId\":\"[0-9a-f]{16}\"}}"));
+        assertEquals("text/html; charset=utf-8", viaHarness.header("Content-Type"));
+        String body = new String(viaHarness.body(), StandardCharsets.UTF_8);
+        assertTrue(body, body.contains("<pre>Cannot GET /p</pre>"));
+        assertEquals("default-src 'none'", viaHarness.header("Content-Security-Policy"));
+        assertEquals("nosniff", viaHarness.header("X-Content-Type-Options"));
+        assertEquals("post", t.send("POST", "/p").text());
         // The adapter handed to create() is the one bound: it reaches the same dispatcher directly.
         ClientResponse direct = adapter.send(ClientRequest.of("GET", "/nothing"));
         assertEquals(404, direct.status());
@@ -202,15 +205,14 @@ public class InMemoryHttpAdapterTest {
         // The harness exchange handler is the gated one listen() bound, not the bare dispatcher.
         assertEquals(404, t.send("GET", "/none").status());
 
+        // CON-APP-010 AC-1 AC-5; FR-APP-021 AC-1: duplicates are ordered HTTP layers, not a freeze error.
         TestApp dup = TestApp.create();
-        dup.app().get("/d", (req, res) -> { });
-        dup.app().get("/d", (req, res) -> { });
-        try {
-            dup.start();
-            fail("duplicate GET /d accepted");
-        } catch (RoutingConfigException e) {
-            assertEquals(RoutingConfigException.class, e.getClass());
-        }
+        List<String> order = new ArrayList<>();
+        dup.app().get("/d", (Middleware) (req, res, next) -> { order.add("first"); next.run(); });
+        dup.app().get("/d", (req, res) -> { order.add("second"); res.send("second"); });
+        dup.start();
+        assertEquals("second", dup.send("GET", "/d").text());
+        assertEquals(Arrays.asList("first", "second"), order);
     }
 
     // SDS-AC-12 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-3.sds.md; FR-APP-009 AC-7
