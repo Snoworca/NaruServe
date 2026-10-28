@@ -2,7 +2,9 @@
 
 [한국어](websocket.md) | [English](en/websocket.md)
 
-HTTP와 **같은 포트**에서 WebSocket(RFC 6455)을 받습니다. Express의 `express-ws`와 비슷합니다.
+> **버전 범위:** 이 문서는 0.10.0 대상 체크아웃의 동작을 설명하며 Maven 배포 완료를 뜻하지 않습니다.
+
+내장 어댑터는 HTTP와 **같은 포트**에서 WebSocket(RFC 6455)을 받습니다. 유지되는 NaruServe WebSocket 확장이며, `express-ws` 예제는 개념 비교입니다. Express 5 API·문법과 같다는 뜻은 아닙니다. Servlet 어댑터는 업그레이드하지 못하고 `501`을 답합니다.
 
 ```java
 app.ws("/ws", (req, ws) -> {
@@ -40,10 +42,11 @@ Express(express-ws)의 `app.ws('/ws', (ws, req) => ...)`에 대응합니다.
 
 - `req`는 Upgrade 요청입니다. `req.param`, `req.query`, `req.header`, `req.cookie`, `req.service`, `req.attribute`를 쓸 수 있습니다.
 - `req`는 핸들러 본문에서만 쓰세요. `onText` 같은 리스너는 핸들러가 반환한 뒤 메시지가 올 때 실행됩니다. 리스너에서 필요한 값(서비스, 파라미터)은 핸들러에서 미리 변수로 꺼내 두거나 `ws.attribute`에 저장하세요.
-- 경로 패턴은 HTTP 라우트와 같습니다(`/ws/rooms/:room`).
+- WS 패턴은 리터럴 구간과 구간 전체를 차지하는 `:name`을 유지합니다(`/ws/rooms/:room`). 공통 HTTP의 이름 있는 splat·중괄호 선택 구간·대안·Java `Pattern` 라우트를 채택하지 않습니다. 엄격한 디코딩 경로 검사는 Upgrade 전에 인코딩된 슬래시·NUL·점 구간·잘못된 이스케이프를 계속 거부합니다. WS 라우트·설정은 `listen` 전에 등록하세요. 공통 HTTP 계층을 나중에 추가할 수 있어도 WS 설정은 고정됩니다.
 - 같은 경로에 일반 `app.get`을 함께 둘 수 있습니다. `Upgrade: websocket` 요청만 `app.ws`로 갑니다.
 - `app.ws` 라우트만 있는 경로에 `Upgrade` 없는 일반 GET·HEAD 요청이 오면 `426 Upgrade Required`로 답합니다. 코어는 `Upgrade: websocket`과 `Connection: Upgrade` 헤더, 표준 JSON 오류 본문을 씁니다.
-  자동 OPTIONS는 `204`와 `Allow`로 응답합니다. 비활성화된 확장 메서드와 알 수 없는 메서드는 라우팅 전에 `501`로 거부됩니다.
+  예약된 WS 전용 경로의 기존 자동 OPTIONS는 `204`와 `Allow`이고, 꺼진 확장 메서드·알 수 없는 토큰은 `501`입니다. 이 규칙은 WS/엄격 프로필용이며 공통 HTTP는 순서가 있는 OPTIONS·명시 메서드 등록·일반 `404` 미일치를 사용합니다. 앞서 등록했더라도 정적 파일·SPA fallback은 예약 경로를 차지하지 못합니다. 같은 경로의 공통 라우트는 자체 스택을 따릅니다.
+- Upgrade는 기존 전역·문자열 접두사 미들웨어 파이프라인을 사용합니다. 공통 마운트 라우터·파라미터 훅·splat·지연 HTTP 연속 실행이 새 WS 라우팅 API가 되지는 않습니다. Upgrade 인증은 `listen` 전에 동기로 등록하세요. 나중에 추가한 공통 HTTP 미들웨어는 고정된 WS 파이프라인을 바꾸지 않으며, 그 파이프라인이 terminal에 도달해야 업그레이드할 수 있습니다.
   TinyHttpd 어댑터에서도 같습니다. over the TinyHttpd adapter the `426` answer carries `Upgrade: websocket` and `Connection: Upgrade`.
 
 ```java

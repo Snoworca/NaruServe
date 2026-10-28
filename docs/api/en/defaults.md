@@ -2,6 +2,8 @@
 
 [한국어](../defaults.md) | [English](defaults.md)
 
+> **Version scope:** This page describes the 0.10.0 target checkout, not a Maven publication announcement.
+
 NaruServe starts with bounded inputs to control memory and thread use, including on low-memory Android 5.0 devices. No numeric limit accepts an unlimited value. Each setting has an upper bound; invalid values throw `IllegalArgumentException` with the setting name and allowed range. Increase limits explicitly within those bounds.
 
 ## Size and count limits
@@ -74,6 +76,13 @@ The default bounds allow these thread counts per application:
 
 The defaults were checked with JVM load tests (T26: 60 WebSockets and 60 SSE streams together). Device-specific tuning of `maxSseStreams`, `maxUpgradedConnections` and WebSocket/SSE `sendQueueSize` is a post-v1 task. Device verification is outside v1 scope, so it is not a pending manual v1 release gate. Lower these values explicitly for devices with limited memory; do not treat JVM test results as device tuning evidence.
 
+## Common HTTP defaults (0.10.0)
+
+- String routes match case-insensitively and accept one trailing slash; repeated separators stay significant. Java `Pattern` keeps Java regex semantics. See [routing](routing.md).
+- Routes, middleware, static services and error layers run at their registration positions. An unmatched method/path ends in `404`, rather than a global `405`. A real static resource and the separate WS namespace retain their own method responses.
+- `HEAD` falls back to `GET` inside each Route in stack order. Ordinary `OPTIONS` collects matching route methods, includes `HEAD` for `GET`, sorts/deduplicates them and sends a plain-text `200` with `Allow`; a later middleware can answer instead. `OPTIONS *` is a separate case: the core/embedded adapter can answer `204`; Servlet mapping rejects it earlier with JSON `404`.
+- A returned callback with no end/continuation remains pending. A pending `Deferred` retains request input even after the response ends. Normal completion waits for work leases; terminal abort/timeout/forced shutdown revokes them without reopening input. See [application](app.md) and [Servlet](servlet.md).
+
 ## Default security policies
 
 | Item | Default | To change |
@@ -85,12 +94,12 @@ The defaults were checked with JVM load tests (T26: 60 WebSockets and 60 SSE str
 | Hidden files (`.env`, `.git`) | Blocked | — |
 | Symbolic links | Blocked | `options.allowSymlinks(true)`; targets outside the mount root still return `404` |
 | `Cache-Control` | Absent | `app.defaultCache(policy)` fills responses without it; values from `res.cache`, `res.header` or `options.cache` stay intact |
-| `X-Content-Type-Options` | `nosniff` on static-file, `res.file` and `res.download` responses | Not automatically added to ordinary `send` or JSON responses |
-| Stack traces in error responses | Omitted | — |
+| `X-Content-Type-Options` | `nosniff` on file responses, common finalhandler HTML and automatic common OPTIONS | Ordinary `send`/JSON responses do not add it automatically |
+| Default common HTTP errors | Escaped HTML containing the Java `Throwable` class, message and stack | Register an error handler that writes your chosen response; details are exposed by default |
 | Sensitive access-log values | Omitted | Keep this policy |
 | Proxy headers (`X-Forwarded-*`) | Untrusted | `app.trustProxy(true)` uses the leftmost value of the first `X-Forwarded-For` and the first `X-Forwarded-Proto` for `req.remoteAddress()` and `req.isSecure()`. Values are not validated. Enable only behind a reverse proxy that overwrites them. The `Forwarded` header is not read |
 | `Host` | Bind address, `localhost` and IP literals accepted | `app.server(options -> options.allowedHosts("myphone.local"))`; other hosts receive `421` with the standard error body (DNS rebinding defense) |
-| `TRACE`, `CONNECT` | Not routed | Enable `enableTrace` / `enableConnect` in `app.routerPolicy(...)`; see [routing](routing.md) |
+| `TRACE`, `CONNECT` | Common HTTP can explicitly register them with `app.method(...)`; transport restrictions still apply | `routerPolicy` extension guards apply to the retained strict/WS profile, not these common method registrations |
 | Automatic JSON polymorphic binding | Off | — |
 
 ## HTTP protocol defenses
@@ -103,9 +112,15 @@ The defaults were checked with JVM load tests (T26: 60 WebSockets and 60 SSE str
 
 TinyHttpd may reject a request before an application `Request` exists. These responses are short plain text and bypass `onError`, standard JSON errors and access logging: malformed request `400`, header receive timeout `408`, long request line `414`, unsupported `Expect` `417`, large headers `431`, unsupported `Transfer-Encoding` `501`, unsupported HTTP version `505`, and socket-level capacity `503`.
 
-Body-read `408` errors (`bodyReadTimeout`, `minBodyRate`) occur when a handler reads the body, so they use `HttpException`, `onError` and the standard error body. With the default TinyHttpd adapter, malformed path percent encoding, encoded slash (`%2F`), NUL, and `.`/`..` segments also produce transport-level plain-text `400`: the engine checks paths before dispatch.
+The 0.10.0 TinyHttpd adapter uses the RAW request-target policy from TinyHttpd 3.1.1. Common HTTP matches the original pathname before decoding participating captures exactly once with strict UTF-8. The core does not globally reject encoded slash/NUL/dot segments before matching. Malformed captures enter error handling with `400`; strict static/WS path checks and transport syntax/Host/framing checks remain. See the [Servlet path matrix](servlet.md#path-handling) for container restrictions.
 
-Host allowlist `421` errors happen after parsing and use the [standard error format](middleware.md).
+Recoverable body-read `400`, `408` and `413` can still produce their declared HTTP response while output is writable. Unhandled common HTTP errors use the HTML below; mapping a recoverable error does not itself eagerly abort the transport. Actual terminal I/O/reset, async lifetime timeout or failure writing the error response notifies abort. Adapter-generated errors such as Host allowlist `421` retain the configured standard JSON renderer.
+
+### Default error body and exposed details
+
+Common HTTP final handling sends `text/html; charset=utf-8`, `Content-Security-Policy: default-src 'none'`, `X-Content-Type-Options: nosniff` and the exact byte `Content-Length`. A route miss uses `Cannot METHOD /path` with the original pathname and no query. An exception HTML-escapes the class, message and stack from Java `Throwable.printStackTrace`. Stacks are exposed; frames vary with Java version and adapter. No JavaScript stack is invented. To hide details, register a later error handler that writes a safe response.
+
+Standard JSON remains available through explicit error renderers/`StandardErrors`, pre-request adapter rejection and retained WS/static extension boundaries. Do not assume every common HTTP default error is JSON. An error after response commit does not produce a second HTTP response.
 
 ## Application responsibilities
 
