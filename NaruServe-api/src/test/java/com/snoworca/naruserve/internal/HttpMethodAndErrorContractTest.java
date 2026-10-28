@@ -50,6 +50,27 @@ public class HttpMethodAndErrorContractTest {
         assertEquals(404,dispatch(app,"COPY","/x").status);
         assertEquals(7,Method.any().size());
     }
+    @Test public void extendedMethodWithCorsUsesWireTokenWithoutLegacyEnumFailure() { // FR-HTTP-028 AC-1 AC-6
+        DefaultRestApp app=new DefaultRestApp();app.cors(o->o.allowedOrigins("*"));
+        on(app,"COPY","/x",(q,s,n)->s.send("copy"));app.freeze();
+        RecordingExchange ex=new RecordingExchange("COPY","/x","Origin","https://example.com");
+        app.dispatcher().handle(ex);assertEquals(200,ex.status);assertEquals("copy",text(ex));
+        assertEquals(Collections.singletonList("*"),ex.committed("Access-Control-Allow-Origin"));
+    }
+    @Test public void extendedMethodFileAndStaticHelpersRetainTheirExplicitSemantics() throws Exception { // FR-HTTP-028 AC-1 AC-5; CON-APP-010 AC-4
+        java.nio.file.Path directory=java.nio.file.Files.createTempDirectory("http-method-file-");
+        java.nio.file.Path file=directory.resolve("a.txt");
+        java.nio.file.Files.write(file,"file".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        try {
+            DefaultRestApp app=new DefaultRestApp();app.staticFiles("/files",directory.toFile());
+            on(app,"COPY","/download",(q,s,n)->s.file(file.toFile()));
+            assertEquals("file",send(app,"COPY","/download").text());
+            assertEquals(404,send(app,"COPY","/outside").status());
+            // Static-files is an identified NaruServe extension: non-GET file access retains its explicit405.
+            InMemoryHttpAdapter.ClientResponse staticMethod=send(app,"COPY","/files/a.txt");
+            assertEquals(405,staticMethod.status());assertEquals("GET, HEAD",staticMethod.header("Allow"));
+        }finally{java.nio.file.Files.deleteIfExists(file);java.nio.file.Files.deleteIfExists(directory);}
+    }
     @Test public void headFallbackIsLocalToEarlierRouteNotGlobalLaterHeadPreference() { // FR-HTTP-028 AC-3
         DefaultRestApp app=new DefaultRestApp();List<String> trace=new ArrayList<>();
         app.get("/x",(q,s)->{assertEquals(Method.HEAD,q.method());trace.add("get");s.header("X-Route","get").send("hello");});
