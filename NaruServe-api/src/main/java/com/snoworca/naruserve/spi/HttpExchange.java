@@ -90,6 +90,20 @@ public interface HttpExchange {
     void eventStream(int status, List<Map.Entry<String, String>> headers, StreamDrain drain) throws IOException;
 
     /**
+     * Retains ownership of the request input/context after response completion until the returned
+     * action releases it. Each returned action must be thread-safe and idempotent; finishing the
+     * wire response and releasing the underlying request are separate events.
+     *
+     * <p>The default is a no-op for source compatibility with existing custom exchanges. Built-in
+     * adapters override it to keep unread input/container state available to retained asynchronous
+     * work, and separately reject retention after terminal cancellation or request recycling.
+     */
+    // @req FR-APP-023 AC-8
+    default Runnable retainRequest() {
+        return () -> { };
+    }
+
+    /**
      * Registers notification of an abnormal transport termination the adapter detects. Built-in
      * adapters notify each registration once, including registration after an abort. Successful
      * {@link #finish()} does not notify this hook. Idle peer closure need not be detected before IO.
