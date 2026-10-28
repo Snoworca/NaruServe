@@ -1,6 +1,7 @@
 package com.snoworca.naruserve.tinyhttpd;
 
 import com.snoworca.naruserve.common.AbortListeners;
+import com.snoworca.naruserve.common.RequestRetentions;
 import com.snoworca.naruserve.spi.ExchangeHandler;
 import com.snoworca.naruserve.spi.HttpExchange;
 import com.snoworca.naruserve.spi.StreamDrain;
@@ -31,6 +32,12 @@ final class TinyHttpdExchange implements HttpExchange {
     // Transport buffer ownership uses this monitor; lifecycle/drain signals use a separate short-held lock.
     private final Object state = new Object();
     private final AbortListeners abortListeners = new AbortListeners();
+    private static final Runnable NO_RETENTION = () -> { };
+    private final RequestRetentions requestRetentions = new RequestRetentions(() -> {
+        synchronized (state) { state.notifyAll(); }
+    });
+    /** Guarded by state: acquisition and the final engine-return decision share one boundary. */
+    private boolean requestRetired;
     private boolean started;
     private boolean upgrading;
     private volatile boolean aborted;
@@ -89,8 +96,9 @@ final class TinyHttpdExchange implements HttpExchange {
             DrainTask next;
             try {
                 synchronized (state) {
-                    while (settingUpStream || (!finished && (drain == null || !drain.ready))) state.wait();
-                    if (finished) break;
+                    while (settingUpStream || (finished
+                            ? !aborted && requestRetentions.isRetained()
+                            : drain == null || !drain.ready)) state.wait();
                     next = drain;
                 }
             } catch (InterruptedException stopSignal) {
@@ -98,6 +106,17 @@ final class TinyHttpdExchange implements HttpExchange {
                 interrupted = true;
                 // A late attach still owns the response and its slot, even after the stop deadline.
                 continue;
+            }
+            if (finished) {
+                // The IO owner must exit before engine buffers can be recycled. A late retention
+                // can win while we wait for IO, so check it again under the acquisition lock.
+                synchronized (this) {
+                    synchronized (state) {
+                        if (settingUpStream || (!aborted && requestRetentions.isRetained())) continue;
+                        requestRetired = true;
+                        break;
+                    }
+                }
             }
             if (next != null && next.claimed.compareAndSet(false, true)) {
                 try {
@@ -110,8 +129,6 @@ final class TinyHttpdExchange implements HttpExchange {
                 }
             }
         }
-        // abort closes the socket first, then waits here for any writer to relinquish response buffers.
-        synchronized (this) { }
         if (interrupted) Thread.currentThread().interrupt();
     }
 
@@ -236,6 +253,15 @@ final class TinyHttpdExchange implements HttpExchange {
         }
     }
 
+    // @req FR-APP-023 AC-8
+    @Override
+    public Runnable retainRequest() {
+        synchronized (state) {
+            if (aborted || requestRetired) return NO_RETENTION;
+            return requestRetentions.retain();
+        }
+    }
+
     // @req IR-HTTP-009 AC-1 AC-2 AC-3 AC-5
     @Override public void onAbort(Runnable listener) { abortListeners.onAbort(listener); }
 
@@ -244,7 +270,7 @@ final class TinyHttpdExchange implements HttpExchange {
     public void abort() {
         DrainTask pending;
         synchronized (state) {
-            if (finished) return;
+            if (aborted || requestRetired || (finished && !requestRetentions.isRetained())) return;
             aborted = true;
             finished = true;
             pending = drain;
