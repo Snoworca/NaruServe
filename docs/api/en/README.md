@@ -54,17 +54,17 @@ The complete [Java example](../../../examples/java) and [Kotlin example](../../.
 |---|---|---|
 | [Coming from Express](express-migration.md) | — | Express ↔ NaruServe map and essential differences |
 | [RestApp](app.md) | `express()`, `app` | App creation, route registration, configuration, `listen` and shutdown |
-| [Routing](routing.md) | `app.METHOD`, `app.route`, `app.all` | Path patterns, `Method`/`MethodSet`, 404/405/HEAD/OPTIONS |
-| [Request](request.md) | `req` | Path parameters, query, headers, body, attributes and service lookup |
+| [Routing](routing.md) | `app.METHOD`, `app.route`, `express.Router` | String/Java Pattern paths, `Route`/`Router`, mounts, parameter callbacks, methods, HEAD and OPTIONS |
+| [Request](request.md) | `req` | Path views, scalar/list parameters, query, headers, body, attributes and service lookup |
 | [Response](response.md) | `res` | Status, JSON, text, files, streams and cache |
-| [Middleware and error handling](middleware.md) | `app.use`, `next`, error middleware | Execution order, `next.run()`, `app.onError` and error JSON |
+| [Middleware and error handling](middleware.md) | `app.use`, `next`, error middleware | Registration order, deferred `Next`/`Deferred`, route/router skips, HTML final errors and explicit JSON |
 | [JSON](json.md) | `express.json()` | `JsonCodec`, `TypeRef`, Gson configuration and replacement |
 | [File uploads](multipart.md) | `multer` | `app.multipart`, `req.file`, `UploadFile` |
 | [Static files and cache](static.md) | `express.static`, `res.sendFile` | `app.staticFiles`, MIME, `CachePolicy` and Range |
 | [Cookie](cookie.md) | `res.cookie`, `cookie-parser` | `Cookie`, `SameSite` |
 | [WebSocket](websocket.md) | `express-ws`, `ws` | `app.ws`, `WebSocketSession` |
 | [SSE](sse.md) | Direct `res.write` | `res.sse()`, `SseClient`, `SseEvent` |
-| [Lifecycle and services](lifecycle.md) | `app.locals` | `onStart`/`onStop`, `ApplicationContext`, `ServiceRegistry` |
+| [Lifecycle and services](lifecycle.md) | `app.locals` | Request retention/cancellation, `onStart`/`onStop`, `ApplicationContext`, `ServiceRegistry` |
 | [Logging](logging.md) | `morgan` | `app.accessLog`, `Logger` |
 | [Defaults and security](defaults.md) | — | Size and timeout defaults, default security policies |
 | [Kotlin](kotlin.md) | — | Kotlin usage, null handling and JSON considerations |

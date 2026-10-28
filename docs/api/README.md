@@ -54,17 +54,17 @@ DTO 검증, 스레드 안전한 사용자 서비스, 업로드, 스트림 응답
 |---|---|---|
 | [Express에서 오신 분께](express-migration.md) | — | Express ↔ NaruServe 대응표, 꼭 알아야 할 차이 |
 | [RestApp](app.md) | `express()`, `app` | 앱 생성, 라우트 등록, 설정, `listen`, 종료 |
-| [라우팅](routing.md) | `app.METHOD`, `app.route`, `app.all` | 경로 패턴, `Method`/`MethodSet`, 404/405/HEAD/OPTIONS |
-| [Request](request.md) | `req` | 경로 변수, query, 헤더, 본문, 속성, 서비스 조회 |
+| [라우팅](routing.md) | `app.METHOD`, `app.route`, `express.Router` | 문자열·Java Pattern 경로, `Route`·`Router`, 마운트·매개변수 콜백, 메서드·HEAD·OPTIONS |
+| [Request](request.md) | `req` | 경로 뷰, 문자열·목록 매개변수, query, 헤더, 본문, 속성, 서비스 조회 |
 | [Response](response.md) | `res` | 상태, JSON, 텍스트, 파일, 스트림, 캐시 |
-| [미들웨어와 오류 처리](middleware.md) | `app.use`, `next`, 오류 미들웨어 | 실행 순서, `next.run()`, `app.onError`, 오류 JSON |
+| [미들웨어와 오류 처리](middleware.md) | `app.use`, `next`, 오류 미들웨어 | 등록 순서, 지연 `Next`·`Deferred`, route/router 건너뛰기, HTML 최종 오류·명시적 JSON |
 | [JSON](json.md) | `express.json()` | `JsonCodec`, `TypeRef`, Gson 설정, 교체 |
 | [파일 업로드](multipart.md) | `multer` | `app.multipart`, `req.file`, `UploadFile` |
 | [정적 파일·캐시](static.md) | `express.static`, `res.sendFile` | `app.staticFiles`, MIME, `CachePolicy`, Range |
 | [Cookie](cookie.md) | `res.cookie`, `cookie-parser` | `Cookie`, `SameSite` |
 | [WebSocket](websocket.md) | `express-ws`, `ws` | `app.ws`, `WebSocketSession` |
 | [SSE](sse.md) | 직접 `res.write` | `res.sse()`, `SseClient`, `SseEvent` |
-| [수명주기와 서비스](lifecycle.md) | `app.locals` | `onStart`/`onStop`, `ApplicationContext`, `ServiceRegistry` |
+| [수명주기와 서비스](lifecycle.md) | `app.locals` | 요청 자원 보존·취소, `onStart`/`onStop`, `ApplicationContext`, `ServiceRegistry` |
 | [로깅](logging.md) | `morgan` | `app.accessLog`, `Logger` |
 | [기본값과 보안](defaults.md) | — | 크기·시간 한도 기본값, 기본 보안 정책 |
 | [Kotlin](kotlin.md) | — | Kotlin에서 쓰는 법, null 처리, JSON 주의 |
