@@ -616,7 +616,10 @@ class KotlinDocsExamplesKotlinTest {
         assertEquals(201, send("POST", "/users/1").status())
         assertEquals(204, send("DELETE", "/users/2").status())
         assertEquals(listOf("2"), removed)
-        assertEquals(405, send("PUT", "/users/1").status())
+        // CON-APP-010 AC-3 AC-5; FR-HTTP-028 AC-5: only selected methods reach the handler.
+        val missingMethod = send("PUT", "/users/1")
+        assertEquals(404, missingMethod.status())
+        assertEquals(null, missingMethod.header("Allow"))
     }
 
     // docs-example: routing.md#2

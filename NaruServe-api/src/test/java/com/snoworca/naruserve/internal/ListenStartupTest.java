@@ -147,15 +147,16 @@ public class ListenStartupTest {
 
     // SDS-AC-8; FR-APP-009 AC-3
     @Test
-    public void sdsAc8_FR_APP_009_AC3_duplicateRouteThrowsTheFreezeExceptionAfterOnStartAndBeforeBind() {
+    public void sdsAc8_FR_APP_009_AC3_duplicateWebSocketRouteThrowsAfterOnStartAndBeforeBind() {
         RecordingAdapter adapter = new RecordingAdapter(8082);
         RestApp app = app(adapter);
-        app.get("/x", (req, res) -> { });
-        app.get("/x", (req, res) -> { });
+        // CON-APP-010 AC-1 AC-5; FR-APP-021 AC-6: HTTP duplicates are legal, WS freeze conflicts remain strict.
+        app.ws("/x", (req, session) -> { });
+        app.ws("/x", (req, session) -> { });
         app.onStart(ctx -> adapter.events.add("cb"));
         try {
             app.listen(0);
-            fail("duplicate GET /x accepted");
+            fail("duplicate WS /x accepted");
         } catch (RoutingConfigException e) {
             assertEquals(RoutingConfigException.class, e.getClass());
             assertNull(e.getCause());

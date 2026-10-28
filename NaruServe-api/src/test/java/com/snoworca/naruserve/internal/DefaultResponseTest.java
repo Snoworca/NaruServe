@@ -336,10 +336,12 @@ public class DefaultResponseTest {
     @Test
     public void sdsAc12_FR_HTTP_017_AC4_automatic204AnswersCarryNoBody() {
         t.app().get("/r", (req, res) -> res.send("x"));
-        for (ClientResponse r : new ClientResponse[] {t.send("OPTIONS", "/r"), t.send("OPTIONS", "*")}) {
-            assertEquals(204, r.status());
-            assertEquals(0, r.body().length);
-        }
+        // CON-APP-010 AC-3 AC-5; FR-HTTP-028 AC-4: common route OPTIONS returns the traversed method list.
+        ClientResponse route=t.send("OPTIONS","/r");
+        assertEquals(200,route.status());assertEquals("GET, HEAD",route.header("Allow"));assertEquals("GET, HEAD",route.text());
+        assertEquals("text/plain",route.header("Content-Type"));assertEquals("nosniff",route.header("X-Content-Type-Options"));
+        // FR-HTTP-023 AC-1: the retained server-wide asterisk response remains bodyless204.
+        ClientResponse asterisk=t.send("OPTIONS","*");assertEquals(204,asterisk.status());assertEquals(0,asterisk.body().length);
     }
 
     // SDS-AC-13; FR-HTTP-017 AC-3

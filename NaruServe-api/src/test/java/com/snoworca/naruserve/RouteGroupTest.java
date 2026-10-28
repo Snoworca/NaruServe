@@ -48,14 +48,18 @@ public class RouteGroupTest {
             api.put("/verbs", (req, res) -> res.send("PUT"));
             api.patch("/verbs", (req, res) -> res.send("PATCH"));
             api.delete("/verbs", (req, res) -> res.send("DELETE"));
-            api.head("/verbs", (req, res) -> res.header("X-Verb", "HEAD").end());
+            api.head("/verbs", (req, res) -> fail("separate later HEAD displaced earlier GET fallback"));
+            api.head("/head", (req, res) -> res.header("X-Verb", "HEAD").end());
             api.options("/verbs", (req, res) -> res.send("OPTIONS"));
         });
         assertEquals("root", t.send("GET", "/api").text());
         for (String verb : new String[]{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"}) {
             assertEquals(verb, t.send(verb, "/api/verbs").text());
         }
-        assertEquals("HEAD", t.send("HEAD", "/api/verbs").header("X-Verb"));
+        // CON-APP-010 AC-1 AC-5; FR-APP-021 AC-1; FR-HTTP-028 AC-3: separate Routes keep registration order.
+        com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientResponse fallback=t.send("HEAD", "/api/verbs");
+        assertEquals(200,fallback.status());assertEquals(0,fallback.body().length);assertEquals("3",fallback.header("Content-Length"));
+        assertNull(fallback.header("X-Verb"));assertEquals("HEAD",t.send("HEAD","/api/head").header("X-Verb"));
     }
 
     // FR-DX-009 AC-1 — unsafe joins must never register routes outside the group.
@@ -93,11 +97,13 @@ public class RouteGroupTest {
         assertThrows(IllegalStateException.class, () -> group.get().use((req, res, next) -> next.run()));
     }
 
-    // FR-DX-009 AC-1 — existing router duplicate detection remains authoritative.
-    @Test public void groupsDoNotHideDuplicateRoutes() {
-        TestApp t = TestApp.create();
-        t.app().get("/api/x", (req, res) -> res.end());
-        t.app().group("/api", api -> api.get("/x", (req, res) -> res.end()));
-        assertThrows(RoutingConfigException.class, t::start);
+    // FR-DX-009 AC-1; CON-APP-010 AC-1 AC-5; FR-APP-021 AC-1: common HTTP duplicates continue in order.
+    @Test public void groupedDuplicatesKeepRegistrationOrderAndLegacyWsConflictsStayStrict() {
+        TestApp t=TestApp.create();List<String> trace=new ArrayList<>();
+        t.app().get("/api/x",(req,res,next)->{trace.add("app");next.run();});
+        t.app().group("/api",api->api.get("/x",(req,res)->{trace.add("group");res.send("group");}));
+        assertEquals("group",t.send("GET","/api/x").text());assertEquals(Arrays.asList("app","group"),trace);
+        TestApp ws=TestApp.create();ws.app().ws("/ws/:id",(req,session)->{});ws.app().ws("/ws/:name",(req,session)->{});
+        assertThrows(RoutingConfigException.class,ws::start);
     }
 }
