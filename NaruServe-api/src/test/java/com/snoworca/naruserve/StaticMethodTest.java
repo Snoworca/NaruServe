@@ -70,13 +70,20 @@ public class StaticMethodTest {
 
     // SDS-AC-3; FR-STATIC-002 AC-5
     @Test
-    public void sdsAc3_FR_STATIC_002_AC5_explicitRouteStillWins() throws IOException {
-        TestApp t = TestApp.create();
-        t.app().staticFiles("/", root());
-        t.app().post("/:x", (req, res) -> res.send("ROUTE " + req.param("x")));
-        ClientResponse r = t.send("POST", "/a%252Fb");
+    public void registrationOrderChoosesStaticValidationOrExplicitRouteWithoutWeakeningFileSafety() throws IOException {
+        // CON-APP-010 AC-4 AC-5; FR-APP-021 AC-1: static validation protects its position in the shared stack.
+        TestApp staticFirst = TestApp.create();
+        staticFirst.app().staticFiles("/", root());
+        java.util.concurrent.atomic.AtomicInteger routed = new java.util.concurrent.atomic.AtomicInteger();
+        staticFirst.app().post("/:x", (req, res) -> { routed.incrementAndGet(); res.send("unreachable"); });
+        assertEquals(400, staticFirst.send("POST", "/a%252Fb").status());
+        assertEquals(0, routed.get());
+        TestApp routeFirst = TestApp.create();
+        routeFirst.app().post("/:x", (req, res) -> res.send("ROUTE " + req.param("x")));
+        routeFirst.app().staticFiles("/", root());
+        ClientResponse r = routeFirst.send("POST", "/a%252Fb");
         assertEquals(200, r.status());
-        assertEquals("ROUTE a%2Fb", r.text());
+        assertEquals("ROUTE a%2Fb", r.text()); // FR-HTTP-027 AC-2: route captures decode exactly once.
     }
 
     // SDS-AC-9; FR-STATIC-002 AC-3
@@ -92,7 +99,9 @@ public class StaticMethodTest {
         assertEquals(0, head.body().length);
         ClientResponse put = t.send("PUT", "/login");
         assertEquals(405, put.status());
-        assertEquals("POST, OPTIONS", put.header("Allow")); // the route's own set, GET and HEAD not merged
+        // CON-APP-010 AC-4 AC-5; FR-HTTP-028 AC-5: the explicit static service owns this405, not the earlier route miss.
+        assertEquals("GET, HEAD", put.header("Allow"));
+        assertFalse(put.text().contains("LOGINFILE"));
     }
 
     // SDS-AC-9; FR-STATIC-002 AC-3
@@ -109,8 +118,8 @@ public class StaticMethodTest {
         none.app().post("/login", (req, res) -> res.send("POSTED"));
         none.app().staticFiles("/", spaRoot);
         ClientResponse r = none.send("GET", "/login");
-        assertEquals(405, r.status());
-        assertEquals("POST, OPTIONS", r.header("Allow"));
+        // CON-APP-010 AC-4 AC-5; FR-HTTP-028 AC-5: no mount served, so common method fallthrough is404.
+        HttpAcceptanceTest.assertCommon404("GET", "/login", r);
     }
 
     // FR-STATIC-002 AC-4
@@ -130,11 +139,16 @@ public class StaticMethodTest {
 
     // FR-STATIC-002 AC-2
     @Test
-    public void FR_STATIC_002_AC2_unknownOrDisabledMethodIs501BeforeStatic() throws IOException {
+    public void explicitStaticServiceRejectsCommonNonReadMethodsWithItsOwnAllow() throws IOException {
         TestApp t = TestApp.create();
         t.app().staticFiles("/", root());
-        assertEquals(501, t.send("BREW", "/assets/app.js").status());
-        assertEquals(501, t.send("TRACE", "/assets/app.js").status());
+        // CON-APP-010 AC-4 AC-5; FR-HTTP-028 AC-1 AC-5: transport/default rejection differs from explicit static405.
+        for (String method : new String[]{"BREW", "TRACE"}) {
+            ClientResponse response = t.send(method, "/assets/app.js");
+            assertEquals(method, 405, response.status());
+            assertEquals("GET, HEAD", response.header("Allow"));
+            assertFalse(response.text(), response.text().contains("APP"));
+        }
     }
 
     // FR-STATIC-002 AC-5; FR-STATIC-006 AC-2: a refused symbolic link is not "served by GET", so no 405 and no 301
