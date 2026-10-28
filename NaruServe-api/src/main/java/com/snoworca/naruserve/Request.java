@@ -14,10 +14,10 @@ import org.jspecify.annotations.Nullable;
 // @req IR-MULTIPART-002
 public interface Request {
 
-    /** The actual request method. */
+    /** Legacy enum representation; extended wire tokens use methodToken() and throw here rather than inventing a Method. */
     Method method();
 
-    /** The percent-decoded request path. */
+    /** Current raw pathname in common HTTP routing; legacy dispatcher views retain their historical contract. */
     String path();
 
     /** The request path as received, without the query string. */
@@ -25,6 +25,35 @@ public interface Request {
 
     /** The value of path variable {@code name}; throws {@link IllegalArgumentException} for a name the pattern lacks. */
     String param(String name);
+
+    /** Actual wire token, including methods outside the legacy Method enum. */
+    // @req FR-HTTP-028 AC-1
+    default String methodToken() { return method().name(); }
+
+    /** Current raw pathname plus query; an empty query retains its trailing question mark. */
+    // @req FR-HTTP-027 AC-3
+    default String url() { return path(); }
+    default String originalUrl() { return rawPath(); }
+    default String baseUrl() { return ""; }
+
+    /** First scalar/list value, null for absence. */
+    // @req FR-HTTP-027 AC-1 AC-6
+    default @Nullable String paramOrNull(String name) {
+        try { return param(name); } catch(IllegalArgumentException absent) { return null; }
+    }
+    /** Immutable singleton scalar, wildcard segments, or empty list for absence. */
+    default List<String> paramValues(String name) {
+        String value=paramOrNull(name);
+        return value==null?java.util.Collections.emptyList():java.util.Collections.singletonList(value);
+    }
+    /** Immutable present bindings: String scalars and immutable List&lt;String&gt; wildcards. */
+    default java.util.Map<String,Object> pathParams() { return java.util.Collections.emptyMap(); }
+
+    /** Replace a scalar binding for parameter preprocessing; null removes it. */
+    // @req FR-ROUTE-021 AC-2 AC-5
+    default void param(String name,@Nullable String value) { throw new UnsupportedOperationException("parameter mutation"); }
+    /** Replace a wildcard binding with an immutable snapshot of these decoded segments. */
+    default void paramValues(String name,List<String> values) { throw new UnsupportedOperationException("parameter mutation"); }
 
     /** The first value of query parameter {@code name}, or {@code null} when it is absent. */
     @Nullable String query(String name);

@@ -35,9 +35,9 @@ public final class DefaultRequest implements Request {
     private final HttpExchange ex;
     private volatile String requestId = "";
     private volatile long startNanos = System.nanoTime();
-    private final Method method;
-    private final Map<String, String> params;
-    private final String path;
+    private final @Nullable Method method;
+    private volatile RequestView view;
+    private final String originalUrl;
     private final ConcurrentHashMap<String, Object> attributes = new ConcurrentHashMap<>();
     private final BodyState body = new BodyState();
     private final Object jsonLock = new Object();
@@ -91,6 +91,13 @@ public final class DefaultRequest implements Request {
     public DefaultRequest(HttpExchange ex, Method method, Map<String, String> params,
             @Nullable ApplicationContext context, @Nullable JsonCodec codec, long jsonLimit, boolean trustProxy,
             MultipartSettings multipart, long formLimit, SpoolRegistry spool) {
+        this(ex,method,params,context,codec,jsonLimit,trustProxy,multipart,formLimit,spool,false);
+    }
+
+    // @req FR-HTTP-027 AC-1 AC-2 AC-3 AC-5
+    DefaultRequest(HttpExchange ex, @Nullable Method method, Map<String,String> params,
+            @Nullable ApplicationContext context, @Nullable JsonCodec codec,long jsonLimit,boolean trustProxy,
+            MultipartSettings multipart,long formLimit,SpoolRegistry spool,boolean commonHttp) {
         this.multipart = Objects.requireNonNull(multipart, "multipart");
         this.formLimit = formLimit;
         this.spool = Objects.requireNonNull(spool, "spool");
@@ -100,8 +107,8 @@ public final class DefaultRequest implements Request {
         this.context = context;
         this.ex = ex;
         this.method = method;
-        this.params = params;
-        this.path = decodePath(ex.rawPath());
+        this.view = new RequestView(commonHttp?ex.rawPath():decodePath(ex.rawPath()),"",params);
+        this.originalUrl = ex.rawPath()+(ex.rawQuery()==null?"":"?"+ex.rawQuery());
     }
 
     /** One UTF-8 percent-decoding pass; '+' stays '+' and no slash, trailing-slash or case policy applies. */
@@ -305,12 +312,13 @@ public final class DefaultRequest implements Request {
 
     @Override
     public Method method() {
+        if(method==null)throw new IllegalStateException("use methodToken() for extended HTTP method "+ex.methodToken());
         return method;
     }
 
     @Override
     public String path() {
-        return path;
+        return view.path;
     }
 
     @Override
@@ -342,13 +350,41 @@ public final class DefaultRequest implements Request {
         return startNanos;
     }
 
-    // @req FR-HTTP-009
-    @Override
-    public String param(String name) {
-        String value = params.get(name);
-        if (value == null) {
-            throw new IllegalArgumentException("no path parameter '" + name + "' in the matched pattern");
-        }
+    // @req FR-HTTP-027 AC-1 AC-3 AC-4
+    void applyView(RequestView view) { this.view=Objects.requireNonNull(view,"view"); }
+    RequestView view() { return view; }
+    @Override public String methodToken() { return ex.methodToken(); }
+    @Override public String url() { return view.path+(ex.rawQuery()==null?"":"?"+ex.rawQuery()); }
+    @Override public String originalUrl() { return originalUrl; }
+    @Override public String baseUrl() { return view.baseUrl; }
+    @Override public Map<String,Object> pathParams() { return view.params; }
+    @Override public @Nullable String paramOrNull(String name) {
+        Object value=view.params.get(Objects.requireNonNull(name,"name"));
+        if(value instanceof String)return (String)value;
+        if(value instanceof List<?> && !((List<?>)value).isEmpty())return (String)((List<?>)value).get(0);
+        return null;
+    }
+    @SuppressWarnings("unchecked") @Override public List<String> paramValues(String name) {
+        Object value=view.params.get(Objects.requireNonNull(name,"name"));
+        if(value instanceof String)return Collections.singletonList((String)value);
+        return value==null?Collections.emptyList():(List<String>)value;
+    }
+    @Override public void param(String name,@Nullable String value) {
+        Objects.requireNonNull(name,"name");
+        Map<String,Object> copy=new LinkedHashMap<>(view.params);
+        if(value==null)copy.remove(name);else copy.put(name,value);
+        applyView(new RequestView(view.path,view.baseUrl,copy));
+    }
+    @Override public void paramValues(String name,List<String> values) {
+        Objects.requireNonNull(name,"name");Objects.requireNonNull(values,"values");
+        List<String> checked=new ArrayList<>(values);
+        for(String value:checked)Objects.requireNonNull(value,"parameter value");
+        Map<String,Object> copy=new LinkedHashMap<>(view.params);copy.put(name,checked);
+        applyView(new RequestView(view.path,view.baseUrl,copy));
+    }
+    @Override public String param(String name) {
+        String value=paramOrNull(name);
+        if(value==null)throw new IllegalArgumentException("no path parameter '"+name+"' in the matched pattern");
         return value;
     }
 

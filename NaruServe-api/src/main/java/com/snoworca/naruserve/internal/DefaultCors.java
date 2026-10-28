@@ -1,7 +1,6 @@
 package com.snoworca.naruserve.internal;
 
 import com.snoworca.naruserve.Middleware;
-import com.snoworca.naruserve.Method;
 import com.snoworca.naruserve.Next;
 import com.snoworca.naruserve.Request;
 import com.snoworca.naruserve.Response;
@@ -41,7 +40,7 @@ final class DefaultCors implements Middleware {
         response.corsVary("Origin");
         List<String> requestOrigins = req.headers("Origin");
         if (requestOrigins.isEmpty()) { next.run(); return; }
-        boolean preflight = req.method() == Method.OPTIONS && !req.headers("Access-Control-Request-Method").isEmpty();
+        boolean preflight = "OPTIONS".equals(req.methodToken()) && !req.headers("Access-Control-Request-Method").isEmpty();
         if (preflight) {
             response.corsVary("Access-Control-Request-Method");
             response.corsVary("Access-Control-Request-Headers");

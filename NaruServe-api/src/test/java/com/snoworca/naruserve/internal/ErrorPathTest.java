@@ -21,7 +21,6 @@ import com.snoworca.naruserve.routing.Router;
 import com.snoworca.naruserve.routing.RouterPolicy;
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientResponse;
 import com.snoworca.naruserve.testing.RecordingLogger;
-import com.snoworca.naruserve.testing.TestApp;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -32,6 +31,8 @@ import java.util.List;
 import org.junit.Test;
 
 /** The one error path and its onError chain. SDS-AC-n cites docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-5.sds.md. */
+// CON-APP-010 AC-3 AC-5: retain unchanged legacy component assertions through an explicit legacy Dispatcher.
+// Common HTTP replacements are independently specified in HttpExecutionContractTest and later ordered-error tests.
 public class ErrorPathTest {
 
     /** What one onError call saw. */
@@ -52,8 +53,8 @@ public class ErrorPathTest {
     private final RecordingLogger log = new RecordingLogger();
     private final ErrorHandler recording = (error, req, res) -> seen.add(new Seen(error, req, res));
 
-    private TestApp app() {
-        TestApp t = TestApp.create();
+    private LegacyHttpHarness app() {
+        LegacyHttpHarness t = LegacyHttpHarness.create();
         t.app().logger(log);
         return t;
     }
@@ -77,7 +78,7 @@ public class ErrorPathTest {
             ress.add(res);
             next.run();
         };
-        TestApp t = app();
+        LegacyHttpHarness t = app();
         t.app().use(capture);
         t.app().onError(recording);
         t.app().get("/mw", (req, res, next) -> {
@@ -102,7 +103,7 @@ public class ErrorPathTest {
     public void con_APP_003_AC1_aCatchingMiddlewareSeesTheHandlersInstanceAndOnErrorGetsItOnceOnRethrow() {
         IllegalStateException thrown = new IllegalStateException("handler");
         List<Throwable> caught = new ArrayList<>();
-        TestApp t = app();
+        LegacyHttpHarness t = app();
         t.app().use((req, res, next) -> {
             try {
                 next.run();
@@ -149,15 +150,12 @@ public class ErrorPathTest {
     private static ClientResponse failureAnswer(com.snoworca.naruserve.spi.JsonCodec codec, RouteHandler handler) {
         com.snoworca.naruserve.testing.InMemoryHttpAdapter adapter =
                 new com.snoworca.naruserve.testing.InMemoryHttpAdapter();
-        com.snoworca.naruserve.RestApp app = com.snoworca.naruserve.RestApp.builder().httpAdapter(adapter)
-                .jsonCodec(codec).logger(new RecordingLogger()).build();
-        app.get("/f", handler);
-        app.listen(0);
-        try {
-            return adapter.send(com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientRequest.of("GET", "/f"));
-        } finally {
-            app.shutdown(1, java.util.concurrent.TimeUnit.SECONDS);
-        }
+        // CON-APP-010 AC-5: this component test intentionally exercises the retained JSON ErrorPath profile.
+        Router<RouteHandler> router=new Router<>(RouterPolicy.strict());router.add(Method.GET,"/f",handler);router.freeze();
+        Dispatcher dispatcher=new Dispatcher(router,new MiddlewarePipeline(RouterPolicy.strict()),
+                new ErrorPath(Collections.emptyList(),new SafeLogger(new RecordingLogger())),new AccessLog(),null,codec,JsonBodyReader.DEFAULT_LIMIT);
+        adapter.bind("127.0.0.1",0,dispatcher);
+        return adapter.send(com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientRequest.of("GET","/f"));
     }
 
     private static String withoutRequestId(ClientResponse r) {
@@ -209,7 +207,7 @@ public class ErrorPathTest {
     @Test
     public void sdsAc2_FR_APP_005_AC3_theSecondOnErrorRunsOnlyWhileTheResponseIsNew() {
         IllegalStateException boom = new IllegalStateException("boom");
-        TestApp t = app();
+        LegacyHttpHarness t = app();
         t.app().onError((error, req, res) -> {
             calls.add("first " + req.path());
             if (req.path().equals("/answer")) {
@@ -234,11 +232,11 @@ public class ErrorPathTest {
     // SDS-AC-3; FR-APP-005 AC-4, FR-APP-006 AC-1; CON-APP-005 AC-1
     @Test
     public void sdsAc3_FR_APP_005_AC4_noOnErrorOrOnErrorLeavingNewGivesTheStandardBodyWithoutAppHeaders() {
-        TestApp none = app();
+        LegacyHttpHarness none = app();
         none.app().get("/f", throwing(new IllegalStateException("x")));
         DispatcherTest.assertError(500, "INTERNAL_ERROR", "Internal Server Error", none.send("GET", "/f"));
 
-        TestApp t = app();
+        LegacyHttpHarness t = app();
         t.app().onError((error, req, res) -> res.status(201).header("X-A", "1"));
         t.app().get("/f", throwing(new HttpException(404)));
         ClientResponse r = t.send("GET", "/f");
@@ -251,7 +249,7 @@ public class ErrorPathTest {
     @Test
     public void sdsAc4_FR_APP_005_AC5_aThrowingOnErrorIsLoggedStopsTheChainAndGives500() {
         IllegalStateException broken = new IllegalStateException("onError broke");
-        TestApp t = app();
+        LegacyHttpHarness t = app();
         t.app().onError((error, req, res) -> {
             calls.add("first");
             throw broken;
@@ -268,7 +266,7 @@ public class ErrorPathTest {
     // SDS-AC-5; FR-APP-005 AC-6, T37
     @Test
     public void sdsAc5_FR_APP_005_AC6_streamingIsAbortedAfterOnErrorAndCompletedStaysCompleted() {
-        TestApp t = app();
+        LegacyHttpHarness t = app();
         t.app().onError(recording);
         t.app().get("/s", (req, res) -> {
             res.stream(new ByteArrayInputStream(new byte[100]), "text/plain");
@@ -293,7 +291,7 @@ public class ErrorPathTest {
     // SDS-AC-5, SDS-AC-7; FR-APP-005 AC-9
     @Test
     public void sdsAc7_FR_APP_005_AC9_aStreamStartedByOnErrorOnANewResponseIsCopiedNotAborted() {
-        TestApp t = app();
+        LegacyHttpHarness t = app();
         t.app().onError((error, req, res) ->
                 res.status(503).stream(new ByteArrayInputStream("down".getBytes(StandardCharsets.UTF_8)),
                         "text/plain"));
@@ -363,7 +361,7 @@ public class ErrorPathTest {
     public void sdsAc6_FR_APP_005_AC8_only500IsLoggedAtErrorWithItsThrowableWhateverTheState() {
         IllegalStateException boom = new IllegalStateException("boom");
         IllegalStateException late = new IllegalStateException("late");
-        TestApp t = app();
+        LegacyHttpHarness t = app();
         t.app().get("/500", throwing(boom));
         t.app().get("/400", throwing(new HttpException(400, "bad")));
         t.app().get("/late", (req, res) -> {
@@ -401,7 +399,7 @@ public class ErrorPathTest {
     // SDS-AC-8; FR-APP-006 AC-1
     @Test
     public void sdsAc8_FR_APP_006_AC1_a500BodyHidesTheMessageClassAndStack() {
-        TestApp t = app();
+        LegacyHttpHarness t = app();
         t.app().get("/f", throwing(new RuntimeException("secret com.example.Foo")));
         ClientResponse r = t.send("GET", "/f");
         DispatcherTest.assertError(500, "INTERNAL_ERROR", "Internal Server Error", r);
@@ -415,7 +413,7 @@ public class ErrorPathTest {
     @Test
     public void sdsAc10_FR_APP_006_AC3_AC4_FR_APP_005_AC2_httpExceptionsKeepTheirStatusAndAppMessage() {
         List<Integer> statuses = new ArrayList<>();
-        TestApp t = app();
+        LegacyHttpHarness t = app();
         t.app().onError((error, req, res) -> statuses.add(((HttpException) error).status()));
         t.app().get("/400", throwing(new HttpException(400)));
         t.app().get("/422", throwing(new HttpException(422, "name required")));
@@ -433,7 +431,7 @@ public class ErrorPathTest {
     // SDS-AC-11; FR-APP-006 AC-6
     @Test
     public void sdsAc11_FR_APP_006_AC6_headKeepsTheHeadersAndContentLengthWithNoBody() {
-        TestApp t = app();
+        LegacyHttpHarness t = app();
         t.app().get("/f", throwing(new IllegalStateException("x")));
         ClientResponse get = t.send("GET", "/f");
         ClientResponse head = t.send("HEAD", "/f");
@@ -461,7 +459,7 @@ public class ErrorPathTest {
     // SDS-AC-16; FR-HTTP-025 AC-3, FR-APP-005 AC-2
     @Test
     public void sdsAc16_FR_HTTP_025_AC3_FR_APP_005_AC2_malformedQueryReachesOnErrorAfterTheMiddleware() {
-        TestApp t = app();
+        LegacyHttpHarness t = app();
         t.app().use((req, res, next) -> {
             calls.add("g");
             next.run();
@@ -481,7 +479,7 @@ public class ErrorPathTest {
     // FR-APP-006 AC-5, FR-APP-006 AC-9, FR-APP-005 AC-7
     @Test
     public void FR_APP_006_AC5_AC9_automaticAnswersCarryTheStandardBodyAndAreNotReplaceable() {
-        TestApp t = app().webSocketRoute("/ws");
+        LegacyHttpHarness t = app().webSocketRoute("/ws");
         t.app().onError(recording);
         t.app().get("/r", (req, res) -> res.send("ok"));
         DispatcherTest.assertError(404, "NOT_FOUND", "Not Found", t.send("GET", "/missing"));
@@ -508,7 +506,7 @@ public class ErrorPathTest {
     @Test
     public void sdsAc16_FR_HTTP_025_AC3_aMiddlewareReadingTheQueryGetsTheHttpExceptionFirst() {
         List<Object> got = new ArrayList<>();
-        TestApp t = app();
+        LegacyHttpHarness t = app();
         t.app().use((req, res, next) -> {
             try {
                 req.query("x");
@@ -529,7 +527,7 @@ public class ErrorPathTest {
     // SDS-AC-12 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-5-4.sds.md; FR-ENGINE-005 AC-2
     @Test
     public void sdsAc12_FR_ENGINE_005_AC2_every408CarriesConnectionCloseAndRequestTimeout() {
-        TestApp t = app();
+        LegacyHttpHarness t = app();
         t.app().get("/slow", throwing(new HttpException(408)));
         t.app().get("/slow-set", (req, res) -> {
             res.header("Connection", "keep-alive");
@@ -558,7 +556,7 @@ public class ErrorPathTest {
     // SDS-AC-9 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-2.sds.md; IR-HTTP-008 AC-4
     @Test
     public void sdsAc9_IR_HTTP_008_AC4_theExceptionHeadersReplaceTheAppSetOnesOnTheStandardError() {
-        TestApp t = app();
+        LegacyHttpHarness t = app();
         t.app().get("/ws", (req, res) -> {
             res.header("X-App", "1");
             throw new HttpException(426).withHeader("Sec-WebSocket-Version", "13");
@@ -573,7 +571,7 @@ public class ErrorPathTest {
     // SDS-AC-9 (wave-7-2); IR-HTTP-008 AC-5
     @Test
     public void sdsAc9_IR_HTTP_008_AC5_onErrorLeavingNewKeepsTheExceptionHeadersAndAnAnsweringOneDropsThem() {
-        TestApp leaving = app();
+        LegacyHttpHarness leaving = app();
         leaving.app().onError((error, req, res) -> res.header("X-From-OnError", "1"));
         leaving.app().get("/f", throwing(new HttpException(503).withHeader("Retry-After", "1")));
         ClientResponse r = leaving.send("GET", "/f");
@@ -581,7 +579,7 @@ public class ErrorPathTest {
         assertEquals("1", r.header("Retry-After"));
         assertNull(r.header("X-From-OnError"));
 
-        TestApp answering = app();
+        LegacyHttpHarness answering = app();
         answering.app().onError((error, req, res) -> res.status(418).header("X-Tea", "1").send("x"));
         answering.app().get("/f", throwing(new HttpException(503).withHeader("Retry-After", "1")));
         ClientResponse tea = answering.send("GET", "/f");
@@ -589,7 +587,7 @@ public class ErrorPathTest {
         assertEquals("1", tea.header("X-Tea"));
         assertNull(tea.header("Retry-After"));
 
-        TestApp failing = app();
+        LegacyHttpHarness failing = app();
         failing.app().onError((error, req, res) -> {
             throw new IllegalStateException("onError broke");
         });
@@ -602,7 +600,7 @@ public class ErrorPathTest {
     // SDS-AC-10 (wave-7-2); IR-HTTP-008 AC-7
     @Test
     public void sdsAc10_IR_HTTP_008_AC7_framingHeadersFromTheExceptionAreDroppedAndTheBodyLengthIsExact() {
-        TestApp t = app();
+        LegacyHttpHarness t = app();
         t.app().get("/f", throwing(new HttpException(400).withHeader("Content-Length", "5")
                 .withHeader("Transfer-Encoding", "chunked").withHeader("X-Kept", "k")));
         ClientResponse r = t.send("GET", "/f");
@@ -614,7 +612,7 @@ public class ErrorPathTest {
         assertEquals("k", r.header("X-Kept"));
 
         // a name the error path set itself is replaced, not doubled
-        TestApp late = app();
+        LegacyHttpHarness late = app();
         late.app().get("/t", throwing(new HttpException(408).withHeader("Connection", "close")));
         ClientResponse timeout = late.send("GET", "/t");
         assertEquals(1, count(timeout, "Connection"));
