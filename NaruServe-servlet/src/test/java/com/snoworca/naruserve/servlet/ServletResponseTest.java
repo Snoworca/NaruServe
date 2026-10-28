@@ -62,13 +62,14 @@ public class ServletResponseTest {
 
     // SDS-AC-7; FR-SVL-003 AC-1 — no container error page for the core's 404 and 500
     @Test
-    public void sdsAc7_FR_SVL_003_AC1_core404And500KeepTheStandardJsonBody() throws Exception {
+    public void commonFinalHandler404And500KeepHtmlSecurityAndExactFraming() throws Exception {
         for (String[] c : new String[][] {{"/nope", "404", "NOT_FOUND"}, {"/boom", "500", "INTERNAL_ERROR"}}) {
             SharedApp.Reply r = send("GET", c[0]);
             assertEquals(Integer.parseInt(c[1]), r.status);
-            assertTrue(r.text(), r.text().startsWith("{\"error\":{\"code\":\"" + c[2] + "\""));
-            assertFalse(r.text(), r.text().toLowerCase().contains("<html"));
-            assertEquals(Integer.toString(r.body.length), r.header("Content-Length"));
+            // FR-APP-024; CON-APP-010 AC-5: explicit common HTML profile.
+            SharedApp.assertHtmlError(r, Integer.parseInt(c[1]), c[0].equals("/nope")
+                    ? "Cannot GET /nope</pre>" : "java.lang.IllegalStateException: boom<br>");
+            assertFalse(r.text(), r.text().contains("org.eclipse.jetty.http.BadMessageException"));
         }
     }
 

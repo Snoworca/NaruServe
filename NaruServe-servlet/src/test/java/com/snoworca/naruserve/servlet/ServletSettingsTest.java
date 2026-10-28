@@ -44,7 +44,7 @@ public class ServletSettingsTest {
 
     private static void assertStandard413(SharedApp.Reply r) {
         assertEquals(r.text(), 413, r.status);
-        assertTrue(r.text(), r.text().contains("\"code\":\"PAYLOAD_TOO_LARGE\""));
+        SharedApp.assertHtmlError(r, 413, "com.snoworca.naruserve.HttpException<br>");
     }
 
     // SDS-AC-9; FR-SVL-008 AC-1

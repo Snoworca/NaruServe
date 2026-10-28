@@ -93,7 +93,9 @@ public class CorsServletTest {
             assertNull(response.header("Access-Control-Allow-Origin"));
             assertNull(response.header("Access-Control-Allow-Credentials"));
             assertTrue(vary(response).contains("origin"));
-            assertJson(response);
+            if (path.equals("/json")) assertJson(response);
+            else SharedApp.assertHtmlError(response, Integer.parseInt(path.substring(7)), path.endsWith("500")
+                    ? "java.lang.IllegalStateException: boom<br>" : "com.snoworca.naruserve.HttpException: invalid request<br>");
         }
     }
 
@@ -135,7 +137,7 @@ public class CorsServletTest {
         assertEquals(401, unauthenticated.status);
         assertEquals(1, authenticated.get());
         assertEquals(ORIGIN, unauthenticated.header("Access-Control-Allow-Origin"));
-        assertJson(unauthenticated);
+        SharedApp.assertHtmlError(unauthenticated, 401, "com.snoworca.naruserve.HttpException: authentication required<br>");
     }
 
     // FR-DX-010 AC-5: WebSocket Origin checks remain separate.
@@ -162,8 +164,9 @@ public class CorsServletTest {
         for (int status : new int[]{400, 401, 500}) {
             SharedApp.Reply error = request("GET", "/error/" + status, "Origin", ORIGIN);
             assertEquals(status, error.status);
-            assertTrue(error.text(), error.isStandardError(status == 401 ? "HTTP_401" : status == 400 ? "BAD_REQUEST" : "INTERNAL_ERROR"));
-            assertJson(error);
+            // CON-APP-010 AC-7: changing the default body never changes CORS privacy.
+            SharedApp.assertHtmlError(error, status, status == 500 ? "java.lang.IllegalStateException: boom<br>"
+                    : "com.snoworca.naruserve.HttpException: invalid request<br>");
             assertEquals(ORIGIN, error.header("Access-Control-Allow-Origin"));
             assertEquals("true", error.header("Access-Control-Allow-Credentials"));
             assertEquals(new HashSet<>(Arrays.asList("origin")), vary(error));

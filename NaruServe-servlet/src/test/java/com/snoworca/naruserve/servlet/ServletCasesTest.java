@@ -64,16 +64,24 @@ public class ServletCasesTest {
         // Jetty re-formats the parameter part of Content-Type (no space after ';'); compare it without spaces.
         String type = r.header("Content-Type");
         b.append(" Content-Type=").append(type == null ? null : type.replace(" ", "").toLowerCase());
-        if (!c.method.equals("HEAD")) {
+        boolean stackError=c.target.equals("/boom");
+        if (stackError) {
+            SharedApp.assertHtmlError(r, 500, "java.lang.IllegalStateException: boom<br>");
+            assertTrue(r.text(), r.text().contains("at com.snoworca.naruserve.servlet.SharedApp.lambda$define$"));
+            assertTrue(r.text(), r.text().contains("at com.snoworca.naruserve.internal.Dispatcher.handleHttp("));
+            assertTrue(r.text(), r.text().contains("<br>\tat "));
+        }
+        if (!c.method.equals("HEAD") && !stackError) {
             b.append(" length=").append(r.body.length);
-        } else {
+        } else if (!stackError) {
             b.append(" Content-Length=").append(r.header("Content-Length"));
         }
-        b.append(" body=").append(TestSupport.maskRequestId(r.text()));
+        // Only Java stack frames vary by transport; each real body/framing/security contract is checked above.
+        b.append(" body=").append(stackError ? "java.lang.IllegalStateException: boom [validated Java stack]" : TestSupport.maskRequestId(r.text()));
         return b.toString();
     }
 
-    // SDS-AC-4; FR-SVL-002 AC-4
+    // FR-SVL-002 AC-4; CON-APP-010 AC-3 AC-5; FR-APP-024; FR-HTTP-028
     @Test
     public void sdsAc4_FR_SVL_002_AC4_sharedCasesGiveEqualStatusesAndBodiesOnBothAdapters() throws Exception {
         File file = SharedApp.tempFile();
@@ -84,8 +92,14 @@ public class ServletCasesTest {
         List<String> jetty = new ArrayList<>();
         List<String> inMemory = new ArrayList<>();
         for (Case c : CASES) {
-            jetty.add(transcript(c, SharedApp.http(container.port(), c.method, c.target, c.body, c.headers)));
-            inMemory.add(transcript(c, SharedApp.inMemory(memory, c.method, c.target, c.body, c.headers)));
+            SharedApp.Reply actual=SharedApp.http(container.port(), c.method, c.target, c.body, c.headers);
+            SharedApp.Reply reference=SharedApp.inMemory(memory, c.method, c.target, c.body, c.headers);
+            if(c.target.equals("/boom")) {
+                assertTrue(actual.text(), actual.text().contains("at com.snoworca.naruserve.servlet.NaruServeServlet.service("));
+                assertTrue(reference.text(), reference.text().contains("at com.snoworca.naruserve.testing.InMemoryHttpAdapter.send("));
+            }
+            jetty.add(transcript(c, actual));
+            inMemory.add(transcript(c, reference));
         }
         assertEquals(String.join("\n", inMemory), String.join("\n", jetty));
 
@@ -93,7 +107,7 @@ public class ServletCasesTest {
         assertTrue(all, all.contains("GET /users/42?q=a%20b -> 200"));
         assertTrue(all, all.contains("body=user 42 q=a b"));
         assertTrue(all, all.contains("GET /nope -> 404"));
-        assertTrue(all, all.contains("DELETE /users/1 -> 405 Allow=["));
+        assertTrue(all, all.contains("DELETE /users/1 -> 404 Allow=[]"));
         assertTrue(all, all.contains("body=m1,m2,h"));
         assertTrue(all, all.contains("GET /boom -> 500"));
         assertTrue(all, all.contains("body=handled short and stout"));

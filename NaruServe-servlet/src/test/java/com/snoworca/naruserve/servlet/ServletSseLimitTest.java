@@ -76,7 +76,7 @@ public class ServletSseLimitTest extends SseJettyTest {
         next();
         SharedApp.Reply third = SharedApp.http(port, "GET", "/events", null);
         assertEquals(503, third.status);
-        assertTrue(third.text(), third.isStandardError("SERVICE_UNAVAILABLE"));
+        SharedApp.assertHtmlError(third, 503, "com.snoworca.naruserve.HttpException<br>");
         assertEquals("503 false", refused.get());
 
         // the end of a stream by close()

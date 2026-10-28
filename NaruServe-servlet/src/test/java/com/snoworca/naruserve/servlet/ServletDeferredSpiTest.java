@@ -29,6 +29,7 @@ public class ServletDeferredSpiTest {
     private volatile long ordinaryTimeout;
     private final AtomicReference<Runnable> asyncStartHook = new AtomicReference<>();
     private final AtomicReference<String> setupIoFailure = new AtomicReference<>();
+    private final AtomicReference<IOException> streamWriteFailure = new AtomicReference<>();
     private final List<CountDownLatch> releases = new ArrayList<>();
 
     @After public void cleanup() throws Exception {
@@ -59,7 +60,15 @@ public class ServletDeferredSpiTest {
                 }
                 @Override public ServletOutputStream getOutputStream() throws IOException {
                     if(setupIoFailure.compareAndSet("output",null))throw new IOException("injected SSE setup output acquisition failure");
-                    return super.getOutputStream();
+                    ServletOutputStream delegate=super.getOutputStream();
+                    return new ServletOutputStream(){
+                        private void checkWrite()throws IOException{IOException failure=streamWriteFailure.getAndSet(null);if(failure!=null)throw failure;}
+                        @Override public boolean isReady(){return delegate.isReady();}
+                        @Override public void setWriteListener(WriteListener listener){delegate.setWriteListener(listener);}
+                        @Override public void write(int value)throws IOException{checkWrite();delegate.write(value);}
+                        @Override public void write(byte[] bytes,int offset,int length)throws IOException{checkWrite();delegate.write(bytes,offset,length);}
+                        @Override public void flush()throws IOException{delegate.flush();}
+                    };
                 }
             };
             try {chain.doFilter(wrapper,responseWrapper);} finally {returned.offer(wrapper.getRequestURI());}
@@ -79,7 +88,7 @@ public class ServletDeferredSpiTest {
         ex.commit(200,headers,bytes.length).write(bytes);ex.finish();
     }
     private int inFlight() throws Exception {Field field=ServletAdapter.class.getDeclaredField("inFlight");field.setAccessible(true);return field.getInt(adapter);}
-    private void idle() throws Exception {assertTrue("in-flight exchange not released",SharedApp.until(()->{try{return inFlight()==0;}catch(Exception e){throw new AssertionError(e);}},5,TimeUnit.SECONDS));assertEquals(0,adapter.pool().open());}
+    private void idle() throws Exception {assertTrue("in-flight exchange not released",SharedApp.until(()->{try{return inFlight()==0 && adapter.pool().open()==0;}catch(Exception e){throw new AssertionError(e);}},5,TimeUnit.SECONDS));assertEquals(0,inFlight());assertEquals(0,adapter.pool().open());}
     private void completeOnce(int expected) throws Exception {assertTrue("async completion not observed",SharedApp.until(()->completes.get()==expected,5,TimeUnit.SECONDS));assertEquals(expected,completes.get());}
     private static void closed(HttpExchange ex) throws Exception {
         try {ex.commit(200,Collections.emptyList(),0);fail("closed exchange resurrected");}
@@ -295,7 +304,8 @@ public class ServletDeferredSpiTest {
         }
     }
 
-    private void acceptedSetupFailure(String point) throws Exception {
+    private void acceptedSetupFailure(String point) throws Exception { acceptedSetupFailure(point,null); }
+    private void acceptedSetupFailure(String point,Throwable cancellationFailure) throws Exception {
         start(exchanges::add);Future<SharedApp.Reply> reply=request("/setup-failure");HttpExchange ex=next();returned();
         AtomicInteger notifications=new AtomicInteger(),attached=new AtomicInteger(),drained=new AtomicInteger(),cancelled=new AtomicInteger();
         AtomicReference<Throwable> callbackFailure=new AtomicReference<>();
@@ -306,7 +316,11 @@ public class ServletDeferredSpiTest {
             ex.eventStream(200,Collections.emptyList(),new StreamDrain(){
                 @Override public void attach(OutputStream out){attached.incrementAndGet();if(point.equals("attach"))throw new IllegalStateException("injected attach failure");}
                 @Override public void drain(OutputStream out){drained.incrementAndGet();}
-                @Override public void abort(){cancelled.incrementAndGet();}
+                @Override public void abort(){
+                    cancelled.incrementAndGet();try{assertCallbackUnlocked(ex);}catch(Throwable e){callbackFailure.set(e);}
+                    if(cancellationFailure instanceof Error)throw (Error)cancellationFailure;
+                    if(cancellationFailure instanceof RuntimeException)throw (RuntimeException)cancellationFailure;
+                }
             });
             fail("setup failure did not propagate");
         } catch(IOException failure){assertFalse(point.equals("attach"));assertTrue(failure.getMessage(),failure.getMessage().contains("injected SSE setup"));}
@@ -324,5 +338,51 @@ public class ServletDeferredSpiTest {
     @Test(timeout=20000) public void acceptedSseOutputAcquisitionFailureNotifiesAbortAndCancelsDrainOnce() throws Exception {acceptedSetupFailure("output");}
     // IR-HTTP-009 AC-2 AC-3 AC-6; FR-SVL-009 AC-3 AC-4: accepted user attach RuntimeException remains abnormal.
     @Test(timeout=20000) public void acceptedSseAttachFailureNotifiesAbortAndCancelsDrainOnce() throws Exception {acceptedSetupFailure("attach");}
+
+    // IR-HTTP-009 AC-3; FR-SVL-009 AC-4: cancellation cannot mask the original setup failure or skip cleanup.
+    @Test(timeout=20000) public void flushFailureKeepsOriginalIoWhenCancellationThrowsRuntime()throws Exception{acceptedSetupFailure("flush",new IllegalStateException("cancel runtime"));}
+    @Test(timeout=20000) public void flushFailureKeepsOriginalIoWhenCancellationThrowsError()throws Exception{acceptedSetupFailure("flush",new AssertionError("cancel error"));}
+    @Test(timeout=20000) public void attachFailureKeepsOriginalFailureWhenCancellationThrowsRuntime()throws Exception{acceptedSetupFailure("attach",new IllegalStateException("cancel runtime"));}
+    @Test(timeout=20000) public void attachFailureKeepsOriginalFailureWhenCancellationThrowsError()throws Exception{acceptedSetupFailure("attach",new AssertionError("cancel error"));}
+
+    private void queuedCancellationFailure(Throwable failure)throws Exception{
+        AtomicInteger cancelled=new AtomicInteger(),drained=new AtomicInteger(),notifications=new AtomicInteger();AtomicReference<Throwable> unexpected=new AtomicReference<>(),callbackFailure=new AtomicReference<>();
+        start(ex->{exchanges.add(ex);ex.onAbort(notifications::incrementAndGet);
+            try{
+                ex.eventStream(200,Collections.emptyList(),new StreamDrain(){
+                    @Override public void drain(OutputStream out){drained.incrementAndGet();}
+                    @Override public void abort(){cancelled.incrementAndGet();try{assertCallbackUnlocked(ex);}catch(Throwable e){callbackFailure.set(e);}
+                        if(failure instanceof Error)throw (Error)failure;throw (RuntimeException)failure;}
+                });
+                ex.abort();
+            }catch(Throwable escaped){unexpected.set(escaped);}
+        });
+        Future<SharedApp.Reply> reply=request("/cancel-before-drain");HttpExchange ex=next();returned();assertEquals(200,reply.get(5,TimeUnit.SECONDS).status);completeOnce(1);idle();
+        assertEquals(1,cancelled.get());assertEquals(0,drained.get());assertEquals(1,notifications.get());assertNull(callbackFailure.get());
+        assertNull("untrusted drain cancellation escaped the adapter",unexpected.get());ex.abort();ex.abort();assertEquals(1,cancelled.get());assertEquals(1,notifications.get());completeOnce(1);closed(ex);
+    }
+    // IR-HTTP-009 AC-3; FR-SVL-009 AC-4: queued cancellation isolates both unchecked exception families.
+    @Test(timeout=20000) public void queuedDrainCancellationRuntimeCannotEscapeOrSkipObservers()throws Exception{queuedCancellationFailure(new IllegalStateException("cancel runtime"));}
+    @Test(timeout=20000) public void queuedDrainCancellationErrorCannotEscapeOrSkipObservers()throws Exception{queuedCancellationFailure(new AssertionError("cancel error"));}
+
+    private void swallowedSseWriteFailure(boolean explicitFinish)throws Exception{
+        start(exchanges::add);Future<SharedApp.Reply> reply=request("/swallowed-stream-failure");HttpExchange ex=next();returned();
+        IOException original=new IOException("injected stream body failure");streamWriteFailure.set(original);AtomicInteger notifications=new AtomicInteger();
+        AtomicReference<Throwable> observed=new AtomicReference<>(),finishFailure=new AtomicReference<>();CountDownLatch drained=new CountDownLatch(1);ex.onAbort(notifications::incrementAndGet);
+        ex.eventStream(200,Collections.emptyList(),out->{
+            try{out.write('x');}catch(IOException failure){observed.set(failure);}
+            if(explicitFinish){try{ex.finish();}catch(Throwable failure){finishFailure.set(failure);}}
+            drained.countDown();
+        });
+        assertTrue("drain did not return",drained.await(5,TimeUnit.SECONDS));try{reply.get(5,TimeUnit.SECONDS);}catch(ExecutionException ended){assertTrue(ended.getCause() instanceof IOException);}
+        completeOnce(1);idle();assertSame("adapter changed the originating IO failure",original,observed.get());
+        if(explicitFinish)assertSame("finish converted swallowed IO into normal completion",original,finishFailure.get());
+        assertEquals("swallowed stream IO lost terminal notification",1,notifications.get());
+        try{((ServletExchange)ex).checkNotAborted();fail("failed stream completed normally");}catch(IOException expected){}
+        ex.abort();assertEquals(1,notifications.get());completeOnce(1);closed(ex);
+    }
+    // IR-HTTP-009 AC-2 AC-3; FR-SVL-009 AC-4: custom drains cannot hide a detected terminal write failure.
+    @Test(timeout=20000) public void swallowedSseIoStillAbortsAtDrainOwnershipExit()throws Exception{swallowedSseWriteFailure(false);}
+    @Test(timeout=20000) public void explicitFinishRethrowsOriginalSwallowedSseIoBeforeNormalCompletion()throws Exception{swallowedSseWriteFailure(true);}
 
 }
