@@ -6,6 +6,8 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.snoworca.naruserve.Method;
+import com.snoworca.naruserve.Middleware;
+import com.snoworca.naruserve.HttpAcceptanceTest;
 import com.snoworca.naruserve.MethodSet;
 import com.snoworca.naruserve.RestApp;
 import com.snoworca.naruserve.RouteBuilder;
@@ -36,7 +38,7 @@ import org.junit.Test;
 
 public class DefaultRestAppTest {
 
-    private final RouteHandler h = (req, res) -> { };
+    private final RouteHandler h = (req, res) -> res.end(); // FR-APP-023 AC-1: explicit common HTTP completion.
 
     private static ClientResponse send(DefaultRestApp app, String method, String target) {
         InMemoryHttpAdapter adapter = new InMemoryHttpAdapter();
@@ -66,16 +68,15 @@ public class DefaultRestAppTest {
 
     // SDS-AC-11; IR-HTTP-006 AC-3
     @Test
-    public void sdsAc11_IR_HTTP_006_AC3_appGetPlusBuilderGetIsADuplicateAtFreeze() {
+    public void appAndBuilderDuplicateRoutesAreOrderedRatherThanFreezeConflicts() {
+        // CON-APP-010 AC-1 AC-5; FR-APP-021 AC-1 AC-2
         DefaultRestApp app = new DefaultRestApp();
-        app.get("/x", h);
-        app.route("/x").get(h);
-        try {
-            app.freeze();
-            fail("duplicate GET /x accepted");
-        } catch (RoutingConfigException e) {
-            assertTrue(e.getMessage(), e.getMessage().contains("GET /x conflicts with GET /x"));
-        }
+        List<String> trace = new ArrayList<>();
+        app.get("/x", (Middleware) (q, r, n) -> { trace.add("app"); n.run(); });
+        app.route("/x").get((q, r) -> { trace.add("builder"); r.send("ok"); });
+        app.freeze();
+        assertEquals("ok", send(app, "GET", "/x").text());
+        assertEquals(Arrays.asList("app", "builder"), trace);
     }
 
     // SDS-AC-11; FR-HTTP-007 AC-1
@@ -103,20 +104,21 @@ public class DefaultRestAppTest {
 
     // SDS-AC-11; FR-HTTP-007 AC-1
     @Test
-    public void sdsAc11_FR_HTTP_007_AC1_unregisteredMethodOfAMethodSetRouteIs405() {
+    public void unregisteredMethodOfAMethodSetRouteFallsThroughToCommon404() {
         DefaultRestApp app = new DefaultRestApp();
         app.route(Method.get().post().delete(), "/users/:id", h);
         app.freeze();
         ClientResponse r = send(app, "PUT", "/users/1");
-        assertEquals(405, r.status());
-        assertEquals("GET, HEAD, POST, DELETE, OPTIONS", r.header("Allow"));
+        // CON-APP-010 AC-3 AC-5; FR-HTTP-028 AC-5: method-set registration remains, automatic405 does not.
+        HttpAcceptanceTest.assertCommon404("PUT", "/users/1", r);
     }
 
     // SDS-AC-12; FR-HTTP-008 AC-2
     @Test
     public void sdsAc12_FR_HTTP_008_AC2_badPatternThrowsAtTheRegistrationCall() {
         DefaultRestApp app = new DefaultRestApp();
-        for (String bad : Arrays.asList("x", "/a/:", "/a*", "/a//b")) {
+        // CON-APP-010 AC-1 AC-5; FR-ROUTE-018: reject actual path-to-regexp grammar errors atomically.
+        for (String bad : Arrays.asList("/a/:", "/a*", "/x/:id(\\d+)", "/a{/:id")) {
             try {
                 app.get(bad, h);
                 fail("accepted " + bad);
@@ -135,10 +137,11 @@ public class DefaultRestAppTest {
 
     // SDS-AC-12; FR-HTTP-008 AC-4
     @Test
-    public void sdsAc12_FR_HTTP_008_AC4_duplicateThrowsOnlyAtFreezeAndLeavesTheAppUnfrozen() {
+    public void retainedWebSocketDuplicatesStillFailFreezeWithoutPublishingADispatcher() {
+        // CON-APP-010 AC-1 AC-5; FR-APP-021 AC-6: preserve strict WS failure and retry/atomicity evidence.
         DefaultRestApp app = new DefaultRestApp();
-        app.get("/x", h);
-        app.get("/x", h);
+        app.webSocketRoute("/x", h);
+        app.webSocketRoute("/x", h);
         assertEquals(2, app.registrations().size());
         try {
             app.freeze();
@@ -203,34 +206,36 @@ public class DefaultRestAppTest {
         assertEquals("hit", new String(r.body(), StandardCharsets.UTF_8));
         assertEquals(1, hits.get());
         ClientResponse mismatch = merged.send("DELETE", "/a//b");
-        assertEquals(405, mismatch.status());
-        assertEquals("GET, HEAD, OPTIONS", mismatch.header("Allow"));
+        // CON-APP-010 AC-3 AC-5; FR-HTTP-028 AC-5: explicit merge policy remains effective, method miss is404.
+        HttpAcceptanceTest.assertCommon404("DELETE", "/a//b", mismatch);
     }
 
     // SDS-AC-13; FR-HTTP-008 AC-5
     @Test
-    public void sdsAc13_FR_HTTP_008_AC5_everyCallAfterFreezeThrowsAndRecordsNothing() {
+    public void ordinaryHttpAndExistingBuildersAppendAfterFreezeWhileConfigurationRemainsGuarded() {
+        // CON-APP-010 AC-3 AC-5; FR-APP-021 AC-3 AC-4: preserve all old overloads under the new live HTTP policy.
         DefaultRestApp app = new DefaultRestApp();
         RouteBuilder early = app.route("/b");
-        app.get("/x", h);
-        app.freeze();
-        List<Runnable> calls = Arrays.<Runnable>asList(
+        app.get("/x", h); app.freeze();
+        List<Runnable> live = Arrays.<Runnable>asList(
             () -> app.get("/a", h), () -> app.post("/a", h), () -> app.put("/a", h), () -> app.patch("/a", h),
             () -> app.delete("/a", h), () -> app.head("/a", h), () -> app.options("/a", h),
             () -> app.route(Method.GET, "/a", h), () -> app.route(Method.any(), "/a", h),
-            () -> app.routerPolicy(RouterPolicy.strict()), () -> app.webSocketRoute("/ws", h),
             () -> early.get(h), () -> early.post(h), () -> early.put(h), () -> early.patch(h),
             () -> early.delete(h), () -> early.head(h), () -> early.options(h),
             () -> app.route("/late").get(h));
-        for (int i = 0; i < calls.size(); i++) {
-            try {
-                calls.get(i).run();
-                fail("call " + i + " accepted after freeze");
-            } catch (IllegalStateException expected) {
-                // frozen
-            }
+        for (Runnable registration : live) registration.run();
+        assertEquals(1 + live.size(), app.registrations().size());
+        for (String verb : new String[]{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"}) {
+            assertEquals(verb, 200, send(app, verb, "/a").status());
+            assertEquals(verb, 200, send(app, verb, "/b").status());
         }
-        assertEquals(1, app.registrations().size());
+        int before = app.registrations().size();
+        for (Runnable guarded : Arrays.<Runnable>asList(() -> app.routerPolicy(RouterPolicy.strict()), () -> app.webSocketRoute("/ws", h))) {
+            try { guarded.run(); fail("configuration/WS accepted after freeze"); }
+            catch (IllegalStateException expected) { }
+        }
+        assertEquals(before, app.registrations().size());
     }
 
     // SDS-AC-13; FR-HTTP-008 AC-7
@@ -329,24 +334,21 @@ public class DefaultRestAppTest {
 
     // SDS-AC-5 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-3.sds.md; FR-APP-002 AC-5
     @Test
-    public void sdsAc5_FR_APP_002_AC5_freezeInNewRejectsThroughTheOneGuardNamingTheMethod() {
+    public void freezeInNewAllowsHttpButKeepsConfigurationGuardMessagesAndUnchangedSettings() {
+        // CON-APP-010 AC-3 AC-5; FR-APP-021 AC-4: freeze is not an ordinary HTTP registration barrier.
         DefaultRestApp app = new DefaultRestApp();
-        app.get("/x", h);
-        app.freeze();
+        app.get("/x", h); app.freeze();
         assertEquals(com.snoworca.naruserve.AppState.NEW, app.state());
-        List<Runnable> calls = Arrays.<Runnable>asList(() -> app.get("/a", h),
-                () -> app.use((req, res, next) -> next.run()), () -> app.onStart(ctx -> { }),
+        app.get("/a", h); app.use((req, res, next) -> next.run());
+        assertEquals(200, send(app, "GET", "/a").status());
+        List<Runnable> calls = Arrays.<Runnable>asList(() -> app.onStart(ctx -> { }),
                 () -> app.logger(new com.snoworca.naruserve.ConsoleLogger()), () -> app.routerPolicy(RouterPolicy.strict()));
-        String[] names = {"get", "use", "onStart", "logger", "routerPolicy"};
+        String[] names = {"onStart", "logger", "routerPolicy"};
         for (int i = 0; i < calls.size(); i++) {
-            try {
-                calls.get(i).run();
-                fail(names[i] + " accepted after freeze");
-            } catch (IllegalStateException e) {
-                assertTrue(e.getMessage(), e.getMessage().contains(names[i]));
-            }
+            try { calls.get(i).run(); fail(names[i] + " accepted after freeze"); }
+            catch (IllegalStateException e) { assertTrue(e.getMessage(), e.getMessage().contains(names[i])); }
         }
-        assertEquals(1, app.registrations().size());
+        assertEquals(2, app.registrations().size());
     }
 
     // SDS-AC-6 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-2.sds.md; IR-WS-001 AC-6

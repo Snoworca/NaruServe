@@ -2,6 +2,7 @@ package com.snoworca.naruserve;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -30,7 +31,8 @@ import org.junit.Test;
 public class HttpAcceptanceTest {
 
     private final AtomicInteger calls = new AtomicInteger();
-    private final RouteHandler recording = (req, res) -> calls.incrementAndGet();
+    // CON-APP-010 AC-3 AC-5; FR-APP-023 AC-1: observing a call does not implicitly end a response.
+    private final RouteHandler recording = (req, res) -> { calls.incrementAndGet(); res.end(); };
 
     private static void assertEmpty(int status, ClientResponse r) {
         assertEquals(status, r.status());
@@ -48,41 +50,57 @@ public class HttpAcceptanceTest {
                 + "\",\"requestId\":\"[0-9a-f]{16}\"}}"));
     }
 
+    // CON-APP-010 AC-3 AC-4 AC-5; FR-HTTP-028 AC-5; FR-APP-024 AC-3: common default, retained JSON profile stays separate.
+    public static void assertCommon404(String method, String rawPath, ClientResponse response) {
+        String document = "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>Cannot "
+                + method + " " + rawPath + "</pre>\n</body>\n</html>\n";
+        assertEquals(404, response.status());
+        assertEquals(document, response.text());
+        assertEquals("text/html; charset=utf-8", response.header("Content-Type"));
+        assertEquals(String.valueOf(document.getBytes(StandardCharsets.UTF_8).length), response.header("Content-Length"));
+        assertEquals("default-src 'none'", response.header("Content-Security-Policy"));
+        assertEquals("nosniff", response.header("X-Content-Type-Options"));
+        assertNull(response.header("Allow"));
+        assertFalse(response.abnormallyClosed());
+    }
+
     // SDS-AC-15 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-4.sds.md; T02, FR-HTTP-022 AC-7, FR-HTTP-026 AC-7
     @Test
-    public void sdsAc15_T02_FR_HTTP_022_AC7_anyExceptDeleteAnswersDelete405() {
+    public void anyExceptDeleteKeepsItsSelectionButDeleteFallsThroughTo404() {
         TestApp t = TestApp.create();
         t.app().route(Method.any().except(Method.DELETE), "/t", recording);
         ClientResponse r = t.send("DELETE", "/t");
-        assertError(405, "METHOD_NOT_ALLOWED", "Method Not Allowed", r);
-        assertEquals("GET, HEAD, POST, PUT, PATCH, OPTIONS", r.header("Allow"));
+        // CON-APP-010 AC-3 AC-5; FR-HTTP-028 AC-5 AC-6
+        assertCommon404("DELETE", "/t", r);
         assertEquals(0, calls.get());
     }
 
     // SDS-AC-11; T03, IR-HTTP-006 AC-3
     @Test
-    public void sdsAc11_T03_IR_HTTP_006_AC3_duplicateBuilderAndAppGetFailsTheHarnessFreeze() {
+    public void duplicateAppAndBuilderRoutesRemainDistinctOrderedHttpLayers() {
+        // CON-APP-010 AC-1 AC-5; FR-APP-021 AC-1 AC-2
         TestApp t = TestApp.create();
-        t.app().get("/x", recording);
-        t.app().route("/x").get(recording);
-        try {
-            t.start();
-            fail("duplicate GET /x accepted");
-        } catch (RoutingConfigException e) {
-            assertTrue(e.getMessage(), e.getMessage().contains("GET /x"));
-        }
+        List<String> trace = new ArrayList<>();
+        t.app().get("/x", (Middleware) (req, res, next) -> { trace.add("app"); next.run(); });
+        t.app().route("/x").get((req, res) -> { trace.add("builder"); res.send("builder"); });
+        t.start();
+        assertEquals("builder", t.send("GET", "/x").text());
+        assertEquals(Arrays.asList("app", "builder"), trace);
     }
 
     // SDS-AC-16 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-4.sds.md; T05, FR-HTTP-022 AC-3, FR-HTTP-026 AC-3
     @Test
-    public void sdsAc16_T05_FR_HTTP_022_AC3_automaticOptionsListsAllowWithoutBody() {
+    public void automaticOptionsUsesSortedPlainTextMethodsWithoutInvokingHandlers() {
         TestApp t = TestApp.create();
         t.app().get("/r", recording).post("/r", recording);
         ClientResponse r = t.send("OPTIONS", "/r");
-        assertEquals(204, r.status());
-        assertEquals("GET, HEAD, POST, OPTIONS", r.header("Allow"));
-        assertNull(r.header("Content-Length"));
-        assertEquals(0, r.body().length);
+        // CON-APP-010 AC-3 AC-5; FR-HTTP-028 AC-4: automatic OPTIONS is200 with sorted body and implicit HEAD.
+        assertEquals(200, r.status());
+        assertEquals("GET, HEAD, POST", r.header("Allow"));
+        assertEquals("GET, HEAD, POST", r.text());
+        assertEquals("text/plain", r.header("Content-Type"));
+        assertEquals("15", r.header("Content-Length"));
+        assertEquals("nosniff", r.header("X-Content-Type-Options"));
         assertEquals(0, calls.get());
     }
 
@@ -91,12 +109,11 @@ public class HttpAcceptanceTest {
     public void sdsAc15_T06_FR_HTTP_022_AC1_AC2_AC4_noPathNoMethodUnknownMethod() {
         TestApp t = TestApp.create();
         t.app().post("/p", recording);
-        assertError(404, "NOT_FOUND", "Not Found", t.send("GET", "/nothing"));
-        ClientResponse mismatch = t.send("GET", "/p");
-        assertError(405, "METHOD_NOT_ALLOWED", "Method Not Allowed", mismatch);
-        assertEquals("POST, OPTIONS", mismatch.header("Allow"));
-        assertError(501, "NOT_IMPLEMENTED", "Not Implemented", t.send("FOO", "/p"));
-        assertError(501, "NOT_IMPLEMENTED", "Not Implemented", t.send("TRACE", "/p"));
+        // CON-APP-010 AC-3 AC-5; FR-HTTP-028 AC-1 AC-5: unmatched paths, methods and explicit common tokens fall through.
+        assertCommon404("GET", "/nothing", t.send("GET", "/nothing"));
+        assertCommon404("GET", "/p", t.send("GET", "/p"));
+        assertCommon404("FOO", "/p", t.send("FOO", "/p"));
+        assertCommon404("TRACE", "/p", t.send("TRACE", "/p"));
         assertEquals(0, calls.get());
     }
 
@@ -133,8 +150,10 @@ public class HttpAcceptanceTest {
         assertNull(star.header("Content-Length"));
         assertError(400, "BAD_REQUEST", "Bad Request", t.send("GET", "abc"));
         assertError(400, "BAD_REQUEST", "Bad Request", t.send("GET", "*"));
-        assertError(400, "BAD_REQUEST", "Bad Request", t.send("GET", "/%2e%2e"));
         assertEquals(0, calls.get());
+        // CON-APP-010 AC-2 AC-5; FR-HTTP-027 AC-2: a captured encoded dot is data, separate from static traversal policy.
+        assertEquals(200, t.send("GET", "/%2e%2e").status());
+        assertEquals(1, calls.get());
     }
 
     // SDS-3-AC-14; FR-HTTP-021 AC-1, FR-HTTP-021 AC-5, FR-HTTP-021 AC-6
@@ -173,7 +192,8 @@ public class HttpAcceptanceTest {
         assertEquals(200, head.status());
         assertEquals(0, head.body().length);
         assertEquals("4", head.header("Content-Length"));
-        assertError(405, "METHOD_NOT_ALLOWED", "Method Not Allowed", t.send("PUT", "/users/1"));
+        // CON-APP-010 AC-3 AC-5; FR-HTTP-028 AC-5
+        assertCommon404("PUT", "/users/1", t.send("PUT", "/users/1"));
         assertEquals(Arrays.asList(Method.GET, Method.POST, Method.DELETE, Method.HEAD), methods);
     }
 
@@ -182,7 +202,7 @@ public class HttpAcceptanceTest {
     public void sds3Ac11_FR_HTTP_007_AC3_patchRouteSeesPatch() {
         List<Method> methods = new ArrayList<>();
         TestApp t = TestApp.create();
-        t.app().route(Method.PATCH, "/p", (req, res) -> methods.add(req.method()));
+        t.app().route(Method.PATCH, "/p", (req, res) -> { methods.add(req.method()); res.end(); });
         assertEmpty(200, t.send("PATCH", "/p"));
         assertEquals(Collections.singletonList(Method.PATCH), methods);
     }
@@ -212,9 +232,11 @@ public class HttpAcceptanceTest {
             seen.add(req.rawPath());
             seen.add(req.path());
             seen.add(req.query("q"));
+            res.end(); // CON-APP-010 AC-3; FR-APP-023 AC-1
         });
         t.send("GET", "/a%20b?q=%20");
-        assertEquals(Arrays.asList("/a%20b", "/a b", " "), seen);
+        // CON-APP-010 AC-2 AC-5; FR-HTTP-027 AC-2 AC-3
+        assertEquals(Arrays.asList("/a%20b", "/a%20b", " "), seen);
     }
 
     // FR-HTTP-009 AC-1, FR-HTTP-009 AC-2, FR-HTTP-009 AC-3
@@ -226,9 +248,11 @@ public class HttpAcceptanceTest {
             seen.add(req.path());
             seen.add(req.rawPath());
             seen.add(req.param("name"));
+            res.end(); // FR-APP-023 AC-1: explicit completion; the capture alone is decoded.
         });
         assertEquals(200, t.send("GET", "/files/a%20b?x=1").status());
-        assertEquals(Arrays.asList("/files/a b", "/files/a%20b", "a b"), seen);
+        // CON-APP-010 AC-2 AC-5; FR-HTTP-027 AC-2 AC-3
+        assertEquals(Arrays.asList("/files/a%20b", "/files/a%20b", "a b"), seen);
     }
 
     // FR-HTTP-012 AC-2
