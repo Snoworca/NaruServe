@@ -193,7 +193,8 @@ public class MultipartSpoolingTest {
             seen.clear();
             ClientResponse r = post(dir, body, h);
             assertEquals(413, r.status());
-            assertTrue(r.text(), r.text().startsWith("{\"error\":{\"code\":\"PAYLOAD_TOO_LARGE\""));
+            // CON-APP-010 AC-4 AC-5; FR-APP-024 AC-3: only final rendering changed; the cap and cleanup remain.
+            JsonBodyAcceptanceTest.assertDefaultError(413, HttpException.class, r);
             assertEquals(Arrays.asList(), seen);
         }
         assertEquals(0, dir.list().length);
