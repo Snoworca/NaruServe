@@ -2,6 +2,7 @@ package com.snoworca.naruserve.tinyhttpd;
 
 import com.snoworca.naruserve.common.AbortListeners;
 import com.snoworca.naruserve.common.RequestRetentions;
+import com.snoworca.naruserve.common.SafeCallbacks;
 import com.snoworca.naruserve.spi.ExchangeHandler;
 import com.snoworca.naruserve.spi.HttpExchange;
 import com.snoworca.naruserve.spi.StreamDrain;
@@ -391,7 +392,7 @@ final class TinyHttpdExchange implements HttpExchange {
             if (claimed.compareAndSet(false, true)) {
                 // FR-APP-023 AC-3/6; IR-HTTP-009 AC-3: cancellation is untrusted user
                 // code. Its failure cannot bypass the active setup owner's wait or stop cleanup.
-                try { callback.abort(); } catch (Throwable ignored) { }
+                SafeCallbacks.run(callback::abort);
             }
         }
     }
