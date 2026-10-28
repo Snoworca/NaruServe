@@ -168,4 +168,37 @@ public class ServletDeferredSpiTest {
         }
         completeOnce(12);
     }
+    // FR-SVL-009 AC-3 AC-4: both late drain failure classes abort ownership, rather than only normal completion.
+    @Test(timeout=20000) public void lateDrainFailuresAbortAndReleaseContextInflightAndSlotOnce() throws Exception {
+        start(exchanges::add);
+        for(boolean ioFailure:new boolean[]{true,false}) {
+            Future<SharedApp.Reply> reply=request("/failed-stream");HttpExchange ex=next();returned();pending(reply);
+            AtomicInteger calls=new AtomicInteger();CountDownLatch drained=new CountDownLatch(1);
+            ex.eventStream(200,Collections.emptyList(),out->{
+                calls.incrementAndGet();drained.countDown();
+                if(ioFailure)throw new IOException("late drain io");
+                throw new IllegalStateException("late drain runtime");
+            });
+            assertTrue(drained.await(5,TimeUnit.SECONDS));
+            try {reply.get(5,TimeUnit.SECONDS);}catch(ExecutionException ended){assertTrue(ended.getCause() instanceof IOException);}
+            completeOnce(ioFailure?1:2);idle();assertEquals(1,calls.get());
+            try {((ServletExchange)ex).checkNotAborted();fail("drain failure did not abort exchange");}catch(IOException expected){}
+            ex.abort();ex.abort();assertEquals(ioFailure?1:2,completes.get());closed(ex);
+        }
+    }
+    // FR-SVL-009 AC-3 AC-4: late promotion still honors the existing single-slot limit and leaves rejection writable.
+    @Test(timeout=20000) public void secondLateSseIsRejectedWithoutTakingOrLeakingTheOccupiedSlot() throws Exception {
+        start(exchanges::add);Future<SharedApp.Reply> first=request("/stream-one");HttpExchange open=next();returned();
+        CountDownLatch release=new CountDownLatch(1),draining=new CountDownLatch(1);releases.add(release);
+        open.eventStream(200,Collections.emptyList(),out->{draining.countDown();out.write("done".getBytes(StandardCharsets.UTF_8));try{release.await(5,TimeUnit.SECONDS);}catch(InterruptedException e){Thread.currentThread().interrupt();}});
+        assertTrue(draining.await(5,TimeUnit.SECONDS));assertEquals(1,adapter.pool().open());
+        Future<SharedApp.Reply> second=request("/stream-two");HttpExchange rejected=next();returned();AtomicInteger rejectedDrains=new AtomicInteger();
+        try {rejected.eventStream(200,Collections.emptyList(),out->rejectedDrains.incrementAndGet());fail("second late stream exceeded capacity");}
+        catch(com.snoworca.naruserve.HttpException expected){assertEquals(503,expected.status());}
+        byte[] body="full".getBytes(StandardCharsets.UTF_8);rejected.commit(503,Collections.emptyList(),body.length).write(body);rejected.finish();
+        SharedApp.Reply rejection=second.get(5,TimeUnit.SECONDS);assertEquals(503,rejection.status);assertEquals("full",rejection.text());
+        assertEquals(0,rejectedDrains.get());assertEquals(1,adapter.pool().open());assertEquals(1,inFlight());
+        release.countDown();assertEquals("done",first.get(5,TimeUnit.SECONDS).text());completeOnce(2);idle();closed(rejected);
+    }
+
 }
