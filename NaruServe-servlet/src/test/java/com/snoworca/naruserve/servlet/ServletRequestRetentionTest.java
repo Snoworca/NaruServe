@@ -91,6 +91,9 @@ public class ServletRequestRetentionTest {
             Field inFlight=ServletAdapter.class.getDeclaredField("inFlight");inFlight.setAccessible(true);
             assertEquals("adapter500 failed terminal cancellation: core="+activeCoreHttp()+", adapter="+inFlight.getInt(adapter)+", uploads="+uploads.list().length+", inputCloses="+closes.get(),1,aborts.get());
             assertEquals("core request registration",0,activeCoreHttp());assertEquals("adapter request admission",0,inFlight.getInt(adapter));assertEquals("upload cleanup",0,uploads.list().length);assertEquals("original request input close",1,closes.get());assertEquals("access log once",1,log.info().size());
+            // FR-APP-019 AC-3 AC-5; IR-HTTP-009 AC-8: preserve the actual adapter500 and written JSON bytes.
+            String access=log.info().get(0);
+            assertTrue("wire500 access metrics: "+access,access.matches("POST /pending 500 aborted \\d+ms in="+body.length+" out="+json.getBytes(StandardCharsets.UTF_8).length+" rid=[0-9a-f]{16}"));
             try{partInput.get().read();fail("upload input remained open after cancellation");}catch(IOException expected){}
             try{upload.get().inputStream();fail("upload reopened after cancellation");}catch(IllegalStateException expected){}
             try{request.get().body(String.class);fail("core body reopened after cancellation");}catch(BodyAlreadyConsumedException expected){}
@@ -98,6 +101,7 @@ public class ServletRequestRetentionTest {
             next.get().run();next.get().error(new IllegalStateException("late continuation"));if(deferred){assertFalse(work.isDone());assertTrue(work.resolve());}
             exchange.get().retainRequest().run();exchange.get().abort();
             assertEquals(0,continued.get());assertEquals(1,aborts.get());assertEquals(0,activeCoreHttp());assertEquals(0,inFlight.getInt(adapter));assertEquals(1,opens.get());assertEquals(1,closes.get());assertEquals(1,log.info().size());
+            assertEquals("late actions changed terminal access metrics",access,log.info().get(0));
         }
     }
     // FR-APP-023 AC-3 AC-5 AC-7 AC-8; FR-SVL-009 AC-2: inability to retain after an ack is terminal cancellation.
