@@ -42,11 +42,7 @@ public final class RequestRetentions {
                     last = --count == 0;
                 }
                 if (last) {
-                    try {
-                        onReleased.run();
-                    } catch (Throwable ignored) {
-                        // An observer failure must not poison the count or prevent transport cleanup.
-                    }
+                    SafeCallbacks.run(onReleased);
                 }
             }
         };

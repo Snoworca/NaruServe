@@ -59,10 +59,6 @@ public final class AbortListeners {
     }
 
     private static void notifyListener(Runnable listener) {
-        try {
-            listener.run();
-        } catch (Throwable ignored) {
-            // Notification is fail-soft, including listener Errors: transport cleanup must continue.
-        }
+        SafeCallbacks.run(listener);
     }
 }
