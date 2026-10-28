@@ -13,8 +13,23 @@ import java.net.SocketTimeoutException;
 // @req FR-ENGINE-005
 final class TinyHttpdBodyStream extends FilterInputStream {
 
-    TinyHttpdBodyStream(InputStream in) {
+    private final Runnable terminalAbort;
+
+    TinyHttpdBodyStream(InputStream in) { this(in, () -> { }); }
+
+    TinyHttpdBodyStream(InputStream in, Runnable terminalAbort) {
         super(in);
+        this.terminalAbort = terminalAbort;
+    }
+
+    // @req IR-HTTP-009 AC-2 AC-7: mapped protocol/limit/timeout errors remain renderable while output is writable.
+    private HttpException mappedOrAbort(IOException failure) throws IOException {
+        try {
+            return map(failure);
+        } catch (IOException terminal) {
+            terminalAbort.run();
+            throw terminal;
+        }
     }
 
     /**
@@ -42,7 +57,7 @@ final class TinyHttpdBodyStream extends FilterInputStream {
         try {
             return super.read();
         } catch (IOException e) {
-            throw map(e);
+            throw mappedOrAbort(e);
         }
     }
 
@@ -51,7 +66,7 @@ final class TinyHttpdBodyStream extends FilterInputStream {
         try {
             return super.read(b, off, len);
         } catch (IOException e) {
-            throw map(e);
+            throw mappedOrAbort(e);
         }
     }
 
@@ -60,7 +75,7 @@ final class TinyHttpdBodyStream extends FilterInputStream {
         try {
             return super.skip(n);
         } catch (IOException e) {
-            throw map(e);
+            throw mappedOrAbort(e);
         }
     }
 }
