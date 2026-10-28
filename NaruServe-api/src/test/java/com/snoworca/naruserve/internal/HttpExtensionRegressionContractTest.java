@@ -75,6 +75,19 @@ public class HttpExtensionRegressionContractTest {
         app.routerPolicy(RouterPolicy.builder().caseInsensitive(true).ignoreTrailingSlash(true).mergeSlashes(true).build());
         assertEquals("yes",text(dispatch(app,"GET","/a//x%2Fy/")));
     }
+    @Test public void explicitMergePolicyMapsMountedConsumedOffsetsBackToTheOriginalRawPath() { // FR-APP-021 AC-5; FR-ROUTE-020 AC-2; FR-HTTP-027 AC-3 AC-4
+        DefaultRestApp app=new DefaultRestApp();Router child=Router.create(true);List<String> trace=new ArrayList<>();
+        child.get("/leaf",(q,s,n)->{
+            assertEquals("/leaf",q.path());assertEquals("/api///x%2Fy",q.baseUrl());assertEquals("x/y",q.param("id"));
+            assertEquals("/leaf?q=a%2Fb",q.url());assertEquals("/api///x%2Fy/leaf?q=a%2Fb",q.originalUrl());trace.add("child");n.router();
+        });
+        app.use("/API/:id",child);app.get("/API/:id/leaf",(q,s)->{
+            assertEquals("/api///x%2Fy/leaf",q.path());assertEquals(q.path(),q.rawPath());assertEquals("",q.baseUrl());assertEquals(q.originalUrl(),q.url());assertEquals("x/y",q.param("id"));trace.add("parent");s.send("yes");
+        });
+        app.routerPolicy(RouterPolicy.builder().caseInsensitive(true).mergeSlashes(true).ignoreTrailingSlash(true).build());app.freeze();
+        LifecycleExchange ex=new LifecycleExchange("GET","/api///x%2Fy/leaf");ex.query="q=a%2Fb";app.dispatcher().handle(ex);
+        assertEquals("yes",text(ex.recording));assertEquals(Arrays.asList("child","parent"),trace);
+    }
     @Test public void explicitPolicyPreservesRouteIdentityAndBuilderAddedAfterFreeze() { // FR-APP-021 AC-2 AC-4 AC-5
         DefaultRestApp app=new DefaultRestApp();RouteBuilder route=app.route("/Case");route.get((q,s,n)->n.route());
         app.get("/Case",(q,s)->s.send("separate"));app.routerPolicy(RouterPolicy.strict());app.freeze();route.get((q,s)->fail("route skip lost identity"));

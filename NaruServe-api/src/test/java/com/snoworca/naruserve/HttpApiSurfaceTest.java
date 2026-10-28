@@ -94,6 +94,10 @@ public class HttpApiSurfaceTest {
         assertTrue(Modifier.isPublic(Request.class.getModifiers()));
         assertEquals("com.snoworca.naruserve", Request.class.getPackage().getName());
         assertEquals(setOf("method()->Method", "path()->String", "rawPath()->String", "param(String)->String",
+                // CON-APP-010 AC-5; FR-HTTP-027 AC-1 AC-3 AC-6; FR-HTTP-028 AC-1
+                "methodToken()->String", "url()->String", "originalUrl()->String", "baseUrl()->String",
+                "paramOrNull(String)->String", "paramValues(String)->List", "pathParams()->Map",
+                "param(String,String)->void", "paramValues(String,List)->void",
                 "query(String)->String", "queries(String)->List", "header(String)->String", "headers(String)->List",
                 "remoteAddress()->String", "isSecure()->boolean", "lastEventId()->String",
                 "requireQuery(String)->String", "requireHeader(String)->String", "requireForm(String)->String",
@@ -242,6 +246,9 @@ public class HttpApiSurfaceTest {
     public void sdsAc3_IR_HTTP_001_AC4_packageNullMarkedAndNullableOnlyOnListedPositions() throws Exception {
         assertNotNull(Request.class.getPackage().getAnnotation(NullMarked.class));
         assertEquals(setOf(
+                // CON-APP-010 AC-5; FR-HTTP-027 AC-1 AC-6
+                "Request.paramOrNull[class java.lang.String]#return",
+                "Request.param[class java.lang.String, class java.lang.String]#p1",
                 "Request.query[class java.lang.String]#return",
                 "Request.header[class java.lang.String]#return",
                 "Request.lastEventId[]#return",
@@ -368,7 +375,10 @@ public class HttpApiSurfaceTest {
                 "ws(String,WebSocketHandler)->RestApp", "webSocket(Configurer)->RestApp",
                 // wave 7: IR-SSE-001 AC-4
                 "sse(Configurer)->RestApp"), signatures(RestApp.class));
-        assertEquals(0, RestApp.class.getInterfaces().length);
+        // CON-APP-010 AC-5; FR-APP-021 AC-3: inherited methods are checked exhaustively below.
+        assertEquals(Arrays.<Class<?>>asList(HttpRoutes.class), Arrays.asList(RestApp.class.getInterfaces()));
+        assertEquals("com.snoworca.naruserve.HttpRoutes<com.snoworca.naruserve.RestApp>",
+                RestApp.class.getGenericInterfaces()[0].getTypeName());
         List<String> statics = new java.util.ArrayList<>();
         for (java.lang.reflect.Method m : RestApp.class.getDeclaredMethods()) {
             if (Modifier.isStatic(m.getModifiers()) && !m.isSynthetic()) {
@@ -403,7 +413,12 @@ public class HttpApiSurfaceTest {
                 "delete(RouteHandler)->RouteBuilder", "head(RouteHandler)->RouteBuilder",
                 "options(RouteHandler)->RouteBuilder",
                 // wave 4: IR-APP-002 AC-3
-                "use(Middleware)->RouteBuilder"), signatures(RouteBuilder.class));
+                "use(Middleware)->RouteBuilder",
+                // CON-APP-010 AC-5; FR-APP-021 AC-2; FR-APP-022 AC-6
+                "method(String,Middleware[])->RouteBuilder", "get(Middleware[])->RouteBuilder",
+                "post(Middleware[])->RouteBuilder", "put(Middleware[])->RouteBuilder",
+                "patch(Middleware[])->RouteBuilder", "delete(Middleware[])->RouteBuilder",
+                "head(Middleware[])->RouteBuilder", "options(Middleware[])->RouteBuilder"), signatures(RouteBuilder.class));
     }
 
     // IR-HTTP-006 AC-2
@@ -430,7 +445,11 @@ public class HttpApiSurfaceTest {
             assertEquals(c[0], c[1], new String(r.body(), java.nio.charset.StandardCharsets.UTF_8));
         }
         assertEquals(Arrays.asList("h1 1", "h2 1", "h3 1"), calls);
-        assertEquals(405, t.send("POST", "/u/1").status());
+        // CON-APP-010 AC-3 AC-5; FR-HTTP-028 AC-5: unmatched method falls through, handlers remain uncalled.
+        InMemoryHttpAdapter.ClientResponse miss = t.send("POST", "/u/1");
+        assertEquals(404, miss.status());
+        assertEquals("text/html; charset=utf-8", miss.header("Content-Type"));
+        assertTrue(miss.text(), miss.text().contains("Cannot POST /u/1"));
         assertEquals(3, calls.size());
     }
 
@@ -449,4 +468,29 @@ public class HttpApiSurfaceTest {
         }
         assertEquals(setOf("builder->Builder", "create->RestApp"), factories);
     }
+    // CON-APP-010 AC-5; FR-APP-021 AC-3; FR-APP-023 AC-1; FR-ROUTE-020/021; FR-HTTP-028 AC-1
+    @Test
+    public void commonHttpInheritedSurfaceIsAnExactVersionedInventory() throws Exception {
+        assertEquals(setOf(
+                "route(Object)->RouteBuilder", "method(String,Object,Middleware[])->Object",
+                "use(Object,Middleware)->Object", "use(Middleware)->Object",
+                "use(Object,Router)->Object", "use(Router)->Object",
+                "use(Object,ErrorMiddleware)->Object", "use(ErrorMiddleware)->Object",
+                "param(String,ParamHandler)->Object",
+                "methodAsync(String,Object,AsyncRouteHandler)->Object", "getAsync(Object,AsyncRouteHandler)->Object",
+                "useAsync(Object,AsyncRouteHandler)->Object", "useAsync(AsyncRouteHandler)->Object",
+                "get(Object,Middleware[])->Object", "post(Object,Middleware[])->Object",
+                "put(Object,Middleware[])->Object", "patch(Object,Middleware[])->Object",
+                "delete(Object,Middleware[])->Object", "head(Object,Middleware[])->Object", "options(Object,Middleware[])->Object",
+                "get(Object,RouteHandler)->Object", "post(Object,RouteHandler)->Object",
+                "put(Object,RouteHandler)->Object", "patch(Object,RouteHandler)->Object",
+                "delete(Object,RouteHandler)->Object", "head(Object,RouteHandler)->Object", "options(Object,RouteHandler)->Object",
+                "terminal(RouteHandler)->Middleware"), signatures(HttpRoutes.class));
+        assertEquals("java.util.List<java.lang.String>", Request.class.getMethod("paramValues", String.class).getGenericReturnType().getTypeName());
+        assertEquals("java.util.Map<java.lang.String, java.lang.Object>", Request.class.getMethod("pathParams").getGenericReturnType().getTypeName());
+        assertTrue(RestApp.class.getMethod("method", String.class, Object.class, Middleware[].class).isVarArgs());
+        assertTrue(RouteBuilder.class.getMethod("method", String.class, Middleware[].class).isVarArgs());
+        assertEquals(RouteBuilder.class, RestApp.class.getMethod("route", Object.class).getReturnType());
+    }
+
 }

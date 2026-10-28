@@ -1021,7 +1021,7 @@ public final class DefaultRestApp implements RestApp {
             if (registration.prefix == null) {
                 pipeline.addGlobal(registration.middleware);
             } else {
-                pipeline.addPrefix(registration.prefix, registration.middleware);
+                pipeline.addCommonPrefix(registration.prefix, registration.middleware);
             }
         }
         DefaultWebSocketOptions ws = webSocketOptions().copy();

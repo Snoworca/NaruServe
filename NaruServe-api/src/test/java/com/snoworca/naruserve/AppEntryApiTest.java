@@ -51,7 +51,7 @@ public class AppEntryApiTest {
 
     // SDS-AC-5; IR-APP-002 AC-1
     @Test
-    public void sdsAc5_IR_APP_002_AC1_middlewareIsFunctionalAndNextHasExactlyRunAndError() throws Exception {
+    public void commonHttpContinuationAddsDefaultSkipOperationsWithoutChangingLegacySam() throws Exception {
         assertNotNull(Middleware.class.getAnnotation(FunctionalInterface.class));
         assertEquals(1, abstractMethods(Middleware.class).size());
         java.lang.reflect.Method handle = Middleware.class.getMethod("handle", Request.class, Response.class,
@@ -61,7 +61,17 @@ public class AppEntryApiTest {
 
         assertTrue(Next.class.isInterface());
         assertEquals(setOf("run[]->void", "error[class java.lang.Throwable]->void"), abstractNames(Next.class));
-        assertEquals(2, Next.class.getMethods().length);
+        // CON-APP-010 AC-5; FR-APP-022 AC-6: legacy implementations still implement only run/error.
+        assertEquals(4, Next.class.getMethods().length);
+        assertTrue(Next.class.getMethod("route").isDefault());
+        assertTrue(Next.class.getMethod("router").isDefault());
+        List<String> defaults = new ArrayList<>();
+        Next legacy = new Next() {
+            @Override public void run() { defaults.add("run"); }
+            @Override public void error(Throwable error) { throw new AssertionError(error); }
+        };
+        legacy.route(); legacy.router();
+        assertEquals(Arrays.asList("run", "run"), defaults);
 
         Middleware mw = (req, res, next) -> next.run();
         assertNotNull(mw);
@@ -171,7 +181,7 @@ public class AppEntryApiTest {
     // SDS-AC-7; IR-APP-002 AC-4
     @Test
     @SuppressWarnings("ConstantConditions")
-    public void sdsAc7_IR_APP_002_AC4_nullArgumentsAndRelativePrefixAreRefused() {
+    public void commonHttpNullRegistrationsStayAtomicWhileRelativeLiteralPrefixesAreAccepted() {
         RestApp app = TestApp.create().app();
         Middleware mw = (req, res, next) -> next.run();
         RouteHandler h = (req, res) -> res.send("x");
@@ -197,13 +207,9 @@ public class AppEntryApiTest {
             } catch (NullPointerException expected) {
             }
         }
-        try {
-            app.use("api", mw);
-            fail("prefix without leading /");
-        } catch (IllegalArgumentException e) {
-            assertTrue(e.getMessage(), e.getMessage().contains("api"));
-        }
-        // Nothing was recorded: the app still freezes and answers 404 for /x.
+        // CON-APP-010 AC-1 AC-5; FR-APP-021 AC-3: path-to-regexp literal grammar permits this prefix.
+        assertSame(app, app.use("api", mw));
+        // A refused callback publishes no executable route: the app still answers404 for /x.
         TestApp t = TestApp.create();
         try {
             t.app().get("/x", AppEntryApiTest.<Middleware>nullOf(), h);
@@ -213,46 +219,51 @@ public class AppEntryApiTest {
         assertEquals(404, t.send("GET", "/x").status());
     }
 
-    // IR-APP-002 AC-4 — an undecodable prefix is refused at use(), not later at listen()
+    // CON-APP-010 AC-2 AC-5; FR-HTTP-027 AC-2: literal-percent and captured-percent behavior are distinct.
     @Test
-    public void IR_APP_002_AC4_undecodablePrefixIsRefusedAtRegistration() {
+    public void literalPercentPrefixIsRawButMalformedCapturedPercentUsesErrorFlow() {
+        // CON-APP-010 AC-2 AC-5; FR-HTTP-027 AC-2 AC-3: decode captures after matching, never the whole pathname.
         TestApp t = TestApp.create();
-        try {
-            t.app().use("/%zz", (req, res, next) -> next.run());
-            fail("undecodable prefix accepted");
-        } catch (IllegalArgumentException e) {
-            assertTrue(e.getMessage(), e.getMessage().contains("/%zz"));
-        }
-        t.app().get("/x", (req, res) -> res.send("x"));
-        assertEquals(200, t.send("GET", "/x").status());
+        List<String> trace = new ArrayList<>();
+        t.app().use("/%zz", (req, res, next) -> { trace.add("prefix " + req.path()); next.run(); });
+        t.app().get("/%zz", (req, res) -> res.send("literal"));
+        t.app().get("/capture/:id", (req, res) -> res.send("unexpected " + req.param("id")));
+        t.app().use((ErrorMiddleware) (error, req, res, next) -> {
+            trace.add("error " + ((HttpException) error).status() + " " + req.url());
+            res.status(((HttpException) error).status()).send("bad capture");
+        });
+        assertEquals("literal", t.send("GET", "/%zz").text());
+        assertEquals(Arrays.asList("prefix /"), trace);
+        trace.clear();
+        InMemoryHttpAdapter.ClientResponse malformed = t.send("GET", "/capture/%ZZ");
+        assertEquals(400, malformed.status());
+        assertEquals("bad capture", malformed.text());
+        assertEquals(Arrays.asList("error 400 /capture/%ZZ"), trace);
     }
 
     // SDS-AC-11; IR-APP-003 AC-5
     @Test
-    public void sdsAc11_IR_APP_003_AC5_onErrorNullThrowsAndOnErrorIsRefusedAfterFreeze() {
+    public void configurationOnErrorStaysGuardedWhileOrdinaryHttpRegistrationRemainsLive() {
+        // CON-APP-010 AC-3 AC-5; FR-APP-021 AC-4: ordinary registrations and configuration have separate guards.
         TestApp t = TestApp.create();
-        try {
-            t.app().onError(AppEntryApiTest.<ErrorHandler>nullOf());
-            fail("onError(null)");
-        } catch (NullPointerException expected) {
-        }
+        try { t.app().onError(AppEntryApiTest.<ErrorHandler>nullOf()); fail("onError(null)"); }
+        catch (NullPointerException expected) { }
         RouteBuilder early = t.app().route("/late");
         t.start();
-        try {
-            early.use((req, res, next) -> next.run());
-            fail("RouteBuilder.use after freeze");
-        } catch (IllegalStateException expected) {
-        }
-        try {
-            t.app().onError((error, req, res) -> res.send("x"));
-            fail("onError after freeze");
-        } catch (IllegalStateException expected) {
-        }
-        try {
-            t.app().use((req, res, next) -> next.run());
-            fail("use after freeze");
-        } catch (IllegalStateException expected) {
-        }
+        List<String> trace = new ArrayList<>();
+        early.use((req, res, next) -> { trace.add("builder"); next.run(); });
+        early.get((req, res) -> res.send("late"));
+        assertEquals("late", t.send("GET", "/late").text());
+        assertEquals(Arrays.asList("builder"), trace);
+        t.app().use("/new", (req, res, next) -> { trace.add("prefix"); next.run(); });
+        t.app().get("/new", (req, res) -> res.send("new"));
+        assertEquals("new", t.send("GET", "/new").text());
+        assertEquals(Arrays.asList("builder", "prefix"), trace);
+        try { t.app().onError((error, req, res) -> res.send("x")); fail("onError after listen"); }
+        catch (IllegalStateException expected) { assertTrue(expected.getMessage().contains("RUNNING")); }
+        try { t.app().get("/bad", (Middleware[]) null); fail("null callbacks accepted after listen"); }
+        catch (NullPointerException expected) { }
+        assertEquals(404, t.send("GET", "/bad").status());
     }
 
     @SuppressWarnings({"unchecked", "TypeParameterUnusedInFormals"})
