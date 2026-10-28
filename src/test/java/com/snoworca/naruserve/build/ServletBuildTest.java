@@ -109,20 +109,100 @@ public class ServletBuildTest {
                 .contains("com.google.code.gson:gson:2.14.0"));
     }
 
-    // SDS-AC-11; CON-SVL-001 AC-4 — f7da71d closes wave 7 (after its lane merge and audit fixes); wave 8 starts there
+    // CON-SVL-001 AC-4 records the historical wave-8 untouched-source checkpoint.
+    // CON-APP-010 AC-5; IR-HTTP-009 AC-1; FR-APP-023 AC-8; FR-ENGINE-012:
+    // version that checkpoint with precise additive defaults and retained SPI/Servlet/Tiny isolation.
     @Test
-    public void sdsAc11_CON_SVL_001_AC4_spiAndTinyHttpdUntouched() throws Exception {
+    public void originalSpiDeclarationsAndIsolationSurviveOptionalLifetimeHooks() throws Exception {
         String spi = "NaruServe-api/src/main/java/com/snoworca/naruserve/spi";
-        String drain = spi + "/StreamDrain.java";
-        assertEquals("", BuildLayoutTest.git(ROOT, "diff", "--stat", "f7da71d", "--", spi, ":(exclude)" + drain));
-        String baseline = BuildLayoutTest.git(ROOT, "show", "f7da71d:" + drain);
-        String current = BuildLayoutTest.read(new File(ROOT, drain));
-        assertEquals("only the documented optional cancellation callback may be added",
-                originalDrainDeclarations(baseline), originalDrainDeclarations(current));
+        Set<String> originalFiles = new TreeSet<>(Arrays.asList(
+                BuildLayoutTest.git(ROOT, "ls-tree", "--name-only", "f7da71d", spi + "/").trim().split("\\n")));
+        Set<String> currentFiles = new TreeSet<>();
+        for (File file : BuildLayoutTest.walk(new File(ROOT, spi), ".java")) {
+            String relative = ROOT.toPath().relativize(file.toPath()).toString().replace(File.separatorChar, '/');
+            currentFiles.add(relative);
+            String baseline = BuildLayoutTest.git(ROOT, "show", "f7da71d:" + relative);
+            String current = BuildLayoutTest.read(file);
+            assertEquals("all original SPI declarations/signatures retained: " + relative,
+                    originalSpiDeclarations(baseline, file.getName()), originalSpiDeclarations(current, file.getName()));
+            assertFalse(relative, current.contains("javax.servlet") || current.contains("jakarta.servlet"));
+            assertFalse(relative, current.contains("com.snoworca.tinyhttpd") || current.contains("com.snoworca.naruserve.tinyhttpd"));
+        }
+        assertEquals("no additional SPI source is silently admitted", originalFiles, currentFiles);
         assertTrue(com.snoworca.naruserve.spi.StreamDrain.class.getMethod("abort").isDefault());
+        java.lang.reflect.Method onAbort = com.snoworca.naruserve.spi.HttpExchange.class.getMethod("onAbort", Runnable.class);
+        assertTrue(onAbort.isDefault());
+        assertEquals(void.class, onAbort.getReturnType());
+        java.lang.reflect.Method retain = com.snoworca.naruserve.spi.HttpExchange.class.getMethod("retainRequest");
+        assertTrue(retain.isDefault());
+        assertEquals(Runnable.class, retain.getReturnType());
         assertEquals("", BuildLayoutTest.git(ROOT, "status", "--porcelain", "--", spi));
         BuildLayoutTest.assertTinyHttpdClean();
     }
+
+    // Preserve every original declaration, including generic types, throws clauses and existing
+    // default bodies. Remove ONLY the three explicitly allowed optional callback declarations.
+    private static String originalSpiDeclarations(String source) {
+        return originalSpiDeclarations(source, "HttpExchange.java");
+    }
+
+    private static String originalSpiDeclarations(String source, String fileName) {
+        String stripped = source.replaceAll("(?s)/\\*.*?\\*/|//[^\\r\\n]*", "");
+        if (fileName.equals("HttpExchange.java")) {
+            stripped = removeOptionalDefault(stripped, "default\\s+void\\s+onAbort\\s*\\(\\s*Runnable\\s+listener\\s*\\)");
+            stripped = removeOptionalDefault(stripped, "default\\s+Runnable\\s+retainRequest\\s*\\(\\s*\\)");
+        }
+        return fileName.equals("StreamDrain.java") ? originalDrainDeclarations(stripped)
+                : stripped.replaceAll("\\s+", "");
+    }
+
+    private static String removeOptionalDefault(String source, String signature) {
+        java.util.regex.Matcher matcher = java.util.regex.Pattern.compile(signature + "\\s*\\{").matcher(source);
+        if (!matcher.find()) return source;
+        int start = matcher.start(), end = matcher.end(), depth = 1;
+        char quote = 0;
+        boolean escaped = false;
+        while (end < source.length() && depth > 0) {
+            char c = source.charAt(end++);
+            if (quote != 0) {
+                if (escaped) escaped = false;
+                else if (c == '\\') escaped = true;
+                else if (c == quote) quote = 0;
+            } else if (c == '"' || c == '\'') quote = c;
+            else if (c == '{') depth++;
+            else if (c == '}') depth--;
+        }
+        assertEquals("well-formed optional default body", 0, depth);
+        return source.substring(0, start) + source.substring(end);
+    }
+
+    // IR-HTTP-009 AC-1; FR-APP-023 AC-8; CON-SVL-001 AC-4:
+    // the exception cannot hide a changed abstract signature, mandatory hook or unrelated default.
+    @Test
+    public void optionalLifetimeHooksRejectUnrelatedOrMandatorySpiChanges() {
+        String original = "interface HttpExchange { OutputStream commit(int status) throws IOException; void finish() throws IOException; }";
+        String permitted = original.substring(0, original.lastIndexOf('}'))
+                + "default void onAbort(Runnable listener) { java.util.Objects.requireNonNull(listener); } "
+                + "default Runnable retainRequest() { return () -> { }; } }";
+        assertEquals(originalSpiDeclarations(original), originalSpiDeclarations(permitted));
+        for (String wrongOwner : new String[] {"HttpAdapter.java", "StreamDrain.java", "ExchangeHandler.java"}) {
+            assertFalse("hooks cannot migrate to " + wrongOwner,
+                    originalSpiDeclarations(original, wrongOwner).equals(originalSpiDeclarations(permitted, wrongOwner)));
+        }
+        for (String changed : new String[] {
+                permitted.replace("OutputStream commit", "InputStream commit"),
+                permitted.replace("commit(int status)", "commit(long status)"),
+                permitted.replace("void finish() throws IOException", "void finish()"),
+                permitted.replace("default void onAbort(Runnable listener) { java.util.Objects.requireNonNull(listener); }", "void onAbort(Runnable listener);"),
+                permitted.replace("default Runnable retainRequest() { return () -> { }; }", "Runnable retainRequest();"),
+                permitted.replace("default Runnable retainRequest()", "default Object retainRequest()"),
+                permitted.replace("Runnable listener", "String listener"),
+                permitted.replace("default Runnable retainRequest()", "default Runnable retainRequest(int extra)"),
+                permitted.replace("void finish()", "default void extra() { } void finish()")}) {
+            assertFalse(changed, originalSpiDeclarations(original).equals(originalSpiDeclarations(changed)));
+        }
+    }
+
     /** Removes comments, whitespace and only the explicitly permitted empty default cancellation callback. */
     private static String originalDrainDeclarations(String source) {
         return source.replaceAll("(?s)/\\*.*?\\*/|//[^\\r\\n]*", "")
