@@ -3,6 +3,7 @@ package com.snoworca.naruserve.internal;
 import com.snoworca.naruserve.common.AttributeValues;
 
 import com.snoworca.naruserve.ApplicationContext;
+import com.snoworca.naruserve.BodyAlreadyConsumedException;
 import com.snoworca.naruserve.Cookie;
 import com.snoworca.naruserve.HttpException;
 import com.snoworca.naruserve.Method;
@@ -40,6 +41,10 @@ public final class DefaultRequest implements Request {
     private final String originalUrl;
     private final ConcurrentHashMap<String, Object> attributes = new ConcurrentHashMap<>();
     private final BodyState body = new BodyState();
+    private final Object inputLock = new Object();
+    // The exclusive body reader acquires once. Terminal cleanup may race a deferred producer's acquisition.
+    private @Nullable InputStream ownedInput;
+    private boolean inputAcquiring, inputClosed;
     private final Object jsonLock = new Object();
     // Guarded by jsonLock; a non-null type distinguishes a cached JSON null from a failed parse.
     private @Nullable Type jsonType;
@@ -178,12 +183,50 @@ public final class DefaultRequest implements Request {
 
     /** Called once by the common HTTP ownership gate after callbacks and work leases release. */
     // @req FR-APP-023 AC-3
-    void closeBody() throws java.io.IOException { body.close();ex.requestBody().close(); }
+    void closeBody() throws java.io.IOException {
+        body.close();
+        InputStream input;
+        boolean acquire;
+        synchronized (inputLock) {
+            if (inputClosed) return;
+            inputClosed = true;
+            input = ownedInput;
+            ownedInput = null;
+            acquire = input == null && !inputAcquiring;
+        }
+        // An unread normal request still releases its input. An in-progress acquisition closes on return.
+        if (acquire) input = ex.requestBody();
+        if (input != null) input.close();
+    }
 
     /** The exchange body counted by {@link #body()}; only a reader that took the body calls this. */
     // @req FR-JSON-001
     InputStream bodyStream() {
-        return body.stream(ex.requestBody());
+        synchronized (inputLock) {
+            if (inputClosed) throw new BodyAlreadyConsumedException("request body is closed");
+            if (ownedInput != null) return body.stream(ownedInput);
+            inputAcquiring = true;
+        }
+        InputStream input;
+        try {
+            input = Objects.requireNonNull(ex.requestBody(), "request input");
+        } catch (RuntimeException | Error failure) {
+            synchronized (inputLock) { inputAcquiring = false; }
+            throw failure;
+        }
+        boolean closed;
+        synchronized (inputLock) {
+            inputAcquiring = false;
+            closed = inputClosed;
+            if (!closed) ownedInput = input;
+        }
+        if (closed) {
+            BodyAlreadyConsumedException failure = new BodyAlreadyConsumedException("request body closed during input acquisition");
+            try { input.close(); }
+            catch (java.io.IOException | RuntimeException closeFailure) { failure.addSuppressed(closeFailure); }
+            throw failure;
+        }
+        return body.stream(input);
     }
 
     // @req FR-JSON-001
