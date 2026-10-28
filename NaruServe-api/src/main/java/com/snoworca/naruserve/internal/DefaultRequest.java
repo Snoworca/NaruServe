@@ -368,6 +368,19 @@ public final class DefaultRequest implements Request {
         if(value instanceof String)return Collections.singletonList((String)value);
         return value==null?Collections.emptyList():(List<String>)value;
     }
+    @Override public void param(String name,@Nullable String value) {
+        Objects.requireNonNull(name,"name");
+        Map<String,Object> copy=new LinkedHashMap<>(view.params);
+        if(value==null)copy.remove(name);else copy.put(name,value);
+        applyView(new RequestView(view.path,view.baseUrl,copy));
+    }
+    @Override public void paramValues(String name,List<String> values) {
+        Objects.requireNonNull(name,"name");Objects.requireNonNull(values,"values");
+        List<String> checked=new ArrayList<>(values);
+        for(String value:checked)Objects.requireNonNull(value,"parameter value");
+        Map<String,Object> copy=new LinkedHashMap<>(view.params);copy.put(name,checked);
+        applyView(new RequestView(view.path,view.baseUrl,copy));
+    }
     @Override public String param(String name) {
         String value=paramOrNull(name);
         if(value==null)throw new IllegalArgumentException("no path parameter '"+name+"' in the matched pattern");

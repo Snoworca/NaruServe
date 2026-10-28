@@ -7,7 +7,24 @@ import java.util.*;
 // @req FR-APP-021 AC-1 AC-2 AC-3 AC-4 AC-5
 public final class HttpRouter {
     volatile Layer[] layers=new Layer[0];
-    private boolean caseSensitive,strict;
+    private final boolean caseSensitive,strict;
+    final boolean mergeParams;
+    volatile Map<String,ParamHandler[]> paramHooks=Collections.emptyMap();
+    public HttpRouter() { this(false,false,false); }
+    public HttpRouter(boolean mergeParams,boolean caseSensitive,boolean strict) {
+        this.mergeParams=mergeParams;this.caseSensitive=caseSensitive;this.strict=strict;
+    }
+    public synchronized void param(String name,ParamHandler callback) {
+        Objects.requireNonNull(name,"name");Objects.requireNonNull(callback,"callback");
+        Map<String,ParamHandler[]> copy=new LinkedHashMap<>(paramHooks);
+        ParamHandler[] old=copy.get(name);if(old==null)old=new ParamHandler[0];
+        ParamHandler[] next=Arrays.copyOf(old,old.length+1);next[old.length]=callback;copy.put(name,next);
+        paramHooks=Collections.unmodifiableMap(copy);
+    }
+    public void mount(Object path,HttpRouter child) {
+        Objects.requireNonNull(child,"router");
+        append(new Layer(new HttpPathSpec(path,false,caseSensitive,false),null,null,child));
+    }
     public RouteBuilder route(Object path) {
         Route route=new Route(new HttpPathSpec(path,true,caseSensitive,strict));
         append(new Layer(route.path,route,null));
@@ -42,8 +59,11 @@ public final class HttpRouter {
         Middleware[] copy=callbacks.clone(); for(Middleware callback:copy) Objects.requireNonNull(callback,"callback"); return copy;
     }
     static final class Layer {
-        final HttpPathSpec path; final Route route; final Middleware middleware;
-        Layer(HttpPathSpec path,Route route,Middleware middleware) { this.path=path; this.route=route; this.middleware=middleware; }
+        final HttpPathSpec path; final Route route; final Middleware middleware; final HttpRouter child;
+        Layer(HttpPathSpec path,Route route,Middleware middleware) { this(path,route,middleware,null); }
+        Layer(HttpPathSpec path,Route route,Middleware middleware,HttpRouter child) {
+            this.path=path;this.route=route;this.middleware=middleware;this.child=child;
+        }
     }
     static final class Handler {
         final String method; final Middleware callback;

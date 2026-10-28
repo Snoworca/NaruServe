@@ -49,6 +49,12 @@ public interface Request {
     /** Immutable present bindings: String scalars and immutable List&lt;String&gt; wildcards. */
     default java.util.Map<String,Object> pathParams() { return java.util.Collections.emptyMap(); }
 
+    /** Replace a scalar binding for parameter preprocessing; null removes it. */
+    // @req FR-ROUTE-021 AC-2 AC-5
+    default void param(String name,@Nullable String value) { throw new UnsupportedOperationException("parameter mutation"); }
+    /** Replace a wildcard binding with an immutable snapshot of these decoded segments. */
+    default void paramValues(String name,List<String> values) { throw new UnsupportedOperationException("parameter mutation"); }
+
     /** The first value of query parameter {@code name}, or {@code null} when it is absent. */
     @Nullable String query(String name);
 

@@ -5,6 +5,13 @@ package com.snoworca.naruserve;
 public interface HttpRoutes<T> {
     RouteBuilder route(Object path);
     T method(String methodToken,Object path,Middleware... callbacks);
+    // @req FR-ROUTE-020 AC-1; FR-ROUTE-021 AC-1 AC-5
+    default T use(Object path,Middleware callback) { throw new UnsupportedOperationException("prefix middleware"); }
+    default T use(Middleware callback) { return use("",callback); }
+    default T use(Object path,Router child) { throw new UnsupportedOperationException("mounted router"); }
+    default T use(Router child) { return use("",child); }
+    default T param(String name,ParamHandler callback) { throw new UnsupportedOperationException("parameter callback"); }
+
     default T get(Object path,Middleware... callbacks) { return method("GET",path,callbacks); }
     default T post(Object path,Middleware... callbacks) { return method("POST",path,callbacks); }
     default T put(Object path,Middleware... callbacks) { return method("PUT",path,callbacks); }

@@ -21,7 +21,7 @@ final class HttpExecution {
     HttpExecution(HttpRouter router,DefaultRequest request,DefaultResponse response,AppLifecycle lifecycle,
                   ErrorPath errors,Runnable finalHandler,Runnable terminalLog) {
         this.request=request; this.response=response; this.lifecycle=lifecycle; this.errors=errors;
-        this.finalHandler=finalHandler; this.terminalLog=terminalLog; this.root=new RouterCursor(router);
+        this.finalHandler=finalHandler; this.terminalLog=terminalLog; this.root=new RouterCursor(router,null,null);
         response.onDone(this::responseDone);
     }
     void start() { submit(()->root.advance(null)); }
@@ -70,25 +70,133 @@ final class HttpExecution {
         try { callback.handle(request,response,next); }
         catch(Exception failure) { next.error(failure); }
     }
+    /** Router completion is deferred like the pinned router's setImmediate(done). */
+    private void defer(Runnable task) {
+        synchronized(state) {
+            if(owner!=null) { queued.add(task);return; }
+        }
+        submit(task);
+    }
+    private static final int NORMAL=0,ROUTE=1,ROUTER=2,ERROR=3;
+    private static final class Flow {
+        final int kind;final @Nullable Throwable error;
+        Flow(int kind,@Nullable Throwable error) { this.kind=kind;this.error=error; }
+    }
+    private static final Flow RUN=new Flow(NORMAL,null),SKIP_ROUTE=new Flow(ROUTE,null),EXIT_ROUTER=new Flow(ROUTER,null);
+    private static final class ParamRecord {
+        final Object match;
+        @Nullable Object value;
+        Flow result=RUN;
+        ParamRecord(Object match) { this.match=match;this.value=match; }
+    }
     private final class RouterCursor {
         final HttpRouter router;
+        final @Nullable RouterCursor parent;
+        final @Nullable RequestView savedMount;
+        final Map<String,Object> inherited;
+        final Map<String,ParamRecord> paramCache=new HashMap<>();
         int index;
-        RouterCursor(HttpRouter router) { this.router=router; }
+        RouterCursor(HttpRouter router,@Nullable RouterCursor parent,@Nullable RequestView savedMount) {
+            this.router=router;this.parent=parent;this.savedMount=savedMount;
+            inherited=savedMount==null?Collections.emptyMap():savedMount.params;
+        }
+        void exit(@Nullable Throwable error) {
+            defer(()->{
+                if(parent==null) {
+                    if(error==null)finalHandler.run();else errors.handle(error,request,response,request.requestId());
+                }else{
+                    request.applyView(Objects.requireNonNull(savedMount));parent.advance(error);
+                }
+            });
+        }
         void advance(@Nullable Throwable error) {
-            if(error!=null) { errors.handle(error,request,response,request.requestId());return; }
+            if(error!=null) { exit(error);return; }
             for(;;) {
                 HttpRouter.Layer[] layers=router.layers;
-                if(index>=layers.length) { finalHandler.run();return; }
-                HttpRouter.Layer layer=layers[index++];
-                HttpPathSpec.Match matched;
+                if(index>=layers.length) { exit(null);return; }
+                HttpRouter.Layer layer=layers[index++];HttpPathSpec.Match matched;
                 try { matched=layer.path.match(request.path()); }
-                catch(Exception failure) { advance(failure); return; }
+                catch(Exception failure) { advance(failure);return; }
                 if(matched==null)continue;
                 if(layer.route!=null && !layer.route.handles(request.methodToken()))continue;
-                request.applyView(new RequestView(request.path(),request.baseUrl(),matched.params));
-                if(layer.route!=null) { new RouteCursor(this,layer.route).advance(null);return; }
-                callback(layer.middleware,new Continue(this,null));return;
+                // Search regex routes are allowed; a use/mount must still be an actual prefix.
+                if(layer.route==null && (matched.start!=0 || matched.end<request.path().length() && request.path().charAt(matched.end)!='/'))continue;
+                Map<String,Object> params=router.mergeParams?HttpParameters.merge(matched.params,inherited):matched.params;
+                request.applyView(new RequestView(request.path(),request.baseUrl(),params));
+                new Parameters(this,new ArrayList<>(matched.params.keySet()),()->dispatch(layer,matched)).advance(RUN);
+                return;
             }
+        }
+        void dispatch(HttpRouter.Layer layer,HttpPathSpec.Match matched) {
+            if(layer.route!=null) { new RouteCursor(this,layer.route).advance(null);return; }
+            RequestView saved=request.view();RequestView prefix=null;
+            if(!matched.matchedPath.isEmpty()) {
+                String rest=saved.path.substring(matched.end);
+                if(rest.isEmpty() || rest.charAt(0)!='/')rest="/"+rest;
+                String consumed=matched.matchedPath;
+                String base=saved.baseUrl+(consumed.endsWith("/")?consumed.substring(0,consumed.length()-1):consumed);
+                request.applyView(new RequestView(rest,base,saved.params));prefix=saved;
+            }
+            if(layer.child!=null) {
+                new RouterCursor(layer.child,this,saved).advance(null);return;
+            }
+            callback(layer.middleware,new Continue(this,null,prefix));
+        }
+    }
+    /** One layer's ordered preprocessing cursor. Its cache belongs to this router invocation. */
+    private final class Parameters {
+        final RouterCursor router;
+        final List<String> keys;
+        final Runnable complete;
+        int keyIndex,hookIndex;
+        String name="";
+        @Nullable ParamHandler[] hooks;
+        @Nullable ParamRecord record;
+        Parameters(RouterCursor router,List<String> keys,Runnable complete) { this.router=router;this.keys=keys;this.complete=complete; }
+        void restore(@Nullable Object value) {
+            if(value instanceof List<?>)request.paramValues(name,HttpParameters.values(value));
+            else request.param(name,(String)value);
+        }
+        void advance(Flow flow) {
+            if(record!=null) {
+                record.value=request.pathParams().get(name);
+                if(flow.kind!=NORMAL)record.result=flow;
+            }
+            if(flow.kind!=NORMAL) { finish(flow);return; }
+            for(;;) {
+                if(hooks!=null && hookIndex<hooks.length) {
+                    ParamHandler hook=hooks[hookIndex++];ParamRecord active=Objects.requireNonNull(record);
+                    Next next=new Next() {
+                        public void run() { submit(()->advance(RUN)); }
+                        public void route() { submit(()->advance(SKIP_ROUTE)); }
+                        public void router() { submit(()->advance(EXIT_ROUTER)); }
+                        public void error(Throwable failure) {
+                            Objects.requireNonNull(failure,"error");submit(()->advance(new Flow(ERROR,failure)));
+                        }
+                    };
+                    try { hook.handle(request,response,next,HttpParameters.values(active.match),name); }
+                    catch(Exception failure) { next.error(failure); }
+                    return;
+                }
+                record=null;hooks=null;
+                if(keyIndex>=keys.size()) { complete.run();return; }
+                name=keys.get(keyIndex++);Object value=request.pathParams().get(name);
+                ParamHandler[] callbacks=router.router.paramHooks.get(name);
+                if(value==null || callbacks==null)continue;
+                ParamRecord prior=router.paramCache.get(name);
+                boolean same=prior!=null && (value instanceof String?value.equals(prior.match):value==prior.match);
+                if(prior!=null && (same || prior.result.kind!=NORMAL && prior.result.kind!=ROUTE)) {
+                    restore(prior.value);
+                    if(prior.result.kind!=NORMAL) { finish(prior.result);return; }
+                    continue;
+                }
+                record=new ParamRecord(value);router.paramCache.put(name,record);
+                hooks=callbacks;hookIndex=0;
+            }
+        }
+        void finish(Flow flow) {
+            if(flow.kind==ROUTER)router.exit(null);
+            else router.advance(flow.error);
         }
     }
     private final class RouteCursor {
@@ -104,7 +212,7 @@ final class HttpExecution {
                 if(!handler.method.isEmpty() && !handler.method.equals("*") && !handler.method.equals(request.methodToken()))continue;
                 try { request.decodeQuery(); }
                 catch(Exception failure) { parent.advance(failure);return; }
-                callback(handler.callback,new Continue(parent,this));return;
+                callback(handler.callback,new Continue(parent,this,null));return;
             }
             parent.advance(null);
         }
@@ -112,12 +220,18 @@ final class HttpExecution {
     private final class Continue implements Next {
         final RouterCursor router;
         final @Nullable RouteCursor route;
-        Continue(RouterCursor router,@Nullable RouteCursor route) { this.router=router;this.route=route; }
-        @Override public void run() { submit(()->{if(route==null)router.advance(null);else route.advance(null);}); }
-        @Override public void error(Throwable error) {
-            Objects.requireNonNull(error,"error");submit(()->{if(route==null)router.advance(error);else route.advance(error);});
+        final @Nullable RequestView prefix;
+        Continue(RouterCursor router,@Nullable RouteCursor route,@Nullable RequestView prefix) {
+            this.router=router;this.route=route;this.prefix=prefix;
         }
-        @Override public void route() { submit(()->router.advance(null)); }
-        @Override public void router() { submit(finalHandler); }
+        void restorePrefix() {
+            if(prefix!=null)request.applyView(new RequestView(prefix.path,prefix.baseUrl,request.pathParams()));
+        }
+        @Override public void run() { submit(()->{restorePrefix();if(route==null)router.advance(null);else route.advance(null);}); }
+        @Override public void error(Throwable error) {
+            Objects.requireNonNull(error,"error");submit(()->{restorePrefix();if(route==null)router.advance(error);else route.advance(error);});
+        }
+        @Override public void route() { submit(()->{restorePrefix();router.advance(null);}); }
+        @Override public void router() { submit(()->{restorePrefix();router.exit(null);}); }
     }
 }

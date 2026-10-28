@@ -15,6 +15,6 @@ final class RequestView {
             if(value instanceof List<?>) value=Collections.unmodifiableList(new ArrayList<>((List<?>)value));
             copy.put(e.getKey(),value);
         }
-        this.params=Collections.unmodifiableMap(copy);
+        this.params=Collections.unmodifiableMap(HttpParameters.ordered(copy));
     }
 }

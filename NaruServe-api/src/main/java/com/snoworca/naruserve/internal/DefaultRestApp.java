@@ -913,6 +913,17 @@ public final class DefaultRestApp implements RestApp {
         return this;
     }
 
+    // @req FR-ROUTE-019 AC-1; FR-ROUTE-020 AC-1; FR-ROUTE-021 AC-5
+    @Override public RestApp use(Object path,Middleware callback) {
+        lifecycle.requireHttpRegistration("use");http.use(path,callback);return this;
+    }
+    @Override public RestApp use(Object path,com.snoworca.naruserve.Router child) {
+        lifecycle.requireHttpRegistration("use");http.mount(path,DefaultRouter.unwrap(child));return this;
+    }
+    @Override public RestApp param(String name,com.snoworca.naruserve.ParamHandler callback) {
+        lifecycle.requireHttpRegistration("param");http.param(name,callback);return this;
+    }
+
     // @req IR-APP-003
     // @req FR-APP-005
     @Override
