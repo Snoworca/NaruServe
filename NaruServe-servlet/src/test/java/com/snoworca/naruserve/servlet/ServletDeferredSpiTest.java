@@ -138,9 +138,10 @@ public class ServletDeferredSpiTest {
     @Test(timeout=20000) public void clientResetDuringLaterWriteAbortsAndReleasesPendingExchange() throws Exception {
         start(exchanges::add);Socket client=new Socket("127.0.0.1",container.port());client.setSoLinger(true,0);
         client.getOutputStream().write("GET /reset HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.ISO_8859_1));
-        HttpExchange ex=next();returned();client.close();
+        HttpExchange ex=next();returned();AtomicInteger abortNotifications=new AtomicInteger();AtomicReference<Throwable> callbackFailure=new AtomicReference<>();
+        ex.onAbort(()->{try{assertCallbackUnlocked(ex);}catch(Throwable e){callbackFailure.set(e);}abortNotifications.incrementAndGet();});client.close();
         Future<Boolean> failed=callbacks.submit(()->{try{OutputStream out=ex.commit(200,Collections.emptyList(),-1);byte[] b=new byte[8192];for(int i=0;i<4096;i++){out.write(b);out.flush();}return false;}catch(IOException expected){return true;}});
-        assertTrue("reset client never failed write",failed.get(5,TimeUnit.SECONDS));completeOnce(1);idle();closed(ex);
+        assertTrue("reset client never failed write",failed.get(5,TimeUnit.SECONDS));completeOnce(1);idle();closed(ex);assertEquals(1,abortNotifications.get());assertNull(callbackFailure.get());
     }
     // FR-SVL-009 AC-4: a pending ordinary request stays in-flight until explicit completion, not initial return.
     @Test(timeout=20000) public void stopWaitsForOrdinaryPendingUntilItFinishes() throws Exception {
@@ -221,6 +222,63 @@ public class ServletDeferredSpiTest {
         request("/creation-race").get(5,TimeUnit.SECONDS);returned();
         assertEquals(1,rejected.get());assertEquals(0,attached.get());assertEquals(0,drained.get());assertEquals(1,cancelled.get());
         completeOnce(1);idle();closed(captured.get());
+    }
+
+    private static void assertCallbackUnlocked(HttpExchange ex) {
+        assertFalse("listener ran under exchange monitor",Thread.holdsLock(ex));
+        try {
+            Field field=ServletExchange.class.getDeclaredField("writeLock");field.setAccessible(true);
+            assertFalse("listener ran under response write lock",((java.util.concurrent.locks.ReentrantLock)field.get(ex)).isHeldByCurrentThread());
+        } catch(ReflectiveOperationException failure){throw new AssertionError(failure);}
+    }
+    // IR-HTTP-009 AC-1 AC-2 AC-3 AC-6; FR-SVL-009 AC-4: real container timeout and fail-soft late registration.
+    @Test(timeout=20000) public void detectedTimeoutNotifiesEarlyAndLateListenersOnceOutsideLocks() throws Exception {
+        ordinaryTimeout=400;start(exchanges::add);Future<SharedApp.Reply> reply=request("/notify-timeout");HttpExchange ex=next();returned();
+        AtomicInteger throwing=new AtomicInteger(),notified=new AtomicInteger();AtomicReference<Throwable> failure=new AtomicReference<>();
+        ex.onAbort(()->{throwing.incrementAndGet();throw new AssertionError("listener failure");});
+        ex.onAbort(()->{try{assertCallbackUnlocked(ex);}catch(Throwable e){failure.set(e);}notified.incrementAndGet();});
+        reply.get(5,TimeUnit.SECONDS);completeOnce(1);idle();
+        assertEquals(1,throwing.get());assertEquals(1,notified.get());assertNull(failure.get());
+        ex.onAbort(notified::incrementAndGet);ex.abort();ex.abort();assertEquals(2,notified.get());closed(ex);
+    }
+    // IR-HTTP-009 AC-1 AC-5; FR-SVL-009 AC-1: both successful response lifetimes preserve normal completion.
+    @Test(timeout=20000) public void successfulSyncAndDeferredFinishNeverNotifyAbort() throws Exception {
+        AtomicInteger notifications=new AtomicInteger();
+        start(ex->{ex.onAbort(notifications::incrementAndGet);if(ex.rawPath().equals("/sync")){try{send(ex,"text/plain","sync");}catch(IOException e){throw new UncheckedIOException(e);}}else exchanges.add(ex);});
+        assertEquals("sync",request("/sync").get(5,TimeUnit.SECONDS).text());returned();
+        Future<SharedApp.Reply> reply=request("/deferred");HttpExchange ex=next();returned();send(ex,"text/plain","later");
+        assertEquals("later",reply.get(5,TimeUnit.SECONDS).text());completeOnce(1);idle();
+        ex.onAbort(notifications::incrementAndGet);ex.abort();assertEquals(0,notifications.get());
+    }
+    // IR-HTTP-009 AC-2 AC-3 AC-6; FR-SVL-009 AC-4: forced stop detects pending transport cancellation.
+    @Test(timeout=20000) public void forcedStopNotifiesAndListenerFailureCannotRetainInflight() throws Exception {
+        start(exchanges::add);Future<SharedApp.Reply> reply=request("/stop-notify");HttpExchange ex=next();returned();
+        AtomicInteger calls=new AtomicInteger();ex.onAbort(()->{throw new IllegalStateException("failure");});ex.onAbort(calls::incrementAndGet);
+        adapter.stop(0,TimeUnit.MILLISECONDS);reply.get(5,TimeUnit.SECONDS);completeOnce(1);idle();
+        assertEquals(1,calls.get());ex.onAbort(calls::incrementAndGet);ex.abort();assertEquals(2,calls.get());
+    }
+    // IR-HTTP-009 AC-2 AC-3 AC-6; FR-SVL-009 AC-3 AC-4: both actual late-drain failure classes notify.
+    @Test(timeout=20000) public void lateSseFailureNotifiesAbortAndKeepsCleanupFailSoft() throws Exception {
+        start(exchanges::add);
+        for(boolean io:new boolean[]{true,false}) {
+            Future<SharedApp.Reply> reply=request("/sse-notify");HttpExchange ex=next();returned();AtomicInteger calls=new AtomicInteger();
+            ex.onAbort(()->{throw new AssertionError("failure");});ex.onAbort(calls::incrementAndGet);
+            ex.eventStream(200,Collections.emptyList(),out->{if(io)throw new IOException("io");throw new IllegalStateException("runtime");});
+            try{reply.get(5,TimeUnit.SECONDS);}catch(ExecutionException ended){assertTrue(ended.getCause() instanceof IOException);}
+            completeOnce(io?1:2);idle();assertEquals(1,calls.get());ex.abort();assertEquals(1,calls.get());
+        }
+    }
+
+    // IR-HTTP-009 AC-2 AC-3 AC-6; FR-SVL-009 AC-4: truncated actual request input is detected without caller abort.
+    @Test(timeout=20000) public void truncatedRequestReadNotifiesAbortAndRetiresAdmission() throws Exception {
+        AtomicInteger calls=new AtomicInteger();AtomicReference<Throwable> callbackFailure=new AtomicReference<>();CountDownLatch readFailed=new CountDownLatch(1);
+        start(ex->{exchanges.add(ex);ex.onAbort(()->{try{assertCallbackUnlocked(ex);}catch(Throwable e){callbackFailure.set(e);}calls.incrementAndGet();});
+            try{InputStream in=ex.requestBody();while(in.read()!=-1){};}catch(IOException expected){readFailed.countDown();}});
+        try(Socket client=new Socket("127.0.0.1",container.port())) {
+            client.getOutputStream().write("POST /truncated HTTP/1.1\r\nHost: localhost\r\nContent-Length: 20\r\nConnection: close\r\n\r\nx".getBytes(StandardCharsets.ISO_8859_1));client.shutdownOutput();
+            HttpExchange ex=next();assertTrue("container did not detect truncated input",readFailed.await(5,TimeUnit.SECONDS));returned();
+            assertEquals(1,calls.get());assertNull(callbackFailure.get());idle();closed(ex);
+        }
     }
 
 }
