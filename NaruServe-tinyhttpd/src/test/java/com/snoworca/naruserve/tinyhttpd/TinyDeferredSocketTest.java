@@ -124,4 +124,19 @@ public class TinyDeferredSocketTest {
         long begin=System.nanoTime();a.shutdown(100,TimeUnit.MILLISECONDS);assertTrue(TimeUnit.NANOSECONDS.toMillis(System.nanoTime()-begin)<2000);reply.get(5,TimeUnit.SECONDS);
         assertEquals(AppState.TERMINATED,a.state());assertEquals(1,owned.get());assertEquals(0,dir.list().length);released(file.get());work.resolve();a.shutdown(0,TimeUnit.MILLISECONDS);assertEquals(1,owned.get());assertEquals(1,log.info().size());
     }
+    // FR-APP-023 AC-3 AC-6; IR-HTTP-009 AC-3: a late attach callback owns the response/slot until it actually exits.
+    @Test(timeout=20000) public void forcedStopDuringLateAttachKeepsSlotUntilSetupOwnerExits()throws Exception{
+        start(ex->{});Future<String> reply=get("/stop-attach");HttpExchange ex=returned();CountDownLatch attaching=new CountDownLatch(1),release=new CountDownLatch(1);releases.add(release);
+        AtomicInteger cancelled=new AtomicInteger(),drained=new AtomicInteger();AtomicReference<Throwable> failed=new AtomicReference<>();
+        Future<?> setup=clients.submit(()->{try{ex.eventStream(200,Collections.emptyList(),new StreamDrain(){
+            public void attach(OutputStream out){attaching.countDown();while(release.getCount()>0)try{release.await();}catch(InterruptedException ignored){}}
+            public void drain(OutputStream out){drained.incrementAndGet();}public void abort(){cancelled.incrementAndGet();}
+        });}catch(Throwable failure){failed.set(failure);}});
+        assertTrue(attaching.await(5,TimeUnit.SECONDS));assertEquals(1,((TinyHttpdExchange)ex).slots().open());long begin=System.nanoTime();engine.stop(100,TimeUnit.MILLISECONDS);
+        assertTrue("stop deadline exceeded",TimeUnit.NANOSECONDS.toMillis(System.nanoTime()-begin)<1500);
+        assertEquals("late attach still owns response and slot",1,((TinyHttpdExchange)ex).slots().open());
+        release.countDown();setup.get(5,TimeUnit.SECONDS);assertTrue(String.valueOf(failed.get()),failed.get() instanceof IOException);reply.get(5,TimeUnit.SECONDS);
+        until(()->((TinyHttpdExchange)ex).slots().open()==0,"completed setup did not release slot");assertEquals(0,drained.get());assertEquals(1,cancelled.get());closed(ex);
+    }
+
 }
