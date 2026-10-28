@@ -1,0 +1,70 @@
+{
+  "review": "independent-test-sufficiency",
+  "round": 1,
+  "scope": "Compiler foundation tests only; implementation correctness and FR-ROUTE-018 AC7 integration not approved.",
+  "requirement": "FR-ROUTE-018",
+  "reviewed_commit": "db20b63721932f25924c9146a3c1185141602cc3",
+  "worktree": "/Users/beom/work/git/NaruServe/.claude/worktrees/v010-http-compiler",
+  "reviewed_at": "2026-10-28T04:53:52.604230+00:00",
+  "verdict": "CHANGES_REQUIRED",
+  "repository_edits": false,
+  "coverage_observed": {
+    "tests": 10,
+    "raw_corpus_vectors": 257,
+    "unique_corpus_patterns": 78,
+    "miss_vectors": 62,
+    "option_shapes": 5,
+    "covered": [
+      "literal/param/wildcard/optional/embedded/escaped grammar",
+      "duplicate and Unicode identifiers",
+      "raw percent preservation and wildcard empty segments",
+      "FULL/PREFIX/trailing/case boundaries",
+      "deep immutability",
+      "256-versus512 optional expansion limit",
+      "500 concurrent matches sharing one compiled pattern",
+      "adversarial subprocess deadline",
+      "upstream source hashes and MIT text retained"
+    ]
+  },
+  "findings": [
+    {
+      "id": "COMPILER-TEST-001",
+      "severity": "HIGH",
+      "ac": [
+        "AC-1",
+        "AC-2"
+      ],
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/HttpPathPatternTest.java",
+      "location": "grammarErrorsHaveSourcePositions/unicodeAndDuplicateNames; pinnedRawCorpus fixture",
+      "problem": "Quoted names have only invalid-quote tests. None of the257 TSV vectors uses a successful quoted name. A parser rejecting every quoted name would pass all current tests despite AC1.",
+      "new_tests_needed": [
+        "Successful /:\"user-id\" against /42 -> capture key user-id singleton42.",
+        "Successful /*\"file-parts\" against /a/b -> capture key file-parts list[a,b].",
+        "Successful quoted name containing escaped quote (and preferably backslash) with exact unescaped capture key."
+      ],
+      "pinned_oracle_checked": "Installed path-to-regexp8.4.2 raw match() returned the stated parameter/wildcard/escaped-quote results."
+    },
+    {
+      "id": "COMPILER-TEST-002",
+      "severity": "MEDIUM",
+      "ac": [
+        "AC-2"
+      ],
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/HttpPathPatternTest.java",
+      "location": "grammarErrorsHaveSourcePositions",
+      "problem": "Only checking that an error contains the word index and the original source does not test a useful source position: reporting index0 for every malformed input passes.",
+      "new_tests_needed": [
+        "Pin representative exact error offsets: /a? ->2; /:\"unterminated ->2; /: ->2; /x\\ ->3.",
+        "Pin supplementary-Unicode position /𐐀? ->2, demonstrating code-point rather than UTF16-unit indexing where required by the pinned parser."
+      ],
+      "pinned_oracle_checked": "Direct parse() of pinned8.4.2 produced those offsets; default probing Node24 version is disclosed and parser offset handling is source-defined, not ICU-dependent."
+    }
+  ],
+  "pending_outside_foundation": [
+    "FR-ROUTE-018 AC7 actual app/registration/dispatcher integration",
+    "actual Java8 runtime and API21 dependency/reference checks after implementation",
+    "host full regression and WS legacy isolation evidence"
+  ],
+  "test_execution": "No production/test source mutation and no competing Gradle test run. Static committed RED-test review plus pinned parser oracle probes only.",
+  "stop_policy": "At most3 review rounds; if next round is sufficient, stop immediately without a third round."
+}

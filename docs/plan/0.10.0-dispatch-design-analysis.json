@@ -1,0 +1,205 @@
+{
+  "kind": "read-only-dispatch-design-preparation",
+  "created_at": "2026-10-28T04:50:17.720676+00:00",
+  "repository_mutations": false,
+  "requirement_source": "docs/spec/",
+  "current_active_target_observed": "0.10.0",
+  "dependencies_added": [],
+  "primary_old_contracts_to_revise": [
+    "FR-APP-003",
+    "FR-APP-004",
+    "FR-APP-005",
+    "FR-APP-002",
+    "FR-HTTP-008",
+    "FR-HTTP-009",
+    "FR-HTTP-021",
+    "FR-HTTP-024",
+    "IR-HTTP-005",
+    "IR-HTTP-006",
+    "IR-APP-002",
+    "IR-APP-003",
+    "FR-DX-008",
+    "FR-DX-009",
+    "CON-ROUTE-005",
+    "IR-HTTP-007"
+  ],
+  "central_replacement": {
+    "principle": "One live ordered HTTP stack with explicit Route identities; one retained legacy routing.Router for WebSocket resolution/profile. Do not route HTTP through global specificity selection or unwrap one preselected RouteChain.",
+    "classes": [
+      {
+        "name": "internal.HttpRouter",
+        "signature": "final class HttpRouter { synchronized HttpRoute appendRoute(PathSpec path); synchronized void appendUse(PathSpec prefix, Middleware callback); synchronized void appendError(PathSpec prefix, ErrorMiddleware callback); synchronized void appendMount(PathSpec prefix, HttpRouter child); HttpLayer[] snapshot(); }",
+        "ownership": "Stores ordered layers and param callback registrations; volatile published immutable layer-array snapshots for safe late registration. No dependency types."
+      },
+      {
+        "name": "internal.HttpLayer",
+        "signature": "final class HttpLayer { enum Kind { USE, ROUTE, ERROR, MOUNT } final Kind kind; final PathSpec matcher; final Object payload; }",
+        "ownership": "Holds FULL route or PREFIX use/mount compiled matcher. Matching raw captures+matchedPath from HttpPathPattern feed a separate UTF8-decoding utility."
+      },
+      {
+        "name": "internal.HttpRoute",
+        "signature": "final class HttpRoute { final long identity; final PathSpec path; synchronized void append(String methodToken, HttpCallback callback); HttpRouteHandler[] snapshot(); boolean handles(String methodToken); }",
+        "ownership": "One app.route(path) call appends exactly one route layer immediately, even before handlers are attached. Builder method calls mutate that Route; separate app.get calls append distinct Route identities."
+      },
+      {
+        "name": "internal.RequestExecution",
+        "signature": "final class RequestExecution { void start(); void resume(Frame frame, Signal signal); void responseDone(); void callbackEnter(); void callbackExit(); void abort(Throwable cause); }",
+        "ownership": "Owns one Request/Response, router+route frames/cursors, current error mode, Router-local param caches, OPTIONS accumulation and completion/cleanup state. Handles synchronous reentry and queued cross-thread continuations."
+      },
+      {
+        "name": "internal.RouterFrame",
+        "signature": "final class RouterFrame { final HttpRouter router; final RouterFrame parent; final RequestView savedMountView; int layerIndex; RouteFrame route; Map<String,ParamResult> paramCache; }",
+        "ownership": "Scope param cache per Router invocation; saved view restored at mount exit. Child mergeParams merges parent/child with child values taking precedence. Do not restore all params after every ordinary next.run return."
+      },
+      {
+        "name": "internal.RouteFrame",
+        "signature": "final class RouteFrame { final HttpRoute route; int handlerIndex; final String effectiveMethodToken; }",
+        "ownership": "Route-local method iteration and HEAD fallback. next.route skips remaining callbacks of current identity; next.router exits current Router frame."
+      },
+      {
+        "name": "internal.RequestView",
+        "signature": "final class RequestView { final String path; final String url; final String baseUrl; final Map<String,List<String>> params; }",
+        "ownership": "Immutable current layer view, published on the same DefaultRequest instance. Original exchange, body/cache/attributes/uploads/requestId/application remain request-global."
+      }
+    ],
+    "path_spec": "Use a focused PathSpec interface for compile-once FULL/PREFIX matching and alternatives. String uses HttpPathPattern; Java Pattern uses Java semantics/own flags and per-match Matcher. Do not overload a single legacy RoutePattern to serve both new HTTP and old WS contracts.",
+    "publication_and_late_registration": "Use synchronized append+volatile array publication for router layers and Route handlers. HTTP registration/use/route-builder attachments after listen are allowed while app is live; retain configuration-only guards for server options, codecs, WS profile and shutdown as expressly scoped. Current request cursor snapshot policy must be tested against the fixed oracle; a fresh snapshot on continuation can observe newly appended layers, while a permanent request-start snapshot can differ. Do not assume snapshot-at-request-start is fully equivalent without that test."
+  },
+  "public_api_recommendation": {
+    "Request": [
+      "Keep String param(String name) as existing NaruServe convenience: first scalar/list element; missing/absent throws IllegalArgumentException (unless SRS explicitly chooses a nullable migration).",
+      "Add @Nullable String paramOrNull(String name): absent optional or undeclared -> null; empty participating capture -> empty string.",
+      "Add List<String> paramValues(String name): immutable singleton for scalar, full list for wildcard, empty list for absent; never conflate wildcard list with a slash-joined scalar.",
+      "Add Map<String,List<String>> pathParams(): immutable present values only; optional nonparticipants omitted; duplicate capture names follow last binding from compiler/oracle.",
+      "String path(): current mount-relative RAW pathname, matching Express req.path; do not percent-decode entire request pathname during Request construction.",
+      "String url(): current mount-relative raw path plus original raw query when present, preserving an empty trailing question mark.",
+      "String baseUrl(): actual consumed mount text, with original percent-encoding and case; String originalUrl(): immutable original raw path+query.",
+      "Keep rawPath() as the original exchange raw pathname for NaruServe compatibility and logging/upgrade; route execution uses RequestView.path, not rawPath(). If choosing current rawPath instead, explicitly revise old contract/tests and provide original-path accessor.",
+      "Optional decodedPath() convenience may preserve former whole-path decoded view, but is never used for matching/routing/security identity. It is not required to implement Express matching.",
+      "DefaultRequest.applyView(RequestView) package-private; originalUrl/originalRawPath initialized once; do not reconstruct request per layer."
+    ],
+    "path_example": {
+      "original_target": "/api/a%2Fb?x=1",
+      "mounted_prefix": "/api",
+      "path": "/a%2Fb",
+      "url": "/a%2Fb?x=1",
+      "baseUrl": "/api",
+      "originalUrl": "/api/a%2Fb?x=1",
+      "rawPath": "/api/a%2Fb",
+      "param_id": "a/b"
+    },
+    "decode_boundary": "Match raw pathname first. Decode participating capture bytes once with strictUTF8; invalid escape/UTF8 in a matched capture is400. A malformed percent sequence outside a capture must not be globally rejected merely by constructing DefaultRequest; exact literal cases follow oracle/transport boundary. Static filesystem safety remains separate at file access.",
+    "Next": [
+      "Retain void run() and void error(Throwable).",
+      "Add void route() and void router() (unambiguous Java names); use-only next.route behaves like normal continuation.",
+      "Default methods for new Next operations may preserve old binary implementations if necessary, but actual common HTTP ChainNext overrides them.",
+      "Remove universal consumed/owner-thread/response-completed bans from new HTTP Next. Repeated explicit next and explicit next after response completion still drive callbacks according to oracle.",
+      "RouteHandler existing2-arg remains terminal-style Java convenience; add Middleware3-arg route overloads/varargs for callbacks that can continue and preserve existing2-arg lambdas/method references."
+    ],
+    "Router": [
+      "Add public com.snoworca.naruserve.Router.create() and Router.create(boolean mergeParams) delegating to internal.HttpRouter. Keep old com.snoworca.naruserve.routing.Router separate as legacy resolver.",
+      "RestApp.use(String prefix, Router child), use(Router child); Router provides corresponding route/use/param methods without application lifecycle/server config.",
+      "Avoid duplicating registry/matcher execution: both DefaultRestApp and public Router delegate to focused HttpRouter/registration support.",
+      "Add explicit param hook registration. Recommended ParamHandler.handle(Request req, Response res, Next next, List<String> value, String name) to retain wildcard list semantics and scalar singleton; API names/overloads need Java/Kotlin compilation tests."
+    ],
+    "errors": [
+      "Add @FunctionalInterface ErrorMiddleware.handle(Throwable error, Request req, Response res, Next next).",
+      "Add use(ErrorMiddleware) and use(String prefix, ErrorMiddleware): lambda arity4 distinguishes existing Middleware3-arg. In error mode skip normal callbacks; error-next.run clears error; error-next.error replaces current error; thrown exceptions enter same ordered cursor.",
+      "Preserve onError(ErrorHandler3-arg) as a documented NaruServe extension bridge. A wrapper can invoke it at its registered stack position and, if still NEW, continue the current error automatically to preserve old terminal-hook behavior. Do not silently treat its missing Next as the full Express error-middleware API.",
+      "Keep StandardErrors JSON utilities/configuration as extension. New common finalhandler/404/errors need a separate FinalHandler boundary and oracle-defined status/essential headers/body; do not retain blanket405/501/defaultJSON as common behavior without SRS decision."
+    ],
+    "async": [
+      "No mandatory CompletionStage/CompletableFuture (AndroidAPI24) and no new library.",
+      "Deferred next via captured Next works independently of promise-like API.",
+      "If representing returned async rejection is required, add an own Java8/API21 Deferred/AsyncResult with own functional failure callback, resolve(), reject(Throwable) and subscription; attach rejection to the current execution cursor, resolve without response/next does nothing.",
+      "Prefer explicitly named getAsync/useAsync or an explicit adapter over overloaded same-arity return-valued lambdas that may break existing Java RouteHandler overload resolution.",
+      "Do not require java.util.function.Consumer in the mandatory API21 surface; own functional callback interface avoids another API24 compatibility trap."
+    ]
+  },
+  "execution_and_lifetime": {
+    "continuations": "Same-thread reentrant next.run executes downstream synchronously so after-next observations remain correct. A different thread enqueues a signal and returns if another callback owns the execution; when no callback owns it, the caller may take execution ownership. Never hold a request-wide blocking lock across user code: a handler can start another thread calling next and join it; blocking that thread on the original callback would deadlock.",
+    "serialization": "Short state lock protects cursor/queue/owner transitions; user callbacks and transport IO outside that lock. Reentrant same-owner recursion allowed. Queued cross-thread signals drain when current callback unwinds. Define/test the Java cross-thread enqueue behavior explicitly; Express has no simultaneous JS callback threads.",
+    "no_auto_finish": "Initial handler return or fulfilled Deferred does not finish a NEW response and does not auto-next. Only stack exhaustion invokes final404/OPTIONS/error handler; response send/end, abort or timeout terminates transport.",
+    "response_hook": "DefaultResponse.onDone currently holds ONE replaceable Runnable; register one RequestExecution-owned callback composing log + terminal status + cleanup trigger, rather than adding competing callbacks.",
+    "split_afterHandler": [
+      "Replace common HTTP afterHandler NEW->empty200 with callbackReturned(): sets handlerDone and starts an already pending stream transfer, never implicitly commits NEW.",
+      "Keep existing DefaultResponse stream(in) late-start branch: when handlerDone=true the caller runs transfer itself; this is useful for deferred text/stream completion.",
+      "After each callback exit, run pending transfer only when its handler unwound; retain afterFailure/abort transport ownership. Legacy WS path can keep its legacy completion policy where required."
+    ],
+    "cleanup": "Track response terminal flag, active user callback count, queued/executing signals and cleanup-once flag. Release uploads exactly once only after terminal response and current callbacks/queue drain, so save(upload) after res.send within the same callback remains valid. Pending deferred request keeps uploads/body/services. Initial Dispatcher finally does not alone prove chain end. Late explicit next after terminal is not globally banned; resource access after terminal cleanup follows documented lifecycle and never writes another response.",
+    "logging": "Exactly one access line at terminal completion/abort using immutable original method/path/requestId/start. Preserve dedicated SSE cause/duration lines and WS101/session logging. Do not log every resumed callback.",
+    "application_context": "GatedExchangeHandler currently marks AppLifecycle.requestThread only around initial Dispatcher.handle. Add a scoped withRequest(Runnable) that remembers prior ThreadLocal value and restores it; every later callback/drain that may call shutdown uses that scope. Plain enter/remove is insufficient for nested request reentry.",
+    "shutdown": "Keep start gate and configuration lifecycle unchanged except scoped HTTP registration guard. Register open RequestExecutions in an app registry before dispatch; terminal cleanup unregisters. Shutdown refuses new requests, waits/graces active executions, then aborts pending transports and closes owned resources once. The adapter-specific registry/finish callbacks integrate with this; do not conflate SSE counts with ordinary deferred requests."
+  },
+  "param_hooks": {
+    "cache_key": "Router invocation frame, param name -> last matched value plus transformed value/error/skip result; not a permanent request(name,value) set. Parent and child same name/value execute separately.",
+    "ordering": "Route matching assigns current capture view, then registered hooks run in token/parameter order before callbacks. Duplicate params lastwins, absent optional absent. Hook can mutate current params or route/error signal; cache replays corresponding result for same last value.",
+    "restoration": "Mount boundary restores saved url/baseUrl/parent view. Do not unconditionally pop params after every same-Router next call; after-next may observe downstream route params according to existing oracle."
+  },
+  "method_and_defaults": {
+    "must_change": "Dispatcher.preCheck currently rejects unknown enum methods and path validator before matching, and HTTP fallback maps METHOD_MISMATCH to405. Common ordered HTTP path must not retain those gates globally.",
+    "method_model": "Need common method-token registration (including Node-supported verbs beyond current9) and Request.methodToken(); preserve existing Method enum convenience, expand/model additional common tokens explicitly. Do not map unfamiliar methods toGET. Java enum name for M-SEARCH requires an explicit token mapping.",
+    "head": "HEAD fallback is per Route: use its explicit HEAD callbacks if present, otherwise that Route's GET callbacks, respecting route order. No global later-HEAD preference.",
+    "options": "Accumulate methods for matching route layers that are traversed, addHEAD forGET, dedup and alphabetical comma+space sort. Send OPTIONS only after actual stack fallthrough; downstream middleware may answer first. OPTIONS* remains transport-specific existing contract unless changed explicitly.",
+    "static": "Preserve static convenience as an explicitly ordered/labeled extension bridge. Existing statics fallback checks only terminal no-match/mismatch; do not let it preempt user downstream middleware, root traversal guards or ordered common routes."
+  },
+  "compatibility_bridges": [
+    "Keep legacy Router/RoutePattern/RouterPolicy strict defaults for WS profile; route matcher worker HttpPathPattern is HTTP-only.",
+    "Preserve Dispatcher(Router<RouteHandler>) and internal constructor shapes for legacy low-level tests initially through a legacy adapter mode, while DefaultRestApp uses the new HTTP stack path. Do not let that bridge hide missing common app behavior.",
+    "Preserve MiddlewarePipeline/ChainNext as legacy WS middleware if needed; new HTTP Next implementation delegates to RequestExecution. Reusing old class names is optional, reusing old bans is incorrect.",
+    "DefaultRouteGroup delegates into unified registration; route-local group middleware becomes callbacks in one Route, not a detached global prefix pipeline.",
+    "DefaultRouteBuilder holds an HttpRoute identity rather than snapshotting a middleware list into every independently registered handler."
+  ],
+  "known_old_tests_requiring_contract_cited_updates": [
+    {
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ChainNextTest.java",
+      "methods": [
+        "secondRunThrowsAndDownstreamRanOnce",
+        "runAfterErrorAndErrorAfterRunThrow",
+        "runAfterSendThrowsAndRunsNoDownstreamStep",
+        "keptNextCalledAfterTheExchangeEndedThrows",
+        "keptNextOfAnUnansweredChainThrowsAfterTheExchangeEnded",
+        "nextCalledFromAnotherThreadDuringTheRequestThrows"
+      ],
+      "conflict": "Old one-use/same-thread/after-response/initial-return expiry assumptions contradict new common HTTP continuation behavior. Replace only after SRS update; add oracle-cited repeated/post-response/deferred tests, preserve extension-specific lifecycle evidence."
+    },
+    {
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java:450-470",
+      "methods": [
+        "returnWithoutBodyEndsTheResponseWithOneWarn"
+      ],
+      "conflict": "NEW autoempty200 after callback return contradicts pending async/no-next semantics."
+    },
+    {
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRestAppTest.java",
+      "methods": [
+        "unregisteredMethodOfAMethodSetRouteIs405",
+        "badPatternThrowsAtTheRegistrationCall",
+        "duplicateThrowsOnlyAtFreezeAndLeavesTheAppUnfrozen"
+      ],
+      "conflict": "Common mismatch404, new string grammar and ordered duplicate routes differ; WS/legacy matcher cases remain protected."
+    },
+    {
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ListenStartupTest.java:43-50,110-143",
+      "conflict": "Assertions probing freeze by attempting app.get must change to a configuration-only guard probe; startup gate/config freeze still applies while common HTTP late registration is allowed."
+    },
+    {
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ErrorPathTest.java",
+      "conflict": "Some tests assert global onError auto-chain, JSON fallback, dropped second error and synchronous exception propagation. Retain documented onError extension semantics but add ordered ErrorMiddleware/cleared/replaced/rejected error cases; do not treat old extension tests as Express finalhandler proof."
+    }
+  ],
+  "test_requirements": [
+    "registration interleaving and route identity before handler attachment",
+    "late app registration and late Route-builder attachment",
+    "exact same-thread before/after-next observations",
+    "repeatednext/postresponse-next and cross-thread join deadlock regression",
+    "deferred success/no-next pending and rejection-to-error, including initially rejected async results",
+    "mount prefix actual text/url/baseUrl restoration and mergeParams",
+    "Router-local param cache transformed values/error/skip/last-value behavior",
+    "HEAD per-route and OPTIONS downstream intercept/final alphabetic list",
+    "request identity/bodycache/upload save after send and terminal cleanup exactlyonce",
+    "shutdown called inside resumed callback with lifecycle scope",
+    "legacy WS authentication/Origin/426/session queues/shutdown regressions"
+  ],
+  "implementation_order": "First central coherent HTTP request/registration/execution slice with current helper contracts; mount+param+error+async features extend those same cursor objects. Then parallel adapters/extensions. Do not implement a second dispatcher per issue or split shared DefaultRestApp/Dispatcher/RequestExecution writes across concurrent workers."
+}

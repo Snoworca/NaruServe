@@ -1,0 +1,97 @@
+{
+  "review": "independent-test-sufficiency",
+  "round": 1,
+  "scope": "Harness foundation comparator/provenance plus minimal already-supported Java replay; future feature corpus growth remains pending.",
+  "requirement": "OPS-ROUTE-004",
+  "reviewed_commit": "3d865990be065bd50150005b35d201d89039d619",
+  "worktree": "/Users/beom/work/git/NaruServe/.claude/worktrees/v010-parity-harness",
+  "reviewed_at": "2026-10-28T04:53:52.604230+00:00",
+  "verdict": "CHANGES_REQUIRED",
+  "repository_edits": false,
+  "coverage_observed": {
+    "committed_red_tests": 7,
+    "current_generated_express_cases": 30,
+    "covered": [
+      "status/header/body multiple mismatch reporting",
+      "object order independence",
+      "scalar values/missing/null/list distinction",
+      "trace ordering/path/baseUrl/completion errors",
+      "registration and raw method/path comparison",
+      "Express version/package hash/generator hash/schema corruption",
+      "Java Pattern name and ECMAScript-equivalence boundary mutation"
+    ],
+    "generated_fixture_features": [
+      "baseline",
+      "grammar",
+      "registration-error",
+      "path-alternatives",
+      "ordered-stack",
+      "route-boundary",
+      "continuation",
+      "mount",
+      "router-skip",
+      "param-hook",
+      "http-defaults",
+      "error-flow",
+      "async",
+      "decoding"
+    ],
+    "provenance": "Generator resolves existing external reference installation, verifies Node22.22.0 and Express5.1/router2.2/path-to-regexp8.4.2, hashes packages and implementation sources, requires committed lock match without automatic installation."
+  },
+  "findings": [
+    {
+      "id": "HARNESS-TEST-001",
+      "severity": "HIGH",
+      "ac": [
+        "AC-2",
+        "AC-3"
+      ],
+      "file": "src/test/java/com/snoworca/naruserve/parity/ParityCorpusTest.java",
+      "location": "committedCorpusHasPinnedProvenanceAndJavaPatternBoundary and comparator controls",
+      "problem": "The committed tests never invoke NaruServe or feed an actual Java request/response/trace into a committed reference case comparison. Comparator controls plus metadata loading can pass with no working Java replay at all. Full future-feature replay is not required here, but the foundation needs at least already-supported literal/param baseline replay.",
+      "new_tests_needed": [
+        "Drive a minimal actual NaruServe app/in-memory adapter for committed literal.get, literal.post or param.basic cases, construct actual observation schema, compare to the committed reference case.",
+        "Prove a deliberate actual handler/status/trace difference fails through this replay adapter rather than only comparing synthetic JSON controls.",
+        "Ensure the ordinary Gradle test path performs those baseline replays without Node/network."
+      ],
+      "boundary_note": "If parent explicitly limits lane to comparator-only helper, AC3 must remain pending and no Java replay sufficiency/requirement completion claim may be made; the complete harness still owes this test."
+    },
+    {
+      "id": "HARNESS-TEST-002",
+      "severity": "MEDIUM",
+      "ac": [
+        "AC-4",
+        "AC-5"
+      ],
+      "file": "src/test/java/com/snoworca/naruserve/parity/ParityCorpusTest.java",
+      "location": "staleReferenceVersionHashGeneratorAndBoundaryFail",
+      "problem": "The user prohibition of JNI is in corpus.boundary.jni but no negative control toggles it; a validator ignoring that field can pass all current tests.",
+      "new_tests_needed": [
+        "Mutate boundary.jni to true and require field-specific validation failure; retain existing regexEngine and ecmascriptRegExpEquivalent controls."
+      ]
+    },
+    {
+      "id": "HARNESS-TEST-003",
+      "severity": "MEDIUM",
+      "ac": [
+        "AC-1",
+        "AC-4"
+      ],
+      "file": "src/test/java/com/snoworca/naruserve/parity/ParityCorpusTest.java",
+      "location": "staleReferenceVersionHashGeneratorAndBoundaryFail",
+      "problem": "The negative provenance tests cover Express version and package.json digest, but not the Node pin or implementation source digests. A comparator validating only package metadata could ignore stale reference runtime or altered router source.",
+      "new_tests_needed": [
+        "Mutate reference.node and require reference failure.",
+        "Mutate a reference.sources router/layer.js or path-to-regexp/dist/index.js SHA256 and require reference failure."
+      ],
+      "note": "Two identical generation runs are also required execution evidence under AC1; no need to install another dependency or force a network test in Gradle."
+    }
+  ],
+  "pending_outside_foundation": [
+    "OPS-ROUTE-004 AC6 per-feature corpus/replay growth as runtime features land",
+    "live generator executed twice with identical bytes and documented pinned Node invocation",
+    "whole implementation parity/Java8/API21/resource tests"
+  ],
+  "test_execution": "No production/test edits or competing Gradle run; inspected committed RED tests and current fixture/generator/provenance artifacts only.",
+  "stop_policy": "At most3 review rounds; stop immediately on first sufficient round."
+}

@@ -18,20 +18,26 @@
     {
       "id": "T01",
       "number": 48,
-      "status": "foundation-ready",
+      "status": "tdd-implementation",
       "depends_on": [
         "T00"
       ],
       "req_ids": [
         "OPS-ROUTE-004"
       ],
-      "test_review_rounds": [],
+      "test_review_rounds": [
+        {
+          "round": 1,
+          "verdict": "changes_required",
+          "report": "docs/plan/evidence/harness-test-review-round1.json"
+        }
+      ],
       "completed": false
     },
     {
       "id": "T02",
       "number": 49,
-      "status": "foundation-ready",
+      "status": "tdd-implementation",
       "depends_on": [
         "T00",
         "T01"
@@ -39,7 +45,13 @@
       "req_ids": [
         "FR-ROUTE-018"
       ],
-      "test_review_rounds": [],
+      "test_review_rounds": [
+        {
+          "round": 1,
+          "verdict": "changes_required",
+          "report": "docs/plan/evidence/compiler-test-review-round1.json"
+        }
+      ],
       "completed": false
     },
     {
@@ -49,7 +61,9 @@
       "depends_on": [
         "T02"
       ],
-      "req_ids": [],
+      "req_ids": [
+        "FR-HTTP-027"
+      ],
       "test_review_rounds": [],
       "completed": false
     },
@@ -61,7 +75,9 @@
         "T02",
         "T03"
       ],
-      "req_ids": [],
+      "req_ids": [
+        "FR-ROUTE-019"
+      ],
       "test_review_rounds": [],
       "completed": false
     },
@@ -74,7 +90,9 @@
         "T03",
         "T04"
       ],
-      "req_ids": [],
+      "req_ids": [
+        "FR-APP-021"
+      ],
       "test_review_rounds": [],
       "completed": false
     },
@@ -86,7 +104,9 @@
         "T03",
         "T05"
       ],
-      "req_ids": [],
+      "req_ids": [
+        "FR-APP-022"
+      ],
       "test_review_rounds": [],
       "completed": false
     },
@@ -98,7 +118,9 @@
         "T03",
         "T06"
       ],
-      "req_ids": [],
+      "req_ids": [
+        "FR-ROUTE-020"
+      ],
       "test_review_rounds": [],
       "completed": false
     },
@@ -109,7 +131,9 @@
       "depends_on": [
         "T07"
       ],
-      "req_ids": [],
+      "req_ids": [
+        "FR-ROUTE-021"
+      ],
       "test_review_rounds": [],
       "completed": false
     },
@@ -120,7 +144,9 @@
       "depends_on": [
         "T08"
       ],
-      "req_ids": [],
+      "req_ids": [
+        "FR-HTTP-028"
+      ],
       "test_review_rounds": [],
       "completed": false
     },
@@ -132,7 +158,9 @@
         "T06",
         "T09"
       ],
-      "req_ids": [],
+      "req_ids": [
+        "FR-APP-024"
+      ],
       "test_review_rounds": [],
       "completed": false
     },
@@ -144,7 +172,9 @@
         "T06",
         "T10"
       ],
-      "req_ids": [],
+      "req_ids": [
+        "FR-APP-023"
+      ],
       "test_review_rounds": [],
       "completed": false
     },
@@ -270,5 +300,23 @@
   "requirements": {
     "harness": "OPS-ROUTE-004",
     "http_compiler": "FR-ROUTE-018"
+  },
+  "lanes": {
+    "harness": {
+      "agent": "/root/release_dependency_audit",
+      "worktree": ".claude/worktrees/v010-parity-harness",
+      "branch": "kiwi/v010/parity-harness",
+      "red_commit": "3d86599"
+    },
+    "compiler": {
+      "agent": "/root/api_core_docs",
+      "worktree": ".claude/worktrees/v010-http-compiler",
+      "branch": "kiwi/v010/http-compiler",
+      "red_commit": "db20b63"
+    },
+    "independent_test_reviewer": {
+      "agent": "/root/transport_dependency_audit",
+      "authors_own_tests": false
+    }
   }
 }
