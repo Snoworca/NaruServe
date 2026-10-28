@@ -4,8 +4,8 @@ plugins {
 }
 repositories { mavenCentral() }
 dependencies {
-    implementation 'com.snoworca.naruserve:naruserve:0.9.0'
-    implementation 'com.snoworca.naruserve:naruserve-kotlin:0.9.0'
+    implementation 'com.snoworca.naruserve:naruserve:0.10.0'
+    implementation 'com.snoworca.naruserve:naruserve-kotlin:0.10.0'
 }
 application { mainClass = 'example.KotlinExample' }
 kotlin { compilerOptions.jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_1_8 }

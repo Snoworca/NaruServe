@@ -22,7 +22,7 @@ def androidModules = naruModules - [':NaruServe-servlet', ':NaruServe-slf4j']
 
 allprojects {
     group = 'com.snoworca.naruserve'
-    version = '0.9.0'
+    version = '0.10.0'
 
     repositories {
         mavenCentral()
