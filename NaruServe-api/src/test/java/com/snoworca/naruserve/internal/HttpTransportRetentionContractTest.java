@@ -122,12 +122,32 @@ public class HttpTransportRetentionContractTest {
             go.countDown();send.get(3,TimeUnit.SECONDS);abort.get(3,TimeUnit.SECONDS);released(ex);assertTrue(ex.recording.commits.get()<=1);assertTrue(ex.recording.finishes.get()<=1);
         }} finally {pool.shutdownNow();}
     }
+    static int tracked(DefaultRestApp app) {
+        try {
+            java.lang.reflect.Field field=AppLifecycle.class.getDeclaredField("executions");field.setAccessible(true);
+            Set<?> executions=(Set<?>)field.get(app.lifecycle());synchronized(executions){return executions.size();}
+        } catch(ReflectiveOperationException failure) {throw new AssertionError(failure);}
+    }
+    @Test public void lifecycleObservationDetectsAnUnfinishedResponseAndItsNormalRemoval() { // FR-APP-023 AC-3 AC-8
+        SettingsCapturingAdapter adapter=new SettingsCapturingAdapter();DefaultRestApp app=new DefaultRestApp(adapter,new StubJsonCodec(),new RecordingLogger());AtomicReference<Response> response=new AtomicReference<>();
+        app.get("/x",(q,s)->response.set(s));app.listen(0);LifecycleExchange ex=new LifecycleExchange("GET","/x");
+        try {adapter.handler.handle(ex);assertEquals(1,tracked(app));assertEquals(0,ex.input.closes.get());response.get().send("ok");assertEquals(0,tracked(app));assertEquals(1,ex.input.closes.get());}
+        finally {app.shutdown(0,TimeUnit.SECONDS);}
+    }
+    @Test public void lifecycleObservationDetectsACompletedResponseWithPendingDeferredOwnership() { // FR-APP-023 AC-3 AC-7 AC-8
+        SettingsCapturingAdapter adapter=new SettingsCapturingAdapter();DefaultRestApp app=new DefaultRestApp(adapter,new StubJsonCodec(),new RecordingLogger());Deferred pending=Deferred.pending();
+        app.getAsync("/x",(q,s,n)->{s.send("ok");return pending;});app.listen(0);LifecycleExchange ex=new LifecycleExchange("GET","/x");
+        try {adapter.handler.handle(ex);assertEquals(1,ex.recording.finishes.get());assertEquals(1,tracked(app));assertEquals(0,ex.input.closes.get());pending.resolve();assertEquals(0,tracked(app));assertEquals(1,ex.input.closes.get());}
+        finally {pending.resolve();app.shutdown(0,TimeUnit.SECONDS);}
+    }
     @Test public void releaseObserverOrCustomReleaseFailureCannotLeakLifecycleOwnership() { // FR-APP-023 AC-3 AC-8
         for(boolean callbackFailure:Arrays.asList(false,true)) {
             SettingsCapturingAdapter adapter=new SettingsCapturingAdapter();RecordingLogger logger=new RecordingLogger();DefaultRestApp app=new DefaultRestApp(adapter,new StubJsonCodec(),logger);app.get("/x",(q,s)->s.send("ok"));app.listen(0);
             RuntimeException failure=new IllegalStateException("release failed");RetainedExchange ex=new RetainedExchange("GET","/x");if(callbackFailure)ex.observerFailure=failure;else ex.releaseFailure=failure;
             adapter.handler.handle(ex);released(ex);assertEquals("ok",text(ex.recording));assertEquals(1,logger.info().size());
-            if(!callbackFailure)assertTrue(logger.errors.contains(failure));app.shutdown(1,TimeUnit.SECONDS);assertEquals(AppState.TERMINATED,app.state());
+            if(!callbackFailure)assertTrue(logger.errors.contains(failure));
+            assertEquals("release failure leaked request ownership before any shutdown/forced cancellation",0,tracked(app));
+            app.shutdown(1,TimeUnit.SECONDS);assertEquals(AppState.TERMINATED,app.state());
         }
     }
 }
