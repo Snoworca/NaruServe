@@ -246,6 +246,14 @@ public class HttpMethodAndErrorContractTest {
         int recorded=Collections.frequency(log.errors,failure),aborted=ex.aborts.get();
         assertEquals("late unhandled failure must be observed once by error log or transport abort",1,Math.max(recorded,aborted));
     }
+    @Test public void noTypedCorsFinalErrorPreservesOrdinaryApplicationHeaders() { // FR-APP-024 AC-3; CON-APP-010 AC-7
+        DefaultRestApp app=new DefaultRestApp();app.get("/x",(q,s)->{
+            s.header("X-Application","keep");throw new HttpException(400,"bad").withHeader("Retry-After","5");
+        });
+        RecordingExchange ex=dispatch(app,"GET","/x");assertEquals(400,ex.status);
+        assertEquals(Collections.singletonList("keep"),ex.committed("X-Application"));
+        assertEquals(Collections.singletonList("5"),ex.committed("Retry-After"));
+    }
     @Test public void defaultHttpExceptionPreservesStatusHeadersAndEscapesErrorDetails() { // FR-APP-024 AC-3 AC-5
         DefaultRestApp app=new DefaultRestApp();app.get("/x",(q,s)->{throw new HttpException(422,"<bad>&value").withHeader("Retry-After","3");});
         RecordingExchange ex=dispatch(app,"GET","/x");assertEquals(422,ex.status);assertEquals(Collections.singletonList("3"),ex.committed("Retry-After"));
