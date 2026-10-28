@@ -1,0 +1,72 @@
+{
+  "jdk17": {
+    "root": {
+      "tests": 27,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "api": {
+      "tests": 60,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "kotlin": {
+      "tests": 10,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "servlet": {
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "actual_java8": {
+    "root": {
+      "tests": 27,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "api": {
+      "tests": 60,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "kotlin": {
+      "tests": 10,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "servlet": {
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "requirements": [
+    "OPS-REL-008 AC-3",
+    "FR-KT-004 AC-1 AC-2 AC-4",
+    "OPS-HTTP-004 AC-2 AC-3 AC-4"
+  ],
+  "red_commit": "947376e6fff54a6f4a740c6fdce4808ca315174c",
+  "independent_test_sufficiency": "ROUND1 PASS /tmp/naru-v010-bilingual-harness-test-review-round1.json; stop loop no round2",
+  "total_per_runtime": 98,
+  "harness_test_count": 40,
+  "actual_runtime_tests_beyond_harness": 58,
+  "corpus": "Existing18KR+18EN guides;96Java/48Kotlin fences perlanguage. BothJava languages compile or exactexisting namedreason; Kotlin executes originalordinal-linked tests with strict EN-to-KR executablecode equivalence. No newskip entries.",
+  "implementation": "Shared testFixtures ExampleCodeTokens preserves quotes/escapes/char/rawstring literal contents/operator token boundaries; Kotlin significant newlines preserved. Java and Kotlin comments skipped with appropriate nesting distinction. Java paired fence counts+all executable tokens compared; English skips inherit only sameKRordinal+matchingtokens. ExistingKotlinmarker ordinal/stale/duplicate/adaptedguards retained; comment-only differences ignored.",
+  "limitations": "Does not claim a standalone Kotlin compiler for English translations: identical executable tokens and significant newline sequence prove existing compiled/executed KR runtime test covers each EN pair. Updated guide content/newfences must pass harness and add actual runtime markers as required. No current pair divergence blocksGREEN. No prose/main/version/dependency/SRS edits.",
+  "logs": [
+    "/tmp/naru-http-core/bilingual-harness-green-j17.log",
+    "/tmp/naru-http-core/bilingual-harness-green-j8.log"
+  ],
+  "baseline_evidence": "/tmp/naru-http-core/bilingual-harness-red-evidence.json"
+}

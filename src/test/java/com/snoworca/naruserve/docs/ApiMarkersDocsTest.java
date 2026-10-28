@@ -88,7 +88,7 @@ public final class ApiMarkersDocsTest {
         }
     }
 
-    // SDS-AC-2; OPS-REL-002 AC-2: the README banner describes the v1 implementation, the legend sentence is gone
+    // OPS-REL-008 AC-1 AC-2: both banners identify the current profile and migration boundary.
     @Test
     public void sdsAc2_OPS_REL_002_AC2_apiReadmeBanner() throws IOException {
         String readme = doc("README.md");
@@ -96,8 +96,12 @@ public final class ApiMarkersDocsTest {
         assertFalse(readme, readme.contains("구현 목표 계약"));
         assertFalse(readme, readme.contains("으로 표시했습니다"));
         String banner = lineWith(readme, "> **문서 상태:**");
-        contains("README.md", banner, "구현", "(express-migration.md)");
+        contains("README.md", banner, "0.10.0", "공통 HTTP", "Java Pattern", "(express-migration.md)");
         assertFalse(banner, banner.contains(MARKER));
+        String english = ReadmeDocsTest.read("docs/api/en/README.md");
+        String englishBanner = lineWith(english, "> **Documentation status:**");
+        contains("en/README.md", englishBanner, "0.10.0", "common HTTP", "Java Pattern", "(express-migration.md)");
+        assertFalse(englishBanner, englishBanner.contains(MARKER));
     }
 
     // SDS-AC-3; OPS-REL-002 AC-3: response.md states res.redirect as a post-v1 item; res.type/res.render rows and the

@@ -1,0 +1,111 @@
+{
+  "reviewType": "Independent release evidence snapshot TEST SUFFICIENCY",
+  "round": 1,
+  "verdict": "CHANGES_REQUIRED",
+  "reviewedCommit": "de8a2e87f29f719a9a3defdef35a2dc91ebe1363",
+  "workspaceRoot": "/Users/beom/work/git/NaruServe/.claude/worktrees/v010-release-checkpoints",
+  "mcpWorkspace": {
+    "rootSource": "per-call-workspace-root",
+    "activeTarget": "0.10.0",
+    "workMode": "sdd"
+  },
+  "scope": [
+    "Exact historical2498edaa643593474f830259b8cf3c31a9590702 record/scan bytes and all67 historical references",
+    "Invalid reference/source/commit and valid-but-wrong pin rejection",
+    "Current source without historical fallback, exact live dependency graph, completed scan, missing evidence before/after version bump"
+  ],
+  "repoEdits": false,
+  "buildsRun": false,
+  "redEvidence": {
+    "path": "/tmp/naru-release-snapshots-red-counts.json",
+    "tests": 24,
+    "failures": 10,
+    "errors": 0,
+    "skipped": 0,
+    "newTests": 8,
+    "newClassMissingFailures": 8,
+    "oldStaleFailures": 2,
+    "positiveControls": 14,
+    "note": "The eight new tests fail on missing helper class, not a compilation error or ignored failure. Existing stale evidence assertions remain RED rather than weakened."
+  },
+  "findings": [
+    {
+      "id": "REL-SNAP-TEST-01",
+      "severity": "MEDIUM",
+      "requirement": "OPS-REL-009 AC-2 (also OPS-REL-008 AC-3)",
+      "file": "src/test/java/com/snoworca/naruserve/docs/ReleaseEvidenceSnapshotsTest.java",
+      "line": 93,
+      "title": "Current release gate has no negative control against an empty current result record with a valid completed scan",
+      "evidence": [
+        "missingCurrentEvidenceIsPendingOnlyBeforeVersionBumpAndMandatoryAt010 checks absent both files, absent scan after writing '# Current', and scan-only; it never supplies both files with a blank/heading-only results record.",
+        "currentGateValidatesLiveMethodGraphAndCompletedScanWithoutHistoricalFallback supplies one valid method row, then tests pending scan and missing live method. No test makes the current automated-reference loop empty.",
+        "No other test in this frozen tree references docs/release/0.10.0-test-results.md, so a separate current-record completeness gate does not yet close this hole."
+      ],
+      "risk": "An implementation can return true at version0.10.0 after iterating zero current evidence rows, as long as a correctly shaped completed/current-graph scan exists. That replaces missing current test evidence with a vacuous pass.",
+      "requiredNewTest": "Create version0.10.0 fixture with both files present and a valid completed scan matching the supplied nonempty current dependency graph. Require current(...) to reject an empty result file, a heading-only result file and/or a record with no automated references. Retain the populated live-method positive control and the existing before-version missing-evidence behavior. Diagnostic must identify current evidence/results.",
+      "scopeBoundary": "This is a small structural guard, not a demand for an invented fixed count of54 rows or duplication of the full release proof. Current full-suite/runtime, per-REQ, Java17/Java8/API21 and publication evidence remain separate final-release obligations."
+    },
+    {
+      "id": "REL-SNAP-TEST-02",
+      "severity": "MEDIUM",
+      "requirement": "OPS-REL-009 AC-2",
+      "file": "src/test/java/com/snoworca/naruserve/docs/ReleaseEvidenceSnapshotsTest.java",
+      "line": 103,
+      "title": "Current positive gate fixture contains no successful current-run witness",
+      "evidence": [
+        "The accepted version0.10 fixture is only a heading plus one existing method reference and a completed scan. No source commit, executed test count or successful run result is declared.",
+        "No negative asserts that missing or unsuccessful current-run evidence prevents current(...) from returning true. Method existence alone does not establish current verification traceability."
+      ],
+      "requiredNewTest": "Extend the populated positive current result fixture with a reproducible successful current-runtime run witness, using the established record conventions: source commit, exit=0 and nonzero test count. Add focused negatives for absent witness and invalid witness fields (missing/unusable commit, failed exit or zero tests). Keep the live-method and exact-current-graph controls. This is structural declared-run verification; final execution/proof remains the release workflow responsibility.",
+      "scopeBoundary": "No fixed54-row table, invented per-REQ minimum or duplicate Java17/Java8/API21 execution is demanded in this utility unit."
+    }
+  ],
+  "adequateCoverage": [
+    {
+      "AC": "OPS-REL-008 AC-2; OPS-REL-009 AC-2",
+      "tests": [
+        "all67ActualHistoricalReferencesResolveAtExactPin",
+        "historicalMissingMethodAndSourceAreRejectedWithoutAliases"
+      ],
+      "assessment": "Uses actual67 historical references and actual old method at exact pin, with separate bogus method/source controls; no alias substitution."
+    },
+    {
+      "AC": "OPS-REL-009 AC-2",
+      "tests": [
+        "unknownCommitWrongExistingCommitAndCrossVersionPinAreRejected"
+      ],
+      "assessment": "Distinguishes invalid commit text/allzero SHA from a valid existing wrong commit, cross-version historical fallback and arbitrary record path."
+    },
+    {
+      "AC": "OPS-REL-008 AC-2; OPS-REL-009 AC-2",
+      "tests": [
+        "modifiedHistoricalRecordAndScanBytesAreRejected"
+      ],
+      "assessment": "Modified record and scan byte controls prevent classifying arbitrary current prose as pinned history."
+    },
+    {
+      "AC": "OPS-REL-008 AC-3; OPS-REL-009 AC-2",
+      "tests": [
+        "currentSourceMustDeclareActualMethodAndCannotFallbackToHistoricalSource"
+      ],
+      "assessment": "Live current method positive, historical-only method negative, nonexistent and parent-traversal paths; no historical fallback."
+    },
+    {
+      "AC": "OPS-REL-009 AC-1 AC-2",
+      "tests": [
+        "historicalScanIsPinnedWhileCurrentScanRequiresExactCurrentGraph"
+      ],
+      "assessment": "Pinned scan may differ from current graph; current scan cannot. Both wrong supplied graph and stale recorded coordinate are rejected, as is historical pin on current scan."
+    },
+    {
+      "AC": "OPS-REL-009 AC-1 AC-2 AC-3",
+      "tests": [
+        "missingCurrentEvidenceIsPendingOnlyBeforeVersionBumpAndMandatoryAt010",
+        "currentGateValidatesLiveMethodGraphAndCompletedScanWithoutHistoricalFallback"
+      ],
+      "assessment": "Before-version absence may remain pending; version0.10.0 requires new files; pending scan is not completed evidence. Missing empty-result negative is finding REL-SNAP-TEST-01."
+    }
+  ],
+  "nonBlockingReleaseBoundary": "The populated helper fixture is not whole-release proof. Bounded declared-run traceability is required by finding REL-SNAP-TEST-02; actual complete Java17/Java8/API21, per-REQ and public publication proofs remain final release gates.",
+  "nextAction": "Add the focused missing negative test(s), preserve actual RED and all controls, then request independent round2. No implementation approval issued."
+}

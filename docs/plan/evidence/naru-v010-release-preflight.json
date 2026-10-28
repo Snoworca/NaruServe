@@ -1,0 +1,183 @@
+{
+  "read_only": true,
+  "repository_edits": false,
+  "network_activity": false,
+  "publication_performed": false,
+  "workspace": "/Users/beom/work/git/NaruServe",
+  "observed_head": "95f9dca6d72eb1972af6a2f92b348ca1b90b8eea",
+  "requirements": [
+    "OPS-REL-008",
+    "OPS-REL-009",
+    "FR-REL-001",
+    "FR-REL-002",
+    "FR-REL-003",
+    "FR-REL-004",
+    "FR-REL-005",
+    "CON-BUILD-018"
+  ],
+  "mcp": {
+    "rootSource": "per-call-workspace-root",
+    "workspaceRoot": "/Users/beom/work/git/NaruServe",
+    "OPS-REL-008": "evolving/in_progress",
+    "OPS-REL-009": "evolving/in_progress"
+  },
+  "current_version": {
+    "build.gradle:25": "0.9.0",
+    "staging": "build/central-staging currently0.9.0 only,300files,50metadatafiles,0signatures",
+    "publication_configuration": "Local centralStaging and MavenLocal only; no Naru upload/sign tooling or .publish directory"
+  },
+  "modules": {
+    "group": "com.snoworca.naruserve",
+    "version": "0.10.0",
+    "ids": [
+      "naruserve",
+      "naruserve-api",
+      "naruserve-servlet",
+      "naruserve-tinyhttpd",
+      "naruserve-gson",
+      "naruserve-kotlin",
+      "naruserve-slf4j",
+      "naruserve-filelog",
+      "naruserve-logcat",
+      "naruserve-android"
+    ],
+    "main": "9JAR+AndroidAAR",
+    "primary_each": [
+      "main.jar or main.aar",
+      "sources.jar",
+      "javadoc.jar",
+      "pom",
+      "module"
+    ],
+    "primary_total": 50,
+    "signature_total": 50,
+    "primary_checksum_algorithms": [
+      "md5",
+      "sha1",
+      "sha256",
+      "sha512"
+    ],
+    "checksum_total": 200,
+    "clean_bundle_entry_total": 300,
+    "important": "Existing local300files are250primary+checksum files plus50maven-metadata files, NOT signed release bundle proof. Bundle must explicitly select50versioned primaries, sign50 and retain200checksums; exclude maven-metadata/test-fixtures/other versions."
+  },
+  "artifact_validation": [
+    "Exact50primary manifest of com/snoworca/naruserve/<id>/0.10.0/<id>-0.10.0 suffixes; validate no missing/extra artifacts and ZIP traversal/duplicate paths.",
+    "Parse all10POMs and .module metadata: group/artifact/version,0.10.0 intermodule edges; no old0.9/SNAPSHOT, correct packaging/scopes.",
+    "Tiny core+websocket remain3.1.1 runtime; Gson2.14.0 compile, Kotlin2.2.0, SLF4J1.7.36; no newdependency or scope changes. Servlet API3.1.0/WebSocket API1.1 compileOnly must not leak into servlet POM runtime.",
+    "POM name/description/project URL/BSD3license/developer/SCM present; source/javadoc ZIP content/nonempty; AAR manifests/classes/consumer ProGuard rules/API21; no test-fixtures shipped.",
+    "Verify50PGP signatures against exact primarybytes and trusted signingpublickey; recompute all200checksums. Preserve immutable SHA256manifest with sourcecommit/tag,toolchain,dependency graph and bundle hash.",
+    "After final authorized single upload: persist deploymentID atomically, poll sameID toPUBLISHED, fetch all50publicprimaries+50signatures+200checksums and compare exactbytes/metadata; isolated MavenCentral-only consumers no mavenLocal/includeBuild."
+  ],
+  "four_remaining_historical_doc_tests": [
+    {
+      "test": "ReadmeDocsTest#ops_REL_005_AC1_readmeAndReleaseNotesHoldTheTinyHttpdInstruction",
+      "cause": "Requires currentREADME to contain Tiny3.1.0 and source165f365.",
+      "action": "Version current contract to3.1.1/source e73cd5d6b3f1ab6f4a7d301049eee26d22e15b3b under OPSREL008/CONBUILD018; keep dated old documents unchanged."
+    },
+    {
+      "test": "ReadmeDocsTest#ops_REL_005_AC3_documentsExplainPublished300ApiLimitation",
+      "cause": "Requires obsolete3.0.0 getHeaderEntries/abort limitation in currentREADME.",
+      "action": "Test actualcurrent RAW/published3.1.1 capability/boundaries in bothlanguages; preserve older limitation as datedhistorical evidence only."
+    },
+    {
+      "test": "ReleaseRecordsDocsTest#fr_REL_002_AC3_vulnerabilityScanRecordHasStatusAndReasonWhenPending",
+      "cause": "Old datedscan dependency list is compared to currentTiny3.1.1 graph.",
+      "action": "Keep dated reports byte-identical, record fresh0.10report and require currentgraph equality on newreport; historical record validated against historical pinnedgraph not latestgraph."
+    },
+    {
+      "test": "ReleaseResultsDocsTest#ops_REL_003_AC3_everyEvidenceLinkResolves",
+      "cause": "Historical T02 references renamed anyExceptDeleteAnswersDelete405 method.",
+      "action": "Validate dated evidence path+method against actual historicalcommit2498edaa643593474f830259b8cf3c31a9590702. Do not add fake aliases/change old behavior label to new unrelatedmethod."
+    }
+  ],
+  "historical_evidence": {
+    "preserve": [
+      "docs/release/verification/central-0.9.0.md",
+      "docs/release/audit-2026-10-21/**",
+      "docs/release/audit-2026-10-23/**",
+      "docs/release/audit-2026-10-24/**",
+      "docs/release/verification/java8-suite*",
+      "docs/release/test-results.md historicalT01-T50 record"
+    ],
+    "verified_source_pin": {
+      "commit": "2498edaa643593474f830259b8cf3c31a9590702",
+      "path": "docs/release/test-results.md",
+      "references_checked": 67,
+      "missing_path_or_method": 0,
+      "example": "T02 method also exists at recorded full-suite c7f306c; all67 historical refs exist at2498edaa"
+    },
+    "new_paths_recommended": [
+      "docs/release/verification/central-0.10.0.md",
+      "docs/release/verification/0.10.0/source-and-artifact-manifest.json",
+      "docs/release/audit-2026-10-29/ (actualdateadjusted if later)",
+      "docs/release/0.10.0-test-results.md"
+    ],
+    "strict_controls": "Only explicitlyversioned historical evidence may use pinnedgit source; currenttests must resolvecurrent source. Add missing/bogus method and invalidcommit negatives. Preserve all54old rows/statuses; do not reinterpret automated as current0.10PASS."
+  },
+  "version_update_surfaces": [
+    "build.gradle allprojects.version",
+    "CentralStagingTest VERSION",
+    "PublishedPomTest VERSION",
+    "BuildLayoutTest testFixtures JAR0.9.0 filename",
+    "ReleaseRecordsDocsTest publish-local path must remainhistorical or separatecurrentversion record",
+    "examples/java/build.gradle",
+    "examples/kotlin/build.gradle",
+    "README.md/README.ko.md/currentAPIguides samples (ownerverifyexactlanguagefilenames)",
+    "New0.10release notes/records generatedPOM,module,SBOM andconsumers"
+  ],
+  "scan": {
+    "existing_approved_plugins": "CycloneDX3.5.1 andDependencyCheck13.0.0 only under-Prelease; no dependencyupdate needed",
+    "command": "./gradlew -PtinyHttpdFromMaven=true -Prelease '-PnvdDatafeedUrl=https://dependency-check.github.io/DependencyCheck_Builder/nvd_cache/nvdcve-{0}.json.gz' releaseSbom releaseScan releaseLicenses releaseCheck --console=plain",
+    "outputs": [
+      "build/reports/naruserve/sbom/*.cdx.json (10)",
+      "build/reports/naruserve/dependency-check/dependency-check-report.csv",
+      "build/reports/naruserve/dependency-check.log",
+      "build/reports/naruserve/vulnerability-scan.md",
+      "build/reports/naruserve/dependency-graphs.txt",
+      "THIRD-PARTY-LICENSES.md"
+    ],
+    "safety": "Run only after finalversion/graph. Existingexactartifact+CVE suppression retained; no new suppression/risk exception or tooling/dependencyupdate. NVDmirror requiresnetwork but not executedinthispreflight; record actualmetadata freshness. NVD_API_KEY presencefalse, mirroredkeyless pathalreadydocumented. Scannerchildexit/csvmissing writespending; releaseCheck exit0 may meanPENDING, so require Status:completed plusactualgateclearance beforepublication.",
+    "coverage": "Publishedruntime scope; do not claim build-tooling/KAPT or authenticatedSonatypeOSSIndex coverage. VerifyAndroidreleaseRuntime graph/SBOM and parentaggregate coverallpublishedexternalcoordinates."
+  },
+  "environment": {
+    "gradle": "8.14.3",
+    "buildJDK": "/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home",
+    "actualJava8": "/Users/beom/Library/Java/JavaVirtualMachines/zulu8.96.0.205-ca-jdk8.0.504-macosx_aarch64/Contents/Home",
+    "ANDROID_HOME": "/opt/homebrew/share/android-commandlinetools",
+    "ANDROID_SDK_ROOT": "/opt/homebrew/share/android-commandlinetools",
+    "API21": "Existinganimal-sniffer signature +bytecodemajor52; platform36build is not actualAPI21deviceproof"
+  },
+  "commands_after_gates": [
+    "./gradlew -PtinyHttpdFromMaven=true build --rerun-tasks --continue --console=plain",
+    "./gradlew -PtinyHttpdFromMaven=true build --rerun-tasks --continue --console=plain -I gradle/java8-tests.gradle -Dnaruserve.java8.home=/Users/beom/Library/Java/JavaVirtualMachines/zulu8.96.0.205-ca-jdk8.0.504-macosx_aarch64/Contents/Home",
+    "./gradlew -PtinyHttpdFromMaven=true checkCentralStaging --rerun-tasks --console=plain",
+    "./gradlew -PtinyHttpdFromMaven=true :test --tests \"*PublishedPomTest*\" --tests \"*CentralStagingTest*\" --tests \"*ReleaseRecordsDocsTest*\" --tests \"*ReleaseResultsDocsTest*\" --tests \"*ReadmeDocsTest*\"",
+    "./gradlew -PtinyHttpdFromMaven=true publishToMavenLocal (0.10.0 only; do not delete old0.9directories)",
+    "Private staging-only Java8 andAndroid minifiedR8 consumers from0.10artifacts; then finalCentral-only versions afterPUBLISHED."
+  ],
+  "signing": {
+    "existing_helper": "/Users/beom/work/git/TinyHttpd/.publish/PgpTool.java +existingcompiledclass",
+    "existing_BC": "Gradle8.14.3 distribution bcpg/bcprov/bcutil1.78.1; operationaltool reuse only, notbuild/test/runtimeNaru deps",
+    "credentials_presence_only": {
+      "central_username": true,
+      "central_password": true,
+      "signing_password": true,
+      "signing_key_file": true,
+      "signing_key_id": true,
+      "key_file_exists": true
+    },
+    "private_values_printed": false,
+    "verified_authentication_or_unlock": false,
+    "exact_invocation_shape": "java -cp <privatehelperdir>:<existingBCjars> PgpTool sign <keyfile-from-private-config> <50primarypaths>; pass password via stdin fromprivateconfig, notargv/environment/log",
+    "warning": "Do not run siblingpublish.py forNaru: hardcodedTinyROOT/MODULES/GitHubrepository. AdaptprivateNaru wrapper with exactmanifest and resume-bydeploymentID; no suchwrapperexistsyet."
+  },
+  "potential_gaps": [
+    "Currentversion0.9.0 andversion-specifictestsurfaces notmigratedyet; no0.10artifactgeneration/sign/upload executed.",
+    "Fresh0.10completedscan/license/SBOM/fullproject/doc/example/independentwholeproject gates stillpending.",
+    "Localstaging300files isunsigned0.9output, cannotbeclaimed0.10signedbundle.",
+    "NeedNaru-specificprivatepublicationwrapper andpersistedreceipt/manifest; signingcredentials presentbutunlock/currentnamespaceauthnotproven.",
+    "Finalcommit/tagpushandartifact/sourcecorrespondencemustbefrozenbeforeupload; do not restage signedbundle aftersourcechanges.",
+    "Four historicaldocfailures require explicitcurrentversushistoricalfixtures, not relabeling oldevidence or fakelegacytestaliases."
+  ]
+}

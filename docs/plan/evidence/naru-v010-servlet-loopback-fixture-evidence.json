@@ -1,0 +1,49 @@
+{
+  "fixtureOnlyCommit": "5031ea2d77863517662dbb61d9f93503fc62f930",
+  "requirements": [
+    "FR-SVL-009 AC-6",
+    "OPS-REL-009 AC-2"
+  ],
+  "observedRootFailure": {
+    "multipart": "No spool before disconnect; Jetty wildcard0.0.0.0:57726 while Gradle receives HTTP POST firstbyte80 on same57726 listener",
+    "retention": "request not dispatched before5s, before any input-lifetime assertion; no surviving endpoint identity; consistent with collision but exact other listener not proven",
+    "xml": "/tmp/naru-v010-servlet-integrated-java8-failure-root-evidence"
+  },
+  "deterministicRepro": {
+    "script": "/tmp/naru-v010-servlet-wildcard-loopback-collision-repro.py",
+    "result": "/tmp/naru-v010-servlet-wildcard-loopback-collision-repro.json",
+    "proved": "macOS wildcard+loopback SO_REUSEADDR listeners may shareport; loopbackclient routes to specificlistener; same exact loopbackbind rejected; loopbackport0 allocator excludesoccupiedspecificport"
+  },
+  "fix": "ContainerRule only: Server(new InetSocketAddress(\"127.0.0.1\",0)); all actual clients already127.0.0.1; no assertions/retries/timeouts/production/deps changes",
+  "targetedActualJava8": {
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "log": "/tmp/naru-v010-servlet-loopback-fixture-java8-target.log"
+  },
+  "fullJdk17": {
+    "task": ":NaruServe-servlet:check",
+    "tests": 158,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "log": "/tmp/naru-v010-servlet-loopback-fixture-full-j17.log",
+    "xml": "/tmp/naru-v010-servlet-loopback-fixture-full-j17-results"
+  },
+  "fullActualJava8": {
+    "task": ":NaruServe-servlet:check",
+    "tests": 158,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "log": "/tmp/naru-v010-servlet-loopback-fixture-full-java8.log",
+    "xml": "/tmp/naru-v010-servlet-loopback-fixture-full-java8-results"
+  },
+  "checks": {
+    "sharedApi21": "PASS",
+    "servletClassReferences": "PASS",
+    "diffCheck": "PASS"
+  },
+  "pending": "Independent fixture review before host harvest. Host integrated full result not claimed green by isolated rerun."
+}

@@ -1,0 +1,38 @@
+{
+  "verdict": "PASS",
+  "round": 1,
+  "reviewedCommit": "947376e6fff54a6f4a740c6fdce4808ca315174c",
+  "scope": "Bilingual Java compiler/Kotlin runtime marker harness RED tests only; no documentation prose or production implementation review",
+  "requirements": [
+    "OPS-REL-008 AC-3",
+    "FR-KT-004 AC-1/2/4",
+    "OPS-HTTP-004 AC-2/3/4"
+  ],
+  "mcpWorkspace": {
+    "workspaceRoot": "/Users/beom/work/git/NaruServe",
+    "rootSource": "per-call-workspace-root"
+  },
+  "findings": [],
+  "evidence": {
+    "manifest": "/tmp/naru-http-core/bilingual-harness-red-evidence.json",
+    "log": "/tmp/naru-http-core/bilingual-harness-red.log",
+    "tests": 40,
+    "failures": 7,
+    "passing": 33,
+    "newTests": 8,
+    "newRed": 7,
+    "existingControls": 32,
+    "errors": 0,
+    "skipped": 0
+  },
+  "assessment": [
+    "Actual Korean/English guide discovery assertions compare every current file to compiler/marker input; missing English coverage therefore fails on real omitted documents, rather than synthetic path flags only. Java per-file compiled counts include every non-skipped fence.",
+    "Java English skip reuse requires original Korean file and matching ordinal plus executable pair. Translated-comment positive is paired with changed type/code, unpaired ordinal and different-file negatives; no new skip or generic English waiver is authorized.",
+    "Kotlin English pairing has positive translated-comment/runtime-ordinal reuse and negative changed literal/code, statement reordering and extra fence cases. Quoted double-space versus single-space literal must fail even though whitespace outside literals may normalize.",
+    "Representative Router/ParamHandler/Deferred/error/extended-method API calls compile using existing Java8 compiler flags. A nonexistent Request API call must produce English-labelled diagnostics, proving actual compilation rather than keyword validation.",
+    "Assertions express observable coverage/compiler outcomes and meaningful negative controls, not a particular parser/tokenizer implementation. Existing compiler/API-level and adapted-marker/named-reason controls remain unchanged.",
+    "Preserved RED evidence shows seven actual omission/normalization failures plus successful new current-API compiler control and32 retained controls, zero errors/skips. Only two test files changed."
+  ],
+  "limitations": "Harness implementation must subsequently pass these tests and compile/execute actual newly authored bilingual examples. This review does not approve unfinished guide prose or final documentation completeness.",
+  "actions": "No edits or builds; inspected pinned test additions, existing harness and evidence. Only tmp review artifact written. First PASS ends loop."
+}

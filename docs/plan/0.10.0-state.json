@@ -4,7 +4,7 @@
   "plan": "docs/plan/0.10.0-parallel-plan.md",
   "dependencies": "Preserve external versions/types/scopes except explicitly approved TinyHttpd core/websocket3.1.0→3.1.1",
   "regex": "Java Pattern",
-  "status": "final-servlet-fixture-review-and-approved-versioned-docs-release-preparation",
+  "status": "bilingual-doc-authoring-with-additional-servlet-noasync-repro",
   "issues": [
     {
       "id": "T00",
@@ -694,7 +694,31 @@
       "java8": "PASS"
     },
     "release": "not bumped, pushed or published",
-    "remaining_root_checks": "Versioned docs and historical release-record assertions pending"
+    "remaining_root_checks": "Versioned docs and historical release-record assertions pending",
+    "integrated_java17": {
+      "tests": 2151,
+      "failures": 4,
+      "errors": 0,
+      "skipped": 0,
+      "scope": "All module checks PASS;4old docs/release assertions pendingOPSREL008/009"
+    },
+    "integrated_java8": {
+      "tests": 1846,
+      "failures": 2,
+      "errors": 0,
+      "skipped": 0,
+      "scope": "Module checks only;2Servlet predispatch socket failures;exactmacOSloopback/wildcardcollisionreproduced;fixturefixpending",
+      "followup": {
+        "fixture_commit": "8c756fb",
+        "servlet_full_tests": 158,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "runtime": "actualJava8",
+        "log": "/tmp/naru-v010-integrated-servlet-loopback-java8.log",
+        "note": "All module cases passed across originalrun+targetedfullServletrecheck;finalsinglewholebuildpendingdocs/release"
+      }
+    }
   },
   "docs_release_lanes": {
     "harness": "/root/api_core_docs",
@@ -703,5 +727,55 @@
       "OPS-REL-008",
       "OPS-REL-009"
     ]
+  },
+  "overall_test_sufficiency": {
+    "round": 1,
+    "verdict": "PASS",
+    "report": "docs/plan/evidence/naru-v010-overall-test-sufficiency-review-round1.json",
+    "tiny_independent_report": "docs/plan/evidence/naru-v010-overall-test-sufficiency-tiny-round1.json",
+    "note": "Functional coverage PASS;notwholebuildorreleasePASS"
+  },
+  "docs_harness": {
+    "red_commit": "947376e",
+    "review": "round1PASS",
+    "status": "integrated98J17/actualJ8PASS",
+    "green_commit": "70c7e50"
+  },
+  "docs_lanes": {
+    "platform": {
+      "agent": "/root/servlet_retention",
+      "worktree": ".claude/worktrees/v010-docs-platform",
+      "files": "defaults,servlet,static,websocket bothlanguages",
+      "status": "prosepausedfornewServletrepro"
+    },
+    "root": "RootREADMEs/apiREADMEindices currentcontractupdated b4c70ad;versionstill0.9pendingrelease",
+    "core": {
+      "agent": "/root/api_core_docs",
+      "worktree": ".claude/worktrees/v010-docs-core",
+      "status": "authoring"
+    },
+    "lifecycle": {
+      "agent": "/root/transport_dependency_audit",
+      "worktree": ".claude/worktrees/v010-docs-lifecycle",
+      "status": "authoring"
+    }
+  },
+  "release_record_tests": {
+    "red": "de8a2e8",
+    "red_round2": "7144852",
+    "green": "0aa47d8",
+    "review": "round2PASS",
+    "tests_each_runtime": 26,
+    "status": "integrated"
+  },
+  "additional_servlet_repro": {
+    "status": "testfirstactualframeworkreproongoing",
+    "description": "unsupportedAsync sendsadapter500withoutnotifyingcoreterminalcancellation;uncommittedDeferredhold mayleak",
+    "requirements": [
+      "FR-SVL-009",
+      "FR-APP-023",
+      "IR-HTTP-009"
+    ],
+    "production_fix": "notstarted"
   }
 }

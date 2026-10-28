@@ -1,0 +1,42 @@
+{
+  "verdict": "PASS",
+  "round": 1,
+  "reviewType": "Independent overall test-sufficiency complementary Tiny transport and adapter interoperability slice",
+  "reviewedRootHead": "06b9ed5",
+  "requirements": [
+    "FR-ENGINE-012 AC-1/2/3",
+    "FR-APP-023 AC-3/6/7/8",
+    "IR-HTTP-009 AC-1/2/3/4/5/6/7",
+    "FR-HTTP-027"
+  ],
+  "findings": [],
+  "evidence": {
+    "tinyJdk17": "/tmp/naru-v010-tiny-request-retention-full-java17-results/counts.json",
+    "tinyActualJava8": "/tmp/naru-v010-tiny-request-retention-full-java8-results/counts.json",
+    "eachFullTiny": {
+      "normalTests": 215,
+      "isolatedTests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "safeCallbacksFocus": "/tmp/naru-v010-tiny-safe-callbacks-java17-results/counts.json",
+    "safeCallbacksFocusTests": 45,
+    "actualFrameworkIntegration": "/tmp/naru-v010-tiny-framework-integration-counts.json",
+    "integratedJdk17Log": "/tmp/naru-v010-integrated-code-j17.log"
+  },
+  "assessment": [
+    "RAW SPI36-vector transport tests are complemented by actual common-framework socket requests:5 malformed captures must reach typed PathDecodeException400/error middleware with exact raw offending value;18 encoded scalar/query-state requests preserve raw views and decode once; wildcard/repeated slash and mounted raw-view cases distinguish list shape, literal separators and original query. Adapter-only200 is never substituted for framework acceptance.",
+    "Security boundary coverage retains request-line/Host/framing rejection with no dispatch/pipeline isolation, allowedHosts, actual static outside sentinel and invalid decoded WS targets alongside valid upgrade. Retained WS protocol/Origin/auth/size/timeout/shutdown suites and direct strict legacy paths stay active.",
+    "Actual deferred input retention tests preserve original POST bytes after completed200ack and first decode, with same-codec positive. Direct two-hold/pipeline, concurrent old releases/new hold, IO-owner retirement, terminal abort/forced stop, no implicit finish and independent running-SSE slot controls establish physical request lifetime. Core/Servlet counterparts cover the same contract through actual Jetty, including immutable metadata/request reuse.",
+    "Abort tests distinguish actualRST/controlledterminal commit-write-flush-finish IO from recoverable400/408; existing413 body/multipart limits still render their expected response. Early/late/concurrent/fail-soft listener controls assert once notification and outside-lock behavior, while successful completion and pre-admission503 remain negative controls.",
+    "SSE tests cover late wakeup, one-slot bounds, accepted setup failures, pending attachment owner retention across stop, RuntimeException/Error cancellation barriers and stop continuing to another request. Swallowed IO and explicit finish require originating failure identity and terminal notification at ownership unwind.",
+    "BothAdaptersCases/MultipartCrossAdapter and Servlet shared cases supply actual in-memory/Tiny/Servlet interoperability checks while validating per-adapter error status/security/framing before excluding only adapter-specific Java stack frames. Previously closed fixture migration reviews are not repeated.",
+    "Latest preserved Tiny full suites report215normal+3isolated GREEN on JDK17 and actualJava8, zero errors/skips; shared-callback focus45 GREEN. Current root integrated run executes Tiny test/isolated/class-reference tasks successfully, with only four root documentation failures reported at the end."
+  ],
+  "limitations": [
+    "PASS applies only to this independent Tiny/interoperability slice. Remaining overall reviewers and final documentation/version/release verification are separate required work.",
+    "Integrated root JDK17 run is not whole GREEN:305root tests include4documentation failures. No completed release or publication claim."
+  ],
+  "actions": "Read-only current root tests/contracts/preserved evidence inspection; no edits/builds/network. Only tmp review artifact written. First PASS ends this slice review loop."
+}

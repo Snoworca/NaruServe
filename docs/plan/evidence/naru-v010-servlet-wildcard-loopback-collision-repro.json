@@ -1,0 +1,12 @@
+{
+  "platform": "macOS",
+  "reservedLoopbackPort": 60356,
+  "wildcardAndLoopbackSamePortBind": "ALLOWED",
+  "loopbackSpecificReceived": "POST /upload HTTP/1.1\r\nHost: localhost\r\n\r\n",
+  "firstByteTag": 80,
+  "wildcardReceivedConnection": false,
+  "secondSameLoopbackBindRejected": true,
+  "rejection": "[Errno 48] Address already in use",
+  "fixedLoopbackPort0": 60359,
+  "fixedAllocatorExcludedOccupiedLoopbackPort": true
+}

@@ -1,0 +1,33 @@
+{
+  "verdict": "PASS",
+  "round": 1,
+  "reviewedCommit": "5031ea2d77863517662dbb61d9f93503fc62f930",
+  "scope": "ContainerRule explicit IPv4 loopback ephemeral binding only",
+  "requirements": [
+    "FR-SVL-009 AC-6",
+    "OPS-REL-009 AC-2"
+  ],
+  "findings": [],
+  "evidence": {
+    "manifest": "/tmp/naru-v010-servlet-loopback-fixture-evidence.json",
+    "deterministicRepro": "/tmp/naru-v010-servlet-wildcard-loopback-collision-repro.json",
+    "independentlySummedEachJdk17ActualJava8": {
+      "tests": 158,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "originalTwoFailuresActualJava8": {
+      "tests": 2,
+      "failures": 0
+    }
+  },
+  "assessment": [
+    "Pinned change modifies one fixture constructor from wildcardport0 to127.0.0.1port0. Existing real clients already connect to127.0.0.1, so intended request paths/parser/Host/application behavior are preserved.",
+    "Preserved macOS reproduction demonstrates wildcard and specific loopback listeners may share a reused port and actual POST bytes route to the specific listener; exact-loopback rebinding rejects collision and port0 allocates a different port. This directly supports matching server/client bind addresses.",
+    "No retry, deadline, assertion, source, dependency, security or resource cleanup change accompanies the bind fix. Existing158 tests exercise the same real container HTTP behavior and cleanup.",
+    "Independent XML aggregation confirms158/158 on JDK17 and actualJava8 with zero errors/skips. Original two focused failures also pass."
+  ],
+  "limitations": "The multipart failure has direct wrong-listener evidence; the second pre-dispatch timeout is consistent with collision but its endpoint identity is not proven. Isolated reruns do not establish a fresh integrated root fullGREEN.",
+  "actions": "Read-only pinned diff/evidence/client inspection; no edits/builds/network. Only tmp report written. Stop at first PASS."
+}
