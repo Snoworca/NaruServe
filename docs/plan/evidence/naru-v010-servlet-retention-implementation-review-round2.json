@@ -1,0 +1,39 @@
+{
+  "verdict": "PASS",
+  "round": 2,
+  "reviewType": "Independent Servlet implementation source rereview",
+  "reviewedCommit": "bbbdf3989173329d8983ca066f93503b09446df2",
+  "scope": "OriginalHIGH SVL-SRC-R1-1 fix over previously inspected d920455 retention/metadata/IO source; no repeat of closed test-sufficiency loops",
+  "requirements": [
+    "FR-APP-023 AC-8",
+    "FR-SVL-009 AC-2/4",
+    "IR-HTTP-009",
+    "FR-HTTP-019"
+  ],
+  "findings": [],
+  "resolvedFindings": [
+    {
+      "id": "SVL-SRC-R1-1",
+      "resolution": "afterHandler handles inability to defer when !finished OR live retentions remain. Finished-but-retained response therefore reaches unsupportedAsync; because response has already started, existing abort cancels held work and cleanup instead of writing another response. Normal completed/no-hold racing release remains protected by both the new guard and abort own finished/no-hold check."
+    }
+  ],
+  "assessment": [
+    "Minimal source diff changes only cannot-defer guard/comment; no new blocking, callbacks-under-lock or buffer/resource ownership path introduced. Existing outside-lock abort, retention reentrant release deferral and once-completion/retirement logic handle cancellation.",
+    "Actual original noAsync retained-ack RED is now covered within54 targeted tests on JDK17 and actualJava8, with preserved synchronous unretained/noAsync positive, original200ack/no second response, pre-shutdown retirement, pending producer identity, no eager/recycled input open and harmless late actions.",
+    "Separate test correction narrows a formerly wrong broad catch to documented BodyAlreadyConsumedException and retains zero input-open assertions; it does not redefine production failure or weaken the tested no-reopen guarantee.",
+    "API21/class-reference checks pass. Earlier SSE first-IO identity, SafeCallbacks cancellation barriers, metadata snapshots and independent running-drain slot ownership source conclusions remain unchanged."
+  ],
+  "evidence": {
+    "manifest": "/tmp/naru-v010-servlet-noasync-main-evidence.json",
+    "redTestCommit": "d7aa1b1",
+    "contractTestCorrection": "8ba22a3",
+    "eachJdk17AndActualJava8": {
+      "tests": 54,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "limitations": "Full suites remain separately non-GREEN due previously identified21 historical fixtures and one Java8 idle observation race. This source PASS does not approve those fixture migrations or whole-project completion.",
+  "actions": "Read-only pinned diff/evidence review; no edits, builds or network. Only tmp review artifact written."
+}

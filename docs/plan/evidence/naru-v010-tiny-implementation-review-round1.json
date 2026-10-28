@@ -1,0 +1,63 @@
+{
+  "review_type": "Independent Tiny adapter implementation audit; not a repeated test-sufficiency review",
+  "round": 1,
+  "decision": "CHANGES_REQUIRED",
+  "reviewed_commit": "d21361447e43b70b61565f20d1b34947a1b79ff3",
+  "reviewer": "release_dependency_audit",
+  "independent": true,
+  "repo_edits": false,
+  "builds_run": false,
+  "scope": [
+    "TinyHttpdAdapter",
+    "TinyHttpdExchange",
+    "TinyHttpdEventStream",
+    "TinyHttpdBodyStream"
+  ],
+  "findings": [
+    {
+      "id": "TINY-IMPL-01",
+      "severity": "HIGH",
+      "confidence": 0.96,
+      "title": "Throwing accepted-drain cancellation can unwind the worker while late setup still owns the response/slot",
+      "file": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdExchange.java",
+      "line": 365,
+      "related_locations": [
+        "TinyHttpdExchange.java:96-100 abort() in the InterruptedException path can throw before continuing the setup wait",
+        "TinyHttpdExchange.java:253-257 cancellation callback is not isolated",
+        "TinyHttpdExchange.java:68-80 unwinding releases slot and retires exchange without waiting for settingUpStream",
+        "TinyHttpdAdapter.java:195 a throwing cancellation can also terminate the remaining-exchange abort loop"
+      ],
+      "violated_requirements": [
+        "FR-APP-023 AC-3",
+        "FR-APP-023 AC-6",
+        "IR-HTTP-009 AC-3"
+      ],
+      "mechanism": "DrainTask.cancelBeforeStart atomically claims the cancellation then invokes user StreamDrain.abort without a failure boundary. During forced stop, the engine interrupts the existing bounded worker waiting on settingUpStream. awaitWork catches interruption and calls abort. If drain.abort throws, the worker bypasses the intended continue/wait-for-setup behavior and the run finally releases the SSE slot and retires the exchange while external attach is still running. That permits response buffers/request context to be recycled while accepted user setup still owns them. The same uncaught callback can interrupt the adapter stop abort loop.",
+      "shortest_deterministic_candidate_red": [
+        "Extend existing TinyDeferredSocketTest.forcedStopDuringLateAttachKeepsSlotUntilSetupOwnerExits with a StreamDrain whose attach signals entry and waits on an owned latch, while abort increments its once counter then throws RuntimeException (also retain an Error variant).",
+        "Let the initial handler return, start eventStream on an owned external setup thread, wait until attach entered and slots.open()==1.",
+        "Force stop with the existing bounded grace, causing the engine worker interrupt; keep attach blocked. Assert stop remains bounded, onAbort remains once/unlocked and slots.open()==1 until attach exits. Current code can release the slot/retire the worker early because the cancellation callback escapes.",
+        "Release the attach latch, join owned work, assert drain never started, cancellation called once, slot finally0 and all remaining exchanges still receive their stop notifications. Preserve the existing nonthrowing cancellation control."
+      ],
+      "evidence": [
+        "Pinned source control flow inspected; no Java build/repro run by reviewer.",
+        "Existing nonthrowing attach-ownership test demonstrates the intended slot-until-setup-exit contract.",
+        "Primary engine source WorkerPool.interruptAll and HttpServer.stop call establish the forced-stop interruption path."
+      ],
+      "minimal_fix_direction": "Contain failures from accepted-drain cancellation while retaining the claimed-once flag; do not let them escape abort/awaitWork/adapter-stop ownership barriers or skip the setup-owner wait. Keep callbacks outside monitors."
+    }
+  ],
+  "checks_without_additional_findings": [
+    "Abort listener utility snapshots and invokes outside the short state lock; ordinary write/flush/commit/finish failure notifications occur after releasing response-buffer monitor.",
+    "SSE admission claims slot/start/drain cancellation before attach; setup-finally and worker-finally provide one release path for normal nonthrowing cancellation.",
+    "Normal finish rejects abort notification and remembered swallowed SSE IO prevents false successful completion.",
+    "Writable protocol/limit/read-timeout errors remain mapped400/413/408; terminal read IO triggers abort.",
+    "Abort closes socket before waiting for buffer-owner exit; late stream publication wakes the existing bounded worker.",
+    "Core SSE drain retains client-vs-error/first-cause classification before adapter notification."
+  ],
+  "explicit_exclusions": [
+    "Known unread-body-after-early-response transport retention defect96896aa; FR-APP-023 AC-8 integration is already assigned.",
+    "Twelve known legacy checkpoint assertion mismatches are not treated as production bugs.",
+    "No previous PASS fixture/test-sufficiency loop is reopened."
+  ]
+}

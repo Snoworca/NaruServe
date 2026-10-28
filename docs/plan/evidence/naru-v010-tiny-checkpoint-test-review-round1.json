@@ -1,0 +1,38 @@
+{
+  "verdict": "PASS",
+  "round": 1,
+  "reviewedCommit": "5569377",
+  "scope": "Eight-file Tiny existing checkpoint test migration only; excludes separate unread-input retention RED and unrelated later work",
+  "requirements": [
+    "CON-APP-010 AC-1/2/4/5",
+    "IR-HTTP-009 AC-3/5",
+    "FR-HTTP-027/028",
+    "FR-ENGINE-012",
+    "FR-APP-023 AC-1/6"
+  ],
+  "findings": [],
+  "evidence": {
+    "selectors": "/tmp/naru-v010-tiny-checkpoint-scope-command.txt",
+    "existingCounts": "/tmp/naru-v010-tiny-checkpoint-existing-scope-results/counts.json",
+    "existingScope": {
+      "normalTests": 203,
+      "isolatedTests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "targetCounts": "/tmp/naru-v010-tiny-checkpoint-target-results/counts.json",
+    "targetTests": 45
+  },
+  "assessment": [
+    "Original16 unsafe-path vectors are retained exactly in a direct strict legacy Router test. Common HTTP separately requires malformed-capture400, encoded slash/NUL/dot data acceptance, meaningful segment-count404, and raw path views with decoded capture values. Literal high bytes remain real-socket400 while in-memory raw text and percent-encoded UTF8 controls distinguish parser and common matching contracts.",
+    "Cross-adapter HTML comparison validates actual per-adapter content type,CSP/nosniff,UTF8 byte Content-Length and scaffold before comparing exact first error class/message line. Only adapter-specific stack frames are excluded; response status and meaningful message remain observed.",
+    "Removed synchronized-method modifier assertions are replaced with real two-thread single-commit winner/loser and a blocked writer behind the current IO owner. Existing feature abort/single-start, attach lock-free and drain/abort wakeup guards remain active.",
+    "Historical late-SSE rejection is replaced with actual socket drain/body/finish after observed initial handler return. Existing capacity, slot bounds, rejection and cancellation ownership controls are retained.",
+    "Multipart limits, epilogue exact cause, temp-file cleanup, recoverable truncated-body cause, transport Host/framing/request rejection and strict WS tests retain status/security checks; no broad parser or error-body waiver appears in the pinned diff.",
+    "Exact selectors retain ten prior TinyDeferred methods while separately unresolved unread-input retention test is omitted only from this focused command; no test is disabled in the repository. Scope is honestly reported as focused existing checkpoints rather than full adapter GREEN.",
+    "Pinned commit touches only eight existing test files; no main/API/dependency changes. Preserved evidence reports203 normal+3 isolated and45 targeted tests passing without errors/skips."
+  ],
+  "limitations": "The968 unread-input reproduction remains RED and requires separate core/adapter retention integration. This PASS cannot establish whole-adapter completion or approve later unrelated throwing-drain changes.",
+  "actions": "No repository edits or builds. Reviewed pinned5569377 diff and scoped evidence, wrote only tmp report. First PASS ends loop."
+}

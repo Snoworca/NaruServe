@@ -1,0 +1,31 @@
+{
+  "verdict": "PASS",
+  "round": 1,
+  "reviewedHead": "80dfe6c29001fb9027ca931070145bb2a3442917",
+  "scope": "Standalone RequestRetentions component and additive legacy HttpExchange retainRequest default only; core/adapter integration excluded",
+  "requirement": "FR-APP-023 AC-8",
+  "mcpWorkspace": {
+    "workspaceRoot": "/Users/beom/work/git/NaruServe",
+    "rootSource": "per-call-workspace-root"
+  },
+  "findings": [],
+  "evidence": {
+    "log": "/tmp/naru-request-retention-red.log",
+    "counts": "/tmp/naru-request-retention-red-counts.json",
+    "tests": 31,
+    "failures": 15,
+    "positiveControls": 16,
+    "errors": 0,
+    "skipped": 0
+  },
+  "assessment": [
+    "Frozen helper API and constructor/null checks distinguish the requested reusable component from an ad-hoc transport implementation. Zero initial count and no initial callback, independent counts, two-hold last-release transition and repeated-release idempotence provide direct positive/negative controls.",
+    "New cycles and stale release tests prevent an old release from consuming current ownership. Concurrent duplicate releases exercise once-state races; concurrent retain/release under a sentinel checks both no premature zero callback and preserved final ownership, followed by exact last-transition count.",
+    "Callbacks observe completed zero state, can reenter retain/release and can join a second subscriber thread outside internal locks. A blocked old callback permits a new retention that remains held after old callback exit, guarding against post-callback count reset.",
+    "RuntimeException and Error callbacks are explicitly fail-soft without poisoning later cycles. Assertions for callback observations/failures are made after callbacks return, avoiding swallowed assertion false positives. Threads/futures have bounded waits and executor shutdown joins.",
+    "Legacy Wave3Exchange remains unchanged and throws AssertionError on transport methods. Default SPI reflection requires inherited default Runnable retainRequest with no arguments/checked exceptions; repeated release actions must be harmless while old abstract SPI inventories remain exact.",
+    "Preserved RED evidence shows13 missing-helper failures plus2 missing-SPI/inventory failures and16 baseline controls passing, with zero errors/skips. Only two test files changed."
+  ],
+  "limitations": "Successful helper/default tests cannot establish actual POST response-before-first-body-read safety. Core retain/release wiring, adapter input/context retention, abort and shutdown integration require separate actual integration tests under AC-8.",
+  "actions": "No repository edits or builds; only tmp report written. Stop at first PASS."
+}

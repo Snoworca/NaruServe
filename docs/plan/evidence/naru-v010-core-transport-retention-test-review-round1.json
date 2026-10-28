@@ -1,0 +1,34 @@
+{
+  "verdict": "CHANGES_REQUIRED",
+  "round": 1,
+  "reviewedHead": "1544311a6a3ced63b6bdd1cd85567f2cd6e7cf1e",
+  "scope": "Core transport-retention wiring test sufficiency only; standalone helper and paired actual adapter repro reviews remain closed",
+  "requirements": [
+    "FR-APP-023 AC-3/7/8"
+  ],
+  "findings": [
+    {
+      "id": "CORE-RET-R1-1",
+      "severity": "MEDIUM",
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/HttpTransportRetentionContractTest.java",
+      "line": 126,
+      "title": "Shutdown termination does not prove a throwing release left no lifecycle execution registered",
+      "requirement": "FR-APP-023 AC-3/8",
+      "evidence": "releaseObserverOrCustomReleaseFailureCannotLeakLifecycleOwnership asserts request cleanup/release and then calls app.shutdown(1,SECONDS), asserting TERMINATED. AppLifecycle.awaitHttp stops waiting when its deadline expires; shutdown then cancelHttp forcibly cancels outstanding executions. A broken cleanup path that executes the transport release but skips lifecycle.releaseHttp when that custom release throws can therefore satisfy all current assertions after shutdown consumes its grace. This specifically leaves the advertised no-lifecycle-leak guarantee untested.",
+      "requestedChange": "Before shutdown, deterministically assert that no core request executions remain registered after successful response/release in both callback-failure and custom-release-failure branches. Use a focused lifecycle observation under its existing synchronization (a test-only reflection inspection is acceptable), and include a live pending request positive control proving that the observation detects actual ownership. Retain current exact release/input/observer/log counters and final shutdown assertions. Avoid relying only on elapsed shutdown time or TERMINATED after a forced deadline."
+    }
+  ],
+  "positiveAssessment": [
+    "The fake transport models the actual recycled-input failure and the delayed first body read reaches HttpException400 before codec without being masked by an earlier retention assertion.",
+    "One hold must precede abort subscription/user callbacks and cover active/queued callbacks, multiple Deferred leases and response-before-first-body read.",
+    "Upload/temp/owned input stream assertions execute at release observation, with their outcomes checked outside fail-soft callbacks; physical release must follow input close.",
+    "Already-aborted subscription, closed lifecycle, completed-response shutdown and20 response/abort races enforce one acquisition/release and no repeated cleanup.",
+    "Preserved RED evidence shows11 executed tests and11 meaningful missing-wiring failures. Existing assertions remain unchanged; helper/default compatibility is independently covered."
+  ],
+  "evidence": {
+    "log": "/tmp/naru-http-core/red-core-transport-retention.log",
+    "tests": 11,
+    "failures": 11
+  },
+  "actions": "No repository edits or builds. Only tmp review artifact written."
+}

@@ -1,0 +1,42 @@
+{
+  "verdict": "PASS",
+  "round": 1,
+  "reviewType": "Independent test-only Servlet fixture migration sufficiency review",
+  "reviewedCommit": "286379009cec802e66ebcb5116018d43502c5aa7",
+  "reviewedProductionParent": "bbbdf3989173329d8983ca066f93503b09446df2",
+  "scope": "Exactly10 changed fixture files; no production implementation rereview or closed retention/SSE sufficiency loops repeated",
+  "requirements": [
+    "CON-APP-010 AC-5",
+    "FR-APP-023 AC-8",
+    "FR-APP-024",
+    "FR-HTTP-027/028/011",
+    "FR-SVL-009",
+    "IR-HTTP-009 AC-7"
+  ],
+  "findings": [],
+  "evidence": {
+    "manifest": "/tmp/naru-v010-servlet-fixture-migration-evidence.json",
+    "jdk17Xml": "/tmp/naru-v010-servlet-fixture-full-check-j17-results",
+    "actualJava8Xml": "/tmp/naru-v010-servlet-fixture-full-check-java8-results",
+    "independentlySummedEach": {
+      "suites": 34,
+      "tests": 158,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "api21": "PASS",
+    "classReferences": "PASS"
+  },
+  "assessment": [
+    "Pinned diff is test-only across10 fixture files. Existing54 retention/abort/SSE guards remain present; the former idle helper now waits for both inFlight0 and pool0 within the unchanged5s budget and asserts both afterward. This removes a real observation race without releasing running-drain ownership early or masking a persistent leak.",
+    "Response-only fake request now permits only required immutable head getters; input, parameters, parts and decoded servlet access still fail. This accommodates the source snapshot contract without broadening the fake to permissive defaults.",
+    "Shared HTML verifier checks exact status/first-line information, complete scaffold,CSP/nosniff,actualbyte Content-Length and CR absence; CORS grant/credentials/Origin-only Vary and privacy guards remain intact. Multipart/settings413 limits retain exact type/message and temp cleanup; SSE503 retains refused/unstarted evidence.",
+    "Crossadapter normalization is restricted to /boom Java stack: each adapter independently verifies error class/message/common/user frames, own adapter frame, security and byte framing before comparing a stable error projection. Other case bodies and headers retain exact comparison.",
+    "Raw-target migration keeps every historical target with an explicit pinned container/common status matrix, no-dispatch assertion for container400, exact successful raw targets, common404 helper, encoded-slash capture, invalidUTF8 decoded-capture error and query control. Direct strict Router test retains historical rejection vectors plus successful lookup and method-mismatch controls.",
+    "OPTIONS* retains explicit adapter standardJSON profile and exact content type/framing instead of being forced into commonHTML. No body limit, parser boundary, WS security, resource lifetime or failure-cause assertion was silently removed.",
+    "Independent preserved XML aggregation confirms158 tests across34 suites pass on both JDK17 and actualJava8 without exclusions/errors/skips."
+  ],
+  "limitations": "This fixture review does not establish whole-project completion or supersede separate technical documentation/version consistency work. Source implementation was independently approved in round2.",
+  "actions": "Read-only pinned diff/evidence inspection, no edits/builds/network; only tmp report written. First PASS closes this fixture loop."
+}

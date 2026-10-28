@@ -1,0 +1,30 @@
+{
+  "verdict": "PASS",
+  "round": 1,
+  "reviewedCommit": "d7aa1b1",
+  "scope": "Focused test for source finding SVL-SRC-R1-1: finished retained response with asyncUnsupported; prior retention/SSE test reviews remain closed",
+  "requirements": [
+    "FR-APP-023 AC-3/5/7/8",
+    "FR-SVL-009 AC-2",
+    "IR-HTTP-009"
+  ],
+  "findings": [],
+  "sourceFindingCovered": "SVL-SRC-R1-1",
+  "evidence": {
+    "log": "/tmp/naru-v010-servlet-noasync-retained-red.log",
+    "tests": 2,
+    "failures": 1,
+    "passingControls": 1,
+    "redReason": "unsupported async must cancel retained work before shutdown: expected1 abort notification, actual0"
+  },
+  "assessment": [
+    "Actual Jetty servlet has asyncSupported=false. Common async handler returns unresolved Deferred after sending200ack without reading input. Callback instrumentation captures actual exchange and onAbort while delegating to original gated core handler.",
+    "Test consumes exact fixed-length200ack, waits Servlet/filter return and checks EOF/no second response before asserting terminal cancellation. This establishes the source issue without a forced shutdown or producer settlement.",
+    "Pre-shutdown inFlight0 and one completion log must hold while producer Deferred is still pending, preventing a forced timeout or eager settlement from masking a leaked lease.",
+    "Wrapped getInputStream count must stay0 before/after cancelled exchange input access, late resolution, retain/release and abort; no eager prefetch or recycled-input reopening is allowed.",
+    "Existing synchronous unretained completion/noAsync positive passes and protects normal successful responses from an overly broad abort fallback.",
+    "Only one test is added to existing retention test file; source unchanged. Actual RED reaches the intended notification assertion; no fixture/setup failure or disabled test."
+  ],
+  "limitations": "Source fix must subsequently pass these tests and full relevant retention/SSE/regression gates; test PASS does not approve a production change yet.",
+  "actions": "Read-only inspection, no edits or builds. Wrote only tmp report; first PASS ends focused loop."
+}

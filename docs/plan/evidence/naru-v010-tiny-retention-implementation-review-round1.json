@@ -1,0 +1,55 @@
+{
+  "review_type": "Independent Tiny request-retention implementation source review",
+  "round": 1,
+  "decision": "PASS",
+  "reviewed_commit": "6c53951b4c2c0eb3cc0828b7114c6e1a430f17a6",
+  "reviewer": "release_dependency_audit",
+  "independent": true,
+  "repo_edits": false,
+  "builds_run": false,
+  "network_activity": false,
+  "requirements": [
+    "FR-APP-023 AC-3 AC-6 AC-8",
+    "IR-HTTP-009 AC-2 AC-3"
+  ],
+  "findings": [],
+  "source_reasoning": [
+    "retainRequest acquisition and requestRetired decision are serialized under the same private state monitor; an accepted hold wins before retirement or receives terminal no-op afterward.",
+    "The worker waits for nonaborted finished-request holds. Last-release notification only acquires short state monitor, with no transport IO/response monitor, and wakeup condition is rechecked under state.",
+    "After acquiring the IO monitor the worker rechecks setup/retention under state before requestRetired=true. A late hold acquired while worker waits for IO cannot be lost.",
+    "RequestRetentions releases its helper monitor before invoking its notify observer; state-to-helper acquisition/count queries therefore have no helper-to-state lock inversion.",
+    "Abort atomically refuses repeated/retired calls, permits forced termination of finished-but-retained requests, marks aborted before unlocking and notifies listeners/drain outside both monitors. Worker ignores revoked holds only for aborted requests. Late retains are no-op and late releases only notify.",
+    "Request hold release neither finishes a pending response nor overrides independent settingUpStream/running-drain ownership. Existing setup wait and once drain cancellation remain intact; physical worker return still follows IO-owner exit.",
+    "Ordinary finish does not invoke abort listeners. Full successful cleanup releases the hold then permits normal retirement; no mutation to first IO failure/cause classification or input bytes."
+  ],
+  "evidence_inspected": {
+    "tests": [
+      "TinyRequestRetentionTest seven direct cases: unread body/pipeline, concurrent duplicate old releases and late hold, nonblocking release/IO-owner retirement, retained-finish abort, bounded stop, pre-finish release, active SSE drain",
+      "TinyDeferredSocketTest actual pending Deferred first body read after early response",
+      "Retained throwing cancellation/late attach and SSE cause controls"
+    ],
+    "logs": [
+      "/tmp/naru-v010-tiny-request-retention-full-java17.log",
+      "/tmp/naru-v010-tiny-request-retention-full-java8.log"
+    ],
+    "count_files": [
+      "/tmp/naru-v010-tiny-request-retention-full-java17-results/counts.json",
+      "/tmp/naru-v010-tiny-request-retention-full-java8-results/counts.json"
+    ],
+    "each_runtime": {
+      "normal": 215,
+      "isolated": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "api21_animalsnifferMain": "PASS in supplied logs",
+    "checkClassReferences": "PASS in supplied logs",
+    "note": "Existing local source/test/evidence only, no reviewer test execution. Full supplied adapter suites are unexcluded, including former968 lazy-body failure."
+  },
+  "scope_limits": [
+    "New Tiny request-retention integration only. Prior throwing-cancellation source review remains closed at PASS.",
+    "No repeat of independent test-sufficiency PASS loop.",
+    "Servlet integration, whole-project final review, docs and release remain outside this bounded PASS."
+  ]
+}

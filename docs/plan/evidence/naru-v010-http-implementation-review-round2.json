@@ -1,0 +1,73 @@
+{
+  "review_type": "Independent HTTP source re-review of original findings and fix regression risk only",
+  "round": 2,
+  "decision": "CHANGES_REQUIRED",
+  "reviewed_commit": "4be64a8e1983c6d9e57b113e7ce3c7a41a1cf6e2",
+  "original_report": "/tmp/naru-v010-http-implementation-review-round1.json",
+  "reviewer": "release_dependency_audit",
+  "independent": true,
+  "repo_edits": false,
+  "builds_run": false,
+  "network_activity": false,
+  "original_findings": [
+    {
+      "id": "HTTP-IMPL-01",
+      "status": "DIRECT_SCENARIO_FIXED_BUT_RELATED_OWNERSHIP_RACE_REMAINS",
+      "evidence": "submit now checks volatile lifecycle.httpClosed and re-registers cleaned work; supplied shutdown and RUNNING post-response controls cover direct former defect. However old cleanup can remove a concurrently re-admitted callback from the same identity set; see HTTP-IMPL-01-R2."
+    },
+    {
+      "id": "HTTP-IMPL-02",
+      "status": "RESOLVED",
+      "evidence": "Globaldepth64 removed. RouterCursor and RouteCursor each maintain ++sync>100 and reset after their own dispatched callback, with queued boundaries. Exact11 recorded reference traces cover64/65/70/99/100/101 middleware,65/99/100/101 Route callbacks and mixed70+70; whole trace arrays are compared. Existing1500 stack-safety/cross-thread regressions remain. Supplied Java17/actualJava8 audit suite168PASS and API21 log inspected."
+    }
+  ],
+  "findings": [
+    {
+      "id": "HTTP-IMPL-01-R2",
+      "severity": "HIGH",
+      "confidence": 0.99,
+      "title": "Old input cleanup can unregister a newly active post-response callback",
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/HttpExecution.java",
+      "line": 56,
+      "related_locations": [
+        "HttpExecution.java:47-49 publishes cleaned=true and releases state before resource cleanup",
+        "HttpExecution.java:53-56 closes input outside state then unconditionally releaseHttp(this)",
+        "HttpExecution.java:64-67 saved continuation re-registers the same execution and becomes owner",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/AppLifecycle.java:35-43 tracking is an identity set; duplicate registration is not a new ownership token"
+      ],
+      "violated_requirements": [
+        "FR-APP-023 AC-3",
+        "FR-APP-023 AC-5",
+        "CON-APP-010 AC-3"
+      ],
+      "precise_interleaving": [
+        "The original request sends its response and saves Next. Once its callback returns, cleanupIfIdle sees terminal/owner-null, sets cleaned=true, then starts closeBody outside state.",
+        "Pause the original input close with a latch before cleanup finally reaches releaseHttp. The execution is still present in AppLifecycle.executions.",
+        "Another thread invokes saved Next while RUNNING. submit sees cleaned=true, registerHttp(this) adds an already-present identity and returns true, then the downstream callback becomes active and waits on its own latch.",
+        "Resume the original close. Its unconditional finally releaseHttp(this) removes the identity now also representing the active downstream callback.",
+        "Shutdown can observe an empty execution set, finish waiting and close owned app resources while the post-response callback remains active. The new callback later calling cleanup cannot undo this early disposal."
+      ],
+      "candidate_unit_test_assertions": [
+        "Use a real common execution and an owned InputStream whose first close signals closeEntered and waits on closeAllowed; use the existing SettingsCapturingAdapter/LifecycleExchange style, no network.",
+        "First handler stores Next and sends ok. A downstream callback records entry, obtains an owned service and waits on callbackAllowed. Run initial dispatch on an owned thread.",
+        "After closeEntered, start savedNext.run on a second owned thread; wait for callbackEntered, then allow the original input close and join initial dispatch.",
+        "Start shutdown with a nonzero grace on a third owned thread. While callbackAllowed is closed, a bounded Future.get must time out, service.close/onStop must remain uncalled and callback must still own app lifetime. Current source can finish shutdown/close service early.",
+        "Allow callback exit and join both continuation/shutdown before the deadline. Assert service.close once and after callback exit, input.close once, response/access record once, and no closed input reopening.",
+        "Retain the existing direct after-TERMINATED negative and RUNNING post-response positive controls."
+      ],
+      "runtime_confirmation": "Source-only deterministic candidate; no new Java repro/build or repository mutation performed. Main owner must capture actual RED before fixing.",
+      "minimal_fix_direction": "Make callback admission and lifecycle deregistration coherent across cleanup completion: an old cleanup must not unlink a newer active work generation. Preserve input/global cleanup ownership until complete, keep resource closing outside user/state locks, and do not merely move unregister before closeBody or suppress all RUNNING post-response continuation."
+    }
+  ],
+  "supplied_evidence_inspected": {
+    "jdk17": "/tmp/naru-http-core/green-http-source-audit.log BUILD SUCCESSFUL",
+    "actual_java8": "/tmp/naru-http-core/java8-http-source-audit.log OK (168 tests)",
+    "tests": "HttpCompletedContinuationShutdownTest, HttpContinuationDepthContractTest and retained1500/cross-thread/WS/CORS contracts",
+    "note": "Passing supplied cases do not include the blocked-initial-close/concurrent-saved-callback interleaving."
+  },
+  "scope_limits": [
+    "Original two implementation findings and changes introduced by their fix only.",
+    "No transport-retention integration review at later467c65a; pinned4be contains no such wiring.",
+    "Previous fixture/test-sufficiency PASS loops remain closed."
+  ]
+}

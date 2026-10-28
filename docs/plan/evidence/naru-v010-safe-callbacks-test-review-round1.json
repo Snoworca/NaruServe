@@ -1,0 +1,26 @@
+{
+  "verdict": "PASS",
+  "round": 1,
+  "reviewedCommit": "0457ce0",
+  "scope": "Minimal shared SafeCallbacks fail-soft Runnable boundary tests only; adapter/core integrations remain separate",
+  "requirement": "IR-HTTP-009 AC-3",
+  "findings": [],
+  "evidence": {
+    "log": "/tmp/naru-safe-callbacks-red.log",
+    "counts": "/tmp/naru-safe-callbacks-red-counts.json",
+    "tests": 25,
+    "failures": 5,
+    "positiveControls": 20,
+    "errors": 0,
+    "skipped": 0
+  },
+  "assessment": [
+    "New tests require public final utility/private constructor and public static void run(Runnable), exact once synchronous caller-thread invocation and strict before/callback/after order.",
+    "Null validation must escape as NullPointerException, separately from isolation of user RuntimeException and Error. A subsequent successful callback proves prior failures do not poison later calls.",
+    "Nested invocation and joined second-thread invocation detect a shared callback lock; bounded Future and executor termination expose deadlocks. Utility class monitor ownership is explicitly observed.",
+    "Callbacks capture counters/order/thread/lock/failure values; meaningful assertions execute outside the isolated callback, preventing swallowed assertion false positives.",
+    "Preserved evidence shows all five new tests fail at missing class while seven AbortListeners and13 RequestRetentions tests remain GREEN, zero errors/skips. Only one new test file changed; no source/dependency changes."
+  ],
+  "limitations": "Production review must verify reuse by existing registries and adapter drain-abort paths, no stored callback/scheduler or new dependency. These standalone tests do not replace actual adapter fail-soft cleanup/ownership tests.",
+  "actions": "No repository edits or builds; only tmp review artifact written. Stop at first PASS."
+}

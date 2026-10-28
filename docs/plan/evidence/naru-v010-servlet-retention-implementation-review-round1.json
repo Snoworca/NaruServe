@@ -1,0 +1,54 @@
+{
+  "verdict": "CHANGES_REQUIRED",
+  "round": 1,
+  "reviewType": "Independent implementation source review; earlier test-sufficiency PASS units remain closed",
+  "reviewedCommit": "d9204552967adeb00283f26b4ccfd702bede31e5",
+  "scope": [
+    "ServletExchange",
+    "ServletEventStream",
+    "retention/metadata/terminal IO ownership"
+  ],
+  "requirements": [
+    "FR-APP-023 AC-8",
+    "FR-SVL-009",
+    "IR-HTTP-009",
+    "FR-HTTP-027",
+    "FR-HTTP-011"
+  ],
+  "findings": [
+    {
+      "id": "SVL-SRC-R1-1",
+      "severity": "HIGH",
+      "confidence": 0.99,
+      "file": "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/ServletExchange.java",
+      "line": 457,
+      "title": "A completed response with retained work silently ignores inability to start async and returns a recyclable request",
+      "requirements": [
+        "FR-APP-023 AC-8",
+        "FR-SVL-009 AC-2/4",
+        "IR-HTTP-009 AC-2/4"
+      ],
+      "mechanism": "afterHandler now correctly requests async when finished && retentions.isRetained(), but its IllegalStateException catch still handles failure only when !finished. With asyncSupported=false (or startAsync failing before context creation), a handler that retains input and sends its response reaches ensureAsync, throws, then the catch silently returns because finished is true. No abort notification revokes the core Deferred lease; no AsyncContext protects request input from recycling; retireIfDone also keeps the exchange registered because retention remains. The pending producer can therefore see recycled input, and the registry stays retained until later release/forced stop. This is the exact response-before-body retention case under unsupported async configuration.",
+      "candidateRed": [
+        "Use the actual Servlet fixture with holder.setAsyncSupported(false). Register an async handler returning pending Deferred after s.send(\"ack\"), without reading body; capture its exchange and onAbort count.",
+        "Observe fixed-length ack and initial Servlet return while Deferred remains pending. Assert the unsupported-retention path signals detected abort once, core cleanup releases its pending request ownership and adapter inFlight returns0; late settlement cannot reopen/clean twice. Current source leaves abort count0 and inFlight1.",
+        "For a smaller direct SPI test, retainRequest inside initial handler, send/finish, return with asyncSupported=false; require terminal cancellation/retirement rather than retained contextless ownership. Preserve existing synchronous-unretained/noasync positive and pending-response unsupported500 tests."
+      ],
+      "minimalFixDirection": "Handle async-start failure when the response is already finished but transport retention still requires a live request. Revoke/cancel ownership through the existing outside-lock abort path; preserve the completed-response success/no-abort case when a racing normal release has removed the need for async. Do not attempt a second wire response."
+    }
+  ],
+  "positiveAssessment": [
+    "Request head snapshots and case-insensitive header-name dedup preserve value enumeration while preventing recycled request metadata exposure.",
+    "Retention helper callback executes outside helper lock; acquire/complete gating avoids ordinary context completion while retained. Async publication uses asyncStarting, late release completion and one completed CAS.",
+    "Write failure is recorded before releasing writeLock; finish rethrows the original recorded Throwable. Owning drain classifies its protocol failure before terminal generic notification, and swallowed failure triggers abort on ownership exit.",
+    "All three untrusted drain abort call sites use shared SafeCallbacks and preserve finally cleanup. Running drains retain pool slots until their actual exit.",
+    "Targeted53 tests pass onJDK17/actualJava8 with API21/class-reference checks, but do not exercise the retained-finished asyncUnsupported path."
+  ],
+  "java8IdleCheckpointAssessment": {
+    "verdict": "Separate fixture observation race, not evidence of leaked SSE ownership",
+    "reason": "DrainTask catches failure and calls exchange.abort, which can complete/retire the AsyncContext and remove adapter inFlight before its finally executes pool.finish and releases the running drain slot. Thus inFlight0 does not imply pool.open0 at the same instant. Waiting explicitly for both ownership counts0 is consistent with retaining slots until actual drain exit; releasing the slot early to satisfy the old helper would weaken ownership."
+  },
+  "consideredButNotReported": "requestBody check/delegate operations can overlap terminal revocation, but the read/open has already been admitted before abort; static inspection alone does not establish an additional invalid post-cancel acquisition or cross-request read. No speculative TOCTOU finding asserted.",
+  "limitations": "Full suites remain explicitly non-GREEN due separate historical fixture migrations and the idle observation race. No whole-project approval.",
+  "actions": "Read-only pinned source/evidence inspection; no edits, builds or network. Only tmp report written."
+}

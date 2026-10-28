@@ -2,9 +2,9 @@
   "goal": "Complete epic46 and issues47-65 under latest user instructions",
   "target": "0.10.0",
   "plan": "docs/plan/0.10.0-parallel-plan.md",
-  "dependencies": "unchanged versions/types/scopes; existing toolchain reused",
+  "dependencies": "Preserve external versions/types/scopes except explicitly approved TinyHttpd core/websocket3.1.0→3.1.1",
   "regex": "Java Pattern",
-  "status": "api-full-validation-transport-retention-and-independent-http-audit-fixes",
+  "status": "final-servlet-fixture-review-and-approved-versioned-docs-release-preparation",
   "issues": [
     {
       "id": "T00",
@@ -310,7 +310,8 @@
     "version": "0.10.0",
     "maven_publication": true,
     "new_dependencies": false,
-    "tinyhttpd_patch_update": "3.1.0 -> 3.1.1 user approved 2026-10-29; no other pin changes"
+    "tinyhttpd_patch_update": "3.1.0 -> 3.1.1 user approved 2026-10-29; no other pin changes",
+    "versioned_docs_release_srs": true
   },
   "history": "Earlier research/orchestrator artifacts retained; latest user goal drives this issue-based plan.",
   "srs_mode": "sdd with mandatory behavior TDD",
@@ -320,7 +321,10 @@
     "profile": "CON-APP-010",
     "abort_notification": "IR-HTTP-009",
     "tiny_raw": "FR-ENGINE-012",
-    "tiny_patch_pins": "CON-BUILD-018"
+    "tiny_patch_pins": "CON-BUILD-018",
+    "documentation": "OPS-REL-008",
+    "release": "OPS-REL-009",
+    "servlet": "FR-SVL-009"
   },
   "lanes": {
     "harness": {
@@ -342,7 +346,7 @@
       "authors_own_tests": false
     }
   },
-  "integrated_head": "df50e4c3c8152eaca7b79401f8daed890933a0fa",
+  "integrated_head": "e6de9ab",
   "next_lanes": {
     "core": {
       "worktree": ".claude/worktrees/v010-http-core",
@@ -639,17 +643,18 @@
     "helper_agent": "/root/release_dependency_audit",
     "core_owner": "/root/api_core_docs",
     "adapter_owner": "/root/transport_dependency_audit",
-    "status": "shared-component-tests-first-and-servlet-repro"
+    "status": "API/Tiny/Servlet source and independently reviewed fixture migrations integrated"
   },
   "http_implementation_review": {
-    "status": "changes-required",
+    "status": "round3-pass",
     "report": "docs/plan/evidence/http-implementation-review-round1.json",
     "findings": [
       "savedNext after cleaned request and app termination",
       "global64 depth differs from pinned per-router/per-route100 yields"
     ],
     "owner": "/root/api_core_docs",
-    "next": "actual Java RED and independent sufficiency review before fixes"
+    "next": "actual Java RED and independent sufficiency review before fixes",
+    "green_commit": "4f001f4"
   },
   "api_full_diagnostic": {
     "head": "e0a9da6",
@@ -658,5 +663,45 @@
     "errors": 0,
     "skipped": 0,
     "note": "Before final Kotlin and safety/remaining fixture merges; not latest full API result."
+  },
+  "latest_validation": {
+    "api": {
+      "commit": "4f001f4",
+      "java17": 1392,
+      "java8": 1392,
+      "failures": 0,
+      "note": "Later SafeCallbacks additions need final full rerun"
+    },
+    "tiny": {
+      "commit": "6c53951",
+      "java17": 218,
+      "java8": 218,
+      "failures": 0,
+      "note": "Later pure SafeCallbacks refactor focused45 both runtimes passed"
+    },
+    "servlet": {
+      "commit": "2863790",
+      "java17": 158,
+      "java8": 158,
+      "failures": 0,
+      "source_review": "round2 PASS",
+      "fixture_review": "round1 PASS",
+      "integrated": true
+    },
+    "parity": {
+      "tests": 54,
+      "java17": "PASS",
+      "java8": "PASS"
+    },
+    "release": "not bumped, pushed or published",
+    "remaining_root_checks": "Versioned docs and historical release-record assertions pending"
+  },
+  "docs_release_lanes": {
+    "harness": "/root/api_core_docs",
+    "preflight": "/root/release_dependency_audit",
+    "requirements": [
+      "OPS-REL-008",
+      "OPS-REL-009"
+    ]
   }
 }

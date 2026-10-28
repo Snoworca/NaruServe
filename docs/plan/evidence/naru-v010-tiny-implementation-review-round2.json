@@ -1,0 +1,51 @@
+{
+  "review_type": "Independent bounded Tiny implementation source re-review",
+  "round": 2,
+  "decision": "PASS",
+  "reviewed_commit": "96366451eb813c176e9802fdee347257f54ebba0",
+  "reviewer": "release_dependency_audit",
+  "independent": true,
+  "repo_edits": false,
+  "builds_run": false,
+  "network_activity": false,
+  "requirements": [
+    "FR-APP-023 AC-3 AC-6",
+    "IR-HTTP-009 AC-3"
+  ],
+  "findings": [],
+  "resolved": [
+    {
+      "id": "TINY-IMPL-01",
+      "evidence": [
+        "DrainTask.cancelBeforeStart claims exactly once with existing atomic CAS, then catches Throwable only around untrusted StreamDrain.abort. RuntimeException and Error can no longer escape this boundary.",
+        "Forced-stop interrupted awaitWork can finish abort(), record interrupted status and continue its setup-owner wait. The settingUpStream condition still holds worker ownership until accepted attach exits; old exceptional unwind cannot release the SSE slot early.",
+        "Adapter.stop remaining-exchange loop no longer receives accepted-drain callback failures. AbortListeners runs before drain cancellation and remains outside the state monitor.",
+        "DrainTask claim remains shared with drain-start CAS, so failed cancellation is still consumed exactly once and cannot permit drain start or repeat abort.",
+        "Callback invocation is after leaving exchange state monitor; no new locking or IO path introduced. Existing worker-finally slot release, buffer monitor barrier, first IO failure state and stream ownership code are unchanged."
+      ]
+    }
+  ],
+  "supplied_evidence_inspected": {
+    "jdk17": "/tmp/naru-v010-tiny-throwing-cancel-green-scope.log",
+    "actual_java8": "/tmp/naru-v010-tiny-throwing-cancel-green-java8.log",
+    "counts": [
+      "/tmp/naru-v010-tiny-throwing-cancel-green-scope-results/counts.json",
+      "/tmp/naru-v010-tiny-throwing-cancel-green-java8-results/counts.json"
+    ],
+    "each_runtime": {
+      "test": 207,
+      "isolatedTest": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "api21_animalsnifferMain": "PASS in supplied logs",
+    "checkClassReferences": "PASS in supplied logs",
+    "note": "Source and existing logs/counts read only; reviewer did not run tests."
+  },
+  "scope_limits": [
+    "Original TINY-IMPL-01 and minimal containment fix only.",
+    "Known unread-input retention defect96896aa remains separately assigned; this PASS does not claim adapter retention integration complete.",
+    "Test-sufficiency loop already closed at round2PASS and was not repeated. No whole-project completion or SRS promotion claimed."
+  ]
+}

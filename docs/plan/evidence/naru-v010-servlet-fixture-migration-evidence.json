@@ -1,0 +1,65 @@
+{
+  "testOnlyCommit": "286379009cec802e66ebcb5116018d43502c5aa7",
+  "reviewedProductionParent": "bbbdf3989173329d8983ca066f93503b09446df2",
+  "requirements": [
+    "CON-APP-010 AC-5",
+    "FR-SVL-009",
+    "FR-APP-023 AC-8",
+    "FR-APP-024",
+    "FR-HTTP-027",
+    "FR-HTTP-028",
+    "FR-HTTP-011",
+    "IR-HTTP-009 AC-7"
+  ],
+  "baseline": {
+    "jdk17": {
+      "tests": 157,
+      "failures": 21,
+      "errors": 0,
+      "skipped": 0
+    },
+    "previousActualJava8": {
+      "tests": 156,
+      "failures": 22,
+      "errors": 0,
+      "skipped": 0
+    },
+    "logs": [
+      "/tmp/naru-v010-servlet-fixture-baseline-j17.log",
+      "/tmp/naru-v010-servlet-cancel-stream-io-full-java8.log"
+    ]
+  },
+  "final": {
+    "jdk17": {
+      "task": ":NaruServe-servlet:check",
+      "tests": 158,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "log": "/tmp/naru-v010-servlet-fixture-full-check-j17-final.log",
+      "results": "/tmp/naru-v010-servlet-fixture-full-check-j17-results"
+    },
+    "actualJava8": {
+      "task": ":NaruServe-servlet:check",
+      "tests": 158,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "runtime": "Zulu8u504 aarch64",
+      "log": "/tmp/naru-v010-servlet-fixture-full-check-java8.log",
+      "results": "/tmp/naru-v010-servlet-fixture-full-check-java8-results"
+    },
+    "sharedApi21": "animalsniffer PASS",
+    "servletClassReferences": "PASS",
+    "unexcluded": true
+  },
+  "migration": [
+    "Response-only request proxy permits only immutable head getters; all other methods still throw",
+    "Shared common finalhandler HTML status/class/message/scaffold/CSP/nosniff/exact Content-Length assertions, typed CORS privacy retained",
+    "Only /boom Java stack is transport-specific: independently verify class/message/top/common/own adapter frames/security/framing; all remaining crossadapter body bytes exact",
+    "Explicit raw status matrix checks actual container rejects do not dispatch, common capture slash/invalidUTF8/query controls, strict Router retained rejection/method mismatch negative controls",
+    "OPTIONS* and WS adapter error keep explicit standardJSON requestId and byte framing assertions",
+    "idle awaits BOTH inFlight0 and pool0 before shutdown under original5s budget; asserts both afterward"
+  ],
+  "pending": "Independent fixture sufficiency review, first PASS closes loop; no host merge yet"
+}

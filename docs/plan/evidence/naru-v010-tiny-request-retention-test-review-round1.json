@@ -1,0 +1,32 @@
+{
+  "verdict": "PASS",
+  "round": 1,
+  "reviewedHead": "0bab9d22ad178344d76f37bb93d6179658cdd7de",
+  "scope": "Tiny direct request-retention/physical retirement tests plus unchanged actual delayed first-body-read case",
+  "requirements": [
+    "FR-APP-023 AC-1/3/6/8",
+    "IR-HTTP-009 AC-2/3"
+  ],
+  "findings": [],
+  "evidence": {
+    "log": "/tmp/naru-v010-tiny-request-retention-red-final.log",
+    "counts": "/tmp/naru-v010-tiny-request-retention-red-results/counts.json",
+    "tests": 8,
+    "failures": 6,
+    "passingControls": 2,
+    "errors": 0,
+    "skipped": 0
+  },
+  "assessment": [
+    "Actual keep-alive fixed-length response bytes and observed initial handler return precede input reads/hold releases; original body and pipelined second request distinguish physical input retirement from wire response completion. Two independent releases must retain the worker until the last hold, without abnormal notification.",
+    "A later hold remains owned after32 joined repeated releases across eight earlier handles, detecting duplicate/stale release underflow and premature physical retirement.",
+    "Holding the exchange IO monitor while joining the final-release task requires nonblocking release bookkeeping; active exchange retention followed by retirement after monitor exit provides the physical-owner boundary control.",
+    "Post-wire abort and force-stop require once-only early/late notifications outside both state and IO locks, actual active-set removal, bounded deadline and harmless releases/retains without response resurrection. Callback lock failures are captured and asserted by the test thread.",
+    "Release-before-finish retains a pending ordinary response until explicit completion. Running-SSE positive requires its slot and exchange ownership to remain after input-hold release and retire only when the drain latch allows actual callback exit.",
+    "Original paired early200ack/late first JSON read test remains unchanged and still reaches the intended400-before-codec failure after core wiring; it prevents a superficial SPI override from standing in for real input retention.",
+    "All tasks have bounded joins and finally/After release gates; worker assertions propagate via Future.get or captured failures. Test commit adds one class only; production/API/Servlet/dependencies remain unchanged.",
+    "Preserved evidence reports six actual missing-retention failures and two distinct positive controls, with zero errors/skips."
+  ],
+  "limitations": "Correct production wiring must subsequently pass all eight and retained Tiny IO/abort/SSE tests GREEN. The final-release retirement race uses joined release and explicit IO ownership; broader race repetition remains in existing adapter suites.",
+  "actions": "No repository edits or builds; only tmp report written. First PASS ends review loop."
+}

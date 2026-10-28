@@ -1,0 +1,70 @@
+{
+  "review_type": "Independent bounded HTTP implementation source re-review",
+  "round": 3,
+  "decision": "PASS",
+  "reviewed_commit": "4f001f49db4130b2599e4f0afebba3503c7f25ad",
+  "reviewer": "release_dependency_audit",
+  "independent": true,
+  "repo_edits": false,
+  "builds_run": false,
+  "network_activity": false,
+  "requirements": [
+    "FR-APP-022 AC-1 AC-3 AC-5",
+    "FR-APP-023 AC-3 AC-4 AC-5 AC-7 AC-8",
+    "IR-HTTP-009 AC-4 AC-6",
+    "CON-APP-010 AC-3"
+  ],
+  "findings": [],
+  "original_findings": [
+    {
+      "id": "HTTP-IMPL-01 / HTTP-IMPL-01-R2",
+      "status": "RESOLVED",
+      "evidence": [
+        "HttpExecution holds registered=true through cleaning and releasing. The initial cleanup no longer unconditionally removes the lifecycle identity after closeBody.",
+        "cleanupIfIdle marks cleaned/cleaning under state, performs upload/input cleanup outside state, clears cleaning and calls releaseIfIdle. releaseIfIdle checks owner, queue and Deferred leases again under state before release.",
+        "A callback admitted during closeBody keeps the same existing registration and sets owner under state. On old cleanup completion, owner or a returned Deferred lease prevents release/unregister. A callback that exits during cleaning cannot unregister because cleaning remains true.",
+        "Admission and unregister both hold state; unregister flips registered and removes the identity without an interleaving admission. Once an idle request is unregistered, a later RUNNING callback registers before becoming owner. Lifecycle closed/cancelled/ABORTED gates still reject forbidden late work.",
+        "The release hook executes outside state with releasing=true and registration retained. Synchronous/reentrant or concurrent callbacks can run; final idle recheck prevents unregister of an active owner/lease. Later idle cleanup observes transportReleased and removes registration without calling the hook again.",
+        "Retained original input is cleaned exactly once; later work never resets cleaned/transportReleased or reacquires input/transport retention. No generation can repeat old cleanup."
+      ]
+    },
+    {
+      "id": "HTTP-IMPL-02",
+      "status": "RESOLVED",
+      "evidence": [
+        "Per-RouterCursor and per-RouteCursor ++sync>100 boundaries and own-callback reset remain unchanged from reviewed4be fix. Global depth64 has not returned.",
+        "Existing exact pinned11 depth traces, mixed70+70,1500-stack and cross-thread controls remain included in supplied regression evidence."
+      ]
+    }
+  ],
+  "coordinator_regression_checks": [
+    "retainRequest acquired before lifecycle registration, onAbort subscription and middleware execution; closed-lifecycle path cancels and releases acquired hold.",
+    "cancel marks cancelled and clears queued work/leases under state before response.abort, so synchronous abort-listener reentry returns immediately. Active owner delays cleanup until callback return.",
+    "Response completion listener is once-only. cancellation after an already completed response still revokes work and invokes idle cleanup without duplicate response abort/log.",
+    "releaseRequest exceptions are caught; finally marks transportReleased, clears releasing and unregisters if idle. Even logger failure cannot bypass finally bookkeeping.",
+    "releaseUploads failure still enters closeBody finally and coordinator finalization. Blocking input close/release hooks occur outside request state monitor; lifecycle membership bookkeeping invokes no user hooks.",
+    "AppLifecycle.cancelHttp snapshots membership under its monitor then invokes cancel outside it, avoiding reverse lock acquisition against state->membership admission/removal."
+  ],
+  "supplied_evidence_inspected": {
+    "tests": [
+      "HttpCleanupAdmissionContractTest (blocked input close plus active callback and returned-Deferred transfer)",
+      "HttpTransportRetentionContractTest (13 retention/lifecycle/release cases)",
+      "HttpCompletedContinuationShutdownTest",
+      "HttpContinuationDepthContractTest"
+    ],
+    "logs": [
+      "/tmp/naru-http-core/green-core-retention-cleanup.log (BUILD SUCCESSFUL; animalsnifferMain/checkClassReferences)",
+      "/tmp/naru-http-core/java8-core-retention-cleanup.log (OK214 tests)"
+    ],
+    "counts": [
+      "/tmp/naru-http-core/full-api-j17-4f001f4-counts.json (1392/0/0/0)",
+      "/tmp/naru-http-core/full-api-j8-4f001f4-counts.json (1392/0/0/0; actual JDK8u504)"
+    ],
+    "note": "Existing authored tests and logs read only; no verifier build or new runtime assertion executed. Test-sufficiency PASS loops not repeated."
+  },
+  "scope_limits": [
+    "Original two HTTP source findings and cleanup/retention coordinator changes at exact pinned commit only.",
+    "Actual Tiny/Servlet retainRequest overrides and adapter integration remain separate owners' pending work, not assessed here.",
+    "PASS is a bounded source-review result, not whole-project completion or requirement verification promotion."
+  ]
+}

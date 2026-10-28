@@ -1,0 +1,33 @@
+{
+  "verdict": "PASS",
+  "round": 2,
+  "reviewedHead": "fd7a12a2f688c7f520f0ad3b7b3363a3ab63d1d3",
+  "scope": "Core transport retention plus deterministic cleanup/post-response admission ownership; no reopening of prior helper/adapter test reviews",
+  "requirements": [
+    "FR-APP-023 AC-3/5/7/8",
+    "CON-APP-010 AC-3"
+  ],
+  "findings": [],
+  "resolvedFindings": [
+    {
+      "id": "CORE-RET-R1-1",
+      "resolution": "Throwing release/observer branches now assert tracked lifecycle executions0 before shutdown. The synchronized observer has two positive1->0 controls for an unfinished response and a completed response with pending Deferred, so forced deadline cancellation cannot mask the claimed release guarantee."
+    }
+  ],
+  "evidence": {
+    "log": "/tmp/naru-http-core/red-core-retention-cleanup-round2.log",
+    "tests": 15,
+    "failures": 13,
+    "passingControls": 2
+  },
+  "assessment": [
+    "All original11 retention cases remain unchanged apart from strengthening the identified pre-shutdown leak assertion.",
+    "Cleanup-admission tests block the original input close, await a newly admitted post-response callback, then unblock/join the old dispatch before asserting current ownership remains1. This creates the exact causal unregister race without sleeps or relying on forced shutdown.",
+    "A shutdown Future is observed in STOPPING while callback is deterministically blocked, and service/onStop counters remain0. Callback exit precedes onStop/service close; Deferred variant transfers ownership to a pending returned result and shutdown stays waiting until settlement.",
+    "Actual response, commit/finish/abort/log counts and body lookup/close counts distinguish preserved application-work ownership from reacquiring already-closed input or repeating old cleanup.",
+    "All workers have bounded latch/future waits and finally release gates; assertions outside callback code expose ownership counts directly. The100ms future timeout establishes continued waiting only while explicit ownership gates remain held, rather than manufacturing the ordering.",
+    "Preserved RED log confirms the original11 missing-transport-wiring failures plus2 concrete stale-cleanup unregister failures, while both new lifecycle observation controls pass. Source unchanged before the implementation gate."
+  ],
+  "limitations": "Transport wiring and coordinator implementation must subsequently pass all15 and relevant regression tests GREEN. This test-sufficiency PASS is separate from independent production source review.",
+  "actions": "No repository changes or builds; only tmp report written. First PASS ends this review loop; no round3 required."
+}

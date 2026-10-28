@@ -1,0 +1,45 @@
+{
+  "verdict": "PASS",
+  "round": 1,
+  "reviewedCommit": "ba89182e8bbef5dfc10c0b3de9b51ae65bc46f60",
+  "scope": "Five assigned runtime/example/Kotlin checkpoint classes plus existing shared RunnableExampleContract test fixture",
+  "requirements": [
+    "CON-APP-010 AC-4/5/7",
+    "FR-APP-024 AC-3",
+    "OPS-DX-001",
+    "FR-DX-002 AC-5",
+    "FR-DX-010 AC-6",
+    "FR-DX-006",
+    "IR-KT-002"
+  ],
+  "findings": [],
+  "evidence": {
+    "manifest": "/tmp/naru-http-core/runtime-checkpoint-evidence.json",
+    "baselineRoot": {
+      "tests": 4,
+      "failures": 3
+    },
+    "baselineKotlinFocused": {
+      "tests": 7,
+      "failures": 3
+    },
+    "eachJdk17AndActualJava8": {
+      "rootTests": 4,
+      "fullKotlinTests": 10,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "assessment": [
+    "Pinned diff touches exactly five assigned test classes and the existing shared verifier; no server example, production/API, docs prose, SRS, build or dependency changes.",
+    "Shared Java fixture helper validates complete HTML scaffold, exact content type,CSP/nosniff, actualUTF8 byte size/Content-Length and meaningful exception information. Both actual Java/Kotlin examples and Kotlin null-body tests reuse it rather than duplicating new verifiers.",
+    "Exact status and required cause/message checks remain: invalid page integer, null JSON, required name, typed DTO/generic round trips and decoder count are retained while obsolete JSON error-envelope fields are replaced.",
+    "Actual source examples still run clean-directory realHTTP routes, uploads, streams and owned-resource lifecycle through unchanged shared contract behavior.",
+    "Partial encoder now writes a concrete JSON document fragment before throwing; status must be500 with original encoding-failure information, while raw secret and escaped secret/document content are explicitly absent. No partial bytes or success status waiver added.",
+    "CORS actual/preflight/rejected-origin and400/401/500 error status/grants/credentials controls remain. New X-Leak and exact Origin-only Vary checks strengthen configured-error privacy; ordinary accepted-response Vary behavior is unchanged.",
+    "Preserved evidence reports root4 and fullKotlin10 passing on both JDK17 and actualJava8, zero errors/skips, after genuine old-envelope baseline failures."
+  ],
+  "limitations": "This checkpoint migration PASS does not approve unrelated concurrent build-normalizer repair or establish whole-project release completion.",
+  "actions": "No repository edits or builds; inspected pinned diff and preserved evidence only. Wrote tmp review artifact. First PASS ends loop."
+}

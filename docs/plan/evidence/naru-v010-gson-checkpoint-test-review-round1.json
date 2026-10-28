@@ -1,0 +1,38 @@
+{
+  "verdict": "PASS",
+  "round": 1,
+  "reviewedCommit": "088b4c29142658aeeb6b5872cf0aee9d07a97a14",
+  "scope": "Gson Java/Kotlin test-only default error envelope checkpoint migration",
+  "requirements": [
+    "CON-APP-010 AC-4/5",
+    "FR-APP-024 AC-3",
+    "FR-JSON-001/003",
+    "FR-KT-006"
+  ],
+  "findings": [],
+  "evidence": {
+    "manifest": "/tmp/naru-http-core/gson-checkpoint-evidence.json",
+    "baseline": {
+      "tests": 31,
+      "failures": 5,
+      "errors": 0,
+      "skipped": 0
+    },
+    "eachJdk17AndActualJava8": {
+      "tests": 31,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "xmlIndependentlySummed": true,
+    "api21": "animalsnifferMain passed; checkClassReferences passed both checks"
+  },
+  "assessment": [
+    "Pinned diff changes only four obsolete common400 JSON-envelope checks and one Kotlin500 envelope check in exactly two test files. Every original status assertion remains intact.",
+    "Replacement checks require actual HTML scaffold/content type,CSP/nosniff,UTF8 byte Content-Length and Java exception information. Kotlin failure additionally retains concrete data-class type and disabled-JDK-Unsafe reason.",
+    "Depth64 acceptance/65 rejection, strict syntax, trailing-data, numeric-type, direct Gson cause-chain, no-Unsafe direct failure and positive DTO/round-trip assertions are unchanged. No production switch or fallback enables Unsafe.",
+    "Independent preserved XML totals confirm all31 tests execute and pass on both JDK17 and actualJava8 with zero skips/errors. No broad exception/body waiver or deleted positive control observed."
+  ],
+  "limitations": "This scoped fixture PASS is not whole-project release approval; unrelated core/adapter retention gates remain separate.",
+  "actions": "No repository edits or builds; only tmp report written. First PASS ends review loop."
+}

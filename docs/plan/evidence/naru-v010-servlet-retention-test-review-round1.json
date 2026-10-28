@@ -1,0 +1,38 @@
+{
+  "verdict": "PASS",
+  "round": 1,
+  "reviewedHead": "487d3fec08850bed0321f2a1e0150f539b93496b",
+  "scope": "Servlet normal request retention, terminal revocation and immutable metadata tests; prior paired first-body-read review stays closed",
+  "requirements": [
+    "FR-APP-023 AC-3/7/8",
+    "FR-HTTP-027 AC-3/5",
+    "FR-HTTP-011 AC-1/2/3",
+    "FR-SVL-009"
+  ],
+  "mcpWorkspace": {
+    "workspaceRoot": "/Users/beom/work/git/NaruServe",
+    "rootSource": "per-call-workspace-root"
+  },
+  "findings": [],
+  "evidence": {
+    "log": "/tmp/naru-v010-servlet-retention-red-reviewed-unit.log",
+    "counts": "/tmp/naru-v010-servlet-retention-red-results/counts.json",
+    "tests": 16,
+    "failures": 13,
+    "passingControls": 3,
+    "errors": 0,
+    "skipped": 0
+  },
+  "assessment": [
+    "Real Jetty fixed-length wire responses are observed independently of AsyncContext completion; held initial and later responses require contexts/in-flight ownership to remain until the last release. Two holds, duplicate releases and15 finish/release races require exact completion without abort.",
+    "First body access requires original bytes after observed wire finish and zero prior body opens, so eager prefetch cannot mask retention. Existing paired same-codec control is reused unchanged.",
+    "Graceful stop waits for a real held request; forced stop and actual async timeout revoke holds within deadline and late releases cannot complete twice or resurrect responses. Aborted requestBody must reject before invoking the wrapped Servlet input accessor.",
+    "Completion interception captures exchange-monitor and writeLock ownership, with assertions made outside callbacks. Release during startAsync exercises the publication race; current sync/no-hold, early-release/no-implicit-finish and independent-request controls remain positive.",
+    "Metadata tests positively snapshot requestA before finish, observe actual container recycle or dispatch a distinct pending POST requestB on the same keep-alive connection, then require savedNext to observe the original complete metadata list. No sleep substitutes for reuse: queue/latch events and explicit raw-header reset establish the boundary.",
+    "Mixed-case duplicate headers independently require first value and exact two-value list, preventing a before/after snapshot from accepting consistently duplicated values.",
+    "Metadata requests keep client sockets open through assertions; following pending response is answered in finally. Executor/container/app cleanup is bounded. No callbacks silently swallow main outcome assertions.",
+    "Pinned diff only adds two test classes and exposes existing fixedResponse helper package-locally; no prior assertion/source/dependency changes. Preserved evidence shows13 meaningful RED and3 positive controls, zero errors/skips."
+  ],
+  "limitations": "Existing SSE setup/drain ownership tests remain required regression gates. This PASS validates test sufficiency, not implementation or final adapter completion.",
+  "actions": "No repository edits or builds; only tmp report written. First PASS ends review loop."
+}

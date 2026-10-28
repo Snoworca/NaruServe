@@ -1,0 +1,40 @@
+{
+  "verdict": "PASS",
+  "round": 1,
+  "scope": "Paired actual Tiny/Servlet response-before-first-request-body-read reproduction tests; separate from standalone retention component",
+  "requirements": [
+    "FR-APP-023 AC-3/7/8"
+  ],
+  "testCommits": {
+    "tiny": "96896aa8dbd2a24e550297b51f6c23092fa685dd",
+    "servlet": "1dc0439ed49b1f307c9211b2dcf30a1ae1460f76"
+  },
+  "findings": [],
+  "evidence": {
+    "tinyLog": "/tmp/naru-v010-tiny-unread-input-lease-repro-final.log",
+    "tinyXml": "/tmp/naru-v010-tiny-unread-input-lease-repro-final.xml",
+    "servletLog": "/tmp/naru-v010-servlet-unread-input-lease-repro.log",
+    "servletXml": "/tmp/naru-v010-servlet-unread-input-lease-repro.xml",
+    "eachCounts": {
+      "tests": 1,
+      "failures": 1,
+      "errors": 0,
+      "skipped": 0
+    },
+    "tinyFailure": "HttpException400 before decoder (decoderCalls0)",
+    "servletFailure": "UnsupportedMediaTypeException415 before decoder (decoderCalls0)"
+  },
+  "assessment": [
+    "Each test first sends the identical payload through its identical codec in a read-before-response control and verifies200 plus exact codec-produced text and one decode. This isolates codec/configuration errors from post-response request retention.",
+    "A separate actual keep-alive socket sends the full POST payload, reads a complete fixed-length200ack without waiting for connection close, then observes initial callback return while Deferred remains unresolved and decoderCalls0. Client socket remains open through the producer read and its assertions, avoiding client disconnect as the failure cause.",
+    "Tiny explicitly observes handlerReturned; Servlet captures the target URI in filter finally and awaits /unread after independently consuming /control. These prove initial callback return, not final engine-worker return, and remain compatible with a correct retained worker/context.",
+    "The producer Future runs only after response-observed latch release; its bounded join exposes exact failure/payload/decode assertions outside callback swallowing. It resolves the pending lease in finally, and owning executors/app shutdown clean up in both success and failure.",
+    "Original decoded payload is required after the response, with exactly one first decode and exact access-log count. No eager body read/prefetch hides the missing retention.",
+    "XML confirms the positive control/setup completed and both tests reach their targeted assertion with actual post-response body-read failure before codec entry. Only test files changed."
+  ],
+  "limitations": [
+    "Both tests include150ms producer delay to exercise later work; ordering is established independently by response bytes, callback-return observation and a latch. They do not claim deterministic observation of internal engine recycling.",
+    "Actual core retain/release and both adapters must subsequently pass these cases GREEN; broader abort/shutdown/resource suites remain separate gates."
+  ],
+  "actions": "No repository edits or builds; only tmp review artifact written. Stop at first PASS."
+}
