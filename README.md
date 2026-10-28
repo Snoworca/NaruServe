@@ -10,6 +10,8 @@ The same API runs on Android 5.0 (API 21) and later and on any Java 8+ JVM.
 Read the [English API guide](docs/api/en/README.md) or the [한국어 API 문서](docs/api/README.md).
 Start with installation and the runnable example below; use the API guides for signatures, defaults and error contracts.
 
+> This checkout documents the 0.10.0 common HTTP profile. Until its Maven release is verified, use the source build for the new APIs; the published 0.9.0 coordinates below describe the previous release.
+
 ## Install
 
 NaruServe 0.9.0 is published on Maven Central, so Gradle downloads it from `mavenCentral()` with no extra
@@ -214,7 +216,9 @@ Both return HTTP 200, the custom header and the JSON body above. The examples bi
 | Read a path parameter | `req.params.id` | `req.param("id")` |
 | Set status and send JSON | `res.status(200).json(value)` | `res.status(200).json(value)` |
 
-The similarity is in the programming style, with important differences: NaruServe handlers and middleware run synchronously on request threads; ordinary responses must finish before the handler returns, and shared mutable state must be thread-safe. NaruServe's `res.send("text")` defaults to plain text, while Express uses HTML for strings. JSON input uses typed `req.body(Type.class)` reads instead of Express's `express.json()` middleware and `req.body` property. See the [full migration guide](docs/api/en/express-migration.md) for routing, errors and lifecycle differences.
+The 0.10.0 common HTTP profile follows Express 5 registration order, named wildcards and optional groups, mounted routers, parameter callbacks, route/router skips, HEAD/OPTIONS and HTML final handling. The committed differential corpus pins Express 5.1.0; see the [migration guide](docs/api/en/express-migration.md) for the tested boundary.
+
+NaruServe uses Java `Pattern` for regular expressions. Typed body reads, plain-text `res.send("text")`, bounded inputs, static-file protections and existing WebSocket APIs remain NaruServe features. Callbacks may resume later through a saved `Next` or a returned `Deferred`; handlers can run concurrently, so protect shared mutable state. Resolving a `Deferred` neither calls `next.run()` nor ends the response.
 
 Compared against the official Express 5 [routing guide](https://expressjs.com/en/guide/routing/), [middleware guide](https://expressjs.com/en/guide/using-middleware/) and [response API](https://expressjs.com/en/5x/api/response/).
 
@@ -225,14 +229,15 @@ NaruServe is an embedded server library. You define your application endpoints; 
 | Task | Public API | Guide |
 |---|---|---|
 | Start or configure an app | `RestApp.start(int, Configurer<RestApp>)`, `create()`, `builder()` | [Application](docs/api/en/app.md) |
-| Register routes and groups | `get`, `post`, `route`, `group` | [Routing](docs/api/en/routing.md) |
+| Register routes and groups | `get`, `post`, `route`, `group`, `Router.create()` | [Routing](docs/api/en/routing.md) |
 | Read and validate input | `Request.param`, `queryInt`, `requireQuery`, `body`, `requireFile` | [Request](docs/api/en/request.md) |
 | Send a response | `Response.status`, `send`, `json`, `file`, `stream` | [Response](docs/api/en/response.md) |
 | Handle cross-cutting behavior | `use`, `cors`, `onError`, `next.run()` | [Middleware](docs/api/en/middleware.md) |
 | Keep a connection open | `ws`, `Response.sse` | [WebSocket](docs/api/en/websocket.md), [SSE](docs/api/en/sse.md) |
+| Resume work later | `getAsync`, `methodAsync`, `useAsync`, `Deferred`, saved `Next` | [Middleware](docs/api/en/middleware.md), [Lifecycle](docs/api/en/lifecycle.md) |
 | Own application services | `onStart`, `onStop`, `ApplicationContext` | [Lifecycle](docs/api/en/lifecycle.md) |
 
-Register routes and settings before listening. Handlers run concurrently; synchronize shared mutable state. `next.run()` is synchronous and may be called at most once. After `res.stream(...)`, NaruServe owns and closes the stream; upload temporary files must be saved before the request ends. See the linked guides for the complete contracts.
+Configure server options, services and WebSocket routes before listening. Ordinary HTTP routes can be appended while the app is running and execute in registration order. A saved `Next` can resume after callback return; serialize your continuation and response work. After `res.stream(...)`, NaruServe owns and closes the stream. A pending `Deferred` returned by an async callback retains request resources even after an early response; settle it after the producer's last request/upload access. Cancellation and forced shutdown end that ownership. See the linked guides for the complete contracts.
 
 ## Repository structure
 

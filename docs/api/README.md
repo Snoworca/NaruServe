@@ -5,7 +5,7 @@
 NaruServe는 Express.js처럼 쓰는 Java 8 / Kotlin용 경량 HTTP 서버 라이브러리입니다.
 Android 5.0(API 21)부터 최신 Android, 그리고 일반 JVM에서 같은 API로 동작합니다.
 
-> **문서 상태:** v1과 API 사용성 개선 구현을 설명합니다. Express 대응과 실행 규칙은 [Express에서 오신 분께](express-migration.md)를 참고하세요.
+> **문서 상태:** 0.10.0 공통 HTTP 프로파일과 기존 확장 API를 설명합니다. Maven 배포 검증 전에는 새 API를 소스 빌드로 사용하세요. 아래 0.9.0 설치 좌표는 이전 공개 릴리스입니다. 라우팅·오류·비동기 계약과 Java Pattern 경계는 [Express에서 오신 분께](express-migration.md)를 참고하세요.
 
 Express를 써 봤다면 [Express에서 오신 분께](express-migration.md)부터 읽으세요.
 

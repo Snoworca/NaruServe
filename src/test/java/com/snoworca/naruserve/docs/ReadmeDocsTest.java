@@ -29,7 +29,7 @@ public final class ReadmeDocsTest {
 
     static final String INCLUDE_BUILD_SNIPPET = "includeBuild('/path/to/TinyHttpd')";
 
-    static final String VERIFIED_COMMIT = "165f365";
+    static final String VERIFIED_COMMIT = "e73cd5d";
 
     private static final String MARKER = "(미확정)";
 
@@ -172,14 +172,16 @@ public final class ReadmeDocsTest {
         assertTrue(readme.contains(NOT_PUBLISHED_PHRASE));
     }
 
-    // SDS-AC-13; OPS-REL-005 AC-1; OPS-DX-001 AC-5
+    // OPS-REL-008 AC-1 AC-2; CON-BUILD-018 AC-1: current instructions supersede the historical engine pin.
     @Test
     public void ops_REL_005_AC1_readmeAndReleaseNotesHoldTheTinyHttpdInstruction() throws IOException {
-        for (String path : new String[] {"README.md", "docs/release/release-notes.md"}) {
+        for (String path : new String[] {"README.md", "README.ko.md", "docs/release/release-notes.md"}) {
             String doc = read(path);
-            for (String part : new String[] {NOT_PUBLISHED_PHRASE, INCLUDE_BUILD_SNIPPET,
-                    "com.snoworca:tinyhttpd-core:3.1.0",
-                    "com.snoworca:tinyhttpd-websocket:3.1.0", "-PtinyHttpdFromMaven=true", VERIFIED_COMMIT}) {
+            assertTrue(path, doc.contains(path.equals("README.ko.md")
+                    ? "이 저장소는 TinyHttpd를 게시하지 않습니다" : NOT_PUBLISHED_PHRASE));
+            for (String part : new String[] {INCLUDE_BUILD_SNIPPET,
+                    "com.snoworca:tinyhttpd-core:3.1.1",
+                    "com.snoworca:tinyhttpd-websocket:3.1.1", "-PtinyHttpdFromMaven=true", VERIFIED_COMMIT}) {
                 assertTrue(path + " holds " + part, doc.contains(part));
             }
         }
@@ -205,19 +207,23 @@ public final class ReadmeDocsTest {
                         && section.contains("mavenLocal()"));
     }
 
-    // SDS-AC-15; OPS-REL-005 AC-3
+    // OPS-REL-008 AC-1 AC-2; FR-ENGINE-012: current RAW policy boundary, not an obsolete 3.0 API gap.
     @Test
-    public void ops_REL_005_AC3_documentsExplainPublished300ApiLimitation() throws IOException {
-        for (String path : new String[] {"README.md", "docs/release/release-notes.md"}) {
+    public void ops_REL_008_AC1_documentsExplainPublished311RawPolicyBoundary() throws IOException {
+        for (String path : new String[] {"README.md", "README.ko.md", "docs/release/release-notes.md"}) {
             String doc = read(path);
-            assertTrue(path, doc.contains("3.0.0") && doc.contains("getHeaderEntries") && doc.contains("abort"));
+            assertTrue(path, doc.contains("3.1.1") && doc.contains("RequestTargetPolicy.RAW")
+                    && doc.contains("3.1.0") && doc.contains("Host"));
         }
-        List<String> paths = new ArrayList<>(Arrays.asList("README.md", "docs/release/release-notes.md"));
+        List<String> paths = new ArrayList<>(Arrays.asList("README.md", "README.ko.md", "docs/release/release-notes.md"));
         File[] api = new File(root(), "docs/api").listFiles((d, n) -> n.endsWith(".md"));
         assertNotNull(api);
         for (File f : api) {
             paths.add("docs/api/" + f.getName());
         }
+        File[] english = new File(root(), "docs/api/en").listFiles((d, n) -> n.endsWith(".md"));
+        assertNotNull(english);
+        for (File f : english) paths.add("docs/api/en/" + f.getName());
         for (String path : paths) {
             assertFalse(path + " says '" + FORBIDDEN_PHRASE + "'",
                     read(path).toLowerCase(Locale.ROOT).contains(FORBIDDEN_PHRASE.toLowerCase(Locale.ROOT)));

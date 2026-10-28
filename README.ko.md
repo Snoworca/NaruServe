@@ -5,6 +5,8 @@
 [English](README.md) | 한국어
 
 NaruServe는 Express.js처럼 사용하는 Java 8·Kotlin용 경량 HTTP 서버 라이브러리입니다.
+
+> 이 체크아웃은 0.10.0 공통 HTTP 프로파일을 설명합니다. Maven 배포 검증 전에는 새 API를 소스 빌드로 사용하세요. 아래 공개 0.9.0 좌표는 이전 릴리스에 해당합니다.
 Android 5.0(API 21) 이상과 Java 8 이상 JVM에서 같은 API를 사용합니다.
 
 [한국어 API 문서](docs/api/README.md)와 [English API guide](docs/api/en/README.md)를 제공합니다.
@@ -210,7 +212,9 @@ curl -i http://127.0.0.1:3000/users/42
 | 경로 변수 읽기 | `req.params.id` | `req.param("id")` |
 | 상태 지정과 JSON 응답 | `res.status(200).json(value)` | `res.status(200).json(value)` |
 
-유사한 것은 프로그래밍 방식이며 중요한 차이가 있습니다. NaruServe의 핸들러와 미들웨어는 요청 스레드에서 동기로 실행됩니다. 일반 응답은 핸들러 반환 전에 끝내야 하며, 공유 가변 상태는 스레드 안전하게 관리해야 합니다. `res.send("text")`는 NaruServe에서 일반 텍스트, Express에서 HTML이 기본입니다. JSON 입력은 Express의 `express.json()` 미들웨어와 `req.body` 속성 대신 타입을 지정한 `req.body(Type.class)`로 읽습니다. 라우팅·오류·수명주기의 차이는 [전체 마이그레이션 가이드](docs/api/express-migration.md)를 참고하세요.
+0.10.0 공통 HTTP 프로파일은 Express 5의 등록 순서, 이름 있는 와일드카드와 선택 그룹, Router 마운트, 매개변수 콜백, route/router 건너뛰기, HEAD/OPTIONS, HTML 최종 응답을 따릅니다. 저장소의 차등 검증 코퍼스는 Express 5.1.0을 고정합니다. 검증 범위는 [마이그레이션 가이드](docs/api/express-migration.md)에서 확인하세요.
+
+정규식에는 Java `Pattern`을 사용합니다. 타입을 지정한 본문 읽기, 일반 텍스트 `res.send("text")`, 입력 제한, 정적 파일 보호, 기존 WebSocket API는 NaruServe 기능으로 유지합니다. 저장한 `Next`나 반환한 `Deferred`로 콜백 이후에도 작업을 이어갈 수 있습니다. 핸들러가 동시에 실행될 수 있으므로 공유 가변 상태를 보호하세요. `Deferred`를 resolve해도 `next.run()`이나 응답 종료가 자동 실행되지는 않습니다.
 
 Express 5 공식 [라우팅 가이드](https://expressjs.com/en/guide/routing/), [미들웨어 가이드](https://expressjs.com/en/guide/using-middleware/), [응답 API](https://expressjs.com/en/5x/api/response/)와 대조했습니다.
 
@@ -221,14 +225,15 @@ NaruServe는 앱에 내장하는 서버 라이브러리입니다. 애플리케�
 | 작업 | 공개 API | 가이드 |
 |---|---|---|
 | 앱 시작·설정 | `RestApp.start(int, Configurer<RestApp>)`, `create()`, `builder()` | [앱](docs/api/app.md) |
-| 라우트·그룹 등록 | `get`, `post`, `route`, `group` | [라우팅](docs/api/routing.md) |
+| 라우트·그룹 등록 | `get`, `post`, `route`, `group`, `Router.create()` | [라우팅](docs/api/routing.md) |
 | 입력 읽기·검증 | `Request.param`, `queryInt`, `requireQuery`, `body`, `requireFile` | [Request](docs/api/request.md) |
 | 응답 전송 | `Response.status`, `send`, `json`, `file`, `stream` | [Response](docs/api/response.md) |
 | 공통 동작 처리 | `use`, `cors`, `onError`, `next.run()` | [미들웨어](docs/api/middleware.md) |
 | 연결 유지 | `ws`, `Response.sse` | [WebSocket](docs/api/websocket.md), [SSE](docs/api/sse.md) |
+| 지연 작업 재개 | `getAsync`, `methodAsync`, `useAsync`, `Deferred`, 저장한 `Next` | [미들웨어](docs/api/middleware.md), [수명주기](docs/api/lifecycle.md) |
 | 앱 서비스 관리 | `onStart`, `onStop`, `ApplicationContext` | [수명주기](docs/api/lifecycle.md) |
 
-리스닝 전에 라우트와 설정을 등록하세요. 핸들러는 동시에 실행되므로 공유 가변 상태를 동기화해야 합니다. `next.run()`은 동기 호출이며 최대 한 번만 호출할 수 있습니다. `res.stream(...)` 뒤에는 NaruServe가 스트림을 소유하고 닫습니다. 업로드 임시 파일은 요청이 끝나기 전에 저장해야 합니다. 전체 계약은 연결된 가이드에서 확인하세요.
+서버 옵션, 서비스, WebSocket 라우트는 리스닝 전에 설정하세요. 일반 HTTP 라우트는 실행 중에도 추가할 수 있으며 등록 순서대로 실행됩니다. 저장한 `Next`는 콜백 반환 후에도 재개할 수 있으므로 continuation과 응답 작업을 직렬화하세요. `res.stream(...)` 뒤에는 NaruServe가 스트림을 소유하고 닫습니다. 비동기 콜백이 반환한 pending `Deferred`는 먼저 응답을 보낸 뒤에도 요청 자원을 유지합니다. 생산자가 요청·업로드 자원에 마지막으로 접근한 뒤 settle하세요. 취소와 강제 종료는 이 소유권을 끝냅니다. 전체 계약은 연결된 가이드에서 확인하세요.
 
 ## 저장소 구조
 
