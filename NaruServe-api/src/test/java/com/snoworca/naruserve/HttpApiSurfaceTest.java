@@ -415,6 +415,11 @@ public class HttpApiSurfaceTest {
                 // wave 4: IR-APP-002 AC-3
                 "use(Middleware)->RouteBuilder",
                 // CON-APP-010 AC-5; FR-APP-021 AC-2; FR-APP-022 AC-6
+                // FR-KT-003 AC-3; FR-APP-021 AC-3: additive default fixed-arity SAM signatures.
+                "method(String,Middleware)->RouteBuilder", "get(Middleware)->RouteBuilder",
+                "post(Middleware)->RouteBuilder", "put(Middleware)->RouteBuilder",
+                "patch(Middleware)->RouteBuilder", "delete(Middleware)->RouteBuilder",
+                "head(Middleware)->RouteBuilder", "options(Middleware)->RouteBuilder",
                 "method(String,Middleware[])->RouteBuilder", "get(Middleware[])->RouteBuilder",
                 "post(Middleware[])->RouteBuilder", "put(Middleware[])->RouteBuilder",
                 "patch(Middleware[])->RouteBuilder", "delete(Middleware[])->RouteBuilder",
@@ -472,6 +477,11 @@ public class HttpApiSurfaceTest {
     @Test
     public void commonHttpInheritedSurfaceIsAnExactVersionedInventory() throws Exception {
         assertEquals(setOf(
+                // FR-KT-003 AC-3; FR-APP-021 AC-3: both fixed and varargs remain in the exact inventory.
+                "method(String,Object,Middleware)->Object", "get(Object,Middleware)->Object",
+                "post(Object,Middleware)->Object", "put(Object,Middleware)->Object",
+                "patch(Object,Middleware)->Object", "delete(Object,Middleware)->Object",
+                "head(Object,Middleware)->Object", "options(Object,Middleware)->Object",
                 "route(Object)->RouteBuilder", "method(String,Object,Middleware[])->Object",
                 "use(Object,Middleware)->Object", "use(Middleware)->Object",
                 "use(Object,Router)->Object", "use(Router)->Object",

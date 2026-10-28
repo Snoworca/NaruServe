@@ -23,6 +23,16 @@ public interface HttpRoutes<T> {
     default T useAsync(Object path,AsyncRouteHandler callback) { return use(path,new com.snoworca.naruserve.internal.AsyncMiddleware(callback)); }
     default T useAsync(AsyncRouteHandler callback) { return useAsync("",callback); }
 
+    // @req FR-KT-003 AC-3; FR-APP-021 AC-3: fixed arity enables Kotlin trailing-lambda SAM conversion.
+    default T method(String methodToken,Object path,Middleware callback) { return method(methodToken,path,new Middleware[]{callback}); }
+    default T get(Object path,Middleware callback) { return method("GET",path,new Middleware[]{callback}); }
+    default T post(Object path,Middleware callback) { return method("POST",path,new Middleware[]{callback}); }
+    default T put(Object path,Middleware callback) { return method("PUT",path,new Middleware[]{callback}); }
+    default T patch(Object path,Middleware callback) { return method("PATCH",path,new Middleware[]{callback}); }
+    default T delete(Object path,Middleware callback) { return method("DELETE",path,new Middleware[]{callback}); }
+    default T head(Object path,Middleware callback) { return method("HEAD",path,new Middleware[]{callback}); }
+    default T options(Object path,Middleware callback) { return method("OPTIONS",path,new Middleware[]{callback}); }
+
     default T get(Object path,Middleware... callbacks) { return method("GET",path,callbacks); }
     default T post(Object path,Middleware... callbacks) { return method("POST",path,callbacks); }
     default T put(Object path,Middleware... callbacks) { return method("PUT",path,callbacks); }
