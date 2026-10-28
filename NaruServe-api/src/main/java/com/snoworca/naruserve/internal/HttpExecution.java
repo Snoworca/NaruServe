@@ -16,7 +16,6 @@ final class HttpExecution {
     private final Deque<Runnable> queued=new ArrayDeque<>();
     private @Nullable Thread owner;
     private boolean terminal,cleaned,cancelled;
-    private int depth;
     private final Set<Object> leases=Collections.newSetFromMap(new IdentityHashMap<Object,Boolean>());
     private final RouterCursor root;
 
@@ -44,28 +43,31 @@ final class HttpExecution {
         try { terminalLog.run(); } finally { cleanupIfIdle(); }
     }
     private void cleanupIfIdle() {
+        boolean releaseResources;
         synchronized(state) {
-            if(!terminal || owner!=null || !queued.isEmpty() || !leases.isEmpty() || cleaned)return;
-            cleaned=true;
+            if(!terminal || owner!=null || !queued.isEmpty() || !leases.isEmpty())return;
+            releaseResources=!cleaned;cleaned=true;
         }
         try {
-            request.releaseUploads();
-            try { request.closeBody(); } catch(Exception failure) { errors.logger.error("request input close failed",failure); }
+            if(releaseResources) {
+                request.releaseUploads();
+                try { request.closeBody(); } catch(Exception failure) { errors.logger.error("request input close failed",failure); }
+            }
         } finally { lifecycle.releaseHttp(this); }
     }
     private void submit(Runnable task) {
         boolean nested;
         synchronized(state) {
-            if(cancelled || response.state()==ResponseState.ABORTED)return;
-            if(owner!=null && (owner!=Thread.currentThread() || depth>=64)) { queued.add(task);return; }
+            if(cancelled || lifecycle.httpClosed() || response.state()==ResponseState.ABORTED)return;
+            if(owner!=null && owner!=Thread.currentThread()) { queued.add(task);return; }
             nested=owner!=null;
-            if(!nested)owner=Thread.currentThread();
+            if(!nested) {
+                // A valid post-response continuation owns app lifetime again, without resurrecting closed input.
+                if(cleaned && !lifecycle.registerHttp(this))return;
+                owner=Thread.currentThread();
+            }
         }
-        if(nested) {
-            depth++;
-            try { lifecycle.withRequest(task); } finally { depth--; }
-            return;
-        }
+        if(nested) { lifecycle.withRequest(task);return; }
         try {
             Runnable next=task;
             for(;;) {
@@ -131,7 +133,7 @@ final class HttpExecution {
         final Map<String,Object> inherited;
         final Map<String,ParamRecord> paramCache=new HashMap<>();
         final Set<String> options=new TreeSet<>();
-        int index;
+        int index,sync;
         RouterCursor(HttpRouter router,@Nullable RouterCursor parent,@Nullable RequestView savedMount) {
             this.router=router;this.parent=parent;this.savedMount=savedMount;
             inherited=savedMount==null?Collections.emptyMap():savedMount.params;
@@ -151,6 +153,8 @@ final class HttpExecution {
             });
         }
         void advance(@Nullable Throwable error) {
+            if(index>=router.layers.length) { exit(error);return; }
+            if(++sync>100) { defer(()->advance(error));return; }
             if(error!=null)request.logFailure(error,errors.logger);
             Throwable pending=error;
             for(;;) {
@@ -170,7 +174,9 @@ final class HttpExecution {
                 Map<String,Object> params=router.mergeParams?HttpParameters.merge(matched.params,inherited):matched.params;
                 request.applyView(new RequestView(request.path(),request.baseUrl(),params));
                 Throwable layerError=pending;
-                new Parameters(this,new ArrayList<>(matched.params.keySet()),layerError,()->dispatch(layer,matched,layerError)).advance(RUN);
+                new Parameters(this,new ArrayList<>(matched.params.keySet()),layerError,()->{
+                    try { dispatch(layer,matched,layerError); } finally { sync=0; }
+                }).advance(RUN);
                 return;
             }
         }
@@ -256,7 +262,7 @@ final class HttpExecution {
         final RouterCursor parent;
         final HttpRouter.Route route;
         final String effectiveMethod;
-        int index;
+        int index,sync;
         RouteCursor(RouterCursor parent,HttpRouter.Route route) {
             this.parent=parent;this.route=route;
             effectiveMethod=request.methodToken().equals("HEAD") && !route.has("HEAD")?"GET":request.methodToken();
@@ -264,12 +270,15 @@ final class HttpExecution {
         void advance(@Nullable Throwable error) {
             if(error!=null) { parent.advance(error);return; }
             HttpRouter.Handler[] handlers=route.handlers;
+            if(index>=handlers.length) { parent.advance(null);return; }
+            if(++sync>100) { defer(()->advance(null));return; }
             while(index<handlers.length) {
                 HttpRouter.Handler handler=handlers[index++];
                 if(!handler.method.isEmpty() && !handler.method.equals("*") && !handler.method.equals(effectiveMethod))continue;
                 try { request.decodeQuery(); }
                 catch(Exception failure) { parent.advance(failure);return; }
-                callback(handler.callback,new Continue(parent,this,null));return;
+                try { callback(handler.callback,new Continue(parent,this,null)); } finally { sync=0; }
+                return;
             }
             parent.advance(null);
         }
