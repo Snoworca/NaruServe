@@ -6,7 +6,7 @@
 
 NaruServe는 Express.js처럼 사용하는 Java 8·Kotlin용 경량 HTTP 서버 라이브러리입니다.
 
-> 이 체크아웃은 0.10.0 공통 HTTP 프로파일을 설명합니다. Maven 배포 검증 전에는 새 API를 소스 빌드로 사용하세요. 아래 공개 0.9.0 좌표는 이전 릴리스에 해당합니다.
+> 이 안내는 NaruServe 0.10.0 공통 HTTP 프로파일과 기존 확장 API를 설명합니다.
 Android 5.0(API 21) 이상과 Java 8 이상 JVM에서 같은 API를 사용합니다.
 
 [한국어 API 문서](docs/api/README.md)와 [English API guide](docs/api/en/README.md)를 제공합니다.
@@ -14,7 +14,7 @@ Android 5.0(API 21) 이상과 Java 8 이상 JVM에서 같은 API를 사용합니
 
 ## 설치
 
-NaruServe 0.9.0은 Maven Central에 공개되어 있어, Gradle이 `mavenCentral()`에서 바로 받습니다. 별도 저장소나 소스 체크아웃은 필요 없습니다.
+NaruServe 0.10.0은 아래 Maven Central 좌표와 `mavenCentral()` 저장소를 사용합니다. 저장소에서 0.10.0을 받을 수 없다면 릴리스가 제공될 때까지 [소스 체크아웃 빌드](#소스-체크아웃-빌드)를 사용하세요.
 
 - Central 페이지: [central.sonatype.com/artifact/com.snoworca.naruserve/naruserve](https://central.sonatype.com/artifact/com.snoworca.naruserve/naruserve)
   (전체 모듈: [namespace com.snoworca.naruserve](https://central.sonatype.com/namespace/com.snoworca.naruserve))
@@ -28,7 +28,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.snoworca.naruserve:naruserve:0.9.0'
+    implementation 'com.snoworca.naruserve:naruserve:0.10.0'
 }
 ```
 
@@ -40,7 +40,7 @@ repositories {
 }
 
 dependencies {
-    implementation("com.snoworca.naruserve:naruserve:0.9.0")
+    implementation("com.snoworca.naruserve:naruserve:0.10.0")
 }
 ```
 
@@ -48,9 +48,9 @@ dependencies {
 
 | 프로젝트 | Gradle 의존성 |
 |---|---|
-| JDK 8 이상 Java 애플리케이션 | `implementation 'com.snoworca.naruserve:naruserve:0.9.0'` |
-| Kotlin 애플리케이션 | `implementation 'com.snoworca.naruserve:naruserve-kotlin:0.9.0'` |
-| Android 앱(API 21 이상) | `implementation 'com.snoworca.naruserve:naruserve-android:0.9.0'`과 아래 `pickFirsts` 설정 |
+| JDK 8 이상 Java 애플리케이션 | `implementation 'com.snoworca.naruserve:naruserve:0.10.0'` |
+| Kotlin 애플리케이션 | `implementation 'com.snoworca.naruserve:naruserve-kotlin:0.10.0'` |
+| Android 앱(API 21 이상) | `implementation 'com.snoworca.naruserve:naruserve-android:0.10.0'`과 아래 `pickFirsts` 설정 |
 
 Android Studio로 만든 프로젝트는 `settings.gradle`의 `dependencyResolutionManagement`에 이미 `google()`과 `mavenCentral()`이 있으므로 따로 추가할 것이 없습니다.
 
@@ -73,16 +73,16 @@ artifactId는 모듈 이름을 소문자로 쓴 값입니다(`NaruServe-api` →
 
 | 모듈 | 좌표 | 내용 |
 |---|---|---|
-| `NaruServe-api` | `com.snoworca.naruserve:naruserve-api:0.9.0` | 공개 API와 SPI. 외부 런타임 의존성 없음(JSpecify 애너테이션은 컴파일 전용) |
-| `NaruServe` | `com.snoworca.naruserve:naruserve:0.9.0` | `RestApp.create()` 기본 조립: TinyHttpd, Gson(컴파일 시점의 `GsonJsonCodec` 포함), 콘솔 로거. 일반 JDK에서 사용 |
-| `NaruServe-tinyhttpd` | `com.snoworca.naruserve:naruserve-tinyhttpd:0.9.0` | TinyHttpd `HttpAdapter` |
-| `NaruServe-gson` | `com.snoworca.naruserve:naruserve-gson:0.9.0` | `GsonJsonCodec`(Gson 2.14.0) |
-| `NaruServe-kotlin` | `com.snoworca.naruserve:naruserve-kotlin:0.9.0` | `NaruServe`와 Kotlin 전용 확장. `kotlin-stdlib`를 사용하는 유일한 모듈 |
-| `NaruServe-android` | `com.snoworca.naruserve:naruserve-android:0.9.0` | `NaruServe`, Logcat 로거, `INTERNET` 권한을 담은 Android 라이브러리(AAR). Android SDK가 있을 때만 빌드 |
-| `NaruServe-logcat` | `com.snoworca.naruserve:naruserve-logcat:0.9.0` | Logcat `Logger` |
-| `NaruServe-filelog` | `com.snoworca.naruserve:naruserve-filelog:0.9.0` | 파일 로테이션 `Logger` |
-| `NaruServe-slf4j` | `com.snoworca.naruserve:naruserve-slf4j:0.9.0` | SLF4J `Logger` 어댑터(JVM 전용) |
-| `NaruServe-servlet` | `com.snoworca.naruserve:naruserve-servlet:0.9.0` | Servlet 3.1 이상 컨테이너에서 NaruServe 앱을 실행하는 어댑터(JVM 전용) |
+| `NaruServe-api` | `com.snoworca.naruserve:naruserve-api:0.10.0` | 공개 API와 SPI. 외부 런타임 의존성 없음(JSpecify 애너테이션은 컴파일 전용) |
+| `NaruServe` | `com.snoworca.naruserve:naruserve:0.10.0` | `RestApp.create()` 기본 조립: TinyHttpd, Gson(컴파일 시점의 `GsonJsonCodec` 포함), 콘솔 로거. 일반 JDK에서 사용 |
+| `NaruServe-tinyhttpd` | `com.snoworca.naruserve:naruserve-tinyhttpd:0.10.0` | TinyHttpd `HttpAdapter` |
+| `NaruServe-gson` | `com.snoworca.naruserve:naruserve-gson:0.10.0` | `GsonJsonCodec`(Gson 2.14.0) |
+| `NaruServe-kotlin` | `com.snoworca.naruserve:naruserve-kotlin:0.10.0` | `NaruServe`와 Kotlin 전용 확장. `kotlin-stdlib`를 사용하는 유일한 모듈 |
+| `NaruServe-android` | `com.snoworca.naruserve:naruserve-android:0.10.0` | `NaruServe`, Logcat 로거, `INTERNET` 권한을 담은 Android 라이브러리(AAR). Android SDK가 있을 때만 빌드 |
+| `NaruServe-logcat` | `com.snoworca.naruserve:naruserve-logcat:0.10.0` | Logcat `Logger` |
+| `NaruServe-filelog` | `com.snoworca.naruserve:naruserve-filelog:0.10.0` | 파일 로테이션 `Logger` |
+| `NaruServe-slf4j` | `com.snoworca.naruserve:naruserve-slf4j:0.10.0` | SLF4J `Logger` 어댑터(JVM 전용) |
+| `NaruServe-servlet` | `com.snoworca.naruserve:naruserve-servlet:0.10.0` | Servlet 3.1 이상 컨테이너에서 NaruServe 앱을 실행하는 어댑터(JVM 전용) |
 
 ### 소스 체크아웃 빌드
 
@@ -259,7 +259,7 @@ settings.gradle        모듈 포함과 선택적 TinyHttpd composite
 | 증상 | 원인과 조치 |
 |---|---|
 | `tinyHttpdDir: TinyHttpd checkout not found` | `-PtinyHttpdFromMaven=true`로 배포된 엔진 JAR를 선택하거나 유효한 `-PtinyHttpdDir` 경로를 넘기세요. |
-| `Could not find com.snoworca.naruserve:...:0.9.0` | 릴리스 가용성을 확인하고, 이 체크아웃을 로컬에 게시한 뒤 소비자에 `mavenLocal()`을 추가하세요. |
+| `Could not find com.snoworca.naruserve:...:0.10.0` | 릴리스 가용성을 확인하고, 이 체크아웃을 로컬에 게시한 뒤 소비자에 `mavenLocal()`을 추가하세요. |
 | `No com.snoworca.naruserve.spi.AppFactory provider found` | `naruserve`(또는 `naruserve-kotlin` / `naruserve-android`)를 추가하거나 `RestApp.builder()`에 `httpAdapter`와 `jsonCodec`을 명시하세요. `naruserve-api`만으로는 인터페이스와 구현 기반 요소만 제공합니다. |
 | 다른 기기에서 연결할 수 없음 | 기본 바인딩은 `127.0.0.1`입니다. 설정 람다에서 `bindAddress("0.0.0.0")`를 지정하고 기기 네트워크·방화벽을 확인하세요. |
 | Android 리소스 병합에서 TinyHttpd 고지가 중복됨 | 설치 절의 `packaging.resources.pickFirsts` 설정을 적용하세요. |

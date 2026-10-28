@@ -13,7 +13,7 @@ Express에서 `multer`로 하던 일을 내장 기능으로 합니다. 미들웨
 | `limits: { fileSize }` | `app.multipart(c -> c.maxFileSize(...))` |
 | `dest: 'uploads/'` | `c.tempDirectory(...)` (임시 폴더) + `file.save(...)` |
 
-아래 공통 HTTP 동작은 0.10.0 체크아웃 기준입니다. 새 릴리스 전까지 공개 모듈 좌표는 0.9.0입니다.
+아래 공통 HTTP 동작은 NaruServe 0.10.0 기준입니다.
 
 ## 예제
 

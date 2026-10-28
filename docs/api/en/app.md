@@ -4,7 +4,7 @@
 
 `RestApp` corresponds to Express's `app`. Use it to register routes, middleware and configuration, then start and stop a server. Examples below are API fragments; use the [quick start](README.md#quick-start) for imports and an executable entry point. Application-specific types such as `Database` and `UserService` stand for your own implementations.
 
-This page describes common HTTP in the **0.10.0 checkout**. The 0.9.0 dependency below identifies the previous release, not availability of these new APIs. Follow the [installation guide](README.md) for the current checkout/artifact procedure. TinyHttpd is pinned to 3.1.1 with raw request-target delivery; default Gson remains 2.14.0. Core APIs target Java 8/API 21; this is not a device performance claim.
+This page describes common HTTP in **NaruServe 0.10.0**. Follow the [installation guide](README.md) for source/artifact setup. TinyHttpd is pinned to 3.1.1 with raw request-target delivery; default Gson remains 2.14.0. Core APIs target Java 8/API 21; this is not a device performance claim.
 
 ## Create an app
 
@@ -15,7 +15,7 @@ RestApp app = RestApp.create();
 `create()` assembles TinyHttpd, Gson 2.14.0 and a console logger through the bootstrap module `NaruServe`. Add that module, or use `NaruServe-kotlin` or `NaruServe-android`, which include it. On Android, `NaruServe-android` selects the Logcat logger.
 
 ```groovy
-implementation 'com.snoworca.naruserve:naruserve:0.9.0'
+implementation 'com.snoworca.naruserve:naruserve:0.10.0'
 ```
 
 Use the builder to select implementations yourself, including when depending only on `NaruServe-api`. Supply `new GsonJsonCodec()` as the codec to use Gson. `NaruServe` includes this type; when assembling without that module, add `com.snoworca.naruserve:naruserve-gson` yourself. See [Gson configuration](json.md#default-gson-configuration).

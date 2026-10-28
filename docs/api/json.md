@@ -18,7 +18,7 @@ ws.sendJson(user);                                          // WebSocket
 - Kotlin의 `object : TypeRef<List<String>>() {}`는 Java의 `new TypeRef<List<String>>() {}`와 같은 `List<String>`을 담습니다. Kotlin은 선언 위치 변성 때문에 `List<? extends String>`을 기록하지만, `TypeRef`가 Kotlin 클래스(`kotlin.Metadata`가 남아 있을 때)에서는 `? extends` 와일드카드를 떼어 냅니다. R8이 이 어노테이션을 지운 빌드에서는 와일드카드가 남지만 기본 Gson 코덱은 두 타입을 똑같이 읽습니다.
 - `res.json`은 객체, 배열, `Map`, 문자열, 숫자, `null`을 모두 올바른 JSON으로 씁니다.
 
-타입을 지정하는 요청 읽기와 명시적 `res.json` 쓰기는 0.10.0 공통 HTTP 체크아웃에서도 유지됩니다. 위 두 요청 읽기는 같은 본문을 서로 다른 타입으로 연속해서 읽는 예제가 아니라 선택지입니다. 파싱·한도 오류는 이후에 등록된 오류 처리기로 전달되고, 처리되지 않은 공통 HTTP 오류는 자동 JSON envelope가 아니라 Java 예외 정보를 이스케이프한 HTML입니다. JSON API가 필요하면 오류 미들웨어에서 `res.status(...).json(...)`으로 명시하세요. 아래 공개 좌표는 여전히 0.9.0이며 0.10.0이 이미 출판됐다는 뜻이 아닙니다.
+타입을 지정하는 요청 읽기와 명시적 `res.json` 쓰기는 0.10.0 공통 HTTP 체크아웃에서도 유지됩니다. 위 두 요청 읽기는 같은 본문을 서로 다른 타입으로 연속해서 읽는 예제가 아니라 선택지입니다. 파싱·한도 오류는 이후에 등록된 오류 처리기로 전달되고, 처리되지 않은 공통 HTTP 오류는 자동 JSON envelope가 아니라 Java 예외 정보를 이스케이프한 HTML입니다. JSON API가 필요하면 오류 미들웨어에서 `res.status(...).json(...)`으로 명시하세요.
 
 async 라우트가 반환한 미완료 `Deferred`는 응답 완료 후에도 같은 캐시 본문이나 미소비 입력을 보유할 수 있습니다. 생산자의 마지막 접근을 마친 뒤 결과를 확정하고 취소된 입력은 재사용하지 마세요. [요청 소유권](lifecycle.md#지연-콜백과-요청-자원)을 참고하세요.
 
@@ -56,7 +56,7 @@ app.jsonCodec(new GsonJsonCodec(gson));
 `GsonJsonCodec`은 `NaruServe-api`에 들어 있지 않습니다(공개 API는 Gson에 의존하지 않습니다). `GsonJsonCodec`은 `NaruServe-gson` 모듈에 있습니다. 이 모듈은 Gson을 `api`로 노출하므로 `Gson`을 직접 만들 때 따로 의존성을 넣지 않아도 됩니다. `RestApp.create()`용 bootstrap 모듈 `com.snoworca.naruserve:naruserve`는 이 모듈을 `api`로 함께 가져오므로, `NaruServe`를 넣었다면 따로 추가할 것이 없습니다(`NaruServe-kotlin`, `NaruServe-android`도 같습니다). `NaruServe` 없이 `RestApp.builder()`로 조립할 때만 아래 의존성을 넣으세요.
 
 ```groovy
-implementation 'com.snoworca.naruserve:naruserve-gson:0.9.0'
+implementation 'com.snoworca.naruserve:naruserve-gson:0.10.0'
 // transitive Gson dependency: com.google.code.gson:gson:2.14.0
 ```
 

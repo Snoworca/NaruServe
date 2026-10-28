@@ -4,7 +4,7 @@
 
 `RestApp`은 Express의 `app`에 해당합니다. 라우트·미들웨어·설정을 등록하고 서버를 시작하고 끕니다.
 
-이 페이지는 **0.10.0 체크아웃**의 일반 HTTP를 설명합니다. 아래 0.9.0 의존성은 이전 배포 좌표이며 새 API의 배포 완료를 뜻하지 않습니다. 현재 체크아웃/아티팩트 사용법은 [설치 안내](README.md)를 따르세요. TinyHttpd는 raw request-target 전달을 사용하는3.1.1, 기본 Gson은2.14.0입니다. 코어 API는 Java 8/API 21을 대상으로 하며 기기 성능 검증을 뜻하지 않습니다.
+이 페이지는 **NaruServe 0.10.0**의 일반 HTTP를 설명합니다. 소스/아티팩트 사용법은 [설치 안내](README.md)를 따르세요. TinyHttpd는 raw request-target 전달을 사용하는3.1.1, 기본 Gson은2.14.0입니다. 코어 API는 Java 8/API 21을 대상으로 하며 기기 성능 검증을 뜻하지 않습니다.
 
 ## 앱 만들기
 
@@ -16,7 +16,7 @@ RestApp app = RestApp.create();
 이 조립은 기본 bootstrap 모듈 `NaruServe`가 맡습니다. `create()`를 쓰려면 이 모듈을 의존성에 넣습니다. Kotlin은 `NaruServe-kotlin`, Android 앱은 `NaruServe-android`를 넣어도 이 모듈이 함께 들어옵니다. `NaruServe-android`에서는 `create()`가 Logcat 로거를 씁니다.
 
 ```groovy
-implementation 'com.snoworca.naruserve:naruserve:0.9.0'
+implementation 'com.snoworca.naruserve:naruserve:0.10.0'
 ```
 
 엔진을 직접 고를 때는 builder를 씁니다. `NaruServe-api`만 의존하는 경우에도 이 방법을 씁니다. 기본 JSON 구현을 코드에서 직접 넘기려면 `new GsonJsonCodec()`을 `jsonCodec(...)`에 넘깁니다. `GsonJsonCodec`은 `NaruServe`에 함께 들어 있고, `NaruServe-api`만 쓸 때는 Gson 모듈 `com.snoworca.naruserve:naruserve-gson`을 넣습니다([JSON](json.md#기본-gson-설정)).

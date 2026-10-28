@@ -8,7 +8,7 @@ Response corresponds to Express's res. status, header, addCookie and cache retur
 res.status(201).header("X-Request-ID", id).json(created);
 ```
 
-The common HTTP behavior below describes the 0.10.0 checkout. Published module coordinates remain 0.9.0 until the new release.
+The common HTTP behavior below targets NaruServe 0.10.0.
 
 ## Method summary
 

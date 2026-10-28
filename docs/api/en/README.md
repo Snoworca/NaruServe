@@ -5,7 +5,7 @@ English | [한국어](../README.md)
 NaruServe is a lightweight HTTP server library for Java 8 and Kotlin with an Express.js-style API.
 Use the same API on Android 5.0 (API 21) and later and on a regular JVM.
 
-> **Documentation status:** These guides describe the 0.10.0 common HTTP profile and retained extensions. Until Maven publication is verified, use a source build for the new APIs; the 0.9.0 coordinates below describe the previous public release. See [Coming from Express](express-migration.md) for routing, errors, asynchronous ownership and the Java Pattern boundary.
+> **Documentation status:** These guides describe the 0.10.0 common HTTP profile and retained extensions. Follow the [installation guide](../../../README.md#install) for coordinates and the source-build fallback when that version is unavailable. See [Coming from Express](express-migration.md) for routing, errors, asynchronous ownership and the Java Pattern boundary.
 
 If you have used Express, start with [Coming from Express](express-migration.md).
 
@@ -72,7 +72,7 @@ The complete [Java example](../../../examples/java) and [Kotlin example](../../.
 
 ## Modules
 
-All modules use Maven group `com.snoworca.naruserve` and version `0.9.0`. The artifactId is the module name in lowercase (`NaruServe-api` → `naruserve-api`).
+All modules use Maven group `com.snoworca.naruserve` and version `0.10.0`. The artifactId is the module name in lowercase (`NaruServe-api` → `naruserve-api`).
 
 | Module | Coordinates | Contents | Android |
 |---|---|---|---|
@@ -100,13 +100,13 @@ Android apps use `NaruServe-android`, which adds the Logcat logger and `android.
 
 ```groovy
 // Regular JDK (Java 8+): start immediately with RestApp.create().
-implementation 'com.snoworca.naruserve:naruserve:0.9.0'
+implementation 'com.snoworca.naruserve:naruserve:0.10.0'
 
 // Kotlin: NaruServe and reified extensions.
-implementation 'com.snoworca.naruserve:naruserve-kotlin:0.9.0'
+implementation 'com.snoworca.naruserve:naruserve-kotlin:0.10.0'
 
 // Android app: NaruServe, the Logcat logger and INTERNET permission.
-implementation 'com.snoworca.naruserve:naruserve-android:0.9.0'
+implementation 'com.snoworca.naruserve:naruserve-android:0.10.0'
 ```
 
 Also add the following to the Android app module's `build.gradle`. The TinyHttpd 3.1.1 core and websocket JARs contain identical license notices at the same paths. Without this configuration, the app's resource merge (`mergeDebugJavaResource`) fails on duplicate files. Keeping one copy preserves the notices in the APK because both copies have the same contents.
