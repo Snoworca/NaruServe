@@ -6,6 +6,11 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.snoworca.naruserve.AccessLogOptions;
+import com.snoworca.naruserve.AsyncRouteHandler;
+import com.snoworca.naruserve.Deferred;
+import com.snoworca.naruserve.ErrorMiddleware;
+import com.snoworca.naruserve.ParamHandler;
+import com.snoworca.naruserve.Router;
 import com.snoworca.naruserve.AppState;
 import com.snoworca.naruserve.Configurer;
 import com.snoworca.naruserve.ConsoleLogger;
@@ -42,38 +47,22 @@ public class AppLifecycleGuardTest {
                 .jsonCodec(new StubJsonCodec()).build();
     }
 
-    /** Every guarded call by method name, run against {@code app} and a RouteBuilder obtained in NEW. */
+    /** Configuration/WS guards only (CON-APP-010 AC-3 AC-5), run against {@code app} and a RouteBuilder obtained in NEW. */
     private static Map<String, Consumer<DefaultRestApp>> guardedCalls(RouteBuilder early) {
         Map<String, Consumer<DefaultRestApp>> c = new LinkedHashMap<>();
-        c.put("get", a -> a.get("/n", H));
-        c.put("post", a -> a.post("/n", H));
-        c.put("put", a -> a.put("/n", H));
-        c.put("patch", a -> a.patch("/n", H));
-        c.put("delete", a -> a.delete("/n", H));
-        c.put("head", a -> a.head("/n", H));
-        c.put("options", a -> a.options("/n", H));
-        c.put("route", a -> a.route(Method.GET, "/n", H));
-        c.put("route ", a -> a.route(MethodSet.of(Method.GET), "/n", H));
-        c.put("get ", a -> a.get("/n", MW, H));
-        c.put("post    ", a -> a.post("/n", null, H)); // guard runs before the null check
-        c.put("post ", a -> a.post("/n", MW, H));
-        c.put("put ", a -> a.put("/n", MW, H));
-        c.put("patch ", a -> a.patch("/n", MW, H));
-        c.put("delete ", a -> a.delete("/n", MW, H));
-        c.put("head ", a -> a.head("/n", MW, H));
-        c.put("options ", a -> a.options("/n", MW, H));
-        c.put("route  ", a -> a.route(Method.GET, "/n", MW, H));
-        c.put("route   ", a -> a.route(MethodSet.of(Method.GET), "/n", MW, H));
-        c.put("use", a -> a.use(MW));
-        c.put("use ", a -> a.use("/p", MW));
         c.put("accessLog", a -> a.accessLog(o -> o.enabled(false)));
         c.put("logger", a -> a.logger(new ConsoleLogger()));
         c.put("onStart", a -> a.onStart(ctx -> { }));
         c.put("onStop", a -> a.onStop(ctx -> { }));
         c.put("onError", a -> a.onError((e, req, res) -> { }));
         c.put("routerPolicy", a -> a.routerPolicy(RouterPolicy.strict()));
-        c.put("get  ", a -> early.get(H));
-        c.put("use  ", a -> early.use(MW));
+        c.put("server", a -> a.server(o -> { }));
+        c.put("ws", a -> a.ws("/ws", (req, ws) -> { }));
+        c.put("webSocket", a -> a.webSocket(o -> { }));
+        c.put("sse", a -> a.sse(o -> { }));
+        c.put("jsonCodec", a -> a.jsonCodec(new StubJsonCodec()));
+        c.put("multipart", a -> a.multipart(o -> { }));
+        c.put("group", a -> a.group("/group", g -> { }));
         return c;
     }
 
@@ -96,7 +85,7 @@ public class AppLifecycleGuardTest {
 
     // SDS-AC-3; FR-APP-002 AC-3
     @Test
-    public void sdsAc3_FR_APP_002_AC3_everyConfigurationMethodIsRefusedOutsideNewNamingMethodAndState() {
+    public void configurationAndWebSocketMethodsRemainRefusedOutsideNewNamingMethodAndState() {
         DefaultRestApp app = newApp();
         RouteBuilder early = app.route("/b");
         Logger original = app.logger();
@@ -146,8 +135,14 @@ public class AppLifecycleGuardTest {
         if (type == RouteHandler.class) {
             return H;
         }
-        if (type == Middleware.class) {
-            return MW;
+        if (type == Middleware.class) { return MW; }
+        if (type == Middleware[].class) { return new Middleware[]{MW}; }
+        if (type == Object.class) { return "/r"; }
+        if (type == Router.class) { return Router.create(); }
+        if (type == ParamHandler.class) { return (ParamHandler) (q, s, n, value, name) -> n.run(); }
+        if (type == ErrorMiddleware.class) { return (ErrorMiddleware) (e, q, s, n) -> n.error(e); }
+        if (type == AsyncRouteHandler.class) {
+            return (AsyncRouteHandler) (q, s, n) -> { n.run(); return Deferred.resolved(); };
         }
         if (type == Method.class) {
             return Method.GET;
@@ -165,7 +160,7 @@ public class AppLifecycleGuardTest {
             return new ConsoleLogger();
         }
         if (type == Configurer.class) {
-            return (Configurer<AccessLogOptions>) o -> { };
+            return (Configurer<Object>) o -> { };
         }
         if (type == RouterPolicy.class) {
             return RouterPolicy.strict();
@@ -199,7 +194,8 @@ public class AppLifecycleGuardTest {
         Class<?>[] types = m.getParameterTypes();
         Object[] args = new Object[types.length];
         for (int i = 0; i < types.length; i++) {
-            args[i] = argFor(types[i]);
+            if (i == 0 && (m.getName().equals("method") || m.getName().equals("methodAsync"))) args[i] = "GET";
+            else args[i] = argFor(types[i]);
         }
         return args;
     }
@@ -207,67 +203,60 @@ public class AppLifecycleGuardTest {
     // SDS-AC-4; FR-APP-002 AC-4; CON-APP-002 AC-1; re-pointed to IR-STATIC-001 AC-5: multipart, formLimit, both staticFiles overloads,
     // defaultCache and mimeTypes().register are refused after listen()
     @Test
-    public void sdsAc4_FR_APP_002_AC4_reflectionFindsEveryRestAppAndRouteBuilderRegistrationRefusedInRunning()
-            throws Exception {
+    public void reflectionPartitionsEveryMutationIntoLiveHttpAndGuardedConfiguration() throws Exception {
+        // CON-APP-010 AC-3 AC-5; FR-APP-021 AC-3 AC-4: inspect inherited erased-generic registrations too.
         DefaultRestApp app = newApp();
         RouteBuilder early = app.route("/b");
         app.listen(0);
         assertEquals(AppState.RUNNING, app.state());
-        List<String> accepted = new ArrayList<>();
+        java.util.Set<String> http = new java.util.TreeSet<>(java.util.Arrays.asList(
+                "route", "get", "post", "put", "patch", "delete", "head", "options", "use", "param",
+                "method", "methodAsync", "getAsync", "useAsync"));
+        java.util.Set<String> configuration = new java.util.TreeSet<>(java.util.Arrays.asList(
+                "group", "cors", "routerPolicy", "onError", "onStart", "onStop", "logger", "accessLog",
+                "jsonCodec", "jsonLimit", "server", "trustProxy", "multipart", "formLimit", "staticFiles",
+                "defaultCache", "ws", "webSocket", "sse"));
+        java.util.Set<String> observedHttp = new java.util.TreeSet<>(), observedConfiguration = new java.util.TreeSet<>();
         int checked = 0;
-        List<String> guarded = new ArrayList<>();
         for (java.lang.reflect.Method m : RestApp.class.getMethods()) {
-            if (Modifier.isStatic(m.getModifiers()) || m.getReturnType() != RestApp.class) {
-                continue;
-            }
+            if (Modifier.isStatic(m.getModifiers()) || m.isSynthetic()) continue;
+            Class<?> returns = m.getReturnType();
+            if (returns != RestApp.class && returns != RouteBuilder.class && m.getDeclaringClass() != com.snoworca.naruserve.HttpRoutes.class) continue;
             checked++;
-            guarded.add(m.getName() + "/" + m.getParameterCount());
+            assertTrue("unclassified mutation " + m, http.contains(m.getName()) || configuration.contains(m.getName()));
+            boolean live = http.contains(m.getName());
+            (live ? observedHttp : observedConfiguration).add(m.getName());
             try {
-                m.invoke(app, argsFor(m));
-                accepted.add("RestApp." + m.getName());
+                Object result = m.invoke(app, argsFor(m));
+                if (!live) fail("configuration accepted in RUNNING: " + m);
+                if (returns == RouteBuilder.class) assertTrue(result instanceof RouteBuilder);
+                else assertSame(m.toString(), app, result);
             } catch (InvocationTargetException e) {
-                if (!(e.getCause() instanceof IllegalStateException)) {
-                    accepted.add("RestApp." + m.getName() + " threw " + e.getCause());
-                }
+                if (live) throw new AssertionError("live HTTP mutation refused: " + m, e.getCause());
+                assertTrue(m + " threw " + e.getCause(), e.getCause() instanceof IllegalStateException);
+                assertTrue(e.getCause().getMessage(), e.getCause().getMessage().contains(m.getName()));
+                assertTrue(e.getCause().getMessage(), e.getCause().getMessage().contains("RUNNING"));
             }
         }
         for (java.lang.reflect.Method m : RouteBuilder.class.getMethods()) {
-            if (m.getReturnType() != RouteBuilder.class) {
-                continue;
-            }
+            assertEquals(m.toString(), RouteBuilder.class, m.getReturnType());
             checked++;
-            try {
-                m.invoke(early, argsFor(m));
-                accepted.add("RouteBuilder." + m.getName());
-            } catch (InvocationTargetException e) {
-                if (!(e.getCause() instanceof IllegalStateException)) {
-                    accepted.add("RouteBuilder." + m.getName() + " threw " + e.getCause());
-                }
-            }
+            try { assertSame(m.toString(), early, m.invoke(early, argsFor(m))); }
+            catch (InvocationTargetException e) { throw new AssertionError("live builder mutation refused: " + m, e.getCause()); }
         }
-        assertEquals(new ArrayList<String>(), accepted);
-        assertTrue("checked " + checked, checked >= 30);
-        for (String wave6 : new String[] {"multipart/1", "formLimit/1", "staticFiles/2", "staticFiles/3",
-                "defaultCache/1"}) {
-            assertTrue(wave6 + " in " + guarded, guarded.contains(wave6));
-        }
-        try {
-            app.mimeTypes().register("webp", "image/webp");
-            fail("mimeTypes().register accepted in RUNNING");
-        } catch (IllegalStateException expected) {
-            // guarded like the RestApp setters
-        }
-        // Not guarded: reads and route(String).
-        app.logger();
-        assertEquals(AppState.RUNNING, app.state());
-        RouteBuilder late = app.route("/late");
-        try {
-            late.get(H);
-            fail("a builder obtained in RUNNING still refuses registration");
-        } catch (IllegalStateException expected) {
-            // guarded at the registration, not at route(String)
-        }
+        assertEquals(http, observedHttp);
+        assertEquals(configuration, observedConfiguration);
+        assertTrue("exhaustive mutations checked " + checked, checked >= 70);
+        try { app.mimeTypes().register("webp", "image/webp"); fail("mimeTypes().register accepted in RUNNING"); }
+        catch (IllegalStateException expected) { assertTrue(expected.getMessage().contains("RUNNING")); }
+        // An inherited async registration and the String-builder path are visible to real requests after listen.
+        app.getAsync("/live-async", (q, s, n) -> { s.send("async"); return Deferred.resolved(); });
+        app.route("/live-builder").get((q, s) -> s.send("builder"));
+        InMemoryHttpAdapter transport = (InMemoryHttpAdapter) app.httpAdapter();
+        assertEquals("async", transport.send(InMemoryHttpAdapter.ClientRequest.of("GET", "/live-async")).text());
+        assertEquals("builder", transport.send(InMemoryHttpAdapter.ClientRequest.of("GET", "/live-builder")).text());
         app.shutdown(1, TimeUnit.SECONDS);
+        assertEquals(AppState.TERMINATED, app.state());
     }
     // CON-APP-010 AC-3 AC-5; FR-APP-021 AC-4: advanced path builders retain application shutdown guards.
     @Test
