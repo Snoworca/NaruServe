@@ -194,6 +194,11 @@ public final class Dispatcher implements ExchangeHandler {
     // Static layers use the same frozen resources and test hooks as legacy fallback, at their actual stack position.
     // @req FR-APP-021 AC-1; CON-APP-010 AC-4
     boolean serveStatic(int mount,DefaultRequest request,DefaultResponse response) throws java.io.IOException {
+        // Static is ordered with ordinary HTTP layers, but cannot occupy a separately reserved WS footprint.
+        try {
+            RouteMatch<RouteHandler> ws=router.lookup("GET",request.rawPath(),false);
+            if(ws.kind()==RouteMatch.Kind.WEBSOCKET_ONLY)return false;
+        } catch(IllegalArgumentException invalidForLegacyWs) { /* ordinary raw HTTP owns its own path profile */ }
         return statics.serveMount(mount,request,response);
     }
 
@@ -455,7 +460,7 @@ public final class Dispatcher implements ExchangeHandler {
             return;
         }
         boolean mismatch = m.kind() == RouteMatch.Kind.METHOD_MISMATCH;
-        boolean getLike = req.method() == Method.GET || req.method() == Method.HEAD;
+        boolean getLike = "GET".equals(req.methodToken()) || "HEAD".equals(req.methodToken());
         if ((m.kind() == RouteMatch.Kind.NO_MATCH || mismatch && getLike) && statics.serve(req, res, mismatch)) {
             return;
         }

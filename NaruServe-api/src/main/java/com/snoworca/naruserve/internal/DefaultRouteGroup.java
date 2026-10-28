@@ -76,46 +76,39 @@ final class DefaultRouteGroup implements RouteGroup {
         for (Middleware value : middleware) builder.use(value);
     }
 
+    @FunctionalInterface private interface BuilderCommand { void apply(RouteBuilder builder); }
+
     private final class GroupRouteBuilder implements RouteBuilder {
         private final String path;
-        private final List<Middleware> routeMiddleware = new ArrayList<>();
+        private final List<BuilderCommand> commands=new ArrayList<>();
 
-        GroupRouteBuilder(String path) { this.path = path; }
-
+        GroupRouteBuilder(String path) {
+            // Validate now, before any buffered group registration can be published.
+            new HttpPathSpec(path,true,false,false);
+            this.path=path;
+            registrations.add(this::publish);
+        }
+        private void publish() {
+            RouteBuilder builder=app.route(path);
+            applyMiddleware(builder);
+            for(BuilderCommand command:commands)command.apply(builder);
+        }
         @Override public RouteBuilder use(Middleware value) {
-            requireOpen();
-            routeMiddleware.add(Objects.requireNonNull(value, "middleware"));
-            return this;
+            requireOpen();Objects.requireNonNull(value,"middleware");commands.add(builder->builder.use(value));return this;
         }
-
-        private RouteBuilder add(Method method, RouteHandler handler) {
-            requireOpen();
-            Objects.requireNonNull(handler, "handler");
-            List<Middleware> snapshot = new ArrayList<>(routeMiddleware);
-            registrations.add(() -> {
-                RouteBuilder builder = app.route(path);
-                applyMiddleware(builder);
-                for (Middleware value : snapshot) builder.use(value);
-                switch (method) {
-                    case GET: builder.get(handler); break;
-                    case POST: builder.post(handler); break;
-                    case PUT: builder.put(handler); break;
-                    case PATCH: builder.patch(handler); break;
-                    case DELETE: builder.delete(handler); break;
-                    case HEAD: builder.head(handler); break;
-                    case OPTIONS: builder.options(handler); break;
-                    default: throw new AssertionError(method);
-                }
-            });
-            return this;
+        @Override public RouteBuilder method(String token,Middleware... callbacks) {
+            requireOpen();String method=HttpRouter.method(token);Middleware[] checked=HttpRouter.callbacks(callbacks);
+            commands.add(builder->builder.method(method,checked));return this;
         }
-
-        @Override public RouteBuilder get(RouteHandler handler) { return add(Method.GET, handler); }
-        @Override public RouteBuilder post(RouteHandler handler) { return add(Method.POST, handler); }
-        @Override public RouteBuilder put(RouteHandler handler) { return add(Method.PUT, handler); }
-        @Override public RouteBuilder patch(RouteHandler handler) { return add(Method.PATCH, handler); }
-        @Override public RouteBuilder delete(RouteHandler handler) { return add(Method.DELETE, handler); }
-        @Override public RouteBuilder head(RouteHandler handler) { return add(Method.HEAD, handler); }
-        @Override public RouteBuilder options(RouteHandler handler) { return add(Method.OPTIONS, handler); }
+        private RouteBuilder add(Method method,RouteHandler handler) {
+            return method(method.name(),com.snoworca.naruserve.HttpRoutes.terminal(handler));
+        }
+        @Override public RouteBuilder get(RouteHandler handler) { return add(Method.GET,handler); }
+        @Override public RouteBuilder post(RouteHandler handler) { return add(Method.POST,handler); }
+        @Override public RouteBuilder put(RouteHandler handler) { return add(Method.PUT,handler); }
+        @Override public RouteBuilder patch(RouteHandler handler) { return add(Method.PATCH,handler); }
+        @Override public RouteBuilder delete(RouteHandler handler) { return add(Method.DELETE,handler); }
+        @Override public RouteBuilder head(RouteHandler handler) { return add(Method.HEAD,handler); }
+        @Override public RouteBuilder options(RouteHandler handler) { return add(Method.OPTIONS,handler); }
     }
 }
