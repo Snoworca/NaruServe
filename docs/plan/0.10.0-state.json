@@ -4,7 +4,7 @@
   "plan": "docs/plan/0.10.0-parallel-plan.md",
   "dependencies": "unchanged versions/types/scopes; existing toolchain reused",
   "regex": "Java Pattern",
-  "status": "foundation-integrated-central-contracts-ready",
+  "status": "parallel-core-pattern-and-servlet-foundation",
   "issues": [
     {
       "id": "T00",
@@ -69,7 +69,7 @@
     {
       "id": "T03",
       "number": 50,
-      "status": "open",
+      "status": "tdd-core-or-helper-work",
       "depends_on": [
         "T02"
       ],
@@ -82,7 +82,7 @@
     {
       "id": "T04",
       "number": 51,
-      "status": "open",
+      "status": "tdd-core-or-helper-work",
       "depends_on": [
         "T02",
         "T03"
@@ -96,7 +96,7 @@
     {
       "id": "T05",
       "number": 52,
-      "status": "open",
+      "status": "tdd-core-or-helper-work",
       "depends_on": [
         "T02",
         "T03",
@@ -111,7 +111,7 @@
     {
       "id": "T06",
       "number": 53,
-      "status": "open",
+      "status": "tdd-core-or-helper-work",
       "depends_on": [
         "T03",
         "T05"
@@ -125,7 +125,7 @@
     {
       "id": "T07",
       "number": 54,
-      "status": "open",
+      "status": "tdd-core-or-helper-work",
       "depends_on": [
         "T03",
         "T06"
@@ -139,7 +139,7 @@
     {
       "id": "T08",
       "number": 55,
-      "status": "open",
+      "status": "tdd-core-or-helper-work",
       "depends_on": [
         "T07"
       ],
@@ -152,7 +152,7 @@
     {
       "id": "T09",
       "number": 56,
-      "status": "open",
+      "status": "tdd-core-or-helper-work",
       "depends_on": [
         "T08"
       ],
@@ -165,7 +165,7 @@
     {
       "id": "T10",
       "number": 57,
-      "status": "open",
+      "status": "tdd-core-or-helper-work",
       "depends_on": [
         "T06",
         "T09"
@@ -179,7 +179,7 @@
     {
       "id": "T11",
       "number": 58,
-      "status": "open",
+      "status": "tdd-core-or-helper-work",
       "depends_on": [
         "T06",
         "T10"
@@ -218,12 +218,14 @@
     {
       "id": "T14",
       "number": 61,
-      "status": "open",
+      "status": "standalone-spi-foundation-ready-integration-pending",
       "depends_on": [
         "T03",
         "T11"
       ],
-      "req_ids": [],
+      "req_ids": [
+        "FR-SVL-009"
+      ],
       "test_review_rounds": [],
       "completed": false
     },
@@ -334,5 +336,22 @@
       "authors_own_tests": false
     }
   },
-  "integrated_head": "ab9b9c09f41d9c4ad7f7e7b417e2ae48e7372734"
+  "integrated_head": "ab9b9c09f41d9c4ad7f7e7b417e2ae48e7372734",
+  "next_lanes": {
+    "core": {
+      "worktree": ".claude/worktrees/v010-http-core",
+      "branch": "kiwi/v010/http-core",
+      "agent": "/root/api_core_docs"
+    },
+    "regex": {
+      "worktree": ".claude/worktrees/v010-regex-path",
+      "branch": "kiwi/v010/regex-path",
+      "agent": "/root/release_dependency_audit"
+    },
+    "servlet": {
+      "worktree": ".claude/worktrees/v010-servlet-deferred",
+      "branch": "kiwi/v010/servlet-deferred",
+      "agent": "/root/transport_dependency_audit"
+    }
+  }
 }
