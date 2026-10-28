@@ -258,7 +258,7 @@ final class ServletEventStream {
         public void write(int b) throws IOException {
             ex.writeLock.lock();
             try {
-                ex.checkNotAborted();
+                ex.checkWritable();
                 out.write(b);
                 out.flush();
             } finally {
@@ -270,7 +270,7 @@ final class ServletEventStream {
         public void write(byte[] b, int off, int len) throws IOException {
             ex.writeLock.lock();
             try {
-                ex.checkNotAborted();
+                ex.checkWritable();
                 out.write(b, off, len);
                 out.flush();
             } finally {
@@ -282,7 +282,7 @@ final class ServletEventStream {
         public void flush() throws IOException {
             ex.writeLock.lock();
             try {
-                ex.checkNotAborted();
+                ex.checkWritable();
                 out.flush();
             } finally {
                 ex.writeLock.unlock();

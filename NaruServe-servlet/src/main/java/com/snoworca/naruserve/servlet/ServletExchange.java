@@ -2,6 +2,7 @@ package com.snoworca.naruserve.servlet;
 
 import com.snoworca.naruserve.HttpException;
 import com.snoworca.naruserve.common.AbortListeners;
+import com.snoworca.naruserve.common.RequestRetentions;
 import com.snoworca.naruserve.spi.HttpExchange;
 import com.snoworca.naruserve.spi.StreamDrain;
 import com.snoworca.naruserve.spi.UpgradeHandler;
@@ -21,8 +22,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -59,6 +63,12 @@ final class ServletExchange implements HttpExchange {
     private final HttpServletRequest req;
     private final HttpServletResponse res;
     private final String path;
+    private final String method;
+    private final @Nullable String query;
+    private final String protocol;
+    private final String remote;
+    private final boolean secure;
+    private final List<Map.Entry<String,String>> requestHeaders;
     private final @Nullable ServletAdapter adapter;
     // Guarded by this.
     private boolean started;
@@ -67,6 +77,8 @@ final class ServletExchange implements HttpExchange {
     private boolean managed;
     private boolean stopRequested;
     private boolean asyncStarting;
+    private boolean aborting;
+    private boolean retired;
     private volatile boolean finished;
     private boolean handlerReturned;
     // Lock-free so abort() never waits for a writer.
@@ -75,6 +87,7 @@ final class ServletExchange implements HttpExchange {
     private volatile @Nullable AsyncContext async;
     private final AtomicBoolean completed = new AtomicBoolean();
     private final AbortListeners abortListeners = new AbortListeners();
+    private final RequestRetentions retentions = new RequestRetentions(this::completeIfReady);
     /** Held by the event stream's body stream around each write; abort() waits for it before completing. */
     final ReentrantLock writeLock = new ReentrantLock();
 
@@ -92,12 +105,19 @@ final class ServletExchange implements HttpExchange {
         this.res = res;
         this.path = path;
         this.adapter = adapter;
+        // A container may reuse its request after completion; saved Next callbacks still own this immutable head.
+        this.method = req.getMethod();
+        this.query = req.getQueryString();
+        this.protocol = req.getProtocol();
+        this.remote = req.getRemoteAddr();
+        this.secure = req.isSecure();
+        this.requestHeaders = snapshotHeaders(req);
     }
 
     // @req FR-SVL-002
     @Override
     public String methodToken() {
-        return req.getMethod();
+        return method;
     }
 
     /** The remainder {@link ServletPath} computed from the raw request URI. */
@@ -110,23 +130,30 @@ final class ServletExchange implements HttpExchange {
     // @req FR-SVL-002
     @Override
     public @Nullable String rawQuery() {
-        return req.getQueryString();
+        return query;
     }
 
     // @req FR-SVL-002
     @Override
     public String httpVersion() {
-        return req.getProtocol();
+        return protocol;
     }
 
     /** Every value of every name, in per-name order; the Servlet API gives no order across names. */
     // @req FR-SVL-002
     @Override
     public List<Map.Entry<String, String>> headers() {
+        return requestHeaders;
+    }
+
+    private static List<Map.Entry<String,String>> snapshotHeaders(HttpServletRequest req) {
         List<Map.Entry<String, String>> out = new ArrayList<>();
+        Set<String> seen = new HashSet<>();
         Enumeration<String> names = req.getHeaderNames();
         while (names != null && names.hasMoreElements()) {
             String name = names.nextElement();
+            // Servlet getHeaders is case-insensitive even if its name enumeration contains both spellings.
+            if (!seen.add(name.toLowerCase(Locale.ROOT))) continue;
             Enumeration<String> values = req.getHeaders(name);
             while (values != null && values.hasMoreElements()) {
                 out.add(new SimpleImmutableEntry<>(name, values.nextElement()));
@@ -144,14 +171,18 @@ final class ServletExchange implements HttpExchange {
     @Override
     public InputStream requestBody() {
         try {
+            checkInputAvailable();
             return new FilterInputStream(req.getInputStream()) {
                 @Override public int read() throws IOException {
+                    checkInputAvailable();
                     try { return in.read(); } catch (IOException failure) { abort(); throw failure; }
                 }
                 @Override public int read(byte[] bytes, int offset, int length) throws IOException {
+                    checkInputAvailable();
                     try { return in.read(bytes, offset, length); } catch (IOException failure) { abort(); throw failure; }
                 }
                 @Override public long skip(long length) throws IOException {
+                    checkInputAvailable();
                     try { return in.skip(length); } catch (IOException failure) { abort(); throw failure; }
                 }
             };
@@ -164,13 +195,29 @@ final class ServletExchange implements HttpExchange {
     // @req FR-SVL-002
     @Override
     public String remoteAddress() {
-        return req.getRemoteAddr();
+        return remote;
     }
 
     // @req FR-SVL-002
     @Override
     public boolean isSecure() {
-        return req.isSecure();
+        return secure;
+    }
+
+    // @req FR-APP-023 AC-8
+    @Override
+    public Runnable retainRequest() {
+        synchronized (this) {
+            if (aborted || retired || completed.get() || finished && !retentions.isRetained()) return () -> {};
+            return retentions.retain();
+        }
+    }
+
+    private void checkInputAvailable() throws IOException {
+        synchronized (this) {
+            checkNotAborted();
+            if (retired || completed.get()) throw new IOException("request input already released");
+        }
     }
 
     /** {@code contentLength} needs no action: the core's Content-Length header is passed as given. */
@@ -208,20 +255,19 @@ final class ServletExchange implements HttpExchange {
     private interface IoOperation { void run() throws IOException; }
 
     private void writeBody(IoOperation operation) throws IOException {
+        boolean attempted = false;
         try {
             writeLock.lock();
             try {
-                synchronized (this) {
-                    checkNotAborted();
-                    if (finished) throw new IOException("exchange finished");
-                }
+                checkWritable();
+                attempted = true;
                 operation.run();
             } finally {
                 writeLock.unlock();
             }
         } catch (IOException | RuntimeException failure) {
             // Abort callbacks may enter the core; never notify while the transport write lock is held.
-            abort();
+            if (attempted) abort();
             throw failure;
         }
     }
@@ -238,10 +284,11 @@ final class ServletExchange implements HttpExchange {
                     if (finished) return;
                 }
                 res.flushBuffer();
-                complete();
+                synchronized (this) { finished = true; }
             } finally {
                 writeLock.unlock();
             }
+            completeIfReady();
         } catch (IOException | RuntimeException failure) {
             abort();
             throw failure;
@@ -269,28 +316,34 @@ final class ServletExchange implements HttpExchange {
     private void abort(long waitMillis) {
         ServletEventStream.DrainTask task;
         synchronized (this) {
-            if (finished && !aborted) return;
+            if (retired || completed.get() || aborting || aborted) return;
+            if (finished && !retentions.isRetained()) return;
+            aborting = true;
             aborted = true;
             finished = true;
             task = drainTask;
         }
-        // The shared registry isolates listener failures and invokes callbacks outside both exchange locks.
-        abortListeners.abort();
-        if (task != null) task.cancelBeforeStart();
-        if (async != null) {
-            boolean held = false;
+        try {
+            // Core cancellation may release its retention reentrantly; defer physical completion until this abort exits.
             try {
-                held = writeLock.tryLock(waitMillis, TimeUnit.MILLISECONDS);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-            try {
-                complete();
+                // An undrained core SSE client records its protocol cause before generic request cancellation.
+                if (task != null) task.cancelBeforeStart();
             } finally {
-                if (held) writeLock.unlock();
+                abortListeners.abort();
             }
-        } else {
-            retireIfDone();
+            if (async != null) {
+                boolean held = false;
+                try {
+                    held = writeLock.tryLock(waitMillis, TimeUnit.MILLISECONDS);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                } finally {
+                    if (held) writeLock.unlock();
+                }
+            }
+        } finally {
+            synchronized (this) { aborting = false; }
+            completeIfReady();
         }
     }
 
@@ -369,7 +422,7 @@ final class ServletExchange implements HttpExchange {
         synchronized (this) {
             if (handlerReturned) return;
             handlerReturned = true;
-            needAsync = managed && !finished && async == null;
+            needAsync = managed && (!finished || retentions.isRetained()) && !aborted && async == null;
             task = drainTask;
         }
         if (needAsync) {
@@ -380,7 +433,7 @@ final class ServletExchange implements HttpExchange {
                 if (!finished) unsupportedAsync();
             }
         }
-        if (stopRequested && !finished) abort();
+        if (stopRequested && (!finished || retentions.isRetained())) abort();
         if (task != null) submit(task);
         retireIfDone();
     }
@@ -415,14 +468,18 @@ final class ServletExchange implements HttpExchange {
     // @req FR-SVL-009 AC-4
     void stopAfterReturn() {
         boolean cut;
-        synchronized (this) { stopRequested = true; cut = handlerReturned && !finished; }
+        synchronized (this) { stopRequested = true; cut = handlerReturned && (!finished || retentions.isRetained()); }
         // SSE aborts already run in parallel in Pool.completeAll; do not add one write wait per stream.
         if (cut && (adapter == null || adapter.pool() == null || !adapter.pool().owns(this))) abort(0);
     }
 
     private void retireIfDone() {
         boolean retire;
-        synchronized (this) { retire = managed && handlerReturned && finished; }
+        synchronized (this) {
+            retire = managed && handlerReturned && finished && !asyncStarting && !aborting && !retired
+                    && (aborted || !retentions.isRetained()) && (async == null || completed.get());
+            if (retire) retired = true;
+        }
         if (retire && adapter != null) adapter.retire(this);
     }
 
@@ -437,7 +494,7 @@ final class ServletExchange implements HttpExchange {
                     throw new IllegalStateException("interrupted while starting async response", failure);
                 }
             }
-            if (finished || aborted) throw new IllegalStateException("exchange already ended");
+            if (aborted || retired || completed.get() || finished && !retentions.isRetained()) throw new IllegalStateException("exchange already ended");
             if (async != null) return async;
             if (!req.isAsyncSupported()) throw new IllegalStateException("deferred response needs asyncSupported=true");
             asyncStarting = true;
@@ -458,7 +515,7 @@ final class ServletExchange implements HttpExchange {
                 @Override public void onStartAsync(AsyncEvent event) { event.getAsyncContext().addListener(this); }
             });
             boolean ended;
-            synchronized (this) { async = context; ended = finished || aborted; }
+            synchronized (this) { async = context; ended = aborted || finished && !retentions.isRetained(); }
             if (ended) {
                 complete();
                 throw new IllegalStateException("exchange ended while starting async response");
@@ -472,6 +529,7 @@ final class ServletExchange implements HttpExchange {
             throw failure;
         } finally {
             synchronized (this) { asyncStarting = false; notifyAll(); }
+            completeIfReady();
         }
     }
 
@@ -523,9 +581,20 @@ final class ServletExchange implements HttpExchange {
     /** Mark terminal and complete any started AsyncContext once, then release only an admitted returned request. */
     // @req FR-SVL-005 FR-SVL-009 AC-2 AC-4
     void complete() {
+        synchronized (this) { finished = true; }
+        completeIfReady();
+    }
+
+    /** Completion invokes container listeners, so neither exchange nor IO monitors are held around it. */
+    private void completeIfReady() {
         AsyncContext ac;
-        synchronized (this) { finished = true; ac = async; }
-        if (ac != null && completed.compareAndSet(false, true)) {
+        boolean finishContext;
+        synchronized (this) {
+            if (!finished || asyncStarting || aborting || !aborted && retentions.isRetained()) return;
+            ac = async;
+            finishContext = ac != null && completed.compareAndSet(false, true);
+        }
+        if (finishContext) {
             try {
                 ac.complete();
             } catch (IllegalStateException ignored) {
@@ -552,6 +621,12 @@ final class ServletExchange implements HttpExchange {
         if (aborted) {
             throw new IOException("exchange aborted");
         }
+    }
+
+    /** Input retention never permits another output write after logical response completion. */
+    synchronized void checkWritable() throws IOException {
+        checkNotAborted();
+        if (finished) throw new IOException("exchange finished");
     }
 
     /** A second start of one exchange throws IllegalStateException; an aborted one throws IOException. */
