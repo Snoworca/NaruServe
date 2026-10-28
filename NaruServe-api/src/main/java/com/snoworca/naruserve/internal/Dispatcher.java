@@ -182,7 +182,7 @@ public final class Dispatcher implements ExchangeHandler {
                 try {
                     RouteMatch<RouteHandler> ws=router.lookup(ex.methodToken(),ex.rawPath(),true);
                     legacyUpgrade=ws.kind()==RouteMatch.Kind.MATCHED && ws.routeKind()==RouteKind.WEBSOCKET;
-                } catch(IllegalArgumentException invalidLegacyPath) { /* common raw HTTP still owns its own matching */ }
+                } catch(IllegalArgumentException invalidLegacyPath) { handleLegacy(ex);return; }
             }
             if(!legacyUpgrade) { handleHttp(ex);return; }
         }
@@ -190,6 +190,12 @@ public final class Dispatcher implements ExchangeHandler {
     }
 
     void commonHttp(HttpRouter http,AppLifecycle lifecycle) { this.http=http;this.lifecycle=lifecycle; }
+
+    // Static layers use the same frozen resources and test hooks as legacy fallback, at their actual stack position.
+    // @req FR-APP-021 AC-1; CON-APP-010 AC-4
+    boolean serveStatic(int mount,DefaultRequest request,DefaultResponse response) throws java.io.IOException {
+        return statics.serveMount(mount,request,response);
+    }
 
     // @req FR-HTTP-027; FR-APP-021; FR-APP-022; FR-APP-023
     private void handleHttp(HttpExchange ex) {
@@ -214,7 +220,7 @@ public final class Dispatcher implements ExchangeHandler {
                 if(wsPath!=null && wsPath.kind()==RouteMatch.Kind.WEBSOCKET_ONLY) {
                     fallback(router.lookup(ex.methodToken(),ex.rawPath(),false),req,res,rid);return;
                 }
-                if(!statics.serve(req,res,false))FinalHandler.finish(req,res,null,errors.logger);
+                FinalHandler.finish(req,res,null,errors.logger);
             } catch(Exception failure) { FinalHandler.finish(req,res,failure,errors.logger); }
         };
         Runnable log=()->{
