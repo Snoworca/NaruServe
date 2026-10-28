@@ -11,7 +11,6 @@ import com.snoworca.naruserve.Next;
 import com.snoworca.naruserve.RouteHandler;
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientResponse;
 import com.snoworca.naruserve.testing.RecordingLogger;
-import com.snoworca.naruserve.testing.TestApp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -20,6 +19,8 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.junit.Test;
 
 /** The once-only next contract. SDS-AC-n cites docs/sds/2026-10-19.naruserve.naruserve-v1-wave-4-4.sds.md. */
+// CON-APP-010 AC-3 AC-5: retain unchanged legacy component assertions through an explicit legacy Dispatcher.
+// Common HTTP replacements are independently specified in HttpExecutionContractTest and later ordered-error tests.
 public class ChainNextTest {
 
     private final List<String> calls = Collections.synchronizedList(new ArrayList<>());
@@ -53,7 +54,7 @@ public class ChainNextTest {
     // SDS-AC-9; FR-APP-004 AC-1, T35
     @Test
     public void sdsAc9_FR_APP_004_AC1_secondRunThrowsAndDownstreamRanOnce() { // FR-DX-008 AC-4
-        TestApp t = TestApp.create();
+        LegacyHttpHarness t = LegacyHttpHarness.create();
         t.app().use((req, res, next) -> {
             next.run();
             expect("second run", next::run);
@@ -67,7 +68,7 @@ public class ChainNextTest {
     // SDS-AC-9; FR-APP-004 AC-5
     @Test
     public void sdsAc9_FR_APP_004_AC5_runAfterErrorAndErrorAfterRunThrow() {
-        TestApp t = TestApp.create();
+        LegacyHttpHarness t = LegacyHttpHarness.create();
         t.app().use("/a", (req, res, next) -> {
             next.error(new IllegalArgumentException("a"));
             expect("run after error", next::run);
@@ -86,7 +87,7 @@ public class ChainNextTest {
     // SDS-AC-10; FR-APP-004 AC-2
     @Test
     public void sdsAc10_FR_APP_004_AC2_runAfterSendThrowsAndRunsNoDownstreamStep() {
-        TestApp t = TestApp.create();
+        LegacyHttpHarness t = LegacyHttpHarness.create();
         t.app().use((req, res, next) -> {
             res.send("x");
             expect("run after send", next::run);
@@ -102,7 +103,7 @@ public class ChainNextTest {
     @Test
     public void sdsAc10_FR_APP_004_AC2_keptNextCalledAfterTheExchangeEndedThrows() {
         AtomicReference<Next> kept = new AtomicReference<>();
-        TestApp t = TestApp.create();
+        LegacyHttpHarness t = LegacyHttpHarness.create();
         t.app().use((req, res, next) -> {
             kept.set(next);
             res.status(204).end();
@@ -119,7 +120,7 @@ public class ChainNextTest {
     @Test
     public void sdsAc10_FR_APP_004_AC2_keptNextOfAnUnansweredChainThrowsAfterTheExchangeEnded() {
         AtomicReference<Next> kept = new AtomicReference<>();
-        TestApp t = TestApp.create();
+        LegacyHttpHarness t = LegacyHttpHarness.create();
         t.app().use((req, res, next) -> kept.set(next));
         t.app().get("/x", h("h"));
         assertEquals(200, t.send("GET", "/x").status());
@@ -130,7 +131,7 @@ public class ChainNextTest {
     // SDS-AC-11; FR-APP-004 AC-3, FR-APP-004 AC-6
     @Test
     public void sdsAc11_FR_APP_004_AC3_AC6_markerAfterRunSeesTheHandlerAndACommittedResponse() { // FR-DX-008 AC-4
-        TestApp t = TestApp.create();
+        LegacyHttpHarness t = LegacyHttpHarness.create();
         t.app().use((req, res, next) -> {
             next.run();
             calls.add("after " + calls.contains("h") + " " + res.isCommitted());
@@ -143,7 +144,7 @@ public class ChainNextTest {
     // SDS-AC-11; FR-APP-004 AC-4, T36
     @Test
     public void sdsAc11_FR_APP_004_AC4_middlewareThatAnswersWithoutNextStopsTheChain() {
-        TestApp t = TestApp.create();
+        LegacyHttpHarness t = LegacyHttpHarness.create();
         t.app().use((req, res, next) -> res.status(401).send("no"));
         t.app().use(mw("m2"));
         t.app().get("/x", mw("r"), h("h"));
@@ -158,7 +159,7 @@ public class ChainNextTest {
     public void sdsAc11_FR_APP_004_AC3_downstreamExceptionLeavesNextRunUnchanged() {
         IllegalArgumentException thrown = new IllegalArgumentException("boom");
         AtomicReference<Throwable> caught = new AtomicReference<>();
-        TestApp t = TestApp.create();
+        LegacyHttpHarness t = LegacyHttpHarness.create();
         t.app().use((req, res, next) -> {
             try {
                 next.run();
@@ -179,7 +180,7 @@ public class ChainNextTest {
     public void sdsAc11_FR_APP_004_AC3_checkedDownstreamExceptionPassesThroughNextRunUnwrapped() {
         java.io.IOException thrown = new java.io.IOException("io");
         AtomicReference<Throwable> caught = new AtomicReference<>();
-        TestApp t = TestApp.create();
+        LegacyHttpHarness t = LegacyHttpHarness.create();
         t.app().use((req, res, next) -> {
             try {
                 next.run();
@@ -198,7 +199,7 @@ public class ChainNextTest {
     // SDS-AC-12; FR-APP-004 AC-5
     @Test
     public void sdsAc12_FR_APP_004_AC5_errorNullThrowsNpeAndALaterRunStillWorks() {
-        TestApp t = TestApp.create();
+        LegacyHttpHarness t = LegacyHttpHarness.create();
         t.app().use((req, res, next) -> {
             expect("error(null)", () -> next.error(null));
             next.run();
@@ -211,7 +212,7 @@ public class ChainNextTest {
     // SDS-AC-9; FR-APP-004 AC-1
     @Test
     public void sdsAc9_FR_APP_004_AC1_eachInvocationHasItsOwnContinuation() {
-        TestApp t = TestApp.create();
+        LegacyHttpHarness t = LegacyHttpHarness.create();
         t.app().use(mw("m1"));
         t.app().use(mw("m2"));
         t.app().get("/x", h("h"));
@@ -276,7 +277,7 @@ public class ChainNextTest {
     // SDS-AC-8, SDS-AC-10; FR-APP-003 AC-8, FR-APP-004 AC-6
     @Test
     public void sdsAc8_FR_APP_004_AC6_nextCalledFromAnotherThreadDuringTheRequestThrows() {
-        TestApp t = TestApp.create();
+        LegacyHttpHarness t = LegacyHttpHarness.create();
         t.app().use((req, res, next) -> {
             Thread other = new Thread(() -> expect("other thread run", next::run));
             other.start();
