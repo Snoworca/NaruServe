@@ -203,6 +203,27 @@ public class ServletBuildTest {
         }
     }
 
+    // CON-SVL-001 AC-4; CON-APP-010 AC-5: retained defaults are behavioral source,
+    // so normalization must never erase content inside Java string/character literals.
+    @Test
+    public void sourceComparisonPreservesActualServerDefaultsAndLiteralContent() throws Exception {
+        String path = "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/ServerSettings.java";
+        String baseline = BuildLayoutTest.git(ROOT, "show", "f7da71d:" + path);
+        String changed = baseline.replace("\"127.0.0.1\"", "\" 127.0.0.1 \"");
+        assertFalse("mutation actually changes original ServerSettings", baseline.equals(changed));
+        assertFalse("bindAddress whitespace is a changed runtime default",
+                originalSpiDeclarations(baseline, "ServerSettings.java")
+                        .equals(originalSpiDeclarations(changed, "ServerSettings.java")));
+        String literalSource = "interface Values { String url = \"http://host/a /* literal */ // path\"; char space = ' '; "
+                + "String escaped = \"a\\\" b\\\\ c\"; }";
+        String expected = "interfaceValues{Stringurl=\"http://host/a /* literal */ // path\";charspace=' ';"
+                + "Stringescaped=\"a\\\" b\\\\ c\";}";
+        assertEquals(expected, originalSpiDeclarations(literalSource, "ServerSettings.java"));
+        assertEquals(expected, originalSpiDeclarations("/* outside */\n" + literalSource + " // outside\n", "ServerSettings.java"));
+        assertFalse(originalSpiDeclarations("interface Values { char space = ' '; }", "ServerSettings.java")
+                .equals(originalSpiDeclarations("interface Values { char space = '\\t'; }", "ServerSettings.java")));
+    }
+
     /** Removes comments, whitespace and only the explicitly permitted empty default cancellation callback. */
     private static String originalDrainDeclarations(String source) {
         return source.replaceAll("(?s)/\\*.*?\\*/|//[^\\r\\n]*", "")
