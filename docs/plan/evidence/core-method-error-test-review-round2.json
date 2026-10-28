@@ -1,0 +1,66 @@
+{
+  "review_type": "independent-test-sufficiency",
+  "round": 2,
+  "reviewer": "/root/transport_dependency_audit",
+  "author": "/root/api_core_docs",
+  "head": "e209b0f8a992194959dbd34e1da95476feaf1062",
+  "reviewed_at": "2026-10-28T12:01:05.355943+00:00",
+  "requirements": [
+    "FR-HTTP-028",
+    "FR-APP-024",
+    "FR-ROUTE-021",
+    "FR-HTTP-027"
+  ],
+  "scope": "Reviewed method/default/error common-core unit only; deferred resources, uploads and full adapter integration remain separate work.",
+  "verdict": "PASS",
+  "findings": [],
+  "resolved_findings": [
+    {
+      "id": "METHOD-ERROR-TEST-001",
+      "covers": [
+        "FR-HTTP-028 AC-4"
+      ],
+      "evidence": "optionsStayRouterLocalAndOnlyIncludeActuallyTraversedRouteLayers exercises child GET /x and parent POST /api/x; normal traversal expects GET, HEAD, child router exit expects POST; exact trace checks child-after/parent-use traversal and method callbacks fail if invoked. Matches saved pinned oracle normal-child versus router-exit observations."
+    },
+    {
+      "id": "METHOD-ERROR-TEST-002",
+      "covers": [
+        "FR-APP-024 AC-3",
+        "FR-HTTP-028 AC-3 AC-5"
+      ],
+      "evidence": "unhandledRuntimeExceptionUsesDeclaredJavaInformationInExact500Html fixes one Java stack frame, asserts exact escaped500 HTML, length, Content-Type, CSP/nosniff, one commit/finish. headFinalhandlerSuppressesMissAndErrorBytesWithCorrectRepresentationLengths checks404 and500 HEAD body suppression, HEAD-specific404 representation length147 versus GET146, status/headers/one commit/finish."
+    },
+    {
+      "id": "METHOD-ERROR-TEST-003",
+      "covers": [
+        "FR-APP-024 AC-4"
+      ],
+      "evidence": "errorAfterSendRunsDownstreamHandlerButCannotCommitAgain preserves first body and one commit/finish, then requires Math.max(identity-frequency of original Throwable in actual RecordingLogger.errors, RecordingExchange.aborts)==1. Silent loss and duplicate log or abort fail; either policy is permitted by AC."
+    }
+  ],
+  "checks_passed": [
+    "Prior method registration/wire-token/case/legacy-any/CORS/file/static/HEAD/default404/error-layer/parameter-error/extension/atomicity guards remain intact.",
+    "OPTIONS response assertion now pins exact text/plain with no charset, nosniff and byte length.",
+    "Generic Java Throwable representation is deterministic rather than assuming JavaScript stack bytes.",
+    "RED log contains27tests/24failures/3positivecontrols; missing error middleware type failures are genuine absent public API rather than a weakened skip.",
+    "RecordingLogger stores actual Throwable references; RecordingExchange abort/commit/finish counters are observable implementation fixtures."
+  ],
+  "red_evidence": {
+    "log": "/tmp/naru-http-core/red-methods-errors-review1.log",
+    "tests": 27,
+    "failures": 24,
+    "baseline_passes": 3
+  },
+  "reference_evidence": "/tmp/naru-v010-method-review-oracle.jsonl",
+  "artifact_sha256": {
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/HttpMethodAndErrorContractTest.java": "8616479ed32b719de0720fb2c73f305ee07cd1137990a999794fdde989e2e65a"
+  },
+  "mcp_workspace": {
+    "workspaceRoot": "/Users/beom/work/git/NaruServe/.claude/worktrees/v010-http-core",
+    "rootSource": "per-call-workspace-root"
+  },
+  "gradle_invoked": false,
+  "repository_edits": false,
+  "production_implementation_verified": false,
+  "next": "Stop this test-sufficiency loop on first PASS; release this scoped GREEN implementation. Do not perform round3."
+}

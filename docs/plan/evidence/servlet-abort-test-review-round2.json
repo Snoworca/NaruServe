@@ -1,0 +1,40 @@
+{
+  "review_type": "independent-test-sufficiency",
+  "round": 2,
+  "reviewer": "/root/release_dependency_audit",
+  "author": "/root/transport_dependency_audit",
+  "head": "0a274ea",
+  "requirement": "IR-HTTP-009",
+  "reviewed_at": "2026-10-28T11:52:15.587164+00:00",
+  "scope": "Servlet built-in abort listener wiring; no core lifetime or full transport-conformance claim.",
+  "verdict": "PASS",
+  "findings": [],
+  "resolved_findings": [
+    {
+      "id": "SVL-ABORT-TEST-001",
+      "status": "closed",
+      "evidence": "The late timeout listener now executes assertCallbackUnlocked(ex), captures failure, and is followed immediately by an explicit null-failure assertion before repeated abort and exactly-once count checks."
+    }
+  ],
+  "checks_passed": [
+    "Original early timeout monitor/writeLock assertions are retained.",
+    "Actual reset write failure, truncated-body read IOException without caller abort, forced stop, late SSE checked/unchecked failures, throwing callbacks and normal synchronous/deferred finish controls remain unchanged.",
+    "The corrected late callback guard detects synchronized adapter registration that invokes an already-aborted listener under a lock.",
+    "Recorded20 targeted tests retain5 actual RED failures and15 baseline passes, with no errors or skips."
+  ],
+  "red_evidence": {
+    "log": "/tmp/naru-v010-servlet-abort-red-round2.log",
+    "counts": "/tmp/naru-v010-servlet-abort-red-round2-counts.json",
+    "tests": 20,
+    "failures": 5,
+    "errors": 0,
+    "skipped": 0
+  },
+  "artifact_sha256": {
+    "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletDeferredSpiTest.java": "b2ad7b4eb2efa9349d1a102c09495f59775ca6cc45bb2538dbc65e11174bed6c"
+  },
+  "gradle_invoked": false,
+  "repository_edits": false,
+  "production_implementation_verified": false,
+  "loop_policy": "Round2 PASS; stop now, no round3. Author may implement the adapter wiring to GREEN and run regression."
+}

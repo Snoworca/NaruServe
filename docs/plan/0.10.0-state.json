@@ -4,7 +4,7 @@
   "plan": "docs/plan/0.10.0-parallel-plan.md",
   "dependencies": "unchanged versions/types/scopes; existing toolchain reused",
   "regex": "Java Pattern",
-  "status": "core-and-servlet-in-progress-regex-ready",
+  "status": "core-method-error-green-in-progress-parity-runtime-and-servlet-completion",
   "issues": [
     {
       "id": "T00",
@@ -375,10 +375,17 @@
         {
           "round": 1,
           "verdict": "changes_required"
+        },
+        {
+          "round": 2,
+          "verdict": "pass"
         }
       ],
       "tests_commit": "351b387",
-      "implementation_started": false
+      "implementation_started": false,
+      "green_commit": "d84ca92",
+      "java8_and_java17_contract_tests": 40,
+      "complete_regression": "not yet green; method/error/lifetime checkpoints pending"
     },
     "regex-foundation": {
       "rounds": [
@@ -405,13 +412,75 @@
       ],
       "target_tests_green": 14,
       "full_regression": "verification in progress",
-      "abort_hook_pending": true
+      "abort_hook_pending": true,
+      "green_commit": "a863448",
+      "full_servlet_tests": 122
     },
     "abort-spi-component": {
       "tests_commit": "f361b20",
       "red_dedicated_tests": 7,
-      "rounds": [],
-      "implementation_started": false
+      "rounds": [
+        {
+          "round": 1,
+          "verdict": "pass"
+        }
+      ],
+      "implementation_started": false,
+      "green_commit": "4eab3e7",
+      "java8_and_java17_tests": 24,
+      "integration_commits": [
+        "868bbd7",
+        "8bf9c59"
+      ],
+      "builtin_core_wiring_pending": true
+    },
+    "servlet-abort-wiring": {
+      "tests_commit": "451ef43",
+      "target_tests": 20,
+      "red_tests": 5,
+      "rounds": [
+        {
+          "round": 1,
+          "verdict": "changes_required",
+          "finding": "late callback lock checks"
+        },
+        {
+          "round": 2,
+          "verdict": "pass"
+        }
+      ],
+      "green_commit": "226a118",
+      "full_servlet_tests": 127,
+      "integration_pending": true
+    },
+    "core-method-error": {
+      "tests_commit": "e209b0f",
+      "target_tests": 27,
+      "red_tests": 24,
+      "rounds": [
+        {
+          "round": 1,
+          "verdict": "changes_required"
+        },
+        {
+          "round": 2,
+          "verdict": "pass"
+        }
+      ],
+      "implementation_status": "approved-to-green"
     }
+  },
+  "runtime_parity_lane": {
+    "worktree": ".claude/worktrees/v010-runtime-parity",
+    "branch": "kiwi/v010/runtime-parity",
+    "base": "d84ca92",
+    "status": "subagent-implementing-all30-cases",
+    "agent": "/root/release_dependency_audit"
+  },
+  "reported_progress": {
+    "estimate_percent": 40,
+    "basis": "Work-volume estimate only; no claim that40%ofissuesareclosed",
+    "issues_closed": 0,
+    "issues_total": 19
   }
 }

@@ -1,0 +1,78 @@
+{
+  "review_type": "independent-test-sufficiency",
+  "round": 2,
+  "reviewer": "/root/release_dependency_audit",
+  "author": "/root/api_core_docs",
+  "head": "3c14d90c5a46294de2b0f4888287f258440f9077",
+  "requirements": [
+    "FR-ROUTE-020",
+    "FR-ROUTE-021",
+    "FR-ROUTE-019",
+    "FR-HTTP-027"
+  ],
+  "reviewed_at": "2026-10-28T11:28:26.831078+00:00",
+  "scope": "Stage 2 mounted routers, parameter hooks, request frames, nested alternatives and Java Pattern integration. Later methods, general error recovery, built-in transport and resource lifetime are not added to this scope.",
+  "verdict": "PASS",
+  "findings": [],
+  "resolved_findings": [
+    {
+      "id": "CORE-ST2-TEST-001",
+      "status": "closed",
+      "evidence": [
+        "absentOptionalDoesNotInvokeItsRegisteredHook asserts missing scalar/list accessors and zero callbacks for an optional absent capture.",
+        "scalarCacheUsesDecodedEqualityAcrossDifferentRawEncodings compares /x/%78 with swapped id positions, one hook invocation and the same transformed value in both handlers.",
+        "canonicalIntegerKeyBoundariesDoNotSortNonIndices asserts the exact pinned order 2,4294967294,01,4294967295,a."
+      ]
+    },
+    {
+      "id": "CORE-ST2-TEST-002",
+      "status": "closed",
+      "evidence": [
+        "heldChildParameterCanExitLaterAndRestoreParentViews captures Next inside the mounted parameter hook, proves no initial commit/finish, and checks the complete before/hold/after/resume/parent trace.",
+        "The same Request is observed across the frames; later router exit skips the child route and restores parent URL/base URL while preserving the original encoded query."
+      ]
+    },
+    {
+      "id": "CORE-ST2-TEST-003",
+      "status": "closed",
+      "evidence": [
+        "malformedAndNullNestedAlternativesRejectAtomically tests a valid first path followed by nested invalid syntax or null. It checks the appropriate exception, then proves only the subsequently registered fallback runs.",
+        "The null case is explicitly labeled as the Java SRS nullness boundary, not misrepresented as an Express observation."
+      ]
+    }
+  ],
+  "checks_passed": [
+    "The five added tests address the three prior finding groups without weakening the original18 tests.",
+    "The existing atomic-registration guard already passes; it is correctly reported as one GREEN baseline in a23-test run with22 RED failures, not forced to fail.",
+    "Current numeric-key and wildcard-array identity expectations remain consistent with the root SRS amendments.",
+    "The new delayed mount trace agrees with the independent pinned Express probe from round1.",
+    "Advanced RegexPathPattern helper harvesting changes an earlier class-missing failure into actual registration-contract coverage; it does not claim that central registration is already implemented.",
+    "No ignored or expected-failure test is used as feature completion evidence."
+  ],
+  "red_evidence": {
+    "log": "/tmp/naru-http-core/red-mounts-params-review1.log",
+    "tests": 23,
+    "failures": 22,
+    "passing_existing_guard": "malformedAndNullNestedAlternativesRejectAtomically"
+  },
+  "independent_reference_evidence": {
+    "script": "/tmp/naru-v010-core-stage2-review-oracle.cjs",
+    "observations": "/tmp/naru-v010-core-stage2-review-oracle.jsonl",
+    "node": "22.22.0",
+    "express": "5.1.0",
+    "router": "2.2.0",
+    "pathToRegexp": "8.4.2"
+  },
+  "remaining_obligations": [
+    "Implement Stage 2 to GREEN, then run the integrated runtime and existing regression suites.",
+    "Keep later cached hook-error recovery, HTTP methods, full error pipeline and request-lifetime resource tests in their separate planned slices.",
+    "Complete final Java8/API21, Java/Kotlin public API compilation and real adapter integration before issue closure."
+  ],
+  "artifact_sha256": {
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/HttpMountAndParamContractTest.java": "7f973fbf6496c89cbee43d7191c1efd0390e5e166d83fc82b3bdb0c423ad3979"
+  },
+  "gradle_invoked": false,
+  "repository_edits": false,
+  "production_implementation_verified": false,
+  "loop_policy": "Round2 PASS. Stop now; no round3 for this Stage 2 test scope."
+}

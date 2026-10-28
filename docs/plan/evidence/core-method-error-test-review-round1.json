@@ -1,0 +1,97 @@
+{
+  "review_type": "independent-test-sufficiency",
+  "round": 1,
+  "reviewer": "/root/release_dependency_audit",
+  "author": "/root/api_core_docs",
+  "head": "b18406f",
+  "requirements": [
+    "FR-HTTP-028",
+    "FR-APP-024",
+    "FR-ROUTE-021",
+    "FR-HTTP-027"
+  ],
+  "reviewed_at": "2026-10-28T11:51:40.215084+00:00",
+  "scope": "Common method/default/error-layer behavior in the current unit. Later deferred resources and full adapter lifetime are not required by this review.",
+  "verdict": "CHANGES_REQUIRED",
+  "findings": [
+    {
+      "id": "METHOD-ERROR-TEST-001",
+      "severity": "HIGH",
+      "covers": [
+        "FR-HTTP-028 AC-4"
+      ],
+      "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/HttpMethodAndErrorContractTest.java",
+      "problem": "OPTIONS tests are root-only. They do not distinguish router-local automatic responses and traversed layers from a global matching-route union.",
+      "why_material": "A global precomputed method table can pass existing matching-path, sorting and interception assertions but return methods that the pinned router never traverses.",
+      "required_test": "Mount a child with GET /x and add parent POST /api/x. OPTIONS /api/x returns GET, HEAD from the child when it exhausts normally. If an earlier child middleware exits via next.router before that GET layer, the response comes from the parent and is POST only. Assert Allow, body, status and a trace proving skipped callbacks do not run.",
+      "reference_evidence": "/tmp/naru-v010-method-review-oracle.jsonl"
+    },
+    {
+      "id": "METHOD-ERROR-TEST-002",
+      "severity": "HIGH",
+      "covers": [
+        "FR-APP-024 AC-3",
+        "FR-HTTP-028 AC-3",
+        "FR-HTTP-028 AC-5"
+      ],
+      "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/HttpMethodAndErrorContractTest.java",
+      "problem": "The only unhandled error response uses HttpException. There is no generic unhandled Throwable/default500 control, and finalhandler body suppression is not checked for a HEAD miss/error.",
+      "why_material": "An implementation can keep the old JSON500 branch for non-HttpException failures or send a HEAD finalhandler body while satisfying the current explicit HttpException and successful HEAD-route tests.",
+      "required_test": "Throw an ordinary RuntimeException with no error middleware, then verify the declared500 HTML/information contract, Content-Type/security headers and exactly one response. Include HEAD no-route/error controls with no response bytes and appropriate status/headers. Preserve the documented Java exception representation rather than inventing identical JavaScript stack bytes."
+    },
+    {
+      "id": "METHOD-ERROR-TEST-003",
+      "severity": "HIGH",
+      "covers": [
+        "FR-APP-024 AC-4"
+      ],
+      "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/HttpMethodAndErrorContractTest.java",
+      "method": "errorAfterSendRunsDownstreamHandlerButCannotCommitAgain",
+      "problem": "The test proves downstream error dispatch and no second commit, but it does not prove the unhandled late error is aborted or logged.",
+      "why_material": "Silently discarding the propagated error after the response has ended passes every current assertion, despite the explicit lifecycle diagnostic/abort contract.",
+      "required_test": "Use the existing RecordingLogger or observable exchange-abort state to assert the chosen terminal response policy produces an abort or a real error record exactly once for the propagated late Throwable. Retain one commit/finish and the original body. No new upload/stream ownership scope is required."
+    }
+  ],
+  "checks_passed": [
+    "Supported and extended method registration, wire-token observation, lowercase request mismatch and unknown method fallthrough are concrete.",
+    "Legacy Method.any remains a seven-method extension without swallowing explicit TRACE or expanding to COPY.",
+    "COPY with CORS Origin, response.file, outside fallback and static non-GET405 exercise old enum assumptions and preserve identified extensions.",
+    "Per-Route HEAD fallback and same-Route explicit HEAD suppression have status/header/body/trace checks.",
+    "Root OPTIONS sorting/dedup/plain body, downstream interception and explicit OPTIONS continuation are covered.",
+    "404 HTML bytes, escaped path, excluded query, CSP/nosniff and content length are asserted.",
+    "Thrown versus explicit error position, clear/replace/throw behavior, prefix/mount views, cached parameter-error replay, malformed raw capture information and onError extension ordering are covered.",
+    "Invalid error registration and null continuation errors retain atomicity guards.",
+    "The observed24-test run contains21 actual RED failures and3 pre-existing passing controls."
+  ],
+  "red_evidence": {
+    "log": "/tmp/naru-http-core/red-methods-errors.log",
+    "tests": 24,
+    "failures": 21,
+    "baseline_passes": 3
+  },
+  "independent_reference_checks": {
+    "node": "22.22.0",
+    "express": "5.1.0",
+    "router": "2.2.0",
+    "pathToRegexp": "8.4.2",
+    "script": "/tmp/naru-v010-method-review-oracle.cjs",
+    "observations": "/tmp/naru-v010-method-review-oracle.jsonl",
+    "router_local_options": {
+      "normal_child": {
+        "allow": "GET, HEAD",
+        "body": "GET, HEAD"
+      },
+      "child_router_exit": {
+        "allow": "POST",
+        "body": "POST"
+      }
+    }
+  },
+  "artifact_sha256": {
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/HttpMethodAndErrorContractTest.java": "ff0afcac5ff5d2cac4c15cef140c10e29daec5d4ee95c7fe7e1139e61951781a"
+  },
+  "gradle_invoked": false,
+  "repository_edits": false,
+  "production_implementation_verified": false,
+  "next": "Add the three scoped finalhandler/OPTIONS/late-error controls, record RED, then request round2. Maximum3 rounds; stop on first PASS."
+}

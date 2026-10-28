@@ -1,0 +1,52 @@
+{
+  "review_type": "independent-test-sufficiency",
+  "round": 1,
+  "reviewer": "/root/release_dependency_audit",
+  "author": "/root/transport_dependency_audit",
+  "head": "451ef43",
+  "requirement": "IR-HTTP-009",
+  "reviewed_at": "2026-10-28T11:42:24.023330+00:00",
+  "scope": "Servlet built-in abort listener wiring only; shared utility and core lifecycle integration have separate reviews.",
+  "verdict": "CHANGES_REQUIRED",
+  "findings": [
+    {
+      "id": "SVL-ABORT-TEST-001",
+      "severity": "HIGH",
+      "covers": [
+        "IR-HTTP-009 AC-2",
+        "IR-HTTP-009 AC-6"
+      ],
+      "path": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletDeferredSpiTest.java",
+      "method": "detectedTimeoutNotifiesEarlyAndLateListenersOnceOutsideLocks",
+      "problem": "The early timeout listener checks both exchange monitor and writeLock, but the late onAbort registration only increments a counter. Late callbacks are also required to run outside those locks.",
+      "why_material": "A synchronized ServletExchange.onAbort method delegating to the common utility can pass the early-abort lock assertions while invoking an already-aborted late listener under the exchange monitor. This can deadlock a late core callback even though its count is correct.",
+      "required_correction": "Use assertCallbackUnlocked(ex) in the late listener as well, record any failure in the existing AtomicReference, and assert it remains null after late registration and repeated abort. Keep the existing exactly-once counts and cleanup assertions."
+    }
+  ],
+  "checks_passed": [
+    "Real Jetty timeout detects abort and exercises an early throwing Error plus a surviving listener, late registration, and repeated abort.",
+    "The actual client-reset test requires a later write to throw IOException without the caller explicitly aborting, then checks adapter cleanup and a notification.",
+    "The truncated request supplies Content-Length20 with one byte and half-closes the actual socket; the handler catches the real request-body read IOException without invoking abort.",
+    "Synchronous and deferred successful finish produce no abort notification, including late listener registration and an abort attempt after successful completion.",
+    "Forced stop and both late SSE drain exception classes retain fail-soft cleanup when listeners throw.",
+    "Outside-monitor and outside-writeLock checks are concrete in early timeout and actual read/write failure callbacks.",
+    "Recorded20 targeted tests have5 actual RED failures and15 existing GREEN controls; no expected-failure or ignored test is counted as feature completion.",
+    "No new dependencies or core lifecycle obligations were introduced in this review."
+  ],
+  "nonblocking_suggestion": "In clientResetDuringLaterWrite..., assert abortNotifications before closed(ex) attempts another commit. This makes the detected-write-failure observation precede any extra operation on the terminal exchange.",
+  "red_evidence": {
+    "log": "/tmp/naru-v010-servlet-abort-red-final.log",
+    "counts": "/tmp/naru-v010-servlet-abort-red-final-counts.json",
+    "tests": 20,
+    "failures": 5,
+    "errors": 0,
+    "skipped": 0
+  },
+  "artifact_sha256": {
+    "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletDeferredSpiTest.java": "2fe65ac155d433b064953acc2165d728cb55cfa53166e38328ca6aac2fe971e1"
+  },
+  "gradle_invoked": false,
+  "repository_edits": false,
+  "production_implementation_verified": false,
+  "next": "Add the late-callback lock assertion, then request round2. Maximum3 rounds; stop on first PASS."
+}

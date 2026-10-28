@@ -1,0 +1,45 @@
+{
+  "review_type": "independent-test-sufficiency",
+  "round": 1,
+  "reviewer": "/root/release_dependency_audit",
+  "author": "/root/api_core_docs",
+  "head": "f361b2094216f9aa55ba06d17486121e457e17d8",
+  "requirement": "IR-HTTP-009",
+  "reviewed_at": "2026-10-28T11:24:57.420930+00:00",
+  "scope": "Standalone default HttpExchange.onAbort and common AbortListeners contracts only. Built-in transport detection and core request lifetime integration remain separate obligations.",
+  "verdict": "PASS",
+  "findings": [],
+  "coverage": [
+    "The new hook is reflected as a default void method. A pre-existing RecordingExchange inherits it without an override and remains usable. Null listeners fail, and the default remains a no-op on successful finish and legacy abort.",
+    "Each registration receives one notification, including duplicate Runnable registrations, repeated abort, and listeners registered after abort. Initial and terminal isAborted state are asserted.",
+    "Both RuntimeException and Error from listeners do not stop later callbacks; a throwing late callback also does not prevent the next late listener.",
+    "Reentrant abort and listener registration do not duplicate callbacks.",
+    "A listener joins a different thread that registers another callback. The explicit joined flag and callback count reject implementations that hold the registry lock while invoking user code.",
+    "Twenty rounds race eight registration workers covering400 distinct registrations with repeated abort. Every registration has an independent exactly-once counter and bounded Future waits.",
+    "Null listener rejection is asserted both before and after the terminal state.",
+    "The historical SPI inventory retains every prior signature and names only the intended additive hook alongside earlier approved additions."
+  ],
+  "red_evidence": {
+    "component_log": "/tmp/naru-http-core/red-abort-spi.log",
+    "component_tests": 7,
+    "component_failures": 7,
+    "inventory_log": "/tmp/naru-http-core/red-abort-inventory.log",
+    "inventory_tests": 17,
+    "inventory_failures": 1,
+    "inventory_failure": "Expected onAbort addition is absent before implementation."
+  },
+  "remaining_obligations": [
+    "Actual built-in adapter registration and timeout/disconnect/write failure notification.",
+    "Core registration before user callbacks, synchronous abort during registration, recursion prevention, and request cleanup exactly once.",
+    "Normal built-in finish versus abort and WS/SSE regression checks after integration.",
+    "Actual Java8/API21 verification of the implemented default and helper."
+  ],
+  "artifact_sha256": {
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/common/AbortListenersTest.java": "4af92671f2303b372456b5f863275ccdc084451b5d14a2dcc416774c2ce0faf2",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/spi/HttpAdapterSpiTest.java": "422f1c6cbebc6999a587e7ef3c0eeb46a8d0549075350e90ac1d3467c2d19cbe"
+  },
+  "gradle_invoked": false,
+  "repository_edits": false,
+  "production_implementation_verified": false,
+  "loop_policy": "PASS at round1 for this component scope. Stop now; no round2 or round3."
+}
