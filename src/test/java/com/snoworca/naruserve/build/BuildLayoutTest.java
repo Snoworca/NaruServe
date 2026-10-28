@@ -380,7 +380,7 @@ public class BuildLayoutTest {
     // CON-BUILD-006 AC-8
     @Test
     public void con_BUILD_006_AC8_apiHasTestFixtures() {
-        assertTrue(new File(ROOT, "NaruServe-api/build/libs/NaruServe-api-0.9.0-test-fixtures.jar").isFile());
+        assertTrue(new File(ROOT, "NaruServe-api/build/libs/NaruServe-api-0.10.0-test-fixtures.jar").isFile());
     }
 
     // CON-BUILD-007 AC-1, CON-BUILD-007 AC-2

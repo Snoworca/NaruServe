@@ -26,7 +26,8 @@ import org.w3c.dom.NodeList;
 // @req CON-BUILD-018 AC-1 AC-2 AC-3
 public class PublishedPomTest {
 
-    private static final String VERSION = "0.9.0";
+    // OPS-REL-009 AC-1: assert the new publication, including every generated internal edge.
+    private static final String VERSION = "0.10.0";
     /** The version of the included TinyHttpd build (group com.snoworca since TinyHttpd 3.0.0). */
     private static final String TINYHTTPD_VERSION = "3.1.1";
 
