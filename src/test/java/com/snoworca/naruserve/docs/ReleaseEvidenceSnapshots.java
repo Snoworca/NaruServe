@@ -43,6 +43,11 @@ final class ReleaseEvidenceSnapshots {
         if(old)assertEquals("historical bytes changed: "+path,git("commit","show",PIN+":"+path),actual);
         return actual;
     }
+    // OPS-REL-008 AC-2: the old wave7 hash remains a claim about this fixed historical text only.
+    // No caller path/commit and no fallback to current content are accepted.
+    static String historicalSse() throws Exception {
+        return git("historical SSE", "show", PIN + ":docs/api/sse.md");
+    }
     // OPS-REL-008 AC-2 AC-3; OPS-REL-009 AC-2
     static void method(File root,String recordPath,String commit,String reference)throws Exception {
         record(root,recordPath,commit,false);

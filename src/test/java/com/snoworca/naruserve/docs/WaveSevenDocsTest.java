@@ -23,6 +23,7 @@ import org.junit.Test;
 /** Wave 7 docs/api statements, found by fixed phrases. SDS-AC-n cites the wave 7 SDS named on each case. */
 // @req FR-WS-004
 // @req OPS-WS-001
+// @req OPS-REL-008 AC-1 AC-2 AC-3
 public final class WaveSevenDocsTest {
 
     private static final String MARKER = "(미확정)";
@@ -53,14 +54,16 @@ public final class WaveSevenDocsTest {
     static final String LATE_ONCLOSE_PHRASE = "이미 끝난 뒤 등록한 `onClose`는 즉시 실행됩니다";
     static final String HEAD_SSE_PHRASE = "`HEAD` 요청에는 헤더만 보내고 본문 없이 이미 끝난 클라이언트를 돌려줍니다";
     static final String HANDLER_WRITE_PHRASE =
-            "핸들러 스레드가 반환 전에 보낸 이벤트는 소켓에 바로 쓰며 송신 큐 한도를 받지 않습니다";
-    static final String HANDLER_ORDER_PHRASE = "그 전에 다른 스레드가 큐에 넣은 이벤트를 먼저 씁니다";
+            "drain이 시작되기 전, 클라이언트를 만든 스레드의 send는 연결된 출력에 직접 쓸 수 있으며 송신 큐 한도를 받지 않습니다";
+    static final String HANDLER_ORDER_PHRASE = "앞서 큐에 들어온 이벤트를 먼저 씁니다";
 
     /** The sse.md decisions of OPS-SSE-001 AC-3, each found verbatim. */
     static final List<String> SSE_PHRASES = Collections.unmodifiableList(Arrays.asList(HEARTBEAT_PHRASE,
             SSE_OVERFLOW_PHRASE, NOTICE_PHRASE, LATE_ONCLOSE_PHRASE, HEAD_SSE_PHRASE, HANDLER_WRITE_PHRASE,
             HANDLER_ORDER_PHRASE));
 
+    // OPS-REL-008 AC-1 AC-3; FR-APP-023 AC-1 AC-6: ownership follows the actual creating callback,
+    // not a frozen initial-dispatch thread. Existing queue, ordering and close semantics remain asserted.
     /** The SSE API sections of sse.md, each with an Express counterpart and Java and Kotlin examples. */
     static final List<String> SSE_SECTIONS = Collections.unmodifiableList(Arrays.asList(
             "## res.sse()", "## SseClient", "## SseEvent", "## 설정", "## 재접속과 Last-Event-ID"));
@@ -228,11 +231,10 @@ public final class WaveSevenDocsTest {
             assertTrue(heading + " has a kotlin block", s.contains("\n```kotlin\n"));
         }
         String migration = doc("express-migration.md");
-        contains("express-migration.md", lineWith(migration, "| `app.ws('/ws'"), "`app.ws(\"/ws\", (req, ws) -> ...)`");
-        contains("express-migration.md", lineWith(migration, "| `ws.send(text)`"), "`ws.sendText(text)`");
-        contains("express-migration.md", lineWith(migration, "| `ws.on('message'"), "`ws.onText(");
-        contains("express-migration.md", lineWith(migration, "| `ws.on('close'"), "`ws.onClose(");
-        contains("express-migration.md", lineWith(migration, "| `ws.close(code, reason)`"), "`ws.close(code, reason)`");
+        // OPS-REL-008 AC-1 AC-3: migration summary links the retained WS guide rather than repeating every row.
+        contains("express-migration.md", migration, "(req, ws)", "(ws, req)", "onText/onBinary/onJson", "Origin");
+        contains("websocket.md", ws, "app.ws(\"/ws\", (req, ws)", "ws.sendText(", "ws.onText(",
+                "ws.onClose(", "ws.close(code, reason)");
     }
 
     // SDS-AC-4 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-8.sds.md; OPS-WS-001 AC-5:

@@ -136,12 +136,21 @@ public class ServletBuildTest {
         java.lang.reflect.Method retain = com.snoworca.naruserve.spi.HttpExchange.class.getMethod("retainRequest");
         assertTrue(retain.isDefault());
         assertEquals(Runnable.class, retain.getReturnType());
+        // IR-HTTP-009 AC-8: these exact optional observations add no abstract obligation.
+        java.lang.reflect.Method status = com.snoworca.naruserve.spi.HttpExchange.class.getMethod("responseStatus");
+        java.lang.reflect.Method bytes = com.snoworca.naruserve.spi.HttpExchange.class.getMethod("responseBytesWritten");
+        assertTrue(status.isDefault()); assertEquals(int.class, status.getReturnType());
+        assertTrue(bytes.isDefault()); assertEquals(long.class, bytes.getReturnType());
+        com.snoworca.naruserve.testing.RecordingExchange legacy =
+                new com.snoworca.naruserve.testing.RecordingExchange("GET", "/legacy");
+        assertEquals(0, status.invoke(legacy));
+        assertEquals(-1L, bytes.invoke(legacy));
         assertEquals("", BuildLayoutTest.git(ROOT, "status", "--porcelain", "--", spi));
         BuildLayoutTest.assertTinyHttpdClean();
     }
 
     // Preserve every original declaration, including generic types, throws clauses and existing
-    // default bodies. Remove ONLY the three explicitly allowed optional callback declarations.
+    // default bodies. Remove ONLY the explicitly allowed optional callback/metric declarations on their owning interface.
     private static String originalSpiDeclarations(String source) {
         return originalSpiDeclarations(source, "HttpExchange.java");
     }
@@ -151,6 +160,8 @@ public class ServletBuildTest {
         if (fileName.equals("HttpExchange.java")) {
             stripped = removeOptionalDefault(stripped, "default\\s+void\\s+onAbort\\s*\\(\\s*Runnable\\s+listener\\s*\\)");
             stripped = removeOptionalDefault(stripped, "default\\s+Runnable\\s+retainRequest\\s*\\(\\s*\\)");
+            stripped = removeOptionalDefault(stripped, "default\\s+int\\s+responseStatus\\s*\\(\\s*\\)");
+            stripped = removeOptionalDefault(stripped, "default\\s+long\\s+responseBytesWritten\\s*\\(\\s*\\)");
         }
         return fileName.equals("StreamDrain.java") ? originalDrainDeclarations(stripped)
                 : normalizedJavaSource(stripped);
@@ -200,6 +211,31 @@ public class ServletBuildTest {
                 permitted.replace("Runnable listener", "String listener"),
                 permitted.replace("default Runnable retainRequest()", "default Runnable retainRequest(int extra)"),
                 permitted.replace("void finish()", "default void extra() { } void finish()")}) {
+            assertFalse(changed, originalSpiDeclarations(original).equals(originalSpiDeclarations(changed)));
+        }
+    }
+
+    // IR-HTTP-009 AC-8; CON-SVL-001 AC-4; CON-APP-010 AC-5:
+    // only the two zero-argument, correctly typed DEFAULT metric observations belong to HttpExchange.
+    @Test
+    public void optionalMetricDefaultsRejectMandatoryWrongTypesAndWrongOwners() {
+        String original = "interface HttpExchange { void finish() throws IOException; }";
+        String status = "default int responseStatus() { return 0; }";
+        String bytes = "default long responseBytesWritten() { return -1; }";
+        String permitted = original.substring(0, original.lastIndexOf('}')) + status + " " + bytes + " }";
+        assertEquals(originalSpiDeclarations(original), originalSpiDeclarations(permitted));
+        for (String owner : new String[] {"HttpAdapter.java", "StreamDrain.java", "ExchangeHandler.java"}) {
+            assertFalse(owner, originalSpiDeclarations(original, owner).equals(originalSpiDeclarations(permitted, owner)));
+        }
+        for (String changed : new String[] {
+                permitted.replace(status, "int responseStatus();"),
+                permitted.replace(bytes, "long responseBytesWritten();"),
+                permitted.replace("default int responseStatus", "default long responseStatus"),
+                permitted.replace("default long responseBytesWritten", "default int responseBytesWritten"),
+                permitted.replace("responseStatus()", "responseStatus(int extra)"),
+                permitted.replace("responseBytesWritten()", "responseBytesWritten(int extra)"),
+                permitted.replace("void finish()", "void extra(); void finish()"),
+                permitted.replace("void finish()", "default int responseCount() { return 0; } void finish()")}) {
             assertFalse(changed, originalSpiDeclarations(original).equals(originalSpiDeclarations(changed)));
         }
     }

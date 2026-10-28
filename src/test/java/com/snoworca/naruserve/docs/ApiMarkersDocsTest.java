@@ -24,6 +24,7 @@ import org.junit.Test;
  * Wave 8 marker cleanup of docs/api (OPS-REL-002) and the TLS post-v1 line (OPS-REL-006). SDS-AC-n cites
  * docs/sds/2026-10-19.naruserve.naruserve-v1-wave-8-12.sds.md.
  */
+// @req OPS-REL-008 AC-1 AC-2 AC-3
 public final class ApiMarkersDocsTest {
 
     private static final String MARKER = "(미확정)";
@@ -113,7 +114,10 @@ public final class ApiMarkersDocsTest {
         assertFalse(response.contains(REDIRECT_POST_V1_PHRASE));
         String migration = doc("express-migration.md");
         assertFalse(migration.contains(MARKER));
-        contains("express-migration.md", migration, "app.group", "app.cors", "res.redirect", "res.type");
+        // OPS-REL-008 AC-1 AC-2 AC-3: updated migration table plus the owning guides preserve all APIs.
+        contains("express-migration.md", migration, "Router.create", "app.cors", "`redirect`", "`type`");
+        contains("middleware.md", doc("middleware.md"), "group(prefix, configurer)");
+        contains("response.md", response, "res.redirect", "res.type");
 
     }
 

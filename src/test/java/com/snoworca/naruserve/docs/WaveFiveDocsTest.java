@@ -38,6 +38,7 @@ import java.util.regex.Pattern;
 import org.junit.Test;
 
 /** Wave 5 docs/api decisions: defaults.md against the code, settled markers gone, module coordinates. */
+// @req OPS-REL-008 AC-1 AC-2 AC-3
 public final class WaveFiveDocsTest {
 
     private static final String MARKER = "(미확정)";
@@ -414,18 +415,18 @@ public final class WaveFiveDocsTest {
         settled("websocket.md", "`maxUpgradedConnections`");
         settled("websocket.md", "Ping 주기");
         assertFalse(lineWith(doc("websocket.md"), "Ping 주기").contains("최대 연결 수"));
-        settled("express-migration.md", "| `app.set('trust proxy', ...)`");
-        settled("express-migration.md", "`bindAddress(\"0.0.0.0\")`");
+        settled("express-migration.md", "`trustProxy(true)`");
+        settled("express-migration.md", "`app.server(o -> o.bindAddress(\"0.0.0.0\"))`");
         String undecided = doc("express-migration.md")
-                .substring(doc("express-migration.md").indexOf("## Express에 있지만 아직 정해지지 않은 기능"));
+                .substring(doc("express-migration.md").indexOf("## 범위 밖의 기능"));
         assertFalse(undecided, undecided.contains("trust proxy"));
         assertFalse(undecided, undecided.contains("LAN"));
         // Wave 7 settles the WebSocket and SSE rows; the wave 8 markers stay.
         settled("defaults.md", "| WebSocket 메시지 |");
         settled("defaults.md", "| SSE 송신 큐(연결당) |");
         settled("sse.md", "heartbeat");
-        settled("express-migration.md", "| `express.Router()`");
-        settled("express-migration.md", "| `cors()`");
+        settled("express-migration.md", "| `express.Router(options)`");
+        settled("express-migration.md", "`cors()` 대신");
     }
 
     // SDS-AC-9 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-8-12.sds.md; OPS-REL-006 AC-3: TLS 리스너 line
@@ -443,7 +444,7 @@ public final class WaveFiveDocsTest {
         contains("defaults.md", lineWith(d, "| 프록시 헤더"), "`app.trustProxy(true)`");
         String rejections = lineWith(d, "`onError`");
         contains("defaults.md", rejections, "`400`", "`408`", "`414`", "`417`", "`431`", "`501`", "`505`", "`503`",
-                "평문", "접근 로그", "오류 JSON");
+                "평문", "접근 로그", "공통 HTML");
         contains("defaults.md", lineWith(d, "`421`"), "표준 오류");
         contains("defaults.md", lineWith(d, "TLS 리스너"), "v1");
     }
@@ -505,8 +506,9 @@ public final class WaveFiveDocsTest {
         contains("cookie.md", lineWith(c, "인코딩하지도"), "`URLEncoder`", "`res.cookie`");
         contains("cookie.md", lineWith(c, "건너뜁니다"), "`=`");
         contains("cookie.md", lineWith(c, "`res.addCookie`가"), "`IllegalArgumentException`");
-        String row = lineWith(doc("express-migration.md"), "| `cookie-parser`");
+        // OPS-REL-008 AC-1 AC-3: migration now maps cookie access directly; encoding/signature facts stay above.
+        String row = lineWith(doc("express-migration.md"), "| `req.cookies`");
         assertFalse(row, row.contains(MARKER));
-        contains("express-migration.md", row, "서명 쿠키", "인코딩", "v1");
+        contains("express-migration.md", row, "`cookie`, `getCookies`", "방어적 복사", "signed cookie 없음");
     }
 }

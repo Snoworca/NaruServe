@@ -16,6 +16,7 @@ import org.junit.Test;
 /** Wave 8 kotlin.md and json.md statements, found by fixed phrases. SDS-AC-n cites the wave 8 part 3 SDS. */
 // @req OPS-KT-001
 // @req FR-KT-006
+// @req OPS-REL-008 AC-1 AC-2 AC-3
 public final class WaveEightKotlinDocsTest {
 
     static final String NULL_PHRASE =
@@ -26,8 +27,7 @@ public final class WaveEightKotlinDocsTest {
     // OPS-KT-001 AC-3 (android-module decision 2026-10-26): the module includes the NaruServe bootstrap.
     static final String STDLIB_PHRASE = "`kotlin-stdlib`은 이 모듈만 사용합니다. 이 모듈은 기본 조립 모듈 `NaruServe`(TinyHttpd + Gson)를 "
             + "포함하므로, Kotlin 프로젝트는 이 모듈 하나로 `RestApp.create()`까지 씁니다.";
-    static final String COROUTINE_PHRASE = "Coroutine 지원은 v1 이후 항목입니다. 논블로킹 coroutine 어댑터는 별도 설계가 필요하고 "
-            + "v1 핸들러는 동기이기 때문입니다.";
+    static final String COROUTINE_PHRASE = "네이티브 `suspend` 핸들러나 필수 coroutine 의존성은 없습니다.";
     static final String GSON_KOTLIN_PHRASE = "Gson은 Kotlin의 기본 인자와 null 불가 타입을 이해하지 못합니다.";
 
     /** The header KotlinAccessorTable (NaruServe-api tests) starts the nullable-accessor table from. */
@@ -73,12 +73,14 @@ public final class WaveEightKotlinDocsTest {
     @Test
     public void sdsAc13_OPS_KT_001_AC_4_the_coroutine_section_states_the_post_v1_item() throws IOException {
         String kotlin = doc("kotlin.md");
+        // OPS-REL-008 AC-1 AC-3; FR-APP-023 AC-1 AC-2 AC-7: async support does not imply native suspend.
         contains("kotlin.md Coroutine", section(kotlin, "## Coroutine"), COROUTINE_PHRASE, "`runBlocking`", "`suspend`",
-                "`suspend` 핸들러는 v1에서 지원하지 않습니다", "`runBlocking`을 기본 비동기 어댑터로 쓰지 않습니다");
+                "Deferred", "AsyncRouteHandler", "요청 수명", "프레임워크의 비동기 어댑터가 아닙니다");
         assertFalse(kotlin.contains("(미확정)"));
     }
 
-    // SDS-AC-14; OPS-KT-001 AC-5
+    // SDS-AC-14; OPS-KT-001 AC-5; OPS-REL-008 AC-1 AC-3; FR-HTTP-027 AC-1 AC-6:
+    // retain all twelve original rows and add the two optional/list accessors.
     @Test
     public void sdsAc14_OPS_KT_001_AC_5_the_nullable_accessor_table_keeps_its_twelve_rows() throws IOException {
         List<String> lines = Arrays.asList(doc("kotlin.md").split("\n"));
@@ -95,6 +97,8 @@ public final class WaveEightKotlinDocsTest {
         }
         assertEquals(Arrays.asList(
                 "`req.param(\"id\")` `String`",
+                "`req.paramOrNull(\"id\")` `String?`",
+                "`req.paramValues(\"parts\")` `List<String>`",
                 "`req.query(\"page\")` `String?`",
                 "`req.form(name)` `String?`",
                 "`req.header(name)` `String?`",

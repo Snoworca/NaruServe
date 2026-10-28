@@ -27,6 +27,7 @@ import org.junit.Test;
 // @req FR-SVL-007
 // @req FR-SVL-006
 // @req OPS-SVL-001
+// @req OPS-REL-008 AC-1 AC-2 AC-3
 public final class ServletDocsTest {
 
     /** The raw request-line labels of FR-SVL-002 AC-5; ServletRawTargetTest keeps the same labels in its CASES. */
@@ -48,11 +49,23 @@ public final class ServletDocsTest {
     @Test
     public void sdsAc5_FR_SVL_002_AC5_observedStatuses() throws IOException {
         String doc = doc("servlet.md");
-        for (String label : RAW_CASES) {
-            int s = status(doc, label);
-            assertTrue(label + " -> " + s, s == 400 || s == 404);
+        // OPS-REL-008 AC-1 AC-3; CON-APP-010 AC-1 AC-2 AC-5:
+        // exact current common-HTTP observations, with all historical strict-path rejections retained below.
+        int[] expected = {400, 400, 404, 404, 400, 400, 200, 400, 404, 200, 400, 404};
+        com.snoworca.naruserve.routing.Router<Object> strict =
+                new com.snoworca.naruserve.routing.Router<>(com.snoworca.naruserve.routing.RouterPolicy.strict());
+        strict.freeze();
+        for (int i = 0; i < RAW_CASES.size(); i++) {
+            String label = RAW_CASES.get(i);
+            assertEquals(label, expected[i], status(doc, label));
+            try {
+                strict.lookup("GET", label.substring(4).replace("<NUL>", "\0"), false);
+                throw new AssertionError("retained strict profile accepted " + label);
+            } catch (IllegalArgumentException rejected) {
+                assertTrue(rejected.getMessage(), rejected.getMessage().contains("Rejected request path"));
+            }
         }
-        status(doc, OPTIONS_STAR);
+        assertEquals(404, status(doc, OPTIONS_STAR));
     }
 
     // SDS-AC-11; FR-SVL-003 AC-5
@@ -135,7 +148,7 @@ public final class ServletDocsTest {
         assertTrue(doc("servlet.md").contains(LAN_PHRASE));
     }
 
-    static final String WEBSOCKET_PHRASE = "Servlet 어댑터는 v1에서 WebSocket을 지원하지 않습니다. `app.ws` 라우트는 이 어댑터에서"
+    static final String WEBSOCKET_PHRASE = "Servlet 어댑터는 WebSocket을 지원하지 않습니다. `app.ws` 라우트는 이 어댑터에서"
             + " `501`을 답하며, WebSocket은 내장 엔진(`app.listen`)이 제공합니다";
 
     // SDS-AC-14; FR-SVL-007 AC-4
@@ -207,10 +220,12 @@ public final class ServletDocsTest {
         assertTrue("sse.md has no pointer line", Arrays.asList(doc("sse.md").split("\n")).contains(SSE_POINTER));
     }
 
-    // OPS-SVL-001 AC-5 SDS-AC-10: sse.md is its wave 7 text plus the pointer line; servlet.md has a kotlin fence
+    // OPS-REL-008 AC-2 AC-3 versions OPS-SVL-001 AC-5 SDS-AC-10:
+    // the exact wave7 hash describes PIN2498 history, while current docs retain the pointer/runtime example.
     @Test
     public void sseDocOnlyGainsPointer() throws Exception {
-        String sse = doc("sse.md");
+        String sse = ReleaseEvidenceSnapshots.historicalSse();
+        assertTrue("current SSE still documents the Servlet bound", doc("sse.md").contains(SSE_POINTER));
         String withoutPointer = sse.replace(SSE_POINTER + "\n", "");
         assertEquals("exactly one pointer line", sse.length() - SSE_POINTER.length() - 1, withoutPointer.length());
         byte[] hash = java.security.MessageDigest.getInstance("SHA-256")
@@ -219,7 +234,7 @@ public final class ServletDocsTest {
         for (byte b : hash) {
             hex.append(String.format("%02x", b));
         }
-        assertEquals("sse.md changed beyond the pointer line", WAVE7_SSE_SHA256, hex.toString());
+        assertEquals("historical SSE changed beyond the pointer line", WAVE7_SSE_SHA256, hex.toString());
         assertEquals("servlet.md kotlin fences", 1, ReadmeDocsTest.blocks(doc("servlet.md"), "kotlin").size());
     }
 }

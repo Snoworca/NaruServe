@@ -44,6 +44,7 @@ import org.junit.rules.TemporaryFolder;
 // @req OPS-STATIC-001
 // @req OPS-WS-001
 // @req OPS-SVL-001
+// @req OPS-REL-008 AC-1 AC-2 AC-3
 public final class DocsExamplesCompileTest {
 
     /** One skipped block: its file, a selector ({@code #n} ordinal or the block's first line) and one reason. */
@@ -83,7 +84,7 @@ public final class DocsExamplesCompileTest {
             skip("express-migration.md", "app.onStart(ctx -> ctx.register(UserService.class, new UserService()));",
                     "app-defined type `UserService`"),
             skip("express-migration.md", "RestApp app = RestApp.create();", "app-defined type `TodoService` and `Todo`"),
-            skip("json.md", "User user = req.body(User.class);                          // 요청 → 객체",
+            skip("json.md", "User user = req.body(User.class);                          // request to object",
                     "app-defined type `User`"),
             skip("json.md", "public class User {", "absent type `SerializedName` (Gson)"),
             skip("json.md", "Gson gson = new GsonBuilder()", "absent type `Gson`"),
@@ -93,7 +94,7 @@ public final class DocsExamplesCompileTest {
             skip("lifecycle.md", "public interface ServiceRegistry {",
                     "illustrative copy of `ServiceRegistry` and `ApplicationContext` (two public types in one unit)"),
             skip("lifecycle.md", "JdbcUserService impl = new JdbcUserService(db);", "app-defined type `JdbcUserService`"),
-            skip("lifecycle.md", "ctx.registerExternal(ConnectionPool.class, sharedPool);   // 종료 때 닫지 않음",
+            skip("lifecycle.md", "ctx.registerExternal(ConnectionPool.class, sharedPool);   // Not closed on shutdown",
                     "app-defined type `ConnectionPool`"),
             skip("lifecycle.md", "public class ServerService extends Service {", "absent type `android.app.Service`"),
             skip("logging.md", "RotatingFileLogger logger = RotatingFileLogger.builder()",
@@ -117,7 +118,7 @@ public final class DocsExamplesCompileTest {
                     "app-defined variables `user`, `user1` and `user2` (the block sends the app's values)"),
             skip("routing.md", "app.route(Method.get().post().delete(), \"/users/:id\", (req, res) -> {",
                     "app-defined methods `find`, `create` and `remove` (the block calls them on the app)"),
-            skip("servlet.md", "// 앱 구성: 내장 엔진과 같은 코드",
+            skip("servlet.md", "// Same application configuration as with the embedded engine",
                     "app-defined type `UserService` (the block is a method declaration, not statements)"),
             skip("sse.md", "app.get(\"/api/progress\", (req, res) -> {", "app-defined type `ProgressService`"),
             skip("sse.md", "client.send(SseEvent.event(\"progress\")", "app-defined variable `client`"),
@@ -451,7 +452,8 @@ public final class DocsExamplesCompileTest {
         String original = korean.get(ordinal - 1);
         Skip existing = skipFor("json.md", ordinal, original);
         assertNotNull(existing);
-        String translatedComment = original.replace("요청 → 객체", "request to object");
+        String translatedComment = original.replace("request to object", "translated fixture comment");
+        assertFalse("fixture actually changes a comment", original.equals(translatedComment));
         Skip inherited = skipFor("en/json.md", ordinal, translatedComment);
         assertNotNull("same code reuses its existing named reason", inherited);
         assertEquals(existing.reason, inherited.reason);

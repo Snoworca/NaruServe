@@ -26,6 +26,7 @@ import org.junit.Test;
 /** Wave 6 docs/api decisions: multipart and static pages marker-free, defaults.md rows read against the code. */
 // @req OPS-MULTIPART-001
 // @req OPS-STATIC-001
+// @req OPS-REL-008 AC-1 AC-2 AC-3
 public final class WaveSixDocsTest {
 
     private static final String MARKER = "(미확정)";
@@ -148,21 +149,15 @@ public final class WaveSixDocsTest {
     @Test
     public void expressMigrationRows() throws IOException {
         String e = doc("express-migration.md");
-        for (String[] r : new String[][] {
-            {"| `express.urlencoded({ limit })`", "`app.formLimit(bytes)`", "묶었습니다"},
-            {"| `multer` |", "`app.multipart(config -> ...)`", "이유"},
-            {"| `multer({ limits", "`app.multipart(c ->", "하려는 것입니다"},
-            {"| `multer({ dest })`", "`java.io.tmpdir`", "골랐습니다"},
-            {"| `express.static('public')`", "`app.staticFiles(", "`serve-static`"},
-            {"| `res.sendFile(path)`", "`res.file(file)`", "`Content-Disposition`"},
-            {"| `res.download(path, name)`", "`res.download(file, name)`"},
-            {"`setHeaders`", "`options.cache(pattern, policy)`", "이유"}}) {
-            String line = lineWith(e, r[0]);
-            assertFalse(line, line.contains(MARKER));
-            for (int i = 1; i < r.length; i++) {
-                contains("express-migration.md", line, r[i]);
-            }
-        }
+        // OPS-REL-008 AC-1 AC-3: the compact migration table delegates exact settings to owning references.
+        contains("express-migration.md", e, "urlencoded()", "formLimit", "multipart", "staticFiles",
+                "`file`, `download`, `stream`", "cache(pattern, policy)", "32 MiB", "64 MiB", "20개", "64 KiB");
+        contains("request.md", doc("request.md"), "`express.urlencoded({ limit })`", "`app.formLimit(bytes)`");
+        contains("multipart.md", doc("multipart.md"), "`app.multipart(c -> c.maxFileSize(...))`",
+                "`tempDirectory`", "`java.io.tmpdir`", "`maxFileSize`", "`maxRequestSize`", "`maxParts`", "`memoryThreshold`");
+        contains("response.md", doc("response.md"), "`file(File)`", "`download(File, filename)`", "`Content-Disposition`");
+        contains("static.md", doc("static.md"), "`cache(pattern, policy)`", "`options.cache");
+        for (String file : new String[] {"express-migration.md", "request.md", "multipart.md", "response.md", "static.md"}) noMarker(file);
     }
 
     // OPS-STATIC-001 AC-1, AC-3
@@ -177,12 +172,13 @@ public final class WaveSixDocsTest {
         contains("static.md", lineWith(s, "심볼릭 링크(루트 안을"), "`allowSymlinks(true)`", "정규 경로");
         contains("static.md", lineWith(s, "`app.defaultCache(policy)`는"), "`null`", "`res.cache`", "`res.header`",
                 "`options.cache`", "프레임워크");
-        contains("static.md", lineWith(s, "**명시 라우트가 먼저**"), "명시 라우트 다음");
-        contains("static.md", lineWith(s, "메서드가 다른 라우트"), "`GET`/`HEAD`", "`405`", "`Allow`");
-        contains("static.md", lineWith(s, "WebSocket 라우트의 경로"), "SPA fallback");
+        // OPS-REL-008 AC-1 AC-3; CON-APP-010 AC-4 AC-5: current ordered HTTP, retained WS reservation.
+        contains("static.md", lineWith(s, "**등록한 위치**"), "정적 등록 앞에 인증", "전역 단계는 없습니다");
+        contains("static.md", lineWith(s, "메서드가 다른 라우트"), "`GET`/`HEAD`", "`405`", "`404`");
+        contains("static.md", lineWith(s, "유지되는 WebSocket 전용 경로"), "SPA fallback", "`426`");
         contains("static.md", lineWith(s, "`Allow: GET, HEAD`"), "`OPTIONS`", "`501`");
         contains("static.md", lineWith(s, "경로 검사("), "`400`", "`NUL`");
-        contains("static.md", lineWith(s, "그 밖의 경로"), "SPA fallback", "`404`");
+        contains("static.md", lineWith(s, "SPA 내용은 실제 쓰기 대상"), "`GET`/`HEAD`", "`404`", "심볼릭 링크");
     }
 
     // SDS-AC-4; OPS-STATIC-001 AC-2
