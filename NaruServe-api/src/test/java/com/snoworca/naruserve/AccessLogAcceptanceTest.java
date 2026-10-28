@@ -80,13 +80,16 @@ public class AccessLogAcceptanceTest {
         t.app().get("/boom", (req, res) -> {
             throw new IllegalStateException("boom");
         });
+        // CON-APP-010 AC-3 AC-5; FR-HTTP-028 AC-5: retain exact-once access logs across versioned final outcomes.
+        t.app().get("/bad", (req, res) -> { throw new HttpException(400); });
         String[][] cases = {
             {"GET", "/missing", "404"},
-            {"POST", "/a", "405"},
+            {"POST", "/a", "404"},
             {"GET", "/boom", "500"},
-            {"FOO", "/a", "501"},
+            {"FOO", "/a", "404"},
             {"GET", "abc", "400"},
-            {"GET", "/%2e%2e", "400"},
+            {"GET", "/%2e%2e", "404"},
+            {"GET", "/bad", "400"},
             {"OPTIONS", "*", "204"},
         };
         for (String[] c : cases) {
@@ -94,6 +97,10 @@ public class AccessLogAcceptanceTest {
             String line = onlyLine();
             assertTrue(line, line.startsWith(c[0] + " " + c[1] + " " + c[2] + " "));
         }
+        // FR-APP-005 AC-8: handled HTTP400 and fallthrough404 do not add ERROR logs; the500 logs once.
+        assertEquals(1, log.errors.size());
+        assertEquals(IllegalStateException.class, log.errors.get(0).getClass());
+        assertEquals("boom", log.errors.get(0).getMessage());
     }
 
     /** Keeps the in-memory adapter bound through shutdown, so a request after TERMINATED reaches the gate. */
@@ -178,13 +185,20 @@ public class AccessLogAcceptanceTest {
 
     // SDS-AC-10; FR-APP-019 AC-7
     @Test
-    public void sdsAc10_FR_APP_019_AC7_lineRidEqualsTheErrorBodyRequestId() {
-        ClientResponse r = send("GET", "/missing");
-        assertEquals(404, r.status());
-        assertEquals(rid(r), lineRid(onlyLine()));
-        ClientResponse rejected = send("FOO", "/missing");
-        assertEquals(501, rejected.status());
+    public void standardJsonPreRequestErrorKeepsRealRidCorrelationAndDefaultHtmlInventsNone() {
+        // CON-APP-010 AC-4 AC-5; FR-APP-019 AC-7: use the existing actual standard JSON pre-request path.
+        ClientResponse rejected = send("GET", "abc");
+        assertEquals(400, rejected.status());
+        assertEquals("application/json; charset=UTF-8", rejected.header("Content-Type"));
+        assertEquals(String.valueOf(rejected.body().length), rejected.header("Content-Length"));
         assertEquals(rid(rejected), lineRid(onlyLine()));
+        // The independent lifecycle-gate503 test above also retains body/log requestId equality.
+        ClientResponse missing = send("GET", "/missing");
+        HttpAcceptanceTest.assertCommon404("GET", "/missing", missing);
+        assertFalse(missing.text(), BODY_RID.matcher(missing.text()).find());
+        String line = onlyLine();
+        assertTrue(line, line.matches("GET /missing 404 \\d+ms in=0 out=\\d+ rid=[0-9a-f]{16}"));
+        assertTrue(lineRid(line).matches("[0-9a-f]{16}"));
     }
 
     // SDS-AC-11; SEC-APP-001 AC-1 (T39)

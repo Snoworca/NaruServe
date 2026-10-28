@@ -93,23 +93,24 @@ public class LoggerIsolationTest {
         t.app().get("/boom", (req, res) -> {
             throw new IllegalStateException("boom");
         });
-        t.app().get("/unfinished", (req, res) -> res.status(202));
+        // CON-APP-010 AC-3 AC-5; FR-APP-023 AC-1: explicit completion replaces the historical automatic empty response.
+        t.app().get("/accepted", (req, res) -> res.status(202).end());
+        t.app().get("/bad", (req, res) -> { throw new HttpException(400); });
         ClientResponse ok = t.send("GET", "/ok");
         assertEquals(200, ok.status());
         assertEquals("fine", new String(ok.body(), StandardCharsets.UTF_8));
         ClientResponse boom = t.send("GET", "/boom");
         assertEquals(500, boom.status());
-        String body = new String(boom.body(), StandardCharsets.UTF_8);
-        assertTrue(body, body.matches("\\{\"error\":\\{\"code\":\"INTERNAL_ERROR\",\"message\":"
-                + "\"Internal Server Error\",\"requestId\":\"[0-9a-f]{16}\"}}"));
-        ClientResponse unfinished = t.send("GET", "/unfinished");
-        assertEquals(202, unfinished.status());
-        assertEquals(false, unfinished.abnormallyClosed());
-        // access lines, the 500 error log and the unfinished-response warn all reached the logger and were dropped
-        assertTrue(String.valueOf(logger.calls.get()), logger.calls.get() >= 5);
-        // FR-APP-014 AC-1: access lines (WARN), the 500 error record and the unfinished-response warn each arrived
-        assertTrue("error records " + logger.errors.get(), logger.errors.get() > 0);
-        assertTrue("warn records " + logger.warns.get(), logger.warns.get() >= 3);
+        // CON-APP-010 AC-4 AC-5; FR-APP-024 AC-3: common default HTML remains independent of logger failures.
+        JsonBodyAcceptanceTest.assertDefaultError(500, IllegalStateException.class, boom);
+        ClientResponse accepted = t.send("GET", "/accepted");
+        assertEquals(202, accepted.status());
+        assertEquals(false, accepted.abnormallyClosed());
+        JsonBodyAcceptanceTest.assertDefaultError(400, HttpException.class, t.send("GET", "/bad"));
+        // FR-APP-014 AC-1 AC-3; FR-APP-005 AC-8: every throwing logger call stays isolated, only500 is ERROR.
+        assertEquals(5, logger.calls.get()); // four WARN access lines and one ERROR Throwable
+        assertEquals(1, logger.errors.get());
+        assertEquals(4, logger.warns.get());
     }
 
     // SDS-AC-2; FR-APP-014 AC-2, FR-APP-014 AC-3; CON-APP-007 AC-1
