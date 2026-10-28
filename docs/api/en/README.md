@@ -129,8 +129,8 @@ android {
 
 ## Execution contracts and troubleshooting
 
-- Register routes and settings before `listen`. Handlers run concurrently, so protect shared mutable state.
-- `next.run()` is synchronous and may be called only once.
+- Configure server options, services and WebSocket routes before `listen`. Ordinary HTTP routes can be appended in registration order while running. Handlers run concurrently, so protect shared mutable state.
+- A saved `Next` can resume after callback return. Repeated calls advance the same cursor, so do not use it as a retry API. Resolving a returned `Deferred` neither advances routing nor ends a response. See [middleware](middleware.md) and [request ownership](lifecycle.md).
 - The framework closes streams passed to `res.stream` after transmission. Save upload temporary files before the request ends.
 - Calling `RestApp.create()` with only `naruserve-api` supplies no default app factory. Add the default assembly module or use the [explicit builder](app.md).
 - Build the source with JDK 17 and the Gradle 8.14.3 wrapper. Distinguish the Java 8 runtime target from the build JDK. See [README troubleshooting](../../../README.md#troubleshooting) for installation, engine resolution and Android resource-merge problems.
