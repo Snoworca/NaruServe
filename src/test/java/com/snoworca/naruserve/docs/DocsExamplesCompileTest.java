@@ -6,6 +6,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import com.snoworca.naruserve.testing.common.ExampleCodeTokens;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -308,11 +309,11 @@ public final class DocsExamplesCompileTest {
 
     private static synchronized Map<String, List<String>> docs() throws IOException {
         if (docs == null) {
-            File[] mds = docsDir().listFiles((d, n) -> n.endsWith(".md"));
-            assertNotNull(mds);
             Map<String, List<String>> m = new TreeMap<>();
-            for (File md : mds) {
-                m.put(md.getName(), extractJavaBlocks(md));
+            for (String prefix : new String[] {"", "en/"}) {
+                File[] mds = new File(docsDir(), prefix).listFiles((d, n) -> n.endsWith(".md"));
+                assertNotNull("guide directory " + prefix, mds);
+                for (File md : mds) m.put(prefix + md.getName(), extractJavaBlocks(md));
             }
             docs = m;
         }
@@ -320,6 +321,16 @@ public final class DocsExamplesCompileTest {
     }
 
     private static Skip skipFor(String file, int ordinal, String body) {
+        if (file.startsWith("en/")) {
+            String paired = file.substring(3);
+            try {
+                List<String> blocks = docs().get(paired);
+                if (blocks == null || ordinal < 1 || ordinal > blocks.size()) return null;
+                String original = blocks.get(ordinal - 1);
+                if (!ExampleCodeTokens.javaTokens(original).equals(ExampleCodeTokens.javaTokens(body))) return null;
+                return skipFor(paired, ordinal, original);
+            } catch (IOException e) { throw new IllegalStateException("cannot read paired guide " + paired, e); }
+        }
         for (Skip s : SKIPS) {
             if (s.file.equals(file) && s.matches(ordinal, body)) {
                 return s;
@@ -395,6 +406,89 @@ public final class DocsExamplesCompileTest {
             o.write(content.getBytes(StandardCharsets.UTF_8));
         }
         return f;
+    }
+
+    // OPS-REL-008 AC-3: no English guide/fence may disappear from compiler accounting.
+    @Test
+    public void OPS_REL_008_AC3_bothLanguageJavaCorporaAreDiscoveredAndCompiled() throws IOException {
+        Map<String, List<String>> expected = new TreeMap<>();
+        for (String prefix : new String[] {"", "en/"}) {
+            File[] files = new File(docsDir(), prefix).listFiles((dir, name) -> name.endsWith(".md"));
+            assertNotNull("guide directory " + prefix, files);
+            for (File file : files) expected.put(prefix + file.getName(), extractJavaBlocks(file));
+        }
+        assertTrue("English guides are present", expected.keySet().stream().anyMatch(name -> name.startsWith("en/")));
+        assertEquals("every actual guide is compiler input", expected, docs());
+        assertTrue(String.join("\n", docsDiagnostics()), docsDiagnostics().isEmpty());
+        for (Map.Entry<String, List<String>> entry : expected.entrySet()) {
+            String paired = entry.getKey().startsWith("en/") ? entry.getKey().substring(3) : "en/" + entry.getKey();
+            assertNotNull("paired guide " + paired, expected.get(paired));
+            assertEquals("paired Java fence count " + entry.getKey(), entry.getValue().size(), expected.get(paired).size());
+            for (int i = 0; i < entry.getValue().size(); i++) {
+                assertEquals("paired Java executable code " + entry.getKey() + "#" + (i + 1),
+                        ExampleCodeTokens.javaTokens(entry.getValue().get(i)),
+                        ExampleCodeTokens.javaTokens(expected.get(paired).get(i)));
+            }
+            int skipped = 0;
+            for (int i = 0; i < entry.getValue().size(); i++) {
+                if (skipFor(entry.getKey(), i + 1, entry.getValue().get(i)) != null) skipped++;
+            }
+            assertEquals("all fences compile or have a named existing reason: " + entry.getKey(),
+                    entry.getValue().size() - skipped, compiledPerFile.getOrDefault(entry.getKey(), 0).intValue());
+        }
+    }
+
+    // OPS-REL-008 AC-3: English inherits a named Korean skip only for the same ordinal
+    // and executable code; translated comments are fine, changed literal/type/code is not.
+    @Test
+    public void OPS_REL_008_AC3_englishNamedSkipRequiresMatchingExecutablePair() throws IOException {
+        List<String> korean = docs().get("json.md");
+        int ordinal = 0;
+        for (int i = 0; i < korean.size(); i++) {
+            if (korean.get(i).startsWith("User user = req.body(User.class);")) { ordinal = i + 1; break; }
+        }
+        assertTrue("existing User example found", ordinal > 0);
+        String original = korean.get(ordinal - 1);
+        Skip existing = skipFor("json.md", ordinal, original);
+        assertNotNull(existing);
+        String translatedComment = original.replace("요청 → 객체", "request to object");
+        Skip inherited = skipFor("en/json.md", ordinal, translatedComment);
+        assertNotNull("same code reuses its existing named reason", inherited);
+        assertEquals(existing.reason, inherited.reason);
+        assertNull("changed executable code cannot inherit a skip",
+                skipFor("en/json.md", ordinal, translatedComment.replace("User.class", "String.class")));
+        assertNull("unpaired ordinal cannot inherit a skip", skipFor("en/json.md", Integer.MAX_VALUE, original));
+        assertNull("different file cannot inherit a skip", skipFor("en/cookie.md", ordinal, original));
+    }
+
+    // OPS-REL-008 AC-3: prove the compiler catches an English-labelled API typo and
+    // accepts representative current APIs under Java8, rather than testing documentation keywords.
+    @Test
+    public void OPS_REL_008_AC3_englishCompilerLabelsRejectBrokenCurrentApiCalls() throws IOException {
+        assertFalse("operator token boundaries", ExampleCodeTokens.javaTokens("a+ ++b")
+                .equals(ExampleCodeTokens.javaTokens("a++ +b")));
+        assertFalse("literal whitespace", ExampleCodeTokens.javaTokens("String x = \"a  b\";")
+                .equals(ExampleCodeTokens.javaTokens("String x = \"a b\";")));
+        String quoted = "String x = \"http://host/a /* literal */ // text\"; char c = ' ';";
+        assertEquals(ExampleCodeTokens.javaTokens(quoted),
+                ExampleCodeTokens.javaTokens("// translated comment\n" + quoted + " /* outside */"));
+        String sample = "com.snoworca.naruserve.Router child = com.snoworca.naruserve.Router.create(true);\n"
+                + "child.param(\"id\", (request, response, next, values, name) -> next.run());\n"
+                + "child.route(\"/users/:id{/:tab}\").get((request, response, next) -> {\n"
+                + "  java.util.List<String> values = request.paramValues(\"id\");\n"
+                + "  response.send(request.originalUrl() + request.baseUrl());\n});\n"
+                + "app.use(\"/api\", child);\n"
+                + "app.getAsync(\"/later\", (request, response, next) -> {\n"
+                + "  Deferred pending = Deferred.pending(); response.send(\"accepted\");\n"
+                + "  pending.onSettled(() -> {}); return pending;\n});\n"
+                + "app.use((error, request, response, next) -> next.error(error));\n"
+                + "app.method(\"COPY\", \"/copy\", (request, response, next) -> next.route());\n";
+        String label = "en/routing.md current-api fixture";
+        assertEquals(Collections.emptyList(), compile(Collections.singletonMap(label, wrap(sample, 9001))));
+        List<String> errors = compile(Collections.singletonMap(label,
+                wrap(sample.replace("request.originalUrl()", "request.notAnApi()"), 9002)));
+        assertFalse("bad English API call must be compiled", errors.isEmpty());
+        assertTrue(errors.toString(), errors.stream().allMatch(error -> error.startsWith(label)));
     }
 
     // SDS-AC-11; OPS-HTTP-004 AC-2
