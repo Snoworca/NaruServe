@@ -1,6 +1,6 @@
 {
   "requirement": "OPS-ROUTE-004",
-  "scope": "All 30 actual Java scenarios wired; method/error core integrated, only async.rejected remains RED",
+  "scope": "All 30 actual Java runtime cases and all54 parity controls pass after approved async integration",
   "tdd": {
     "red_commit": "3d86599",
     "red_tests": 7,
@@ -67,6 +67,33 @@
       "full_runtime_cases": 30,
       "full_runtime_passing": 29,
       "counterpart_controls": 8
+    },
+    "async_runtime_jdk17": {
+      "tests": 54,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "source_commit": "3adef32a8f03a433ec563bc83f7e49065f592d08",
+      "approved_core_commit": "9dbd88c44cd64e12ba81d54039759973d649ffd6",
+      "log": "/tmp/naru-runtime-parity-async.log",
+      "xml": "/tmp/naru-runtime-parity-async/xml",
+      "full_runtime_cases": 30,
+      "full_runtime_passing": 30,
+      "counterpart_controls": 8
+    },
+    "async_runtime_actual_java8": {
+      "tests": 54,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "source_commit": "3adef32a8f03a433ec563bc83f7e49065f592d08",
+      "approved_core_commit": "9dbd88c44cd64e12ba81d54039759973d649ffd6",
+      "log": "/tmp/naru-runtime-parity-async-java8.log",
+      "xml": "/tmp/naru-runtime-parity-async-java8/xml",
+      "full_runtime_cases": 30,
+      "full_runtime_passing": 30,
+      "counterpart_controls": 8,
+      "runtime": "1.8.0_504"
     }
   },
   "corpus": {
@@ -110,9 +137,7 @@
       "registration.unnamed-wildcard",
       "registration.inline-regex"
     ],
-    "failing_runtime_case_ids": [
-      "async.rejected"
-    ]
+    "failing_runtime_case_ids": []
   },
   "normalization_source": "https://www.rfc-editor.org/rfc/rfc9110.html#section-8.3.2",
   "dependencies_changed": false,
