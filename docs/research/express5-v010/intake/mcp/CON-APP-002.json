@@ -1,0 +1,118 @@
+{
+  "ok": true,
+  "value": {
+    "id": "CON-APP-002",
+    "title": "Every new RestApp or RouteBuilder configuration method calls the NEW-state guard first",
+    "type": "constraint",
+    "target": "wave-4",
+    "status": "verified",
+    "scope": "APP",
+    "filePath": "docs/spec/05.application.srs.md",
+    "headingLine": 2637,
+    "metadata": {
+      "Type": "constraint",
+      "Target": "wave-4",
+      "Status": "verified",
+      "Priority": "medium",
+      "Tags": "-",
+      "Risk": "medium",
+      "Stability": "evolving",
+      "Verification Method": "test",
+      "GitHub Issue": "-",
+      "Related Docs": "-"
+    },
+    "acceptanceCriteria": [
+      {
+        "id": "AC-1",
+        "text": "The reflection test of FR-APP-002 AC-4 lists every non-static `RestApp` method returning `RestApp` and every `RouteBuilder` registration method, including those a later wave adds, and finds each one rejected with `IllegalStateException` in `RUNNING` with nothing recorded.",
+        "checked": true,
+        "line": 2662
+      }
+    ],
+    "verificationEvidence": [
+      {
+        "id": "VE-1",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AppLifecycleGuardTest.java#sdsAc4_FR_APP_002_AC4_reflectionFindsEveryRestAppAndRouteBuilderRegistrationRefusedInRunning",
+        "covers": "AC-1",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 2668
+      }
+    ],
+    "traceLinks": [],
+    "changeNotes": [
+      {
+        "date": "2026-10-19",
+        "change": "Created",
+        "reason": "add-requirement",
+        "line": 2687
+      },
+      {
+        "date": "2026-10-21",
+        "change": "Stability -> evolving",
+        "reason": "constraint transcribed from the SDS Durable Rules, enforced by the cited test",
+        "line": 2688
+      },
+      {
+        "date": "2026-10-21",
+        "change": "Status -> implemented",
+        "reason": "constraint enforced by the cited test, build passes",
+        "line": 2689
+      },
+      {
+        "date": "2026-10-21",
+        "change": "Status -> verified",
+        "reason": "AC-1 checked with test evidence VE-1, ./gradlew build pass",
+        "line": 2690
+      }
+    ],
+    "tags": [
+      "-"
+    ],
+    "relatedDocs": [],
+    "evidenceReferences": [
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AppLifecycleGuardTest.java"
+    ],
+    "traceReferences": [],
+    "blockStartLine": 2637,
+    "blockEndLine": 2691,
+    "sectionLines": {
+      "Requirement": 2652,
+      "Rationale": 2656,
+      "Acceptance Criteria": 2660,
+      "Verification Evidence": 2664,
+      "Trace Links": 2670,
+      "Research / Analysis": 2675,
+      "Implementation Notes": 2679,
+      "Change Notes": 2683
+    },
+    "priority": "medium",
+    "risk": "medium",
+    "stability": "evolving",
+    "newWorkCandidate": false,
+    "requirement": "The system shall make every `RestApp` and `RouteBuilder` configuration method that a later wave adds (such as `ws`, `staticFiles`, `multipart` and `jsonCodec`) call the internal guard `AppLifecycle.requireConfigurable` before it records anything.",
+    "rationale": "Durable rule of SDS 2026-10-19.naruserve.naruserve-v1-wave-4-3 (app isolation, NEW-state guard, listen() startup and start gate), moved to the SRS at SDS close; binds FR-APP-002.",
+    "research": "- -",
+    "implementationNotes": "- -",
+    "diagnostics": [],
+    "errors": [],
+    "warnings": [],
+    "diagnosticsSummary": {
+      "errors": 0,
+      "warnings": 0,
+      "byCode": {}
+    }
+  },
+  "diagnostics": [],
+  "diagnosticsSummary": {
+    "errors": 0,
+    "warnings": 0,
+    "byCode": {}
+  },
+  "mcpWorkspace": {
+    "workspaceRoot": "/Users/beom/work/git/NaruServe",
+    "rootSource": "server-cwd-discovery",
+    "indexPath": "docs/spec/00.index.md",
+    "packageVersion": "4.2.0"
+  }
+}

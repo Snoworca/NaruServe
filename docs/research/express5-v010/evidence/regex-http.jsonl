@@ -1,0 +1,6 @@
+{"pattern":"/:x(a$)","path":"/a","status":200,"body":"{\"x\":\"a\"}"}
+{"pattern":"/:x(\\d+$)","path":"/42","status":200,"body":"{\"x\":\"42\"}"}
+{"pattern":"/files/:path(.*)","path":"/files/a/b","status":200,"body":"{\"0\":\"/b\",\"path\":\"a/b\"}"}
+{"pattern":"/:x((a|b)+)","path":"/ab","status":200,"body":"{\"0\":\"b\",\"x\":\"b\"}"}
+{"pattern":"/:x([a-z]*)","path":"/a123","status":200,"body":"{\"0\":\"123\",\"x\":\"a123\"}"}
+{"pattern":"/:x((a)(b))","path":"/ab","status":200,"body":"{\"0\":\"a\",\"1\":\"b\",\"x\":\"a\"}"}

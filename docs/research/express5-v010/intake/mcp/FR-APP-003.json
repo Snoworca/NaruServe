@@ -1,0 +1,498 @@
+{
+  "ok": true,
+  "value": {
+    "id": "FR-APP-003",
+    "title": "Middleware scope and pipeline order in the dispatcher",
+    "type": "functional",
+    "target": "wave-4",
+    "status": "verified",
+    "scope": "APP",
+    "filePath": "docs/spec/05.application.srs.md",
+    "headingLine": 833,
+    "metadata": {
+      "Type": "functional",
+      "Target": "wave-4",
+      "Status": "verified",
+      "Priority": "high",
+      "Tags": "wave-4, feasibility:high, middleware",
+      "Risk": "high",
+      "Stability": "evolving",
+      "Verification Method": "test",
+      "GitHub Issue": "https://github.com/Snoworca/NaruServe/issues/5",
+      "Related Docs": "-"
+    },
+    "acceptanceCriteria": [
+      {
+        "id": "AC-1",
+        "text": "With global middleware `g1`, `g2`, prefix middleware `p1` on `/api` registered before `g2` and `p2` on `/api`, and `app.route(\"/api/users\").use(r1).use(r2).get(h)`, a `GET /api/users` records `g1, g2, p1, p2, r1, r2, h`, and `app.get(\"/b\", r3, h2)` makes `GET /b` record `g1, g2, r3, h2`. [D-120; D-119; T35] Decision: all global middleware run first in registration order, then all matching prefix middleware in registration order, however the two kinds of registration interleave. [SDS 2026-10-19.naruserve.naruserve-v1-wave-4-4 SDS-AC-1] User-approved revision: FR-DX-008 overrides scope regrouping: global and matching prefix middleware execute in their combined registration order, then route middleware.",
+        "checked": true,
+        "line": 858
+      },
+      {
+        "id": "AC-2",
+        "text": "Prefix `/api` runs for `/api` and `/api/users` and not for `/apix` or `/ap`; prefix `/api/` behaves as `/api`, and prefix `/` runs for every path. [D-118; T35] Decision: a trailing `/` of a prefix is ignored and `/` covers every path. User-approved revision: FR-DX-008 overrides scope regrouping: global and matching prefix middleware execute in their combined registration order, then route middleware.",
+        "checked": true,
+        "line": 859
+      },
+      {
+        "id": "AC-3",
+        "text": "With `RouterPolicy.builder().caseInsensitive(true)` the `/api` prefix middleware runs for `/API/users`, and with `mergeSlashes(true)` it runs for `//api//users`, so every path that reaches a route under the prefix runs the prefix middleware. [D-118] Decision: the prefix comparison uses the same case and slash normalisation that the router applies under the app's `RouterPolicy`. User-approved revision: FR-DX-008 overrides scope regrouping: global and matching prefix middleware execute in their combined registration order, then route middleware.",
+        "checked": true,
+        "line": 860
+      },
+      {
+        "id": "AC-4",
+        "text": "Inside prefix middleware and the handler, `req.path()` still returns the full decoded path (for example `/api/users`, not `/users`). [D-118; D-137] Decision: NaruServe does not strip the mount prefix from `req.path()` and has no `baseUrl`. User-approved revision: FR-DX-008 overrides scope regrouping: global and matching prefix middleware execute in their combined registration order, then route middleware.",
+        "checked": true,
+        "line": 861
+      },
+      {
+        "id": "AC-5",
+        "text": "A request that matches no route runs global and matching prefix middleware and then receives the `404` of the fallback point; route middleware of other routes does not run. [D-121; D-117] Decision: for a lookup result other than `MATCHED` the dispatcher builds the `Request` with the parsed `Method` and empty params and runs the global and matching prefix middleware with an empty route middleware list and the fallback answer as the terminal step. [SDS 2026-10-19.naruserve.naruserve-v1-wave-4-4 SDS-AC-6] User-approved revision: FR-DX-008 overrides scope regrouping: global and matching prefix middleware execute in their combined registration order, then route middleware.",
+        "checked": true,
+        "line": 862
+      },
+      {
+        "id": "AC-6",
+        "text": "A recording global middleware runs once each for a `405` (method mismatch), a `426` (WebSocket-only route without upgrade), an automatic `OPTIONS /r` `204`, a `501` for `TRACE /x` with `TRACE` disabled and a `501` for `CONNECT /`, before the automatic response is written. [D-117; wave decision: Pre-request rejections] User-approved revision: FR-DX-008 overrides scope regrouping: global and matching prefix middleware execute in their combined registration order, then route middleware.",
+        "checked": true,
+        "line": 863
+      },
+      {
+        "id": "AC-7",
+        "text": "A global middleware does not run for the pre-request rejections (unrecognised method token `501`, raw path not starting with `/` `400`, `PathValidator` rejection `400`, `OPTIONS *` `204`) nor for the lifecycle-gate `503`s of FR-APP-009 and FR-APP-013. [wave decision: Pre-request rejections; wave decision: Lifecycle gate] User-approved revision: FR-DX-008 overrides scope regrouping: global and matching prefix middleware execute in their combined registration order, then route middleware.",
+        "checked": true,
+        "line": 864
+      },
+      {
+        "id": "AC-8",
+        "text": "For a matched route all middleware and the handler run on the adapter thread that called the dispatcher, one after the other. [D-128]",
+        "checked": true,
+        "line": 865
+      }
+    ],
+    "verificationEvidence": [
+      {
+        "id": "VE-1",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MiddlewarePipelineTest.java#sdsAc1_FR_APP_003_AC1_globalsThenPrefixesThenRouteMiddlewareThenHandler",
+        "covers": "AC-1",
+        "notes": "command: ./gradlew build; result: pass (exit 0)",
+        "line": 871
+      },
+      {
+        "id": "VE-2",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MiddlewarePipelineTest.java#sdsAc2_FR_APP_003_AC1_routeBuilderUseAppliesInOrderToLaterVerbsOnly",
+        "covers": "AC-1",
+        "notes": "command: ./gradlew build; result: pass (exit 0)",
+        "line": 872
+      },
+      {
+        "id": "VE-3",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/PrefixMatcherTest.java#sdsAc3_FR_APP_003_AC2_prefixMatchesOnSegmentBoundaryOnly",
+        "covers": "AC-2",
+        "notes": "command: ./gradlew build; result: pass (exit 0)",
+        "line": 873
+      },
+      {
+        "id": "VE-4",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/PrefixMatcherTest.java#sdsAc3_FR_APP_003_AC2_trailingSlashPrefixEqualsBareAndRootCoversEveryPath",
+        "covers": "AC-2",
+        "notes": "command: ./gradlew build; result: pass (exit 0)",
+        "line": 874
+      },
+      {
+        "id": "VE-5",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MiddlewarePipelineTest.java#sdsAc4_FR_APP_003_AC3_prefixFollowsTheCaseInsensitivePolicy",
+        "covers": "AC-3",
+        "notes": "command: ./gradlew build; result: pass (exit 0)",
+        "line": 875
+      },
+      {
+        "id": "VE-6",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MiddlewarePipelineTest.java#sdsAc4_FR_APP_003_AC3_prefixFollowsTheMergeSlashesPolicy",
+        "covers": "AC-3",
+        "notes": "command: ./gradlew build; result: pass (exit 0)",
+        "line": 876
+      },
+      {
+        "id": "VE-7",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MiddlewarePipelineTest.java#sdsAc5_FR_APP_003_AC4_prefixMiddlewareAndHandlerSeeTheFullPath",
+        "covers": "AC-4",
+        "notes": "command: ./gradlew build; result: pass (exit 0)",
+        "line": 877
+      },
+      {
+        "id": "VE-8",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MiddlewarePipelineTest.java#sdsAc6_FR_APP_003_AC5_noMatchRunsGlobalsAndPrefixThenThe404",
+        "covers": "AC-5",
+        "notes": "command: ./gradlew build; result: pass (exit 0)",
+        "line": 878
+      },
+      {
+        "id": "VE-9",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MiddlewarePipelineTest.java#sdsAc17_FR_HTTP_022_AC8_globalRunsOnceForEveryFallbackAnswerButNotTheUnknownToken",
+        "covers": "AC-6",
+        "notes": "command: ./gradlew build; result: pass (exit 0)",
+        "line": 879
+      },
+      {
+        "id": "VE-10",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MiddlewarePipelineTest.java#sdsAc7_FR_APP_003_AC7_FR_HTTP_021_AC4_preRequestRejectionsRunNoMiddlewareHandlerOrOnError",
+        "covers": "AC-7",
+        "notes": "command: ./gradlew build; result: pass (exit 0)",
+        "line": 880
+      },
+      {
+        "id": "VE-11",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MiddlewarePipelineTest.java#sdsAc8_FR_APP_003_AC8_everyStepRunsOnTheAdapterThread",
+        "covers": "AC-8",
+        "notes": "command: ./gradlew build; result: pass (exit 0)",
+        "line": 881
+      },
+      {
+        "id": "VE-12",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MiddlewarePipelineTest.java",
+        "covers": "AC-1",
+        "notes": "verification_cmd ./gradlew build passed at 04f3673 (588/588); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MiddlewarePipelineTest.java:47; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MiddlewarePipelineTest.java:65; bundle docs/research/naruserve-v1/waves/stage-4/lane-2026-10-19.naruserve.naruserve-v1-wave-4/",
+        "line": 882
+      },
+      {
+        "id": "VE-13",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/PrefixMatcherTest.java",
+        "covers": "AC-2",
+        "notes": "verification_cmd ./gradlew build passed at 04f3673 (588/588); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/internal/PrefixMatcherTest.java:21; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/PrefixMatcherTest.java:33; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/PrefixMatcherTest.java:62; bundle docs/research/naruserve-v1/waves/stage-4/lane-2026-10-19.naruserve.naruserve-v1-wave-4/",
+        "line": 883
+      },
+      {
+        "id": "VE-14",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MiddlewarePipelineTest.java",
+        "covers": "AC-3",
+        "notes": "verification_cmd ./gradlew build passed at 04f3673 (588/588); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MiddlewarePipelineTest.java:77; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MiddlewarePipelineTest.java:88; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/PrefixMatcherTest.java:44; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/PrefixMatcherTest.java:53; bundle docs/research/naruserve-v1/waves/stage-4/lane-2026-10-19.naruserve.naruserve-v1-wave-4/",
+        "line": 884
+      },
+      {
+        "id": "VE-15",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MiddlewarePipelineTest.java",
+        "covers": "AC-4",
+        "notes": "verification_cmd ./gradlew build passed at 04f3673 (588/588); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MiddlewarePipelineTest.java:99; bundle docs/research/naruserve-v1/waves/stage-4/lane-2026-10-19.naruserve.naruserve-v1-wave-4/",
+        "line": 885
+      },
+      {
+        "id": "VE-16",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MiddlewarePipelineTest.java",
+        "covers": "AC-6",
+        "notes": "verification_cmd ./gradlew build passed at 04f3673 (588/588); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MiddlewarePipelineTest.java:203; bundle docs/research/naruserve-v1/waves/stage-4/lane-2026-10-19.naruserve.naruserve-v1-wave-4/",
+        "line": 886
+      },
+      {
+        "id": "VE-17",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MiddlewarePipelineTest.java",
+        "covers": "AC-7",
+        "notes": "verification_cmd ./gradlew build passed at 04f3673 (588/588); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MiddlewarePipelineTest.java:158; bundle docs/research/naruserve-v1/waves/stage-4/lane-2026-10-19.naruserve.naruserve-v1-wave-4/",
+        "line": 887
+      },
+      {
+        "id": "VE-18",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ChainNextTest.java",
+        "covers": "AC-8",
+        "notes": "verification_cmd ./gradlew build passed at 04f3673 (588/588); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ChainNextTest.java:280; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MiddlewarePipelineTest.java:180; bundle docs/research/naruserve-v1/waves/stage-4/lane-2026-10-19.naruserve.naruserve-v1-wave-4/",
+        "line": 888
+      },
+      {
+        "id": "VE-19",
+        "type": "commit",
+        "reference": "e344a664b14f2b0fe577f556373ce0b0222c9a56",
+        "covers": "all",
+        "notes": "wave 4 worker or issue-fix commit (Orch-Wave: 4), ancestor of integration head 04f3673",
+        "line": 889
+      },
+      {
+        "id": "VE-20",
+        "type": "commit",
+        "reference": "9b502e31d25812a02ebddc8f1c01a97f308e0583",
+        "covers": "all",
+        "notes": "wave 4 worker or issue-fix commit (Orch-Wave: 4), ancestor of integration head 04f3673",
+        "line": 890
+      },
+      {
+        "id": "VE-21",
+        "type": "commit",
+        "reference": "0c9bfb4ee13638e5de052decedb48d5800a30843",
+        "covers": "all",
+        "notes": "wave 4 worker or issue-fix commit (Orch-Wave: 4), ancestor of integration head 04f3673",
+        "line": 891
+      },
+      {
+        "id": "VE-22",
+        "type": "commit",
+        "reference": "e680e56169d4cde7c86ed9f4c2d2b093978596e6",
+        "covers": "all",
+        "notes": "wave 4 worker or issue-fix commit (Orch-Wave: 4), ancestor of integration head 04f3673",
+        "line": 892
+      },
+      {
+        "id": "VE-23",
+        "type": "commit",
+        "reference": "a452c0ca77b3d08a15f5758b710a3363c4377355",
+        "covers": "all",
+        "notes": "wave 4 worker or issue-fix commit (Orch-Wave: 4), ancestor of integration head 04f3673",
+        "line": 893
+      },
+      {
+        "id": "VE-24",
+        "type": "commit",
+        "reference": "9e5488314eacccd5383e9c10fecd35d122ed63c4",
+        "covers": "all",
+        "notes": "wave 4 worker or issue-fix commit (Orch-Wave: 4), ancestor of integration head 04f3673",
+        "line": 894
+      },
+      {
+        "id": "VE-25",
+        "type": "commit",
+        "reference": "7cb379bec63d289fae06d288ae01a92c37223d55",
+        "covers": "all",
+        "notes": "wave 4 worker or issue-fix commit (Orch-Wave: 4), ancestor of integration head 04f3673",
+        "line": 895
+      },
+      {
+        "id": "VE-26",
+        "type": "commit",
+        "reference": "b0869b93e712dda6b48a1f7001862877ea1056b9",
+        "covers": "all",
+        "notes": "wave 4 worker or issue-fix commit (Orch-Wave: 4), ancestor of integration head 04f3673",
+        "line": 896
+      },
+      {
+        "id": "VE-27",
+        "type": "commit",
+        "reference": "18f79a529b9ecb4e6d3b605f90bf2df3dfad5494",
+        "covers": "all",
+        "notes": "wave 4 worker or issue-fix commit (Orch-Wave: 4), ancestor of integration head 04f3673",
+        "line": 897
+      },
+      {
+        "id": "VE-28",
+        "type": "commit",
+        "reference": "b4bf9d84ff28d07ffa85ea39ca39569c91e296fd",
+        "covers": "all",
+        "notes": "wave 4 worker or issue-fix commit (Orch-Wave: 4), ancestor of integration head 04f3673",
+        "line": 898
+      },
+      {
+        "id": "VE-29",
+        "type": "commit",
+        "reference": "e612f8fe3a2f95cb8c94c6d836017fb447434a92",
+        "covers": "all",
+        "notes": "wave 4 worker or issue-fix commit (Orch-Wave: 4), ancestor of integration head 04f3673",
+        "line": 899
+      },
+      {
+        "id": "VE-30",
+        "type": "commit",
+        "reference": "d39522781993188e36f6d0f22663fb03c7ab4d54",
+        "covers": "all",
+        "notes": "wave 4 worker or issue-fix commit (Orch-Wave: 4), ancestor of integration head 04f3673",
+        "line": 900
+      },
+      {
+        "id": "VE-31",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MiddlewarePipelineTest.java",
+        "covers": "AC-5",
+        "notes": "verification_cmd ./gradlew build passed at 04f3673 (588/588); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MiddlewarePipelineTest.java:116; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MiddlewarePipelineTest.java:138; bundle docs/research/naruserve-v1/waves/stage-4/lane-2026-10-19.naruserve.naruserve-v1-wave-4/",
+        "line": 901
+      },
+      {
+        "id": "VE-32",
+        "type": "commit",
+        "reference": "a6e9fbe31a145333369d669970648e17c0d38be9",
+        "covers": "all",
+        "notes": "wave 4 worker or issue-fix commit (Orch-Wave: 4), ancestor of integration head 04f3673",
+        "line": 902
+      },
+      {
+        "id": "VE-33",
+        "type": "commit",
+        "reference": "217f6d75e4b46887d073c89a19ad41d35fb16cd9",
+        "covers": "all",
+        "notes": "wave 4 worker or issue-fix commit (Orch-Wave: 4), ancestor of integration head 04f3673",
+        "line": 903
+      },
+      {
+        "id": "VE-34",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MiddlewarePipelineTest.java",
+        "covers": "all",
+        "notes": "API usability epic #21: prior unchanged criteria retain existing evidence; current revision covered by this suite and complete ./gradlew build PASS. See docs/release/api-usability-verification.md.",
+        "line": 904
+      }
+    ],
+    "traceLinks": [
+      {
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+        "relation": "implements",
+        "notes": "trace_intent=addition_site",
+        "line": 910
+      },
+      {
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+        "relation": "implements",
+        "notes": "trace_intent=addition_site",
+        "line": 911
+      },
+      {
+        "type": "Requirement",
+        "reference": "IR-APP-002",
+        "relation": "depends_on",
+        "notes": "middleware types and registration",
+        "line": 912
+      },
+      {
+        "type": "Requirement",
+        "reference": "FR-ROUTE-006",
+        "relation": "extends",
+        "notes": "prefix comparison follows the path-form policies",
+        "line": 913
+      },
+      {
+        "type": "Requirement",
+        "reference": "FR-HTTP-001",
+        "relation": "extends",
+        "notes": "tests run through the in-memory adapter",
+        "line": 914
+      },
+      {
+        "type": "Requirement",
+        "reference": "FR-DX-008",
+        "relation": "depends_on",
+        "notes": "User-approved API usability revision, epic #21.",
+        "line": 915
+      }
+    ],
+    "changeNotes": [
+      {
+        "date": "2026-10-19",
+        "change": "Created",
+        "reason": "add-requirement",
+        "line": 929
+      },
+      {
+        "date": "2026-10-19",
+        "change": "Stability -> evolving",
+        "reason": "Feasibility=high (score 93). Blockers: none. Run: 2026-10-19.naruserve.wave-4.v01",
+        "line": 930
+      },
+      {
+        "date": "2026-10-19",
+        "change": "Status -> verified",
+        "reason": "Wave 4 promotion: every AC cited in docs/research/naruserve-v1/waves/wave-4/test-sufficiency.json; ./gradlew build passed at 04f3673 (588/588); worker commits recorded",
+        "line": 931
+      },
+      {
+        "date": "2026-10-21",
+        "change": "Status -> in_progress",
+        "reason": "User-approved usability revision under epic #21: FR-DX-008 supersedes conflicting earlier API decisions; preserve unrelated behavior.",
+        "line": 932
+      },
+      {
+        "date": "2026-10-21",
+        "change": "Status -> verified",
+        "reason": "Per-requirement current API evidence and complete Gradle build passed after epic #21 revision.",
+        "line": 933
+      }
+    ],
+    "tags": [
+      "wave-4",
+      "feasibility:high",
+      "middleware"
+    ],
+    "relatedDocs": [],
+    "evidenceReferences": [
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MiddlewarePipelineTest.java",
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/PrefixMatcherTest.java",
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ChainNextTest.java",
+      "e344a664b14f2b0fe577f556373ce0b0222c9a56",
+      "9b502e31d25812a02ebddc8f1c01a97f308e0583",
+      "0c9bfb4ee13638e5de052decedb48d5800a30843",
+      "e680e56169d4cde7c86ed9f4c2d2b093978596e6",
+      "a452c0ca77b3d08a15f5758b710a3363c4377355",
+      "9e5488314eacccd5383e9c10fecd35d122ed63c4",
+      "7cb379bec63d289fae06d288ae01a92c37223d55",
+      "b0869b93e712dda6b48a1f7001862877ea1056b9",
+      "18f79a529b9ecb4e6d3b605f90bf2df3dfad5494",
+      "b4bf9d84ff28d07ffa85ea39ca39569c91e296fd",
+      "e612f8fe3a2f95cb8c94c6d836017fb447434a92",
+      "d39522781993188e36f6d0f22663fb03c7ab4d54",
+      "a6e9fbe31a145333369d669970648e17c0d38be9",
+      "217f6d75e4b46887d073c89a19ad41d35fb16cd9"
+    ],
+    "traceReferences": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+      "IR-APP-002",
+      "FR-ROUTE-006",
+      "FR-HTTP-001",
+      "FR-DX-008"
+    ],
+    "blockStartLine": 833,
+    "blockEndLine": 934,
+    "sectionLines": {
+      "Requirement": 848,
+      "Rationale": 852,
+      "Acceptance Criteria": 856,
+      "Verification Evidence": 867,
+      "Trace Links": 906,
+      "Research / Analysis": 917,
+      "Implementation Notes": 921,
+      "Change Notes": 925
+    },
+    "priority": "high",
+    "risk": "high",
+    "stability": "evolving",
+    "newWorkCandidate": false,
+    "requirement": "The system shall execute global and matching segment-boundary prefix middleware in their combined registration order, followed by matched route middleware and its handler, or the automatic/static fallback. All continuations remain synchronous and single-use.",
+    "rationale": "Covers D-117, D-118, D-120, D-121 and the wave decision on pre-request rejections (middleware runs for `404`, `405`, `426`, the automatic `OPTIONS` reply and the `501` of a disabled `TRACE` or `CONNECT`, including `CONNECT /`; the static-file and WebSocket-upgrade cases are asserted in waves 6 and 7). T35.",
+    "research": "- -",
+    "implementationNotes": "- -",
+    "diagnostics": [],
+    "errors": [],
+    "warnings": [],
+    "diagnosticsSummary": {
+      "errors": 0,
+      "warnings": 0,
+      "byCode": {}
+    }
+  },
+  "diagnostics": [],
+  "diagnosticsSummary": {
+    "errors": 0,
+    "warnings": 0,
+    "byCode": {}
+  },
+  "mcpWorkspace": {
+    "workspaceRoot": "/Users/beom/work/git/NaruServe",
+    "rootSource": "server-cwd-discovery",
+    "indexPath": "docs/spec/00.index.md",
+    "packageVersion": "4.2.0"
+  }
+}

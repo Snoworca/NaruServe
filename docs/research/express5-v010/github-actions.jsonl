@@ -1,0 +1,78 @@
+{"at": "2026-10-27T18:04:59.981328+00:00", "action": "epic", "phase": "intent", "kind": "issue-create", "title": "[Epic] 0.10.0 Express 5 공통 라우팅 일치와 확장 API 보존"}
+{"at": "2026-10-27T18:05:05.239117+00:00", "action": "epic", "phase": "result", "number": 46, "id": 6064943852, "url": "https://github.com/Snoworca/NaruServe/issues/46", "title": "[Epic] 0.10.0 Express 5 공통 라우팅 일치와 확장 API 보존"}
+{"at": "2026-10-27T18:05:05.240325+00:00", "action": "T00", "phase": "intent", "kind": "issue-create", "title": "[0.10.0] T00 0.10.0 호환 프로파일과 변경 SRS 확정"}
+{"at": "2026-10-27T18:05:09.301502+00:00", "action": "T00", "phase": "result", "number": 47, "id": 6064945115, "url": "https://github.com/Snoworca/NaruServe/issues/47", "title": "[0.10.0] T00 0.10.0 호환 프로파일과 변경 SRS 확정"}
+{"at": "2026-10-27T18:05:09.302481+00:00", "action": "T00", "phase": "intent", "kind": "native-subissue-link", "parent": 46, "child": 47}
+{"at": "2026-10-27T18:05:10.560603+00:00", "action": "T00", "phase": "result", "kind": "native-subissue-link", "parent": 46, "child": 47}
+{"at": "2026-10-27T18:05:10.561302+00:00", "action": "T01", "phase": "intent", "kind": "issue-create", "title": "[0.10.0] T01 Express 5 oracle와 차등 적합성 코퍼스 구축"}
+{"at": "2026-10-27T18:05:14.736751+00:00", "action": "T01", "phase": "result", "number": 48, "id": 6064946234, "url": "https://github.com/Snoworca/NaruServe/issues/48", "title": "[0.10.0] T01 Express 5 oracle와 차등 적합성 코퍼스 구축"}
+{"at": "2026-10-27T18:05:14.737789+00:00", "action": "T01", "phase": "intent", "kind": "native-subissue-link", "parent": 46, "child": 48}
+{"at": "2026-10-27T18:05:16.510091+00:00", "action": "T01", "phase": "result", "kind": "native-subissue-link", "parent": 46, "child": 48}
+{"at": "2026-10-27T18:05:16.510820+00:00", "action": "T02", "phase": "intent", "kind": "issue-create", "title": "[0.10.0] T02 Express 5 문자열 경로 tokenizer와 compiled matcher 구현"}
+{"at": "2026-10-27T18:05:19.856713+00:00", "action": "T02", "phase": "result", "number": 49, "id": 6064947841, "url": "https://github.com/Snoworca/NaruServe/issues/49", "title": "[0.10.0] T02 Express 5 문자열 경로 tokenizer와 compiled matcher 구현"}
+{"at": "2026-10-27T18:05:19.858545+00:00", "action": "T02", "phase": "intent", "kind": "native-subissue-link", "parent": 46, "child": 49}
+{"at": "2026-10-27T18:05:21.696598+00:00", "action": "T02", "phase": "result", "kind": "native-subissue-link", "parent": 46, "child": 49}
+{"at": "2026-10-27T18:05:21.697249+00:00", "action": "T03", "phase": "intent", "kind": "issue-create", "title": "[0.10.0] T03 Request의 목록형 매개변수와 레이어 경로 뷰 구현"}
+{"at": "2026-10-27T18:05:24.655159+00:00", "action": "T03", "phase": "result", "number": 50, "id": 6064949158, "url": "https://github.com/Snoworca/NaruServe/issues/50", "title": "[0.10.0] T03 Request의 목록형 매개변수와 레이어 경로 뷰 구현"}
+{"at": "2026-10-27T18:05:24.656305+00:00", "action": "T03", "phase": "intent", "kind": "native-subissue-link", "parent": 46, "child": 50}
+{"at": "2026-10-27T18:05:26.386498+00:00", "action": "T03", "phase": "result", "kind": "native-subissue-link", "parent": 46, "child": 50}
+{"at": "2026-10-27T18:05:26.386866+00:00", "action": "T04", "phase": "intent", "kind": "issue-create", "title": "[0.10.0] T04 경로 대안 배열과 정규식 경로 대응 API 구현"}
+{"at": "2026-10-27T18:05:29.413186+00:00", "action": "T04", "phase": "result", "number": 51, "id": 6064950415, "url": "https://github.com/Snoworca/NaruServe/issues/51", "title": "[0.10.0] T04 경로 대안 배열과 정규식 경로 대응 API 구현"}
+{"at": "2026-10-27T18:05:29.415008+00:00", "action": "T04", "phase": "intent", "kind": "native-subissue-link", "parent": 46, "child": 51}
+{"at": "2026-10-27T18:05:31.307926+00:00", "action": "T04", "phase": "result", "kind": "native-subissue-link", "parent": 46, "child": 51}
+{"at": "2026-10-27T18:05:31.308576+00:00", "action": "T05", "phase": "intent", "kind": "issue-create", "title": "[0.10.0] T05 단일 등록 스택과 Route identity로 등록 모델 교체"}
+{"at": "2026-10-27T18:05:34.698308+00:00", "action": "T05", "phase": "result", "number": 52, "id": 6064951805, "url": "https://github.com/Snoworca/NaruServe/issues/52", "title": "[0.10.0] T05 단일 등록 스택과 Route identity로 등록 모델 교체"}
+{"at": "2026-10-27T18:05:34.699925+00:00", "action": "T05", "phase": "intent", "kind": "native-subissue-link", "parent": 46, "child": 52}
+{"at": "2026-10-27T18:05:36.438794+00:00", "action": "T05", "phase": "result", "kind": "native-subissue-link", "parent": 46, "child": 52}
+{"at": "2026-10-27T18:05:36.439227+00:00", "action": "T06", "phase": "intent", "kind": "issue-create", "title": "[0.10.0] T06 Dispatch cursor와 next·route/router skip 실행 구현"}
+{"at": "2026-10-27T18:05:40.332591+00:00", "action": "T06", "phase": "result", "number": 53, "id": 6064953211, "url": "https://github.com/Snoworca/NaruServe/issues/53", "title": "[0.10.0] T06 Dispatch cursor와 next·route/router skip 실행 구현"}
+{"at": "2026-10-27T18:05:40.334330+00:00", "action": "T06", "phase": "intent", "kind": "native-subissue-link", "parent": 46, "child": 53}
+{"at": "2026-10-27T18:05:42.113826+00:00", "action": "T06", "phase": "result", "kind": "native-subissue-link", "parent": 46, "child": 53}
+{"at": "2026-10-27T18:05:42.114406+00:00", "action": "T07", "phase": "intent", "kind": "issue-create", "title": "[0.10.0] T07 중첩 Router 마운트와 mergeParams 지원"}
+{"at": "2026-10-27T18:05:45.088584+00:00", "action": "T07", "phase": "result", "number": 54, "id": 6064954416, "url": "https://github.com/Snoworca/NaruServe/issues/54", "title": "[0.10.0] T07 중첩 Router 마운트와 mergeParams 지원"}
+{"at": "2026-10-27T18:05:45.089782+00:00", "action": "T07", "phase": "intent", "kind": "native-subissue-link", "parent": 46, "child": 54}
+{"at": "2026-10-27T18:05:47.096854+00:00", "action": "T07", "phase": "result", "kind": "native-subissue-link", "parent": 46, "child": 54}
+{"at": "2026-10-27T18:05:47.097307+00:00", "action": "T08", "phase": "intent", "kind": "issue-create", "title": "[0.10.0] T08 경로 매개변수 전처리 콜백과 요청별 캐시 구현"}
+{"at": "2026-10-27T18:05:49.837772+00:00", "action": "T08", "phase": "result", "number": 55, "id": 6064955795, "url": "https://github.com/Snoworca/NaruServe/issues/55", "title": "[0.10.0] T08 경로 매개변수 전처리 콜백과 요청별 캐시 구현"}
+{"at": "2026-10-27T18:05:49.838562+00:00", "action": "T08", "phase": "intent", "kind": "native-subissue-link", "parent": 46, "child": 55}
+{"at": "2026-10-27T18:05:51.740683+00:00", "action": "T08", "phase": "result", "kind": "native-subissue-link", "parent": 46, "child": 55}
+{"at": "2026-10-27T18:05:51.741351+00:00", "action": "T09", "phase": "intent", "kind": "issue-create", "title": "[0.10.0] T09 HTTP 메서드·기본 정책·HEAD·OPTIONS 자동 응답 정합화"}
+{"at": "2026-10-27T18:05:54.900951+00:00", "action": "T09", "phase": "result", "number": 56, "id": 6064956948, "url": "https://github.com/Snoworca/NaruServe/issues/56", "title": "[0.10.0] T09 HTTP 메서드·기본 정책·HEAD·OPTIONS 자동 응답 정합화"}
+{"at": "2026-10-27T18:05:54.901362+00:00", "action": "T09", "phase": "intent", "kind": "native-subissue-link", "parent": 46, "child": 56}
+{"at": "2026-10-27T18:05:56.618988+00:00", "action": "T09", "phase": "result", "kind": "native-subissue-link", "parent": 46, "child": 56}
+{"at": "2026-10-27T18:05:56.619348+00:00", "action": "T10", "phase": "intent", "kind": "issue-create", "title": "[0.10.0] T10 등록 순서의 오류 흐름과 final response 정합화"}
+{"at": "2026-10-27T18:05:59.956200+00:00", "action": "T10", "phase": "result", "number": 57, "id": 6064958334, "url": "https://github.com/Snoworca/NaruServe/issues/57", "title": "[0.10.0] T10 등록 순서의 오류 흐름과 final response 정합화"}
+{"at": "2026-10-27T18:05:59.957130+00:00", "action": "T10", "phase": "intent", "kind": "native-subissue-link", "parent": 46, "child": 57}
+{"at": "2026-10-27T18:06:01.560888+00:00", "action": "T10", "phase": "result", "kind": "native-subissue-link", "parent": 46, "child": 57}
+{"at": "2026-10-27T18:06:01.561490+00:00", "action": "T11", "phase": "intent", "kind": "issue-create", "title": "[0.10.0] T11 지연 next와 비동기 resolve/reject 요청 수명 구현"}
+{"at": "2026-10-27T18:06:04.789801+00:00", "action": "T11", "phase": "result", "number": 58, "id": 6064959601, "url": "https://github.com/Snoworca/NaruServe/issues/58", "title": "[0.10.0] T11 지연 next와 비동기 resolve/reject 요청 수명 구현"}
+{"at": "2026-10-27T18:06:04.791521+00:00", "action": "T11", "phase": "intent", "kind": "native-subissue-link", "parent": 46, "child": 58}
+{"at": "2026-10-27T18:06:06.354765+00:00", "action": "T11", "phase": "result", "kind": "native-subissue-link", "parent": 46, "child": 58}
+{"at": "2026-10-27T18:06:06.355127+00:00", "action": "T12", "phase": "intent", "kind": "issue-create", "title": "[0.10.0] T12 TinyHttpd 원시 경로 전달 opt-in 정책 확보"}
+{"at": "2026-10-27T18:06:09.227424+00:00", "action": "T12", "phase": "result", "number": 59, "id": 6064960736, "url": "https://github.com/Snoworca/NaruServe/issues/59", "title": "[0.10.0] T12 TinyHttpd 원시 경로 전달 opt-in 정책 확보"}
+{"at": "2026-10-27T18:06:09.228605+00:00", "action": "T12", "phase": "intent", "kind": "native-subissue-link", "parent": 46, "child": 59}
+{"at": "2026-10-27T18:06:10.708241+00:00", "action": "T12", "phase": "result", "kind": "native-subissue-link", "parent": 46, "child": 59}
+{"at": "2026-10-27T18:06:10.708908+00:00", "action": "T13", "phase": "intent", "kind": "issue-create", "title": "[0.10.0] T13 NaruServe TinyHttpd 어댑터의 raw routing·지연 응답 통합"}
+{"at": "2026-10-27T18:06:14.205208+00:00", "action": "T13", "phase": "result", "number": 60, "id": 6064961955, "url": "https://github.com/Snoworca/NaruServe/issues/60", "title": "[0.10.0] T13 NaruServe TinyHttpd 어댑터의 raw routing·지연 응답 통합"}
+{"at": "2026-10-27T18:06:14.206394+00:00", "action": "T13", "phase": "intent", "kind": "native-subissue-link", "parent": 46, "child": 60}
+{"at": "2026-10-27T18:06:15.891670+00:00", "action": "T13", "phase": "result", "kind": "native-subissue-link", "parent": 46, "child": 60}
+{"at": "2026-10-27T18:06:15.892430+00:00", "action": "T14", "phase": "intent", "kind": "issue-create", "title": "[0.10.0] T14 Servlet 일반 요청의 AsyncContext 수명과 raw path 통합"}
+{"at": "2026-10-27T18:06:18.733301+00:00", "action": "T14", "phase": "result", "number": 61, "id": 6064963256, "url": "https://github.com/Snoworca/NaruServe/issues/61", "title": "[0.10.0] T14 Servlet 일반 요청의 AsyncContext 수명과 raw path 통합"}
+{"at": "2026-10-27T18:06:18.734268+00:00", "action": "T14", "phase": "intent", "kind": "native-subissue-link", "parent": 46, "child": 61}
+{"at": "2026-10-27T18:06:20.201243+00:00", "action": "T14", "phase": "result", "kind": "native-subissue-link", "parent": 46, "child": 61}
+{"at": "2026-10-27T18:06:20.201912+00:00", "action": "T15", "phase": "intent", "kind": "issue-create", "title": "[0.10.0] T15 group·CORS·정적 파일·서비스 확장 통합 회귀"}
+{"at": "2026-10-27T18:06:23.082365+00:00", "action": "T15", "phase": "result", "number": 62, "id": 6064964470, "url": "https://github.com/Snoworca/NaruServe/issues/62", "title": "[0.10.0] T15 group·CORS·정적 파일·서비스 확장 통합 회귀"}
+{"at": "2026-10-27T18:06:23.084064+00:00", "action": "T15", "phase": "intent", "kind": "native-subissue-link", "parent": 46, "child": 62}
+{"at": "2026-10-27T18:06:24.856537+00:00", "action": "T15", "phase": "result", "kind": "native-subissue-link", "parent": 46, "child": 62}
+{"at": "2026-10-27T18:06:24.857312+00:00", "action": "T16", "phase": "intent", "kind": "issue-create", "title": "[0.10.0] T16 WebSocket 기존 확장 동작 보존 검증"}
+{"at": "2026-10-27T18:06:27.940230+00:00", "action": "T16", "phase": "result", "number": 63, "id": 6064965758, "url": "https://github.com/Snoworca/NaruServe/issues/63", "title": "[0.10.0] T16 WebSocket 기존 확장 동작 보존 검증"}
+{"at": "2026-10-27T18:06:27.941202+00:00", "action": "T16", "phase": "intent", "kind": "native-subissue-link", "parent": 46, "child": 63}
+{"at": "2026-10-27T18:06:29.759571+00:00", "action": "T16", "phase": "result", "kind": "native-subissue-link", "parent": 46, "child": 63}
+{"at": "2026-10-27T18:06:29.760325+00:00", "action": "T17", "phase": "intent", "kind": "issue-create", "title": "[0.10.0] T17 전체 적합성·Java8/API21·자원 회귀와 독립 개선 루프"}
+{"at": "2026-10-27T18:06:33.142985+00:00", "action": "T17", "phase": "result", "number": 64, "id": 6064967194, "url": "https://github.com/Snoworca/NaruServe/issues/64", "title": "[0.10.0] T17 전체 적합성·Java8/API21·자원 회귀와 독립 개선 루프"}
+{"at": "2026-10-27T18:06:33.145246+00:00", "action": "T17", "phase": "intent", "kind": "native-subissue-link", "parent": 46, "child": 64}
+{"at": "2026-10-27T18:06:35.090696+00:00", "action": "T17", "phase": "result", "kind": "native-subissue-link", "parent": 46, "child": 64}
+{"at": "2026-10-27T18:06:35.091443+00:00", "action": "T18", "phase": "intent", "kind": "issue-create", "title": "[0.10.0] T18 0.10.0 한영 마이그레이션 문서와 릴리스 산출물 정리"}
+{"at": "2026-10-27T18:06:38.207259+00:00", "action": "T18", "phase": "result", "number": 65, "id": 6064968542, "url": "https://github.com/Snoworca/NaruServe/issues/65", "title": "[0.10.0] T18 0.10.0 한영 마이그레이션 문서와 릴리스 산출물 정리"}
+{"at": "2026-10-27T18:06:38.209295+00:00", "action": "T18", "phase": "intent", "kind": "native-subissue-link", "parent": 46, "child": 65}
+{"at": "2026-10-27T18:06:40.260704+00:00", "action": "T18", "phase": "result", "kind": "native-subissue-link", "parent": 46, "child": 65}

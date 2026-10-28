@@ -1,0 +1,245 @@
+{
+  "ok": true,
+  "value": {
+    "id": "FR-ROUTE-004",
+    "title": "Engine-free request path validator",
+    "type": "functional",
+    "target": "wave-2",
+    "status": "verified",
+    "scope": "ROUTE",
+    "filePath": "docs/spec/03.routing.srs.md",
+    "headingLine": 541,
+    "metadata": {
+      "Type": "functional",
+      "Target": "wave-2",
+      "Status": "verified",
+      "Priority": "critical",
+      "Tags": "wave-2, feasibility:high, routing, security, path-validation",
+      "Risk": "high",
+      "Stability": "evolving",
+      "Verification Method": "test",
+      "GitHub Issue": "https://github.com/Snoworca/NaruServe/issues/3",
+      "Related Docs": "-"
+    },
+    "acceptanceCriteria": [
+      {
+        "id": "AC-1",
+        "text": "The validator rejects `/a%2`, `/a%zz`, `/a%C3` (truncated UTF-8), `/a%FF`, a path containing a raw character above U+007F, `/a%2Fb`, `/a%2fb`, `/a%00`, a path containing a raw U+0000, `/./a`, `/a/..`, `/a/%2e`, `/a/%2E%2e` and `/a/.%2e/b`. [D-052] [SDS 2026-10-19.naruserve.naruserve-v1-wave-2-2 SDS-AC-6] A segment equal to '.' or '..' after decoding, a malformed %XX, an encoded '/', NUL or an invalid UTF-8 byte sequence yields false.",
+        "checked": true,
+        "line": 566
+      },
+      {
+        "id": "AC-2",
+        "text": "The validator also rejects, as TinyHttpd's request-target parser does, a path containing a raw space, a raw control character U+0001..U+001F, U+007F or `#`. [D-052]",
+        "checked": true,
+        "line": 567
+      },
+      {
+        "id": "AC-3",
+        "text": "The validator accepts `/users/42`, `/files/%252e`, `/caf%C3%A9` and `/a/.hidden`, and its result is the same whether or not a query string follows the path. [D-052; D-051]",
+        "checked": true,
+        "line": 568
+      },
+      {
+        "id": "AC-4",
+        "text": "The validator returns an accept or reject decision without returning a decoded path, and the router lookup API has no result variant for a rejected path. [loop W residual; wave decision: path validation before lookup]",
+        "checked": true,
+        "line": 569
+      }
+    ],
+    "verificationEvidence": [
+      {
+        "id": "VE-1",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/PathValidatorTest.java#sdsAc6_FR_ROUTE_004_AC1_rejectList",
+        "covers": "AC-1",
+        "notes": "-",
+        "line": 575
+      },
+      {
+        "id": "VE-2",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/PathValidatorTest.java#sdsAc6_FR_ROUTE_004_AC3_acceptListWithAndWithoutQuery",
+        "covers": "AC-3",
+        "notes": "-",
+        "line": 576
+      },
+      {
+        "id": "VE-3",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/PathValidatorTest.java#FR_ROUTE_004_AC4_validatorReturnsOnlyADecisionNeverADecodedPath",
+        "covers": "AC-4",
+        "notes": "-",
+        "line": 577
+      },
+      {
+        "id": "VE-4",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/PathValidatorTest.java#sdsAc7_FR_ROUTE_004_AC2_rawSpaceControlDelHashAndNonAsciiRejected",
+        "covers": "AC-2",
+        "notes": "-",
+        "line": 578
+      },
+      {
+        "id": "VE-5",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/PathValidatorTest.java",
+        "covers": "AC-1",
+        "notes": "verification_cmd ./gradlew build passed at 461fc3f (153/153); cited line PathValidatorTest.java:10, RoutePatternTest.java:63; bundle docs/research/naruserve-v1/waves/stage-2/lane-2026-10-19.naruserve.naruserve-v1-wave-2/",
+        "line": 579
+      },
+      {
+        "id": "VE-6",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/PathValidatorTest.java",
+        "covers": "AC-2",
+        "notes": "verification_cmd ./gradlew build passed at 461fc3f (153/153); cited line PathValidatorTest.java:43; bundle docs/research/naruserve-v1/waves/stage-2/lane-2026-10-19.naruserve.naruserve-v1-wave-2/",
+        "line": 580
+      },
+      {
+        "id": "VE-7",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/PathValidatorTest.java",
+        "covers": "AC-3",
+        "notes": "verification_cmd ./gradlew build passed at 461fc3f (153/153); cited line PathValidatorTest.java:21; bundle docs/research/naruserve-v1/waves/stage-2/lane-2026-10-19.naruserve.naruserve-v1-wave-2/",
+        "line": 581
+      },
+      {
+        "id": "VE-8",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/PathValidatorTest.java",
+        "covers": "AC-4",
+        "notes": "verification_cmd ./gradlew build passed at 461fc3f (153/153); cited line PathValidatorTest.java:33; bundle docs/research/naruserve-v1/waves/stage-2/lane-2026-10-19.naruserve.naruserve-v1-wave-2/",
+        "line": 582
+      },
+      {
+        "id": "VE-9",
+        "type": "commit",
+        "reference": "f80370b",
+        "covers": "all",
+        "notes": "-",
+        "line": 583
+      },
+      {
+        "id": "VE-10",
+        "type": "commit",
+        "reference": "8a4b565",
+        "covers": "all",
+        "notes": "-",
+        "line": 584
+      },
+      {
+        "id": "VE-11",
+        "type": "commit",
+        "reference": "7b7b6b7",
+        "covers": "all",
+        "notes": "-",
+        "line": 585
+      },
+      {
+        "id": "VE-12",
+        "type": "commit",
+        "reference": "b5677c3",
+        "covers": "all",
+        "notes": "-",
+        "line": 586
+      }
+    ],
+    "traceLinks": [
+      {
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/PathValidator.java",
+        "relation": "implements",
+        "notes": "trace_intent=addition_site",
+        "line": 592
+      },
+      {
+        "type": "Requirement",
+        "reference": "CON-ROUTE-001",
+        "relation": "depends_on",
+        "notes": "runs inside the engine-free router",
+        "line": 593
+      },
+      {
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/PathValidator.java",
+        "relation": "implements",
+        "notes": "-",
+        "line": 594
+      }
+    ],
+    "changeNotes": [
+      {
+        "date": "2026-10-19",
+        "change": "Created",
+        "reason": "add-requirement",
+        "line": 608
+      },
+      {
+        "date": "2026-10-19",
+        "change": "Stability -> evolving",
+        "reason": "Feasibility=high (score 92). Blockers: none. TinyHttpd used only as read-only parity reference. Run: 2026-10-19.naruserve.wave-2.v01",
+        "line": 609
+      }
+    ],
+    "tags": [
+      "wave-2",
+      "feasibility:high",
+      "routing",
+      "security",
+      "path-validation"
+    ],
+    "relatedDocs": [],
+    "evidenceReferences": [
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/PathValidatorTest.java",
+      "f80370b",
+      "8a4b565",
+      "7b7b6b7",
+      "b5677c3"
+    ],
+    "traceReferences": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/PathValidator.java",
+      "CON-ROUTE-001"
+    ],
+    "blockStartLine": 541,
+    "blockEndLine": 610,
+    "sectionLines": {
+      "Requirement": 556,
+      "Rationale": 560,
+      "Acceptance Criteria": 564,
+      "Verification Evidence": 571,
+      "Trace Links": 588,
+      "Research / Analysis": 596,
+      "Implementation Notes": 600,
+      "Change Notes": 604
+    },
+    "priority": "critical",
+    "risk": "high",
+    "stability": "evolving",
+    "newWorkCandidate": false,
+    "requirement": "The system shall provide an engine-free path validator, run before the router lookup by the wave 3 dispatcher and every adapter, that inspects the raw request path without decoding it and rejects malformed percent-encoding, percent-encoded bytes that are not valid UTF-8, raw non-ASCII characters, an encoded `/`, an encoded or raw `NUL`, and any `.` or `..` segment in raw or percent-encoded form, matching the rules TinyHttpd's parser applies.",
+    "rationale": "Covers D-052 and the wave decision on path validation before lookup (W2-003, W2-004), plus the loop W residual (the validator inspects the raw path and does not decode it). Mapping a rejection to `400` is the wave 3 dispatcher's job; the router lookup returns only the six results of D-390.",
+    "research": "- -",
+    "implementationNotes": "- -",
+    "diagnostics": [],
+    "errors": [],
+    "warnings": [],
+    "diagnosticsSummary": {
+      "errors": 0,
+      "warnings": 0,
+      "byCode": {}
+    }
+  },
+  "diagnostics": [],
+  "diagnosticsSummary": {
+    "errors": 0,
+    "warnings": 0,
+    "byCode": {}
+  },
+  "mcpWorkspace": {
+    "workspaceRoot": "/Users/beom/work/git/NaruServe",
+    "rootSource": "server-cwd-discovery",
+    "indexPath": "docs/spec/00.index.md",
+    "packageVersion": "4.2.0"
+  }
+}

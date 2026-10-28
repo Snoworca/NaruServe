@@ -1,0 +1,268 @@
+{
+  "ok": true,
+  "value": {
+    "id": "IR-HTTP-002",
+    "title": "RouteHandler functional interface",
+    "type": "interface",
+    "target": "wave-3",
+    "status": "verified",
+    "scope": "HTTP",
+    "filePath": "docs/spec/04.http-core.srs.md",
+    "headingLine": 126,
+    "metadata": {
+      "Type": "interface",
+      "Target": "wave-3",
+      "Status": "verified",
+      "Priority": "high",
+      "Tags": "wave-3, feasibility:high, http-surface, routing",
+      "Risk": "low",
+      "Stability": "evolving",
+      "Verification Method": "test",
+      "GitHub Issue": "https://github.com/Snoworca/NaruServe/issues/3",
+      "Related Docs": "-"
+    },
+    "acceptanceCriteria": [
+      {
+        "id": "AC-1",
+        "text": "A reflection test finds `RouteHandler` public, annotated `@FunctionalInterface` and declaring exactly one abstract method `handle(Request, Response)` with return type `void` and `throws Exception`. [D-045]",
+        "checked": true,
+        "line": 151
+      },
+      {
+        "id": "AC-2",
+        "text": "A Java lambda that throws a checked `IOException` and a Kotlin lambda `{ req, res -> }` both compile as `RouteHandler` without wrapping. [D-045]",
+        "checked": true,
+        "line": 152
+      }
+    ],
+    "verificationEvidence": [
+      {
+        "id": "VE-1",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java#sdsAc5_IR_HTTP_002_AC1_routeHandlerIsFunctionalWithOneHandleMethod",
+        "covers": "AC-1",
+        "notes": "./gradlew build exit 0",
+        "line": 158
+      },
+      {
+        "id": "VE-2",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java#sdsAc5_IR_HTTP_002_AC2_javaLambdaThrowingIOExceptionIsARouteHandler",
+        "covers": "AC-2",
+        "notes": "./gradlew build exit 0",
+        "line": 159
+      },
+      {
+        "id": "VE-3",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/HttpApiKotlinTest.kt#SDS-AC-5 IR-HTTP-002 AC-2 Kotlin lambda is a RouteHandler without an adapter type",
+        "covers": "AC-2",
+        "notes": "./gradlew build exit 0",
+        "line": 160
+      },
+      {
+        "id": "VE-4",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java",
+        "covers": "AC-1",
+        "notes": "verification_cmd ./gradlew build passed at ea1217e (346/346); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java:152; bundle docs/research/naruserve-v1/waves/stage-3/lane-2026-10-19.naruserve.naruserve-v1-wave-3/",
+        "line": 161
+      },
+      {
+        "id": "VE-5",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java",
+        "covers": "AC-2",
+        "notes": "verification_cmd ./gradlew build passed at ea1217e (346/346); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java:170; NaruServe-api/src/test/kotlin/com/snoworca/naruserve/HttpApiKotlinTest.kt:85; bundle docs/research/naruserve-v1/waves/stage-3/lane-2026-10-19.naruserve.naruserve-v1-wave-3/",
+        "line": 162
+      },
+      {
+        "id": "VE-6",
+        "type": "commit",
+        "reference": "a4d3403a786e0ee895c72c3ea53fe4c28a3477f4",
+        "covers": "all",
+        "notes": "wave 3 worker commit (Orch-Wave: 3), ancestor of integration head ea1217e",
+        "line": 163
+      },
+      {
+        "id": "VE-7",
+        "type": "commit",
+        "reference": "ef85d35a7bbc8ee25d27e60262d1b727913f0a28",
+        "covers": "all",
+        "notes": "wave 3 worker commit (Orch-Wave: 3), ancestor of integration head ea1217e",
+        "line": 164
+      },
+      {
+        "id": "VE-8",
+        "type": "commit",
+        "reference": "45469d2e1a7c931dc16bc9bc5ae907d4cd28c4cc",
+        "covers": "all",
+        "notes": "wave 3 worker commit (Orch-Wave: 3), ancestor of integration head ea1217e",
+        "line": 165
+      },
+      {
+        "id": "VE-9",
+        "type": "commit",
+        "reference": "8fb4835bf65967f266ad84b15aeda66274dbe5eb",
+        "covers": "all",
+        "notes": "wave 3 worker commit (Orch-Wave: 3), ancestor of integration head ea1217e",
+        "line": 166
+      },
+      {
+        "id": "VE-10",
+        "type": "commit",
+        "reference": "1ae79fe445e09375b270e2d78e1316dc0ce4aaa7",
+        "covers": "all",
+        "notes": "wave 3 worker commit (Orch-Wave: 3), ancestor of integration head ea1217e",
+        "line": 167
+      },
+      {
+        "id": "VE-11",
+        "type": "commit",
+        "reference": "4917e408d4708724c76e963c279a4aa55a4d107c",
+        "covers": "all",
+        "notes": "wave 3 worker commit (Orch-Wave: 3), ancestor of integration head ea1217e",
+        "line": 168
+      },
+      {
+        "id": "VE-12",
+        "type": "commit",
+        "reference": "5a9322dedaf1229c0ab34349c05bae6802b5ada5",
+        "covers": "all",
+        "notes": "wave 3 worker commit (Orch-Wave: 3), ancestor of integration head ea1217e",
+        "line": 169
+      },
+      {
+        "id": "VE-13",
+        "type": "commit",
+        "reference": "06d70b4c4771c90888edda5d6b95fca6feaa6af7",
+        "covers": "all",
+        "notes": "wave 3 worker commit (Orch-Wave: 3), ancestor of integration head ea1217e",
+        "line": 170
+      },
+      {
+        "id": "VE-14",
+        "type": "commit",
+        "reference": "c47335c85e5e9e13a19bf2aaf9c95beb7436de6f",
+        "covers": "all",
+        "notes": "wave 3 worker commit (Orch-Wave: 3), ancestor of integration head ea1217e",
+        "line": 171
+      }
+    ],
+    "traceLinks": [
+      {
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/RouteHandler.java",
+        "relation": "implements",
+        "notes": "trace_intent=addition_site",
+        "line": 177
+      },
+      {
+        "type": "Requirement",
+        "reference": "IR-HTTP-001",
+        "relation": "depends_on",
+        "notes": "handler takes Request and Response",
+        "line": 178
+      },
+      {
+        "type": "Requirement",
+        "reference": "CON-ROUTE-006",
+        "relation": "depends_on",
+        "notes": "successor of CON-ROUTE-001; the router stays opaque to RouteHandler",
+        "line": 179
+      },
+      {
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/RouteHandler.java",
+        "relation": "implements",
+        "notes": "-",
+        "line": 180
+      }
+    ],
+    "changeNotes": [
+      {
+        "date": "2026-10-19",
+        "change": "Created",
+        "reason": "add-requirement",
+        "line": 194
+      },
+      {
+        "date": "2026-10-19",
+        "change": "Stability -> evolving",
+        "reason": "Feasibility=high (score 93). Blockers: none. Run: 2026-10-19.naruserve.wave-3.v01",
+        "line": 195
+      },
+      {
+        "date": "2026-10-19",
+        "change": "Status -> verified",
+        "reason": "Wave 3 promotion: every AC cited in docs/research/naruserve-v1/waves/wave-3/test-sufficiency.json; ./gradlew build passed at ea1217e (346/346); worker commits recorded",
+        "line": 196
+      }
+    ],
+    "tags": [
+      "wave-3",
+      "feasibility:high",
+      "http-surface",
+      "routing"
+    ],
+    "relatedDocs": [],
+    "evidenceReferences": [
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java",
+      "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/HttpApiKotlinTest.kt",
+      "a4d3403a786e0ee895c72c3ea53fe4c28a3477f4",
+      "ef85d35a7bbc8ee25d27e60262d1b727913f0a28",
+      "45469d2e1a7c931dc16bc9bc5ae907d4cd28c4cc",
+      "8fb4835bf65967f266ad84b15aeda66274dbe5eb",
+      "1ae79fe445e09375b270e2d78e1316dc0ce4aaa7",
+      "4917e408d4708724c76e963c279a4aa55a4d107c",
+      "5a9322dedaf1229c0ab34349c05bae6802b5ada5",
+      "06d70b4c4771c90888edda5d6b95fca6feaa6af7",
+      "c47335c85e5e9e13a19bf2aaf9c95beb7436de6f"
+    ],
+    "traceReferences": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/RouteHandler.java",
+      "IR-HTTP-001",
+      "CON-ROUTE-006"
+    ],
+    "blockStartLine": 126,
+    "blockEndLine": 197,
+    "sectionLines": {
+      "Requirement": 141,
+      "Rationale": 145,
+      "Acceptance Criteria": 149,
+      "Verification Evidence": 154,
+      "Trace Links": 173,
+      "Research / Analysis": 182,
+      "Implementation Notes": 186,
+      "Change Notes": 190
+    },
+    "priority": "high",
+    "risk": "low",
+    "stability": "evolving",
+    "newWorkCandidate": false,
+    "requirement": "The system shall provide `RouteHandler` as a public `@FunctionalInterface` in `com.snoworca.naruserve` whose single abstract method is `void handle(Request req, Response res) throws Exception`.",
+    "rationale": "Covers D-045. Used by T01, T02, T03, T05 and T06.",
+    "research": "- -",
+    "implementationNotes": "- -",
+    "diagnostics": [],
+    "errors": [],
+    "warnings": [],
+    "diagnosticsSummary": {
+      "errors": 0,
+      "warnings": 0,
+      "byCode": {}
+    }
+  },
+  "diagnostics": [],
+  "diagnosticsSummary": {
+    "errors": 0,
+    "warnings": 0,
+    "byCode": {}
+  },
+  "mcpWorkspace": {
+    "workspaceRoot": "/Users/beom/work/git/NaruServe",
+    "rootSource": "server-cwd-discovery",
+    "indexPath": "docs/spec/00.index.md",
+    "packageVersion": "4.2.0"
+  }
+}

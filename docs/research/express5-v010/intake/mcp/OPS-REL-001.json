@@ -1,0 +1,612 @@
+{
+  "ok": true,
+  "value": {
+    "id": "OPS-REL-001",
+    "title": "Root README with installation coordinates and a quick start that matches docs/api/README.md",
+    "type": "operational",
+    "target": "wave-8",
+    "status": "verified",
+    "scope": "REL",
+    "filePath": "docs/spec/15.release.srs.md",
+    "headingLine": 604,
+    "metadata": {
+      "Type": "operational",
+      "Target": "wave-8",
+      "Status": "verified",
+      "Priority": "medium",
+      "Tags": "wave-8, feasibility:high, release, docs, readme",
+      "Risk": "low",
+      "Stability": "evolving",
+      "Verification Method": "test",
+      "GitHub Issue": "https://github.com/Snoworca/NaruServe/issues/18",
+      "Related Docs": "-"
+    },
+    "acceptanceCriteria": [
+      {
+        "id": "AC-1",
+        "text": "`README.md` exists at the repository root and a docs test finds in it the ten module coordinates `com.snoworca.naruserve:<artifactId>:0.9.0` (the lowercase artifactIds of FR-REL-005 for the nine JAR modules and `NaruServe-android`) equal to the rows of the module table of `docs/api/README.md`, the text `publishToMavenLocal`, the text `mavenLocal()` and the `implementation 'com.snoworca.naruserve:naruserve:0.9.0'` line. [D-379; wave decision Publishing; android-module decision 2026-10-26; central-0.9.0 decision 2026-10-27]",
+        "checked": true,
+        "line": 629
+      },
+      {
+        "id": "AC-2",
+        "text": "The ```java and ```kotlin quick-start blocks of `README.md` are character-for-character equal to the Java and Kotlin blocks under \"5분 시작\" of `docs/api/README.md`, which a docs test asserts; the Java block of `docs/api/README.md` stays on the named skip list of `DocsExamplesCompileTest` with the reason `app-defined type `User``, and the root `README.md` is not compiled. [D-379; I-009]",
+        "checked": true,
+        "line": 630
+      },
+      {
+        "id": "AC-3",
+        "text": "`README.md` states that the Android sample build and API 21 device or emulator verification are not part of v1 and that API 21 compatibility rests on `--release 8` and the animal-sniffer `android-api-level-21` check, and links `docs/api/README.md`, `docs/release/release-notes.md`, `docs/release/test-results.md` and `THIRD-PARTY-LICENSES.md`, all of which exist. [r1 W1-005; D-379]",
+        "checked": true,
+        "line": 631
+      },
+      {
+        "id": "AC-4",
+        "text": "`README.md` holds no (미확정) marker and names the TinyHttpd instruction of OPS-REL-005. [D-379; D-380; D-383]",
+        "checked": true,
+        "line": 632
+      },
+      {
+        "id": "AC-5",
+        "text": "The Install section of `README.md` shows a `repositories` block with `mavenCentral()` and without `mavenLocal()` before the `implementation 'com.snoworca.naruserve:naruserve:0.9.0'` line and states that the modules are published on Maven Central; `publishToMavenLocal` and `mavenLocal()` appear only under a source-checkout heading; and neither `README.md` nor `docs/api/README.md` contains \"published to the local Maven repository only\" or \"not published to Maven Central\", which a docs test asserts. [central-0.9.0 publication 2026-10-27]",
+        "checked": true,
+        "line": 633
+      }
+    ],
+    "verificationEvidence": [
+      {
+        "id": "VE-1",
+        "type": "test",
+        "reference": "src/test/java/com/snoworca/naruserve/docs/ReadmeDocsTest.java#ops_REL_001_AC1_readmeListsTheNineCoordinatesOfTheApiModuleTableAndTheInstallLines",
+        "covers": "AC-1",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 639
+      },
+      {
+        "id": "VE-2",
+        "type": "test",
+        "reference": "src/test/java/com/snoworca/naruserve/docs/ReadmeDocsTest.java#ops_REL_001_AC2_quickStartBlocksEqualTheApiReadmeBlocks",
+        "covers": "AC-2",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 640
+      },
+      {
+        "id": "VE-3",
+        "type": "test",
+        "reference": "src/test/java/com/snoworca/naruserve/docs/ReadmeDocsTest.java#ops_REL_001_AC4_readmeHasNoMarkerAndTheTinyHttpdSection",
+        "covers": "AC-4",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 641
+      },
+      {
+        "id": "VE-4",
+        "type": "test",
+        "reference": "src/test/java/com/snoworca/naruserve/docs/ReadmeDocsTest.java#ops_REL_001_AC3_readmeStatesTheAndroidScopeAndApi21BasisAndLinksTheDocuments",
+        "covers": "AC-3",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 642
+      },
+      {
+        "id": "VE-5",
+        "type": "test",
+        "reference": "src/test/java/com/snoworca/naruserve/docs/ReadmeDocsTest.java",
+        "covers": "AC-1",
+        "notes": "verification_cmd ./gradlew build passed at 514472f (1534/1534); cited line src/test/java/com/snoworca/naruserve/docs/ReadmeDocsTest.java:76; bundle docs/research/naruserve-v1/waves/stage-8/lane-2026-10-19.naruserve.naruserve-v1-wave-8/",
+        "line": 643
+      },
+      {
+        "id": "VE-6",
+        "type": "test",
+        "reference": "src/test/java/com/snoworca/naruserve/docs/ReadmeDocsTest.java",
+        "covers": "AC-2",
+        "notes": "verification_cmd ./gradlew build passed at 514472f (1534/1534); cited line src/test/java/com/snoworca/naruserve/docs/ReadmeDocsTest.java:100; bundle docs/research/naruserve-v1/waves/stage-8/lane-2026-10-19.naruserve.naruserve-v1-wave-8/",
+        "line": 644
+      },
+      {
+        "id": "VE-7",
+        "type": "test",
+        "reference": "src/test/java/com/snoworca/naruserve/docs/ReadmeDocsTest.java",
+        "covers": "AC-3",
+        "notes": "verification_cmd ./gradlew build passed at 514472f (1534/1534); cited line src/test/java/com/snoworca/naruserve/docs/ReadmeDocsTest.java:122; bundle docs/research/naruserve-v1/waves/stage-8/lane-2026-10-19.naruserve.naruserve-v1-wave-8/",
+        "line": 645
+      },
+      {
+        "id": "VE-8",
+        "type": "test",
+        "reference": "src/test/java/com/snoworca/naruserve/docs/ReadmeDocsTest.java",
+        "covers": "AC-4",
+        "notes": "verification_cmd ./gradlew build passed at 514472f (1534/1534); cited line src/test/java/com/snoworca/naruserve/docs/ReadmeDocsTest.java:143; bundle docs/research/naruserve-v1/waves/stage-8/lane-2026-10-19.naruserve.naruserve-v1-wave-8/",
+        "line": 646
+      },
+      {
+        "id": "VE-9",
+        "type": "commit",
+        "reference": "173e22c39b13c1527ec3cdfb1a38773ba06c7ca7",
+        "covers": "all",
+        "notes": "-",
+        "line": 647
+      },
+      {
+        "id": "VE-10",
+        "type": "commit",
+        "reference": "93106928f1fd8308dc447b8ec5845eb3a66e8143",
+        "covers": "all",
+        "notes": "-",
+        "line": 648
+      },
+      {
+        "id": "VE-11",
+        "type": "commit",
+        "reference": "e2c5097b5e9d47d7159f4857875813daa02358a3",
+        "covers": "all",
+        "notes": "-",
+        "line": 649
+      },
+      {
+        "id": "VE-12",
+        "type": "commit",
+        "reference": "d57af39a5a48b55ce9d12b56cc15f4fe8cf21239",
+        "covers": "all",
+        "notes": "-",
+        "line": 650
+      },
+      {
+        "id": "VE-13",
+        "type": "commit",
+        "reference": "aa4126bacb6bcc2da533811cc2555b43ce5fca2f",
+        "covers": "all",
+        "notes": "-",
+        "line": 651
+      },
+      {
+        "id": "VE-14",
+        "type": "commit",
+        "reference": "f202f2428b6a89fdc494a8ff7d378105a538a6ea",
+        "covers": "all",
+        "notes": "-",
+        "line": 652
+      },
+      {
+        "id": "VE-15",
+        "type": "commit",
+        "reference": "a26b2875a827902c054376d7b5501081e9f429ef",
+        "covers": "all",
+        "notes": "-",
+        "line": 653
+      },
+      {
+        "id": "VE-16",
+        "type": "commit",
+        "reference": "9d21cda7d24c3c1f0df36b5c81963737464b6ab6",
+        "covers": "all",
+        "notes": "-",
+        "line": 654
+      },
+      {
+        "id": "VE-17",
+        "type": "commit",
+        "reference": "89b371549d8f35ae6d3f2536d066232da2a69bf5",
+        "covers": "all",
+        "notes": "-",
+        "line": 655
+      },
+      {
+        "id": "VE-18",
+        "type": "commit",
+        "reference": "b36a89ceb7284a3b697a1fdacf9b85fb3c3ad583",
+        "covers": "all",
+        "notes": "-",
+        "line": 656
+      },
+      {
+        "id": "VE-19",
+        "type": "commit",
+        "reference": "fd20f57e53332639f60dd7870355065373590a6b",
+        "covers": "all",
+        "notes": "-",
+        "line": 657
+      },
+      {
+        "id": "VE-20",
+        "type": "commit",
+        "reference": "cc9d318ea1b384589f59b692a3f8b5e0a303cb75",
+        "covers": "all",
+        "notes": "-",
+        "line": 658
+      },
+      {
+        "id": "VE-21",
+        "type": "commit",
+        "reference": "20b0a98d185959882e225af4c62315d4f697347e",
+        "covers": "all",
+        "notes": "-",
+        "line": 659
+      },
+      {
+        "id": "VE-22",
+        "type": "commit",
+        "reference": "69809b971001b87af17240bddfcc06cb3bd950b4",
+        "covers": "all",
+        "notes": "-",
+        "line": 660
+      },
+      {
+        "id": "VE-23",
+        "type": "commit",
+        "reference": "de35ca2940b126b57392cfdcd9e40e56e4bff2ef",
+        "covers": "all",
+        "notes": "-",
+        "line": 661
+      },
+      {
+        "id": "VE-24",
+        "type": "commit",
+        "reference": "b0cd6f8effd1a8dac770ad7cc40fc59ef670ffe9",
+        "covers": "all",
+        "notes": "-",
+        "line": 662
+      },
+      {
+        "id": "VE-25",
+        "type": "commit",
+        "reference": "5a03978d03bdfb270d70c5c5e750270d9a45faaa",
+        "covers": "all",
+        "notes": "-",
+        "line": 663
+      },
+      {
+        "id": "VE-26",
+        "type": "commit",
+        "reference": "f7cfac2b825ff4acedf23aa427dcbb10e0ba79ab",
+        "covers": "all",
+        "notes": "-",
+        "line": 664
+      },
+      {
+        "id": "VE-27",
+        "type": "commit",
+        "reference": "9a2cfd03cc0bd40d416a26c62df31dcb7e632aaf",
+        "covers": "all",
+        "notes": "-",
+        "line": 665
+      },
+      {
+        "id": "VE-28",
+        "type": "commit",
+        "reference": "c88825d30240da9b739571060a88095e4c57ae53",
+        "covers": "all",
+        "notes": "-",
+        "line": 666
+      },
+      {
+        "id": "VE-29",
+        "type": "commit",
+        "reference": "9087a451cf999ae92c2d9fc5f44bf54209650999",
+        "covers": "all",
+        "notes": "-",
+        "line": 667
+      },
+      {
+        "id": "VE-30",
+        "type": "commit",
+        "reference": "4320bb287a21abada6f265bb5a2b1f1e9fcffde7",
+        "covers": "all",
+        "notes": "-",
+        "line": 668
+      },
+      {
+        "id": "VE-31",
+        "type": "commit",
+        "reference": "ae44f5a3f0d7b0343b8876fddd5844922ef0290e",
+        "covers": "all",
+        "notes": "-",
+        "line": 669
+      },
+      {
+        "id": "VE-32",
+        "type": "commit",
+        "reference": "c63303ee4692aa542175255df1a8aec99979ae26",
+        "covers": "all",
+        "notes": "-",
+        "line": 670
+      },
+      {
+        "id": "VE-33",
+        "type": "commit",
+        "reference": "0350848107098466b6e30ae539c642721dbbc62b",
+        "covers": "all",
+        "notes": "-",
+        "line": 671
+      },
+      {
+        "id": "VE-34",
+        "type": "commit",
+        "reference": "18c30d1c050e33a80e4dac82a8556f071dfcf508",
+        "covers": "all",
+        "notes": "-",
+        "line": 672
+      },
+      {
+        "id": "VE-35",
+        "type": "commit",
+        "reference": "cd13b2d077fd3c2f43236c67828530216377b7d2",
+        "covers": "all",
+        "notes": "-",
+        "line": 673
+      },
+      {
+        "id": "VE-36",
+        "type": "commit",
+        "reference": "bb12b0c7c5678ddfdfc36597443123ff1b892925",
+        "covers": "all",
+        "notes": "-",
+        "line": 674
+      },
+      {
+        "id": "VE-37",
+        "type": "commit",
+        "reference": "21bdb681a408eac425f16686993a416c1667b45b",
+        "covers": "all",
+        "notes": "-",
+        "line": 675
+      },
+      {
+        "id": "VE-38",
+        "type": "commit",
+        "reference": "2963d044e3dee158c384bbd17d3fd1474d9dc3b3",
+        "covers": "all",
+        "notes": "-",
+        "line": 676
+      },
+      {
+        "id": "VE-39",
+        "type": "commit",
+        "reference": "48729f3e2b0feca58ceb5dc732f5a88426151774",
+        "covers": "all",
+        "notes": "-",
+        "line": 677
+      },
+      {
+        "id": "VE-40",
+        "type": "commit",
+        "reference": "543c5efcfbf4bcdf2460d2915a038790b6b97473",
+        "covers": "all",
+        "notes": "-",
+        "line": 678
+      },
+      {
+        "id": "VE-41",
+        "type": "commit",
+        "reference": "d28426f15386bd74767d215e77f6a4df0d3af4c1",
+        "covers": "all",
+        "notes": "-",
+        "line": 679
+      },
+      {
+        "id": "VE-42",
+        "type": "commit",
+        "reference": "9a35c5092137c3d4d48a34395d3141070458073e",
+        "covers": "all",
+        "notes": "-",
+        "line": 680
+      },
+      {
+        "id": "VE-43",
+        "type": "test",
+        "reference": "src/test/java/com/snoworca/naruserve/docs/ReadmeDocsTest.java#ops_REL_001_AC1_readmeListsTheTenCoordinatesOfTheApiModuleTableAndTheInstallLines",
+        "covers": "AC-1",
+        "notes": "android-module: AC-1 re-worded first (ten coordinates); the nine-row test failed against the new table in the first full build, then counts ten and requires NaruServe-android; JDK17 1728, actual Java 8 1728, Java 8 Maven mode 1730, 0 failures/skips",
+        "line": 681
+      },
+      {
+        "id": "VE-44",
+        "type": "test",
+        "reference": "src/test/java/com/snoworca/naruserve/docs/ReadmeDocsTest.java#ops_REL_001_AC1_readmeListsTheTenCoordinatesOfTheApiModuleTableAndTheInstallLines",
+        "covers": "AC-1",
+        "notes": "central-0.9.0: RED against the 0.1.0-SNAPSHOT README, GREEN with the ten lowercase 0.9.0 coordinates and the naruserve:0.9.0 install line; JDK17 1734, Java 8 1734, Java 8 Maven mode 1736",
+        "line": 682
+      },
+      {
+        "id": "VE-45",
+        "type": "test",
+        "reference": "src/test/java/com/snoworca/naruserve/docs/ReadmeDocsTest.java#ops_REL_001_AC5_readmeInstallsFromMavenCentral",
+        "covers": "AC-5",
+        "notes": "central-0.9.0: RED against the local-only README, GREEN with the mavenCentral() install and the source-checkout heading; JDK17 1736, Java 8 1736, Java 8 Maven mode 1738",
+        "line": 683
+      }
+    ],
+    "traceLinks": [
+      {
+        "type": "Code",
+        "reference": "README.md",
+        "relation": "implements",
+        "notes": "trace_intent=addition_site",
+        "line": 689
+      },
+      {
+        "type": "Code",
+        "reference": "docs/api/README.md",
+        "relation": "implements",
+        "notes": "trace_intent=verifies",
+        "line": 690
+      },
+      {
+        "type": "Requirement",
+        "reference": "OPS-BUILD-003",
+        "relation": "extends",
+        "notes": "coordinates in docs",
+        "line": 691
+      },
+      {
+        "type": "Requirement",
+        "reference": "OPS-HTTP-004",
+        "relation": "extends",
+        "notes": "docs Java examples compile",
+        "line": 692
+      },
+      {
+        "type": "Requirement",
+        "reference": "FR-REL-005",
+        "relation": "depends_on",
+        "notes": "publishing instruction",
+        "line": 693
+      },
+      {
+        "type": "Requirement",
+        "reference": "OPS-REL-005",
+        "relation": "depends_on",
+        "notes": "TinyHttpd instruction",
+        "line": 694
+      }
+    ],
+    "changeNotes": [
+      {
+        "date": "2026-10-20",
+        "change": "Created",
+        "reason": "add-requirement",
+        "line": 708
+      },
+      {
+        "date": "2026-10-20",
+        "change": "Stability -> evolving",
+        "reason": "Feasibility=high (score 86). Blockers: none. Run: 2026-10-20.NaruServe.wave-8.v01",
+        "line": 709
+      },
+      {
+        "date": "2026-10-21",
+        "change": "Status -> verified",
+        "reason": "wave 8 promotion: all ACs checked with test evidence at 514472f",
+        "line": 710
+      },
+      {
+        "date": "2026-10-26",
+        "change": "Status -> in_progress",
+        "reason": "android-module: the module tables gain NaruServe-android, so AC-1 counts ten module coordinates",
+        "line": 711
+      },
+      {
+        "date": "2026-10-26",
+        "change": "Status -> verified",
+        "reason": "android-module: AC-1 re-worded (ten coordinates), evidence VE-43",
+        "line": 712
+      },
+      {
+        "date": "2026-10-27",
+        "change": "Status -> in_progress",
+        "reason": "central-0.9.0: AC-1 README coordinates become the ten lowercase artifactIds at 0.9.0",
+        "line": 713
+      },
+      {
+        "date": "2026-10-27",
+        "change": "Status -> verified",
+        "reason": "central-0.9.0: AC-1 README lists the ten lowercase 0.9.0 coordinates, evidence VE-44",
+        "line": 714
+      },
+      {
+        "date": "2026-10-27",
+        "change": "Status -> in_progress",
+        "reason": "central-0.9.0 publication: README installs from mavenCentral() and drops the local-only and not-on-Central statements; AC-5 added",
+        "line": 715
+      },
+      {
+        "date": "2026-10-27",
+        "change": "Status -> verified",
+        "reason": "central-0.9.0: AC-5 README installs from Maven Central, evidence VE-45",
+        "line": 716
+      }
+    ],
+    "tags": [
+      "wave-8",
+      "feasibility:high",
+      "release",
+      "docs",
+      "readme"
+    ],
+    "relatedDocs": [],
+    "evidenceReferences": [
+      "src/test/java/com/snoworca/naruserve/docs/ReadmeDocsTest.java",
+      "173e22c39b13c1527ec3cdfb1a38773ba06c7ca7",
+      "93106928f1fd8308dc447b8ec5845eb3a66e8143",
+      "e2c5097b5e9d47d7159f4857875813daa02358a3",
+      "d57af39a5a48b55ce9d12b56cc15f4fe8cf21239",
+      "aa4126bacb6bcc2da533811cc2555b43ce5fca2f",
+      "f202f2428b6a89fdc494a8ff7d378105a538a6ea",
+      "a26b2875a827902c054376d7b5501081e9f429ef",
+      "9d21cda7d24c3c1f0df36b5c81963737464b6ab6",
+      "89b371549d8f35ae6d3f2536d066232da2a69bf5",
+      "b36a89ceb7284a3b697a1fdacf9b85fb3c3ad583",
+      "fd20f57e53332639f60dd7870355065373590a6b",
+      "cc9d318ea1b384589f59b692a3f8b5e0a303cb75",
+      "20b0a98d185959882e225af4c62315d4f697347e",
+      "69809b971001b87af17240bddfcc06cb3bd950b4",
+      "de35ca2940b126b57392cfdcd9e40e56e4bff2ef",
+      "b0cd6f8effd1a8dac770ad7cc40fc59ef670ffe9",
+      "5a03978d03bdfb270d70c5c5e750270d9a45faaa",
+      "f7cfac2b825ff4acedf23aa427dcbb10e0ba79ab",
+      "9a2cfd03cc0bd40d416a26c62df31dcb7e632aaf",
+      "c88825d30240da9b739571060a88095e4c57ae53",
+      "9087a451cf999ae92c2d9fc5f44bf54209650999",
+      "4320bb287a21abada6f265bb5a2b1f1e9fcffde7",
+      "ae44f5a3f0d7b0343b8876fddd5844922ef0290e",
+      "c63303ee4692aa542175255df1a8aec99979ae26",
+      "0350848107098466b6e30ae539c642721dbbc62b",
+      "18c30d1c050e33a80e4dac82a8556f071dfcf508",
+      "cd13b2d077fd3c2f43236c67828530216377b7d2",
+      "bb12b0c7c5678ddfdfc36597443123ff1b892925",
+      "21bdb681a408eac425f16686993a416c1667b45b",
+      "2963d044e3dee158c384bbd17d3fd1474d9dc3b3",
+      "48729f3e2b0feca58ceb5dc732f5a88426151774",
+      "543c5efcfbf4bcdf2460d2915a038790b6b97473",
+      "d28426f15386bd74767d215e77f6a4df0d3af4c1",
+      "9a35c5092137c3d4d48a34395d3141070458073e"
+    ],
+    "traceReferences": [
+      "README.md",
+      "docs/api/README.md",
+      "OPS-BUILD-003",
+      "OPS-HTTP-004",
+      "FR-REL-005",
+      "OPS-REL-005"
+    ],
+    "blockStartLine": 604,
+    "blockEndLine": 717,
+    "sectionLines": {
+      "Requirement": 619,
+      "Rationale": 623,
+      "Acceptance Criteria": 627,
+      "Verification Evidence": 635,
+      "Trace Links": 685,
+      "Research / Analysis": 696,
+      "Implementation Notes": 700,
+      "Change Notes": 704
+    },
+    "priority": "medium",
+    "risk": "low",
+    "stability": "evolving",
+    "newWorkCandidate": false,
+    "requirement": "The repository shall contain a root `README.md` with the installation coordinates of the nine JAR modules and the `NaruServe-android` AAR, the Maven Central installation with `repositories { mavenCentral() }`, the source-checkout instruction `./gradlew publishToMavenLocal` with `repositories { mavenLocal() }`, how to obtain TinyHttpd, a Java and a Kotlin quick start whose code equals the quick start of `docs/api/README.md`, the statement that the Android sample build and the API 21 device or emulator verification are not part of v1, and links to the API documents and the release documents.",
+    "rationale": "Covers D-379 and wave decisions Release documentation statement (r1 W1-005) and Publishing (r1 W2-004); supports T50 (\"README, API documents and license list exist\", the first general release gate at `object.md:1170`). Measured (2026-10-20): the repository root has no `README.md`; `docs/api/README.md:11-60` holds the \"5분 시작\" Java and Kotlin blocks and `:87-115` the module table with the nine coordinates and `0.1.0-SNAPSHOT`; `docs/api/README.md:6-7` still says the document is a target contract that is \"아직 구현되지 않았습니다\" (OPS-REL-002 rewrites it). Decision: the README quick start is a copy of those two blocks, compared by a test, so the two cannot drift; the README says API 21 compatibility rests on `--release 8` and the animal-sniffer `android-api-level-21` check. Pitfall: the README is read by people who have not seen `docs/api`; it must state that the HTTP engine TinyHttpd is not published by this repository (OPS-REL-005). Rejected alternative: a README that links to the quick start only; D-379 asks for the quick start in the README.",
+    "research": "- -",
+    "implementationNotes": "- -",
+    "diagnostics": [],
+    "errors": [],
+    "warnings": [],
+    "diagnosticsSummary": {
+      "errors": 0,
+      "warnings": 0,
+      "byCode": {}
+    }
+  },
+  "diagnostics": [],
+  "diagnosticsSummary": {
+    "errors": 0,
+    "warnings": 0,
+    "byCode": {}
+  },
+  "mcpWorkspace": {
+    "workspaceRoot": "/Users/beom/work/git/NaruServe",
+    "rootSource": "server-cwd-discovery",
+    "indexPath": "docs/spec/00.index.md",
+    "packageVersion": "4.2.0"
+  }
+}

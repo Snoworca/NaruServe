@@ -1,0 +1,38 @@
+{
+  "head": "274775f",
+  "workspaceRoot": "/Users/beom/work/git/NaruServe",
+  "scopeSource": "User conversation: Express 5 common routing behavior; existing NaruServe extensions retained; WebSocket parity excluded; research then epic/sub-issues then kiwi-orchestrator implementation and improvement.",
+  "currentRequestFile": {
+    "path": "docs/next/request.md",
+    "sha256": "f33e09f857061e9fc69b61f8c9803a7b5865ad1a7dab7dd41565ca15622d646c",
+    "title": "# 챗봇 OpenAI 호환 API 후속 연구: node-api 영향 · 자동 기억 · 보관 기간",
+    "usedAsScope": false,
+    "reason": "Current file describes another product; user clarification pending. File preserved."
+  },
+  "oracle": {
+    "node": "22.22.0",
+    "express": "5.1.0",
+    "router": "2.2.0",
+    "path-to-regexp": "8.4.2"
+  },
+  "mcp": {
+    "transport": "stdio",
+    "serverCommand": "speckiwi mcp",
+    "workspaceRoot": "/Users/beom/work/git/NaruServe",
+    "rootSource": "server-cwd-discovery",
+    "packageVersion": "4.2.0"
+  },
+  "researchers": [
+    "code-context",
+    "intent-and-external-parity",
+    "architecture-fit"
+  ],
+  "implementationStarted": false,
+  "createdAt": "2026-10-27T17:56:55.015734+00:00",
+  "regexDecision": {
+    "source": "아닙니다. 자바의 정규식으로 갑시다. 그것까지 자바 스크립트로 맞출 필요 없죠.",
+    "engine": "java.util.regex.Pattern",
+    "ecmascriptRegExpEquivalence": false,
+    "jni": false
+  }
+}

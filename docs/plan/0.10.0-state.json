@@ -1,0 +1,274 @@
+{
+  "goal": "Complete epic46 and issues47-65 under latest user instructions",
+  "target": "0.10.0",
+  "plan": "docs/plan/0.10.0-parallel-plan.md",
+  "dependencies": "unchanged versions/types/scopes; existing toolchain reused",
+  "regex": "Java Pattern",
+  "status": "parallel-foundation-dispatch",
+  "issues": [
+    {
+      "id": "T00",
+      "number": 47,
+      "status": "in_progress",
+      "depends_on": [],
+      "req_ids": [],
+      "test_review_rounds": [],
+      "completed": false
+    },
+    {
+      "id": "T01",
+      "number": 48,
+      "status": "foundation-ready",
+      "depends_on": [
+        "T00"
+      ],
+      "req_ids": [
+        "OPS-ROUTE-004"
+      ],
+      "test_review_rounds": [],
+      "completed": false
+    },
+    {
+      "id": "T02",
+      "number": 49,
+      "status": "foundation-ready",
+      "depends_on": [
+        "T00",
+        "T01"
+      ],
+      "req_ids": [
+        "FR-ROUTE-018"
+      ],
+      "test_review_rounds": [],
+      "completed": false
+    },
+    {
+      "id": "T03",
+      "number": 50,
+      "status": "open",
+      "depends_on": [
+        "T02"
+      ],
+      "req_ids": [],
+      "test_review_rounds": [],
+      "completed": false
+    },
+    {
+      "id": "T04",
+      "number": 51,
+      "status": "open",
+      "depends_on": [
+        "T02",
+        "T03"
+      ],
+      "req_ids": [],
+      "test_review_rounds": [],
+      "completed": false
+    },
+    {
+      "id": "T05",
+      "number": 52,
+      "status": "open",
+      "depends_on": [
+        "T02",
+        "T03",
+        "T04"
+      ],
+      "req_ids": [],
+      "test_review_rounds": [],
+      "completed": false
+    },
+    {
+      "id": "T06",
+      "number": 53,
+      "status": "open",
+      "depends_on": [
+        "T03",
+        "T05"
+      ],
+      "req_ids": [],
+      "test_review_rounds": [],
+      "completed": false
+    },
+    {
+      "id": "T07",
+      "number": 54,
+      "status": "open",
+      "depends_on": [
+        "T03",
+        "T06"
+      ],
+      "req_ids": [],
+      "test_review_rounds": [],
+      "completed": false
+    },
+    {
+      "id": "T08",
+      "number": 55,
+      "status": "open",
+      "depends_on": [
+        "T07"
+      ],
+      "req_ids": [],
+      "test_review_rounds": [],
+      "completed": false
+    },
+    {
+      "id": "T09",
+      "number": 56,
+      "status": "open",
+      "depends_on": [
+        "T08"
+      ],
+      "req_ids": [],
+      "test_review_rounds": [],
+      "completed": false
+    },
+    {
+      "id": "T10",
+      "number": 57,
+      "status": "open",
+      "depends_on": [
+        "T06",
+        "T09"
+      ],
+      "req_ids": [],
+      "test_review_rounds": [],
+      "completed": false
+    },
+    {
+      "id": "T11",
+      "number": 58,
+      "status": "open",
+      "depends_on": [
+        "T06",
+        "T10"
+      ],
+      "req_ids": [],
+      "test_review_rounds": [],
+      "completed": false
+    },
+    {
+      "id": "T12",
+      "number": 59,
+      "status": "open",
+      "depends_on": [
+        "T00",
+        "T01"
+      ],
+      "req_ids": [],
+      "test_review_rounds": [],
+      "completed": false
+    },
+    {
+      "id": "T13",
+      "number": 60,
+      "status": "open",
+      "depends_on": [
+        "T03",
+        "T11",
+        "T12"
+      ],
+      "req_ids": [],
+      "test_review_rounds": [],
+      "completed": false
+    },
+    {
+      "id": "T14",
+      "number": 61,
+      "status": "open",
+      "depends_on": [
+        "T03",
+        "T11"
+      ],
+      "req_ids": [],
+      "test_review_rounds": [],
+      "completed": false
+    },
+    {
+      "id": "T15",
+      "number": 62,
+      "status": "open",
+      "depends_on": [
+        "T07",
+        "T08",
+        "T09",
+        "T10",
+        "T11"
+      ],
+      "req_ids": [],
+      "test_review_rounds": [],
+      "completed": false
+    },
+    {
+      "id": "T16",
+      "number": 63,
+      "status": "open",
+      "depends_on": [
+        "T05",
+        "T11",
+        "T13",
+        "T15"
+      ],
+      "req_ids": [],
+      "test_review_rounds": [],
+      "completed": false
+    },
+    {
+      "id": "T17",
+      "number": 64,
+      "status": "open",
+      "depends_on": [
+        "T01",
+        "T02",
+        "T03",
+        "T04",
+        "T05",
+        "T06",
+        "T07",
+        "T08",
+        "T09",
+        "T10",
+        "T11",
+        "T13",
+        "T14",
+        "T15",
+        "T16"
+      ],
+      "req_ids": [],
+      "test_review_rounds": [],
+      "completed": false
+    },
+    {
+      "id": "T18",
+      "number": 65,
+      "status": "open",
+      "depends_on": [
+        "T17"
+      ],
+      "req_ids": [],
+      "test_review_rounds": [],
+      "completed": false
+    }
+  ],
+  "review_policy": {
+    "max_rounds": 3,
+    "stop_on_first_pass": true,
+    "independent": true
+  },
+  "pending_local_decisions": [
+    "Tiny3.1.0 transport raw-path boundary versus explicit version-change authorization"
+  ],
+  "authorization": {
+    "commit_push": true,
+    "version": "0.10.0",
+    "maven_publication": true,
+    "new_dependencies": false
+  },
+  "history": "Earlier research/orchestrator artifacts retained; latest user goal drives this issue-based plan.",
+  "srs_mode": "sdd with mandatory behavior TDD",
+  "requirements": {
+    "harness": "OPS-ROUTE-004",
+    "http_compiler": "FR-ROUTE-018"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "reason": "Previous broker and MCP server PIDs 82257/82259 confirmed absent with ps; old holder exactly matched Phase0 contract. Old stale lease released through MCP, same run reacquired through currently available native MCP. Historical contract pin preserved; this record identifies the recovered session.",
+  "mcpWorkspace": {
+    "workspaceRoot": "/Users/beom/work/git/NaruServe",
+    "rootSource": "server-cwd-discovery",
+    "indexPath": "docs/spec/00.index.md",
+    "packageVersion": "4.0.0"
+  },
+  "holder": {
+    "owner": "2026-10-28.naru.express5-v010",
+    "pid": 3621,
+    "host": "Sungbeomui-Macmini.local",
+    "acquiredAt": "2026-10-28T00:53:26.930Z"
+  },
+  "run_id": "2026-10-28.naru.express5-v010"
+}

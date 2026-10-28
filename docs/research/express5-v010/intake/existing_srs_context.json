@@ -1,0 +1,2986 @@
+{
+  "work": "express5-v010",
+  "target": "0.10.0",
+  "captured_at": "2026-10-27T18:16:22.797261+00:00",
+  "workspace_root": "/Users/beom/work/git/NaruServe",
+  "head": "3f91c6e17d3e40eec51946043b87e45cf95ab6de",
+  "read_only": true,
+  "source": "Actual SpecKiwi MCP get_requirement reads via /tmp/naruserve-mcp.py; all response envelopes checked.",
+  "mcp_workspace": {
+    "workspaceRoot": "/Users/beom/work/git/NaruServe",
+    "rootSource": "server-cwd-discovery",
+    "indexPath": "docs/spec/00.index.md",
+    "packageVersion": "4.2.0"
+  },
+  "active_target": "central-0.9.0",
+  "candidate_matches": [
+    {
+      "id": "FR-ROUTE-014",
+      "requirement_id": "FR-ROUTE-014",
+      "classification": "potential-conflict",
+      "match_type": "potential-conflict",
+      "similarity_score": 1.0,
+      "similarity_basis": "Direct named existing contract and code trace, not embedding estimate.",
+      "scope": "ROUTE",
+      "target": "wave-2",
+      "status": "verified",
+      "stability": "evolving",
+      "title": "TRACE and CONNECT enable policy",
+      "file_path": "docs/spec/03.routing.srs.md",
+      "heading_line": 1339,
+      "statement": "The system shall disable `TRACE` and `CONNECT` routing by default, so that both yield the unsupported-method result whatever the path, and shall provide a router policy that enables each of them separately, after which an enabled method routes like any other method and is registered only by naming it.",
+      "reason": "Legacy default-off TRACE/CONNECT routing conflicts with explicit common Express method registration; preserve legacy switches only in identified extension/WS profile.",
+      "evidence": [
+        "docs/spec/03.routing.srs.md:1339",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouterPolicy.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java",
+        "CON-ROUTE-001"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "text": "Under the default policy, `TRACE /x` and `CONNECT /x` yield unsupported method whether or not any route matches `/x`. [D-067]",
+          "checked": true,
+          "line": 1364
+        },
+        {
+          "id": "AC-2",
+          "text": "With only `TRACE` enabled, a registered `TRACE /x` route is matched, `TRACE /y` with no matching pattern yields no match, `TRACE` on a path with only a `GET` route yields method mismatch, and `CONNECT /x` still yields unsupported method. [wave decision: TRACE/CONNECT policy]",
+          "checked": true,
+          "line": 1365
+        },
+        {
+          "id": "AC-3",
+          "text": "With `CONNECT` enabled, `CONNECT` behaves as `TRACE` does in the previous criterion, and in neither case does a registration under `Method.any()` serve the enabled method. [wave decision: TRACE/CONNECT policy; D-036]",
+          "checked": true,
+          "line": 1366
+        }
+      ],
+      "mcp_read": "/tmp/naruserve-intake-core/mcp/FR-ROUTE-014.json"
+    },
+    {
+      "id": "FR-ROUTE-003",
+      "requirement_id": "FR-ROUTE-003",
+      "classification": "potential-conflict",
+      "match_type": "potential-conflict",
+      "similarity_score": 1.0,
+      "similarity_basis": "Direct named existing contract and code trace, not embedding estimate.",
+      "scope": "ROUTE",
+      "target": "wave-2",
+      "status": "verified",
+      "stability": "evolving",
+      "title": "Route pattern syntax and registration-time validation",
+      "file_path": "docs/spec/03.routing.srs.md",
+      "heading_line": 469,
+      "statement": "The system shall accept route patterns made of literal segments and `:name` variable segments, where a variable matches exactly one non-empty path segment and never crosses `/`, and shall fail registration with a configuration error for a pattern that contains Express wildcard or regular-expression syntax, an empty variable name, a variable name repeated within the pattern, or an empty segment.",
+      "reason": "Legacy string syntax rejects wildcard/optional/quoted/escape/partial parameters that common Express5 accepts.",
+      "evidence": [
+        "docs/spec/03.routing.srs.md:469",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RoutePattern.java",
+        "CON-ROUTE-001",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RoutingConfigException.java"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "text": "`/users/:id` matches `/users/42` with `id` = `42`, and matches neither `/users`, `/users/` nor `/users/42/posts`. [D-047]",
+          "checked": true,
+          "line": 494
+        },
+        {
+          "id": "AC-2",
+          "text": "Registering a pattern containing `?`, `*`, `+`, `(` or `)` fails with a configuration error. [D-048]",
+          "checked": true,
+          "line": 495
+        },
+        {
+          "id": "AC-3",
+          "text": "Registering `/a/:` or `/a/:id/:id` fails with a configuration error at registration time. [wave decision: pattern validation] [SDS 2026-10-19.naruserve.naruserve-v1-wave-2-2 SDS-AC-5] The error is a `RoutingConfigException` thrown from `add` before freeze, naming the pattern.",
+          "checked": true,
+          "line": 496
+        },
+        {
+          "id": "AC-4",
+          "text": "Registering `/a//b` fails with a configuration error, while `/` and a pattern with one trailing slash such as `/users/` are accepted. [loop W residual: empty segment]",
+          "checked": true,
+          "line": 497
+        }
+      ],
+      "mcp_read": "/tmp/naruserve-intake-core/mcp/FR-ROUTE-003.json"
+    },
+    {
+      "id": "FR-ROUTE-004",
+      "requirement_id": "FR-ROUTE-004",
+      "classification": "potential-conflict",
+      "match_type": "potential-conflict",
+      "similarity_score": 1.0,
+      "similarity_basis": "Direct named existing contract and code trace, not embedding estimate.",
+      "scope": "ROUTE",
+      "target": "wave-2",
+      "status": "verified",
+      "stability": "evolving",
+      "title": "Engine-free request path validator",
+      "file_path": "docs/spec/03.routing.srs.md",
+      "heading_line": 541,
+      "statement": "The system shall provide an engine-free path validator, run before the router lookup by the wave 3 dispatcher and every adapter, that inspects the raw request path without decoding it and rejects malformed percent-encoding, percent-encoded bytes that are not valid UTF-8, raw non-ASCII characters, an encoded `/`, an encoded or raw `NUL`, and any `.` or `..` segment in raw or percent-encoded form, matching the rules TinyHttpd's parser applies.",
+      "reason": "Pre-routing decoded slash/NUL/dot rejection conflicts with common raw-path matching/capture decode semantics.",
+      "evidence": [
+        "docs/spec/03.routing.srs.md:541",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/PathValidator.java",
+        "CON-ROUTE-001"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "text": "The validator rejects `/a%2`, `/a%zz`, `/a%C3` (truncated UTF-8), `/a%FF`, a path containing a raw character above U+007F, `/a%2Fb`, `/a%2fb`, `/a%00`, a path containing a raw U+0000, `/./a`, `/a/..`, `/a/%2e`, `/a/%2E%2e` and `/a/.%2e/b`. [D-052] [SDS 2026-10-19.naruserve.naruserve-v1-wave-2-2 SDS-AC-6] A segment equal to '.' or '..' after decoding, a malformed %XX, an encoded '/', NUL or an invalid UTF-8 byte sequence yields false.",
+          "checked": true,
+          "line": 566
+        },
+        {
+          "id": "AC-2",
+          "text": "The validator also rejects, as TinyHttpd's request-target parser does, a path containing a raw space, a raw control character U+0001..U+001F, U+007F or `#`. [D-052]",
+          "checked": true,
+          "line": 567
+        },
+        {
+          "id": "AC-3",
+          "text": "The validator accepts `/users/42`, `/files/%252e`, `/caf%C3%A9` and `/a/.hidden`, and its result is the same whether or not a query string follows the path. [D-052; D-051]",
+          "checked": true,
+          "line": 568
+        },
+        {
+          "id": "AC-4",
+          "text": "The validator returns an accept or reject decision without returning a decoded path, and the router lookup API has no result variant for a rejected path. [loop W residual; wave decision: path validation before lookup]",
+          "checked": true,
+          "line": 569
+        }
+      ],
+      "mcp_read": "/tmp/naruserve-intake-core/mcp/FR-ROUTE-004.json"
+    },
+    {
+      "id": "FR-ROUTE-005",
+      "requirement_id": "FR-ROUTE-005",
+      "classification": "potential-conflict",
+      "match_type": "potential-conflict",
+      "similarity_score": 1.0,
+      "similarity_basis": "Direct named existing contract and code trace, not embedding estimate.",
+      "scope": "ROUTE",
+      "target": "wave-2",
+      "status": "verified",
+      "stability": "evolving",
+      "title": "Strict default matching with single percent-decoding",
+      "file_path": "docs/spec/03.routing.srs.md",
+      "heading_line": 611,
+      "statement": "The system shall match a request path against patterns ignoring the query string, decoding each path segment exactly once, and by default comparing case-sensitively with a significant trailing slash and with an empty segment never matching a literal or variable segment, returning path parameter values as decoded once and otherwise as received.",
+      "reason": "Strict decoded segment matching conflicts with raw-path compiled matcher and new defaults.",
+      "evidence": [
+        "docs/spec/03.routing.srs.md:611",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RoutePattern.java",
+        "CON-ROUTE-001"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "text": "`/users?id=1` and `/users` both match `/users`. [D-049]",
+          "checked": true,
+          "line": 636
+        },
+        {
+          "id": "AC-2",
+          "text": "Under the default policy `/Users` and `/users/` do not match `/users`, and `/users/` matches only a pattern registered as `/users/`. [D-050]",
+          "checked": true,
+          "line": 637
+        },
+        {
+          "id": "AC-3",
+          "text": "`/files/%252e` matched against `/files/:name` yields `name` = `%2e`, and `/caf%C3%A9` matches the literal pattern `/café`. [D-051] [SDS 2026-10-19.naruserve.naruserve-v1-wave-2-2 SDS-AC-8] Each segment is decoded %XX exactly once as UTF-8 and '+' stays '+'.",
+          "checked": true,
+          "line": 638
+        },
+        {
+          "id": "AC-4",
+          "text": "Under the default policy `/a//b` matches neither `/a/:x/b` nor `/a/b` and reaches the no-match result when no other pattern matches. [wave decision: path-form policy]",
+          "checked": true,
+          "line": 639
+        }
+      ],
+      "mcp_read": "/tmp/naruserve-intake-core/mcp/FR-ROUTE-005.json"
+    },
+    {
+      "id": "FR-ROUTE-006",
+      "requirement_id": "FR-ROUTE-006",
+      "classification": "potential-conflict",
+      "match_type": "potential-conflict",
+      "similarity_score": 1.0,
+      "similarity_basis": "Direct named existing contract and code trace, not embedding estimate.",
+      "scope": "ROUTE",
+      "target": "wave-2",
+      "status": "verified",
+      "stability": "evolving",
+      "title": "Path-form router policies",
+      "file_path": "docs/spec/03.routing.srs.md",
+      "heading_line": 685,
+      "statement": "The system shall provide three independent router policy switches, each off by default, that merge repeated slashes, ignore one trailing slash, and compare literal segments case-insensitively, with path parameter values returned as received under every switch and the configuration API names on `RestApp` left to wave 3.",
+      "reason": "All-off defaults conflict with Express5 case/trailing defaults; retain explicit strict and WS profile.",
+      "evidence": [
+        "docs/spec/03.routing.srs.md:685",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouterPolicy.java",
+        "CON-ROUTE-001"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "text": "With repeated-slash merging on, `/a//b` matches `/a/b`; with it off, it does not. [D-053]",
+          "checked": true,
+          "line": 710
+        },
+        {
+          "id": "AC-2",
+          "text": "With trailing-slash ignoring on, `/users/` matches `/users` and `/users` matches a pattern registered as `/users/`; `/users//` does not match `/users` unless repeated-slash merging is also on; the root path `/` is never stripped to an empty path. [D-053]",
+          "checked": true,
+          "line": 711
+        },
+        {
+          "id": "AC-3",
+          "text": "With case-insensitive matching on, `/USERS/Bob` matches `/users/:name` and yields `name` = `Bob`, and the comparison is locale-independent (the same result under a Turkish default locale for `/LIST` against `/list`). [D-053; wave decision: path-form policy] Matching and prefix-middleware selection use the same locale-independent Unicode code-point folding policy on Java8 and Java17, including supplementary characters.",
+          "checked": true,
+          "line": 712
+        },
+        {
+          "id": "AC-4",
+          "text": "Each switch can be set without the others, the switches are fixed when the router is built, and a router built without setting any of them behaves as the strict default. [wave decision: path-form policy] [SDS 2026-10-19.naruserve.naruserve-v1-wave-2-2 SDS-AC-10] The router copies the immutable `RouterPolicy` at construction and offers no setter afterwards.",
+          "checked": true,
+          "line": 713
+        }
+      ],
+      "mcp_read": "/tmp/naruserve-intake-core/mcp/FR-ROUTE-006.json"
+    },
+    {
+      "id": "FR-ROUTE-007",
+      "requirement_id": "FR-ROUTE-007",
+      "classification": "potential-conflict",
+      "match_type": "potential-conflict",
+      "similarity_score": 1.0,
+      "similarity_basis": "Direct named existing contract and code trace, not embedding estimate.",
+      "scope": "ROUTE",
+      "target": "wave-2",
+      "status": "verified",
+      "stability": "evolving",
+      "title": "Per-method pattern priority",
+      "file_path": "docs/spec/03.routing.srs.md",
+      "heading_line": 761,
+      "statement": "The system shall, for the request method, pick the most specific matching pattern among the routes of that method, comparing patterns segment by segment from the left so that the first differing segment decides and a literal segment beats a variable segment regardless of registration order.",
+      "reason": "Specificity precedence conflicts with registration order.",
+      "evidence": [
+        "docs/spec/03.routing.srs.md:761",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java",
+        "CON-ROUTE-001",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RoutePattern.java"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "text": "With `GET /users/:id` registered before `GET /users/me`, a `GET /users/me` lookup returns the `/users/me` handler and `GET /users/42` returns the `/users/:id` handler; the result is the same with the opposite registration order. [D-054]",
+          "checked": true,
+          "line": 786
+        },
+        {
+          "id": "AC-2",
+          "text": "With `GET /a/:x/c` and `GET /a/b/:y`, a `GET /a/b/c` lookup returns the `/a/b/:y` handler. [D-055]",
+          "checked": true,
+          "line": 787
+        },
+        {
+          "id": "AC-3",
+          "text": "With `GET /users/me` and `DELETE /users/:id`, a `DELETE /users/me` lookup returns the matched result for `DELETE /users/:id`. [wave decision: per-method priority]",
+          "checked": true,
+          "line": 788
+        }
+      ],
+      "mcp_read": "/tmp/naruserve-intake-core/mcp/FR-ROUTE-007.json"
+    },
+    {
+      "id": "FR-ROUTE-008",
+      "requirement_id": "FR-ROUTE-008",
+      "classification": "potential-conflict",
+      "match_type": "potential-conflict",
+      "similarity_score": 1.0,
+      "similarity_basis": "Direct named existing contract and code trace, not embedding estimate.",
+      "scope": "ROUTE",
+      "target": "wave-2",
+      "status": "verified",
+      "stability": "evolving",
+      "title": "Conflict detection at route-table freeze",
+      "file_path": "docs/spec/03.routing.srs.md",
+      "heading_line": 828,
+      "statement": "The system shall provide a route-table freeze, which wave 4 calls inside `listen()` before any socket is bound, that raises a configuration error naming both conflicting registrations when two registrations of the same route kind share a method and have the same pattern or patterns that differ only in variable names, comparing patterns normalised under the active path-form policies, and when a `TRACE` or `CONNECT` route is registered while that method's routing is disabled.",
+      "reason": "Freeze duplicate conflict rejection conflicts with duplicate Route layers and live registration.",
+      "evidence": [
+        "docs/spec/03.routing.srs.md:828",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java",
+        "CON-ROUTE-001",
+        "FR-ROUTE-006",
+        "FR-ROUTE-014",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RoutePattern.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RoutingConfigException.java"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "text": "Registering `GET /a` twice, or `GET /a` and a `MethodSet` registration containing `GET` on `/a`, makes the freeze raise a configuration error. [D-056]",
+          "checked": true,
+          "line": 853
+        },
+        {
+          "id": "AC-2",
+          "text": "Registering `GET /a/:x` and `GET /a/:y` makes the freeze raise a configuration error, while `GET /a/:x` and `POST /a/:y` freeze without error. [D-057]",
+          "checked": true,
+          "line": 854
+        },
+        {
+          "id": "AC-3",
+          "text": "The configuration error message names the method and the pattern of both conflicting registrations, and registration itself does not raise it before the freeze. [D-058] [SDS 2026-10-19.naruserve.naruserve-v1-wave-2-2 SDS-AC-12] The freeze throws one `RoutingConfigException` whose message has one line per conflicting pair, \"METHOD pattern conflicts with METHOD pattern\".",
+          "checked": true,
+          "line": 855
+        },
+        {
+          "id": "AC-4",
+          "text": "With case-insensitive matching on, `GET /Users` and `GET /users` conflict at freeze; with trailing-slash ignoring on, `GET /a` and `GET /a/` conflict; under the strict default neither pair conflicts. [loop W residual: normalised conflicts] Case-insensitive conflict keys use the same Unicode code-point folding as runtime literal/prefix matching, including supplementary characters.",
+          "checked": true,
+          "line": 856
+        },
+        {
+          "id": "AC-5",
+          "text": "Registering a `TRACE` route while `TRACE` routing is disabled makes the freeze raise a configuration error, and likewise for `CONNECT`; a WebSocket registration and a `GET` registration on the same pattern freeze without error. [loop W residual; D-068] [SDS 2026-10-19.naruserve.naruserve-v1-wave-2-2 SDS-AC-14] The freeze error line reads \"METHOD pattern registered while METHOD routing is disabled\".",
+          "checked": true,
+          "line": 857
+        }
+      ],
+      "mcp_read": "/tmp/naruserve-intake-core/mcp/FR-ROUTE-008.json"
+    },
+    {
+      "id": "FR-ROUTE-010",
+      "requirement_id": "FR-ROUTE-010",
+      "classification": "potential-conflict",
+      "match_type": "potential-conflict",
+      "similarity_score": 1.0,
+      "similarity_basis": "Direct named existing contract and code trace, not embedding estimate.",
+      "scope": "ROUTE",
+      "target": "wave-2",
+      "status": "verified",
+      "stability": "evolving",
+      "title": "Method-mismatch result and Allow set",
+      "file_path": "docs/spec/03.routing.srs.md",
+      "heading_line": 1068,
+      "statement": "The system shall return the method-mismatch result when the path matches but no route of the request method matches it and no earlier result applies, carrying an `Allow` set that is the union of the methods of every route whose pattern matches the path, plus `HEAD` wherever `GET` is present and `OPTIONS` always, with a WebSocket route counted as `GET`.",
+      "reason": "405/Allow outcome changes to common404 and separate ordered OPTIONS accumulation.",
+      "evidence": [
+        "docs/spec/03.routing.srs.md:1068",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java",
+        "CON-ROUTE-001",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouteMatch.java"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "text": "With `Method.any().except(Method.DELETE)` registered on `/r`, `DELETE /r` yields method mismatch with `Allow` = `GET`, `HEAD`, `POST`, `PUT`, `PATCH`, `OPTIONS`. [D-061; T02] [SDS 2026-10-19.naruserve.naruserve-v1-wave-2-3 SDS-AC-6] The `Allow` set iterates and prints in `Method` declaration order.",
+          "checked": true,
+          "line": 1093
+        },
+        {
+          "id": "AC-2",
+          "text": "With `POST /a/:id` and `GET /a/me`, `PUT /a/me` yields method mismatch with `Allow` = `GET`, `HEAD`, `POST`, `OPTIONS`. [wave decision: Allow sets]",
+          "checked": true,
+          "line": 1094
+        },
+        {
+          "id": "AC-3",
+          "text": "With only `POST /p`, `GET /p` yields method mismatch with `Allow` = `POST`, `OPTIONS` (no `HEAD`). [wave decision: Allow sets]",
+          "checked": true,
+          "line": 1095
+        },
+        {
+          "id": "AC-4",
+          "text": "With a WebSocket route and a `POST` route on `/w`, `PUT /w` yields method mismatch with `Allow` = `GET`, `HEAD`, `POST`, `OPTIONS`. [wave decision: Allow sets]",
+          "checked": true,
+          "line": 1096
+        }
+      ],
+      "mcp_read": "/tmp/naruserve-intake-core/mcp/FR-ROUTE-010.json"
+    },
+    {
+      "id": "FR-ROUTE-011",
+      "requirement_id": "FR-ROUTE-011",
+      "classification": "potential-conflict",
+      "match_type": "potential-conflict",
+      "similarity_score": 1.0,
+      "similarity_basis": "Direct named existing contract and code trace, not embedding estimate.",
+      "scope": "ROUTE",
+      "target": "wave-2",
+      "status": "verified",
+      "stability": "evolving",
+      "title": "Automatic HEAD resolution",
+      "file_path": "docs/spec/03.routing.srs.md",
+      "heading_line": 1139,
+      "statement": "The system shall resolve a `HEAD` request for which no `HEAD` route matches the path to the most specific matching HTTP `GET` route (never a WebSocket route), returned as matched with the automatic-`HEAD` flag set, and shall give a matching explicit `HEAD` route precedence over this resolution.",
+      "reason": "Global explicit HEAD precedence changes to per-Route fallback in ordered stack.",
+      "evidence": [
+        "docs/spec/03.routing.srs.md:1139",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java",
+        "CON-ROUTE-001",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouteMatch.java"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "text": "With only `GET /x`, `HEAD /x` yields matched with the `GET` handler, actual method `GET` and the automatic-`HEAD` flag set. [D-062]",
+          "checked": true,
+          "line": 1164
+        },
+        {
+          "id": "AC-2",
+          "text": "With `GET /x` and `HEAD /x`, `HEAD /x` yields matched with the `HEAD` handler and the flag clear. [D-063]",
+          "checked": true,
+          "line": 1165
+        },
+        {
+          "id": "AC-3",
+          "text": "With `HEAD /x/:id` and `GET /x/me`, `HEAD /x/me` yields the `HEAD /x/:id` route with the flag clear. [wave decision: per-method priority]",
+          "checked": true,
+          "line": 1166
+        }
+      ],
+      "mcp_read": "/tmp/naruserve-intake-core/mcp/FR-ROUTE-011.json"
+    },
+    {
+      "id": "FR-ROUTE-012",
+      "requirement_id": "FR-ROUTE-012",
+      "classification": "potential-conflict",
+      "match_type": "potential-conflict",
+      "similarity_score": 1.0,
+      "similarity_basis": "Direct named existing contract and code trace, not embedding estimate.",
+      "scope": "ROUTE",
+      "target": "wave-2",
+      "status": "verified",
+      "stability": "evolving",
+      "title": "Automatic OPTIONS result",
+      "file_path": "docs/spec/03.routing.srs.md",
+      "heading_line": 1207,
+      "statement": "The system shall return the automatic-OPTIONS result, carrying the same `Allow` set as the method-mismatch result, for an `OPTIONS` request to a matched path when no `OPTIONS` route matches it, and shall give a matching explicit `OPTIONS` route precedence.",
+      "reason": "Automatic OPTIONS204 changes to terminal200 with exact Allow and body.",
+      "evidence": [
+        "docs/spec/03.routing.srs.md:1207",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java",
+        "CON-ROUTE-001",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouteMatch.java"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "text": "With `GET /x` and `POST /x`, `OPTIONS /x` yields automatic OPTIONS with `Allow` = `GET`, `HEAD`, `POST`, `OPTIONS`. [D-064]",
+          "checked": true,
+          "line": 1232
+        },
+        {
+          "id": "AC-2",
+          "text": "With `GET /x` and `OPTIONS /x`, `OPTIONS /x` yields matched with the `OPTIONS` handler. [D-065]",
+          "checked": true,
+          "line": 1233
+        },
+        {
+          "id": "AC-3",
+          "text": "With only a WebSocket route on `/w`, `OPTIONS /w` yields automatic OPTIONS with `Allow` = `GET`, `HEAD`, `OPTIONS`. [wave decision: Allow sets]",
+          "checked": true,
+          "line": 1234
+        }
+      ],
+      "mcp_read": "/tmp/naruserve-intake-core/mcp/FR-ROUTE-012.json"
+    },
+    {
+      "id": "FR-ROUTE-013",
+      "requirement_id": "FR-ROUTE-013",
+      "classification": "potential-conflict",
+      "match_type": "potential-conflict",
+      "similarity_score": 1.0,
+      "similarity_basis": "Direct named existing contract and code trace, not embedding estimate.",
+      "scope": "ROUTE",
+      "target": "wave-2",
+      "status": "verified",
+      "stability": "evolving",
+      "title": "Unsupported-method result for unknown tokens",
+      "file_path": "docs/spec/03.routing.srs.md",
+      "heading_line": 1275,
+      "statement": "The system shall match the raw method token against `Method` constant names exactly and case-sensitively and return the unsupported-method result, whatever the path, for every token that is not a `Method` constant name.",
+      "reason": "Nine-case unsupported method gate cannot silently exclude common methods.",
+      "evidence": [
+        "docs/spec/03.routing.srs.md:1275",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java",
+        "CON-ROUTE-001"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "text": "With `GET /x` registered, tokens `FOO`, `get` and `Get` on `/x` yield unsupported method. [D-066; loop W residual]",
+          "checked": true,
+          "line": 1300
+        },
+        {
+          "id": "AC-2",
+          "text": "Token `PROPFIND` on a path no pattern matches yields unsupported method, not no match. [wave decision: lookup result order]",
+          "checked": true,
+          "line": 1301
+        }
+      ],
+      "mcp_read": "/tmp/naruserve-intake-core/mcp/FR-ROUTE-013.json"
+    },
+    {
+      "id": "CON-ROUTE-005",
+      "requirement_id": "CON-ROUTE-005",
+      "classification": "potential-conflict",
+      "match_type": "potential-conflict",
+      "similarity_score": 1.0,
+      "similarity_basis": "Direct named existing contract and code trace, not embedding estimate.",
+      "scope": "ROUTE",
+      "target": "wave-2",
+      "status": "verified",
+      "stability": "evolving",
+      "title": "Router lookup returns six result kinds and builds no response",
+      "file_path": "docs/spec/03.routing.srs.md",
+      "heading_line": 1842,
+      "statement": "The system shall make Router lookup return exactly the six RouteMatch kinds and never build HTTP responses, so that the wave 3 dispatcher maps kinds to 404/405/204/426/501 and adapters rely on that split.",
+      "reason": "Exactly six RouteMatch outcome kinds and dispatcher405/204 mapping conflict with ordered layer cursors and common404/OPTIONS200; preserve engine-free response ownership.",
+      "evidence": [
+        "docs/spec/03.routing.srs.md:1842"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "text": "Router lookup returns one of exactly six RouteMatch kinds and the routing package builds no HTTP response.",
+          "checked": true,
+          "line": 1867
+        }
+      ],
+      "mcp_read": "/tmp/naruserve-intake-core/mcp/CON-ROUTE-005.json"
+    },
+    {
+      "id": "FR-HTTP-008",
+      "requirement_id": "FR-HTTP-008",
+      "classification": "potential-conflict",
+      "match_type": "potential-conflict",
+      "similarity_score": 1.0,
+      "similarity_basis": "Direct named existing contract and code trace, not embedding estimate.",
+      "scope": "HTTP",
+      "target": "wave-3",
+      "status": "verified",
+      "stability": "evolving",
+      "title": "Internal RestApp implementation with deferred router build and freeze",
+      "file_path": "docs/spec/04.http-core.srs.md",
+      "heading_line": 1206,
+      "statement": "The system shall provide in an internal package of `NaruServe-api` a `RestApp` implementation that holds the router and the dispatcher, parses each registered pattern at the registration call, records the registrations and the routing policy, builds the `Router` with that policy only at the route-table freeze, and rejects any registration or `routerPolicy` call after the freeze with `IllegalStateException`. Wave 3 adds no public factory for it.",
+      "reason": "Deferred frozen router build and NEW-only registration conflict with common after-listen registration.",
+      "evidence": [
+        "docs/spec/04.http-core.srs.md:1206",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RoutePattern.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java",
+        "IR-HTTP-005",
+        "FR-ROUTE-003",
+        "FR-ROUTE-008",
+        "FR-HTTP-002"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "text": "The implementation is a public class in a package documented as internal and not part of the API contract, it implements `RestApp`, and it holds the router and the dispatcher. [wave decision: Working app in wave 3; D-393] Decision: the implementation is public class `DefaultRestApp` in package `com.snoworca.naruserve.internal`, whose package javadoc states it is not API. [SDS 2026-10-19.naruserve.naruserve-v1-wave-3-3 SDS-AC-14]",
+          "checked": true,
+          "line": 1231
+        },
+        {
+          "id": "AC-2",
+          "text": "A registration with an invalid pattern (one that `RoutePattern.parse` rejects) throws at the registration call itself, before any freeze. [wave decision: Working app in wave 3; D-047; D-048]",
+          "checked": true,
+          "line": 1232
+        },
+        {
+          "id": "AC-3",
+          "text": "`app.get(\"/a/b\", h)` followed by `app.routerPolicy(RouterPolicy.builder().mergeSlashes(true).build())` makes `GET /a//b` reach `h` after the harness freeze, showing the policy applies to registrations made before it. [wave decision: Working app in wave 3; FR-ROUTE-006]",
+          "checked": true,
+          "line": 1233
+        },
+        {
+          "id": "AC-4",
+          "text": "The `Router` is constructed only at the freeze, and a duplicate of D-044 surfaces as the freeze's `RoutingConfigException`, not at the second registration call. [wave decision: Working app in wave 3; D-044] Decision: the freeze propagates the `RoutingConfigException` unchanged and leaves the app unfrozen, so `dispatcher()` keeps throwing `IllegalStateException`. [SDS 2026-10-19.naruserve.naruserve-v1-wave-3-3 SDS-AC-12]",
+          "checked": true,
+          "line": 1234
+        },
+        {
+          "id": "AC-5",
+          "text": "After the harness freeze, `app.get(...)`, `app.route(Method, path, h)`, `app.route(MethodSet, path, h)` and `app.routerPolicy(...)` each throw `IllegalStateException`, and `RouteBuilder` registration methods (`get`, `put`, ...) throw `IllegalStateException` too, including on a builder obtained from `app.route(path)` before the freeze. [wave decision: Settings after the freeze] Decision: the internal WebSocket-route hook also throws `IllegalStateException` after the freeze, and a refused call records nothing. [SDS 2026-10-19.naruserve.naruserve-v1-wave-3-3 SDS-AC-13]",
+          "checked": true,
+          "line": 1235
+        },
+        {
+          "id": "AC-6",
+          "text": "No public static method or constructor in package `com.snoworca.naruserve` returns a `RestApp` in wave 3. [wave decision: Working app in wave 3; D-111]",
+          "checked": true,
+          "line": 1236
+        },
+        {
+          "id": "AC-7",
+          "text": "The internal implementation (not the public `RestApp` interface) offers an internal WebSocket-route registration hook that records a WebSocket registration and passes it to `Router.addWebSocket` at the freeze; the test-fixtures harness uses it to register a WebSocket-only route, and wave 3 dispatches no handshake to that route (a matching upgrade request gets the same `426` as a plain `GET`) until wave 7 adds `app.ws`. [D-395; T06; wave decision: Working app in wave 3]",
+          "checked": true,
+          "line": 1237
+        }
+      ],
+      "mcp_read": "/tmp/naruserve-intake-core/mcp/FR-HTTP-008.json"
+    },
+    {
+      "id": "FR-HTTP-009",
+      "requirement_id": "FR-HTTP-009",
+      "classification": "potential-conflict",
+      "match_type": "potential-conflict",
+      "similarity_score": 1.0,
+      "similarity_basis": "Direct named existing contract and code trace, not embedding estimate.",
+      "scope": "HTTP",
+      "target": "wave-3",
+      "status": "verified",
+      "stability": "evolving",
+      "title": "Request path, raw path and path parameter accessors",
+      "file_path": "docs/spec/04.http-core.srs.md",
+      "heading_line": 1297,
+      "statement": "The system shall make `req.path()` return the decoded path without the query string, `req.rawPath()` return the raw, undecoded path without the query string, and `req.param(name)` return the decoded value of a variable of the matched pattern and throw an exception for a name absent from that pattern.",
+      "reason": "Scalar non-null params/full decoded path conflict with list/optional captures and mounted path views.",
+      "evidence": [
+        "docs/spec/04.http-core.srs.md:1297",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java",
+        "IR-HTTP-001",
+        "FR-ROUTE-005",
+        "IR-HTTP-003"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "text": "For `GET /files/a%20b?x=1` matched by `/files/:name`, `req.path()` returns `/files/a b`. [D-073] Decision: `req.path()` percent-decodes the raw path once as UTF-8, keeps `+` as `+`, and applies no `mergeSlashes`, trailing-slash or case policy. [SDS 2026-10-19.naruserve.naruserve-v1-wave-3-4 SDS-AC-1] Under `mergeSlashes(true)`, `GET /a//b` matched by `/a/b` gives `req.path()` = `/a//b` (the policy affects only route matching, not the decoded path). [wave 3 implementation decision]",
+          "checked": true,
+          "line": 1322
+        },
+        {
+          "id": "AC-2",
+          "text": "For the same request `req.rawPath()` returns `/files/a%20b`, without `?x=1`. [D-074; wave decision: Remaining markers]",
+          "checked": true,
+          "line": 1323
+        },
+        {
+          "id": "AC-3",
+          "text": "For the same request `req.param(\"name\")` returns `a b`. [D-075]",
+          "checked": true,
+          "line": 1324
+        },
+        {
+          "id": "AC-4",
+          "text": "`req.param(\"missing\")` for a name not in the matched pattern throws an exception instead of returning `null`. [D-075] Decision: the exception is `IllegalArgumentException` and its message contains the name. [SDS 2026-10-19.naruserve.naruserve-v1-wave-3-4 SDS-AC-2]",
+          "checked": true,
+          "line": 1325
+        }
+      ],
+      "mcp_read": "/tmp/naruserve-intake-core/mcp/FR-HTTP-009.json"
+    },
+    {
+      "id": "FR-HTTP-021",
+      "requirement_id": "FR-HTTP-021",
+      "classification": "potential-conflict",
+      "match_type": "potential-conflict",
+      "similarity_score": 1.0,
+      "similarity_basis": "Direct named existing contract and code trace, not embedding estimate.",
+      "scope": "HTTP",
+      "target": "wave-4",
+      "status": "verified",
+      "stability": "evolving",
+      "title": "Dispatcher pipeline and pre-request checks before route lookup (wave 4)",
+      "file_path": "docs/spec/04.http-core.srs.md",
+      "heading_line": 2920,
+      "statement": "The system shall provide a dispatcher that takes each exchange from an `HttpAdapter` that passed the lifecycle gate of FR-APP-009 and FR-APP-013, checks the asterisk-form `OPTIONS *` first, then rejects a raw path not starting with `/` with `400`, then rejects a raw path refused by the wave 2 path validator with `400`, and only then calls the router lookup and either runs the middleware pipeline and the matched `RouteHandler` with a `Request` and a `Response` or writes the automatic response, where the pre-request rejections are answered before any `Request` is built, so no middleware, handler or `onError` sees them, and the two `400` rejections carry the standard error body.",
+      "reason": "Preselect-one-route pipeline conflicts with mutable current layer/Route cursor.",
+      "evidence": [
+        "docs/spec/04.http-core.srs.md:2920",
+        "FR-HTTP-002",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+        "FR-APP-006",
+        "FR-APP-003",
+        "FR-ROUTE-004"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "text": "Through the harness, a `GET /users/7` request with `app.get(\"/users/:id\", h)` registered reaches `h` once with a `Request` and a `Response`, and the status, headers and body `h` wrote come back through the in-memory adapter. [D-394; D-397]",
+          "checked": true,
+          "line": 2945
+        },
+        {
+          "id": "AC-2",
+          "text": "With a recording handler registered through `app.route(Method.any(), \"/\", h)` and `app.route(Method.any(), \"/:x\", h)`, `OPTIONS *` is answered `204` before path validation (so `*` is not rejected with `400`), and a validator rejection happens before the router lookup: `GET /%2e%2e` and `GET /a%2Fb` (both rejected by the `PathValidator`) are answered `400`, no lookup exception escapes, and `h` registered on the matching pattern `/:x` records no call. [wave decision: Order before lookup; D-442; D-052] Decision: the dispatcher checks in this order: `OPTIONS` with raw path `*` gives `204`, any raw path not starting with `/` gives `400`, a `PathValidator` rejection gives `400`, then the router lookup runs. This order applies to requests that passed the lifecycle gate; the unrecognised-method-token `501` comes after the validator check and before a `Request` is built.",
+          "checked": true,
+          "line": 2946
+        },
+        {
+          "id": "AC-3",
+          "text": "A raw path that the wave 2 `PathValidator` rejects is answered `400` with the standard error body of FR-APP-006 (`code` `BAD_REQUEST`, `Content-Type: application/json; charset=UTF-8`) without a router lookup, and the validator sees the raw form with a single decoding: `/%2e%2e` and `/a%2Fb` are answered `400`, while `/%252e%252e` reaches a `/:x` route with `req.param(\"x\")` = `%2e%2e`. [wave-3 carried: path validator before lookup; D-052; wave-4 carried: standard error body; D-134] Decision: a pre-request `400` or `501` carries `Content-Type: application/json; charset=UTF-8` and the `Content-Length` of the standard body; for a `HEAD` method token the `Content-Length` is kept and no body bytes are written. [SDS 2026-10-19.naruserve.naruserve-v1-wave-4-4 SDS-AC-14]",
+          "checked": true,
+          "line": 2947
+        },
+        {
+          "id": "AC-4",
+          "text": "An unrecognised method token is answered `501`, a raw path not starting with `/` `400`, a validator rejection `400` and `OPTIONS *` `204`, each before a `Request` is built, so no middleware, handler or `onError` sees them; a recording global middleware, a recording `onError` and a recording handler registered through `app.route(Method.any(), \"/\", h)` and `app.route(Method.any(), \"/:x\", h)` record that they were never called. [wave-3 residual: pre-request rejections; D-422; wave decision: Pre-request rejections]",
+          "checked": true,
+          "line": 2948
+        },
+        {
+          "id": "AC-5",
+          "text": "In every handler and middleware call `req.method()` returns a non-null `Method` and `req.path()` a non-null decoded path. [wave-3 residual: pre-request rejections; I-014]",
+          "checked": true,
+          "line": 2949
+        },
+        {
+          "id": "AC-6",
+          "text": "The HTTP-level assertions of T01, T02, T03, T05 and T06 run as tests through the in-memory adapter and the harness in `./gradlew build`. [D-397]",
+          "checked": true,
+          "line": 2950
+        }
+      ],
+      "mcp_read": "/tmp/naruserve-intake-core/mcp/FR-HTTP-021.json"
+    },
+    {
+      "id": "FR-HTTP-023",
+      "requirement_id": "FR-HTTP-023",
+      "classification": "potential-conflict",
+      "match_type": "potential-conflict",
+      "similarity_score": 1.0,
+      "similarity_basis": "Direct named existing contract and code trace, not embedding estimate.",
+      "scope": "HTTP",
+      "target": "wave-4",
+      "status": "verified",
+      "stability": "evolving",
+      "title": "Asterisk-form OPTIONS and raw paths not starting with a slash (wave 4)",
+      "file_path": "docs/spec/04.http-core.srs.md",
+      "heading_line": 3106,
+      "statement": "The system shall answer the asterisk-form request `OPTIONS *` (raw path `*`) with `204` and an `Allow` header listing the methods of `Method.any()`, without route lookup or path validation, and answer any other raw path that does not start with `/` with `400` and the standard error body.",
+      "reason": "Asterisk OPTIONS and pre-request checks require oracle-specific updated semantics.",
+      "evidence": [
+        "docs/spec/04.http-core.srs.md:3106",
+        "FR-HTTP-005",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+        "FR-APP-006",
+        "FR-APP-015"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "text": "Through the in-memory adapter, `OPTIONS *` is answered `204` with `Allow` listing exactly the methods of `Method.any()` in `Method` declaration order and no body, even when no route is registered. [D-442; loop D: V1-006/V2-004] Decision: the `OPTIONS *` answer has no `Content-Length` header. [SDS 2026-10-19.naruserve.naruserve-v1-wave-4-4 SDS-AC-19]",
+          "checked": true,
+          "line": 3131
+        },
+        {
+          "id": "AC-2",
+          "text": "`OPTIONS *` reaches neither the router lookup nor the path validator: with a recording handler registered through `app.route(Method.any(), \"/\", h)` and `app.route(Method.any(), \"/:x\", h)`, `OPTIONS *` is still answered `204` with the `Allow` of AC-1 (not the validator's `400` for a raw path `*`), and `h` records no call. [D-442; D-052]",
+          "checked": true,
+          "line": 3132
+        },
+        {
+          "id": "AC-3",
+          "text": "A raw path `abc` and a raw path `*` with method `GET` are each answered `400` with the standard error body of FR-APP-006 (`code` `BAD_REQUEST`) without route lookup, and the access log records one line for each. [D-442; wave-4 carried: standard error body; wave decision: Pre-request rejections]",
+          "checked": true,
+          "line": 3133
+        },
+        {
+          "id": "AC-4",
+          "text": "The `OPTIONS *` and non-`/` cases are tested through the in-memory adapter in waves 3 and 4; their TinyHttpd counterparts are not asserted in this requirement. [I-021; wave decision: Adapter halves]",
+          "checked": true,
+          "line": 3134
+        }
+      ],
+      "mcp_read": "/tmp/naruserve-intake-core/mcp/FR-HTTP-023.json"
+    },
+    {
+      "id": "FR-HTTP-024",
+      "requirement_id": "FR-HTTP-024",
+      "classification": "potential-conflict",
+      "match_type": "potential-conflict",
+      "similarity_score": 1.0,
+      "similarity_basis": "Direct named existing contract and code trace, not embedding estimate.",
+      "scope": "HTTP",
+      "target": "wave-4",
+      "status": "verified",
+      "stability": "evolving",
+      "title": "Handler failure and unfinished-response handling through the wave 4 error path",
+      "file_path": "docs/spec/04.http-core.srs.md",
+      "heading_line": 3188,
+      "statement": "The system shall answer an exception thrown by a handler or middleware through the error path of FR-APP-005, which gives the standard `500` error body while the response is not committed and no `onError` responded, abort the response when the exception is thrown after commit or while streaming, and, when the chain returns with the response not started and no `next.run()`, log a developer warning through the app logger and finish the response with the status and headers set so far and an empty body without waiting for a timeout.",
+      "reason": "Auto-ending an unfinished returned handler conflicts with pending/deferred common response lifetime.",
+      "evidence": [
+        "docs/spec/04.http-core.srs.md:3188",
+        "FR-HTTP-006",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+        "FR-APP-005",
+        "FR-APP-006",
+        "FR-HTTP-016"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "text": "A handler that throws `RuntimeException` before writing anything is answered `500` with the standard error body of FR-APP-006 (`code` `INTERNAL_ERROR`) through the harness when no `onError` is registered. [D-127; D-132; wave-4 carried: interim failure handling replaced]",
+          "checked": true,
+          "line": 3213
+        },
+        {
+          "id": "AC-2",
+          "text": "A handler that throws a checked `IOException` after setting status `201` and header `X-A: 1` but before commit is answered `500` with the standard error body; the status and headers the handler set are dropped and the exception is not rethrown to the adapter. [D-127; D-132; D-134]",
+          "checked": true,
+          "line": 3214
+        },
+        {
+          "id": "AC-3",
+          "text": "A handler that throws after commit while the response is `STREAMING` (the only committed-but-incomplete state a handler can reach before wave 5) leaves the response `ABORTED` and the in-memory adapter reports the exchange closed abnormally instead of a `500`; a handler that throws after the response is `COMPLETED` (for example after `res.send(\"x\")`) leaves it `COMPLETED`, because abort is a no-op there, with the sent bytes unchanged and no `500`. [D-097; D-099; D-131; wave decision: abort() after completion]",
+          "checked": true,
+          "line": 3215
+        },
+        {
+          "id": "AC-4",
+          "text": "A handler that sets `status(202)` and `header(\"X-A\", \"1\")` and returns without a body write or `end()`, and a middleware that returns without responding or calling `next.run()`, each yield the status and headers set so far (`202` with `X-A: 1`, and `200` for the middleware case) with an empty body, the response is `COMPLETED`, and the app logger received one `warn` naming the method and path. [D-126] Decision: the finishing behaviour is a `warn` through the app logger followed by `end()`; with the response `STREAMING` the dispatcher runs the pending stream copy on the same adapter thread and logs no warning.",
+          "checked": true,
+          "line": 3216
+        }
+      ],
+      "mcp_read": "/tmp/naruserve-intake-core/mcp/FR-HTTP-024.json"
+    },
+    {
+      "id": "FR-HTTP-026",
+      "requirement_id": "FR-HTTP-026",
+      "classification": "potential-conflict",
+      "match_type": "potential-conflict",
+      "similarity_score": 1.0,
+      "similarity_basis": "Direct named existing contract and code trace, not embedding estimate.",
+      "scope": "HTTP",
+      "target": "wave-8",
+      "status": "verified",
+      "stability": "evolving",
+      "title": "Automatic responses for router lookup results with the standard error body (wave 4, restated in wave 8)",
+      "file_path": "docs/spec/04.http-core.srs.md",
+      "heading_line": 4286,
+      "statement": "The system shall, after the global and prefix middleware ran, answer the no-match result with `404`, the method-mismatch result with `405` and an `Allow` header, the automatic-OPTIONS result with `204` and an `Allow` header, the unsupported-method result for a disabled `TRACE` or `CONNECT` (a `Method` value) with `501` and the WebSocket-only result with `426` plus `Upgrade: websocket` and `Connection: Upgrade`, where the `404`, `405`, `426` and `501` answers carry the standard error body and the `204` answers carry no body, while an unrecognised method token stays a pre-request rejection answered `501` before any `Request` is built (FR-HTTP-021).",
+      "reason": "Automatic405/OPTIONS204 mapping conflicts with common404/OPTIONS200 final flow.",
+      "evidence": [
+        "docs/spec/04.http-core.srs.md:4286",
+        "FR-HTTP-022"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "text": "Through the harness, a request whose path matches no route is answered `404` with the standard error body of FR-APP-006 (`code` `NOT_FOUND`). [D-395; wave-4 carried: standard error body; D-134] Decision: the fallback answers only a response that is still `NEW`, through the request's `Response`, keeping the headers a middleware set; a response that is no longer `NEW` is left as it is. [SDS 2026-10-19.naruserve.naruserve-v1-wave-4-4 SDS-AC-15]",
+          "checked": true,
+          "line": 4311
+        },
+        {
+          "id": "AC-2",
+          "text": "With only `POST /p` registered, `GET /p` is answered `405` with `Allow` listing `POST, OPTIONS`, and with `GET /r` registered `DELETE /r` is answered `405` with `Allow` including the automatic `HEAD` and `OPTIONS`, both with the standard error body (`code` `METHOD_NOT_ALLOWED`). [D-395; T02; D-134] Decision: the `Allow` value joins the allowed methods (or `Method.any()` for `OPTIONS *`) with `, ` in `MethodSet` iteration (`Method` declaration) order.",
+          "checked": true,
+          "line": 4312
+        },
+        {
+          "id": "AC-3",
+          "text": "With `GET /r` and `POST /r` registered and no `OPTIONS` route, `OPTIONS /r` is answered `204` with `Allow` = `GET, HEAD, POST, OPTIONS`, no body and no `Content-Length` header. [D-395; T05; wave decision: Automatic response bodies]",
+          "checked": true,
+          "line": 4313
+        },
+        {
+          "id": "AC-4",
+          "text": "`TRACE /x` with `TRACE` disabled and `CONNECT /` with `CONNECT` disabled are each answered `501` with the standard error body (`code` `NOT_IMPLEMENTED`) after the global middleware ran, while a request with an unrecognised method token (FR-ROUTE-013) is answered `501` with the standard error body before any `Request` is built, as FR-HTTP-021 AC-4 states. [D-395; wave decision: 426 and 501; wave decision: Pre-request rejections; D-422] Decision: the dispatcher tells the two cases apart by whether the method token parses to a `Method` value.",
+          "checked": true,
+          "line": 4314
+        },
+        {
+          "id": "AC-5",
+          "text": "With a WebSocket-only route registered through the internal hook of FR-HTTP-008 AC-7, a plain `GET` to that path is answered `426` with headers `Upgrade: websocket` and `Connection: Upgrade` and the standard error body (`code` `UPGRADE_REQUIRED`), asserted through the in-memory adapter. [D-395; T06; wave decision: 426 over TinyHttpd; wave decision: 426 and 501] Decision: the upgrade flag passed to the lookup is `Router.isWebSocketUpgrade(token, Connection, Upgrade)` with each header's values joined by `, `.",
+          "checked": true,
+          "line": 4315
+        },
+        {
+          "id": "AC-6",
+          "text": "On a WebSocket-only hook route, a `GET` carrying `Upgrade: websocket` and `Connection: Upgrade` is handled by the WebSocket handshake of FR-WS-001 AC-7 (answered `101` with no `426`), while a `GET` without `Upgrade` on such a route is answered `426` with both headers and the standard error body (FR-WS-004 AC-1). [D-395; T06; FR-ROUTE-015; wave decision: FR-WS-001 AC-7]",
+          "checked": true,
+          "line": 4316
+        },
+        {
+          "id": "AC-7",
+          "text": "After `app.route(Method.any().except(Method.DELETE), \"/t\", h)`, `DELETE /t` through the in-memory harness is answered `405` with `Allow` = `GET, HEAD, POST, PUT, PATCH, OPTIONS` (the router's `Method` declaration order, FR-ROUTE-010 AC-1) and the standard error body. [D-395; T02]",
+          "checked": true,
+          "line": 4317
+        },
+        {
+          "id": "AC-8",
+          "text": "A recording global middleware runs once before each of the `404`, `405`, `426`, automatic `OPTIONS` and disabled-`TRACE`/`CONNECT` `501` answers above and not for the unrecognised-token `501`, and a recording `onError` records no call for any of them. [wave decision: Pre-request rejections; residual: onError scope; D-117]",
+          "checked": true,
+          "line": 4318
+        }
+      ],
+      "mcp_read": "/tmp/naruserve-intake-core/mcp/FR-HTTP-026.json"
+    },
+    {
+      "id": "FR-APP-003",
+      "requirement_id": "FR-APP-003",
+      "classification": "potential-conflict",
+      "match_type": "potential-conflict",
+      "similarity_score": 1.0,
+      "similarity_basis": "Direct named existing contract and code trace, not embedding estimate.",
+      "scope": "APP",
+      "target": "wave-4",
+      "status": "verified",
+      "stability": "evolving",
+      "title": "Middleware scope and pipeline order in the dispatcher",
+      "file_path": "docs/spec/05.application.srs.md",
+      "heading_line": 833,
+      "statement": "The system shall execute global and matching segment-boundary prefix middleware in their combined registration order, followed by matched route middleware and its handler, or the automatic/static fallback. All continuations remain synchronous and single-use.",
+      "reason": "All app middleware before route conflicts with mixed ordered layers and dynamic prefix capture.",
+      "evidence": [
+        "docs/spec/05.application.srs.md:833",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+        "IR-APP-002",
+        "FR-ROUTE-006",
+        "FR-HTTP-001",
+        "FR-DX-008"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "text": "With global middleware `g1`, `g2`, prefix middleware `p1` on `/api` registered before `g2` and `p2` on `/api`, and `app.route(\"/api/users\").use(r1).use(r2).get(h)`, a `GET /api/users` records `g1, g2, p1, p2, r1, r2, h`, and `app.get(\"/b\", r3, h2)` makes `GET /b` record `g1, g2, r3, h2`. [D-120; D-119; T35] Decision: all global middleware run first in registration order, then all matching prefix middleware in registration order, however the two kinds of registration interleave. [SDS 2026-10-19.naruserve.naruserve-v1-wave-4-4 SDS-AC-1] User-approved revision: FR-DX-008 overrides scope regrouping: global and matching prefix middleware execute in their combined registration order, then route middleware.",
+          "checked": true,
+          "line": 858
+        },
+        {
+          "id": "AC-2",
+          "text": "Prefix `/api` runs for `/api` and `/api/users` and not for `/apix` or `/ap`; prefix `/api/` behaves as `/api`, and prefix `/` runs for every path. [D-118; T35] Decision: a trailing `/` of a prefix is ignored and `/` covers every path. User-approved revision: FR-DX-008 overrides scope regrouping: global and matching prefix middleware execute in their combined registration order, then route middleware.",
+          "checked": true,
+          "line": 859
+        },
+        {
+          "id": "AC-3",
+          "text": "With `RouterPolicy.builder().caseInsensitive(true)` the `/api` prefix middleware runs for `/API/users`, and with `mergeSlashes(true)` it runs for `//api//users`, so every path that reaches a route under the prefix runs the prefix middleware. [D-118] Decision: the prefix comparison uses the same case and slash normalisation that the router applies under the app's `RouterPolicy`. User-approved revision: FR-DX-008 overrides scope regrouping: global and matching prefix middleware execute in their combined registration order, then route middleware.",
+          "checked": true,
+          "line": 860
+        },
+        {
+          "id": "AC-4",
+          "text": "Inside prefix middleware and the handler, `req.path()` still returns the full decoded path (for example `/api/users`, not `/users`). [D-118; D-137] Decision: NaruServe does not strip the mount prefix from `req.path()` and has no `baseUrl`. User-approved revision: FR-DX-008 overrides scope regrouping: global and matching prefix middleware execute in their combined registration order, then route middleware.",
+          "checked": true,
+          "line": 861
+        },
+        {
+          "id": "AC-5",
+          "text": "A request that matches no route runs global and matching prefix middleware and then receives the `404` of the fallback point; route middleware of other routes does not run. [D-121; D-117] Decision: for a lookup result other than `MATCHED` the dispatcher builds the `Request` with the parsed `Method` and empty params and runs the global and matching prefix middleware with an empty route middleware list and the fallback answer as the terminal step. [SDS 2026-10-19.naruserve.naruserve-v1-wave-4-4 SDS-AC-6] User-approved revision: FR-DX-008 overrides scope regrouping: global and matching prefix middleware execute in their combined registration order, then route middleware.",
+          "checked": true,
+          "line": 862
+        },
+        {
+          "id": "AC-6",
+          "text": "A recording global middleware runs once each for a `405` (method mismatch), a `426` (WebSocket-only route without upgrade), an automatic `OPTIONS /r` `204`, a `501` for `TRACE /x` with `TRACE` disabled and a `501` for `CONNECT /`, before the automatic response is written. [D-117; wave decision: Pre-request rejections] User-approved revision: FR-DX-008 overrides scope regrouping: global and matching prefix middleware execute in their combined registration order, then route middleware.",
+          "checked": true,
+          "line": 863
+        },
+        {
+          "id": "AC-7",
+          "text": "A global middleware does not run for the pre-request rejections (unrecognised method token `501`, raw path not starting with `/` `400`, `PathValidator` rejection `400`, `OPTIONS *` `204`) nor for the lifecycle-gate `503`s of FR-APP-009 and FR-APP-013. [wave decision: Pre-request rejections; wave decision: Lifecycle gate] User-approved revision: FR-DX-008 overrides scope regrouping: global and matching prefix middleware execute in their combined registration order, then route middleware.",
+          "checked": true,
+          "line": 864
+        },
+        {
+          "id": "AC-8",
+          "text": "For a matched route all middleware and the handler run on the adapter thread that called the dispatcher, one after the other. [D-128]",
+          "checked": true,
+          "line": 865
+        }
+      ],
+      "mcp_read": "/tmp/naruserve-intake-core/mcp/FR-APP-003.json"
+    },
+    {
+      "id": "FR-APP-004",
+      "requirement_id": "FR-APP-004",
+      "classification": "potential-conflict",
+      "match_type": "potential-conflict",
+      "similarity_score": 1.0,
+      "similarity_basis": "Direct named existing contract and code trace, not embedding estimate.",
+      "scope": "APP",
+      "target": "wave-4",
+      "status": "verified",
+      "stability": "evolving",
+      "title": "next.run() contract",
+      "file_path": "docs/spec/05.application.srs.md",
+      "heading_line": 935,
+      "statement": "The system shall let each middleware invocation continue the chain at most once through `next.run()` or `next.error(e)`, return from `next.run()` only after every downstream middleware and the handler returned, deliver the response of a middleware that responds without calling `next.run()` with no later middleware or handler run, and throw `IllegalStateException` for a second continuation within one invocation and for a continuation after the response completed or the request ended.",
+      "reason": "Same-thread/single-use/initial-return continuation guards conflict with observed deferred/repeated/explicit post-response next.",
+      "evidence": [
+        "docs/spec/05.application.srs.md:935",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+        "FR-APP-003",
+        "FR-HTTP-016"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "text": "A middleware that calls `next.run()` twice gets `IllegalStateException` from the second call, and the downstream middleware and handler ran once. [D-122; T35]",
+          "checked": true,
+          "line": 960
+        },
+        {
+          "id": "AC-2",
+          "text": "A middleware that calls `next.run()` after `res.send(\"x\")` completed the response gets `IllegalStateException` and no downstream middleware runs; a `Next` kept and called after the request ended (from the test thread after the in-memory exchange finished) throws `IllegalStateException`. [D-123] Decision: `next.run()` throws when the response is `COMPLETED` or `ABORTED` or the request has ended, and no downstream step runs. [SDS 2026-10-19.naruserve.naruserve-v1-wave-4-4 SDS-AC-10]",
+          "checked": true,
+          "line": 961
+        },
+        {
+          "id": "AC-3",
+          "text": "A middleware that records a marker after `next.run()` returns sees the handler's marker already recorded and `res.isCommitted()` true for a handler that called `res.send(...)`. [D-124] Decision: an exception thrown downstream propagates out of `next.run()` unchanged and the dispatcher hands it to the error path once, so a middleware may wrap `next.run()` in `try`/`catch`. [SDS 2026-10-19.naruserve.naruserve-v1-wave-4-4 SDS-AC-11]",
+          "checked": true,
+          "line": 962
+        },
+        {
+          "id": "AC-4",
+          "text": "A middleware that writes `res.status(401).send(\"no\")` and returns without `next.run()` delivers `401` with body `no`, and the later middleware and the handler record no call. [D-125; T36]",
+          "checked": true,
+          "line": 963
+        },
+        {
+          "id": "AC-5",
+          "text": "Calling `next.error(e)` after `next.run()` in the same invocation, or `next.run()` after `next.error(e)`, throws `IllegalStateException`; `next.error(null)` throws `NullPointerException`. [D-122; D-116] Decision: `next.run()` and `next.error(e)` together count as the single continuation of one invocation. Decision: `next.error(null)` throws before the continuation is consumed. [SDS 2026-10-19.naruserve.naruserve-v1-wave-4-4 SDS-AC-12]",
+          "checked": true,
+          "line": 964
+        },
+        {
+          "id": "AC-6",
+          "text": "`next.run()` runs the downstream chain on the calling thread, and no middleware or handler runs after the dispatcher returned to the adapter for a non-streaming response. [D-128]",
+          "checked": true,
+          "line": 965
+        }
+      ],
+      "mcp_read": "/tmp/naruserve-intake-core/mcp/FR-APP-004.json"
+    },
+    {
+      "id": "CON-APP-002",
+      "requirement_id": "CON-APP-002",
+      "classification": "potential-conflict",
+      "match_type": "potential-conflict",
+      "similarity_score": 1.0,
+      "similarity_basis": "Direct named existing contract and code trace, not embedding estimate.",
+      "scope": "APP",
+      "target": "wave-4",
+      "status": "verified",
+      "stability": "evolving",
+      "title": "Every new RestApp or RouteBuilder configuration method calls the NEW-state guard first",
+      "file_path": "docs/spec/05.application.srs.md",
+      "heading_line": 2637,
+      "statement": "The system shall make every `RestApp` and `RouteBuilder` configuration method that a later wave adds (such as `ws`, `staticFiles`, `multipart` and `jsonCodec`) call the internal guard `AppLifecycle.requireConfigurable` before it records anything.",
+      "reason": "Unconditional NEW-only guard conflicts with common registration after listen; extension-only settings remain guarded.",
+      "evidence": [
+        "docs/spec/05.application.srs.md:2637"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "text": "The reflection test of FR-APP-002 AC-4 lists every non-static `RestApp` method returning `RestApp` and every `RouteBuilder` registration method, including those a later wave adds, and finds each one rejected with `IllegalStateException` in `RUNNING` with nothing recorded.",
+          "checked": true,
+          "line": 2662
+        }
+      ],
+      "mcp_read": "/tmp/naruserve-intake-core/mcp/CON-APP-002.json"
+    },
+    {
+      "id": "FR-STATIC-001",
+      "requirement_id": "FR-STATIC-001",
+      "classification": "potential-conflict",
+      "match_type": "potential-conflict",
+      "similarity_score": 1.0,
+      "similarity_basis": "Direct named existing contract and code trace, not embedding estimate.",
+      "scope": "STATIC",
+      "target": "wave-6",
+      "status": "verified",
+      "stability": "evolving",
+      "title": "Static mount mapping, directory index, several mounts, routes first, global middleware and the trailing-slash redirect",
+      "file_path": "docs/spec/10.static-files.srs.md",
+      "heading_line": 253,
+      "statement": "The system shall map `prefix + relative path` of a static mount to the file under its directory, serve the configured index file for a directory path ending in `/`, let several mounts with different prefixes coexist, consult static mounts only after explicit routes, run global middleware on requests that end in a static file, and redirect a directory request without a trailing slash with `301` to the same path plus `/`.",
+      "reason": "Always routes-before-static precedence must be reconciled with common ordered stack while retaining file serving extension.",
+      "evidence": [
+        "docs/spec/10.static-files.srs.md:253",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+        "IR-STATIC-001",
+        "FR-HTTP-022",
+        "FR-APP-003",
+        "FR-APP-015"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "text": "With `app.staticFiles(\"/\", root)`, `GET /` returns the bytes of `root/index.html` and `GET /assets/app.js` returns the bytes of `root/assets/app.js`, both `200`. [D-256; T27]",
+          "checked": true,
+          "line": 278
+        },
+        {
+          "id": "AC-2",
+          "text": "`GET /docs/` returns `root/docs/index.html`, and with `index(\"main.html\")` it returns `root/docs/main.html` instead. [D-257; D-261; T27]",
+          "checked": true,
+          "line": 279
+        },
+        {
+          "id": "AC-3",
+          "text": "With the mounts `/` on `rootA` and `/static` on `rootB`, `GET /static/x.css` returns `rootB/x.css` and `GET /a.txt` returns `rootA/a.txt`; with `spaFallback(true)` on the `/` mount, `GET /static/x.css` with `Accept: text/html` still returns `rootB/x.css`, and `GET /static/missing.css` with `Accept: text/html` receives the SPA index of the `/` mount. Decision: mounts are consulted in registration order and a miss in one mount falls through to the next, as with several Express `static` middlewares; SPA fallback runs only after every mount missed the file lookup, and then the first registered mount with `spaFallback(true)` whose prefix matches the path serves its index. [D-258; D-265]",
+          "checked": true,
+          "line": 280
+        },
+        {
+          "id": "AC-4",
+          "text": "With an explicit `GET /index.html` route and a `/` mount whose root holds `index.html`, `GET /index.html` returns the route's body. [D-259; T27]",
+          "checked": true,
+          "line": 281
+        },
+        {
+          "id": "AC-5",
+          "text": "A global middleware registered through `app.use` that sets `X-Mw: 1` runs on `GET /assets/app.js` served from a mount, the response carries `X-Mw: 1`, a global middleware that ends the response itself prevents the file from being sent, and one access-log line is written for the static request. [D-407; T35]",
+          "checked": true,
+          "line": 282
+        },
+        {
+          "id": "AC-6",
+          "text": "`GET /docs?x=1` for the directory `root/docs` is answered `301` with `Location: /docs/?x=1`; `GET /my%20docs` is answered `301` with `Location: /my%20docs/` built from the raw encoded path; and `GET //assets` is answered `404`, so no `Location` starts with `//` (a T29 case). [wave decision: SPA fallback exclusions; D-267; T29] Decision: the `301` applies to `GET` and `HEAD` of a directory without a trailing `/`, with `Location` equal to the raw path plus `/` plus `?` and the raw query when a query is present. [SDS 2026-10-19.naruserve.naruserve-v1-wave-6-6 SDS-AC-4]",
+          "checked": true,
+          "line": 283
+        }
+      ],
+      "mcp_read": "/tmp/naruserve-intake-core/mcp/FR-STATIC-001.json"
+    },
+    {
+      "id": "FR-STATIC-002",
+      "requirement_id": "FR-STATIC-002",
+      "classification": "potential-conflict",
+      "match_type": "potential-conflict",
+      "similarity_score": 1.0,
+      "similarity_basis": "Direct named existing contract and code trace, not embedding estimate.",
+      "scope": "STATIC",
+      "target": "wave-6",
+      "status": "verified",
+      "stability": "evolving",
+      "title": "Method handling on static paths: 405 Allow GET, HEAD, fall-through after a route's method mismatch, OPTIONS and 501 order",
+      "file_path": "docs/spec/10.static-files.srs.md",
+      "heading_line": 355,
+      "statement": "The system shall answer a non-`GET`/`HEAD` request with `405` and `Allow: GET, HEAD` only when a `GET` for the same path would be answered from the file system by a static mount, let `GET` and `HEAD` fall through to the static mounts when a route matches the path but not the method, keep the route's own `405` and `Allow` otherwise, answer unknown or disabled methods with the router's `501` before any static mount lookup, run the static path checks before the static method decision, and never serve a path owned by a WebSocket route from a static mount.",
+      "reason": "Static mismatch405/fallback needs explicit common-vs-extension boundary.",
+      "evidence": [
+        "docs/spec/10.static-files.srs.md:355",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+        "IR-STATIC-001",
+        "FR-ROUTE-010",
+        "FR-HTTP-022",
+        "FR-HTTP-021"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "text": "Under `app.staticFiles(\"/\", root)` with no route for the path, `POST /assets/app.js`, `PUT /assets/app.js` and `DELETE /docs/` (a directory with an index file) are answered `405` with `Allow: GET, HEAD`, and the file is not sent. [D-260] Decision: a method other than `GET` or `HEAD` gets the static `405` only when a `GET` would be served; otherwise the router's answer (`404` or the route's `405`) stands. [SDS 2026-10-19.naruserve.naruserve-v1-wave-6-6 SDS-AC-8]",
+          "checked": true,
+          "line": 380
+        },
+        {
+          "id": "AC-2",
+          "text": "`OPTIONS /assets/app.js` on a static-only path is answered `405` with `Allow: GET, HEAD`, the automatic `204` of D-395 applies to explicit routes only, and an unknown method token or a disabled `TRACE`/`CONNECT` on that path is answered with the router's `501` before any static mount lookup. Decision: the order is the FR-HTTP-021 AC-2 pre-check order (`OPTIONS *` `204`, raw path not starting with `/` `400`, `PathValidator` `400`, unknown-token `501`), then the router lookup with the disabled `TRACE`/`CONNECT` `501` of FR-HTTP-022 AC-4, then the static mounts, so a `PathValidator` `400` still comes before either `501`. [wave decision: OPTIONS on a static-only path; D-260; D-395]",
+          "checked": true,
+          "line": 381
+        },
+        {
+          "id": "AC-3",
+          "text": "With only `POST /login` registered and `root/login` a file, `GET /login` and `HEAD /login` are served from the mount; with `spaFallback(true)` and no file `GET /login` (with `Accept: text/html`) receives the SPA index; with no mount serving it `GET /login` receives the route's `405` with the route's own `Allow`; and `PUT /login` receives the route's `405` with the route's own `Allow`, with no `Allow` values merged. [wave decision: Static files after a route's method mismatch; D-259; D-260]",
+          "checked": true,
+          "line": 382
+        },
+        {
+          "id": "AC-4",
+          "text": "A path that a WebSocket route of the router owns is never served from a static mount or by SPA fallback, even when a file of that name exists. Decision: in wave 6, where `app.ws` does not exist yet, the test registers the WebSocket route through the internal router. [wave decision: Static files after a route's method mismatch; D-265]",
+          "checked": true,
+          "line": 383
+        },
+        {
+          "id": "AC-5",
+          "text": "The `405` with `Allow: GET, HEAD` applies only when a `GET` for the same path would be answered from the file system (a file, a directory index, a directory listing or the trailing-slash `301`); SPA fallback content does not count, so under a `/` mount with `spaFallback(true)` `POST /missing`, `POST /api/typo` and `POST /.env` receive `404` (a T27 case). A path that D-052 or D-268 rejects receives `400` for every recognised, enabled method because path validation runs before method handling: `POST /a/..%2Fb` and paths with an encoded `/` or `NUL` get the `PathValidator` `400` of FR-HTTP-021; for a path that no explicit route matches and that lies under a static mount prefix, the static D-268 check runs before the static `405`/`404` method decision, so `GET`, `HEAD`, `POST`, `PUT`, `DELETE` and `OPTIONS` of `/%252e%252e/secret.txt` and `/a%252Fb` under a `/` mount all receive `400` (test cases). Explicit routes still take precedence: with `app.post(\"/:x\", h)` registered, `POST /a%252Fb` reaches `h`. [residual: served only by a static mount; D-260; D-262; D-265; D-268; D-271; T27]",
+          "checked": true,
+          "line": 384
+        }
+      ],
+      "mcp_read": "/tmp/naruserve-intake-core/mcp/FR-STATIC-002.json"
+    },
+    {
+      "id": "IR-ROUTE-004",
+      "requirement_id": "IR-ROUTE-004",
+      "classification": "potential-update",
+      "match_type": "potential-update",
+      "similarity_score": 1.0,
+      "similarity_basis": "Direct named existing contract and code trace, not embedding estimate.",
+      "scope": "ROUTE",
+      "target": "wave-2",
+      "status": "verified",
+      "stability": "evolving",
+      "title": "Lookup result contract and precedence",
+      "file_path": "docs/spec/03.routing.srs.md",
+      "heading_line": 915,
+      "statement": "The system shall make a route lookup, which takes the raw method token, the request path and an upgrade flag, return an engine-free result that is exactly one of matched (handler, path parameters, actual method, route kind, automatic-`HEAD` flag), method mismatch (with an `Allow` set), automatic OPTIONS (with an `Allow` set), WebSocket-only, unsupported method or no match, chosen in this order: unsupported method; no match; matched; automatic OPTIONS; automatic `HEAD`; WebSocket-only; method mismatch.",
+      "reason": "Single lookup result must support ordered layer/Route cursor and multi-valued captures.",
+      "evidence": [
+        "docs/spec/03.routing.srs.md:915",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouteMatch.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java",
+        "CON-ROUTE-001",
+        "FR-ROUTE-004"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "text": "The result type exposes exactly six kinds and each lookup returns exactly one; the matched kind carries the handler, the path parameters, the actual method (the request method for a direct match, `GET` under automatic `HEAD` and for a WebSocket match; it does not decide the wave 3 `req.method()` value, D-398), the route kind and the automatic-`HEAD` flag, and the method-mismatch and automatic-OPTIONS kinds carry an `Allow` `MethodSet`. [D-390] [SDS 2026-10-19.naruserve.naruserve-v1-wave-2-3 SDS-AC-1] A field a kind does not carry reads as null (handler, method, route kind, allow) and params reads as an empty map.",
+          "checked": true,
+          "line": 940
+        },
+        {
+          "id": "AC-2",
+          "text": "An unrecognised method token yields unsupported method even when no pattern matches the path, and a recognised method on a path no pattern matches yields no match. [wave decision: lookup result order]",
+          "checked": true,
+          "line": 941
+        },
+        {
+          "id": "AC-3",
+          "text": "On a matched path a route of the request method wins over automatic OPTIONS and automatic `HEAD`, which win over WebSocket-only, which wins over method mismatch. [wave decision: lookup result order]",
+          "checked": true,
+          "line": 942
+        },
+        {
+          "id": "AC-4",
+          "text": "The lookup takes the raw, undecoded path as received in the request target, so a lookup of `GET /files/%252e` against `GET /files/:name` yields `name` = `%2e`; the path is checked with the path validator before any result is chosen, so a rejected path such as `/a%zz` fails with `IllegalArgumentException` for every method token, and \"whatever the path\" elsewhere in this scope means whatever accepted path. [D-051; loop W residual: validator does not decode] [SDS 2026-10-19.naruserve.naruserve-v1-wave-2-3 SDS-AC-2] The `IllegalArgumentException` names the path and is thrown before the method token is read.",
+          "checked": true,
+          "line": 943
+        },
+        {
+          "id": "AC-5",
+          "text": "The upgrade flag is ignored unless the method token is `GET`; registering a route after the freeze fails with `IllegalStateException`, a lookup before a successful freeze fails with `IllegalStateException`, and the routing configuration error is an exception type of its own (name decided under C-07), distinct from `IllegalStateException` and `IllegalArgumentException`. [wave decision: route kind; D-058]",
+          "checked": true,
+          "line": 944
+        }
+      ],
+      "mcp_read": "/tmp/naruserve-intake-core/mcp/IR-ROUTE-004.json"
+    },
+    {
+      "id": "FR-ROUTE-009",
+      "requirement_id": "FR-ROUTE-009",
+      "classification": "potential-update",
+      "match_type": "potential-update",
+      "similarity_score": 1.0,
+      "similarity_basis": "Direct named existing contract and code trace, not embedding estimate.",
+      "scope": "ROUTE",
+      "target": "wave-2",
+      "status": "verified",
+      "stability": "evolving",
+      "title": "No-match result",
+      "file_path": "docs/spec/03.routing.srs.md",
+      "heading_line": 1001,
+      "statement": "The system shall return the no-match result for a recognised, routable method when no pattern of any route kind matches the path, including an `OPTIONS` request to such a path.",
+      "reason": "No-match contract needs terminal stack fallthrough integration.",
+      "evidence": [
+        "docs/spec/03.routing.srs.md:1001",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java",
+        "CON-ROUTE-001"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "text": "With only `GET /users` registered, `GET /nope` yields no match. [D-060]",
+          "checked": true,
+          "line": 1026
+        },
+        {
+          "id": "AC-2",
+          "text": "With only `GET /users` registered, `OPTIONS /nope` yields no match, not automatic OPTIONS. [wave decision: lookup result order]",
+          "checked": true,
+          "line": 1027
+        },
+        {
+          "id": "AC-3",
+          "text": "A path that matches only a WebSocket pattern is not a no-match path for any method. [wave decision: lookup result order]",
+          "checked": true,
+          "line": 1028
+        }
+      ],
+      "mcp_read": "/tmp/naruserve-intake-core/mcp/FR-ROUTE-009.json"
+    },
+    {
+      "id": "FR-ROUTE-001",
+      "requirement_id": "FR-ROUTE-001",
+      "classification": "potential-update",
+      "match_type": "potential-update",
+      "similarity_score": 1.0,
+      "similarity_basis": "Direct named existing contract and code trace, not embedding estimate.",
+      "scope": "ROUTE",
+      "target": "wave-2",
+      "status": "verified",
+      "stability": "evolving",
+      "title": "Method.any() excludes TRACE and CONNECT",
+      "file_path": "docs/spec/03.routing.srs.md",
+      "heading_line": 180,
+      "statement": "The system shall make `Method.any()` contain exactly `GET`, `HEAD`, `POST`, `PUT`, `PATCH`, `DELETE` and `OPTIONS`, leaving out `TRACE` and `CONNECT` whatever router policy is in effect.",
+      "reason": "Preserve legacy Method.any exclusion as an extension; introduce common all/method scope without silently changing this additional API.",
+      "evidence": [
+        "docs/spec/03.routing.srs.md:180",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/Method.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/MethodSet.java",
+        "IR-ROUTE-001",
+        "FR-ROUTE-014"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "text": "`Method.any()` contains exactly `GET`, `HEAD`, `POST`, `PUT`, `PATCH`, `DELETE`, `OPTIONS` and contains neither `TRACE` nor `CONNECT`. [D-036]",
+          "checked": true,
+          "line": 205
+        },
+        {
+          "id": "AC-2",
+          "text": "`Method.any().except(Method.DELETE)` equals `Method.of(Method.GET, Method.HEAD, Method.POST, Method.PUT, Method.PATCH, Method.OPTIONS)`. [D-037]",
+          "checked": true,
+          "line": 206
+        },
+        {
+          "id": "AC-3",
+          "text": "`Method.any()` returns the same members when a router has `TRACE` and `CONNECT` routing enabled; `TRACE` or `CONNECT` enters a `MethodSet` only when named, as in `Method.of(Method.TRACE)`. [wave decision: TRACE/CONNECT policy]",
+          "checked": true,
+          "line": 207
+        }
+      ],
+      "mcp_read": "/tmp/naruserve-intake-core/mcp/FR-ROUTE-001.json"
+    },
+    {
+      "id": "IR-HTTP-001",
+      "requirement_id": "IR-HTTP-001",
+      "classification": "potential-update",
+      "match_type": "potential-update",
+      "similarity_score": 1.0,
+      "similarity_basis": "Direct named existing contract and code trace, not embedding estimate.",
+      "scope": "HTTP",
+      "target": "wave-3",
+      "status": "verified",
+      "stability": "evolving",
+      "title": "Request and Response public surface of wave 3",
+      "file_path": "docs/spec/04.http-core.srs.md",
+      "heading_line": 38,
+      "statement": "The system shall expose Request and Response interfaces using unambiguous attribute writes, attributeAs typed reads, removeAttribute, and one nullable Object send method with runtime text/byte/JSON/empty dispatch; all other existing request/response operations remain available.",
+      "reason": "Request list/optional params and mount URL views extend API.",
+      "evidence": [
+        "docs/spec/04.http-core.srs.md:38",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/Response.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/Method.java",
+        "IR-ROUTE-001",
+        "FR-DX-001"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "text": "`Request` is a public interface in `com.snoworca.naruserve` declaring `method()`, `path()`, `rawPath()`, `param(name)`, `query(name)`, `queries(name)`, `header(name)`, `headers(name)`, `remoteAddress()`, `isSecure()`, `lastEventId()`, `attribute(key, value)` and `attributeAs(key, type)`, with `method()` returning `Method`. [D-071] Decision: the write overload `attribute(String, @Nullable Object)` returns `void` and the read overload is generic `<T> @Nullable T attributeAs(String, Class<T>)`, so a literal `null` second argument unambiguously removes the attribute. [SDS 2026-10-19.naruserve.naruserve-v1-wave-3-1 SDS-AC-1]",
+          "checked": true,
+          "line": 63
+        },
+        {
+          "id": "AC-2",
+          "text": "`Response` is a public interface in `com.snoworca.naruserve` declaring `status(code)`, `header(name, value)`, `send(@Nullable Object)`, `html(String)`, `stream(InputStream, contentType)`, `end()`, `isCommitted()` and `abort(error)`. [D-071] Decision: `status` and `header` return the receiver; `send`, `html`, `stream`, `end` and `abort` return `void`. [SDS 2026-10-19.naruserve.naruserve-v1-wave-3-1 SDS-AC-2]",
+          "checked": true,
+          "line": 64
+        },
+        {
+          "id": "AC-3",
+          "text": "At the wave 3 merge, a reflection test finds no method named `body`, `form`, `file`, `files`, `parts`, `json`, `download`, `cache`, `sse`, `cookie`, `getCookies`, `addCookie`, `service` or `application` on `Request` or `Response`, even where the parameter and return types of such a method exist in wave 3; the later waves of D-392 add them. [D-392; wave decision: Request and response surface]",
+          "checked": true,
+          "line": 65
+        },
+        {
+          "id": "AC-4",
+          "text": "The public API package is JSpecify NullMarked. Nullable accessors and nullable parameters are annotated, including send(Object), JSON values, attribute write values and abort(error); typed attributeAs reads are nullable. A reflection test checks the current public surface.",
+          "checked": true,
+          "line": 66
+        },
+        {
+          "id": "AC-5",
+          "text": "A Kotlin source test compiles and runs calls to the wave 3 `Request` and `Response` methods, assigning `req.query(\"q\")` to `String?` and `req.path()` to `String` without platform types. [D-072] Decision: the Kotlin test routes a request through the test-fixtures `TestApp` harness and calls every wave 3 `Request` and `Response` method from a Kotlin lambda. [SDS 2026-10-19.naruserve.naruserve-v1-wave-3-1 SDS-AC-4]",
+          "checked": true,
+          "line": 67
+        }
+      ],
+      "mcp_read": "/tmp/naruserve-intake-core/mcp/IR-HTTP-001.json"
+    },
+    {
+      "id": "IR-HTTP-002",
+      "requirement_id": "IR-HTTP-002",
+      "classification": "potential-update",
+      "match_type": "potential-update",
+      "similarity_score": 1.0,
+      "similarity_basis": "Direct named existing contract and code trace, not embedding estimate.",
+      "scope": "HTTP",
+      "target": "wave-3",
+      "status": "verified",
+      "stability": "evolving",
+      "title": "RouteHandler functional interface",
+      "file_path": "docs/spec/04.http-core.srs.md",
+      "heading_line": 126,
+      "statement": "The system shall provide `RouteHandler` as a public `@FunctionalInterface` in `com.snoworca.naruserve` whose single abstract method is `void handle(Request req, Response res) throws Exception`.",
+      "reason": "Keep terminal handler; add next-aware and API21 async completion callbacks.",
+      "evidence": [
+        "docs/spec/04.http-core.srs.md:126",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/RouteHandler.java",
+        "IR-HTTP-001",
+        "CON-ROUTE-006"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "text": "A reflection test finds `RouteHandler` public, annotated `@FunctionalInterface` and declaring exactly one abstract method `handle(Request, Response)` with return type `void` and `throws Exception`. [D-045]",
+          "checked": true,
+          "line": 151
+        },
+        {
+          "id": "AC-2",
+          "text": "A Java lambda that throws a checked `IOException` and a Kotlin lambda `{ req, res -> }` both compile as `RouteHandler` without wrapping. [D-045]",
+          "checked": true,
+          "line": 152
+        }
+      ],
+      "mcp_read": "/tmp/naruserve-intake-core/mcp/IR-HTTP-002.json"
+    },
+    {
+      "id": "IR-HTTP-003",
+      "requirement_id": "IR-HTTP-003",
+      "classification": "potential-update",
+      "match_type": "potential-update",
+      "similarity_score": 1.0,
+      "similarity_basis": "Direct named existing contract and code trace, not embedding estimate.",
+      "scope": "HTTP",
+      "target": "wave-3",
+      "status": "verified",
+      "stability": "evolving",
+      "title": "HttpAdapter SPI exchange data contract",
+      "file_path": "docs/spec/04.http-core.srs.md",
+      "heading_line": 198,
+      "statement": "The system shall define an `HttpAdapter` SPI in `NaruServe-api` through which an adapter gives the core the method token, the raw request-target path, the raw query string, the headers, a streaming body `InputStream`, the remote address and the secure flag of each request, and through which the core sends status, headers and a streaming body `OutputStream`. The core decodes the raw path and raw query once; adapters never pass decoded values.",
+      "reason": "Already permits exchange outliving initial handle; finish/abort lifecycle must work in all actual adapters.",
+      "evidence": [
+        "docs/spec/04.http-core.srs.md:198",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpAdapter.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpExchange.java",
+        "FR-ROUTE-005"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "text": "The SPI exposes, per request, the request line as the method token, the raw request-target path, the raw query string (or its absence) and the HTTP version, plus the header names and values in received order, a body `InputStream`, the remote address and the secure flag. [D-105] Decision: the headers are exposed as a `List<Map.Entry<String, String>>` in received order with duplicates kept, not as a `Map`. [SDS 2026-10-19.naruserve.naruserve-v1-wave-3-2 SDS-AC-1]",
+          "checked": true,
+          "line": 223
+        },
+        {
+          "id": "AC-2",
+          "text": "The SPI accepts from the core a status code, response headers and a body `OutputStream`, and the core writes status and headers before the first body byte. [D-105] Decision: status, headers and the content length (`-1` when unknown) pass in one `commit` call that returns the body `OutputStream`, and a second start of the response throws `IllegalStateException`. [SDS 2026-10-19.naruserve.naruserve-v1-wave-3-2 SDS-AC-2] The exchange outlives `ExchangeHandler#handle` until the core calls `finish` or `abort`, and the adapter may force-close it only at its stop deadline; `abort()` is idempotent and thread-safe (it may run on any thread, also while another thread is in `commit`, a body write or `finish`, which then fail with an `IOException`). The headers passed to `commit` are sent as given: they already carry `Content-Length` when the core knows it (a `HEAD` response carries the length the `GET` body would have had) and the adapter never adds, removes or changes `Content-Length`; `contentLength` is the number of body bytes the core will write, `0` for a bodyless response (`204`, `304`, `HEAD`) or `-1` when unknown, which the adapter frames itself (chunked, or close on HTTP/1.0) and is the only case where it may add a framing header. Header names and values are ISO-8859-1: the core guarantees every char is at most U+00FF and never CR or LF, so the adapter writes each char as one byte. [wave 3 implementation decision]",
+          "checked": true,
+          "line": 224
+        },
+        {
+          "id": "AC-3",
+          "text": "The raw request-target path and the raw query string travel through the SPI as separate undecoded fields: an exchange with target `/a%20b?x=%41` reaches the core with raw path `/a%20b` and raw query `x=%41`, and the core alone yields `req.path()` = `/a b` and `req.query(\"x\")` = `A`. [D-399; wave decision: Adapter halves] Decision: the raw query is `null` when the target has no `?`. [SDS 2026-10-19.naruserve.naruserve-v1-wave-3-2 SDS-AC-3]",
+          "checked": true,
+          "line": 225
+        }
+      ],
+      "mcp_read": "/tmp/naruserve-intake-core/mcp/IR-HTTP-003.json"
+    },
+    {
+      "id": "IR-HTTP-005",
+      "requirement_id": "IR-HTTP-005",
+      "classification": "potential-update",
+      "match_type": "potential-update",
+      "similarity_score": 1.0,
+      "similarity_basis": "Direct named existing contract and code trace, not embedding estimate.",
+      "scope": "HTTP",
+      "target": "wave-3",
+      "status": "verified",
+      "stability": "evolving",
+      "title": "RestApp route registration and routing policy interface",
+      "file_path": "docs/spec/04.http-core.srs.md",
+      "heading_line": 955,
+      "statement": "The system shall provide a public `RestApp` interface in `com.snoworca.naruserve` whose wave 3 methods are the route registration methods `get`, `post`, `put`, `patch`, `delete`, `head`, `options`, `route(Method, ...)`, `route(MethodSet, ...)` and `route(path)`, and the routing policy method `routerPolicy(RouterPolicy)`, with no `serve(...)` method.",
+      "reason": "New registration inputs, methods and mounted Router analogue.",
+      "evidence": [
+        "docs/spec/04.http-core.srs.md:955",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouterPolicy.java",
+        "IR-HTTP-002",
+        "FR-ROUTE-002",
+        "FR-ROUTE-006",
+        "FR-ROUTE-014",
+        "IR-ROUTE-001"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "text": "`RestApp` declares `get`, `post`, `put`, `patch`, `delete`, `head` and `options`, each taking `(String path, RouteHandler handler)` and returning `RestApp`. [D-040]",
+          "checked": true,
+          "line": 980
+        },
+        {
+          "id": "AC-2",
+          "text": "`RestApp` declares `route(Method, String, RouteHandler)` and `route(MethodSet, String, RouteHandler)` returning `RestApp`, and `route(String)` returning `RouteBuilder`. [D-041; D-043]",
+          "checked": true,
+          "line": 981
+        },
+        {
+          "id": "AC-3",
+          "text": "`RestApp` declares `routerPolicy(RouterPolicy)` returning `RestApp`, taking the existing `RouterPolicy` built with `RouterPolicy.builder()` (`mergeSlashes`, `ignoreTrailingSlash`, `caseInsensitive`, `enableTrace`, `enableConnect`). [D-393; D-398; wave decision: Remaining markers; wave-3 carried: routing-policy API names]",
+          "checked": true,
+          "line": 982
+        },
+        {
+          "id": "AC-4",
+          "text": "A reflection test finds no method named `serve` on `RestApp`. [D-046]",
+          "checked": true,
+          "line": 983
+        },
+        {
+          "id": "AC-5",
+          "text": "At the wave 3 merge, a reflection test finds that the methods of the public `RestApp` interface are exactly the route registration and routing policy methods above (no `ws`, `use` or `listen` until their waves add them; the internal WebSocket hook of FR-HTTP-008 is not on the interface); nullness follows the wave 1 convention: the package is `@NullMarked` (non-null by default, which counts as `@NonNull`) and any nullable reference-type parameter or return carries `@Nullable`, which the test checks through the package annotation and the `@Nullable` positions listed in `docs/api/app.md`. [D-393; D-072]",
+          "checked": true,
+          "line": 984
+        },
+        {
+          "id": "AC-6",
+          "text": "Kotlin source `app.get(\"/x\") { req, res -> res.send(\"ok\") }` compiles and returns `RestApp`. [D-040]",
+          "checked": true,
+          "line": 985
+        }
+      ],
+      "mcp_read": "/tmp/naruserve-intake-core/mcp/IR-HTTP-005.json"
+    },
+    {
+      "id": "IR-HTTP-006",
+      "requirement_id": "IR-HTTP-006",
+      "classification": "potential-update",
+      "match_type": "potential-update",
+      "similarity_score": 1.0,
+      "similarity_basis": "Direct named existing contract and code trace, not embedding estimate.",
+      "scope": "HTTP",
+      "target": "wave-3",
+      "status": "verified",
+      "stability": "evolving",
+      "title": "RouteBuilder per-method registration and duplicate equivalence",
+      "file_path": "docs/spec/04.http-core.srs.md",
+      "heading_line": 1045,
+      "statement": "The system shall make `app.route(path)` return a public `RouteBuilder` whose `get`, `post`, `put`, `patch`, `delete`, `head` and `options` each register a separate handler on that path, with `app.get(path, h)` and `app.route(path).get(h)` producing the same registration so that registering both for one path is a duplicate.",
+      "reason": "RouteBuilder stable identity and multiple callback chains.",
+      "evidence": [
+        "docs/spec/04.http-core.srs.md:1045",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/RouteBuilder.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RoutingConfigException.java",
+        "IR-HTTP-005",
+        "FR-ROUTE-008"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "text": "`RouteBuilder` is a public interface in `com.snoworca.naruserve` declaring `get`, `post`, `put`, `patch`, `delete`, `head` and `options`, each taking a `RouteHandler` and returning `RouteBuilder`, so `app.route(\"/u/:id\").get(h1).put(h2).delete(h3)` compiles. [D-043] Decision: each `RouteBuilder` registration method returns the same builder instance it was called on. [SDS 2026-10-19.naruserve.naruserve-v1-wave-3-1 SDS-AC-7]",
+          "checked": true,
+          "line": 1070
+        },
+        {
+          "id": "AC-2",
+          "text": "Through the harness, after `app.route(\"/u/:id\").get(h1).put(h2).delete(h3)`, `GET`, `PUT` and `DELETE /u/1` each reach only their own handler. [D-043; T03]",
+          "checked": true,
+          "line": 1071
+        },
+        {
+          "id": "AC-3",
+          "text": "Registering `app.get(\"/x\", h1)` and `app.route(\"/x\").get(h2)` makes the harness freeze throw `RoutingConfigException` naming the duplicate. [D-044; T03; wave decision: Working app in wave 3]",
+          "checked": true,
+          "line": 1072
+        },
+        {
+          "id": "AC-4",
+          "text": "`app.get(\"/x\", h)` and `app.route(\"/x\").get(h)` record the same method set, pattern and route kind in the router registration. [D-044]",
+          "checked": true,
+          "line": 1073
+        }
+      ],
+      "mcp_read": "/tmp/naruserve-intake-core/mcp/IR-HTTP-006.json"
+    },
+    {
+      "id": "IR-HTTP-007",
+      "requirement_id": "IR-HTTP-007",
+      "classification": "potential-update",
+      "match_type": "potential-update",
+      "similarity_score": 1.0,
+      "similarity_basis": "Direct named existing contract and code trace, not embedding estimate.",
+      "scope": "HTTP",
+      "target": "wave-7",
+      "status": "verified",
+      "stability": "evolving",
+      "title": "HttpAdapter SPI extension points and bind/stop lifecycle calls, extended add-only by wave 7",
+      "file_path": "docs/spec/04.http-core.srs.md",
+      "heading_line": 3821,
+      "statement": "The system shall include in the `HttpAdapter` SPI extension points for file transfer, event streams and protocol upgrade, and lifecycle calls that bind synchronously to an address and port, report the actual bound port, and stop in two calls: a blocking stop bounded by a core-supplied deadline and a final release bounded by a fixed margin, and shall extend that SPI from wave 7 only by adding types and `default` methods, never by changing or removing an existing signature.",
+      "reason": "Actual deferred ordinary transport/stream/SSE lifecycle without requiring incompatible abstract SPI changes.",
+      "evidence": [
+        "docs/spec/04.http-core.srs.md:3821",
+        "IR-HTTP-004",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpExchange.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpAdapter.java",
+        "IR-HTTP-003",
+        "IR-WS-002"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "text": "Through the file-transfer extension point the core hands the adapter a `java.io.File` with an offset and a length, and the adapter writes exactly those bytes of the file as the response body; an in-memory test hands over a file with a non-zero offset and a length shorter than the rest of the file and reads back exactly that byte range from the client body. [D-106] re_stated_from: IR-HTTP-004#AC1",
+          "checked": true,
+          "line": 3848
+        },
+        {
+          "id": "AC-2",
+          "text": "Through the protocol-upgrade extension point the core hands the adapter an upgrade callback with a `101` response, and the adapter invokes that callback with the exchange's raw input and output streams after writing the `101` response; an in-memory test observes that the callback ran with the exchange's streams (or that the in-memory adapter recorded the hand-over). [D-106] re_stated_from: IR-HTTP-004#AC2",
+          "checked": true,
+          "line": 3849
+        },
+        {
+          "id": "AC-3",
+          "text": "The event-stream point hands the adapter a core-owned drain loop that keeps writing after the handler returned until the core reports the stream ended, and the adapter chooses the thread that runs it; in wave 3 (before `res.sse` exists) an in-memory test supplies a drain loop through the SPI type, runs it on an adapter-chosen thread after the handler returned and sees it end only when the end is reported. [D-106] Decision: `eventStream` returns to the caller at once, and the in-memory adapter runs the drain on its own worker thread, completing the client response when the drain returns. [SDS 2026-10-19.naruserve.naruserve-v1-wave-3-2 SDS-AC-4] re_stated_from: IR-HTTP-004#AC3 StreamDrain also exposes a default no-op abort() callback so an adapter that cancels before drain startup can notify the core stream without blocking or adding an abstract method.",
+          "checked": true,
+          "line": 3850
+        },
+        {
+          "id": "AC-4",
+          "text": "The three extension points are SPI types in `NaruServe-api`, usable by an adapter without any NaruServe class outside `NaruServe-api`, so waves 6, 7 and 8 add adapter classes against them without breaking the SPI: from wave 7 the SPI gains only the new types `WebSocketEndpoint`, `WebSocketChannel` and `WebSocketSettings`, the `default` method `HttpExchange.webSocket(WebSocketSettings, WebSocketEndpoint)` and the `default` method `StreamDrain.attach(OutputStream out)`, which does nothing by default, and a signature comparison test against the SPI of the wave 6 close (`9ce5cc4`; unchanged since `40b9665`) finds every method of every `com.snoworca.naruserve.spi` type of that baseline (`AppFactory`, `ErrorRenderer`, `ExchangeHandler`, `HttpAdapter`, `HttpExchange`, `JsonCodec`, `ServerSettings`, `StreamDrain`, `UpgradeHandler`) present with an unchanged signature and no method removed, finds `HttpExchange.webSocket` and `StreamDrain.attach` the only added methods of those types, and finds `StreamDrain` still annotated `@FunctionalInterface` with `drain(OutputStream)` its only abstract method. Every adapter's `eventStream` calls `drain.attach(out)` before it returns, with the same exchange-synchronized body stream it later passes to `drain(out)`. Deviation (recorded): D-106 reads \"without changing the SPI\"; wave 7 reads it as \"without breaking the SPI\" (add-only types and `default` methods), which `docs/api` records. Deviation (recorded): W2-001 names one added `default` method; wave 7 adds a second one, `StreamDrain.attach`, still add-only, so handler-thread SSE sends before the drain starts have a stream (r4 W2-001). [D-106] [wave decision: WebSocket upgrade SPI (W2-001)] [wave decision: Sends inside the SSE handler (r4 W2-001)] [committee decision: StreamDrain.attach (wave-7 feasibility B-1)] re_stated_from: IR-HTTP-004#AC4 (changed by wave 7: add-only types and default methods instead of no SPI change)",
+          "checked": true,
+          "line": 3851
+        },
+        {
+          "id": "AC-5",
+          "text": "The SPI declares a bind to an address and port that returns only after binding completed, and a separate call through which the core reads the actual bound port; with the in-memory adapter, a bind with port `0` reports a positive bound port that the core reads back through the SPI and that stays the same on every read until stop, and a bind with a positive port reports that port. [D-107] Decision: for a bind with port `0` the in-memory adapter assigns a positive port from a counter starting at `49152`. [SDS 2026-10-19.naruserve.naruserve-v1-wave-3-2 SDS-AC-5] re_stated_from: IR-HTTP-004#AC5",
+          "checked": true,
+          "line": 3852
+        },
+        {
+          "id": "AC-6",
+          "text": "The SPI declares a blocking stop that stops accepting, waits for in-flight exchanges until a deadline passed by the core and then force-closes the remaining connections, and a separate final release that waits at most a fixed margin for the adapter's threads to end; the in-memory adapter implements both and a test shows an in-flight exchange still running at the deadline is force-closed. [D-107] Decision: an exchange in flight at the deadline is aborted so its client response reports `abnormallyClosed`, and the in-memory adapter's release shuts its worker pool waiting at most 1 second. [SDS 2026-10-19.naruserve.naruserve-v1-wave-3-2 SDS-AC-6] re_stated_from: IR-HTTP-004#AC6",
+          "checked": true,
+          "line": 3853
+        }
+      ],
+      "mcp_read": "/tmp/naruserve-intake-core/mcp/IR-HTTP-007.json"
+    },
+    {
+      "id": "FR-HTTP-004",
+      "requirement_id": "FR-HTTP-004",
+      "classification": "potential-update",
+      "match_type": "potential-update",
+      "similarity_score": 1.0,
+      "similarity_basis": "Direct named existing contract and code trace, not embedding estimate.",
+      "scope": "HTTP",
+      "target": "wave-3",
+      "status": "verified",
+      "stability": "evolving",
+      "title": "Automatic HEAD through the GET handler",
+      "file_path": "docs/spec/04.http-core.srs.md",
+      "heading_line": 719,
+      "statement": "The system shall, for an automatic-`HEAD` result, run the `GET` handler and send its status and headers without a body, with `req.method()` returning `HEAD` inside that handler.",
+      "reason": "HEAD bodyless handling retained but dispatch order changes.",
+      "evidence": [
+        "docs/spec/04.http-core.srs.md:719",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+        "FR-ROUTE-011",
+        "FR-HTTP-002"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "text": "With only `GET /h` registered writing status `200`, header `X-A: 1` and body `hello`, `HEAD /h` through the harness is answered `200` with `X-A: 1` and no body bytes. [D-396; T05]",
+          "checked": true,
+          "line": 744
+        },
+        {
+          "id": "AC-2",
+          "text": "Inside the `GET` handler run for an automatic `HEAD`, `req.method()` returns `Method.HEAD`. [D-398; D-042; wave decision: req.method() during automatic HEAD]",
+          "checked": true,
+          "line": 745
+        }
+      ],
+      "mcp_read": "/tmp/naruserve-intake-core/mcp/FR-HTTP-004.json"
+    },
+    {
+      "id": "FR-HTTP-007",
+      "requirement_id": "FR-HTTP-007",
+      "classification": "potential-update",
+      "match_type": "potential-update",
+      "similarity_score": 1.0,
+      "similarity_basis": "Direct named existing contract and code trace, not embedding estimate.",
+      "scope": "HTTP",
+      "target": "wave-3",
+      "status": "verified",
+      "stability": "evolving",
+      "title": "One handler for a Method or MethodSet reports the actual method",
+      "file_path": "docs/spec/04.http-core.srs.md",
+      "heading_line": 1124,
+      "statement": "The system shall register the one handler given to `route(Method, path, handler)` or `route(MethodSet, path, handler)` for every method in the argument, and report the actual request method through `req.method()` when a request reaches that handler.",
+      "reason": "Actual method and legacy MethodSet retained alongside common method/all handling.",
+      "evidence": [
+        "docs/spec/04.http-core.srs.md:1124",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java",
+        "IR-HTTP-005",
+        "FR-ROUTE-002",
+        "FR-HTTP-004"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "text": "After `app.route(Method.get().post().delete(), \"/users/:id\", h)`, `GET`, `POST` and `DELETE /users/1` through the harness all reach `h`, and `PUT /users/1` is answered `405`. [D-041; T01] Decision: `app.get(p, h)` and a builder `get(h)` record the same registration (method set `MethodSet.of(GET)`, pattern `p`, HTTP route kind), so the freeze reports such a pair as a duplicate. [SDS 2026-10-19.naruserve.naruserve-v1-wave-3-3 SDS-AC-11]",
+          "checked": true,
+          "line": 1149
+        },
+        {
+          "id": "AC-2",
+          "text": "Inside `h`, `req.method()` returns `Method.GET`, `Method.POST` and `Method.DELETE` for those three requests respectively. [D-042; T01]",
+          "checked": true,
+          "line": 1150
+        },
+        {
+          "id": "AC-3",
+          "text": "After `app.route(Method.PATCH, \"/p\", h)`, `PATCH /p` reaches `h` with `req.method()` = `Method.PATCH`. [D-041; D-042]",
+          "checked": true,
+          "line": 1151
+        },
+        {
+          "id": "AC-4",
+          "text": "`HEAD /users/1` reaches `h` through automatic `HEAD` with `req.method()` = `Method.HEAD`. [D-042; wave decision: req.method() during automatic HEAD]",
+          "checked": true,
+          "line": 1152
+        }
+      ],
+      "mcp_read": "/tmp/naruserve-intake-core/mcp/FR-HTTP-007.json"
+    },
+    {
+      "id": "FR-HTTP-016",
+      "requirement_id": "FR-HTTP-016",
+      "classification": "potential-update",
+      "match_type": "potential-update",
+      "similarity_score": 1.0,
+      "similarity_basis": "Direct named existing contract and code trace, not embedding estimate.",
+      "scope": "HTTP",
+      "target": "wave-3",
+      "status": "verified",
+      "stability": "evolving",
+      "title": "Response state machine with single commit",
+      "file_path": "docs/spec/04.http-core.srs.md",
+      "heading_line": 1873,
+      "statement": "The system shall move each response through the states `NEW`, `COMMITTED`, `STREAMING`, `COMPLETED` and `ABORTED`, committing at most once, throw an exception for `status` or `header` after commit and for a second body after a body was sent, and keep a streaming response in `STREAMING` after the handler returns until the transfer ends.",
+      "reason": "Single commit retained; initial handler return no longer forces completion.",
+      "evidence": [
+        "docs/spec/04.http-core.srs.md:1873",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+        "FR-HTTP-014",
+        "FR-HTTP-015",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ResponseState.java"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "text": "A response starts in `NEW`, is `COMMITTED` once status and headers are handed to the adapter, and reaches `COMPLETED` after `send`; the adapter receives the status line and headers exactly once. [D-099]",
+          "checked": true,
+          "line": 1898
+        },
+        {
+          "id": "AC-2",
+          "text": "`res.status(500)` or `res.header(\"X\", \"1\")` after `res.send(\"a\")` committed the response throws an exception and the sent status and headers stay unchanged. [D-100] Decision: the exception is `IllegalStateException` naming the current state, thrown in `COMMITTED`, `STREAMING`, `COMPLETED` or `ABORTED`, and nothing changes. [SDS 2026-10-19.naruserve.naruserve-v1-wave-3-5 SDS-AC-10]",
+          "checked": true,
+          "line": 1899
+        },
+        {
+          "id": "AC-3",
+          "text": "A second body call (`send`, `html`, `stream` or `end`) after a body was sent throws an exception and writes no further bytes. [D-101]",
+          "checked": true,
+          "line": 1900
+        },
+        {
+          "id": "AC-4",
+          "text": "After `res.stream(...)` returns, the response is `STREAMING` until the copy ends, then `COMPLETED`, or `ABORTED` on abort; a read failure of the input stream during the copy, including after the handler returned, ends the response `ABORTED` with the input stream closed (FR-HTTP-014 AC-5). [D-103; D-097; wave decision: stream() closing] Decision: a read failure during the copy sets `ABORTED`, calls `exchange.abort()` and closes the input, without rethrowing to the adapter. [SDS 2026-10-19.naruserve.naruserve-v1-wave-3-5 SDS-AC-11]",
+          "checked": true,
+          "line": 1901
+        },
+        {
+          "id": "AC-5",
+          "text": "While the response is `STREAMING` (committed but not completed), `res.status(500)` and `res.header(\"X\", \"1\")` each throw an exception and the status and headers the adapter received stay unchanged. [D-100; D-099]",
+          "checked": true,
+          "line": 1902
+        }
+      ],
+      "mcp_read": "/tmp/naruserve-intake-core/mcp/FR-HTTP-016.json"
+    },
+    {
+      "id": "FR-HTTP-019",
+      "requirement_id": "FR-HTTP-019",
+      "classification": "potential-update",
+      "match_type": "potential-update",
+      "similarity_score": 1.0,
+      "similarity_basis": "Direct named existing contract and code trace, not embedding estimate.",
+      "scope": "HTTP",
+      "target": "wave-3",
+      "status": "verified",
+      "stability": "evolving",
+      "title": "Request body ownership with BodyState and BodyAlreadyConsumedException",
+      "file_path": "docs/spec/04.http-core.srs.md",
+      "heading_line": 2116,
+      "statement": "The system shall consume a request body stream once, cache a successful JSON result (including null) for repeated reads of an equal Type, and share one form parse across form/file/files/parts. Different JSON types, mixed body formats, closed requests and retries after parsing failure throw BodyAlreadyConsumedException.",
+      "reason": "Body/cache/upload resources must outlive initial callback when deferred.",
+      "evidence": [
+        "docs/spec/04.http-core.srs.md:2116",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/BodyAlreadyConsumedException.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/BodyState.java",
+        "IR-HTTP-001",
+        "IR-HTTP-003",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java",
+        "FR-DX-007"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "text": "`BodyAlreadyConsumedException` is a public class in `com.snoworca.naruserve` extending `RuntimeException`. [D-086; wave decision: Body ownership]",
+          "checked": true,
+          "line": 2141
+        },
+        {
+          "id": "AC-2",
+          "text": "`BodyState` is an internal class whose state is `UNREAD` initially, `PARSING` while a reader holds the body, and `CONSUMED` after a completed read or `CLOSED` after the body was closed; a unit test drives each transition. [D-085] Decision: `close` moves to `CLOSED` from any state, and a later `begin` or shared parse throws `BodyAlreadyConsumedException`. [SDS 2026-10-19.naruserve.naruserve-v1-wave-3-4 SDS-AC-11] User-approved revision: FR-DX-007 permits cached same-Type JSON reads, including cached null; mixed formats, mismatched types and retries after failed parsing remain rejected.",
+          "checked": true,
+          "line": 2142
+        },
+        {
+          "id": "AC-3",
+          "text": "A unit test acquiring the body through `BodyState` after a first read gets `BodyAlreadyConsumedException` when the second read is of a different kind (JSON, form/multipart or raw) or is a second JSON or raw read; the shared form/multipart parse of AC-4 is the only exemption. [D-086] Decision: `begin` in any state other than `UNREAD` throws `BodyAlreadyConsumedException` naming the current state. [SDS 2026-10-19.naruserve.naruserve-v1-wave-3-4 SDS-AC-9] User-approved revision: FR-DX-007 permits cached same-Type JSON reads, including cached null; mixed formats, mismatched types and retries after failed parsing remain rejected.",
+          "checked": true,
+          "line": 2143
+        },
+        {
+          "id": "AC-4",
+          "text": "A unit test acquiring the shared form/multipart parse through `BodyState` repeatedly gets the same parse result each time without a second read of the stream and without `BodyAlreadyConsumedException`. [D-087] Decision: the shared parse after `begin`, or `begin` after the shared parse, throws `BodyAlreadyConsumedException`; a parser failure leaves `CONSUMED` with no cached result and later calls throw `BodyAlreadyConsumedException`. [SDS 2026-10-19.naruserve.naruserve-v1-wave-3-4 SDS-AC-10] User-approved revision: FR-DX-007 permits cached same-Type JSON reads, including cached null; mixed formats, mismatched types and retries after failed parsing remain rejected.",
+          "checked": true,
+          "line": 2144
+        },
+        {
+          "id": "AC-5",
+          "text": "A reflection test finds no public body-reading method on `Request` at the wave 3 merge (wave 5 adds the body readers). [wave decision: Body ownership]",
+          "checked": true,
+          "line": 2145
+        }
+      ],
+      "mcp_read": "/tmp/naruserve-intake-core/mcp/FR-HTTP-019.json"
+    },
+    {
+      "id": "FR-APP-005",
+      "requirement_id": "FR-APP-005",
+      "classification": "potential-update",
+      "match_type": "potential-update",
+      "similarity_score": 1.0,
+      "similarity_basis": "Direct named existing contract and code trace, not embedding estimate.",
+      "scope": "APP",
+      "target": "wave-4",
+      "status": "verified",
+      "stability": "evolving",
+      "title": "Unified error path and onError chain",
+      "file_path": "docs/spec/05.application.srs.md",
+      "heading_line": 1024,
+      "statement": "The system shall route an exception thrown by a middleware or handler and an error passed to `next.error(e)` to one error path that calls the registered `onError` handlers in registration order while the previous one left the response `NEW`, writes the standard error response of FR-APP-006 when the response is still `NEW` after them, and aborts instead of writing an error body when the response is already committed but not completed, while `onError` never receives the automatic `404`, `405`, `426`, `501` or `OPTIONS` responses.",
+      "reason": "Common ordered error/recovery/forward flow plus retained JSON error extension.",
+      "evidence": [
+        "docs/spec/05.application.srs.md:1024",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+        "IR-APP-003",
+        "FR-APP-004",
+        "FR-HTTP-015"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "text": "With one recording `onError`, a `RuntimeException` thrown by a middleware, a checked `IOException` thrown by a handler and `next.error(e)` from a middleware each reach the handler once with the same `Throwable` instance and the request's `Request` and `Response`. [D-127; D-129; T36] Decision: a thrown `java.lang.Error` is not routed to `onError`; it aborts the response and is rethrown, as in wave 3. [SDS 2026-10-19.naruserve.naruserve-v1-wave-4-5 SDS-AC-1]",
+          "checked": true,
+          "line": 1049
+        },
+        {
+          "id": "AC-2",
+          "text": "An `HttpException(400)` thrown by a handler, an `HttpException(413)` and an `UnsupportedMediaTypeException` each reach `onError` with `status()` readable, and the malformed query `?x=%zz` raises an `HttpException` with status `400` that reaches `onError` after the middleware ran and before the handler. [D-129; D-130; wave-4 carried: malformed query]",
+          "checked": true,
+          "line": 1050
+        },
+        {
+          "id": "AC-3",
+          "text": "With two `onError` handlers, the second runs only when the first returned with the response `NEW`, and receives the same error; when the first responded, the second records no call. [D-137] Decision: `onError` registrations form one chain in registration order that stops at the first handler that starts the response. Decision: the first `onError` handler runs whatever the response state was when the error arrived; a later one runs only while the response is still `NEW`. [SDS 2026-10-19.naruserve.naruserve-v1-wave-4-5 SDS-AC-2]",
+          "checked": true,
+          "line": 1051
+        },
+        {
+          "id": "AC-4",
+          "text": "When every `onError` handler returned with the response `NEW`, or none is registered, the response is the standard error response of FR-APP-006 for the error. [D-132; D-137] Decision: the standard error response drops the status and headers the app set before the error. [SDS 2026-10-19.naruserve.naruserve-v1-wave-4-5 SDS-AC-3]",
+          "checked": true,
+          "line": 1052
+        },
+        {
+          "id": "AC-5",
+          "text": "An `onError` handler that throws makes the framework log the thrown exception at `ERROR` through the app logger and answer the standard `500` error response if the response is still `NEW`; no later `onError` handler runs. [D-129; D-133]",
+          "checked": true,
+          "line": 1053
+        },
+        {
+          "id": "AC-6",
+          "text": "When a handler throws while the response is `STREAMING`, `onError` is still called once, no error body is written, and after the error path the response is `ABORTED` with the in-memory exchange closed abnormally; when the response is `COMPLETED`, it stays `COMPLETED` with the sent bytes unchanged. [D-131; T37]",
+          "checked": true,
+          "line": 1054
+        },
+        {
+          "id": "AC-7",
+          "text": "A recording `onError` records no call for the automatic `404`, `405`, `426`, `501` and `OPTIONS` responses and for the pre-request and lifecycle-gate rejections. [residual: onError scope; wave decision: Pre-request rejections]",
+          "checked": true,
+          "line": 1055
+        },
+        {
+          "id": "AC-8",
+          "text": "An error that ends in a standard `500` response is logged once at `ERROR` with its `Throwable` through the app logger; an `HttpException` with a `4xx` status is not logged at `ERROR`. [D-129; D-133] Decision: only `500`s are logged at `ERROR`, with the stack trace kept in the server log. Decision: a `500` is logged at `ERROR` whatever the response state, and no other status is logged at `ERROR`. [SDS 2026-10-19.naruserve.naruserve-v1-wave-4-5 SDS-AC-6]",
+          "checked": true,
+          "line": 1056
+        },
+        {
+          "id": "AC-9",
+          "text": "The error path decides by the response state at the time the error arrives (`NEW` gives the error response, committed but not completed gives an abort, `COMPLETED` stays unchanged), the rule that the `res.json` serialisation case of D-136 relies on; that case itself is asserted in wave 5 once `res.json` exists. [D-136; D-131] Decision: the error path reads the response state once, after the `onError` chain, under the response lock; because a response committed on arrival can only stay committed or end, this gives the same outcome as the arrival-state rule. [SDS 2026-10-19.naruserve.naruserve-v1-wave-4-5 SDS-AC-7]",
+          "checked": true,
+          "line": 1057
+        }
+      ],
+      "mcp_read": "/tmp/naruserve-intake-core/mcp/FR-APP-005.json"
+    },
+    {
+      "id": "FR-APP-019",
+      "requirement_id": "FR-APP-019",
+      "classification": "potential-update",
+      "match_type": "potential-update",
+      "similarity_score": 1.0,
+      "similarity_basis": "Direct named existing contract and code trace, not embedding estimate.",
+      "scope": "APP",
+      "target": "wave-7",
+      "status": "verified",
+      "stability": "evolving",
+      "title": "Access log: one line per HTTP request, the WebSocket handshake and close lines, and the SSE stream-end line (wave 7)",
+      "file_path": "docs/spec/05.application.srs.md",
+      "heading_line": 3278,
+      "statement": "The system shall write through the app logger at the configured level exactly one access log line per HTTP request that reaches the dispatcher, when the response completes or is aborted, in the format `<method> <path> <status>[ aborted][ <duration>ms][ in=<bytesIn> out=<bytesOut>][ rid=<requestId>]`, where `path` is the raw path without the query, the optional parts follow the options of IR-APP-007, the byte fields count body bytes actually read from and written to the connection, and requests to an excluded path produce no line, except that an accepted WebSocket upgrade gets its line with status `101` when the connection opens plus a separate close line with close code and duration, and an SSE stream gets its one line when the stream ends, with its start time and closing cause.",
+      "reason": "Access log/request ID exactly once across deferred completion and WS/SSE.",
+      "evidence": [
+        "docs/spec/05.application.srs.md:3278",
+        "FR-APP-015",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/AccessLog.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+        "IR-APP-007",
+        "FR-APP-006",
+        "FR-WS-006",
+        "FR-SSE-004"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "text": "With the defaults, `GET /users/7` answered `200` with a 5-byte body produces exactly one `info` line matching `GET /users/7 200 \\d+ms in=0 out=5 rid=[0-9a-f]{16}`. [D-173; D-181; T38] Decision: this is the line format, and the request id is 16 lowercase hex characters generated per request. Decision: the duration is the `System.nanoTime()` difference from request start to response end divided by 1 000 000, in whole milliseconds. [SDS 2026-10-19.naruserve.naruserve-v1-wave-4-8 SDS-AC-4] re_stated_from: FR-APP-015#AC1",
+          "checked": true,
+          "line": 3303
+        },
+        {
+          "id": "AC-2",
+          "text": "With `includeDuration(false)`, `includeBytes(false)` and `includeRequestId(false)` the line is `GET /users/7 200`, and with `level(LogLevel.DEBUG)` it is written through `debug`. [D-172; D-173] Decision: a disabled part is dropped together with its leading space, and `level` selects the `Logger` method, `trace` to `error(String)` for `TRACE` to `ERROR`. [SDS 2026-10-19.naruserve.naruserve-v1-wave-4-8 SDS-AC-5] re_stated_from: FR-APP-015#AC2",
+          "checked": true,
+          "line": 3304
+        },
+        {
+          "id": "AC-3",
+          "text": "A response aborted after commit (handler throws while `STREAMING`) produces one line with its committed status followed by ` aborted`; a `404`, a `405`, a handler `500`, each pre-request rejection (`501` unknown token, `400` raw path, `400` validator, `204` `OPTIONS *`) and each lifecycle-gate `503` produce exactly one line. [D-173; wave decision: Pre-request rejections; wave decision: Lifecycle gate] re_stated_from: FR-APP-015#AC3",
+          "checked": true,
+          "line": 3305
+        },
+        {
+          "id": "AC-4",
+          "text": "For a streaming response the line is written once after the stream copy finished, with `out` equal to the bytes copied; for a `HEAD` response `out` is `0`. [D-173; D-177] re_stated_from: FR-APP-015#AC4",
+          "checked": true,
+          "line": 3306
+        },
+        {
+          "id": "AC-5",
+          "text": "`in` counts the request body bytes the core read from the adapter's body stream (not the declared `Content-Length`): a dispatcher test whose handler reads 4 bytes of a 10-byte body through the internal `BodyState` stream logs `in=4`, and a handler that never reads gives `in=0`. [D-177] re_stated_from: FR-APP-015#AC5",
+          "checked": true,
+          "line": 3307
+        },
+        {
+          "id": "AC-6",
+          "text": "After `exclude(\"/health\")`, `GET /health` produces no line while `GET /health/x` and `GET /healthz` do; with `enabled(false)` no request produces a line. [D-174; D-172] Decision: `exclude` matches the raw path without the query exactly. re_stated_from: FR-APP-015#AC6",
+          "checked": true,
+          "line": 3308
+        },
+        {
+          "id": "AC-7",
+          "text": "The `rid` value of the line equals the `requestId` of the standard error body of the same request. [D-135] re_stated_from: FR-APP-015#AC7",
+          "checked": true,
+          "line": 3309
+        },
+        {
+          "id": "AC-8",
+          "text": "An accepted upgrade to `/ws` produces exactly one handshake line matching `GET /ws 101 \\d+ms in=0 out=0 rid=[0-9a-f]{16}`, written in the endpoint's `onOpen` after `101` was written and before the first frame is read, which a test asserts by reading the log before the client sends its first frame; an upgrade rejected before `onOpen` (`426` for `Sec-WebSocket-Version: 12`, `403` for a refused `Origin`, `503` beyond the limit) produces its ordinary line with the rejection status and no `101` line (T38). [D-430; D-325; T38] Decision: the handshake line is written in `onOpen` after the channel is stored and before the handler, with the duration measured from `req.startNanos()`. [SDS 2026-10-19.naruserve.naruserve-v1-wave-7-12 SDS-AC-1] Decision: when the response ends with `upgraded101()` true no line is written from `onDone`, and a refusal before `onOpen` never calls `upgraded`, so its ordinary line is written. [SDS 2026-10-19.naruserve.naruserve-v1-wave-7-12 SDS-AC-2]",
+          "checked": true,
+          "line": 3310
+        },
+        {
+          "id": "AC-9",
+          "text": "When a session ends, one close line `WS /ws <closeCode> \\d+ms rid=<id>` is written with the same `rid` as its handshake line, the close code chosen by FR-WS-006 AC-9 (`1000` for `ws.close()`, `1001` at shutdown, `1008` on queue overflow, each also when the client never answers the server's close frame; the client's code for a client close; `1006` for a session aborted without any close frame) and the duration from `onOpen` to the close, exactly once per session (T38). Decision: the close line form is `WS <path> <closeCode>[ <n>ms][ rid=<id>]`. [D-325; T38]",
+          "checked": true,
+          "line": 3311
+        },
+        {
+          "id": "AC-10",
+          "text": "An SSE stream produces no line when it starts and exactly one line when it ends, matching `GET /events 200 \\d+ms in=0 out=<n> rid=[0-9a-f]{16} sse start=\\d+ cause=(client|app|overflow|shutdown|error)`, where the duration covers the whole stream, `out` equals the bytes written to the stream, `start` is the epoch milliseconds of the stream start, and `cause` is the first end reason the core recorded for the stream: `app` when `close()` is called, `overflow` when the overflow policy ends the stream, and `shutdown` when the closing participant marks the stream ended or the deadline force-close begins, each recorded before any `IOException` that the ending causes; `client` only when a drain write or heartbeat to the socket failed with an `IOException`, or the drain found the connection closed, on a stream with no earlier recorded reason (how a client disconnect is detected); and `error` when a failure that is not an `IOException` in the core or app code during the drain (for example a `RuntimeException` thrown by event serialisation or by the adapter's output stream) ends a stream with no earlier recorded reason; an in-memory test asserts `cause=client` for a drain write failed with `IOException`, `cause=error` for a drain write failed with a `RuntimeException`, `cause=app` when the drain write after `close()` fails with `IOException` and `cause=overflow` when the drain write after the overflow end fails with `IOException`, and a TinyHttpd test asserts `cause=shutdown` for the stalled stream force-closed at the shutdown deadline (FR-SSE-005 AC-5); a `HEAD` to an SSE route produces its ordinary line without the `sse` part (T38). Decision: the SSE line appends ` sse start=<epochMillis> cause=<cause>` to the D-173 line, and the first recorded end reason wins over a later `IOException` or failure. [D-338; D-343; T38] Decision: for a response with a non-null `sseClient()`, `writeSse` is called with status `200`, `out` = `bytesWritten()`, the stream's start millis and the client's `cause()`; a null cause cannot occur because `sseEnded` runs only after `endBy`. [SDS 2026-10-19.naruserve.naruserve-v1-wave-7-12 SDS-AC-4] A Servlet stream aborted before drain startup still emits its terminal stream-end record once.",
+          "checked": true,
+          "line": 3312
+        },
+        {
+          "id": "AC-11",
+          "text": "`exclude(\"/ws\")` and `exclude(\"/events\")` suppress the WebSocket handshake and close lines and the SSE line of those paths, `enabled(false)` suppresses all of them, and `level(LogLevel.DEBUG)` writes them through `debug`. [D-325; D-338; D-174]",
+          "checked": true,
+          "line": 3313
+        }
+      ],
+      "mcp_read": "/tmp/naruserve-intake-core/mcp/FR-APP-019.json"
+    },
+    {
+      "id": "FR-APP-020",
+      "requirement_id": "FR-APP-020",
+      "classification": "potential-update",
+      "match_type": "potential-update",
+      "similarity_score": 1.0,
+      "similarity_basis": "Direct named existing contract and code trace, not embedding estimate.",
+      "scope": "APP",
+      "target": "wave-7",
+      "status": "verified",
+      "stability": "evolving",
+      "title": "Long-connection shutdown coordination: closed flags before snapshots, participants with the deadline, the accepting phase, in-flight requests, force-close and the 3 s bound",
+      "file_path": "docs/spec/05.application.srs.md",
+      "heading_line": 3419,
+      "statement": "The system shall coordinate the WebSocket and SSE closing participants in the before-wait phase of shutdown by setting each registry's closed flag before its snapshot, passing each participant the shutdown deadline, running them while the adapter still accepts connections for at most 1 s with every request in that phase answered `503` with `Connection: close`, letting in-flight short requests complete before `onStop`, force-closing long connections still open at the deadline, returning from `shutdown(timeout, unit)` within the timeout plus a 3 s margin, and leaving no thread, queue or temporary upload file of the app behind.",
+      "reason": "Deferred requests and continuation shutdown participate in lifecycle deadline/context.",
+      "evidence": [
+        "docs/spec/05.application.srs.md:3419",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ShutdownParticipants.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+        "docs/api/lifecycle.md",
+        "FR-APP-011",
+        "FR-APP-013",
+        "FR-ENGINE-006",
+        "FR-WS-010",
+        "FR-SSE-005"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "text": "`ShutdownParticipants` keeps `add(Phase, Runnable)` and gains an overload taking a participant that receives `long deadlineNanos`; participants of both kinds registered in one phase run in registration order, and a deadline participant receives the deadline that `shutdown(timeout, unit)` computed, which a test asserts by checking that `deadlineNanos - System.nanoTime()` at entry is at most the timeout and at least the timeout minus 100 ms. Decision: the deadline participant is a package-private functional interface. [residual: Deadline for shutdown participants (r5 W2-003)]",
+          "checked": true,
+          "line": 3444
+        },
+        {
+          "id": "AC-2",
+          "text": "With a shutdown timeout of 500 ms and one WebSocket session whose client stopped reading, the WebSocket close wait ends within 500 ms plus 200 ms and `shutdown` returns within 500 ms plus the 3 s margin (T44 case with a timeout below 1 s). [residual: Deadline for shutdown participants (r5 W2-003)] [D-344]",
+          "checked": true,
+          "line": 3445
+        },
+        {
+          "id": "AC-3",
+          "text": "Each closing participant sets its registry's closed flag under the registry lock before it takes its snapshot; afterwards `res.sse()` in a handler that was already running returns a client that is ended at once: the client receives the event-stream headers, the closing notice `event: shutdown\\ndata: shutdown\\n\\n` and the end of the body, the `onClose` listeners run once and `send` returns `false`; an upgrade that reaches the upgrade extension point after the flag receives `503` with `Connection: close` before any `101`; and every session or stream registered before the flag is in the snapshot, which an in-memory test asserts by setting the flag between two registrations. [D-445; carried: V2-002]",
+          "checked": true,
+          "line": 3446
+        },
+        {
+          "id": "AC-4",
+          "text": "The before-wait participants run while the adapter still accepts connections, for at most 1 s plus 200 ms of slack: a plain request sent while the WebSocket close wait is held by a stalled session receives `503` with `Connection: close` and the standard error body from the stopping gate, and an upgrade sent in that phase is refused without `101`. Deviation (recorded): object.md §11.4 step 2 stops accepting new connections and upgrades before the goodbye of step 3; NaruServe accepts connections during this phase and answers them `503` under D-166, which `docs/api/lifecycle.md` records. [D-446; carried: V2-002]",
+          "checked": true,
+          "line": 3447
+        },
+        {
+          "id": "AC-5",
+          "text": "A short request whose handler takes 300 ms and starts before `shutdown(5, TimeUnit.SECONDS)` completes with `200` and its full body, and the `onStop` callback runs only after that response completed, which a test asserts by recording both events in order (T44). [D-342]",
+          "checked": true,
+          "line": 3448
+        },
+        {
+          "id": "AC-6",
+          "text": "A WebSocket session and an SSE stream whose clients stopped reading are force-closed by the deadline: both client sockets reach end of stream or reset within the shutdown timeout plus the 3 s margin. [D-343]",
+          "checked": true,
+          "line": 3449
+        },
+        {
+          "id": "AC-7",
+          "text": "`shutdown(timeout, unit)` returns within the timeout plus 3 s when `onStop` callbacks and owned resources return at once, and `docs/api/lifecycle.md` records the 3 s margin with its parts (TinyHttpd stop overrun up to 1.5 s, adapter release up to 1 s, 0.5 s slack) and keeps the statement that `onStop`, resource close and logger flush run without a time limit. Decision: the D-344 margin is 3 s and is the T44 tolerance. [D-344; wave decision: Shutdown bound (W2-010)]",
+          "checked": true,
+          "line": 3450
+        },
+        {
+          "id": "AC-8",
+          "text": "A T44 test opens two WebSocket sessions whose clients stop reading while the server sends to them until their writes block, one healthy WebSocket session and one SSE stream over TinyHttpd, calls `shutdown(1, TimeUnit.SECONDS)` and asserts that it returns within 1 s plus 3 s, that the healthy session receives close `1001`, that the SSE client receives the closing notice and that both stalled sessions' client sockets are closed. [D-439; T44]",
+          "checked": true,
+          "line": 3451
+        },
+        {
+          "id": "AC-9",
+          "text": "After `shutdown` returns, no live thread of that app remains, counted by name as the threads whose names start with `naruserve-` plus `tinyhttpd-acceptor-<port>` and `tinyhttpd-watchdog`, the WebSocket session registry and the SSE stream registry are empty, and the multipart temporary directory holds no file created by that app, which a test run in an isolated test JVM fork that starts no other app asserts after a run with open sessions, streams and an upload in progress (T44). Decision: the app's threads are counted by name in an isolated fork, as in PERF-APP-001 AC-1, because TinyHttpd's `tinyhttpd-watchdog` name carries no port. [D-345]",
+          "checked": true,
+          "line": 3452
+        }
+      ],
+      "mcp_read": "/tmp/naruserve-intake-core/mcp/FR-APP-020.json"
+    },
+    {
+      "id": "CON-APP-003",
+      "requirement_id": "CON-APP-003",
+      "classification": "potential-update",
+      "match_type": "potential-update",
+      "similarity_score": 1.0,
+      "similarity_basis": "Direct named existing contract and code trace, not embedding estimate.",
+      "scope": "APP",
+      "target": "wave-4",
+      "status": "verified",
+      "stability": "evolving",
+      "title": "Exceptions leave next.run() unchanged and reach the error path once",
+      "file_path": "docs/spec/05.application.srs.md",
+      "heading_line": 2692,
+      "statement": "The system shall let an exception thrown downstream leave `next.run()` unchanged and shall hand it to the error path exactly once, from the dispatcher, so a middleware can wrap `next.run()` in `try`/`catch` like a Servlet filter.",
+      "reason": "Preserve exception identity and no accidental duplicate error routing, while matching explicit next traces.",
+      "evidence": [
+        "docs/spec/05.application.srs.md:2692"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "text": "A middleware that wraps `next.run()` in `try`/`catch` catches the same exception instance the handler threw, and when it rethrows that instance a recording `onError` receives it exactly once.",
+          "checked": true,
+          "line": 2717
+        }
+      ],
+      "mcp_read": "/tmp/naruserve-intake-core/mcp/CON-APP-003.json"
+    },
+    {
+      "id": "FR-STATIC-004",
+      "requirement_id": "FR-STATIC-004",
+      "classification": "potential-update",
+      "match_type": "potential-update",
+      "similarity_score": 1.0,
+      "similarity_basis": "Direct named existing contract and code trace, not embedding estimate.",
+      "scope": "STATIC",
+      "target": "wave-6",
+      "status": "verified",
+      "stability": "evolving",
+      "title": "SPA fallback conditions and the always-excluded /api/ and /ws/ prefixes",
+      "file_path": "docs/spec/10.static-files.srs.md",
+      "heading_line": 547,
+      "statement": "The system shall, with `spaFallback(true)`, serve the mount's index file only when no file exists for the path in any mount, no explicit route matches the path and method (a `GET`/`HEAD` after a route's method mismatch falls through, as FR-STATIC-002 AC-3 decides), no WebSocket route owns the path and the `Accept` header contains `text/html`, never serve SPA fallback content under `/api/` and `/ws/`, and treat prefixes configured through `spaExclude` as additions to those two, matched on segment boundaries of the full request path.",
+      "reason": "Preserve SPA exclusions/fallback without bypassing ordered route ownership.",
+      "evidence": [
+        "docs/spec/10.static-files.srs.md:547",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+        "IR-STATIC-001"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "text": "Under `app.staticFiles(\"/\", root, o -> o.spaFallback(true))`, `GET /app/users/7` with `Accept: text/html,application/xhtml+xml` and no such file is answered `200` with the bytes of `root/index.html`. [D-265; T27] Decision: SPA fallback requires `GET` or `HEAD` and an `Accept` header containing `text/html` case-insensitively; `*/*` alone does not qualify. [SDS 2026-10-19.naruserve.naruserve-v1-wave-6-6 SDS-AC-6]",
+          "checked": true,
+          "line": 572
+        },
+        {
+          "id": "AC-2",
+          "text": "No SPA fallback is served for `GET /app/users/7` with `Accept: application/json` (answered `404`), for a path whose file exists (the file is served), for a path an explicit `GET` route matches (the route answers) or for a path a WebSocket route owns. [D-265]",
+          "checked": true,
+          "line": 573
+        },
+        {
+          "id": "AC-3",
+          "text": "`GET /api/x`, `GET /api`, `GET /ws/chat` and `GET /ws` with `Accept: text/html` and no file are answered `404`, while `GET /apix` with `Accept: text/html` receives the SPA index, because exclusions match on segment boundaries of the full request path. [D-266; D-267; wave decision: SPA fallback exclusions] Decision: the full raw request path is compared with each exclusion prefix stripped of a trailing `/`, matching when equal or followed by `/`. [SDS 2026-10-19.naruserve.naruserve-v1-wave-6-6 SDS-AC-7]",
+          "checked": true,
+          "line": 574
+        },
+        {
+          "id": "AC-4",
+          "text": "After `spaExclude(\"/admin\")`, `GET /admin/x` and `GET /api/x` with `Accept: text/html` are both answered `404`, so configured prefixes are added to `/api/` and `/ws/` and never replace them. Decision: `spaExclude` adds prefixes; `/api/` and `/ws/` are always excluded. [wave decision: SPA fallback exclusions; D-267]",
+          "checked": true,
+          "line": 575
+        }
+      ],
+      "mcp_read": "/tmp/naruserve-intake-core/mcp/FR-STATIC-004.json"
+    },
+    {
+      "id": "FR-DX-003",
+      "requirement_id": "FR-DX-003",
+      "classification": "potential-update",
+      "match_type": "potential-update",
+      "similarity_score": 1.0,
+      "similarity_basis": "Direct named existing contract and code trace, not embedding estimate.",
+      "scope": "DX",
+      "target": "api-usability",
+      "status": "verified",
+      "stability": "evolving",
+      "title": "필수값·숫자·업로드 입력 편의 함수 제공",
+      "file_path": "docs/spec/16.developer-experience.srs.md",
+      "heading_line": 211,
+      "statement": "The system shall provide requireQuery, requireHeader, requireForm, requireFile, queryInt, formInt and paramInt with common validation utilities.",
+      "reason": "Optional params must not silently become paramInt0; input convenience behavior explicitly defined.",
+      "evidence": [
+        "docs/spec/16.developer-experience.srs.md:211"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "text": "Missing or blank required text and missing or empty required files answer 400. Blank required text includes Unicode whitespace (Character.isWhitespace or Character.isSpaceChar); nonblank input is returned unchanged.",
+          "checked": true,
+          "line": 236
+        },
+        {
+          "id": "AC-2",
+          "text": "missing optional numeric input uses its default.",
+          "checked": true,
+          "line": 237
+        },
+        {
+          "id": "AC-3",
+          "text": "malformed or overflowing integers answer 400.",
+          "checked": true,
+          "line": 238
+        },
+        {
+          "id": "AC-4",
+          "text": "ranges remain application validation.",
+          "checked": true,
+          "line": 239
+        }
+      ],
+      "mcp_read": "/tmp/naruserve-intake-core/mcp/FR-DX-003.json"
+    },
+    {
+      "id": "FR-DX-007",
+      "requirement_id": "FR-DX-007",
+      "classification": "potential-update",
+      "match_type": "potential-update",
+      "similarity_score": 1.0,
+      "similarity_basis": "Direct named existing contract and code trace, not embedding estimate.",
+      "scope": "DX",
+      "target": "api-usability",
+      "status": "verified",
+      "stability": "evolving",
+      "title": "JSON 본문을 미들웨어와 핸들러에서 안전하게 재사용",
+      "file_path": "docs/spec/16.developer-experience.srs.md",
+      "heading_line": 453,
+      "statement": "The system shall cache the first successfully decoded JSON body and its requested type for request-local reuse.",
+      "reason": "JSON body cache persists across layer/mount/async changes.",
+      "evidence": [
+        "docs/spec/16.developer-experience.srs.md:453"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "text": "Repeated reads of the same type return the cached value without reading or decoding again including null.",
+          "checked": true,
+          "line": 478
+        },
+        {
+          "id": "AC-2",
+          "text": "incompatible JSON type or form/JSON mixing is rejected explicitly.",
+          "checked": true,
+          "line": 479
+        },
+        {
+          "id": "AC-3",
+          "text": "parsing limits still apply.",
+          "checked": true,
+          "line": 480
+        }
+      ],
+      "mcp_read": "/tmp/naruserve-intake-core/mcp/FR-DX-007.json"
+    },
+    {
+      "id": "FR-DX-008",
+      "requirement_id": "FR-DX-008",
+      "classification": "potential-update",
+      "match_type": "potential-update",
+      "similarity_score": 1.0,
+      "similarity_basis": "Direct named existing contract and code trace, not embedding estimate.",
+      "scope": "DX",
+      "target": "api-usability",
+      "status": "verified",
+      "stability": "evolving",
+      "title": "미들웨어를 전체 등록 순서로 실행",
+      "file_path": "docs/spec/16.developer-experience.srs.md",
+      "heading_line": 512,
+      "statement": "The system shall execute global and matching prefix middleware in their combined registration order followed by route middleware.",
+      "reason": "Combined global/prefix ordering extends to whole common stack.",
+      "evidence": [
+        "docs/spec/16.developer-experience.srs.md:512"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "text": "Interleaved global and prefix registration preserves chronology.",
+          "checked": true,
+          "line": 537
+        },
+        {
+          "id": "AC-2",
+          "text": "prefix filtering respects segment boundaries.",
+          "checked": true,
+          "line": 538
+        },
+        {
+          "id": "AC-3",
+          "text": "route middleware order remains explicit.",
+          "checked": true,
+          "line": 539
+        },
+        {
+          "id": "AC-4",
+          "text": "continuation remains synchronous and single-use.",
+          "checked": true,
+          "line": 540
+        }
+      ],
+      "mcp_read": "/tmp/naruserve-intake-core/mcp/FR-DX-008.json"
+    },
+    {
+      "id": "FR-DX-009",
+      "requirement_id": "FR-DX-009",
+      "classification": "potential-update",
+      "match_type": "potential-update",
+      "similarity_score": 1.0,
+      "similarity_basis": "Direct named existing contract and code trace, not embedding estimate.",
+      "scope": "DX",
+      "target": "api-usability",
+      "status": "verified",
+      "stability": "evolving",
+      "title": "라우트 그룹으로 중복 prefix 제거",
+      "file_path": "docs/spec/16.developer-experience.srs.md",
+      "heading_line": 573,
+      "statement": "The system shall provide an app group(prefix, configurer) API with scoped HTTP routes and middleware without exposing a second application lifecycle.",
+      "reason": "Preserve group API/inheritance while joining new escaped syntax and route builder chains.",
+      "evidence": [
+        "docs/spec/16.developer-experience.srs.md:573"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "text": "Nested groups join paths safely.",
+          "checked": true,
+          "line": 598
+        },
+        {
+          "id": "AC-2",
+          "text": "grouped middleware applies to its prefix.",
+          "checked": true,
+          "line": 599
+        },
+        {
+          "id": "AC-3",
+          "text": "group route handlers and per-route middleware compose.",
+          "checked": true,
+          "line": 600
+        },
+        {
+          "id": "AC-4",
+          "text": "configuration is frozen after listen.",
+          "checked": true,
+          "line": 601
+        }
+      ],
+      "mcp_read": "/tmp/naruserve-intake-core/mcp/FR-DX-009.json"
+    },
+    {
+      "id": "FR-DX-010",
+      "requirement_id": "FR-DX-010",
+      "classification": "potential-update",
+      "match_type": "potential-update",
+      "similarity_score": 1.0,
+      "similarity_basis": "Direct named existing contract and code trace, not embedding estimate.",
+      "scope": "DX",
+      "target": "api-usability",
+      "status": "verified",
+      "stability": "evolving",
+      "title": "CORS 허용 출처·preflight 편의 설정 제공",
+      "file_path": "docs/spec/16.developer-experience.srs.md",
+      "heading_line": 634,
+      "statement": "The system shall provide typed CORS configuration with validated origins, methods, request headers, credentials and preflight handling.",
+      "reason": "Preserve CORS preflight204 and separate WS Origin policy after stack integration.",
+      "evidence": [
+        "docs/spec/16.developer-experience.srs.md:634"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "text": "Allowed origins get appropriate headers and Vary.",
+          "checked": true,
+          "line": 659
+        },
+        {
+          "id": "AC-2",
+          "text": "denied origins are not granted access.",
+          "checked": true,
+          "line": 660
+        },
+        {
+          "id": "AC-3",
+          "text": "credentials cannot combine with wildcard origin.",
+          "checked": true,
+          "line": 661
+        },
+        {
+          "id": "AC-4",
+          "text": "preflight terminates before downstream authentication.",
+          "checked": true,
+          "line": 662
+        },
+        {
+          "id": "AC-5",
+          "text": "WebSocket Origin checks remain separate.",
+          "checked": true,
+          "line": 663
+        },
+        {
+          "id": "AC-6",
+          "text": "CORS installs Vary: Origin even without an Origin header for shared-cache correctness; allowed-origin 400/401/500 error responses preserve only framework CORS grant/Vary metadata, including credentials, while denied origins receive no grant.",
+          "checked": true,
+          "line": 664
+        }
+      ],
+      "mcp_read": "/tmp/naruserve-intake-core/mcp/FR-DX-010.json"
+    },
+    {
+      "id": "FR-ENGINE-011",
+      "requirement_id": "FR-ENGINE-011",
+      "classification": "potential-update",
+      "match_type": "potential-update",
+      "similarity_score": 1.0,
+      "similarity_basis": "Direct named existing contract and code trace, not embedding estimate.",
+      "scope": "ENGINE",
+      "target": "wave-7",
+      "status": "verified",
+      "stability": "evolving",
+      "title": "TinyHttpd adapter implements HttpAdapter with confined engine types and per-feature classes, event-stream and upgrade paths filled (wave 7)",
+      "file_path": "docs/spec/06.engine-adapter.srs.md",
+      "heading_line": 1249,
+      "statement": "The system shall provide the TinyHttpd adapter as a public final `HttpAdapter` implementation whose public signatures expose no TinyHttpd type, whose exchange bridge and file-transfer, event-stream and upgrade paths are separate module classes receiving the exchange, whose file-transfer hook writes the requested byte range of a file through a plain buffered copy, whose event-stream path and `webSocket` path from wave 7 write a chunked event stream and run the TinyHttpd WebSocket handshake instead of throwing `UnsupportedOperationException`, holding the exchange lock only to check abort and mark the response started, and whose raw `upgrade(headers, UpgradeHandler)` path stays unsupported in v1 with a message that names no wave.",
+      "reason": "Integrate external raw routing policy and delayed stream/SSE response with actual binary/source dependency evidence.",
+      "evidence": [
+        "docs/spec/06.engine-adapter.srs.md:1249",
+        "FR-ENGINE-010",
+        "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdFeatures.java",
+        "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdExchange.java",
+        "FR-ENGINE-004",
+        "IR-HTTP-003",
+        "IR-HTTP-007"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "text": "`TinyHttpdAdapter` is a public final class with a public no-argument constructor implementing `HttpAdapter`, and reflection finds no `com.snoworca.tinyhttpd` type in any public or protected constructor, method or field signature of any public class of `NaruServe-tinyhttpd`. [D-209] Decision: the adapter class is `com.snoworca.naruserve.tinyhttpd.TinyHttpdAdapter`. re_stated_from: FR-ENGINE-010#AC1",
+          "checked": true,
+          "line": 1275
+        },
+        {
+          "id": "AC-2",
+          "text": "The adapter core class sets every TinyHttpd builder limit of FR-ENGINE-003 and FR-ENGINE-004, while the exchange bridge and the file-transfer, event-stream and upgrade paths of `HttpExchange` are separate classes of the module: the exchange delegates them to the module class `TinyHttpdFeatures`, and each keeps the exchange's commit lock, abort check and single-start rule. From wave 6, `sendFile(status, headers, file, offset, length)` writes the status, the given headers and exactly `length` bytes of `file` starting at `offset` through a plain buffered copy (no zero-copy transfer) and throws no `UnsupportedOperationException`; a socket test hands over a file with a non-zero offset and a length shorter than the rest of the file and reads back exactly that byte range. From wave 7, `eventStream` writes a chunked streaming body as FR-SSE-003 states and `webSocket` runs the TinyHttpd handshake as FR-WS-002 states; a test calls both on a TinyHttpd exchange and neither throws `UnsupportedOperationException`, and a source scan finds no `UnsupportedOperationException` naming wave 7 in `TinyHttpdFeatures`. The raw `upgrade(headers, UpgradeHandler)` path on TinyHttpd still throws `UnsupportedOperationException` in v1, with a message stating that raw protocol upgrades are not supported by the TinyHttpd adapter and that WebSocket goes through `webSocket`, naming no wave, which a test asserts before any byte is written. Decision: on TinyHttpd only `webSocket` is implemented in v1; the raw upgrade stays unsupported because no v1 feature uses it and TinyHttpd's upgrade path is driven by its `WebSocketHandler`, reopen when a non-WebSocket upgrade is requested. Decision: the TinyHttpd `sendFile` hook fills D-106's extension point for apps that call it directly; the framework's own static, `res.file` and `res.download` bodies do not use it. [D-210; D-404; D-106; D-291; wave decision: File bodies come from the opened stream] Decision: a negative `offset`, a negative `length` or `offset + length` beyond the file length throws `IllegalArgumentException` before the response starts. [SDS 2026-10-19.naruserve.naruserve-v1-wave-6-9 SDS-AC-1] Decision: a file that shrinks during the copy throws `IOException` (EOF before `length` bytes) and leaves the exchange to the abort path. [SDS 2026-10-19.naruserve.naruserve-v1-wave-6-9 SDS-AC-2] Decision: `sendFile` commits through the exchange commit, so a second start throws `IllegalStateException` like `commit`. [SDS 2026-10-19.naruserve.naruserve-v1-wave-6-9 SDS-AC-3] re_stated_from: FR-ENGINE-010#AC2 (changed by wave 7: event-stream and WebSocket paths filled instead of throwing UnsupportedOperationException naming wave 7; raw upgrade unsupported with a non-wave message)",
+          "checked": true,
+          "line": 1276
+        },
+        {
+          "id": "AC-3",
+          "text": "The package-private `TinyHttpdFeatures` methods for the event-stream and WebSocket paths receive the `TinyHttpdExchange`, which holds both the TinyHttpd `Request` and `Response`, and hold the exchange lock only to check abort and mark the response started, so the WebSocket read loop and the SSE drain loop run outside it: a same-package test thread enters `synchronized (exchange)` within 100 ms while that exchange's WebSocket session waits idle for a frame, and again while its SSE drain loop waits for an event. Decision: the hook signatures change because D-210 protects only the adapter core limit mapping. [wave decision: TinyHttpd feature hooks (W2-003)]",
+          "checked": true,
+          "line": 1277
+        },
+        {
+          "id": "AC-4",
+          "text": "`TinyHttpdAdapter` keeps setting TinyHttpd's `maxEventStreams` to `maxSseStreams` and `maxUpgradedConnections` to `maxUpgradedConnections`, unchanged by wave 7, which the existing limit-mapping test asserts; the `maxEventStreams` value is an inert bound because NaruServe never opens a TinyHttpd event stream, and the NaruServe SSE counter of FR-SSE-003 is the bound that answers `503`. [wave decision: maxEventStreams (W2-009); D-336]",
+          "checked": true,
+          "line": 1278
+        },
+        {
+          "id": "AC-5",
+          "text": "No class of `NaruServe-tinyhttpd` references TinyHttpd's `TlsConfig` or calls the builder's `tls(...)` or a `listen(..., TlsConfig)` overload, which a class-reference test checks, and on the TinyHttpd adapter `req.isSecure()` returns `false` unless proxy trust of FR-ENGINE-008 reports `https`. [D-433; D-080] re_stated_from: FR-ENGINE-010#AC3",
+          "checked": true,
+          "line": 1279
+        },
+        {
+          "id": "AC-6",
+          "text": "Over a real socket, `GET /a%20b?x=%41` reaches the core with raw path `/a%20b` and raw query `x=%41`, and a request without `?` has a `null` raw query, because the adapter reads `getRequestURI()` and `getQueryString()` and never `getPath()`. [D-399; I-021; wave-3 carried: TinyHttpd halves] re_stated_from: FR-ENGINE-010#AC4",
+          "checked": true,
+          "line": 1280
+        },
+        {
+          "id": "AC-7",
+          "text": "The adapter's request headers, method token, HTTP version and remote address reach the core unchanged, and the adapter's `boundPort()` throws `IllegalStateException` before bind like the SPI requires. [D-209; D-107] re_stated_from: FR-ENGINE-010#AC5",
+          "checked": true,
+          "line": 1281
+        }
+      ],
+      "mcp_read": "/tmp/naruserve-intake-core/mcp/FR-ENGINE-011.json"
+    },
+    {
+      "id": "FR-SVL-002",
+      "requirement_id": "FR-SVL-002",
+      "classification": "potential-update",
+      "match_type": "potential-update",
+      "similarity_score": 1.0,
+      "similarity_basis": "Direct named existing contract and code trace, not embedding estimate.",
+      "scope": "SVL",
+      "target": "wave-8",
+      "status": "verified",
+      "stability": "evolving",
+      "title": "Servlet request mapping: raw path minus context path and servlet mapping, raw query, headers, and the same application types as on the embedded engine",
+      "file_path": "docs/spec/14.servlet-adapter.srs.md",
+      "heading_line": 291,
+      "statement": "The system shall map each servlet request to the `HttpExchange` values the core expects — `methodToken`, the raw `getRequestURI()` with the context path and the url-pattern prefix the initializer registered stripped at a segment boundary and kept percent-encoded, the raw `getQueryString()`, `getProtocol()`, every header value with duplicates kept and per-name order preserved, `getRemoteAddr()`, `isSecure()` and `getInputStream()` — so that routes, middleware, `Request`, `Response` and `Cookie` behave as on the embedded engine.",
+      "reason": "Raw URI and deferred general service callback lifecycle.",
+      "evidence": [
+        "docs/spec/14.servlet-adapter.srs.md:291",
+        "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet",
+        "IR-HTTP-003",
+        "FR-HTTP-009",
+        "FR-ROUTE-004",
+        "FR-ENGINE-007",
+        "FR-ENGINE-008",
+        "IR-SVL-001"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "text": "With context path `/app` and pattern `/api/*`, a request to `/app/api/users/%41;v=1?x=%20` reaches a route `/users/:id` with `req.rawPath()` equal to `/users/%41;v=1`, `req.param(\"id\")` equal to `A;v=1` and `req.query(\"x\")` equal to a space; with pattern `/*` or `/` the same request without `/api` reaches the same route, and a request to the bare servlet root reaches the route `/` (empty remainder is `/`). [D-363; D-399]",
+          "checked": true,
+          "line": 316
+        },
+        {
+          "id": "AC-2",
+          "text": "A request whose raw URI does not start with the context path plus the registered prefix at a segment boundary (a test sends `/app/%61pi/users` to pattern `/api/*`) is answered `404` with the standard error body and a request id, and `getServletPath()`, `getPathInfo()` and `getParameter*` are never read, which a recording `HttpServletRequest` proxy asserts. [D-363; r3 W2-004]",
+          "checked": true,
+          "line": 317
+        },
+        {
+          "id": "AC-3",
+          "text": "Headers reach `req.header(name)` and `req.headers(name)` with repeated names kept in their per-name order (the Servlet API gives no cross-name order), `Cookie` request headers reach the core cookie parser unchanged (`req.cookie(\"s\")` returns a NaruServe `Cookie`, never `javax.servlet.http.Cookie`), `req.remoteAddress()` is `getRemoteAddr()` and `req.isSecure()` is `isSecure()`; `app.trustProxy(true)` takes effect in the core (FR-ENGINE-008). [D-360]",
+          "checked": true,
+          "line": 318
+        },
+        {
+          "id": "AC-4",
+          "text": "A shared case suite — route parameters, query decoding, JSON body and `res.json`, cookies read and written, `404`, `405` with `Allow`, automatic `HEAD` and `OPTIONS`, middleware order, `onError` and the standard error body, `res.file` — runs on the Servlet adapter and on the in-memory adapter with identical statuses and bodies, using the same app definition code, so application code needs no change between engines. [D-360; I-021]",
+          "checked": true,
+          "line": 319
+        },
+        {
+          "id": "AC-5",
+          "text": "The path-rejection cases of D-052 (malformed percent-encoding, invalid UTF-8, an encoded `/`, an encoded or raw `NUL`, `.` and `..` segments raw and encoded) sent as raw request lines to the embedded container are answered `400`, or `404` when the container normalises the path and never reaches the servlet, and never `2xx`; the `OPTIONS *` request is sent too, and the observed status of every case is recorded in `docs/api/servlet.md`. [D-052; I-021]",
+          "checked": true,
+          "line": 320
+        },
+        {
+          "id": "AC-6",
+          "text": "Header values the framework writes never contain CR or LF on this adapter, and security-related log lines of the adapter carry no token, session id or file content. [I-016; I-017]",
+          "checked": true,
+          "line": 321
+        }
+      ],
+      "mcp_read": "/tmp/naruserve-intake-core/mcp/FR-SVL-002.json"
+    },
+    {
+      "id": "FR-SVL-003",
+      "requirement_id": "FR-SVL-003",
+      "classification": "potential-update",
+      "match_type": "potential-update",
+      "similarity_score": 1.0,
+      "similarity_basis": "Direct named existing contract and code trace, not embedding estimate.",
+      "scope": "SVL",
+      "target": "wave-8",
+      "status": "verified",
+      "stability": "evolving",
+      "title": "Servlet response writing: commit, finish, abort, sendFile and a single start per exchange",
+      "file_path": "docs/spec/14.servlet-adapter.srs.md",
+      "heading_line": 411,
+      "statement": "The system shall write each response through the container's `HttpServletResponse` — `commit` sets the status with `setStatus` and writes each header with `addHeader` in the given order, and `Content-Length` with `setHeader` exactly as the core gave it, without `sendError`, never itself adds, removes or changes `Content-Length` (its own code never calls `setContentLength`; a container may still frame a small buffered body with a length), and returns the container's output stream; `finish` completes the response; `abort` marks the exchange aborted so that every later write, `commit` or `finish` throws `IOException`; `sendFile` writes exactly `length` bytes of the file from `offset` in bounded chunks; and a second start of the same exchange throws `IllegalStateException`.",
+      "reason": "General async finish/abort/completion must retain response framing/ownership.",
+      "evidence": [
+        "docs/spec/14.servlet-adapter.srs.md:411",
+        "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet",
+        "IR-HTTP-003",
+        "IR-HTTP-007",
+        "FR-HTTP-016",
+        "FR-HTTP-017",
+        "FR-STATIC-011",
+        "IR-SVL-001"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "text": "A handler's `res.status(201).header(\"X-A\", \"1\").send(\"ok\")` reaches the client as status `201`, header `X-A: 1` and body `ok` with the `Content-Length` the core set; a `res.stream` response of unknown length arrives with an intact body and without a `Content-Length` and `Transfer-Encoding` conflict (chunked framing is asserted only for a body larger than the container's output buffer or after a flush, because a container may buffer a small body and frame it with a length); and no error page of the container appears for a `404` or `500` the core produced, because `sendError` is never called. [D-360]",
+          "checked": true,
+          "line": 436
+        },
+        {
+          "id": "AC-2",
+          "text": "A HEAD request to a GET route returns the `Content-Length` of the GET body and no body bytes, and a `204` and a `304` carry no body, on the embedded container. [D-360; FR-HTTP-017]",
+          "checked": true,
+          "line": 437
+        },
+        {
+          "id": "AC-3",
+          "text": "After `abort()` the next body write, `commit` or `finish` throws `IOException` (a write already blocked inside the container ends only by the container's write timeout, FR-SVL-006 AC-3), `abort()` called twice is harmless and `abort()` may run on another thread than the writer; a second `commit`, `sendFile` or `eventStream` on one exchange throws `IllegalStateException`. [r2 W2-006]",
+          "checked": true,
+          "line": 438
+        },
+        {
+          "id": "AC-4",
+          "text": "`res.file` and `res.download` on a file serve the whole file, a single `Range` (`206` with `Content-Range`) and a `416`, byte for byte equal to the in-memory adapter, with `sendFile` copying in chunks of at most 64 KiB, which a spy output stream records, and never reading the file into memory; the class references no `java.nio.file` type. [D-360; FR-STATIC-010]",
+          "checked": true,
+          "line": 439
+        },
+        {
+          "id": "AC-5",
+          "text": "Response header order on the wire is the container's, `docs/api/servlet.md` says so, and no test of the shared case suite depends on header order. [r2 W2-006]",
+          "checked": true,
+          "line": 440
+        }
+      ],
+      "mcp_read": "/tmp/naruserve-intake-core/mcp/FR-SVL-003.json"
+    },
+    {
+      "id": "FR-SVL-005",
+      "requirement_id": "FR-SVL-005",
+      "classification": "potential-update",
+      "match_type": "potential-update",
+      "similarity_score": 1.0,
+      "similarity_basis": "Direct named existing contract and code trace, not embedding estimate.",
+      "scope": "SVL",
+      "target": "wave-8",
+      "status": "verified",
+      "stability": "evolving",
+      "title": "Servlet SSE under AsyncContext: bounded stream counter, dedicated executor and no async timeout",
+      "file_path": "docs/spec/14.servlet-adapter.srs.md",
+      "heading_line": 636,
+      "statement": "The system shall implement `HttpExchange.eventStream` on the Servlet adapter so that the exchange counts open streams against `maxSseStreams` (default 128) and answers `503` before the exchange is marked started when the bound is reached, otherwise calls `startAsync()` and `AsyncContext.setTimeout(0)`, commits status and headers, hands the container's output stream to `StreamDrain.attach`, runs the core drain loop on a dedicated bounded executor owned by the adapter — daemon threads named `naruserve-servlet-sse-<n>`, at most `maxSseStreams`, never the container's pool threads — returns at once so the container's request thread is released after the handler returned, and completes the `AsyncContext` when the drain ends.",
+      "reason": "General deferred request async context must not consume/misuse SSE pool slots.",
+      "evidence": [
+        "docs/spec/14.servlet-adapter.srs.md:636",
+        "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/StreamDrain.java",
+        "FR-SSE-002",
+        "FR-SSE-003",
+        "FR-SSE-004",
+        "IR-HTTP-007",
+        "FR-SSE-001",
+        "IR-SVL-001"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "text": "With `maxSseStreams(2)` and two open streams, a third request whose handler calls `res.sse()` receives `503` with the standard error body and its request id, because the adapter's counter throws a `503` `HttpException` before the exchange is marked started; after one stream ends a new `res.sse()` is accepted, and the counter is released also when the drain fails with `IOException` and when the exchange is aborted. [D-361; r3 W2-002]",
+          "checked": true,
+          "line": 661
+        },
+        {
+          "id": "AC-2",
+          "text": "The drain runs on a thread named `naruserve-servlet-sse-<n>` that is a daemon and not a container pool thread, the container request thread has returned from `service()` while the stream is open (a test records both thread ids and the return), and the executor never holds more than `maxSseStreams` threads. [D-361; D-106]",
+          "checked": true,
+          "line": 662
+        },
+        {
+          "id": "AC-3",
+          "text": "The servlet is registered with `asyncSupported=true`; a test filter in front of the servlet records, after the handler called `res.sse()`, that `request.getAsyncContext().getTimeout()` is `0` for every stream; and a stream kept open longer than the container's default async timeout (the test lowers it to 1 s) still receives a heartbeat after 2.5 s and is not ended by the container. [r4 W2-005]",
+          "checked": true,
+          "line": 663
+        },
+        {
+          "id": "AC-4",
+          "text": "An event sent from another thread after the handler returned reaches the client within 500 ms of the `send`, a `: ping` heartbeat reaches an idle client within `heartbeatInterval` plus 500 ms, and an event sent by the handler thread before the drain starts reaches the client while the handler still runs, each flushed without further writes behind it. [D-361; D-406; FR-SSE-002]",
+          "checked": true,
+          "line": 664
+        },
+        {
+          "id": "AC-5",
+          "text": "When the drain ends (client close, `close()` or the core's end report) `AsyncContext.complete()` is called, the stream's `onClose` listeners run once, and `abort()` on an SSE exchange also calls `AsyncContext.complete()`. [D-361; r5 W2-001] Abort, timeout or rejected drain submission before the SSE drain starts must still close the core client exactly once, free its registry entry and invoke close listeners.",
+          "checked": true,
+          "line": 665
+        },
+        {
+          "id": "AC-6",
+          "text": "A stream whose client closed its socket is detected by the next write or heartbeat failing with `IOException`, ends with the access-log cause `client` and returns its executor thread within two heartbeat intervals plus 1 s. [D-361; FR-SSE-004]",
+          "checked": true,
+          "line": 666
+        }
+      ],
+      "mcp_read": "/tmp/naruserve-intake-core/mcp/FR-SVL-005.json"
+    },
+    {
+      "id": "FR-SVL-006",
+      "requirement_id": "FR-SVL-006",
+      "classification": "potential-update",
+      "match_type": "potential-update",
+      "similarity_score": 1.0,
+      "similarity_basis": "Direct named existing contract and code trace, not embedding estimate.",
+      "scope": "SVL",
+      "target": "wave-8",
+      "status": "verified",
+      "stability": "evolving",
+      "title": "Servlet stop and release: refuse new requests, wait for in-flight exchanges to the deadline, then cut the rest",
+      "file_path": "docs/spec/14.servlet-adapter.srs.md",
+      "heading_line": 758,
+      "statement": "The system shall implement `HttpAdapter.stop(timeout, unit)` on the Servlet adapter so that it first refuses new requests with `503` and `Connection: close`, then waits for the in-flight exchanges until the deadline, and at the deadline calls `shutdownNow()` on the SSE executor and `AsyncContext.complete()` on every stream still open; and `release()` detaches the handler, so that after shutdown no `naruserve-servlet-sse-*` thread and no upload temporary file of the app remains.",
+      "reason": "Shutdown/inflight async completion with adapter/container race evidence.",
+      "evidence": [
+        "docs/spec/14.servlet-adapter.srs.md:758",
+        "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet",
+        "FR-APP-011",
+        "FR-APP-013",
+        "FR-SSE-005",
+        "FR-ENGINE-006",
+        "IR-HTTP-007",
+        "FR-SVL-005",
+        "FR-SVL-001"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "text": "With one slow plain request in flight, `stop(2, SECONDS)` makes a new request answer `503` with `Connection: close` and the standard error body at once, returns as soon as the slow request finishes (before the deadline), and a request that outlasts the deadline does not make `stop` return later than the deadline plus 1 s. [D-359; r3 W2-003]",
+          "checked": true,
+          "line": 783
+        },
+        {
+          "id": "AC-2",
+          "text": "With open SSE streams, `shutdown` delivers the closing notice of FR-SSE-005 through the core, each stream's client sees the end of the chunked body within the shutdown timeout plus the D-344 margin, the `AsyncContext` of each stream is completed, and the executor is shut down. [D-359; FR-SSE-005]",
+          "checked": true,
+          "line": 784
+        },
+        {
+          "id": "AC-3",
+          "text": "A stream whose client stopped reading is cut at the deadline: `stop` returns within the deadline plus 1 s and the stream's `AsyncContext` is completed, so the container closes the output (Jetty frees a blocked writer at once, another container at its own write timeout, which the test does not wait for); the deviation sentence is present in `docs/api/servlet.md` and `docs/api/sse.md` gains a pointer to it. [r5 W2-001]",
+          "checked": true,
+          "line": 785
+        },
+        {
+          "id": "AC-4",
+          "text": "`release()` detaches the handler (later requests are answered `503`), `stop` and `release` are idempotent, `stop` before `bind` is harmless, and after `shutdown` returns a test finds no thread named `naruserve-servlet-sse-*` alive within 2 s and no upload temporary file of the app. [D-107; I-015]",
+          "checked": true,
+          "line": 786
+        },
+        {
+          "id": "AC-5",
+          "text": "Every test of the module that starts the container asserts after shutdown that no server thread and no temporary upload file of that app remains (a shared test rule). [I-015]",
+          "checked": true,
+          "line": 787
+        }
+      ],
+      "mcp_read": "/tmp/naruserve-intake-core/mcp/FR-SVL-006.json"
+    },
+    {
+      "id": "OPS-ROUTE-003",
+      "requirement_id": "OPS-ROUTE-003",
+      "classification": "potential-update",
+      "match_type": "potential-update",
+      "similarity_score": 1.0,
+      "similarity_basis": "Direct named existing contract and code trace, not embedding estimate.",
+      "scope": "ROUTE",
+      "target": "wave-4",
+      "status": "verified",
+      "stability": "evolving",
+      "title": "Decided routing semantics in docs/api/routing.md with no remaining marker (wave 4)",
+      "file_path": "docs/spec/03.routing.srs.md",
+      "heading_line": 2049,
+      "statement": "The system shall record in `docs/api/routing.md` the routing semantics decided in wave 2 and the `MethodSet` membership and iteration accessors with Java and Kotlin examples, and from wave 4 keep no (미확정) marker in it, the last one (`RouteBuilder.use(middleware)`) being decided by wave 4.",
+      "reason": "Bilingual routing contract/examples updated with new common-versus-extension boundary.",
+      "evidence": [
+        "docs/spec/03.routing.srs.md:2049",
+        "OPS-ROUTE-002",
+        "OPS-APP-001",
+        "docs/api/routing.md"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "text": "`docs/api/routing.md` describes the `//`, trailing-slash and case policy switches and their strict default, the `TRACE`/`CONNECT` enable policy, the `Allow` set rule, the lookup result order including WebSocket-only for plain `GET`/`HEAD` and the upgrade fallback, per-method priority with the `DELETE /users/me` example, the pattern validation errors (empty or repeated variable name, empty segment), policy-normalised conflict detection, case-sensitive method tokens, the upgrade-flag header rule, the path rejection rules applied before lookup and single percent-decoding of parameters (`%252e` gives `%2e`). [D-070; re_stated_from: OPS-ROUTE-001#AC1; the clause 'without naming configuration API methods' is dropped because wave 3 names `app.routerPolicy(RouterPolicy)` under D-398]",
+          "checked": true,
+          "line": 2074
+        },
+        {
+          "id": "AC-2",
+          "text": "`docs/api/routing.md` names the `MethodSet` membership and iteration accessors exactly as implemented, with a Java and a Kotlin example each and its Express counterpart or a note that Express has none. [D-038; re_stated_from: OPS-ROUTE-001#AC2]",
+          "checked": true,
+          "line": 2075
+        },
+        {
+          "id": "AC-3",
+          "text": "From wave 4 no line of `docs/api/routing.md` contains `(미확정)`: the `RouteBuilder.use(middleware)` marker is replaced by the wave 4 decision of OPS-APP-001 AC-2, and the markers on the `TRACE`/`CONNECT` setting API, on the `//`/trailing-slash/case setting API and on the `req.method()` value during automatic `HEAD` stay gone; `RoutingDocsTest` is re-pointed to this requirement. [D-109; D-398; D-137]",
+          "checked": true,
+          "line": 2076
+        }
+      ],
+      "mcp_read": "/tmp/naruserve-intake-core/mcp/OPS-ROUTE-003.json"
+    },
+    {
+      "id": "OPS-HTTP-004",
+      "requirement_id": "OPS-HTTP-004",
+      "classification": "potential-update",
+      "match_type": "potential-update",
+      "similarity_score": 1.0,
+      "similarity_basis": "Direct named existing contract and code trace, not embedding estimate.",
+      "scope": "HTTP",
+      "target": "wave-4",
+      "status": "verified",
+      "stability": "evolving",
+      "title": "docs/api Java examples compile against the API of the current wave (wave 4)",
+      "file_path": "docs/spec/04.http-core.srs.md",
+      "heading_line": 3460,
+      "statement": "The system shall compile, in the root test suite, every ```java block of `docs/api/*.md` whose methods and types exist at the merge of the current wave, against the `NaruServe-api` main classes, skipping only blocks on an explicit, non-stale skip list (I-008, I-009).",
+      "reason": "All changed Java examples compile or use justified existing skips.",
+      "evidence": [
+        "docs/spec/04.http-core.srs.md:3460",
+        "OPS-HTTP-002",
+        "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java",
+        "IR-HTTP-005",
+        "build.gradle",
+        "IR-HTTP-001"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "text": "The root `build.gradle` puts the `NaruServe-api` main classes on the root test suite's test classpath (for example `testImplementation project(':NaruServe-api')`) while keeping the wave 1 root test conventions (JUnit 4, `gradleTestKit()`, the existing `test` task dependencies and system properties). [I-009; wave decision: docs examples]",
+          "checked": true,
+          "line": 3485
+        },
+        {
+          "id": "AC-2",
+          "text": "The root test `src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java` extracts every ```java fenced block of every `docs/api/*.md` file. [I-009; wave decision: docs examples]",
+          "checked": true,
+          "line": 3486
+        },
+        {
+          "id": "AC-3",
+          "text": "The test compiles a block that declares a top-level type as its own compilation unit and places any other block in a method template that declares `throws Exception`, both with the fixed imports `com.snoworca.naruserve.*`, `com.snoworca.naruserve.routing.*`, `com.snoworca.naruserve.spi.*`, `java.util.*`, `java.util.concurrent.*` and `java.io.*`, where the template has `app` (`RestApp`), `req` (`Request`) and `res` (`Response`) as fields in scope and declares the stub handlers and stub values the docs name (such as `getUser`, `id`, `user`, `ctx`, `auth`, `myAdapter` or `myCodec`); compilation runs in process through `javax.tools.ToolProvider.getSystemJavaCompiler()` with the test runtime classpath, using `--release 8` when the in-process compiler supports it, or `-source 8 -target 8` on a Java 8 compiler against its actual Java 8 platform classes, and a compilation error or a missing system compiler fails the test. [I-009; wave decision: docs examples] Decision: a non-type block is wrapped in `class DocExampleN` with fields `app`, `req` and `res` and stub `RouteHandler` fields for the handler names the docs use, inside `void example() throws Exception`; a failure names each block's file, ordinal and diagnostics. [SDS 2026-10-19.naruserve.naruserve-v1-wave-3-6 SDS-AC-7] [SDS 2026-10-19.naruserve.naruserve-v1-wave-3-6 SDS-AC-8] Decision: the template also declares the stub fields `ctx` (`ApplicationContext`), `auth` (`Middleware`), `myAdapter` (`HttpAdapter`) and `myCodec` (`JsonCodec`). [SDS 2026-10-19.naruserve.naruserve-v1-wave-4-10 SDS-AC-11]",
+          "checked": true,
+          "line": 3487
+        },
+        {
+          "id": "AC-4",
+          "text": "A block is skipped only when it is on an explicit list kept in the test whose entry names the file, the block (its ordinal among the file's ```java blocks or its first line) and one reason: a call to a later-wave method (named), an illustrative copy of an existing type declaration (such as `Method` or `RouteHandler`), a type of a later wave or of a library absent from the root test classpath (named, such as Gson `@SerializedName` or `UploadFile`), or an app-defined example type the block assumes (named, such as `UserService` or `Database`). [I-009; wave decision: docs examples] Decision: the block selector is an ordinal such as `#3` or the block's first line. [SDS 2026-10-19.naruserve.naruserve-v1-wave-3-6 SDS-AC-9]",
+          "checked": true,
+          "line": 3488
+        },
+        {
+          "id": "AC-5",
+          "text": "A ```java fence in `docs/api` that holds JavaScript is relabelled ```js. [I-009; wave decision: docs examples]",
+          "checked": true,
+          "line": 3489
+        },
+        {
+          "id": "AC-6",
+          "text": "The test fails when a skip-list entry no longer matches any block of its file, so no stale skip remains. [I-009; wave decision: docs examples] `DocsExamplesCompileTest` is re-pointed to this requirement.",
+          "checked": true,
+          "line": 3490
+        },
+        {
+          "id": "AC-7",
+          "text": "The blocks of `docs/api/response.md` and `docs/api/routing.md` that call only wave 3 methods are compiled, not skipped: the test asserts that at least one block of each of these two files was compiled. [I-009; wave decision: docs examples]",
+          "checked": true,
+          "line": 3491
+        }
+      ],
+      "mcp_read": "/tmp/naruserve-intake-core/mcp/OPS-HTTP-004.json"
+    },
+    {
+      "id": "OPS-REL-001",
+      "requirement_id": "OPS-REL-001",
+      "classification": "potential-update",
+      "match_type": "potential-update",
+      "similarity_score": 1.0,
+      "similarity_basis": "Direct named existing contract and code trace, not embedding estimate.",
+      "scope": "REL",
+      "target": "wave-8",
+      "status": "verified",
+      "stability": "evolving",
+      "title": "Root README with installation coordinates and a quick start that matches docs/api/README.md",
+      "file_path": "docs/spec/15.release.srs.md",
+      "heading_line": 604,
+      "statement": "The repository shall contain a root `README.md` with the installation coordinates of the nine JAR modules and the `NaruServe-android` AAR, the Maven Central installation with `repositories { mavenCentral() }`, the source-checkout instruction `./gradlew publishToMavenLocal` with `repositories { mavenLocal() }`, how to obtain TinyHttpd, a Java and a Kotlin quick start whose code equals the quick start of `docs/api/README.md`, the statement that the Android sample build and the API 21 device or emulator verification are not part of v1, and links to the API documents and the release documents.",
+      "reason": "Bilingual README/version/install/quickstart remain aligned.",
+      "evidence": [
+        "docs/spec/15.release.srs.md:604",
+        "README.md",
+        "docs/api/README.md",
+        "OPS-BUILD-003",
+        "OPS-HTTP-004",
+        "FR-REL-005",
+        "OPS-REL-005"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "text": "`README.md` exists at the repository root and a docs test finds in it the ten module coordinates `com.snoworca.naruserve:<artifactId>:0.9.0` (the lowercase artifactIds of FR-REL-005 for the nine JAR modules and `NaruServe-android`) equal to the rows of the module table of `docs/api/README.md`, the text `publishToMavenLocal`, the text `mavenLocal()` and the `implementation 'com.snoworca.naruserve:naruserve:0.9.0'` line. [D-379; wave decision Publishing; android-module decision 2026-10-26; central-0.9.0 decision 2026-10-27]",
+          "checked": true,
+          "line": 629
+        },
+        {
+          "id": "AC-2",
+          "text": "The ```java and ```kotlin quick-start blocks of `README.md` are character-for-character equal to the Java and Kotlin blocks under \"5분 시작\" of `docs/api/README.md`, which a docs test asserts; the Java block of `docs/api/README.md` stays on the named skip list of `DocsExamplesCompileTest` with the reason `app-defined type `User``, and the root `README.md` is not compiled. [D-379; I-009]",
+          "checked": true,
+          "line": 630
+        },
+        {
+          "id": "AC-3",
+          "text": "`README.md` states that the Android sample build and API 21 device or emulator verification are not part of v1 and that API 21 compatibility rests on `--release 8` and the animal-sniffer `android-api-level-21` check, and links `docs/api/README.md`, `docs/release/release-notes.md`, `docs/release/test-results.md` and `THIRD-PARTY-LICENSES.md`, all of which exist. [r1 W1-005; D-379]",
+          "checked": true,
+          "line": 631
+        },
+        {
+          "id": "AC-4",
+          "text": "`README.md` holds no (미확정) marker and names the TinyHttpd instruction of OPS-REL-005. [D-379; D-380; D-383]",
+          "checked": true,
+          "line": 632
+        },
+        {
+          "id": "AC-5",
+          "text": "The Install section of `README.md` shows a `repositories` block with `mavenCentral()` and without `mavenLocal()` before the `implementation 'com.snoworca.naruserve:naruserve:0.9.0'` line and states that the modules are published on Maven Central; `publishToMavenLocal` and `mavenLocal()` appear only under a source-checkout heading; and neither `README.md` nor `docs/api/README.md` contains \"published to the local Maven repository only\" or \"not published to Maven Central\", which a docs test asserts. [central-0.9.0 publication 2026-10-27]",
+          "checked": true,
+          "line": 633
+        }
+      ],
+      "mcp_read": "/tmp/naruserve-intake-core/mcp/OPS-REL-001.json"
+    }
+  ],
+  "declared_existing_req_edit": true,
+  "counts": {
+    "candidate_matches": 54,
+    "potential_conflict": 23,
+    "potential_update": 31
+  },
+  "new_contract_candidates": [
+    "Pinned live Express oracle and deterministic Node-free Java fixture replay",
+    "Standalone mounted Router and param preprocessing",
+    "List/optional params and mounted URL/path views",
+    "API21 asynchronous completion/deferred common next request lifetime"
+  ],
+  "workflow": "MCP-safe SRS update/supersede/discard decisions belong to host after routing/design gate; this researcher mutated nothing."
+}

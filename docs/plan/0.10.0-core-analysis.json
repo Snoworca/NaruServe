@@ -1,0 +1,802 @@
+{
+  "work": "naru-v010",
+  "research_kind": "read-only-core-parallel-lane-design",
+  "captured_at": "2026-10-28T04:41:44.405476+00:00",
+  "head": "3f91c6e17d3e40eec51946043b87e45cf95ab6de",
+  "repository_edits": false,
+  "request_basis": "Latest user work instruction supplied by host: complete issues47–65 with parallel subagents; behaviorTDD; independent sufficiency max3 rounds stop firstpass; preserve dependencies; docs then0.10.0 commit/push/Maven deployment.",
+  "canonical_issue_dag": [
+    {
+      "task": "T00",
+      "issue": 47,
+      "depends_on": [],
+      "owner_boundary": "host-SRS",
+      "files": [
+        "docs/spec/03.routing.srs.md",
+        "docs/spec/04.http-core.srs.md",
+        "docs/spec/05.application.srs.md",
+        "docs/spec/06.engine-adapter.srs.md"
+      ]
+    },
+    {
+      "task": "T01",
+      "issue": 48,
+      "depends_on": [
+        "T00"
+      ],
+      "owner_boundary": "parity-harness",
+      "files": [
+        "src/test/",
+        "gradle/",
+        "build.gradle"
+      ]
+    },
+    {
+      "task": "T02",
+      "issue": 49,
+      "depends_on": [
+        "T00",
+        "T01"
+      ],
+      "owner_boundary": "compiler",
+      "files": [
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RoutePattern.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouterPolicy.java"
+      ]
+    },
+    {
+      "task": "T03",
+      "issue": 50,
+      "depends_on": [
+        "T02"
+      ],
+      "owner_boundary": "request-model",
+      "files": [
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouteMatch.java"
+      ]
+    },
+    {
+      "task": "T04",
+      "issue": 51,
+      "depends_on": [
+        "T02",
+        "T03"
+      ],
+      "owner_boundary": "registration-input",
+      "files": [
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/RouteBuilder.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RoutePattern.java"
+      ]
+    },
+    {
+      "task": "T05",
+      "issue": 52,
+      "depends_on": [
+        "T02",
+        "T03",
+        "T04"
+      ],
+      "owner_boundary": "registration",
+      "files": [
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/RouteBuilder.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java"
+      ]
+    },
+    {
+      "task": "T06",
+      "issue": 53,
+      "depends_on": [
+        "T03",
+        "T05"
+      ],
+      "owner_boundary": "dispatch-core",
+      "files": [
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/MiddlewarePipeline.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ChainNext.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/Next.java"
+      ]
+    },
+    {
+      "task": "T07",
+      "issue": 54,
+      "depends_on": [
+        "T03",
+        "T06"
+      ],
+      "owner_boundary": "mounts",
+      "files": [
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/PrefixMatcher.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/Router.java (planned public mounted-router analogue)",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/RouterMount.java (planned)"
+      ]
+    },
+    {
+      "task": "T08",
+      "issue": 55,
+      "depends_on": [
+        "T07"
+      ],
+      "owner_boundary": "dispatch-core",
+      "files": [
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/Router.java (planned)"
+      ]
+    },
+    {
+      "task": "T09",
+      "issue": 56,
+      "depends_on": [
+        "T08"
+      ],
+      "owner_boundary": "dispatch-core",
+      "files": [
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/Method.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/MethodSet.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouterPolicy.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java"
+      ]
+    },
+    {
+      "task": "T10",
+      "issue": 57,
+      "depends_on": [
+        "T06",
+        "T09"
+      ],
+      "owner_boundary": "dispatch-core",
+      "files": [
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/ErrorHandler.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ErrorPath.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StandardErrors.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java"
+      ]
+    },
+    {
+      "task": "T11",
+      "issue": 58,
+      "depends_on": [
+        "T06",
+        "T10"
+      ],
+      "owner_boundary": "dispatch-core",
+      "files": [
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/Next.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ChainNext.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/GatedExchangeHandler.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/MiddlewarePipeline.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/AppLifecycle.java"
+      ]
+    },
+    {
+      "task": "T12",
+      "issue": 59,
+      "depends_on": [
+        "T00",
+        "T01"
+      ],
+      "owner_boundary": "external-engine",
+      "files": [
+        "TinyHttpd dependency: core/RequestParser.java",
+        "TinyHttpd dependency: core/PercentCodec.java",
+        "TinyHttpd dependency: public server configuration"
+      ]
+    },
+    {
+      "task": "T13",
+      "issue": 60,
+      "depends_on": [
+        "T03",
+        "T11",
+        "T12"
+      ],
+      "owner_boundary": "tiny-adapter",
+      "files": [
+        "NaruServe-tinyhttpd/src/main/",
+        "build.gradle",
+        "settings.gradle",
+        "NaruServe-tinyhttpd/src/test/"
+      ]
+    },
+    {
+      "task": "T14",
+      "issue": 61,
+      "depends_on": [
+        "T03",
+        "T11"
+      ],
+      "owner_boundary": "servlet-adapter",
+      "files": [
+        "NaruServe-servlet/src/main/",
+        "NaruServe-servlet/src/test/"
+      ]
+    },
+    {
+      "task": "T15",
+      "issue": 62,
+      "depends_on": [
+        "T07",
+        "T08",
+        "T09",
+        "T10",
+        "T11"
+      ],
+      "owner_boundary": "extensions",
+      "files": [
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRouteGroup.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/common/RoutePaths.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultCors.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StaticHandler.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/RouteGroup.java"
+      ]
+    },
+    {
+      "task": "T16",
+      "issue": 63,
+      "depends_on": [
+        "T05",
+        "T11",
+        "T13",
+        "T15"
+      ],
+      "owner_boundary": "ws-preservation",
+      "files": [
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/WebSocketUpgrade.java",
+        "NaruServe-tinyhttpd/src/test/"
+      ]
+    },
+    {
+      "task": "T17",
+      "issue": 64,
+      "depends_on": [
+        "T01",
+        "T02",
+        "T03",
+        "T04",
+        "T05",
+        "T06",
+        "T07",
+        "T08",
+        "T09",
+        "T10",
+        "T11",
+        "T13",
+        "T14",
+        "T15",
+        "T16"
+      ],
+      "owner_boundary": "integration-verification",
+      "files": [
+        "all changed tests",
+        "docs/research/express5-v010/"
+      ]
+    },
+    {
+      "task": "T18",
+      "issue": 65,
+      "depends_on": [
+        "T17"
+      ],
+      "owner_boundary": "release-docs",
+      "files": [
+        "README.md",
+        "README.ko.md",
+        "docs/api/",
+        "docs/release/",
+        "build.gradle"
+      ]
+    }
+  ],
+  "parallelism_rules": [
+    "Issue completion prerequisites remain tracked; no independent leaf preparation is reported as completed descendant issue.",
+    "If independent code leaves are extracted from later issues, host must make explicit prerequisite workorders/REQAC coverage before TDD execution; otherwise preparation is read-only until canonical dependencies complete.",
+    "Contract freeze is required before compiler/parameter/Pattern writers depend on each other.",
+    "Never run multiple writers on RestApp/DefaultRestApp/Dispatcher/DefaultRequest concurrently, even in separate worktrees: merge conflicts hide semantic races.",
+    "With4 agent slots: three implementation lanes plus root integration; reviews use a freed lane and must be independent.",
+    "Root serializes all SpecKiwi SRS mutations and build.gradle/settings.gradle/version changes.",
+    "No dependency removal/addition/version change from this research; existing pins and module exposure must be preserved unless task/user explicitly resolves a required change."
+  ],
+  "proposed_workorders": [
+    {
+      "id": "P0-contract",
+      "issues": [
+        "T00/#47"
+      ],
+      "depends_on": [],
+      "lane": "host-contract",
+      "write_set": [
+        "docs/spec/ (MCP host only)",
+        "docs/plan/ (host only)"
+      ],
+      "result": "Freeze RoutePath/PathMatch/params/mount/cursor/completion contracts and changedREQ assignments before writers start. Include JavaPattern boundary and WS profile.",
+      "parallel_rule": "Root is sole SRS and shared plan writer."
+    },
+    {
+      "id": "P1-oracle",
+      "issues": [
+        "T01/#48"
+      ],
+      "depends_on": [
+        "P0-contract"
+      ],
+      "lane": "oracle",
+      "write_set": [
+        "new dedicated parity fixture/generator/replay package",
+        "new gradle/parity.gradle"
+      ],
+      "forbidden": [
+        "build.gradle except root-applied minimal task hook",
+        "RestApp.java",
+        "Dispatcher.java"
+      ],
+      "tests": [
+        "deterministic oracle regeneration",
+        "fixture replay positive/negative/stale cases",
+        "Node-free replay"
+      ],
+      "result": "Freeze corpus schema early. New behaviors are expected fixtures, not already passing NaruServe claims."
+    },
+    {
+      "id": "P2-compiler-leaf",
+      "issues": [
+        "T02/#49"
+      ],
+      "depends_on": [
+        "P0-contract"
+      ],
+      "lane": "compiler",
+      "write_set": [
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RoutePattern.java",
+        "new routing token/compiler/match result types",
+        "compiler-only tests"
+      ],
+      "forbidden": [
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+        "build.gradle"
+      ],
+      "tests": [
+        "upstream strings/invalid cases",
+        "wildcard/optional/quoted/Unicode/escape captures",
+        "FULL/PREFIX delimiter behavior",
+        "bounded expansion/adversarial subprocesses"
+      ],
+      "result": "Independent compiler implementation against frozen common fixture schema; T02 issue integration waits T01 and canonical prerequisites."
+    },
+    {
+      "id": "P3-params-leaf",
+      "issues": [
+        "T03/#50"
+      ],
+      "depends_on": [
+        "P0-contract"
+      ],
+      "lane": "request",
+      "write_set": [
+        "new internal parameter/mount-view immutable types",
+        "new request-model focused tests"
+      ],
+      "forbidden": [
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RoutePattern.java"
+      ],
+      "tests": [
+        "optional absent versus undeclared",
+        "immutable scalar/list captures",
+        "mount frame view snapshots",
+        "paramInt missing contract"
+      ],
+      "result": "Pure capture/view storage leaf independent of matcher implementation. Existing Request/DefaultRequest wiring waits P2 contract implementation and canonical T02."
+    },
+    {
+      "id": "P4-pattern-leaf",
+      "issues": [
+        "T04/#51"
+      ],
+      "depends_on": [
+        "P0-contract"
+      ],
+      "lane": "java-pattern",
+      "write_set": [
+        "new internal PatternPathMatcher/PathAlternatives types",
+        "Pattern-specific tests"
+      ],
+      "forbidden": [
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/RouteBuilder.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RoutePattern.java",
+        "build.gradle"
+      ],
+      "tests": [
+        "Pattern.find search and supplied flags",
+        "numeric/nonparticipating captures",
+        "per-match Matcher concurrency",
+        "path alternatives first-selection",
+        "realJava8/API21 callable APIs"
+      ],
+      "result": "JavaPattern engine needs no dependency addition. Public registration wiring waits canonical T03/T04 phase. New leaf paths are planned, not existing files."
+    },
+    {
+      "id": "P5-external-engine",
+      "issues": [
+        "T12/#59"
+      ],
+      "depends_on": [
+        "P0-contract",
+        "P1-oracle"
+      ],
+      "lane": "external-tiny",
+      "write_set": [
+        "external TinyHttpd opt-in parser/config/test files only"
+      ],
+      "forbidden": [
+        "NaruServe shared root build files"
+      ],
+      "tests": [
+        "default security/framing/header/Host unchanged",
+        "opt-in raw socket matrix",
+        "source/binary consumer API contract"
+      ],
+      "gate": "Reconcile Q-EXT and current dependency constraint from latest authorization; do not infer permission from prior JavaPattern decision. No external mutation by this researcher."
+    },
+    {
+      "id": "P6-register-converge",
+      "issues": [
+        "T03/#50 wiring",
+        "T04/#51 API",
+        "T05/#52"
+      ],
+      "depends_on": [
+        "P1-oracle",
+        "P2-compiler-leaf",
+        "P3-params-leaf",
+        "P4-pattern-leaf"
+      ],
+      "lane": "registration-single-owner",
+      "write_set": [
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouteMatch.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/RouteBuilder.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouterPolicy.java"
+      ],
+      "tests": [
+        "2arg/3arg/array/Pattern JavaKotlin compilation",
+        "Route creation-order and repeated handlers",
+        "after-listen registration/safely published updates",
+        "HTTP versus WS profiles"
+      ],
+      "result": "Single public API owner applies prepared leaves; respects original T03→T04→T05 closure barriers."
+    },
+    {
+      "id": "P7-dispatch-chain",
+      "issues": [
+        "T06/#53",
+        "T07/#54",
+        "T08/#55",
+        "T09/#56",
+        "T10/#57",
+        "T11/#58"
+      ],
+      "depends_on": [
+        "P6-register-converge"
+      ],
+      "lane": "dispatch-core-single-owner",
+      "write_set": [
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/MiddlewarePipeline.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ChainNext.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/Next.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ErrorPath.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/GatedExchangeHandler.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/AppLifecycle.java",
+        "public/router/param/error/completion wiring by same owner"
+      ],
+      "sequence": [
+        "T06 cursor/synthetic mount frames",
+        "T07 actual mounted routers",
+        "T08 router-local param cache",
+        "T09 methods/defaults/HEAD/OPTIONS",
+        "T10 error flow",
+        "T11 deferred request lifetime"
+      ],
+      "tests": [
+        "ordered trace/route-router skips",
+        "sameRouter vs mounted restoration",
+        "param last-value/router-local effects",
+        "explicitnext afterresponse/repeatednext",
+        "common errors versus JSON extension",
+        "deferred response/error/stream/SSE/upload/shutdown lifecycle"
+      ],
+      "result": "Large central shared-write chain cannot safely be assigned to simultaneous implementation writers."
+    },
+    {
+      "id": "P8-tiny-adapter",
+      "issues": [
+        "T13/#60"
+      ],
+      "depends_on": [
+        "P7-dispatch-chain",
+        "P5-external-engine"
+      ],
+      "lane": "tiny-adapter",
+      "write_set": [
+        "NaruServe-tinyhttpd/src/main/",
+        "NaruServe-tinyhttpd/src/test/"
+      ],
+      "forbidden": [
+        "build.gradle",
+        "settings.gradle",
+        "NaruServe-api/src/main/"
+      ],
+      "tests": [
+        "actual raw HTTP oracle",
+        "deferred ordinary/stream/SSE completion",
+        "disconnect/shutdown/worker bounds"
+      ],
+      "result": "Root owns dependency and source-pin integration."
+    },
+    {
+      "id": "P9-servlet-adapter",
+      "issues": [
+        "T14/#61"
+      ],
+      "depends_on": [
+        "P7-dispatch-chain"
+      ],
+      "lane": "servlet-adapter",
+      "write_set": [
+        "NaruServe-servlet/src/main/",
+        "NaruServe-servlet/src/test/"
+      ],
+      "forbidden": [
+        "NaruServe-api/src/main/",
+        "build.gradle"
+      ],
+      "tests": [
+        "ordinary AsyncContext hold/finish/abort",
+        "late stream/SSE start",
+        "inflight and shutdown races",
+        "supported raw URI policy"
+      ],
+      "result": "Parallel with P8 and P10 after lifetime seam freezes; no transport success inferred from in-memory tests."
+    },
+    {
+      "id": "P10-extensions",
+      "issues": [
+        "T15/#62"
+      ],
+      "depends_on": [
+        "P7-dispatch-chain"
+      ],
+      "lane": "extensions",
+      "write_set": [
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRouteGroup.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/common/RoutePaths.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultCors.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StaticHandler.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StaticMount.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/RouteGroup.java"
+      ],
+      "forbidden": [
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java"
+      ],
+      "tests": [
+        "group inheritance and new syntax joining",
+        "CORS preflight204 distinct autoOPTIONS200",
+        "static ordering/fallthrough and Range/cache/SPA",
+        "filesystem traversal/symlink defenses"
+      ],
+      "result": "Shared Dispatcher/DefaultRestApp hook requests go to root/dispatch owner, not direct cross-lane edits."
+    },
+    {
+      "id": "P11-ws-verify",
+      "issues": [
+        "T16/#63"
+      ],
+      "depends_on": [
+        "P8-tiny-adapter",
+        "P10-extensions"
+      ],
+      "lane": "ws-preservation",
+      "write_set": [
+        "WS-specific tests only initially"
+      ],
+      "tests": [
+        "existing GET/ws coexistence426",
+        "Origin/auth-before101",
+        "callbacks/params/queues/close/shutdown/access logs"
+      ],
+      "result": "If defect needs core/adapter change, hand back to that file owner, then re-review. No ExpressWS equivalence work."
+    },
+    {
+      "id": "P12-final-sufficiency",
+      "issues": [
+        "T17/#64"
+      ],
+      "depends_on": [
+        "P8-tiny-adapter",
+        "P9-servlet-adapter",
+        "P10-extensions",
+        "P11-ws-verify"
+      ],
+      "lane": "independent-final-review",
+      "write_set": [
+        "test sufficiency/evidence reports only unless owner-routed fixes"
+      ],
+      "tests": [
+        "all changed+new REQ/AC mapping",
+        "whole-suite/live parity",
+        "actualJava8/JDK17/API21",
+        "raw transport/resource/adversarial regressions"
+      ],
+      "result": "Independent sufficiency review, maximum3 rounds, stop immediately on first pass."
+    },
+    {
+      "id": "P13-doc-release",
+      "issues": [
+        "T18/#65"
+      ],
+      "depends_on": [
+        "P12-final-sufficiency"
+      ],
+      "lane": "docs-then-release",
+      "write_set": [
+        "README.md",
+        "README.ko.md",
+        "docs/api/",
+        "docs/release/",
+        "root-owned version/build/publication config"
+      ],
+      "tests": [
+        "bilingual API code examples compile",
+        "local links",
+        "version/POM/staging/source/javadoc/AAR consistency",
+        "post-doc/version wholebuild/parity/Java8/API21 if changed inputs require"
+      ],
+      "result": "technical-writer skill after final sufficiency; independent max3/first-pass-stop; commit/push/version0.10.0 Maven deployment per latest authorization, accurately record remote outcomes."
+    }
+  ],
+  "api_design_choices": [
+    {
+      "topic": "route inputs",
+      "proposal": "One internal PathSpec/CompiledPath abstraction supports string, Pattern and ordered alternatives; public route overloads delegate to it. Preserve existing String+2arg calls.",
+      "decision_needed_in_design": "Exact factory/overload naming: avoid null/lambda overload ambiguity and ambiguous wildcard imports. No JavaScript regex engine."
+    },
+    {
+      "topic": "mounted router naming",
+      "proposal": "Prefer a distinct public HttpRouter/RestRouter name rather than colliding with existing generic routing.Router; retain group as its own extension.",
+      "evidence": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:20; NaruServe-api/src/main/java/com/snoworca/naruserve/RouteGroup.java:3"
+    },
+    {
+      "topic": "Pattern captures",
+      "proposal": "Search/find semantics; Pattern flags respected; Matcher isolated per execution; numeric capture API first and explicit named-mapping design checked on actualAPI21.",
+      "evidence": "docs/research/express5-v010/04.java-pattern-decision.md"
+    },
+    {
+      "topic": "Request",
+      "proposal": "Optional nullable param, immutable params(name) list, mount URL/path/baseUrl/originalUrl views. Do not reconstruct body/cache/services/uploads per layer. Explicit paramInt absence contract.",
+      "evidence": "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java:27,65; NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java:39,103,347"
+    },
+    {
+      "topic": "continuations",
+      "proposal": "Stable Route identity, layer/route/router cursors; common explicitnext-afterresponse/repeatednext not blocked just by response completion. Separate no-second-commit invariant.",
+      "evidence": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ChainNext.java:57,90; NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:1081"
+    },
+    {
+      "topic": "async",
+      "proposal": "API21-compatible custom completion/callback; successful completion does not autonext/autofinish; failed completion enters error progression. Separate initial callback return, response completion and cleanup.",
+      "evidence": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java:777; NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpExchange.java:14"
+    },
+    {
+      "topic": "defaults/extensions",
+      "proposal": "Express common method/default/error flows separate from legacy Method.any, strict WS profile, JSONerror convenience, group, CORS/SSE/service extensions.",
+      "evidence": "NaruServe-api/src/main/java/com/snoworca/naruserve/Method.java:9,12; NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultCors.java:44,71"
+    }
+  ],
+  "existing_srs_conflicts": [
+    "FR-ROUTE-003",
+    "FR-ROUTE-004",
+    "FR-ROUTE-005",
+    "FR-ROUTE-006",
+    "FR-ROUTE-007",
+    "FR-ROUTE-008",
+    "FR-ROUTE-010",
+    "FR-ROUTE-011",
+    "FR-ROUTE-012",
+    "FR-ROUTE-013",
+    "FR-ROUTE-014",
+    "CON-ROUTE-005",
+    "FR-HTTP-008",
+    "FR-HTTP-009",
+    "FR-HTTP-021",
+    "FR-HTTP-023",
+    "FR-HTTP-024",
+    "FR-HTTP-026",
+    "FR-APP-003",
+    "FR-APP-004",
+    "CON-APP-002",
+    "FR-STATIC-001",
+    "FR-STATIC-002"
+  ],
+  "other_requirement_anchors": [
+    "IR-HTTP-001",
+    "IR-HTTP-002",
+    "IR-HTTP-003",
+    "IR-HTTP-005",
+    "IR-HTTP-006",
+    "IR-HTTP-007",
+    "FR-DX-003",
+    "FR-DX-007",
+    "FR-DX-008",
+    "FR-DX-009",
+    "FR-DX-010",
+    "FR-APP-019",
+    "FR-APP-020",
+    "FR-ENGINE-011",
+    "FR-SVL-002",
+    "FR-SVL-003",
+    "FR-SVL-005",
+    "FR-SVL-006"
+  ],
+  "largest_runtime_changes": [
+    {
+      "change": "Replace preselected singular route with live ordered layer/Route cursor",
+      "evidence": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:184–193; NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:148–153,983–999"
+    },
+    {
+      "change": "Replace return-time auto200 and exhausted continuation with true deferred request lifecycle",
+      "evidence": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java:777–792; NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ChainNext.java:90–99"
+    },
+    {
+      "change": "Separate common raw-path match/capture decoding from transport and file/WS security profiles",
+      "evidence": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/PathValidator.java:22–38; NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StaticHandler.java:65–83"
+    },
+    {
+      "change": "Implement ordinary deferred ServletAsyncContext, delayed stream/SSE and shutdown accounting",
+      "evidence": "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/NaruServeServlet.java:59–69; ServletExchange.java:191–194,303–317,355–357"
+    }
+  ],
+  "dependency_risk": {
+    "existing_pins": [
+      "TinyHttpd core/websocket3.1.0",
+      "Gson2.14.0",
+      "SLF4J1.7.36",
+      "existingKotlin/Servlet/jspecify dependencies"
+    ],
+    "evidence": "build.gradle:61–85",
+    "risk": "T12/T13 propose consuming an external new raw-routing API. Source composite changes do not update published3.1.0. If preserve-current-dependencies means exact artifact version pins, resolve that conflict explicitly; never overwrite existing published version or claim Maven-only parity from composite output.",
+    "regex": "JavaPattern adds no new runtime dependency; ECMAScript/JNI/native engine remains excluded."
+  },
+  "review_protocol": {
+    "per_behavior": "REQ/AC failing automated test observed before implementation; smallestgreen then meaningfulregression.",
+    "independence": "test sufficiency reviewer separate from author; fixes routed to owning writer; review no more than3 rounds.",
+    "first_pass": "stop immediately when reviewer passes; do not force3 rounds.",
+    "after_three_failures": "record exact unresolved defects and required action; do not mark verified/close affectedissue or publish falsely.",
+    "final": "Whole-suite sufficiency before technical-writer bilingual docs, then verify final docs/version/package changes as required."
+  },
+  "verification_status": "No implementation tests run; lane proposal based on current source/DAG/SRS inspection only."
+}

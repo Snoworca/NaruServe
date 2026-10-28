@@ -1,0 +1,220 @@
+{
+  "task": "transport_dependency_audit",
+  "read_only": true,
+  "repository_mutations": false,
+  "created_at": "2026-10-28T04:42:47.273863+00:00",
+  "workspace": {
+    "root": "/Users/beom/work/git/NaruServe",
+    "mcpRootSource": "per-call-workspace-root",
+    "work_mode": "sdd",
+    "active_target": "central-0.9.0"
+  },
+  "requirements": [
+    "FR-ENGINE-011",
+    "IR-HTTP-003",
+    "IR-HTTP-007",
+    "FR-SVL-002",
+    "FR-SVL-003",
+    "FR-SVL-005",
+    "FR-SVL-006",
+    "CON-SVL-001",
+    "CON-BUILD-006"
+  ],
+  "requirement_lifecycle_observed": "All named requirements are verified/evolving; changed contracts need guarded SRS updates before behavior implementation.",
+  "dependency_pins": {
+    "tinyhttpd_core": "com.snoworca:tinyhttpd-core:3.1.0",
+    "tinyhttpd_websocket": "com.snoworca:tinyhttpd-websocket:3.1.0",
+    "gson": "com.google.code.gson:gson:2.14.0",
+    "servlet_api": "javax.servlet:javax.servlet-api:3.1.0 (compileOnly)",
+    "websocket_api": "javax.websocket:javax.websocket-api:1.1 (compileOnly)",
+    "servlet_test_container": "org.eclipse.jetty:jetty-{servlet,webapp,annotations}:9.4.58.v20250814 (test only)",
+    "build_evidence": [
+      "build.gradle:65-66",
+      "build.gradle:68",
+      "build.gradle:83",
+      "build.gradle:362-370"
+    ],
+    "tiny_default_source_substitution": "settings.gradle:42-67; -PtinyHttpdFromMaven=true disables composite",
+    "tiny_verified_source_commit": "165f365",
+    "tiny_current_readonly_checkout": "e63858670abf2d3c29a1b39e221b0dc858c38f85",
+    "published_core_jar": "/Users/beom/.gradle/caches/modules-2/files-2.1/com.snoworca/tinyhttpd-core/3.1.0/59a406ca69a6b535096959966d85ecf8a136955c/tinyhttpd-core-3.1.0.jar",
+    "published_core_jar_sha256": "78d18ed556ca5a846bb5b9001d33d53216357947841bb7e2d1ff6c5c8151f225"
+  },
+  "raw_path_feasibility": {
+    "issues": [
+      59,
+      60
+    ],
+    "verdict": "Not implementable through the existing TinyHttpd3.1.0 public parser/handler/filter API while retaining the prior full raw-socket path acceptance criteria.",
+    "reason": "The parser rejects decoded path==null before dispatching any application handler/filter. RequestURI exposes raw input only for accepted requests. There is no raw-path validation policy/parser hook in the published Builder/ServerConfig API.",
+    "source_evidence": [
+      "/Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/RequestParser.java:30-31",
+      "/Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/RequestParser.java:90-94",
+      "/Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/PercentCodec.java:39-41",
+      "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdExchange.java:132-137"
+    ],
+    "binary_api_evidence": "javap inspected the published3.1.0 TinyHttpd.Builder and ServerConfig; no raw/parser/path policy hook.",
+    "actual_socket_probe": {
+      "runtime": "JShell17.0.20.1",
+      "dependency": "exact published tinyhttpd-core3.1.0 JAR",
+      "method": "Loopback ephemeral-port TinyHttpd with handler hit counter; raw GET HTTP/1.1, Host localhost, Connection close",
+      "cases": [
+        {
+          "target": "/x/ok",
+          "status": 200,
+          "handler_hits": 1
+        },
+        {
+          "target": "/x/a%2Fb",
+          "status": 400,
+          "handler_hits": 0
+        },
+        {
+          "target": "/x/%00",
+          "status": 400,
+          "handler_hits": 0
+        },
+        {
+          "target": "/x/%2e",
+          "status": 400,
+          "handler_hits": 0
+        },
+        {
+          "target": "/x/%2e%2e",
+          "status": 400,
+          "handler_hits": 0
+        },
+        {
+          "target": "/x/%ZZ",
+          "status": 400,
+          "handler_hits": 0
+        },
+        {
+          "target": "/x/a//b",
+          "status": 200,
+          "handler_hits": 1,
+          "request_uri": "/x/a//b",
+          "get_path": "/x/a/b"
+        }
+      ]
+    },
+    "unsupported_shortcuts": [
+      "A NaruServe rawPath accessor cannot intercept requests already rejected by the engine.",
+      "Adding an ordinary TinyHttpd filter cannot run before parser rejection.",
+      "Source-only composite patches with unchanged Maven3.1.0 dependency do not provide a correct published consumer.",
+      "Reflection, class shadowing, rewriting dependency bytecode or silently weakening HTTP parser security are not a supported public-API solution."
+    ],
+    "decision_options": [
+      {
+        "id": "KEEP_PIN",
+        "preserves_latest_dependency_constraint": true,
+        "description": "Keep TinyHttpd3.1.0, implement all available common routing/deferred behaviors, and explicitly obtain user agreement to revise #59/#60 raw-socket acceptance to the transport-supported domain. Existing engine rejections must be documented as an approved boundary, never reported as full raw parity.",
+        "requires_user_scope_decision": true
+      },
+      {
+        "id": "UPSTREAM_RELEASE",
+        "preserves_latest_dependency_constraint": false,
+        "description": "If user explicitly permits updating the existing TinyHttpd dependency (without adding new libraries), add a secure opt-in upstream raw-routing policy with TDD, publish a new dependency release, and pin/test that binary in NaruServe. No external writes or version bump were authorized by this research.",
+        "requires_user_constraint_override": true
+      }
+    ],
+    "independent_work_unblocked": "Core matcher/registration/lifetime, Java Pattern API, Servlet async implementation, extension regression and documentation can progress under their own SRS contracts; do not block the whole core on this transport decision."
+  },
+  "deferred_lifetime": {
+    "spi": "HttpExchange/ExchangeHandler already allow completion after handle returns; avoid inventing mandatory new abstract methods unless needed by a frozen contract.",
+    "tiny_existing_support": "TinyHttpdExchange.run waits ended CountDownLatch; finish/abort wake it; raw-target SPI test exchangeOutlivesHandle demonstrates delayed ordinary response.",
+    "tiny_existing_support_evidence": [
+      "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdExchange.java:78-125",
+      "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/RawTargetSocketTest.java:103-135"
+    ],
+    "tiny_stream_gap": "run snapshots registered drain once after handle returns, marks handlerReturned and prohibits later eventStream; delayed SSE requires a wait/wakeup/drain-state redesign in addition to core lifetime changes.",
+    "resource_limit": "Existing TinyHttpd holds a worker while deferred response waits. Semantic async completion is feasible without new dependencies, but nonblocking capacity is not established and must not be claimed.",
+    "servlet_gap": "NaruServeServlet.service calls adapter.leave in finally after initial handler return. ServletExchange.finish only flushes; ordinary requests never start AsyncContext. SSE alone starts AsyncContext.",
+    "servlet_evidence": [
+      "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/NaruServeServlet.java:45-69",
+      "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/ServletExchange.java:190-194",
+      "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/ServletExchange.java:303-331",
+      "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/ServletEventStream.java:58-59",
+      "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/ServletAdapter.java:101-160"
+    ],
+    "servlet_design_work": [
+      "Own ordinary AsyncContext from before the initial handler may defer; distinguish synchronous completion from pending request.",
+      "Keep admitted exchange in-flight until terminal completion/abort rather than initial callback return.",
+      "Complete exactly once on success/error/timeout/disconnect/shutdown, preserving stream write ownership and existing SSE capacity contract.",
+      "Avoid imposing SSE max-stream/executor limits on ordinary asynchronous requests.",
+      "Allow late stream registration if core contract supports it; remove old before-return assumptions only with behavior tests."
+    ],
+    "new_dependency_required": false
+  },
+  "servlet_raw_path": {
+    "current_raw_mapping": "ServletPath.remainder uses requestURI minus context and servlet prefix without decoding; NaruServeServlet invokes it before constructing exchange.",
+    "existing_test_matrix": "ServletRawTargetTest sends invalid percent/UTF8, encoded slash/NUL, literal/encoded dot segments and OPTIONS* over real Jetty; currently expects400/404 and documentation matching. These old expectations do not prove new Express parity.",
+    "existing_configurable_seam": "Pinned Jetty9.4.58 HttpConnectionFactory.setHttpCompliance(HttpCompliance) is public. HttpComplianceSection has NO_AMBIGUOUS_PATH_SEGMENTS, NO_AMBIGUOUS_PATH_SEPARATORS, NO_AMBIGUOUS_PATH_PARAMETERS, NO_UTF16_ENCODINGS, NO_AMBIGUOUS_EMPTY_SEGMENT, NO_AMBIGUOUS_PATH_ENCODING. Jetty Request.setMetaData calls HttpCompliance.checkUriCompliance before normal handling.",
+    "important_version_detail": "There is no org.eclipse.jetty.http.UriCompliance class in this pinned9.4.58 jar; use its existing HttpCompliance API rather than newer Jetty APIs/dependencies.",
+    "feasibility": "Can investigate supported container configuration using existing test dependencies. Full raw-path matrix remains unproven; do not infer that every path including NUL is possible from a configurable ambiguity API alone.",
+    "test_support": "ContainerRule starts embedded Jetty9.4 on port0, offers webApp before-start hook and plain servlet context helpers; initializer already setAsyncSupported(true). Retain existing container and configure test connector if required; no added servlet/Jetty dependency."
+  },
+  "parallel_lanes": [
+    {
+      "lane": "tiny-adapter",
+      "issue": 60,
+      "starts_after": "Core request-lifetime/public callback and raw-path contracts are ready; #59 decision needed for raw acceptance portion",
+      "write_set": [
+        "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdExchange.java",
+        "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdEventStream.java",
+        "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdAdapter.java",
+        "NaruServe-tinyhttpd/src/test/"
+      ],
+      "avoid": [
+        "build.gradle",
+        "settings.gradle",
+        "docs/spec/**"
+      ],
+      "tests": [
+        "delayed next text/JSON/stream/SSE",
+        "response/error after initial handle return",
+        "disconnect/shutdown deadline",
+        "worker/thread/resource leak budgets",
+        "real-socket path matrix against exact published JAR",
+        "preserve existing WS/SSE slots and handshake tests"
+      ]
+    },
+    {
+      "lane": "servlet-adapter",
+      "issue": 61,
+      "starts_after": "Core request execution/completion contract ready; may design tests earlier against SPI without modifying core",
+      "write_set": [
+        "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/ServletExchange.java",
+        "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/NaruServeServlet.java",
+        "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/ServletAdapter.java",
+        "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/ServletEventStream.java",
+        "NaruServe-servlet/src/test/"
+      ],
+      "avoid": [
+        "build.gradle",
+        "settings.gradle",
+        "docs/spec/**"
+      ],
+      "parallel_with": [
+        "tiny-adapter",
+        "extension regression on nonshared files"
+      ],
+      "tests": [
+        "delayed ordinary request success/error",
+        "completion at initial-return race",
+        "timeout/disconnect/shutdown races",
+        "normal/SSE resource counters and capacity independence",
+        "supported existing-Jetty raw URI configuration matrix",
+        "context/mapping remainder correctness",
+        "cross-adapter behavior parity only after lane integration"
+      ]
+    }
+  ],
+  "host_owned_convergence": [
+    "docs/spec/** requirement changes and evidence",
+    "build.gradle/settings.gradle and dependency invariants",
+    "cross-adapter shared fixtures and public SPI contract",
+    "final docs and release/version/publication"
+  ],
+  "tdd_and_test_review": "Require failing requirement-cited tests before each behavior change; independent test sufficiency reviewer at most3 rounds and stop immediately on first passing round; current research did not implement behavior or change tests."
+}

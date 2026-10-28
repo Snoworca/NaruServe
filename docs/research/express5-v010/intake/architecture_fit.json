@@ -1,0 +1,747 @@
+{
+  "schema_version": "1.0",
+  "stance": "architecture-fit",
+  "read_only_research": true,
+  "workspace": {
+    "root": "/Users/beom/work/git/NaruServe",
+    "root_source": "server-cwd-discovery",
+    "identity_confirmed_via": "SpecKiwi MCP get_work_mode/get_active_target",
+    "work_mode": "sdd",
+    "active_target_observed": "central-0.9.0"
+  },
+  "input": {
+    "source": "Latest user direction and parent task",
+    "ignored": "docs/next/request.md currently unrelated; not consulted for this intake",
+    "goal": "Express 5 common HTTP routing parity while preserving existing NaruServe extensions; WebSocket parity excluded"
+  },
+  "feasibility": {
+    "verdict": "feasible_with_cross_layer_and_upstream_work",
+    "largest_change": "request execution/lifetime model, not only route pattern syntax",
+    "not_sufficient": [
+      "matcher-only implementation",
+      "in-memory-only conformance",
+      "rawPath accessor without upstream parser change",
+      "removing next owner-thread check without request lifetime redesign"
+    ]
+  },
+  "scopes": [
+    {
+      "name": "Routing",
+      "prefix": "ROUTE",
+      "document": "docs/spec/03.routing.srs.md",
+      "requirement_ids": [
+        "FR-ROUTE-003",
+        "FR-ROUTE-004",
+        "FR-ROUTE-005",
+        "FR-ROUTE-006",
+        "FR-ROUTE-007",
+        "FR-ROUTE-008",
+        "FR-ROUTE-009"
+      ],
+      "requirements": [
+        {
+          "id": "FR-ROUTE-003",
+          "title": "Route pattern syntax and registration-time validation",
+          "status": "verified",
+          "stability": "evolving",
+          "source": "docs/spec/03.routing.srs.md:469"
+        },
+        {
+          "id": "FR-ROUTE-004",
+          "title": "Engine-free request path validator",
+          "status": "verified",
+          "stability": "evolving",
+          "source": "docs/spec/03.routing.srs.md:541"
+        },
+        {
+          "id": "FR-ROUTE-005",
+          "title": "Strict default matching with single percent-decoding",
+          "status": "verified",
+          "stability": "evolving",
+          "source": "docs/spec/03.routing.srs.md:611"
+        },
+        {
+          "id": "FR-ROUTE-006",
+          "title": "Path-form router policies",
+          "status": "verified",
+          "stability": "evolving",
+          "source": "docs/spec/03.routing.srs.md:685"
+        },
+        {
+          "id": "FR-ROUTE-007",
+          "title": "Per-method pattern priority",
+          "status": "verified",
+          "stability": "evolving",
+          "source": "docs/spec/03.routing.srs.md:761"
+        },
+        {
+          "id": "FR-ROUTE-008",
+          "title": "Conflict detection at route-table freeze",
+          "status": "verified",
+          "stability": "evolving",
+          "source": "docs/spec/03.routing.srs.md:828"
+        },
+        {
+          "id": "FR-ROUTE-009",
+          "title": "No-match result",
+          "status": "verified",
+          "stability": "evolving",
+          "source": "docs/spec/03.routing.srs.md:1001"
+        }
+      ],
+      "impact": "revise relevant contracts before implementation; retain unaffected guarantees"
+    },
+    {
+      "name": "HTTP Core",
+      "prefix": "HTTP",
+      "document": "docs/spec/04.http-core.srs.md",
+      "requirement_ids": [
+        "FR-HTTP-004",
+        "FR-HTTP-009",
+        "FR-HTTP-023",
+        "IR-HTTP-003",
+        "IR-HTTP-007"
+      ],
+      "requirements": [
+        {
+          "id": "FR-HTTP-004",
+          "title": "Automatic HEAD through the GET handler",
+          "status": "verified",
+          "stability": "evolving",
+          "source": "docs/spec/04.http-core.srs.md:719"
+        },
+        {
+          "id": "FR-HTTP-009",
+          "title": "Request path, raw path and path parameter accessors",
+          "status": "verified",
+          "stability": "evolving",
+          "source": "docs/spec/04.http-core.srs.md:1297"
+        },
+        {
+          "id": "FR-HTTP-023",
+          "title": "Asterisk-form OPTIONS and raw paths not starting with a slash (wave 4)",
+          "status": "verified",
+          "stability": "evolving",
+          "source": "docs/spec/04.http-core.srs.md:3106"
+        },
+        {
+          "id": "IR-HTTP-003",
+          "title": "HttpAdapter SPI exchange data contract",
+          "status": "verified",
+          "stability": "evolving",
+          "source": "docs/spec/04.http-core.srs.md:198"
+        },
+        {
+          "id": "IR-HTTP-007",
+          "title": "HttpAdapter SPI extension points and bind/stop lifecycle calls, extended add-only by wave 7",
+          "status": "verified",
+          "stability": "evolving",
+          "source": "docs/spec/04.http-core.srs.md:3821"
+        }
+      ],
+      "impact": "revise relevant contracts before implementation; retain unaffected guarantees"
+    },
+    {
+      "name": "Application",
+      "prefix": "APP",
+      "document": "docs/spec/05.application.srs.md",
+      "requirement_ids": [
+        "FR-APP-003",
+        "FR-APP-004",
+        "FR-APP-005",
+        "FR-APP-008",
+        "FR-APP-011",
+        "FR-APP-019"
+      ],
+      "requirements": [
+        {
+          "id": "FR-APP-003",
+          "title": "Middleware scope and pipeline order in the dispatcher",
+          "status": "verified",
+          "stability": "evolving",
+          "source": "docs/spec/05.application.srs.md:833"
+        },
+        {
+          "id": "FR-APP-004",
+          "title": "next.run() contract",
+          "status": "verified",
+          "stability": "evolving",
+          "source": "docs/spec/05.application.srs.md:935"
+        },
+        {
+          "id": "FR-APP-005",
+          "title": "Unified error path and onError chain",
+          "status": "verified",
+          "stability": "evolving",
+          "source": "docs/spec/05.application.srs.md:1024"
+        },
+        {
+          "id": "FR-APP-008",
+          "title": "Owned and registered resources close once in reverse order",
+          "status": "verified",
+          "stability": "evolving",
+          "source": "docs/spec/05.application.srs.md:1320"
+        },
+        {
+          "id": "FR-APP-011",
+          "title": "Shutdown sequence, deadline and shutdown participants",
+          "status": "verified",
+          "stability": "evolving",
+          "source": "docs/spec/05.application.srs.md:1598"
+        },
+        {
+          "id": "FR-APP-019",
+          "title": "Access log: one line per HTTP request, the WebSocket handshake and close lines, and the SSE stream-end line (wave 7)",
+          "status": "verified",
+          "stability": "evolving",
+          "source": "docs/spec/05.application.srs.md:3278"
+        }
+      ],
+      "impact": "revise relevant contracts before implementation; retain unaffected guarantees"
+    },
+    {
+      "name": "Engine Adapter",
+      "prefix": "ENGINE",
+      "document": "docs/spec/06.engine-adapter.srs.md",
+      "requirement_ids": [
+        "FR-ENGINE-011"
+      ],
+      "requirements": [
+        {
+          "id": "FR-ENGINE-011",
+          "title": "TinyHttpd adapter implements HttpAdapter with confined engine types and per-feature classes, event-stream and upgrade paths filled (wave 7)",
+          "status": "verified",
+          "stability": "evolving",
+          "source": "docs/spec/06.engine-adapter.srs.md:1249"
+        }
+      ],
+      "impact": "revise relevant contracts before implementation; retain unaffected guarantees"
+    },
+    {
+      "name": "Developer Experience",
+      "prefix": "DX",
+      "document": "docs/spec/16.developer-experience.srs.md",
+      "requirement_ids": [
+        "FR-DX-008",
+        "FR-DX-009",
+        "OPS-DX-002",
+        "OPS-DX-003"
+      ],
+      "requirements": [
+        {
+          "id": "FR-DX-008",
+          "title": "미들웨어를 전체 등록 순서로 실행",
+          "status": "verified",
+          "stability": "evolving",
+          "source": "docs/spec/16.developer-experience.srs.md:512"
+        },
+        {
+          "id": "FR-DX-009",
+          "title": "라우트 그룹으로 중복 prefix 제거",
+          "status": "verified",
+          "stability": "evolving",
+          "source": "docs/spec/16.developer-experience.srs.md:573"
+        },
+        {
+          "id": "OPS-DX-002",
+          "title": "오류·Origin·기본값 문서의 모순과 오해 제거",
+          "status": "verified",
+          "stability": "evolving",
+          "source": "docs/spec/16.developer-experience.srs.md:762"
+        },
+        {
+          "id": "OPS-DX-003",
+          "title": "docs/api에 start 절, start·listen 대비표와 Quick start 반영",
+          "status": "verified",
+          "stability": "evolving",
+          "source": "docs/spec/16.developer-experience.srs.md:1069"
+        }
+      ],
+      "impact": "revise relevant contracts before implementation; retain unaffected guarantees"
+    },
+    {
+      "name": "Static Files",
+      "prefix": "STATIC",
+      "document": "docs/spec/10.static-files.srs.md",
+      "requirement_ids": [
+        "IR-STATIC-001",
+        "FR-STATIC-001",
+        "FR-STATIC-002",
+        "FR-STATIC-004",
+        "FR-STATIC-005"
+      ],
+      "requirements": [
+        {
+          "id": "IR-STATIC-001",
+          "title": "Static mount API: app.staticFiles, StaticOptions and the engine-free ResourceResolver",
+          "status": "verified",
+          "stability": "evolving",
+          "source": "docs/spec/10.static-files.srs.md:39"
+        },
+        {
+          "id": "FR-STATIC-001",
+          "title": "Static mount mapping, directory index, several mounts, routes first, global middleware and the trailing-slash redirect",
+          "status": "verified",
+          "stability": "evolving",
+          "source": "docs/spec/10.static-files.srs.md:253"
+        },
+        {
+          "id": "FR-STATIC-002",
+          "title": "Method handling on static paths: 405 Allow GET, HEAD, fall-through after a route's method mismatch, OPTIONS and 501 order",
+          "status": "verified",
+          "stability": "evolving",
+          "source": "docs/spec/10.static-files.srs.md:355"
+        },
+        {
+          "id": "FR-STATIC-004",
+          "title": "SPA fallback conditions and the always-excluded /api/ and /ws/ prefixes",
+          "status": "verified",
+          "stability": "evolving",
+          "source": "docs/spec/10.static-files.srs.md:547"
+        },
+        {
+          "id": "FR-STATIC-005",
+          "title": "Static path traversal rejected with 400 and hidden dot segments answered 404",
+          "status": "verified",
+          "stability": "evolving",
+          "source": "docs/spec/10.static-files.srs.md:637"
+        }
+      ],
+      "impact": "revise relevant contracts before implementation; retain unaffected guarantees"
+    },
+    {
+      "name": "Server-Sent Events",
+      "prefix": "SSE",
+      "document": "docs/spec/12.server-sent-events.srs.md",
+      "requirement_ids": [
+        "FR-SSE-002",
+        "FR-SSE-004"
+      ],
+      "requirements": [
+        {
+          "id": "FR-SSE-002",
+          "title": "SSE outbound queue, drain loop and heartbeat: any-thread sends in call order, handler-thread writes before the drain starts and the overflow policy",
+          "status": "verified",
+          "stability": "evolving",
+          "source": "docs/spec/12.server-sent-events.srs.md:283"
+        },
+        {
+          "id": "FR-SSE-004",
+          "title": "SSE stream lifetime: open after the handler returns, onClose exactly once, explicit close, HEAD on an SSE route, req.service in SSE handlers and shutdown from onClose",
+          "status": "verified",
+          "stability": "evolving",
+          "source": "docs/spec/12.server-sent-events.srs.md:523"
+        }
+      ],
+      "impact": "preserve extension and regression contracts"
+    },
+    {
+      "name": "WebSocket",
+      "prefix": "WS",
+      "document": "docs/spec/11.websocket.srs.md",
+      "requirement_ids": [
+        "FR-WS-001",
+        "FR-WS-010"
+      ],
+      "requirements": [
+        {
+          "id": "FR-WS-001",
+          "title": "Upgrade dispatch: middleware chain to completion, then the upgrade extension point, handler once after 101",
+          "status": "verified",
+          "stability": "evolving",
+          "source": "docs/spec/11.websocket.srs.md:282"
+        },
+        {
+          "id": "FR-WS-010",
+          "title": "Shutdown of WebSocket sessions: before-wait participant closes with 1001, bounded close wait and abort through UpgradedConnection",
+          "status": "verified",
+          "stability": "evolving",
+          "source": "docs/spec/11.websocket.srs.md:1322"
+        }
+      ],
+      "impact": "preserve extension and regression contracts"
+    },
+    {
+      "name": "Servlet Adapter",
+      "prefix": "SVL",
+      "document": "docs/spec/14.servlet-adapter.srs.md",
+      "requirement_ids": [
+        "FR-SVL-002",
+        "FR-SVL-005",
+        "FR-SVL-006"
+      ],
+      "requirements": [
+        {
+          "id": "FR-SVL-002",
+          "title": "Servlet request mapping: raw path minus context path and servlet mapping, raw query, headers, and the same application types as on the embedded engine",
+          "status": "verified",
+          "stability": "evolving",
+          "source": "docs/spec/14.servlet-adapter.srs.md:291"
+        },
+        {
+          "id": "FR-SVL-005",
+          "title": "Servlet SSE under AsyncContext: bounded stream counter, dedicated executor and no async timeout",
+          "status": "verified",
+          "stability": "evolving",
+          "source": "docs/spec/14.servlet-adapter.srs.md:636"
+        },
+        {
+          "id": "FR-SVL-006",
+          "title": "Servlet stop and release: refuse new requests, wait for in-flight exchanges to the deadline, then cut the rest",
+          "status": "verified",
+          "stability": "evolving",
+          "source": "docs/spec/14.servlet-adapter.srs.md:758"
+        }
+      ],
+      "impact": "revise relevant contracts before implementation; retain unaffected guarantees"
+    },
+    {
+      "name": "Kotlin Compatibility",
+      "prefix": "KT",
+      "document": "docs/spec/13.kotlin-compatibility.srs.md",
+      "requirement_ids": [
+        "FR-KT-001",
+        "CON-KT-001",
+        "OPS-KT-001"
+      ],
+      "requirements": [
+        {
+          "id": "FR-KT-001",
+          "title": "Nullability check over the public API packages of NaruServe-api",
+          "status": "verified",
+          "stability": "evolving",
+          "source": "docs/spec/13.kotlin-compatibility.srs.md:39"
+        },
+        {
+          "id": "CON-KT-001",
+          "title": "The framework never uses runBlocking as an asynchronous adapter",
+          "status": "verified",
+          "stability": "evolving",
+          "source": "docs/spec/13.kotlin-compatibility.srs.md:882"
+        },
+        {
+          "id": "OPS-KT-001",
+          "title": "docs/api/kotlin.md names the Kotlin module and the nullability annotations exactly and states the coroutine limit",
+          "status": "verified",
+          "stability": "evolving",
+          "source": "docs/spec/13.kotlin-compatibility.srs.md:985"
+        }
+      ],
+      "impact": "revise relevant contracts before implementation; retain unaffected guarantees"
+    },
+    {
+      "name": "Build",
+      "prefix": "BUILD",
+      "document": "docs/spec/02.build.srs.md",
+      "requirement_ids": [
+        "CON-BUILD-004",
+        "CON-BUILD-006",
+        "CON-BUILD-009",
+        "CON-BUILD-012",
+        "CON-BUILD-013"
+      ],
+      "requirements": [
+        {
+          "id": "CON-BUILD-004",
+          "title": "Java 8 bytecode target for Java and Kotlin compilation",
+          "status": "verified",
+          "stability": "evolving",
+          "source": "docs/spec/02.build.srs.md:232"
+        },
+        {
+          "id": "CON-BUILD-006",
+          "title": "Main dependencies of every module declared in wave 1",
+          "status": "verified",
+          "stability": "evolving",
+          "source": "docs/spec/02.build.srs.md:355"
+        },
+        {
+          "id": "CON-BUILD-009",
+          "title": "TinyHttpd dependency boundaries",
+          "status": "verified",
+          "stability": "evolving",
+          "source": "docs/spec/02.build.srs.md:644"
+        },
+        {
+          "id": "CON-BUILD-012",
+          "title": "animal-sniffer API 21 check on Android-bound modules",
+          "status": "verified",
+          "stability": "evolving",
+          "source": "docs/spec/02.build.srs.md:921"
+        },
+        {
+          "id": "CON-BUILD-013",
+          "title": "Core isolation, servlet-free Android modules and single Gson version build checks",
+          "status": "verified",
+          "stability": "evolving",
+          "source": "docs/spec/02.build.srs.md:982"
+        }
+      ],
+      "impact": "revise relevant contracts before implementation; retain unaffected guarantees"
+    },
+    {
+      "name": "Release",
+      "prefix": "REL",
+      "document": "docs/spec/15.release.srs.md",
+      "requirement_ids": [
+        "FR-REL-005",
+        "OPS-REL-001",
+        "OPS-REL-005"
+      ],
+      "requirements": [
+        {
+          "id": "FR-REL-005",
+          "title": "Publishing the ten modules as lowercase 0.9.0 artifacts with sources, javadoc and full POMs to mavenLocal and the local staging repository",
+          "status": "verified",
+          "stability": "evolving",
+          "source": "docs/spec/15.release.srs.md:481"
+        },
+        {
+          "id": "OPS-REL-001",
+          "title": "Root README with installation coordinates and a quick start that matches docs/api/README.md",
+          "status": "verified",
+          "stability": "evolving",
+          "source": "docs/spec/15.release.srs.md:604"
+        },
+        {
+          "id": "OPS-REL-005",
+          "title": "How consumers obtain TinyHttpd: includeBuild of the checkout, since this repository does not publish it",
+          "status": "verified",
+          "stability": "evolving",
+          "source": "docs/spec/15.release.srs.md:1008"
+        }
+      ],
+      "impact": "revise relevant contracts before implementation; retain unaffected guarantees"
+    }
+  ],
+  "decisions": [
+    {
+      "id": "A-01",
+      "decision": "Freeze an exact Express/router/path-to-regexp oracle profile and route input/output contract. Java API adaptation must preserve observable routing behavior.",
+      "classification": "routine_architecture",
+      "evidence": [
+        "docs/spec/03.routing.srs.md",
+        "docs/spec/05.application.srs.md"
+      ]
+    },
+    {
+      "id": "A-02",
+      "decision": "Separate raw HTTP route matching and matched-capture decoding from static-file path containment and existing WebSocket extension behavior.",
+      "classification": "routine_architecture",
+      "evidence": [
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java:103",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StaticHandler.java:55"
+      ]
+    },
+    {
+      "id": "A-03",
+      "decision": "Replace preselected-route plus middleware-list dispatch with immutable ordered layers, explicit Route identity and per-request mount/params/error cursor state.",
+      "classification": "routine_architecture",
+      "evidence": [
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:184",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/MiddlewarePipeline.java:78"
+      ]
+    },
+    {
+      "id": "A-04",
+      "decision": "Introduce logical asynchronous request lifetime; initial handler return is not response completion. Serialize late continuation, rejection, finish, abort and shutdown.",
+      "classification": "routine_architecture",
+      "evidence": [
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ChainNext.java:90",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java:777"
+      ]
+    },
+    {
+      "id": "A-05",
+      "decision": "Keep Java 8 bytecode and Android API 21; implement core callback/completion semantics without mandatory CompletionStage, CompletableFuture or kotlinx.coroutines. Optional JVM adapters may map future types.",
+      "classification": "routine_architecture",
+      "evidence": [
+        "build.gradle:40",
+        "build.gradle:431",
+        "docs/spec/13.kotlin-compatibility.srs.md:882",
+        "https://developer.android.com/reference/java/util/concurrent/CompletionStage"
+      ]
+    },
+    {
+      "id": "A-06",
+      "decision": "Preserve source-level extension APIs and regression guarantees; give WebSocket a separate non-Express profile and preserve static confinement, SSE ownership and resource cleanup.",
+      "classification": "resolved_user_scope",
+      "evidence": [
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRouteGroup.java:34",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpExchange.java:12"
+      ]
+    },
+    {
+      "id": "A-07",
+      "decision": "Generalize Servlet AsyncContext lifecycle for deferred ordinary responses; keep SSE pool limits distinct. TinyHttpd currently can wait for completion but consumes its worker.",
+      "classification": "routine_architecture",
+      "evidence": [
+        "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/NaruServeServlet.java:59",
+        "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/ServletExchange.java:191",
+        "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdExchange.java:94"
+      ]
+    }
+  ],
+  "external_dependency": {
+    "repository": "/Users/beom/work/git/TinyHttpd",
+    "read_only_head": "e638586",
+    "verified_source_pin": "165f365",
+    "relevant_parser_files_unchanged_between_heads": true,
+    "required": true,
+    "reason": "Parser unconditionally decodes and rejects semantic path cases before NaruServe handler runs.",
+    "evidence": [
+      "core/src/main/java/com/snoworca/tinyhttpd/server/RequestParser.java:30",
+      "core/src/main/java/com/snoworca/tinyhttpd/server/RequestParser.java:94",
+      "core/src/main/java/com/snoworca/tinyhttpd/server/PercentCodec.java:39"
+    ],
+    "package": "Opt-in raw-routing parser policy, unchanged legacy default behavior and framing security, raw socket regression, independently consumable binary version, NaruServe pin update",
+    "not_authorized_by_this_research": "No external checkout edits or publishing performed"
+  },
+  "task_packages": [
+    {
+      "id": "P0",
+      "title": "Freeze compatibility profile, SRS conflicts and oracle contract",
+      "depends_on": [],
+      "output": "Traceable common HTTP routing versus extension contracts"
+    },
+    {
+      "id": "P1",
+      "title": "Pinned Express differential oracle and Java-only golden replay",
+      "depends_on": [
+        "P0"
+      ],
+      "output": "Versioned corpus with raw requests and handler/params/Allow/error expectations"
+    },
+    {
+      "id": "P2",
+      "title": "TinyHttpd raw-routing transport prerequisite",
+      "depends_on": [
+        "P0"
+      ],
+      "output": "Upstream opt-in API, default security regression, consumable version"
+    },
+    {
+      "id": "P3",
+      "title": "Express matcher and per-layer parameter representation",
+      "depends_on": [
+        "P0",
+        "P1"
+      ],
+      "output": "Registration validation, raw matching and capture decode tests"
+    },
+    {
+      "id": "P4",
+      "title": "Ordered layer and Route execution engine",
+      "depends_on": [
+        "P0",
+        "P3"
+      ],
+      "output": "Ordering, next/skip/error, mount/params restoration"
+    },
+    {
+      "id": "P5",
+      "title": "Asynchronous continuation and logical request lifetime",
+      "depends_on": [
+        "P0",
+        "P4"
+      ],
+      "output": "API21-safe completion, cleanup and cancellation semantics"
+    },
+    {
+      "id": "P6",
+      "title": "TinyHttpd and Servlet adapter integration",
+      "depends_on": [
+        "P2",
+        "P5"
+      ],
+      "output": "Actual HTTP delayed responses and Servlet AsyncContext completion"
+    },
+    {
+      "id": "P7",
+      "title": "Existing extensions and lifecycle integration",
+      "depends_on": [
+        "P4",
+        "P5",
+        "P6"
+      ],
+      "output": "Group/static/CORS/JSON/upload/SSE/WS regression and shutdown correctness"
+    },
+    {
+      "id": "P8",
+      "title": "End-to-end conformance, resource and cross-runtime gates",
+      "depends_on": [
+        "P1",
+        "P6",
+        "P7"
+      ],
+      "output": "Binary/source engines, Java8/17, API21 checks and concurrency evidence"
+    },
+    {
+      "id": "P9",
+      "title": "Bilingual migration, license and release records",
+      "depends_on": [
+        "P8"
+      ],
+      "output": "Accurate compatibility contract and staged publication metadata"
+    }
+  ],
+  "unresolved": [
+    {
+      "id": "U-EXTERNAL",
+      "classification": "needs-decision",
+      "question": "Who owns the required TinyHttpd change and consumable release, and is that external repository execution inside this run authorization?",
+      "blocking": "real HTTP parity cannot pass against unchanged 3.1.0",
+      "recommended": "Explicit upstream work package or authorized handoff; no silent adjacent-checkout edit"
+    },
+    {
+      "id": "U-PUBLISH",
+      "classification": "action-gate",
+      "question": "If a new dependency binary requires signing/public upload, obtain the existing explicit publishing authorization at that action.",
+      "blocking": "release availability, not local implementation",
+      "recommended": "Prepare complete reviewable artifacts first; do not equate composite success with released binaries"
+    }
+  ],
+  "routine_choices_not_user_gates": [
+    "handler and completion type names",
+    "immutable layer and parameter representation",
+    "matcher tokenization structure",
+    "test process isolation and replay fixture layout",
+    "worktree lane allocation after shared contracts freeze",
+    "exact pinned dependency revisions selected from validated oracle input",
+    "synchronous source overload preservation via adapters"
+  ],
+  "must_not_narrow": [
+    "Do not exclude deferred next/rejection simply because the current runtime is synchronous",
+    "Do not retain decoded matching for common HTTP routes merely to avoid upstream work",
+    "Do not drop existing extensions to simplify the new stack",
+    "Do not claim WebSocket Express parity or import obsolete request-document decisions",
+    "Do not raise minSdk or add coroutine dependency without explicit scope change"
+  ],
+  "regression_gates": [
+    "actual raw socket conformance through new published engine binary and source composite",
+    "Java8 runtime and JDK17 suite",
+    "Android API21 animal-sniffer and dependency/class reference checks",
+    "Java/Kotlin source compatibility and nullability tests",
+    "deferred success/rejection, race, abort, disconnect and shutdown tests",
+    "upload/stream/SSE/WS and access-log exactly-once cleanup",
+    "Servlet delayed ordinary response plus existing SSE lifecycle",
+    "registered extension contract regression",
+    "bilingual docs and license metadata match shipped graph"
+  ],
+  "external_sources": [
+    {
+      "url": "https://developer.android.com/reference/java/util/concurrent/CompletionStage",
+      "finding": "Added in API level 24"
+    },
+    {
+      "url": "https://developer.android.com/reference/java/util/concurrent/CompletableFuture",
+      "finding": "Added in API level 24"
+    }
+  ],
+  "mutations": {
+    "repository": [],
+    "srs": [],
+    "external_repository": [],
+    "artifacts_directory": "/tmp/naruserve-intake-architecture/"
+  }
+}

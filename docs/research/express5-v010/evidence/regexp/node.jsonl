@@ -1,0 +1,23 @@
+{"label":"identity-a","source":"\\a","flags":"","input":"a","result":["a"]}
+{"label":"unmatched-backref","source":"^(a|(b))\\2$","flags":"","input":"a","result":["a","a",null]}
+{"label":"astral-dot-no-u","source":"^.$","flags":"","input":"😀","result":null}
+{"label":"ascii-identity-u-braces","source":"\\u{61}","flags":"u","input":"a","result":["a"]}
+{"label":"named-underscore","source":"(?<user_id>\\w+)","flags":"","input":"abc","result":["abc","abc"]}
+{"label":"js-empty-negative-class","source":"[^]","flags":"","input":"a","result":["a"]}
+{"label":"java-intersection","source":"[a-z&&[^b]]","flags":"","input":"c","result":null}
+{"case":"layer-state","flags":"","i":0,"matched":true,"lastIndex":0,"params":{"0":"foo"},"path":"/x/foo"}
+{"case":"layer-state","flags":"","i":1,"matched":true,"lastIndex":0,"params":{"0":"foo"},"path":"/x/foo"}
+{"case":"layer-state","flags":"","i":2,"matched":true,"lastIndex":0,"params":{"0":"foo"},"path":"/x/foo"}
+{"case":"layer-state","flags":"g","i":0,"matched":true,"lastIndex":6,"params":{"0":"foo"},"path":"/x/foo"}
+{"case":"layer-state","flags":"g","i":1,"matched":false,"lastIndex":0}
+{"case":"layer-state","flags":"g","i":2,"matched":true,"lastIndex":6,"params":{"0":"foo"},"path":"/x/foo"}
+{"case":"layer-state","flags":"y","i":0,"matched":true,"lastIndex":6,"params":{"0":"foo"},"path":"/x/foo"}
+{"case":"layer-state","flags":"y","i":1,"matched":false,"lastIndex":0}
+{"case":"layer-state","flags":"y","i":2,"matched":true,"lastIndex":6,"params":{"0":"foo"},"path":"/x/foo"}
+{"case":"layer-state","flags":"d","i":0,"matched":true,"lastIndex":0,"params":{"0":"foo"},"path":"/x/foo"}
+{"case":"layer-state","flags":"d","i":1,"matched":true,"lastIndex":0,"params":{"0":"foo"},"path":"/x/foo"}
+{"case":"layer-state","flags":"d","i":2,"matched":true,"lastIndex":0,"params":{"0":"foo"},"path":"/x/foo"}
+{"case":"layer-captures","source":"\\(abc\\)(?<id>foo)","matched":true,"params":{"0":"foo"},"path":"(abc)foo"}
+{"case":"layer-captures","source":"(?<user_id>foo)","matched":true,"params":{"user_id":"foo"},"path":"foo"}
+{"case":"layer-captures","source":"(?:(foo)|(bar))","matched":true,"params":{"0":"foo"},"path":"foo"}
+{"case":"layer-captures","source":"(?<id>a)|(?<id>b)","error":"Invalid regular expression: /(?<id>a)|(?<id>b)/: Duplicate capture group name"}

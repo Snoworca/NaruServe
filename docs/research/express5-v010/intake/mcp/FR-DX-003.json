@@ -1,0 +1,193 @@
+{
+  "ok": true,
+  "value": {
+    "id": "FR-DX-003",
+    "title": "필수값·숫자·업로드 입력 편의 함수 제공",
+    "type": "functional",
+    "target": "api-usability",
+    "status": "verified",
+    "scope": "DX",
+    "filePath": "docs/spec/16.developer-experience.srs.md",
+    "headingLine": 211,
+    "metadata": {
+      "Type": "functional",
+      "Target": "api-usability",
+      "Status": "verified",
+      "Priority": "high",
+      "Tags": "-",
+      "Risk": "medium",
+      "Stability": "evolving",
+      "Verification Method": "test",
+      "GitHub Issue": "https://github.com/Snoworca/NaruServe/issues/25",
+      "Related Docs": "-"
+    },
+    "acceptanceCriteria": [
+      {
+        "id": "AC-1",
+        "text": "Missing or blank required text and missing or empty required files answer 400. Blank required text includes Unicode whitespace (Character.isWhitespace or Character.isSpaceChar); nonblank input is returned unchanged.",
+        "checked": true,
+        "line": 236
+      },
+      {
+        "id": "AC-2",
+        "text": "missing optional numeric input uses its default.",
+        "checked": true,
+        "line": 237
+      },
+      {
+        "id": "AC-3",
+        "text": "malformed or overflowing integers answer 400.",
+        "checked": true,
+        "line": 238
+      },
+      {
+        "id": "AC-4",
+        "text": "ranges remain application validation.",
+        "checked": true,
+        "line": 239
+      }
+    ],
+    "verificationEvidence": [
+      {
+        "id": "VE-1",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/InputConvenienceTest.java",
+        "covers": "all",
+        "notes": "RED confirmed before implementation; GREEN: ./gradlew :NaruServe-api:test --tests *InputConvenienceTest --tests *HttpApiSurfaceTest",
+        "line": 245
+      },
+      {
+        "id": "VE-2",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/InputBoundaryTest.java",
+        "covers": "AC-1",
+        "notes": "check_test_sufficiency source citation NaruServe-api/src/test/java/com/snoworca/naruserve/InputBoundaryTest.java:38; complete ./gradlew build passed 1643 tests, zero failures/skips; see docs/release/test-sufficiency-review.md.",
+        "line": 246
+      },
+      {
+        "id": "VE-3",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/InputBoundaryTest.java",
+        "covers": "AC-2",
+        "notes": "check_test_sufficiency source citation NaruServe-api/src/test/java/com/snoworca/naruserve/InputBoundaryTest.java:12; complete ./gradlew build passed 1643 tests, zero failures/skips; see docs/release/test-sufficiency-review.md.",
+        "line": 247
+      },
+      {
+        "id": "VE-4",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/InputBoundaryTest.java",
+        "covers": "AC-3",
+        "notes": "check_test_sufficiency source citation NaruServe-api/src/test/java/com/snoworca/naruserve/InputBoundaryTest.java:12; complete ./gradlew build passed 1643 tests, zero failures/skips; see docs/release/test-sufficiency-review.md.",
+        "line": 248
+      },
+      {
+        "id": "VE-5",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/InputBoundaryTest.java",
+        "covers": "AC-4",
+        "notes": "check_test_sufficiency source citation NaruServe-api/src/test/java/com/snoworca/naruserve/InputBoundaryTest.java:12; complete ./gradlew build passed 1643 tests, zero failures/skips; see docs/release/test-sufficiency-review.md.",
+        "line": 249
+      },
+      {
+        "id": "VE-6",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/UnicodeRequiredInputTest.java",
+        "covers": "AC-1",
+        "notes": "Issue #39: failing automated regression reproduced before implementation; targeted existing/new suites passed on default JDK17 and actual OpenJDK8; independent review has no remaining HIGH/MEDIUM findings. Logs: docs/release/audit-2026-10-21/39/. Broad final integration regression is tracked in epic #36.",
+        "line": 250
+      },
+      {
+        "id": "VE-7",
+        "type": "test",
+        "reference": "docs/release/additional-audit-2026-10-21.md",
+        "covers": "AC-1",
+        "notes": "Final integration: default JDK17 and actual OpenJDK8 each passed full build --rerun-tasks with1677 tests, failures/errors/skipped0; all11 Test tasks actually used Java8 in its run. Real NVD releaseCheck passed. This evidence applies only to the fixed contract; external engine issue45 remains blocked.",
+        "line": 251
+      }
+    ],
+    "traceLinks": [],
+    "changeNotes": [
+      {
+        "date": "2026-10-21",
+        "change": "Created",
+        "reason": "add-requirement",
+        "line": 270
+      },
+      {
+        "date": "2026-10-21",
+        "change": "Status -> implemented",
+        "reason": "Issue #25: red test then green; ./gradlew :NaruServe-api:test --tests *InputConvenienceTest --tests *HttpApiSurfaceTest",
+        "line": 271
+      },
+      {
+        "date": "2026-10-21",
+        "change": "Status -> verified",
+        "reason": "Issue #25: all acceptance criteria covered by passing regression evidence.",
+        "line": 272
+      },
+      {
+        "date": "2026-10-21",
+        "change": "Status -> implemented",
+        "reason": "Additional audit reproduced Unicode normalization/blank-input/JSON media syntax defect; regression extension before verification.",
+        "line": 273
+      },
+      {
+        "date": "2026-10-21",
+        "change": "Status -> verified",
+        "reason": "Issue #39: targeted contract regression passed JDK17 and actual Java8 after RED reproduction and independent review.",
+        "line": 274
+      }
+    ],
+    "tags": [
+      "-"
+    ],
+    "relatedDocs": [],
+    "evidenceReferences": [
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/InputConvenienceTest.java",
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/InputBoundaryTest.java",
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/UnicodeRequiredInputTest.java",
+      "docs/release/additional-audit-2026-10-21.md"
+    ],
+    "traceReferences": [],
+    "blockStartLine": 211,
+    "blockEndLine": 275,
+    "sectionLines": {
+      "Requirement": 226,
+      "Rationale": 230,
+      "Acceptance Criteria": 234,
+      "Verification Evidence": 241,
+      "Trace Links": 253,
+      "Research / Analysis": 258,
+      "Implementation Notes": 262,
+      "Change Notes": 266
+    },
+    "priority": "high",
+    "risk": "medium",
+    "stability": "evolving",
+    "newWorkCandidate": false,
+    "requirement": "The system shall provide requireQuery, requireHeader, requireForm, requireFile, queryInt, formInt and paramInt with common validation utilities.",
+    "rationale": "-",
+    "research": "- -",
+    "implementationNotes": "- -",
+    "diagnostics": [],
+    "errors": [],
+    "warnings": [],
+    "diagnosticsSummary": {
+      "errors": 0,
+      "warnings": 0,
+      "byCode": {}
+    }
+  },
+  "diagnostics": [],
+  "diagnosticsSummary": {
+    "errors": 0,
+    "warnings": 0,
+    "byCode": {}
+  },
+  "mcpWorkspace": {
+    "workspaceRoot": "/Users/beom/work/git/NaruServe",
+    "rootSource": "server-cwd-discovery",
+    "indexPath": "docs/spec/00.index.md",
+    "packageVersion": "4.2.0"
+  }
+}

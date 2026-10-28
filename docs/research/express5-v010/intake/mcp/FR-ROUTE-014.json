@@ -1,0 +1,231 @@
+{
+  "ok": true,
+  "value": {
+    "id": "FR-ROUTE-014",
+    "title": "TRACE and CONNECT enable policy",
+    "type": "functional",
+    "target": "wave-2",
+    "status": "verified",
+    "scope": "ROUTE",
+    "filePath": "docs/spec/03.routing.srs.md",
+    "headingLine": 1339,
+    "metadata": {
+      "Type": "functional",
+      "Target": "wave-2",
+      "Status": "verified",
+      "Priority": "medium",
+      "Tags": "wave-2, feasibility:high, routing, policy, security",
+      "Risk": "medium",
+      "Stability": "evolving",
+      "Verification Method": "test",
+      "GitHub Issue": "https://github.com/Snoworca/NaruServe/issues/3",
+      "Related Docs": "-"
+    },
+    "acceptanceCriteria": [
+      {
+        "id": "AC-1",
+        "text": "Under the default policy, `TRACE /x` and `CONNECT /x` yield unsupported method whether or not any route matches `/x`. [D-067]",
+        "checked": true,
+        "line": 1364
+      },
+      {
+        "id": "AC-2",
+        "text": "With only `TRACE` enabled, a registered `TRACE /x` route is matched, `TRACE /y` with no matching pattern yields no match, `TRACE` on a path with only a `GET` route yields method mismatch, and `CONNECT /x` still yields unsupported method. [wave decision: TRACE/CONNECT policy]",
+        "checked": true,
+        "line": 1365
+      },
+      {
+        "id": "AC-3",
+        "text": "With `CONNECT` enabled, `CONNECT` behaves as `TRACE` does in the previous criterion, and in neither case does a registration under `Method.any()` serve the enabled method. [wave decision: TRACE/CONNECT policy; D-036]",
+        "checked": true,
+        "line": 1366
+      }
+    ],
+    "verificationEvidence": [
+      {
+        "id": "VE-1",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterTraceConnectTest.java#sdsAc10_FR_ROUTE_014_AC1_defaultPolicyUnsupported",
+        "covers": "AC-1",
+        "notes": "-",
+        "line": 1372
+      },
+      {
+        "id": "VE-2",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterTraceConnectTest.java#sdsAc10_FR_ROUTE_014_AC2_traceEnabled",
+        "covers": "AC-2",
+        "notes": "-",
+        "line": 1373
+      },
+      {
+        "id": "VE-3",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterTraceConnectTest.java#sdsAc10_FR_ROUTE_014_AC3_connectEnabled",
+        "covers": "AC-3",
+        "notes": "-",
+        "line": 1374
+      },
+      {
+        "id": "VE-4",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterTraceConnectTest.java",
+        "covers": "AC-1",
+        "notes": "verification_cmd ./gradlew build passed at 461fc3f (153/153); cited line RouterTraceConnectTest.java:25; bundle docs/research/naruserve-v1/waves/stage-2/lane-2026-10-19.naruserve.naruserve-v1-wave-2/",
+        "line": 1375
+      },
+      {
+        "id": "VE-5",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterTraceConnectTest.java",
+        "covers": "AC-2",
+        "notes": "verification_cmd ./gradlew build passed at 461fc3f (153/153); cited line RouterTraceConnectTest.java:49; bundle docs/research/naruserve-v1/waves/stage-2/lane-2026-10-19.naruserve.naruserve-v1-wave-2/",
+        "line": 1376
+      },
+      {
+        "id": "VE-6",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterTraceConnectTest.java",
+        "covers": "AC-3",
+        "notes": "verification_cmd ./gradlew build passed at 461fc3f (153/153); cited line RouterTraceConnectTest.java:55; bundle docs/research/naruserve-v1/waves/stage-2/lane-2026-10-19.naruserve.naruserve-v1-wave-2/",
+        "line": 1377
+      },
+      {
+        "id": "VE-7",
+        "type": "commit",
+        "reference": "f80370b",
+        "covers": "all",
+        "notes": "-",
+        "line": 1378
+      },
+      {
+        "id": "VE-8",
+        "type": "commit",
+        "reference": "8a4b565",
+        "covers": "all",
+        "notes": "-",
+        "line": 1379
+      },
+      {
+        "id": "VE-9",
+        "type": "commit",
+        "reference": "7b7b6b7",
+        "covers": "all",
+        "notes": "-",
+        "line": 1380
+      },
+      {
+        "id": "VE-10",
+        "type": "commit",
+        "reference": "b5677c3",
+        "covers": "all",
+        "notes": "-",
+        "line": 1381
+      }
+    ],
+    "traceLinks": [
+      {
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouterPolicy.java",
+        "relation": "implements",
+        "notes": "trace_intent=addition_site",
+        "line": 1387
+      },
+      {
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java",
+        "relation": "implements",
+        "notes": "trace_intent=addition_site",
+        "line": 1388
+      },
+      {
+        "type": "Requirement",
+        "reference": "CON-ROUTE-001",
+        "relation": "depends_on",
+        "notes": "runs inside the engine-free router",
+        "line": 1389
+      },
+      {
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java",
+        "relation": "implements",
+        "notes": "-",
+        "line": 1390
+      }
+    ],
+    "changeNotes": [
+      {
+        "date": "2026-10-19",
+        "change": "Created",
+        "reason": "add-requirement",
+        "line": 1404
+      },
+      {
+        "date": "2026-10-19",
+        "change": "Stability -> evolving",
+        "reason": "Feasibility=high (score 94). Blockers: none. Run: 2026-10-19.naruserve.wave-2.v01",
+        "line": 1405
+      }
+    ],
+    "tags": [
+      "wave-2",
+      "feasibility:high",
+      "routing",
+      "policy",
+      "security"
+    ],
+    "relatedDocs": [],
+    "evidenceReferences": [
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterTraceConnectTest.java",
+      "f80370b",
+      "8a4b565",
+      "7b7b6b7",
+      "b5677c3"
+    ],
+    "traceReferences": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouterPolicy.java",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java",
+      "CON-ROUTE-001"
+    ],
+    "blockStartLine": 1339,
+    "blockEndLine": 1406,
+    "sectionLines": {
+      "Requirement": 1354,
+      "Rationale": 1358,
+      "Acceptance Criteria": 1362,
+      "Verification Evidence": 1368,
+      "Trace Links": 1383,
+      "Research / Analysis": 1392,
+      "Implementation Notes": 1396,
+      "Change Notes": 1400
+    },
+    "priority": "medium",
+    "risk": "medium",
+    "stability": "evolving",
+    "newWorkCandidate": false,
+    "requirement": "The system shall disable `TRACE` and `CONNECT` routing by default, so that both yield the unsupported-method result whatever the path, and shall provide a router policy that enables each of them separately, after which an enabled method routes like any other method and is registered only by naming it.",
+    "rationale": "Covers D-067, D-070 and the wave decision on the TRACE/CONNECT policy. On the TinyHttpd adapter the policy also governs a `CONNECT` with an origin-form or absolute-form target; authority-form `CONNECT` is answered `501` by TinyHttpd before dispatch (deferred TinyHttpd gap under D-020, wave 3).",
+    "research": "- -",
+    "implementationNotes": "- -",
+    "diagnostics": [],
+    "errors": [],
+    "warnings": [],
+    "diagnosticsSummary": {
+      "errors": 0,
+      "warnings": 0,
+      "byCode": {}
+    }
+  },
+  "diagnostics": [],
+  "diagnosticsSummary": {
+    "errors": 0,
+    "warnings": 0,
+    "byCode": {}
+  },
+  "mcpWorkspace": {
+    "workspaceRoot": "/Users/beom/work/git/NaruServe",
+    "rootSource": "server-cwd-discovery",
+    "indexPath": "docs/spec/00.index.md",
+    "packageVersion": "4.2.0"
+  }
+}

@@ -1,0 +1,364 @@
+{
+  "ok": true,
+  "value": {
+    "id": "FR-HTTP-024",
+    "title": "Handler failure and unfinished-response handling through the wave 4 error path",
+    "type": "functional",
+    "target": "wave-4",
+    "status": "verified",
+    "scope": "HTTP",
+    "filePath": "docs/spec/04.http-core.srs.md",
+    "headingLine": 3188,
+    "metadata": {
+      "Type": "functional",
+      "Target": "wave-4",
+      "Status": "verified",
+      "Priority": "high",
+      "Tags": "wave-4, feasibility:high, dispatcher",
+      "Risk": "medium",
+      "Stability": "evolving",
+      "Verification Method": "test",
+      "GitHub Issue": "https://github.com/Snoworca/NaruServe/issues/5",
+      "Related Docs": "-"
+    },
+    "acceptanceCriteria": [
+      {
+        "id": "AC-1",
+        "text": "A handler that throws `RuntimeException` before writing anything is answered `500` with the standard error body of FR-APP-006 (`code` `INTERNAL_ERROR`) through the harness when no `onError` is registered. [D-127; D-132; wave-4 carried: interim failure handling replaced]",
+        "checked": true,
+        "line": 3213
+      },
+      {
+        "id": "AC-2",
+        "text": "A handler that throws a checked `IOException` after setting status `201` and header `X-A: 1` but before commit is answered `500` with the standard error body; the status and headers the handler set are dropped and the exception is not rethrown to the adapter. [D-127; D-132; D-134]",
+        "checked": true,
+        "line": 3214
+      },
+      {
+        "id": "AC-3",
+        "text": "A handler that throws after commit while the response is `STREAMING` (the only committed-but-incomplete state a handler can reach before wave 5) leaves the response `ABORTED` and the in-memory adapter reports the exchange closed abnormally instead of a `500`; a handler that throws after the response is `COMPLETED` (for example after `res.send(\"x\")`) leaves it `COMPLETED`, because abort is a no-op there, with the sent bytes unchanged and no `500`. [D-097; D-099; D-131; wave decision: abort() after completion]",
+        "checked": true,
+        "line": 3215
+      },
+      {
+        "id": "AC-4",
+        "text": "A handler that sets `status(202)` and `header(\"X-A\", \"1\")` and returns without a body write or `end()`, and a middleware that returns without responding or calling `next.run()`, each yield the status and headers set so far (`202` with `X-A: 1`, and `200` for the middleware case) with an empty body, the response is `COMPLETED`, and the app logger received one `warn` naming the method and path. [D-126] Decision: the finishing behaviour is a `warn` through the app logger followed by `end()`; with the response `STREAMING` the dispatcher runs the pending stream copy on the same adapter thread and logs no warning.",
+        "checked": true,
+        "line": 3216
+      }
+    ],
+    "verificationEvidence": [
+      {
+        "id": "VE-1",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java#sdsAc14_FR_HTTP_024_AC1_runtimeExceptionBeforeAnyWriteGivesTheStandard500",
+        "covers": "AC-1",
+        "notes": "command: ./gradlew build; result: pass (exit 0)",
+        "line": 3222
+      },
+      {
+        "id": "VE-2",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java#sdsAc14_FR_HTTP_024_AC2_checkedExceptionAfterStatusDropsStatusAndHeaders",
+        "covers": "AC-2",
+        "notes": "command: ./gradlew build; result: pass (exit 0)",
+        "line": 3223
+      },
+      {
+        "id": "VE-3",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java#sdsAc5_FR_HTTP_024_AC3_throwWhileStreamingAborts",
+        "covers": "AC-3",
+        "notes": "command: ./gradlew build; result: pass (exit 0)",
+        "line": 3224
+      },
+      {
+        "id": "VE-4",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java#sdsAc5_FR_HTTP_024_AC3_throwAfterSendKeepsTheSentBytes",
+        "covers": "AC-3",
+        "notes": "command: ./gradlew build; result: pass (exit 0)",
+        "line": 3225
+      },
+      {
+        "id": "VE-5",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java#sdsAc15_FR_HTTP_024_AC4_returnWithoutBodyEndsTheResponseWithOneWarn",
+        "covers": "AC-4",
+        "notes": "command: ./gradlew build; result: pass (exit 0)",
+        "line": 3226
+      },
+      {
+        "id": "VE-6",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java",
+        "covers": "AC-1",
+        "notes": "verification_cmd ./gradlew build passed at 04f3673 (588/588); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java:338; bundle docs/research/naruserve-v1/waves/stage-4/lane-2026-10-19.naruserve.naruserve-v1-wave-4/",
+        "line": 3227
+      },
+      {
+        "id": "VE-7",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java",
+        "covers": "AC-2",
+        "notes": "verification_cmd ./gradlew build passed at 04f3673 (588/588); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java:348; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java:496; bundle docs/research/naruserve-v1/waves/stage-4/lane-2026-10-19.naruserve.naruserve-v1-wave-4/",
+        "line": 3228
+      },
+      {
+        "id": "VE-8",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java",
+        "covers": "AC-3",
+        "notes": "verification_cmd ./gradlew build passed at 04f3673 (588/588); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java:362; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java:384; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java:452; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java:468; bundle docs/research/naruserve-v1/waves/stage-4/lane-2026-10-19.naruserve.naruserve-v1-wave-4/",
+        "line": 3229
+      },
+      {
+        "id": "VE-9",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java",
+        "covers": "AC-4",
+        "notes": "verification_cmd ./gradlew build passed at 04f3673 (588/588); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java:399; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java:422; bundle docs/research/naruserve-v1/waves/stage-4/lane-2026-10-19.naruserve.naruserve-v1-wave-4/",
+        "line": 3230
+      },
+      {
+        "id": "VE-10",
+        "type": "commit",
+        "reference": "a6e9fbe31a145333369d669970648e17c0d38be9",
+        "covers": "all",
+        "notes": "wave 4 worker or issue-fix commit (Orch-Wave: 4), ancestor of integration head 04f3673",
+        "line": 3231
+      },
+      {
+        "id": "VE-11",
+        "type": "commit",
+        "reference": "e344a664b14f2b0fe577f556373ce0b0222c9a56",
+        "covers": "all",
+        "notes": "wave 4 worker or issue-fix commit (Orch-Wave: 4), ancestor of integration head 04f3673",
+        "line": 3232
+      },
+      {
+        "id": "VE-12",
+        "type": "commit",
+        "reference": "9b502e31d25812a02ebddc8f1c01a97f308e0583",
+        "covers": "all",
+        "notes": "wave 4 worker or issue-fix commit (Orch-Wave: 4), ancestor of integration head 04f3673",
+        "line": 3233
+      },
+      {
+        "id": "VE-13",
+        "type": "commit",
+        "reference": "0c9bfb4ee13638e5de052decedb48d5800a30843",
+        "covers": "all",
+        "notes": "wave 4 worker or issue-fix commit (Orch-Wave: 4), ancestor of integration head 04f3673",
+        "line": 3234
+      },
+      {
+        "id": "VE-14",
+        "type": "commit",
+        "reference": "e680e56169d4cde7c86ed9f4c2d2b093978596e6",
+        "covers": "all",
+        "notes": "wave 4 worker or issue-fix commit (Orch-Wave: 4), ancestor of integration head 04f3673",
+        "line": 3235
+      },
+      {
+        "id": "VE-15",
+        "type": "commit",
+        "reference": "217f6d75e4b46887d073c89a19ad41d35fb16cd9",
+        "covers": "all",
+        "notes": "wave 4 worker or issue-fix commit (Orch-Wave: 4), ancestor of integration head 04f3673",
+        "line": 3236
+      },
+      {
+        "id": "VE-16",
+        "type": "commit",
+        "reference": "9e5488314eacccd5383e9c10fecd35d122ed63c4",
+        "covers": "all",
+        "notes": "wave 4 worker or issue-fix commit (Orch-Wave: 4), ancestor of integration head 04f3673",
+        "line": 3237
+      },
+      {
+        "id": "VE-17",
+        "type": "commit",
+        "reference": "7cb379bec63d289fae06d288ae01a92c37223d55",
+        "covers": "all",
+        "notes": "wave 4 worker or issue-fix commit (Orch-Wave: 4), ancestor of integration head 04f3673",
+        "line": 3238
+      },
+      {
+        "id": "VE-18",
+        "type": "commit",
+        "reference": "b0869b93e712dda6b48a1f7001862877ea1056b9",
+        "covers": "all",
+        "notes": "wave 4 worker or issue-fix commit (Orch-Wave: 4), ancestor of integration head 04f3673",
+        "line": 3239
+      },
+      {
+        "id": "VE-19",
+        "type": "commit",
+        "reference": "18f79a529b9ecb4e6d3b605f90bf2df3dfad5494",
+        "covers": "all",
+        "notes": "wave 4 worker or issue-fix commit (Orch-Wave: 4), ancestor of integration head 04f3673",
+        "line": 3240
+      },
+      {
+        "id": "VE-20",
+        "type": "commit",
+        "reference": "b4bf9d84ff28d07ffa85ea39ca39569c91e296fd",
+        "covers": "all",
+        "notes": "wave 4 worker or issue-fix commit (Orch-Wave: 4), ancestor of integration head 04f3673",
+        "line": 3241
+      },
+      {
+        "id": "VE-21",
+        "type": "commit",
+        "reference": "e612f8fe3a2f95cb8c94c6d836017fb447434a92",
+        "covers": "all",
+        "notes": "wave 4 worker or issue-fix commit (Orch-Wave: 4), ancestor of integration head 04f3673",
+        "line": 3242
+      },
+      {
+        "id": "VE-22",
+        "type": "commit",
+        "reference": "d39522781993188e36f6d0f22663fb03c7ab4d54",
+        "covers": "all",
+        "notes": "wave 4 worker or issue-fix commit (Orch-Wave: 4), ancestor of integration head 04f3673",
+        "line": 3243
+      },
+      {
+        "id": "VE-23",
+        "type": "commit",
+        "reference": "a452c0ca77b3d08a15f5758b710a3363c4377355",
+        "covers": "all",
+        "notes": "wave 4 worker or issue-fix commit (Orch-Wave: 4), ancestor of integration head 04f3673",
+        "line": 3244
+      }
+    ],
+    "traceLinks": [
+      {
+        "type": "Requirement",
+        "reference": "FR-HTTP-006",
+        "relation": "supersedes",
+        "notes": "-",
+        "line": 3250
+      },
+      {
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+        "relation": "implements",
+        "notes": "trace_intent=addition_site",
+        "line": 3251
+      },
+      {
+        "type": "Requirement",
+        "reference": "FR-APP-005",
+        "relation": "depends_on",
+        "notes": "error path",
+        "line": 3252
+      },
+      {
+        "type": "Requirement",
+        "reference": "FR-APP-006",
+        "relation": "depends_on",
+        "notes": "standard error body",
+        "line": 3253
+      },
+      {
+        "type": "Requirement",
+        "reference": "FR-HTTP-016",
+        "relation": "extends",
+        "notes": "response state machine",
+        "line": 3254
+      }
+    ],
+    "changeNotes": [
+      {
+        "date": "2026-10-19",
+        "change": "Created",
+        "reason": "add-requirement",
+        "line": 3268
+      },
+      {
+        "date": "2026-10-19",
+        "change": "Stability -> evolving",
+        "reason": "Feasibility=high (score 94). Blockers: none. Run: 2026-10-19.naruserve.wave-4.v01",
+        "line": 3269
+      },
+      {
+        "date": "2026-10-19",
+        "change": "Status -> verified",
+        "reason": "Wave 4 promotion: every AC cited in docs/research/naruserve-v1/waves/wave-4/test-sufficiency.json; ./gradlew build passed at 04f3673 (588/588); worker commits recorded",
+        "line": 3270
+      }
+    ],
+    "tags": [
+      "wave-4",
+      "feasibility:high",
+      "dispatcher"
+    ],
+    "relatedDocs": [],
+    "evidenceReferences": [
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java",
+      "a6e9fbe31a145333369d669970648e17c0d38be9",
+      "e344a664b14f2b0fe577f556373ce0b0222c9a56",
+      "9b502e31d25812a02ebddc8f1c01a97f308e0583",
+      "0c9bfb4ee13638e5de052decedb48d5800a30843",
+      "e680e56169d4cde7c86ed9f4c2d2b093978596e6",
+      "217f6d75e4b46887d073c89a19ad41d35fb16cd9",
+      "9e5488314eacccd5383e9c10fecd35d122ed63c4",
+      "7cb379bec63d289fae06d288ae01a92c37223d55",
+      "b0869b93e712dda6b48a1f7001862877ea1056b9",
+      "18f79a529b9ecb4e6d3b605f90bf2df3dfad5494",
+      "b4bf9d84ff28d07ffa85ea39ca39569c91e296fd",
+      "e612f8fe3a2f95cb8c94c6d836017fb447434a92",
+      "d39522781993188e36f6d0f22663fb03c7ab4d54",
+      "a452c0ca77b3d08a15f5758b710a3363c4377355"
+    ],
+    "traceReferences": [
+      "FR-HTTP-006",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+      "FR-APP-005",
+      "FR-APP-006",
+      "FR-HTTP-016"
+    ],
+    "blockStartLine": 3188,
+    "blockEndLine": 3271,
+    "sectionLines": {
+      "Requirement": 3203,
+      "Rationale": 3207,
+      "Acceptance Criteria": 3211,
+      "Verification Evidence": 3218,
+      "Trace Links": 3246,
+      "Research / Analysis": 3256,
+      "Implementation Notes": 3260,
+      "Change Notes": 3264
+    },
+    "priority": "high",
+    "risk": "medium",
+    "stability": "evolving",
+    "newWorkCandidate": false,
+    "requirement": "The system shall answer an exception thrown by a handler or middleware through the error path of FR-APP-005, which gives the standard `500` error body while the response is not committed and no `onError` responded, abort the response when the exception is thrown after commit or while streaming, and, when the chain returns with the response not started and no `next.run()`, log a developer warning through the app logger and finish the response with the status and headers set so far and an empty body without waiting for a timeout.",
+    "rationale": "-",
+    "research": "- -",
+    "implementationNotes": "- -",
+    "diagnostics": [],
+    "errors": [],
+    "warnings": [],
+    "diagnosticsSummary": {
+      "errors": 0,
+      "warnings": 0,
+      "byCode": {}
+    }
+  },
+  "diagnostics": [],
+  "diagnosticsSummary": {
+    "errors": 0,
+    "warnings": 0,
+    "byCode": {}
+  },
+  "mcpWorkspace": {
+    "workspaceRoot": "/Users/beom/work/git/NaruServe",
+    "rootSource": "server-cwd-discovery",
+    "indexPath": "docs/spec/00.index.md",
+    "packageVersion": "4.2.0"
+  }
+}

@@ -1,0 +1,163 @@
+{
+  "ok": true,
+  "value": {
+    "id": "FR-DX-008",
+    "title": "미들웨어를 전체 등록 순서로 실행",
+    "type": "functional",
+    "target": "api-usability",
+    "status": "verified",
+    "scope": "DX",
+    "filePath": "docs/spec/16.developer-experience.srs.md",
+    "headingLine": 512,
+    "metadata": {
+      "Type": "functional",
+      "Target": "api-usability",
+      "Status": "verified",
+      "Priority": "high",
+      "Tags": "-",
+      "Risk": "medium",
+      "Stability": "evolving",
+      "Verification Method": "test",
+      "GitHub Issue": "https://github.com/Snoworca/NaruServe/issues/30",
+      "Related Docs": "-"
+    },
+    "acceptanceCriteria": [
+      {
+        "id": "AC-1",
+        "text": "Interleaved global and prefix registration preserves chronology.",
+        "checked": true,
+        "line": 537
+      },
+      {
+        "id": "AC-2",
+        "text": "prefix filtering respects segment boundaries.",
+        "checked": true,
+        "line": 538
+      },
+      {
+        "id": "AC-3",
+        "text": "route middleware order remains explicit.",
+        "checked": true,
+        "line": 539
+      },
+      {
+        "id": "AC-4",
+        "text": "continuation remains synchronous and single-use.",
+        "checked": true,
+        "line": 540
+      }
+    ],
+    "verificationEvidence": [
+      {
+        "id": "VE-1",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MiddlewarePipelineTest.java",
+        "covers": "all",
+        "notes": "RED confirmed before implementation; GREEN: ./gradlew :NaruServe-api:test --tests *MiddlewarePipelineTest --tests *PrefixMatcherTest --tests *ChainNextTest --tests *WebSocketDispatchTest --tests *AppDocsTest",
+        "line": 546
+      },
+      {
+        "id": "VE-2",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MiddlewarePipelineTest.java",
+        "covers": "AC-1",
+        "notes": "check_test_sufficiency source citation NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MiddlewarePipelineTest.java:42; complete ./gradlew build passed 1643 tests, zero failures/skips; see docs/release/test-sufficiency-review.md.",
+        "line": 547
+      },
+      {
+        "id": "VE-3",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MiddlewarePipelineTest.java",
+        "covers": "AC-2",
+        "notes": "check_test_sufficiency source citation NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MiddlewarePipelineTest.java:60; complete ./gradlew build passed 1643 tests, zero failures/skips; see docs/release/test-sufficiency-review.md.",
+        "line": 548
+      },
+      {
+        "id": "VE-4",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MiddlewarePipelineTest.java",
+        "covers": "AC-3",
+        "notes": "check_test_sufficiency source citation NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MiddlewarePipelineTest.java:42; complete ./gradlew build passed 1643 tests, zero failures/skips; see docs/release/test-sufficiency-review.md.",
+        "line": 549
+      },
+      {
+        "id": "VE-5",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ChainNextTest.java",
+        "covers": "AC-4",
+        "notes": "check_test_sufficiency source citation NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ChainNextTest.java:55; complete ./gradlew build passed 1643 tests, zero failures/skips; see docs/release/test-sufficiency-review.md.",
+        "line": 550
+      }
+    ],
+    "traceLinks": [],
+    "changeNotes": [
+      {
+        "date": "2026-10-21",
+        "change": "Created",
+        "reason": "add-requirement",
+        "line": 569
+      },
+      {
+        "date": "2026-10-21",
+        "change": "Status -> implemented",
+        "reason": "Issue #30: red test then green; ./gradlew :NaruServe-api:test --tests *MiddlewarePipelineTest --tests *PrefixMatcherTest --tests *ChainNextTest --tests *WebSocketDispatchTest --tests *AppDocsTest",
+        "line": 570
+      },
+      {
+        "date": "2026-10-21",
+        "change": "Status -> verified",
+        "reason": "Issue #30: all acceptance criteria covered by passing regression evidence.",
+        "line": 571
+      }
+    ],
+    "tags": [
+      "-"
+    ],
+    "relatedDocs": [],
+    "evidenceReferences": [
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MiddlewarePipelineTest.java",
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ChainNextTest.java"
+    ],
+    "traceReferences": [],
+    "blockStartLine": 512,
+    "blockEndLine": 572,
+    "sectionLines": {
+      "Requirement": 527,
+      "Rationale": 531,
+      "Acceptance Criteria": 535,
+      "Verification Evidence": 542,
+      "Trace Links": 552,
+      "Research / Analysis": 557,
+      "Implementation Notes": 561,
+      "Change Notes": 565
+    },
+    "priority": "high",
+    "risk": "medium",
+    "stability": "evolving",
+    "newWorkCandidate": false,
+    "requirement": "The system shall execute global and matching prefix middleware in their combined registration order followed by route middleware.",
+    "rationale": "-",
+    "research": "- -",
+    "implementationNotes": "- -",
+    "diagnostics": [],
+    "errors": [],
+    "warnings": [],
+    "diagnosticsSummary": {
+      "errors": 0,
+      "warnings": 0,
+      "byCode": {}
+    }
+  },
+  "diagnostics": [],
+  "diagnosticsSummary": {
+    "errors": 0,
+    "warnings": 0,
+    "byCode": {}
+  },
+  "mcpWorkspace": {
+    "workspaceRoot": "/Users/beom/work/git/NaruServe",
+    "rootSource": "server-cwd-discovery",
+    "indexPath": "docs/spec/00.index.md",
+    "packageVersion": "4.2.0"
+  }
+}

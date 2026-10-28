@@ -1,0 +1,224 @@
+{
+  "ok": true,
+  "value": {
+    "id": "FR-ROUTE-007",
+    "title": "Per-method pattern priority",
+    "type": "functional",
+    "target": "wave-2",
+    "status": "verified",
+    "scope": "ROUTE",
+    "filePath": "docs/spec/03.routing.srs.md",
+    "headingLine": 761,
+    "metadata": {
+      "Type": "functional",
+      "Target": "wave-2",
+      "Status": "verified",
+      "Priority": "high",
+      "Tags": "wave-2, feasibility:high, routing, priority",
+      "Risk": "medium",
+      "Stability": "evolving",
+      "Verification Method": "test",
+      "GitHub Issue": "https://github.com/Snoworca/NaruServe/issues/3",
+      "Related Docs": "-"
+    },
+    "acceptanceCriteria": [
+      {
+        "id": "AC-1",
+        "text": "With `GET /users/:id` registered before `GET /users/me`, a `GET /users/me` lookup returns the `/users/me` handler and `GET /users/42` returns the `/users/:id` handler; the result is the same with the opposite registration order. [D-054]",
+        "checked": true,
+        "line": 786
+      },
+      {
+        "id": "AC-2",
+        "text": "With `GET /a/:x/c` and `GET /a/b/:y`, a `GET /a/b/c` lookup returns the `/a/b/:y` handler. [D-055]",
+        "checked": true,
+        "line": 787
+      },
+      {
+        "id": "AC-3",
+        "text": "With `GET /users/me` and `DELETE /users/:id`, a `DELETE /users/me` lookup returns the matched result for `DELETE /users/:id`. [wave decision: per-method priority]",
+        "checked": true,
+        "line": 788
+      }
+    ],
+    "verificationEvidence": [
+      {
+        "id": "VE-1",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterPriorityTest.java#sdsAc11_FR_ROUTE_007_AC1_literalBeatsVariableInBothOrders",
+        "covers": "AC-1",
+        "notes": "-",
+        "line": 794
+      },
+      {
+        "id": "VE-2",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterPriorityTest.java#sdsAc11_FR_ROUTE_007_AC2_leftmostDifferingSegmentDecides",
+        "covers": "AC-2",
+        "notes": "-",
+        "line": 795
+      },
+      {
+        "id": "VE-3",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterPriorityTest.java#sdsAc11_FR_ROUTE_007_AC3_priorityIsPerMethod",
+        "covers": "AC-3",
+        "notes": "-",
+        "line": 796
+      },
+      {
+        "id": "VE-4",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterLookupTest.java",
+        "covers": "AC-1",
+        "notes": "verification_cmd ./gradlew build passed at 461fc3f (153/153); cited line RouterLookupTest.java:234, RouterPriorityTest.java:28; bundle docs/research/naruserve-v1/waves/stage-2/lane-2026-10-19.naruserve.naruserve-v1-wave-2/",
+        "line": 797
+      },
+      {
+        "id": "VE-5",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterLookupTest.java",
+        "covers": "AC-2",
+        "notes": "verification_cmd ./gradlew build passed at 461fc3f (153/153); cited line RouterLookupTest.java:246, RouterPriorityTest.java:39; bundle docs/research/naruserve-v1/waves/stage-2/lane-2026-10-19.naruserve.naruserve-v1-wave-2/",
+        "line": 798
+      },
+      {
+        "id": "VE-6",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterLookupTest.java",
+        "covers": "AC-3",
+        "notes": "verification_cmd ./gradlew build passed at 461fc3f (153/153); cited line RouterLookupTest.java:254, RouterPriorityTest.java:51; bundle docs/research/naruserve-v1/waves/stage-2/lane-2026-10-19.naruserve.naruserve-v1-wave-2/",
+        "line": 799
+      },
+      {
+        "id": "VE-7",
+        "type": "commit",
+        "reference": "f80370b",
+        "covers": "all",
+        "notes": "-",
+        "line": 800
+      },
+      {
+        "id": "VE-8",
+        "type": "commit",
+        "reference": "8a4b565",
+        "covers": "all",
+        "notes": "-",
+        "line": 801
+      },
+      {
+        "id": "VE-9",
+        "type": "commit",
+        "reference": "7b7b6b7",
+        "covers": "all",
+        "notes": "-",
+        "line": 802
+      },
+      {
+        "id": "VE-10",
+        "type": "commit",
+        "reference": "b5677c3",
+        "covers": "all",
+        "notes": "-",
+        "line": 803
+      }
+    ],
+    "traceLinks": [
+      {
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java",
+        "relation": "implements",
+        "notes": "trace_intent=addition_site",
+        "line": 809
+      },
+      {
+        "type": "Requirement",
+        "reference": "CON-ROUTE-001",
+        "relation": "depends_on",
+        "notes": "runs inside the engine-free router",
+        "line": 810
+      },
+      {
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RoutePattern.java",
+        "relation": "implements",
+        "notes": "-",
+        "line": 811
+      }
+    ],
+    "changeNotes": [
+      {
+        "date": "2026-10-19",
+        "change": "Created",
+        "reason": "add-requirement",
+        "line": 825
+      },
+      {
+        "date": "2026-10-19",
+        "change": "Stability -> evolving",
+        "reason": "Feasibility=high (score 94). Blockers: none. Run: 2026-10-19.naruserve.wave-2.v01",
+        "line": 826
+      }
+    ],
+    "tags": [
+      "wave-2",
+      "feasibility:high",
+      "routing",
+      "priority"
+    ],
+    "relatedDocs": [],
+    "evidenceReferences": [
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterPriorityTest.java",
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterLookupTest.java",
+      "f80370b",
+      "8a4b565",
+      "7b7b6b7",
+      "b5677c3"
+    ],
+    "traceReferences": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java",
+      "CON-ROUTE-001",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RoutePattern.java"
+    ],
+    "blockStartLine": 761,
+    "blockEndLine": 827,
+    "sectionLines": {
+      "Requirement": 776,
+      "Rationale": 780,
+      "Acceptance Criteria": 784,
+      "Verification Evidence": 790,
+      "Trace Links": 805,
+      "Research / Analysis": 813,
+      "Implementation Notes": 817,
+      "Change Notes": 821
+    },
+    "priority": "high",
+    "risk": "medium",
+    "stability": "evolving",
+    "newWorkCandidate": false,
+    "requirement": "The system shall, for the request method, pick the most specific matching pattern among the routes of that method, comparing patterns segment by segment from the left so that the first differing segment decides and a literal segment beats a variable segment regardless of registration order.",
+    "rationale": "Covers D-054, D-055 (T04) and the wave decision on per-method priority (as in Express).",
+    "research": "- -",
+    "implementationNotes": "- -",
+    "diagnostics": [],
+    "errors": [],
+    "warnings": [],
+    "diagnosticsSummary": {
+      "errors": 0,
+      "warnings": 0,
+      "byCode": {}
+    }
+  },
+  "diagnostics": [],
+  "diagnosticsSummary": {
+    "errors": 0,
+    "warnings": 0,
+    "byCode": {}
+  },
+  "mcpWorkspace": {
+    "workspaceRoot": "/Users/beom/work/git/NaruServe",
+    "rootSource": "server-cwd-discovery",
+    "indexPath": "docs/spec/00.index.md",
+    "packageVersion": "4.2.0"
+  }
+}

@@ -1,0 +1,217 @@
+{
+  "stance": "release-dependencies-test-harness",
+  "read_only": true,
+  "observed_at": "2026-10-28T04:42:13.994164+00:00",
+  "workspace": "/Users/beom/work/git/NaruServe",
+  "requirement_ids": [
+    "FR-REL-005",
+    "FR-REL-001",
+    "FR-REL-002",
+    "FR-REL-003",
+    "FR-REL-004",
+    "CON-BUILD-006",
+    "CON-BUILD-010",
+    "CON-BUILD-012",
+    "CON-BUILD-013",
+    "OPS-BUILD-002",
+    "OPS-HTTP-004"
+  ],
+  "mcp": {
+    "work_mode": "sdd",
+    "active_target": "central-0.9.0",
+    "workspaceRoot": "/Users/beom/work/git/NaruServe",
+    "rootSource": "per-call-workspace-root",
+    "packageVersion": "4.0.0",
+    "queried_requirement_status": "verified",
+    "queried_requirement_stability": "evolving"
+  },
+  "scope": {
+    "user_current_goal_authorizes_final_push_and_maven_deployment": true,
+    "no_dependency_changes": true,
+    "java_pattern": true,
+    "new_runtime_or_test_dependencies_required": false
+  },
+  "dependency_pins": {
+    "main": {
+      "com.snoworca:tinyhttpd-core": "3.1.0",
+      "com.snoworca:tinyhttpd-websocket": "3.1.0",
+      "com.google.code.gson:gson": "2.14.0",
+      "org.jetbrains.kotlin:kotlin-stdlib": "2.2.0",
+      "org.slf4j:slf4j-api": "1.7.36"
+    },
+    "compile_only": {
+      "org.jspecify:jspecify": "1.0.0",
+      "javax.servlet:javax.servlet-api": "3.1.0",
+      "javax.websocket:javax.websocket-api": "1.1"
+    },
+    "test": {
+      "junit:junit": "4.13.2",
+      "Jetty9": "9.4.58.v20250814"
+    },
+    "toolchain": {
+      "gradle": "8.14.3",
+      "kotlin_plugin": "2.2.0",
+      "agp": "8.13.2",
+      "animalsniffer_plugin": "2.0.1",
+      "compileSdk": 36,
+      "buildTools": "36.0.0",
+      "minSdk": 21
+    },
+    "evidence": [
+      "build.gradle:3-10",
+      "build.gradle:53-85",
+      "build.gradle:348-354",
+      "settings.gradle:17-58"
+    ]
+  },
+  "environment": {
+    "real_java8_present": true,
+    "real_java8_home": "/Users/beom/Library/Java/JavaVirtualMachines/zulu8.96.0.205-ca-jdk8.0.504-macosx_aarch64/Contents/Home",
+    "real_java8_version": "1.8.0_504",
+    "android_sdk_env_present": true,
+    "android_platform36_present": true,
+    "android_platform21_installed": false,
+    "existing_api21_animal_sniffer_signature": "net.sf.androidscents.signature:android-api-level-21:5.0.1_r2@signature",
+    "gpg_binary_present": false,
+    "node_present": true,
+    "npm_present": true
+  },
+  "publication": {
+    "repo_gradle_support": "Local staging and MavenLocal only; no signing or Central upload task exists.",
+    "module_count": 10,
+    "coordinates_prefix": "com.snoworca.naruserve",
+    "artifact_ids": [
+      "naruserve",
+      "naruserve-api",
+      "naruserve-servlet",
+      "naruserve-tinyhttpd",
+      "naruserve-gson",
+      "naruserve-kotlin",
+      "naruserve-slf4j",
+      "naruserve-filelog",
+      "naruserve-logcat",
+      "naruserve-android"
+    ],
+    "target_version": "0.10.0",
+    "staging": "build/central-staging",
+    "primary_files_per_module": [
+      "main .jar (.aar for android)",
+      "-sources.jar",
+      "-javadoc.jar",
+      ".pom",
+      ".module"
+    ],
+    "expected_primary_count": 50,
+    "signature_count": 50,
+    "checksum_count_with_four_algorithms": 200,
+    "expected_bundle_entry_count": 300,
+    "validator_task": "checkCentralStaging",
+    "validator_evidence": [
+      "build.gradle:610-645",
+      "src/test/java/com/snoworca/naruserve/build/CentralStagingTest.java:25-85",
+      "src/test/java/com/snoworca/naruserve/build/PublishedPomTest.java:28-30"
+    ],
+    "version_update_surfaces": [
+      "build.gradle allprojects.version",
+      "src/test/java/com/snoworca/naruserve/build/CentralStagingTest.java VERSION",
+      "src/test/java/com/snoworca/naruserve/build/PublishedPomTest.java VERSION",
+      "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:382 fixture jar version",
+      "README/README.ko/docs/api/examples/release docs version samples"
+    ],
+    "current_0_9_0_prior_publication_evidence": "docs/release/verification/central-0.9.0.md:99-114",
+    "release_gate_previous_limit": "Prior0.9 report explicitly states releaseCheck was not rerun; do not reuse that as0.10 release clearance."
+  },
+  "credential_presence_only": {
+    "source_file": "/Users/beom/work/git/TinyHttpd/.publish/secrets.json",
+    "settings_present": {
+      "central_username": true,
+      "central_password": true,
+      "signing_password": true,
+      "signing_key_file": true,
+      "signing_key_id": true
+    },
+    "signing_key_file_present": true,
+    "credential_values_printed": false,
+    "remote_auth_or_namespace_permission_tested": false
+  },
+  "existing_operational_signing_reuse": {
+    "source": "/Users/beom/work/git/TinyHttpd/.publish/PgpTool.java",
+    "compiled_class_present": true,
+    "pgp_jars_already_in_gradle_distribution": [
+      "bcpg-jdk18on-1.78.1.jar",
+      "bcprov-jdk18on-1.78.1.jar",
+      "bcutil-jdk18on-1.78.1.jar"
+    ],
+    "adds_naru_dependency": false,
+    "constraint": "Use host JDK17; PgpTool uses InputStream.readAllBytes, so it is operational release tooling, not a Java8 shipped class. Copy/compile helper in private temporary staging workspace if recompilation is needed; never recompile or write inside TinyHttpd checkout.",
+    "signature_validation": "Existing helper rejects expired/revoked key, unlocks key using stdin, signs each primary byte sequence using SHA256, and self-verifies generated signature before writing .asc.",
+    "do_not_execute_as_naru": "TinyHttpd .publish/publish.py hardcodes its own ROOT/MODULES and validators; do not invoke its central/build commands for NaruServe."
+  },
+  "official_api_verified": {
+    "sources": [
+      "https://central.sonatype.org/publish/publish-portal-api/",
+      "https://central.sonatype.org/publish/requirements/"
+    ],
+    "auth": "Bearer base64(username:password) from Portal user token; construct in memory and never log.",
+    "upload": "POST /api/v1/publisher/upload?name=NaruServe%200.10.0&publishingType=AUTOMATIC multipart field bundle(application/octet-stream).",
+    "upload_response": "Deployment UUID. Persist ID with exact primary-file SHA256 manifest before polling; never upload a second bundle after observation timeout.",
+    "status": "POST /api/v1/publisher/status?id=<UUID>; PENDING/VALIDATING/PUBLISHING are live; PUBLISHED succeeds; FAILED requires recorded errors.",
+    "requirements": "Sources, javadoc, POM metadata, PGP signatures; md5/sha1 required, sha256/sha512 supported. Signatures do not need checksums and checksums do not need signatures.",
+    "word_limit_note": "Paraphrase only; do not copy complete source content."
+  },
+  "release_sequence": [
+    "Finish and integrate every feature with per-REQ evidence; full-suite sufficiency pass, then bilingual technical-writer documentation.",
+    "TDD-update version-specific build/POM tests to0.10.0, then version/build/docs/artifact outputs without modifying dependency pins.",
+    "Run full JDK17 and actualJava8 suites, API21/class-reference/dependency checks, and supported socket/Servlet regressions on final candidate.",
+    "Run -Prelease releaseSbom releaseCheck; fresh vulnerability/license evidence is required, with any pending scan explicitly preserved and never presented as successful scan.",
+    "Run checkCentralStaging and staging-only Java/Android consumers including Android minified/R8 release build.",
+    "Commit/push reviewed code/docs/evidence; record exact commit/tag and ensure staged artifact bytes correspond to that final commit.",
+    "Create private deployment staging from50 primary files, sign/self-verify50, create4 checksums for each, validate clean300-entry archive and dependency pins/POM scopes.",
+    "Upload once through official API after final gates; persist UUID+artifact manifest, poll same deployment until terminal.",
+    "Download all50 primary artifacts and50 signatures from repo.maven.apache.org, compare hashes/bytes, run MavenCentral-only Java and Android consumers, record proof, close issues only with real evidence."
+  ],
+  "exact_existing_commands": [
+    "./gradlew -PtinyHttpdFromMaven=true build",
+    "./gradlew -PtinyHttpdFromMaven=true build --rerun-tasks -I gradle/java8-tests.gradle -Dnaruserve.java8.home=/Users/beom/Library/Java/JavaVirtualMachines/zulu8.96.0.205-ca-jdk8.0.504-macosx_aarch64/Contents/Home",
+    "./gradlew -PtinyHttpdFromMaven=true checkCentralStaging --rerun-tasks",
+    "./gradlew -PtinyHttpdFromMaven=true -Prelease releaseSbom releaseCheck",
+    "./gradlew -PtinyHttpdFromMaven=true publishToMavenLocal"
+  ],
+  "parallel_harness_lane": {
+    "issues": [
+      48
+    ],
+    "safe_owned_paths": [
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/conformance/",
+      "NaruServe-api/src/test/resources/express5/",
+      "tools/oracle/ (new only if approved plan owns this path)",
+      "src/test/java/com/snoworca/naruserve/conformance/ (alternative root harness location)"
+    ],
+    "avoid_shared_writes": [
+      "build.gradle (host single owner)",
+      "settings.gradle (host single owner)",
+      "common testing/TestApp.java/InMemoryHttpAdapter.java unless explicitly leased",
+      "docs/spec/** (host MCP only)"
+    ],
+    "available_without_new_deps": [
+      "JUnit4.13.2 already every Java module",
+      "Kotlin2.2 test tooling already every Java module",
+      "API testFixtures: TestApp/InMemoryHttpAdapter/RecordingExchange/RecordingLogger",
+      "Root tests already depend on NaruServe-gson: Gson JSON fixture parser available through existing API dependency. API-module test runtime does not have Gson; use simple JDK-based corpus or put JSON replay at root instead of adding Gson there.",
+      "Root real HTTP helper src/test/java/com/snoworca/naruserve/common/RealHttpTestSupport.java",
+      "Jetty existing test dependencies for Servlet integration; do not add another container/framework."
+    ],
+    "oracle_dependency_boundary": "Reference Express packages already used in prior research may remain isolated external oracle tools at pinned versions; ordinary Gradle replay remains Node-free. Do not introduce Node/npm runtime/build dependency into NaruServe or add Gradle/test libraries.",
+    "schedule": "Fixture generator/schema can progress beside matcher implementation after the shared acceptance schema is fixed. Replay tests targeting new public API need the API contract committed first; selective test commands prevent unrelated TDD RED lanes from invalidating others.",
+    "review_contract": "Independent tests sufficiency pass up to3 rounds, stopping after first pass; record original failing test evidence, meaningful missing-case fixes, and final pass without weakening tests."
+  },
+  "risks": [
+    "All10 artifacts require available Android SDK; staging refuses nine-module release. API21 physical runtime is not evidenced by platform36 build or animal-sniffer alone.",
+    "Signing/token/key files exist but unlockability, current validity and namespace authorization were not exercised by this read-only audit.",
+    "No automatic new dependency version or TinyHttpd source write is authorized by this audit; transport compatibility constraints belong to separate lane analysis.",
+    "Published0.10.0 is immutable; exact final version bytes must be stable before upload.",
+    "Current root tests hardcode0.9.0 in multiple locations; updating only allprojects.version will fail."
+  ],
+  "repository_edits": false,
+  "publication_performed": false
+}

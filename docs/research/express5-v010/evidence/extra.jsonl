@@ -1,0 +1,6 @@
+{"label":"8.3.0","pattern":"/x{/a}{/a}{/a}{/a}{/a}{/a}{/a}{/a}{/a}","len":8973}
+{"label":"8.3.0","pattern":"/x\\","len":26}
+{"label":"8.4.2","pattern":"/x{/a}{/a}{/a}{/a}{/a}{/a}{/a}{/a}{/a}","error":"Too many path combinations: /x{/a}{/a}{/a}{/a}{/a}{/a}{/a}{/a}{/a}; visit https://git.new/pathToRegexpError for info"}
+{"label":"8.4.2","pattern":"/x\\","error":"Unexpected end after \\ at index 3: /x\\; visit https://git.new/pathToRegexpError for info"}
+{"label":"express4","allow":"POST,GET,HEAD,DELETE","body":"POST,GET,HEAD,DELETE"}
+{"label":"express5","allow":"DELETE, GET, HEAD, POST","body":"DELETE, GET, HEAD, POST"}

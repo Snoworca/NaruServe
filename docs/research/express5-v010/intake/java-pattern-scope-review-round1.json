@@ -1,0 +1,58 @@
+{
+  "audit_type": "read-only-explicit-user-decision-scope-review",
+  "audited_at": "2026-10-28T00:56:03.837442+00:00",
+  "result": "CHANGES_REQUIRED",
+  "reviewed_files": [
+    "docs/research/express5-v010/04.java-pattern-decision.md",
+    "docs/research/express5-v010/tasks.json",
+    "docs/research/express5-v010/01.intake.md",
+    "docs/research/express5-v010/01.research.md",
+    "docs/research/express5-v010/issue-bodies/T04.md",
+    "docs/research/express5-v010/issue-bodies/epic.md",
+    "docs/research/express5-v010/02.tasks.md",
+    "docs/research/express5-v010/intake/intent.json",
+    "docs/research/express5-v010/intake/code_context.json"
+  ],
+  "findings": [
+    {
+      "id": "PATTERN-SCOPE-001",
+      "severity": "HIGH",
+      "status": "open",
+      "title": "Machine-readable orchestrator intake still requires the superseded ECMAScript engine decision",
+      "evidence": [
+        {
+          "path": "docs/research/express5-v010/intake/intent.json",
+          "fields": [
+            "key_entities native ECMAScript RegExp path object",
+            "ambiguities[A-ECMA-ENGINE].status=unresolved",
+            "ambiguities[A-ECMA-ENGINE].options JNI backend / ECMAScript parser VM",
+            "ambiguity_count=2",
+            "decisions_not_made No JavaPattern subset authorized"
+          ]
+        },
+        {
+          "path": "docs/research/express5-v010/intake/code_context.json",
+          "field": "open_decisions[0] ECMAScript RegExp analogue/equivalence denominator must freeze; no silent Java regex subset"
+        }
+      ],
+      "impact": "Updated prose/tasks correctly resolve Q-REGEX, but intake intent remains an active gate producer. Resuming from it can recreate an unauthorized JNI/ECMAScript requirement or report the resolved question as pending. The old code-context open-decision text also needs reconciliation rather than treatment as current scope.",
+      "required_correction": "Record the explicit Java Pattern user decision in current intent entities/implied requirements/equivalence denominator; mark A-ECMA-ENGINE resolved/superseded and recalculate unresolved count to retain Q-EXT only. Update or annotate code_context open_decisions as superseded. Refresh affected research-manifest hashes after the updates; retain original historical evidence in03.regexp-engine-research.md/evidence/regexp."
+    }
+  ],
+  "checks_passed": [
+    "04.java-pattern-decision.md explicitly quotes the new user decision and chooses java.util.regex.Pattern",
+    "T04 current gate removed; no current T04 engine/JNI/test262/lastIndex emulation requirement",
+    "T04 preserves alternatives, flags, matching/captures/decoding, per-match Matcher isolation, Java8/API21 and Java/Kotlin validation",
+    "T00/T01/T17/T18 define Java-specific regex contract separately from unchanged Express common HTTP parity",
+    "01.intake.md,01.research.md and epic/T04 issue bodies preserve NaruServe extensions and existing WS contracts",
+    "03.regexp-engine-research.md/evidence/regexp remain identified as historical investigation, not active implementation demands",
+    "Q-EXT remains unanswered in current intake prose and T12 external-module-impact gate remains present"
+  ],
+  "decision_state": {
+    "Q-REGEX": "resolved by explicit user Java Pattern decision; machine intake reconciliation remains necessary",
+    "Q-EXT": "unanswered; external repository mutation/publication not authorized by regex decision"
+  },
+  "remote_github_verification": "Not performed; reviewed local issue-body artifacts only.",
+  "implementation_or_runtime_verification": false,
+  "repository_edits": false
+}

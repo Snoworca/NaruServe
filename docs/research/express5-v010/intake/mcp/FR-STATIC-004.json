@@ -1,0 +1,422 @@
+{
+  "ok": true,
+  "value": {
+    "id": "FR-STATIC-004",
+    "title": "SPA fallback conditions and the always-excluded /api/ and /ws/ prefixes",
+    "type": "functional",
+    "target": "wave-6",
+    "status": "verified",
+    "scope": "STATIC",
+    "filePath": "docs/spec/10.static-files.srs.md",
+    "headingLine": 547,
+    "metadata": {
+      "Type": "functional",
+      "Target": "wave-6",
+      "Status": "verified",
+      "Priority": "high",
+      "Tags": "wave-6, feasibility:high, static, spa",
+      "Risk": "medium",
+      "Stability": "evolving",
+      "Verification Method": "test",
+      "GitHub Issue": "https://github.com/Snoworca/NaruServe/issues/12",
+      "Related Docs": "-"
+    },
+    "acceptanceCriteria": [
+      {
+        "id": "AC-1",
+        "text": "Under `app.staticFiles(\"/\", root, o -> o.spaFallback(true))`, `GET /app/users/7` with `Accept: text/html,application/xhtml+xml` and no such file is answered `200` with the bytes of `root/index.html`. [D-265; T27] Decision: SPA fallback requires `GET` or `HEAD` and an `Accept` header containing `text/html` case-insensitively; `*/*` alone does not qualify. [SDS 2026-10-19.naruserve.naruserve-v1-wave-6-6 SDS-AC-6]",
+        "checked": true,
+        "line": 572
+      },
+      {
+        "id": "AC-2",
+        "text": "No SPA fallback is served for `GET /app/users/7` with `Accept: application/json` (answered `404`), for a path whose file exists (the file is served), for a path an explicit `GET` route matches (the route answers) or for a path a WebSocket route owns. [D-265]",
+        "checked": true,
+        "line": 573
+      },
+      {
+        "id": "AC-3",
+        "text": "`GET /api/x`, `GET /api`, `GET /ws/chat` and `GET /ws` with `Accept: text/html` and no file are answered `404`, while `GET /apix` with `Accept: text/html` receives the SPA index, because exclusions match on segment boundaries of the full request path. [D-266; D-267; wave decision: SPA fallback exclusions] Decision: the full raw request path is compared with each exclusion prefix stripped of a trailing `/`, matching when equal or followed by `/`. [SDS 2026-10-19.naruserve.naruserve-v1-wave-6-6 SDS-AC-7]",
+        "checked": true,
+        "line": 574
+      },
+      {
+        "id": "AC-4",
+        "text": "After `spaExclude(\"/admin\")`, `GET /admin/x` and `GET /api/x` with `Accept: text/html` are both answered `404`, so configured prefixes are added to `/api/` and `/ws/` and never replace them. Decision: `spaExclude` adds prefixes; `/api/` and `/ws/` are always excluded. [wave decision: SPA fallback exclusions; D-267]",
+        "checked": true,
+        "line": 575
+      }
+    ],
+    "verificationEvidence": [
+      {
+        "id": "VE-1",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticSpaTest.java#sdsAc6_FR_STATIC_004_AC1_AC2_acceptMustNameTextHtml",
+        "covers": "AC-1",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 581
+      },
+      {
+        "id": "VE-2",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticSpaTest.java#sdsAc6_FR_STATIC_004_AC1_AC2_acceptMustNameTextHtml",
+        "covers": "AC-2",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 582
+      },
+      {
+        "id": "VE-3",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticSpaTest.java#sdsAc6_FR_STATIC_004_AC1_spaOffMeans404",
+        "covers": "AC-1",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 583
+      },
+      {
+        "id": "VE-4",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticSpaTest.java#sdsAc7_FR_STATIC_004_AC3_apiAndWsExcludedOnSegmentBoundaries",
+        "covers": "AC-3",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 584
+      },
+      {
+        "id": "VE-5",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticSpaTest.java#sdsAc7_FR_STATIC_004_AC4_spaExcludeAddsToDefaults",
+        "covers": "AC-4",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 585
+      },
+      {
+        "id": "VE-6",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticSpaTest.java",
+        "covers": "AC-1",
+        "notes": "verification_cmd ./gradlew build passed at 40b9665 (959/959); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/StaticSpaTest.java:30; bundle docs/research/naruserve-v1/waves/stage-6/lane-2026-10-19.naruserve.naruserve-v1-wave-6/",
+        "line": 586
+      },
+      {
+        "id": "VE-7",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticSpaTest.java",
+        "covers": "AC-2",
+        "notes": "verification_cmd ./gradlew build passed at 40b9665 (959/959); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/StaticSpaTest.java:30; bundle docs/research/naruserve-v1/waves/stage-6/lane-2026-10-19.naruserve.naruserve-v1-wave-6/",
+        "line": 587
+      },
+      {
+        "id": "VE-8",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticSpaTest.java",
+        "covers": "AC-3",
+        "notes": "verification_cmd ./gradlew build passed at 40b9665 (959/959); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/StaticSpaTest.java:55; bundle docs/research/naruserve-v1/waves/stage-6/lane-2026-10-19.naruserve.naruserve-v1-wave-6/",
+        "line": 588
+      },
+      {
+        "id": "VE-9",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticSpaTest.java",
+        "covers": "AC-4",
+        "notes": "verification_cmd ./gradlew build passed at 40b9665 (959/959); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/StaticSpaTest.java:65; bundle docs/research/naruserve-v1/waves/stage-6/lane-2026-10-19.naruserve.naruserve-v1-wave-6/",
+        "line": 589
+      },
+      {
+        "id": "VE-10",
+        "type": "commit",
+        "reference": "91773422926f109dcb74d36364cd8c774ba63c67",
+        "covers": "all",
+        "notes": "-",
+        "line": 590
+      },
+      {
+        "id": "VE-11",
+        "type": "commit",
+        "reference": "d1f13b3d801e105510ca5fde416249055b91bc5d",
+        "covers": "all",
+        "notes": "-",
+        "line": 591
+      },
+      {
+        "id": "VE-12",
+        "type": "commit",
+        "reference": "01ae12af3cbb45ca226b4dfdf8fcf8c247c0faf0",
+        "covers": "all",
+        "notes": "-",
+        "line": 592
+      },
+      {
+        "id": "VE-13",
+        "type": "commit",
+        "reference": "c3d6399f3dbc5aa66089e0cbfd00df3216ea4c13",
+        "covers": "all",
+        "notes": "-",
+        "line": 593
+      },
+      {
+        "id": "VE-14",
+        "type": "commit",
+        "reference": "d6920c738615bdb08919496cd064ff4dfb165538",
+        "covers": "all",
+        "notes": "-",
+        "line": 594
+      },
+      {
+        "id": "VE-15",
+        "type": "commit",
+        "reference": "4ebab20289a8b4bca0fab1081042ccfd00cec727",
+        "covers": "all",
+        "notes": "-",
+        "line": 595
+      },
+      {
+        "id": "VE-16",
+        "type": "commit",
+        "reference": "f589f1b23901a822b906b214e7ed46d0db83ea1d",
+        "covers": "all",
+        "notes": "-",
+        "line": 596
+      },
+      {
+        "id": "VE-17",
+        "type": "commit",
+        "reference": "b9293042cf1e02691b8fb81a2587ab79b09a4580",
+        "covers": "all",
+        "notes": "-",
+        "line": 597
+      },
+      {
+        "id": "VE-18",
+        "type": "commit",
+        "reference": "cf502cc4ba526b7736839033eb89f4622f1db186",
+        "covers": "all",
+        "notes": "-",
+        "line": 598
+      },
+      {
+        "id": "VE-19",
+        "type": "commit",
+        "reference": "9ef602cc818ef320d0bd175f1045bf4619c8a22f",
+        "covers": "all",
+        "notes": "-",
+        "line": 599
+      },
+      {
+        "id": "VE-20",
+        "type": "commit",
+        "reference": "050b49fd67addda1696da305c767ce46e2f39b77",
+        "covers": "all",
+        "notes": "-",
+        "line": 600
+      },
+      {
+        "id": "VE-21",
+        "type": "commit",
+        "reference": "f1697289066efde4576a564664a16f1a8b5f3563",
+        "covers": "all",
+        "notes": "-",
+        "line": 601
+      },
+      {
+        "id": "VE-22",
+        "type": "commit",
+        "reference": "b528a61a241e35657b4ac4850305661dd3c886d2",
+        "covers": "all",
+        "notes": "-",
+        "line": 602
+      },
+      {
+        "id": "VE-23",
+        "type": "commit",
+        "reference": "0584e4ce3049a13d38a9e3d34fc35977327fac83",
+        "covers": "all",
+        "notes": "-",
+        "line": 603
+      },
+      {
+        "id": "VE-24",
+        "type": "commit",
+        "reference": "79a0e3e0ecbf054a52a82522c1085745cc97ba87",
+        "covers": "all",
+        "notes": "-",
+        "line": 604
+      },
+      {
+        "id": "VE-25",
+        "type": "commit",
+        "reference": "9a3aa6bd3bab4b8759f657aa47881e854e301bff",
+        "covers": "all",
+        "notes": "-",
+        "line": 605
+      },
+      {
+        "id": "VE-26",
+        "type": "commit",
+        "reference": "294bba8634d98e4328ff2374c5b3bf00f7c30b17",
+        "covers": "all",
+        "notes": "-",
+        "line": 606
+      },
+      {
+        "id": "VE-27",
+        "type": "commit",
+        "reference": "8cf8a6bb40ca8c1f6f70eaed03e2c3359263df41",
+        "covers": "all",
+        "notes": "-",
+        "line": 607
+      },
+      {
+        "id": "VE-28",
+        "type": "commit",
+        "reference": "e5dd65caa748eb2fdb8198571dd931a90d312c2c",
+        "covers": "all",
+        "notes": "-",
+        "line": 608
+      },
+      {
+        "id": "VE-29",
+        "type": "commit",
+        "reference": "dc2ba034eaee05b62eb9b1f9c339c82b72cb2297",
+        "covers": "all",
+        "notes": "-",
+        "line": 609
+      },
+      {
+        "id": "VE-30",
+        "type": "commit",
+        "reference": "ed2fe3033831bba5ed092046dca905b332b14d59",
+        "covers": "all",
+        "notes": "-",
+        "line": 610
+      },
+      {
+        "id": "VE-31",
+        "type": "commit",
+        "reference": "83a0ee6337d3d76b56d1827f36aa6b669e80927d",
+        "covers": "all",
+        "notes": "-",
+        "line": 611
+      },
+      {
+        "id": "VE-32",
+        "type": "commit",
+        "reference": "a32d75a6d71a113f3443a0a81a198cf76c82639a",
+        "covers": "all",
+        "notes": "-",
+        "line": 612
+      }
+    ],
+    "traceLinks": [
+      {
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+        "relation": "implements",
+        "notes": "trace_intent=addition_site",
+        "line": 618
+      },
+      {
+        "type": "Requirement",
+        "reference": "IR-STATIC-001",
+        "relation": "depends_on",
+        "notes": "spaFallback and spaExclude options",
+        "line": 619
+      }
+    ],
+    "changeNotes": [
+      {
+        "date": "2026-10-20",
+        "change": "Created",
+        "reason": "add-requirement",
+        "line": 633
+      },
+      {
+        "date": "2026-10-20",
+        "change": "Stability -> evolving",
+        "reason": "Feasibility=high (score 93). Blockers: none. Run: 2026-10-19.naruserve.wave-6.v01",
+        "line": 634
+      },
+      {
+        "date": "2026-10-20",
+        "change": "Status -> verified",
+        "reason": "Wave 6 promotion: ./gradlew build passed at 40b9665 (959/959); every AC cited in docs/research/naruserve-v1/waves/wave-6/test-sufficiency.json; wave commits recorded as evidence.",
+        "line": 635
+      }
+    ],
+    "tags": [
+      "wave-6",
+      "feasibility:high",
+      "static",
+      "spa"
+    ],
+    "relatedDocs": [],
+    "evidenceReferences": [
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticSpaTest.java",
+      "91773422926f109dcb74d36364cd8c774ba63c67",
+      "d1f13b3d801e105510ca5fde416249055b91bc5d",
+      "01ae12af3cbb45ca226b4dfdf8fcf8c247c0faf0",
+      "c3d6399f3dbc5aa66089e0cbfd00df3216ea4c13",
+      "d6920c738615bdb08919496cd064ff4dfb165538",
+      "4ebab20289a8b4bca0fab1081042ccfd00cec727",
+      "f589f1b23901a822b906b214e7ed46d0db83ea1d",
+      "b9293042cf1e02691b8fb81a2587ab79b09a4580",
+      "cf502cc4ba526b7736839033eb89f4622f1db186",
+      "9ef602cc818ef320d0bd175f1045bf4619c8a22f",
+      "050b49fd67addda1696da305c767ce46e2f39b77",
+      "f1697289066efde4576a564664a16f1a8b5f3563",
+      "b528a61a241e35657b4ac4850305661dd3c886d2",
+      "0584e4ce3049a13d38a9e3d34fc35977327fac83",
+      "79a0e3e0ecbf054a52a82522c1085745cc97ba87",
+      "9a3aa6bd3bab4b8759f657aa47881e854e301bff",
+      "294bba8634d98e4328ff2374c5b3bf00f7c30b17",
+      "8cf8a6bb40ca8c1f6f70eaed03e2c3359263df41",
+      "e5dd65caa748eb2fdb8198571dd931a90d312c2c",
+      "dc2ba034eaee05b62eb9b1f9c339c82b72cb2297",
+      "ed2fe3033831bba5ed092046dca905b332b14d59",
+      "83a0ee6337d3d76b56d1827f36aa6b669e80927d",
+      "a32d75a6d71a113f3443a0a81a198cf76c82639a"
+    ],
+    "traceReferences": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+      "IR-STATIC-001"
+    ],
+    "blockStartLine": 547,
+    "blockEndLine": 636,
+    "sectionLines": {
+      "Requirement": 562,
+      "Rationale": 566,
+      "Acceptance Criteria": 570,
+      "Verification Evidence": 577,
+      "Trace Links": 614,
+      "Research / Analysis": 621,
+      "Implementation Notes": 625,
+      "Change Notes": 629
+    },
+    "priority": "high",
+    "risk": "medium",
+    "stability": "evolving",
+    "newWorkCandidate": false,
+    "requirement": "The system shall, with `spaFallback(true)`, serve the mount's index file only when no file exists for the path in any mount, no explicit route matches the path and method (a `GET`/`HEAD` after a route's method mismatch falls through, as FR-STATIC-002 AC-3 decides), no WebSocket route owns the path and the `Accept` header contains `text/html`, never serve SPA fallback content under `/api/` and `/ws/`, and treat prefixes configured through `spaExclude` as additions to those two, matched on segment boundaries of the full request path.",
+    "rationale": "Covers D-265, D-266 and D-267 (exclusion configuration) with the wave decision \"SPA fallback exclusions\" (W2-009; D-266, D-267). Builds on FR-HTTP-022 (fallback point) and FR-STATIC-002 (SPA content does not count as \"served by a static mount\" for `405`). Rejected alternative: letting `spaExclude` replace the defaults; an app could then expose SPA HTML at `/api/typo`, which D-266 forbids.",
+    "research": "- -",
+    "implementationNotes": "- -",
+    "diagnostics": [],
+    "errors": [],
+    "warnings": [],
+    "diagnosticsSummary": {
+      "errors": 0,
+      "warnings": 0,
+      "byCode": {}
+    }
+  },
+  "diagnostics": [],
+  "diagnosticsSummary": {
+    "errors": 0,
+    "warnings": 0,
+    "byCode": {}
+  },
+  "mcpWorkspace": {
+    "workspaceRoot": "/Users/beom/work/git/NaruServe",
+    "rootSource": "server-cwd-discovery",
+    "indexPath": "docs/spec/00.index.md",
+    "packageVersion": "4.2.0"
+  }
+}

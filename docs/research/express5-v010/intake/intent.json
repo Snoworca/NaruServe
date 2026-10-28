@@ -1,0 +1,84 @@
+{
+  "summary": "Implement full Express5 common HTTP-routing semantics in NaruServe0.10.0 while preserving NaruServe extensions and existing WebSocket behavior; WebSocket equivalence is excluded.",
+  "intent_type_hint": "conflict",
+  "key_entities": [
+    "NaruServe0.10.0",
+    "Express5.1.0",
+    "router2.2.0",
+    "path-to-regexp8.4.2",
+    "Node22.22.0/V8 12.4.254.21-node.33",
+    "RoutePattern",
+    "Route identity and ordered HTTP layers",
+    "Request layer params/path/url/baseUrl/originalUrl",
+    "Next route/router/error/deferred transitions",
+    "java.util.regex.Pattern route inputs",
+    "Java8 bytecode/runtime",
+    "Android API21",
+    "TinyHttpd raw-routing opt-in policy",
+    "Servlet AsyncContext",
+    "NaruServe group/CORS/services/SSE/convenience APIs",
+    "WebSocket existing route profile"
+  ],
+  "ambiguities": [
+    {
+      "id": "A-TINYHTTPD-PERMISSION",
+      "status": "pending-parent-confirmation",
+      "kind": "external-repository-authorization",
+      "scope": "T12 external-module-impact gate",
+      "question": "Has the user authorized changing the external TinyHttpd checkout to expose an opt-in raw-routing policy?",
+      "confirmed_constraints": [
+        "Current engine pre-routing path rejection prevents actual socket parity",
+        "Keep TinyHttpd default security behavior intact",
+        "Publication/signing is a distinct action and is not inferred from implementation authorization"
+      ],
+      "default_decision": null,
+      "note": "This investigator has no current authorization evidence beyond the parent task stating permission is pending. Parent must reconcile a later user answer before intake freeze."
+    }
+  ],
+  "ambiguity_count": 1,
+  "implied_requirements": [
+    "Use a single pinned Express5 oracle; no Express4 inline-regex hybrid.",
+    "Cover strings and path alternatives under common routing parity; regex paths use explicitly approved Java Pattern syntax, flags and matching semantics.",
+    "Match raw pathname then decode captures once; transport and file-security boundaries must be separately proven.",
+    "Preserve registration/Route identity, late registration, layer scopes, nested routers, parameter hooks and exact HEAD/OPTIONS behavior.",
+    "Support common continuation and error behavior, including deferred next, rejection, post-response explicit next and repeated next as observed by the oracle.",
+    "Preserve NaruServe expanded APIs and stable WebSocket behavior through separate profiles and regression evidence.",
+    "Keep Java8/API21 requirements; do not turn modern-JDK-only APIs into mandatory core dependencies.",
+    "Resolve changed verified/evolving body-SRS contracts through guarded MCP workflow before behavior implementation; satisfy TDD and per-requirement evidence.",
+    "Separate code implementation, artifact publication/signing, merge and external-repository authorization boundaries."
+  ],
+  "semantic_equivalences": [
+    {
+      "prompt_term": "Express5 와 완전히 동일",
+      "normalized_term": "Common HTTP-routing semantics under a pinned Express5 reference; regex language/flags/matching use Java Pattern by subsequent explicit user decision.",
+      "confidence": 1.0
+    },
+    {
+      "prompt_term": "NaruServe 확장 API 유지",
+      "normalized_term": "retain group/convenience/service/SSE and other extension APIs; do not remove them merely because Express has no direct counterpart",
+      "confidence": 1.0
+    },
+    {
+      "prompt_term": "WebSocket 동일화 제외",
+      "normalized_term": "WebSocket equivalence is out of scope; existing WebSocket behavior must pass regression",
+      "confidence": 1.0
+    }
+  ],
+  "source_of_truth": {
+    "requirements": "docs/spec/",
+    "intent_provenance": "User steering recorded by the parent conversation and approved research/epic scope",
+    "excluded_input": "Current docs/next/request.md is unrelated and was not treated as target intent."
+  },
+  "decisions_not_made": [
+    "No external TinyHttpd permission inferred",
+    "No publication/signing/merge authorization inferred"
+  ],
+  "resolved_decisions": [
+    {
+      "id": "A-ECMA-ENGINE",
+      "status": "resolved-by-user",
+      "decision": "Use Java Pattern semantics; no ECMAScript RegExp equivalence, JNI or new JavaScript engine",
+      "source": "04.java-pattern-decision.md"
+    }
+  ]
+}

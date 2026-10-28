@@ -1,0 +1,398 @@
+{
+  "ok": true,
+  "value": {
+    "id": "FR-HTTP-016",
+    "title": "Response state machine with single commit",
+    "type": "functional",
+    "target": "wave-3",
+    "status": "verified",
+    "scope": "HTTP",
+    "filePath": "docs/spec/04.http-core.srs.md",
+    "headingLine": 1873,
+    "metadata": {
+      "Type": "functional",
+      "Target": "wave-3",
+      "Status": "verified",
+      "Priority": "high",
+      "Tags": "wave-3, feasibility:high, response, state-machine",
+      "Risk": "medium",
+      "Stability": "evolving",
+      "Verification Method": "test",
+      "GitHub Issue": "https://github.com/Snoworca/NaruServe/issues/4",
+      "Related Docs": "-"
+    },
+    "acceptanceCriteria": [
+      {
+        "id": "AC-1",
+        "text": "A response starts in `NEW`, is `COMMITTED` once status and headers are handed to the adapter, and reaches `COMPLETED` after `send`; the adapter receives the status line and headers exactly once. [D-099]",
+        "checked": true,
+        "line": 1898
+      },
+      {
+        "id": "AC-2",
+        "text": "`res.status(500)` or `res.header(\"X\", \"1\")` after `res.send(\"a\")` committed the response throws an exception and the sent status and headers stay unchanged. [D-100] Decision: the exception is `IllegalStateException` naming the current state, thrown in `COMMITTED`, `STREAMING`, `COMPLETED` or `ABORTED`, and nothing changes. [SDS 2026-10-19.naruserve.naruserve-v1-wave-3-5 SDS-AC-10]",
+        "checked": true,
+        "line": 1899
+      },
+      {
+        "id": "AC-3",
+        "text": "A second body call (`send`, `html`, `stream` or `end`) after a body was sent throws an exception and writes no further bytes. [D-101]",
+        "checked": true,
+        "line": 1900
+      },
+      {
+        "id": "AC-4",
+        "text": "After `res.stream(...)` returns, the response is `STREAMING` until the copy ends, then `COMPLETED`, or `ABORTED` on abort; a read failure of the input stream during the copy, including after the handler returned, ends the response `ABORTED` with the input stream closed (FR-HTTP-014 AC-5). [D-103; D-097; wave decision: stream() closing] Decision: a read failure during the copy sets `ABORTED`, calls `exchange.abort()` and closes the input, without rethrowing to the adapter. [SDS 2026-10-19.naruserve.naruserve-v1-wave-3-5 SDS-AC-11]",
+        "checked": true,
+        "line": 1901
+      },
+      {
+        "id": "AC-5",
+        "text": "While the response is `STREAMING` (committed but not completed), `res.status(500)` and `res.header(\"X\", \"1\")` each throw an exception and the status and headers the adapter received stay unchanged. [D-100; D-099]",
+        "checked": true,
+        "line": 1902
+      }
+    ],
+    "verificationEvidence": [
+      {
+        "id": "VE-1",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultResponseTest.java#sdsAc7_FR_HTTP_015_AC4_stateCheckRunsBeforeTheCrLfCheck",
+        "covers": "AC-2",
+        "notes": "./gradlew build exit 0 (2026-10-19.naruserve.naruserve-v1-wave-3-5)",
+        "line": 1908
+      },
+      {
+        "id": "VE-2",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultResponseTest.java#sdsAc8_FR_HTTP_015_AC1_FR_HTTP_016_AC1_isCommittedFlipsOnSendAndCommitIsSingle",
+        "covers": "AC-1",
+        "notes": "./gradlew build exit 0 (2026-10-19.naruserve.naruserve-v1-wave-3-5)",
+        "line": 1909
+      },
+      {
+        "id": "VE-3",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultResponseTest.java#sdsAc10_FR_HTTP_016_AC2_AC3_FR_HTTP_018_AC1_everyMutationAfterCompletionThrows",
+        "covers": "AC-2",
+        "notes": "./gradlew build exit 0 (2026-10-19.naruserve.naruserve-v1-wave-3-5)",
+        "line": 1910
+      },
+      {
+        "id": "VE-4",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultResponseTest.java#sdsAc10_FR_HTTP_016_AC2_AC3_FR_HTTP_018_AC1_everyMutationAfterCompletionThrows",
+        "covers": "AC-3",
+        "notes": "./gradlew build exit 0 (2026-10-19.naruserve.naruserve-v1-wave-3-5)",
+        "line": 1911
+      },
+      {
+        "id": "VE-5",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultResponseTest.java#sdsAc10_FR_HTTP_016_AC2_mutationAfterAbortThrowsNamingAborted",
+        "covers": "AC-2",
+        "notes": "./gradlew build exit 0 (2026-10-19.naruserve.naruserve-v1-wave-3-5)",
+        "line": 1912
+      },
+      {
+        "id": "VE-6",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultResponseTest.java#sdsAc10_FR_HTTP_016_AC1_stateEnumListsTheFiveStates",
+        "covers": "AC-1",
+        "notes": "./gradlew build exit 0 (2026-10-19.naruserve.naruserve-v1-wave-3-5)",
+        "line": 1913
+      },
+      {
+        "id": "VE-7",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultResponseTest.java#sdsAc10_FR_HTTP_016_AC1_AC2_mutationWhileCommittedThrowsAndCommitIsSingle",
+        "covers": "AC-1",
+        "notes": "./gradlew build exit 0 (2026-10-19.naruserve.naruserve-v1-wave-3-5)",
+        "line": 1914
+      },
+      {
+        "id": "VE-8",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultResponseTest.java#sdsAc10_FR_HTTP_016_AC1_AC2_mutationWhileCommittedThrowsAndCommitIsSingle",
+        "covers": "AC-2",
+        "notes": "./gradlew build exit 0 (2026-10-19.naruserve.naruserve-v1-wave-3-5)",
+        "line": 1915
+      },
+      {
+        "id": "VE-9",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ResponseStreamTest.java#sdsAc5_FR_HTTP_014_AC7_FR_HTTP_016_AC4_streamReturnsBeforeTheInputIsRead",
+        "covers": "AC-4",
+        "notes": "./gradlew build exit 0 (2026-10-19.naruserve.naruserve-v1-wave-3-5)",
+        "line": 1916
+      },
+      {
+        "id": "VE-10",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ResponseStreamTest.java#sdsAc5_FR_HTTP_016_AC5_statusAndHeaderThrowWhileStreaming",
+        "covers": "AC-5",
+        "notes": "./gradlew build exit 0 (2026-10-19.naruserve.naruserve-v1-wave-3-5)",
+        "line": 1917
+      },
+      {
+        "id": "VE-11",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ResponseStreamTest.java#sdsAc11_FR_HTTP_016_AC4_readFailureAfterHandlerReturnEndsAbortedWithoutRethrow",
+        "covers": "AC-4",
+        "notes": "./gradlew build exit 0 (2026-10-19.naruserve.naruserve-v1-wave-3-5)",
+        "line": 1918
+      },
+      {
+        "id": "VE-12",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ResponseStreamTest.java#sdsAc11_sdsAc4_FR_HTTP_016_AC4_readFailureAbortsTheExchangeItself",
+        "covers": "AC-4",
+        "notes": "./gradlew build exit 0 (2026-10-19.naruserve.naruserve-v1-wave-3-5)",
+        "line": 1919
+      },
+      {
+        "id": "VE-13",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ResponseStreamTest.java#sdsAc8_FR_HTTP_015_AC1_FR_HTTP_016_AC1_exchangeCommitRunsOutsideTheLock",
+        "covers": "AC-1",
+        "notes": "./gradlew build exit 0 (2026-10-19.naruserve.naruserve-v1-wave-3-5)",
+        "line": 1920
+      },
+      {
+        "id": "VE-14",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultResponseTest.java",
+        "covers": "AC-1",
+        "notes": "verification_cmd ./gradlew build passed at ea1217e (346/346); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultResponseTest.java:244; :407; :427; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ResponseStreamTest.java:535; bundle docs/research/naruserve-v1/waves/stage-3/lane-2026-10-19.naruserve.naruserve-v1-wave-3/",
+        "line": 1921
+      },
+      {
+        "id": "VE-15",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultResponseTest.java",
+        "covers": "AC-2",
+        "notes": "verification_cmd ./gradlew build passed at ea1217e (346/346); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultResponseTest.java:234; :277; :301; :427; bundle docs/research/naruserve-v1/waves/stage-3/lane-2026-10-19.naruserve.naruserve-v1-wave-3/",
+        "line": 1922
+      },
+      {
+        "id": "VE-16",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultResponseTest.java",
+        "covers": "AC-3",
+        "notes": "verification_cmd ./gradlew build passed at ea1217e (346/346); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultResponseTest.java:277; bundle docs/research/naruserve-v1/waves/stage-3/lane-2026-10-19.naruserve.naruserve-v1-wave-3/",
+        "line": 1923
+      },
+      {
+        "id": "VE-17",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ResponseStreamTest.java",
+        "covers": "AC-4",
+        "notes": "verification_cmd ./gradlew build passed at ea1217e (346/346); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ResponseStreamTest.java:162; :224; :400; :594; plus :596 FR_HTTP_016_AC4_IR_HTTP_003_copyThatOutlivesTheHandlerDeliversTheWholeBody (added in c47335c); bundle docs/research/naruserve-v1/waves/stage-3/lane-2026-10-19.naruserve.naruserve-v1-wave-3/",
+        "line": 1924
+      },
+      {
+        "id": "VE-18",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ResponseStreamTest.java",
+        "covers": "AC-5",
+        "notes": "verification_cmd ./gradlew build passed at ea1217e (346/346); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ResponseStreamTest.java:185; bundle docs/research/naruserve-v1/waves/stage-3/lane-2026-10-19.naruserve.naruserve-v1-wave-3/",
+        "line": 1925
+      },
+      {
+        "id": "VE-19",
+        "type": "commit",
+        "reference": "a4d3403a786e0ee895c72c3ea53fe4c28a3477f4",
+        "covers": "all",
+        "notes": "wave 3 worker commit (Orch-Wave: 3), ancestor of integration head ea1217e",
+        "line": 1926
+      },
+      {
+        "id": "VE-20",
+        "type": "commit",
+        "reference": "ef85d35a7bbc8ee25d27e60262d1b727913f0a28",
+        "covers": "all",
+        "notes": "wave 3 worker commit (Orch-Wave: 3), ancestor of integration head ea1217e",
+        "line": 1927
+      },
+      {
+        "id": "VE-21",
+        "type": "commit",
+        "reference": "45469d2e1a7c931dc16bc9bc5ae907d4cd28c4cc",
+        "covers": "all",
+        "notes": "wave 3 worker commit (Orch-Wave: 3), ancestor of integration head ea1217e",
+        "line": 1928
+      },
+      {
+        "id": "VE-22",
+        "type": "commit",
+        "reference": "8fb4835bf65967f266ad84b15aeda66274dbe5eb",
+        "covers": "all",
+        "notes": "wave 3 worker commit (Orch-Wave: 3), ancestor of integration head ea1217e",
+        "line": 1929
+      },
+      {
+        "id": "VE-23",
+        "type": "commit",
+        "reference": "1ae79fe445e09375b270e2d78e1316dc0ce4aaa7",
+        "covers": "all",
+        "notes": "wave 3 worker commit (Orch-Wave: 3), ancestor of integration head ea1217e",
+        "line": 1930
+      },
+      {
+        "id": "VE-24",
+        "type": "commit",
+        "reference": "4917e408d4708724c76e963c279a4aa55a4d107c",
+        "covers": "all",
+        "notes": "wave 3 worker commit (Orch-Wave: 3), ancestor of integration head ea1217e",
+        "line": 1931
+      },
+      {
+        "id": "VE-25",
+        "type": "commit",
+        "reference": "5a9322dedaf1229c0ab34349c05bae6802b5ada5",
+        "covers": "all",
+        "notes": "wave 3 worker commit (Orch-Wave: 3), ancestor of integration head ea1217e",
+        "line": 1932
+      },
+      {
+        "id": "VE-26",
+        "type": "commit",
+        "reference": "06d70b4c4771c90888edda5d6b95fca6feaa6af7",
+        "covers": "all",
+        "notes": "wave 3 worker commit (Orch-Wave: 3), ancestor of integration head ea1217e",
+        "line": 1933
+      },
+      {
+        "id": "VE-27",
+        "type": "commit",
+        "reference": "c47335c85e5e9e13a19bf2aaf9c95beb7436de6f",
+        "covers": "all",
+        "notes": "wave 3 worker commit (Orch-Wave: 3), ancestor of integration head ea1217e",
+        "line": 1934
+      }
+    ],
+    "traceLinks": [
+      {
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+        "relation": "implements",
+        "notes": "trace_intent=addition_site",
+        "line": 1940
+      },
+      {
+        "type": "Requirement",
+        "reference": "FR-HTTP-014",
+        "relation": "depends_on",
+        "notes": "body writers drive transitions",
+        "line": 1941
+      },
+      {
+        "type": "Requirement",
+        "reference": "FR-HTTP-015",
+        "relation": "depends_on",
+        "notes": "commit flag and abort",
+        "line": 1942
+      },
+      {
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+        "relation": "implements",
+        "notes": "-",
+        "line": 1943
+      },
+      {
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ResponseState.java",
+        "relation": "implements",
+        "notes": "-",
+        "line": 1944
+      }
+    ],
+    "changeNotes": [
+      {
+        "date": "2026-10-19",
+        "change": "Created",
+        "reason": "add-requirement",
+        "line": 1958
+      },
+      {
+        "date": "2026-10-19",
+        "change": "Stability -> evolving",
+        "reason": "Feasibility=high (score 82). Blockers: none. Run: 2026-10-19.naruserve.wave-3.v01",
+        "line": 1959
+      },
+      {
+        "date": "2026-10-19",
+        "change": "Status -> verified",
+        "reason": "Wave 3 promotion: every AC cited in docs/research/naruserve-v1/waves/wave-3/test-sufficiency.json; ./gradlew build passed at ea1217e (346/346); worker commits recorded",
+        "line": 1960
+      }
+    ],
+    "tags": [
+      "wave-3",
+      "feasibility:high",
+      "response",
+      "state-machine"
+    ],
+    "relatedDocs": [],
+    "evidenceReferences": [
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultResponseTest.java",
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ResponseStreamTest.java",
+      "a4d3403a786e0ee895c72c3ea53fe4c28a3477f4",
+      "ef85d35a7bbc8ee25d27e60262d1b727913f0a28",
+      "45469d2e1a7c931dc16bc9bc5ae907d4cd28c4cc",
+      "8fb4835bf65967f266ad84b15aeda66274dbe5eb",
+      "1ae79fe445e09375b270e2d78e1316dc0ce4aaa7",
+      "4917e408d4708724c76e963c279a4aa55a4d107c",
+      "5a9322dedaf1229c0ab34349c05bae6802b5ada5",
+      "06d70b4c4771c90888edda5d6b95fca6feaa6af7",
+      "c47335c85e5e9e13a19bf2aaf9c95beb7436de6f"
+    ],
+    "traceReferences": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+      "FR-HTTP-014",
+      "FR-HTTP-015",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ResponseState.java"
+    ],
+    "blockStartLine": 1873,
+    "blockEndLine": 1961,
+    "sectionLines": {
+      "Requirement": 1888,
+      "Rationale": 1892,
+      "Acceptance Criteria": 1896,
+      "Verification Evidence": 1904,
+      "Trace Links": 1936,
+      "Research / Analysis": 1946,
+      "Implementation Notes": 1950,
+      "Change Notes": 1954
+    },
+    "priority": "high",
+    "risk": "medium",
+    "stability": "evolving",
+    "newWorkCandidate": false,
+    "requirement": "The system shall move each response through the states `NEW`, `COMMITTED`, `STREAMING`, `COMPLETED` and `ABORTED`, committing at most once, throw an exception for `status` or `header` after commit and for a second body after a body was sent, and keep a streaming response in `STREAMING` after the handler returns until the transfer ends.",
+    "rationale": "Covers D-099, D-100, D-101 and D-103 and the wave decision on `stream()` closing. D-100 applies to `addCookie` and `cache` once waves 5 and 6 add them; among the streaming responses only `stream` exists in wave 3.",
+    "research": "- -",
+    "implementationNotes": "- -",
+    "diagnostics": [],
+    "errors": [],
+    "warnings": [],
+    "diagnosticsSummary": {
+      "errors": 0,
+      "warnings": 0,
+      "byCode": {}
+    }
+  },
+  "diagnostics": [],
+  "diagnosticsSummary": {
+    "errors": 0,
+    "warnings": 0,
+    "byCode": {}
+  },
+  "mcpWorkspace": {
+    "workspaceRoot": "/Users/beom/work/git/NaruServe",
+    "rootSource": "server-cwd-discovery",
+    "indexPath": "docs/spec/00.index.md",
+    "packageVersion": "4.2.0"
+  }
+}

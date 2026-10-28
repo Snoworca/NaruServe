@@ -1,0 +1,657 @@
+{
+  "ok": true,
+  "value": {
+    "id": "FR-ENGINE-011",
+    "title": "TinyHttpd adapter implements HttpAdapter with confined engine types and per-feature classes, event-stream and upgrade paths filled (wave 7)",
+    "type": "functional",
+    "target": "wave-7",
+    "status": "verified",
+    "scope": "ENGINE",
+    "filePath": "docs/spec/06.engine-adapter.srs.md",
+    "headingLine": 1249,
+    "metadata": {
+      "Type": "functional",
+      "Target": "wave-7",
+      "Status": "verified",
+      "Priority": "high",
+      "Tags": "wave-7, feasibility:high, engine, supersedes:FR-ENGINE-010",
+      "Risk": "medium",
+      "Stability": "evolving",
+      "Verification Method": "test",
+      "GitHub Issue": "https://github.com/Snoworca/NaruServe/issues/15",
+      "Related Docs": "-"
+    },
+    "acceptanceCriteria": [
+      {
+        "id": "AC-1",
+        "text": "`TinyHttpdAdapter` is a public final class with a public no-argument constructor implementing `HttpAdapter`, and reflection finds no `com.snoworca.tinyhttpd` type in any public or protected constructor, method or field signature of any public class of `NaruServe-tinyhttpd`. [D-209] Decision: the adapter class is `com.snoworca.naruserve.tinyhttpd.TinyHttpdAdapter`. re_stated_from: FR-ENGINE-010#AC1",
+        "checked": true,
+        "line": 1275
+      },
+      {
+        "id": "AC-2",
+        "text": "The adapter core class sets every TinyHttpd builder limit of FR-ENGINE-003 and FR-ENGINE-004, while the exchange bridge and the file-transfer, event-stream and upgrade paths of `HttpExchange` are separate classes of the module: the exchange delegates them to the module class `TinyHttpdFeatures`, and each keeps the exchange's commit lock, abort check and single-start rule. From wave 6, `sendFile(status, headers, file, offset, length)` writes the status, the given headers and exactly `length` bytes of `file` starting at `offset` through a plain buffered copy (no zero-copy transfer) and throws no `UnsupportedOperationException`; a socket test hands over a file with a non-zero offset and a length shorter than the rest of the file and reads back exactly that byte range. From wave 7, `eventStream` writes a chunked streaming body as FR-SSE-003 states and `webSocket` runs the TinyHttpd handshake as FR-WS-002 states; a test calls both on a TinyHttpd exchange and neither throws `UnsupportedOperationException`, and a source scan finds no `UnsupportedOperationException` naming wave 7 in `TinyHttpdFeatures`. The raw `upgrade(headers, UpgradeHandler)` path on TinyHttpd still throws `UnsupportedOperationException` in v1, with a message stating that raw protocol upgrades are not supported by the TinyHttpd adapter and that WebSocket goes through `webSocket`, naming no wave, which a test asserts before any byte is written. Decision: on TinyHttpd only `webSocket` is implemented in v1; the raw upgrade stays unsupported because no v1 feature uses it and TinyHttpd's upgrade path is driven by its `WebSocketHandler`, reopen when a non-WebSocket upgrade is requested. Decision: the TinyHttpd `sendFile` hook fills D-106's extension point for apps that call it directly; the framework's own static, `res.file` and `res.download` bodies do not use it. [D-210; D-404; D-106; D-291; wave decision: File bodies come from the opened stream] Decision: a negative `offset`, a negative `length` or `offset + length` beyond the file length throws `IllegalArgumentException` before the response starts. [SDS 2026-10-19.naruserve.naruserve-v1-wave-6-9 SDS-AC-1] Decision: a file that shrinks during the copy throws `IOException` (EOF before `length` bytes) and leaves the exchange to the abort path. [SDS 2026-10-19.naruserve.naruserve-v1-wave-6-9 SDS-AC-2] Decision: `sendFile` commits through the exchange commit, so a second start throws `IllegalStateException` like `commit`. [SDS 2026-10-19.naruserve.naruserve-v1-wave-6-9 SDS-AC-3] re_stated_from: FR-ENGINE-010#AC2 (changed by wave 7: event-stream and WebSocket paths filled instead of throwing UnsupportedOperationException naming wave 7; raw upgrade unsupported with a non-wave message)",
+        "checked": true,
+        "line": 1276
+      },
+      {
+        "id": "AC-3",
+        "text": "The package-private `TinyHttpdFeatures` methods for the event-stream and WebSocket paths receive the `TinyHttpdExchange`, which holds both the TinyHttpd `Request` and `Response`, and hold the exchange lock only to check abort and mark the response started, so the WebSocket read loop and the SSE drain loop run outside it: a same-package test thread enters `synchronized (exchange)` within 100 ms while that exchange's WebSocket session waits idle for a frame, and again while its SSE drain loop waits for an event. Decision: the hook signatures change because D-210 protects only the adapter core limit mapping. [wave decision: TinyHttpd feature hooks (W2-003)]",
+        "checked": true,
+        "line": 1277
+      },
+      {
+        "id": "AC-4",
+        "text": "`TinyHttpdAdapter` keeps setting TinyHttpd's `maxEventStreams` to `maxSseStreams` and `maxUpgradedConnections` to `maxUpgradedConnections`, unchanged by wave 7, which the existing limit-mapping test asserts; the `maxEventStreams` value is an inert bound because NaruServe never opens a TinyHttpd event stream, and the NaruServe SSE counter of FR-SSE-003 is the bound that answers `503`. [wave decision: maxEventStreams (W2-009); D-336]",
+        "checked": true,
+        "line": 1278
+      },
+      {
+        "id": "AC-5",
+        "text": "No class of `NaruServe-tinyhttpd` references TinyHttpd's `TlsConfig` or calls the builder's `tls(...)` or a `listen(..., TlsConfig)` overload, which a class-reference test checks, and on the TinyHttpd adapter `req.isSecure()` returns `false` unless proxy trust of FR-ENGINE-008 reports `https`. [D-433; D-080] re_stated_from: FR-ENGINE-010#AC3",
+        "checked": true,
+        "line": 1279
+      },
+      {
+        "id": "AC-6",
+        "text": "Over a real socket, `GET /a%20b?x=%41` reaches the core with raw path `/a%20b` and raw query `x=%41`, and a request without `?` has a `null` raw query, because the adapter reads `getRequestURI()` and `getQueryString()` and never `getPath()`. [D-399; I-021; wave-3 carried: TinyHttpd halves] re_stated_from: FR-ENGINE-010#AC4",
+        "checked": true,
+        "line": 1280
+      },
+      {
+        "id": "AC-7",
+        "text": "The adapter's request headers, method token, HTTP version and remote address reach the core unchanged, and the adapter's `boundPort()` throws `IllegalStateException` before bind like the SPI requires. [D-209; D-107] re_stated_from: FR-ENGINE-010#AC5",
+        "checked": true,
+        "line": 1281
+      }
+    ],
+    "verificationEvidence": [
+      {
+        "id": "VE-1",
+        "type": "test",
+        "reference": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/AdapterSurfaceTest.java#sdsAc1_FR_ENGINE_011_AC1_noEngineTypeInAnyPublicSignature",
+        "covers": "AC-1",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 1287
+      },
+      {
+        "id": "VE-2",
+        "type": "test",
+        "reference": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/AdapterSurfaceTest.java#FR_ENGINE_011_AC2_eventStreamAndWebSocketAreFilledAndRawUpgradeNamesNoWave",
+        "covers": "AC-2",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 1288
+      },
+      {
+        "id": "VE-3",
+        "type": "test",
+        "reference": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/AdapterSurfaceTest.java#FR_ENGINE_011_AC2_featureHooksShareTheCommitLockAbortCheckAndSingleStart",
+        "covers": "AC-2",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 1289
+      },
+      {
+        "id": "VE-4",
+        "type": "test",
+        "reference": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/SendFileSocketTest.java#sdsAc3_FR_ENGINE_011_AC2_sendFileWritesExactlyTheRequestedRangeAndCommitsOnce",
+        "covers": "AC-2",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 1290
+      },
+      {
+        "id": "VE-5",
+        "type": "test",
+        "reference": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/AdapterSurfaceTest.java#FR_ENGINE_011_AC3_theExchangeLockIsFreeWhileTheReadLoopAndTheDrainWait",
+        "covers": "AC-3",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 1291
+      },
+      {
+        "id": "VE-6",
+        "type": "test",
+        "reference": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/ConnectionLimitsTest.java#sdsAc11_FR_ENGINE_004_AC1_defaultConnectionLimitsReachTheBuilder",
+        "covers": "AC-4",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 1292
+      },
+      {
+        "id": "VE-7",
+        "type": "test",
+        "reference": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/AdapterSurfaceTest.java#sdsAc3_FR_ENGINE_011_AC5_noClassReferencesTlsConfig",
+        "covers": "AC-5",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 1293
+      },
+      {
+        "id": "VE-8",
+        "type": "test",
+        "reference": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/RawTargetSocketTest.java#sdsAc4_FR_ENGINE_011_AC6_rawPathAndRawQueryReachTheCoreUndecoded",
+        "covers": "AC-6",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 1294
+      },
+      {
+        "id": "VE-9",
+        "type": "test",
+        "reference": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/RawTargetSocketTest.java#FR_ENGINE_011_AC7_requestLineHeadersAndRemoteAddressReachTheCoreUnchanged",
+        "covers": "AC-7",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 1295
+      },
+      {
+        "id": "VE-10",
+        "type": "test",
+        "reference": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/AdapterSurfaceTest.java",
+        "covers": "AC-1",
+        "notes": "verification_cmd ./gradlew build passed at e25fe0d (1239/1239); cited line NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/AdapterSurfaceTest.java:80; bundle docs/research/naruserve-v1/waves/stage-7/lane-2026-10-19.naruserve.naruserve-v1-wave-7/",
+        "line": 1296
+      },
+      {
+        "id": "VE-11",
+        "type": "test",
+        "reference": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/AbortSocketTest.java",
+        "covers": "AC-2",
+        "notes": "verification_cmd ./gradlew build passed at e25fe0d (1239/1239); cited line NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/AbortSocketTest.java:29,44; bundle docs/research/naruserve-v1/waves/stage-7/lane-2026-10-19.naruserve.naruserve-v1-wave-7/",
+        "line": 1297
+      },
+      {
+        "id": "VE-12",
+        "type": "test",
+        "reference": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/AdapterSurfaceTest.java",
+        "covers": "AC-2",
+        "notes": "verification_cmd ./gradlew build passed at e25fe0d (1239/1239); cited line NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/AdapterSurfaceTest.java:163,214; bundle docs/research/naruserve-v1/waves/stage-7/lane-2026-10-19.naruserve.naruserve-v1-wave-7/",
+        "line": 1298
+      },
+      {
+        "id": "VE-13",
+        "type": "test",
+        "reference": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/RawTargetSocketTest.java",
+        "covers": "AC-2",
+        "notes": "verification_cmd ./gradlew build passed at e25fe0d (1239/1239); cited line NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/RawTargetSocketTest.java:96; bundle docs/research/naruserve-v1/waves/stage-7/lane-2026-10-19.naruserve.naruserve-v1-wave-7/",
+        "line": 1299
+      },
+      {
+        "id": "VE-14",
+        "type": "test",
+        "reference": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/SendFileSocketTest.java",
+        "covers": "AC-2",
+        "notes": "verification_cmd ./gradlew build passed at e25fe0d (1239/1239); cited line NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/SendFileSocketTest.java:57,89,114,154,165; bundle docs/research/naruserve-v1/waves/stage-7/lane-2026-10-19.naruserve.naruserve-v1-wave-7/",
+        "line": 1300
+      },
+      {
+        "id": "VE-15",
+        "type": "test",
+        "reference": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/AdapterSurfaceTest.java",
+        "covers": "AC-3",
+        "notes": "verification_cmd ./gradlew build passed at e25fe0d (1239/1239); cited line NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/AdapterSurfaceTest.java:163,308,347; bundle docs/research/naruserve-v1/waves/stage-7/lane-2026-10-19.naruserve.naruserve-v1-wave-7/",
+        "line": 1301
+      },
+      {
+        "id": "VE-16",
+        "type": "test",
+        "reference": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/ConnectionLimitsTest.java",
+        "covers": "AC-4",
+        "notes": "verification_cmd ./gradlew build passed at e25fe0d (1239/1239); cited line NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/ConnectionLimitsTest.java:94; bundle docs/research/naruserve-v1/waves/stage-7/lane-2026-10-19.naruserve.naruserve-v1-wave-7/",
+        "line": 1302
+      },
+      {
+        "id": "VE-17",
+        "type": "test",
+        "reference": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/AdapterSurfaceTest.java",
+        "covers": "AC-5",
+        "notes": "verification_cmd ./gradlew build passed at e25fe0d (1239/1239); cited line NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/AdapterSurfaceTest.java:464; bundle docs/research/naruserve-v1/waves/stage-7/lane-2026-10-19.naruserve.naruserve-v1-wave-7/",
+        "line": 1303
+      },
+      {
+        "id": "VE-18",
+        "type": "test",
+        "reference": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/RawTargetSocketTest.java",
+        "covers": "AC-6",
+        "notes": "verification_cmd ./gradlew build passed at e25fe0d (1239/1239); cited line NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/RawTargetSocketTest.java:49; bundle docs/research/naruserve-v1/waves/stage-7/lane-2026-10-19.naruserve.naruserve-v1-wave-7/",
+        "line": 1304
+      },
+      {
+        "id": "VE-19",
+        "type": "test",
+        "reference": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/RawTargetSocketTest.java",
+        "covers": "AC-7",
+        "notes": "verification_cmd ./gradlew build passed at e25fe0d (1239/1239); cited line NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/RawTargetSocketTest.java:66; bundle docs/research/naruserve-v1/waves/stage-7/lane-2026-10-19.naruserve.naruserve-v1-wave-7/",
+        "line": 1305
+      },
+      {
+        "id": "VE-20",
+        "type": "commit",
+        "reference": "e67f61e4c54c4877676bc79cef9cd3332614ab9b",
+        "covers": "all",
+        "notes": "-",
+        "line": 1306
+      },
+      {
+        "id": "VE-21",
+        "type": "commit",
+        "reference": "6ba51788c866ce1e140528ca77e2e39fff94c6d7",
+        "covers": "all",
+        "notes": "-",
+        "line": 1307
+      },
+      {
+        "id": "VE-22",
+        "type": "commit",
+        "reference": "fa7e535ec036f99c8f9ab3aa788567a3fd52c382",
+        "covers": "all",
+        "notes": "-",
+        "line": 1308
+      },
+      {
+        "id": "VE-23",
+        "type": "commit",
+        "reference": "cea10fccebdad844952135edd3e23ccff208d201",
+        "covers": "all",
+        "notes": "-",
+        "line": 1309
+      },
+      {
+        "id": "VE-24",
+        "type": "commit",
+        "reference": "7b3ba1ab8f1ad8821b49ed9f5dd8e0fac62353db",
+        "covers": "all",
+        "notes": "-",
+        "line": 1310
+      },
+      {
+        "id": "VE-25",
+        "type": "commit",
+        "reference": "e8d9036e3403012b21e2c4e3d06e92634cbc5e48",
+        "covers": "all",
+        "notes": "-",
+        "line": 1311
+      },
+      {
+        "id": "VE-26",
+        "type": "commit",
+        "reference": "6abec962bf077393bdda7b1f34866d6789195af9",
+        "covers": "all",
+        "notes": "-",
+        "line": 1312
+      },
+      {
+        "id": "VE-27",
+        "type": "commit",
+        "reference": "8bf8ea8f45f10654aa0e18bbf5dfbd2f1efe4721",
+        "covers": "all",
+        "notes": "-",
+        "line": 1313
+      },
+      {
+        "id": "VE-28",
+        "type": "commit",
+        "reference": "11019dbbe5a3513d2a0edaceae9f34066d24b14d",
+        "covers": "all",
+        "notes": "-",
+        "line": 1314
+      },
+      {
+        "id": "VE-29",
+        "type": "commit",
+        "reference": "c1974cb50b2f1427d66468cae20782bf8f0962e3",
+        "covers": "all",
+        "notes": "-",
+        "line": 1315
+      },
+      {
+        "id": "VE-30",
+        "type": "commit",
+        "reference": "0b3bec9d0a742af3a6cec69aab16976dbba0a0a7",
+        "covers": "all",
+        "notes": "-",
+        "line": 1316
+      },
+      {
+        "id": "VE-31",
+        "type": "commit",
+        "reference": "6856cb45be366bda0101e34f39c3a3ab99061e02",
+        "covers": "all",
+        "notes": "-",
+        "line": 1317
+      },
+      {
+        "id": "VE-32",
+        "type": "commit",
+        "reference": "9513a1df1dbf834849d28c7fae108ecff6cdbc3d",
+        "covers": "all",
+        "notes": "-",
+        "line": 1318
+      },
+      {
+        "id": "VE-33",
+        "type": "commit",
+        "reference": "d61b4fa96800096579e010634cc76ac5d10f4433",
+        "covers": "all",
+        "notes": "-",
+        "line": 1319
+      },
+      {
+        "id": "VE-34",
+        "type": "commit",
+        "reference": "1e1e42fcfceef81bc0e01d5d2f3a085ef9803294",
+        "covers": "all",
+        "notes": "-",
+        "line": 1320
+      },
+      {
+        "id": "VE-35",
+        "type": "commit",
+        "reference": "4c773396d7fd9593e38b3e586ee04f5d7d1ad680",
+        "covers": "all",
+        "notes": "-",
+        "line": 1321
+      },
+      {
+        "id": "VE-36",
+        "type": "commit",
+        "reference": "b90b382bcb16b57b7d98aa0e3a95334475ce22e2",
+        "covers": "all",
+        "notes": "-",
+        "line": 1322
+      },
+      {
+        "id": "VE-37",
+        "type": "commit",
+        "reference": "cab4cb5c109fa3e29b3c9193e8107e93935944fe",
+        "covers": "all",
+        "notes": "-",
+        "line": 1323
+      },
+      {
+        "id": "VE-38",
+        "type": "commit",
+        "reference": "404466417b8d5c4feda526d828a7c5017649e585",
+        "covers": "all",
+        "notes": "-",
+        "line": 1324
+      },
+      {
+        "id": "VE-39",
+        "type": "commit",
+        "reference": "4c368bb169368759b5938d5767f3cadbcbfa91b1",
+        "covers": "all",
+        "notes": "-",
+        "line": 1325
+      },
+      {
+        "id": "VE-40",
+        "type": "commit",
+        "reference": "c9cb060b41c06328529d79ebf1eb2eab71ef9729",
+        "covers": "all",
+        "notes": "-",
+        "line": 1326
+      },
+      {
+        "id": "VE-41",
+        "type": "commit",
+        "reference": "3e5ae1dfb47efeea1667a7081279320395678475",
+        "covers": "all",
+        "notes": "-",
+        "line": 1327
+      },
+      {
+        "id": "VE-42",
+        "type": "commit",
+        "reference": "58e89c1346edd2157acdc34c4ac384889c009797",
+        "covers": "all",
+        "notes": "-",
+        "line": 1328
+      },
+      {
+        "id": "VE-43",
+        "type": "commit",
+        "reference": "923548e6108f4cc29212f09e5ddf60c3d5c725d1",
+        "covers": "all",
+        "notes": "-",
+        "line": 1329
+      },
+      {
+        "id": "VE-44",
+        "type": "commit",
+        "reference": "27d24d6fe6c9e47bfb6d71127e654e240a07c954",
+        "covers": "all",
+        "notes": "-",
+        "line": 1330
+      },
+      {
+        "id": "VE-45",
+        "type": "commit",
+        "reference": "4022f6efe7cd0ae4bf9c27d2ffb52e613cb7afe0",
+        "covers": "all",
+        "notes": "-",
+        "line": 1331
+      },
+      {
+        "id": "VE-46",
+        "type": "commit",
+        "reference": "19b221dec3f49af7db5b6e90c6740514ef6d7919",
+        "covers": "all",
+        "notes": "-",
+        "line": 1332
+      },
+      {
+        "id": "VE-47",
+        "type": "commit",
+        "reference": "3021f38de62535bdf14a473074373c85003376aa",
+        "covers": "all",
+        "notes": "-",
+        "line": 1333
+      },
+      {
+        "id": "VE-48",
+        "type": "test",
+        "reference": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/RawTargetSocketTest.java#FR_ENGINE_011_AC7_requestLineHeadersAndRemoteAddressReachTheCoreUnchanged",
+        "covers": "AC-7",
+        "notes": "Issue #45: the adapter returns Request.getHeaderEntries() (TinyHttpd FR-HTTP-001, b759e2d); interleaved duplicate headers reach the core in received order. Red first on c000eb1. Full build green on JDK17 and actual Java 8 (1711 tests, 0 failures), clean b759e2d clone. Log docs/release/verification/header-contracts.log",
+        "line": 1334
+      },
+      {
+        "id": "VE-49",
+        "type": "test",
+        "reference": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/AbortSocketTest.java",
+        "covers": "AC-2",
+        "notes": "TDD RED/GREEN; source composite JDK17 full build1718 tests and published-Maven/no-checkout actualJava8 full build1720 tests passed with0failures/errors/skips. Independent re-review found no remaining defect or test weakening.",
+        "line": 1335
+      },
+      {
+        "id": "VE-50",
+        "type": "test",
+        "reference": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/SendFileSocketTest.java#sdsAc2_FR_ENGINE_011_AC2_fileShrinkingDuringTheCopyThrowsIOExceptionAndAborts",
+        "covers": "AC-2",
+        "notes": "TDD RED/GREEN; source composite JDK17 full build1718 tests and published-Maven/no-checkout actualJava8 full build1720 tests passed with0failures/errors/skips. Independent re-review found no remaining defect or test weakening.",
+        "line": 1336
+      },
+      {
+        "id": "VE-51",
+        "type": "test",
+        "reference": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/RawTargetSocketTest.java#FR_ENGINE_011_AC2_exchangeOutlivesHandleAndGuardsStartAndAbort",
+        "covers": "AC-2",
+        "notes": "TDD RED/GREEN; source composite JDK17 full build1718 tests and published-Maven/no-checkout actualJava8 full build1720 tests passed with0failures/errors/skips. Independent re-review found no remaining defect or test weakening.",
+        "line": 1337
+      }
+    ],
+    "traceLinks": [
+      {
+        "type": "Requirement",
+        "reference": "FR-ENGINE-010",
+        "relation": "supersedes",
+        "notes": "-",
+        "line": 1343
+      },
+      {
+        "type": "Code",
+        "reference": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdFeatures.java",
+        "relation": "implements",
+        "notes": "trace_intent=addition_site",
+        "line": 1344
+      },
+      {
+        "type": "Code",
+        "reference": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdExchange.java",
+        "relation": "implements",
+        "notes": "trace_intent=addition_site",
+        "line": 1345
+      },
+      {
+        "type": "Requirement",
+        "reference": "FR-ENGINE-004",
+        "relation": "extends",
+        "notes": "AC-2 and AC-4 name the connection limits of FR-ENGINE-004",
+        "line": 1346
+      },
+      {
+        "type": "Requirement",
+        "reference": "IR-HTTP-003",
+        "relation": "extends",
+        "notes": "exchange data contract (carried from FR-ENGINE-010)",
+        "line": 1347
+      },
+      {
+        "type": "Requirement",
+        "reference": "IR-HTTP-007",
+        "relation": "depends_on",
+        "notes": "fills the event-stream and upgrade extension points of the add-only SPI",
+        "line": 1348
+      }
+    ],
+    "changeNotes": [
+      {
+        "date": "2026-10-20",
+        "change": "Created",
+        "reason": "add-requirement",
+        "line": 1362
+      },
+      {
+        "date": "2026-10-20",
+        "change": "Stability -> evolving",
+        "reason": "Feasibility=high (score 86). Blockers: none. Run: 2026-10-19.naruserve.wave-7.v01",
+        "line": 1363
+      },
+      {
+        "date": "2026-10-21",
+        "change": "Status -> blocked",
+        "reason": "Issue #45: actual TinyHttpd socket loses interleaved request header order; supported upstream public API omits ordering. CON-BUILD-010 mandates read-only checkout; awaiting explicit external repository/SRS target authorization.",
+        "line": 1364
+      },
+      {
+        "date": "2026-10-23",
+        "change": "Status -> in_progress",
+        "reason": "Issue #45 unblocked: TinyHttpd FR-HTTP-001 Request.getHeaderEntries (b759e2d); the adapter reads received order; AC-7 re-verified",
+        "line": 1365
+      },
+      {
+        "date": "2026-10-23",
+        "change": "Status -> verified",
+        "reason": "Issue #45: AC-7 verified (VE-48); JDK17 and Java 8 full builds green",
+        "line": 1366
+      },
+      {
+        "date": "2026-10-24",
+        "change": "Status -> in_progress",
+        "reason": "TDD transport abort fix: replace fabricated response with TinyHttpd cancellation and cover HEAD/blocked writers.",
+        "line": 1367
+      },
+      {
+        "date": "2026-10-24",
+        "change": "Status -> verified",
+        "reason": "Per-criterion regression and independent review completed; source and public binary builds passed, with actualJava8 and no source checkout in Maven mode.",
+        "line": 1368
+      }
+    ],
+    "tags": [
+      "wave-7",
+      "feasibility:high",
+      "engine",
+      "supersedes:FR-ENGINE-010"
+    ],
+    "relatedDocs": [],
+    "evidenceReferences": [
+      "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/AdapterSurfaceTest.java",
+      "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/SendFileSocketTest.java",
+      "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/ConnectionLimitsTest.java",
+      "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/RawTargetSocketTest.java",
+      "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/AbortSocketTest.java",
+      "e67f61e4c54c4877676bc79cef9cd3332614ab9b",
+      "6ba51788c866ce1e140528ca77e2e39fff94c6d7",
+      "fa7e535ec036f99c8f9ab3aa788567a3fd52c382",
+      "cea10fccebdad844952135edd3e23ccff208d201",
+      "7b3ba1ab8f1ad8821b49ed9f5dd8e0fac62353db",
+      "e8d9036e3403012b21e2c4e3d06e92634cbc5e48",
+      "6abec962bf077393bdda7b1f34866d6789195af9",
+      "8bf8ea8f45f10654aa0e18bbf5dfbd2f1efe4721",
+      "11019dbbe5a3513d2a0edaceae9f34066d24b14d",
+      "c1974cb50b2f1427d66468cae20782bf8f0962e3",
+      "0b3bec9d0a742af3a6cec69aab16976dbba0a0a7",
+      "6856cb45be366bda0101e34f39c3a3ab99061e02",
+      "9513a1df1dbf834849d28c7fae108ecff6cdbc3d",
+      "d61b4fa96800096579e010634cc76ac5d10f4433",
+      "1e1e42fcfceef81bc0e01d5d2f3a085ef9803294",
+      "4c773396d7fd9593e38b3e586ee04f5d7d1ad680",
+      "b90b382bcb16b57b7d98aa0e3a95334475ce22e2",
+      "cab4cb5c109fa3e29b3c9193e8107e93935944fe",
+      "404466417b8d5c4feda526d828a7c5017649e585",
+      "4c368bb169368759b5938d5767f3cadbcbfa91b1",
+      "c9cb060b41c06328529d79ebf1eb2eab71ef9729",
+      "3e5ae1dfb47efeea1667a7081279320395678475",
+      "58e89c1346edd2157acdc34c4ac384889c009797",
+      "923548e6108f4cc29212f09e5ddf60c3d5c725d1",
+      "27d24d6fe6c9e47bfb6d71127e654e240a07c954",
+      "4022f6efe7cd0ae4bf9c27d2ffb52e613cb7afe0",
+      "19b221dec3f49af7db5b6e90c6740514ef6d7919",
+      "3021f38de62535bdf14a473074373c85003376aa"
+    ],
+    "traceReferences": [
+      "FR-ENGINE-010",
+      "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdFeatures.java",
+      "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdExchange.java",
+      "FR-ENGINE-004",
+      "IR-HTTP-003",
+      "IR-HTTP-007"
+    ],
+    "blockStartLine": 1249,
+    "blockEndLine": 1369,
+    "sectionLines": {
+      "Requirement": 1264,
+      "Rationale": 1268,
+      "Acceptance Criteria": 1273,
+      "Verification Evidence": 1283,
+      "Trace Links": 1339,
+      "Research / Analysis": 1350,
+      "Implementation Notes": 1354,
+      "Change Notes": 1358
+    },
+    "priority": "high",
+    "risk": "medium",
+    "stability": "evolving",
+    "newWorkCandidate": false,
+    "requirement": "The system shall provide the TinyHttpd adapter as a public final `HttpAdapter` implementation whose public signatures expose no TinyHttpd type, whose exchange bridge and file-transfer, event-stream and upgrade paths are separate module classes receiving the exchange, whose file-transfer hook writes the requested byte range of a file through a plain buffered copy, whose event-stream path and `webSocket` path from wave 7 write a chunked event stream and run the TinyHttpd WebSocket handshake instead of throwing `UnsupportedOperationException`, holding the exchange lock only to check abort and mark the response started, and whose raw `upgrade(headers, UpgradeHandler)` path stays unsupported in v1 with a message that names no wave.",
+    "rationale": "Covers D-209, D-210, D-404, D-106, D-291, D-433, D-080, D-399 and D-107 as restated from FR-ENGINE-010, with AC-2 changed by wave 7 (the event-stream and `webSocket` paths are filled; raw `upgrade` stays unsupported) and new AC-3 and AC-4 from wave decisions TinyHttpd feature hooks (W2-003; D-210) and maxEventStreams (W2-009; D-336). Measured: `tinyhttpd/TinyHttpdFeatures.java:51-57` throws `UnsupportedOperationException` \"arrive in wave 7\" for `eventStream` and `upgrade`; `TinyHttpdExchange.java:229-240` declares `upgrade` and `eventStream` as `synchronized` methods that take the lock, abort check and single-start bookkeeping of `commit()` (wave 5 commit 387db8c, w5-P2-002), and drain writes made later from another thread must also synchronize on the exchange (FR-SSE-003). Carried note (r2 W1-002 / W1-001, D-408): TinyHttpd at 46b973e keeps only `Connection: close`/`keep-alive` on a non-`101` response (`ExchangeResponse.java:172-177`, `:466-470`), so the `426` answer's `Connection: Upgrade` cannot pass through this adapter; the D-020 TinyHttpd-gap issue is opened in the wave 7 ledger and D-408 stays below `verified` (FR-WS-004); this requirement does not patch TinyHttpd. Pitfall: holding the exchange lock for the whole WebSocket read loop or SSE drain would block every other call that synchronizes on the exchange for the life of the connection. Rejected alternative: TinyHttpd's `startEventStream()` (D-335: fixed `Cache-Control: no-cache` and a separate `retry` block). Tests to re-point to FR-ENGINE-011: every `FR_ENGINE_010_*` method of `AdapterSurfaceTest`, `RawTargetSocketTest`, `AbortSocketTest` and `SendFileSocketTest` in `NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/`; `AdapterSurfaceTest#FR_ENGINE_010_AC2_sendFileIsFilledAndTheOtherHooksThrowNamingWave7` is replaced by a test that asserts the event-stream and `webSocket` paths no longer throw and that raw `upgrade` throws with a message naming no wave; the `@req FR-ENGINE-001` (discarded id) and `@req FR-ENGINE-010` comments of `TinyHttpdExchange.java` and `TinyHttpdFeatures.java` move to FR-ENGINE-011.\n- [2026-10-20] Correction: the `@req FR-ENGINE-001` (discarded id) and `@req FR-ENGINE-010` comments of `TinyHttpdExchange.java` and `TinyHttpdFeatures.java` move to FR-ENGINE-011. Raw `upgrade` stays unsupported on TinyHttpd in v1 (AC-2), so the replaced AdapterSurfaceTest asserts that `eventStream` and `webSocket` no longer throw and that `upgrade` throws with a message naming no wave. The D-408 gap is a deferred D-020 issue recorded by the orchestrator in the run's issue ledger.",
+    "research": "- -",
+    "implementationNotes": "- -",
+    "diagnostics": [],
+    "errors": [],
+    "warnings": [],
+    "diagnosticsSummary": {
+      "errors": 0,
+      "warnings": 0,
+      "byCode": {}
+    }
+  },
+  "diagnostics": [],
+  "diagnosticsSummary": {
+    "errors": 0,
+    "warnings": 0,
+    "byCode": {}
+  },
+  "mcpWorkspace": {
+    "workspaceRoot": "/Users/beom/work/git/NaruServe",
+    "rootSource": "server-cwd-discovery",
+    "indexPath": "docs/spec/00.index.md",
+    "packageVersion": "4.2.0"
+  }
+}

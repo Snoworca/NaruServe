@@ -1,0 +1,6 @@
+{"path":"/x/a%2Fb","status":200,"body":"{\"p\":\"a/b\"}"}
+{"path":"/x/%00","status":200,"body":"{\"p\":\"\\u0000\"}"}
+{"path":"/x/%2e","status":200,"body":"{\"p\":\".\"}"}
+{"path":"/x/%2e%2e","status":200,"body":"{\"p\":\"..\"}"}
+{"path":"/x/%ZZ","status":400,"body":"decode-error"}
+{"path":"/x/%E0%A4%A","status":400,"body":"decode-error"}

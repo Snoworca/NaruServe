@@ -1,0 +1,60 @@
+{"label":"v800","pattern":"/:id/:id","url":"/a/b","result":{"path":"/a/b","params":{"id":"b"}}}
+{"label":"v800","pattern":"/:foo*foo","error":"Missing text after \"foo\": https://git.new/pathToRegexpError"}
+{"label":"v800","pattern":"/:가","url":"/a","result":{"path":"/a","params":{"가":"a"}}}
+{"label":"v800","pattern":"/:é","url":"/a","result":{"path":"/a","params":{"é":"a"}}}
+{"label":"v800","pattern":"/:$id","url":"/a","result":{"path":"/a","params":{"$id":"a"}}}
+{"label":"v800","pattern":"/*foo/:bar/*baz","url":"/a/b/c/d/e","result":{"path":"/a/b/c/d/e","params":{"foo":["a","b","c"],"bar":"d","baz":["e"]}}}
+{"label":"v800","pattern":"/files/*path.:ext","url":"/files/a/b.txt","result":{"path":"/files/a/b.txt","params":{"path":["a","b"],"ext":"txt"}}}
+{"label":"v800","pattern":"/a{:b}{:c}","error":"Missing text after \"c\": https://git.new/pathToRegexpError"}
+{"label":"v800","pattern":"/:a:b","error":"Missing text after \"b\": https://git.new/pathToRegexpError"}
+{"label":"v800","pattern":"/*a*b","error":"Missing text after \"b\": https://git.new/pathToRegexpError"}
+{"label":"v800","pattern":"/:\"\"","error":"Missing parameter name at 4: https://git.new/pathToRegexpError"}
+{"label":"v800","pattern":"/api{/*path}","url":"/api","result":{"path":"/api","params":{}}}
+{"label":"v800","pattern":"/users{/:id}/delete","url":"/users/delete","result":{"path":"/users/delete","params":{}}}
+{"label":"v800","pattern":"/foo{}","url":"/foo","result":{"path":"/foo","params":{}}}
+{"label":"v800","pattern":"/:id(\\d+)","error":"Unexpected ( at 4, expected END: https://git.new/pathToRegexpError"}
+{"label":"v800","pattern":"/a\\(b\\)","url":"/a(b)","result":{"path":"/a(b)","params":{}}}
+{"label":"v830","pattern":"/:id/:id","url":"/a/b","result":{"path":"/a/b","params":{"id":"b"}}}
+{"label":"v830","pattern":"/:foo*foo","error":"Missing text before \"foo\" wildcard: /:foo*foo; visit https://git.new/pathToRegexpError for info"}
+{"label":"v830","pattern":"/:가","url":"/a","result":{"path":"/a","params":{"가":"a"}}}
+{"label":"v830","pattern":"/:é","url":"/a","result":{"path":"/a","params":{"é":"a"}}}
+{"label":"v830","pattern":"/:$id","url":"/a","result":{"path":"/a","params":{"$id":"a"}}}
+{"label":"v830","pattern":"/*foo/:bar/*baz","url":"/a/b/c/d/e","result":{"path":"/a/b/c/d/e","params":{"foo":["a","b","c"],"bar":"d","baz":["e"]}}}
+{"label":"v830","pattern":"/files/*path.:ext","url":"/files/a/b.txt","result":{"path":"/files/a/b.txt","params":{"path":["a","b"],"ext":"txt"}}}
+{"label":"v830","pattern":"/a{:b}{:c}","error":"Missing text before \"c\" param: /a{:b}{:c}; visit https://git.new/pathToRegexpError for info"}
+{"label":"v830","pattern":"/:a:b","error":"Missing text before \"b\" param: /:a:b; visit https://git.new/pathToRegexpError for info"}
+{"label":"v830","pattern":"/*a*b","error":"Missing text before \"b\" wildcard: /*a*b; visit https://git.new/pathToRegexpError for info"}
+{"label":"v830","pattern":"/:\"\"","error":"Missing parameter name at index 4: /:\"\"; visit https://git.new/pathToRegexpError for info"}
+{"label":"v830","pattern":"/api{/*path}","url":"/api","result":{"path":"/api","params":{}}}
+{"label":"v830","pattern":"/users{/:id}/delete","url":"/users/delete","result":{"path":"/users/delete","params":{}}}
+{"label":"v830","pattern":"/foo{}","url":"/foo","result":{"path":"/foo","params":{}}}
+{"label":"v830","pattern":"/:id(\\d+)","error":"Unexpected ( at index 4, expected end: /:id(\\d+); visit https://git.new/pathToRegexpError for info"}
+{"label":"v830","pattern":"/a\\(b\\)","url":"/a(b)","result":{"path":"/a(b)","params":{}}}
+{"label":"v842","pattern":"/:id/:id","url":"/a/b","result":{"path":"/a/b","params":{"id":"b"}}}
+{"label":"v842","pattern":"/:foo*foo","error":"Missing text before \"foo\" wildcard: /:foo*foo; visit https://git.new/pathToRegexpError for info"}
+{"label":"v842","pattern":"/:가","url":"/a","result":{"path":"/a","params":{"가":"a"}}}
+{"label":"v842","pattern":"/:é","url":"/a","result":{"path":"/a","params":{"é":"a"}}}
+{"label":"v842","pattern":"/:$id","url":"/a","result":{"path":"/a","params":{"$id":"a"}}}
+{"label":"v842","pattern":"/*foo/:bar/*baz","url":"/a/b/c/d/e","result":{"path":"/a/b/c/d/e","params":{"foo":["a","b","c"],"bar":"d","baz":["e"]}}}
+{"label":"v842","pattern":"/files/*path.:ext","url":"/files/a/b.txt","result":{"path":"/files/a/b.txt","params":{"path":["a","b"],"ext":"txt"}}}
+{"label":"v842","pattern":"/a{:b}{:c}","error":"Missing text before \"c\" param: /a{:b}{:c}; visit https://git.new/pathToRegexpError for info"}
+{"label":"v842","pattern":"/:a:b","error":"Missing text before \"b\" param: /:a:b; visit https://git.new/pathToRegexpError for info"}
+{"label":"v842","pattern":"/*a*b","error":"Missing text before \"b\" wildcard: /*a*b; visit https://git.new/pathToRegexpError for info"}
+{"label":"v842","pattern":"/:\"\"","error":"Missing parameter name at index 4: /:\"\"; visit https://git.new/pathToRegexpError for info"}
+{"label":"v842","pattern":"/api{/*path}","url":"/api","result":{"path":"/api","params":{}}}
+{"label":"v842","pattern":"/users{/:id}/delete","url":"/users/delete","result":{"path":"/users/delete","params":{}}}
+{"label":"v842","pattern":"/foo{}","url":"/foo","result":{"path":"/foo","params":{}}}
+{"label":"v842","pattern":"/:id(\\d+)","error":"Unexpected ( at index 4: /:id(\\d+); visit https://git.new/pathToRegexpError for info"}
+{"label":"v842","pattern":"/a\\(b\\)","url":"/a(b)","result":{"path":"/a(b)","params":{}}}
+{"label":"v0112","pattern":"/files/:path(.*)","url":"/files/a/b","re":"/^\\/files(?:\\/(.(.*)))\\/?$/i","keys":[{"name":"path","optional":false,"offset":6},{"name":0,"optional":false,"offset":12}],"result":["/files/a/b","a/b","/b"]}
+{"label":"v0112","pattern":"/:x(^\\d+$)","url":"/42","re":"/^(?:\\/(^\\d+$))\\/?$/i","keys":[{"name":"x","optional":false,"offset":0}],"result":null}
+{"label":"v0112","pattern":"/:x(\\d+$)","url":"/42","re":"/^(?:\\/(\\d+$))\\/?$/i","keys":[{"name":"x","optional":false,"offset":0}],"result":["/42","42"]}
+{"label":"v0112","pattern":"/:x(a$)","url":"/a","re":"/^(?:\\/(a$))\\/?$/i","keys":[{"name":"x","optional":false,"offset":0}],"result":["/a","a"]}
+{"label":"v0112","pattern":"/:x([^/]+)","url":"/ab","re":"/^(?:\\/([^/]+))\\/?$/i","keys":[{"name":"x","optional":false,"offset":0}],"result":["/ab","ab"]}
+{"label":"v0112","pattern":"/:x((a|b)+)","url":"/ab","re":"/^(?:\\/((a|b))+)\\/?$/i","keys":[{"name":"x","optional":false,"offset":0},{"name":0,"optional":false,"offset":5}],"result":["/ab","b","b"]}
+{"label":"v0112","pattern":"/:x((?:a|b)+)","url":"/ab","re":"/^(?:\\/((?:a|b))+)\\/?$/i","keys":[{"name":"x","optional":false,"offset":0}],"result":["/ab","b"]}
+{"label":"v0112","pattern":"/:x([()]+)","error":"Invalid regular expression: /^(?:/([())]+)/?$/i: Unterminated group"}
+{"label":"v0112","pattern":"/:x(\\^\\d+)","url":"/^42","re":"/^(?:\\/(\\^\\d+))\\/?$/i","keys":[{"name":"x","optional":false,"offset":0}],"result":["/^42","^42"]}
+{"label":"v0112","pattern":"/:x([a-z]*)","url":"/abc","re":"/^(?:\\/([a-z](.*)))\\/?$/i","keys":[{"name":"x","optional":false,"offset":0},{"name":0,"optional":false,"offset":10}],"result":["/abc","abc","bc"]}
+{"label":"v0112","pattern":"/:x(.*)/end","url":"/a/b/end","re":"/^(?:\\/(.(.*)))\\/end\\/?$/i","keys":[{"name":"x","optional":false,"offset":0},{"name":0,"optional":false,"offset":6}],"result":["/a/b/end","a/b","/b"]}
+{"label":"v0112","pattern":"/:x((a)(b))","url":"/ab","re":"/^(?:\\/((a))(b))\\/?$/i","keys":[{"name":"x","optional":false,"offset":0},{"name":0,"optional":false,"offset":5},{"name":1,"optional":false,"offset":9}],"result":["/ab","a","a","b"]}

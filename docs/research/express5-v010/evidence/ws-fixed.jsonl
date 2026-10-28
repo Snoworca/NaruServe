@@ -1,0 +1,2 @@
+{"deny":false,"events":["open","{\"room\":[\"a\",\"b\"]}"],"code":1005,"trace":[{"kind":"middleware","path":"/a/b/.websocket","url":"/a/b/.websocket","base":"/ws"},{"kind":"handler","params":{"room":["a","b"]},"path":"/ws/a/b/.websocket","url":"/ws/a/b/.websocket"}]}
+{"deny":true,"events":["open"],"code":1005,"trace":[{"kind":"middleware","path":"/a/b/.websocket","url":"/a/b/.websocket","base":"/ws"}]}

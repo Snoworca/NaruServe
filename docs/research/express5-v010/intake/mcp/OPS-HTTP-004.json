@@ -1,0 +1,476 @@
+{
+  "ok": true,
+  "value": {
+    "id": "OPS-HTTP-004",
+    "title": "docs/api Java examples compile against the API of the current wave (wave 4)",
+    "type": "operational",
+    "target": "wave-4",
+    "status": "verified",
+    "scope": "HTTP",
+    "filePath": "docs/spec/04.http-core.srs.md",
+    "headingLine": 3460,
+    "metadata": {
+      "Type": "operational",
+      "Target": "wave-4",
+      "Status": "verified",
+      "Priority": "medium",
+      "Tags": "wave-4, feasibility:high, docs",
+      "Risk": "low",
+      "Stability": "evolving",
+      "Verification Method": "test",
+      "GitHub Issue": "https://github.com/Snoworca/NaruServe/issues/5",
+      "Related Docs": "-"
+    },
+    "acceptanceCriteria": [
+      {
+        "id": "AC-1",
+        "text": "The root `build.gradle` puts the `NaruServe-api` main classes on the root test suite's test classpath (for example `testImplementation project(':NaruServe-api')`) while keeping the wave 1 root test conventions (JUnit 4, `gradleTestKit()`, the existing `test` task dependencies and system properties). [I-009; wave decision: docs examples]",
+        "checked": true,
+        "line": 3485
+      },
+      {
+        "id": "AC-2",
+        "text": "The root test `src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java` extracts every ```java fenced block of every `docs/api/*.md` file. [I-009; wave decision: docs examples]",
+        "checked": true,
+        "line": 3486
+      },
+      {
+        "id": "AC-3",
+        "text": "The test compiles a block that declares a top-level type as its own compilation unit and places any other block in a method template that declares `throws Exception`, both with the fixed imports `com.snoworca.naruserve.*`, `com.snoworca.naruserve.routing.*`, `com.snoworca.naruserve.spi.*`, `java.util.*`, `java.util.concurrent.*` and `java.io.*`, where the template has `app` (`RestApp`), `req` (`Request`) and `res` (`Response`) as fields in scope and declares the stub handlers and stub values the docs name (such as `getUser`, `id`, `user`, `ctx`, `auth`, `myAdapter` or `myCodec`); compilation runs in process through `javax.tools.ToolProvider.getSystemJavaCompiler()` with the test runtime classpath, using `--release 8` when the in-process compiler supports it, or `-source 8 -target 8` on a Java 8 compiler against its actual Java 8 platform classes, and a compilation error or a missing system compiler fails the test. [I-009; wave decision: docs examples] Decision: a non-type block is wrapped in `class DocExampleN` with fields `app`, `req` and `res` and stub `RouteHandler` fields for the handler names the docs use, inside `void example() throws Exception`; a failure names each block's file, ordinal and diagnostics. [SDS 2026-10-19.naruserve.naruserve-v1-wave-3-6 SDS-AC-7] [SDS 2026-10-19.naruserve.naruserve-v1-wave-3-6 SDS-AC-8] Decision: the template also declares the stub fields `ctx` (`ApplicationContext`), `auth` (`Middleware`), `myAdapter` (`HttpAdapter`) and `myCodec` (`JsonCodec`). [SDS 2026-10-19.naruserve.naruserve-v1-wave-4-10 SDS-AC-11]",
+        "checked": true,
+        "line": 3487
+      },
+      {
+        "id": "AC-4",
+        "text": "A block is skipped only when it is on an explicit list kept in the test whose entry names the file, the block (its ordinal among the file's ```java blocks or its first line) and one reason: a call to a later-wave method (named), an illustrative copy of an existing type declaration (such as `Method` or `RouteHandler`), a type of a later wave or of a library absent from the root test classpath (named, such as Gson `@SerializedName` or `UploadFile`), or an app-defined example type the block assumes (named, such as `UserService` or `Database`). [I-009; wave decision: docs examples] Decision: the block selector is an ordinal such as `#3` or the block's first line. [SDS 2026-10-19.naruserve.naruserve-v1-wave-3-6 SDS-AC-9]",
+        "checked": true,
+        "line": 3488
+      },
+      {
+        "id": "AC-5",
+        "text": "A ```java fence in `docs/api` that holds JavaScript is relabelled ```js. [I-009; wave decision: docs examples]",
+        "checked": true,
+        "line": 3489
+      },
+      {
+        "id": "AC-6",
+        "text": "The test fails when a skip-list entry no longer matches any block of its file, so no stale skip remains. [I-009; wave decision: docs examples] `DocsExamplesCompileTest` is re-pointed to this requirement.",
+        "checked": true,
+        "line": 3490
+      },
+      {
+        "id": "AC-7",
+        "text": "The blocks of `docs/api/response.md` and `docs/api/routing.md` that call only wave 3 methods are compiled, not skipped: the test asserts that at least one block of each of these two files was compiled. [I-009; wave decision: docs examples]",
+        "checked": true,
+        "line": 3491
+      }
+    ],
+    "verificationEvidence": [
+      {
+        "id": "VE-1",
+        "type": "test",
+        "reference": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java#sdsAc11_OPS_HTTP_004_AC2_everyJavaFenceOfEveryDocIsExtracted",
+        "covers": "AC-2",
+        "notes": "command ./gradlew build result pass (SDS wave-4-10)",
+        "line": 3497
+      },
+      {
+        "id": "VE-2",
+        "type": "test",
+        "reference": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java#sdsAc11_OPS_HTTP_004_AC3_nonTypeBlocksAreWrappedInTheTemplate",
+        "covers": "AC-3",
+        "notes": "command ./gradlew build result pass (SDS wave-4-10)",
+        "line": 3498
+      },
+      {
+        "id": "VE-3",
+        "type": "test",
+        "reference": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java#sdsAc11_OPS_HTTP_004_AC3_compilerRunsInProcessAndReportsErrors",
+        "covers": "AC-3",
+        "notes": "command ./gradlew build result pass (SDS wave-4-10)",
+        "line": 3499
+      },
+      {
+        "id": "VE-4",
+        "type": "test",
+        "reference": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java#sdsAc11_OPS_HTTP_004_AC3_everyNonSkippedDocsBlockCompiles",
+        "covers": "AC-3",
+        "notes": "command ./gradlew build result pass (SDS wave-4-10)",
+        "line": 3500
+      },
+      {
+        "id": "VE-5",
+        "type": "test",
+        "reference": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java#sdsAc12_OPS_HTTP_004_AC4_everySkipNamesFileBlockAndReason",
+        "covers": "AC-4",
+        "notes": "command ./gradlew build result pass (SDS wave-4-10)",
+        "line": 3501
+      },
+      {
+        "id": "VE-6",
+        "type": "test",
+        "reference": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java#sdsAc12_OPS_HTTP_004_AC4_appDefinedTypesAreNamedReasons",
+        "covers": "AC-4",
+        "notes": "command ./gradlew build result pass (SDS wave-4-10)",
+        "line": 3502
+      },
+      {
+        "id": "VE-7",
+        "type": "test",
+        "reference": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java#sdsAc11_OPS_HTTP_004_AC5_noJavaScriptInJavaFences",
+        "covers": "AC-5",
+        "notes": "command ./gradlew build result pass (SDS wave-4-10)",
+        "line": 3503
+      },
+      {
+        "id": "VE-8",
+        "type": "test",
+        "reference": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java#sdsAc12_OPS_HTTP_004_AC6_noStaleSkip",
+        "covers": "AC-6",
+        "notes": "command ./gradlew build result pass (SDS wave-4-10)",
+        "line": 3504
+      },
+      {
+        "id": "VE-9",
+        "type": "test",
+        "reference": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java#sdsAc11_OPS_HTTP_004_AC7_responseAndRoutingBlocksAreCompiled",
+        "covers": "AC-7",
+        "notes": "command ./gradlew build result pass (SDS wave-4-10)",
+        "line": 3505
+      },
+      {
+        "id": "VE-10",
+        "type": "test",
+        "reference": "src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java#ops_HTTP_004_AC1_apiMainOnRootTestClasspathWithWave1ConventionsKept",
+        "covers": "AC-1",
+        "notes": "command: ./gradlew build; result: pass (exit 0)",
+        "line": 3506
+      },
+      {
+        "id": "VE-11",
+        "type": "test",
+        "reference": "src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java",
+        "covers": "AC-1",
+        "notes": "verification_cmd ./gradlew build passed at 04f3673 (588/588); cited line src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java:365; bundle docs/research/naruserve-v1/waves/stage-4/lane-2026-10-19.naruserve.naruserve-v1-wave-4/",
+        "line": 3507
+      },
+      {
+        "id": "VE-12",
+        "type": "test",
+        "reference": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java",
+        "covers": "AC-2",
+        "notes": "verification_cmd ./gradlew build passed at 04f3673 (588/588); cited line src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java:402; bundle docs/research/naruserve-v1/waves/stage-4/lane-2026-10-19.naruserve.naruserve-v1-wave-4/",
+        "line": 3508
+      },
+      {
+        "id": "VE-13",
+        "type": "test",
+        "reference": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java",
+        "covers": "AC-3",
+        "notes": "verification_cmd ./gradlew build passed at 04f3673 (588/588); cited line src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java:420; src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java:459; src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java:475; bundle docs/research/naruserve-v1/waves/stage-4/lane-2026-10-19.naruserve.naruserve-v1-wave-4/",
+        "line": 3509
+      },
+      {
+        "id": "VE-14",
+        "type": "test",
+        "reference": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java",
+        "covers": "AC-4",
+        "notes": "verification_cmd ./gradlew build passed at 04f3673 (588/588); cited line src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java:482; src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java:569; bundle docs/research/naruserve-v1/waves/stage-4/lane-2026-10-19.naruserve.naruserve-v1-wave-4/",
+        "line": 3510
+      },
+      {
+        "id": "VE-15",
+        "type": "test",
+        "reference": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java",
+        "covers": "AC-5",
+        "notes": "verification_cmd ./gradlew build passed at 04f3673 (588/588); cited line src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java:441; bundle docs/research/naruserve-v1/waves/stage-4/lane-2026-10-19.naruserve.naruserve-v1-wave-4/",
+        "line": 3511
+      },
+      {
+        "id": "VE-16",
+        "type": "test",
+        "reference": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java",
+        "covers": "AC-6",
+        "notes": "verification_cmd ./gradlew build passed at 04f3673 (588/588); cited line src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java:503; bundle docs/research/naruserve-v1/waves/stage-4/lane-2026-10-19.naruserve.naruserve-v1-wave-4/",
+        "line": 3512
+      },
+      {
+        "id": "VE-17",
+        "type": "test",
+        "reference": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java",
+        "covers": "AC-7",
+        "notes": "verification_cmd ./gradlew build passed at 04f3673 (588/588); cited line src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java:516; bundle docs/research/naruserve-v1/waves/stage-4/lane-2026-10-19.naruserve.naruserve-v1-wave-4/",
+        "line": 3513
+      },
+      {
+        "id": "VE-18",
+        "type": "commit",
+        "reference": "a6e9fbe31a145333369d669970648e17c0d38be9",
+        "covers": "all",
+        "notes": "wave 4 worker or issue-fix commit (Orch-Wave: 4), ancestor of integration head 04f3673",
+        "line": 3514
+      },
+      {
+        "id": "VE-19",
+        "type": "commit",
+        "reference": "e344a664b14f2b0fe577f556373ce0b0222c9a56",
+        "covers": "all",
+        "notes": "wave 4 worker or issue-fix commit (Orch-Wave: 4), ancestor of integration head 04f3673",
+        "line": 3515
+      },
+      {
+        "id": "VE-20",
+        "type": "commit",
+        "reference": "9b502e31d25812a02ebddc8f1c01a97f308e0583",
+        "covers": "all",
+        "notes": "wave 4 worker or issue-fix commit (Orch-Wave: 4), ancestor of integration head 04f3673",
+        "line": 3516
+      },
+      {
+        "id": "VE-21",
+        "type": "commit",
+        "reference": "0c9bfb4ee13638e5de052decedb48d5800a30843",
+        "covers": "all",
+        "notes": "wave 4 worker or issue-fix commit (Orch-Wave: 4), ancestor of integration head 04f3673",
+        "line": 3517
+      },
+      {
+        "id": "VE-22",
+        "type": "commit",
+        "reference": "e680e56169d4cde7c86ed9f4c2d2b093978596e6",
+        "covers": "all",
+        "notes": "wave 4 worker or issue-fix commit (Orch-Wave: 4), ancestor of integration head 04f3673",
+        "line": 3518
+      },
+      {
+        "id": "VE-23",
+        "type": "commit",
+        "reference": "a452c0ca77b3d08a15f5758b710a3363c4377355",
+        "covers": "all",
+        "notes": "wave 4 worker or issue-fix commit (Orch-Wave: 4), ancestor of integration head 04f3673",
+        "line": 3519
+      },
+      {
+        "id": "VE-24",
+        "type": "commit",
+        "reference": "217f6d75e4b46887d073c89a19ad41d35fb16cd9",
+        "covers": "all",
+        "notes": "wave 4 worker or issue-fix commit (Orch-Wave: 4), ancestor of integration head 04f3673",
+        "line": 3520
+      },
+      {
+        "id": "VE-25",
+        "type": "commit",
+        "reference": "9e5488314eacccd5383e9c10fecd35d122ed63c4",
+        "covers": "all",
+        "notes": "wave 4 worker or issue-fix commit (Orch-Wave: 4), ancestor of integration head 04f3673",
+        "line": 3521
+      },
+      {
+        "id": "VE-26",
+        "type": "commit",
+        "reference": "b0869b93e712dda6b48a1f7001862877ea1056b9",
+        "covers": "all",
+        "notes": "wave 4 worker or issue-fix commit (Orch-Wave: 4), ancestor of integration head 04f3673",
+        "line": 3522
+      },
+      {
+        "id": "VE-27",
+        "type": "commit",
+        "reference": "b4bf9d84ff28d07ffa85ea39ca39569c91e296fd",
+        "covers": "all",
+        "notes": "wave 4 worker or issue-fix commit (Orch-Wave: 4), ancestor of integration head 04f3673",
+        "line": 3523
+      },
+      {
+        "id": "VE-28",
+        "type": "commit",
+        "reference": "e612f8fe3a2f95cb8c94c6d836017fb447434a92",
+        "covers": "all",
+        "notes": "wave 4 worker or issue-fix commit (Orch-Wave: 4), ancestor of integration head 04f3673",
+        "line": 3524
+      },
+      {
+        "id": "VE-29",
+        "type": "commit",
+        "reference": "d39522781993188e36f6d0f22663fb03c7ab4d54",
+        "covers": "all",
+        "notes": "wave 4 worker or issue-fix commit (Orch-Wave: 4), ancestor of integration head 04f3673",
+        "line": 3525
+      },
+      {
+        "id": "VE-30",
+        "type": "commit",
+        "reference": "7cb379bec63d289fae06d288ae01a92c37223d55",
+        "covers": "all",
+        "notes": "wave 4 worker or issue-fix commit (Orch-Wave: 4), ancestor of integration head 04f3673",
+        "line": 3526
+      },
+      {
+        "id": "VE-31",
+        "type": "commit",
+        "reference": "18f79a529b9ecb4e6d3b605f90bf2df3dfad5494",
+        "covers": "all",
+        "notes": "wave 4 worker or issue-fix commit (Orch-Wave: 4), ancestor of integration head 04f3673",
+        "line": 3527
+      },
+      {
+        "id": "VE-32",
+        "type": "test",
+        "reference": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java",
+        "covers": "AC-1, AC-2, AC-3, AC-4, AC-5, AC-6, AC-7",
+        "notes": "2026-10-21: full ./gradlew build --rerun-tasks passed on default JDK17 and all Test tasks on actual OpenJDK8: 1649 tests each, failures/errors/skipped=0. Runtime and per-suite artifacts: docs/release/verification/java8-suite.json and java17-suite.json. TDD red and green recorded before implementation.",
+        "line": 3528
+      },
+      {
+        "id": "VE-33",
+        "type": "test",
+        "reference": "docs/release/verification/java8-suite.json",
+        "covers": "AC-1, AC-2, AC-3, AC-4, AC-5, AC-6, AC-7",
+        "notes": "Actual execution evidence. FR-REL-002 additionally has completed raw CSV, exact artifact/CVE suppression regression and release gate success; OPS-REL-004 verified record validation also reran on Java8 after final document updates.",
+        "line": 3529
+      }
+    ],
+    "traceLinks": [
+      {
+        "type": "Requirement",
+        "reference": "OPS-HTTP-002",
+        "relation": "supersedes",
+        "notes": "-",
+        "line": 3535
+      },
+      {
+        "type": "Code",
+        "reference": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java",
+        "relation": "implements",
+        "notes": "trace_intent=addition_site",
+        "line": 3536
+      },
+      {
+        "type": "Requirement",
+        "reference": "IR-HTTP-005",
+        "relation": "extends",
+        "notes": "compiles against the RestApp surface",
+        "line": 3537
+      },
+      {
+        "type": "Code",
+        "reference": "build.gradle",
+        "relation": "implements",
+        "notes": "trace_intent=addition_site",
+        "line": 3538
+      },
+      {
+        "type": "Requirement",
+        "reference": "IR-HTTP-001",
+        "relation": "depends_on",
+        "notes": "wave 3 API surface",
+        "line": 3539
+      }
+    ],
+    "changeNotes": [
+      {
+        "date": "2026-10-19",
+        "change": "Created",
+        "reason": "add-requirement",
+        "line": 3553
+      },
+      {
+        "date": "2026-10-19",
+        "change": "Stability -> evolving",
+        "reason": "Feasibility=high (score 96). Blockers: none. Run: 2026-10-19.naruserve.wave-4.v01",
+        "line": 3554
+      },
+      {
+        "date": "2026-10-19",
+        "change": "Status -> verified",
+        "reason": "Wave 4 promotion: every AC cited in docs/research/naruserve-v1/waves/wave-4/test-sufficiency.json; ./gradlew build passed at 04f3673 (588/588); worker commits recorded",
+        "line": 3555
+      },
+      {
+        "date": "2026-10-21",
+        "change": "Status -> implemented",
+        "reason": "Extend compiler verification to an actual Java 8 test JVM while preserving JDK 17 build compilation.",
+        "line": 3556
+      },
+      {
+        "date": "2026-10-21",
+        "change": "Status -> verified",
+        "reason": "Individual evidence reviewed: actual Java8 and JDK17 regressions passed 1649 tests each; source AC coverage complete, release scan completed and gate cleared, updated evidence documents passed Java8 checks.",
+        "line": 3557
+      }
+    ],
+    "tags": [
+      "wave-4",
+      "feasibility:high",
+      "docs"
+    ],
+    "relatedDocs": [],
+    "evidenceReferences": [
+      "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java",
+      "src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java",
+      "a6e9fbe31a145333369d669970648e17c0d38be9",
+      "e344a664b14f2b0fe577f556373ce0b0222c9a56",
+      "9b502e31d25812a02ebddc8f1c01a97f308e0583",
+      "0c9bfb4ee13638e5de052decedb48d5800a30843",
+      "e680e56169d4cde7c86ed9f4c2d2b093978596e6",
+      "a452c0ca77b3d08a15f5758b710a3363c4377355",
+      "217f6d75e4b46887d073c89a19ad41d35fb16cd9",
+      "9e5488314eacccd5383e9c10fecd35d122ed63c4",
+      "b0869b93e712dda6b48a1f7001862877ea1056b9",
+      "b4bf9d84ff28d07ffa85ea39ca39569c91e296fd",
+      "e612f8fe3a2f95cb8c94c6d836017fb447434a92",
+      "d39522781993188e36f6d0f22663fb03c7ab4d54",
+      "7cb379bec63d289fae06d288ae01a92c37223d55",
+      "18f79a529b9ecb4e6d3b605f90bf2df3dfad5494",
+      "docs/release/verification/java8-suite.json"
+    ],
+    "traceReferences": [
+      "OPS-HTTP-002",
+      "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java",
+      "IR-HTTP-005",
+      "build.gradle",
+      "IR-HTTP-001"
+    ],
+    "blockStartLine": 3460,
+    "blockEndLine": 3558,
+    "sectionLines": {
+      "Requirement": 3475,
+      "Rationale": 3479,
+      "Acceptance Criteria": 3483,
+      "Verification Evidence": 3493,
+      "Trace Links": 3531,
+      "Research / Analysis": 3541,
+      "Implementation Notes": 3545,
+      "Change Notes": 3549
+    },
+    "priority": "medium",
+    "risk": "low",
+    "stability": "evolving",
+    "newWorkCandidate": false,
+    "requirement": "The system shall compile, in the root test suite, every ```java block of `docs/api/*.md` whose methods and types exist at the merge of the current wave, against the `NaruServe-api` main classes, skipping only blocks on an explicit, non-stale skip list (I-008, I-009).",
+    "rationale": "-",
+    "research": "- -",
+    "implementationNotes": "- -",
+    "diagnostics": [],
+    "errors": [],
+    "warnings": [],
+    "diagnosticsSummary": {
+      "errors": 0,
+      "warnings": 0,
+      "byCode": {}
+    }
+  },
+  "diagnostics": [],
+  "diagnosticsSummary": {
+    "errors": 0,
+    "warnings": 0,
+    "byCode": {}
+  },
+  "mcpWorkspace": {
+    "workspaceRoot": "/Users/beom/work/git/NaruServe",
+    "rootSource": "server-cwd-discovery",
+    "indexPath": "docs/spec/00.index.md",
+    "packageVersion": "4.2.0"
+  }
+}

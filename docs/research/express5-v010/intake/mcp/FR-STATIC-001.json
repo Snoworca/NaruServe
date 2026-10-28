@@ -1,0 +1,515 @@
+{
+  "ok": true,
+  "value": {
+    "id": "FR-STATIC-001",
+    "title": "Static mount mapping, directory index, several mounts, routes first, global middleware and the trailing-slash redirect",
+    "type": "functional",
+    "target": "wave-6",
+    "status": "verified",
+    "scope": "STATIC",
+    "filePath": "docs/spec/10.static-files.srs.md",
+    "headingLine": 253,
+    "metadata": {
+      "Type": "functional",
+      "Target": "wave-6",
+      "Status": "verified",
+      "Priority": "high",
+      "Tags": "wave-6, feasibility:high, static, dispatch",
+      "Risk": "medium",
+      "Stability": "evolving",
+      "Verification Method": "test",
+      "GitHub Issue": "https://github.com/Snoworca/NaruServe/issues/12",
+      "Related Docs": "-"
+    },
+    "acceptanceCriteria": [
+      {
+        "id": "AC-1",
+        "text": "With `app.staticFiles(\"/\", root)`, `GET /` returns the bytes of `root/index.html` and `GET /assets/app.js` returns the bytes of `root/assets/app.js`, both `200`. [D-256; T27]",
+        "checked": true,
+        "line": 278
+      },
+      {
+        "id": "AC-2",
+        "text": "`GET /docs/` returns `root/docs/index.html`, and with `index(\"main.html\")` it returns `root/docs/main.html` instead. [D-257; D-261; T27]",
+        "checked": true,
+        "line": 279
+      },
+      {
+        "id": "AC-3",
+        "text": "With the mounts `/` on `rootA` and `/static` on `rootB`, `GET /static/x.css` returns `rootB/x.css` and `GET /a.txt` returns `rootA/a.txt`; with `spaFallback(true)` on the `/` mount, `GET /static/x.css` with `Accept: text/html` still returns `rootB/x.css`, and `GET /static/missing.css` with `Accept: text/html` receives the SPA index of the `/` mount. Decision: mounts are consulted in registration order and a miss in one mount falls through to the next, as with several Express `static` middlewares; SPA fallback runs only after every mount missed the file lookup, and then the first registered mount with `spaFallback(true)` whose prefix matches the path serves its index. [D-258; D-265]",
+        "checked": true,
+        "line": 280
+      },
+      {
+        "id": "AC-4",
+        "text": "With an explicit `GET /index.html` route and a `/` mount whose root holds `index.html`, `GET /index.html` returns the route's body. [D-259; T27]",
+        "checked": true,
+        "line": 281
+      },
+      {
+        "id": "AC-5",
+        "text": "A global middleware registered through `app.use` that sets `X-Mw: 1` runs on `GET /assets/app.js` served from a mount, the response carries `X-Mw: 1`, a global middleware that ends the response itself prevents the file from being sent, and one access-log line is written for the static request. [D-407; T35]",
+        "checked": true,
+        "line": 282
+      },
+      {
+        "id": "AC-6",
+        "text": "`GET /docs?x=1` for the directory `root/docs` is answered `301` with `Location: /docs/?x=1`; `GET /my%20docs` is answered `301` with `Location: /my%20docs/` built from the raw encoded path; and `GET //assets` is answered `404`, so no `Location` starts with `//` (a T29 case). [wave decision: SPA fallback exclusions; D-267; T29] Decision: the `301` applies to `GET` and `HEAD` of a directory without a trailing `/`, with `Location` equal to the raw path plus `/` plus `?` and the raw query when a query is present. [SDS 2026-10-19.naruserve.naruserve-v1-wave-6-6 SDS-AC-4]",
+        "checked": true,
+        "line": 283
+      }
+    ],
+    "verificationEvidence": [
+      {
+        "id": "VE-1",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticTraversalTest.java#sdsAc2_FR_STATIC_005_AC2_dotSegments400FirstHiddenFiles404EmptySegment404",
+        "covers": "AC-6",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 289
+      },
+      {
+        "id": "VE-2",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMountingTest.java#FR_STATIC_001_AC1_AC2_AC4_filesIndexesAndRoutesFirst",
+        "covers": "AC-1",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 290
+      },
+      {
+        "id": "VE-3",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMountingTest.java#FR_STATIC_001_AC1_AC2_AC4_filesIndexesAndRoutesFirst",
+        "covers": "AC-2",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 291
+      },
+      {
+        "id": "VE-4",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMountingTest.java#FR_STATIC_001_AC1_AC2_AC4_filesIndexesAndRoutesFirst",
+        "covers": "AC-4",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 292
+      },
+      {
+        "id": "VE-5",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMountingTest.java#sdsAc5_FR_STATIC_001_AC3_mountsInOrderThenSpaOnce",
+        "covers": "AC-3",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 293
+      },
+      {
+        "id": "VE-6",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMountingTest.java#FR_STATIC_001_AC5_globalMiddlewareRunsOnStaticAndCanEndIt",
+        "covers": "AC-5",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 294
+      },
+      {
+        "id": "VE-7",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMountingTest.java#sdsAc4_FR_STATIC_001_AC6_directoryWithoutSlashIs301WithRawLocation",
+        "covers": "AC-6",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 295
+      },
+      {
+        "id": "VE-8",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMountingTest.java#sdsAc4_FR_STATIC_001_AC6_mountPrefixItselfRedirects",
+        "covers": "AC-6",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 296
+      },
+      {
+        "id": "VE-9",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMountingTest.java#FR_STATIC_001_AC2_optionsKeptByTheConfigurerDoNotChangeARunningMount",
+        "covers": "AC-2",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 297
+      },
+      {
+        "id": "VE-10",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMountingTest.java",
+        "covers": "AC-1",
+        "notes": "verification_cmd ./gradlew build passed at 40b9665 (959/959); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMountingTest.java:21; bundle docs/research/naruserve-v1/waves/stage-6/lane-2026-10-19.naruserve.naruserve-v1-wave-6/",
+        "line": 298
+      },
+      {
+        "id": "VE-11",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMountingTest.java",
+        "covers": "AC-2",
+        "notes": "verification_cmd ./gradlew build passed at 40b9665 (959/959); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMountingTest.java:21; bundle docs/research/naruserve-v1/waves/stage-6/lane-2026-10-19.naruserve.naruserve-v1-wave-6/",
+        "line": 299
+      },
+      {
+        "id": "VE-12",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMountingTest.java",
+        "covers": "AC-3",
+        "notes": "verification_cmd ./gradlew build passed at 40b9665 (959/959); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMountingTest.java:77; bundle docs/research/naruserve-v1/waves/stage-6/lane-2026-10-19.naruserve.naruserve-v1-wave-6/",
+        "line": 300
+      },
+      {
+        "id": "VE-13",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMountingTest.java",
+        "covers": "AC-4",
+        "notes": "verification_cmd ./gradlew build passed at 40b9665 (959/959); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMountingTest.java:21; bundle docs/research/naruserve-v1/waves/stage-6/lane-2026-10-19.naruserve.naruserve-v1-wave-6/",
+        "line": 301
+      },
+      {
+        "id": "VE-14",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMountingTest.java",
+        "covers": "AC-5",
+        "notes": "verification_cmd ./gradlew build passed at 40b9665 (959/959); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMountingTest.java:96; bundle docs/research/naruserve-v1/waves/stage-6/lane-2026-10-19.naruserve.naruserve-v1-wave-6/",
+        "line": 302
+      },
+      {
+        "id": "VE-15",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMountingTest.java",
+        "covers": "AC-6",
+        "notes": "verification_cmd ./gradlew build passed at 40b9665 (959/959); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMountingTest.java:46; bundle docs/research/naruserve-v1/waves/stage-6/lane-2026-10-19.naruserve.naruserve-v1-wave-6/",
+        "line": 303
+      },
+      {
+        "id": "VE-16",
+        "type": "commit",
+        "reference": "91773422926f109dcb74d36364cd8c774ba63c67",
+        "covers": "all",
+        "notes": "-",
+        "line": 304
+      },
+      {
+        "id": "VE-17",
+        "type": "commit",
+        "reference": "d1f13b3d801e105510ca5fde416249055b91bc5d",
+        "covers": "all",
+        "notes": "-",
+        "line": 305
+      },
+      {
+        "id": "VE-18",
+        "type": "commit",
+        "reference": "01ae12af3cbb45ca226b4dfdf8fcf8c247c0faf0",
+        "covers": "all",
+        "notes": "-",
+        "line": 306
+      },
+      {
+        "id": "VE-19",
+        "type": "commit",
+        "reference": "c3d6399f3dbc5aa66089e0cbfd00df3216ea4c13",
+        "covers": "all",
+        "notes": "-",
+        "line": 307
+      },
+      {
+        "id": "VE-20",
+        "type": "commit",
+        "reference": "d6920c738615bdb08919496cd064ff4dfb165538",
+        "covers": "all",
+        "notes": "-",
+        "line": 308
+      },
+      {
+        "id": "VE-21",
+        "type": "commit",
+        "reference": "4ebab20289a8b4bca0fab1081042ccfd00cec727",
+        "covers": "all",
+        "notes": "-",
+        "line": 309
+      },
+      {
+        "id": "VE-22",
+        "type": "commit",
+        "reference": "f589f1b23901a822b906b214e7ed46d0db83ea1d",
+        "covers": "all",
+        "notes": "-",
+        "line": 310
+      },
+      {
+        "id": "VE-23",
+        "type": "commit",
+        "reference": "b9293042cf1e02691b8fb81a2587ab79b09a4580",
+        "covers": "all",
+        "notes": "-",
+        "line": 311
+      },
+      {
+        "id": "VE-24",
+        "type": "commit",
+        "reference": "cf502cc4ba526b7736839033eb89f4622f1db186",
+        "covers": "all",
+        "notes": "-",
+        "line": 312
+      },
+      {
+        "id": "VE-25",
+        "type": "commit",
+        "reference": "9ef602cc818ef320d0bd175f1045bf4619c8a22f",
+        "covers": "all",
+        "notes": "-",
+        "line": 313
+      },
+      {
+        "id": "VE-26",
+        "type": "commit",
+        "reference": "050b49fd67addda1696da305c767ce46e2f39b77",
+        "covers": "all",
+        "notes": "-",
+        "line": 314
+      },
+      {
+        "id": "VE-27",
+        "type": "commit",
+        "reference": "f1697289066efde4576a564664a16f1a8b5f3563",
+        "covers": "all",
+        "notes": "-",
+        "line": 315
+      },
+      {
+        "id": "VE-28",
+        "type": "commit",
+        "reference": "b528a61a241e35657b4ac4850305661dd3c886d2",
+        "covers": "all",
+        "notes": "-",
+        "line": 316
+      },
+      {
+        "id": "VE-29",
+        "type": "commit",
+        "reference": "0584e4ce3049a13d38a9e3d34fc35977327fac83",
+        "covers": "all",
+        "notes": "-",
+        "line": 317
+      },
+      {
+        "id": "VE-30",
+        "type": "commit",
+        "reference": "79a0e3e0ecbf054a52a82522c1085745cc97ba87",
+        "covers": "all",
+        "notes": "-",
+        "line": 318
+      },
+      {
+        "id": "VE-31",
+        "type": "commit",
+        "reference": "9a3aa6bd3bab4b8759f657aa47881e854e301bff",
+        "covers": "all",
+        "notes": "-",
+        "line": 319
+      },
+      {
+        "id": "VE-32",
+        "type": "commit",
+        "reference": "294bba8634d98e4328ff2374c5b3bf00f7c30b17",
+        "covers": "all",
+        "notes": "-",
+        "line": 320
+      },
+      {
+        "id": "VE-33",
+        "type": "commit",
+        "reference": "8cf8a6bb40ca8c1f6f70eaed03e2c3359263df41",
+        "covers": "all",
+        "notes": "-",
+        "line": 321
+      },
+      {
+        "id": "VE-34",
+        "type": "commit",
+        "reference": "e5dd65caa748eb2fdb8198571dd931a90d312c2c",
+        "covers": "all",
+        "notes": "-",
+        "line": 322
+      },
+      {
+        "id": "VE-35",
+        "type": "commit",
+        "reference": "dc2ba034eaee05b62eb9b1f9c339c82b72cb2297",
+        "covers": "all",
+        "notes": "-",
+        "line": 323
+      },
+      {
+        "id": "VE-36",
+        "type": "commit",
+        "reference": "ed2fe3033831bba5ed092046dca905b332b14d59",
+        "covers": "all",
+        "notes": "-",
+        "line": 324
+      },
+      {
+        "id": "VE-37",
+        "type": "commit",
+        "reference": "83a0ee6337d3d76b56d1827f36aa6b669e80927d",
+        "covers": "all",
+        "notes": "-",
+        "line": 325
+      },
+      {
+        "id": "VE-38",
+        "type": "commit",
+        "reference": "a32d75a6d71a113f3443a0a81a198cf76c82639a",
+        "covers": "all",
+        "notes": "-",
+        "line": 326
+      }
+    ],
+    "traceLinks": [
+      {
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+        "relation": "implements",
+        "notes": "trace_intent=addition_site",
+        "line": 332
+      },
+      {
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+        "relation": "implements",
+        "notes": "trace_intent=addition_site",
+        "line": 333
+      },
+      {
+        "type": "Requirement",
+        "reference": "IR-STATIC-001",
+        "relation": "depends_on",
+        "notes": "mount API",
+        "line": 334
+      },
+      {
+        "type": "Requirement",
+        "reference": "FR-HTTP-022",
+        "relation": "extends",
+        "notes": "static mounts consulted at the fallback point after routes",
+        "line": 335
+      },
+      {
+        "type": "Requirement",
+        "reference": "FR-APP-003",
+        "relation": "extends",
+        "notes": "global middleware on static responses (D-407)",
+        "line": 336
+      },
+      {
+        "type": "Requirement",
+        "reference": "FR-APP-015",
+        "relation": "extends",
+        "notes": "one access-log line per static request",
+        "line": 337
+      }
+    ],
+    "changeNotes": [
+      {
+        "date": "2026-10-20",
+        "change": "Created",
+        "reason": "add-requirement",
+        "line": 351
+      },
+      {
+        "date": "2026-10-20",
+        "change": "Stability -> evolving",
+        "reason": "Feasibility=high (score 93). Blockers: none. Run: 2026-10-19.naruserve.wave-6.v01",
+        "line": 352
+      },
+      {
+        "date": "2026-10-20",
+        "change": "Status -> verified",
+        "reason": "Wave 6 promotion: ./gradlew build passed at 40b9665 (959/959); every AC cited in docs/research/naruserve-v1/waves/wave-6/test-sufficiency.json; wave commits recorded as evidence.",
+        "line": 353
+      }
+    ],
+    "tags": [
+      "wave-6",
+      "feasibility:high",
+      "static",
+      "dispatch"
+    ],
+    "relatedDocs": [],
+    "evidenceReferences": [
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticTraversalTest.java",
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMountingTest.java",
+      "91773422926f109dcb74d36364cd8c774ba63c67",
+      "d1f13b3d801e105510ca5fde416249055b91bc5d",
+      "01ae12af3cbb45ca226b4dfdf8fcf8c247c0faf0",
+      "c3d6399f3dbc5aa66089e0cbfd00df3216ea4c13",
+      "d6920c738615bdb08919496cd064ff4dfb165538",
+      "4ebab20289a8b4bca0fab1081042ccfd00cec727",
+      "f589f1b23901a822b906b214e7ed46d0db83ea1d",
+      "b9293042cf1e02691b8fb81a2587ab79b09a4580",
+      "cf502cc4ba526b7736839033eb89f4622f1db186",
+      "9ef602cc818ef320d0bd175f1045bf4619c8a22f",
+      "050b49fd67addda1696da305c767ce46e2f39b77",
+      "f1697289066efde4576a564664a16f1a8b5f3563",
+      "b528a61a241e35657b4ac4850305661dd3c886d2",
+      "0584e4ce3049a13d38a9e3d34fc35977327fac83",
+      "79a0e3e0ecbf054a52a82522c1085745cc97ba87",
+      "9a3aa6bd3bab4b8759f657aa47881e854e301bff",
+      "294bba8634d98e4328ff2374c5b3bf00f7c30b17",
+      "8cf8a6bb40ca8c1f6f70eaed03e2c3359263df41",
+      "e5dd65caa748eb2fdb8198571dd931a90d312c2c",
+      "dc2ba034eaee05b62eb9b1f9c339c82b72cb2297",
+      "ed2fe3033831bba5ed092046dca905b332b14d59",
+      "83a0ee6337d3d76b56d1827f36aa6b669e80927d",
+      "a32d75a6d71a113f3443a0a81a198cf76c82639a"
+    ],
+    "traceReferences": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+      "IR-STATIC-001",
+      "FR-HTTP-022",
+      "FR-APP-003",
+      "FR-APP-015"
+    ],
+    "blockStartLine": 253,
+    "blockEndLine": 354,
+    "sectionLines": {
+      "Requirement": 268,
+      "Rationale": 272,
+      "Acceptance Criteria": 276,
+      "Verification Evidence": 285,
+      "Trace Links": 328,
+      "Research / Analysis": 339,
+      "Implementation Notes": 343,
+      "Change Notes": 347
+    },
+    "priority": "high",
+    "risk": "medium",
+    "stability": "evolving",
+    "newWorkCandidate": false,
+    "requirement": "The system shall map `prefix + relative path` of a static mount to the file under its directory, serve the configured index file for a directory path ending in `/`, let several mounts with different prefixes coexist, consult static mounts only after explicit routes, run global middleware on requests that end in a static file, and redirect a directory request without a trailing slash with `301` to the same path plus `/`.",
+    "rationale": "Covers D-256, D-257, D-258, D-259, D-407 (T27, T35) and the trailing-slash part of D-267 settled by the wave decision \"SPA fallback exclusions\" (W2-009; `serve-static` behaviour; CVE-2015-1164 open redirect avoided by building `Location` from the raw path and answering `404` for an empty segment; r2 W2-001). Builds on FR-HTTP-022 (fallback point after the route lookup), FR-APP-003 (global middleware) and FR-APP-015 (one access-log line per request).",
+    "research": "- -",
+    "implementationNotes": "- -",
+    "diagnostics": [],
+    "errors": [],
+    "warnings": [],
+    "diagnosticsSummary": {
+      "errors": 0,
+      "warnings": 0,
+      "byCode": {}
+    }
+  },
+  "diagnostics": [],
+  "diagnosticsSummary": {
+    "errors": 0,
+    "warnings": 0,
+    "byCode": {}
+  },
+  "mcpWorkspace": {
+    "workspaceRoot": "/Users/beom/work/git/NaruServe",
+    "rootSource": "server-cwd-discovery",
+    "indexPath": "docs/spec/00.index.md",
+    "packageVersion": "4.2.0"
+  }
+}

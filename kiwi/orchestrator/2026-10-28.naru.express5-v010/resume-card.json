@@ -1,0 +1,94 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "2026-10-28.naru.express5-v010",
+  "run_contract": "docs/research/express5-v010/00.run-contract.md@sha256:d156c9a6d7b4cb680769458d9a710c48bd3de6502f8b3e6559e2752596c34db5",
+  "position": {
+    "wave": 0,
+    "stage": 0,
+    "phase": "intake"
+  },
+  "next_action": {
+    "verb": "intake-qna",
+    "args": {
+      "pending": [
+        "Q-EXT"
+      ],
+      "decisions": "docs/research/express5-v010/intake/decisions.json"
+    },
+    "preconditions": []
+  },
+  "frozen": {
+    "engine": "kiwi-orchestrator",
+    "work_root": "docs/research/express5-v010/",
+    "journal": "kiwi/waves.jsonl",
+    "run_root": {
+      "git_toplevel": "/Users/beom/work/git/NaruServe",
+      "mcp_workspace_root": "/Users/beom/work/git/NaruServe"
+    },
+    "isolation_profile": "worktree-parallel",
+    "proof_strength": "strong",
+    "base_branch": "main",
+    "integration_branch": "kiwi/orch/2026-10-28.naru.express5-v010/integration",
+    "integration_base_sha": "274775f918d74c42a79f52e123cd2d9784666ee5",
+    "regression_baseline": {
+      "command": "./gradlew -PtinyHttpdFromMaven=true build",
+      "head_sha": "274775f918d74c42a79f52e123cd2d9784666ee5",
+      "failing_tests": []
+    }
+  },
+  "done": [
+    {
+      "key": "preflight-isolation",
+      "proof": {
+        "kind": "digest",
+        "ref": "docs/research/express5-v010/isolation.json@sha256:aa7ff8001a64f1dc53bb76b77f754441c1beaa4e19e27c0110290a797886fda4"
+      }
+    },
+    {
+      "key": "integration-created",
+      "proof": {
+        "kind": "git-ref",
+        "ref": "kiwi/orch/2026-10-28.naru.express5-v010/integration@274775f918d74c42a79f52e123cd2d9784666ee5"
+      }
+    },
+    {
+      "key": "initial-run-artifacts",
+      "proof": {
+        "kind": "git-trailer",
+        "ref": "3f91c6e17d3e40eec51946043b87e45cf95ab6de Orch-Run=2026-10-28.naru.express5-v010 Orch-Verb=commit-run-artifacts Orch-Artifacts=sha256:05f15e883611ef7e451b5604e362a5d53f7cfca4e1fbdb52a8042b53eef935c4"
+      }
+    },
+    {
+      "key": "intake-investigation",
+      "proof": {
+        "kind": "digest",
+        "ref": "docs/research/express5-v010/intake/research-manifest.java-pattern.json@sha256:54f16608d87164e41d96773ad5f4927ffa5c7da0162d907f835bb1ddcb986a42"
+      }
+    },
+    {
+      "key": "research-trace-audit",
+      "proof": {
+        "kind": "digest",
+        "ref": "docs/research/express5-v010/intake/trace-audit.json@sha256:8a42ca07f6cdf1db0913b7c74cad422c9beb44ad3b945ff1e404fe8ab6144389"
+      }
+    },
+    {
+      "key": "user-java-pattern-decision",
+      "proof": {
+        "kind": "digest",
+        "ref": "docs/research/express5-v010/intake/java-pattern-decision-manifest.json@sha256:2bf7a4933bb76fa18e9ddec8e25a7771a19db0180c87d8909501b3e51aec5bf6"
+      }
+    }
+  ],
+  "open": [],
+  "blocked_on": {
+    "gate": "external-module-impact",
+    "questions": [
+      "Q-EXT"
+    ],
+    "state": "awaiting-user",
+    "implementation_started": false
+  },
+  "written_at": "2026-10-28T00:57:01.429567+00:00",
+  "invariant_digest": "sha256:46790d92dc7eb03b52cb8478e2fb923e5e97fdf66493f83817e363b66bb329d2"
+}

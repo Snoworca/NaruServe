@@ -1,0 +1,12 @@
+{"name":"array-alternative","status":200,"trace":[],"body":"{\"y\":\"42\"}"}
+{"name":"regexp-substring","status":200,"trace":[],"body":"{\"path\":\"/prefixfooend\",\"params\":{}}"}
+{"name":"regexp-numeric-capture","status":200,"trace":[],"body":"{\"0\":\"42\"}"}
+{"name":"regexp-named-capture","status":200,"trace":[],"body":"{\"id\":\"42\"}"}
+{"name":"regexp-case-not-inherited","status":404,"trace":[],"body":"<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>Cannot GET /FOO</pre>\n</body>\n</html>\n"}
+{"name":"delayed-next","status":200,"trace":["late"],"body":"[\"late\"]"}
+{"name":"fulfilled-promise-no-next","trace":["fulfilled"],"error":"TimeoutError"}
+{"name":"rejected-promise-error","status":500,"trace":["bad"],"body":"[\"bad\"]"}
+{"name":"nested-merge-false","status":200,"trace":[],"body":"{\"id\":\"42\"}"}
+{"name":"nested-merge-true","status":200,"trace":[],"body":"{\"version\":\"v1\",\"id\":\"42\"}"}
+{"name":"next-router","status":200,"trace":["router1","parent"],"body":"[\"router1\",\"parent\"]"}
+{"name":"param-cached","status":200,"trace":["param:42","one","two"],"body":"[\"param:42\",\"one\",\"two\"]"}

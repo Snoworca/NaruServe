@@ -1,0 +1,361 @@
+{
+  "ok": true,
+  "value": {
+    "id": "IR-HTTP-003",
+    "title": "HttpAdapter SPI exchange data contract",
+    "type": "interface",
+    "target": "wave-3",
+    "status": "verified",
+    "scope": "HTTP",
+    "filePath": "docs/spec/04.http-core.srs.md",
+    "headingLine": 198,
+    "metadata": {
+      "Type": "interface",
+      "Target": "wave-3",
+      "Status": "verified",
+      "Priority": "high",
+      "Tags": "wave-3, feasibility:high, http-spi",
+      "Risk": "medium",
+      "Stability": "evolving",
+      "Verification Method": "test",
+      "GitHub Issue": "https://github.com/Snoworca/NaruServe/issues/4",
+      "Related Docs": "-"
+    },
+    "acceptanceCriteria": [
+      {
+        "id": "AC-1",
+        "text": "The SPI exposes, per request, the request line as the method token, the raw request-target path, the raw query string (or its absence) and the HTTP version, plus the header names and values in received order, a body `InputStream`, the remote address and the secure flag. [D-105] Decision: the headers are exposed as a `List<Map.Entry<String, String>>` in received order with duplicates kept, not as a `Map`. [SDS 2026-10-19.naruserve.naruserve-v1-wave-3-2 SDS-AC-1]",
+        "checked": true,
+        "line": 223
+      },
+      {
+        "id": "AC-2",
+        "text": "The SPI accepts from the core a status code, response headers and a body `OutputStream`, and the core writes status and headers before the first body byte. [D-105] Decision: status, headers and the content length (`-1` when unknown) pass in one `commit` call that returns the body `OutputStream`, and a second start of the response throws `IllegalStateException`. [SDS 2026-10-19.naruserve.naruserve-v1-wave-3-2 SDS-AC-2] The exchange outlives `ExchangeHandler#handle` until the core calls `finish` or `abort`, and the adapter may force-close it only at its stop deadline; `abort()` is idempotent and thread-safe (it may run on any thread, also while another thread is in `commit`, a body write or `finish`, which then fail with an `IOException`). The headers passed to `commit` are sent as given: they already carry `Content-Length` when the core knows it (a `HEAD` response carries the length the `GET` body would have had) and the adapter never adds, removes or changes `Content-Length`; `contentLength` is the number of body bytes the core will write, `0` for a bodyless response (`204`, `304`, `HEAD`) or `-1` when unknown, which the adapter frames itself (chunked, or close on HTTP/1.0) and is the only case where it may add a framing header. Header names and values are ISO-8859-1: the core guarantees every char is at most U+00FF and never CR or LF, so the adapter writes each char as one byte. [wave 3 implementation decision]",
+        "checked": true,
+        "line": 224
+      },
+      {
+        "id": "AC-3",
+        "text": "The raw request-target path and the raw query string travel through the SPI as separate undecoded fields: an exchange with target `/a%20b?x=%41` reaches the core with raw path `/a%20b` and raw query `x=%41`, and the core alone yields `req.path()` = `/a b` and `req.query(\"x\")` = `A`. [D-399; wave decision: Adapter halves] Decision: the raw query is `null` when the target has no `?`. [SDS 2026-10-19.naruserve.naruserve-v1-wave-3-2 SDS-AC-3]",
+        "checked": true,
+        "line": 225
+      }
+    ],
+    "verificationEvidence": [
+      {
+        "id": "VE-1",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/spi/HttpAdapterSpiTest.java",
+        "covers": "AC-1, AC-2",
+        "notes": "./gradlew build green at merge 0447676 (wave 3 lane a4d3403); host-added, the lane queue had no row",
+        "line": 231
+      },
+      {
+        "id": "VE-2",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/testing/InMemoryHttpAdapterTest.java",
+        "covers": "AC-3",
+        "notes": "./gradlew build green at merge 0447676; host-added",
+        "line": 232
+      },
+      {
+        "id": "VE-3",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/spi/HttpAdapterSpiTest.java",
+        "covers": "AC-1",
+        "notes": "verification_cmd ./gradlew build passed at ea1217e (346/346); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/spi/HttpAdapterSpiTest.java:61; bundle docs/research/naruserve-v1/waves/stage-3/lane-2026-10-19.naruserve.naruserve-v1-wave-3/",
+        "line": 233
+      },
+      {
+        "id": "VE-4",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/spi/HttpAdapterSpiTest.java",
+        "covers": "AC-2",
+        "notes": "verification_cmd ./gradlew build passed at ea1217e (346/346); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/spi/HttpAdapterSpiTest.java:93; bundle docs/research/naruserve-v1/waves/stage-3/lane-2026-10-19.naruserve.naruserve-v1-wave-3/",
+        "line": 234
+      },
+      {
+        "id": "VE-5",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ResponseStreamTest.java",
+        "covers": "AC-2",
+        "notes": "verification_cmd ./gradlew build passed at ea1217e (346/346); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ResponseStreamTest.java:596 (FR_HTTP_016_AC4_IR_HTTP_003_copyThatOutlivesTheHandlerDeliversTheWholeBody); :650 (FR_HTTP_015_AC2_IR_HTTP_003_concurrentAbortDuringTheCopyEndsTheExchangeCleanly); both added in c47335c, resolve w3-P2-001 (exchange lifetime, thread-safe abort); bundle docs/research/naruserve-v1/waves/stage-3/lane-2026-10-19.naruserve.naruserve-v1-wave-3/",
+        "line": 235
+      },
+      {
+        "id": "VE-6",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/testing/InMemoryHttpAdapterTest.java",
+        "covers": "AC-3",
+        "notes": "verification_cmd ./gradlew build passed at ea1217e (346/346); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/testing/InMemoryHttpAdapterTest.java:57; bundle docs/research/naruserve-v1/waves/stage-3/lane-2026-10-19.naruserve.naruserve-v1-wave-3/",
+        "line": 236
+      },
+      {
+        "id": "VE-7",
+        "type": "commit",
+        "reference": "a4d3403a786e0ee895c72c3ea53fe4c28a3477f4",
+        "covers": "all",
+        "notes": "wave 3 worker commit (Orch-Wave: 3), ancestor of integration head ea1217e",
+        "line": 237
+      },
+      {
+        "id": "VE-8",
+        "type": "commit",
+        "reference": "ef85d35a7bbc8ee25d27e60262d1b727913f0a28",
+        "covers": "all",
+        "notes": "wave 3 worker commit (Orch-Wave: 3), ancestor of integration head ea1217e",
+        "line": 238
+      },
+      {
+        "id": "VE-9",
+        "type": "commit",
+        "reference": "45469d2e1a7c931dc16bc9bc5ae907d4cd28c4cc",
+        "covers": "all",
+        "notes": "wave 3 worker commit (Orch-Wave: 3), ancestor of integration head ea1217e",
+        "line": 239
+      },
+      {
+        "id": "VE-10",
+        "type": "commit",
+        "reference": "8fb4835bf65967f266ad84b15aeda66274dbe5eb",
+        "covers": "all",
+        "notes": "wave 3 worker commit (Orch-Wave: 3), ancestor of integration head ea1217e",
+        "line": 240
+      },
+      {
+        "id": "VE-11",
+        "type": "commit",
+        "reference": "1ae79fe445e09375b270e2d78e1316dc0ce4aaa7",
+        "covers": "all",
+        "notes": "wave 3 worker commit (Orch-Wave: 3), ancestor of integration head ea1217e",
+        "line": 241
+      },
+      {
+        "id": "VE-12",
+        "type": "commit",
+        "reference": "4917e408d4708724c76e963c279a4aa55a4d107c",
+        "covers": "all",
+        "notes": "wave 3 worker commit (Orch-Wave: 3), ancestor of integration head ea1217e",
+        "line": 242
+      },
+      {
+        "id": "VE-13",
+        "type": "commit",
+        "reference": "5a9322dedaf1229c0ab34349c05bae6802b5ada5",
+        "covers": "all",
+        "notes": "wave 3 worker commit (Orch-Wave: 3), ancestor of integration head ea1217e",
+        "line": 243
+      },
+      {
+        "id": "VE-14",
+        "type": "commit",
+        "reference": "06d70b4c4771c90888edda5d6b95fca6feaa6af7",
+        "covers": "all",
+        "notes": "wave 3 worker commit (Orch-Wave: 3), ancestor of integration head ea1217e",
+        "line": 244
+      },
+      {
+        "id": "VE-15",
+        "type": "commit",
+        "reference": "c47335c85e5e9e13a19bf2aaf9c95beb7436de6f",
+        "covers": "all",
+        "notes": "wave 3 worker commit (Orch-Wave: 3), ancestor of integration head ea1217e",
+        "line": 245
+      },
+      {
+        "id": "VE-16",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/spi/HttpAdapterSpiTest.java#sdsAc1_IR_HTTP_003_AC1_headersInReceivedOrderWithDuplicatesAndRequestLine",
+        "covers": "AC-1",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 246
+      },
+      {
+        "id": "VE-17",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/spi/HttpAdapterSpiTest.java#sdsAc2_IR_HTTP_003_AC2_oneCommitCarriesStatusHeadersLengthAndSecondCommitIsRefused",
+        "covers": "AC-2",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 247
+      },
+      {
+        "id": "VE-18",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/testing/InMemoryHttpAdapterTest.java#sdsAc3_IR_HTTP_003_AC3_FR_HTTP_001_AC4_rawPathAndRawQueryTravelUndecoded",
+        "covers": "AC-3",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 248
+      },
+      {
+        "id": "VE-19",
+        "type": "test",
+        "reference": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/RawTargetSocketTest.java#FR_ENGINE_011_AC7_requestLineHeadersAndRemoteAddressReachTheCoreUnchanged",
+        "covers": "AC-1",
+        "notes": "Issue #45: socket test sends Host, X-One, X-Two, x-one, X-Two, Connection and expects exactly that order through TinyHttpdExchange.headers() (TinyHttpd Request.getHeaderEntries, FR-HTTP-001 at b759e2d). Red first on c000eb1 (grouped order). Full build green on JDK17 and actual Java 8 (1711 tests, 0 failures), clean b759e2d clone. Log docs/release/verification/header-contracts.log",
+        "line": 249
+      },
+      {
+        "id": "VE-20",
+        "type": "test",
+        "reference": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/AbortSocketTest.java#FR_ENGINE_011_AC2_IR_HTTP_003_AC2_getAndHeadAbortSendNoResponse",
+        "covers": "AC-2",
+        "notes": "TDD RED/GREEN; source composite JDK17 full build1718 tests and published-Maven/no-checkout actualJava8 full build1720 tests passed with0failures/errors/skips. Independent re-review found no remaining defect or test weakening.",
+        "line": 250
+      },
+      {
+        "id": "VE-21",
+        "type": "test",
+        "reference": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/AbortSocketTest.java#IR_HTTP_003_AC2_abortUnblocksAStalledWriter",
+        "covers": "AC-2",
+        "notes": "TDD RED/GREEN; source composite JDK17 full build1718 tests and published-Maven/no-checkout actualJava8 full build1720 tests passed with0failures/errors/skips. Independent re-review found no remaining defect or test weakening.",
+        "line": 251
+      }
+    ],
+    "traceLinks": [
+      {
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpAdapter.java",
+        "relation": "implements",
+        "notes": "trace_intent=addition_site",
+        "line": 257
+      },
+      {
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpExchange.java",
+        "relation": "implements",
+        "notes": "trace_intent=addition_site",
+        "line": 258
+      },
+      {
+        "type": "Requirement",
+        "reference": "FR-ROUTE-005",
+        "relation": "extends",
+        "notes": "core decodes the raw path once",
+        "line": 259
+      }
+    ],
+    "changeNotes": [
+      {
+        "date": "2026-10-19",
+        "change": "Created",
+        "reason": "add-requirement",
+        "line": 273
+      },
+      {
+        "date": "2026-10-19",
+        "change": "Stability -> evolving",
+        "reason": "Feasibility=high (score 86). Blockers: none. Run: 2026-10-19.naruserve.wave-3.v01",
+        "line": 274
+      },
+      {
+        "date": "2026-10-19",
+        "change": "Status -> implemented",
+        "reason": "SPI merged in 0447676; tests cite every AC; build green",
+        "line": 275
+      },
+      {
+        "date": "2026-10-19",
+        "change": "Status -> verified",
+        "reason": "Wave 3 promotion: every AC cited in docs/research/naruserve-v1/waves/wave-3/test-sufficiency.json; ./gradlew build passed at ea1217e (346/346); worker commits recorded",
+        "line": 276
+      },
+      {
+        "date": "2026-10-21",
+        "change": "Status -> blocked",
+        "reason": "Issue #45: actual TinyHttpd socket loses interleaved request header order; supported upstream public API omits ordering. CON-BUILD-010 mandates read-only checkout; awaiting explicit external repository/SRS target authorization.",
+        "line": 277
+      },
+      {
+        "date": "2026-10-23",
+        "change": "Status -> in_progress",
+        "reason": "Issue #45 unblocked: TinyHttpd FR-HTTP-001 Request.getHeaderEntries (b759e2d); AC-1 received order re-verified over a socket",
+        "line": 278
+      },
+      {
+        "date": "2026-10-23",
+        "change": "Status -> verified",
+        "reason": "Issue #45: AC-1 verified over a socket with TinyHttpd Request.getHeaderEntries (b759e2d); JDK17 and Java 8 full builds green",
+        "line": 279
+      },
+      {
+        "date": "2026-10-24",
+        "change": "Status -> in_progress",
+        "reason": "TDD transport abort fix: replace fabricated response with TinyHttpd cancellation and cover HEAD/blocked writers.",
+        "line": 280
+      },
+      {
+        "date": "2026-10-24",
+        "change": "Status -> verified",
+        "reason": "Per-criterion regression and independent review completed; source and public binary builds passed, with actualJava8 and no source checkout in Maven mode.",
+        "line": 281
+      }
+    ],
+    "tags": [
+      "wave-3",
+      "feasibility:high",
+      "http-spi"
+    ],
+    "relatedDocs": [],
+    "evidenceReferences": [
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/spi/HttpAdapterSpiTest.java",
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/testing/InMemoryHttpAdapterTest.java",
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ResponseStreamTest.java",
+      "a4d3403a786e0ee895c72c3ea53fe4c28a3477f4",
+      "ef85d35a7bbc8ee25d27e60262d1b727913f0a28",
+      "45469d2e1a7c931dc16bc9bc5ae907d4cd28c4cc",
+      "8fb4835bf65967f266ad84b15aeda66274dbe5eb",
+      "1ae79fe445e09375b270e2d78e1316dc0ce4aaa7",
+      "4917e408d4708724c76e963c279a4aa55a4d107c",
+      "5a9322dedaf1229c0ab34349c05bae6802b5ada5",
+      "06d70b4c4771c90888edda5d6b95fca6feaa6af7",
+      "c47335c85e5e9e13a19bf2aaf9c95beb7436de6f",
+      "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/RawTargetSocketTest.java",
+      "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/AbortSocketTest.java"
+    ],
+    "traceReferences": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpAdapter.java",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpExchange.java",
+      "FR-ROUTE-005"
+    ],
+    "blockStartLine": 198,
+    "blockEndLine": 282,
+    "sectionLines": {
+      "Requirement": 213,
+      "Rationale": 217,
+      "Acceptance Criteria": 221,
+      "Verification Evidence": 227,
+      "Trace Links": 253,
+      "Research / Analysis": 261,
+      "Implementation Notes": 265,
+      "Change Notes": 269
+    },
+    "priority": "high",
+    "risk": "medium",
+    "stability": "evolving",
+    "newWorkCandidate": false,
+    "requirement": "The system shall define an `HttpAdapter` SPI in `NaruServe-api` through which an adapter gives the core the method token, the raw request-target path, the raw query string, the headers, a streaming body `InputStream`, the remote address and the secure flag of each request, and through which the core sends status, headers and a streaming body `OutputStream`. The core decodes the raw path and raw query once; adapters never pass decoded values.",
+    "rationale": "Covers D-105, the SPI half of D-399 and the wave decision on adapter halves. The TinyHttpd half of D-399 (reading `getRequestURI()` and `getQueryString()`, never `getPath()`) and the adapter value comparison of the residual (`/a//b` under `mergeSlashes(true)`, `/a%20b` to `/:x`, compared by `rawPath()` and decoded values) are deferred to wave 5 (`docs/research/naruserve-v1/waves/carried-into-wave-5.md`).",
+    "research": "- -",
+    "implementationNotes": "- -",
+    "diagnostics": [],
+    "errors": [],
+    "warnings": [],
+    "diagnosticsSummary": {
+      "errors": 0,
+      "warnings": 0,
+      "byCode": {}
+    }
+  },
+  "diagnostics": [],
+  "diagnosticsSummary": {
+    "errors": 0,
+    "warnings": 0,
+    "byCode": {}
+  },
+  "mcpWorkspace": {
+    "workspaceRoot": "/Users/beom/work/git/NaruServe",
+    "rootSource": "server-cwd-discovery",
+    "indexPath": "docs/spec/00.index.md",
+    "packageVersion": "4.2.0"
+  }
+}

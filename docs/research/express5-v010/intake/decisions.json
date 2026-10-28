@@ -1,0 +1,39 @@
+{
+  "confirmed": {
+    "express5_common_http": true,
+    "preserve_extensions": true,
+    "websocket_equivalence": false,
+    "java8_android21": true,
+    "regex_engine": "java.util.regex.Pattern",
+    "ecmascript_regexp_equivalence": false,
+    "jni_regex_engine": false
+  },
+  "pending": [
+    {
+      "id": "Q-EXT",
+      "question": "Permit necessary TinyHttpd opt-in raw-routing changes?",
+      "status": "awaiting-user",
+      "gate": "external-module-impact",
+      "scope": "../TinyHttpd",
+      "proposal_issue": 59
+    }
+  ],
+  "autonomous_design_answers": 0,
+  "requirements_ssot": "docs/spec/",
+  "resolved": [
+    {
+      "id": "Q-REGEX",
+      "status": "resolved-by-user",
+      "source": "아닙니다. 자바의 정규식으로 갑시다. 그것까지 자바 스크립트로 맞출 필요 없죠.",
+      "recorded_at": "2026-10-28T00:54:45.099778+00:00",
+      "decision": "java.util.regex.Pattern syntax, flags, and matching semantics; ECMAScript RegExp equivalence excluded; no JNI/JavaScript regex engine",
+      "supersedes": {
+        "id": "Q-REGEX",
+        "question": "Allow a JNI engine module or require a Java-only implementation?",
+        "status": "awaiting-user",
+        "full_parity_goal_unchanged": true,
+        "proposal_issue": 51
+      }
+    }
+  ]
+}

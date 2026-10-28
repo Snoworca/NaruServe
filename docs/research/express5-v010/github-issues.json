@@ -1,0 +1,146 @@
+{
+  "repo": "Snoworca/NaruServe",
+  "work": "express5-v010",
+  "tasks": {
+    "T00": {
+      "number": 47,
+      "id": 6064945115,
+      "url": "https://github.com/Snoworca/NaruServe/issues/47",
+      "title": "[0.10.0] T00 0.10.0 호환 프로파일과 변경 SRS 확정",
+      "linked": true
+    },
+    "T01": {
+      "number": 48,
+      "id": 6064946234,
+      "url": "https://github.com/Snoworca/NaruServe/issues/48",
+      "title": "[0.10.0] T01 Express 5 oracle와 차등 적합성 코퍼스 구축",
+      "linked": true
+    },
+    "T02": {
+      "number": 49,
+      "id": 6064947841,
+      "url": "https://github.com/Snoworca/NaruServe/issues/49",
+      "title": "[0.10.0] T02 Express 5 문자열 경로 tokenizer와 compiled matcher 구현",
+      "linked": true
+    },
+    "T03": {
+      "number": 50,
+      "id": 6064949158,
+      "url": "https://github.com/Snoworca/NaruServe/issues/50",
+      "title": "[0.10.0] T03 Request의 목록형 매개변수와 레이어 경로 뷰 구현",
+      "linked": true
+    },
+    "T04": {
+      "number": 51,
+      "id": 6064950415,
+      "url": "https://github.com/Snoworca/NaruServe/issues/51",
+      "title": "[0.10.0] T04 경로 대안 배열과 정규식 경로 대응 API 구현",
+      "linked": true
+    },
+    "T05": {
+      "number": 52,
+      "id": 6064951805,
+      "url": "https://github.com/Snoworca/NaruServe/issues/52",
+      "title": "[0.10.0] T05 단일 등록 스택과 Route identity로 등록 모델 교체",
+      "linked": true
+    },
+    "T06": {
+      "number": 53,
+      "id": 6064953211,
+      "url": "https://github.com/Snoworca/NaruServe/issues/53",
+      "title": "[0.10.0] T06 Dispatch cursor와 next·route/router skip 실행 구현",
+      "linked": true
+    },
+    "T07": {
+      "number": 54,
+      "id": 6064954416,
+      "url": "https://github.com/Snoworca/NaruServe/issues/54",
+      "title": "[0.10.0] T07 중첩 Router 마운트와 mergeParams 지원",
+      "linked": true
+    },
+    "T08": {
+      "number": 55,
+      "id": 6064955795,
+      "url": "https://github.com/Snoworca/NaruServe/issues/55",
+      "title": "[0.10.0] T08 경로 매개변수 전처리 콜백과 요청별 캐시 구현",
+      "linked": true
+    },
+    "T09": {
+      "number": 56,
+      "id": 6064956948,
+      "url": "https://github.com/Snoworca/NaruServe/issues/56",
+      "title": "[0.10.0] T09 HTTP 메서드·기본 정책·HEAD·OPTIONS 자동 응답 정합화",
+      "linked": true
+    },
+    "T10": {
+      "number": 57,
+      "id": 6064958334,
+      "url": "https://github.com/Snoworca/NaruServe/issues/57",
+      "title": "[0.10.0] T10 등록 순서의 오류 흐름과 final response 정합화",
+      "linked": true
+    },
+    "T11": {
+      "number": 58,
+      "id": 6064959601,
+      "url": "https://github.com/Snoworca/NaruServe/issues/58",
+      "title": "[0.10.0] T11 지연 next와 비동기 resolve/reject 요청 수명 구현",
+      "linked": true
+    },
+    "T12": {
+      "number": 59,
+      "id": 6064960736,
+      "url": "https://github.com/Snoworca/NaruServe/issues/59",
+      "title": "[0.10.0] T12 TinyHttpd 원시 경로 전달 opt-in 정책 확보",
+      "linked": true
+    },
+    "T13": {
+      "number": 60,
+      "id": 6064961955,
+      "url": "https://github.com/Snoworca/NaruServe/issues/60",
+      "title": "[0.10.0] T13 NaruServe TinyHttpd 어댑터의 raw routing·지연 응답 통합",
+      "linked": true
+    },
+    "T14": {
+      "number": 61,
+      "id": 6064963256,
+      "url": "https://github.com/Snoworca/NaruServe/issues/61",
+      "title": "[0.10.0] T14 Servlet 일반 요청의 AsyncContext 수명과 raw path 통합",
+      "linked": true
+    },
+    "T15": {
+      "number": 62,
+      "id": 6064964470,
+      "url": "https://github.com/Snoworca/NaruServe/issues/62",
+      "title": "[0.10.0] T15 group·CORS·정적 파일·서비스 확장 통합 회귀",
+      "linked": true
+    },
+    "T16": {
+      "number": 63,
+      "id": 6064965758,
+      "url": "https://github.com/Snoworca/NaruServe/issues/63",
+      "title": "[0.10.0] T16 WebSocket 기존 확장 동작 보존 검증",
+      "linked": true
+    },
+    "T17": {
+      "number": 64,
+      "id": 6064967194,
+      "url": "https://github.com/Snoworca/NaruServe/issues/64",
+      "title": "[0.10.0] T17 전체 적합성·Java8/API21·자원 회귀와 독립 개선 루프",
+      "linked": true
+    },
+    "T18": {
+      "number": 65,
+      "id": 6064968542,
+      "url": "https://github.com/Snoworca/NaruServe/issues/65",
+      "title": "[0.10.0] T18 0.10.0 한영 마이그레이션 문서와 릴리스 산출물 정리",
+      "linked": true
+    }
+  },
+  "epic": {
+    "number": 46,
+    "id": 6064943852,
+    "url": "https://github.com/Snoworca/NaruServe/issues/46",
+    "title": "[Epic] 0.10.0 Express 5 공통 라우팅 일치와 확장 API 보존"
+  },
+  "verifiedNativeSubIssues": 19
+}

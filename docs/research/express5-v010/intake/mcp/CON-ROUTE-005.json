@@ -1,0 +1,118 @@
+{
+  "ok": true,
+  "value": {
+    "id": "CON-ROUTE-005",
+    "title": "Router lookup returns six result kinds and builds no response",
+    "type": "constraint",
+    "target": "wave-2",
+    "status": "verified",
+    "scope": "ROUTE",
+    "filePath": "docs/spec/03.routing.srs.md",
+    "headingLine": 1842,
+    "metadata": {
+      "Type": "constraint",
+      "Target": "wave-2",
+      "Status": "verified",
+      "Priority": "medium",
+      "Tags": "-",
+      "Risk": "medium",
+      "Stability": "evolving",
+      "Verification Method": "test",
+      "GitHub Issue": "-",
+      "Related Docs": "-"
+    },
+    "acceptanceCriteria": [
+      {
+        "id": "AC-1",
+        "text": "Router lookup returns one of exactly six RouteMatch kinds and the routing package builds no HTTP response.",
+        "checked": true,
+        "line": 1867
+      }
+    ],
+    "verificationEvidence": [
+      {
+        "id": "VE-1",
+        "type": "test",
+        "reference": "src/test/java/com/snoworca/naruserve/build/ClassConstraintsTest.java#con_ROUTE_005_AC1_con_HTTP_003_AC1_routingBuildsNoResponseAndNamesNoCoreHttpType",
+        "covers": "AC-1",
+        "notes": "command: ./gradlew build; result: pass; also NaruServe-api RouteMatchTest#sdsAc1_IR_ROUTE_004_AC1_exactlySixKindsAndNoPublicConstructor",
+        "line": 1873
+      }
+    ],
+    "traceLinks": [],
+    "changeNotes": [
+      {
+        "date": "2026-10-19",
+        "change": "Created",
+        "reason": "add-requirement",
+        "line": 1892
+      },
+      {
+        "date": "2026-10-21",
+        "change": "Stability -> evolving",
+        "reason": "constraint transcribed from the SDS Durable Rules, enforced by the cited test",
+        "line": 1893
+      },
+      {
+        "date": "2026-10-21",
+        "change": "Status -> implemented",
+        "reason": "constraint enforced by the cited test, build passes",
+        "line": 1894
+      },
+      {
+        "date": "2026-10-21",
+        "change": "Status -> verified",
+        "reason": "AC-1 checked with test evidence VE-1, ./gradlew build pass",
+        "line": 1895
+      }
+    ],
+    "tags": [
+      "-"
+    ],
+    "relatedDocs": [],
+    "evidenceReferences": [
+      "src/test/java/com/snoworca/naruserve/build/ClassConstraintsTest.java"
+    ],
+    "traceReferences": [],
+    "blockStartLine": 1842,
+    "blockEndLine": 1896,
+    "sectionLines": {
+      "Requirement": 1857,
+      "Rationale": 1861,
+      "Acceptance Criteria": 1865,
+      "Verification Evidence": 1869,
+      "Trace Links": 1875,
+      "Research / Analysis": 1880,
+      "Implementation Notes": 1884,
+      "Change Notes": 1888
+    },
+    "priority": "medium",
+    "risk": "medium",
+    "stability": "evolving",
+    "newWorkCandidate": false,
+    "requirement": "The system shall make Router lookup return exactly the six RouteMatch kinds and never build HTTP responses, so that the wave 3 dispatcher maps kinds to 404/405/204/426/501 and adapters rely on that split.",
+    "rationale": "Durable rule moved from SDS 2026-10-19.naruserve.naruserve-v1-wave-2-3 on close-out.",
+    "research": "- -",
+    "implementationNotes": "- -",
+    "diagnostics": [],
+    "errors": [],
+    "warnings": [],
+    "diagnosticsSummary": {
+      "errors": 0,
+      "warnings": 0,
+      "byCode": {}
+    }
+  },
+  "diagnostics": [],
+  "diagnosticsSummary": {
+    "errors": 0,
+    "warnings": 0,
+    "byCode": {}
+  },
+  "mcpWorkspace": {
+    "workspaceRoot": "/Users/beom/work/git/NaruServe",
+    "rootSource": "server-cwd-discovery",
+    "indexPath": "docs/spec/00.index.md",
+    "packageVersion": "4.2.0"
+  }
+}

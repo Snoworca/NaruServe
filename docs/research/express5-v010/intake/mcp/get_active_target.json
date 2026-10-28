@@ -1,0 +1,57 @@
+{
+  "ok": true,
+  "value": {
+    "activeTarget": "central-0.9.0",
+    "summary": {
+      "target": "central-0.9.0",
+      "targetSource": "active-target",
+      "countsByStatus": {},
+      "countsByType": {},
+      "countsByStability": {},
+      "total": 0,
+      "blocked": [],
+      "implementedNotVerified": [],
+      "missingEvidence": [],
+      "draftRequirements": [],
+      "deprecatedRequirements": [],
+      "newWorkCandidates": [],
+      "stabilityBlockers": [],
+      "stabilityWarnings": [],
+      "diagnosticsSummary": {
+        "errors": 0,
+        "warnings": 0,
+        "byCode": {}
+      },
+      "completedWork": [],
+      "completedWorkPage": {
+        "total": 0,
+        "returned": 0,
+        "limit": 20,
+        "hasMore": false,
+        "nextOffset": null
+      },
+      "goal": "Make the ten modules Maven Central ready at version 0.9.0: lowercase artifactIds (naruserve, naruserve-api, ..., naruserve-android), sources and javadoc JARs, full POM metadata, and a verified local staging repository build/central-staging; signing and the Central Portal upload are a separate, user-confirmed step."
+    },
+    "goal": "Make the ten modules Maven Central ready at version 0.9.0: lowercase artifactIds (naruserve, naruserve-api, ..., naruserve-android), sources and javadoc JARs, full POM metadata, and a verified local staging repository build/central-staging; signing and the Central Portal upload are a separate, user-confirmed step.",
+    "diagnostics": [],
+    "errors": [],
+    "warnings": [],
+    "diagnosticsSummary": {
+      "errors": 0,
+      "warnings": 0,
+      "byCode": {}
+    }
+  },
+  "diagnostics": [],
+  "diagnosticsSummary": {
+    "errors": 0,
+    "warnings": 0,
+    "byCode": {}
+  },
+  "mcpWorkspace": {
+    "workspaceRoot": "/Users/beom/work/git/NaruServe",
+    "rootSource": "server-cwd-discovery",
+    "indexPath": "docs/spec/00.index.md",
+    "packageVersion": "4.2.0"
+  }
+}

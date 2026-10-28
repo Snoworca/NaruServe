@@ -1,0 +1,371 @@
+{
+  "ok": true,
+  "value": {
+    "id": "IR-ROUTE-004",
+    "title": "Lookup result contract and precedence",
+    "type": "interface",
+    "target": "wave-2",
+    "status": "verified",
+    "scope": "ROUTE",
+    "filePath": "docs/spec/03.routing.srs.md",
+    "headingLine": 915,
+    "metadata": {
+      "Type": "interface",
+      "Target": "wave-2",
+      "Status": "verified",
+      "Priority": "high",
+      "Tags": "wave-2, feasibility:high, routing, lookup",
+      "Risk": "medium",
+      "Stability": "evolving",
+      "Verification Method": "test",
+      "GitHub Issue": "https://github.com/Snoworca/NaruServe/issues/3",
+      "Related Docs": "-"
+    },
+    "acceptanceCriteria": [
+      {
+        "id": "AC-1",
+        "text": "The result type exposes exactly six kinds and each lookup returns exactly one; the matched kind carries the handler, the path parameters, the actual method (the request method for a direct match, `GET` under automatic `HEAD` and for a WebSocket match; it does not decide the wave 3 `req.method()` value, D-398), the route kind and the automatic-`HEAD` flag, and the method-mismatch and automatic-OPTIONS kinds carry an `Allow` `MethodSet`. [D-390] [SDS 2026-10-19.naruserve.naruserve-v1-wave-2-3 SDS-AC-1] A field a kind does not carry reads as null (handler, method, route kind, allow) and params reads as an empty map.",
+        "checked": true,
+        "line": 940
+      },
+      {
+        "id": "AC-2",
+        "text": "An unrecognised method token yields unsupported method even when no pattern matches the path, and a recognised method on a path no pattern matches yields no match. [wave decision: lookup result order]",
+        "checked": true,
+        "line": 941
+      },
+      {
+        "id": "AC-3",
+        "text": "On a matched path a route of the request method wins over automatic OPTIONS and automatic `HEAD`, which win over WebSocket-only, which wins over method mismatch. [wave decision: lookup result order]",
+        "checked": true,
+        "line": 942
+      },
+      {
+        "id": "AC-4",
+        "text": "The lookup takes the raw, undecoded path as received in the request target, so a lookup of `GET /files/%252e` against `GET /files/:name` yields `name` = `%2e`; the path is checked with the path validator before any result is chosen, so a rejected path such as `/a%zz` fails with `IllegalArgumentException` for every method token, and \"whatever the path\" elsewhere in this scope means whatever accepted path. [D-051; loop W residual: validator does not decode] [SDS 2026-10-19.naruserve.naruserve-v1-wave-2-3 SDS-AC-2] The `IllegalArgumentException` names the path and is thrown before the method token is read.",
+        "checked": true,
+        "line": 943
+      },
+      {
+        "id": "AC-5",
+        "text": "The upgrade flag is ignored unless the method token is `GET`; registering a route after the freeze fails with `IllegalStateException`, a lookup before a successful freeze fails with `IllegalStateException`, and the routing configuration error is an exception type of its own (name decided under C-07), distinct from `IllegalStateException` and `IllegalArgumentException`. [wave decision: route kind; D-058]",
+        "checked": true,
+        "line": 944
+      }
+    ],
+    "verificationEvidence": [
+      {
+        "id": "VE-1",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouteMatchTest.java#sdsAc1_IR_ROUTE_004_AC1_exactlySixKindsAndNoPublicConstructor",
+        "covers": "AC-1",
+        "notes": "-",
+        "line": 950
+      },
+      {
+        "id": "VE-2",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouteMatchTest.java#sdsAc1_IR_ROUTE_004_AC1_matchedCarriesHandlerParamsMethodKind",
+        "covers": "AC-1",
+        "notes": "-",
+        "line": 951
+      },
+      {
+        "id": "VE-3",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouteMatchTest.java#sdsAc1_IR_ROUTE_004_AC1_paramsUnmodifiable",
+        "covers": "AC-1",
+        "notes": "-",
+        "line": 952
+      },
+      {
+        "id": "VE-4",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouteMatchTest.java#sdsAc1_IR_ROUTE_004_AC1_mismatchAndAutoOptionsCarryOnlyAllow",
+        "covers": "AC-1",
+        "notes": "-",
+        "line": 953
+      },
+      {
+        "id": "VE-5",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouteMatchTest.java#sdsAc1_IR_ROUTE_004_AC1_otherKindsCarryNoFields",
+        "covers": "AC-1",
+        "notes": "-",
+        "line": 954
+      },
+      {
+        "id": "VE-6",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouteMatchTest.java#sdsAc1_IR_ROUTE_004_AC1_everyKindReachable",
+        "covers": "AC-1",
+        "notes": "-",
+        "line": 955
+      },
+      {
+        "id": "VE-7",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterLookupTest.java#sdsAc2_IR_ROUTE_004_AC4_rejectedPathThrowsBeforeTokenIsRead",
+        "covers": "AC-4",
+        "notes": "-",
+        "line": 956
+      },
+      {
+        "id": "VE-8",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterLookupTest.java#sdsAc3_IR_ROUTE_004_AC5_lookupBeforeFreezeThrows",
+        "covers": "AC-5",
+        "notes": "-",
+        "line": 957
+      },
+      {
+        "id": "VE-9",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterLookupTest.java#sdsAc3_IR_ROUTE_004_AC5_lookupAfterFailedFreezeThrows",
+        "covers": "AC-5",
+        "notes": "-",
+        "line": 958
+      },
+      {
+        "id": "VE-10",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterLookupTest.java#sdsAc3_IR_ROUTE_004_AC5_addAfterFreezeThrows",
+        "covers": "AC-5",
+        "notes": "-",
+        "line": 959
+      },
+      {
+        "id": "VE-11",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterLookupTest.java#sdsAc3_IR_ROUTE_004_AC5_upgradeIgnoredUnlessGet",
+        "covers": "AC-5",
+        "notes": "-",
+        "line": 960
+      },
+      {
+        "id": "VE-12",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterLookupTest.java#sdsAc4_IR_ROUTE_004_AC3_precedenceOnOnePath",
+        "covers": "AC-3",
+        "notes": "-",
+        "line": 961
+      },
+      {
+        "id": "VE-13",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterLookupTest.java#sdsAc4_IR_ROUTE_004_AC4_rawPathDecodedOnceIntoParams",
+        "covers": "AC-4",
+        "notes": "-",
+        "line": 962
+      },
+      {
+        "id": "VE-14",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterAutoResponseTest.java#sdsAc5_FR_ROUTE_009_AC1_AC2_unmatchedPathIsNoMatchIncludingOptions",
+        "covers": "AC-2",
+        "notes": "-",
+        "line": 963
+      },
+      {
+        "id": "VE-15",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterAutoResponseTest.java#sdsAc9_FR_ROUTE_013_AC1_AC2_unknownTokensUnsupported",
+        "covers": "AC-2",
+        "notes": "-",
+        "line": 964
+      },
+      {
+        "id": "VE-16",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouteMatchTest.java",
+        "covers": "AC-1",
+        "notes": "verification_cmd ./gradlew build passed at 461fc3f (153/153); cited line RouteMatchTest.java:44, RouteMatchTest.java:55, RouteMatchTest.java:70, RouteMatchTest.java:78, RouteMatchTest.java:92, RouteMatchTest.java:108; bundle docs/research/naruserve-v1/waves/stage-2/lane-2026-10-19.naruserve.naruserve-v1-wave-2/",
+        "line": 965
+      },
+      {
+        "id": "VE-17",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterAutoResponseTest.java",
+        "covers": "AC-2",
+        "notes": "verification_cmd ./gradlew build passed at 461fc3f (153/153); cited line RouterAutoResponseTest.java:31, RouterAutoResponseTest.java:181; bundle docs/research/naruserve-v1/waves/stage-2/lane-2026-10-19.naruserve.naruserve-v1-wave-2/",
+        "line": 966
+      },
+      {
+        "id": "VE-18",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterLookupTest.java",
+        "covers": "AC-3",
+        "notes": "verification_cmd ./gradlew build passed at 461fc3f (153/153); cited line RouterLookupTest.java:110; bundle docs/research/naruserve-v1/waves/stage-2/lane-2026-10-19.naruserve.naruserve-v1-wave-2/",
+        "line": 967
+      },
+      {
+        "id": "VE-19",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterLookupTest.java",
+        "covers": "AC-4",
+        "notes": "verification_cmd ./gradlew build passed at 461fc3f (153/153); cited line RouterLookupTest.java:33, RouterLookupTest.java:148; bundle docs/research/naruserve-v1/waves/stage-2/lane-2026-10-19.naruserve.naruserve-v1-wave-2/",
+        "line": 968
+      },
+      {
+        "id": "VE-20",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterLookupTest.java",
+        "covers": "AC-5",
+        "notes": "verification_cmd ./gradlew build passed at 461fc3f (153/153); cited line RouterLookupTest.java:43, RouterLookupTest.java:56, RouterLookupTest.java:76, RouterLookupTest.java:94; bundle docs/research/naruserve-v1/waves/stage-2/lane-2026-10-19.naruserve.naruserve-v1-wave-2/",
+        "line": 969
+      },
+      {
+        "id": "VE-21",
+        "type": "commit",
+        "reference": "f80370b",
+        "covers": "all",
+        "notes": "-",
+        "line": 970
+      },
+      {
+        "id": "VE-22",
+        "type": "commit",
+        "reference": "8a4b565",
+        "covers": "all",
+        "notes": "-",
+        "line": 971
+      },
+      {
+        "id": "VE-23",
+        "type": "commit",
+        "reference": "7b7b6b7",
+        "covers": "all",
+        "notes": "-",
+        "line": 972
+      },
+      {
+        "id": "VE-24",
+        "type": "commit",
+        "reference": "b5677c3",
+        "covers": "all",
+        "notes": "-",
+        "line": 973
+      }
+    ],
+    "traceLinks": [
+      {
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouteMatch.java",
+        "relation": "implements",
+        "notes": "trace_intent=addition_site",
+        "line": 979
+      },
+      {
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java",
+        "relation": "implements",
+        "notes": "trace_intent=addition_site",
+        "line": 980
+      },
+      {
+        "type": "Requirement",
+        "reference": "CON-ROUTE-001",
+        "relation": "depends_on",
+        "notes": "runs inside the engine-free router",
+        "line": 981
+      },
+      {
+        "type": "Requirement",
+        "reference": "FR-ROUTE-004",
+        "relation": "depends_on",
+        "notes": "lookup checks the path with the validator first",
+        "line": 982
+      },
+      {
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java",
+        "relation": "implements",
+        "notes": "-",
+        "line": 983
+      },
+      {
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouteMatch.java",
+        "relation": "implements",
+        "notes": "-",
+        "line": 984
+      }
+    ],
+    "changeNotes": [
+      {
+        "date": "2026-10-19",
+        "change": "Created",
+        "reason": "add-requirement",
+        "line": 998
+      },
+      {
+        "date": "2026-10-19",
+        "change": "Stability -> evolving",
+        "reason": "Feasibility=high (score 91). Blockers: none. Run: 2026-10-19.naruserve.wave-2.v01",
+        "line": 999
+      }
+    ],
+    "tags": [
+      "wave-2",
+      "feasibility:high",
+      "routing",
+      "lookup"
+    ],
+    "relatedDocs": [],
+    "evidenceReferences": [
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouteMatchTest.java",
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterLookupTest.java",
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterAutoResponseTest.java",
+      "f80370b",
+      "8a4b565",
+      "7b7b6b7",
+      "b5677c3"
+    ],
+    "traceReferences": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouteMatch.java",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java",
+      "CON-ROUTE-001",
+      "FR-ROUTE-004"
+    ],
+    "blockStartLine": 915,
+    "blockEndLine": 1000,
+    "sectionLines": {
+      "Requirement": 930,
+      "Rationale": 934,
+      "Acceptance Criteria": 938,
+      "Verification Evidence": 946,
+      "Trace Links": 975,
+      "Research / Analysis": 986,
+      "Implementation Notes": 990,
+      "Change Notes": 994
+    },
+    "priority": "high",
+    "risk": "medium",
+    "stability": "evolving",
+    "newWorkCandidate": false,
+    "requirement": "The system shall make a route lookup, which takes the raw method token, the request path and an upgrade flag, return an engine-free result that is exactly one of matched (handler, path parameters, actual method, route kind, automatic-`HEAD` flag), method mismatch (with an `Allow` set), automatic OPTIONS (with an `Allow` set), WebSocket-only, unsupported method or no match, chosen in this order: unsupported method; no match; matched; automatic OPTIONS; automatic `HEAD`; WebSocket-only; method mismatch.",
+    "rationale": "Covers D-390 and the wave decision on lookup result order (D-060..D-069); the route kind on the matched result follows the wave decision on route kind.",
+    "research": "- -",
+    "implementationNotes": "- -",
+    "diagnostics": [],
+    "errors": [],
+    "warnings": [],
+    "diagnosticsSummary": {
+      "errors": 0,
+      "warnings": 0,
+      "byCode": {}
+    }
+  },
+  "diagnostics": [],
+  "diagnosticsSummary": {
+    "errors": 0,
+    "warnings": 0,
+    "byCode": {}
+  },
+  "mcpWorkspace": {
+    "workspaceRoot": "/Users/beom/work/git/NaruServe",
+    "rootSource": "server-cwd-discovery",
+    "indexPath": "docs/spec/00.index.md",
+    "packageVersion": "4.2.0"
+  }
+}

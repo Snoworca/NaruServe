@@ -1,0 +1,6 @@
+{"name":"response-end-then-next","status":200,"body":"done","trace":["one","two-after-end","use-after-end"]}
+{"name":"repeated-next","status":200,"body":"done","trace":["one","two","three","between-next","four-after-end","after-second-next"]}
+{"name":"register-after-listen","status":200,"body":"late","trace":[]}
+{"name":"trace-connect-registration","status":200,"body":"registration-ok","trace":["trace-and-connect-registered"]}
+{"name":"trace-http-dispatch","status":200,"body":"trace","trace":[]}
+{"name":"router-param-cache-scope","status":200,"body":"[\"parent:42\",\"child:42\"]","trace":["parent:42","child:42"]}

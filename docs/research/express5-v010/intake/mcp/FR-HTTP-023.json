@@ -1,0 +1,349 @@
+{
+  "ok": true,
+  "value": {
+    "id": "FR-HTTP-023",
+    "title": "Asterisk-form OPTIONS and raw paths not starting with a slash (wave 4)",
+    "type": "functional",
+    "target": "wave-4",
+    "status": "verified",
+    "scope": "HTTP",
+    "filePath": "docs/spec/04.http-core.srs.md",
+    "headingLine": 3106,
+    "metadata": {
+      "Type": "functional",
+      "Target": "wave-4",
+      "Status": "verified",
+      "Priority": "high",
+      "Tags": "wave-4, feasibility:high, dispatcher",
+      "Risk": "medium",
+      "Stability": "evolving",
+      "Verification Method": "test",
+      "GitHub Issue": "https://github.com/Snoworca/NaruServe/issues/5",
+      "Related Docs": "-"
+    },
+    "acceptanceCriteria": [
+      {
+        "id": "AC-1",
+        "text": "Through the in-memory adapter, `OPTIONS *` is answered `204` with `Allow` listing exactly the methods of `Method.any()` in `Method` declaration order and no body, even when no route is registered. [D-442; loop D: V1-006/V2-004] Decision: the `OPTIONS *` answer has no `Content-Length` header. [SDS 2026-10-19.naruserve.naruserve-v1-wave-4-4 SDS-AC-19]",
+        "checked": true,
+        "line": 3131
+      },
+      {
+        "id": "AC-2",
+        "text": "`OPTIONS *` reaches neither the router lookup nor the path validator: with a recording handler registered through `app.route(Method.any(), \"/\", h)` and `app.route(Method.any(), \"/:x\", h)`, `OPTIONS *` is still answered `204` with the `Allow` of AC-1 (not the validator's `400` for a raw path `*`), and `h` records no call. [D-442; D-052]",
+        "checked": true,
+        "line": 3132
+      },
+      {
+        "id": "AC-3",
+        "text": "A raw path `abc` and a raw path `*` with method `GET` are each answered `400` with the standard error body of FR-APP-006 (`code` `BAD_REQUEST`) without route lookup, and the access log records one line for each. [D-442; wave-4 carried: standard error body; wave decision: Pre-request rejections]",
+        "checked": true,
+        "line": 3133
+      },
+      {
+        "id": "AC-4",
+        "text": "The `OPTIONS *` and non-`/` cases are tested through the in-memory adapter in waves 3 and 4; their TinyHttpd counterparts are not asserted in this requirement. [I-021; wave decision: Adapter halves]",
+        "checked": true,
+        "line": 3134
+      }
+    ],
+    "verificationEvidence": [
+      {
+        "id": "VE-1",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java#sdsAc19_FR_HTTP_023_AC1_optionsAsteriskAllowIsMethodAnyWithNoRoutes",
+        "covers": "AC-1",
+        "notes": "command: ./gradlew build; result: pass (exit 0)",
+        "line": 3140
+      },
+      {
+        "id": "VE-2",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java#sdsAc19_FR_HTTP_021_AC2_FR_HTTP_023_AC2_optionsAsteriskIsAnswered204BeforePathValidation",
+        "covers": "AC-2",
+        "notes": "command: ./gradlew build; result: pass (exit 0)",
+        "line": 3141
+      },
+      {
+        "id": "VE-3",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java#sdsAc13_FR_HTTP_021_AC4_FR_HTTP_023_AC3_preRequestRejectionsNeverReachTheHandler",
+        "covers": "AC-3",
+        "notes": "command: ./gradlew build; result: pass (exit 0)",
+        "line": 3142
+      },
+      {
+        "id": "VE-4",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java#sdsAc19_FR_HTTP_023_AC1_AC2_AC3_AC4_asteriskAndNonSlashTargets",
+        "covers": "AC-4",
+        "notes": "command: ./gradlew build; result: pass (exit 0)",
+        "line": 3143
+      },
+      {
+        "id": "VE-5",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java",
+        "covers": "AC-1",
+        "notes": "verification_cmd ./gradlew build passed at 04f3673 (588/588); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java:115; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java:172; bundle docs/research/naruserve-v1/waves/stage-4/lane-2026-10-19.naruserve.naruserve-v1-wave-4/",
+        "line": 3144
+      },
+      {
+        "id": "VE-6",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java",
+        "covers": "AC-2",
+        "notes": "verification_cmd ./gradlew build passed at 04f3673 (588/588); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java:115; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java:77; bundle docs/research/naruserve-v1/waves/stage-4/lane-2026-10-19.naruserve.naruserve-v1-wave-4/",
+        "line": 3145
+      },
+      {
+        "id": "VE-7",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java",
+        "covers": "AC-3",
+        "notes": "verification_cmd ./gradlew build passed at 04f3673 (588/588); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java:115; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java:98; bundle docs/research/naruserve-v1/waves/stage-4/lane-2026-10-19.naruserve.naruserve-v1-wave-4/",
+        "line": 3146
+      },
+      {
+        "id": "VE-8",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java",
+        "covers": "AC-4",
+        "notes": "verification_cmd ./gradlew build passed at 04f3673 (588/588); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java:115; bundle docs/research/naruserve-v1/waves/stage-4/lane-2026-10-19.naruserve.naruserve-v1-wave-4/",
+        "line": 3147
+      },
+      {
+        "id": "VE-9",
+        "type": "commit",
+        "reference": "a6e9fbe31a145333369d669970648e17c0d38be9",
+        "covers": "all",
+        "notes": "wave 4 worker or issue-fix commit (Orch-Wave: 4), ancestor of integration head 04f3673",
+        "line": 3148
+      },
+      {
+        "id": "VE-10",
+        "type": "commit",
+        "reference": "e344a664b14f2b0fe577f556373ce0b0222c9a56",
+        "covers": "all",
+        "notes": "wave 4 worker or issue-fix commit (Orch-Wave: 4), ancestor of integration head 04f3673",
+        "line": 3149
+      },
+      {
+        "id": "VE-11",
+        "type": "commit",
+        "reference": "9b502e31d25812a02ebddc8f1c01a97f308e0583",
+        "covers": "all",
+        "notes": "wave 4 worker or issue-fix commit (Orch-Wave: 4), ancestor of integration head 04f3673",
+        "line": 3150
+      },
+      {
+        "id": "VE-12",
+        "type": "commit",
+        "reference": "0c9bfb4ee13638e5de052decedb48d5800a30843",
+        "covers": "all",
+        "notes": "wave 4 worker or issue-fix commit (Orch-Wave: 4), ancestor of integration head 04f3673",
+        "line": 3151
+      },
+      {
+        "id": "VE-13",
+        "type": "commit",
+        "reference": "e680e56169d4cde7c86ed9f4c2d2b093978596e6",
+        "covers": "all",
+        "notes": "wave 4 worker or issue-fix commit (Orch-Wave: 4), ancestor of integration head 04f3673",
+        "line": 3152
+      },
+      {
+        "id": "VE-14",
+        "type": "commit",
+        "reference": "a452c0ca77b3d08a15f5758b710a3363c4377355",
+        "covers": "all",
+        "notes": "wave 4 worker or issue-fix commit (Orch-Wave: 4), ancestor of integration head 04f3673",
+        "line": 3153
+      },
+      {
+        "id": "VE-15",
+        "type": "commit",
+        "reference": "217f6d75e4b46887d073c89a19ad41d35fb16cd9",
+        "covers": "all",
+        "notes": "wave 4 worker or issue-fix commit (Orch-Wave: 4), ancestor of integration head 04f3673",
+        "line": 3154
+      },
+      {
+        "id": "VE-16",
+        "type": "commit",
+        "reference": "9e5488314eacccd5383e9c10fecd35d122ed63c4",
+        "covers": "all",
+        "notes": "wave 4 worker or issue-fix commit (Orch-Wave: 4), ancestor of integration head 04f3673",
+        "line": 3155
+      },
+      {
+        "id": "VE-17",
+        "type": "commit",
+        "reference": "7cb379bec63d289fae06d288ae01a92c37223d55",
+        "covers": "all",
+        "notes": "wave 4 worker or issue-fix commit (Orch-Wave: 4), ancestor of integration head 04f3673",
+        "line": 3156
+      },
+      {
+        "id": "VE-18",
+        "type": "commit",
+        "reference": "b0869b93e712dda6b48a1f7001862877ea1056b9",
+        "covers": "all",
+        "notes": "wave 4 worker or issue-fix commit (Orch-Wave: 4), ancestor of integration head 04f3673",
+        "line": 3157
+      },
+      {
+        "id": "VE-19",
+        "type": "commit",
+        "reference": "18f79a529b9ecb4e6d3b605f90bf2df3dfad5494",
+        "covers": "all",
+        "notes": "wave 4 worker or issue-fix commit (Orch-Wave: 4), ancestor of integration head 04f3673",
+        "line": 3158
+      },
+      {
+        "id": "VE-20",
+        "type": "commit",
+        "reference": "b4bf9d84ff28d07ffa85ea39ca39569c91e296fd",
+        "covers": "all",
+        "notes": "wave 4 worker or issue-fix commit (Orch-Wave: 4), ancestor of integration head 04f3673",
+        "line": 3159
+      },
+      {
+        "id": "VE-21",
+        "type": "commit",
+        "reference": "e612f8fe3a2f95cb8c94c6d836017fb447434a92",
+        "covers": "all",
+        "notes": "wave 4 worker or issue-fix commit (Orch-Wave: 4), ancestor of integration head 04f3673",
+        "line": 3160
+      },
+      {
+        "id": "VE-22",
+        "type": "commit",
+        "reference": "d39522781993188e36f6d0f22663fb03c7ab4d54",
+        "covers": "all",
+        "notes": "wave 4 worker or issue-fix commit (Orch-Wave: 4), ancestor of integration head 04f3673",
+        "line": 3161
+      }
+    ],
+    "traceLinks": [
+      {
+        "type": "Requirement",
+        "reference": "FR-HTTP-005",
+        "relation": "supersedes",
+        "notes": "-",
+        "line": 3167
+      },
+      {
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+        "relation": "implements",
+        "notes": "trace_intent=addition_site",
+        "line": 3168
+      },
+      {
+        "type": "Requirement",
+        "reference": "FR-APP-006",
+        "relation": "depends_on",
+        "notes": "standard error body",
+        "line": 3169
+      },
+      {
+        "type": "Requirement",
+        "reference": "FR-APP-015",
+        "relation": "depends_on",
+        "notes": "access log line",
+        "line": 3170
+      }
+    ],
+    "changeNotes": [
+      {
+        "date": "2026-10-19",
+        "change": "Created",
+        "reason": "add-requirement",
+        "line": 3184
+      },
+      {
+        "date": "2026-10-19",
+        "change": "Stability -> evolving",
+        "reason": "Feasibility=high (score 95). Blockers: none. Run: 2026-10-19.naruserve.wave-4.v01",
+        "line": 3185
+      },
+      {
+        "date": "2026-10-19",
+        "change": "Status -> verified",
+        "reason": "Wave 4 promotion: every AC cited in docs/research/naruserve-v1/waves/wave-4/test-sufficiency.json; ./gradlew build passed at 04f3673 (588/588); worker commits recorded",
+        "line": 3186
+      }
+    ],
+    "tags": [
+      "wave-4",
+      "feasibility:high",
+      "dispatcher"
+    ],
+    "relatedDocs": [],
+    "evidenceReferences": [
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java",
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java",
+      "a6e9fbe31a145333369d669970648e17c0d38be9",
+      "e344a664b14f2b0fe577f556373ce0b0222c9a56",
+      "9b502e31d25812a02ebddc8f1c01a97f308e0583",
+      "0c9bfb4ee13638e5de052decedb48d5800a30843",
+      "e680e56169d4cde7c86ed9f4c2d2b093978596e6",
+      "a452c0ca77b3d08a15f5758b710a3363c4377355",
+      "217f6d75e4b46887d073c89a19ad41d35fb16cd9",
+      "9e5488314eacccd5383e9c10fecd35d122ed63c4",
+      "7cb379bec63d289fae06d288ae01a92c37223d55",
+      "b0869b93e712dda6b48a1f7001862877ea1056b9",
+      "18f79a529b9ecb4e6d3b605f90bf2df3dfad5494",
+      "b4bf9d84ff28d07ffa85ea39ca39569c91e296fd",
+      "e612f8fe3a2f95cb8c94c6d836017fb447434a92",
+      "d39522781993188e36f6d0f22663fb03c7ab4d54"
+    ],
+    "traceReferences": [
+      "FR-HTTP-005",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+      "FR-APP-006",
+      "FR-APP-015"
+    ],
+    "blockStartLine": 3106,
+    "blockEndLine": 3187,
+    "sectionLines": {
+      "Requirement": 3121,
+      "Rationale": 3125,
+      "Acceptance Criteria": 3129,
+      "Verification Evidence": 3136,
+      "Trace Links": 3163,
+      "Research / Analysis": 3172,
+      "Implementation Notes": 3176,
+      "Change Notes": 3180
+    },
+    "priority": "high",
+    "risk": "medium",
+    "stability": "evolving",
+    "newWorkCandidate": false,
+    "requirement": "The system shall answer the asterisk-form request `OPTIONS *` (raw path `*`) with `204` and an `Allow` header listing the methods of `Method.any()`, without route lookup or path validation, and answer any other raw path that does not start with `/` with `400` and the standard error body.",
+    "rationale": "-",
+    "research": "- -",
+    "implementationNotes": "- -",
+    "diagnostics": [],
+    "errors": [],
+    "warnings": [],
+    "diagnosticsSummary": {
+      "errors": 0,
+      "warnings": 0,
+      "byCode": {}
+    }
+  },
+  "diagnostics": [],
+  "diagnosticsSummary": {
+    "errors": 0,
+    "warnings": 0,
+    "byCode": {}
+  },
+  "mcpWorkspace": {
+    "workspaceRoot": "/Users/beom/work/git/NaruServe",
+    "rootSource": "server-cwd-discovery",
+    "indexPath": "docs/spec/00.index.md",
+    "packageVersion": "4.2.0"
+  }
+}

@@ -1,0 +1,377 @@
+{
+  "ok": true,
+  "value": {
+    "id": "FR-ROUTE-008",
+    "title": "Conflict detection at route-table freeze",
+    "type": "functional",
+    "target": "wave-2",
+    "status": "verified",
+    "scope": "ROUTE",
+    "filePath": "docs/spec/03.routing.srs.md",
+    "headingLine": 828,
+    "metadata": {
+      "Type": "functional",
+      "Target": "wave-2",
+      "Status": "verified",
+      "Priority": "high",
+      "Tags": "wave-2, feasibility:high, routing, configuration-error",
+      "Risk": "medium",
+      "Stability": "evolving",
+      "Verification Method": "test",
+      "GitHub Issue": "https://github.com/Snoworca/NaruServe/issues/3",
+      "Related Docs": "-"
+    },
+    "acceptanceCriteria": [
+      {
+        "id": "AC-1",
+        "text": "Registering `GET /a` twice, or `GET /a` and a `MethodSet` registration containing `GET` on `/a`, makes the freeze raise a configuration error. [D-056]",
+        "checked": true,
+        "line": 853
+      },
+      {
+        "id": "AC-2",
+        "text": "Registering `GET /a/:x` and `GET /a/:y` makes the freeze raise a configuration error, while `GET /a/:x` and `POST /a/:y` freeze without error. [D-057]",
+        "checked": true,
+        "line": 854
+      },
+      {
+        "id": "AC-3",
+        "text": "The configuration error message names the method and the pattern of both conflicting registrations, and registration itself does not raise it before the freeze. [D-058] [SDS 2026-10-19.naruserve.naruserve-v1-wave-2-2 SDS-AC-12] The freeze throws one `RoutingConfigException` whose message has one line per conflicting pair, \"METHOD pattern conflicts with METHOD pattern\".",
+        "checked": true,
+        "line": 855
+      },
+      {
+        "id": "AC-4",
+        "text": "With case-insensitive matching on, `GET /Users` and `GET /users` conflict at freeze; with trailing-slash ignoring on, `GET /a` and `GET /a/` conflict; under the strict default neither pair conflicts. [loop W residual: normalised conflicts] Case-insensitive conflict keys use the same Unicode code-point folding as runtime literal/prefix matching, including supplementary characters.",
+        "checked": true,
+        "line": 856
+      },
+      {
+        "id": "AC-5",
+        "text": "Registering a `TRACE` route while `TRACE` routing is disabled makes the freeze raise a configuration error, and likewise for `CONNECT`; a WebSocket registration and a `GET` registration on the same pattern freeze without error. [loop W residual; D-068] [SDS 2026-10-19.naruserve.naruserve-v1-wave-2-2 SDS-AC-14] The freeze error line reads \"METHOD pattern registered while METHOD routing is disabled\".",
+        "checked": true,
+        "line": 857
+      }
+    ],
+    "verificationEvidence": [
+      {
+        "id": "VE-1",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterFreezeTest.java#sdsAc12_FR_ROUTE_008_AC1_duplicateGetAndMethodSetOverlap",
+        "covers": "AC-1",
+        "notes": "-",
+        "line": 863
+      },
+      {
+        "id": "VE-2",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterFreezeTest.java#sdsAc12_FR_ROUTE_008_AC2_AC3_variableNamesOnlyDifferAndOneLinePerPair",
+        "covers": "AC-2",
+        "notes": "-",
+        "line": 864
+      },
+      {
+        "id": "VE-3",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterFreezeTest.java#sdsAc12_FR_ROUTE_008_AC2_AC3_variableNamesOnlyDifferAndOneLinePerPair",
+        "covers": "AC-3",
+        "notes": "-",
+        "line": 865
+      },
+      {
+        "id": "VE-4",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterFreezeTest.java#sdsAc12_FR_ROUTE_008_AC3_registrationDoesNotRaiseBeforeFreeze",
+        "covers": "AC-3",
+        "notes": "-",
+        "line": 866
+      },
+      {
+        "id": "VE-5",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterFreezeTest.java#sdsAc12_FR_ROUTE_008_AC3_isDistinctFromIllegalStateAndArgument",
+        "covers": "AC-3",
+        "notes": "-",
+        "line": 867
+      },
+      {
+        "id": "VE-6",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterFreezeTest.java#sdsAc13_FR_ROUTE_008_AC4_conflictsOnlyUnderTheirPolicies",
+        "covers": "AC-4",
+        "notes": "-",
+        "line": 868
+      },
+      {
+        "id": "VE-7",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterFreezeTest.java#sdsAc13_FR_ROUTE_008_AC4_conflictKeyFoldsCaseLikeMatching",
+        "covers": "AC-4",
+        "notes": "-",
+        "line": 869
+      },
+      {
+        "id": "VE-8",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterFreezeTest.java#FR_ROUTE_008_AC1_registrationAfterFreezeCannotBypassConflictDetection",
+        "covers": "AC-1",
+        "notes": "-",
+        "line": 870
+      },
+      {
+        "id": "VE-9",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterFreezeTest.java#sdsAc14_FR_ROUTE_008_AC5_traceAndConnectWhileDisabledFailFreeze",
+        "covers": "AC-5",
+        "notes": "-",
+        "line": 871
+      },
+      {
+        "id": "VE-10",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterFreezeTest.java#sdsAc14_FR_ROUTE_008_AC5_enabledTraceAndConnectFreeze",
+        "covers": "AC-5",
+        "notes": "-",
+        "line": 872
+      },
+      {
+        "id": "VE-11",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterRegistrationTest.java#sdsAc4_FR_ROUTE_008_AC5_webSocketAndGetOnOnePatternFreeze",
+        "covers": "AC-5",
+        "notes": "-",
+        "line": 873
+      },
+      {
+        "id": "VE-12",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterFreezeTest.java",
+        "covers": "AC-1",
+        "notes": "verification_cmd ./gradlew build passed at 461fc3f (153/153); cited line RouterFreezeTest.java:26, RouterFreezeTest.java:114, RouterFreezeTest.java:159, RouterFreezeTest.java:174, RouterFreezeTest.java:185; bundle docs/research/naruserve-v1/waves/stage-2/lane-2026-10-19.naruserve.naruserve-v1-wave-2/",
+        "line": 874
+      },
+      {
+        "id": "VE-13",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterFreezeTest.java",
+        "covers": "AC-2",
+        "notes": "verification_cmd ./gradlew build passed at 461fc3f (153/153); cited line RouterFreezeTest.java:40; bundle docs/research/naruserve-v1/waves/stage-2/lane-2026-10-19.naruserve.naruserve-v1-wave-2/",
+        "line": 875
+      },
+      {
+        "id": "VE-14",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterFreezeTest.java",
+        "covers": "AC-3",
+        "notes": "verification_cmd ./gradlew build passed at 461fc3f (153/153); cited line RouterFreezeTest.java:40, RouterFreezeTest.java:56, RouterFreezeTest.java:67; bundle docs/research/naruserve-v1/waves/stage-2/lane-2026-10-19.naruserve.naruserve-v1-wave-2/",
+        "line": 876
+      },
+      {
+        "id": "VE-15",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterFreezeTest.java",
+        "covers": "AC-4",
+        "notes": "verification_cmd ./gradlew build passed at 461fc3f (153/153); cited line RouterFreezeTest.java:75, RouterFreezeTest.java:104; bundle docs/research/naruserve-v1/waves/stage-2/lane-2026-10-19.naruserve.naruserve-v1-wave-2/",
+        "line": 877
+      },
+      {
+        "id": "VE-16",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterFreezeTest.java",
+        "covers": "AC-5",
+        "notes": "verification_cmd ./gradlew build passed at 461fc3f (153/153); cited line RouterFreezeTest.java:134, RouterFreezeTest.java:149, RouterRegistrationTest.java:85; bundle docs/research/naruserve-v1/waves/stage-2/lane-2026-10-19.naruserve.naruserve-v1-wave-2/",
+        "line": 878
+      },
+      {
+        "id": "VE-17",
+        "type": "commit",
+        "reference": "f80370b",
+        "covers": "all",
+        "notes": "-",
+        "line": 879
+      },
+      {
+        "id": "VE-18",
+        "type": "commit",
+        "reference": "8a4b565",
+        "covers": "all",
+        "notes": "-",
+        "line": 880
+      },
+      {
+        "id": "VE-19",
+        "type": "commit",
+        "reference": "7b7b6b7",
+        "covers": "all",
+        "notes": "-",
+        "line": 881
+      },
+      {
+        "id": "VE-20",
+        "type": "commit",
+        "reference": "b5677c3",
+        "covers": "all",
+        "notes": "-",
+        "line": 882
+      },
+      {
+        "id": "VE-21",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/UnicodeRoutingContractTest.java",
+        "covers": "AC-4",
+        "notes": "Issue #38: failing automated regression reproduced before implementation; targeted existing/new suites passed on default JDK17 and actual OpenJDK8; independent review has no remaining HIGH/MEDIUM findings. Logs: docs/release/audit-2026-10-21/38/. Broad final integration regression is tracked in epic #36.",
+        "line": 883
+      },
+      {
+        "id": "VE-22",
+        "type": "test",
+        "reference": "docs/release/additional-audit-2026-10-21.md",
+        "covers": "AC-4",
+        "notes": "Final integration: default JDK17 and actual OpenJDK8 each passed full build --rerun-tasks with1677 tests, failures/errors/skipped0; all11 Test tasks actually used Java8 in its run. Real NVD releaseCheck passed. This evidence applies only to the fixed contract; external engine issue45 remains blocked.",
+        "line": 884
+      }
+    ],
+    "traceLinks": [
+      {
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java",
+        "relation": "implements",
+        "notes": "trace_intent=addition_site",
+        "line": 890
+      },
+      {
+        "type": "Requirement",
+        "reference": "CON-ROUTE-001",
+        "relation": "depends_on",
+        "notes": "runs inside the engine-free router",
+        "line": 891
+      },
+      {
+        "type": "Requirement",
+        "reference": "FR-ROUTE-006",
+        "relation": "depends_on",
+        "notes": "conflicts normalised under path-form policies",
+        "line": 892
+      },
+      {
+        "type": "Requirement",
+        "reference": "FR-ROUTE-014",
+        "relation": "depends_on",
+        "notes": "TRACE/CONNECT enablement checked at freeze",
+        "line": 893
+      },
+      {
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java",
+        "relation": "implements",
+        "notes": "-",
+        "line": 894
+      },
+      {
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RoutePattern.java",
+        "relation": "implements",
+        "notes": "-",
+        "line": 895
+      },
+      {
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RoutingConfigException.java",
+        "relation": "implements",
+        "notes": "-",
+        "line": 896
+      }
+    ],
+    "changeNotes": [
+      {
+        "date": "2026-10-19",
+        "change": "Created",
+        "reason": "add-requirement",
+        "line": 910
+      },
+      {
+        "date": "2026-10-19",
+        "change": "Stability -> evolving",
+        "reason": "Feasibility=high (score 93). Blockers: none. Run: 2026-10-19.naruserve.wave-2.v01",
+        "line": 911
+      },
+      {
+        "date": "2026-10-21",
+        "change": "Status -> implemented",
+        "reason": "Additional audit reproduced Unicode normalization/blank-input/JSON media syntax defect; regression extension before verification.",
+        "line": 912
+      },
+      {
+        "date": "2026-10-21",
+        "change": "Status -> verified",
+        "reason": "Issue #38: targeted contract regression passed JDK17 and actual Java8 after RED reproduction and independent review.",
+        "line": 913
+      }
+    ],
+    "tags": [
+      "wave-2",
+      "feasibility:high",
+      "routing",
+      "configuration-error"
+    ],
+    "relatedDocs": [],
+    "evidenceReferences": [
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterFreezeTest.java",
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterRegistrationTest.java",
+      "f80370b",
+      "8a4b565",
+      "7b7b6b7",
+      "b5677c3",
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/UnicodeRoutingContractTest.java",
+      "docs/release/additional-audit-2026-10-21.md"
+    ],
+    "traceReferences": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java",
+      "CON-ROUTE-001",
+      "FR-ROUTE-006",
+      "FR-ROUTE-014",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RoutePattern.java",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RoutingConfigException.java"
+    ],
+    "blockStartLine": 828,
+    "blockEndLine": 914,
+    "sectionLines": {
+      "Requirement": 843,
+      "Rationale": 847,
+      "Acceptance Criteria": 851,
+      "Verification Evidence": 859,
+      "Trace Links": 886,
+      "Research / Analysis": 898,
+      "Implementation Notes": 902,
+      "Change Notes": 906
+    },
+    "priority": "high",
+    "risk": "medium",
+    "stability": "evolving",
+    "newWorkCandidate": false,
+    "requirement": "The system shall provide a route-table freeze, which wave 4 calls inside `listen()` before any socket is bound, that raises a configuration error naming both conflicting registrations when two registrations of the same route kind share a method and have the same pattern or patterns that differ only in variable names, comparing patterns normalised under the active path-form policies, and when a `TRACE` or `CONNECT` route is registered while that method's routing is disabled.",
+    "rationale": "Covers D-056, D-057, D-058 (T03) and the loop W residual (conflict detection on policy-normalised patterns; a TRACE or CONNECT route while disabled is a configuration error at freeze). A WebSocket route and a `GET` route on one pattern do not conflict (D-068).",
+    "research": "- -",
+    "implementationNotes": "- -",
+    "diagnostics": [],
+    "errors": [],
+    "warnings": [],
+    "diagnosticsSummary": {
+      "errors": 0,
+      "warnings": 0,
+      "byCode": {}
+    }
+  },
+  "diagnostics": [],
+  "diagnosticsSummary": {
+    "errors": 0,
+    "warnings": 0,
+    "byCode": {}
+  },
+  "mcpWorkspace": {
+    "workspaceRoot": "/Users/beom/work/git/NaruServe",
+    "rootSource": "server-cwd-discovery",
+    "indexPath": "docs/spec/00.index.md",
+    "packageVersion": "4.2.0"
+  }
+}

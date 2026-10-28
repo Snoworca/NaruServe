@@ -1,0 +1,675 @@
+{
+  "ok": true,
+  "value": {
+    "id": "FR-SVL-002",
+    "title": "Servlet request mapping: raw path minus context path and servlet mapping, raw query, headers, and the same application types as on the embedded engine",
+    "type": "functional",
+    "target": "wave-8",
+    "status": "verified",
+    "scope": "SVL",
+    "filePath": "docs/spec/14.servlet-adapter.srs.md",
+    "headingLine": 291,
+    "metadata": {
+      "Type": "functional",
+      "Target": "wave-8",
+      "Status": "verified",
+      "Priority": "high",
+      "Tags": "wave-8, feasibility:high, servlet, request, paths",
+      "Risk": "high",
+      "Stability": "evolving",
+      "Verification Method": "test",
+      "GitHub Issue": "https://github.com/Snoworca/NaruServe/issues/19",
+      "Related Docs": "-"
+    },
+    "acceptanceCriteria": [
+      {
+        "id": "AC-1",
+        "text": "With context path `/app` and pattern `/api/*`, a request to `/app/api/users/%41;v=1?x=%20` reaches a route `/users/:id` with `req.rawPath()` equal to `/users/%41;v=1`, `req.param(\"id\")` equal to `A;v=1` and `req.query(\"x\")` equal to a space; with pattern `/*` or `/` the same request without `/api` reaches the same route, and a request to the bare servlet root reaches the route `/` (empty remainder is `/`). [D-363; D-399]",
+        "checked": true,
+        "line": 316
+      },
+      {
+        "id": "AC-2",
+        "text": "A request whose raw URI does not start with the context path plus the registered prefix at a segment boundary (a test sends `/app/%61pi/users` to pattern `/api/*`) is answered `404` with the standard error body and a request id, and `getServletPath()`, `getPathInfo()` and `getParameter*` are never read, which a recording `HttpServletRequest` proxy asserts. [D-363; r3 W2-004]",
+        "checked": true,
+        "line": 317
+      },
+      {
+        "id": "AC-3",
+        "text": "Headers reach `req.header(name)` and `req.headers(name)` with repeated names kept in their per-name order (the Servlet API gives no cross-name order), `Cookie` request headers reach the core cookie parser unchanged (`req.cookie(\"s\")` returns a NaruServe `Cookie`, never `javax.servlet.http.Cookie`), `req.remoteAddress()` is `getRemoteAddr()` and `req.isSecure()` is `isSecure()`; `app.trustProxy(true)` takes effect in the core (FR-ENGINE-008). [D-360]",
+        "checked": true,
+        "line": 318
+      },
+      {
+        "id": "AC-4",
+        "text": "A shared case suite — route parameters, query decoding, JSON body and `res.json`, cookies read and written, `404`, `405` with `Allow`, automatic `HEAD` and `OPTIONS`, middleware order, `onError` and the standard error body, `res.file` — runs on the Servlet adapter and on the in-memory adapter with identical statuses and bodies, using the same app definition code, so application code needs no change between engines. [D-360; I-021]",
+        "checked": true,
+        "line": 319
+      },
+      {
+        "id": "AC-5",
+        "text": "The path-rejection cases of D-052 (malformed percent-encoding, invalid UTF-8, an encoded `/`, an encoded or raw `NUL`, `.` and `..` segments raw and encoded) sent as raw request lines to the embedded container are answered `400`, or `404` when the container normalises the path and never reaches the servlet, and never `2xx`; the `OPTIONS *` request is sent too, and the observed status of every case is recorded in `docs/api/servlet.md`. [D-052; I-021]",
+        "checked": true,
+        "line": 320
+      },
+      {
+        "id": "AC-6",
+        "text": "Header values the framework writes never contain CR or LF on this adapter, and security-related log lines of the adapter carry no token, session id or file content. [I-016; I-017]",
+        "checked": true,
+        "line": 321
+      }
+    ],
+    "verificationEvidence": [
+      {
+        "id": "VE-1",
+        "type": "test",
+        "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletCasesTest.java#sdsAc4_FR_SVL_002_AC4_sharedCasesGiveEqualStatusesAndBodiesOnBothAdapters",
+        "covers": "AC-4",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 327
+      },
+      {
+        "id": "VE-2",
+        "type": "test",
+        "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletPathTest.java#sdsAc1_FR_SVL_002_AC1_remainderStripsContextAndPrefixAtASegmentBoundary",
+        "covers": "AC-1",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 328
+      },
+      {
+        "id": "VE-3",
+        "type": "test",
+        "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletPathTest.java#sdsAc1_FR_SVL_002_AC1_remainderNeverDecodesOrNormalises",
+        "covers": "AC-1",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 329
+      },
+      {
+        "id": "VE-4",
+        "type": "test",
+        "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletPathTest.java#sdsAc1_FR_SVL_002_AC1_prefixPatternReachesTheRouteWithTheRawPath",
+        "covers": "AC-1",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 330
+      },
+      {
+        "id": "VE-5",
+        "type": "test",
+        "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletPathTest.java#sdsAc1_FR_SVL_002_AC1_slashStarAndSlashStripNothingAfterTheContextPath",
+        "covers": "AC-1",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 331
+      },
+      {
+        "id": "VE-6",
+        "type": "test",
+        "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRawTargetTest.java#sdsAc5_FR_SVL_002_AC5_rejectedTargetsAre400Or404AndMatchServletMd",
+        "covers": "AC-5",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 332
+      },
+      {
+        "id": "VE-7",
+        "type": "test",
+        "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRejectTest.java#sdsAc6_FR_SVL_002_AC6_unboundAnswer503CarriesOnlyFixedHeaderValues",
+        "covers": "AC-6",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 333
+      },
+      {
+        "id": "VE-8",
+        "type": "test",
+        "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRejectTest.java#sdsAc6_FR_SVL_002_AC6_prefixMiss404LogsNoTokenSessionOrPath",
+        "covers": "AC-6",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 334
+      },
+      {
+        "id": "VE-9",
+        "type": "test",
+        "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRejectTest.java#sdsAc6_FR_SVL_002_AC6_fallbackRendererIsPlainJsonWithoutRequestText",
+        "covers": "AC-6",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 335
+      },
+      {
+        "id": "VE-10",
+        "type": "test",
+        "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRequestTest.java#sdsAc2_FR_SVL_002_AC2_encodedPrefixMissIs404WithStandardBodyAndNoForbiddenGetter",
+        "covers": "AC-2",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 336
+      },
+      {
+        "id": "VE-11",
+        "type": "test",
+        "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRequestTest.java#sdsAc3_FR_SVL_002_AC3_repeatedHeadersCookieAndRemoteValuesReachTheCore",
+        "covers": "AC-3",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 337
+      },
+      {
+        "id": "VE-12",
+        "type": "test",
+        "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRequestTest.java#sdsAc3_FR_SVL_002_AC3_trustProxyTakesEffectInTheCore",
+        "covers": "AC-3",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 338
+      },
+      {
+        "id": "VE-13",
+        "type": "test",
+        "reference": "src/test/java/com/snoworca/naruserve/docs/ServletDocsTest.java#sdsAc5_FR_SVL_002_AC5_observedStatuses",
+        "covers": "AC-5",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 339
+      },
+      {
+        "id": "VE-14",
+        "type": "test",
+        "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletPathTest.java",
+        "covers": "AC-1",
+        "notes": "verification_cmd ./gradlew build passed at 514472f (1534/1534); cited line NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletPathTest.java:29 and 3 more; bundle docs/research/naruserve-v1/waves/stage-8/lane-2026-10-19.naruserve.naruserve-v1-wave-8/",
+        "line": 340
+      },
+      {
+        "id": "VE-15",
+        "type": "test",
+        "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRequestTest.java",
+        "covers": "AC-2",
+        "notes": "verification_cmd ./gradlew build passed at 514472f (1534/1534); cited line NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRequestTest.java:41; bundle docs/research/naruserve-v1/waves/stage-8/lane-2026-10-19.naruserve.naruserve-v1-wave-8/",
+        "line": 341
+      },
+      {
+        "id": "VE-16",
+        "type": "test",
+        "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRequestTest.java",
+        "covers": "AC-3",
+        "notes": "verification_cmd ./gradlew build passed at 514472f (1534/1534); cited line NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRequestTest.java:62 and 1 more; bundle docs/research/naruserve-v1/waves/stage-8/lane-2026-10-19.naruserve.naruserve-v1-wave-8/",
+        "line": 342
+      },
+      {
+        "id": "VE-17",
+        "type": "test",
+        "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletCasesTest.java",
+        "covers": "AC-4",
+        "notes": "verification_cmd ./gradlew build passed at 514472f (1534/1534); cited line NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletCasesTest.java:76; bundle docs/research/naruserve-v1/waves/stage-8/lane-2026-10-19.naruserve.naruserve-v1-wave-8/",
+        "line": 343
+      },
+      {
+        "id": "VE-18",
+        "type": "test",
+        "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletPathTest.java",
+        "covers": "AC-5",
+        "notes": "verification_cmd ./gradlew build passed at 514472f (1534/1534); cited line NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletPathTest.java:43; bundle docs/research/naruserve-v1/waves/stage-8/lane-2026-10-19.naruserve.naruserve-v1-wave-8/",
+        "line": 344
+      },
+      {
+        "id": "VE-19",
+        "type": "test",
+        "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRawTargetTest.java",
+        "covers": "AC-5",
+        "notes": "verification_cmd ./gradlew build passed at 514472f (1534/1534); cited line NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRawTargetTest.java:86; bundle docs/research/naruserve-v1/waves/stage-8/lane-2026-10-19.naruserve.naruserve-v1-wave-8/",
+        "line": 345
+      },
+      {
+        "id": "VE-20",
+        "type": "test",
+        "reference": "src/test/java/com/snoworca/naruserve/docs/ServletDocsTest.java",
+        "covers": "AC-5",
+        "notes": "verification_cmd ./gradlew build passed at 514472f (1534/1534); cited line src/test/java/com/snoworca/naruserve/docs/ServletDocsTest.java:32 and 1 more; bundle docs/research/naruserve-v1/waves/stage-8/lane-2026-10-19.naruserve.naruserve-v1-wave-8/",
+        "line": 346
+      },
+      {
+        "id": "VE-21",
+        "type": "test",
+        "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRejectTest.java",
+        "covers": "AC-6",
+        "notes": "verification_cmd ./gradlew build passed at 514472f (1534/1534); cited line NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRejectTest.java:41 and 2 more; bundle docs/research/naruserve-v1/waves/stage-8/lane-2026-10-19.naruserve.naruserve-v1-wave-8/",
+        "line": 347
+      },
+      {
+        "id": "VE-22",
+        "type": "commit",
+        "reference": "173e22c39b13c1527ec3cdfb1a38773ba06c7ca7",
+        "covers": "all",
+        "notes": "-",
+        "line": 348
+      },
+      {
+        "id": "VE-23",
+        "type": "commit",
+        "reference": "93106928f1fd8308dc447b8ec5845eb3a66e8143",
+        "covers": "all",
+        "notes": "-",
+        "line": 349
+      },
+      {
+        "id": "VE-24",
+        "type": "commit",
+        "reference": "e2c5097b5e9d47d7159f4857875813daa02358a3",
+        "covers": "all",
+        "notes": "-",
+        "line": 350
+      },
+      {
+        "id": "VE-25",
+        "type": "commit",
+        "reference": "d57af39a5a48b55ce9d12b56cc15f4fe8cf21239",
+        "covers": "all",
+        "notes": "-",
+        "line": 351
+      },
+      {
+        "id": "VE-26",
+        "type": "commit",
+        "reference": "aa4126bacb6bcc2da533811cc2555b43ce5fca2f",
+        "covers": "all",
+        "notes": "-",
+        "line": 352
+      },
+      {
+        "id": "VE-27",
+        "type": "commit",
+        "reference": "f202f2428b6a89fdc494a8ff7d378105a538a6ea",
+        "covers": "all",
+        "notes": "-",
+        "line": 353
+      },
+      {
+        "id": "VE-28",
+        "type": "commit",
+        "reference": "a26b2875a827902c054376d7b5501081e9f429ef",
+        "covers": "all",
+        "notes": "-",
+        "line": 354
+      },
+      {
+        "id": "VE-29",
+        "type": "commit",
+        "reference": "9d21cda7d24c3c1f0df36b5c81963737464b6ab6",
+        "covers": "all",
+        "notes": "-",
+        "line": 355
+      },
+      {
+        "id": "VE-30",
+        "type": "commit",
+        "reference": "89b371549d8f35ae6d3f2536d066232da2a69bf5",
+        "covers": "all",
+        "notes": "-",
+        "line": 356
+      },
+      {
+        "id": "VE-31",
+        "type": "commit",
+        "reference": "b36a89ceb7284a3b697a1fdacf9b85fb3c3ad583",
+        "covers": "all",
+        "notes": "-",
+        "line": 357
+      },
+      {
+        "id": "VE-32",
+        "type": "commit",
+        "reference": "fd20f57e53332639f60dd7870355065373590a6b",
+        "covers": "all",
+        "notes": "-",
+        "line": 358
+      },
+      {
+        "id": "VE-33",
+        "type": "commit",
+        "reference": "cc9d318ea1b384589f59b692a3f8b5e0a303cb75",
+        "covers": "all",
+        "notes": "-",
+        "line": 359
+      },
+      {
+        "id": "VE-34",
+        "type": "commit",
+        "reference": "20b0a98d185959882e225af4c62315d4f697347e",
+        "covers": "all",
+        "notes": "-",
+        "line": 360
+      },
+      {
+        "id": "VE-35",
+        "type": "commit",
+        "reference": "69809b971001b87af17240bddfcc06cb3bd950b4",
+        "covers": "all",
+        "notes": "-",
+        "line": 361
+      },
+      {
+        "id": "VE-36",
+        "type": "commit",
+        "reference": "de35ca2940b126b57392cfdcd9e40e56e4bff2ef",
+        "covers": "all",
+        "notes": "-",
+        "line": 362
+      },
+      {
+        "id": "VE-37",
+        "type": "commit",
+        "reference": "b0cd6f8effd1a8dac770ad7cc40fc59ef670ffe9",
+        "covers": "all",
+        "notes": "-",
+        "line": 363
+      },
+      {
+        "id": "VE-38",
+        "type": "commit",
+        "reference": "5a03978d03bdfb270d70c5c5e750270d9a45faaa",
+        "covers": "all",
+        "notes": "-",
+        "line": 364
+      },
+      {
+        "id": "VE-39",
+        "type": "commit",
+        "reference": "f7cfac2b825ff4acedf23aa427dcbb10e0ba79ab",
+        "covers": "all",
+        "notes": "-",
+        "line": 365
+      },
+      {
+        "id": "VE-40",
+        "type": "commit",
+        "reference": "9a2cfd03cc0bd40d416a26c62df31dcb7e632aaf",
+        "covers": "all",
+        "notes": "-",
+        "line": 366
+      },
+      {
+        "id": "VE-41",
+        "type": "commit",
+        "reference": "c88825d30240da9b739571060a88095e4c57ae53",
+        "covers": "all",
+        "notes": "-",
+        "line": 367
+      },
+      {
+        "id": "VE-42",
+        "type": "commit",
+        "reference": "9087a451cf999ae92c2d9fc5f44bf54209650999",
+        "covers": "all",
+        "notes": "-",
+        "line": 368
+      },
+      {
+        "id": "VE-43",
+        "type": "commit",
+        "reference": "4320bb287a21abada6f265bb5a2b1f1e9fcffde7",
+        "covers": "all",
+        "notes": "-",
+        "line": 369
+      },
+      {
+        "id": "VE-44",
+        "type": "commit",
+        "reference": "ae44f5a3f0d7b0343b8876fddd5844922ef0290e",
+        "covers": "all",
+        "notes": "-",
+        "line": 370
+      },
+      {
+        "id": "VE-45",
+        "type": "commit",
+        "reference": "c63303ee4692aa542175255df1a8aec99979ae26",
+        "covers": "all",
+        "notes": "-",
+        "line": 371
+      },
+      {
+        "id": "VE-46",
+        "type": "commit",
+        "reference": "0350848107098466b6e30ae539c642721dbbc62b",
+        "covers": "all",
+        "notes": "-",
+        "line": 372
+      },
+      {
+        "id": "VE-47",
+        "type": "commit",
+        "reference": "18c30d1c050e33a80e4dac82a8556f071dfcf508",
+        "covers": "all",
+        "notes": "-",
+        "line": 373
+      },
+      {
+        "id": "VE-48",
+        "type": "commit",
+        "reference": "cd13b2d077fd3c2f43236c67828530216377b7d2",
+        "covers": "all",
+        "notes": "-",
+        "line": 374
+      },
+      {
+        "id": "VE-49",
+        "type": "commit",
+        "reference": "bb12b0c7c5678ddfdfc36597443123ff1b892925",
+        "covers": "all",
+        "notes": "-",
+        "line": 375
+      },
+      {
+        "id": "VE-50",
+        "type": "commit",
+        "reference": "21bdb681a408eac425f16686993a416c1667b45b",
+        "covers": "all",
+        "notes": "-",
+        "line": 376
+      },
+      {
+        "id": "VE-51",
+        "type": "commit",
+        "reference": "2963d044e3dee158c384bbd17d3fd1474d9dc3b3",
+        "covers": "all",
+        "notes": "-",
+        "line": 377
+      },
+      {
+        "id": "VE-52",
+        "type": "commit",
+        "reference": "48729f3e2b0feca58ceb5dc732f5a88426151774",
+        "covers": "all",
+        "notes": "-",
+        "line": 378
+      },
+      {
+        "id": "VE-53",
+        "type": "commit",
+        "reference": "543c5efcfbf4bcdf2460d2915a038790b6b97473",
+        "covers": "all",
+        "notes": "-",
+        "line": 379
+      },
+      {
+        "id": "VE-54",
+        "type": "commit",
+        "reference": "d28426f15386bd74767d215e77f6a4df0d3af4c1",
+        "covers": "all",
+        "notes": "-",
+        "line": 380
+      },
+      {
+        "id": "VE-55",
+        "type": "commit",
+        "reference": "9a35c5092137c3d4d48a34395d3141070458073e",
+        "covers": "all",
+        "notes": "-",
+        "line": 381
+      }
+    ],
+    "traceLinks": [
+      {
+        "type": "Code",
+        "reference": "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet",
+        "relation": "implements",
+        "notes": "trace_intent=addition_site",
+        "line": 387
+      },
+      {
+        "type": "Requirement",
+        "reference": "IR-HTTP-003",
+        "relation": "extends",
+        "notes": "HttpExchange data contract",
+        "line": 388
+      },
+      {
+        "type": "Requirement",
+        "reference": "FR-HTTP-009",
+        "relation": "extends",
+        "notes": "request path accessors",
+        "line": 389
+      },
+      {
+        "type": "Requirement",
+        "reference": "FR-ROUTE-004",
+        "relation": "extends",
+        "notes": "path validator",
+        "line": 390
+      },
+      {
+        "type": "Requirement",
+        "reference": "FR-ENGINE-007",
+        "relation": "extends",
+        "notes": "path-rejection cases on both adapters",
+        "line": 391
+      },
+      {
+        "type": "Requirement",
+        "reference": "FR-ENGINE-008",
+        "relation": "extends",
+        "notes": "proxy trust in the core",
+        "line": 392
+      },
+      {
+        "type": "Requirement",
+        "reference": "IR-SVL-001",
+        "relation": "depends_on",
+        "notes": "registered url-pattern and init-parameters",
+        "line": 393
+      }
+    ],
+    "changeNotes": [
+      {
+        "date": "2026-10-20",
+        "change": "Created",
+        "reason": "add-requirement",
+        "line": 407
+      },
+      {
+        "date": "2026-10-20",
+        "change": "Stability -> evolving",
+        "reason": "Feasibility=high (score 83). Blockers: none. Run: 2026-10-20.NaruServe.wave-8.v01",
+        "line": 408
+      },
+      {
+        "date": "2026-10-21",
+        "change": "Status -> verified",
+        "reason": "wave 8 promotion: all ACs checked with test evidence at 514472f",
+        "line": 409
+      }
+    ],
+    "tags": [
+      "wave-8",
+      "feasibility:high",
+      "servlet",
+      "request",
+      "paths"
+    ],
+    "relatedDocs": [],
+    "evidenceReferences": [
+      "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletCasesTest.java",
+      "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletPathTest.java",
+      "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRawTargetTest.java",
+      "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRejectTest.java",
+      "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRequestTest.java",
+      "src/test/java/com/snoworca/naruserve/docs/ServletDocsTest.java",
+      "173e22c39b13c1527ec3cdfb1a38773ba06c7ca7",
+      "93106928f1fd8308dc447b8ec5845eb3a66e8143",
+      "e2c5097b5e9d47d7159f4857875813daa02358a3",
+      "d57af39a5a48b55ce9d12b56cc15f4fe8cf21239",
+      "aa4126bacb6bcc2da533811cc2555b43ce5fca2f",
+      "f202f2428b6a89fdc494a8ff7d378105a538a6ea",
+      "a26b2875a827902c054376d7b5501081e9f429ef",
+      "9d21cda7d24c3c1f0df36b5c81963737464b6ab6",
+      "89b371549d8f35ae6d3f2536d066232da2a69bf5",
+      "b36a89ceb7284a3b697a1fdacf9b85fb3c3ad583",
+      "fd20f57e53332639f60dd7870355065373590a6b",
+      "cc9d318ea1b384589f59b692a3f8b5e0a303cb75",
+      "20b0a98d185959882e225af4c62315d4f697347e",
+      "69809b971001b87af17240bddfcc06cb3bd950b4",
+      "de35ca2940b126b57392cfdcd9e40e56e4bff2ef",
+      "b0cd6f8effd1a8dac770ad7cc40fc59ef670ffe9",
+      "5a03978d03bdfb270d70c5c5e750270d9a45faaa",
+      "f7cfac2b825ff4acedf23aa427dcbb10e0ba79ab",
+      "9a2cfd03cc0bd40d416a26c62df31dcb7e632aaf",
+      "c88825d30240da9b739571060a88095e4c57ae53",
+      "9087a451cf999ae92c2d9fc5f44bf54209650999",
+      "4320bb287a21abada6f265bb5a2b1f1e9fcffde7",
+      "ae44f5a3f0d7b0343b8876fddd5844922ef0290e",
+      "c63303ee4692aa542175255df1a8aec99979ae26",
+      "0350848107098466b6e30ae539c642721dbbc62b",
+      "18c30d1c050e33a80e4dac82a8556f071dfcf508",
+      "cd13b2d077fd3c2f43236c67828530216377b7d2",
+      "bb12b0c7c5678ddfdfc36597443123ff1b892925",
+      "21bdb681a408eac425f16686993a416c1667b45b",
+      "2963d044e3dee158c384bbd17d3fd1474d9dc3b3",
+      "48729f3e2b0feca58ceb5dc732f5a88426151774",
+      "543c5efcfbf4bcdf2460d2915a038790b6b97473",
+      "d28426f15386bd74767d215e77f6a4df0d3af4c1",
+      "9a35c5092137c3d4d48a34395d3141070458073e"
+    ],
+    "traceReferences": [
+      "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet",
+      "IR-HTTP-003",
+      "FR-HTTP-009",
+      "FR-ROUTE-004",
+      "FR-ENGINE-007",
+      "FR-ENGINE-008",
+      "IR-SVL-001"
+    ],
+    "blockStartLine": 291,
+    "blockEndLine": 410,
+    "sectionLines": {
+      "Requirement": 306,
+      "Rationale": 310,
+      "Acceptance Criteria": 314,
+      "Verification Evidence": 323,
+      "Trace Links": 383,
+      "Research / Analysis": 395,
+      "Implementation Notes": 399,
+      "Change Notes": 403
+    },
+    "priority": "high",
+    "risk": "high",
+    "stability": "evolving",
+    "newWorkCandidate": false,
+    "requirement": "The system shall map each servlet request to the `HttpExchange` values the core expects — `methodToken`, the raw `getRequestURI()` with the context path and the url-pattern prefix the initializer registered stripped at a segment boundary and kept percent-encoded, the raw `getQueryString()`, `getProtocol()`, every header value with duplicates kept and per-name order preserved, `getRemoteAddr()`, `isSecure()` and `getInputStream()` — so that routes, middleware, `Request`, `Response` and `Cookie` behave as on the embedded engine.",
+    "rationale": "Covers D-360, D-363 (path handling), D-399, D-052, wave decisions Servlet path edge cases (r2 W2-003) and Servlet path and WebSocket answer (r3 W2-004: the remainder is the request URI minus the context path minus the url-pattern prefix, not `getServletPath()`), and I-021. Measured: `HttpExchange.rawPath()` is \"the raw request-target path, undecoded\" and `httpVersion()` is the request-line version such as `HTTP/1.1` (`spi/HttpExchange.java:27-37`). Decision: context path `/app`, pattern `/api/*` and URI `/app/api/users/%41;v=1` give the path `/users/%41;v=1`; patterns `/*` and `/` strip nothing after the context path; an empty remainder is the path `/`; path parameters (`;name=value`) stay in the path as in Express; when the raw URI does not start with the context path plus the prefix at a segment boundary (the remainder must be empty or start with `/`) the adapter answers `404` with the standard error body through the `ErrorRenderer` of the settings. Pitfall: containers match servlet mappings on the decoded path, so `/app/%61pi/x` can reach the servlet while the raw prefix `/api` does not match; `getServletPath()` and `getPathInfo()` are decoded and normalised and must not be used (D-399). Pitfall: `getParameter*` would consume a form body (FR-SVL-004). Rejected alternative: matching the prefix on the decoded path; it would let an encoded segment change which handler runs.",
+    "research": "- -",
+    "implementationNotes": "- -",
+    "diagnostics": [],
+    "errors": [],
+    "warnings": [],
+    "diagnosticsSummary": {
+      "errors": 0,
+      "warnings": 0,
+      "byCode": {}
+    }
+  },
+  "diagnostics": [],
+  "diagnosticsSummary": {
+    "errors": 0,
+    "warnings": 0,
+    "byCode": {}
+  },
+  "mcpWorkspace": {
+    "workspaceRoot": "/Users/beom/work/git/NaruServe",
+    "rootSource": "server-cwd-discovery",
+    "indexPath": "docs/spec/00.index.md",
+    "packageVersion": "4.2.0"
+  }
+}

@@ -1,0 +1,15 @@
+java8 identity-a=false
+java8 unmatched-backref=false
+java8 astral-dot-no-u=true
+java8 ascii-identity-u-braces=ERROR:PatternSyntaxException
+java8 named-underscore=ERROR:PatternSyntaxException
+java8 js-empty-negative-class=ERROR:PatternSyntaxException
+java8 java-intersection=true
+rhino new RegExp('a','g').flags => g
+rhino new RegExp('a','y').flags => y
+rhino new RegExp('.','s').flags => s
+rhino new RegExp('.','u').flags => ERROR:SyntaxError: invalid flag 'u' after regular expression (probe#1)
+rhino new RegExp('a','d').flags => ERROR:SyntaxError: invalid flag 'd' after regular expression (probe#1)
+rhino new RegExp('[a&&a]','v').flags => ERROR:SyntaxError: invalid flag 'v' after regular expression (probe#1)
+rhino new RegExp('(?<id>a)').exec('a')[1] => ERROR:SyntaxError: Invalid quantifier ? (probe#1)
+rhino new RegExp('(?<=a)b').exec('ab')[0] => ERROR:SyntaxError: Invalid quantifier ? (probe#1)

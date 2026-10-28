@@ -1,0 +1,672 @@
+{
+  "ok": true,
+  "value": {
+    "id": "FR-APP-020",
+    "title": "Long-connection shutdown coordination: closed flags before snapshots, participants with the deadline, the accepting phase, in-flight requests, force-close and the 3 s bound",
+    "type": "functional",
+    "target": "wave-7",
+    "status": "verified",
+    "scope": "APP",
+    "filePath": "docs/spec/05.application.srs.md",
+    "headingLine": 3419,
+    "metadata": {
+      "Type": "functional",
+      "Target": "wave-7",
+      "Status": "verified",
+      "Priority": "high",
+      "Tags": "wave-7, feasibility:high, shutdown",
+      "Risk": "high",
+      "Stability": "evolving",
+      "Verification Method": "test",
+      "GitHub Issue": "https://github.com/Snoworca/NaruServe/issues/15",
+      "Related Docs": "-"
+    },
+    "acceptanceCriteria": [
+      {
+        "id": "AC-1",
+        "text": "`ShutdownParticipants` keeps `add(Phase, Runnable)` and gains an overload taking a participant that receives `long deadlineNanos`; participants of both kinds registered in one phase run in registration order, and a deadline participant receives the deadline that `shutdown(timeout, unit)` computed, which a test asserts by checking that `deadlineNanos - System.nanoTime()` at entry is at most the timeout and at least the timeout minus 100 ms. Decision: the deadline participant is a package-private functional interface. [residual: Deadline for shutdown participants (r5 W2-003)]",
+        "checked": true,
+        "line": 3444
+      },
+      {
+        "id": "AC-2",
+        "text": "With a shutdown timeout of 500 ms and one WebSocket session whose client stopped reading, the WebSocket close wait ends within 500 ms plus 200 ms and `shutdown` returns within 500 ms plus the 3 s margin (T44 case with a timeout below 1 s). [residual: Deadline for shutdown participants (r5 W2-003)] [D-344]",
+        "checked": true,
+        "line": 3445
+      },
+      {
+        "id": "AC-3",
+        "text": "Each closing participant sets its registry's closed flag under the registry lock before it takes its snapshot; afterwards `res.sse()` in a handler that was already running returns a client that is ended at once: the client receives the event-stream headers, the closing notice `event: shutdown\\ndata: shutdown\\n\\n` and the end of the body, the `onClose` listeners run once and `send` returns `false`; an upgrade that reaches the upgrade extension point after the flag receives `503` with `Connection: close` before any `101`; and every session or stream registered before the flag is in the snapshot, which an in-memory test asserts by setting the flag between two registrations. [D-445; carried: V2-002]",
+        "checked": true,
+        "line": 3446
+      },
+      {
+        "id": "AC-4",
+        "text": "The before-wait participants run while the adapter still accepts connections, for at most 1 s plus 200 ms of slack: a plain request sent while the WebSocket close wait is held by a stalled session receives `503` with `Connection: close` and the standard error body from the stopping gate, and an upgrade sent in that phase is refused without `101`. Deviation (recorded): object.md §11.4 step 2 stops accepting new connections and upgrades before the goodbye of step 3; NaruServe accepts connections during this phase and answers them `503` under D-166, which `docs/api/lifecycle.md` records. [D-446; carried: V2-002]",
+        "checked": true,
+        "line": 3447
+      },
+      {
+        "id": "AC-5",
+        "text": "A short request whose handler takes 300 ms and starts before `shutdown(5, TimeUnit.SECONDS)` completes with `200` and its full body, and the `onStop` callback runs only after that response completed, which a test asserts by recording both events in order (T44). [D-342]",
+        "checked": true,
+        "line": 3448
+      },
+      {
+        "id": "AC-6",
+        "text": "A WebSocket session and an SSE stream whose clients stopped reading are force-closed by the deadline: both client sockets reach end of stream or reset within the shutdown timeout plus the 3 s margin. [D-343]",
+        "checked": true,
+        "line": 3449
+      },
+      {
+        "id": "AC-7",
+        "text": "`shutdown(timeout, unit)` returns within the timeout plus 3 s when `onStop` callbacks and owned resources return at once, and `docs/api/lifecycle.md` records the 3 s margin with its parts (TinyHttpd stop overrun up to 1.5 s, adapter release up to 1 s, 0.5 s slack) and keeps the statement that `onStop`, resource close and logger flush run without a time limit. Decision: the D-344 margin is 3 s and is the T44 tolerance. [D-344; wave decision: Shutdown bound (W2-010)]",
+        "checked": true,
+        "line": 3450
+      },
+      {
+        "id": "AC-8",
+        "text": "A T44 test opens two WebSocket sessions whose clients stop reading while the server sends to them until their writes block, one healthy WebSocket session and one SSE stream over TinyHttpd, calls `shutdown(1, TimeUnit.SECONDS)` and asserts that it returns within 1 s plus 3 s, that the healthy session receives close `1001`, that the SSE client receives the closing notice and that both stalled sessions' client sockets are closed. [D-439; T44]",
+        "checked": true,
+        "line": 3451
+      },
+      {
+        "id": "AC-9",
+        "text": "After `shutdown` returns, no live thread of that app remains, counted by name as the threads whose names start with `naruserve-` plus `tinyhttpd-acceptor-<port>` and `tinyhttpd-watchdog`, the WebSocket session registry and the SSE stream registry are empty, and the multipart temporary directory holds no file created by that app, which a test run in an isolated test JVM fork that starts no other app asserts after a run with open sessions, streams and an upload in progress (T44). Decision: the app's threads are counted by name in an isolated fork, as in PERF-APP-001 AC-1, because TinyHttpd's `tinyhttpd-watchdog` name carries no port. [D-345]",
+        "checked": true,
+        "line": 3452
+      }
+    ],
+    "verificationEvidence": [
+      {
+        "id": "VE-1",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownParticipantsTest.java#wave7SdsAc6_FR_APP_020_AC1_runnableAndDeadlineParticipantsRunInAddOrderWithTheDeadline",
+        "covers": "AC-1",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 3458
+      },
+      {
+        "id": "VE-2",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownSequenceTest.java#wave7SdsAc7_FR_APP_020_AC1_everyPhaseGetsTheDeadlineComputedAtShutdownEntry",
+        "covers": "AC-1",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 3459
+      },
+      {
+        "id": "VE-3",
+        "type": "test",
+        "reference": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LongConnectionShutdownSocketTest.java#wave7SdsAc9_FR_APP_020_AC2_halfSecondTimeoutBoundsTheCloseWaitAndTheReturn",
+        "covers": "AC-2",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 3460
+      },
+      {
+        "id": "VE-4",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/SseShutdownTest.java#wave7SdsAc8_FR_APP_020_AC3_sseAfterTheFlagGetsTheNoticeAndEndsAtOnce",
+        "covers": "AC-3",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 3461
+      },
+      {
+        "id": "VE-5",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/WebSocketRegistryTest.java#sdsAc2_FR_WS_009_AC3_afterTheClosedFlagAnUpgradeGets503CloseAndNoWebSocketCall",
+        "covers": "AC-3",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 3462
+      },
+      {
+        "id": "VE-6",
+        "type": "test",
+        "reference": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LongConnectionShutdownSocketTest.java#wave7SdsAc9_FR_APP_020_AC4_requestsDuringTheGoodbyeGet503WithConnectionClose",
+        "covers": "AC-4",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 3463
+      },
+      {
+        "id": "VE-7",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownSequenceTest.java#wave7SdsAc7_FR_APP_020_AC5_inFlight300MsRequestCompletesBeforeOnStop",
+        "covers": "AC-5",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 3464
+      },
+      {
+        "id": "VE-8",
+        "type": "test",
+        "reference": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LongConnectionShutdownSocketTest.java#wave7SdsAc9_FR_APP_020_AC8_AC6_AC7_oneSecondShutdownClosesStalledAndHealthyConnections",
+        "covers": "AC-6",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 3465
+      },
+      {
+        "id": "VE-9",
+        "type": "test",
+        "reference": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LongConnectionShutdownSocketTest.java#wave7SdsAc9_FR_APP_020_AC8_AC6_AC7_oneSecondShutdownClosesStalledAndHealthyConnections",
+        "covers": "AC-7",
+        "notes": "command: ./gradlew build; result: pass; the docs/api/lifecycle.md 3 s margin statement is written by wave-7 part 13",
+        "line": 3466
+      },
+      {
+        "id": "VE-10",
+        "type": "test",
+        "reference": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LongConnectionShutdownSocketTest.java#wave7SdsAc9_FR_APP_020_AC8_AC6_AC7_oneSecondShutdownClosesStalledAndHealthyConnections",
+        "covers": "AC-8",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 3467
+      },
+      {
+        "id": "VE-11",
+        "type": "test",
+        "reference": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/ShutdownIsolatedSocketTest.java#wave7SdsAc9_FR_APP_020_AC9_noThreadNoRegistryEntryAndNoTempFileAfterShutdown",
+        "covers": "AC-9",
+        "notes": "command: ./gradlew build (NaruServe-tinyhttpd isolatedTest task, forkEvery 1); result: pass",
+        "line": 3468
+      },
+      {
+        "id": "VE-12",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/AppDocsTest.java#wave7s13SdsAc10_OPS_APP_005_AC9_lifecycleStatementsAndLoggingLines",
+        "covers": "AC-7",
+        "notes": "command ./gradlew build, result pass",
+        "line": 3469
+      },
+      {
+        "id": "VE-13",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownParticipantsTest.java",
+        "covers": "AC-1",
+        "notes": "verification_cmd ./gradlew build passed at e25fe0d (1239/1239); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownParticipantsTest.java:49; bundle docs/research/naruserve-v1/waves/stage-7/lane-2026-10-19.naruserve.naruserve-v1-wave-7/",
+        "line": 3470
+      },
+      {
+        "id": "VE-14",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownSequenceTest.java",
+        "covers": "AC-1",
+        "notes": "verification_cmd ./gradlew build passed at e25fe0d (1239/1239); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownSequenceTest.java:403; bundle docs/research/naruserve-v1/waves/stage-7/lane-2026-10-19.naruserve.naruserve-v1-wave-7/",
+        "line": 3471
+      },
+      {
+        "id": "VE-15",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/SseShutdownTest.java",
+        "covers": "AC-1",
+        "notes": "verification_cmd ./gradlew build passed at e25fe0d (1239/1239); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/internal/SseShutdownTest.java:292; bundle docs/research/naruserve-v1/waves/stage-7/lane-2026-10-19.naruserve.naruserve-v1-wave-7/",
+        "line": 3472
+      },
+      {
+        "id": "VE-16",
+        "type": "test",
+        "reference": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LongConnectionShutdownSocketTest.java",
+        "covers": "AC-2",
+        "notes": "verification_cmd ./gradlew build passed at e25fe0d (1239/1239); cited line NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LongConnectionShutdownSocketTest.java:154; bundle docs/research/naruserve-v1/waves/stage-7/lane-2026-10-19.naruserve.naruserve-v1-wave-7/",
+        "line": 3473
+      },
+      {
+        "id": "VE-17",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/SseShutdownTest.java",
+        "covers": "AC-3",
+        "notes": "verification_cmd ./gradlew build passed at e25fe0d (1239/1239); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/internal/SseShutdownTest.java:298; bundle docs/research/naruserve-v1/waves/stage-7/lane-2026-10-19.naruserve.naruserve-v1-wave-7/",
+        "line": 3474
+      },
+      {
+        "id": "VE-18",
+        "type": "test",
+        "reference": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LongConnectionShutdownSocketTest.java",
+        "covers": "AC-4",
+        "notes": "verification_cmd ./gradlew build passed at e25fe0d (1239/1239); cited line NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LongConnectionShutdownSocketTest.java:171; bundle docs/research/naruserve-v1/waves/stage-7/lane-2026-10-19.naruserve.naruserve-v1-wave-7/",
+        "line": 3475
+      },
+      {
+        "id": "VE-19",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownSequenceTest.java",
+        "covers": "AC-5",
+        "notes": "verification_cmd ./gradlew build passed at e25fe0d (1239/1239); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownSequenceTest.java:429; bundle docs/research/naruserve-v1/waves/stage-7/lane-2026-10-19.naruserve.naruserve-v1-wave-7/",
+        "line": 3476
+      },
+      {
+        "id": "VE-20",
+        "type": "test",
+        "reference": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LongConnectionShutdownSocketTest.java",
+        "covers": "AC-6",
+        "notes": "verification_cmd ./gradlew build passed at e25fe0d (1239/1239); cited line NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LongConnectionShutdownSocketTest.java:107; bundle docs/research/naruserve-v1/waves/stage-7/lane-2026-10-19.naruserve.naruserve-v1-wave-7/",
+        "line": 3477
+      },
+      {
+        "id": "VE-21",
+        "type": "test",
+        "reference": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LongConnectionShutdownSocketTest.java",
+        "covers": "AC-7",
+        "notes": "verification_cmd ./gradlew build passed at e25fe0d (1239/1239); cited line NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LongConnectionShutdownSocketTest.java:107; bundle docs/research/naruserve-v1/waves/stage-7/lane-2026-10-19.naruserve.naruserve-v1-wave-7/",
+        "line": 3478
+      },
+      {
+        "id": "VE-22",
+        "type": "test",
+        "reference": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LongConnectionShutdownSocketTest.java",
+        "covers": "AC-8",
+        "notes": "verification_cmd ./gradlew build passed at e25fe0d (1239/1239); cited line NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LongConnectionShutdownSocketTest.java:107; bundle docs/research/naruserve-v1/waves/stage-7/lane-2026-10-19.naruserve.naruserve-v1-wave-7/",
+        "line": 3479
+      },
+      {
+        "id": "VE-23",
+        "type": "test",
+        "reference": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/ShutdownIsolatedSocketTest.java",
+        "covers": "AC-9",
+        "notes": "verification_cmd ./gradlew build passed at e25fe0d (1239/1239); cited line NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/ShutdownIsolatedSocketTest.java:41; bundle docs/research/naruserve-v1/waves/stage-7/lane-2026-10-19.naruserve.naruserve-v1-wave-7/",
+        "line": 3480
+      },
+      {
+        "id": "VE-24",
+        "type": "commit",
+        "reference": "e67f61e4c54c4877676bc79cef9cd3332614ab9b",
+        "covers": "all",
+        "notes": "-",
+        "line": 3481
+      },
+      {
+        "id": "VE-25",
+        "type": "commit",
+        "reference": "6ba51788c866ce1e140528ca77e2e39fff94c6d7",
+        "covers": "all",
+        "notes": "-",
+        "line": 3482
+      },
+      {
+        "id": "VE-26",
+        "type": "commit",
+        "reference": "fa7e535ec036f99c8f9ab3aa788567a3fd52c382",
+        "covers": "all",
+        "notes": "-",
+        "line": 3483
+      },
+      {
+        "id": "VE-27",
+        "type": "commit",
+        "reference": "cea10fccebdad844952135edd3e23ccff208d201",
+        "covers": "all",
+        "notes": "-",
+        "line": 3484
+      },
+      {
+        "id": "VE-28",
+        "type": "commit",
+        "reference": "7b3ba1ab8f1ad8821b49ed9f5dd8e0fac62353db",
+        "covers": "all",
+        "notes": "-",
+        "line": 3485
+      },
+      {
+        "id": "VE-29",
+        "type": "commit",
+        "reference": "e8d9036e3403012b21e2c4e3d06e92634cbc5e48",
+        "covers": "all",
+        "notes": "-",
+        "line": 3486
+      },
+      {
+        "id": "VE-30",
+        "type": "commit",
+        "reference": "6abec962bf077393bdda7b1f34866d6789195af9",
+        "covers": "all",
+        "notes": "-",
+        "line": 3487
+      },
+      {
+        "id": "VE-31",
+        "type": "commit",
+        "reference": "8bf8ea8f45f10654aa0e18bbf5dfbd2f1efe4721",
+        "covers": "all",
+        "notes": "-",
+        "line": 3488
+      },
+      {
+        "id": "VE-32",
+        "type": "commit",
+        "reference": "11019dbbe5a3513d2a0edaceae9f34066d24b14d",
+        "covers": "all",
+        "notes": "-",
+        "line": 3489
+      },
+      {
+        "id": "VE-33",
+        "type": "commit",
+        "reference": "c1974cb50b2f1427d66468cae20782bf8f0962e3",
+        "covers": "all",
+        "notes": "-",
+        "line": 3490
+      },
+      {
+        "id": "VE-34",
+        "type": "commit",
+        "reference": "0b3bec9d0a742af3a6cec69aab16976dbba0a0a7",
+        "covers": "all",
+        "notes": "-",
+        "line": 3491
+      },
+      {
+        "id": "VE-35",
+        "type": "commit",
+        "reference": "6856cb45be366bda0101e34f39c3a3ab99061e02",
+        "covers": "all",
+        "notes": "-",
+        "line": 3492
+      },
+      {
+        "id": "VE-36",
+        "type": "commit",
+        "reference": "9513a1df1dbf834849d28c7fae108ecff6cdbc3d",
+        "covers": "all",
+        "notes": "-",
+        "line": 3493
+      },
+      {
+        "id": "VE-37",
+        "type": "commit",
+        "reference": "d61b4fa96800096579e010634cc76ac5d10f4433",
+        "covers": "all",
+        "notes": "-",
+        "line": 3494
+      },
+      {
+        "id": "VE-38",
+        "type": "commit",
+        "reference": "1e1e42fcfceef81bc0e01d5d2f3a085ef9803294",
+        "covers": "all",
+        "notes": "-",
+        "line": 3495
+      },
+      {
+        "id": "VE-39",
+        "type": "commit",
+        "reference": "4c773396d7fd9593e38b3e586ee04f5d7d1ad680",
+        "covers": "all",
+        "notes": "-",
+        "line": 3496
+      },
+      {
+        "id": "VE-40",
+        "type": "commit",
+        "reference": "b90b382bcb16b57b7d98aa0e3a95334475ce22e2",
+        "covers": "all",
+        "notes": "-",
+        "line": 3497
+      },
+      {
+        "id": "VE-41",
+        "type": "commit",
+        "reference": "cab4cb5c109fa3e29b3c9193e8107e93935944fe",
+        "covers": "all",
+        "notes": "-",
+        "line": 3498
+      },
+      {
+        "id": "VE-42",
+        "type": "commit",
+        "reference": "404466417b8d5c4feda526d828a7c5017649e585",
+        "covers": "all",
+        "notes": "-",
+        "line": 3499
+      },
+      {
+        "id": "VE-43",
+        "type": "commit",
+        "reference": "4c368bb169368759b5938d5767f3cadbcbfa91b1",
+        "covers": "all",
+        "notes": "-",
+        "line": 3500
+      },
+      {
+        "id": "VE-44",
+        "type": "commit",
+        "reference": "c9cb060b41c06328529d79ebf1eb2eab71ef9729",
+        "covers": "all",
+        "notes": "-",
+        "line": 3501
+      },
+      {
+        "id": "VE-45",
+        "type": "commit",
+        "reference": "3e5ae1dfb47efeea1667a7081279320395678475",
+        "covers": "all",
+        "notes": "-",
+        "line": 3502
+      },
+      {
+        "id": "VE-46",
+        "type": "commit",
+        "reference": "58e89c1346edd2157acdc34c4ac384889c009797",
+        "covers": "all",
+        "notes": "-",
+        "line": 3503
+      },
+      {
+        "id": "VE-47",
+        "type": "commit",
+        "reference": "923548e6108f4cc29212f09e5ddf60c3d5c725d1",
+        "covers": "all",
+        "notes": "-",
+        "line": 3504
+      },
+      {
+        "id": "VE-48",
+        "type": "commit",
+        "reference": "27d24d6fe6c9e47bfb6d71127e654e240a07c954",
+        "covers": "all",
+        "notes": "-",
+        "line": 3505
+      },
+      {
+        "id": "VE-49",
+        "type": "commit",
+        "reference": "4022f6efe7cd0ae4bf9c27d2ffb52e613cb7afe0",
+        "covers": "all",
+        "notes": "-",
+        "line": 3506
+      },
+      {
+        "id": "VE-50",
+        "type": "commit",
+        "reference": "19b221dec3f49af7db5b6e90c6740514ef6d7919",
+        "covers": "all",
+        "notes": "-",
+        "line": 3507
+      },
+      {
+        "id": "VE-51",
+        "type": "commit",
+        "reference": "3021f38de62535bdf14a473074373c85003376aa",
+        "covers": "all",
+        "notes": "-",
+        "line": 3508
+      }
+    ],
+    "traceLinks": [
+      {
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ShutdownParticipants.java",
+        "relation": "implements",
+        "notes": "trace_intent=addition_site",
+        "line": 3514
+      },
+      {
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+        "relation": "implements",
+        "notes": "trace_intent=addition_site",
+        "line": 3515
+      },
+      {
+        "type": "Code",
+        "reference": "docs/api/lifecycle.md",
+        "relation": "implements",
+        "notes": "trace_intent=addition_site",
+        "line": 3516
+      },
+      {
+        "type": "Requirement",
+        "reference": "FR-APP-011",
+        "relation": "extends",
+        "notes": "shutdown sequence, deadline and participants gain the deadline overload",
+        "line": 3517
+      },
+      {
+        "type": "Requirement",
+        "reference": "FR-APP-013",
+        "relation": "extends",
+        "notes": "stopping gate answers requests and upgrades during the accepting phase",
+        "line": 3518
+      },
+      {
+        "type": "Requirement",
+        "reference": "FR-ENGINE-006",
+        "relation": "extends",
+        "notes": "adapter stop, release and keeper end inside the bound",
+        "line": 3519
+      },
+      {
+        "type": "Requirement",
+        "reference": "FR-WS-010",
+        "relation": "depends_on",
+        "notes": "WebSocket closing participant, for the T44 ACs only (AC-2, AC-6, AC-8, AC-9); FR-WS-010 AC-5 in turn uses this requirement's AC-1 deadline overload, so both are verified in one group and no reverse depends_on is declared (it would form a cycle)",
+        "line": 3520
+      },
+      {
+        "type": "Requirement",
+        "reference": "FR-SSE-005",
+        "relation": "depends_on",
+        "notes": "SSE closing participant",
+        "line": 3521
+      },
+      {
+        "type": "Requirement",
+        "reference": "FR-WS-009",
+        "relation": "depends_on",
+        "notes": "upgrade refused with 503 and Connection: close after the flag",
+        "line": 3522
+      },
+      {
+        "type": "Requirement",
+        "reference": "IR-HTTP-008",
+        "relation": "depends_on",
+        "notes": "AC-3/AC-4 503 with Connection: close through HttpException headers",
+        "line": 3523
+      }
+    ],
+    "changeNotes": [
+      {
+        "date": "2026-10-20",
+        "change": "Created",
+        "reason": "add-requirement",
+        "line": 3537
+      },
+      {
+        "date": "2026-10-20",
+        "change": "Stability -> evolving",
+        "reason": "Feasibility=high (score 85). Blockers: none. Run: 2026-10-19.naruserve.wave-7.v01",
+        "line": 3538
+      }
+    ],
+    "tags": [
+      "wave-7",
+      "feasibility:high",
+      "shutdown"
+    ],
+    "relatedDocs": [],
+    "evidenceReferences": [
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownParticipantsTest.java",
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ShutdownSequenceTest.java",
+      "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LongConnectionShutdownSocketTest.java",
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/SseShutdownTest.java",
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/WebSocketRegistryTest.java",
+      "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/ShutdownIsolatedSocketTest.java",
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/AppDocsTest.java",
+      "e67f61e4c54c4877676bc79cef9cd3332614ab9b",
+      "6ba51788c866ce1e140528ca77e2e39fff94c6d7",
+      "fa7e535ec036f99c8f9ab3aa788567a3fd52c382",
+      "cea10fccebdad844952135edd3e23ccff208d201",
+      "7b3ba1ab8f1ad8821b49ed9f5dd8e0fac62353db",
+      "e8d9036e3403012b21e2c4e3d06e92634cbc5e48",
+      "6abec962bf077393bdda7b1f34866d6789195af9",
+      "8bf8ea8f45f10654aa0e18bbf5dfbd2f1efe4721",
+      "11019dbbe5a3513d2a0edaceae9f34066d24b14d",
+      "c1974cb50b2f1427d66468cae20782bf8f0962e3",
+      "0b3bec9d0a742af3a6cec69aab16976dbba0a0a7",
+      "6856cb45be366bda0101e34f39c3a3ab99061e02",
+      "9513a1df1dbf834849d28c7fae108ecff6cdbc3d",
+      "d61b4fa96800096579e010634cc76ac5d10f4433",
+      "1e1e42fcfceef81bc0e01d5d2f3a085ef9803294",
+      "4c773396d7fd9593e38b3e586ee04f5d7d1ad680",
+      "b90b382bcb16b57b7d98aa0e3a95334475ce22e2",
+      "cab4cb5c109fa3e29b3c9193e8107e93935944fe",
+      "404466417b8d5c4feda526d828a7c5017649e585",
+      "4c368bb169368759b5938d5767f3cadbcbfa91b1",
+      "c9cb060b41c06328529d79ebf1eb2eab71ef9729",
+      "3e5ae1dfb47efeea1667a7081279320395678475",
+      "58e89c1346edd2157acdc34c4ac384889c009797",
+      "923548e6108f4cc29212f09e5ddf60c3d5c725d1",
+      "27d24d6fe6c9e47bfb6d71127e654e240a07c954",
+      "4022f6efe7cd0ae4bf9c27d2ffb52e613cb7afe0",
+      "19b221dec3f49af7db5b6e90c6740514ef6d7919",
+      "3021f38de62535bdf14a473074373c85003376aa"
+    ],
+    "traceReferences": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ShutdownParticipants.java",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+      "docs/api/lifecycle.md",
+      "FR-APP-011",
+      "FR-APP-013",
+      "FR-ENGINE-006",
+      "FR-WS-010",
+      "FR-SSE-005",
+      "FR-WS-009",
+      "IR-HTTP-008"
+    ],
+    "blockStartLine": 3419,
+    "blockEndLine": 3539,
+    "sectionLines": {
+      "Requirement": 3434,
+      "Rationale": 3438,
+      "Acceptance Criteria": 3442,
+      "Verification Evidence": 3454,
+      "Trace Links": 3510,
+      "Research / Analysis": 3525,
+      "Implementation Notes": 3529,
+      "Change Notes": 3533
+    },
+    "priority": "high",
+    "risk": "high",
+    "stability": "evolving",
+    "newWorkCandidate": false,
+    "requirement": "The system shall coordinate the WebSocket and SSE closing participants in the before-wait phase of shutdown by setting each registry's closed flag before its snapshot, passing each participant the shutdown deadline, running them while the adapter still accepts connections for at most 1 s with every request in that phase answered `503` with `Connection: close`, letting in-flight short requests complete before `onStop`, force-closing long connections still open at the deadline, returning from `shutdown(timeout, unit)` within the timeout plus a 3 s margin, and leaving no thread, queue or temporary upload file of the app behind.",
+    "rationale": "Covers D-342, D-343, D-344, D-345, D-439, D-445 (shared ordering and the `res.sse()`/upgrade answers after the flag), D-446, carried loop-D fix V2-002 (D-445, D-446), wave decision Shutdown bound (W2-010) and residual Deadline for shutdown participants (r5 W2-003); test T44. The per-registry participants are FR-WS-010 and FR-SSE-005; this requirement holds what they share. Measured: `internal/ShutdownParticipants.java:33` has only `add(Phase, Runnable)` with no deadline; `internal/DefaultRestApp.java:544` computes `deadline = System.nanoTime() + unit.toNanos(timeout)` and `:610-636` runs before-wait participants, `adapter.stop(left(deadline))`, force-close participants, `onStop`, after-on-stop participants (FR-APP-011); the stopping gate answers `503` + `Connection: close` (FR-APP-013, D-166). Decision: `ShutdownParticipants` gains an add-only overload taking a package-private functional interface `void run(long deadlineNanos)`; existing `Runnable` participants are unchanged (the type is package-private, so the change is allowed). Decision: the D-344 margin is 3 s = TinyHttpd `stop(grace)` overrun up to 1.5 s (acceptor join up to 1000 ms plus worker wait up to 500 ms) + adapter release wait of D-107 up to 1 s + 0.5 s scheduling slack, recorded in `docs/api/lifecycle.md` and used as the T44 tolerance; W2-010: the bound covers the core and adapter waits of D-162 while `onStop`, resource close and logger flush return promptly, and `docs/api/lifecycle.md` keeps its statement that those steps run without a time limit. Deviation (recorded): object.md §11.4 step 2 stops accepting new connections and upgrades before the WebSocket and SSE goodbye of step 3; NaruServe runs the before-wait participants while TinyHttpd still accepts connections (at most 1 s) and answers every request reaching the dispatcher with `503` + `Connection: close` (D-446), which `docs/api/lifecycle.md` records. Pitfall: snapshotting before setting the flag lets a session or stream register between the two and miss the goodbye (D-445). Rejected alternative: stopping the TinyHttpd acceptor before the participants; TinyHttpd's stop also closes its upgraded connections at once without the 1001 close frame, reopen if TinyHttpd gains a separate stop-accepting call (D-020).",
+    "research": "- -",
+    "implementationNotes": "- -",
+    "diagnostics": [],
+    "errors": [],
+    "warnings": [],
+    "diagnosticsSummary": {
+      "errors": 0,
+      "warnings": 0,
+      "byCode": {}
+    }
+  },
+  "diagnostics": [],
+  "diagnosticsSummary": {
+    "errors": 0,
+    "warnings": 0,
+    "byCode": {}
+  },
+  "mcpWorkspace": {
+    "workspaceRoot": "/Users/beom/work/git/NaruServe",
+    "rootSource": "server-cwd-discovery",
+    "indexPath": "docs/spec/00.index.md",
+    "packageVersion": "4.2.0"
+  }
+}

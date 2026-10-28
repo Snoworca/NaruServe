@@ -1,0 +1,825 @@
+{
+  "ok": true,
+  "value": {
+    "id": "FR-APP-019",
+    "title": "Access log: one line per HTTP request, the WebSocket handshake and close lines, and the SSE stream-end line (wave 7)",
+    "type": "functional",
+    "target": "wave-7",
+    "status": "verified",
+    "scope": "APP",
+    "filePath": "docs/spec/05.application.srs.md",
+    "headingLine": 3278,
+    "metadata": {
+      "Type": "functional",
+      "Target": "wave-7",
+      "Status": "verified",
+      "Priority": "high",
+      "Tags": "wave-7, feasibility:high, access-log, supersedes:FR-APP-015",
+      "Risk": "medium",
+      "Stability": "evolving",
+      "Verification Method": "test",
+      "GitHub Issue": "https://github.com/Snoworca/NaruServe/issues/15",
+      "Related Docs": "-"
+    },
+    "acceptanceCriteria": [
+      {
+        "id": "AC-1",
+        "text": "With the defaults, `GET /users/7` answered `200` with a 5-byte body produces exactly one `info` line matching `GET /users/7 200 \\d+ms in=0 out=5 rid=[0-9a-f]{16}`. [D-173; D-181; T38] Decision: this is the line format, and the request id is 16 lowercase hex characters generated per request. Decision: the duration is the `System.nanoTime()` difference from request start to response end divided by 1 000 000, in whole milliseconds. [SDS 2026-10-19.naruserve.naruserve-v1-wave-4-8 SDS-AC-4] re_stated_from: FR-APP-015#AC1",
+        "checked": true,
+        "line": 3303
+      },
+      {
+        "id": "AC-2",
+        "text": "With `includeDuration(false)`, `includeBytes(false)` and `includeRequestId(false)` the line is `GET /users/7 200`, and with `level(LogLevel.DEBUG)` it is written through `debug`. [D-172; D-173] Decision: a disabled part is dropped together with its leading space, and `level` selects the `Logger` method, `trace` to `error(String)` for `TRACE` to `ERROR`. [SDS 2026-10-19.naruserve.naruserve-v1-wave-4-8 SDS-AC-5] re_stated_from: FR-APP-015#AC2",
+        "checked": true,
+        "line": 3304
+      },
+      {
+        "id": "AC-3",
+        "text": "A response aborted after commit (handler throws while `STREAMING`) produces one line with its committed status followed by ` aborted`; a `404`, a `405`, a handler `500`, each pre-request rejection (`501` unknown token, `400` raw path, `400` validator, `204` `OPTIONS *`) and each lifecycle-gate `503` produce exactly one line. [D-173; wave decision: Pre-request rejections; wave decision: Lifecycle gate] re_stated_from: FR-APP-015#AC3",
+        "checked": true,
+        "line": 3305
+      },
+      {
+        "id": "AC-4",
+        "text": "For a streaming response the line is written once after the stream copy finished, with `out` equal to the bytes copied; for a `HEAD` response `out` is `0`. [D-173; D-177] re_stated_from: FR-APP-015#AC4",
+        "checked": true,
+        "line": 3306
+      },
+      {
+        "id": "AC-5",
+        "text": "`in` counts the request body bytes the core read from the adapter's body stream (not the declared `Content-Length`): a dispatcher test whose handler reads 4 bytes of a 10-byte body through the internal `BodyState` stream logs `in=4`, and a handler that never reads gives `in=0`. [D-177] re_stated_from: FR-APP-015#AC5",
+        "checked": true,
+        "line": 3307
+      },
+      {
+        "id": "AC-6",
+        "text": "After `exclude(\"/health\")`, `GET /health` produces no line while `GET /health/x` and `GET /healthz` do; with `enabled(false)` no request produces a line. [D-174; D-172] Decision: `exclude` matches the raw path without the query exactly. re_stated_from: FR-APP-015#AC6",
+        "checked": true,
+        "line": 3308
+      },
+      {
+        "id": "AC-7",
+        "text": "The `rid` value of the line equals the `requestId` of the standard error body of the same request. [D-135] re_stated_from: FR-APP-015#AC7",
+        "checked": true,
+        "line": 3309
+      },
+      {
+        "id": "AC-8",
+        "text": "An accepted upgrade to `/ws` produces exactly one handshake line matching `GET /ws 101 \\d+ms in=0 out=0 rid=[0-9a-f]{16}`, written in the endpoint's `onOpen` after `101` was written and before the first frame is read, which a test asserts by reading the log before the client sends its first frame; an upgrade rejected before `onOpen` (`426` for `Sec-WebSocket-Version: 12`, `403` for a refused `Origin`, `503` beyond the limit) produces its ordinary line with the rejection status and no `101` line (T38). [D-430; D-325; T38] Decision: the handshake line is written in `onOpen` after the channel is stored and before the handler, with the duration measured from `req.startNanos()`. [SDS 2026-10-19.naruserve.naruserve-v1-wave-7-12 SDS-AC-1] Decision: when the response ends with `upgraded101()` true no line is written from `onDone`, and a refusal before `onOpen` never calls `upgraded`, so its ordinary line is written. [SDS 2026-10-19.naruserve.naruserve-v1-wave-7-12 SDS-AC-2]",
+        "checked": true,
+        "line": 3310
+      },
+      {
+        "id": "AC-9",
+        "text": "When a session ends, one close line `WS /ws <closeCode> \\d+ms rid=<id>` is written with the same `rid` as its handshake line, the close code chosen by FR-WS-006 AC-9 (`1000` for `ws.close()`, `1001` at shutdown, `1008` on queue overflow, each also when the client never answers the server's close frame; the client's code for a client close; `1006` for a session aborted without any close frame) and the duration from `onOpen` to the close, exactly once per session (T38). Decision: the close line form is `WS <path> <closeCode>[ <n>ms][ rid=<id>]`. [D-325; T38]",
+        "checked": true,
+        "line": 3311
+      },
+      {
+        "id": "AC-10",
+        "text": "An SSE stream produces no line when it starts and exactly one line when it ends, matching `GET /events 200 \\d+ms in=0 out=<n> rid=[0-9a-f]{16} sse start=\\d+ cause=(client|app|overflow|shutdown|error)`, where the duration covers the whole stream, `out` equals the bytes written to the stream, `start` is the epoch milliseconds of the stream start, and `cause` is the first end reason the core recorded for the stream: `app` when `close()` is called, `overflow` when the overflow policy ends the stream, and `shutdown` when the closing participant marks the stream ended or the deadline force-close begins, each recorded before any `IOException` that the ending causes; `client` only when a drain write or heartbeat to the socket failed with an `IOException`, or the drain found the connection closed, on a stream with no earlier recorded reason (how a client disconnect is detected); and `error` when a failure that is not an `IOException` in the core or app code during the drain (for example a `RuntimeException` thrown by event serialisation or by the adapter's output stream) ends a stream with no earlier recorded reason; an in-memory test asserts `cause=client` for a drain write failed with `IOException`, `cause=error` for a drain write failed with a `RuntimeException`, `cause=app` when the drain write after `close()` fails with `IOException` and `cause=overflow` when the drain write after the overflow end fails with `IOException`, and a TinyHttpd test asserts `cause=shutdown` for the stalled stream force-closed at the shutdown deadline (FR-SSE-005 AC-5); a `HEAD` to an SSE route produces its ordinary line without the `sse` part (T38). Decision: the SSE line appends ` sse start=<epochMillis> cause=<cause>` to the D-173 line, and the first recorded end reason wins over a later `IOException` or failure. [D-338; D-343; T38] Decision: for a response with a non-null `sseClient()`, `writeSse` is called with status `200`, `out` = `bytesWritten()`, the stream's start millis and the client's `cause()`; a null cause cannot occur because `sseEnded` runs only after `endBy`. [SDS 2026-10-19.naruserve.naruserve-v1-wave-7-12 SDS-AC-4] A Servlet stream aborted before drain startup still emits its terminal stream-end record once.",
+        "checked": true,
+        "line": 3312
+      },
+      {
+        "id": "AC-11",
+        "text": "`exclude(\"/ws\")` and `exclude(\"/events\")` suppress the WebSocket handshake and close lines and the SSE line of those paths, `enabled(false)` suppresses all of them, and `level(LogLevel.DEBUG)` writes them through `debug`. [D-325; D-338; D-174]",
+        "checked": true,
+        "line": 3313
+      }
+    ],
+    "verificationEvidence": [
+      {
+        "id": "VE-1",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogAcceptanceTest.java#sdsAc4_FR_APP_019_AC1_defaultLineForGetUsers7",
+        "covers": "AC-1",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 3319
+      },
+      {
+        "id": "VE-2",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AccessLogTest.java#sdsAc5_FR_APP_019_AC2_levelSelectsTheLoggerMethod",
+        "covers": "AC-2",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 3320
+      },
+      {
+        "id": "VE-3",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogAcceptanceTest.java#sdsAc6_FR_APP_019_AC3_everyAutomaticAnswerAndRejectionWritesExactlyOneLine",
+        "covers": "AC-3",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 3321
+      },
+      {
+        "id": "VE-4",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogAcceptanceTest.java#sdsAc7_FR_APP_019_AC4_streamCountsCopiedBytesAndHeadCountsZero",
+        "covers": "AC-4",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 3322
+      },
+      {
+        "id": "VE-5",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java#sdsAc8_FR_APP_019_AC5_inCountsTheBodyBytesReadNotTheDeclaredLength",
+        "covers": "AC-5",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 3323
+      },
+      {
+        "id": "VE-6",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogAcceptanceTest.java#sdsAc9_FR_APP_019_AC6_excludedRawPathWritesNoLine",
+        "covers": "AC-6",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 3324
+      },
+      {
+        "id": "VE-7",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogAcceptanceTest.java#sdsAc10_FR_APP_019_AC7_lineRidEqualsTheErrorBodyRequestId",
+        "covers": "AC-7",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 3325
+      },
+      {
+        "id": "VE-8",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogAcceptanceTest.java#wave7SdsAc1_FR_APP_019_AC8_handshakeLineIsWrittenBeforeTheFirstClientFrame",
+        "covers": "AC-8",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 3326
+      },
+      {
+        "id": "VE-9",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java#wave7SdsAc2_FR_APP_019_AC8_oneHandshakeLinePerSessionAndRefusalsLogTheirStatusOnly",
+        "covers": "AC-8",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 3327
+      },
+      {
+        "id": "VE-10",
+        "type": "test",
+        "reference": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/WebSocketSessionSocketTest.java#wave7SdsAc1_FR_APP_019_AC8_AC9_handshakeLineBeforeTheFirstFrameThenTheCloseLine",
+        "covers": "AC-8",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 3328
+      },
+      {
+        "id": "VE-11",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogAcceptanceTest.java#wave7SdsAc3_FR_APP_019_AC9_closeLineCarriesTheReportedCodeAndTheHandshakeRidOnce",
+        "covers": "AC-9",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 3329
+      },
+      {
+        "id": "VE-12",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AccessLogTest.java#wave7SdsAc3_FR_APP_019_AC9_closeLineHasTheTokenWsTheCodeTheDurationAndTheRid",
+        "covers": "AC-9",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 3330
+      },
+      {
+        "id": "VE-13",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogAcceptanceTest.java#wave7SdsAc4_FR_APP_019_AC10_sseLineAtStreamEndWithTheFirstRecordedCause",
+        "covers": "AC-10",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 3331
+      },
+      {
+        "id": "VE-14",
+        "type": "test",
+        "reference": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LongConnectionShutdownSocketTest.java#wave7SdsAc9_FR_APP_020_AC8_AC6_AC7_oneSecondShutdownClosesStalledAndHealthyConnections",
+        "covers": "AC-10",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 3332
+      },
+      {
+        "id": "VE-15",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AccessLogTest.java#wave7SdsAc5_FR_APP_019_AC11_closeAndSseLinesFollowExcludeEnabledAndLevel",
+        "covers": "AC-11",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 3333
+      },
+      {
+        "id": "VE-16",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogAcceptanceTest.java",
+        "covers": "AC-1",
+        "notes": "verification_cmd ./gradlew build passed at e25fe0d (1239/1239); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogAcceptanceTest.java:55; bundle docs/research/naruserve-v1/waves/stage-7/lane-2026-10-19.naruserve.naruserve-v1-wave-7/",
+        "line": 3334
+      },
+      {
+        "id": "VE-17",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AccessLogTest.java",
+        "covers": "AC-1",
+        "notes": "verification_cmd ./gradlew build passed at e25fe0d (1239/1239); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AccessLogTest.java:63; bundle docs/research/naruserve-v1/waves/stage-7/lane-2026-10-19.naruserve.naruserve-v1-wave-7/",
+        "line": 3335
+      },
+      {
+        "id": "VE-18",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AccessLogTest.java",
+        "covers": "AC-2",
+        "notes": "verification_cmd ./gradlew build passed at e25fe0d (1239/1239); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AccessLogTest.java:70,81; bundle docs/research/naruserve-v1/waves/stage-7/lane-2026-10-19.naruserve.naruserve-v1-wave-7/",
+        "line": 3336
+      },
+      {
+        "id": "VE-19",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogAcceptanceTest.java",
+        "covers": "AC-3",
+        "notes": "verification_cmd ./gradlew build passed at e25fe0d (1239/1239); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogAcceptanceTest.java:64,76,122; bundle docs/research/naruserve-v1/waves/stage-7/lane-2026-10-19.naruserve.naruserve-v1-wave-7/",
+        "line": 3337
+      },
+      {
+        "id": "VE-20",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StoppingGateTest.java",
+        "covers": "AC-3",
+        "notes": "verification_cmd ./gradlew build passed at e25fe0d (1239/1239); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StoppingGateTest.java:71; bundle docs/research/naruserve-v1/waves/stage-7/lane-2026-10-19.naruserve.naruserve-v1-wave-7/",
+        "line": 3338
+      },
+      {
+        "id": "VE-21",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogAcceptanceTest.java",
+        "covers": "AC-4",
+        "notes": "verification_cmd ./gradlew build passed at e25fe0d (1239/1239); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogAcceptanceTest.java:139; bundle docs/research/naruserve-v1/waves/stage-7/lane-2026-10-19.naruserve.naruserve-v1-wave-7/",
+        "line": 3339
+      },
+      {
+        "id": "VE-22",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java",
+        "covers": "AC-5",
+        "notes": "verification_cmd ./gradlew build passed at e25fe0d (1239/1239); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java:552; bundle docs/research/naruserve-v1/waves/stage-7/lane-2026-10-19.naruserve.naruserve-v1-wave-7/",
+        "line": 3340
+      },
+      {
+        "id": "VE-23",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogAcceptanceTest.java",
+        "covers": "AC-6",
+        "notes": "verification_cmd ./gradlew build passed at e25fe0d (1239/1239); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogAcceptanceTest.java:152,168; bundle docs/research/naruserve-v1/waves/stage-7/lane-2026-10-19.naruserve.naruserve-v1-wave-7/",
+        "line": 3341
+      },
+      {
+        "id": "VE-24",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AccessLogTest.java",
+        "covers": "AC-6",
+        "notes": "verification_cmd ./gradlew build passed at e25fe0d (1239/1239); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AccessLogTest.java:93,108; bundle docs/research/naruserve-v1/waves/stage-7/lane-2026-10-19.naruserve.naruserve-v1-wave-7/",
+        "line": 3342
+      },
+      {
+        "id": "VE-25",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogAcceptanceTest.java",
+        "covers": "AC-7",
+        "notes": "verification_cmd ./gradlew build passed at e25fe0d (1239/1239); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogAcceptanceTest.java:179; bundle docs/research/naruserve-v1/waves/stage-7/lane-2026-10-19.naruserve.naruserve-v1-wave-7/",
+        "line": 3343
+      },
+      {
+        "id": "VE-26",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogAcceptanceTest.java",
+        "covers": "AC-8",
+        "notes": "verification_cmd ./gradlew build passed at e25fe0d (1239/1239); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogAcceptanceTest.java:219; bundle docs/research/naruserve-v1/waves/stage-7/lane-2026-10-19.naruserve.naruserve-v1-wave-7/",
+        "line": 3344
+      },
+      {
+        "id": "VE-27",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java",
+        "covers": "AC-8",
+        "notes": "verification_cmd ./gradlew build passed at e25fe0d (1239/1239); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java:582,625; bundle docs/research/naruserve-v1/waves/stage-7/lane-2026-10-19.naruserve.naruserve-v1-wave-7/",
+        "line": 3345
+      },
+      {
+        "id": "VE-28",
+        "type": "test",
+        "reference": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/WebSocketSessionSocketTest.java",
+        "covers": "AC-8",
+        "notes": "verification_cmd ./gradlew build passed at e25fe0d (1239/1239); cited line NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/WebSocketSessionSocketTest.java:144; bundle docs/research/naruserve-v1/waves/stage-7/lane-2026-10-19.naruserve.naruserve-v1-wave-7/",
+        "line": 3346
+      },
+      {
+        "id": "VE-29",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogAcceptanceTest.java",
+        "covers": "AC-9",
+        "notes": "verification_cmd ./gradlew build passed at e25fe0d (1239/1239); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogAcceptanceTest.java:241; bundle docs/research/naruserve-v1/waves/stage-7/lane-2026-10-19.naruserve.naruserve-v1-wave-7/",
+        "line": 3347
+      },
+      {
+        "id": "VE-30",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AccessLogTest.java",
+        "covers": "AC-9",
+        "notes": "verification_cmd ./gradlew build passed at e25fe0d (1239/1239); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AccessLogTest.java:121; bundle docs/research/naruserve-v1/waves/stage-7/lane-2026-10-19.naruserve.naruserve-v1-wave-7/",
+        "line": 3348
+      },
+      {
+        "id": "VE-31",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/WebSocketUpgradeFailureTest.java",
+        "covers": "AC-9",
+        "notes": "verification_cmd ./gradlew build passed at e25fe0d (1239/1239); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/internal/WebSocketUpgradeFailureTest.java:36; bundle docs/research/naruserve-v1/waves/stage-7/lane-2026-10-19.naruserve.naruserve-v1-wave-7/",
+        "line": 3349
+      },
+      {
+        "id": "VE-32",
+        "type": "test",
+        "reference": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LongConnectionShutdownSocketTest.java",
+        "covers": "AC-9",
+        "notes": "verification_cmd ./gradlew build passed at e25fe0d (1239/1239); cited line NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LongConnectionShutdownSocketTest.java:107; bundle docs/research/naruserve-v1/waves/stage-7/lane-2026-10-19.naruserve.naruserve-v1-wave-7/",
+        "line": 3350
+      },
+      {
+        "id": "VE-33",
+        "type": "test",
+        "reference": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/WebSocketSessionSocketTest.java",
+        "covers": "AC-9",
+        "notes": "verification_cmd ./gradlew build passed at e25fe0d (1239/1239); cited line NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/WebSocketSessionSocketTest.java:144; bundle docs/research/naruserve-v1/waves/stage-7/lane-2026-10-19.naruserve.naruserve-v1-wave-7/",
+        "line": 3351
+      },
+      {
+        "id": "VE-34",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogAcceptanceTest.java",
+        "covers": "AC-10",
+        "notes": "verification_cmd ./gradlew build passed at e25fe0d (1239/1239); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogAcceptanceTest.java:303; bundle docs/research/naruserve-v1/waves/stage-7/lane-2026-10-19.naruserve.naruserve-v1-wave-7/",
+        "line": 3352
+      },
+      {
+        "id": "VE-35",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AccessLogTest.java",
+        "covers": "AC-10",
+        "notes": "verification_cmd ./gradlew build passed at e25fe0d (1239/1239); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AccessLogTest.java:138; bundle docs/research/naruserve-v1/waves/stage-7/lane-2026-10-19.naruserve.naruserve-v1-wave-7/",
+        "line": 3353
+      },
+      {
+        "id": "VE-36",
+        "type": "test",
+        "reference": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LongConnectionShutdownSocketTest.java",
+        "covers": "AC-10",
+        "notes": "verification_cmd ./gradlew build passed at e25fe0d (1239/1239); cited line NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LongConnectionShutdownSocketTest.java:107; bundle docs/research/naruserve-v1/waves/stage-7/lane-2026-10-19.naruserve.naruserve-v1-wave-7/",
+        "line": 3354
+      },
+      {
+        "id": "VE-37",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AccessLogTest.java",
+        "covers": "AC-11",
+        "notes": "verification_cmd ./gradlew build passed at e25fe0d (1239/1239); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AccessLogTest.java:154; bundle docs/research/naruserve-v1/waves/stage-7/lane-2026-10-19.naruserve.naruserve-v1-wave-7/",
+        "line": 3355
+      },
+      {
+        "id": "VE-38",
+        "type": "commit",
+        "reference": "e67f61e4c54c4877676bc79cef9cd3332614ab9b",
+        "covers": "all",
+        "notes": "-",
+        "line": 3356
+      },
+      {
+        "id": "VE-39",
+        "type": "commit",
+        "reference": "6ba51788c866ce1e140528ca77e2e39fff94c6d7",
+        "covers": "all",
+        "notes": "-",
+        "line": 3357
+      },
+      {
+        "id": "VE-40",
+        "type": "commit",
+        "reference": "fa7e535ec036f99c8f9ab3aa788567a3fd52c382",
+        "covers": "all",
+        "notes": "-",
+        "line": 3358
+      },
+      {
+        "id": "VE-41",
+        "type": "commit",
+        "reference": "cea10fccebdad844952135edd3e23ccff208d201",
+        "covers": "all",
+        "notes": "-",
+        "line": 3359
+      },
+      {
+        "id": "VE-42",
+        "type": "commit",
+        "reference": "7b3ba1ab8f1ad8821b49ed9f5dd8e0fac62353db",
+        "covers": "all",
+        "notes": "-",
+        "line": 3360
+      },
+      {
+        "id": "VE-43",
+        "type": "commit",
+        "reference": "e8d9036e3403012b21e2c4e3d06e92634cbc5e48",
+        "covers": "all",
+        "notes": "-",
+        "line": 3361
+      },
+      {
+        "id": "VE-44",
+        "type": "commit",
+        "reference": "6abec962bf077393bdda7b1f34866d6789195af9",
+        "covers": "all",
+        "notes": "-",
+        "line": 3362
+      },
+      {
+        "id": "VE-45",
+        "type": "commit",
+        "reference": "8bf8ea8f45f10654aa0e18bbf5dfbd2f1efe4721",
+        "covers": "all",
+        "notes": "-",
+        "line": 3363
+      },
+      {
+        "id": "VE-46",
+        "type": "commit",
+        "reference": "11019dbbe5a3513d2a0edaceae9f34066d24b14d",
+        "covers": "all",
+        "notes": "-",
+        "line": 3364
+      },
+      {
+        "id": "VE-47",
+        "type": "commit",
+        "reference": "c1974cb50b2f1427d66468cae20782bf8f0962e3",
+        "covers": "all",
+        "notes": "-",
+        "line": 3365
+      },
+      {
+        "id": "VE-48",
+        "type": "commit",
+        "reference": "0b3bec9d0a742af3a6cec69aab16976dbba0a0a7",
+        "covers": "all",
+        "notes": "-",
+        "line": 3366
+      },
+      {
+        "id": "VE-49",
+        "type": "commit",
+        "reference": "6856cb45be366bda0101e34f39c3a3ab99061e02",
+        "covers": "all",
+        "notes": "-",
+        "line": 3367
+      },
+      {
+        "id": "VE-50",
+        "type": "commit",
+        "reference": "9513a1df1dbf834849d28c7fae108ecff6cdbc3d",
+        "covers": "all",
+        "notes": "-",
+        "line": 3368
+      },
+      {
+        "id": "VE-51",
+        "type": "commit",
+        "reference": "d61b4fa96800096579e010634cc76ac5d10f4433",
+        "covers": "all",
+        "notes": "-",
+        "line": 3369
+      },
+      {
+        "id": "VE-52",
+        "type": "commit",
+        "reference": "1e1e42fcfceef81bc0e01d5d2f3a085ef9803294",
+        "covers": "all",
+        "notes": "-",
+        "line": 3370
+      },
+      {
+        "id": "VE-53",
+        "type": "commit",
+        "reference": "4c773396d7fd9593e38b3e586ee04f5d7d1ad680",
+        "covers": "all",
+        "notes": "-",
+        "line": 3371
+      },
+      {
+        "id": "VE-54",
+        "type": "commit",
+        "reference": "b90b382bcb16b57b7d98aa0e3a95334475ce22e2",
+        "covers": "all",
+        "notes": "-",
+        "line": 3372
+      },
+      {
+        "id": "VE-55",
+        "type": "commit",
+        "reference": "cab4cb5c109fa3e29b3c9193e8107e93935944fe",
+        "covers": "all",
+        "notes": "-",
+        "line": 3373
+      },
+      {
+        "id": "VE-56",
+        "type": "commit",
+        "reference": "404466417b8d5c4feda526d828a7c5017649e585",
+        "covers": "all",
+        "notes": "-",
+        "line": 3374
+      },
+      {
+        "id": "VE-57",
+        "type": "commit",
+        "reference": "4c368bb169368759b5938d5767f3cadbcbfa91b1",
+        "covers": "all",
+        "notes": "-",
+        "line": 3375
+      },
+      {
+        "id": "VE-58",
+        "type": "commit",
+        "reference": "c9cb060b41c06328529d79ebf1eb2eab71ef9729",
+        "covers": "all",
+        "notes": "-",
+        "line": 3376
+      },
+      {
+        "id": "VE-59",
+        "type": "commit",
+        "reference": "3e5ae1dfb47efeea1667a7081279320395678475",
+        "covers": "all",
+        "notes": "-",
+        "line": 3377
+      },
+      {
+        "id": "VE-60",
+        "type": "commit",
+        "reference": "58e89c1346edd2157acdc34c4ac384889c009797",
+        "covers": "all",
+        "notes": "-",
+        "line": 3378
+      },
+      {
+        "id": "VE-61",
+        "type": "commit",
+        "reference": "923548e6108f4cc29212f09e5ddf60c3d5c725d1",
+        "covers": "all",
+        "notes": "-",
+        "line": 3379
+      },
+      {
+        "id": "VE-62",
+        "type": "commit",
+        "reference": "27d24d6fe6c9e47bfb6d71127e654e240a07c954",
+        "covers": "all",
+        "notes": "-",
+        "line": 3380
+      },
+      {
+        "id": "VE-63",
+        "type": "commit",
+        "reference": "4022f6efe7cd0ae4bf9c27d2ffb52e613cb7afe0",
+        "covers": "all",
+        "notes": "-",
+        "line": 3381
+      },
+      {
+        "id": "VE-64",
+        "type": "commit",
+        "reference": "19b221dec3f49af7db5b6e90c6740514ef6d7919",
+        "covers": "all",
+        "notes": "-",
+        "line": 3382
+      },
+      {
+        "id": "VE-65",
+        "type": "commit",
+        "reference": "3021f38de62535bdf14a473074373c85003376aa",
+        "covers": "all",
+        "notes": "-",
+        "line": 3383
+      },
+      {
+        "id": "VE-66",
+        "type": "test",
+        "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletSsePreDrainAbortTest.java",
+        "covers": "AC-10",
+        "notes": "Issue #41: failing automated regression reproduced before implementation; targeted existing/new suites passed on default JDK17 and actual OpenJDK8; independent review has no remaining HIGH/MEDIUM findings. Logs: docs/release/audit-2026-10-21/41/. Broad final integration regression is tracked in epic #36.",
+        "line": 3384
+      },
+      {
+        "id": "VE-67",
+        "type": "test",
+        "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletSsePreDrainAbortTest.java",
+        "covers": "AC-10",
+        "notes": "Issue #41: failing automated regression reproduced before implementation; targeted existing/new suites passed on default JDK17 and actual OpenJDK8; independent review has no remaining HIGH/MEDIUM findings. Logs: docs/release/audit-2026-10-21/41/. Broad final integration regression is tracked in epic #36.",
+        "line": 3385
+      },
+      {
+        "id": "VE-68",
+        "type": "test",
+        "reference": "docs/release/additional-audit-2026-10-21.md",
+        "covers": "AC-10",
+        "notes": "Final integration: default JDK17 and actual OpenJDK8 each passed full build --rerun-tasks with1677 tests, failures/errors/skipped0; all11 Test tasks actually used Java8 in its run. Real NVD releaseCheck passed. This evidence applies only to the fixed contract; external engine issue45 remains blocked.",
+        "line": 3386
+      }
+    ],
+    "traceLinks": [
+      {
+        "type": "Requirement",
+        "reference": "FR-APP-015",
+        "relation": "supersedes",
+        "notes": "-",
+        "line": 3392
+      },
+      {
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/AccessLog.java",
+        "relation": "implements",
+        "notes": "trace_intent=addition_site",
+        "line": 3393
+      },
+      {
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+        "relation": "implements",
+        "notes": "trace_intent=addition_site",
+        "line": 3394
+      },
+      {
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+        "relation": "implements",
+        "notes": "trace_intent=addition_site",
+        "line": 3395
+      },
+      {
+        "type": "Requirement",
+        "reference": "IR-APP-007",
+        "relation": "extends",
+        "notes": "access log options apply to the WebSocket and SSE lines (carried from FR-APP-015)",
+        "line": 3396
+      },
+      {
+        "type": "Requirement",
+        "reference": "FR-APP-006",
+        "relation": "extends",
+        "notes": "requestId shared with the error body (carried from FR-APP-015)",
+        "line": 3397
+      },
+      {
+        "type": "Requirement",
+        "reference": "FR-WS-006",
+        "relation": "depends_on",
+        "notes": "session close code and onOpen timing for the handshake and close lines",
+        "line": 3398
+      },
+      {
+        "type": "Requirement",
+        "reference": "FR-SSE-004",
+        "relation": "depends_on",
+        "notes": "stream end and closing cause for the SSE line",
+        "line": 3399
+      }
+    ],
+    "changeNotes": [
+      {
+        "date": "2026-10-20",
+        "change": "Created",
+        "reason": "add-requirement",
+        "line": 3413
+      },
+      {
+        "date": "2026-10-20",
+        "change": "Stability -> evolving",
+        "reason": "Feasibility=high (score 89). Blockers: none. Run: 2026-10-19.naruserve.wave-7.v01",
+        "line": 3414
+      },
+      {
+        "date": "2026-10-21",
+        "change": "Status -> implemented",
+        "reason": "Additional audit reproduced a resource-boundary/abort/conditional-header defect; add regression before re-verification.",
+        "line": 3415
+      },
+      {
+        "date": "2026-10-21",
+        "change": "Status -> verified",
+        "reason": "Issue #41: targeted contract regression passed JDK17 and actual Java8 after RED reproduction and independent review.",
+        "line": 3416
+      },
+      {
+        "date": "2026-10-21",
+        "change": "Status -> verified",
+        "reason": "Issue #41: targeted contract regression passed JDK17 and actual Java8 after RED reproduction and independent review.",
+        "line": 3417
+      }
+    ],
+    "tags": [
+      "wave-7",
+      "feasibility:high",
+      "access-log",
+      "supersedes:FR-APP-015"
+    ],
+    "relatedDocs": [],
+    "evidenceReferences": [
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/AccessLogAcceptanceTest.java",
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AccessLogTest.java",
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java",
+      "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/WebSocketSessionSocketTest.java",
+      "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LongConnectionShutdownSocketTest.java",
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StoppingGateTest.java",
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/WebSocketUpgradeFailureTest.java",
+      "e67f61e4c54c4877676bc79cef9cd3332614ab9b",
+      "6ba51788c866ce1e140528ca77e2e39fff94c6d7",
+      "fa7e535ec036f99c8f9ab3aa788567a3fd52c382",
+      "cea10fccebdad844952135edd3e23ccff208d201",
+      "7b3ba1ab8f1ad8821b49ed9f5dd8e0fac62353db",
+      "e8d9036e3403012b21e2c4e3d06e92634cbc5e48",
+      "6abec962bf077393bdda7b1f34866d6789195af9",
+      "8bf8ea8f45f10654aa0e18bbf5dfbd2f1efe4721",
+      "11019dbbe5a3513d2a0edaceae9f34066d24b14d",
+      "c1974cb50b2f1427d66468cae20782bf8f0962e3",
+      "0b3bec9d0a742af3a6cec69aab16976dbba0a0a7",
+      "6856cb45be366bda0101e34f39c3a3ab99061e02",
+      "9513a1df1dbf834849d28c7fae108ecff6cdbc3d",
+      "d61b4fa96800096579e010634cc76ac5d10f4433",
+      "1e1e42fcfceef81bc0e01d5d2f3a085ef9803294",
+      "4c773396d7fd9593e38b3e586ee04f5d7d1ad680",
+      "b90b382bcb16b57b7d98aa0e3a95334475ce22e2",
+      "cab4cb5c109fa3e29b3c9193e8107e93935944fe",
+      "404466417b8d5c4feda526d828a7c5017649e585",
+      "4c368bb169368759b5938d5767f3cadbcbfa91b1",
+      "c9cb060b41c06328529d79ebf1eb2eab71ef9729",
+      "3e5ae1dfb47efeea1667a7081279320395678475",
+      "58e89c1346edd2157acdc34c4ac384889c009797",
+      "923548e6108f4cc29212f09e5ddf60c3d5c725d1",
+      "27d24d6fe6c9e47bfb6d71127e654e240a07c954",
+      "4022f6efe7cd0ae4bf9c27d2ffb52e613cb7afe0",
+      "19b221dec3f49af7db5b6e90c6740514ef6d7919",
+      "3021f38de62535bdf14a473074373c85003376aa",
+      "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletSsePreDrainAbortTest.java",
+      "docs/release/additional-audit-2026-10-21.md"
+    ],
+    "traceReferences": [
+      "FR-APP-015",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/AccessLog.java",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+      "IR-APP-007",
+      "FR-APP-006",
+      "FR-WS-006",
+      "FR-SSE-004"
+    ],
+    "blockStartLine": 3278,
+    "blockEndLine": 3418,
+    "sectionLines": {
+      "Requirement": 3293,
+      "Rationale": 3297,
+      "Acceptance Criteria": 3301,
+      "Verification Evidence": 3315,
+      "Trace Links": 3388,
+      "Research / Analysis": 3401,
+      "Implementation Notes": 3405,
+      "Change Notes": 3409
+    },
+    "priority": "high",
+    "risk": "medium",
+    "stability": "evolving",
+    "newWorkCandidate": false,
+    "requirement": "The system shall write through the app logger at the configured level exactly one access log line per HTTP request that reaches the dispatcher, when the response completes or is aborted, in the format `<method> <path> <status>[ aborted][ <duration>ms][ in=<bytesIn> out=<bytesOut>][ rid=<requestId>]`, where `path` is the raw path without the query, the optional parts follow the options of IR-APP-007, the byte fields count body bytes actually read from and written to the connection, and requests to an excluded path produce no line, except that an accepted WebSocket upgrade gets its line with status `101` when the connection opens plus a separate close line with close code and duration, and an SSE stream gets its one line when the stream ends, with its start time and closing cause.",
+    "rationale": "Restates FR-APP-015 AC-1 to AC-7 unchanged for plain HTTP (D-173, D-174, D-177, D-135, D-181 and the pre-request and lifecycle-gate decisions of wave 4) and adds D-430 (the `101` handshake line written in `onOpen`), D-325 (separate WebSocket close line with close code and duration) and D-338 (one SSE line at stream end with start time, duration, bytes and closing cause), which change the \"one line per request when the response completes\" statement; test T38 (WebSocket and SSE parts). Measured: `internal/AccessLog.java:51-86` formats the D-173 line once per request when the response completes; `DefaultAccessLogOptions`, `BodyState` and `RequestIds` keep their roles. Decision: the WebSocket close line starts with the token `WS` instead of an HTTP method so log tools can tell it from request lines; the SSE line keeps the D-173 prefix and appends ` sse start=<epochMillis> cause=<client|app|overflow|shutdown|error>`. Decision (SSE cause, AC-10): the first end reason recorded wins. The core records `app` when `close()` is called, `overflow` when the overflow policy ends the stream and `shutdown` when the closing participant marks the stream ended or the deadline force-close begins, before any `IOException` that the ending causes (TinyHttpd's `stop` aborts every remaining socket at the grace deadline, so the stalled drain write of FR-SSE-005 AC-5 then fails with an `IOException`); `client` is recorded only when an `IOException` or a detected closed connection ends a stream with no earlier recorded reason, since a client disconnect is seen only as such a failure (FR-SSE-003 AC-7, FR-SSE-004 AC-2); `error` is kept for a failure that is not an `IOException` (a `RuntimeException` in the drain, serialisation or adapter stream) with no earlier recorded reason; the core tells `client` from `error` by exception type. Pitfall: writing the SSE line at `res.sse()` time would log `out=0` and no cause; it is written when the stream ends. Pitfall: an upgrade rejected before `onOpen` must not get a `101` line; it takes the ordinary error-path line (D-444). Rejected alternative: logging every WebSocket message; it would flood the log of a chat app, reopen on demand as an option. Tests to re-point to FR-APP-019: every `FR_APP_015_*` method of `NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AccessLogTest.java`, `AccessLogAcceptanceTest.java`, `internal/DispatcherTest.java` (pre-request rejection log asserts) and the access-log asserts of `internal/StoppingGateTest.java` and `internal/AppIsolationTest.java`; the `@req FR-APP-015` comments of `AccessLog.java`, `BodyState.java`, `DefaultAccessLogOptions.java`, `DefaultResponse.java`, `DefaultRestApp.java`, `Dispatcher.java` and `RequestIds.java` move to FR-APP-019.",
+    "research": "- -",
+    "implementationNotes": "- -",
+    "diagnostics": [],
+    "errors": [],
+    "warnings": [],
+    "diagnosticsSummary": {
+      "errors": 0,
+      "warnings": 0,
+      "byCode": {}
+    }
+  },
+  "diagnostics": [],
+  "diagnosticsSummary": {
+    "errors": 0,
+    "warnings": 0,
+    "byCode": {}
+  },
+  "mcpWorkspace": {
+    "workspaceRoot": "/Users/beom/work/git/NaruServe",
+    "rootSource": "server-cwd-discovery",
+    "indexPath": "docs/spec/00.index.md",
+    "packageVersion": "4.2.0"
+  }
+}

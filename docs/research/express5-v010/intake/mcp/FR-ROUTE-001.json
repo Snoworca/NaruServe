@@ -1,0 +1,247 @@
+{
+  "ok": true,
+  "value": {
+    "id": "FR-ROUTE-001",
+    "title": "Method.any() excludes TRACE and CONNECT",
+    "type": "functional",
+    "target": "wave-2",
+    "status": "verified",
+    "scope": "ROUTE",
+    "filePath": "docs/spec/03.routing.srs.md",
+    "headingLine": 180,
+    "metadata": {
+      "Type": "functional",
+      "Target": "wave-2",
+      "Status": "verified",
+      "Priority": "high",
+      "Tags": "wave-2, feasibility:high, routing, methodset",
+      "Risk": "low",
+      "Stability": "evolving",
+      "Verification Method": "test",
+      "GitHub Issue": "https://github.com/Snoworca/NaruServe/issues/2",
+      "Related Docs": "-"
+    },
+    "acceptanceCriteria": [
+      {
+        "id": "AC-1",
+        "text": "`Method.any()` contains exactly `GET`, `HEAD`, `POST`, `PUT`, `PATCH`, `DELETE`, `OPTIONS` and contains neither `TRACE` nor `CONNECT`. [D-036]",
+        "checked": true,
+        "line": 205
+      },
+      {
+        "id": "AC-2",
+        "text": "`Method.any().except(Method.DELETE)` equals `Method.of(Method.GET, Method.HEAD, Method.POST, Method.PUT, Method.PATCH, Method.OPTIONS)`. [D-037]",
+        "checked": true,
+        "line": 206
+      },
+      {
+        "id": "AC-3",
+        "text": "`Method.any()` returns the same members when a router has `TRACE` and `CONNECT` routing enabled; `TRACE` or `CONNECT` enters a `MethodSet` only when named, as in `Method.of(Method.TRACE)`. [wave decision: TRACE/CONNECT policy]",
+        "checked": true,
+        "line": 207
+      }
+    ],
+    "verificationEvidence": [
+      {
+        "id": "VE-1",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/MethodSetTest.java#sdsAc5_FR_ROUTE_001_AC1_anyHasSevenMembersWithoutTraceOrConnect",
+        "covers": "AC-1",
+        "notes": "-",
+        "line": 213
+      },
+      {
+        "id": "VE-2",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/MethodSetTest.java#sdsAc5_FR_ROUTE_001_AC2_anyExceptDeleteEquality",
+        "covers": "AC-2",
+        "notes": "-",
+        "line": 214
+      },
+      {
+        "id": "VE-3",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/MethodSetTest.java#sdsAc5_FR_ROUTE_001_AC3_anyIsConstantAndTraceConnectOnlyWhenNamed",
+        "covers": "AC-3",
+        "notes": "partial: built-router (RouterPolicy enableTrace/enableConnect) case pending wave-2-2 lane",
+        "line": 215
+      },
+      {
+        "id": "VE-4",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterPolicyTest.java#FR_ROUTE_001_AC3_anyUnchangedOnRouterWithTraceAndConnectEnabled",
+        "covers": "AC-3",
+        "notes": "-",
+        "line": 216
+      },
+      {
+        "id": "VE-5",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/MethodSetTest.java",
+        "covers": "AC-1",
+        "notes": "verification_cmd ./gradlew build passed at 461fc3f (153/153); cited line MethodSetTest.java:95; bundle docs/research/naruserve-v1/waves/stage-2/lane-2026-10-19.naruserve.naruserve-v1-wave-2/",
+        "line": 217
+      },
+      {
+        "id": "VE-6",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/MethodSetTest.java",
+        "covers": "AC-2",
+        "notes": "verification_cmd ./gradlew build passed at 461fc3f (153/153); cited line MethodSetTest.java:104; bundle docs/research/naruserve-v1/waves/stage-2/lane-2026-10-19.naruserve.naruserve-v1-wave-2/",
+        "line": 218
+      },
+      {
+        "id": "VE-7",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/MethodSetTest.java",
+        "covers": "AC-3",
+        "notes": "verification_cmd ./gradlew build passed at 461fc3f (153/153); cited line MethodSetTest.java:111, RouterPolicyTest.java:126; bundle docs/research/naruserve-v1/waves/stage-2/lane-2026-10-19.naruserve.naruserve-v1-wave-2/",
+        "line": 219
+      },
+      {
+        "id": "VE-8",
+        "type": "commit",
+        "reference": "f80370b",
+        "covers": "all",
+        "notes": "-",
+        "line": 220
+      },
+      {
+        "id": "VE-9",
+        "type": "commit",
+        "reference": "8a4b565",
+        "covers": "all",
+        "notes": "-",
+        "line": 221
+      },
+      {
+        "id": "VE-10",
+        "type": "commit",
+        "reference": "7b7b6b7",
+        "covers": "all",
+        "notes": "-",
+        "line": 222
+      },
+      {
+        "id": "VE-11",
+        "type": "commit",
+        "reference": "b5677c3",
+        "covers": "all",
+        "notes": "-",
+        "line": 223
+      }
+    ],
+    "traceLinks": [
+      {
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/Method.java",
+        "relation": "implements",
+        "notes": "trace_intent=addition_site",
+        "line": 229
+      },
+      {
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/MethodSet.java",
+        "relation": "implements",
+        "notes": "trace_intent=addition_site",
+        "line": 230
+      },
+      {
+        "type": "Requirement",
+        "reference": "IR-ROUTE-001",
+        "relation": "depends_on",
+        "notes": "builds on Method and its factories",
+        "line": 231
+      },
+      {
+        "type": "Requirement",
+        "reference": "FR-ROUTE-014",
+        "relation": "depends_on",
+        "notes": "AC-3 uses an enabled TRACE/CONNECT policy",
+        "line": 232
+      },
+      {
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/Method.java",
+        "relation": "implements",
+        "notes": "-",
+        "line": 233
+      }
+    ],
+    "changeNotes": [
+      {
+        "date": "2026-10-19",
+        "change": "Created",
+        "reason": "add-requirement",
+        "line": 247
+      },
+      {
+        "date": "2026-10-19",
+        "change": "Stability -> evolving",
+        "reason": "Feasibility=high (score 98). Blockers: none. Run: 2026-10-19.naruserve.wave-2.v01",
+        "line": 248
+      }
+    ],
+    "tags": [
+      "wave-2",
+      "feasibility:high",
+      "routing",
+      "methodset"
+    ],
+    "relatedDocs": [],
+    "evidenceReferences": [
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/MethodSetTest.java",
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterPolicyTest.java",
+      "f80370b",
+      "8a4b565",
+      "7b7b6b7",
+      "b5677c3"
+    ],
+    "traceReferences": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/Method.java",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/MethodSet.java",
+      "IR-ROUTE-001",
+      "FR-ROUTE-014"
+    ],
+    "blockStartLine": 180,
+    "blockEndLine": 249,
+    "sectionLines": {
+      "Requirement": 195,
+      "Rationale": 199,
+      "Acceptance Criteria": 203,
+      "Verification Evidence": 209,
+      "Trace Links": 225,
+      "Research / Analysis": 235,
+      "Implementation Notes": 239,
+      "Change Notes": 243
+    },
+    "priority": "high",
+    "risk": "low",
+    "stability": "evolving",
+    "newWorkCandidate": false,
+    "requirement": "The system shall make `Method.any()` contain exactly `GET`, `HEAD`, `POST`, `PUT`, `PATCH`, `DELETE` and `OPTIONS`, leaving out `TRACE` and `CONNECT` whatever router policy is in effect.",
+    "rationale": "Covers D-036, D-037 (T02) and the wave decision on the TRACE/CONNECT policy (an enabled method is never part of `Method.any()`).",
+    "research": "- -",
+    "implementationNotes": "- -",
+    "diagnostics": [],
+    "errors": [],
+    "warnings": [],
+    "diagnosticsSummary": {
+      "errors": 0,
+      "warnings": 0,
+      "byCode": {}
+    }
+  },
+  "diagnostics": [],
+  "diagnosticsSummary": {
+    "errors": 0,
+    "warnings": 0,
+    "byCode": {}
+  },
+  "mcpWorkspace": {
+    "workspaceRoot": "/Users/beom/work/git/NaruServe",
+    "rootSource": "server-cwd-discovery",
+    "indexPath": "docs/spec/00.index.md",
+    "packageVersion": "4.2.0"
+  }
+}

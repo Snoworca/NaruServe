@@ -1,0 +1,409 @@
+{
+  "ok": true,
+  "value": {
+    "id": "FR-HTTP-008",
+    "title": "Internal RestApp implementation with deferred router build and freeze",
+    "type": "functional",
+    "target": "wave-3",
+    "status": "verified",
+    "scope": "HTTP",
+    "filePath": "docs/spec/04.http-core.srs.md",
+    "headingLine": 1206,
+    "metadata": {
+      "Type": "functional",
+      "Target": "wave-3",
+      "Status": "verified",
+      "Priority": "high",
+      "Tags": "wave-3, feasibility:high, routing, app",
+      "Risk": "medium",
+      "Stability": "evolving",
+      "Verification Method": "test",
+      "GitHub Issue": "https://github.com/Snoworca/NaruServe/issues/3",
+      "Related Docs": "-"
+    },
+    "acceptanceCriteria": [
+      {
+        "id": "AC-1",
+        "text": "The implementation is a public class in a package documented as internal and not part of the API contract, it implements `RestApp`, and it holds the router and the dispatcher. [wave decision: Working app in wave 3; D-393] Decision: the implementation is public class `DefaultRestApp` in package `com.snoworca.naruserve.internal`, whose package javadoc states it is not API. [SDS 2026-10-19.naruserve.naruserve-v1-wave-3-3 SDS-AC-14]",
+        "checked": true,
+        "line": 1231
+      },
+      {
+        "id": "AC-2",
+        "text": "A registration with an invalid pattern (one that `RoutePattern.parse` rejects) throws at the registration call itself, before any freeze. [wave decision: Working app in wave 3; D-047; D-048]",
+        "checked": true,
+        "line": 1232
+      },
+      {
+        "id": "AC-3",
+        "text": "`app.get(\"/a/b\", h)` followed by `app.routerPolicy(RouterPolicy.builder().mergeSlashes(true).build())` makes `GET /a//b` reach `h` after the harness freeze, showing the policy applies to registrations made before it. [wave decision: Working app in wave 3; FR-ROUTE-006]",
+        "checked": true,
+        "line": 1233
+      },
+      {
+        "id": "AC-4",
+        "text": "The `Router` is constructed only at the freeze, and a duplicate of D-044 surfaces as the freeze's `RoutingConfigException`, not at the second registration call. [wave decision: Working app in wave 3; D-044] Decision: the freeze propagates the `RoutingConfigException` unchanged and leaves the app unfrozen, so `dispatcher()` keeps throwing `IllegalStateException`. [SDS 2026-10-19.naruserve.naruserve-v1-wave-3-3 SDS-AC-12]",
+        "checked": true,
+        "line": 1234
+      },
+      {
+        "id": "AC-5",
+        "text": "After the harness freeze, `app.get(...)`, `app.route(Method, path, h)`, `app.route(MethodSet, path, h)` and `app.routerPolicy(...)` each throw `IllegalStateException`, and `RouteBuilder` registration methods (`get`, `put`, ...) throw `IllegalStateException` too, including on a builder obtained from `app.route(path)` before the freeze. [wave decision: Settings after the freeze] Decision: the internal WebSocket-route hook also throws `IllegalStateException` after the freeze, and a refused call records nothing. [SDS 2026-10-19.naruserve.naruserve-v1-wave-3-3 SDS-AC-13]",
+        "checked": true,
+        "line": 1235
+      },
+      {
+        "id": "AC-6",
+        "text": "No public static method or constructor in package `com.snoworca.naruserve` returns a `RestApp` in wave 3. [wave decision: Working app in wave 3; D-111]",
+        "checked": true,
+        "line": 1236
+      },
+      {
+        "id": "AC-7",
+        "text": "The internal implementation (not the public `RestApp` interface) offers an internal WebSocket-route registration hook that records a WebSocket registration and passes it to `Router.addWebSocket` at the freeze; the test-fixtures harness uses it to register a WebSocket-only route, and wave 3 dispatches no handshake to that route (a matching upgrade request gets the same `426` as a plain `GET`) until wave 7 adds `app.ws`. [D-395; T06; wave decision: Working app in wave 3]",
+        "checked": true,
+        "line": 1237
+      }
+    ],
+    "verificationEvidence": [
+      {
+        "id": "VE-1",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRestAppTest.java#sdsAc12_FR_HTTP_008_AC2_badPatternThrowsAtTheRegistrationCall",
+        "covers": "AC-2",
+        "notes": "./gradlew build exit 0",
+        "line": 1243
+      },
+      {
+        "id": "VE-2",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRestAppTest.java#sdsAc12_FR_HTTP_008_AC4_duplicateThrowsOnlyAtFreezeAndLeavesTheAppUnfrozen",
+        "covers": "AC-4",
+        "notes": "./gradlew build exit 0",
+        "line": 1244
+      },
+      {
+        "id": "VE-3",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRestAppTest.java#sdsAc12_FR_HTTP_008_AC4_dispatcherBeforeFreezeThrowsAndFreezeRunsOnce",
+        "covers": "AC-4",
+        "notes": "./gradlew build exit 0",
+        "line": 1245
+      },
+      {
+        "id": "VE-4",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRestAppTest.java#sdsAc13_FR_HTTP_008_AC3_policySetAfterGetAppliesToIt",
+        "covers": "AC-3",
+        "notes": "./gradlew build exit 0",
+        "line": 1246
+      },
+      {
+        "id": "VE-5",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRestAppTest.java#sdsAc13_FR_HTTP_008_AC5_everyCallAfterFreezeThrowsAndRecordsNothing",
+        "covers": "AC-5",
+        "notes": "./gradlew build exit 0",
+        "line": 1247
+      },
+      {
+        "id": "VE-6",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRestAppTest.java#sdsAc13_FR_HTTP_008_AC7_webSocketHookRecordsAWebSocketRegistration",
+        "covers": "AC-7",
+        "notes": "./gradlew build exit 0",
+        "line": 1248
+      },
+      {
+        "id": "VE-7",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRestAppTest.java#sdsAc14_FR_HTTP_008_AC1_implementationIsAPublicInternalClassWithAPublicCtor",
+        "covers": "AC-1",
+        "notes": "./gradlew build exit 0",
+        "line": 1249
+      },
+      {
+        "id": "VE-8",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRestAppTest.java#sdsAc14_FR_HTTP_008_AC6_noPublicFactoryInTheApiPackageReturnsRestApp",
+        "covers": "AC-6",
+        "notes": "./gradlew build exit 0",
+        "line": 1250
+      },
+      {
+        "id": "VE-9",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRestAppTest.java",
+        "covers": "AC-1",
+        "notes": "verification_cmd ./gradlew build passed at ea1217e (346/346); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRestAppTest.java:248; bundle docs/research/naruserve-v1/waves/stage-3/lane-2026-10-19.naruserve.naruserve-v1-wave-3/",
+        "line": 1251
+      },
+      {
+        "id": "VE-10",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRestAppTest.java",
+        "covers": "AC-2",
+        "notes": "verification_cmd ./gradlew build passed at ea1217e (346/346); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRestAppTest.java:115; bundle docs/research/naruserve-v1/waves/stage-3/lane-2026-10-19.naruserve.naruserve-v1-wave-3/",
+        "line": 1252
+      },
+      {
+        "id": "VE-11",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRestAppTest.java",
+        "covers": "AC-3",
+        "notes": "verification_cmd ./gradlew build passed at ea1217e (346/346); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRestAppTest.java:184; bundle docs/research/naruserve-v1/waves/stage-3/lane-2026-10-19.naruserve.naruserve-v1-wave-3/",
+        "line": 1253
+      },
+      {
+        "id": "VE-12",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRestAppTest.java",
+        "covers": "AC-4",
+        "notes": "verification_cmd ./gradlew build passed at ea1217e (346/346); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRestAppTest.java:136; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRestAppTest.java:166; bundle docs/research/naruserve-v1/waves/stage-3/lane-2026-10-19.naruserve.naruserve-v1-wave-3/",
+        "line": 1254
+      },
+      {
+        "id": "VE-13",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRestAppTest.java",
+        "covers": "AC-5",
+        "notes": "verification_cmd ./gradlew build passed at ea1217e (346/346); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRestAppTest.java:210; bundle docs/research/naruserve-v1/waves/stage-3/lane-2026-10-19.naruserve.naruserve-v1-wave-3/",
+        "line": 1255
+      },
+      {
+        "id": "VE-14",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRestAppTest.java",
+        "covers": "AC-6",
+        "notes": "verification_cmd ./gradlew build passed at ea1217e (346/346); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRestAppTest.java:266; bundle docs/research/naruserve-v1/waves/stage-3/lane-2026-10-19.naruserve.naruserve-v1-wave-3/",
+        "line": 1256
+      },
+      {
+        "id": "VE-15",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRestAppTest.java",
+        "covers": "AC-7",
+        "notes": "verification_cmd ./gradlew build passed at ea1217e (346/346); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRestAppTest.java:236; bundle docs/research/naruserve-v1/waves/stage-3/lane-2026-10-19.naruserve.naruserve-v1-wave-3/",
+        "line": 1257
+      },
+      {
+        "id": "VE-16",
+        "type": "commit",
+        "reference": "a4d3403a786e0ee895c72c3ea53fe4c28a3477f4",
+        "covers": "all",
+        "notes": "wave 3 worker commit (Orch-Wave: 3), ancestor of integration head ea1217e",
+        "line": 1258
+      },
+      {
+        "id": "VE-17",
+        "type": "commit",
+        "reference": "ef85d35a7bbc8ee25d27e60262d1b727913f0a28",
+        "covers": "all",
+        "notes": "wave 3 worker commit (Orch-Wave: 3), ancestor of integration head ea1217e",
+        "line": 1259
+      },
+      {
+        "id": "VE-18",
+        "type": "commit",
+        "reference": "45469d2e1a7c931dc16bc9bc5ae907d4cd28c4cc",
+        "covers": "all",
+        "notes": "wave 3 worker commit (Orch-Wave: 3), ancestor of integration head ea1217e",
+        "line": 1260
+      },
+      {
+        "id": "VE-19",
+        "type": "commit",
+        "reference": "8fb4835bf65967f266ad84b15aeda66274dbe5eb",
+        "covers": "all",
+        "notes": "wave 3 worker commit (Orch-Wave: 3), ancestor of integration head ea1217e",
+        "line": 1261
+      },
+      {
+        "id": "VE-20",
+        "type": "commit",
+        "reference": "1ae79fe445e09375b270e2d78e1316dc0ce4aaa7",
+        "covers": "all",
+        "notes": "wave 3 worker commit (Orch-Wave: 3), ancestor of integration head ea1217e",
+        "line": 1262
+      },
+      {
+        "id": "VE-21",
+        "type": "commit",
+        "reference": "4917e408d4708724c76e963c279a4aa55a4d107c",
+        "covers": "all",
+        "notes": "wave 3 worker commit (Orch-Wave: 3), ancestor of integration head ea1217e",
+        "line": 1263
+      },
+      {
+        "id": "VE-22",
+        "type": "commit",
+        "reference": "5a9322dedaf1229c0ab34349c05bae6802b5ada5",
+        "covers": "all",
+        "notes": "wave 3 worker commit (Orch-Wave: 3), ancestor of integration head ea1217e",
+        "line": 1264
+      },
+      {
+        "id": "VE-23",
+        "type": "commit",
+        "reference": "06d70b4c4771c90888edda5d6b95fca6feaa6af7",
+        "covers": "all",
+        "notes": "wave 3 worker commit (Orch-Wave: 3), ancestor of integration head ea1217e",
+        "line": 1265
+      },
+      {
+        "id": "VE-24",
+        "type": "commit",
+        "reference": "c47335c85e5e9e13a19bf2aaf9c95beb7436de6f",
+        "covers": "all",
+        "notes": "wave 3 worker commit (Orch-Wave: 3), ancestor of integration head ea1217e",
+        "line": 1266
+      }
+    ],
+    "traceLinks": [
+      {
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+        "relation": "implements",
+        "notes": "trace_intent=addition_site",
+        "line": 1272
+      },
+      {
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RoutePattern.java",
+        "relation": "uses",
+        "notes": "trace_intent=verifies",
+        "line": 1273
+      },
+      {
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java",
+        "relation": "uses",
+        "notes": "trace_intent=verifies",
+        "line": 1274
+      },
+      {
+        "type": "Requirement",
+        "reference": "IR-HTTP-005",
+        "relation": "depends_on",
+        "notes": "implements RestApp",
+        "line": 1275
+      },
+      {
+        "type": "Requirement",
+        "reference": "FR-ROUTE-003",
+        "relation": "extends",
+        "notes": "registration-time pattern validation",
+        "line": 1276
+      },
+      {
+        "type": "Requirement",
+        "reference": "FR-ROUTE-008",
+        "relation": "extends",
+        "notes": "conflicts raised at freeze",
+        "line": 1277
+      },
+      {
+        "type": "Requirement",
+        "reference": "FR-HTTP-002",
+        "relation": "depends_on",
+        "notes": "holds the dispatcher",
+        "line": 1278
+      },
+      {
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+        "relation": "implements",
+        "notes": "-",
+        "line": 1279
+      }
+    ],
+    "changeNotes": [
+      {
+        "date": "2026-10-19",
+        "change": "Created",
+        "reason": "add-requirement",
+        "line": 1293
+      },
+      {
+        "date": "2026-10-19",
+        "change": "Stability -> evolving",
+        "reason": "Feasibility=high (score 86). Blockers: none. Run: 2026-10-19.naruserve.wave-3.v01",
+        "line": 1294
+      },
+      {
+        "date": "2026-10-19",
+        "change": "Status -> verified",
+        "reason": "Wave 3 promotion: every AC cited in docs/research/naruserve-v1/waves/wave-3/test-sufficiency.json; ./gradlew build passed at ea1217e (346/346); worker commits recorded",
+        "line": 1295
+      }
+    ],
+    "tags": [
+      "wave-3",
+      "feasibility:high",
+      "routing",
+      "app"
+    ],
+    "relatedDocs": [],
+    "evidenceReferences": [
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRestAppTest.java",
+      "a4d3403a786e0ee895c72c3ea53fe4c28a3477f4",
+      "ef85d35a7bbc8ee25d27e60262d1b727913f0a28",
+      "45469d2e1a7c931dc16bc9bc5ae907d4cd28c4cc",
+      "8fb4835bf65967f266ad84b15aeda66274dbe5eb",
+      "1ae79fe445e09375b270e2d78e1316dc0ce4aaa7",
+      "4917e408d4708724c76e963c279a4aa55a4d107c",
+      "5a9322dedaf1229c0ab34349c05bae6802b5ada5",
+      "06d70b4c4771c90888edda5d6b95fca6feaa6af7",
+      "c47335c85e5e9e13a19bf2aaf9c95beb7436de6f"
+    ],
+    "traceReferences": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RoutePattern.java",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java",
+      "IR-HTTP-005",
+      "FR-ROUTE-003",
+      "FR-ROUTE-008",
+      "FR-HTTP-002"
+    ],
+    "blockStartLine": 1206,
+    "blockEndLine": 1296,
+    "sectionLines": {
+      "Requirement": 1221,
+      "Rationale": 1225,
+      "Acceptance Criteria": 1229,
+      "Verification Evidence": 1239,
+      "Trace Links": 1268,
+      "Research / Analysis": 1281,
+      "Implementation Notes": 1285,
+      "Change Notes": 1289
+    },
+    "priority": "high",
+    "risk": "medium",
+    "stability": "evolving",
+    "newWorkCandidate": false,
+    "requirement": "The system shall provide in an internal package of `NaruServe-api` a `RestApp` implementation that holds the router and the dispatcher, parses each registered pattern at the registration call, records the registrations and the routing policy, builds the `Router` with that policy only at the route-table freeze, and rejects any registration or `routerPolicy` call after the freeze with `IllegalStateException`. Wave 3 adds no public factory for it.",
+    "rationale": "Covers D-393 and D-044 (duplicate raised at freeze) and the wave decisions on the working app in wave 3 (D-047, D-048, D-058, D-111, D-154) and settings after the freeze (D-114, D-152). Wave 4 makes `listen()` run the same freeze and ties the after-freeze rule to the `NEW` state.",
+    "research": "- -",
+    "implementationNotes": "- -",
+    "diagnostics": [],
+    "errors": [],
+    "warnings": [],
+    "diagnosticsSummary": {
+      "errors": 0,
+      "warnings": 0,
+      "byCode": {}
+    }
+  },
+  "diagnostics": [],
+  "diagnosticsSummary": {
+    "errors": 0,
+    "warnings": 0,
+    "byCode": {}
+  },
+  "mcpWorkspace": {
+    "workspaceRoot": "/Users/beom/work/git/NaruServe",
+    "rootSource": "server-cwd-discovery",
+    "indexPath": "docs/spec/00.index.md",
+    "packageVersion": "4.2.0"
+  }
+}

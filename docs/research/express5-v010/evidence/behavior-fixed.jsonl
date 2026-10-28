@@ -1,0 +1,14 @@
+{"name":"options-order","method":"OPTIONS","path":"/a","status":404,"contentType":"application/json; charset=utf-8","trace":[],"body":"{\"trace\":[],\"params\":{},\"path\":\"/a\",\"url\":\"/a\",\"base\":\"\"}"}
+{"name":"options-fallthrough","method":"OPTIONS","path":"/a","status":404,"contentType":"application/json; charset=utf-8","trace":[],"body":"{\"trace\":[],\"params\":{},\"path\":\"/a\",\"url\":\"/a\",\"base\":\"\"}"}
+{"name":"head-route-order","headFirst":false,"status":200,"handler":"get"}
+{"name":"head-route-order","headFirst":true,"status":200,"handler":"head"}
+{"name":"route-skip","method":"GET","path":"/a","status":200,"contentType":"application/json; charset=utf-8","trace":["one","three"],"body":"[\"one\",\"three\"]"}
+{"name":"route-next","method":"GET","path":"/a","status":200,"contentType":"application/json; charset=utf-8","trace":["one","two"],"body":"[\"one\",\"two\"]"}
+{"name":"use-next-route","method":"GET","path":"/a","status":200,"contentType":"application/json; charset=utf-8","trace":["use1","use2"],"body":"[\"use1\",\"use2\"]"}
+{"name":"prefix-scope","method":"GET","path":"/api/v1/users?q=1","status":200,"contentType":"application/json; charset=utf-8","trace":[{"layer":"use","params":{"version":"v1"},"path":"/users","url":"/users?q=1","base":"/api/v1"},{"layer":"route","params":{"other":"v1"},"path":"/api/v1/users","url":"/api/v1/users?q=1","base":""},{"layer":"after","params":{"other":"v1"},"path":"/api/v1/users","url":"/api/v1/users?q=1","base":""}],"body":"[{\"layer\":\"use\",\"params\":{\"version\":\"v1\"},\"path\":\"/users\",\"url\":\"/users?q=1\",\"base\":\"/api/v1\"},{\"layer\":\"route\",\"params\":{\"other\":\"v1\"},\"path\":\"/api/v1/users\",\"url\":\"/api/v1/users?q=1\",\"base\":\"\"}]"}
+{"name":"use-suffix-boundary","method":"GET","path":"/apix","status":404,"contentType":"application/json; charset=utf-8","trace":[],"body":"{\"trace\":[],\"params\":{},\"path\":\"/apix\",\"url\":\"/apix\",\"base\":\"\"}"}
+{"name":"copy-method","method":"COPY","path":"/a","status":200,"contentType":"text/html; charset=utf-8","trace":[],"body":"copy"}
+{"name":"decoded-ascii-regex","method":"GET","path":"/a/%41","status":200,"contentType":"application/json; charset=utf-8","trace":[],"body":"{\"id\":\"A\"}"}
+{"name":"autoOptions","setup":"getOnly","status":200,"allow":"GET, HEAD","contentType":"text/plain","body":"GET, HEAD"}
+{"name":"autoOptions","setup":"methods","status":200,"allow":"DELETE, GET, HEAD, POST","contentType":"text/plain","body":"DELETE, GET, HEAD, POST"}
+{"name":"autoOptions","setup":"optionsNext","status":200,"allow":"GET, HEAD","contentType":"text/plain","body":"GET, HEAD"}

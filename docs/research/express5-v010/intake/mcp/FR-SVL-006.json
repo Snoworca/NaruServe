@@ -1,0 +1,677 @@
+{
+  "ok": true,
+  "value": {
+    "id": "FR-SVL-006",
+    "title": "Servlet stop and release: refuse new requests, wait for in-flight exchanges to the deadline, then cut the rest",
+    "type": "functional",
+    "target": "wave-8",
+    "status": "verified",
+    "scope": "SVL",
+    "filePath": "docs/spec/14.servlet-adapter.srs.md",
+    "headingLine": 758,
+    "metadata": {
+      "Type": "functional",
+      "Target": "wave-8",
+      "Status": "verified",
+      "Priority": "high",
+      "Tags": "wave-8, feasibility:high, servlet, shutdown",
+      "Risk": "high",
+      "Stability": "evolving",
+      "Verification Method": "test",
+      "GitHub Issue": "https://github.com/Snoworca/NaruServe/issues/19",
+      "Related Docs": "-"
+    },
+    "acceptanceCriteria": [
+      {
+        "id": "AC-1",
+        "text": "With one slow plain request in flight, `stop(2, SECONDS)` makes a new request answer `503` with `Connection: close` and the standard error body at once, returns as soon as the slow request finishes (before the deadline), and a request that outlasts the deadline does not make `stop` return later than the deadline plus 1 s. [D-359; r3 W2-003]",
+        "checked": true,
+        "line": 783
+      },
+      {
+        "id": "AC-2",
+        "text": "With open SSE streams, `shutdown` delivers the closing notice of FR-SSE-005 through the core, each stream's client sees the end of the chunked body within the shutdown timeout plus the D-344 margin, the `AsyncContext` of each stream is completed, and the executor is shut down. [D-359; FR-SSE-005]",
+        "checked": true,
+        "line": 784
+      },
+      {
+        "id": "AC-3",
+        "text": "A stream whose client stopped reading is cut at the deadline: `stop` returns within the deadline plus 1 s and the stream's `AsyncContext` is completed, so the container closes the output (Jetty frees a blocked writer at once, another container at its own write timeout, which the test does not wait for); the deviation sentence is present in `docs/api/servlet.md` and `docs/api/sse.md` gains a pointer to it. [r5 W2-001]",
+        "checked": true,
+        "line": 785
+      },
+      {
+        "id": "AC-4",
+        "text": "`release()` detaches the handler (later requests are answered `503`), `stop` and `release` are idempotent, `stop` before `bind` is harmless, and after `shutdown` returns a test finds no thread named `naruserve-servlet-sse-*` alive within 2 s and no upload temporary file of the app. [D-107; I-015]",
+        "checked": true,
+        "line": 786
+      },
+      {
+        "id": "AC-5",
+        "text": "Every test of the module that starts the container asserts after shutdown that no server thread and no temporary upload file of that app remains (a shared test rule). [I-015]",
+        "checked": true,
+        "line": 787
+      }
+    ],
+    "verificationEvidence": [
+      {
+        "id": "VE-1",
+        "type": "test",
+        "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletStopTest.java#sdsAc1_FR_SVL_006_AC1_refusesAtOnceAndReturnsWhenTheSlowRequestEnds",
+        "covers": "AC-1",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 793
+      },
+      {
+        "id": "VE-2",
+        "type": "test",
+        "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletStopTest.java#sdsAc1_FR_SVL_006_AC1_stopReturnsByTheDeadlinePlusOneSecond",
+        "covers": "AC-1",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 794
+      },
+      {
+        "id": "VE-3",
+        "type": "test",
+        "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletStopSseTest.java#sdsAc2_FR_SVL_006_AC2_shutdownEndsEveryOpenStream",
+        "covers": "AC-2",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 795
+      },
+      {
+        "id": "VE-4",
+        "type": "test",
+        "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletStopSseTest.java#sdsAc3_FR_SVL_006_AC3_nonReadingClientIsCutAtTheDeadline",
+        "covers": "AC-3",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 796
+      },
+      {
+        "id": "VE-5",
+        "type": "test",
+        "reference": "src/test/java/com/snoworca/naruserve/docs/ServletDocsTest.java#cutAtTimeoutDeviation",
+        "covers": "AC-3",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 797
+      },
+      {
+        "id": "VE-6",
+        "type": "test",
+        "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletStopTest.java#sdsAc4_FR_SVL_006_AC4_releaseDetachesTheHandler",
+        "covers": "AC-4",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 798
+      },
+      {
+        "id": "VE-7",
+        "type": "test",
+        "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletStopTest.java#sdsAc4_FR_SVL_006_AC4_stopAndReleaseAreIdempotent",
+        "covers": "AC-4",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 799
+      },
+      {
+        "id": "VE-8",
+        "type": "test",
+        "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletStopTest.java#sdsAc4_FR_SVL_006_AC4_stopBeforeBindIsHarmless",
+        "covers": "AC-4",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 800
+      },
+      {
+        "id": "VE-9",
+        "type": "test",
+        "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletStopTest.java#sdsAc4_FR_SVL_006_AC4_noSseThreadWithinTwoSecondsOfShutdown",
+        "covers": "AC-4",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 801
+      },
+      {
+        "id": "VE-10",
+        "type": "test",
+        "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRuleTest.java#sdsAc5_FR_SVL_006_AC5_aCleanTestPasses",
+        "covers": "AC-5",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 802
+      },
+      {
+        "id": "VE-11",
+        "type": "test",
+        "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRuleTest.java#sdsAc5_FR_SVL_006_AC5_ruleFailsOnALeakedSseThread",
+        "covers": "AC-5",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 803
+      },
+      {
+        "id": "VE-12",
+        "type": "test",
+        "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRuleTest.java#sdsAc5_FR_SVL_006_AC5_ruleFailsOnALeftoverUploadFile",
+        "covers": "AC-5",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 804
+      },
+      {
+        "id": "VE-13",
+        "type": "test",
+        "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletStopTest.java",
+        "covers": "AC-1",
+        "notes": "verification_cmd ./gradlew build passed at 514472f (1534/1534); cited line NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletStopTest.java:103 and 1 more; bundle docs/research/naruserve-v1/waves/stage-8/lane-2026-10-19.naruserve.naruserve-v1-wave-8/",
+        "line": 805
+      },
+      {
+        "id": "VE-14",
+        "type": "test",
+        "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletStopSseTest.java",
+        "covers": "AC-2",
+        "notes": "verification_cmd ./gradlew build passed at 514472f (1534/1534); cited line NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletStopSseTest.java:77; bundle docs/research/naruserve-v1/waves/stage-8/lane-2026-10-19.naruserve.naruserve-v1-wave-8/",
+        "line": 806
+      },
+      {
+        "id": "VE-15",
+        "type": "test",
+        "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletAbortTest.java",
+        "covers": "AC-3",
+        "notes": "verification_cmd ./gradlew build passed at 514472f (1534/1534); cited line NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletAbortTest.java:192 and 1 more; bundle docs/research/naruserve-v1/waves/stage-8/lane-2026-10-19.naruserve.naruserve-v1-wave-8/",
+        "line": 807
+      },
+      {
+        "id": "VE-16",
+        "type": "test",
+        "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletStopSseTest.java",
+        "covers": "AC-3",
+        "notes": "verification_cmd ./gradlew build passed at 514472f (1534/1534); cited line NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletStopSseTest.java:107; bundle docs/research/naruserve-v1/waves/stage-8/lane-2026-10-19.naruserve.naruserve-v1-wave-8/",
+        "line": 808
+      },
+      {
+        "id": "VE-17",
+        "type": "test",
+        "reference": "src/test/java/com/snoworca/naruserve/docs/ServletDocsTest.java",
+        "covers": "AC-3",
+        "notes": "verification_cmd ./gradlew build passed at 514472f (1534/1534); cited line src/test/java/com/snoworca/naruserve/docs/ServletDocsTest.java:203; bundle docs/research/naruserve-v1/waves/stage-8/lane-2026-10-19.naruserve.naruserve-v1-wave-8/",
+        "line": 809
+      },
+      {
+        "id": "VE-18",
+        "type": "test",
+        "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletStopTest.java",
+        "covers": "AC-4",
+        "notes": "verification_cmd ./gradlew build passed at 514472f (1534/1534); cited line NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletStopTest.java:151 and 3 more; bundle docs/research/naruserve-v1/waves/stage-8/lane-2026-10-19.naruserve.naruserve-v1-wave-8/",
+        "line": 810
+      },
+      {
+        "id": "VE-19",
+        "type": "test",
+        "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletMultipartDisconnectTest.java",
+        "covers": "AC-5",
+        "notes": "verification_cmd ./gradlew build passed at 514472f (1534/1534); cited line NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletMultipartDisconnectTest.java:31; bundle docs/research/naruserve-v1/waves/stage-8/lane-2026-10-19.naruserve.naruserve-v1-wave-8/",
+        "line": 811
+      },
+      {
+        "id": "VE-20",
+        "type": "test",
+        "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletMultipartTest.java",
+        "covers": "AC-5",
+        "notes": "verification_cmd ./gradlew build passed at 514472f (1534/1534); cited line NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletMultipartTest.java:99 and 2 more; bundle docs/research/naruserve-v1/waves/stage-8/lane-2026-10-19.naruserve.naruserve-v1-wave-8/",
+        "line": 812
+      },
+      {
+        "id": "VE-21",
+        "type": "test",
+        "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRuleTest.java",
+        "covers": "AC-5",
+        "notes": "verification_cmd ./gradlew build passed at 514472f (1534/1534); cited line NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRuleTest.java:36 and 2 more; bundle docs/research/naruserve-v1/waves/stage-8/lane-2026-10-19.naruserve.naruserve-v1-wave-8/",
+        "line": 813
+      },
+      {
+        "id": "VE-22",
+        "type": "commit",
+        "reference": "173e22c39b13c1527ec3cdfb1a38773ba06c7ca7",
+        "covers": "all",
+        "notes": "-",
+        "line": 814
+      },
+      {
+        "id": "VE-23",
+        "type": "commit",
+        "reference": "93106928f1fd8308dc447b8ec5845eb3a66e8143",
+        "covers": "all",
+        "notes": "-",
+        "line": 815
+      },
+      {
+        "id": "VE-24",
+        "type": "commit",
+        "reference": "e2c5097b5e9d47d7159f4857875813daa02358a3",
+        "covers": "all",
+        "notes": "-",
+        "line": 816
+      },
+      {
+        "id": "VE-25",
+        "type": "commit",
+        "reference": "d57af39a5a48b55ce9d12b56cc15f4fe8cf21239",
+        "covers": "all",
+        "notes": "-",
+        "line": 817
+      },
+      {
+        "id": "VE-26",
+        "type": "commit",
+        "reference": "aa4126bacb6bcc2da533811cc2555b43ce5fca2f",
+        "covers": "all",
+        "notes": "-",
+        "line": 818
+      },
+      {
+        "id": "VE-27",
+        "type": "commit",
+        "reference": "f202f2428b6a89fdc494a8ff7d378105a538a6ea",
+        "covers": "all",
+        "notes": "-",
+        "line": 819
+      },
+      {
+        "id": "VE-28",
+        "type": "commit",
+        "reference": "a26b2875a827902c054376d7b5501081e9f429ef",
+        "covers": "all",
+        "notes": "-",
+        "line": 820
+      },
+      {
+        "id": "VE-29",
+        "type": "commit",
+        "reference": "9d21cda7d24c3c1f0df36b5c81963737464b6ab6",
+        "covers": "all",
+        "notes": "-",
+        "line": 821
+      },
+      {
+        "id": "VE-30",
+        "type": "commit",
+        "reference": "89b371549d8f35ae6d3f2536d066232da2a69bf5",
+        "covers": "all",
+        "notes": "-",
+        "line": 822
+      },
+      {
+        "id": "VE-31",
+        "type": "commit",
+        "reference": "b36a89ceb7284a3b697a1fdacf9b85fb3c3ad583",
+        "covers": "all",
+        "notes": "-",
+        "line": 823
+      },
+      {
+        "id": "VE-32",
+        "type": "commit",
+        "reference": "fd20f57e53332639f60dd7870355065373590a6b",
+        "covers": "all",
+        "notes": "-",
+        "line": 824
+      },
+      {
+        "id": "VE-33",
+        "type": "commit",
+        "reference": "cc9d318ea1b384589f59b692a3f8b5e0a303cb75",
+        "covers": "all",
+        "notes": "-",
+        "line": 825
+      },
+      {
+        "id": "VE-34",
+        "type": "commit",
+        "reference": "20b0a98d185959882e225af4c62315d4f697347e",
+        "covers": "all",
+        "notes": "-",
+        "line": 826
+      },
+      {
+        "id": "VE-35",
+        "type": "commit",
+        "reference": "69809b971001b87af17240bddfcc06cb3bd950b4",
+        "covers": "all",
+        "notes": "-",
+        "line": 827
+      },
+      {
+        "id": "VE-36",
+        "type": "commit",
+        "reference": "de35ca2940b126b57392cfdcd9e40e56e4bff2ef",
+        "covers": "all",
+        "notes": "-",
+        "line": 828
+      },
+      {
+        "id": "VE-37",
+        "type": "commit",
+        "reference": "b0cd6f8effd1a8dac770ad7cc40fc59ef670ffe9",
+        "covers": "all",
+        "notes": "-",
+        "line": 829
+      },
+      {
+        "id": "VE-38",
+        "type": "commit",
+        "reference": "5a03978d03bdfb270d70c5c5e750270d9a45faaa",
+        "covers": "all",
+        "notes": "-",
+        "line": 830
+      },
+      {
+        "id": "VE-39",
+        "type": "commit",
+        "reference": "f7cfac2b825ff4acedf23aa427dcbb10e0ba79ab",
+        "covers": "all",
+        "notes": "-",
+        "line": 831
+      },
+      {
+        "id": "VE-40",
+        "type": "commit",
+        "reference": "9a2cfd03cc0bd40d416a26c62df31dcb7e632aaf",
+        "covers": "all",
+        "notes": "-",
+        "line": 832
+      },
+      {
+        "id": "VE-41",
+        "type": "commit",
+        "reference": "c88825d30240da9b739571060a88095e4c57ae53",
+        "covers": "all",
+        "notes": "-",
+        "line": 833
+      },
+      {
+        "id": "VE-42",
+        "type": "commit",
+        "reference": "9087a451cf999ae92c2d9fc5f44bf54209650999",
+        "covers": "all",
+        "notes": "-",
+        "line": 834
+      },
+      {
+        "id": "VE-43",
+        "type": "commit",
+        "reference": "4320bb287a21abada6f265bb5a2b1f1e9fcffde7",
+        "covers": "all",
+        "notes": "-",
+        "line": 835
+      },
+      {
+        "id": "VE-44",
+        "type": "commit",
+        "reference": "ae44f5a3f0d7b0343b8876fddd5844922ef0290e",
+        "covers": "all",
+        "notes": "-",
+        "line": 836
+      },
+      {
+        "id": "VE-45",
+        "type": "commit",
+        "reference": "c63303ee4692aa542175255df1a8aec99979ae26",
+        "covers": "all",
+        "notes": "-",
+        "line": 837
+      },
+      {
+        "id": "VE-46",
+        "type": "commit",
+        "reference": "0350848107098466b6e30ae539c642721dbbc62b",
+        "covers": "all",
+        "notes": "-",
+        "line": 838
+      },
+      {
+        "id": "VE-47",
+        "type": "commit",
+        "reference": "18c30d1c050e33a80e4dac82a8556f071dfcf508",
+        "covers": "all",
+        "notes": "-",
+        "line": 839
+      },
+      {
+        "id": "VE-48",
+        "type": "commit",
+        "reference": "cd13b2d077fd3c2f43236c67828530216377b7d2",
+        "covers": "all",
+        "notes": "-",
+        "line": 840
+      },
+      {
+        "id": "VE-49",
+        "type": "commit",
+        "reference": "bb12b0c7c5678ddfdfc36597443123ff1b892925",
+        "covers": "all",
+        "notes": "-",
+        "line": 841
+      },
+      {
+        "id": "VE-50",
+        "type": "commit",
+        "reference": "21bdb681a408eac425f16686993a416c1667b45b",
+        "covers": "all",
+        "notes": "-",
+        "line": 842
+      },
+      {
+        "id": "VE-51",
+        "type": "commit",
+        "reference": "2963d044e3dee158c384bbd17d3fd1474d9dc3b3",
+        "covers": "all",
+        "notes": "-",
+        "line": 843
+      },
+      {
+        "id": "VE-52",
+        "type": "commit",
+        "reference": "48729f3e2b0feca58ceb5dc732f5a88426151774",
+        "covers": "all",
+        "notes": "-",
+        "line": 844
+      },
+      {
+        "id": "VE-53",
+        "type": "commit",
+        "reference": "543c5efcfbf4bcdf2460d2915a038790b6b97473",
+        "covers": "all",
+        "notes": "-",
+        "line": 845
+      },
+      {
+        "id": "VE-54",
+        "type": "commit",
+        "reference": "d28426f15386bd74767d215e77f6a4df0d3af4c1",
+        "covers": "all",
+        "notes": "-",
+        "line": 846
+      },
+      {
+        "id": "VE-55",
+        "type": "commit",
+        "reference": "9a35c5092137c3d4d48a34395d3141070458073e",
+        "covers": "all",
+        "notes": "-",
+        "line": 847
+      }
+    ],
+    "traceLinks": [
+      {
+        "type": "Code",
+        "reference": "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet",
+        "relation": "implements",
+        "notes": "trace_intent=addition_site",
+        "line": 853
+      },
+      {
+        "type": "Requirement",
+        "reference": "FR-APP-011",
+        "relation": "extends",
+        "notes": "core shutdown sequence",
+        "line": 854
+      },
+      {
+        "type": "Requirement",
+        "reference": "FR-APP-013",
+        "relation": "extends",
+        "notes": "503 during STOPPING",
+        "line": 855
+      },
+      {
+        "type": "Requirement",
+        "reference": "FR-SSE-005",
+        "relation": "extends",
+        "notes": "SSE closing participant",
+        "line": 856
+      },
+      {
+        "type": "Requirement",
+        "reference": "FR-ENGINE-006",
+        "relation": "extends",
+        "notes": "TinyHttpd stop mirror",
+        "line": 857
+      },
+      {
+        "type": "Requirement",
+        "reference": "IR-HTTP-007",
+        "relation": "extends",
+        "notes": "stop and release lifecycle calls",
+        "line": 858
+      },
+      {
+        "type": "Requirement",
+        "reference": "FR-SVL-005",
+        "relation": "depends_on",
+        "notes": "SSE executor and AsyncContext handling",
+        "line": 859
+      },
+      {
+        "type": "Requirement",
+        "reference": "FR-SVL-001",
+        "relation": "depends_on",
+        "notes": "destroy callback runs shutdown",
+        "line": 860
+      }
+    ],
+    "changeNotes": [
+      {
+        "date": "2026-10-20",
+        "change": "Created",
+        "reason": "add-requirement",
+        "line": 874
+      },
+      {
+        "date": "2026-10-20",
+        "change": "Stability -> evolving",
+        "reason": "Feasibility=medium (score 75) at assessment; its stated conditions were addressed by SRS text fixes before promotion (blocker: AC-3 needs a non-reading client filling TCP buffers (flaky); its premise is pessimistic, complete() frees the writer). Run: 2026-10-20.NaruServe.wave-8.v01",
+        "line": 875
+      },
+      {
+        "date": "2026-10-21",
+        "change": "Status -> verified",
+        "reason": "wave 8 promotion: all ACs checked with test evidence at 514472f",
+        "line": 876
+      }
+    ],
+    "tags": [
+      "wave-8",
+      "feasibility:high",
+      "servlet",
+      "shutdown"
+    ],
+    "relatedDocs": [],
+    "evidenceReferences": [
+      "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletStopTest.java",
+      "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletStopSseTest.java",
+      "src/test/java/com/snoworca/naruserve/docs/ServletDocsTest.java",
+      "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRuleTest.java",
+      "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletAbortTest.java",
+      "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletMultipartDisconnectTest.java",
+      "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletMultipartTest.java",
+      "173e22c39b13c1527ec3cdfb1a38773ba06c7ca7",
+      "93106928f1fd8308dc447b8ec5845eb3a66e8143",
+      "e2c5097b5e9d47d7159f4857875813daa02358a3",
+      "d57af39a5a48b55ce9d12b56cc15f4fe8cf21239",
+      "aa4126bacb6bcc2da533811cc2555b43ce5fca2f",
+      "f202f2428b6a89fdc494a8ff7d378105a538a6ea",
+      "a26b2875a827902c054376d7b5501081e9f429ef",
+      "9d21cda7d24c3c1f0df36b5c81963737464b6ab6",
+      "89b371549d8f35ae6d3f2536d066232da2a69bf5",
+      "b36a89ceb7284a3b697a1fdacf9b85fb3c3ad583",
+      "fd20f57e53332639f60dd7870355065373590a6b",
+      "cc9d318ea1b384589f59b692a3f8b5e0a303cb75",
+      "20b0a98d185959882e225af4c62315d4f697347e",
+      "69809b971001b87af17240bddfcc06cb3bd950b4",
+      "de35ca2940b126b57392cfdcd9e40e56e4bff2ef",
+      "b0cd6f8effd1a8dac770ad7cc40fc59ef670ffe9",
+      "5a03978d03bdfb270d70c5c5e750270d9a45faaa",
+      "f7cfac2b825ff4acedf23aa427dcbb10e0ba79ab",
+      "9a2cfd03cc0bd40d416a26c62df31dcb7e632aaf",
+      "c88825d30240da9b739571060a88095e4c57ae53",
+      "9087a451cf999ae92c2d9fc5f44bf54209650999",
+      "4320bb287a21abada6f265bb5a2b1f1e9fcffde7",
+      "ae44f5a3f0d7b0343b8876fddd5844922ef0290e",
+      "c63303ee4692aa542175255df1a8aec99979ae26",
+      "0350848107098466b6e30ae539c642721dbbc62b",
+      "18c30d1c050e33a80e4dac82a8556f071dfcf508",
+      "cd13b2d077fd3c2f43236c67828530216377b7d2",
+      "bb12b0c7c5678ddfdfc36597443123ff1b892925",
+      "21bdb681a408eac425f16686993a416c1667b45b",
+      "2963d044e3dee158c384bbd17d3fd1474d9dc3b3",
+      "48729f3e2b0feca58ceb5dc732f5a88426151774",
+      "543c5efcfbf4bcdf2460d2915a038790b6b97473",
+      "d28426f15386bd74767d215e77f6a4df0d3af4c1",
+      "9a35c5092137c3d4d48a34395d3141070458073e"
+    ],
+    "traceReferences": [
+      "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet",
+      "FR-APP-011",
+      "FR-APP-013",
+      "FR-SSE-005",
+      "FR-ENGINE-006",
+      "IR-HTTP-007",
+      "FR-SVL-005",
+      "FR-SVL-001"
+    ],
+    "blockStartLine": 758,
+    "blockEndLine": 877,
+    "sectionLines": {
+      "Requirement": 773,
+      "Rationale": 777,
+      "Acceptance Criteria": 781,
+      "Verification Evidence": 789,
+      "Trace Links": 849,
+      "Research / Analysis": 862,
+      "Implementation Notes": 866,
+      "Change Notes": 870
+    },
+    "priority": "high",
+    "risk": "high",
+    "stability": "evolving",
+    "newWorkCandidate": false,
+    "requirement": "The system shall implement `HttpAdapter.stop(timeout, unit)` on the Servlet adapter so that it first refuses new requests with `503` and `Connection: close`, then waits for the in-flight exchanges until the deadline, and at the deadline calls `shutdownNow()` on the SSE executor and `AsyncContext.complete()` on every stream still open; and `release()` detaches the handler, so that after shutdown no `naruserve-servlet-sse-*` thread and no upload temporary file of the app remains.",
+    "rationale": "Covers D-359 (shutdown on container destroy), D-107 (two-call stop), wave decisions Servlet stop (r3 W2-003) and Blocked writes of a Servlet SSE stream (r5 W2-001), and I-012, I-015. Measured: the core shutdown sequence runs the before-wait participants (the SSE and WebSocket closing participants, FR-SSE-005) and then `adapter.stop(left(deadline))` (`internal/DefaultRestApp.java:682` `a.stop`, `:705` `a.release`, FR-APP-011). Deviation (recorded under I-012): a drain thread stuck in a socket write to a client that stopped reading is bounded only by the container's own write timeout, which the adapter does not control; the \"cut at timeout\" promise of `docs/api/sse.md` therefore holds on the Servlet adapter up to that container bound, and the release documentation lists the deviation (OPS-REL-007). Decision: the adapter counts in-flight `service()` calls and open streams under one lock and waits on its condition; refusing by `503` happens before the core handler runs, using the `ErrorRenderer` of the settings. Pitfall: `stop` called from the container's destroy callback may run on a container thread, so it must not wait for container-owned work beyond the deadline. Rejected alternative: interrupting container request threads at the deadline; interrupting a thread the container owns is unsafe.",
+    "research": "- -",
+    "implementationNotes": "- -",
+    "diagnostics": [],
+    "errors": [],
+    "warnings": [],
+    "diagnosticsSummary": {
+      "errors": 0,
+      "warnings": 0,
+      "byCode": {}
+    }
+  },
+  "diagnostics": [],
+  "diagnosticsSummary": {
+    "errors": 0,
+    "warnings": 0,
+    "byCode": {}
+  },
+  "mcpWorkspace": {
+    "workspaceRoot": "/Users/beom/work/git/NaruServe",
+    "rootSource": "server-cwd-discovery",
+    "indexPath": "docs/spec/00.index.md",
+    "packageVersion": "4.2.0"
+  }
+}

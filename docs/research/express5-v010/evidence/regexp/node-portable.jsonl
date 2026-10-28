@@ -1,0 +1,16 @@
+{"label":"identity-a","result":["a"]}
+{"label":"unmatched-backref","result":["a","a",null]}
+{"label":"astral-dot-no-u","result":null}
+{"label":"astral-dot-u","result":["😀"]}
+{"label":"ascii-identity-u-braces","result":["a"]}
+{"label":"named-underscore","result":["abc","abc"]}
+{"label":"js-empty-negative-class","result":["a"]}
+{"label":"java-intersection","result":null}
+{"label":"unicode-set-intersection","result":["c"]}
+{"label":"duplicate-named-alt","error":"SyntaxError"}
+{"label":"lookbehind","result":["b"]}
+{"label":"ignore-case-no-u","result":null}
+{"label":"ignore-case-u","result":["ſ"]}
+{"label":"property-emoji","result":["😀"]}
+{"label":"indices","result":["a"]}
+{"label":"260-captures","accepted":true}

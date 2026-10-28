@@ -1,0 +1,200 @@
+{
+  "ok": true,
+  "value": {
+    "id": "FR-ROUTE-013",
+    "title": "Unsupported-method result for unknown tokens",
+    "type": "functional",
+    "target": "wave-2",
+    "status": "verified",
+    "scope": "ROUTE",
+    "filePath": "docs/spec/03.routing.srs.md",
+    "headingLine": 1275,
+    "metadata": {
+      "Type": "functional",
+      "Target": "wave-2",
+      "Status": "verified",
+      "Priority": "high",
+      "Tags": "wave-2, feasibility:high, routing, auto-response",
+      "Risk": "low",
+      "Stability": "evolving",
+      "Verification Method": "test",
+      "GitHub Issue": "https://github.com/Snoworca/NaruServe/issues/3",
+      "Related Docs": "-"
+    },
+    "acceptanceCriteria": [
+      {
+        "id": "AC-1",
+        "text": "With `GET /x` registered, tokens `FOO`, `get` and `Get` on `/x` yield unsupported method. [D-066; loop W residual]",
+        "checked": true,
+        "line": 1300
+      },
+      {
+        "id": "AC-2",
+        "text": "Token `PROPFIND` on a path no pattern matches yields unsupported method, not no match. [wave decision: lookup result order]",
+        "checked": true,
+        "line": 1301
+      }
+    ],
+    "verificationEvidence": [
+      {
+        "id": "VE-1",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterAutoResponseTest.java#sdsAc9_FR_ROUTE_013_AC1_AC2_unknownTokensUnsupported",
+        "covers": "AC-1",
+        "notes": "-",
+        "line": 1307
+      },
+      {
+        "id": "VE-2",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterAutoResponseTest.java#sdsAc9_FR_ROUTE_013_AC1_AC2_unknownTokensUnsupported",
+        "covers": "AC-2",
+        "notes": "-",
+        "line": 1308
+      },
+      {
+        "id": "VE-3",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterAutoResponseTest.java",
+        "covers": "AC-1",
+        "notes": "verification_cmd ./gradlew build passed at 461fc3f (153/153); cited line RouterAutoResponseTest.java:181; bundle docs/research/naruserve-v1/waves/stage-2/lane-2026-10-19.naruserve.naruserve-v1-wave-2/",
+        "line": 1309
+      },
+      {
+        "id": "VE-4",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterAutoResponseTest.java",
+        "covers": "AC-2",
+        "notes": "verification_cmd ./gradlew build passed at 461fc3f (153/153); cited line RouterAutoResponseTest.java:181; bundle docs/research/naruserve-v1/waves/stage-2/lane-2026-10-19.naruserve.naruserve-v1-wave-2/",
+        "line": 1310
+      },
+      {
+        "id": "VE-5",
+        "type": "commit",
+        "reference": "f80370b",
+        "covers": "all",
+        "notes": "-",
+        "line": 1311
+      },
+      {
+        "id": "VE-6",
+        "type": "commit",
+        "reference": "8a4b565",
+        "covers": "all",
+        "notes": "-",
+        "line": 1312
+      },
+      {
+        "id": "VE-7",
+        "type": "commit",
+        "reference": "7b7b6b7",
+        "covers": "all",
+        "notes": "-",
+        "line": 1313
+      },
+      {
+        "id": "VE-8",
+        "type": "commit",
+        "reference": "b5677c3",
+        "covers": "all",
+        "notes": "-",
+        "line": 1314
+      }
+    ],
+    "traceLinks": [
+      {
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java",
+        "relation": "implements",
+        "notes": "trace_intent=addition_site",
+        "line": 1320
+      },
+      {
+        "type": "Requirement",
+        "reference": "CON-ROUTE-001",
+        "relation": "depends_on",
+        "notes": "runs inside the engine-free router",
+        "line": 1321
+      },
+      {
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java",
+        "relation": "implements",
+        "notes": "-",
+        "line": 1322
+      }
+    ],
+    "changeNotes": [
+      {
+        "date": "2026-10-19",
+        "change": "Created",
+        "reason": "add-requirement",
+        "line": 1336
+      },
+      {
+        "date": "2026-10-19",
+        "change": "Stability -> evolving",
+        "reason": "Feasibility=high (score 96). Blockers: none. Run: 2026-10-19.naruserve.wave-2.v01",
+        "line": 1337
+      }
+    ],
+    "tags": [
+      "wave-2",
+      "feasibility:high",
+      "routing",
+      "auto-response"
+    ],
+    "relatedDocs": [],
+    "evidenceReferences": [
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterAutoResponseTest.java",
+      "f80370b",
+      "8a4b565",
+      "7b7b6b7",
+      "b5677c3"
+    ],
+    "traceReferences": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java",
+      "CON-ROUTE-001"
+    ],
+    "blockStartLine": 1275,
+    "blockEndLine": 1338,
+    "sectionLines": {
+      "Requirement": 1290,
+      "Rationale": 1294,
+      "Acceptance Criteria": 1298,
+      "Verification Evidence": 1303,
+      "Trace Links": 1316,
+      "Research / Analysis": 1324,
+      "Implementation Notes": 1328,
+      "Change Notes": 1332
+    },
+    "priority": "high",
+    "risk": "low",
+    "stability": "evolving",
+    "newWorkCandidate": false,
+    "requirement": "The system shall match the raw method token against `Method` constant names exactly and case-sensitively and return the unsupported-method result, whatever the path, for every token that is not a `Method` constant name.",
+    "rationale": "Covers D-066 (T06) and the loop W residual (`get` is not `GET`; every other token is unsupported method, `501`).",
+    "research": "- -",
+    "implementationNotes": "- -",
+    "diagnostics": [],
+    "errors": [],
+    "warnings": [],
+    "diagnosticsSummary": {
+      "errors": 0,
+      "warnings": 0,
+      "byCode": {}
+    }
+  },
+  "diagnostics": [],
+  "diagnosticsSummary": {
+    "errors": 0,
+    "warnings": 0,
+    "byCode": {}
+  },
+  "mcpWorkspace": {
+    "workspaceRoot": "/Users/beom/work/git/NaruServe",
+    "rootSource": "server-cwd-discovery",
+    "indexPath": "docs/spec/00.index.md",
+    "packageVersion": "4.2.0"
+  }
+}

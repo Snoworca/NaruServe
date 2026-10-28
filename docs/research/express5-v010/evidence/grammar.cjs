@@ -1,0 +1,7 @@
+const root='/tmp/naruserve-parity-research.KkcjUP';
+const suites={v800:require(root+'/p8/node_modules/path-to-regexp'),v830:require(root+'/e5/node_modules/path-to-regexp'),v842:require(root+'/p8latest/node_modules/path-to-regexp')};
+const cases=[['/:id/:id','/a/b'],['/:foo*foo','/ab'],['/:가','/a'],['/:é','/a'],['/:$id','/a'],['/*foo/:bar/*baz','/a/b/c/d/e'],['/files/*path.:ext','/files/a/b.txt'],['/a{:b}{:c}','/axy'],['/:a:b','/abc'],['/*a*b','/abc'],['/:""','/a'],['/api{/*path}','/api'],['/users{/:id}/delete','/users/delete'],['/foo{}','/foo'],['/:id(\\d+)','/42'],['/a\\(b\\)','/a(b)']];
+for(const [label,p] of Object.entries(suites))for(const [pattern,url]of cases){try{console.log(JSON.stringify({label,pattern,url,result:p.match(pattern)(url)}));}catch(e){console.log(JSON.stringify({label,pattern,error:e.message}));}}
+const old=require(root+'/e4/node_modules/path-to-regexp');
+const oldCases=[['/files/:path(.*)','/files/a/b'],['/:x(^\\d+$)','/42'],['/:x(\\d+$)','/42'],['/:x(a$)','/a'],['/:x([^/]+)','/ab'],['/:x((a|b)+)','/ab'],['/:x((?:a|b)+)','/ab'],['/:x([()]+)','/()'],['/:x(\\^\\d+)','/^42'],['/:x([a-z]*)','/abc'],['/:x(.*)/end','/a/b/end'],['/:x((a)(b))','/ab']];
+for(const [pattern,url]of oldCases){const keys=[];try{const re=old(pattern,keys); console.log(JSON.stringify({label:'v0112',pattern,url,re:String(re),keys,result:re.exec(url)}));}catch(e){console.log(JSON.stringify({label:'v0112',pattern,error:e.message}));}}

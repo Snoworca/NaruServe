@@ -1,0 +1,149 @@
+{
+  "ok": true,
+  "value": {
+    "id": "FR-DX-007",
+    "title": "JSON 본문을 미들웨어와 핸들러에서 안전하게 재사용",
+    "type": "functional",
+    "target": "api-usability",
+    "status": "verified",
+    "scope": "DX",
+    "filePath": "docs/spec/16.developer-experience.srs.md",
+    "headingLine": 453,
+    "metadata": {
+      "Type": "functional",
+      "Target": "api-usability",
+      "Status": "verified",
+      "Priority": "high",
+      "Tags": "-",
+      "Risk": "medium",
+      "Stability": "evolving",
+      "Verification Method": "test",
+      "GitHub Issue": "https://github.com/Snoworca/NaruServe/issues/29",
+      "Related Docs": "-"
+    },
+    "acceptanceCriteria": [
+      {
+        "id": "AC-1",
+        "text": "Repeated reads of the same type return the cached value without reading or decoding again including null.",
+        "checked": true,
+        "line": 478
+      },
+      {
+        "id": "AC-2",
+        "text": "incompatible JSON type or form/JSON mixing is rejected explicitly.",
+        "checked": true,
+        "line": 479
+      },
+      {
+        "id": "AC-3",
+        "text": "parsing limits still apply.",
+        "checked": true,
+        "line": 480
+      }
+    ],
+    "verificationEvidence": [
+      {
+        "id": "VE-1",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/JsonBodyCacheTest.java",
+        "covers": "all",
+        "notes": "RED confirmed before implementation; GREEN: ./gradlew :NaruServe-api:test --tests *JsonBodyCacheTest --tests *JsonApiTest --tests *JsonBodyAcceptanceTest --tests *FormAccessorsTest --tests *BodyStateTest",
+        "line": 486
+      },
+      {
+        "id": "VE-2",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/JsonApiTest.java",
+        "covers": "AC-1",
+        "notes": "check_test_sufficiency source citation NaruServe-api/src/test/java/com/snoworca/naruserve/JsonApiTest.java:148; complete ./gradlew build passed 1643 tests, zero failures/skips; see docs/release/test-sufficiency-review.md.",
+        "line": 487
+      },
+      {
+        "id": "VE-3",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/JsonBodyCacheTest.java",
+        "covers": "AC-2",
+        "notes": "check_test_sufficiency source citation NaruServe-api/src/test/java/com/snoworca/naruserve/JsonBodyCacheTest.java:126; complete ./gradlew build passed 1643 tests, zero failures/skips; see docs/release/test-sufficiency-review.md.",
+        "line": 488
+      },
+      {
+        "id": "VE-4",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/JsonBodyCacheTest.java",
+        "covers": "AC-3",
+        "notes": "check_test_sufficiency source citation NaruServe-api/src/test/java/com/snoworca/naruserve/JsonBodyCacheTest.java:166; complete ./gradlew build passed 1643 tests, zero failures/skips; see docs/release/test-sufficiency-review.md.",
+        "line": 489
+      }
+    ],
+    "traceLinks": [],
+    "changeNotes": [
+      {
+        "date": "2026-10-21",
+        "change": "Created",
+        "reason": "add-requirement",
+        "line": 508
+      },
+      {
+        "date": "2026-10-21",
+        "change": "Status -> implemented",
+        "reason": "Issue #29: red test then green; ./gradlew :NaruServe-api:test --tests *JsonBodyCacheTest --tests *JsonApiTest --tests *JsonBodyAcceptanceTest --tests *FormAccessorsTest --tests *BodyStateTest",
+        "line": 509
+      },
+      {
+        "date": "2026-10-21",
+        "change": "Status -> verified",
+        "reason": "Issue #29: all acceptance criteria covered by passing regression evidence.",
+        "line": 510
+      }
+    ],
+    "tags": [
+      "-"
+    ],
+    "relatedDocs": [],
+    "evidenceReferences": [
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/JsonBodyCacheTest.java",
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/JsonApiTest.java"
+    ],
+    "traceReferences": [],
+    "blockStartLine": 453,
+    "blockEndLine": 511,
+    "sectionLines": {
+      "Requirement": 468,
+      "Rationale": 472,
+      "Acceptance Criteria": 476,
+      "Verification Evidence": 482,
+      "Trace Links": 491,
+      "Research / Analysis": 496,
+      "Implementation Notes": 500,
+      "Change Notes": 504
+    },
+    "priority": "high",
+    "risk": "medium",
+    "stability": "evolving",
+    "newWorkCandidate": false,
+    "requirement": "The system shall cache the first successfully decoded JSON body and its requested type for request-local reuse.",
+    "rationale": "-",
+    "research": "- -",
+    "implementationNotes": "- -",
+    "diagnostics": [],
+    "errors": [],
+    "warnings": [],
+    "diagnosticsSummary": {
+      "errors": 0,
+      "warnings": 0,
+      "byCode": {}
+    }
+  },
+  "diagnostics": [],
+  "diagnosticsSummary": {
+    "errors": 0,
+    "warnings": 0,
+    "byCode": {}
+  },
+  "mcpWorkspace": {
+    "workspaceRoot": "/Users/beom/work/git/NaruServe",
+    "rootSource": "server-cwd-discovery",
+    "indexPath": "docs/spec/00.index.md",
+    "packageVersion": "4.2.0"
+  }
+}

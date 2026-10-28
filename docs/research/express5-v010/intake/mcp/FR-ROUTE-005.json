@@ -1,0 +1,277 @@
+{
+  "ok": true,
+  "value": {
+    "id": "FR-ROUTE-005",
+    "title": "Strict default matching with single percent-decoding",
+    "type": "functional",
+    "target": "wave-2",
+    "status": "verified",
+    "scope": "ROUTE",
+    "filePath": "docs/spec/03.routing.srs.md",
+    "headingLine": 611,
+    "metadata": {
+      "Type": "functional",
+      "Target": "wave-2",
+      "Status": "verified",
+      "Priority": "high",
+      "Tags": "wave-2, feasibility:high, routing, matching",
+      "Risk": "medium",
+      "Stability": "evolving",
+      "Verification Method": "test",
+      "GitHub Issue": "https://github.com/Snoworca/NaruServe/issues/3",
+      "Related Docs": "-"
+    },
+    "acceptanceCriteria": [
+      {
+        "id": "AC-1",
+        "text": "`/users?id=1` and `/users` both match `/users`. [D-049]",
+        "checked": true,
+        "line": 636
+      },
+      {
+        "id": "AC-2",
+        "text": "Under the default policy `/Users` and `/users/` do not match `/users`, and `/users/` matches only a pattern registered as `/users/`. [D-050]",
+        "checked": true,
+        "line": 637
+      },
+      {
+        "id": "AC-3",
+        "text": "`/files/%252e` matched against `/files/:name` yields `name` = `%2e`, and `/caf%C3%A9` matches the literal pattern `/café`. [D-051] [SDS 2026-10-19.naruserve.naruserve-v1-wave-2-2 SDS-AC-8] Each segment is decoded %XX exactly once as UTF-8 and '+' stays '+'.",
+        "checked": true,
+        "line": 638
+      },
+      {
+        "id": "AC-4",
+        "text": "Under the default policy `/a//b` matches neither `/a/:x/b` nor `/a/b` and reaches the no-match result when no other pattern matches. [wave decision: path-form policy]",
+        "checked": true,
+        "line": 639
+      }
+    ],
+    "verificationEvidence": [
+      {
+        "id": "VE-1",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RoutePatternTest.java#FR_ROUTE_005_AC3_paramsAreUnmodifiable",
+        "covers": "AC-3",
+        "notes": "-",
+        "line": 645
+      },
+      {
+        "id": "VE-2",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterMatchingTest.java#sdsAc3_CON_ROUTE_001_AC4_FR_ROUTE_005_AC1_queryIsDroppedBeforeDecoding",
+        "covers": "AC-1",
+        "notes": "-",
+        "line": 646
+      },
+      {
+        "id": "VE-3",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterMatchingTest.java#sdsAc8_FR_ROUTE_005_AC3_decodedOnceAsUtf8",
+        "covers": "AC-3",
+        "notes": "-",
+        "line": 647
+      },
+      {
+        "id": "VE-4",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterMatchingTest.java#sdsAc8_FR_ROUTE_005_AC3_plusStaysPlus",
+        "covers": "AC-3",
+        "notes": "-",
+        "line": 648
+      },
+      {
+        "id": "VE-5",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterMatchingTest.java#sdsAc8_FR_ROUTE_005_AC2_strictDefaultCaseAndTrailingSlashSignificant",
+        "covers": "AC-2",
+        "notes": "-",
+        "line": 649
+      },
+      {
+        "id": "VE-6",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterMatchingTest.java#sdsAc8_FR_ROUTE_005_AC4_emptySegmentNeverMatchesUnderStrictDefault",
+        "covers": "AC-4",
+        "notes": "-",
+        "line": 650
+      },
+      {
+        "id": "VE-7",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterLookupTest.java",
+        "covers": "AC-1",
+        "notes": "verification_cmd ./gradlew build passed at 461fc3f (153/153); cited line RouterLookupTest.java:267, RouterMatchingTest.java:30; bundle docs/research/naruserve-v1/waves/stage-2/lane-2026-10-19.naruserve.naruserve-v1-wave-2/",
+        "line": 651
+      },
+      {
+        "id": "VE-8",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterMatchingTest.java",
+        "covers": "AC-2",
+        "notes": "verification_cmd ./gradlew build passed at 461fc3f (153/153); cited line RouterMatchingTest.java:66; bundle docs/research/naruserve-v1/waves/stage-2/lane-2026-10-19.naruserve.naruserve-v1-wave-2/",
+        "line": 652
+      },
+      {
+        "id": "VE-9",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RoutePatternTest.java",
+        "covers": "AC-3",
+        "notes": "verification_cmd ./gradlew build passed at 461fc3f (153/153); cited line RoutePatternTest.java:99, RouterMatchingTest.java:48, RouterMatchingTest.java:59; bundle docs/research/naruserve-v1/waves/stage-2/lane-2026-10-19.naruserve.naruserve-v1-wave-2/",
+        "line": 653
+      },
+      {
+        "id": "VE-10",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterMatchingTest.java",
+        "covers": "AC-4",
+        "notes": "verification_cmd ./gradlew build passed at 461fc3f (153/153); cited line RouterMatchingTest.java:77; bundle docs/research/naruserve-v1/waves/stage-2/lane-2026-10-19.naruserve.naruserve-v1-wave-2/",
+        "line": 654
+      },
+      {
+        "id": "VE-11",
+        "type": "commit",
+        "reference": "f80370b",
+        "covers": "all",
+        "notes": "-",
+        "line": 655
+      },
+      {
+        "id": "VE-12",
+        "type": "commit",
+        "reference": "8a4b565",
+        "covers": "all",
+        "notes": "-",
+        "line": 656
+      },
+      {
+        "id": "VE-13",
+        "type": "commit",
+        "reference": "7b7b6b7",
+        "covers": "all",
+        "notes": "-",
+        "line": 657
+      },
+      {
+        "id": "VE-14",
+        "type": "commit",
+        "reference": "b5677c3",
+        "covers": "all",
+        "notes": "-",
+        "line": 658
+      }
+    ],
+    "traceLinks": [
+      {
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java",
+        "relation": "implements",
+        "notes": "trace_intent=addition_site",
+        "line": 664
+      },
+      {
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RoutePattern.java",
+        "relation": "implements",
+        "notes": "trace_intent=addition_site",
+        "line": 665
+      },
+      {
+        "type": "Requirement",
+        "reference": "CON-ROUTE-001",
+        "relation": "depends_on",
+        "notes": "runs inside the engine-free router",
+        "line": 666
+      },
+      {
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java",
+        "relation": "implements",
+        "notes": "-",
+        "line": 667
+      },
+      {
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RoutePattern.java",
+        "relation": "implements",
+        "notes": "-",
+        "line": 668
+      }
+    ],
+    "changeNotes": [
+      {
+        "date": "2026-10-19",
+        "change": "Created",
+        "reason": "add-requirement",
+        "line": 682
+      },
+      {
+        "date": "2026-10-19",
+        "change": "Stability -> evolving",
+        "reason": "Feasibility=high (score 94). Blockers: none. Run: 2026-10-19.naruserve.wave-2.v01",
+        "line": 683
+      }
+    ],
+    "tags": [
+      "wave-2",
+      "feasibility:high",
+      "routing",
+      "matching"
+    ],
+    "relatedDocs": [],
+    "evidenceReferences": [
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RoutePatternTest.java",
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterMatchingTest.java",
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterLookupTest.java",
+      "f80370b",
+      "8a4b565",
+      "7b7b6b7",
+      "b5677c3"
+    ],
+    "traceReferences": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RoutePattern.java",
+      "CON-ROUTE-001"
+    ],
+    "blockStartLine": 611,
+    "blockEndLine": 684,
+    "sectionLines": {
+      "Requirement": 626,
+      "Rationale": 630,
+      "Acceptance Criteria": 634,
+      "Verification Evidence": 641,
+      "Trace Links": 660,
+      "Research / Analysis": 670,
+      "Implementation Notes": 674,
+      "Change Notes": 678
+    },
+    "priority": "high",
+    "risk": "medium",
+    "stability": "evolving",
+    "newWorkCandidate": false,
+    "requirement": "The system shall match a request path against patterns ignoring the query string, decoding each path segment exactly once, and by default comparing case-sensitively with a significant trailing slash and with an empty segment never matching a literal or variable segment, returning path parameter values as decoded once and otherwise as received.",
+    "rationale": "Covers D-049, D-050, D-051, the wave decision on the path-form policy (strict default; parameter values always as received) and the loop W residual (the router decodes path segments exactly once when it extracts parameters, D-051, D-399).",
+    "research": "- -",
+    "implementationNotes": "- -",
+    "diagnostics": [],
+    "errors": [],
+    "warnings": [],
+    "diagnosticsSummary": {
+      "errors": 0,
+      "warnings": 0,
+      "byCode": {}
+    }
+  },
+  "diagnostics": [],
+  "diagnosticsSummary": {
+    "errors": 0,
+    "warnings": 0,
+    "byCode": {}
+  },
+  "mcpWorkspace": {
+    "workspaceRoot": "/Users/beom/work/git/NaruServe",
+    "rootSource": "server-cwd-discovery",
+    "indexPath": "docs/spec/00.index.md",
+    "packageVersion": "4.2.0"
+  }
+}

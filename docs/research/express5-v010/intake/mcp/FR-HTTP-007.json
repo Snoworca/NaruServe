@@ -1,0 +1,345 @@
+{
+  "ok": true,
+  "value": {
+    "id": "FR-HTTP-007",
+    "title": "One handler for a Method or MethodSet reports the actual method",
+    "type": "functional",
+    "target": "wave-3",
+    "status": "verified",
+    "scope": "HTTP",
+    "filePath": "docs/spec/04.http-core.srs.md",
+    "headingLine": 1124,
+    "metadata": {
+      "Type": "functional",
+      "Target": "wave-3",
+      "Status": "verified",
+      "Priority": "high",
+      "Tags": "wave-3, feasibility:high, routing, dispatcher",
+      "Risk": "low",
+      "Stability": "evolving",
+      "Verification Method": "test",
+      "GitHub Issue": "https://github.com/Snoworca/NaruServe/issues/2",
+      "Related Docs": "-"
+    },
+    "acceptanceCriteria": [
+      {
+        "id": "AC-1",
+        "text": "After `app.route(Method.get().post().delete(), \"/users/:id\", h)`, `GET`, `POST` and `DELETE /users/1` through the harness all reach `h`, and `PUT /users/1` is answered `405`. [D-041; T01] Decision: `app.get(p, h)` and a builder `get(h)` record the same registration (method set `MethodSet.of(GET)`, pattern `p`, HTTP route kind), so the freeze reports such a pair as a duplicate. [SDS 2026-10-19.naruserve.naruserve-v1-wave-3-3 SDS-AC-11]",
+        "checked": true,
+        "line": 1149
+      },
+      {
+        "id": "AC-2",
+        "text": "Inside `h`, `req.method()` returns `Method.GET`, `Method.POST` and `Method.DELETE` for those three requests respectively. [D-042; T01]",
+        "checked": true,
+        "line": 1150
+      },
+      {
+        "id": "AC-3",
+        "text": "After `app.route(Method.PATCH, \"/p\", h)`, `PATCH /p` reaches `h` with `req.method()` = `Method.PATCH`. [D-041; D-042]",
+        "checked": true,
+        "line": 1151
+      },
+      {
+        "id": "AC-4",
+        "text": "`HEAD /users/1` reaches `h` through automatic `HEAD` with `req.method()` = `Method.HEAD`. [D-042; wave decision: req.method() during automatic HEAD]",
+        "checked": true,
+        "line": 1152
+      }
+    ],
+    "verificationEvidence": [
+      {
+        "id": "VE-1",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRestAppTest.java#sdsAc11_FR_HTTP_007_AC1_eachRegistrationMethodRecordsItsMethods",
+        "covers": "AC-1",
+        "notes": "./gradlew build exit 0",
+        "line": 1158
+      },
+      {
+        "id": "VE-2",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRestAppTest.java#sdsAc11_FR_HTTP_007_AC1_unregisteredMethodOfAMethodSetRouteIs405",
+        "covers": "AC-1",
+        "notes": "./gradlew build exit 0",
+        "line": 1159
+      },
+      {
+        "id": "VE-3",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java#sds3Ac7_FR_HTTP_004_AC1_AC2_FR_HTTP_007_AC4_autoHeadRunsGetHandlerInHeadMode",
+        "covers": "AC-4",
+        "notes": "./gradlew build exit 0 (2026-10-19.naruserve.naruserve-v1-wave-3-5)",
+        "line": 1160
+      },
+      {
+        "id": "VE-4",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java#sds3Ac11_T01_FR_HTTP_007_AC1_AC2_AC4_oneHandlerForAMethodSetSeesTheActualMethod",
+        "covers": "AC-1",
+        "notes": "./gradlew build exit 0 (2026-10-19.naruserve.naruserve-v1-wave-3-5)",
+        "line": 1161
+      },
+      {
+        "id": "VE-5",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java#sds3Ac11_T01_FR_HTTP_007_AC1_AC2_AC4_oneHandlerForAMethodSetSeesTheActualMethod",
+        "covers": "AC-2",
+        "notes": "./gradlew build exit 0 (2026-10-19.naruserve.naruserve-v1-wave-3-5)",
+        "line": 1162
+      },
+      {
+        "id": "VE-6",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java#sds3Ac11_T01_FR_HTTP_007_AC1_AC2_AC4_oneHandlerForAMethodSetSeesTheActualMethod",
+        "covers": "AC-4",
+        "notes": "./gradlew build exit 0 (2026-10-19.naruserve.naruserve-v1-wave-3-5)",
+        "line": 1163
+      },
+      {
+        "id": "VE-7",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java#sds3Ac11_FR_HTTP_007_AC3_patchRouteSeesPatch",
+        "covers": "AC-3",
+        "notes": "./gradlew build exit 0 (2026-10-19.naruserve.naruserve-v1-wave-3-5)",
+        "line": 1164
+      },
+      {
+        "id": "VE-8",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java",
+        "covers": "AC-1",
+        "notes": "verification_cmd ./gradlew build passed at ea1217e (346/346); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java:143; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRestAppTest.java:81; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRestAppTest.java:104; bundle docs/research/naruserve-v1/waves/stage-3/lane-2026-10-19.naruserve.naruserve-v1-wave-3/",
+        "line": 1165
+      },
+      {
+        "id": "VE-9",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java",
+        "covers": "AC-2",
+        "notes": "verification_cmd ./gradlew build passed at ea1217e (346/346); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java:143; bundle docs/research/naruserve-v1/waves/stage-3/lane-2026-10-19.naruserve.naruserve-v1-wave-3/",
+        "line": 1166
+      },
+      {
+        "id": "VE-10",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java",
+        "covers": "AC-3",
+        "notes": "verification_cmd ./gradlew build passed at ea1217e (346/346); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java:163; bundle docs/research/naruserve-v1/waves/stage-3/lane-2026-10-19.naruserve.naruserve-v1-wave-3/",
+        "line": 1167
+      },
+      {
+        "id": "VE-11",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java",
+        "covers": "AC-4",
+        "notes": "verification_cmd ./gradlew build passed at ea1217e (346/346); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java:143; NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java:223; bundle docs/research/naruserve-v1/waves/stage-3/lane-2026-10-19.naruserve.naruserve-v1-wave-3/",
+        "line": 1168
+      },
+      {
+        "id": "VE-12",
+        "type": "commit",
+        "reference": "a4d3403a786e0ee895c72c3ea53fe4c28a3477f4",
+        "covers": "all",
+        "notes": "wave 3 worker commit (Orch-Wave: 3), ancestor of integration head ea1217e",
+        "line": 1169
+      },
+      {
+        "id": "VE-13",
+        "type": "commit",
+        "reference": "ef85d35a7bbc8ee25d27e60262d1b727913f0a28",
+        "covers": "all",
+        "notes": "wave 3 worker commit (Orch-Wave: 3), ancestor of integration head ea1217e",
+        "line": 1170
+      },
+      {
+        "id": "VE-14",
+        "type": "commit",
+        "reference": "45469d2e1a7c931dc16bc9bc5ae907d4cd28c4cc",
+        "covers": "all",
+        "notes": "wave 3 worker commit (Orch-Wave: 3), ancestor of integration head ea1217e",
+        "line": 1171
+      },
+      {
+        "id": "VE-15",
+        "type": "commit",
+        "reference": "8fb4835bf65967f266ad84b15aeda66274dbe5eb",
+        "covers": "all",
+        "notes": "wave 3 worker commit (Orch-Wave: 3), ancestor of integration head ea1217e",
+        "line": 1172
+      },
+      {
+        "id": "VE-16",
+        "type": "commit",
+        "reference": "1ae79fe445e09375b270e2d78e1316dc0ce4aaa7",
+        "covers": "all",
+        "notes": "wave 3 worker commit (Orch-Wave: 3), ancestor of integration head ea1217e",
+        "line": 1173
+      },
+      {
+        "id": "VE-17",
+        "type": "commit",
+        "reference": "4917e408d4708724c76e963c279a4aa55a4d107c",
+        "covers": "all",
+        "notes": "wave 3 worker commit (Orch-Wave: 3), ancestor of integration head ea1217e",
+        "line": 1174
+      },
+      {
+        "id": "VE-18",
+        "type": "commit",
+        "reference": "5a9322dedaf1229c0ab34349c05bae6802b5ada5",
+        "covers": "all",
+        "notes": "wave 3 worker commit (Orch-Wave: 3), ancestor of integration head ea1217e",
+        "line": 1175
+      },
+      {
+        "id": "VE-19",
+        "type": "commit",
+        "reference": "06d70b4c4771c90888edda5d6b95fca6feaa6af7",
+        "covers": "all",
+        "notes": "wave 3 worker commit (Orch-Wave: 3), ancestor of integration head ea1217e",
+        "line": 1176
+      },
+      {
+        "id": "VE-20",
+        "type": "commit",
+        "reference": "c47335c85e5e9e13a19bf2aaf9c95beb7436de6f",
+        "covers": "all",
+        "notes": "wave 3 worker commit (Orch-Wave: 3), ancestor of integration head ea1217e",
+        "line": 1177
+      }
+    ],
+    "traceLinks": [
+      {
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+        "relation": "implements",
+        "notes": "trace_intent=addition_site",
+        "line": 1183
+      },
+      {
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java",
+        "relation": "implements",
+        "notes": "trace_intent=addition_site",
+        "line": 1184
+      },
+      {
+        "type": "Requirement",
+        "reference": "IR-HTTP-005",
+        "relation": "depends_on",
+        "notes": "route(Method/MethodSet) signatures",
+        "line": 1185
+      },
+      {
+        "type": "Requirement",
+        "reference": "FR-ROUTE-002",
+        "relation": "extends",
+        "notes": "registration by method set",
+        "line": 1186
+      },
+      {
+        "type": "Requirement",
+        "reference": "FR-HTTP-004",
+        "relation": "depends_on",
+        "notes": "HEAD value during automatic HEAD",
+        "line": 1187
+      },
+      {
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+        "relation": "implements",
+        "notes": "-",
+        "line": 1188
+      }
+    ],
+    "changeNotes": [
+      {
+        "date": "2026-10-19",
+        "change": "Created",
+        "reason": "add-requirement",
+        "line": 1202
+      },
+      {
+        "date": "2026-10-19",
+        "change": "Stability -> evolving",
+        "reason": "Feasibility=high (score 91). Blockers: none. Run: 2026-10-19.naruserve.wave-3.v01",
+        "line": 1203
+      },
+      {
+        "date": "2026-10-19",
+        "change": "Status -> verified",
+        "reason": "Wave 3 promotion: every AC cited in docs/research/naruserve-v1/waves/wave-3/test-sufficiency.json; ./gradlew build passed at ea1217e (346/346); worker commits recorded",
+        "line": 1204
+      }
+    ],
+    "tags": [
+      "wave-3",
+      "feasibility:high",
+      "routing",
+      "dispatcher"
+    ],
+    "relatedDocs": [],
+    "evidenceReferences": [
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRestAppTest.java",
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java",
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpAcceptanceTest.java",
+      "a4d3403a786e0ee895c72c3ea53fe4c28a3477f4",
+      "ef85d35a7bbc8ee25d27e60262d1b727913f0a28",
+      "45469d2e1a7c931dc16bc9bc5ae907d4cd28c4cc",
+      "8fb4835bf65967f266ad84b15aeda66274dbe5eb",
+      "1ae79fe445e09375b270e2d78e1316dc0ce4aaa7",
+      "4917e408d4708724c76e963c279a4aa55a4d107c",
+      "5a9322dedaf1229c0ab34349c05bae6802b5ada5",
+      "06d70b4c4771c90888edda5d6b95fca6feaa6af7",
+      "c47335c85e5e9e13a19bf2aaf9c95beb7436de6f"
+    ],
+    "traceReferences": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java",
+      "IR-HTTP-005",
+      "FR-ROUTE-002",
+      "FR-HTTP-004"
+    ],
+    "blockStartLine": 1124,
+    "blockEndLine": 1205,
+    "sectionLines": {
+      "Requirement": 1139,
+      "Rationale": 1143,
+      "Acceptance Criteria": 1147,
+      "Verification Evidence": 1154,
+      "Trace Links": 1179,
+      "Research / Analysis": 1190,
+      "Implementation Notes": 1194,
+      "Change Notes": 1198
+    },
+    "priority": "high",
+    "risk": "low",
+    "stability": "evolving",
+    "newWorkCandidate": false,
+    "requirement": "The system shall register the one handler given to `route(Method, path, handler)` or `route(MethodSet, path, handler)` for every method in the argument, and report the actual request method through `req.method()` when a request reaches that handler.",
+    "rationale": "Covers D-041 and D-042 (T01) and the wave decision on `req.method()` during automatic `HEAD`.",
+    "research": "- -",
+    "implementationNotes": "- -",
+    "diagnostics": [],
+    "errors": [],
+    "warnings": [],
+    "diagnosticsSummary": {
+      "errors": 0,
+      "warnings": 0,
+      "byCode": {}
+    }
+  },
+  "diagnostics": [],
+  "diagnosticsSummary": {
+    "errors": 0,
+    "warnings": 0,
+    "byCode": {}
+  },
+  "mcpWorkspace": {
+    "workspaceRoot": "/Users/beom/work/git/NaruServe",
+    "rootSource": "server-cwd-discovery",
+    "indexPath": "docs/spec/00.index.md",
+    "packageVersion": "4.2.0"
+  }
+}

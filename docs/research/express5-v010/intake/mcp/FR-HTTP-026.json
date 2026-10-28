@@ -1,0 +1,227 @@
+{
+  "ok": true,
+  "value": {
+    "id": "FR-HTTP-026",
+    "title": "Automatic responses for router lookup results with the standard error body (wave 4, restated in wave 8)",
+    "type": "functional",
+    "target": "wave-8",
+    "status": "verified",
+    "scope": "HTTP",
+    "filePath": "docs/spec/04.http-core.srs.md",
+    "headingLine": 4286,
+    "metadata": {
+      "Type": "functional",
+      "Target": "wave-8",
+      "Status": "verified",
+      "Priority": "medium",
+      "Tags": "-",
+      "Risk": "medium",
+      "Stability": "evolving",
+      "Verification Method": "test",
+      "GitHub Issue": "-",
+      "Related Docs": "-"
+    },
+    "acceptanceCriteria": [
+      {
+        "id": "AC-1",
+        "text": "Through the harness, a request whose path matches no route is answered `404` with the standard error body of FR-APP-006 (`code` `NOT_FOUND`). [D-395; wave-4 carried: standard error body; D-134] Decision: the fallback answers only a response that is still `NEW`, through the request's `Response`, keeping the headers a middleware set; a response that is no longer `NEW` is left as it is. [SDS 2026-10-19.naruserve.naruserve-v1-wave-4-4 SDS-AC-15]",
+        "checked": true,
+        "line": 4311
+      },
+      {
+        "id": "AC-2",
+        "text": "With only `POST /p` registered, `GET /p` is answered `405` with `Allow` listing `POST, OPTIONS`, and with `GET /r` registered `DELETE /r` is answered `405` with `Allow` including the automatic `HEAD` and `OPTIONS`, both with the standard error body (`code` `METHOD_NOT_ALLOWED`). [D-395; T02; D-134] Decision: the `Allow` value joins the allowed methods (or `Method.any()` for `OPTIONS *`) with `, ` in `MethodSet` iteration (`Method` declaration) order.",
+        "checked": true,
+        "line": 4312
+      },
+      {
+        "id": "AC-3",
+        "text": "With `GET /r` and `POST /r` registered and no `OPTIONS` route, `OPTIONS /r` is answered `204` with `Allow` = `GET, HEAD, POST, OPTIONS`, no body and no `Content-Length` header. [D-395; T05; wave decision: Automatic response bodies]",
+        "checked": true,
+        "line": 4313
+      },
+      {
+        "id": "AC-4",
+        "text": "`TRACE /x` with `TRACE` disabled and `CONNECT /` with `CONNECT` disabled are each answered `501` with the standard error body (`code` `NOT_IMPLEMENTED`) after the global middleware ran, while a request with an unrecognised method token (FR-ROUTE-013) is answered `501` with the standard error body before any `Request` is built, as FR-HTTP-021 AC-4 states. [D-395; wave decision: 426 and 501; wave decision: Pre-request rejections; D-422] Decision: the dispatcher tells the two cases apart by whether the method token parses to a `Method` value.",
+        "checked": true,
+        "line": 4314
+      },
+      {
+        "id": "AC-5",
+        "text": "With a WebSocket-only route registered through the internal hook of FR-HTTP-008 AC-7, a plain `GET` to that path is answered `426` with headers `Upgrade: websocket` and `Connection: Upgrade` and the standard error body (`code` `UPGRADE_REQUIRED`), asserted through the in-memory adapter. [D-395; T06; wave decision: 426 over TinyHttpd; wave decision: 426 and 501] Decision: the upgrade flag passed to the lookup is `Router.isWebSocketUpgrade(token, Connection, Upgrade)` with each header's values joined by `, `.",
+        "checked": true,
+        "line": 4315
+      },
+      {
+        "id": "AC-6",
+        "text": "On a WebSocket-only hook route, a `GET` carrying `Upgrade: websocket` and `Connection: Upgrade` is handled by the WebSocket handshake of FR-WS-001 AC-7 (answered `101` with no `426`), while a `GET` without `Upgrade` on such a route is answered `426` with both headers and the standard error body (FR-WS-004 AC-1). [D-395; T06; FR-ROUTE-015; wave decision: FR-WS-001 AC-7]",
+        "checked": true,
+        "line": 4316
+      },
+      {
+        "id": "AC-7",
+        "text": "After `app.route(Method.any().except(Method.DELETE), \"/t\", h)`, `DELETE /t` through the in-memory harness is answered `405` with `Allow` = `GET, HEAD, POST, PUT, PATCH, OPTIONS` (the router's `Method` declaration order, FR-ROUTE-010 AC-1) and the standard error body. [D-395; T02]",
+        "checked": true,
+        "line": 4317
+      },
+      {
+        "id": "AC-8",
+        "text": "A recording global middleware runs once before each of the `404`, `405`, `426`, automatic `OPTIONS` and disabled-`TRACE`/`CONNECT` `501` answers above and not for the unrecognised-token `501`, and a recording `onError` records no call for any of them. [wave decision: Pre-request rejections; residual: onError scope; D-117]",
+        "checked": true,
+        "line": 4318
+      }
+    ],
+    "verificationEvidence": [
+      {
+        "id": "VE-1",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java#sdsAc15_FR_HTTP_022_AC1_AC4_noMatchAndUnsupportedCarryTheStandardBody",
+        "covers": "AC-1",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 4324
+      },
+      {
+        "id": "VE-2",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java#sdsAc15_FR_HTTP_022_AC2_methodMismatchListsAllowInDeclarationOrder",
+        "covers": "AC-2",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 4325
+      },
+      {
+        "id": "VE-3",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java#sdsAc16_FR_HTTP_022_AC3_automaticOptionsIs204WithoutContentLength",
+        "covers": "AC-3",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 4326
+      },
+      {
+        "id": "VE-4",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MiddlewarePipelineTest.java#sdsAc17_FR_HTTP_022_AC4_disabledTraceRequestSeesTheTraceMethod",
+        "covers": "AC-4",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 4327
+      },
+      {
+        "id": "VE-5",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java#sdsAc18_FR_HTTP_022_AC5_AC6_webSocketOnlyRouteGives426ForPlainAndUpgradeGet",
+        "covers": "AC-5",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 4328
+      },
+      {
+        "id": "VE-6",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java#sdsAc18_FR_HTTP_022_AC5_AC6_webSocketOnlyRouteGives426ForPlainAndUpgradeGet",
+        "covers": "AC-6",
+        "notes": "command: ./gradlew build; result: pass; asserts 426 with both headers for the plain GET and 101 for the upgrade GET",
+        "line": 4329
+      },
+      {
+        "id": "VE-7",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java#sdsAc15_FR_HTTP_022_AC7_anyExceptDeleteGives405WithAllow",
+        "covers": "AC-7",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 4330
+      },
+      {
+        "id": "VE-8",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MiddlewarePipelineTest.java#sdsAc17_FR_HTTP_022_AC8_globalRunsOnceForEveryFallbackAnswerButNotTheUnknownToken",
+        "covers": "AC-8",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 4331
+      }
+    ],
+    "traceLinks": [
+      {
+        "type": "Requirement",
+        "reference": "FR-HTTP-022",
+        "relation": "supersedes",
+        "notes": "-",
+        "line": 4337
+      }
+    ],
+    "changeNotes": [
+      {
+        "date": "2026-10-21",
+        "change": "Created",
+        "reason": "add-requirement",
+        "line": 4351
+      },
+      {
+        "date": "2026-10-21",
+        "change": "Stability -> evolving",
+        "reason": "Restates FR-HTTP-022 after the expiry of its AC-6; ACs 1-5, 7, 8 carried over unchanged",
+        "line": 4352
+      },
+      {
+        "date": "2026-10-21",
+        "change": "Status -> implemented",
+        "reason": "Behavior unchanged since FR-HTTP-022; tests cite the successor",
+        "line": 4353
+      },
+      {
+        "date": "2026-10-21",
+        "change": "Status -> verified",
+        "reason": "./gradlew build --rerun-tasks passed (1561 tests, 0 failures); every AC cited by a passing test and evidenced",
+        "line": 4354
+      }
+    ],
+    "tags": [
+      "-"
+    ],
+    "relatedDocs": [],
+    "evidenceReferences": [
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java",
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MiddlewarePipelineTest.java"
+    ],
+    "traceReferences": [
+      "FR-HTTP-022"
+    ],
+    "blockStartLine": 4286,
+    "blockEndLine": 4355,
+    "sectionLines": {
+      "Requirement": 4301,
+      "Rationale": 4305,
+      "Acceptance Criteria": 4309,
+      "Verification Evidence": 4320,
+      "Trace Links": 4333,
+      "Research / Analysis": 4339,
+      "Implementation Notes": 4343,
+      "Change Notes": 4347
+    },
+    "priority": "medium",
+    "risk": "medium",
+    "stability": "evolving",
+    "newWorkCandidate": false,
+    "requirement": "The system shall, after the global and prefix middleware ran, answer the no-match result with `404`, the method-mismatch result with `405` and an `Allow` header, the automatic-OPTIONS result with `204` and an `Allow` header, the unsupported-method result for a disabled `TRACE` or `CONNECT` (a `Method` value) with `501` and the WebSocket-only result with `426` plus `Upgrade: websocket` and `Connection: Upgrade`, where the `404`, `405`, `426` and `501` answers carry the standard error body and the `204` answers carry no body, while an unrecognised method token stays a pre-request rejection answered `501` before any `Request` is built (FR-HTTP-021).",
+    "rationale": "-",
+    "research": "- -",
+    "implementationNotes": "- -",
+    "diagnostics": [],
+    "errors": [],
+    "warnings": [],
+    "diagnosticsSummary": {
+      "errors": 0,
+      "warnings": 0,
+      "byCode": {}
+    }
+  },
+  "diagnostics": [],
+  "diagnosticsSummary": {
+    "errors": 0,
+    "warnings": 0,
+    "byCode": {}
+  },
+  "mcpWorkspace": {
+    "workspaceRoot": "/Users/beom/work/git/NaruServe",
+    "rootSource": "server-cwd-discovery",
+    "indexPath": "docs/spec/00.index.md",
+    "packageVersion": "4.2.0"
+  }
+}

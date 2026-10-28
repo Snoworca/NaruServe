@@ -1,0 +1,319 @@
+{
+  "ok": true,
+  "value": {
+    "id": "OPS-ROUTE-003",
+    "title": "Decided routing semantics in docs/api/routing.md with no remaining marker (wave 4)",
+    "type": "operational",
+    "target": "wave-4",
+    "status": "verified",
+    "scope": "ROUTE",
+    "filePath": "docs/spec/03.routing.srs.md",
+    "headingLine": 2049,
+    "metadata": {
+      "Type": "operational",
+      "Target": "wave-4",
+      "Status": "verified",
+      "Priority": "medium",
+      "Tags": "wave-4, feasibility:high, routing, docs",
+      "Risk": "low",
+      "Stability": "evolving",
+      "Verification Method": "test",
+      "GitHub Issue": "https://github.com/Snoworca/NaruServe/issues/5",
+      "Related Docs": "-"
+    },
+    "acceptanceCriteria": [
+      {
+        "id": "AC-1",
+        "text": "`docs/api/routing.md` describes the `//`, trailing-slash and case policy switches and their strict default, the `TRACE`/`CONNECT` enable policy, the `Allow` set rule, the lookup result order including WebSocket-only for plain `GET`/`HEAD` and the upgrade fallback, per-method priority with the `DELETE /users/me` example, the pattern validation errors (empty or repeated variable name, empty segment), policy-normalised conflict detection, case-sensitive method tokens, the upgrade-flag header rule, the path rejection rules applied before lookup and single percent-decoding of parameters (`%252e` gives `%2e`). [D-070; re_stated_from: OPS-ROUTE-001#AC1; the clause 'without naming configuration API methods' is dropped because wave 3 names `app.routerPolicy(RouterPolicy)` under D-398]",
+        "checked": true,
+        "line": 2074
+      },
+      {
+        "id": "AC-2",
+        "text": "`docs/api/routing.md` names the `MethodSet` membership and iteration accessors exactly as implemented, with a Java and a Kotlin example each and its Express counterpart or a note that Express has none. [D-038; re_stated_from: OPS-ROUTE-001#AC2]",
+        "checked": true,
+        "line": 2075
+      },
+      {
+        "id": "AC-3",
+        "text": "From wave 4 no line of `docs/api/routing.md` contains `(미확정)`: the `RouteBuilder.use(middleware)` marker is replaced by the wave 4 decision of OPS-APP-001 AC-2, and the markers on the `TRACE`/`CONNECT` setting API, on the `//`/trailing-slash/case setting API and on the `req.method()` value during automatic `HEAD` stay gone; `RoutingDocsTest` is re-pointed to this requirement. [D-109; D-398; D-137]",
+        "checked": true,
+        "line": 2076
+      }
+    ],
+    "verificationEvidence": [
+      {
+        "id": "VE-1",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/RoutingDocsTest.java#sdsAc10_OPS_ROUTE_003_AC1_routingRulesSectionPresent",
+        "covers": "AC-1",
+        "notes": "command ./gradlew build result pass (SDS wave-4-10)",
+        "line": 2082
+      },
+      {
+        "id": "VE-2",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/RoutingDocsTest.java#sdsAc10_OPS_ROUTE_003_AC2_accessorsNamedWithJavaKotlinAndExpressNote",
+        "covers": "AC-2",
+        "notes": "command ./gradlew build result pass (SDS wave-4-10)",
+        "line": 2083
+      },
+      {
+        "id": "VE-3",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/RoutingDocsTest.java#noMarkerRemains",
+        "covers": "AC-3",
+        "notes": "command ./gradlew build result pass (SDS wave-4-10)",
+        "line": 2084
+      },
+      {
+        "id": "VE-4",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/RoutingDocsTest.java",
+        "covers": "AC-1",
+        "notes": "verification_cmd ./gradlew build passed at 04f3673 (588/588); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/RoutingDocsTest.java:78; bundle docs/research/naruserve-v1/waves/stage-4/lane-2026-10-19.naruserve.naruserve-v1-wave-4/",
+        "line": 2085
+      },
+      {
+        "id": "VE-5",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/RoutingDocsTest.java",
+        "covers": "AC-2",
+        "notes": "verification_cmd ./gradlew build passed at 04f3673 (588/588); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/RoutingDocsTest.java:54; bundle docs/research/naruserve-v1/waves/stage-4/lane-2026-10-19.naruserve.naruserve-v1-wave-4/",
+        "line": 2086
+      },
+      {
+        "id": "VE-6",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/RoutingDocsTest.java",
+        "covers": "AC-3",
+        "notes": "verification_cmd ./gradlew build passed at 04f3673 (588/588); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/RoutingDocsTest.java:66; bundle docs/research/naruserve-v1/waves/stage-4/lane-2026-10-19.naruserve.naruserve-v1-wave-4/",
+        "line": 2087
+      },
+      {
+        "id": "VE-7",
+        "type": "commit",
+        "reference": "a6e9fbe31a145333369d669970648e17c0d38be9",
+        "covers": "all",
+        "notes": "wave 4 worker or issue-fix commit (Orch-Wave: 4), ancestor of integration head 04f3673",
+        "line": 2088
+      },
+      {
+        "id": "VE-8",
+        "type": "commit",
+        "reference": "e344a664b14f2b0fe577f556373ce0b0222c9a56",
+        "covers": "all",
+        "notes": "wave 4 worker or issue-fix commit (Orch-Wave: 4), ancestor of integration head 04f3673",
+        "line": 2089
+      },
+      {
+        "id": "VE-9",
+        "type": "commit",
+        "reference": "9b502e31d25812a02ebddc8f1c01a97f308e0583",
+        "covers": "all",
+        "notes": "wave 4 worker or issue-fix commit (Orch-Wave: 4), ancestor of integration head 04f3673",
+        "line": 2090
+      },
+      {
+        "id": "VE-10",
+        "type": "commit",
+        "reference": "0c9bfb4ee13638e5de052decedb48d5800a30843",
+        "covers": "all",
+        "notes": "wave 4 worker or issue-fix commit (Orch-Wave: 4), ancestor of integration head 04f3673",
+        "line": 2091
+      },
+      {
+        "id": "VE-11",
+        "type": "commit",
+        "reference": "e680e56169d4cde7c86ed9f4c2d2b093978596e6",
+        "covers": "all",
+        "notes": "wave 4 worker or issue-fix commit (Orch-Wave: 4), ancestor of integration head 04f3673",
+        "line": 2092
+      },
+      {
+        "id": "VE-12",
+        "type": "commit",
+        "reference": "a452c0ca77b3d08a15f5758b710a3363c4377355",
+        "covers": "all",
+        "notes": "wave 4 worker or issue-fix commit (Orch-Wave: 4), ancestor of integration head 04f3673",
+        "line": 2093
+      },
+      {
+        "id": "VE-13",
+        "type": "commit",
+        "reference": "217f6d75e4b46887d073c89a19ad41d35fb16cd9",
+        "covers": "all",
+        "notes": "wave 4 worker or issue-fix commit (Orch-Wave: 4), ancestor of integration head 04f3673",
+        "line": 2094
+      },
+      {
+        "id": "VE-14",
+        "type": "commit",
+        "reference": "7cb379bec63d289fae06d288ae01a92c37223d55",
+        "covers": "all",
+        "notes": "wave 4 worker or issue-fix commit (Orch-Wave: 4), ancestor of integration head 04f3673",
+        "line": 2095
+      },
+      {
+        "id": "VE-15",
+        "type": "commit",
+        "reference": "b0869b93e712dda6b48a1f7001862877ea1056b9",
+        "covers": "all",
+        "notes": "wave 4 worker or issue-fix commit (Orch-Wave: 4), ancestor of integration head 04f3673",
+        "line": 2096
+      },
+      {
+        "id": "VE-16",
+        "type": "commit",
+        "reference": "18f79a529b9ecb4e6d3b605f90bf2df3dfad5494",
+        "covers": "all",
+        "notes": "wave 4 worker or issue-fix commit (Orch-Wave: 4), ancestor of integration head 04f3673",
+        "line": 2097
+      },
+      {
+        "id": "VE-17",
+        "type": "commit",
+        "reference": "b4bf9d84ff28d07ffa85ea39ca39569c91e296fd",
+        "covers": "all",
+        "notes": "wave 4 worker or issue-fix commit (Orch-Wave: 4), ancestor of integration head 04f3673",
+        "line": 2098
+      },
+      {
+        "id": "VE-18",
+        "type": "commit",
+        "reference": "d39522781993188e36f6d0f22663fb03c7ab4d54",
+        "covers": "all",
+        "notes": "wave 4 worker or issue-fix commit (Orch-Wave: 4), ancestor of integration head 04f3673",
+        "line": 2099
+      },
+      {
+        "id": "VE-19",
+        "type": "commit",
+        "reference": "e612f8fe3a2f95cb8c94c6d836017fb447434a92",
+        "covers": "all",
+        "notes": "wave 4 worker or issue-fix commit (Orch-Wave: 4), ancestor of integration head 04f3673",
+        "line": 2100
+      },
+      {
+        "id": "VE-20",
+        "type": "commit",
+        "reference": "9e5488314eacccd5383e9c10fecd35d122ed63c4",
+        "covers": "all",
+        "notes": "wave 4 worker or issue-fix commit (Orch-Wave: 4), ancestor of integration head 04f3673",
+        "line": 2101
+      }
+    ],
+    "traceLinks": [
+      {
+        "type": "Requirement",
+        "reference": "OPS-ROUTE-002",
+        "relation": "supersedes",
+        "notes": "-",
+        "line": 2107
+      },
+      {
+        "type": "Requirement",
+        "reference": "OPS-APP-001",
+        "relation": "depends_on",
+        "notes": "wave 4 docs decisions",
+        "line": 2108
+      },
+      {
+        "type": "Code",
+        "reference": "docs/api/routing.md",
+        "relation": "implements",
+        "notes": "trace_intent=addition_site",
+        "line": 2109
+      }
+    ],
+    "changeNotes": [
+      {
+        "date": "2026-10-19",
+        "change": "Created",
+        "reason": "add-requirement",
+        "line": 2123
+      },
+      {
+        "date": "2026-10-19",
+        "change": "Stability -> evolving",
+        "reason": "Feasibility=high (score 90). Blockers: none. Run: 2026-10-19.naruserve.wave-4.v01",
+        "line": 2124
+      },
+      {
+        "date": "2026-10-19",
+        "change": "Status -> verified",
+        "reason": "Wave 4 promotion: every AC cited in docs/research/naruserve-v1/waves/wave-4/test-sufficiency.json; ./gradlew build passed at 04f3673 (588/588); worker commits recorded",
+        "line": 2125
+      }
+    ],
+    "tags": [
+      "wave-4",
+      "feasibility:high",
+      "routing",
+      "docs"
+    ],
+    "relatedDocs": [],
+    "evidenceReferences": [
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/RoutingDocsTest.java",
+      "a6e9fbe31a145333369d669970648e17c0d38be9",
+      "e344a664b14f2b0fe577f556373ce0b0222c9a56",
+      "9b502e31d25812a02ebddc8f1c01a97f308e0583",
+      "0c9bfb4ee13638e5de052decedb48d5800a30843",
+      "e680e56169d4cde7c86ed9f4c2d2b093978596e6",
+      "a452c0ca77b3d08a15f5758b710a3363c4377355",
+      "217f6d75e4b46887d073c89a19ad41d35fb16cd9",
+      "7cb379bec63d289fae06d288ae01a92c37223d55",
+      "b0869b93e712dda6b48a1f7001862877ea1056b9",
+      "18f79a529b9ecb4e6d3b605f90bf2df3dfad5494",
+      "b4bf9d84ff28d07ffa85ea39ca39569c91e296fd",
+      "d39522781993188e36f6d0f22663fb03c7ab4d54",
+      "e612f8fe3a2f95cb8c94c6d836017fb447434a92",
+      "9e5488314eacccd5383e9c10fecd35d122ed63c4"
+    ],
+    "traceReferences": [
+      "OPS-ROUTE-002",
+      "OPS-APP-001",
+      "docs/api/routing.md"
+    ],
+    "blockStartLine": 2049,
+    "blockEndLine": 2126,
+    "sectionLines": {
+      "Requirement": 2064,
+      "Rationale": 2068,
+      "Acceptance Criteria": 2072,
+      "Verification Evidence": 2078,
+      "Trace Links": 2103,
+      "Research / Analysis": 2111,
+      "Implementation Notes": 2115,
+      "Change Notes": 2119
+    },
+    "priority": "medium",
+    "risk": "low",
+    "stability": "evolving",
+    "newWorkCandidate": false,
+    "requirement": "The system shall record in `docs/api/routing.md` the routing semantics decided in wave 2 and the `MethodSet` membership and iteration accessors with Java and Kotlin examples, and from wave 4 keep no (미확정) marker in it, the last one (`RouteBuilder.use(middleware)`) being decided by wave 4.",
+    "rationale": "-",
+    "research": "- -",
+    "implementationNotes": "- -",
+    "diagnostics": [],
+    "errors": [],
+    "warnings": [],
+    "diagnosticsSummary": {
+      "errors": 0,
+      "warnings": 0,
+      "byCode": {}
+    }
+  },
+  "diagnostics": [],
+  "diagnosticsSummary": {
+    "errors": 0,
+    "warnings": 0,
+    "byCode": {}
+  },
+  "mcpWorkspace": {
+    "workspaceRoot": "/Users/beom/work/git/NaruServe",
+    "rootSource": "server-cwd-discovery",
+    "indexPath": "docs/spec/00.index.md",
+    "packageVersion": "4.2.0"
+  }
+}

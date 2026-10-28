@@ -1,0 +1,221 @@
+{
+  "created_at_utc": "2026-10-27T18:15:03.511007+00:00",
+  "oracle": {
+    "express": "5.1.0",
+    "router": "2.2.0",
+    "path_to_regexp": "8.4.2",
+    "node": "22.22.0",
+    "v8": "12.4.254.21-node.33",
+    "unicode": "17.0",
+    "icu": "78.2"
+  },
+  "java8": {
+    "distribution": "Zulu 8.96.0.205-CA",
+    "version": "1.8.0_504",
+    "architecture": "macos-aarch64",
+    "java_home": "/Users/beom/Library/Java/JavaVirtualMachines/zulu8.96.0.205-ca-jdk8.0.504-macosx_aarch64/Contents/Home"
+  },
+  "artifacts": [
+    {
+      "id": "quickjs-source-archive",
+      "version": "2026-06-04",
+      "kind": "official-source-archive",
+      "local_path": "/tmp/naruserve-regexp-research/quickjs-2026-06-04.tar.xz",
+      "sha256": "b376e839b322978313d929fd20663b11ba58b75df5a46c126dd19ea2fa70ad2a",
+      "primary_url": "https://bellard.org/quickjs/quickjs-2026-06-04.tar.xz"
+    },
+    {
+      "id": "quickjs-libregexp.h",
+      "version": "2026-06-04",
+      "kind": "archive-member",
+      "local_path": "/tmp/naruserve-regexp-research/quickjs-2026-06-04/libregexp.h",
+      "sha256": "f5c5ef1899f224dcc718422a22c789ef9d8b5b837b622818fcfaf681ae793446",
+      "primary_url": "https://bellard.org/quickjs/quickjs-2026-06-04.tar.xz"
+    },
+    {
+      "id": "quickjs-libregexp.c",
+      "version": "2026-06-04",
+      "kind": "archive-member",
+      "local_path": "/tmp/naruserve-regexp-research/quickjs-2026-06-04/libregexp.c",
+      "sha256": "fdfcf86167029ab2c39c35730d4ae6875b7bbeb9406a0fcc886de4e9b1f5e2ac",
+      "primary_url": "https://bellard.org/quickjs/quickjs-2026-06-04.tar.xz"
+    },
+    {
+      "id": "quickjs-libunicode.h",
+      "version": "2026-06-04",
+      "kind": "archive-member",
+      "local_path": "/tmp/naruserve-regexp-research/quickjs-2026-06-04/libunicode.h",
+      "sha256": "ce310152bc80d7415dcb657e23abd9a40bf83e393c0d05d325dae384bb01d259",
+      "primary_url": "https://bellard.org/quickjs/quickjs-2026-06-04.tar.xz"
+    },
+    {
+      "id": "quickjs-libunicode.c",
+      "version": "2026-06-04",
+      "kind": "archive-member",
+      "local_path": "/tmp/naruserve-regexp-research/quickjs-2026-06-04/libunicode.c",
+      "sha256": "26203ae888c0582e7d0e2113f13db0c9b39dc7b0b3836d68fa308c54f7a0898c",
+      "primary_url": "https://bellard.org/quickjs/quickjs-2026-06-04.tar.xz"
+    },
+    {
+      "id": "quickjs-quickjs.c",
+      "version": "2026-06-04",
+      "kind": "archive-member",
+      "local_path": "/tmp/naruserve-regexp-research/quickjs-2026-06-04/quickjs.c",
+      "sha256": "a00762d2eee42316cecbc9c15efc4549b715ec500461845cd91b2a6c38190d08",
+      "primary_url": "https://bellard.org/quickjs/quickjs-2026-06-04.tar.xz"
+    },
+    {
+      "id": "quickjs-VERSION",
+      "version": "2026-06-04",
+      "kind": "archive-member",
+      "local_path": "/tmp/naruserve-regexp-research/quickjs-2026-06-04/VERSION",
+      "sha256": "234057c4079458cba9862d4bbb6f8a059ac2e4a194947673da0ad38ca16a37fd",
+      "primary_url": "https://bellard.org/quickjs/quickjs-2026-06-04.tar.xz"
+    },
+    {
+      "id": "quickjs-LICENSE",
+      "version": "2026-06-04",
+      "kind": "archive-member",
+      "local_path": "/tmp/naruserve-regexp-research/quickjs-2026-06-04/LICENSE",
+      "sha256": "598fd7fc928e4350abce36e337ba5a1346923c5c692f5be92c3d8e29ddd7c18d",
+      "primary_url": "https://bellard.org/quickjs/quickjs-2026-06-04.tar.xz"
+    },
+    {
+      "id": "rhino-jar",
+      "version": "1.7.15.1",
+      "kind": "official-maven-artifact",
+      "local_path": "/tmp/naruserve-regexp-research/rhino-1.7.15.1.jar",
+      "sha256": "f3520a0e2e22d550f1216a456be233eb5385bf08e3219407dece7a16369eb38f",
+      "primary_url": "https://repo.maven.apache.org/maven2/org/mozilla/rhino/1.7.15.1/rhino-1.7.15.1.jar"
+    },
+    {
+      "id": "express-package.json",
+      "version": "5.1.0",
+      "kind": "npm-package-member",
+      "local_path": "/tmp/naruserve-parity-research.KkcjUP/e5fixed/node_modules/express/package.json",
+      "sha256": "0ca5c69a8c6647bd6c8b7d9ee3451e0eefce551304f6bfeb57f8df3ab79823e1",
+      "primary_url": "https://registry.npmjs.org/express/-/express-5.1.0.tgz"
+    },
+    {
+      "id": "router-package.json",
+      "version": "2.2.0",
+      "kind": "npm-package-member",
+      "local_path": "/tmp/naruserve-parity-research.KkcjUP/e5fixed/node_modules/router/package.json",
+      "sha256": "b77062595f89476fab6acbcde5fa8dfac3be7d7b9b0b0b69d48c84ebc13c9a06",
+      "primary_url": "https://registry.npmjs.org/router/-/router-2.2.0.tgz"
+    },
+    {
+      "id": "router-lib/layer.js",
+      "version": "2.2.0",
+      "kind": "npm-package-member",
+      "local_path": "/tmp/naruserve-parity-research.KkcjUP/e5fixed/node_modules/router/lib/layer.js",
+      "sha256": "569771db2d3ade3d695ae9259063e8b685ed734e78c2e0ff7648e0a6bf436119",
+      "primary_url": "https://registry.npmjs.org/router/-/router-2.2.0.tgz"
+    },
+    {
+      "id": "router-lib/route.js",
+      "version": "2.2.0",
+      "kind": "npm-package-member",
+      "local_path": "/tmp/naruserve-parity-research.KkcjUP/e5fixed/node_modules/router/lib/route.js",
+      "sha256": "77e83b1ceca13bdbdaf42b79d90527489c46249db2ad4226e328352dfe68f83d",
+      "primary_url": "https://registry.npmjs.org/router/-/router-2.2.0.tgz"
+    },
+    {
+      "id": "router-index.js",
+      "version": "2.2.0",
+      "kind": "npm-package-member",
+      "local_path": "/tmp/naruserve-parity-research.KkcjUP/e5fixed/node_modules/router/index.js",
+      "sha256": "fcc39d49329e5701e3fbd195060834398434b8e136a59949a654f6f402f6e31b",
+      "primary_url": "https://registry.npmjs.org/router/-/router-2.2.0.tgz"
+    },
+    {
+      "id": "path-to-regexp-package.json",
+      "version": "8.4.2",
+      "kind": "npm-package-member",
+      "local_path": "/tmp/naruserve-parity-research.KkcjUP/e5fixed/node_modules/path-to-regexp/package.json",
+      "sha256": "3c37dce1e0587231f7c9f63e137dd0ed4d6f25552c89b5b5939c6a3d36113634",
+      "primary_url": "https://registry.npmjs.org/path-to-regexp/-/path-to-regexp-8.4.2.tgz"
+    },
+    {
+      "id": "path-to-regexp-dist/index.js",
+      "version": "8.4.2",
+      "kind": "npm-package-member",
+      "local_path": "/tmp/naruserve-parity-research.KkcjUP/e5fixed/node_modules/path-to-regexp/dist/index.js",
+      "sha256": "f8e7946ca3a4dcc2ed1ea46e3bcffaef014e4abc359a7469a16817f1f79df62f",
+      "primary_url": "https://registry.npmjs.org/path-to-regexp/-/path-to-regexp-8.4.2.tgz"
+    },
+    {
+      "id": "oracle-package-lock",
+      "version": "express5.1.0-router2.2.0-ptr8.4.2",
+      "kind": "npm-lockfile",
+      "local_path": "/tmp/naruserve-parity-research.KkcjUP/e5fixed/package-lock.json",
+      "sha256": "4f7f1120170475c7b4589401c2bd37d1d5604da9ede3bf1ab2284943d517b9b9",
+      "primary_url": null
+    }
+  ],
+  "primary_sources": [
+    {
+      "id": "router-layer",
+      "url": "https://raw.githubusercontent.com/pillarjs/router/v2.2.0/lib/layer.js",
+      "version": "2.2.0",
+      "supports": [
+        "stored native exec",
+        "source-scanned capture keys",
+        "per-capture URI decode",
+        "RegExp search and flags"
+      ]
+    },
+    {
+      "id": "ecma-exec",
+      "url": "https://tc39.es/ecma262/2024/multipage/text-processing.html#sec-regexpbuiltinexec",
+      "version": "ECMAScript 2024",
+      "supports": [
+        "g/y lastIndex algorithm",
+        "UTF16 and Unicode exec semantics"
+      ]
+    },
+    {
+      "id": "rhino-legacy-source",
+      "url": "https://raw.githubusercontent.com/mozilla/rhino/Rhino1_7_15_1_Release/src/org/mozilla/javascript/regexp/NativeRegExp.java",
+      "version": "1.7.15.1",
+      "supports": [
+        "legacy supported flags",
+        "Java8 tested binary"
+      ]
+    },
+    {
+      "id": "rhino-current-runtime",
+      "url": "https://raw.githubusercontent.com/mozilla/rhino/master/README.md",
+      "version": "current documentation; mutable, not an engine pin",
+      "supports": [
+        "current Rhino requires Java17"
+      ]
+    },
+    {
+      "id": "java-pattern",
+      "url": "https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html",
+      "version": "Java SE8",
+      "supports": [
+        "native Java Pattern semantics and matcher ownership"
+      ]
+    },
+    {
+      "id": "android-pattern",
+      "url": "https://developer.android.com/reference/java/util/regex/Pattern",
+      "version": "Android API documentation; API21 execution not performed",
+      "supports": [
+        "Android Unicode-aware case-insensitive behavior"
+      ]
+    },
+    {
+      "id": "quickjs-official",
+      "url": "https://bellard.org/quickjs/",
+      "version": "2026-06-04 investigated archive",
+      "supports": [
+        "MIT license",
+        "independent C libregexp/libunicode"
+      ]
+    }
+  ],
+  "scope_note": "Hashes identify exact downloaded or installed bytes; mutable documentation links are evidence sources, never reproducibility pins."
+}

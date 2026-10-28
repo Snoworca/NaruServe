@@ -1,0 +1,115 @@
+{
+  "created_at_utc": "2026-10-27T18:15:03.511007+00:00",
+  "commands": [
+    {
+      "id": "environment-node",
+      "argv": [
+        "node",
+        "-p",
+        "JSON.stringify(process.versions)"
+      ],
+      "cwd": "/tmp/naruserve-regexp-research",
+      "exit_code": 0,
+      "stdout": "/tmp/naruserve-regexp-research/invocation-logs/environment-node.stdout",
+      "stderr": "/tmp/naruserve-regexp-research/invocation-logs/environment-node.stderr",
+      "executed_at_utc": "2026-10-27T18:15:03.558360+00:00"
+    },
+    {
+      "id": "environment-java8",
+      "argv": [
+        "/Users/beom/Library/Java/JavaVirtualMachines/zulu8.96.0.205-ca-jdk8.0.504-macosx_aarch64/Contents/Home/bin/java",
+        "-version"
+      ],
+      "cwd": "/tmp/naruserve-regexp-research",
+      "exit_code": 0,
+      "stdout": "/tmp/naruserve-regexp-research/invocation-logs/environment-java8.stdout",
+      "stderr": "/tmp/naruserve-regexp-research/invocation-logs/environment-java8.stderr",
+      "executed_at_utc": "2026-10-27T18:15:03.584038+00:00"
+    },
+    {
+      "id": "java8-compile",
+      "argv": [
+        "/Users/beom/Library/Java/JavaVirtualMachines/zulu8.96.0.205-ca-jdk8.0.504-macosx_aarch64/Contents/Home/bin/javac",
+        "-cp",
+        "/tmp/naruserve-regexp-research/rhino-1.7.15.1.jar",
+        "/tmp/naruserve-regexp-research/RegexProbes.java"
+      ],
+      "cwd": "/tmp/naruserve-regexp-research",
+      "exit_code": 0,
+      "stdout": "/tmp/naruserve-regexp-research/invocation-logs/java8-compile.stdout",
+      "stderr": "/tmp/naruserve-regexp-research/invocation-logs/java8-compile.stderr",
+      "executed_at_utc": "2026-10-27T18:15:03.775004+00:00"
+    },
+    {
+      "id": "java8-rhino-run",
+      "argv": [
+        "/Users/beom/Library/Java/JavaVirtualMachines/zulu8.96.0.205-ca-jdk8.0.504-macosx_aarch64/Contents/Home/bin/java",
+        "-cp",
+        "/tmp/naruserve-regexp-research:/tmp/naruserve-regexp-research/rhino-1.7.15.1.jar",
+        "RegexProbes"
+      ],
+      "cwd": "/tmp/naruserve-regexp-research",
+      "exit_code": 0,
+      "stdout": "/tmp/naruserve-regexp-research/invocation-logs/java8-rhino-run.stdout",
+      "stderr": "/tmp/naruserve-regexp-research/invocation-logs/java8-rhino-run.stderr",
+      "executed_at_utc": "2026-10-27T18:15:03.885234+00:00"
+    },
+    {
+      "id": "node-layer-probes",
+      "argv": [
+        "node",
+        "/tmp/naruserve-regexp-research/node.cjs"
+      ],
+      "cwd": "/tmp/naruserve-regexp-research",
+      "exit_code": 0,
+      "stdout": "/tmp/naruserve-regexp-research/invocation-logs/node-layer-probes.stdout",
+      "stderr": "/tmp/naruserve-regexp-research/invocation-logs/node-layer-probes.stderr",
+      "executed_at_utc": "2026-10-27T18:15:03.929804+00:00"
+    },
+    {
+      "id": "node-portable",
+      "argv": [
+        "node",
+        "/tmp/naruserve-regexp-research/portable.js"
+      ],
+      "cwd": "/tmp/naruserve-regexp-research",
+      "exit_code": 0,
+      "stdout": "/tmp/naruserve-regexp-research/invocation-logs/node-portable.stdout",
+      "stderr": "/tmp/naruserve-regexp-research/invocation-logs/node-portable.stderr",
+      "executed_at_utc": "2026-10-27T18:15:03.967417+00:00"
+    },
+    {
+      "id": "quickjs-build-recheck",
+      "argv": [
+        "make",
+        "-j4",
+        "qjs"
+      ],
+      "cwd": "/tmp/naruserve-regexp-research/quickjs-2026-06-04",
+      "exit_code": 0,
+      "stdout": "/tmp/naruserve-regexp-research/invocation-logs/quickjs-build-recheck.stdout",
+      "stderr": "/tmp/naruserve-regexp-research/invocation-logs/quickjs-build-recheck.stderr",
+      "executed_at_utc": "2026-10-27T18:15:03.990199+00:00"
+    },
+    {
+      "id": "quickjs-portable",
+      "argv": [
+        "/tmp/naruserve-regexp-research/quickjs-2026-06-04/qjs",
+        "/tmp/naruserve-regexp-research/portable.js"
+      ],
+      "cwd": "/tmp/naruserve-regexp-research",
+      "exit_code": 0,
+      "stdout": "/tmp/naruserve-regexp-research/invocation-logs/quickjs-portable.stdout",
+      "stderr": "/tmp/naruserve-regexp-research/invocation-logs/quickjs-portable.stderr",
+      "executed_at_utc": "2026-10-27T18:15:03.992531+00:00"
+    }
+  ],
+  "initial_quickjs_build_log": "/tmp/naruserve-regexp-research/quickjs-build.log",
+  "claims_not_tested": [
+    "JNI binding",
+    "Android API 21 device/emulator",
+    "all Android ABIs",
+    "test262 exhaustive conformance",
+    "V8 complete native-RegExp equivalence"
+  ]
+}

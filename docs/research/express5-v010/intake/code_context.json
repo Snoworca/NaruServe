@@ -1,0 +1,1775 @@
+{
+  "work": "express5-v010",
+  "target": "0.10.0",
+  "researcher": "api_core_docs",
+  "captured_at": "2026-10-27T18:16:22.797261+00:00",
+  "workspace_root": "/Users/beom/work/git/NaruServe",
+  "head": "3f91c6e17d3e40eec51946043b87e45cf95ab6de",
+  "read_only": true,
+  "scope_basis": "Latest conversation: common Express5 semantics; preserve NaruServe extensions and exclude WS equivalence.",
+  "excluded_inputs": [
+    "docs/next/request.md (unrelated overwritten document; not treated as spec)"
+  ],
+  "mcp_workspace": {
+    "workspaceRoot": "/Users/beom/work/git/NaruServe",
+    "rootSource": "server-cwd-discovery",
+    "indexPath": "docs/spec/00.index.md",
+    "packageVersion": "4.2.0"
+  },
+  "work_mode": {
+    "mode": "sdd"
+  },
+  "active_target": "central-0.9.0",
+  "relevant_files": [
+    {
+      "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RoutePattern.java",
+      "module": "NaruServe-api",
+      "scope": "ROUTE",
+      "kind": "source",
+      "change": "replace",
+      "evidence": [
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RoutePattern.java:21",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RoutePattern.java:36",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RoutePattern.java:125",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RoutePattern.java:145",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RoutePattern.java:157"
+      ],
+      "reason": "Segment arrays and whole-segment variables; compile tokens/full-prefix matching instead."
+    },
+    {
+      "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java",
+      "module": "NaruServe-api",
+      "scope": "ROUTE",
+      "kind": "source",
+      "change": "replace",
+      "evidence": [
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:98",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:147",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:164",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:190",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:257",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:296"
+      ],
+      "reason": "Specificity selection, collision freeze and one lookup outcome; ordered mutable registration/safely published request views required."
+    },
+    {
+      "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouteMatch.java",
+      "module": "NaruServe-api",
+      "scope": "ROUTE",
+      "kind": "source",
+      "change": "update",
+      "evidence": [
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouteMatch.java:18",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouteMatch.java:26",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouteMatch.java:43",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouteMatch.java:79"
+      ],
+      "reason": "One handler and scalar parameters; layer/Route cursor and list captures required."
+    },
+    {
+      "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouterPolicy.java",
+      "module": "NaruServe-api",
+      "scope": "ROUTE",
+      "kind": "source",
+      "change": "update",
+      "evidence": [
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouterPolicy.java:7",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouterPolicy.java:25",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouterPolicy.java:61"
+      ],
+      "reason": "Current strict defaults must split into common HTTP and extension/WS policy."
+    },
+    {
+      "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/PathValidator.java",
+      "module": "NaruServe-api",
+      "scope": "ROUTE",
+      "kind": "source",
+      "change": "split-boundary",
+      "evidence": [
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/PathValidator.java:22",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/PathValidator.java:34"
+      ],
+      "reason": "Current pre-routing rejection conflicts with raw Express paths; retain file-access/WS protection at their profile boundaries."
+    },
+    {
+      "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouteKind.java",
+      "module": "NaruServe-api",
+      "scope": "ROUTE",
+      "kind": "source",
+      "change": "preserve-extend",
+      "evidence": [
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouteKind.java:1"
+      ],
+      "reason": "Retain HTTP versus WebSocket profile identity."
+    },
+    {
+      "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RoutingConfigException.java",
+      "module": "NaruServe-api",
+      "scope": "ROUTE",
+      "kind": "source",
+      "change": "reuse",
+      "evidence": [
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RoutingConfigException.java:1"
+      ],
+      "reason": "Existing registration-error type can retain pattern/context diagnostics."
+    },
+    {
+      "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java",
+      "module": "NaruServe-api",
+      "scope": "HTTP",
+      "kind": "source",
+      "change": "extend",
+      "evidence": [
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:61",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:81",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:88",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:99",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:103",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:127",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:197",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:235"
+      ],
+      "reason": "Add common route/mount/param/async inputs without removing NaruServe extension entry points."
+    },
+    {
+      "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/RouteBuilder.java",
+      "module": "NaruServe-api",
+      "scope": "HTTP",
+      "kind": "source",
+      "change": "extend",
+      "evidence": [
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/RouteBuilder.java:8",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/RouteBuilder.java:10",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/RouteBuilder.java:29"
+      ],
+      "reason": "Stable Route identity; repeated handlers, path alternatives and next-aware callbacks."
+    },
+    {
+      "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/RouteHandler.java",
+      "module": "NaruServe-api",
+      "scope": "HTTP",
+      "kind": "source",
+      "change": "preserve-extend",
+      "evidence": [
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/RouteHandler.java:1"
+      ],
+      "reason": "Preserve two-argument terminal callback; introduce next-aware/completion counterparts."
+    },
+    {
+      "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/RouteGroup.java",
+      "module": "NaruServe-api",
+      "scope": "DX",
+      "kind": "source",
+      "change": "preserve-extend",
+      "evidence": [
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/RouteGroup.java:3",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/RouteGroup.java:9",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/RouteGroup.java:16"
+      ],
+      "reason": "Existing all-group middleware inheritance is a retained extension; adapt new APIs and joining."
+    },
+    {
+      "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/Next.java",
+      "module": "NaruServe-api",
+      "scope": "APP",
+      "kind": "source",
+      "change": "extend",
+      "evidence": [
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/Next.java:3",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/Next.java:8",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/Next.java:11"
+      ],
+      "reason": "Common continuation/error/route/router skip and deferred semantics."
+    },
+    {
+      "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/Middleware.java",
+      "module": "NaruServe-api",
+      "scope": "APP",
+      "kind": "source",
+      "change": "reuse",
+      "evidence": [
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/Middleware.java:1"
+      ],
+      "reason": "Existing three-argument callback is reusable."
+    },
+    {
+      "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/ErrorHandler.java",
+      "module": "NaruServe-api",
+      "scope": "APP",
+      "kind": "source",
+      "change": "preserve-extend",
+      "evidence": [
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/ErrorHandler.java:1"
+      ],
+      "reason": "Retain extension callback while adding common recover/forward error flow."
+    },
+    {
+      "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java",
+      "module": "NaruServe-api",
+      "scope": "HTTP",
+      "kind": "source",
+      "change": "extend",
+      "evidence": [
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java:20",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java:24",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java:27",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java:65"
+      ],
+      "reason": "List/optional captures and mounted path views; paramInt absent semantics must be explicit."
+    },
+    {
+      "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/Method.java",
+      "module": "NaruServe-api",
+      "scope": "ROUTE",
+      "kind": "source",
+      "change": "extend",
+      "evidence": [
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/Method.java:9",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/Method.java:12"
+      ],
+      "reason": "Nine method constants are narrower than Express; distinguish common all from legacy any."
+    },
+    {
+      "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/MethodSet.java",
+      "module": "NaruServe-api",
+      "scope": "ROUTE",
+      "kind": "source",
+      "change": "preserve-extend",
+      "evidence": [
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/MethodSet.java:146"
+      ],
+      "reason": "Retain extension immutable set; dedicated OPTIONS accumulator may differ from enum order."
+    },
+    {
+      "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+      "module": "NaruServe-api",
+      "scope": "APP",
+      "kind": "source",
+      "change": "replace-registration",
+      "evidence": [
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:148",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:153",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:309",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:817",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:835",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:844",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:925",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:932",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:955",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:979",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:1081"
+      ],
+      "reason": "Separate route/middleware/static/error lists and NEW-only guards; central registration convergence owner."
+    },
+    {
+      "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+      "module": "NaruServe-api",
+      "scope": "HTTP",
+      "kind": "source",
+      "change": "replace-dispatch",
+      "evidence": [
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:175",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:184",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:191",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:202",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:224",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:242",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:255",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:279",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:294",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:389"
+      ],
+      "reason": "Single preselected match and handler-return completion; introduce request execution/layer cursor."
+    },
+    {
+      "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/MiddlewarePipeline.java",
+      "module": "NaruServe-api",
+      "scope": "APP",
+      "kind": "source",
+      "change": "replace",
+      "evidence": [
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/MiddlewarePipeline.java:23",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/MiddlewarePipeline.java:74",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/MiddlewarePipeline.java:91",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/MiddlewarePipeline.java:104"
+      ],
+      "reason": "Preassembled middleware then one terminal; cursor and lifetime integration."
+    },
+    {
+      "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ChainNext.java",
+      "module": "NaruServe-api",
+      "scope": "APP",
+      "kind": "source",
+      "change": "replace",
+      "evidence": [
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ChainNext.java:27",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ChainNext.java:57",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ChainNext.java:76",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ChainNext.java:90"
+      ],
+      "reason": "Current same-thread/single-use guards cannot silently narrow common next behavior."
+    },
+    {
+      "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/PrefixMatcher.java",
+      "module": "NaruServe-api",
+      "scope": "APP",
+      "kind": "source",
+      "change": "replace-reuse-compiler",
+      "evidence": [
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/PrefixMatcher.java:21",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/PrefixMatcher.java:32"
+      ],
+      "reason": "Literal-only prefix comparison; compile dynamic prefix and capture mount boundary."
+    },
+    {
+      "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java",
+      "module": "NaruServe-api",
+      "scope": "HTTP",
+      "kind": "source",
+      "change": "update-shared-lifetime",
+      "evidence": [
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java:39",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java:103",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java:107",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java:182",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java:312",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java:317",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java:347"
+      ],
+      "reason": "Keep body/cache/attributes/services/uploads while changing current layer/mount views."
+    },
+    {
+      "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRouteGroup.java",
+      "module": "NaruServe-api",
+      "scope": "DX",
+      "kind": "source",
+      "change": "preserve-extend",
+      "evidence": [
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRouteGroup.java:34",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRouteGroup.java:57",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRouteGroup.java:74",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRouteGroup.java:91"
+      ],
+      "reason": "Transactional registration buffers and inheritance must remain after unified HTTP stack."
+    },
+    {
+      "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/common/RoutePaths.java",
+      "module": "NaruServe-api",
+      "scope": "DX",
+      "kind": "source",
+      "change": "update",
+      "evidence": [
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/common/RoutePaths.java:14",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/common/RoutePaths.java:24"
+      ],
+      "reason": "Current joining rejects all backslashes; token-aware joining must preserve valid escaped grammar."
+    },
+    {
+      "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/common/InputValues.java",
+      "module": "NaruServe-api",
+      "scope": "DX",
+      "kind": "source",
+      "change": "review-preserve",
+      "evidence": [
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/common/InputValues.java:24"
+      ],
+      "reason": "null integer currently selects default; define optional paramInt behavior explicitly."
+    },
+    {
+      "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/common/UnicodeCase.java",
+      "module": "NaruServe-api",
+      "scope": "ROUTE",
+      "kind": "source",
+      "change": "review-preserve",
+      "evidence": [
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/common/UnicodeCase.java:1"
+      ],
+      "reason": "Existing case-fold helper; compare common HTTP compiler Unicode behavior to oracle, preserve WS contract."
+    },
+    {
+      "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ErrorPath.java",
+      "module": "NaruServe-api",
+      "scope": "APP",
+      "kind": "source",
+      "change": "update",
+      "evidence": [
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ErrorPath.java:19",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ErrorPath.java:35",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ErrorPath.java:43"
+      ],
+      "reason": "Separate error chain becomes common ordered error flow plus retained JSON extension."
+    },
+    {
+      "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StandardErrors.java",
+      "module": "NaruServe-api",
+      "scope": "HTTP",
+      "kind": "source",
+      "change": "preserve-extend",
+      "evidence": [
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StandardErrors.java:1"
+      ],
+      "reason": "Preserve codec-independent JSON error utilities while adding common finalhandler representation."
+    },
+    {
+      "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+      "module": "NaruServe-api",
+      "scope": "HTTP",
+      "kind": "source",
+      "change": "update-lifetime",
+      "evidence": [
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java:699",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java:773",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java:777"
+      ],
+      "reason": "Handler-return NEW auto-completion changes; commit-once/stream ownership must stay."
+    },
+    {
+      "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/GatedExchangeHandler.java",
+      "module": "NaruServe-api",
+      "scope": "APP",
+      "kind": "source",
+      "change": "update-lifetime",
+      "evidence": [
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/GatedExchangeHandler.java:38",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/GatedExchangeHandler.java:45",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/GatedExchangeHandler.java:46",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/GatedExchangeHandler.java:50"
+      ],
+      "reason": "Continuation threads need lifecycle request-context setup and retirement."
+    },
+    {
+      "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/AppLifecycle.java",
+      "module": "NaruServe-api",
+      "scope": "APP",
+      "kind": "source",
+      "change": "update-lifetime",
+      "evidence": [
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/AppLifecycle.java:29",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/AppLifecycle.java:110",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/AppLifecycle.java:116",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/AppLifecycle.java:122"
+      ],
+      "reason": "Current request-thread marker does not cover deferred continuations."
+    },
+    {
+      "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StaticHandler.java",
+      "module": "NaruServe-api",
+      "scope": "STATIC",
+      "kind": "source",
+      "change": "update-boundary-preserve-files",
+      "evidence": [
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StaticHandler.java:65",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StaticHandler.java:77",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StaticHandler.java:124"
+      ],
+      "reason": "Current terminal filesystem method405 and SPA behavior; common flow plus root/symlink/Range security."
+    },
+    {
+      "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StaticMount.java",
+      "module": "NaruServe-api",
+      "scope": "STATIC",
+      "kind": "source",
+      "change": "review-update",
+      "evidence": [
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StaticMount.java:21",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StaticMount.java:35",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StaticMount.java:73"
+      ],
+      "reason": "Raw prefix mapping and frozen file root ownership must coexist with common mount views."
+    },
+    {
+      "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StaticPath.java",
+      "module": "NaruServe-api",
+      "scope": "STATIC",
+      "kind": "source",
+      "change": "preserve-security",
+      "evidence": [
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StaticPath.java:1"
+      ],
+      "reason": "Keep traversal checks at filesystem boundary after common routing raw-path change."
+    },
+    {
+      "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/FileResourceResolver.java",
+      "module": "NaruServe-api",
+      "scope": "STATIC",
+      "kind": "source",
+      "change": "preserve-security",
+      "evidence": [
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/FileResourceResolver.java:1"
+      ],
+      "reason": "Preserve canonical-root/symlink defenses."
+    },
+    {
+      "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultCors.java",
+      "module": "NaruServe-api",
+      "scope": "DX",
+      "kind": "source",
+      "change": "preserve",
+      "evidence": [
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultCors.java:33",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultCors.java:44",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultCors.java:67"
+      ],
+      "reason": "Preflight204 is middleware output, not general automatic OPTIONS200."
+    },
+    {
+      "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/WebSocketUpgrade.java",
+      "module": "NaruServe-api",
+      "scope": "WS",
+      "kind": "source",
+      "change": "preserve-profile",
+      "evidence": [
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/WebSocketUpgrade.java:1"
+      ],
+      "reason": "No Express WebSocket equivalence; preserve auth/Origin/101/426 and socket lifecycle."
+    },
+    {
+      "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/WebSocketRoute.java",
+      "module": "NaruServe-api",
+      "scope": "WS",
+      "kind": "source",
+      "change": "preserve-profile",
+      "evidence": [
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/WebSocketRoute.java:1"
+      ],
+      "reason": "Preserve WS kind payload independently of common HTTP registration."
+    },
+    {
+      "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpExchange.java",
+      "module": "NaruServe-api",
+      "scope": "HTTP",
+      "kind": "source",
+      "change": "review-optional-seam",
+      "evidence": [
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpExchange.java:14",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpExchange.java:66",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpExchange.java:70",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpExchange.java:77",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpExchange.java:90"
+      ],
+      "reason": "Already permits outliving initial callback; defer seam optional, not assumed new mandatory abstract method."
+    },
+    {
+      "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/ExchangeHandler.java",
+      "module": "NaruServe-api",
+      "scope": "HTTP",
+      "kind": "source",
+      "change": "preserve-contract",
+      "evidence": [
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/ExchangeHandler.java:4",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/ExchangeHandler.java:14"
+      ],
+      "reason": "Existing lifetime permits finish/abort after handle return."
+    },
+    {
+      "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpAdapter.java",
+      "module": "NaruServe-api",
+      "scope": "HTTP",
+      "kind": "source",
+      "change": "preserve-contract",
+      "evidence": [
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpAdapter.java:1"
+      ],
+      "reason": "Keep engine-free adapter boundary and shutdown behavior."
+    },
+    {
+      "path": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdExchange.java",
+      "module": "NaruServe-tinyhttpd",
+      "scope": "ENGINE",
+      "kind": "source",
+      "evidence": [
+        "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdExchange.java:84",
+        "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdExchange.java:101",
+        "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdExchange.java:212",
+        "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdExchange.java:302"
+      ],
+      "reason": "Deferred stream/ordinary completion and initial handler-return transport lifetime."
+    },
+    {
+      "path": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdAdapter.java",
+      "module": "NaruServe-tinyhttpd",
+      "scope": "ENGINE",
+      "kind": "source",
+      "evidence": [
+        "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdAdapter.java:1"
+      ],
+      "reason": "Opt in external raw-routing API and preserve stop/dependency contract."
+    },
+    {
+      "path": "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/NaruServeServlet.java",
+      "module": "NaruServe-servlet",
+      "scope": "SVL",
+      "kind": "source",
+      "evidence": [
+        "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/NaruServeServlet.java:45",
+        "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/NaruServeServlet.java:59",
+        "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/NaruServeServlet.java:61",
+        "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/NaruServeServlet.java:69"
+      ],
+      "reason": "Ordinary requests return without async processing; update deferred lifecycle."
+    },
+    {
+      "path": "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/ServletExchange.java",
+      "module": "NaruServe-servlet",
+      "scope": "SVL",
+      "kind": "source",
+      "evidence": [
+        "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/ServletExchange.java:191",
+        "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/ServletExchange.java:291",
+        "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/ServletExchange.java:303",
+        "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/ServletExchange.java:368",
+        "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/ServletExchange.java:382"
+      ],
+      "reason": "Ordinary finish flushes; async complete currently used for SSE."
+    },
+    {
+      "path": "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/ServletAdapter.java",
+      "module": "NaruServe-servlet",
+      "scope": "SVL",
+      "kind": "source",
+      "evidence": [
+        "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/ServletAdapter.java:49",
+        "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/ServletAdapter.java:69"
+      ],
+      "reason": "Track deferred in-flight exchanges and shutdown independently of SSE slots."
+    },
+    {
+      "path": "NaruServe-kotlin/src/main/kotlin/com/snoworca/naruserve/kotlin/RequestExtensions.kt",
+      "module": "NaruServe-kotlin",
+      "scope": "KT",
+      "kind": "source",
+      "evidence": [
+        "NaruServe-kotlin/src/main/kotlin/com/snoworca/naruserve/kotlin/RequestExtensions.kt:1"
+      ],
+      "reason": "Reified body extension remains; new nullability/overloads need Kotlin validation."
+    },
+    {
+      "path": "build.gradle",
+      "module": "root-build",
+      "scope": "BUILD",
+      "kind": "build-or-document",
+      "evidence": [
+        "build.gradle:25",
+        "build.gradle:35",
+        "build.gradle:42",
+        "build.gradle:431",
+        "build.gradle:440"
+      ],
+      "reason": "Version/dependencies/parity task plus Java8/API21 gates."
+    },
+    {
+      "path": "settings.gradle",
+      "module": "root-build",
+      "scope": "BUILD",
+      "kind": "build-or-document",
+      "evidence": [
+        "settings.gradle:1"
+      ],
+      "reason": "TinyHttpd composite/source pin and Android conditional module registration."
+    },
+    {
+      "path": "THIRD-PARTY-LICENSES.md",
+      "module": "root-build",
+      "scope": "REL",
+      "kind": "build-or-document",
+      "evidence": [
+        "THIRD-PARTY-LICENSES.md:1"
+      ],
+      "reason": "Preserve upstream MIT attribution for ported code/test vectors."
+    },
+    {
+      "path": "README.md",
+      "module": "root-build",
+      "scope": "REL",
+      "kind": "build-or-document",
+      "evidence": [
+        "README.md:1"
+      ],
+      "reason": "0.10 compatibility and example migration."
+    },
+    {
+      "path": "README.ko.md",
+      "module": "root-build",
+      "scope": "REL",
+      "kind": "build-or-document",
+      "evidence": [
+        "README.ko.md:1"
+      ],
+      "reason": "Korean counterpart migration."
+    },
+    {
+      "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RoutePatternTest.java",
+      "module": "NaruServe-api",
+      "scope": "ROUTE",
+      "kind": "test",
+      "evidence": [
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RoutePatternTest.java:1"
+      ],
+      "reason": "Existing test or fixture; changed contracts need replacement assertions, unchanged extension invariants retain regression evidence. Not executed by this research."
+    },
+    {
+      "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterPriorityTest.java",
+      "module": "NaruServe-api",
+      "scope": "ROUTE",
+      "kind": "test",
+      "evidence": [
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterPriorityTest.java:1"
+      ],
+      "reason": "Existing test or fixture; changed contracts need replacement assertions, unchanged extension invariants retain regression evidence. Not executed by this research."
+    },
+    {
+      "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterFreezeTest.java",
+      "module": "NaruServe-api",
+      "scope": "ROUTE",
+      "kind": "test",
+      "evidence": [
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterFreezeTest.java:1"
+      ],
+      "reason": "Existing test or fixture; changed contracts need replacement assertions, unchanged extension invariants retain regression evidence. Not executed by this research."
+    },
+    {
+      "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterPolicyTest.java",
+      "module": "NaruServe-api",
+      "scope": "ROUTE",
+      "kind": "test",
+      "evidence": [
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterPolicyTest.java:1"
+      ],
+      "reason": "Existing test or fixture; changed contracts need replacement assertions, unchanged extension invariants retain regression evidence. Not executed by this research."
+    },
+    {
+      "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterAutoResponseTest.java",
+      "module": "NaruServe-api",
+      "scope": "ROUTE",
+      "kind": "test",
+      "evidence": [
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterAutoResponseTest.java:1"
+      ],
+      "reason": "Existing test or fixture; changed contracts need replacement assertions, unchanged extension invariants retain regression evidence. Not executed by this research."
+    },
+    {
+      "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java",
+      "module": "NaruServe-api",
+      "scope": "HTTP",
+      "kind": "test",
+      "evidence": [
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DispatcherTest.java:1"
+      ],
+      "reason": "Existing test or fixture; changed contracts need replacement assertions, unchanged extension invariants retain regression evidence. Not executed by this research."
+    },
+    {
+      "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ChainNextTest.java",
+      "module": "NaruServe-api",
+      "scope": "APP",
+      "kind": "test",
+      "evidence": [
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ChainNextTest.java:1"
+      ],
+      "reason": "Existing test or fixture; changed contracts need replacement assertions, unchanged extension invariants retain regression evidence. Not executed by this research."
+    },
+    {
+      "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MiddlewarePipelineTest.java",
+      "module": "NaruServe-api",
+      "scope": "APP",
+      "kind": "test",
+      "evidence": [
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/MiddlewarePipelineTest.java:1"
+      ],
+      "reason": "Existing test or fixture; changed contracts need replacement assertions, unchanged extension invariants retain regression evidence. Not executed by this research."
+    },
+    {
+      "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/RouteGroupTest.java",
+      "module": "NaruServe-api",
+      "scope": "DX",
+      "kind": "test",
+      "evidence": [
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/RouteGroupTest.java:1"
+      ],
+      "reason": "Existing test or fixture; changed contracts need replacement assertions, unchanged extension invariants retain regression evidence. Not executed by this research."
+    },
+    {
+      "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMethodTest.java",
+      "module": "NaruServe-api",
+      "scope": "STATIC",
+      "kind": "test",
+      "evidence": [
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMethodTest.java:1"
+      ],
+      "reason": "Existing test or fixture; changed contracts need replacement assertions, unchanged extension invariants retain regression evidence. Not executed by this research."
+    },
+    {
+      "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/WebSocketDispatchTest.java",
+      "module": "NaruServe-api",
+      "scope": "WS",
+      "kind": "test",
+      "evidence": [
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/WebSocketDispatchTest.java:1"
+      ],
+      "reason": "Existing test or fixture; changed contracts need replacement assertions, unchanged extension invariants retain regression evidence. Not executed by this research."
+    },
+    {
+      "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java",
+      "module": "NaruServe-api",
+      "scope": "HTTP",
+      "kind": "test",
+      "evidence": [
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java:1"
+      ],
+      "reason": "Existing test or fixture; changed contracts need replacement assertions, unchanged extension invariants retain regression evidence. Not executed by this research."
+    },
+    {
+      "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/RoutingDocsTest.java",
+      "module": "NaruServe-api",
+      "scope": "ROUTE",
+      "kind": "test",
+      "evidence": [
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/RoutingDocsTest.java:1"
+      ],
+      "reason": "Existing test or fixture; changed contracts need replacement assertions, unchanged extension invariants retain regression evidence. Not executed by this research."
+    },
+    {
+      "path": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/routing/RouterKotlinTest.kt",
+      "module": "NaruServe-api",
+      "scope": "KT",
+      "kind": "test",
+      "evidence": [
+        "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/routing/RouterKotlinTest.kt:1"
+      ],
+      "reason": "Existing test or fixture; changed contracts need replacement assertions, unchanged extension invariants retain regression evidence. Not executed by this research."
+    },
+    {
+      "path": "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/InMemoryHttpAdapter.java",
+      "module": "NaruServe-api",
+      "scope": "HTTP",
+      "kind": "test-fixture",
+      "evidence": [
+        "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/InMemoryHttpAdapter.java:1"
+      ],
+      "reason": "Existing test or fixture; changed contracts need replacement assertions, unchanged extension invariants retain regression evidence. Not executed by this research."
+    },
+    {
+      "path": "src/test/java/com/snoworca/naruserve/docs/ReadmeDocsTest.java",
+      "module": "root-build",
+      "scope": "REL",
+      "kind": "test",
+      "evidence": [
+        "src/test/java/com/snoworca/naruserve/docs/ReadmeDocsTest.java:1"
+      ],
+      "reason": "Existing test or fixture; changed contracts need replacement assertions, unchanged extension invariants retain regression evidence. Not executed by this research."
+    },
+    {
+      "path": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java",
+      "module": "root-build",
+      "scope": "HTTP",
+      "kind": "test",
+      "evidence": [
+        "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java:1"
+      ],
+      "reason": "Existing test or fixture; changed contracts need replacement assertions, unchanged extension invariants retain regression evidence. Not executed by this research."
+    },
+    {
+      "path": "docs/api/routing.md",
+      "module": "root-build",
+      "scope": "ROUTE",
+      "kind": "document",
+      "evidence": [
+        "docs/api/routing.md:1"
+      ],
+      "reason": "Bilingual API/migration contracts and executable example parity."
+    },
+    {
+      "path": "docs/api/en/routing.md",
+      "module": "root-build",
+      "scope": "ROUTE",
+      "kind": "document",
+      "evidence": [
+        "docs/api/en/routing.md:1"
+      ],
+      "reason": "Bilingual API/migration contracts and executable example parity."
+    },
+    {
+      "path": "docs/api/middleware.md",
+      "module": "root-build",
+      "scope": "HTTP",
+      "kind": "document",
+      "evidence": [
+        "docs/api/middleware.md:1"
+      ],
+      "reason": "Bilingual API/migration contracts and executable example parity."
+    },
+    {
+      "path": "docs/api/en/middleware.md",
+      "module": "root-build",
+      "scope": "HTTP",
+      "kind": "document",
+      "evidence": [
+        "docs/api/en/middleware.md:1"
+      ],
+      "reason": "Bilingual API/migration contracts and executable example parity."
+    },
+    {
+      "path": "docs/api/request.md",
+      "module": "root-build",
+      "scope": "HTTP",
+      "kind": "document",
+      "evidence": [
+        "docs/api/request.md:1"
+      ],
+      "reason": "Bilingual API/migration contracts and executable example parity."
+    },
+    {
+      "path": "docs/api/en/request.md",
+      "module": "root-build",
+      "scope": "HTTP",
+      "kind": "document",
+      "evidence": [
+        "docs/api/en/request.md:1"
+      ],
+      "reason": "Bilingual API/migration contracts and executable example parity."
+    },
+    {
+      "path": "docs/api/defaults.md",
+      "module": "root-build",
+      "scope": "HTTP",
+      "kind": "document",
+      "evidence": [
+        "docs/api/defaults.md:1"
+      ],
+      "reason": "Bilingual API/migration contracts and executable example parity."
+    },
+    {
+      "path": "docs/api/en/defaults.md",
+      "module": "root-build",
+      "scope": "HTTP",
+      "kind": "document",
+      "evidence": [
+        "docs/api/en/defaults.md:1"
+      ],
+      "reason": "Bilingual API/migration contracts and executable example parity."
+    },
+    {
+      "path": "docs/api/express-migration.md",
+      "module": "root-build",
+      "scope": "HTTP",
+      "kind": "document",
+      "evidence": [
+        "docs/api/express-migration.md:1"
+      ],
+      "reason": "Bilingual API/migration contracts and executable example parity."
+    },
+    {
+      "path": "docs/api/en/express-migration.md",
+      "module": "root-build",
+      "scope": "HTTP",
+      "kind": "document",
+      "evidence": [
+        "docs/api/en/express-migration.md:1"
+      ],
+      "reason": "Bilingual API/migration contracts and executable example parity."
+    },
+    {
+      "path": "docs/api/app.md",
+      "module": "root-build",
+      "scope": "HTTP",
+      "kind": "document",
+      "evidence": [
+        "docs/api/app.md:1"
+      ],
+      "reason": "Bilingual API/migration contracts and executable example parity."
+    },
+    {
+      "path": "docs/api/en/app.md",
+      "module": "root-build",
+      "scope": "HTTP",
+      "kind": "document",
+      "evidence": [
+        "docs/api/en/app.md:1"
+      ],
+      "reason": "Bilingual API/migration contracts and executable example parity."
+    },
+    {
+      "path": "docs/api/static.md",
+      "module": "root-build",
+      "scope": "HTTP",
+      "kind": "document",
+      "evidence": [
+        "docs/api/static.md:1"
+      ],
+      "reason": "Bilingual API/migration contracts and executable example parity."
+    },
+    {
+      "path": "docs/api/en/static.md",
+      "module": "root-build",
+      "scope": "HTTP",
+      "kind": "document",
+      "evidence": [
+        "docs/api/en/static.md:1"
+      ],
+      "reason": "Bilingual API/migration contracts and executable example parity."
+    },
+    {
+      "path": "docs/api/websocket.md",
+      "module": "root-build",
+      "scope": "HTTP",
+      "kind": "document",
+      "evidence": [
+        "docs/api/websocket.md:1"
+      ],
+      "reason": "Bilingual API/migration contracts and executable example parity."
+    },
+    {
+      "path": "docs/api/en/websocket.md",
+      "module": "root-build",
+      "scope": "HTTP",
+      "kind": "document",
+      "evidence": [
+        "docs/api/en/websocket.md:1"
+      ],
+      "reason": "Bilingual API/migration contracts and executable example parity."
+    },
+    {
+      "path": "docs/api/servlet.md",
+      "module": "root-build",
+      "scope": "HTTP",
+      "kind": "document",
+      "evidence": [
+        "docs/api/servlet.md:1"
+      ],
+      "reason": "Bilingual API/migration contracts and executable example parity."
+    },
+    {
+      "path": "docs/api/en/servlet.md",
+      "module": "root-build",
+      "scope": "HTTP",
+      "kind": "document",
+      "evidence": [
+        "docs/api/en/servlet.md:1"
+      ],
+      "reason": "Bilingual API/migration contracts and executable example parity."
+    }
+  ],
+  "files": 88,
+  "modules": 4,
+  "module_names": [
+    "NaruServe-api",
+    "NaruServe-kotlin",
+    "NaruServe-servlet",
+    "NaruServe-tinyhttpd"
+  ],
+  "counts": {
+    "files": 88,
+    "modules": 4,
+    "root_build_not_counted_as_published_module": true,
+    "by_kind": {
+      "build-or-document": 5,
+      "document": 18,
+      "source": 48,
+      "test": 16,
+      "test-fixture": 1
+    },
+    "by_module": {
+      "NaruServe-api": 57,
+      "NaruServe-kotlin": 1,
+      "NaruServe-servlet": 3,
+      "NaruServe-tinyhttpd": 2,
+      "root-build": 25
+    }
+  },
+  "external_paths": [
+    "/Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/RequestParser.java",
+    "/Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/PercentCodec.java",
+    "/Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/ServerConfig.java"
+  ],
+  "external_context": {
+    "workspace_root": "/Users/beom/work/git/TinyHttpd",
+    "module": "core",
+    "reason": "Actual parser rejects raw-route cases before NaruServe dispatch; opt-in API needs separate approved external work.",
+    "evidence": [
+      "core/src/main/java/com/snoworca/tinyhttpd/server/RequestParser.java:30",
+      "core/src/main/java/com/snoworca/tinyhttpd/server/RequestParser.java:90",
+      "core/src/main/java/com/snoworca/tinyhttpd/server/PercentCodec.java:39"
+    ],
+    "gate": "external-module-impact pending; no external writes authorized by this researcher; publication separately gated"
+  },
+  "shared_write_convergence": [
+    "RoutePattern/RouterPolicy compiler seam before Route/registration integration.",
+    "RestApp/DefaultRestApp shared registration API single owner and sequential task handoff.",
+    "Dispatcher/ChainNext/lifetime/error tasks share dispatch-core sequential lane.",
+    "Adapter tasks may run independently after request-lifetime and raw-routing contracts freeze."
+  ],
+  "async_next_spi_assessment": {
+    "new_mandatory_method_required": false,
+    "reason": "HttpExchange14-16 and ExchangeHandler4-7 already permit deferred exchange lifetime; concrete core and adapters still need completion implementation.",
+    "core_changes": [
+      "Do not auto-end NEW on initial callback return",
+      "Separate execution/response/continuation/resource lifetime",
+      "Match oracle repeated/explicit post-response next while forbidding second response commit",
+      "Install lifecycle request context for continuation callbacks"
+    ],
+    "tinyhttpd": "Existing ended.await foundation; delayed stream/SSE and abort/shutdown require actual transport tests.",
+    "servlet": "Ordinary deferred requests need real startAsync/complete/inflight lifecycle; current async is SSE-only.",
+    "api21": "Do not make CompletionStage/CompletableFuture mandatory core API; use API21 custom completion/callback contract."
+  },
+  "existing_requirement_changes": [
+    {
+      "id": "FR-ROUTE-014",
+      "classification": "potential-conflict",
+      "reason": "Legacy default-off TRACE/CONNECT routing conflicts with explicit common Express method registration; preserve legacy switches only in identified extension/WS profile.",
+      "evidence": [
+        "docs/spec/03.routing.srs.md:1339",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouterPolicy.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java",
+        "CON-ROUTE-001"
+      ]
+    },
+    {
+      "id": "FR-ROUTE-003",
+      "classification": "potential-conflict",
+      "reason": "Legacy string syntax rejects wildcard/optional/quoted/escape/partial parameters that common Express5 accepts.",
+      "evidence": [
+        "docs/spec/03.routing.srs.md:469",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RoutePattern.java",
+        "CON-ROUTE-001",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RoutingConfigException.java"
+      ]
+    },
+    {
+      "id": "FR-ROUTE-004",
+      "classification": "potential-conflict",
+      "reason": "Pre-routing decoded slash/NUL/dot rejection conflicts with common raw-path matching/capture decode semantics.",
+      "evidence": [
+        "docs/spec/03.routing.srs.md:541",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/PathValidator.java",
+        "CON-ROUTE-001"
+      ]
+    },
+    {
+      "id": "FR-ROUTE-005",
+      "classification": "potential-conflict",
+      "reason": "Strict decoded segment matching conflicts with raw-path compiled matcher and new defaults.",
+      "evidence": [
+        "docs/spec/03.routing.srs.md:611",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RoutePattern.java",
+        "CON-ROUTE-001"
+      ]
+    },
+    {
+      "id": "FR-ROUTE-006",
+      "classification": "potential-conflict",
+      "reason": "All-off defaults conflict with Express5 case/trailing defaults; retain explicit strict and WS profile.",
+      "evidence": [
+        "docs/spec/03.routing.srs.md:685",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouterPolicy.java",
+        "CON-ROUTE-001"
+      ]
+    },
+    {
+      "id": "FR-ROUTE-007",
+      "classification": "potential-conflict",
+      "reason": "Specificity precedence conflicts with registration order.",
+      "evidence": [
+        "docs/spec/03.routing.srs.md:761",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java",
+        "CON-ROUTE-001",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RoutePattern.java"
+      ]
+    },
+    {
+      "id": "FR-ROUTE-008",
+      "classification": "potential-conflict",
+      "reason": "Freeze duplicate conflict rejection conflicts with duplicate Route layers and live registration.",
+      "evidence": [
+        "docs/spec/03.routing.srs.md:828",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java",
+        "CON-ROUTE-001",
+        "FR-ROUTE-006",
+        "FR-ROUTE-014",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RoutePattern.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RoutingConfigException.java"
+      ]
+    },
+    {
+      "id": "FR-ROUTE-010",
+      "classification": "potential-conflict",
+      "reason": "405/Allow outcome changes to common404 and separate ordered OPTIONS accumulation.",
+      "evidence": [
+        "docs/spec/03.routing.srs.md:1068",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java",
+        "CON-ROUTE-001",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouteMatch.java"
+      ]
+    },
+    {
+      "id": "FR-ROUTE-011",
+      "classification": "potential-conflict",
+      "reason": "Global explicit HEAD precedence changes to per-Route fallback in ordered stack.",
+      "evidence": [
+        "docs/spec/03.routing.srs.md:1139",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java",
+        "CON-ROUTE-001",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouteMatch.java"
+      ]
+    },
+    {
+      "id": "FR-ROUTE-012",
+      "classification": "potential-conflict",
+      "reason": "Automatic OPTIONS204 changes to terminal200 with exact Allow and body.",
+      "evidence": [
+        "docs/spec/03.routing.srs.md:1207",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java",
+        "CON-ROUTE-001",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouteMatch.java"
+      ]
+    },
+    {
+      "id": "FR-ROUTE-013",
+      "classification": "potential-conflict",
+      "reason": "Nine-case unsupported method gate cannot silently exclude common methods.",
+      "evidence": [
+        "docs/spec/03.routing.srs.md:1275",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java",
+        "CON-ROUTE-001"
+      ]
+    },
+    {
+      "id": "CON-ROUTE-005",
+      "classification": "potential-conflict",
+      "reason": "Exactly six RouteMatch outcome kinds and dispatcher405/204 mapping conflict with ordered layer cursors and common404/OPTIONS200; preserve engine-free response ownership.",
+      "evidence": [
+        "docs/spec/03.routing.srs.md:1842"
+      ]
+    },
+    {
+      "id": "FR-HTTP-008",
+      "classification": "potential-conflict",
+      "reason": "Deferred frozen router build and NEW-only registration conflict with common after-listen registration.",
+      "evidence": [
+        "docs/spec/04.http-core.srs.md:1206",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RoutePattern.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java",
+        "IR-HTTP-005",
+        "FR-ROUTE-003",
+        "FR-ROUTE-008",
+        "FR-HTTP-002"
+      ]
+    },
+    {
+      "id": "FR-HTTP-009",
+      "classification": "potential-conflict",
+      "reason": "Scalar non-null params/full decoded path conflict with list/optional captures and mounted path views.",
+      "evidence": [
+        "docs/spec/04.http-core.srs.md:1297",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java",
+        "IR-HTTP-001",
+        "FR-ROUTE-005",
+        "IR-HTTP-003"
+      ]
+    },
+    {
+      "id": "FR-HTTP-021",
+      "classification": "potential-conflict",
+      "reason": "Preselect-one-route pipeline conflicts with mutable current layer/Route cursor.",
+      "evidence": [
+        "docs/spec/04.http-core.srs.md:2920",
+        "FR-HTTP-002",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+        "FR-APP-006",
+        "FR-APP-003",
+        "FR-ROUTE-004"
+      ]
+    },
+    {
+      "id": "FR-HTTP-023",
+      "classification": "potential-conflict",
+      "reason": "Asterisk OPTIONS and pre-request checks require oracle-specific updated semantics.",
+      "evidence": [
+        "docs/spec/04.http-core.srs.md:3106",
+        "FR-HTTP-005",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+        "FR-APP-006",
+        "FR-APP-015"
+      ]
+    },
+    {
+      "id": "FR-HTTP-024",
+      "classification": "potential-conflict",
+      "reason": "Auto-ending an unfinished returned handler conflicts with pending/deferred common response lifetime.",
+      "evidence": [
+        "docs/spec/04.http-core.srs.md:3188",
+        "FR-HTTP-006",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+        "FR-APP-005",
+        "FR-APP-006",
+        "FR-HTTP-016"
+      ]
+    },
+    {
+      "id": "FR-HTTP-026",
+      "classification": "potential-conflict",
+      "reason": "Automatic405/OPTIONS204 mapping conflicts with common404/OPTIONS200 final flow.",
+      "evidence": [
+        "docs/spec/04.http-core.srs.md:4286",
+        "FR-HTTP-022"
+      ]
+    },
+    {
+      "id": "FR-APP-003",
+      "classification": "potential-conflict",
+      "reason": "All app middleware before route conflicts with mixed ordered layers and dynamic prefix capture.",
+      "evidence": [
+        "docs/spec/05.application.srs.md:833",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+        "IR-APP-002",
+        "FR-ROUTE-006",
+        "FR-HTTP-001",
+        "FR-DX-008"
+      ]
+    },
+    {
+      "id": "FR-APP-004",
+      "classification": "potential-conflict",
+      "reason": "Same-thread/single-use/initial-return continuation guards conflict with observed deferred/repeated/explicit post-response next.",
+      "evidence": [
+        "docs/spec/05.application.srs.md:935",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+        "FR-APP-003",
+        "FR-HTTP-016"
+      ]
+    },
+    {
+      "id": "CON-APP-002",
+      "classification": "potential-conflict",
+      "reason": "Unconditional NEW-only guard conflicts with common registration after listen; extension-only settings remain guarded.",
+      "evidence": [
+        "docs/spec/05.application.srs.md:2637"
+      ]
+    },
+    {
+      "id": "FR-STATIC-001",
+      "classification": "potential-conflict",
+      "reason": "Always routes-before-static precedence must be reconciled with common ordered stack while retaining file serving extension.",
+      "evidence": [
+        "docs/spec/10.static-files.srs.md:253",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+        "IR-STATIC-001",
+        "FR-HTTP-022",
+        "FR-APP-003",
+        "FR-APP-015"
+      ]
+    },
+    {
+      "id": "FR-STATIC-002",
+      "classification": "potential-conflict",
+      "reason": "Static mismatch405/fallback needs explicit common-vs-extension boundary.",
+      "evidence": [
+        "docs/spec/10.static-files.srs.md:355",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+        "IR-STATIC-001",
+        "FR-ROUTE-010",
+        "FR-HTTP-022",
+        "FR-HTTP-021"
+      ]
+    },
+    {
+      "id": "IR-ROUTE-004",
+      "classification": "potential-update",
+      "reason": "Single lookup result must support ordered layer/Route cursor and multi-valued captures.",
+      "evidence": [
+        "docs/spec/03.routing.srs.md:915",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouteMatch.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java",
+        "CON-ROUTE-001",
+        "FR-ROUTE-004"
+      ]
+    },
+    {
+      "id": "FR-ROUTE-009",
+      "classification": "potential-update",
+      "reason": "No-match contract needs terminal stack fallthrough integration.",
+      "evidence": [
+        "docs/spec/03.routing.srs.md:1001",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java",
+        "CON-ROUTE-001"
+      ]
+    },
+    {
+      "id": "FR-ROUTE-001",
+      "classification": "potential-update",
+      "reason": "Preserve legacy Method.any exclusion as an extension; introduce common all/method scope without silently changing this additional API.",
+      "evidence": [
+        "docs/spec/03.routing.srs.md:180",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/Method.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/MethodSet.java",
+        "IR-ROUTE-001",
+        "FR-ROUTE-014"
+      ]
+    },
+    {
+      "id": "IR-HTTP-001",
+      "classification": "potential-update",
+      "reason": "Request list/optional params and mount URL views extend API.",
+      "evidence": [
+        "docs/spec/04.http-core.srs.md:38",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/Response.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/Method.java",
+        "IR-ROUTE-001",
+        "FR-DX-001"
+      ]
+    },
+    {
+      "id": "IR-HTTP-002",
+      "classification": "potential-update",
+      "reason": "Keep terminal handler; add next-aware and API21 async completion callbacks.",
+      "evidence": [
+        "docs/spec/04.http-core.srs.md:126",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/RouteHandler.java",
+        "IR-HTTP-001",
+        "CON-ROUTE-006"
+      ]
+    },
+    {
+      "id": "IR-HTTP-003",
+      "classification": "potential-update",
+      "reason": "Already permits exchange outliving initial handle; finish/abort lifecycle must work in all actual adapters.",
+      "evidence": [
+        "docs/spec/04.http-core.srs.md:198",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpAdapter.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpExchange.java",
+        "FR-ROUTE-005"
+      ]
+    },
+    {
+      "id": "IR-HTTP-005",
+      "classification": "potential-update",
+      "reason": "New registration inputs, methods and mounted Router analogue.",
+      "evidence": [
+        "docs/spec/04.http-core.srs.md:955",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouterPolicy.java",
+        "IR-HTTP-002",
+        "FR-ROUTE-002",
+        "FR-ROUTE-006",
+        "FR-ROUTE-014",
+        "IR-ROUTE-001"
+      ]
+    },
+    {
+      "id": "IR-HTTP-006",
+      "classification": "potential-update",
+      "reason": "RouteBuilder stable identity and multiple callback chains.",
+      "evidence": [
+        "docs/spec/04.http-core.srs.md:1045",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/RouteBuilder.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RoutingConfigException.java",
+        "IR-HTTP-005",
+        "FR-ROUTE-008"
+      ]
+    },
+    {
+      "id": "IR-HTTP-007",
+      "classification": "potential-update",
+      "reason": "Actual deferred ordinary transport/stream/SSE lifecycle without requiring incompatible abstract SPI changes.",
+      "evidence": [
+        "docs/spec/04.http-core.srs.md:3821",
+        "IR-HTTP-004",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpExchange.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpAdapter.java",
+        "IR-HTTP-003",
+        "IR-WS-002"
+      ]
+    },
+    {
+      "id": "FR-HTTP-004",
+      "classification": "potential-update",
+      "reason": "HEAD bodyless handling retained but dispatch order changes.",
+      "evidence": [
+        "docs/spec/04.http-core.srs.md:719",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+        "FR-ROUTE-011",
+        "FR-HTTP-002"
+      ]
+    },
+    {
+      "id": "FR-HTTP-007",
+      "classification": "potential-update",
+      "reason": "Actual method and legacy MethodSet retained alongside common method/all handling.",
+      "evidence": [
+        "docs/spec/04.http-core.srs.md:1124",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java",
+        "IR-HTTP-005",
+        "FR-ROUTE-002",
+        "FR-HTTP-004"
+      ]
+    },
+    {
+      "id": "FR-HTTP-016",
+      "classification": "potential-update",
+      "reason": "Single commit retained; initial handler return no longer forces completion.",
+      "evidence": [
+        "docs/spec/04.http-core.srs.md:1873",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+        "FR-HTTP-014",
+        "FR-HTTP-015",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ResponseState.java"
+      ]
+    },
+    {
+      "id": "FR-HTTP-019",
+      "classification": "potential-update",
+      "reason": "Body/cache/upload resources must outlive initial callback when deferred.",
+      "evidence": [
+        "docs/spec/04.http-core.srs.md:2116",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/BodyAlreadyConsumedException.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/BodyState.java",
+        "IR-HTTP-001",
+        "IR-HTTP-003",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java",
+        "FR-DX-007"
+      ]
+    },
+    {
+      "id": "FR-APP-005",
+      "classification": "potential-update",
+      "reason": "Common ordered error/recovery/forward flow plus retained JSON error extension.",
+      "evidence": [
+        "docs/spec/05.application.srs.md:1024",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+        "IR-APP-003",
+        "FR-APP-004",
+        "FR-HTTP-015"
+      ]
+    },
+    {
+      "id": "FR-APP-019",
+      "classification": "potential-update",
+      "reason": "Access log/request ID exactly once across deferred completion and WS/SSE.",
+      "evidence": [
+        "docs/spec/05.application.srs.md:3278",
+        "FR-APP-015",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/AccessLog.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+        "IR-APP-007",
+        "FR-APP-006",
+        "FR-WS-006",
+        "FR-SSE-004"
+      ]
+    },
+    {
+      "id": "FR-APP-020",
+      "classification": "potential-update",
+      "reason": "Deferred requests and continuation shutdown participate in lifecycle deadline/context.",
+      "evidence": [
+        "docs/spec/05.application.srs.md:3419",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ShutdownParticipants.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+        "docs/api/lifecycle.md",
+        "FR-APP-011",
+        "FR-APP-013",
+        "FR-ENGINE-006",
+        "FR-WS-010",
+        "FR-SSE-005"
+      ]
+    },
+    {
+      "id": "CON-APP-003",
+      "classification": "potential-update",
+      "reason": "Preserve exception identity and no accidental duplicate error routing, while matching explicit next traces.",
+      "evidence": [
+        "docs/spec/05.application.srs.md:2692"
+      ]
+    },
+    {
+      "id": "FR-STATIC-004",
+      "classification": "potential-update",
+      "reason": "Preserve SPA exclusions/fallback without bypassing ordered route ownership.",
+      "evidence": [
+        "docs/spec/10.static-files.srs.md:547",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+        "IR-STATIC-001"
+      ]
+    },
+    {
+      "id": "FR-DX-003",
+      "classification": "potential-update",
+      "reason": "Optional params must not silently become paramInt0; input convenience behavior explicitly defined.",
+      "evidence": [
+        "docs/spec/16.developer-experience.srs.md:211"
+      ]
+    },
+    {
+      "id": "FR-DX-007",
+      "classification": "potential-update",
+      "reason": "JSON body cache persists across layer/mount/async changes.",
+      "evidence": [
+        "docs/spec/16.developer-experience.srs.md:453"
+      ]
+    },
+    {
+      "id": "FR-DX-008",
+      "classification": "potential-update",
+      "reason": "Combined global/prefix ordering extends to whole common stack.",
+      "evidence": [
+        "docs/spec/16.developer-experience.srs.md:512"
+      ]
+    },
+    {
+      "id": "FR-DX-009",
+      "classification": "potential-update",
+      "reason": "Preserve group API/inheritance while joining new escaped syntax and route builder chains.",
+      "evidence": [
+        "docs/spec/16.developer-experience.srs.md:573"
+      ]
+    },
+    {
+      "id": "FR-DX-010",
+      "classification": "potential-update",
+      "reason": "Preserve CORS preflight204 and separate WS Origin policy after stack integration.",
+      "evidence": [
+        "docs/spec/16.developer-experience.srs.md:634"
+      ]
+    },
+    {
+      "id": "FR-ENGINE-011",
+      "classification": "potential-update",
+      "reason": "Integrate external raw routing policy and delayed stream/SSE response with actual binary/source dependency evidence.",
+      "evidence": [
+        "docs/spec/06.engine-adapter.srs.md:1249",
+        "FR-ENGINE-010",
+        "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdFeatures.java",
+        "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdExchange.java",
+        "FR-ENGINE-004",
+        "IR-HTTP-003",
+        "IR-HTTP-007"
+      ]
+    },
+    {
+      "id": "FR-SVL-002",
+      "classification": "potential-update",
+      "reason": "Raw URI and deferred general service callback lifecycle.",
+      "evidence": [
+        "docs/spec/14.servlet-adapter.srs.md:291",
+        "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet",
+        "IR-HTTP-003",
+        "FR-HTTP-009",
+        "FR-ROUTE-004",
+        "FR-ENGINE-007",
+        "FR-ENGINE-008",
+        "IR-SVL-001"
+      ]
+    },
+    {
+      "id": "FR-SVL-003",
+      "classification": "potential-update",
+      "reason": "General async finish/abort/completion must retain response framing/ownership.",
+      "evidence": [
+        "docs/spec/14.servlet-adapter.srs.md:411",
+        "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet",
+        "IR-HTTP-003",
+        "IR-HTTP-007",
+        "FR-HTTP-016",
+        "FR-HTTP-017",
+        "FR-STATIC-011",
+        "IR-SVL-001"
+      ]
+    },
+    {
+      "id": "FR-SVL-005",
+      "classification": "potential-update",
+      "reason": "General deferred request async context must not consume/misuse SSE pool slots.",
+      "evidence": [
+        "docs/spec/14.servlet-adapter.srs.md:636",
+        "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/StreamDrain.java",
+        "FR-SSE-002",
+        "FR-SSE-003",
+        "FR-SSE-004",
+        "IR-HTTP-007",
+        "FR-SSE-001",
+        "IR-SVL-001"
+      ]
+    },
+    {
+      "id": "FR-SVL-006",
+      "classification": "potential-update",
+      "reason": "Shutdown/inflight async completion with adapter/container race evidence.",
+      "evidence": [
+        "docs/spec/14.servlet-adapter.srs.md:758",
+        "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet",
+        "FR-APP-011",
+        "FR-APP-013",
+        "FR-SSE-005",
+        "FR-ENGINE-006",
+        "IR-HTTP-007",
+        "FR-SVL-005",
+        "FR-SVL-001"
+      ]
+    },
+    {
+      "id": "OPS-ROUTE-003",
+      "classification": "potential-update",
+      "reason": "Bilingual routing contract/examples updated with new common-versus-extension boundary.",
+      "evidence": [
+        "docs/spec/03.routing.srs.md:2049",
+        "OPS-ROUTE-002",
+        "OPS-APP-001",
+        "docs/api/routing.md"
+      ]
+    },
+    {
+      "id": "OPS-HTTP-004",
+      "classification": "potential-update",
+      "reason": "All changed Java examples compile or use justified existing skips.",
+      "evidence": [
+        "docs/spec/04.http-core.srs.md:3460",
+        "OPS-HTTP-002",
+        "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java",
+        "IR-HTTP-005",
+        "build.gradle",
+        "IR-HTTP-001"
+      ]
+    },
+    {
+      "id": "OPS-REL-001",
+      "classification": "potential-update",
+      "reason": "Bilingual README/version/install/quickstart remain aligned.",
+      "evidence": [
+        "docs/spec/15.release.srs.md:604",
+        "README.md",
+        "docs/api/README.md",
+        "OPS-BUILD-003",
+        "OPS-HTTP-004",
+        "FR-REL-005",
+        "OPS-REL-005"
+      ]
+    }
+  ],
+  "invariants": [
+    "Single commit and bodyless HEAD/204/304",
+    "One body/cache/attribute/service/upload ownership object per request",
+    "One request ID and final access log",
+    "Filesystem root/traversal/symlink security at file-access boundary",
+    "Retain CORS preflight204, group/convenience/services/SSE APIs",
+    "Preserve existing WS profile/auth/Origin/426/GET coexistence/queues/shutdown; no ExpressWS parity",
+    "Java8 bytecode and real Java8 tests plus API21 animal-sniffer and engine-free dependency placement"
+  ],
+  "open_decisions": [
+    "External TinyHttpd source/API/artifact/publication boundary approval is pending",
+    "Exact error/finalhandler platform representation without suppressing unexplained differences"
+  ],
+  "test_execution": "No implementation test run in this intake; source inspection and read-only MCP calls only.",
+  "worktree_probe": "/tmp/naruserve-intake-core/worktree_isolation_probe.json",
+  "resolved_regex_decision": {
+    "engine": "java.util.regex.Pattern",
+    "source": "04.java-pattern-decision.md",
+    "ecmascript_equivalence": false,
+    "jni": false
+  }
+}

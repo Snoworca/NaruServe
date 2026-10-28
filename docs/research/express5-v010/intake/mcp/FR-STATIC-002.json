@@ -1,0 +1,501 @@
+{
+  "ok": true,
+  "value": {
+    "id": "FR-STATIC-002",
+    "title": "Method handling on static paths: 405 Allow GET, HEAD, fall-through after a route's method mismatch, OPTIONS and 501 order",
+    "type": "functional",
+    "target": "wave-6",
+    "status": "verified",
+    "scope": "STATIC",
+    "filePath": "docs/spec/10.static-files.srs.md",
+    "headingLine": 355,
+    "metadata": {
+      "Type": "functional",
+      "Target": "wave-6",
+      "Status": "verified",
+      "Priority": "high",
+      "Tags": "wave-6, feasibility:high, static, dispatch, methods",
+      "Risk": "high",
+      "Stability": "evolving",
+      "Verification Method": "test",
+      "GitHub Issue": "https://github.com/Snoworca/NaruServe/issues/12",
+      "Related Docs": "-"
+    },
+    "acceptanceCriteria": [
+      {
+        "id": "AC-1",
+        "text": "Under `app.staticFiles(\"/\", root)` with no route for the path, `POST /assets/app.js`, `PUT /assets/app.js` and `DELETE /docs/` (a directory with an index file) are answered `405` with `Allow: GET, HEAD`, and the file is not sent. [D-260] Decision: a method other than `GET` or `HEAD` gets the static `405` only when a `GET` would be served; otherwise the router's answer (`404` or the route's `405`) stands. [SDS 2026-10-19.naruserve.naruserve-v1-wave-6-6 SDS-AC-8]",
+        "checked": true,
+        "line": 380
+      },
+      {
+        "id": "AC-2",
+        "text": "`OPTIONS /assets/app.js` on a static-only path is answered `405` with `Allow: GET, HEAD`, the automatic `204` of D-395 applies to explicit routes only, and an unknown method token or a disabled `TRACE`/`CONNECT` on that path is answered with the router's `501` before any static mount lookup. Decision: the order is the FR-HTTP-021 AC-2 pre-check order (`OPTIONS *` `204`, raw path not starting with `/` `400`, `PathValidator` `400`, unknown-token `501`), then the router lookup with the disabled `TRACE`/`CONNECT` `501` of FR-HTTP-022 AC-4, then the static mounts, so a `PathValidator` `400` still comes before either `501`. [wave decision: OPTIONS on a static-only path; D-260; D-395]",
+        "checked": true,
+        "line": 381
+      },
+      {
+        "id": "AC-3",
+        "text": "With only `POST /login` registered and `root/login` a file, `GET /login` and `HEAD /login` are served from the mount; with `spaFallback(true)` and no file `GET /login` (with `Accept: text/html`) receives the SPA index; with no mount serving it `GET /login` receives the route's `405` with the route's own `Allow`; and `PUT /login` receives the route's `405` with the route's own `Allow`, with no `Allow` values merged. [wave decision: Static files after a route's method mismatch; D-259; D-260]",
+        "checked": true,
+        "line": 382
+      },
+      {
+        "id": "AC-4",
+        "text": "A path that a WebSocket route of the router owns is never served from a static mount or by SPA fallback, even when a file of that name exists. Decision: in wave 6, where `app.ws` does not exist yet, the test registers the WebSocket route through the internal router. [wave decision: Static files after a route's method mismatch; D-265]",
+        "checked": true,
+        "line": 383
+      },
+      {
+        "id": "AC-5",
+        "text": "The `405` with `Allow: GET, HEAD` applies only when a `GET` for the same path would be answered from the file system (a file, a directory index, a directory listing or the trailing-slash `301`); SPA fallback content does not count, so under a `/` mount with `spaFallback(true)` `POST /missing`, `POST /api/typo` and `POST /.env` receive `404` (a T27 case). A path that D-052 or D-268 rejects receives `400` for every recognised, enabled method because path validation runs before method handling: `POST /a/..%2Fb` and paths with an encoded `/` or `NUL` get the `PathValidator` `400` of FR-HTTP-021; for a path that no explicit route matches and that lies under a static mount prefix, the static D-268 check runs before the static `405`/`404` method decision, so `GET`, `HEAD`, `POST`, `PUT`, `DELETE` and `OPTIONS` of `/%252e%252e/secret.txt` and `/a%252Fb` under a `/` mount all receive `400` (test cases). Explicit routes still take precedence: with `app.post(\"/:x\", h)` registered, `POST /a%252Fb` reaches `h`. [residual: served only by a static mount; D-260; D-262; D-265; D-268; D-271; T27]",
+        "checked": true,
+        "line": 384
+      }
+    ],
+    "verificationEvidence": [
+      {
+        "id": "VE-1",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMethodTest.java#sdsAc8_FR_STATIC_002_AC1_nonGetOnServedPathIs405AllowGetHead",
+        "covers": "AC-1",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 390
+      },
+      {
+        "id": "VE-2",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMethodTest.java#sdsAc8_FR_STATIC_002_AC1_nonGetOnServedPathIs405AllowGetHead",
+        "covers": "AC-2",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 391
+      },
+      {
+        "id": "VE-3",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMethodTest.java#FR_STATIC_002_AC2_unknownOrDisabledMethodIs501BeforeStatic",
+        "covers": "AC-2",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 392
+      },
+      {
+        "id": "VE-4",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMethodTest.java#sdsAc9_FR_STATIC_002_AC3_getAfterRouteMethodMismatchFallsThroughPutKeepsRouteAllow",
+        "covers": "AC-3",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 393
+      },
+      {
+        "id": "VE-5",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMethodTest.java#sdsAc9_FR_STATIC_002_AC3_spaAfterMismatchAndRoute405WhenNoMountServes",
+        "covers": "AC-3",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 394
+      },
+      {
+        "id": "VE-6",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMethodTest.java#FR_STATIC_002_AC4_webSocketRoutePathIsNeverServedStatically",
+        "covers": "AC-4",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 395
+      },
+      {
+        "id": "VE-7",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMethodTest.java#sdsAc8_FR_STATIC_002_AC5_spaContentDoesNotCountFor405",
+        "covers": "AC-5",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 396
+      },
+      {
+        "id": "VE-8",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMethodTest.java#sdsAc3_FR_STATIC_002_AC5_staticPathCheckRunsBeforeMethodDecision",
+        "covers": "AC-5",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 397
+      },
+      {
+        "id": "VE-9",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMethodTest.java#sdsAc3_FR_STATIC_002_AC5_explicitRouteStillWins",
+        "covers": "AC-5",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 398
+      },
+      {
+        "id": "VE-10",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMethodTest.java#FR_STATIC_002_AC5_refusedSymlinksGet404NotAllowOr301",
+        "covers": "AC-5",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 399
+      },
+      {
+        "id": "VE-11",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMethodTest.java",
+        "covers": "AC-1",
+        "notes": "verification_cmd ./gradlew build passed at 40b9665 (959/959); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMethodTest.java:33; bundle docs/research/naruserve-v1/waves/stage-6/lane-2026-10-19.naruserve.naruserve-v1-wave-6/",
+        "line": 400
+      },
+      {
+        "id": "VE-12",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMethodTest.java",
+        "covers": "AC-2",
+        "notes": "verification_cmd ./gradlew build passed at 40b9665 (959/959); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMethodTest.java:33; bundle docs/research/naruserve-v1/waves/stage-6/lane-2026-10-19.naruserve.naruserve-v1-wave-6/",
+        "line": 401
+      },
+      {
+        "id": "VE-13",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMethodTest.java",
+        "covers": "AC-3",
+        "notes": "verification_cmd ./gradlew build passed at 40b9665 (959/959); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMethodTest.java:82; bundle docs/research/naruserve-v1/waves/stage-6/lane-2026-10-19.naruserve.naruserve-v1-wave-6/",
+        "line": 402
+      },
+      {
+        "id": "VE-14",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMethodTest.java",
+        "covers": "AC-4",
+        "notes": "verification_cmd ./gradlew build passed at 40b9665 (959/959); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMethodTest.java:116; bundle docs/research/naruserve-v1/waves/stage-6/lane-2026-10-19.naruserve.naruserve-v1-wave-6/",
+        "line": 403
+      },
+      {
+        "id": "VE-15",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMethodTest.java",
+        "covers": "AC-5",
+        "notes": "verification_cmd ./gradlew build passed at 40b9665 (959/959); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMethodTest.java:48; bundle docs/research/naruserve-v1/waves/stage-6/lane-2026-10-19.naruserve.naruserve-v1-wave-6/",
+        "line": 404
+      },
+      {
+        "id": "VE-16",
+        "type": "commit",
+        "reference": "91773422926f109dcb74d36364cd8c774ba63c67",
+        "covers": "all",
+        "notes": "-",
+        "line": 405
+      },
+      {
+        "id": "VE-17",
+        "type": "commit",
+        "reference": "d1f13b3d801e105510ca5fde416249055b91bc5d",
+        "covers": "all",
+        "notes": "-",
+        "line": 406
+      },
+      {
+        "id": "VE-18",
+        "type": "commit",
+        "reference": "01ae12af3cbb45ca226b4dfdf8fcf8c247c0faf0",
+        "covers": "all",
+        "notes": "-",
+        "line": 407
+      },
+      {
+        "id": "VE-19",
+        "type": "commit",
+        "reference": "c3d6399f3dbc5aa66089e0cbfd00df3216ea4c13",
+        "covers": "all",
+        "notes": "-",
+        "line": 408
+      },
+      {
+        "id": "VE-20",
+        "type": "commit",
+        "reference": "d6920c738615bdb08919496cd064ff4dfb165538",
+        "covers": "all",
+        "notes": "-",
+        "line": 409
+      },
+      {
+        "id": "VE-21",
+        "type": "commit",
+        "reference": "4ebab20289a8b4bca0fab1081042ccfd00cec727",
+        "covers": "all",
+        "notes": "-",
+        "line": 410
+      },
+      {
+        "id": "VE-22",
+        "type": "commit",
+        "reference": "f589f1b23901a822b906b214e7ed46d0db83ea1d",
+        "covers": "all",
+        "notes": "-",
+        "line": 411
+      },
+      {
+        "id": "VE-23",
+        "type": "commit",
+        "reference": "b9293042cf1e02691b8fb81a2587ab79b09a4580",
+        "covers": "all",
+        "notes": "-",
+        "line": 412
+      },
+      {
+        "id": "VE-24",
+        "type": "commit",
+        "reference": "cf502cc4ba526b7736839033eb89f4622f1db186",
+        "covers": "all",
+        "notes": "-",
+        "line": 413
+      },
+      {
+        "id": "VE-25",
+        "type": "commit",
+        "reference": "9ef602cc818ef320d0bd175f1045bf4619c8a22f",
+        "covers": "all",
+        "notes": "-",
+        "line": 414
+      },
+      {
+        "id": "VE-26",
+        "type": "commit",
+        "reference": "050b49fd67addda1696da305c767ce46e2f39b77",
+        "covers": "all",
+        "notes": "-",
+        "line": 415
+      },
+      {
+        "id": "VE-27",
+        "type": "commit",
+        "reference": "f1697289066efde4576a564664a16f1a8b5f3563",
+        "covers": "all",
+        "notes": "-",
+        "line": 416
+      },
+      {
+        "id": "VE-28",
+        "type": "commit",
+        "reference": "b528a61a241e35657b4ac4850305661dd3c886d2",
+        "covers": "all",
+        "notes": "-",
+        "line": 417
+      },
+      {
+        "id": "VE-29",
+        "type": "commit",
+        "reference": "0584e4ce3049a13d38a9e3d34fc35977327fac83",
+        "covers": "all",
+        "notes": "-",
+        "line": 418
+      },
+      {
+        "id": "VE-30",
+        "type": "commit",
+        "reference": "79a0e3e0ecbf054a52a82522c1085745cc97ba87",
+        "covers": "all",
+        "notes": "-",
+        "line": 419
+      },
+      {
+        "id": "VE-31",
+        "type": "commit",
+        "reference": "9a3aa6bd3bab4b8759f657aa47881e854e301bff",
+        "covers": "all",
+        "notes": "-",
+        "line": 420
+      },
+      {
+        "id": "VE-32",
+        "type": "commit",
+        "reference": "294bba8634d98e4328ff2374c5b3bf00f7c30b17",
+        "covers": "all",
+        "notes": "-",
+        "line": 421
+      },
+      {
+        "id": "VE-33",
+        "type": "commit",
+        "reference": "8cf8a6bb40ca8c1f6f70eaed03e2c3359263df41",
+        "covers": "all",
+        "notes": "-",
+        "line": 422
+      },
+      {
+        "id": "VE-34",
+        "type": "commit",
+        "reference": "e5dd65caa748eb2fdb8198571dd931a90d312c2c",
+        "covers": "all",
+        "notes": "-",
+        "line": 423
+      },
+      {
+        "id": "VE-35",
+        "type": "commit",
+        "reference": "dc2ba034eaee05b62eb9b1f9c339c82b72cb2297",
+        "covers": "all",
+        "notes": "-",
+        "line": 424
+      },
+      {
+        "id": "VE-36",
+        "type": "commit",
+        "reference": "ed2fe3033831bba5ed092046dca905b332b14d59",
+        "covers": "all",
+        "notes": "-",
+        "line": 425
+      },
+      {
+        "id": "VE-37",
+        "type": "commit",
+        "reference": "83a0ee6337d3d76b56d1827f36aa6b669e80927d",
+        "covers": "all",
+        "notes": "-",
+        "line": 426
+      },
+      {
+        "id": "VE-38",
+        "type": "commit",
+        "reference": "a32d75a6d71a113f3443a0a81a198cf76c82639a",
+        "covers": "all",
+        "notes": "-",
+        "line": 427
+      }
+    ],
+    "traceLinks": [
+      {
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+        "relation": "implements",
+        "notes": "trace_intent=addition_site",
+        "line": 433
+      },
+      {
+        "type": "Requirement",
+        "reference": "IR-STATIC-001",
+        "relation": "depends_on",
+        "notes": "mount API",
+        "line": 434
+      },
+      {
+        "type": "Requirement",
+        "reference": "FR-ROUTE-010",
+        "relation": "extends",
+        "notes": "route's own Allow kept, no merge",
+        "line": 435
+      },
+      {
+        "type": "Requirement",
+        "reference": "FR-HTTP-022",
+        "relation": "extends",
+        "notes": "405/501 fallback order; OPTIONS 204 for routes only",
+        "line": 436
+      },
+      {
+        "type": "Requirement",
+        "reference": "FR-HTTP-021",
+        "relation": "extends",
+        "notes": "path validation 400 before method handling (residual)",
+        "line": 437
+      }
+    ],
+    "changeNotes": [
+      {
+        "date": "2026-10-20",
+        "change": "Created",
+        "reason": "add-requirement",
+        "line": 451
+      },
+      {
+        "date": "2026-10-20",
+        "change": "Stability -> evolving",
+        "reason": "Feasibility=high (score 91). Blockers: none. Run: 2026-10-19.naruserve.wave-6.v01",
+        "line": 452
+      },
+      {
+        "date": "2026-10-20",
+        "change": "Status -> verified",
+        "reason": "Wave 6 promotion: ./gradlew build passed at 40b9665 (959/959); every AC cited in docs/research/naruserve-v1/waves/wave-6/test-sufficiency.json; wave commits recorded as evidence.",
+        "line": 453
+      }
+    ],
+    "tags": [
+      "wave-6",
+      "feasibility:high",
+      "static",
+      "dispatch",
+      "methods"
+    ],
+    "relatedDocs": [],
+    "evidenceReferences": [
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticMethodTest.java",
+      "91773422926f109dcb74d36364cd8c774ba63c67",
+      "d1f13b3d801e105510ca5fde416249055b91bc5d",
+      "01ae12af3cbb45ca226b4dfdf8fcf8c247c0faf0",
+      "c3d6399f3dbc5aa66089e0cbfd00df3216ea4c13",
+      "d6920c738615bdb08919496cd064ff4dfb165538",
+      "4ebab20289a8b4bca0fab1081042ccfd00cec727",
+      "f589f1b23901a822b906b214e7ed46d0db83ea1d",
+      "b9293042cf1e02691b8fb81a2587ab79b09a4580",
+      "cf502cc4ba526b7736839033eb89f4622f1db186",
+      "9ef602cc818ef320d0bd175f1045bf4619c8a22f",
+      "050b49fd67addda1696da305c767ce46e2f39b77",
+      "f1697289066efde4576a564664a16f1a8b5f3563",
+      "b528a61a241e35657b4ac4850305661dd3c886d2",
+      "0584e4ce3049a13d38a9e3d34fc35977327fac83",
+      "79a0e3e0ecbf054a52a82522c1085745cc97ba87",
+      "9a3aa6bd3bab4b8759f657aa47881e854e301bff",
+      "294bba8634d98e4328ff2374c5b3bf00f7c30b17",
+      "8cf8a6bb40ca8c1f6f70eaed03e2c3359263df41",
+      "e5dd65caa748eb2fdb8198571dd931a90d312c2c",
+      "dc2ba034eaee05b62eb9b1f9c339c82b72cb2297",
+      "ed2fe3033831bba5ed092046dca905b332b14d59",
+      "83a0ee6337d3d76b56d1827f36aa6b669e80927d",
+      "a32d75a6d71a113f3443a0a81a198cf76c82639a"
+    ],
+    "traceReferences": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+      "IR-STATIC-001",
+      "FR-ROUTE-010",
+      "FR-HTTP-022",
+      "FR-HTTP-021"
+    ],
+    "blockStartLine": 355,
+    "blockEndLine": 454,
+    "sectionLines": {
+      "Requirement": 370,
+      "Rationale": 374,
+      "Acceptance Criteria": 378,
+      "Verification Evidence": 386,
+      "Trace Links": 429,
+      "Research / Analysis": 439,
+      "Implementation Notes": 443,
+      "Change Notes": 447
+    },
+    "priority": "high",
+    "risk": "high",
+    "stability": "evolving",
+    "newWorkCandidate": false,
+    "requirement": "The system shall answer a non-`GET`/`HEAD` request with `405` and `Allow: GET, HEAD` only when a `GET` for the same path would be answered from the file system by a static mount, let `GET` and `HEAD` fall through to the static mounts when a route matches the path but not the method, keep the route's own `405` and `Allow` otherwise, answer unknown or disabled methods with the router's `501` before any static mount lookup, run the static path checks before the static method decision, and never serve a path owned by a WebSocket route from a static mount.",
+    "rationale": "Covers D-260, the wave decisions \"Static files after a route's method mismatch\" (W2-005, r2 W2-004, r3 W2-003; D-259, D-260, D-395, D-265) and \"OPTIONS on a static-only path\" (W2-006; D-260, D-395; r3 W2-002), and the residual \"What served only by a static mount means\" (r5 W2-001; D-260, D-262, D-265, D-271, D-395). Builds on FR-HTTP-022 (fallback point, OPTIONS 204 for routes only), FR-ROUTE-010 (the route's own Allow set, no merge), FR-HTTP-021 and FR-ROUTE-004 (path validation `400` before method handling). FR-HTTP-022 scenarios register routes only and stay true. Rejected alternative: merging the route's `Allow` with `GET, HEAD`; the wave decision rejects merged `Allow` values.",
+    "research": "- -",
+    "implementationNotes": "- -",
+    "diagnostics": [],
+    "errors": [],
+    "warnings": [],
+    "diagnosticsSummary": {
+      "errors": 0,
+      "warnings": 0,
+      "byCode": {}
+    }
+  },
+  "diagnostics": [],
+  "diagnosticsSummary": {
+    "errors": 0,
+    "warnings": 0,
+    "byCode": {}
+  },
+  "mcpWorkspace": {
+    "workspaceRoot": "/Users/beom/work/git/NaruServe",
+    "rootSource": "server-cwd-discovery",
+    "indexPath": "docs/spec/00.index.md",
+    "packageVersion": "4.2.0"
+  }
+}

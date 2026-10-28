@@ -1,0 +1,163 @@
+{
+  "ok": true,
+  "value": {
+    "id": "FR-DX-009",
+    "title": "라우트 그룹으로 중복 prefix 제거",
+    "type": "functional",
+    "target": "api-usability",
+    "status": "verified",
+    "scope": "DX",
+    "filePath": "docs/spec/16.developer-experience.srs.md",
+    "headingLine": 573,
+    "metadata": {
+      "Type": "functional",
+      "Target": "api-usability",
+      "Status": "verified",
+      "Priority": "high",
+      "Tags": "-",
+      "Risk": "medium",
+      "Stability": "evolving",
+      "Verification Method": "test",
+      "GitHub Issue": "https://github.com/Snoworca/NaruServe/issues/31",
+      "Related Docs": "-"
+    },
+    "acceptanceCriteria": [
+      {
+        "id": "AC-1",
+        "text": "Nested groups join paths safely.",
+        "checked": true,
+        "line": 598
+      },
+      {
+        "id": "AC-2",
+        "text": "grouped middleware applies to its prefix.",
+        "checked": true,
+        "line": 599
+      },
+      {
+        "id": "AC-3",
+        "text": "group route handlers and per-route middleware compose.",
+        "checked": true,
+        "line": 600
+      },
+      {
+        "id": "AC-4",
+        "text": "configuration is frozen after listen.",
+        "checked": true,
+        "line": 601
+      }
+    ],
+    "verificationEvidence": [
+      {
+        "id": "VE-1",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/RouteGroupTest.java",
+        "covers": "all",
+        "notes": "RED confirmed before implementation; GREEN: ./gradlew :NaruServe-api:test --tests *RouteGroupTest --tests *RouteGroupKotlinTest --tests *MiddlewarePipelineTest --tests *AppLifecycleGuardTest --tests *HttpApiSurfaceTest",
+        "line": 607
+      },
+      {
+        "id": "VE-2",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java",
+        "covers": "AC-1",
+        "notes": "check_test_sufficiency source citation NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java:334; complete ./gradlew build passed 1643 tests, zero failures/skips; see docs/release/test-sufficiency-review.md.",
+        "line": 608
+      },
+      {
+        "id": "VE-3",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/RouteGroupTest.java",
+        "covers": "AC-2",
+        "notes": "check_test_sufficiency source citation NaruServe-api/src/test/java/com/snoworca/naruserve/RouteGroupTest.java:15; complete ./gradlew build passed 1643 tests, zero failures/skips; see docs/release/test-sufficiency-review.md.",
+        "line": 609
+      },
+      {
+        "id": "VE-4",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/RouteGroupTest.java",
+        "covers": "AC-3",
+        "notes": "check_test_sufficiency source citation NaruServe-api/src/test/java/com/snoworca/naruserve/RouteGroupTest.java:15; complete ./gradlew build passed 1643 tests, zero failures/skips; see docs/release/test-sufficiency-review.md.",
+        "line": 610
+      },
+      {
+        "id": "VE-5",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/RouteGroupTest.java",
+        "covers": "AC-4",
+        "notes": "check_test_sufficiency source citation NaruServe-api/src/test/java/com/snoworca/naruserve/RouteGroupTest.java:13; complete ./gradlew build passed 1643 tests, zero failures/skips; see docs/release/test-sufficiency-review.md.",
+        "line": 611
+      }
+    ],
+    "traceLinks": [],
+    "changeNotes": [
+      {
+        "date": "2026-10-21",
+        "change": "Created",
+        "reason": "add-requirement",
+        "line": 630
+      },
+      {
+        "date": "2026-10-21",
+        "change": "Status -> implemented",
+        "reason": "Issue #31: red test then green; ./gradlew :NaruServe-api:test --tests *RouteGroupTest --tests *RouteGroupKotlinTest --tests *MiddlewarePipelineTest --tests *AppLifecycleGuardTest --tests *HttpApiSurfaceTest",
+        "line": 631
+      },
+      {
+        "date": "2026-10-21",
+        "change": "Status -> verified",
+        "reason": "Issue #31: all acceptance criteria covered by passing regression evidence.",
+        "line": 632
+      }
+    ],
+    "tags": [
+      "-"
+    ],
+    "relatedDocs": [],
+    "evidenceReferences": [
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/RouteGroupTest.java",
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java"
+    ],
+    "traceReferences": [],
+    "blockStartLine": 573,
+    "blockEndLine": 633,
+    "sectionLines": {
+      "Requirement": 588,
+      "Rationale": 592,
+      "Acceptance Criteria": 596,
+      "Verification Evidence": 603,
+      "Trace Links": 613,
+      "Research / Analysis": 618,
+      "Implementation Notes": 622,
+      "Change Notes": 626
+    },
+    "priority": "high",
+    "risk": "medium",
+    "stability": "evolving",
+    "newWorkCandidate": false,
+    "requirement": "The system shall provide an app group(prefix, configurer) API with scoped HTTP routes and middleware without exposing a second application lifecycle.",
+    "rationale": "-",
+    "research": "- -",
+    "implementationNotes": "- -",
+    "diagnostics": [],
+    "errors": [],
+    "warnings": [],
+    "diagnosticsSummary": {
+      "errors": 0,
+      "warnings": 0,
+      "byCode": {}
+    }
+  },
+  "diagnostics": [],
+  "diagnosticsSummary": {
+    "errors": 0,
+    "warnings": 0,
+    "byCode": {}
+  },
+  "mcpWorkspace": {
+    "workspaceRoot": "/Users/beom/work/git/NaruServe",
+    "rootSource": "server-cwd-discovery",
+    "indexPath": "docs/spec/00.index.md",
+    "packageVersion": "4.2.0"
+  }
+}

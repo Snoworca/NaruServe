@@ -1,0 +1,10 @@
+const express=require('/tmp/naruserve-parity-research.KkcjUP/e5fixed/node_modules/express');
+async function run(name,setup,path='/a',method='GET') {const a=express(),trace=[];const afterStart=setup(a,trace);const srv=await new Promise(r=>{const s=a.listen(0,()=>r(s))});if(name==='register-after-listen')afterStart(a,trace);try{const result=await new Promise((resolve,reject)=>{const req=require('http').request({host:'localhost',port:srv.address().port,path,method},res=>{let body='';res.on('data',chunk=>body+=chunk);res.on('end',()=>resolve({res,body}))});req.setTimeout(500,()=>req.destroy(new Error('timeout')));req.on('error',reject);req.end()});const res=result.res;const body=result.body;await new Promise(r=>setTimeout(r,10));console.log(JSON.stringify({name,status:res.statusCode,body,trace}))}catch(e){console.log(JSON.stringify({name,error:e.name,trace}))}finally{srv.closeAllConnections();srv.close()}}
+(async()=>{
+ await run('response-end-then-next',(a,t)=>{a.get('/a',(q,s,n)=>{t.push('one');s.end('done');n()},(q,s,n)=>{t.push('two-after-end');n()});a.use((q,s,n)=>{t.push('use-after-end');n()})});
+ await run('repeated-next',(a,t)=>{a.get('/a',(q,s,n)=>{t.push('one');n();t.push('between-next');n();t.push('after-second-next')});a.use((q,s,n)=>{t.push('two');n()});a.use((q,s,n)=>{t.push('three');s.end('done')});a.use((q,s,n)=>{t.push('four-after-end');n()})});
+ await run('register-after-listen',(a,t)=>()=>a.get('/a',(q,s)=>s.end('late')));
+ await run('trace-connect-registration',(a,t)=>{a.trace('/a',(q,s)=>s.end('trace'));a.connect('/a',(q,s)=>s.end('connect'));t.push('trace-and-connect-registered');a.get('/a',(q,s)=>s.end('registration-ok'))});
+ await run('trace-http-dispatch',(a,t)=>a.trace('/a',(q,s)=>s.end('trace')),'/a','TRACE');
+ await run('router-param-cache-scope',(a,t)=>{const r=express.Router();a.param('id',(q,s,n,v)=>{t.push('parent:'+v);n()});r.param('id',(q,s,n,v)=>{t.push('child:'+v);n()});r.get('/:id',(q,s)=>s.json(t));a.use('/api/:id',r)},'/api/42/42');
+})();

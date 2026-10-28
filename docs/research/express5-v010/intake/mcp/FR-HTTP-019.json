@@ -1,0 +1,377 @@
+{
+  "ok": true,
+  "value": {
+    "id": "FR-HTTP-019",
+    "title": "Request body ownership with BodyState and BodyAlreadyConsumedException",
+    "type": "functional",
+    "target": "wave-3",
+    "status": "verified",
+    "scope": "HTTP",
+    "filePath": "docs/spec/04.http-core.srs.md",
+    "headingLine": 2116,
+    "metadata": {
+      "Type": "functional",
+      "Target": "wave-3",
+      "Status": "verified",
+      "Priority": "medium",
+      "Tags": "wave-3, feasibility:high, request, body",
+      "Risk": "medium",
+      "Stability": "evolving",
+      "Verification Method": "test",
+      "GitHub Issue": "https://github.com/Snoworca/NaruServe/issues/4",
+      "Related Docs": "-"
+    },
+    "acceptanceCriteria": [
+      {
+        "id": "AC-1",
+        "text": "`BodyAlreadyConsumedException` is a public class in `com.snoworca.naruserve` extending `RuntimeException`. [D-086; wave decision: Body ownership]",
+        "checked": true,
+        "line": 2141
+      },
+      {
+        "id": "AC-2",
+        "text": "`BodyState` is an internal class whose state is `UNREAD` initially, `PARSING` while a reader holds the body, and `CONSUMED` after a completed read or `CLOSED` after the body was closed; a unit test drives each transition. [D-085] Decision: `close` moves to `CLOSED` from any state, and a later `begin` or shared parse throws `BodyAlreadyConsumedException`. [SDS 2026-10-19.naruserve.naruserve-v1-wave-3-4 SDS-AC-11] User-approved revision: FR-DX-007 permits cached same-Type JSON reads, including cached null; mixed formats, mismatched types and retries after failed parsing remain rejected.",
+        "checked": true,
+        "line": 2142
+      },
+      {
+        "id": "AC-3",
+        "text": "A unit test acquiring the body through `BodyState` after a first read gets `BodyAlreadyConsumedException` when the second read is of a different kind (JSON, form/multipart or raw) or is a second JSON or raw read; the shared form/multipart parse of AC-4 is the only exemption. [D-086] Decision: `begin` in any state other than `UNREAD` throws `BodyAlreadyConsumedException` naming the current state. [SDS 2026-10-19.naruserve.naruserve-v1-wave-3-4 SDS-AC-9] User-approved revision: FR-DX-007 permits cached same-Type JSON reads, including cached null; mixed formats, mismatched types and retries after failed parsing remain rejected.",
+        "checked": true,
+        "line": 2143
+      },
+      {
+        "id": "AC-4",
+        "text": "A unit test acquiring the shared form/multipart parse through `BodyState` repeatedly gets the same parse result each time without a second read of the stream and without `BodyAlreadyConsumedException`. [D-087] Decision: the shared parse after `begin`, or `begin` after the shared parse, throws `BodyAlreadyConsumedException`; a parser failure leaves `CONSUMED` with no cached result and later calls throw `BodyAlreadyConsumedException`. [SDS 2026-10-19.naruserve.naruserve-v1-wave-3-4 SDS-AC-10] User-approved revision: FR-DX-007 permits cached same-Type JSON reads, including cached null; mixed formats, mismatched types and retries after failed parsing remain rejected.",
+        "checked": true,
+        "line": 2144
+      },
+      {
+        "id": "AC-5",
+        "text": "A reflection test finds no public body-reading method on `Request` at the wave 3 merge (wave 5 adds the body readers). [wave decision: Body ownership]",
+        "checked": true,
+        "line": 2145
+      }
+    ],
+    "verificationEvidence": [
+      {
+        "id": "VE-1",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/BodyStateTest.java#sdsAc11_FR_HTTP_019_AC1_exceptionIsPublicUncheckedInRootPackage",
+        "covers": "AC-1",
+        "notes": "./gradlew build exit 0 (2026-10-19.naruserve.naruserve-v1-wave-3-4)",
+        "line": 2151
+      },
+      {
+        "id": "VE-2",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/BodyStateTest.java#sdsAc11_FR_HTTP_019_AC2_stateMovesUnreadParsingConsumedAndCloseFromAny",
+        "covers": "AC-2",
+        "notes": "./gradlew build exit 0 (2026-10-19.naruserve.naruserve-v1-wave-3-4)",
+        "line": 2152
+      },
+      {
+        "id": "VE-3",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/BodyStateTest.java#sdsAc9_FR_HTTP_019_AC3_secondReadOfAnyKindAfterAFirstReadThrows",
+        "covers": "AC-3",
+        "notes": "./gradlew build exit 0 (2026-10-19.naruserve.naruserve-v1-wave-3-4)",
+        "line": 2153
+      },
+      {
+        "id": "VE-4",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/BodyStateTest.java#sdsAc10_FR_HTTP_019_AC4_repeatedSharedParseReturnsTheSameObjectParsedOnce",
+        "covers": "AC-4",
+        "notes": "./gradlew build exit 0 (2026-10-19.naruserve.naruserve-v1-wave-3-4)",
+        "line": 2154
+      },
+      {
+        "id": "VE-5",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/BodyStateTest.java#sdsAc11_FR_HTTP_019_AC5_requestHasNoPublicBodyReadingMethod",
+        "covers": "AC-5",
+        "notes": "./gradlew build exit 0 (2026-10-19.naruserve.naruserve-v1-wave-3-4)",
+        "line": 2155
+      },
+      {
+        "id": "VE-6",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/BodyStateTest.java",
+        "covers": "AC-1",
+        "notes": "verification_cmd ./gradlew build passed at ea1217e (346/346); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/internal/BodyStateTest.java:238; bundle docs/research/naruserve-v1/waves/stage-3/lane-2026-10-19.naruserve.naruserve-v1-wave-3/",
+        "line": 2156
+      },
+      {
+        "id": "VE-7",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/BodyStateTest.java",
+        "covers": "AC-2",
+        "notes": "verification_cmd ./gradlew build passed at ea1217e (346/346); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/internal/BodyStateTest.java:141; :171; :204; bundle docs/research/naruserve-v1/waves/stage-3/lane-2026-10-19.naruserve.naruserve-v1-wave-3/",
+        "line": 2157
+      },
+      {
+        "id": "VE-8",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/BodyStateTest.java",
+        "covers": "AC-3",
+        "notes": "verification_cmd ./gradlew build passed at ea1217e (346/346); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/internal/BodyStateTest.java:44; :54; bundle docs/research/naruserve-v1/waves/stage-3/lane-2026-10-19.naruserve.naruserve-v1-wave-3/",
+        "line": 2158
+      },
+      {
+        "id": "VE-9",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/BodyStateTest.java",
+        "covers": "AC-4",
+        "notes": "verification_cmd ./gradlew build passed at ea1217e (346/346); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/internal/BodyStateTest.java:62; :80; :98; :111; :181; bundle docs/research/naruserve-v1/waves/stage-3/lane-2026-10-19.naruserve.naruserve-v1-wave-3/",
+        "line": 2159
+      },
+      {
+        "id": "VE-10",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/BodyStateTest.java",
+        "covers": "AC-5",
+        "notes": "verification_cmd ./gradlew build passed at ea1217e (346/346); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/internal/BodyStateTest.java:248; bundle docs/research/naruserve-v1/waves/stage-3/lane-2026-10-19.naruserve.naruserve-v1-wave-3/",
+        "line": 2160
+      },
+      {
+        "id": "VE-11",
+        "type": "commit",
+        "reference": "a4d3403a786e0ee895c72c3ea53fe4c28a3477f4",
+        "covers": "all",
+        "notes": "wave 3 worker commit (Orch-Wave: 3), ancestor of integration head ea1217e",
+        "line": 2161
+      },
+      {
+        "id": "VE-12",
+        "type": "commit",
+        "reference": "ef85d35a7bbc8ee25d27e60262d1b727913f0a28",
+        "covers": "all",
+        "notes": "wave 3 worker commit (Orch-Wave: 3), ancestor of integration head ea1217e",
+        "line": 2162
+      },
+      {
+        "id": "VE-13",
+        "type": "commit",
+        "reference": "45469d2e1a7c931dc16bc9bc5ae907d4cd28c4cc",
+        "covers": "all",
+        "notes": "wave 3 worker commit (Orch-Wave: 3), ancestor of integration head ea1217e",
+        "line": 2163
+      },
+      {
+        "id": "VE-14",
+        "type": "commit",
+        "reference": "8fb4835bf65967f266ad84b15aeda66274dbe5eb",
+        "covers": "all",
+        "notes": "wave 3 worker commit (Orch-Wave: 3), ancestor of integration head ea1217e",
+        "line": 2164
+      },
+      {
+        "id": "VE-15",
+        "type": "commit",
+        "reference": "1ae79fe445e09375b270e2d78e1316dc0ce4aaa7",
+        "covers": "all",
+        "notes": "wave 3 worker commit (Orch-Wave: 3), ancestor of integration head ea1217e",
+        "line": 2165
+      },
+      {
+        "id": "VE-16",
+        "type": "commit",
+        "reference": "4917e408d4708724c76e963c279a4aa55a4d107c",
+        "covers": "all",
+        "notes": "wave 3 worker commit (Orch-Wave: 3), ancestor of integration head ea1217e",
+        "line": 2166
+      },
+      {
+        "id": "VE-17",
+        "type": "commit",
+        "reference": "5a9322dedaf1229c0ab34349c05bae6802b5ada5",
+        "covers": "all",
+        "notes": "wave 3 worker commit (Orch-Wave: 3), ancestor of integration head ea1217e",
+        "line": 2167
+      },
+      {
+        "id": "VE-18",
+        "type": "commit",
+        "reference": "06d70b4c4771c90888edda5d6b95fca6feaa6af7",
+        "covers": "all",
+        "notes": "wave 3 worker commit (Orch-Wave: 3), ancestor of integration head ea1217e",
+        "line": 2168
+      },
+      {
+        "id": "VE-19",
+        "type": "commit",
+        "reference": "c47335c85e5e9e13a19bf2aaf9c95beb7436de6f",
+        "covers": "all",
+        "notes": "wave 3 worker commit (Orch-Wave: 3), ancestor of integration head ea1217e",
+        "line": 2169
+      },
+      {
+        "id": "VE-20",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/JsonBodyCacheTest.java",
+        "covers": "all",
+        "notes": "API usability epic #21: prior unchanged criteria retain existing evidence; current revision covered by this suite and complete ./gradlew build PASS. See docs/release/api-usability-verification.md.",
+        "line": 2170
+      }
+    ],
+    "traceLinks": [
+      {
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/BodyAlreadyConsumedException.java",
+        "relation": "implements",
+        "notes": "trace_intent=addition_site",
+        "line": 2176
+      },
+      {
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/BodyState.java",
+        "relation": "implements",
+        "notes": "trace_intent=addition_site",
+        "line": 2177
+      },
+      {
+        "type": "Requirement",
+        "reference": "IR-HTTP-001",
+        "relation": "depends_on",
+        "notes": "no body method on Request",
+        "line": 2178
+      },
+      {
+        "type": "Requirement",
+        "reference": "IR-HTTP-003",
+        "relation": "depends_on",
+        "notes": "body InputStream from the SPI",
+        "line": 2179
+      },
+      {
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/BodyState.java",
+        "relation": "implements",
+        "notes": "-",
+        "line": 2180
+      },
+      {
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/BodyAlreadyConsumedException.java",
+        "relation": "implements",
+        "notes": "-",
+        "line": 2181
+      },
+      {
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java",
+        "relation": "implements",
+        "notes": "-",
+        "line": 2182
+      },
+      {
+        "type": "Requirement",
+        "reference": "FR-DX-007",
+        "relation": "depends_on",
+        "notes": "User-approved API usability revision, epic #21.",
+        "line": 2183
+      }
+    ],
+    "changeNotes": [
+      {
+        "date": "2026-10-19",
+        "change": "Created",
+        "reason": "add-requirement",
+        "line": 2197
+      },
+      {
+        "date": "2026-10-19",
+        "change": "Stability -> evolving",
+        "reason": "Feasibility=high (score 81). Blockers: none. Run: 2026-10-19.naruserve.wave-3.v01",
+        "line": 2198
+      },
+      {
+        "date": "2026-10-19",
+        "change": "Status -> verified",
+        "reason": "Wave 3 promotion: every AC cited in docs/research/naruserve-v1/waves/wave-3/test-sufficiency.json; ./gradlew build passed at ea1217e (346/346); worker commits recorded",
+        "line": 2199
+      },
+      {
+        "date": "2026-10-21",
+        "change": "Status -> in_progress",
+        "reason": "User-approved usability revision under epic #21: FR-DX-007 supersedes conflicting earlier API decisions; preserve unrelated behavior.",
+        "line": 2200
+      },
+      {
+        "date": "2026-10-21",
+        "change": "Status -> verified",
+        "reason": "Per-requirement current API evidence and complete Gradle build passed after epic #21 revision.",
+        "line": 2201
+      }
+    ],
+    "tags": [
+      "wave-3",
+      "feasibility:high",
+      "request",
+      "body"
+    ],
+    "relatedDocs": [],
+    "evidenceReferences": [
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/BodyStateTest.java",
+      "a4d3403a786e0ee895c72c3ea53fe4c28a3477f4",
+      "ef85d35a7bbc8ee25d27e60262d1b727913f0a28",
+      "45469d2e1a7c931dc16bc9bc5ae907d4cd28c4cc",
+      "8fb4835bf65967f266ad84b15aeda66274dbe5eb",
+      "1ae79fe445e09375b270e2d78e1316dc0ce4aaa7",
+      "4917e408d4708724c76e963c279a4aa55a4d107c",
+      "5a9322dedaf1229c0ab34349c05bae6802b5ada5",
+      "06d70b4c4771c90888edda5d6b95fca6feaa6af7",
+      "c47335c85e5e9e13a19bf2aaf9c95beb7436de6f",
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/JsonBodyCacheTest.java"
+    ],
+    "traceReferences": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/BodyAlreadyConsumedException.java",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/BodyState.java",
+      "IR-HTTP-001",
+      "IR-HTTP-003",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java",
+      "FR-DX-007"
+    ],
+    "blockStartLine": 2116,
+    "blockEndLine": 2202,
+    "sectionLines": {
+      "Requirement": 2131,
+      "Rationale": 2135,
+      "Acceptance Criteria": 2139,
+      "Verification Evidence": 2147,
+      "Trace Links": 2172,
+      "Research / Analysis": 2185,
+      "Implementation Notes": 2189,
+      "Change Notes": 2193
+    },
+    "priority": "medium",
+    "risk": "medium",
+    "stability": "evolving",
+    "newWorkCandidate": false,
+    "requirement": "The system shall consume a request body stream once, cache a successful JSON result (including null) for repeated reads of an equal Type, and share one form parse across form/file/files/parts. Different JSON types, mixed body formats, closed requests and retries after parsing failure throw BodyAlreadyConsumedException.",
+    "rationale": "Covers D-085, D-086, D-087 and the wave decision on body ownership (W2-004; I-012). The JSON, form, multipart and raw readers arrive in waves 5 and 6, so wave 3 tests these rules through `BodyState` directly; the raw kind is an internal consumer of the body stream.",
+    "research": "- -",
+    "implementationNotes": "- -",
+    "diagnostics": [],
+    "errors": [],
+    "warnings": [],
+    "diagnosticsSummary": {
+      "errors": 0,
+      "warnings": 0,
+      "byCode": {}
+    }
+  },
+  "diagnostics": [],
+  "diagnosticsSummary": {
+    "errors": 0,
+    "warnings": 0,
+    "byCode": {}
+  },
+  "mcpWorkspace": {
+    "workspaceRoot": "/Users/beom/work/git/NaruServe",
+    "rootSource": "server-cwd-discovery",
+    "indexPath": "docs/spec/00.index.md",
+    "packageVersion": "4.2.0"
+  }
+}

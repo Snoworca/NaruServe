@@ -1,0 +1,666 @@
+{
+  "ok": true,
+  "value": {
+    "id": "FR-SVL-003",
+    "title": "Servlet response writing: commit, finish, abort, sendFile and a single start per exchange",
+    "type": "functional",
+    "target": "wave-8",
+    "status": "verified",
+    "scope": "SVL",
+    "filePath": "docs/spec/14.servlet-adapter.srs.md",
+    "headingLine": 411,
+    "metadata": {
+      "Type": "functional",
+      "Target": "wave-8",
+      "Status": "verified",
+      "Priority": "high",
+      "Tags": "wave-8, feasibility:high, servlet, response",
+      "Risk": "high",
+      "Stability": "evolving",
+      "Verification Method": "test",
+      "GitHub Issue": "https://github.com/Snoworca/NaruServe/issues/19",
+      "Related Docs": "-"
+    },
+    "acceptanceCriteria": [
+      {
+        "id": "AC-1",
+        "text": "A handler's `res.status(201).header(\"X-A\", \"1\").send(\"ok\")` reaches the client as status `201`, header `X-A: 1` and body `ok` with the `Content-Length` the core set; a `res.stream` response of unknown length arrives with an intact body and without a `Content-Length` and `Transfer-Encoding` conflict (chunked framing is asserted only for a body larger than the container's output buffer or after a flush, because a container may buffer a small body and frame it with a length); and no error page of the container appears for a `404` or `500` the core produced, because `sendError` is never called. [D-360]",
+        "checked": true,
+        "line": 436
+      },
+      {
+        "id": "AC-2",
+        "text": "A HEAD request to a GET route returns the `Content-Length` of the GET body and no body bytes, and a `204` and a `304` carry no body, on the embedded container. [D-360; FR-HTTP-017]",
+        "checked": true,
+        "line": 437
+      },
+      {
+        "id": "AC-3",
+        "text": "After `abort()` the next body write, `commit` or `finish` throws `IOException` (a write already blocked inside the container ends only by the container's write timeout, FR-SVL-006 AC-3), `abort()` called twice is harmless and `abort()` may run on another thread than the writer; a second `commit`, `sendFile` or `eventStream` on one exchange throws `IllegalStateException`. [r2 W2-006]",
+        "checked": true,
+        "line": 438
+      },
+      {
+        "id": "AC-4",
+        "text": "`res.file` and `res.download` on a file serve the whole file, a single `Range` (`206` with `Content-Range`) and a `416`, byte for byte equal to the in-memory adapter, with `sendFile` copying in chunks of at most 64 KiB, which a spy output stream records, and never reading the file into memory; the class references no `java.nio.file` type. [D-360; FR-STATIC-010]",
+        "checked": true,
+        "line": 439
+      },
+      {
+        "id": "AC-5",
+        "text": "Response header order on the wire is the container's, `docs/api/servlet.md` says so, and no test of the shared case suite depends on header order. [r2 W2-006]",
+        "checked": true,
+        "line": 440
+      }
+    ],
+    "verificationEvidence": [
+      {
+        "id": "VE-1",
+        "type": "test",
+        "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletAbortTest.java#sdsAc9_FR_SVL_003_AC3_afterAbortWriteAndFinishThrowIOException",
+        "covers": "AC-3",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 446
+      },
+      {
+        "id": "VE-2",
+        "type": "test",
+        "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletAbortTest.java#sdsAc9_FR_SVL_003_AC3_abortBeforeCommitMakesCommitThrowIOException",
+        "covers": "AC-3",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 447
+      },
+      {
+        "id": "VE-3",
+        "type": "test",
+        "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletAbortTest.java#sdsAc9_FR_SVL_003_AC3_abortFromAnotherThreadFailsTheWriter",
+        "covers": "AC-3",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 448
+      },
+      {
+        "id": "VE-4",
+        "type": "test",
+        "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletAbortTest.java#sdsAc9_FR_SVL_003_AC3_secondCommitOrSendFileThrowsIllegalState",
+        "covers": "AC-3",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 449
+      },
+      {
+        "id": "VE-5",
+        "type": "test",
+        "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletAbortTest.java#sdsAc7_FR_SVL_003_AC1_commitWritesStatusAndHeadersAsGiven",
+        "covers": "AC-1",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 450
+      },
+      {
+        "id": "VE-6",
+        "type": "test",
+        "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletResponseTest.java#sdsAc7_FR_SVL_003_AC1_statusHeaderAndBodyPassWithTheCoreContentLength",
+        "covers": "AC-1",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 451
+      },
+      {
+        "id": "VE-7",
+        "type": "test",
+        "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletResponseTest.java#sdsAc7_FR_SVL_003_AC1_unknownLengthStreamArrivesIntactAndChunked",
+        "covers": "AC-1",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 452
+      },
+      {
+        "id": "VE-8",
+        "type": "test",
+        "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletResponseTest.java#sdsAc7_FR_SVL_003_AC1_core404And500KeepTheStandardJsonBody",
+        "covers": "AC-1",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 453
+      },
+      {
+        "id": "VE-9",
+        "type": "test",
+        "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletResponseTest.java#sdsAc8_FR_SVL_003_AC2_headKeepsTheGetLengthAndSendsNoBody",
+        "covers": "AC-2",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 454
+      },
+      {
+        "id": "VE-10",
+        "type": "test",
+        "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletResponseTest.java#sdsAc8_FR_SVL_003_AC2_204And304CarryNoBody",
+        "covers": "AC-2",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 455
+      },
+      {
+        "id": "VE-11",
+        "type": "test",
+        "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletSendFileTest.java#sdsAc10_FR_SVL_003_AC4_sendFileCopiesExactlyLengthInChunksOfAtMost64KiB",
+        "covers": "AC-4",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 456
+      },
+      {
+        "id": "VE-12",
+        "type": "test",
+        "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletSendFileTest.java#sdsAc10_FR_SVL_003_AC4_abortStopsSendFileBeforeTheNextChunk",
+        "covers": "AC-4",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 457
+      },
+      {
+        "id": "VE-13",
+        "type": "test",
+        "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletSendFileTest.java#sdsAc10_FR_SVL_003_AC4_servletExchangeReferencesNoJavaNioFile",
+        "covers": "AC-4",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 458
+      },
+      {
+        "id": "VE-14",
+        "type": "test",
+        "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletSendFileTest.java#sdsAc10_FR_SVL_003_AC4_fileAndDownloadWithRangeAnd416EqualInMemory",
+        "covers": "AC-4",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 459
+      },
+      {
+        "id": "VE-15",
+        "type": "test",
+        "reference": "src/test/java/com/snoworca/naruserve/docs/ServletDocsTest.java#sdsAc11_FR_SVL_003_AC5_headerOrderSentence",
+        "covers": "AC-5",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 460
+      },
+      {
+        "id": "VE-16",
+        "type": "test",
+        "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletAbortTest.java",
+        "covers": "AC-1",
+        "notes": "verification_cmd ./gradlew build passed at 514472f (1534/1534); cited line NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletAbortTest.java:294; bundle docs/research/naruserve-v1/waves/stage-8/lane-2026-10-19.naruserve.naruserve-v1-wave-8/",
+        "line": 461
+      },
+      {
+        "id": "VE-17",
+        "type": "test",
+        "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletResponseTest.java",
+        "covers": "AC-1",
+        "notes": "verification_cmd ./gradlew build passed at 514472f (1534/1534); cited line NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletResponseTest.java:43 and 2 more; bundle docs/research/naruserve-v1/waves/stage-8/lane-2026-10-19.naruserve.naruserve-v1-wave-8/",
+        "line": 462
+      },
+      {
+        "id": "VE-18",
+        "type": "test",
+        "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletResponseTest.java",
+        "covers": "AC-2",
+        "notes": "verification_cmd ./gradlew build passed at 514472f (1534/1534); cited line NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletResponseTest.java:75 and 1 more; bundle docs/research/naruserve-v1/waves/stage-8/lane-2026-10-19.naruserve.naruserve-v1-wave-8/",
+        "line": 463
+      },
+      {
+        "id": "VE-19",
+        "type": "test",
+        "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletAbortTest.java",
+        "covers": "AC-3",
+        "notes": "verification_cmd ./gradlew build passed at 514472f (1534/1534); cited line NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletAbortTest.java:104 and 4 more; bundle docs/research/naruserve-v1/waves/stage-8/lane-2026-10-19.naruserve.naruserve-v1-wave-8/",
+        "line": 464
+      },
+      {
+        "id": "VE-20",
+        "type": "test",
+        "reference": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletSendFileTest.java",
+        "covers": "AC-4",
+        "notes": "verification_cmd ./gradlew build passed at 514472f (1534/1534); cited line NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletSendFileTest.java:27 and 4 more; bundle docs/research/naruserve-v1/waves/stage-8/lane-2026-10-19.naruserve.naruserve-v1-wave-8/",
+        "line": 465
+      },
+      {
+        "id": "VE-21",
+        "type": "test",
+        "reference": "src/test/java/com/snoworca/naruserve/docs/ServletDocsTest.java",
+        "covers": "AC-5",
+        "notes": "verification_cmd ./gradlew build passed at 514472f (1534/1534); cited line src/test/java/com/snoworca/naruserve/docs/ServletDocsTest.java:58; bundle docs/research/naruserve-v1/waves/stage-8/lane-2026-10-19.naruserve.naruserve-v1-wave-8/",
+        "line": 466
+      },
+      {
+        "id": "VE-22",
+        "type": "commit",
+        "reference": "173e22c39b13c1527ec3cdfb1a38773ba06c7ca7",
+        "covers": "all",
+        "notes": "-",
+        "line": 467
+      },
+      {
+        "id": "VE-23",
+        "type": "commit",
+        "reference": "93106928f1fd8308dc447b8ec5845eb3a66e8143",
+        "covers": "all",
+        "notes": "-",
+        "line": 468
+      },
+      {
+        "id": "VE-24",
+        "type": "commit",
+        "reference": "e2c5097b5e9d47d7159f4857875813daa02358a3",
+        "covers": "all",
+        "notes": "-",
+        "line": 469
+      },
+      {
+        "id": "VE-25",
+        "type": "commit",
+        "reference": "d57af39a5a48b55ce9d12b56cc15f4fe8cf21239",
+        "covers": "all",
+        "notes": "-",
+        "line": 470
+      },
+      {
+        "id": "VE-26",
+        "type": "commit",
+        "reference": "aa4126bacb6bcc2da533811cc2555b43ce5fca2f",
+        "covers": "all",
+        "notes": "-",
+        "line": 471
+      },
+      {
+        "id": "VE-27",
+        "type": "commit",
+        "reference": "f202f2428b6a89fdc494a8ff7d378105a538a6ea",
+        "covers": "all",
+        "notes": "-",
+        "line": 472
+      },
+      {
+        "id": "VE-28",
+        "type": "commit",
+        "reference": "a26b2875a827902c054376d7b5501081e9f429ef",
+        "covers": "all",
+        "notes": "-",
+        "line": 473
+      },
+      {
+        "id": "VE-29",
+        "type": "commit",
+        "reference": "9d21cda7d24c3c1f0df36b5c81963737464b6ab6",
+        "covers": "all",
+        "notes": "-",
+        "line": 474
+      },
+      {
+        "id": "VE-30",
+        "type": "commit",
+        "reference": "89b371549d8f35ae6d3f2536d066232da2a69bf5",
+        "covers": "all",
+        "notes": "-",
+        "line": 475
+      },
+      {
+        "id": "VE-31",
+        "type": "commit",
+        "reference": "b36a89ceb7284a3b697a1fdacf9b85fb3c3ad583",
+        "covers": "all",
+        "notes": "-",
+        "line": 476
+      },
+      {
+        "id": "VE-32",
+        "type": "commit",
+        "reference": "fd20f57e53332639f60dd7870355065373590a6b",
+        "covers": "all",
+        "notes": "-",
+        "line": 477
+      },
+      {
+        "id": "VE-33",
+        "type": "commit",
+        "reference": "cc9d318ea1b384589f59b692a3f8b5e0a303cb75",
+        "covers": "all",
+        "notes": "-",
+        "line": 478
+      },
+      {
+        "id": "VE-34",
+        "type": "commit",
+        "reference": "20b0a98d185959882e225af4c62315d4f697347e",
+        "covers": "all",
+        "notes": "-",
+        "line": 479
+      },
+      {
+        "id": "VE-35",
+        "type": "commit",
+        "reference": "69809b971001b87af17240bddfcc06cb3bd950b4",
+        "covers": "all",
+        "notes": "-",
+        "line": 480
+      },
+      {
+        "id": "VE-36",
+        "type": "commit",
+        "reference": "de35ca2940b126b57392cfdcd9e40e56e4bff2ef",
+        "covers": "all",
+        "notes": "-",
+        "line": 481
+      },
+      {
+        "id": "VE-37",
+        "type": "commit",
+        "reference": "b0cd6f8effd1a8dac770ad7cc40fc59ef670ffe9",
+        "covers": "all",
+        "notes": "-",
+        "line": 482
+      },
+      {
+        "id": "VE-38",
+        "type": "commit",
+        "reference": "5a03978d03bdfb270d70c5c5e750270d9a45faaa",
+        "covers": "all",
+        "notes": "-",
+        "line": 483
+      },
+      {
+        "id": "VE-39",
+        "type": "commit",
+        "reference": "f7cfac2b825ff4acedf23aa427dcbb10e0ba79ab",
+        "covers": "all",
+        "notes": "-",
+        "line": 484
+      },
+      {
+        "id": "VE-40",
+        "type": "commit",
+        "reference": "9a2cfd03cc0bd40d416a26c62df31dcb7e632aaf",
+        "covers": "all",
+        "notes": "-",
+        "line": 485
+      },
+      {
+        "id": "VE-41",
+        "type": "commit",
+        "reference": "c88825d30240da9b739571060a88095e4c57ae53",
+        "covers": "all",
+        "notes": "-",
+        "line": 486
+      },
+      {
+        "id": "VE-42",
+        "type": "commit",
+        "reference": "9087a451cf999ae92c2d9fc5f44bf54209650999",
+        "covers": "all",
+        "notes": "-",
+        "line": 487
+      },
+      {
+        "id": "VE-43",
+        "type": "commit",
+        "reference": "4320bb287a21abada6f265bb5a2b1f1e9fcffde7",
+        "covers": "all",
+        "notes": "-",
+        "line": 488
+      },
+      {
+        "id": "VE-44",
+        "type": "commit",
+        "reference": "ae44f5a3f0d7b0343b8876fddd5844922ef0290e",
+        "covers": "all",
+        "notes": "-",
+        "line": 489
+      },
+      {
+        "id": "VE-45",
+        "type": "commit",
+        "reference": "c63303ee4692aa542175255df1a8aec99979ae26",
+        "covers": "all",
+        "notes": "-",
+        "line": 490
+      },
+      {
+        "id": "VE-46",
+        "type": "commit",
+        "reference": "0350848107098466b6e30ae539c642721dbbc62b",
+        "covers": "all",
+        "notes": "-",
+        "line": 491
+      },
+      {
+        "id": "VE-47",
+        "type": "commit",
+        "reference": "18c30d1c050e33a80e4dac82a8556f071dfcf508",
+        "covers": "all",
+        "notes": "-",
+        "line": 492
+      },
+      {
+        "id": "VE-48",
+        "type": "commit",
+        "reference": "cd13b2d077fd3c2f43236c67828530216377b7d2",
+        "covers": "all",
+        "notes": "-",
+        "line": 493
+      },
+      {
+        "id": "VE-49",
+        "type": "commit",
+        "reference": "bb12b0c7c5678ddfdfc36597443123ff1b892925",
+        "covers": "all",
+        "notes": "-",
+        "line": 494
+      },
+      {
+        "id": "VE-50",
+        "type": "commit",
+        "reference": "21bdb681a408eac425f16686993a416c1667b45b",
+        "covers": "all",
+        "notes": "-",
+        "line": 495
+      },
+      {
+        "id": "VE-51",
+        "type": "commit",
+        "reference": "2963d044e3dee158c384bbd17d3fd1474d9dc3b3",
+        "covers": "all",
+        "notes": "-",
+        "line": 496
+      },
+      {
+        "id": "VE-52",
+        "type": "commit",
+        "reference": "48729f3e2b0feca58ceb5dc732f5a88426151774",
+        "covers": "all",
+        "notes": "-",
+        "line": 497
+      },
+      {
+        "id": "VE-53",
+        "type": "commit",
+        "reference": "543c5efcfbf4bcdf2460d2915a038790b6b97473",
+        "covers": "all",
+        "notes": "-",
+        "line": 498
+      },
+      {
+        "id": "VE-54",
+        "type": "commit",
+        "reference": "d28426f15386bd74767d215e77f6a4df0d3af4c1",
+        "covers": "all",
+        "notes": "-",
+        "line": 499
+      },
+      {
+        "id": "VE-55",
+        "type": "commit",
+        "reference": "9a35c5092137c3d4d48a34395d3141070458073e",
+        "covers": "all",
+        "notes": "-",
+        "line": 500
+      }
+    ],
+    "traceLinks": [
+      {
+        "type": "Code",
+        "reference": "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet",
+        "relation": "implements",
+        "notes": "trace_intent=addition_site",
+        "line": 506
+      },
+      {
+        "type": "Requirement",
+        "reference": "IR-HTTP-003",
+        "relation": "extends",
+        "notes": "commit and abort contract",
+        "line": 507
+      },
+      {
+        "type": "Requirement",
+        "reference": "IR-HTTP-007",
+        "relation": "extends",
+        "notes": "sendFile extension point",
+        "line": 508
+      },
+      {
+        "type": "Requirement",
+        "reference": "FR-HTTP-016",
+        "relation": "extends",
+        "notes": "single commit",
+        "line": 509
+      },
+      {
+        "type": "Requirement",
+        "reference": "FR-HTTP-017",
+        "relation": "extends",
+        "notes": "bodyless responses",
+        "line": 510
+      },
+      {
+        "type": "Requirement",
+        "reference": "FR-STATIC-011",
+        "relation": "extends",
+        "notes": "file bodies from the opened file",
+        "line": 511
+      },
+      {
+        "type": "Requirement",
+        "reference": "IR-SVL-001",
+        "relation": "depends_on",
+        "notes": "adapter class",
+        "line": 512
+      }
+    ],
+    "changeNotes": [
+      {
+        "date": "2026-10-20",
+        "change": "Created",
+        "reason": "add-requirement",
+        "line": 526
+      },
+      {
+        "date": "2026-10-20",
+        "change": "Stability -> evolving",
+        "reason": "Feasibility=medium (score 79) at assessment; its stated conditions were addressed by SRS text fixes before promotion (blocker: adapter 'never adds' Content-Length but AC-1 admits Jetty may add a length for small buffered bodies). Run: 2026-10-20.NaruServe.wave-8.v01",
+        "line": 527
+      },
+      {
+        "date": "2026-10-21",
+        "change": "Status -> verified",
+        "reason": "wave 8 promotion: all ACs checked with test evidence at 514472f",
+        "line": 528
+      }
+    ],
+    "tags": [
+      "wave-8",
+      "feasibility:high",
+      "servlet",
+      "response"
+    ],
+    "relatedDocs": [],
+    "evidenceReferences": [
+      "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletAbortTest.java",
+      "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletResponseTest.java",
+      "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletSendFileTest.java",
+      "src/test/java/com/snoworca/naruserve/docs/ServletDocsTest.java",
+      "173e22c39b13c1527ec3cdfb1a38773ba06c7ca7",
+      "93106928f1fd8308dc447b8ec5845eb3a66e8143",
+      "e2c5097b5e9d47d7159f4857875813daa02358a3",
+      "d57af39a5a48b55ce9d12b56cc15f4fe8cf21239",
+      "aa4126bacb6bcc2da533811cc2555b43ce5fca2f",
+      "f202f2428b6a89fdc494a8ff7d378105a538a6ea",
+      "a26b2875a827902c054376d7b5501081e9f429ef",
+      "9d21cda7d24c3c1f0df36b5c81963737464b6ab6",
+      "89b371549d8f35ae6d3f2536d066232da2a69bf5",
+      "b36a89ceb7284a3b697a1fdacf9b85fb3c3ad583",
+      "fd20f57e53332639f60dd7870355065373590a6b",
+      "cc9d318ea1b384589f59b692a3f8b5e0a303cb75",
+      "20b0a98d185959882e225af4c62315d4f697347e",
+      "69809b971001b87af17240bddfcc06cb3bd950b4",
+      "de35ca2940b126b57392cfdcd9e40e56e4bff2ef",
+      "b0cd6f8effd1a8dac770ad7cc40fc59ef670ffe9",
+      "5a03978d03bdfb270d70c5c5e750270d9a45faaa",
+      "f7cfac2b825ff4acedf23aa427dcbb10e0ba79ab",
+      "9a2cfd03cc0bd40d416a26c62df31dcb7e632aaf",
+      "c88825d30240da9b739571060a88095e4c57ae53",
+      "9087a451cf999ae92c2d9fc5f44bf54209650999",
+      "4320bb287a21abada6f265bb5a2b1f1e9fcffde7",
+      "ae44f5a3f0d7b0343b8876fddd5844922ef0290e",
+      "c63303ee4692aa542175255df1a8aec99979ae26",
+      "0350848107098466b6e30ae539c642721dbbc62b",
+      "18c30d1c050e33a80e4dac82a8556f071dfcf508",
+      "cd13b2d077fd3c2f43236c67828530216377b7d2",
+      "bb12b0c7c5678ddfdfc36597443123ff1b892925",
+      "21bdb681a408eac425f16686993a416c1667b45b",
+      "2963d044e3dee158c384bbd17d3fd1474d9dc3b3",
+      "48729f3e2b0feca58ceb5dc732f5a88426151774",
+      "543c5efcfbf4bcdf2460d2915a038790b6b97473",
+      "d28426f15386bd74767d215e77f6a4df0d3af4c1",
+      "9a35c5092137c3d4d48a34395d3141070458073e"
+    ],
+    "traceReferences": [
+      "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet",
+      "IR-HTTP-003",
+      "IR-HTTP-007",
+      "FR-HTTP-016",
+      "FR-HTTP-017",
+      "FR-STATIC-011",
+      "IR-SVL-001"
+    ],
+    "blockStartLine": 411,
+    "blockEndLine": 529,
+    "sectionLines": {
+      "Requirement": 426,
+      "Rationale": 430,
+      "Acceptance Criteria": 434,
+      "Verification Evidence": 442,
+      "Trace Links": 502,
+      "Research / Analysis": 514,
+      "Implementation Notes": 518,
+      "Change Notes": 522
+    },
+    "priority": "high",
+    "risk": "high",
+    "stability": "evolving",
+    "newWorkCandidate": false,
+    "requirement": "The system shall write each response through the container's `HttpServletResponse` — `commit` sets the status with `setStatus` and writes each header with `addHeader` in the given order, and `Content-Length` with `setHeader` exactly as the core gave it, without `sendError`, never itself adds, removes or changes `Content-Length` (its own code never calls `setContentLength`; a container may still frame a small buffered body with a length), and returns the container's output stream; `finish` completes the response; `abort` marks the exchange aborted so that every later write, `commit` or `finish` throws `IOException`; `sendFile` writes exactly `length` bytes of the file from `offset` in bounded chunks; and a second start of the same exchange throws `IllegalStateException`.",
+    "rationale": "Covers D-360 (the `Response` behaviour is the core's; the adapter must not alter it), wave decision Servlet adapter semantics left open (r2 W2-006: `abort()` marks the exchange aborted and later writes throw `IOException` because the container owns the socket; response header order is the container's) and the SPI contract of `HttpExchange.commit`, `abort` (idempotent, thread-safe) and `sendFile`. Measured: `spi/HttpExchange.java:55-75` states that the adapter never adds, removes or changes `Content-Length`, that header chars are at most U+00FF and never CR or LF, and that `abort()` may run on any thread while another thread is writing. Decision: header values are written with `addHeader` as given and the `Content-Length` header the core provides with `setHeader` (one rule, no `setContentLength`); the status is set with `setStatus` so the container renders no error page; `abort` does not close the container's socket (the container owns it) and does not call `sendError`; `sendFile` uses `java.io` only (no `java.nio.file`, CON-HTTP-002) and a buffer of at most 64 KiB. Pitfall: `HttpServletResponse.setContentLength` and containers that compute a length for small bodies can change `Content-Length`; the core's header is passed through `setHeader`, and a HEAD response keeps the length the GET body would have had (FR-HTTP-017). Rejected alternative: closing the connection from `abort` through container-specific APIs; it is not portable across containers.",
+    "research": "- -",
+    "implementationNotes": "- -",
+    "diagnostics": [],
+    "errors": [],
+    "warnings": [],
+    "diagnosticsSummary": {
+      "errors": 0,
+      "warnings": 0,
+      "byCode": {}
+    }
+  },
+  "diagnostics": [],
+  "diagnosticsSummary": {
+    "errors": 0,
+    "warnings": 0,
+    "byCode": {}
+  },
+  "mcpWorkspace": {
+    "workspaceRoot": "/Users/beom/work/git/NaruServe",
+    "rootSource": "server-cwd-discovery",
+    "indexPath": "docs/spec/00.index.md",
+    "packageVersion": "4.2.0"
+  }
+}

@@ -1,0 +1,252 @@
+{
+  "ok": true,
+  "value": {
+    "id": "FR-ROUTE-010",
+    "title": "Method-mismatch result and Allow set",
+    "type": "functional",
+    "target": "wave-2",
+    "status": "verified",
+    "scope": "ROUTE",
+    "filePath": "docs/spec/03.routing.srs.md",
+    "headingLine": 1068,
+    "metadata": {
+      "Type": "functional",
+      "Target": "wave-2",
+      "Status": "verified",
+      "Priority": "high",
+      "Tags": "wave-2, feasibility:high, routing, auto-response",
+      "Risk": "medium",
+      "Stability": "evolving",
+      "Verification Method": "test",
+      "GitHub Issue": "https://github.com/Snoworca/NaruServe/issues/3",
+      "Related Docs": "-"
+    },
+    "acceptanceCriteria": [
+      {
+        "id": "AC-1",
+        "text": "With `Method.any().except(Method.DELETE)` registered on `/r`, `DELETE /r` yields method mismatch with `Allow` = `GET`, `HEAD`, `POST`, `PUT`, `PATCH`, `OPTIONS`. [D-061; T02] [SDS 2026-10-19.naruserve.naruserve-v1-wave-2-3 SDS-AC-6] The `Allow` set iterates and prints in `Method` declaration order.",
+        "checked": true,
+        "line": 1093
+      },
+      {
+        "id": "AC-2",
+        "text": "With `POST /a/:id` and `GET /a/me`, `PUT /a/me` yields method mismatch with `Allow` = `GET`, `HEAD`, `POST`, `OPTIONS`. [wave decision: Allow sets]",
+        "checked": true,
+        "line": 1094
+      },
+      {
+        "id": "AC-3",
+        "text": "With only `POST /p`, `GET /p` yields method mismatch with `Allow` = `POST`, `OPTIONS` (no `HEAD`). [wave decision: Allow sets]",
+        "checked": true,
+        "line": 1095
+      },
+      {
+        "id": "AC-4",
+        "text": "With a WebSocket route and a `POST` route on `/w`, `PUT /w` yields method mismatch with `Allow` = `GET`, `HEAD`, `POST`, `OPTIONS`. [wave decision: Allow sets]",
+        "checked": true,
+        "line": 1096
+      }
+    ],
+    "verificationEvidence": [
+      {
+        "id": "VE-1",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterAutoResponseTest.java#sdsAc6_FR_ROUTE_010_AC1_anyExceptDelete",
+        "covers": "AC-1",
+        "notes": "-",
+        "line": 1102
+      },
+      {
+        "id": "VE-2",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterAutoResponseTest.java#sdsAc6_FR_ROUTE_010_AC2_unionOverEveryMatchingPattern",
+        "covers": "AC-2",
+        "notes": "-",
+        "line": 1103
+      },
+      {
+        "id": "VE-3",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterAutoResponseTest.java#sdsAc6_FR_ROUTE_010_AC3_noHeadWithoutGet",
+        "covers": "AC-3",
+        "notes": "-",
+        "line": 1104
+      },
+      {
+        "id": "VE-4",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterAutoResponseTest.java#sdsAc6_FR_ROUTE_010_AC4_webSocketCountsAsGet",
+        "covers": "AC-4",
+        "notes": "-",
+        "line": 1105
+      },
+      {
+        "id": "VE-5",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterAutoResponseTest.java",
+        "covers": "AC-1",
+        "notes": "verification_cmd ./gradlew build passed at 461fc3f (153/153); cited line RouterAutoResponseTest.java:57, RouterAutoResponseTest.java:195; bundle docs/research/naruserve-v1/waves/stage-2/lane-2026-10-19.naruserve.naruserve-v1-wave-2/",
+        "line": 1106
+      },
+      {
+        "id": "VE-6",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterAutoResponseTest.java",
+        "covers": "AC-2",
+        "notes": "verification_cmd ./gradlew build passed at 461fc3f (153/153); cited line RouterAutoResponseTest.java:68; bundle docs/research/naruserve-v1/waves/stage-2/lane-2026-10-19.naruserve.naruserve-v1-wave-2/",
+        "line": 1107
+      },
+      {
+        "id": "VE-7",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterAutoResponseTest.java",
+        "covers": "AC-3",
+        "notes": "verification_cmd ./gradlew build passed at 461fc3f (153/153); cited line RouterAutoResponseTest.java:84; bundle docs/research/naruserve-v1/waves/stage-2/lane-2026-10-19.naruserve.naruserve-v1-wave-2/",
+        "line": 1108
+      },
+      {
+        "id": "VE-8",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterAutoResponseTest.java",
+        "covers": "AC-4",
+        "notes": "verification_cmd ./gradlew build passed at 461fc3f (153/153); cited line RouterAutoResponseTest.java:93; bundle docs/research/naruserve-v1/waves/stage-2/lane-2026-10-19.naruserve.naruserve-v1-wave-2/",
+        "line": 1109
+      },
+      {
+        "id": "VE-9",
+        "type": "commit",
+        "reference": "f80370b",
+        "covers": "all",
+        "notes": "-",
+        "line": 1110
+      },
+      {
+        "id": "VE-10",
+        "type": "commit",
+        "reference": "8a4b565",
+        "covers": "all",
+        "notes": "-",
+        "line": 1111
+      },
+      {
+        "id": "VE-11",
+        "type": "commit",
+        "reference": "7b7b6b7",
+        "covers": "all",
+        "notes": "-",
+        "line": 1112
+      },
+      {
+        "id": "VE-12",
+        "type": "commit",
+        "reference": "b5677c3",
+        "covers": "all",
+        "notes": "-",
+        "line": 1113
+      }
+    ],
+    "traceLinks": [
+      {
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java",
+        "relation": "implements",
+        "notes": "trace_intent=addition_site",
+        "line": 1119
+      },
+      {
+        "type": "Requirement",
+        "reference": "CON-ROUTE-001",
+        "relation": "depends_on",
+        "notes": "runs inside the engine-free router",
+        "line": 1120
+      },
+      {
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java",
+        "relation": "implements",
+        "notes": "-",
+        "line": 1121
+      },
+      {
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouteMatch.java",
+        "relation": "implements",
+        "notes": "-",
+        "line": 1122
+      }
+    ],
+    "changeNotes": [
+      {
+        "date": "2026-10-19",
+        "change": "Created",
+        "reason": "add-requirement",
+        "line": 1136
+      },
+      {
+        "date": "2026-10-19",
+        "change": "Stability -> evolving",
+        "reason": "Feasibility=high (score 94). Blockers: none. Run: 2026-10-19.naruserve.wave-2.v01",
+        "line": 1137
+      }
+    ],
+    "tags": [
+      "wave-2",
+      "feasibility:high",
+      "routing",
+      "auto-response"
+    ],
+    "relatedDocs": [],
+    "evidenceReferences": [
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterAutoResponseTest.java",
+      "f80370b",
+      "8a4b565",
+      "7b7b6b7",
+      "b5677c3"
+    ],
+    "traceReferences": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java",
+      "CON-ROUTE-001",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouteMatch.java"
+    ],
+    "blockStartLine": 1068,
+    "blockEndLine": 1138,
+    "sectionLines": {
+      "Requirement": 1083,
+      "Rationale": 1087,
+      "Acceptance Criteria": 1091,
+      "Verification Evidence": 1098,
+      "Trace Links": 1115,
+      "Research / Analysis": 1124,
+      "Implementation Notes": 1128,
+      "Change Notes": 1132
+    },
+    "priority": "high",
+    "risk": "medium",
+    "stability": "evolving",
+    "newWorkCandidate": false,
+    "requirement": "The system shall return the method-mismatch result when the path matches but no route of the request method matches it and no earlier result applies, carrying an `Allow` set that is the union of the methods of every route whose pattern matches the path, plus `HEAD` wherever `GET` is present and `OPTIONS` always, with a WebSocket route counted as `GET`.",
+    "rationale": "Covers D-061 (T02, T06) and the wave decision on `Allow` sets.",
+    "research": "- -",
+    "implementationNotes": "- -",
+    "diagnostics": [],
+    "errors": [],
+    "warnings": [],
+    "diagnosticsSummary": {
+      "errors": 0,
+      "warnings": 0,
+      "byCode": {}
+    }
+  },
+  "diagnostics": [],
+  "diagnosticsSummary": {
+    "errors": 0,
+    "warnings": 0,
+    "byCode": {}
+  },
+  "mcpWorkspace": {
+    "workspaceRoot": "/Users/beom/work/git/NaruServe",
+    "rootSource": "server-cwd-discovery",
+    "indexPath": "docs/spec/00.index.md",
+    "packageVersion": "4.2.0"
+  }
+}

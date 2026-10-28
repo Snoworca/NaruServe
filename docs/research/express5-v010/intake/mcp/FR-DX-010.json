@@ -1,0 +1,190 @@
+{
+  "ok": true,
+  "value": {
+    "id": "FR-DX-010",
+    "title": "CORS 허용 출처·preflight 편의 설정 제공",
+    "type": "functional",
+    "target": "api-usability",
+    "status": "verified",
+    "scope": "DX",
+    "filePath": "docs/spec/16.developer-experience.srs.md",
+    "headingLine": 634,
+    "metadata": {
+      "Type": "functional",
+      "Target": "api-usability",
+      "Status": "verified",
+      "Priority": "high",
+      "Tags": "-",
+      "Risk": "medium",
+      "Stability": "evolving",
+      "Verification Method": "test",
+      "GitHub Issue": "https://github.com/Snoworca/NaruServe/issues/32",
+      "Related Docs": "-"
+    },
+    "acceptanceCriteria": [
+      {
+        "id": "AC-1",
+        "text": "Allowed origins get appropriate headers and Vary.",
+        "checked": true,
+        "line": 659
+      },
+      {
+        "id": "AC-2",
+        "text": "denied origins are not granted access.",
+        "checked": true,
+        "line": 660
+      },
+      {
+        "id": "AC-3",
+        "text": "credentials cannot combine with wildcard origin.",
+        "checked": true,
+        "line": 661
+      },
+      {
+        "id": "AC-4",
+        "text": "preflight terminates before downstream authentication.",
+        "checked": true,
+        "line": 662
+      },
+      {
+        "id": "AC-5",
+        "text": "WebSocket Origin checks remain separate.",
+        "checked": true,
+        "line": 663
+      },
+      {
+        "id": "AC-6",
+        "text": "CORS installs Vary: Origin even without an Origin header for shared-cache correctness; allowed-origin 400/401/500 error responses preserve only framework CORS grant/Vary metadata, including credentials, while denied origins receive no grant.",
+        "checked": true,
+        "line": 664
+      }
+    ],
+    "verificationEvidence": [
+      {
+        "id": "VE-1",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/CorsTest.java",
+        "covers": "all",
+        "notes": "RED confirmed before implementation; GREEN: ./gradlew :NaruServe-api:test --tests *CorsTest --tests *DefaultResponseTest --tests *ErrorPathTest --tests *HttpApiSurfaceTest; :NaruServe-api:animalsnifferMain",
+        "line": 670
+      },
+      {
+        "id": "VE-2",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/CorsTest.java",
+        "covers": "AC-1",
+        "notes": "check_test_sufficiency source citation NaruServe-api/src/test/java/com/snoworca/naruserve/CorsTest.java:12; complete ./gradlew build passed 1643 tests, zero failures/skips; see docs/release/test-sufficiency-review.md.",
+        "line": 671
+      },
+      {
+        "id": "VE-3",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/CorsTest.java",
+        "covers": "AC-2",
+        "notes": "check_test_sufficiency source citation NaruServe-api/src/test/java/com/snoworca/naruserve/CorsTest.java:16; complete ./gradlew build passed 1643 tests, zero failures/skips; see docs/release/test-sufficiency-review.md.",
+        "line": 672
+      },
+      {
+        "id": "VE-4",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/CorsTest.java",
+        "covers": "AC-3",
+        "notes": "check_test_sufficiency source citation NaruServe-api/src/test/java/com/snoworca/naruserve/CorsTest.java:89; complete ./gradlew build passed 1643 tests, zero failures/skips; see docs/release/test-sufficiency-review.md.",
+        "line": 673
+      },
+      {
+        "id": "VE-5",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/CorsTest.java",
+        "covers": "AC-4",
+        "notes": "check_test_sufficiency source citation NaruServe-api/src/test/java/com/snoworca/naruserve/CorsTest.java:34; complete ./gradlew build passed 1643 tests, zero failures/skips; see docs/release/test-sufficiency-review.md.",
+        "line": 674
+      },
+      {
+        "id": "VE-6",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/CorsTest.java",
+        "covers": "AC-5",
+        "notes": "check_test_sufficiency source citation NaruServe-api/src/test/java/com/snoworca/naruserve/CorsTest.java:12; complete ./gradlew build passed 1643 tests, zero failures/skips; see docs/release/test-sufficiency-review.md.",
+        "line": 675
+      },
+      {
+        "id": "VE-7",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/CorsTest.java",
+        "covers": "AC-6",
+        "notes": "check_test_sufficiency source citation NaruServe-api/src/test/java/com/snoworca/naruserve/CorsTest.java:133; complete ./gradlew build passed 1643 tests, zero failures/skips; see docs/release/test-sufficiency-review.md.",
+        "line": 676
+      }
+    ],
+    "traceLinks": [],
+    "changeNotes": [
+      {
+        "date": "2026-10-21",
+        "change": "Created",
+        "reason": "add-requirement",
+        "line": 695
+      },
+      {
+        "date": "2026-10-21",
+        "change": "Status -> implemented",
+        "reason": "Issue #32: red test then green; ./gradlew :NaruServe-api:test --tests *CorsTest --tests *DefaultResponseTest --tests *ErrorPathTest --tests *HttpApiSurfaceTest; :NaruServe-api:animalsnifferMain",
+        "line": 696
+      },
+      {
+        "date": "2026-10-21",
+        "change": "Status -> verified",
+        "reason": "Issue #32: all acceptance criteria covered by passing regression evidence.",
+        "line": 697
+      }
+    ],
+    "tags": [
+      "-"
+    ],
+    "relatedDocs": [],
+    "evidenceReferences": [
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/CorsTest.java"
+    ],
+    "traceReferences": [],
+    "blockStartLine": 634,
+    "blockEndLine": 698,
+    "sectionLines": {
+      "Requirement": 649,
+      "Rationale": 653,
+      "Acceptance Criteria": 657,
+      "Verification Evidence": 666,
+      "Trace Links": 678,
+      "Research / Analysis": 683,
+      "Implementation Notes": 687,
+      "Change Notes": 691
+    },
+    "priority": "high",
+    "risk": "medium",
+    "stability": "evolving",
+    "newWorkCandidate": false,
+    "requirement": "The system shall provide typed CORS configuration with validated origins, methods, request headers, credentials and preflight handling.",
+    "rationale": "-",
+    "research": "- -",
+    "implementationNotes": "- -",
+    "diagnostics": [],
+    "errors": [],
+    "warnings": [],
+    "diagnosticsSummary": {
+      "errors": 0,
+      "warnings": 0,
+      "byCode": {}
+    }
+  },
+  "diagnostics": [],
+  "diagnosticsSummary": {
+    "errors": 0,
+    "warnings": 0,
+    "byCode": {}
+  },
+  "mcpWorkspace": {
+    "workspaceRoot": "/Users/beom/work/git/NaruServe",
+    "rootSource": "server-cwd-discovery",
+    "indexPath": "docs/spec/00.index.md",
+    "packageVersion": "4.2.0"
+  }
+}

@@ -1,0 +1,260 @@
+{
+  "ok": true,
+  "value": {
+    "id": "FR-ROUTE-003",
+    "title": "Route pattern syntax and registration-time validation",
+    "type": "functional",
+    "target": "wave-2",
+    "status": "verified",
+    "scope": "ROUTE",
+    "filePath": "docs/spec/03.routing.srs.md",
+    "headingLine": 469,
+    "metadata": {
+      "Type": "functional",
+      "Target": "wave-2",
+      "Status": "verified",
+      "Priority": "high",
+      "Tags": "wave-2, feasibility:high, routing, pattern",
+      "Risk": "medium",
+      "Stability": "evolving",
+      "Verification Method": "test",
+      "GitHub Issue": "https://github.com/Snoworca/NaruServe/issues/3",
+      "Related Docs": "-"
+    },
+    "acceptanceCriteria": [
+      {
+        "id": "AC-1",
+        "text": "`/users/:id` matches `/users/42` with `id` = `42`, and matches neither `/users`, `/users/` nor `/users/42/posts`. [D-047]",
+        "checked": true,
+        "line": 494
+      },
+      {
+        "id": "AC-2",
+        "text": "Registering a pattern containing `?`, `*`, `+`, `(` or `)` fails with a configuration error. [D-048]",
+        "checked": true,
+        "line": 495
+      },
+      {
+        "id": "AC-3",
+        "text": "Registering `/a/:` or `/a/:id/:id` fails with a configuration error at registration time. [wave decision: pattern validation] [SDS 2026-10-19.naruserve.naruserve-v1-wave-2-2 SDS-AC-5] The error is a `RoutingConfigException` thrown from `add` before freeze, naming the pattern.",
+        "checked": true,
+        "line": 496
+      },
+      {
+        "id": "AC-4",
+        "text": "Registering `/a//b` fails with a configuration error, while `/` and a pattern with one trailing slash such as `/users/` are accepted. [loop W residual: empty segment]",
+        "checked": true,
+        "line": 497
+      }
+    ],
+    "verificationEvidence": [
+      {
+        "id": "VE-1",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RoutePatternTest.java#sdsAc5_FR_ROUTE_003_AC2_wildcardAndRegexSyntaxRejectedAtAdd",
+        "covers": "AC-2",
+        "notes": "-",
+        "line": 503
+      },
+      {
+        "id": "VE-2",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RoutePatternTest.java#sdsAc5_FR_ROUTE_003_AC3_emptyOrRepeatedVariableNameRejectedAtAdd",
+        "covers": "AC-3",
+        "notes": "-",
+        "line": 504
+      },
+      {
+        "id": "VE-3",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RoutePatternTest.java#sdsAc5_FR_ROUTE_003_AC4_emptyInteriorSegmentRejectedRootAndTrailingAccepted",
+        "covers": "AC-4",
+        "notes": "-",
+        "line": 505
+      },
+      {
+        "id": "VE-4",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RoutePatternTest.java#sdsAc5_FR_ROUTE_003_AC3_parseNamesThePattern",
+        "covers": "AC-3",
+        "notes": "-",
+        "line": 506
+      },
+      {
+        "id": "VE-5",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RoutePatternTest.java#FR_ROUTE_003_AC1_variableMatchesExactlyOneNonEmptySegment",
+        "covers": "AC-1",
+        "notes": "-",
+        "line": 507
+      },
+      {
+        "id": "VE-6",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RoutePatternTest.java",
+        "covers": "AC-1",
+        "notes": "verification_cmd ./gradlew build passed at 461fc3f (153/153); cited line RoutePatternTest.java:52, RoutePatternTest.java:63, RoutePatternTest.java:86; bundle docs/research/naruserve-v1/waves/stage-2/lane-2026-10-19.naruserve.naruserve-v1-wave-2/",
+        "line": 508
+      },
+      {
+        "id": "VE-7",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RoutePatternTest.java",
+        "covers": "AC-2",
+        "notes": "verification_cmd ./gradlew build passed at 461fc3f (153/153); cited line RoutePatternTest.java:27; bundle docs/research/naruserve-v1/waves/stage-2/lane-2026-10-19.naruserve.naruserve-v1-wave-2/",
+        "line": 509
+      },
+      {
+        "id": "VE-8",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RoutePatternTest.java",
+        "covers": "AC-3",
+        "notes": "verification_cmd ./gradlew build passed at 461fc3f (153/153); cited line RoutePatternTest.java:35, RoutePatternTest.java:52, RoutePatternTest.java:75; bundle docs/research/naruserve-v1/waves/stage-2/lane-2026-10-19.naruserve.naruserve-v1-wave-2/",
+        "line": 510
+      },
+      {
+        "id": "VE-9",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RoutePatternTest.java",
+        "covers": "AC-4",
+        "notes": "verification_cmd ./gradlew build passed at 461fc3f (153/153); cited line RoutePatternTest.java:42; bundle docs/research/naruserve-v1/waves/stage-2/lane-2026-10-19.naruserve.naruserve-v1-wave-2/",
+        "line": 511
+      },
+      {
+        "id": "VE-10",
+        "type": "commit",
+        "reference": "f80370b",
+        "covers": "all",
+        "notes": "-",
+        "line": 512
+      },
+      {
+        "id": "VE-11",
+        "type": "commit",
+        "reference": "8a4b565",
+        "covers": "all",
+        "notes": "-",
+        "line": 513
+      },
+      {
+        "id": "VE-12",
+        "type": "commit",
+        "reference": "7b7b6b7",
+        "covers": "all",
+        "notes": "-",
+        "line": 514
+      },
+      {
+        "id": "VE-13",
+        "type": "commit",
+        "reference": "b5677c3",
+        "covers": "all",
+        "notes": "-",
+        "line": 515
+      }
+    ],
+    "traceLinks": [
+      {
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RoutePattern.java",
+        "relation": "implements",
+        "notes": "trace_intent=addition_site",
+        "line": 521
+      },
+      {
+        "type": "Requirement",
+        "reference": "CON-ROUTE-001",
+        "relation": "depends_on",
+        "notes": "runs inside the engine-free router",
+        "line": 522
+      },
+      {
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RoutePattern.java",
+        "relation": "implements",
+        "notes": "-",
+        "line": 523
+      },
+      {
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RoutingConfigException.java",
+        "relation": "implements",
+        "notes": "-",
+        "line": 524
+      }
+    ],
+    "changeNotes": [
+      {
+        "date": "2026-10-19",
+        "change": "Created",
+        "reason": "add-requirement",
+        "line": 538
+      },
+      {
+        "date": "2026-10-19",
+        "change": "Stability -> evolving",
+        "reason": "Feasibility=high (score 95). Blockers: none. Run: 2026-10-19.naruserve.wave-2.v01",
+        "line": 539
+      }
+    ],
+    "tags": [
+      "wave-2",
+      "feasibility:high",
+      "routing",
+      "pattern"
+    ],
+    "relatedDocs": [],
+    "evidenceReferences": [
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RoutePatternTest.java",
+      "f80370b",
+      "8a4b565",
+      "7b7b6b7",
+      "b5677c3"
+    ],
+    "traceReferences": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RoutePattern.java",
+      "CON-ROUTE-001",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RoutingConfigException.java"
+    ],
+    "blockStartLine": 469,
+    "blockEndLine": 540,
+    "sectionLines": {
+      "Requirement": 484,
+      "Rationale": 488,
+      "Acceptance Criteria": 492,
+      "Verification Evidence": 499,
+      "Trace Links": 517,
+      "Research / Analysis": 526,
+      "Implementation Notes": 530,
+      "Change Notes": 534
+    },
+    "priority": "high",
+    "risk": "medium",
+    "stability": "evolving",
+    "newWorkCandidate": false,
+    "requirement": "The system shall accept route patterns made of literal segments and `:name` variable segments, where a variable matches exactly one non-empty path segment and never crosses `/`, and shall fail registration with a configuration error for a pattern that contains Express wildcard or regular-expression syntax, an empty variable name, a variable name repeated within the pattern, or an empty segment.",
+    "rationale": "Covers D-047, D-048, the wave decision on pattern validation (empty or repeated variable name is a configuration error at registration time) and the loop W residual (a pattern containing an empty segment such as `/a//b` is a configuration error). Reporting the empty-segment error at registration, together with the other pattern errors, is the implementer's choice under C-07.",
+    "research": "- -",
+    "implementationNotes": "- -",
+    "diagnostics": [],
+    "errors": [],
+    "warnings": [],
+    "diagnosticsSummary": {
+      "errors": 0,
+      "warnings": 0,
+      "byCode": {}
+    }
+  },
+  "diagnostics": [],
+  "diagnosticsSummary": {
+    "errors": 0,
+    "warnings": 0,
+    "byCode": {}
+  },
+  "mcpWorkspace": {
+    "workspaceRoot": "/Users/beom/work/git/NaruServe",
+    "rootSource": "server-cwd-discovery",
+    "indexPath": "docs/spec/00.index.md",
+    "packageVersion": "4.2.0"
+  }
+}

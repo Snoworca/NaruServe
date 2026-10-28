@@ -1,0 +1,45 @@
+{
+  "audit_type": "read-only-scope-correction-rereview",
+  "audited_at": "2026-10-28T00:57:12.426496+00:00",
+  "result": "PASS",
+  "findings": [],
+  "resolved_findings": [
+    {
+      "id": "PATTERN-SCOPE-001",
+      "status": "closed",
+      "evidence": [
+        "intake/intent.json:JavaPattern entity, corrected implied_requirements/semantic_equivalences, resolved_decisions[A-ECMA-ENGINE], ambiguity_count1",
+        "intake/code_context.json:resolved_regex_decision and corrected open_decisions"
+      ],
+      "resolution": "Current machine intake agrees with explicit Java Pattern decision; superseded engine/JNI question is no longer an active ambiguity."
+    }
+  ],
+  "manifest_checks": [
+    {
+      "manifest": "docs/research/express5-v010/intake/research-manifest.java-pattern.json",
+      "entries": 69,
+      "mismatches": []
+    },
+    {
+      "manifest": "docs/research/express5-v010/intake/java-pattern-decision-manifest.json",
+      "entries": 8,
+      "mismatches": []
+    }
+  ],
+  "historical_evidence": "Original research-manifest.json and prior engine research retained separately; refreshed manifests validate current active JSONs.",
+  "pending_questions": [
+    {
+      "id": "Q-EXT",
+      "status": "unanswered",
+      "note": "Only remaining intake ambiguity is external TinyHttpd permission; regex decision does not grant it."
+    }
+  ],
+  "scope_preserved": [
+    "Express5 common HTTP semantics outside explicit Java-regex boundary",
+    "NaruServe extension APIs",
+    "Existing WS contracts; no Express WebSocket equivalence",
+    "Java8/API21 target"
+  ],
+  "repository_edits": false,
+  "implementation_verification": false
+}

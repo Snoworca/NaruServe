@@ -1,0 +1,580 @@
+{
+  "ok": true,
+  "value": {
+    "id": "IR-HTTP-007",
+    "title": "HttpAdapter SPI extension points and bind/stop lifecycle calls, extended add-only by wave 7",
+    "type": "interface",
+    "target": "wave-7",
+    "status": "verified",
+    "scope": "HTTP",
+    "filePath": "docs/spec/04.http-core.srs.md",
+    "headingLine": 3821,
+    "metadata": {
+      "Type": "interface",
+      "Target": "wave-7",
+      "Status": "verified",
+      "Priority": "high",
+      "Tags": "wave-7, feasibility:high, http-spi, supersedes:IR-HTTP-004",
+      "Risk": "medium",
+      "Stability": "evolving",
+      "Verification Method": "test",
+      "GitHub Issue": "https://github.com/Snoworca/NaruServe/issues/13",
+      "Related Docs": "-"
+    },
+    "acceptanceCriteria": [
+      {
+        "id": "AC-1",
+        "text": "Through the file-transfer extension point the core hands the adapter a `java.io.File` with an offset and a length, and the adapter writes exactly those bytes of the file as the response body; an in-memory test hands over a file with a non-zero offset and a length shorter than the rest of the file and reads back exactly that byte range from the client body. [D-106] re_stated_from: IR-HTTP-004#AC1",
+        "checked": true,
+        "line": 3848
+      },
+      {
+        "id": "AC-2",
+        "text": "Through the protocol-upgrade extension point the core hands the adapter an upgrade callback with a `101` response, and the adapter invokes that callback with the exchange's raw input and output streams after writing the `101` response; an in-memory test observes that the callback ran with the exchange's streams (or that the in-memory adapter recorded the hand-over). [D-106] re_stated_from: IR-HTTP-004#AC2",
+        "checked": true,
+        "line": 3849
+      },
+      {
+        "id": "AC-3",
+        "text": "The event-stream point hands the adapter a core-owned drain loop that keeps writing after the handler returned until the core reports the stream ended, and the adapter chooses the thread that runs it; in wave 3 (before `res.sse` exists) an in-memory test supplies a drain loop through the SPI type, runs it on an adapter-chosen thread after the handler returned and sees it end only when the end is reported. [D-106] Decision: `eventStream` returns to the caller at once, and the in-memory adapter runs the drain on its own worker thread, completing the client response when the drain returns. [SDS 2026-10-19.naruserve.naruserve-v1-wave-3-2 SDS-AC-4] re_stated_from: IR-HTTP-004#AC3 StreamDrain also exposes a default no-op abort() callback so an adapter that cancels before drain startup can notify the core stream without blocking or adding an abstract method.",
+        "checked": true,
+        "line": 3850
+      },
+      {
+        "id": "AC-4",
+        "text": "The three extension points are SPI types in `NaruServe-api`, usable by an adapter without any NaruServe class outside `NaruServe-api`, so waves 6, 7 and 8 add adapter classes against them without breaking the SPI: from wave 7 the SPI gains only the new types `WebSocketEndpoint`, `WebSocketChannel` and `WebSocketSettings`, the `default` method `HttpExchange.webSocket(WebSocketSettings, WebSocketEndpoint)` and the `default` method `StreamDrain.attach(OutputStream out)`, which does nothing by default, and a signature comparison test against the SPI of the wave 6 close (`9ce5cc4`; unchanged since `40b9665`) finds every method of every `com.snoworca.naruserve.spi` type of that baseline (`AppFactory`, `ErrorRenderer`, `ExchangeHandler`, `HttpAdapter`, `HttpExchange`, `JsonCodec`, `ServerSettings`, `StreamDrain`, `UpgradeHandler`) present with an unchanged signature and no method removed, finds `HttpExchange.webSocket` and `StreamDrain.attach` the only added methods of those types, and finds `StreamDrain` still annotated `@FunctionalInterface` with `drain(OutputStream)` its only abstract method. Every adapter's `eventStream` calls `drain.attach(out)` before it returns, with the same exchange-synchronized body stream it later passes to `drain(out)`. Deviation (recorded): D-106 reads \"without changing the SPI\"; wave 7 reads it as \"without breaking the SPI\" (add-only types and `default` methods), which `docs/api` records. Deviation (recorded): W2-001 names one added `default` method; wave 7 adds a second one, `StreamDrain.attach`, still add-only, so handler-thread SSE sends before the drain starts have a stream (r4 W2-001). [D-106] [wave decision: WebSocket upgrade SPI (W2-001)] [wave decision: Sends inside the SSE handler (r4 W2-001)] [committee decision: StreamDrain.attach (wave-7 feasibility B-1)] re_stated_from: IR-HTTP-004#AC4 (changed by wave 7: add-only types and default methods instead of no SPI change)",
+        "checked": true,
+        "line": 3851
+      },
+      {
+        "id": "AC-5",
+        "text": "The SPI declares a bind to an address and port that returns only after binding completed, and a separate call through which the core reads the actual bound port; with the in-memory adapter, a bind with port `0` reports a positive bound port that the core reads back through the SPI and that stays the same on every read until stop, and a bind with a positive port reports that port. [D-107] Decision: for a bind with port `0` the in-memory adapter assigns a positive port from a counter starting at `49152`. [SDS 2026-10-19.naruserve.naruserve-v1-wave-3-2 SDS-AC-5] re_stated_from: IR-HTTP-004#AC5",
+        "checked": true,
+        "line": 3852
+      },
+      {
+        "id": "AC-6",
+        "text": "The SPI declares a blocking stop that stops accepting, waits for in-flight exchanges until a deadline passed by the core and then force-closes the remaining connections, and a separate final release that waits at most a fixed margin for the adapter's threads to end; the in-memory adapter implements both and a test shows an in-flight exchange still running at the deadline is force-closed. [D-107] Decision: an exchange in flight at the deadline is aborted so its client response reports `abnormallyClosed`, and the in-memory adapter's release shuts its worker pool waiting at most 1 second. [SDS 2026-10-19.naruserve.naruserve-v1-wave-3-2 SDS-AC-6] re_stated_from: IR-HTTP-004#AC6",
+        "checked": true,
+        "line": 3853
+      }
+    ],
+    "verificationEvidence": [
+      {
+        "id": "VE-1",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/spi/HttpAdapterSpiTest.java#sdsAc4_IR_HTTP_007_AC1_sendFileWritesExactlyTheByteRange",
+        "covers": "AC-1",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 3859
+      },
+      {
+        "id": "VE-2",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/spi/HttpAdapterSpiTest.java#sdsAc4_IR_HTTP_007_AC2_upgradeWrites101ThenHandsOverTheExchangeStreams",
+        "covers": "AC-2",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 3860
+      },
+      {
+        "id": "VE-3",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/spi/HttpAdapterSpiTest.java#sdsAc4_IR_HTTP_007_AC3_drainRunsOnAdapterThreadAndEndsOnlyWhenEndIsReported",
+        "covers": "AC-3",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 3861
+      },
+      {
+        "id": "VE-4",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/spi/HttpAdapterSpiTest.java#sdsAc1_IR_HTTP_007_AC4_IR_WS_002_AC5_wave6SpiIsKeptAndOnlyWebSocketAndAttachAreAdded",
+        "covers": "AC-4",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 3862
+      },
+      {
+        "id": "VE-5",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/spi/HttpAdapterSpiTest.java#sdsAc2_IR_HTTP_007_AC4_streamDrainStaysFunctionalAndEventStreamAttachesTheDrainStream",
+        "covers": "AC-4",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 3863
+      },
+      {
+        "id": "VE-6",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/spi/HttpAdapterSpiTest.java#sdsAc7_CON_HTTP_001_AC1_IR_HTTP_007_AC4_spiSignaturesUseOnlyAllowedTypesFromApiMain",
+        "covers": "AC-4",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 3864
+      },
+      {
+        "id": "VE-7",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/spi/HttpAdapterSpiTest.java#sdsAc5_IR_HTTP_007_AC5_portZeroGetsAStablePositivePortAndAPositivePortIsKept",
+        "covers": "AC-5",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 3865
+      },
+      {
+        "id": "VE-8",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/spi/HttpAdapterSpiTest.java#sdsAc6_IR_HTTP_007_AC6_inFlightExchangeIsForceClosedAtTheDeadline",
+        "covers": "AC-6",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 3866
+      },
+      {
+        "id": "VE-9",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/spi/HttpAdapterSpiTest.java",
+        "covers": "AC-1",
+        "notes": "verification_cmd ./gradlew build passed at e25fe0d (1239/1239); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/spi/HttpAdapterSpiTest.java:169; bundle docs/research/naruserve-v1/waves/stage-7/lane-2026-10-19.naruserve.naruserve-v1-wave-7/",
+        "line": 3867
+      },
+      {
+        "id": "VE-10",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/spi/HttpAdapterSpiTest.java",
+        "covers": "AC-2",
+        "notes": "verification_cmd ./gradlew build passed at e25fe0d (1239/1239); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/spi/HttpAdapterSpiTest.java:190; bundle docs/research/naruserve-v1/waves/stage-7/lane-2026-10-19.naruserve.naruserve-v1-wave-7/",
+        "line": 3868
+      },
+      {
+        "id": "VE-11",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/spi/HttpAdapterSpiTest.java",
+        "covers": "AC-3",
+        "notes": "verification_cmd ./gradlew build passed at e25fe0d (1239/1239); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/spi/HttpAdapterSpiTest.java:121; bundle docs/research/naruserve-v1/waves/stage-7/lane-2026-10-19.naruserve.naruserve-v1-wave-7/",
+        "line": 3869
+      },
+      {
+        "id": "VE-12",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/spi/HttpAdapterSpiTest.java",
+        "covers": "AC-4",
+        "notes": "verification_cmd ./gradlew build passed at e25fe0d (1239/1239); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/spi/HttpAdapterSpiTest.java:305,543,587; bundle docs/research/naruserve-v1/waves/stage-7/lane-2026-10-19.naruserve.naruserve-v1-wave-7/",
+        "line": 3870
+      },
+      {
+        "id": "VE-13",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/spi/HttpAdapterSpiTest.java",
+        "covers": "AC-5",
+        "notes": "verification_cmd ./gradlew build passed at e25fe0d (1239/1239); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/spi/HttpAdapterSpiTest.java:217; bundle docs/research/naruserve-v1/waves/stage-7/lane-2026-10-19.naruserve.naruserve-v1-wave-7/",
+        "line": 3871
+      },
+      {
+        "id": "VE-14",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/spi/HttpAdapterSpiTest.java",
+        "covers": "AC-6",
+        "notes": "verification_cmd ./gradlew build passed at e25fe0d (1239/1239); cited line NaruServe-api/src/test/java/com/snoworca/naruserve/spi/HttpAdapterSpiTest.java:240; bundle docs/research/naruserve-v1/waves/stage-7/lane-2026-10-19.naruserve.naruserve-v1-wave-7/",
+        "line": 3872
+      },
+      {
+        "id": "VE-15",
+        "type": "commit",
+        "reference": "e67f61e4c54c4877676bc79cef9cd3332614ab9b",
+        "covers": "all",
+        "notes": "-",
+        "line": 3873
+      },
+      {
+        "id": "VE-16",
+        "type": "commit",
+        "reference": "6ba51788c866ce1e140528ca77e2e39fff94c6d7",
+        "covers": "all",
+        "notes": "-",
+        "line": 3874
+      },
+      {
+        "id": "VE-17",
+        "type": "commit",
+        "reference": "fa7e535ec036f99c8f9ab3aa788567a3fd52c382",
+        "covers": "all",
+        "notes": "-",
+        "line": 3875
+      },
+      {
+        "id": "VE-18",
+        "type": "commit",
+        "reference": "cea10fccebdad844952135edd3e23ccff208d201",
+        "covers": "all",
+        "notes": "-",
+        "line": 3876
+      },
+      {
+        "id": "VE-19",
+        "type": "commit",
+        "reference": "7b3ba1ab8f1ad8821b49ed9f5dd8e0fac62353db",
+        "covers": "all",
+        "notes": "-",
+        "line": 3877
+      },
+      {
+        "id": "VE-20",
+        "type": "commit",
+        "reference": "e8d9036e3403012b21e2c4e3d06e92634cbc5e48",
+        "covers": "all",
+        "notes": "-",
+        "line": 3878
+      },
+      {
+        "id": "VE-21",
+        "type": "commit",
+        "reference": "6abec962bf077393bdda7b1f34866d6789195af9",
+        "covers": "all",
+        "notes": "-",
+        "line": 3879
+      },
+      {
+        "id": "VE-22",
+        "type": "commit",
+        "reference": "8bf8ea8f45f10654aa0e18bbf5dfbd2f1efe4721",
+        "covers": "all",
+        "notes": "-",
+        "line": 3880
+      },
+      {
+        "id": "VE-23",
+        "type": "commit",
+        "reference": "11019dbbe5a3513d2a0edaceae9f34066d24b14d",
+        "covers": "all",
+        "notes": "-",
+        "line": 3881
+      },
+      {
+        "id": "VE-24",
+        "type": "commit",
+        "reference": "c1974cb50b2f1427d66468cae20782bf8f0962e3",
+        "covers": "all",
+        "notes": "-",
+        "line": 3882
+      },
+      {
+        "id": "VE-25",
+        "type": "commit",
+        "reference": "0b3bec9d0a742af3a6cec69aab16976dbba0a0a7",
+        "covers": "all",
+        "notes": "-",
+        "line": 3883
+      },
+      {
+        "id": "VE-26",
+        "type": "commit",
+        "reference": "6856cb45be366bda0101e34f39c3a3ab99061e02",
+        "covers": "all",
+        "notes": "-",
+        "line": 3884
+      },
+      {
+        "id": "VE-27",
+        "type": "commit",
+        "reference": "9513a1df1dbf834849d28c7fae108ecff6cdbc3d",
+        "covers": "all",
+        "notes": "-",
+        "line": 3885
+      },
+      {
+        "id": "VE-28",
+        "type": "commit",
+        "reference": "d61b4fa96800096579e010634cc76ac5d10f4433",
+        "covers": "all",
+        "notes": "-",
+        "line": 3886
+      },
+      {
+        "id": "VE-29",
+        "type": "commit",
+        "reference": "1e1e42fcfceef81bc0e01d5d2f3a085ef9803294",
+        "covers": "all",
+        "notes": "-",
+        "line": 3887
+      },
+      {
+        "id": "VE-30",
+        "type": "commit",
+        "reference": "4c773396d7fd9593e38b3e586ee04f5d7d1ad680",
+        "covers": "all",
+        "notes": "-",
+        "line": 3888
+      },
+      {
+        "id": "VE-31",
+        "type": "commit",
+        "reference": "b90b382bcb16b57b7d98aa0e3a95334475ce22e2",
+        "covers": "all",
+        "notes": "-",
+        "line": 3889
+      },
+      {
+        "id": "VE-32",
+        "type": "commit",
+        "reference": "cab4cb5c109fa3e29b3c9193e8107e93935944fe",
+        "covers": "all",
+        "notes": "-",
+        "line": 3890
+      },
+      {
+        "id": "VE-33",
+        "type": "commit",
+        "reference": "404466417b8d5c4feda526d828a7c5017649e585",
+        "covers": "all",
+        "notes": "-",
+        "line": 3891
+      },
+      {
+        "id": "VE-34",
+        "type": "commit",
+        "reference": "4c368bb169368759b5938d5767f3cadbcbfa91b1",
+        "covers": "all",
+        "notes": "-",
+        "line": 3892
+      },
+      {
+        "id": "VE-35",
+        "type": "commit",
+        "reference": "c9cb060b41c06328529d79ebf1eb2eab71ef9729",
+        "covers": "all",
+        "notes": "-",
+        "line": 3893
+      },
+      {
+        "id": "VE-36",
+        "type": "commit",
+        "reference": "3e5ae1dfb47efeea1667a7081279320395678475",
+        "covers": "all",
+        "notes": "-",
+        "line": 3894
+      },
+      {
+        "id": "VE-37",
+        "type": "commit",
+        "reference": "58e89c1346edd2157acdc34c4ac384889c009797",
+        "covers": "all",
+        "notes": "-",
+        "line": 3895
+      },
+      {
+        "id": "VE-38",
+        "type": "commit",
+        "reference": "923548e6108f4cc29212f09e5ddf60c3d5c725d1",
+        "covers": "all",
+        "notes": "-",
+        "line": 3896
+      },
+      {
+        "id": "VE-39",
+        "type": "commit",
+        "reference": "27d24d6fe6c9e47bfb6d71127e654e240a07c954",
+        "covers": "all",
+        "notes": "-",
+        "line": 3897
+      },
+      {
+        "id": "VE-40",
+        "type": "commit",
+        "reference": "4022f6efe7cd0ae4bf9c27d2ffb52e613cb7afe0",
+        "covers": "all",
+        "notes": "-",
+        "line": 3898
+      },
+      {
+        "id": "VE-41",
+        "type": "commit",
+        "reference": "19b221dec3f49af7db5b6e90c6740514ef6d7919",
+        "covers": "all",
+        "notes": "-",
+        "line": 3899
+      },
+      {
+        "id": "VE-42",
+        "type": "commit",
+        "reference": "3021f38de62535bdf14a473074373c85003376aa",
+        "covers": "all",
+        "notes": "-",
+        "line": 3900
+      },
+      {
+        "id": "VE-43",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/spi/HttpAdapterSpiTest.java",
+        "covers": "AC-3",
+        "notes": "Issue #41: failing automated regression reproduced before implementation; targeted existing/new suites passed on default JDK17 and actual OpenJDK8; independent review has no remaining HIGH/MEDIUM findings. Logs: docs/release/audit-2026-10-21/41/. Broad final integration regression is tracked in epic #36.",
+        "line": 3901
+      },
+      {
+        "id": "VE-44",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/spi/HttpAdapterSpiTest.java",
+        "covers": "AC-3",
+        "notes": "Issue #41: failing automated regression reproduced before implementation; targeted existing/new suites passed on default JDK17 and actual OpenJDK8; independent review has no remaining HIGH/MEDIUM findings. Logs: docs/release/audit-2026-10-21/41/. Broad final integration regression is tracked in epic #36.",
+        "line": 3902
+      },
+      {
+        "id": "VE-45",
+        "type": "test",
+        "reference": "docs/release/additional-audit-2026-10-21.md",
+        "covers": "AC-3",
+        "notes": "Final integration: default JDK17 and actual OpenJDK8 each passed full build --rerun-tasks with1677 tests, failures/errors/skipped0; all11 Test tasks actually used Java8 in its run. Real NVD releaseCheck passed. This evidence applies only to the fixed contract; external engine issue45 remains blocked.",
+        "line": 3903
+      }
+    ],
+    "traceLinks": [
+      {
+        "type": "Requirement",
+        "reference": "IR-HTTP-004",
+        "relation": "supersedes",
+        "notes": "-",
+        "line": 3909
+      },
+      {
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpExchange.java",
+        "relation": "implements",
+        "notes": "trace_intent=addition_site",
+        "line": 3910
+      },
+      {
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpAdapter.java",
+        "relation": "implements",
+        "notes": "trace_intent=addition_site",
+        "line": 3911
+      },
+      {
+        "type": "Requirement",
+        "reference": "IR-HTTP-003",
+        "relation": "extends",
+        "notes": "extends the exchange contract (carried from IR-HTTP-004)",
+        "line": 3912
+      },
+      {
+        "type": "Requirement",
+        "reference": "IR-WS-002",
+        "relation": "depends_on",
+        "notes": "the add-only WebSocket SPI types of AC-4",
+        "line": 3913
+      }
+    ],
+    "changeNotes": [
+      {
+        "date": "2026-10-20",
+        "change": "Created",
+        "reason": "add-requirement",
+        "line": 3927
+      },
+      {
+        "date": "2026-10-20",
+        "change": "Stability -> evolving",
+        "reason": "Feasibility=high (score 88). Blockers: none. Run: 2026-10-19.naruserve.wave-7.v01",
+        "line": 3928
+      },
+      {
+        "date": "2026-10-21",
+        "change": "Status -> implemented",
+        "reason": "Servlet pre-drain SSE cancellation requires add-only default StreamDrain.abort callback while retaining functional-interface compatibility.",
+        "line": 3929
+      },
+      {
+        "date": "2026-10-21",
+        "change": "Status -> verified",
+        "reason": "Issue #41: targeted contract regression passed JDK17 and actual Java8 after RED reproduction and independent review.",
+        "line": 3930
+      },
+      {
+        "date": "2026-10-21",
+        "change": "Status -> verified",
+        "reason": "Issue #41: targeted contract regression passed JDK17 and actual Java8 after RED reproduction and independent review.",
+        "line": 3931
+      }
+    ],
+    "tags": [
+      "wave-7",
+      "feasibility:high",
+      "http-spi",
+      "supersedes:IR-HTTP-004"
+    ],
+    "relatedDocs": [],
+    "evidenceReferences": [
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/spi/HttpAdapterSpiTest.java",
+      "e67f61e4c54c4877676bc79cef9cd3332614ab9b",
+      "6ba51788c866ce1e140528ca77e2e39fff94c6d7",
+      "fa7e535ec036f99c8f9ab3aa788567a3fd52c382",
+      "cea10fccebdad844952135edd3e23ccff208d201",
+      "7b3ba1ab8f1ad8821b49ed9f5dd8e0fac62353db",
+      "e8d9036e3403012b21e2c4e3d06e92634cbc5e48",
+      "6abec962bf077393bdda7b1f34866d6789195af9",
+      "8bf8ea8f45f10654aa0e18bbf5dfbd2f1efe4721",
+      "11019dbbe5a3513d2a0edaceae9f34066d24b14d",
+      "c1974cb50b2f1427d66468cae20782bf8f0962e3",
+      "0b3bec9d0a742af3a6cec69aab16976dbba0a0a7",
+      "6856cb45be366bda0101e34f39c3a3ab99061e02",
+      "9513a1df1dbf834849d28c7fae108ecff6cdbc3d",
+      "d61b4fa96800096579e010634cc76ac5d10f4433",
+      "1e1e42fcfceef81bc0e01d5d2f3a085ef9803294",
+      "4c773396d7fd9593e38b3e586ee04f5d7d1ad680",
+      "b90b382bcb16b57b7d98aa0e3a95334475ce22e2",
+      "cab4cb5c109fa3e29b3c9193e8107e93935944fe",
+      "404466417b8d5c4feda526d828a7c5017649e585",
+      "4c368bb169368759b5938d5767f3cadbcbfa91b1",
+      "c9cb060b41c06328529d79ebf1eb2eab71ef9729",
+      "3e5ae1dfb47efeea1667a7081279320395678475",
+      "58e89c1346edd2157acdc34c4ac384889c009797",
+      "923548e6108f4cc29212f09e5ddf60c3d5c725d1",
+      "27d24d6fe6c9e47bfb6d71127e654e240a07c954",
+      "4022f6efe7cd0ae4bf9c27d2ffb52e613cb7afe0",
+      "19b221dec3f49af7db5b6e90c6740514ef6d7919",
+      "3021f38de62535bdf14a473074373c85003376aa",
+      "docs/release/additional-audit-2026-10-21.md"
+    ],
+    "traceReferences": [
+      "IR-HTTP-004",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpExchange.java",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpAdapter.java",
+      "IR-HTTP-003",
+      "IR-WS-002"
+    ],
+    "blockStartLine": 3821,
+    "blockEndLine": 3932,
+    "sectionLines": {
+      "Requirement": 3836,
+      "Rationale": 3840,
+      "Acceptance Criteria": 3846,
+      "Verification Evidence": 3855,
+      "Trace Links": 3905,
+      "Research / Analysis": 3915,
+      "Implementation Notes": 3919,
+      "Change Notes": 3923
+    },
+    "priority": "high",
+    "risk": "medium",
+    "stability": "evolving",
+    "newWorkCandidate": false,
+    "requirement": "The system shall include in the `HttpAdapter` SPI extension points for file transfer, event streams and protocol upgrade, and lifecycle calls that bind synchronously to an address and port, report the actual bound port, and stop in two calls: a blocking stop bounded by a core-supplied deadline and a final release bounded by a fixed margin, and shall extend that SPI from wave 7 only by adding types and `default` methods, never by changing or removing an existing signature.",
+    "rationale": "Covers D-106 and D-107 as restated from IR-HTTP-004, with AC-4 changed by wave decision WebSocket upgrade SPI (W2-001): the SPI gains the add-only types `WebSocketEndpoint`, `WebSocketChannel`, `WebSocketSettings` and the `default` method `HttpExchange.webSocket` (IR-WS-002), and no existing signature changes. Deviation (recorded): D-106 says \"without changing the SPI\"; wave 7 reads it as \"without breaking it\", and `docs/api` records this. Measured: `spi/HttpExchange.java` declares `upgrade(List<Map.Entry<String,String>>, UpgradeHandler)` and `eventStream(...)` with signatures unchanged since wave 3; the comparison baseline is the wave 6 close `9ce5cc4` (SPI unchanged since `40b9665`). AC-1 to AC-3, AC-5 and AC-6 are unchanged. Pitfall: a non-default abstract method added to `HttpExchange` would break every adapter compiled against wave 6; the signature test catches it. Rejected alternative: a separate WebSocket SPI interface beside `HttpExchange`; it would need a second lookup path per exchange, reopen if a non-TinyHttpd adapter cannot implement `webSocket` on its exchange. Tests to re-point to IR-HTTP-007: every `IR_HTTP_004_*` method of `NaruServe-api/src/test/java/com/snoworca/naruserve/spi/HttpAdapterSpiTest.java`, and the `@req IR-HTTP-004` comments of `HttpAdapter.java`, `HttpExchange.java`, `StreamDrain.java`, `UpgradeHandler.java` and the test-fixture `InMemoryHttpAdapter.java`.\n- [2026-10-20] Deviation (recorded), committee decision StreamDrain.attach (wave-7 feasibility B-1): AC-4 adds a second add-only `default` method, `StreamDrain.attach(OutputStream)`, beyond W2-001's \"one default method\" wording. `eventStream` returns nothing and `drain(out)` runs only after the handler returned on TinyHttpd, so without `attach` handler-thread SSE sends (r4 W2-001) had no stream. `StreamDrain` stays @FunctionalInterface; an adapter that never calls `attach` falls back to the bounded queue.\n- [2026-10-20] Verification coupling (feasibility F-03): IR-WS-002 AC-5's signature test also names StreamDrain.attach from AC-4 here; this requirement depends_on IR-WS-002, so both are built and verified as one group. The per-adapter attach checks are FR-SSE-002 AC-8 (in-memory) and FR-SSE-003 AC-6 (TinyHttpd).",
+    "research": "- -",
+    "implementationNotes": "- -",
+    "diagnostics": [],
+    "errors": [],
+    "warnings": [],
+    "diagnosticsSummary": {
+      "errors": 0,
+      "warnings": 0,
+      "byCode": {}
+    }
+  },
+  "diagnostics": [],
+  "diagnosticsSummary": {
+    "errors": 0,
+    "warnings": 0,
+    "byCode": {}
+  },
+  "mcpWorkspace": {
+    "workspaceRoot": "/Users/beom/work/git/NaruServe",
+    "rootSource": "server-cwd-discovery",
+    "indexPath": "docs/spec/00.index.md",
+    "packageVersion": "4.2.0"
+  }
+}

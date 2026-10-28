@@ -1,0 +1,291 @@
+{
+  "ok": true,
+  "value": {
+    "id": "FR-ROUTE-006",
+    "title": "Path-form router policies",
+    "type": "functional",
+    "target": "wave-2",
+    "status": "verified",
+    "scope": "ROUTE",
+    "filePath": "docs/spec/03.routing.srs.md",
+    "headingLine": 685,
+    "metadata": {
+      "Type": "functional",
+      "Target": "wave-2",
+      "Status": "verified",
+      "Priority": "medium",
+      "Tags": "wave-2, feasibility:high, routing, policy",
+      "Risk": "medium",
+      "Stability": "evolving",
+      "Verification Method": "test",
+      "GitHub Issue": "https://github.com/Snoworca/NaruServe/issues/3",
+      "Related Docs": "-"
+    },
+    "acceptanceCriteria": [
+      {
+        "id": "AC-1",
+        "text": "With repeated-slash merging on, `/a//b` matches `/a/b`; with it off, it does not. [D-053]",
+        "checked": true,
+        "line": 710
+      },
+      {
+        "id": "AC-2",
+        "text": "With trailing-slash ignoring on, `/users/` matches `/users` and `/users` matches a pattern registered as `/users/`; `/users//` does not match `/users` unless repeated-slash merging is also on; the root path `/` is never stripped to an empty path. [D-053]",
+        "checked": true,
+        "line": 711
+      },
+      {
+        "id": "AC-3",
+        "text": "With case-insensitive matching on, `/USERS/Bob` matches `/users/:name` and yields `name` = `Bob`, and the comparison is locale-independent (the same result under a Turkish default locale for `/LIST` against `/list`). [D-053; wave decision: path-form policy] Matching and prefix-middleware selection use the same locale-independent Unicode code-point folding policy on Java8 and Java17, including supplementary characters.",
+        "checked": true,
+        "line": 712
+      },
+      {
+        "id": "AC-4",
+        "text": "Each switch can be set without the others, the switches are fixed when the router is built, and a router built without setting any of them behaves as the strict default. [wave decision: path-form policy] [SDS 2026-10-19.naruserve.naruserve-v1-wave-2-2 SDS-AC-10] The router copies the immutable `RouterPolicy` at construction and offers no setter afterwards.",
+        "checked": true,
+        "line": 713
+      }
+    ],
+    "verificationEvidence": [
+      {
+        "id": "VE-1",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterPolicyTest.java#sdsAc9_FR_ROUTE_006_AC3_caseInsensitiveLiteralsKeepParamAsReceived",
+        "covers": "AC-3",
+        "notes": "-",
+        "line": 719
+      },
+      {
+        "id": "VE-2",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterPolicyTest.java#sdsAc9_FR_ROUTE_006_AC3_turkishDefaultLocaleDoesNotChangeComparison",
+        "covers": "AC-3",
+        "notes": "-",
+        "line": 720
+      },
+      {
+        "id": "VE-3",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterPolicyTest.java#sdsAc10_FR_ROUTE_006_AC1_mergeSlashesAlone",
+        "covers": "AC-1",
+        "notes": "-",
+        "line": 721
+      },
+      {
+        "id": "VE-4",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterPolicyTest.java#sdsAc10_FR_ROUTE_006_AC2_ignoreTrailingSlashAloneAndWithMerge",
+        "covers": "AC-2",
+        "notes": "-",
+        "line": 722
+      },
+      {
+        "id": "VE-5",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterPolicyTest.java#sdsAc10_FR_ROUTE_006_AC4_strictEqualsUnsetBuilderAndBuiltPolicyIsFixed",
+        "covers": "AC-4",
+        "notes": "-",
+        "line": 723
+      },
+      {
+        "id": "VE-6",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterPolicyTest.java#sdsAc10_FR_ROUTE_006_AC4_policyAndRouterOfferNoSetter",
+        "covers": "AC-4",
+        "notes": "-",
+        "line": 724
+      },
+      {
+        "id": "VE-7",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterLookupTest.java",
+        "covers": "AC-1",
+        "notes": "verification_cmd ./gradlew build passed at 461fc3f (153/153); cited line RouterLookupTest.java:202, RouterPolicyTest.java:54; bundle docs/research/naruserve-v1/waves/stage-2/lane-2026-10-19.naruserve.naruserve-v1-wave-2/",
+        "line": 725
+      },
+      {
+        "id": "VE-8",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterLookupTest.java",
+        "covers": "AC-2",
+        "notes": "verification_cmd ./gradlew build passed at 461fc3f (153/153); cited line RouterLookupTest.java:210, RouterPolicyTest.java:65; bundle docs/research/naruserve-v1/waves/stage-2/lane-2026-10-19.naruserve.naruserve-v1-wave-2/",
+        "line": 726
+      },
+      {
+        "id": "VE-9",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterLookupTest.java",
+        "covers": "AC-3",
+        "notes": "verification_cmd ./gradlew build passed at 461fc3f (153/153); cited line RouterLookupTest.java:223, RouterPolicyTest.java:26, RouterPolicyTest.java:39; bundle docs/research/naruserve-v1/waves/stage-2/lane-2026-10-19.naruserve.naruserve-v1-wave-2/",
+        "line": 727
+      },
+      {
+        "id": "VE-10",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterPolicyTest.java",
+        "covers": "AC-4",
+        "notes": "verification_cmd ./gradlew build passed at 461fc3f (153/153); cited line RouterPolicyTest.java:82, RouterPolicyTest.java:102; bundle docs/research/naruserve-v1/waves/stage-2/lane-2026-10-19.naruserve.naruserve-v1-wave-2/",
+        "line": 728
+      },
+      {
+        "id": "VE-11",
+        "type": "commit",
+        "reference": "f80370b",
+        "covers": "all",
+        "notes": "-",
+        "line": 729
+      },
+      {
+        "id": "VE-12",
+        "type": "commit",
+        "reference": "8a4b565",
+        "covers": "all",
+        "notes": "-",
+        "line": 730
+      },
+      {
+        "id": "VE-13",
+        "type": "commit",
+        "reference": "7b7b6b7",
+        "covers": "all",
+        "notes": "-",
+        "line": 731
+      },
+      {
+        "id": "VE-14",
+        "type": "commit",
+        "reference": "b5677c3",
+        "covers": "all",
+        "notes": "-",
+        "line": 732
+      },
+      {
+        "id": "VE-15",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/UnicodeRoutingContractTest.java",
+        "covers": "AC-3",
+        "notes": "Issue #38: failing automated regression reproduced before implementation; targeted existing/new suites passed on default JDK17 and actual OpenJDK8; independent review has no remaining HIGH/MEDIUM findings. Logs: docs/release/audit-2026-10-21/38/. Broad final integration regression is tracked in epic #36.",
+        "line": 733
+      },
+      {
+        "id": "VE-16",
+        "type": "test",
+        "reference": "docs/release/additional-audit-2026-10-21.md",
+        "covers": "AC-3",
+        "notes": "Final integration: default JDK17 and actual OpenJDK8 each passed full build --rerun-tasks with1677 tests, failures/errors/skipped0; all11 Test tasks actually used Java8 in its run. Real NVD releaseCheck passed. This evidence applies only to the fixed contract; external engine issue45 remains blocked.",
+        "line": 734
+      }
+    ],
+    "traceLinks": [
+      {
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouterPolicy.java",
+        "relation": "implements",
+        "notes": "trace_intent=addition_site",
+        "line": 740
+      },
+      {
+        "type": "Requirement",
+        "reference": "CON-ROUTE-001",
+        "relation": "depends_on",
+        "notes": "runs inside the engine-free router",
+        "line": 741
+      },
+      {
+        "type": "Code",
+        "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouterPolicy.java",
+        "relation": "implements",
+        "notes": "-",
+        "line": 742
+      }
+    ],
+    "changeNotes": [
+      {
+        "date": "2026-10-19",
+        "change": "Created",
+        "reason": "add-requirement",
+        "line": 756
+      },
+      {
+        "date": "2026-10-19",
+        "change": "Stability -> evolving",
+        "reason": "Feasibility=high (score 93). Blockers: none. Run: 2026-10-19.naruserve.wave-2.v01",
+        "line": 757
+      },
+      {
+        "date": "2026-10-21",
+        "change": "Status -> implemented",
+        "reason": "Additional audit reproduced Unicode normalization/blank-input/JSON media syntax defect; regression extension before verification.",
+        "line": 758
+      },
+      {
+        "date": "2026-10-21",
+        "change": "Status -> verified",
+        "reason": "Issue #38: targeted contract regression passed JDK17 and actual Java8 after RED reproduction and independent review.",
+        "line": 759
+      }
+    ],
+    "tags": [
+      "wave-2",
+      "feasibility:high",
+      "routing",
+      "policy"
+    ],
+    "relatedDocs": [],
+    "evidenceReferences": [
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterPolicyTest.java",
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/RouterLookupTest.java",
+      "f80370b",
+      "8a4b565",
+      "7b7b6b7",
+      "b5677c3",
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/UnicodeRoutingContractTest.java",
+      "docs/release/additional-audit-2026-10-21.md"
+    ],
+    "traceReferences": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/RouterPolicy.java",
+      "CON-ROUTE-001"
+    ],
+    "blockStartLine": 685,
+    "blockEndLine": 760,
+    "sectionLines": {
+      "Requirement": 700,
+      "Rationale": 704,
+      "Acceptance Criteria": 708,
+      "Verification Evidence": 715,
+      "Trace Links": 736,
+      "Research / Analysis": 744,
+      "Implementation Notes": 748,
+      "Change Notes": 752
+    },
+    "priority": "medium",
+    "risk": "medium",
+    "stability": "evolving",
+    "newWorkCandidate": false,
+    "requirement": "The system shall provide three independent router policy switches, each off by default, that merge repeated slashes, ignore one trailing slash, and compare literal segments case-insensitively, with path parameter values returned as received under every switch and the configuration API names on `RestApp` left to wave 3.",
+    "rationale": "Covers D-053 and the wave decision on the path-form policy (D-050, D-053, D-070); the RestApp-level names are decided in wave 3 (D-398).",
+    "research": "- -",
+    "implementationNotes": "- -",
+    "diagnostics": [],
+    "errors": [],
+    "warnings": [],
+    "diagnosticsSummary": {
+      "errors": 0,
+      "warnings": 0,
+      "byCode": {}
+    }
+  },
+  "diagnostics": [],
+  "diagnosticsSummary": {
+    "errors": 0,
+    "warnings": 0,
+    "byCode": {}
+  },
+  "mcpWorkspace": {
+    "workspaceRoot": "/Users/beom/work/git/NaruServe",
+    "rootSource": "server-cwd-discovery",
+    "indexPath": "docs/spec/00.index.md",
+    "packageVersion": "4.2.0"
+  }
+}

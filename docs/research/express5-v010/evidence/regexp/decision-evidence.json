@@ -1,0 +1,112 @@
+{
+  "status": "research-complete-engine-decision-unresolved",
+  "issue": "T04 / #51",
+  "repository_mutations": false,
+  "engine_selected": null,
+  "scope_narrowing_authorized": false,
+  "findings": [
+    {
+      "id": "F01",
+      "claim": "Java Pattern cannot provide complete native ECMAScript RegExp semantics by direct delegation.",
+      "status": "demonstrated",
+      "evidence": [
+        "invocation-logs/java8-rhino-run.stdout",
+        "invocation-logs/node-portable.stdout"
+      ],
+      "examples": [
+        "identity escape \\a",
+        "unmatched capture backreference",
+        "astral dot without u",
+        "underscore in named capture",
+        "empty negative class [^]"
+      ]
+    },
+    {
+      "id": "F02",
+      "claim": "router2.2.0 preserves native RegExp g/y lastIndex across matches.",
+      "status": "demonstrated",
+      "evidence": [
+        "invocation-logs/node-layer-probes.stdout"
+      ],
+      "observation": "Three identical matches with one g/y object produce true,false,true; lastIndex6,0,6."
+    },
+    {
+      "id": "F03",
+      "claim": "Java8-compatible Rhino1.7.15.1 is insufficient for full native RegExp parity.",
+      "status": "demonstrated",
+      "evidence": [
+        "invocation-logs/java8-rhino-run.stdout"
+      ],
+      "observation": "u,d,v flags, named groups and lookbehind rejected."
+    },
+    {
+      "id": "F04",
+      "claim": "QuickJS2026-06-04 is a candidate engine, not a validated drop-in oracle.",
+      "status": "demonstrated-with-unproven-platforms",
+      "evidence": [
+        "invocation-logs/node-portable.stdout",
+        "invocation-logs/quickjs-portable.stdout",
+        "quickjs-build.log"
+      ],
+      "observation": "Host build works and modern flags/features sampled work; alternate duplicate names accepted unlike pinned V8;260 captures rejected unlike pinned V8;Android/JNI untested."
+    },
+    {
+      "id": "F05",
+      "claim": "Capture-key naming must reproduce router source scanning rather than simply use engine group-name metadata.",
+      "status": "demonstrated",
+      "evidence": [
+        "invocation-logs/node-layer-probes.stdout"
+      ],
+      "observation": "Escaped literal parentheses preceding named capture make pinned router expose the captured value as numeric key0."
+    }
+  ],
+  "recommendation": "Keep full Express5 native-RegExp parity; define engine-neutral EcmaRegExp object and exec facade, then validate an engine architecture. Split engine validation from route integration. Do not freeze Java Pattern as an assumed complete mapping.",
+  "options": [
+    {
+      "id": "O1",
+      "name": "ECMAScript object facade plus verified native RegExp backend",
+      "keeps_full_parity_goal": true,
+      "candidate": "QuickJS libregexp/libunicode through JNI, or a V8-aligned native implementation",
+      "decision": "not-selected",
+      "required_work": [
+        "V8 grammar/capture-limit compatibility, including current QuickJS counterexamples",
+        "router-specific capture-name scan and URI decoding",
+        "shared g/y lastIndex identity and serialized exec",
+        "Java8 JNI API and Android21 ABI/NDK/packaging/lifecycle proof",
+        "full pinned native-RegExp differential and applicable test262 coverage"
+      ],
+      "risk": "Native packaging expands supported build/runtime architecture; current candidate does not yet pass full oracle."
+    },
+    {
+      "id": "O2",
+      "name": "Portable Java8 ECMAScript RegExp parser and VM",
+      "keeps_full_parity_goal": true,
+      "candidate": "Dedicated VM or carefully backported complete implementation with pinned Unicode tables",
+      "decision": "not-selected",
+      "required_work": [
+        "ECMAScript grammar and exec semantics beyond Java Pattern",
+        "flags d/g/i/m/s/u/v/y, UTF16, lookarounds/backrefs/participating captures",
+        "V8-version-aligned validation and capture capacities",
+        "router object-state semantics",
+        "real Java8 and Android21 performance/conformance verification"
+      ],
+      "risk": "Substantial engine project; not a small Pattern translator or overload addition."
+    },
+    {
+      "id": "O3",
+      "name": "Java Pattern analogue as an additional NaruServe extension",
+      "keeps_full_parity_goal": false,
+      "decision": "not-a-substitute-for-full-parity",
+      "reason": "May coexist as explicitly named native-Java extension; cannot satisfy the ECMAScript RegExp path requirement."
+    }
+  ],
+  "unproven_constraints": [
+    "complete pinned V8 native-RegExp conformance",
+    "Java8 and Android21 execution using proposed backend",
+    "native ABI packaging and minimum API if choosing O1",
+    "large capture groups and duplicate-name syntax validation",
+    "shared state ordering under concurrent requests",
+    "allocation/cancellation/timeout behavior without changing declared matching semantics",
+    "dependency/module/licensing changes permitted by architecture contract"
+  ]
+}

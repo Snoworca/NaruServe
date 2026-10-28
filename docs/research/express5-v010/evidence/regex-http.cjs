@@ -1,0 +1,2 @@
+const express=require('/tmp/naruserve-parity-research.KkcjUP/e4/node_modules/express');
+(async()=>{for(const [pattern,path]of[['/:x(a$)','/a'],['/:x(\\d+$)','/42'],['/files/:path(.*)','/files/a/b'],['/:x((a|b)+)','/ab'],['/:x([a-z]*)','/a123'],['/:x((a)(b))','/ab']]){const a=express();a.get(pattern,(q,s)=>s.json(q.params));const srv=await new Promise(r=>{const s=a.listen(0,()=>r(s))});const resp=await fetch('http://localhost:'+srv.address().port+path);console.log(JSON.stringify({pattern,path,status:resp.status,body:await resp.text()}));srv.close()}})()

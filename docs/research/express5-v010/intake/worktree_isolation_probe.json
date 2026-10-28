@@ -1,0 +1,19 @@
+{
+  "persisted_at": "2026-10-27T18:16:22.797261+00:00",
+  "method": "Actual exec_command with explicit workdir, output f0b7ea; no edits. Worktree removed by host after successful probe before artifact persistence.",
+  "requested_workdir": "/Users/beom/work/git/NaruServe/.claude/worktrees/express5-v010-isolation-probe",
+  "cwd": "/Users/beom/work/git/NaruServe/.claude/worktrees/express5-v010-isolation-probe",
+  "git_toplevel": "/Users/beom/work/git/NaruServe/.claude/worktrees/express5-v010-isolation-probe",
+  "head": "274775f",
+  "status_porcelain": "",
+  "currently_exists": false,
+  "exec_command_evidence": {
+    "output_id": "f0b7ea",
+    "exit_code": 0,
+    "observed_pwd": "/Users/beom/work/git/NaruServe/.claude/worktrees/express5-v010-isolation-probe",
+    "observed_git_toplevel": "/Users/beom/work/git/NaruServe/.claude/worktrees/express5-v010-isolation-probe",
+    "observed_short_head": "274775f",
+    "observed_porcelain": ""
+  },
+  "clean": true
+}

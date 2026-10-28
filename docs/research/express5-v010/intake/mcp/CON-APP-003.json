@@ -1,0 +1,118 @@
+{
+  "ok": true,
+  "value": {
+    "id": "CON-APP-003",
+    "title": "Exceptions leave next.run() unchanged and reach the error path once",
+    "type": "constraint",
+    "target": "wave-4",
+    "status": "verified",
+    "scope": "APP",
+    "filePath": "docs/spec/05.application.srs.md",
+    "headingLine": 2692,
+    "metadata": {
+      "Type": "constraint",
+      "Target": "wave-4",
+      "Status": "verified",
+      "Priority": "medium",
+      "Tags": "-",
+      "Risk": "medium",
+      "Stability": "evolving",
+      "Verification Method": "test",
+      "GitHub Issue": "-",
+      "Related Docs": "-"
+    },
+    "acceptanceCriteria": [
+      {
+        "id": "AC-1",
+        "text": "A middleware that wraps `next.run()` in `try`/`catch` catches the same exception instance the handler threw, and when it rethrows that instance a recording `onError` receives it exactly once.",
+        "checked": true,
+        "line": 2717
+      }
+    ],
+    "verificationEvidence": [
+      {
+        "id": "VE-1",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ErrorPathTest.java#con_APP_003_AC1_aCatchingMiddlewareSeesTheHandlersInstanceAndOnErrorGetsItOnceOnRethrow",
+        "covers": "AC-1",
+        "notes": "command: ./gradlew build; result: pass",
+        "line": 2723
+      }
+    ],
+    "traceLinks": [],
+    "changeNotes": [
+      {
+        "date": "2026-10-19",
+        "change": "Created",
+        "reason": "add-requirement",
+        "line": 2742
+      },
+      {
+        "date": "2026-10-21",
+        "change": "Stability -> evolving",
+        "reason": "constraint transcribed from the SDS Durable Rules, enforced by the cited test",
+        "line": 2743
+      },
+      {
+        "date": "2026-10-21",
+        "change": "Status -> implemented",
+        "reason": "constraint enforced by the cited test, build passes",
+        "line": 2744
+      },
+      {
+        "date": "2026-10-21",
+        "change": "Status -> verified",
+        "reason": "AC-1 checked with test evidence VE-1, ./gradlew build pass",
+        "line": 2745
+      }
+    ],
+    "tags": [
+      "-"
+    ],
+    "relatedDocs": [],
+    "evidenceReferences": [
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ErrorPathTest.java"
+    ],
+    "traceReferences": [],
+    "blockStartLine": 2692,
+    "blockEndLine": 2746,
+    "sectionLines": {
+      "Requirement": 2707,
+      "Rationale": 2711,
+      "Acceptance Criteria": 2715,
+      "Verification Evidence": 2719,
+      "Trace Links": 2725,
+      "Research / Analysis": 2730,
+      "Implementation Notes": 2734,
+      "Change Notes": 2738
+    },
+    "priority": "medium",
+    "risk": "medium",
+    "stability": "evolving",
+    "newWorkCandidate": false,
+    "requirement": "The system shall let an exception thrown downstream leave `next.run()` unchanged and shall hand it to the error path exactly once, from the dispatcher, so a middleware can wrap `next.run()` in `try`/`catch` like a Servlet filter.",
+    "rationale": "Durable rule of SDS 2026-10-19.naruserve.naruserve-v1-wave-4-4 (middleware pipeline, next contract, dispatcher order), moved to the SRS at SDS close; binds FR-APP-004 and FR-APP-005.",
+    "research": "- -",
+    "implementationNotes": "- -",
+    "diagnostics": [],
+    "errors": [],
+    "warnings": [],
+    "diagnosticsSummary": {
+      "errors": 0,
+      "warnings": 0,
+      "byCode": {}
+    }
+  },
+  "diagnostics": [],
+  "diagnosticsSummary": {
+    "errors": 0,
+    "warnings": 0,
+    "byCode": {}
+  },
+  "mcpWorkspace": {
+    "workspaceRoot": "/Users/beom/work/git/NaruServe",
+    "rootSource": "server-cwd-discovery",
+    "indexPath": "docs/spec/00.index.md",
+    "packageVersion": "4.2.0"
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "code_context_review": {
+    "status": "pass",
+    "closed": [
+      "dispatcher shared write ordering",
+      "post-release final verification",
+      "missing ownership paths",
+      "HTTP/WS profile separation",
+      "router-local param cache",
+      "synthetic vs actual mount boundary"
+    ]
+  },
+  "express_semantic_review": {
+    "status": "pass-with-pending-gates",
+    "closed": [
+      "late registration and common method guards",
+      "postresponse and repeated next",
+      "same-router vs mount param views",
+      "supported Servlet raw URI pass evidence"
+    ]
+  },
+  "pending": [
+    "external TinyHttpd write authorization"
+  ],
+  "completionClaim": "Research/decomposition/issue publication only; implementation not started",
+  "regexp_research": "Historical engine comparison retained; explicit subsequent user decision selects Java Pattern and excludes ECMAScript engine/JNI parity.",
+  "latest_scope_change": "04.java-pattern-decision.md"
+}
