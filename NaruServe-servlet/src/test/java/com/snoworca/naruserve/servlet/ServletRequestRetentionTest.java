@@ -22,7 +22,7 @@ public class ServletRequestRetentionTest {
     @After public void cleanup()throws Exception{
         if(app!=null)app.shutdown(0,TimeUnit.MILLISECONDS);producer.shutdownNow();assertTrue("producer leaked",producer.awaitTermination(12,TimeUnit.SECONDS));
     }
-    private static String fixedResponse(InputStream input)throws IOException{
+    static String fixedResponse(InputStream input)throws IOException{
         ByteArrayOutputStream bytes=new ByteArrayOutputStream();int tail=0;
         while(tail!=0x0d0a0d0a){int b=input.read();if(b<0)throw new EOFException("response head ended");bytes.write(b);tail=(tail<<8)|b;}
         String head=new String(bytes.toByteArray(),StandardCharsets.ISO_8859_1);String length=null;
