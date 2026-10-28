@@ -62,7 +62,7 @@ public class ServletRequestRetentionTest {
             try{exchange.get().requestBody();fail("cancelled request opened recycled input");}catch(UncheckedIOException|IllegalStateException expected){}
             assertEquals(0,opens.get());assertTrue(work.resolve());exchange.get().retainRequest().run();exchange.get().abort();
             assertEquals(1,aborts.get());assertEquals(0,inFlight.getInt(adapter));assertEquals(1,log.info().size());
-            try{request.get().body(String.class);fail("settled producer resurrected request input");}catch(UncheckedIOException|IllegalStateException|HttpException expected){}
+            try{request.get().body(String.class);fail("settled producer resurrected request input");}catch(BodyAlreadyConsumedException expected){}
             assertEquals(0,opens.get());
         }
     }
