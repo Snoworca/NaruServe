@@ -220,14 +220,15 @@ public class TinyDeferredSocketTest {
     private void throwingCancellationCannotBreakStopLoop(boolean error) throws Exception {
         CountDownLatch keepHandler = new CountDownLatch(1), accepted = new CountDownLatch(1);
         releases.add(keepHandler);
-        AtomicInteger cancelled = new AtomicInteger(), notices = new AtomicInteger(), otherNotices = new AtomicInteger();
+        AtomicInteger cancelled = new AtomicInteger(), notices = new AtomicInteger(), otherNotices = new AtomicInteger(),
+                drained = new AtomicInteger();
         AtomicReference<Throwable> lockFailure = new AtomicReference<>();
         start(ex -> {
             if (ex.rawPath().equals("/owned-in-handler")) {
                 ex.onAbort(() -> { cancellationUnlocked(ex, lockFailure); notices.incrementAndGet(); });
                 try {
                     ex.eventStream(200, Collections.emptyList(), new StreamDrain() {
-                        public void drain(OutputStream out) { fail("cancelled drain was started"); }
+                        public void drain(OutputStream out) { drained.incrementAndGet(); }
                         public void abort() {
                             cancellationUnlocked(ex, lockFailure);
                             cancelled.incrementAndGet();
@@ -262,6 +263,7 @@ public class TinyDeferredSocketTest {
         keepHandler.countDown();
         reply.get(5, TimeUnit.SECONDS); otherReply.get(5, TimeUnit.SECONDS);
         until(() -> ((TinyHttpdExchange) ex).slots().open() == 0, "cancelled slot leaked");
+        assertEquals("cancelled drain was started", 0, drained.get());
         ex.abort(); other.abort();
         assertEquals(1, cancelled.get()); assertEquals(1, notices.get()); assertEquals(1, observedOther.get());
     }
