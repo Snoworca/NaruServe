@@ -239,7 +239,8 @@ public class ServletDeferredSpiTest {
         ex.onAbort(()->{try{assertCallbackUnlocked(ex);}catch(Throwable e){failure.set(e);}notified.incrementAndGet();});
         reply.get(5,TimeUnit.SECONDS);completeOnce(1);idle();
         assertEquals(1,throwing.get());assertEquals(1,notified.get());assertNull(failure.get());
-        ex.onAbort(notified::incrementAndGet);ex.abort();ex.abort();assertEquals(2,notified.get());closed(ex);
+        ex.onAbort(()->{try{assertCallbackUnlocked(ex);}catch(Throwable e){failure.set(e);}notified.incrementAndGet();});
+        assertNull("late listener ran under an adapter lock",failure.get());ex.abort();ex.abort();assertEquals(2,notified.get());closed(ex);
     }
     // IR-HTTP-009 AC-1 AC-5; FR-SVL-009 AC-1: both successful response lifetimes preserve normal completion.
     @Test(timeout=20000) public void successfulSyncAndDeferredFinishNeverNotifyAbort() throws Exception {
