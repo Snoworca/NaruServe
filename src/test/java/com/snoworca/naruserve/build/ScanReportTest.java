@@ -76,6 +76,7 @@ public class ScanReportTest {
 
     // SDS-AC-1; FR-REL-002 AC-1
     @Test
+    // CON-BUILD-018 AC-1 AC-2: current shipped graph; historical fixtures above stay historical.
     public void fr_REL_002_AC1_realGraphReportGivesTheShippedRuntimeDependencies() throws IOException {
         File report = new File(BuildLayoutTest.property("naruserve.depReport"));
         List<String> lines = ReleaseMain.graphLines(report);
@@ -83,7 +84,7 @@ public class ScanReportTest {
         for (String expected : new String[] {"com.google.code.gson:gson:2.14.0",
                 "com.google.errorprone:error_prone_annotations:2.48.0", "org.jetbrains.kotlin:kotlin-stdlib:2.2.0",
                 "org.jetbrains:annotations:13.0", "org.slf4j:slf4j-api:1.7.36",
-                "com.snoworca:tinyhttpd-core:3.1.0"}) {
+                "com.snoworca:tinyhttpd-core:3.1.1"}) {
             assertTrue(expected + " in " + deps, deps.contains(expected));
         }
         for (String dep : deps) {
