@@ -122,4 +122,11 @@ public class TinyAbortNotificationTest {
         Future<String> reply=get();next();terminal(reply);assertNotNull(caught.get());assertSame(injected.get(),caught.get());assertEquals(1,notices.get());assertNull(lockFailure.get());assertEquals(1,transportAborts.get());
     }
 
+    // IR-HTTP-009 AC-2 AC-3: explicit finish after swallowed SSE IO cannot erase the known terminal failure.
+    @Test(timeout=20000) public void customDrainFinishingAfterCaughtIoCannotReportSuccess()throws Exception{
+        AtomicInteger notices=new AtomicInteger();AtomicReference<IOException> caught=new AtomicReference<>(),finishFailure=new AtomicReference<>();
+        start(ex->{ex.onAbort(notices::incrementAndGet);try{ex.eventStream(200,Collections.emptyList(),out->{fault.set("write");try{out.write('x');}catch(IOException original){caught.set(original);}try{ex.finish();}catch(IOException original){finishFailure.set(original);}});}catch(IOException failure){throw new UncheckedIOException(failure);}});
+        Future<String> reply=get();next();terminal(reply);assertNotNull(caught.get());assertSame(injected.get(),caught.get());assertSame(caught.get(),finishFailure.get());assertEquals(1,notices.get());assertEquals(1,transportAborts.get());
+    }
+
 }
