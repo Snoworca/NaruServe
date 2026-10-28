@@ -38,7 +38,8 @@ public class ServletDeferredSpiTest {
     }
     private void start(ExchangeHandler handler) throws Exception { start(handler,true); }
     private void start(ExchangeHandler handler,boolean asyncSupported) throws Exception {
-        adapter=new ServletAdapter();adapter.bind(TestSupport.settings().maxSseStreams(1).build(),handler);
+        adapter=new ServletAdapter();adapter.bind(TestSupport.settings().maxSseStreams(1)
+                .errorRenderer(status -> "{\"error\":{\"status\":"+status+"}}") .build(),handler);
         container.filter((request,response,chain)->{
             HttpServletRequestWrapper wrapper=new HttpServletRequestWrapper((HttpServletRequest)request) {
                 @Override public AsyncContext startAsync() {
@@ -49,8 +50,7 @@ public class ServletDeferredSpiTest {
             };
             try {chain.doFilter(wrapper,response);} finally {returned.offer(wrapper.getRequestURI());}
         });
-        ServletContextHandler context=container.servlet(new NaruServeServlet(adapter,""),"/*");
-        context.getServletHandler().getServlets()[0].setAsyncSupported(asyncSupported);
+        container.servlet(new NaruServeServlet(adapter,""),"/*","/",holder -> holder.setAsyncSupported(asyncSupported));
     }
     private Future<SharedApp.Reply> request(String path) { return clients.submit(()->SharedApp.http(container.port(),"GET",path,null)); }
     private HttpExchange next() throws Exception {HttpExchange ex=exchanges.poll(5,TimeUnit.SECONDS);assertNotNull("handler did not receive exchange",ex);return ex;}
