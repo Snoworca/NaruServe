@@ -1,0 +1,1280 @@
+{
+  "schemaVersion": 1,
+  "reference": {
+    "node": "22.22.0",
+    "express": "5.1.0",
+    "router": "2.2.0",
+    "pathToRegexp": "8.4.2",
+    "packages": {
+      "express": {
+        "version": "5.1.0",
+        "packageSha256": "0ca5c69a8c6647bd6c8b7d9ee3451e0eefce551304f6bfeb57f8df3ab79823e1",
+        "entrySha256": "4d2f5afc192178c5b0dc418d2da5826d52a8b6998771b011aede7fdba9118140"
+      },
+      "router": {
+        "version": "2.2.0",
+        "packageSha256": "b77062595f89476fab6acbcde5fa8dfac3be7d7b9b0b0b69d48c84ebc13c9a06",
+        "entrySha256": "fcc39d49329e5701e3fbd195060834398434b8e136a59949a654f6f402f6e31b"
+      },
+      "path-to-regexp": {
+        "version": "8.4.2",
+        "packageSha256": "3c37dce1e0587231f7c9f63e137dd0ed4d6f25552c89b5b5939c6a3d36113634",
+        "entrySha256": "f8e7946ca3a4dcc2ed1ea46e3bcffaef014e4abc359a7469a16817f1f79df62f"
+      }
+    },
+    "sources": {
+      "express/lib/application.js": "f907fbf24306e0a5ed9d526c7804903d556b51e91c295e6ec65842a8343c9644",
+      "router/index.js": "fcc39d49329e5701e3fbd195060834398434b8e136a59949a654f6f402f6e31b",
+      "router/lib/layer.js": "569771db2d3ade3d695ae9259063e8b685ed734e78c2e0ff7648e0a6bf436119",
+      "router/lib/route.js": "77e83b1ceca13bdbdaf42b79d90527489c46249db2ad4226e328352dfe68f83d",
+      "path-to-regexp/dist/index.js": "f8e7946ca3a4dcc2ed1ea46e3bcffaef014e4abc359a7469a16817f1f79df62f"
+    }
+  },
+  "generatorSha256": "7d4bb62086464bc8681d3ff3f7022573f2f3903a7696609e0fd6f01ca314f026",
+  "boundary": {
+    "regexEngine": "java.util.regex.Pattern",
+    "ecmascriptRegExpEquivalent": false,
+    "jni": false
+  },
+  "normalization": {
+    "essentialHeaders": [
+      "allow",
+      "content-type",
+      "content-length",
+      "location",
+      "x-handler"
+    ],
+    "excludedHeaders": [
+      "date",
+      "connection",
+      "keep-alive",
+      "etag",
+      "x-powered-by"
+    ],
+    "notes": [
+      "Unquoted UTF-8 charset parameter tokens are lowercased on both sides (RFC 9110 sections 8.3.1/8.3.2); other header values remain exact.",
+      "Ephemeral TCP ports and elapsed times are not observations.",
+      "Stacks and filesystem paths are excluded; observed error names/messages are retained.",
+      "Response bytes, selected essential headers, trace order and absent/null/list parameter shape remain exact.",
+      "Java-specific Pattern cases belong to Java contract tests, not ECMAScript regex comparison."
+    ]
+  },
+  "cases": [
+    {
+      "id": "literal.get",
+      "feature": "baseline",
+      "registration": {
+        "success": true,
+        "error": null
+      },
+      "request": {
+        "method": "GET",
+        "rawPath": "/a"
+      },
+      "observation": {
+        "status": 200,
+        "headers": {
+          "allow": null,
+          "content-type": "text/plain; charset=utf-8",
+          "content-length": "7",
+          "location": null,
+          "x-handler": null
+        },
+        "body": "literal",
+        "trace": [
+          {
+            "handler": "literal",
+            "params": {},
+            "path": "/a",
+            "url": "/a",
+            "baseUrl": "",
+            "originalUrl": "/a"
+          }
+        ],
+        "completion": {
+          "state": "finished",
+          "errors": []
+        }
+      }
+    },
+    {
+      "id": "literal.post",
+      "feature": "baseline",
+      "registration": {
+        "success": true,
+        "error": null
+      },
+      "request": {
+        "method": "POST",
+        "rawPath": "/a"
+      },
+      "observation": {
+        "status": 201,
+        "headers": {
+          "allow": null,
+          "content-type": "text/plain; charset=utf-8",
+          "content-length": "6",
+          "location": null,
+          "x-handler": null
+        },
+        "body": "posted",
+        "trace": [
+          {
+            "handler": "posted",
+            "params": {},
+            "path": "/a",
+            "url": "/a",
+            "baseUrl": "",
+            "originalUrl": "/a"
+          }
+        ],
+        "completion": {
+          "state": "finished",
+          "errors": []
+        }
+      }
+    },
+    {
+      "id": "param.basic",
+      "feature": "baseline",
+      "registration": {
+        "success": true,
+        "error": null
+      },
+      "request": {
+        "method": "GET",
+        "rawPath": "/users/42"
+      },
+      "observation": {
+        "status": 200,
+        "headers": {
+          "allow": null,
+          "content-type": "text/plain; charset=utf-8",
+          "content-length": "5",
+          "location": null,
+          "x-handler": null
+        },
+        "body": "id=42",
+        "trace": [
+          {
+            "handler": "user",
+            "params": {
+              "id": "42"
+            },
+            "path": "/users/42",
+            "url": "/users/42",
+            "baseUrl": "",
+            "originalUrl": "/users/42"
+          }
+        ],
+        "completion": {
+          "state": "finished",
+          "errors": []
+        }
+      }
+    },
+    {
+      "id": "optional.absent",
+      "feature": "grammar",
+      "registration": {
+        "success": true,
+        "error": null
+      },
+      "request": {
+        "method": "GET",
+        "rawPath": "/users"
+      },
+      "observation": {
+        "status": 200,
+        "headers": {
+          "allow": null,
+          "content-type": "text/plain; charset=utf-8",
+          "content-length": "2",
+          "location": null,
+          "x-handler": null
+        },
+        "body": "ok",
+        "trace": [
+          {
+            "handler": "optional",
+            "params": {},
+            "path": "/users",
+            "url": "/users",
+            "baseUrl": "",
+            "originalUrl": "/users"
+          }
+        ],
+        "completion": {
+          "state": "finished",
+          "errors": []
+        }
+      }
+    },
+    {
+      "id": "optional.present",
+      "feature": "grammar",
+      "registration": {
+        "success": true,
+        "error": null
+      },
+      "request": {
+        "method": "GET",
+        "rawPath": "/users/42"
+      },
+      "observation": {
+        "status": 200,
+        "headers": {
+          "allow": null,
+          "content-type": "text/plain; charset=utf-8",
+          "content-length": "2",
+          "location": null,
+          "x-handler": null
+        },
+        "body": "ok",
+        "trace": [
+          {
+            "handler": "optional",
+            "params": {
+              "id": "42"
+            },
+            "path": "/users/42",
+            "url": "/users/42",
+            "baseUrl": "",
+            "originalUrl": "/users/42"
+          }
+        ],
+        "completion": {
+          "state": "finished",
+          "errors": []
+        }
+      }
+    },
+    {
+      "id": "wildcard.list",
+      "feature": "grammar",
+      "registration": {
+        "success": true,
+        "error": null
+      },
+      "request": {
+        "method": "GET",
+        "rawPath": "/files/a/b"
+      },
+      "observation": {
+        "status": 200,
+        "headers": {
+          "allow": null,
+          "content-type": "text/plain; charset=utf-8",
+          "content-length": "2",
+          "location": null,
+          "x-handler": null
+        },
+        "body": "ok",
+        "trace": [
+          {
+            "handler": "wildcard",
+            "params": {
+              "parts": [
+                "a",
+                "b"
+              ]
+            },
+            "path": "/files/a/b",
+            "url": "/files/a/b",
+            "baseUrl": "",
+            "originalUrl": "/files/a/b"
+          }
+        ],
+        "completion": {
+          "state": "finished",
+          "errors": []
+        }
+      }
+    },
+    {
+      "id": "param.duplicate",
+      "feature": "grammar",
+      "registration": {
+        "success": true,
+        "error": null
+      },
+      "request": {
+        "method": "GET",
+        "rawPath": "/a/b"
+      },
+      "observation": {
+        "status": 200,
+        "headers": {
+          "allow": null,
+          "content-type": "text/plain; charset=utf-8",
+          "content-length": "2",
+          "location": null,
+          "x-handler": null
+        },
+        "body": "ok",
+        "trace": [
+          {
+            "handler": "duplicate",
+            "params": {
+              "id": "b"
+            },
+            "path": "/a/b",
+            "url": "/a/b",
+            "baseUrl": "",
+            "originalUrl": "/a/b"
+          }
+        ],
+        "completion": {
+          "state": "finished",
+          "errors": []
+        }
+      }
+    },
+    {
+      "id": "param.quoted",
+      "feature": "grammar",
+      "registration": {
+        "success": true,
+        "error": null
+      },
+      "request": {
+        "method": "GET",
+        "rawPath": "/42"
+      },
+      "observation": {
+        "status": 200,
+        "headers": {
+          "allow": null,
+          "content-type": "text/plain; charset=utf-8",
+          "content-length": "2",
+          "location": null,
+          "x-handler": null
+        },
+        "body": "ok",
+        "trace": [
+          {
+            "handler": "quoted",
+            "params": {
+              "user-id": "42"
+            },
+            "path": "/42",
+            "url": "/42",
+            "baseUrl": "",
+            "originalUrl": "/42"
+          }
+        ],
+        "completion": {
+          "state": "finished",
+          "errors": []
+        }
+      }
+    },
+    {
+      "id": "registration.unnamed-wildcard",
+      "feature": "registration-error",
+      "registration": {
+        "success": false,
+        "error": {
+          "name": "TypeError",
+          "message": "Missing parameter name at index 8: /files/*; visit https://git.new/pathToRegexpError for info"
+        }
+      },
+      "request": null,
+      "observation": null
+    },
+    {
+      "id": "registration.inline-regex",
+      "feature": "registration-error",
+      "registration": {
+        "success": false,
+        "error": {
+          "name": "TypeError",
+          "message": "Unexpected ( at index 6: /x/:id(\\d+); visit https://git.new/pathToRegexpError for info"
+        }
+      },
+      "request": null,
+      "observation": null
+    },
+    {
+      "id": "array.alternative",
+      "feature": "path-alternatives",
+      "registration": {
+        "success": true,
+        "error": null
+      },
+      "request": {
+        "method": "GET",
+        "rawPath": "/b/42"
+      },
+      "observation": {
+        "status": 200,
+        "headers": {
+          "allow": null,
+          "content-type": "text/plain; charset=utf-8",
+          "content-length": "2",
+          "location": null,
+          "x-handler": null
+        },
+        "body": "ok",
+        "trace": [
+          {
+            "handler": "alternative",
+            "params": {
+              "b": "42"
+            },
+            "path": "/b/42",
+            "url": "/b/42",
+            "baseUrl": "",
+            "originalUrl": "/b/42"
+          }
+        ],
+        "completion": {
+          "state": "finished",
+          "errors": []
+        }
+      }
+    },
+    {
+      "id": "order.parameter-before-literal",
+      "feature": "ordered-stack",
+      "registration": {
+        "success": true,
+        "error": null
+      },
+      "request": {
+        "method": "GET",
+        "rawPath": "/fixed"
+      },
+      "observation": {
+        "status": 200,
+        "headers": {
+          "allow": null,
+          "content-type": "text/plain; charset=utf-8",
+          "content-length": "9",
+          "location": null,
+          "x-handler": null
+        },
+        "body": "parameter",
+        "trace": [
+          {
+            "handler": "parameter",
+            "params": {
+              "id": "fixed"
+            },
+            "path": "/fixed",
+            "url": "/fixed",
+            "baseUrl": "",
+            "originalUrl": "/fixed"
+          }
+        ],
+        "completion": {
+          "state": "finished",
+          "errors": []
+        }
+      }
+    },
+    {
+      "id": "route.next",
+      "feature": "route-boundary",
+      "registration": {
+        "success": true,
+        "error": null
+      },
+      "request": {
+        "method": "GET",
+        "rawPath": "/a"
+      },
+      "observation": {
+        "status": 200,
+        "headers": {
+          "allow": null,
+          "content-type": "text/plain; charset=utf-8",
+          "content-length": "3",
+          "location": null,
+          "x-handler": null
+        },
+        "body": "two",
+        "trace": [
+          {
+            "handler": "one",
+            "params": {},
+            "path": "/a",
+            "url": "/a",
+            "baseUrl": "",
+            "originalUrl": "/a"
+          },
+          {
+            "handler": "two",
+            "params": {},
+            "path": "/a",
+            "url": "/a",
+            "baseUrl": "",
+            "originalUrl": "/a"
+          }
+        ],
+        "completion": {
+          "state": "finished",
+          "errors": []
+        }
+      }
+    },
+    {
+      "id": "route.skip",
+      "feature": "route-boundary",
+      "registration": {
+        "success": true,
+        "error": null
+      },
+      "request": {
+        "method": "GET",
+        "rawPath": "/a"
+      },
+      "observation": {
+        "status": 200,
+        "headers": {
+          "allow": null,
+          "content-type": "text/plain; charset=utf-8",
+          "content-length": "5",
+          "location": null,
+          "x-handler": null
+        },
+        "body": "three",
+        "trace": [
+          {
+            "handler": "one",
+            "params": {},
+            "path": "/a",
+            "url": "/a",
+            "baseUrl": "",
+            "originalUrl": "/a"
+          },
+          {
+            "handler": "three",
+            "params": {},
+            "path": "/a",
+            "url": "/a",
+            "baseUrl": "",
+            "originalUrl": "/a"
+          }
+        ],
+        "completion": {
+          "state": "finished",
+          "errors": []
+        }
+      }
+    },
+    {
+      "id": "use.route-skip-continues",
+      "feature": "continuation",
+      "registration": {
+        "success": true,
+        "error": null
+      },
+      "request": {
+        "method": "GET",
+        "rawPath": "/a"
+      },
+      "observation": {
+        "status": 200,
+        "headers": {
+          "allow": null,
+          "content-type": "text/plain; charset=utf-8",
+          "content-length": "2",
+          "location": null,
+          "x-handler": null
+        },
+        "body": "ok",
+        "trace": [
+          {
+            "handler": "use-one",
+            "params": {},
+            "path": "/",
+            "url": "/",
+            "baseUrl": "/a",
+            "originalUrl": "/a"
+          },
+          {
+            "handler": "use-two",
+            "params": {},
+            "path": "/",
+            "url": "/",
+            "baseUrl": "/a",
+            "originalUrl": "/a"
+          },
+          {
+            "handler": "route",
+            "params": {},
+            "path": "/a",
+            "url": "/a",
+            "baseUrl": "",
+            "originalUrl": "/a"
+          }
+        ],
+        "completion": {
+          "state": "finished",
+          "errors": []
+        }
+      }
+    },
+    {
+      "id": "mount.layer-views",
+      "feature": "mount",
+      "registration": {
+        "success": true,
+        "error": null
+      },
+      "request": {
+        "method": "GET",
+        "rawPath": "/api/v1/users?q=1"
+      },
+      "observation": {
+        "status": 200,
+        "headers": {
+          "allow": null,
+          "content-type": "text/plain; charset=utf-8",
+          "content-length": "2",
+          "location": null,
+          "x-handler": null
+        },
+        "body": "ok",
+        "trace": [
+          {
+            "handler": "before",
+            "params": {
+              "version": "v1"
+            },
+            "path": "/users",
+            "url": "/users?q=1",
+            "baseUrl": "/api/v1",
+            "originalUrl": "/api/v1/users?q=1"
+          },
+          {
+            "handler": "route",
+            "params": {
+              "other": "v1"
+            },
+            "path": "/api/v1/users",
+            "url": "/api/v1/users?q=1",
+            "baseUrl": "",
+            "originalUrl": "/api/v1/users?q=1"
+          },
+          {
+            "handler": "after",
+            "params": {
+              "other": "v1"
+            },
+            "path": "/api/v1/users",
+            "url": "/api/v1/users?q=1",
+            "baseUrl": "",
+            "originalUrl": "/api/v1/users?q=1"
+          }
+        ],
+        "completion": {
+          "state": "finished",
+          "errors": []
+        }
+      }
+    },
+    {
+      "id": "mount.merge-false",
+      "feature": "mount",
+      "registration": {
+        "success": true,
+        "error": null
+      },
+      "request": {
+        "method": "GET",
+        "rawPath": "/api/v1/users/42"
+      },
+      "observation": {
+        "status": 200,
+        "headers": {
+          "allow": null,
+          "content-type": "text/plain; charset=utf-8",
+          "content-length": "2",
+          "location": null,
+          "x-handler": null
+        },
+        "body": "ok",
+        "trace": [
+          {
+            "handler": "child",
+            "params": {
+              "id": "42"
+            },
+            "path": "/users/42",
+            "url": "/users/42",
+            "baseUrl": "/api/v1",
+            "originalUrl": "/api/v1/users/42"
+          }
+        ],
+        "completion": {
+          "state": "finished",
+          "errors": []
+        }
+      }
+    },
+    {
+      "id": "mount.merge-true",
+      "feature": "mount",
+      "registration": {
+        "success": true,
+        "error": null
+      },
+      "request": {
+        "method": "GET",
+        "rawPath": "/api/v1/users/42"
+      },
+      "observation": {
+        "status": 200,
+        "headers": {
+          "allow": null,
+          "content-type": "text/plain; charset=utf-8",
+          "content-length": "2",
+          "location": null,
+          "x-handler": null
+        },
+        "body": "ok",
+        "trace": [
+          {
+            "handler": "child",
+            "params": {
+              "version": "v1",
+              "id": "42"
+            },
+            "path": "/users/42",
+            "url": "/users/42",
+            "baseUrl": "/api/v1",
+            "originalUrl": "/api/v1/users/42"
+          }
+        ],
+        "completion": {
+          "state": "finished",
+          "errors": []
+        }
+      }
+    },
+    {
+      "id": "router.exit",
+      "feature": "router-skip",
+      "registration": {
+        "success": true,
+        "error": null
+      },
+      "request": {
+        "method": "GET",
+        "rawPath": "/a"
+      },
+      "observation": {
+        "status": 200,
+        "headers": {
+          "allow": null,
+          "content-type": "text/plain; charset=utf-8",
+          "content-length": "2",
+          "location": null,
+          "x-handler": null
+        },
+        "body": "ok",
+        "trace": [
+          {
+            "handler": "child",
+            "params": {},
+            "path": "/a",
+            "url": "/a",
+            "baseUrl": "",
+            "originalUrl": "/a"
+          },
+          {
+            "handler": "parent",
+            "params": {},
+            "path": "/a",
+            "url": "/a",
+            "baseUrl": "",
+            "originalUrl": "/a"
+          }
+        ],
+        "completion": {
+          "state": "finished",
+          "errors": []
+        }
+      }
+    },
+    {
+      "id": "param.callback-cache",
+      "feature": "param-hook",
+      "registration": {
+        "success": true,
+        "error": null
+      },
+      "request": {
+        "method": "GET",
+        "rawPath": "/42"
+      },
+      "observation": {
+        "status": 200,
+        "headers": {
+          "allow": null,
+          "content-type": "text/plain; charset=utf-8",
+          "content-length": "2",
+          "location": null,
+          "x-handler": null
+        },
+        "body": "ok",
+        "trace": [
+          {
+            "handler": "param:42",
+            "params": {
+              "id": "42"
+            },
+            "path": "/42",
+            "url": "/42",
+            "baseUrl": "",
+            "originalUrl": "/42"
+          },
+          {
+            "handler": "one",
+            "params": {
+              "id": "42"
+            },
+            "path": "/42",
+            "url": "/42",
+            "baseUrl": "",
+            "originalUrl": "/42"
+          },
+          {
+            "handler": "two",
+            "params": {
+              "id": "42"
+            },
+            "path": "/42",
+            "url": "/42",
+            "baseUrl": "",
+            "originalUrl": "/42"
+          }
+        ],
+        "completion": {
+          "state": "finished",
+          "errors": []
+        }
+      }
+    },
+    {
+      "id": "head.order-false",
+      "feature": "http-defaults",
+      "registration": {
+        "success": true,
+        "error": null
+      },
+      "request": {
+        "method": "HEAD",
+        "rawPath": "/a"
+      },
+      "observation": {
+        "status": 200,
+        "headers": {
+          "allow": null,
+          "content-type": "text/plain; charset=utf-8",
+          "content-length": "3",
+          "location": null,
+          "x-handler": "get"
+        },
+        "body": "",
+        "trace": [
+          {
+            "handler": "get",
+            "params": {},
+            "path": "/a",
+            "url": "/a",
+            "baseUrl": "",
+            "originalUrl": "/a"
+          }
+        ],
+        "completion": {
+          "state": "finished",
+          "errors": []
+        }
+      }
+    },
+    {
+      "id": "head.order-true",
+      "feature": "http-defaults",
+      "registration": {
+        "success": true,
+        "error": null
+      },
+      "request": {
+        "method": "HEAD",
+        "rawPath": "/a"
+      },
+      "observation": {
+        "status": 200,
+        "headers": {
+          "allow": null,
+          "content-type": "text/plain; charset=utf-8",
+          "content-length": "4",
+          "location": null,
+          "x-handler": "head"
+        },
+        "body": "",
+        "trace": [
+          {
+            "handler": "head",
+            "params": {},
+            "path": "/a",
+            "url": "/a",
+            "baseUrl": "",
+            "originalUrl": "/a"
+          }
+        ],
+        "completion": {
+          "state": "finished",
+          "errors": []
+        }
+      }
+    },
+    {
+      "id": "options.automatic",
+      "feature": "http-defaults",
+      "registration": {
+        "success": true,
+        "error": null
+      },
+      "request": {
+        "method": "OPTIONS",
+        "rawPath": "/a"
+      },
+      "observation": {
+        "status": 200,
+        "headers": {
+          "allow": "DELETE, GET, HEAD, POST",
+          "content-type": "text/plain",
+          "content-length": "23",
+          "location": null,
+          "x-handler": null
+        },
+        "body": "DELETE, GET, HEAD, POST",
+        "trace": [],
+        "completion": {
+          "state": "finished",
+          "errors": []
+        }
+      }
+    },
+    {
+      "id": "options.middleware-fallthrough",
+      "feature": "http-defaults",
+      "registration": {
+        "success": true,
+        "error": null
+      },
+      "request": {
+        "method": "OPTIONS",
+        "rawPath": "/a"
+      },
+      "observation": {
+        "status": 202,
+        "headers": {
+          "allow": null,
+          "content-type": "text/plain; charset=utf-8",
+          "content-length": "6",
+          "location": null,
+          "x-handler": null
+        },
+        "body": "custom",
+        "trace": [
+          {
+            "handler": "fallback",
+            "params": {},
+            "path": "/a",
+            "url": "/a",
+            "baseUrl": "",
+            "originalUrl": "/a"
+          }
+        ],
+        "completion": {
+          "state": "finished",
+          "errors": []
+        }
+      }
+    },
+    {
+      "id": "error.thrown",
+      "feature": "error-flow",
+      "registration": {
+        "success": true,
+        "error": null
+      },
+      "request": {
+        "method": "GET",
+        "rawPath": "/a"
+      },
+      "observation": {
+        "status": 500,
+        "headers": {
+          "allow": null,
+          "content-type": "text/plain; charset=utf-8",
+          "content-length": "4",
+          "location": null,
+          "x-handler": null
+        },
+        "body": "boom",
+        "trace": [
+          {
+            "handler": "throw",
+            "params": {},
+            "path": "/a",
+            "url": "/a",
+            "baseUrl": "",
+            "originalUrl": "/a"
+          },
+          {
+            "handler": "error",
+            "params": {},
+            "path": "/a",
+            "url": "/a",
+            "baseUrl": "",
+            "originalUrl": "/a"
+          }
+        ],
+        "completion": {
+          "state": "finished",
+          "errors": [
+            {
+              "name": "Error",
+              "message": "boom"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "async.delayed-next",
+      "feature": "async",
+      "registration": {
+        "success": true,
+        "error": null
+      },
+      "request": {
+        "method": "GET",
+        "rawPath": "/a"
+      },
+      "observation": {
+        "status": 200,
+        "headers": {
+          "allow": null,
+          "content-type": "text/plain; charset=utf-8",
+          "content-length": "2",
+          "location": null,
+          "x-handler": null
+        },
+        "body": "ok",
+        "trace": [
+          {
+            "handler": "scheduled",
+            "params": {},
+            "path": "/a",
+            "url": "/a",
+            "baseUrl": "",
+            "originalUrl": "/a"
+          },
+          {
+            "handler": "continued",
+            "params": {},
+            "path": "/a",
+            "url": "/a",
+            "baseUrl": "",
+            "originalUrl": "/a"
+          },
+          {
+            "handler": "final",
+            "params": {},
+            "path": "/a",
+            "url": "/a",
+            "baseUrl": "",
+            "originalUrl": "/a"
+          }
+        ],
+        "completion": {
+          "state": "finished",
+          "errors": []
+        }
+      }
+    },
+    {
+      "id": "async.rejected",
+      "feature": "async",
+      "registration": {
+        "success": true,
+        "error": null
+      },
+      "request": {
+        "method": "GET",
+        "rawPath": "/a"
+      },
+      "observation": {
+        "status": 500,
+        "headers": {
+          "allow": null,
+          "content-type": "text/plain; charset=utf-8",
+          "content-length": "8",
+          "location": null,
+          "x-handler": null
+        },
+        "body": "rejected",
+        "trace": [
+          {
+            "handler": "async",
+            "params": {},
+            "path": "/a",
+            "url": "/a",
+            "baseUrl": "",
+            "originalUrl": "/a"
+          },
+          {
+            "handler": "error",
+            "params": {},
+            "path": "/a",
+            "url": "/a",
+            "baseUrl": "",
+            "originalUrl": "/a"
+          }
+        ],
+        "completion": {
+          "state": "finished",
+          "errors": [
+            {
+              "name": "Error",
+              "message": "rejected"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "continuation.after-response",
+      "feature": "continuation",
+      "registration": {
+        "success": true,
+        "error": null
+      },
+      "request": {
+        "method": "GET",
+        "rawPath": "/a"
+      },
+      "observation": {
+        "status": 200,
+        "headers": {
+          "allow": null,
+          "content-type": "text/plain; charset=utf-8",
+          "content-length": "2",
+          "location": null,
+          "x-handler": null
+        },
+        "body": "ok",
+        "trace": [
+          {
+            "handler": "respond",
+            "params": {},
+            "path": "/a",
+            "url": "/a",
+            "baseUrl": "",
+            "originalUrl": "/a"
+          },
+          {
+            "handler": "after-response",
+            "params": {},
+            "path": "/a",
+            "url": "/a",
+            "baseUrl": "",
+            "originalUrl": "/a"
+          }
+        ],
+        "completion": {
+          "state": "finished",
+          "errors": []
+        }
+      }
+    },
+    {
+      "id": "raw.encoded-slash",
+      "feature": "decoding",
+      "registration": {
+        "success": true,
+        "error": null
+      },
+      "request": {
+        "method": "GET",
+        "rawPath": "/x/a%2Fb"
+      },
+      "observation": {
+        "status": 200,
+        "headers": {
+          "allow": null,
+          "content-type": "text/plain; charset=utf-8",
+          "content-length": "2",
+          "location": null,
+          "x-handler": null
+        },
+        "body": "ok",
+        "trace": [
+          {
+            "handler": "decoded",
+            "params": {
+              "id": "a/b"
+            },
+            "path": "/x/a%2Fb",
+            "url": "/x/a%2Fb",
+            "baseUrl": "",
+            "originalUrl": "/x/a%2Fb"
+          }
+        ],
+        "completion": {
+          "state": "finished",
+          "errors": []
+        }
+      }
+    },
+    {
+      "id": "raw.malformed-escape",
+      "feature": "decoding",
+      "registration": {
+        "success": true,
+        "error": null
+      },
+      "request": {
+        "method": "GET",
+        "rawPath": "/x/%ZZ"
+      },
+      "observation": {
+        "status": 400,
+        "headers": {
+          "allow": null,
+          "content-type": "text/plain; charset=utf-8",
+          "content-length": "8",
+          "location": null,
+          "x-handler": null
+        },
+        "body": "bad path",
+        "trace": [
+          {
+            "handler": "decode-error",
+            "params": {},
+            "path": "/x/%ZZ",
+            "url": "/x/%ZZ",
+            "baseUrl": "",
+            "originalUrl": "/x/%ZZ"
+          }
+        ],
+        "completion": {
+          "state": "finished",
+          "errors": [
+            {
+              "name": "URIError",
+              "message": "Failed to decode param '%ZZ'"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

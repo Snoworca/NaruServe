@@ -78,6 +78,25 @@ public class ParityCorpusTest {
         changed=original.deepCopy(); changed.getAsJsonObject("boundary").addProperty("regexEngine","ECMAScript"); invalid(changed,lock,"boundary.regexEngine");
         changed=original.deepCopy(); changed.getAsJsonObject("boundary").addProperty("ecmascriptRegExpEquivalent",true); invalid(changed,lock,"boundary.ecmascriptRegExpEquivalent");
         changed=original.deepCopy(); changed.addProperty("schemaVersion",2); invalid(changed,lock,"schemaVersion");
+        changed=original.deepCopy(); changed.getAsJsonObject("boundary").addProperty("jni",true); invalid(changed,lock,"boundary.jni");
+        changed=original.deepCopy(); changed.getAsJsonObject("reference").addProperty("node","24.0.0"); invalid(changed,lock,"reference");
+        changed=original.deepCopy(); changed.getAsJsonObject("reference").getAsJsonObject("sources").addProperty("router/lib/layer.js",repeat('0',64)); invalid(changed,lock,"sources");
+    }
+    // OPS-ROUTE-004 AC-1 AC-4: invalid provenance format cannot be legitimized by copying it into both files.
+    @Test public void malformedPackageAndSourceHashesFailEvenWhenLockAndCorpusAgree() throws Exception {
+        JsonObject original=resource("express5.json"), lock=resource("reference-lock.json");
+        JsonObject changedLock=lock.deepCopy(), changed=original.deepCopy();
+        changedLock.getAsJsonObject("sources").addProperty("router/lib/layer.js","not-a-sha256");changed.add("reference",changedLock.deepCopy());invalid(changed,changedLock,"reference.sources");
+        changedLock=lock.deepCopy();changed=original.deepCopy();changedLock.getAsJsonObject("packages").getAsJsonObject("express").addProperty("packageSha256","short");changed.add("reference",changedLock.deepCopy());invalid(changed,changedLock,"reference.packages.express.packageSha256");
+    }
+    // OPS-ROUTE-004 AC-2 AC-4: only a protocol-equivalent token is normalized; other header values remain distinct.
+    @Test public void charsetTokenNormalizationDoesNotEraseRealHeaderDifferences() {
+        assertEquals("text/plain; charset=utf-8",ParityCorpus.canonicalHeader("Content-Type","text/plain; charset=UTF-8"));
+        assertEquals("text/plain; charset=iso-8859-1",ParityCorpus.canonicalHeader("content-type","text/plain; charset=iso-8859-1"));
+        assertEquals("charset=UTF-8",ParityCorpus.canonicalHeader("x-handler","charset=UTF-8"));
+        assertEquals("text/plain; xcharset=UTF-8",ParityCorpus.canonicalHeader("content-type","text/plain; xcharset=UTF-8"));
+        assertNull(ParityCorpus.canonicalHeader("content-type",null));
+        mismatch(object("{\"headers\":{\"content-type\":\"text/plain; charset=utf-8\"}}"),object("{\"headers\":{\"content-type\":\"text/plain; charset=iso-8859-1\"}}"),"$.headers.content-type");
     }
     private static String repeat(char c,int n) { char[] a=new char[n];java.util.Arrays.fill(a,c);return new String(a); }
     private static void invalid(JsonObject corpus,JsonObject lock,String field) throws Exception {
