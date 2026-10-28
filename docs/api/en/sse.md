@@ -1,6 +1,6 @@
 # SSE (Server-Sent Events)
 
-[한국어](../sse.md) | [English](sse.md)
+[한국어](../sse.md) | [API index](README.md)
 
 SSE is a one-way server-to-client stream consumed by the browser's `EventSource`. Express requires you to write the headers and frame `res.write` data yourself; NaruServe starts it with `res.sse()`.
 
@@ -29,7 +29,7 @@ This corresponds to Express's `res.writeHead(200, { 'Content-Type': 'text/event-
 - Sets `Content-Type: text/event-stream; charset=UTF-8` and `Cache-Control: no-cache, no-transform`, then switches to streaming mode.
 - **The connection stays open after the handler returns.** Give the `SseClient` to a service and call `send` from another thread.
 - `onClose` runs when the stream ends. Unlike Express's `req.on('close')`, it may not run immediately when the peer leaves: the core detects disconnection only during writes. Detection may take up to twice the heartbeat interval plus one second (about 31 seconds by default). Unsubscribe and release resources there, but do not assume immediate execution. Lower `heartbeatInterval` when faster detection matters. A listener added after closure notifications have finished runs immediately. A listener added during pending closure, before notifications run, runs with the other listeners at termination.
-- Events sent by the handler thread before it returns write directly to the socket, outside the send queue limit. Any events already queued by other threads are written first. After the handler returns, `send` queues events for ordered framework delivery.
+- Before the drain starts, a send on the thread that created the client can write directly to its attached output, outside the send queue limit; earlier queued events are written first. Other-thread sends and sends after drain startup use the bounded queue. A client created by a late callback is not tied to the original dispatch thread; the adapter drains it using its existing bounded worker resources.
 - A `HEAD` request sends headers only and returns an already-closed client. Its `send` returns `false`, and `onClose` runs immediately.
 
 ```java
@@ -88,6 +88,12 @@ app.get("/api/ticks") { req, res ->
     client.close()
 }
 ```
+
+### Late start and request ownership
+
+In the 0.10.0 common HTTP checkout, a handler may return with an unfinished response and start `res.sse()` in a later callback. No empty response is sent at the initial return. Late startup still obeys single commit and `maxSseStreams`. A capacity refusal before admission throws `HttpException(503)` without starting the adapter response. During initial dispatch it follows the ordered error path with default HTML unless handled. If startup fails after the initial callback chain returned, the response can instead abort; a late SSE start does not guarantee a fresh 503 body.
+
+Keep a returned pending `Deferred` if a producer must use request input/uploads after response completion. Resolving it does not close the SSE client or continue routing; call `client.close()` when the stream should end, and settle only after the last request-resource access. Cancellation/timeout/shutdown cannot reopen a client or input. A running drain keeps its slot until the callback actually exits, even after forced cancellation. The first SSE termination cause remains unchanged; see [logging](logging.md).
 
 ## SseEvent
 
@@ -169,7 +175,7 @@ The framework does not store events. Your application must retain them to replay
 ## Limits and shutdown
 
 - Each connection has a 256 KiB send queue by default. A slow client that fills it terminates the stream; remaining queued events are discarded and the overflowing `send` returns `false`.
-- `app.server(options -> options.maxSseStreams(256))` sets simultaneous SSE capacity: default 128, maximum 1024. Requests beyond capacity receive `503`. See [server settings](app.md).
+- `app.server(options -> options.maxSseStreams(256))` sets simultaneous SSE capacity: default 128, maximum 1024. Capacity refusal during initial dispatch receives `503`; see the late-start failure behavior above. See [server settings](app.md).
 - `app.shutdown(...)` closes open SSE streams and runs `onClose`. It sends a final `event: shutdown` / `data: shutdown` notification. Clients that do not read it are forcibly disconnected at the timeout. See [shutdown](app.md#shutdown).
 - With `NaruServe-servlet`, forced termination depends on the container's write timeout. See [Servlet shutdown](servlet.md#shutdown).
 

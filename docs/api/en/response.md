@@ -8,6 +8,8 @@ Response corresponds to Express's res. status, header, addCookie and cache retur
 res.status(201).header("X-Request-ID", id).json(created);
 ```
 
+The common HTTP behavior below describes the 0.10.0 checkout. Published module coordinates remain 0.9.0 until the new release.
+
 ## Method summary
 
 ### Status and headers
@@ -34,7 +36,7 @@ Header values use ISO-8859-1, one byte per character. Names must be HTTP tokens:
 | `send(Object)` with String | text/plain; charset=UTF-8, unless explicitly set | res.send(text) | Text |
 | `html(String)` | text/html; charset=UTF-8 | res.send(html) | HTML |
 | `send(Object)` with byte[] | Explicit type or application/octet-stream | res.send(buffer) | Binary |
-| `stream(in, contentType)` | Argument | stream.pipe(res) | Return immediately; copy on request thread after handler return; framework closes the input exactly once on success, failure or abort |
+| `stream(in, contentType)` | Argument | stream.pipe(res) | Commit headers now; defer an initial copy until the callback chain unwinds; a later call may copy on its calling thread; framework closes the input exactly once on success, failure or abort |
 | `file(File)` | File extension | res.sendFile | Range/conditional requests; no Content-Disposition |
 | `download(File, filename)` | File extension | res.download | Content-Disposition: attachment |
 | `end()` | — | res.end | No body |
@@ -89,10 +91,11 @@ Encoding completes before commit. An encoding exception can become an error resp
 The response moves NEW → COMMITTED → COMPLETED, or COMMITTED → STREAMING → COMPLETED for streaming, and ABORTED on abnormal termination.
 
 - After sending a body, changing status/headers/cookies or sending again throws IllegalStateException whose message includes the current state. isCommitted and request read methods remain callable, but request-owned resources still obey their lifetime rules.
-- Returning without a body ends with the selected status/headers. A thrown exception before commit enters error handling and standard JSON; after streaming starts, it aborts the connection.
+- Returning without sending or continuing leaves common HTTP pending. Call `send`, `json`, `end` or another completion API explicitly, or retain the response for a later callback. `next.run()` continues; it does not itself end the response.
+- Exceptions and `next.error(error)` enter downstream error layers in registration order. Before commit, the default final handler produces HTML with escaped Java `Throwable` details and stack frames, plus `Content-Security-Policy` and `X-Content-Type-Options`. Explicit JSON answers remain available through error middleware. After commit, an unhandled error aborts an unfinished response; an error after completion remains observable in logging without committing again.
 - status accepts 100..999, matching Express 5's status range (its error is RangeError).
 - 204, 304 and HEAD suppress bodies, including values passed to json.
-- Select and finish the response before returning. SSE, file, download and stream transmission may continue after handler return.
+- A later callback may send JSON or start a stream/SSE. Response completion and request-resource cleanup are separate: returned pending `Deferred` work can retain input and uploads after response bytes finish. See [request ownership](lifecycle.md#deferred-callbacks-and-request-resources).
 
 ## Files
 
@@ -108,7 +111,7 @@ app.get("/export", (req, res) -> {
 - Large files stream without loading them into memory.
 - A satisfiable single Range receives 206; an out-of-bounds start receives 416. Invalid or multiple ranges are ignored with a full 200. Conditional ETag/Last-Modified requests can return 304. See [ranges](static.md#range-and-conditional-requests).
 - Do not construct file paths directly from user input: only staticFiles enforces a mount root.
-- file/download reject a supplied path that is itself a symbolic link, missing, a directory or not a regular file with standard 404 JSON.
+- file/download reject a supplied path that is itself a symbolic link, missing, a directory or not a regular file with an HTTP 404 error entering the ordered error path; the unhandled common HTTP result is HTML.
 - file leaves Content-Disposition unset so the browser may display it; download requests an attachment and sanitizes filename header-injection characters.
 
 ### Default cache policy
@@ -129,7 +132,7 @@ app.get("/report") { req, res -> res.file(File("/data/report.pdf")) }
 
 ## Streams
 
-stream sends status and headers immediately and returns; subsequent status/header calls throw. Set them first. When called inside a handler, copying runs on that request thread after handler return. NaruServe closes the input. Do not wrap it in try-with-resources or Kotlin use, which would close it before copying begins.
+`stream` commits status and headers; subsequent status/header calls throw, so set them first. An initial copy is deferred until the callback chain unwinds. Once that initial return point has passed, a subsequent call can perform the copy on its calling thread before returning, including inside a late callback. A late call can therefore block on I/O; there is no guarantee of one dispatch thread for all sends. NaruServe closes the input once. Do not wrap it in try-with-resources or Kotlin `use`, which can close it before transmission. Retaining request input through a returned pending `Deferred` does not transfer ownership of this response stream back to the application.
 
 ```java
 app.get("/video", (req, res) -> {

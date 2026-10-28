@@ -1,6 +1,6 @@
 # 로깅
 
-[한국어](logging.md) | [English](en/logging.md)
+[English](en/logging.md) | [문서 목록](README.md)
 
 로그는 두 종류입니다.
 
@@ -40,13 +40,13 @@ app.accessLog(options -> {
 요청 하나에 한 줄을 씁니다: `<method> <path> <status>[ aborted][ <n>ms][ in=<i> out=<o>][ rid=<id>]`. 대괄호 부분은 해당 옵션이 켜져 있을 때만 붙고(`aborted`는 응답이 중단됐을 때), 순서를 고정한 이유는 `grep`·`awk`로 바로 자르기 위해서입니다.
 
 ```text
-GET /api/users/42 200 3ms in=0 out=27 rid=5f2c9a1e
-POST /upload 413 aborted 12ms in=1048576 out=0 rid=5f2c9a1f
+GET /api/users/42 200 3ms in=0 out=27 rid=000000005f2c9a1e
+POST /upload 413 aborted 12ms in=1048576 out=0 rid=000000005f2c9a1f
 ```
 
 - `<path>`는 쿼리 문자열을 뺀 원본 경로입니다.
 - `in`/`out`은 실제로 읽고 쓴 본문 바이트입니다(헤더 제외).
-- `rid`는 요청 ID로, 같은 요청의 앱 로그·표준 오류 본문의 `requestId`와 같은 값입니다.
+- `rid`는 요청 ID이며 표준 JSON 오류 envelope를 명시적으로 사용하는 경우 그 본문의 `requestId`와 같습니다. 기본 공통 HTTP HTML 오류에는 `requestId` 필드가 없으므로 접근·앱 로그로 연결하세요.
 
 ### 언제 기록하나
 
@@ -56,9 +56,9 @@ POST /upload 413 aborted 12ms in=1048576 out=0 rid=5f2c9a1f
 | WebSocket | Upgrade(`101`)할 때 한 줄, 연결이 끝날 때 close 코드·연결 시간을 한 줄 |
 | SSE | 연결이 끝나거나 오류로 끊길 때 한 줄(시작부터 종료까지의 정보 포함). 시작할 때는 쓰지 않습니다 |
 
-WebSocket은 `101`을 보낸 뒤 첫 프레임을 읽기 전에 요청과 같은 형식의 handshake 줄(`GET /ws 101 2ms in=0 out=0 rid=5f2c9a20`)을 쓰고, 연결이 끝나면 `WS <path> <closeCode>[ <n>ms][ rid=<id>]` 형식의 close 줄을 한 번 씁니다. close 줄은 HTTP 메서드 대신 `WS`로 시작해 요청 줄과 구분되고, `rid`는 handshake 줄과 같으며, 시간은 연결이 열린 뒤부터 닫힐 때까지입니다. close 코드는 `ws.close()`면 `1000`, 종료 때 `1001`, 송신 큐가 넘치면 `1008`, 클라이언트가 닫으면 그 코드, close 프레임 없이 끊기면 `1006`입니다. `101` 전에 거부된 Upgrade(`403`, `426`, `503`)는 그 상태의 일반 줄만 남습니다.
+WebSocket은 `101`을 보낸 뒤 첫 프레임을 읽기 전에 요청과 같은 형식의 handshake 줄(`GET /ws 101 2ms in=0 out=0 rid=000000005f2c9a20`)을 쓰고, 연결이 끝나면 `WS <path> <closeCode>[ <n>ms][ rid=<id>]` 형식의 close 줄을 한 번 씁니다. close 줄은 HTTP 메서드 대신 `WS`로 시작해 요청 줄과 구분되고, `rid`는 handshake 줄과 같으며, 시간은 연결이 열린 뒤부터 닫힐 때까지입니다. close 코드는 `ws.close()`면 `1000`, 종료 때 `1001`, 송신 큐가 넘치면 `1008`, 클라이언트가 닫으면 그 코드, close 프레임 없이 끊기면 `1006`입니다. `101` 전에 거부된 Upgrade(`403`, `426`, `503`)는 그 상태의 일반 줄만 남습니다.
 
-SSE는 스트림이 끝날 때 요청 줄 뒤에 ` sse start=<epochMillis> cause=<client|app|overflow|shutdown|error>`를 붙인 한 줄을 씁니다(`GET /events 200 30512ms in=0 out=812 rid=5f2c9a21 sse start=1760918400000 cause=client`). 시간은 스트림 전체, `out`은 스트림에 쓴 바이트, `start`는 시작 시각(epoch 밀리초)이고, `cause`는 처음 기록된 종료 이유입니다: `close()`면 `app`, 송신 큐가 넘치면 `overflow`, 종료면 `shutdown`, 클라이언트가 끊으면(쓰기 실패) `client`, 그 밖의 오류면 `error`. `HEAD` 요청은 `sse` 부분이 없는 일반 줄입니다. `exclude(path)`, `enabled(false)`, `level(...)`은 이 줄들에도 똑같이 걸립니다.
+SSE는 스트림이 끝날 때 요청 줄 뒤에 ` sse start=<epochMillis> cause=<client|app|overflow|shutdown|error>`를 붙인 한 줄을 씁니다(`GET /events 200 30512ms in=0 out=812 rid=000000005f2c9a21 sse start=1760918400000 cause=client`). 시간은 스트림 전체, `out`은 스트림에 쓴 바이트, `start`는 시작 시각(epoch 밀리초)이고, `cause`는 처음 기록된 종료 이유입니다: `close()`면 `app`, 송신 큐가 넘치면 `overflow`, 종료면 `shutdown`, 클라이언트가 끊으면(쓰기 실패) `client`, 그 밖의 오류면 `error`. `HEAD` 요청은 `sse` 부분이 없는 일반 줄입니다. `exclude(path)`, `enabled(false)`, `level(...)`은 이 줄들에도 똑같이 걸립니다.
 
 ### 기록하지 않는 것
 
@@ -70,6 +70,14 @@ SSE는 스트림이 끝날 때 요청 줄 뒤에 ` sse start=<epochMillis> cause
 - 전체 query string
 
 로그에 들어가는 값의 줄바꿈 등은 이스케이프해서 로그 위조를 막습니다.
+
+### 공통 HTTP 오류 기록
+
+순서가 있는 오류 처리기가 원래 실패 기록을 없애지는 않습니다. 내부 `StandardErrors.statusOf` 분류가 500인 오류는 요청별·`Throwable` 객체별로 한 번 `logger.error(message, throwable)`에 전달됩니다. 이후 처리기가 응답했거나 성공 응답 뒤에 발생한 경우도 같습니다. 같은 객체를 다시 전달해도 중복 기록하지 않지만 서로 다른 서버 실패는 각각 기록될 수 있습니다. 기본 본문이 HTML이라는 이유만으로 클라이언트 오류를 ERROR로 기록하지 않습니다. 응답은 여전히 한 번만 확정됩니다.
+
+접근 로그와 요청 정리는 별개입니다. 반환한 미완료 `Deferred`가 응답의 접근 로그 한 줄이 기록된 뒤에도 입력·업로드를 보유할 수 있으며, 결과를 확정해도 로그를 추가하지 않습니다. 기존 접근 로그의 개인정보 제외 규칙은 유지됩니다. 앱 로그·기본 오류 HTML의 Java 스택과 예외 메시지가 앱이 넣은 비밀 값을 자동으로 제거하지는 않습니다.
+
+아래 모듈 좌표는 공개된 0.9.0 좌표이며 이 페이지의 공통 HTTP 동작은 0.10.0 체크아웃을 설명합니다.
 
 ## 앱 로거
 

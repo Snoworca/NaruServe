@@ -13,6 +13,8 @@ The built-in multipart reader replaces typical multer usage. Configure app-wide 
 | limits.fileSize | app.multipart(c -> c.maxFileSize(...)) |
 | dest: uploads | tempDirectory for temporary storage, then file.save for persistence |
 
+The common HTTP behavior below describes the 0.10.0 checkout. Published module coordinates remain 0.9.0 until the new release.
+
 ## Example
 
 Prepare the destination directory before starting. See complete [Java](../../../examples/java/src/main/java/example/JavaExample.java) and [Kotlin](../../../examples/kotlin/src/main/kotlin/example/KotlinExample.kt) programs for imports and entry points. The following snippets run inside an app configuration.
@@ -121,6 +123,8 @@ req.parts returns every part in body order, including text parts whose filename 
 
 The API uses File and streams rather than java.nio.file.Path, which is unavailable on Android 5.0.
 
+Malformed multipart, limit and storage failures enter the common ordered error path. The default unhandled response is HTML; explicitly configured JSON errors remain available. Limits, part ownership and path/file safety are unchanged.
+
 ## Security
 
 - filename preserves client input. Backslashes in names such as C:\fakepath\a.txt remain; only escaped quote/backslash sequences inside quoted header values are unescaped.
@@ -131,7 +135,7 @@ The API uses File and streams rather than java.nio.file.Path, which is unavailab
 
 - Files larger than memoryThreshold spool to temporary storage rather than buffering the whole request.
 - Cleanup runs after request completion, successful save, a size-limit rejection, disconnect and app shutdown.
-- A request completes only when both the response is finished and the handler returns. You may send an early 202 and then save within that same handler, supporting the familiar Express/multer pattern.
-- Do not use upload content after the request ends or pass inputStream to another thread for later processing. Save persistent content inside the handler first.
+- Normal request cleanup waits for response completion, active callbacks, queued continuations and every pending `Deferred` returned from an async callback. Sending an early 202 does not release uploads while such work still owns them. You may save within the active handler or in the producer covered by that returned result.
+- Return the pending result through `app.getAsync`/`app.methodAsync`, and settle it only after the producer's last upload or input access. A detached thread or a `Deferred` merely stored in a variable does not acquire that lease. After cleanup, content access fails; persist data with `save` for later use. Abort/timeout/shutdown can cancel pending ownership, and late settlement cannot reopen it. See [lifetime](lifecycle.md#deferred-callbacks-and-request-resources).
 - save and close first close streams obtained from that part, then delete its temporary file, so Windows open handles do not block deletion. Failed deletions remain tracked for a shutdown retry.
 - Calling save on a released part throws IllegalStateException before touching the destination, preserving an already saved file.

@@ -7,9 +7,9 @@ Express의 `express.json()`과 `res.json()`에 해당합니다. NaruServe는 JSO
 ## 읽기와 쓰기
 
 ```java
-User user = req.body(User.class);                          // 요청 → 객체
-List<User> users = req.body(new TypeRef<List<User>>() {});  // 제네릭
-res.json(users);                                            // 객체 → 응답
+User user = req.body(User.class);                          // request to object
+List<User> users = req.body(new TypeRef<List<User>>() {});  // generic type
+res.json(users);                                            // object to response
 ws.sendJson(user);                                          // WebSocket
 ```
 
@@ -17,6 +17,10 @@ ws.sendJson(user);                                          // WebSocket
 - `TypeRef<T>`는 `List<User>` 같은 제네릭 타입 정보를 보존합니다. 끝의 `{}`(익명 클래스)를 빼먹지 마세요.
 - Kotlin의 `object : TypeRef<List<String>>() {}`는 Java의 `new TypeRef<List<String>>() {}`와 같은 `List<String>`을 담습니다. Kotlin은 선언 위치 변성 때문에 `List<? extends String>`을 기록하지만, `TypeRef`가 Kotlin 클래스(`kotlin.Metadata`가 남아 있을 때)에서는 `? extends` 와일드카드를 떼어 냅니다. R8이 이 어노테이션을 지운 빌드에서는 와일드카드가 남지만 기본 Gson 코덱은 두 타입을 똑같이 읽습니다.
 - `res.json`은 객체, 배열, `Map`, 문자열, 숫자, `null`을 모두 올바른 JSON으로 씁니다.
+
+타입을 지정하는 요청 읽기와 명시적 `res.json` 쓰기는 0.10.0 공통 HTTP 체크아웃에서도 유지됩니다. 위 두 요청 읽기는 같은 본문을 서로 다른 타입으로 연속해서 읽는 예제가 아니라 선택지입니다. 파싱·한도 오류는 이후에 등록된 오류 처리기로 전달되고, 처리되지 않은 공통 HTTP 오류는 자동 JSON envelope가 아니라 Java 예외 정보를 이스케이프한 HTML입니다. JSON API가 필요하면 오류 미들웨어에서 `res.status(...).json(...)`으로 명시하세요. 아래 공개 좌표는 여전히 0.9.0이며 0.10.0이 이미 출판됐다는 뜻이 아닙니다.
+
+async 라우트가 반환한 미완료 `Deferred`는 응답 완료 후에도 같은 캐시 본문이나 미소비 입력을 보유할 수 있습니다. 생산자의 마지막 접근을 마친 뒤 결과를 확정하고 취소된 입력은 재사용하지 마세요. [요청 소유권](lifecycle.md#지연-콜백과-요청-자원)을 참고하세요.
 
 ## DTO 작성
 
@@ -27,7 +31,7 @@ public class User {
     @SerializedName("id")   private String id;
     @SerializedName("name") private String name;
 
-    public User() {}   // 기본 생성자
+    public User() {}   // no-argument constructor
     // getter/setter
 }
 ```
@@ -53,7 +57,7 @@ app.jsonCodec(new GsonJsonCodec(gson));
 
 ```groovy
 implementation 'com.snoworca.naruserve:naruserve-gson:0.9.0'
-// 함께 들어오는 Gson: com.google.code.gson:gson:2.14.0
+// transitive Gson dependency: com.google.code.gson:gson:2.14.0
 ```
 
 날짜 형식, 이름 규칙 등을 바꾸려면 Gson을 직접 만들어 `app.jsonCodec(...)`으로 넘깁니다. 위 두 보안 설정은 유지하세요.
@@ -91,7 +95,7 @@ app.jsonCodec(GsonJsonCodec(GsonJsonCodec.defaultGson(), 32))
 
 ```java
 public interface JsonCodec {
-    <T> @Nullable T decode(Reader reader, Type type) throws IOException;   // JSON null이면 null
+    <T> @Nullable T decode(Reader reader, Type type) throws IOException;   // null for a JSON null body
     void encode(@Nullable Object value, Writer writer) throws IOException;
 }
 ```
@@ -111,11 +115,11 @@ Gson은 Kotlin `data class`의 기본 인자와 null 불가 타입을 이해하�
 
 ```kotlin
 data class User(val name: String, val role: String = "user")
-// 인자 없는 생성자가 없습니다. 기본 설정(Unsafe 끔)의 Gson은 이 클래스를 만들지 못하고 예외가 납니다.
+// No no-argument constructor: default Gson (Unsafe disabled) cannot instantiate this class.
 
 data class Profile(val name: String = "", val role: String = "user")
-// 모든 인자에 기본값이 있으면 인자 없는 생성자가 생겨 읽을 수 있습니다.
-// 하지만 {"name":null} 을 받으면 null 불가 타입인 name에 null이 들어갑니다.
+// Defaults for every parameter generate a no-argument constructor, so decoding works.
+// However, {"name":null} still puts null into the non-null name property.
 ```
 
 Kotlin 앱이라면 Moshi(codegen)나 kotlinx.serialization 코덱을 쓰거나, DTO 필드를 nullable로 두고 검증하세요. [Kotlin](kotlin.md#json)

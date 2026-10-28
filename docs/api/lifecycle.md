@@ -1,6 +1,6 @@
 # 수명주기와 서비스
 
-[한국어](lifecycle.md) | [English](en/lifecycle.md)
+[English](en/lifecycle.md) | [문서 목록](README.md)
 
 Express에서는 모듈 변수나 `app.locals`에 DB 연결 같은 공유 객체를 둡니다. NaruServe는 시작할 때 한 번 만들어 **등록**하고, 요청·WebSocket·SSE에서 **같은 객체를 꺼내 씁니다**. Servlet의 `ServletContext`(application scope)와 같은 역할입니다.
 
@@ -13,7 +13,7 @@ RestApp app = RestApp.create();
 
 app.onStart(ctx -> {
     Database db = new Database();
-    ctx.own(db);                // 아래 connect()가 실패해도 db가 닫히도록 먼저 등록
+    ctx.own(db);                // Register before connect(), so failure still closes db
     db.connect();
 
     ctx.register(Database.class, db);
@@ -28,7 +28,7 @@ app.get("/api/users/:id", (req, res) -> {
 });
 
 app.ws("/ws", (req, ws) -> {
-    UserService users = req.service(UserService.class);   // 같은 객체
+    UserService users = req.service(UserService.class);   // The same instance
     ws.onText(id -> ws.sendJson(users.findById(id)));
 });
 
@@ -72,15 +72,15 @@ app.get("/api/users/:id") { req, res ->
 
 ```java
 public interface ServiceRegistry {
-    <T> void register(Class<T> type, T instance);          // AutoCloseable이면 종료 때 닫음
-    <T> void registerExternal(Class<T> type, T instance);  // 닫지 않음
-    <T> T get(Class<T> type);           // 없으면 ServiceNotFoundException
-    <T> @Nullable T getOrNull(Class<T> type);     // 없으면 null
+    <T> void register(Class<T> type, T instance);          // Closes AutoCloseable on shutdown
+    <T> void registerExternal(Class<T> type, T instance);  // Does not close
+    <T> T get(Class<T> type);           // ServiceNotFoundException if absent
+    <T> @Nullable T getOrNull(Class<T> type);     // null if absent
     boolean contains(Class<?> type);
 }
 
 public interface ApplicationContext extends ServiceRegistry {
-    void attribute(String key, @Nullable Object value);   // null이면 키를 지움
+    void attribute(String key, @Nullable Object value);   // null removes the key
     <T> @Nullable T attributeAs(String key, Class<T> type);
     void own(AutoCloseable resource);
     Logger logger();
@@ -91,14 +91,14 @@ public interface ApplicationContext extends ServiceRegistry {
 
 ### register
 
-- `onStart` 안에서만 부를 수 있습니다. 서버가 `RUNNING`이 되면 등록부는 바뀌지 않습니다. 그래서 요청 스레드에서 동시에 읽어도 안전합니다.
+- `onStart` 안에서만 부를 수 있습니다. `RUNNING`에서는 서비스 등록부가 고정되어 요청 스레드에서 동시에 읽을 수 있습니다. 이 제한은 일반 공통 HTTP 계층에는 적용되지 않습니다. listen 이후에도 라우트·미들웨어와 기존 RouteBuilder 콜백을 추가할 수 있습니다. 서버 옵션·수명주기 콜백·WebSocket 설정은 각각의 시작 시점 제한을 유지합니다.
 - 같은 `Class`를 두 번 등록하면 **설정 오류**입니다. 덮어쓰지 않습니다.
 - 인터페이스와 구현 클래스로 같은 객체를 두 번 등록해도 됩니다. 종료할 때 한 번만 닫습니다.
 
 ```java
 JdbcUserService impl = new JdbcUserService(db);
 ctx.register(UserService.class, impl);
-ctx.register(JdbcUserService.class, impl);   // 같은 객체, 닫기는 한 번
+ctx.register(JdbcUserService.class, impl);   // Same instance, closed once
 ```
 
 같은 타입의 서비스가 둘 필요하면(예: DB 두 개) 감싸는 클래스를 만드세요. 이름으로 구분하는 `ServiceKey`는 v1 이후에 검토합니다.
@@ -115,7 +115,7 @@ ctx.register(JdbcUserService.class, impl);   // 같은 객체, 닫기는 한 번
 외부에서 만든 객체(다른 곳과 공유하는 커넥션 풀 등)는 `registerExternal`(`ctx.registerExternal(Type.class, instance)`)로 등록하면 조회는 `register`와 같고 프레임워크가 닫지 않으며, `Ownership.EXTERNAL` 같은 인자 대신 메서드를 나눈 이유는 호출부에서 소유권이 이름으로 바로 보이기 때문입니다.
 
 ```java
-ctx.registerExternal(ConnectionPool.class, sharedPool);   // 종료 때 닫지 않음
+ctx.registerExternal(ConnectionPool.class, sharedPool);   // Not closed on shutdown
 ```
 
 ### attribute
@@ -125,7 +125,7 @@ ctx.registerExternal(ConnectionPool.class, sharedPool);   // 종료 때 닫지 �
 ```java
 ctx.attribute("appVersion", "1.0.0");
 String v = req.application().attributeAs("appVersion", String.class);
-ctx.attribute("appVersion", null);   // 지우기
+ctx.attribute("appVersion", null);   // Remove
 ```
 
 `attribute(key, null)`은 캐스팅 없이 값을 지웁니다. 명시적인 삭제는 `removeAttribute(key)`, 타입 지정 조회는 `attributeAs(key, type)`를 사용합니다.
@@ -155,7 +155,7 @@ NEW ──listen/start──> STARTING ──성공──> RUNNING ──shutdow
 
 | 상태 | 의미 |
 |---|---|
-| `NEW` | 설정 중. 라우트·미들웨어·설정을 바꿀 수 있는 유일한 상태 |
+| `NEW` | 초기 설정 중. 서버 옵션·서비스·WebSocket 설정은 시작 시점의 제한을 따릅니다 |
 | `STARTING` | `onStart` 실행·검사·바인딩 중. 바인딩 뒤 도착한 요청은 `RUNNING`이 될 때까지 기다렸다가 처리되고, 시작이 실패하면 기다리던 요청은 `503`과 `Connection: close`로 답을 받습니다(멈춤 요청이 이미 있으면 기다리지 않고 바로 `503`) |
 | `RUNNING` | 요청 처리 중 |
 | `STOPPING` | 종료 중. 새 요청·Upgrade를 `503` + `Connection: close`(표준 오류 본문)로 거부 |
@@ -181,6 +181,25 @@ NEW ──listen/start──> STARTING ──성공──> RUNNING ──shutdow
 다른 곳(신호 처리, 다른 요청, `Service.onDestroy`)에서 이미 시작한 종료가 진행 중(`STOPPING`)일 때 요청 핸들러에서 `shutdown(...)`을 불러도 기다리지 않고 바로 반환합니다. 종료 스레드를 만들 수 없으면(메모리 부족 등) 종료 순서는 호출한 요청 스레드에서 바로 돌며, 이때는 그 요청을 timeout까지 기다릴 수 있지만 앱은 반드시 `TERMINATED`가 됩니다.
 SSE `onClose` 리스너 안에서 부른 `app.shutdown`도 요청 핸들러에서 부른 것처럼 바로 반환합니다. 종료 순서가 그 스트림이 끝나기를 기다리므로, 같은 이유로 별도 스레드에서 돕니다.
 
+## 지연 콜백과 요청 자원
+
+0.10.0 공통 HTTP 체크아웃은 콜백 반환·응답 완료·요청 정리를 구분합니다. 일반 콜백이 응답하거나 다음으로 진행하지 않고 반환하면 요청은 대기합니다. 나중의 콜백에서 `next.run()`을 부르거나 JSON을 보내거나 스트림/SSE를 시작할 수 있습니다. 작업 성공이 응답을 자동 종료하거나 다음 계층으로 진행시키지는 않습니다.
+
+먼저 응답한 뒤에도 백그라운드 작업이 요청 자원을 사용해야 하면 `app.getAsync`나 `app.methodAsync`를 사용하세요. 그 작업의 미완료 `Deferred`를 반환해야 요청 보유권을 얻습니다. 객체만 만들고 반환하지 않으면 보유권이 생기지 않습니다. 작업은 앱이 소유한 executor에 예약합니다. 코어가 새 executor나 `CompletionStage` 의존성을 요구하지 않습니다.
+
+1. `Deferred.pending()`을 만들고 생산자 작업을 준비한 뒤 async 콜백에서 그 결과를 반환합니다.
+2. 보유권이 유효한 동안 생산자는 먼저 `res.send("ack")`한 뒤에도 같은 요청 본문이나 업로드를 읽을 수 있습니다. 기본 Tiny/Servlet 어댑터는 입력을 미리 읽지 않고 보존합니다.
+3. 아직 응답하지 않았다면 명시적으로 보내거나 종료합니다. 먼저 응답을 완료했다면 두 번째 응답을 보내지 않습니다. 요청·업로드에 대한 마지막 접근을 마친 뒤 `work.resolve()`하고, 실패는 `work.reject(error)`로 이후 오류 경로에 전달합니다. 확정 이후의 reject는 두 번째 오류 응답을 만들지 않습니다.
+4. 결과는 한 번만 확정됩니다. `onSettled(Runnable)`은 성공·실패와 늦은 등록을 포함해 한 번 관찰하며 응답을 종료하거나 다음으로 진행하지 않습니다. 정상 정리는 활성 콜백·대기 중인 continuation·모든 미완료 보유권을 기다립니다. 정리 이후에 쓸 데이터는 앱 소유 저장소에 저장하세요.
+
+비정상 중단·async timeout·강제 shutdown은 미완료 보유권을 취소할 수 있습니다. 늦은 결과 확정이나 continuation으로 취소된 입력을 다시 열거나 완료된 exchange를 새 요청으로 되살릴 수 없습니다. 실제 실행 중인 콜백/drain은 종료할 때까지 활성 자원을 소유하므로 강제 종료가 임의의 사용자 코드를 멈춘다고 가정하지 마세요. 지연 콜백 재진입 시 요청 수명주기 문맥도 복원되어 그 콜백 안의 shutdown이 자기 자신을 기다리지 않습니다.
+
+### 사용자 HTTP 어댑터
+
+`HttpExchange.onAbort(Runnable)`과 `Runnable retainRequest()`는 기존 어댑터를 위한 기본 메서드입니다. 기본 abort 훅은 nonnull 리스너를 검증하고 알림은 하지 않으며, 기본 retention은 아무 작업도 하지 않는 해제 함수를 반환합니다. 이 호환성 기본값만으로 사용자 어댑터가 기본 어댑터의 지연 전송 보장을 얻지는 않습니다.
+
+retention을 구현한 어댑터는 `finish()`의 응답 전송과 별개로 정상 보유권이 모두 해제될 때까지 입력·컨테이너 상태를 유지해야 합니다. 각 해제 함수는 스레드 안전하고 여러 번 불러도 한 번만 적용되어야 합니다. 감지한 비정상 중단은 늦은 등록까지 포함해 각 리스너에 한 번, 어댑터 락 밖에서 알리며 리스너 실패가 정리를 막지 않아야 합니다. 정상 `finish()`는 abort를 알리지 않습니다. I/O 전의 유휴 연결 이탈을 즉시 감지할 필요는 없습니다. 종료 시 보유권을 취소할 수 있지만 늦은 해제로 자원을 되살릴 수 없으며, 제한된 stop 시간과 실제 I/O/drain 소유권을 유지해야 합니다. 구현할 때 `common.RequestRetentions`, `common.AbortListeners`, `common.SafeCallbacks`를 재사용하세요.
+
 ## Android
 
 - `RestApp`은 Android `Service` 안에서 만들고 관리하세요.
@@ -203,7 +222,7 @@ public class ServerService extends Service {
         worker.execute(() -> {
             try {
                 app.listen(8080);
-            } catch (RuntimeException e) {   // 포트 사용 중 등. 잡지 않으면 앱 프로세스가 죽습니다.
+            } catch (RuntimeException e) {   // Port in use, etc.; uncaught failure can kill the process
                 Log.e("Server", "start failed", e);
             }
         });
