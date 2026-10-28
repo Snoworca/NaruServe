@@ -9,7 +9,7 @@ import java.util.concurrent.atomic.*;
 
 /** Observable detected-abort SPI fixture; normal finish intentionally never signals abort. */
 // @req IR-HTTP-009 AC-1 AC-4 AC-5 AC-6
-final class LifecycleExchange implements HttpExchange {
+class LifecycleExchange implements HttpExchange {
     final RecordingExchange recording;
     final CountingInput input;
     final AbortListeners aborts=new AbortListeners();
