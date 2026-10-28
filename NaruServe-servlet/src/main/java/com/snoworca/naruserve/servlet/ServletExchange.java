@@ -483,6 +483,8 @@ final class ServletExchange implements HttpExchange {
             headers.add(new SimpleImmutableEntry<>("Content-Length", String.valueOf(bytes.length)));
             commit(500, headers, bytes.length).write(bytes);
             finish();
+            // FR-SVL-009 AC-4; FR-APP-023 AC-8: this adapter answer bypasses core Response.onDone.
+            abort(); // revoke retained core work after the complete JSON500, without a second response
         } catch (IOException | RuntimeException failure) {
             abort();
         }
