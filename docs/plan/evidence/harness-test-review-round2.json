@@ -1,0 +1,68 @@
+{
+  "review": "independent-test-sufficiency",
+  "round": 2,
+  "requirement": "OPS-ROUTE-004",
+  "scope": "Harness foundation comparator/provenance and three actually supported runtime cases; future feature integration/AC6 remains pending.",
+  "reviewed_at": "2026-10-28T04:57:51.582907+00:00",
+  "worktree": "/Users/beom/work/git/NaruServe/.claude/worktrees/v010-parity-harness",
+  "head_at_review": "3d865990be065bd50150005b35d201d89039d619",
+  "working_tree_ready_files_reviewed": true,
+  "verdict": "PASS",
+  "unresolved_findings": [],
+  "resolved_findings": [
+    {
+      "id": "HARNESS-TEST-001",
+      "resolution": "BasicRuntimeParityTest executes actual in-memory NaruServe literalGET/literalPOST/param routes against three committed Express cases. Same real adapter observation passes then a deliberately modified actual body fails with caseID and field path."
+    },
+    {
+      "id": "HARNESS-TEST-002",
+      "resolution": "Explicit boundary.jni=true negative added alongside regexEngine and ecmascriptRegExpEquivalent negatives."
+    },
+    {
+      "id": "HARNESS-TEST-003",
+      "resolution": "Reference.node and implementation source hash corruption controls added. Invalid source/package hash formats are rejected even when identically copied into corpus and lock."
+    }
+  ],
+  "normalization_assessment": "Only an unquoted charset=utf-8 parameter token in Content-Type is case-normalized on generator and Java capture, declared in both corpus and README. Tests retain differing charset, unrelated header and xcharset parameter differences. No broad trimming, body normalization, error exclusion or post-hoc parity waiver introduced.",
+  "execution": {
+    "command": "JAVA_HOME=/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home ANDROID_HOME=/opt/homebrew/share/android-commandlinetools ./gradlew -PtinyHttpdFromMaven=true :test --tests 'com.snoworca.naruserve.parity.*'",
+    "exit_code": 0,
+    "log": "/tmp/naru-v010-harness-review2-run.log",
+    "test_task": "executed",
+    "tests": 16,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "classes": {
+      "ParityCorpusTest": 9,
+      "BasicRuntimeParityTest": 4,
+      "JavaPatternBoundaryTest": 3
+    }
+  },
+  "reference_checks": {
+    "actual_Express_cases": 30,
+    "actual_NaruServe_runtime_cases": 3,
+    "explicit_pending_feature_cases": 27,
+    "no_ignored_or_expected_failure_runtime_tests": true,
+    "second_generation_bytes_equal": true,
+    "generator_hash_matches_fixture": true
+  },
+  "artifact_hashes": {
+    "src/test/java/com/snoworca/naruserve/parity/ParityCorpus.java": "b5f943e0f1a7f16f6e275eff67662a2cf914d3df5f3f3855e5c700ca1d0f545c",
+    "src/test/java/com/snoworca/naruserve/parity/ParityCorpusTest.java": "5c499e095bc6470c99212ac9696dc0d9def1fe0694b2e23c74650077a21f28b2",
+    "src/test/java/com/snoworca/naruserve/parity/BasicRuntimeParityTest.java": "743865a0fc90baf39a9b226243d4c1dfd5422b32a32c9c764ac94e1b310f8214",
+    "src/test/java/com/snoworca/naruserve/parity/JavaPatternBoundaryTest.java": "34cc36e9f122d79f735ee4878985a84e207f2ac3d145ec7ed874b51cba626dad",
+    "src/test/resources/parity/express5.json": "0e9e11fb6be87146eb83bc6aed2ee1fbf8e22435c9acdc36a7868a8e9725c39f",
+    "src/test/resources/parity/reference-lock.json": "ea0c2f917f495b747b79ffa7d5181610c43c56ebe96cd7473183705216a69cac",
+    "tools/parity/generate-express-corpus.cjs": "7d4bb62086464bc8681d3ff3f7022573f2f3903a7696609e0fd6f01ca314f026",
+    "tools/parity/README.md": "f9858d8f62a559ab85db6712498b31f1fb166ad810f5e03ad898ddba4e4f955c"
+  },
+  "remaining_obligations": [
+    "Feature owners add real Java runtime replay for all implemented features;27 observations alone do not prove runtime parity.",
+    "Actual TinyHttpd/Servlet socket matrices remain separate from this in-memory foundation.",
+    "Final entire requirement/test sufficiency and release candidate checks remain host obligations."
+  ],
+  "implementation_approval": false,
+  "repository_source_edits": false,
+  "review_loop": "PASS in round2. Stop; do not run round3 for this foundation."
+}

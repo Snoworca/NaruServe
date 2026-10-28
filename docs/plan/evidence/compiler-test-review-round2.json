@@ -1,0 +1,74 @@
+{
+  "review": "independent-test-sufficiency",
+  "round": 2,
+  "requirement": "FR-ROUTE-018",
+  "supporting_requirement": "FR-HTTP-027 AC-1 wildcard/scalar winner metadata",
+  "scope": "Compiler foundation AC1-6; AC7 public registration/runtime integration remains pending.",
+  "reviewed_at": "2026-10-28T04:59:35.394540+00:00",
+  "worktree": "/Users/beom/work/git/NaruServe/.claude/worktrees/v010-http-compiler",
+  "reviewed_head": "3f746b4ed8ab4f8b59243eae2fa441c9ebfa1a10",
+  "test_first_commits": [
+    "db20b63",
+    "aa1bf70",
+    "079201e"
+  ],
+  "verdict": "PASS",
+  "unresolved_sufficiency_findings": [],
+  "material_implementation_defects_noticed": [],
+  "resolved_findings": [
+    {
+      "id": "COMPILER-TEST-001",
+      "resolution": "quotedNamesAndEscapes tests successful quoted scalar name with space, quoted wildcard name with escaped quote and backslash, exact decoded names and raw wildcard segment list; literal reserved metacharacter escaping is also exercised."
+    },
+    {
+      "id": "COMPILER-TEST-002",
+      "resolution": "errorsUseActualCodePointOffsets pins9 specific offsets including missing/empty/unterminated names, adjacent tokens, dangling escape, unclosed group, reserved marker and supplementaryUnicode inputs."
+    }
+  ],
+  "coverage_assessment": {
+    "AC-1": "257 pinned vectors plus quoted/Unicode/duplicate-name tests and actual winning scalar/wildcard type metadata, including absent duplicate optional and single-segment wildcard.",
+    "AC-2": "15 malformed grammar forms and9 exact source offsets; successful escaped quoted names and supplementary identifiers.",
+    "AC-3": "Pinned FULL/PREFIX/case/trailing vectors and explicit delimiter boundaries/repeated-slash non-normalization; non-u casefold edge cases.",
+    "AC-4": "Encoded slash/malformed percent remain raw, wildcard slash splitting preserves empty segments, encoded static literal stays distinct. Strict UTF8 decoding is intentionally a later layer.",
+    "AC-5": "256-versus512 expansion boundary,100000-character adversarial cases,10000nestedgroups rejection and multi-wildcard paths run under an isolated20second process deadline; license/provenance retained.",
+    "AC-6": "500concurrent matches share one immutable compiled pattern; map/list/wildcard-kind sets immutable; changed-file set contains only new compiler/helper/tests/resources, leaving legacy classes untouched. Java8/API21 evidence separately inspected."
+  },
+  "independent_execution": {
+    "command": "JAVA_HOME=/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home ANDROID_HOME=/opt/homebrew/share/android-commandlinetools ./gradlew -PtinyHttpdFromMaven=true :NaruServe-api:test --tests 'com.snoworca.naruserve.routing.*'",
+    "exit_code": 0,
+    "log": "/tmp/naru-v010-compiler-review2-run.log",
+    "task_executed": true,
+    "routing_tests": 111,
+    "new_helper_tests": 12,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "legacy_router_websocket_tests_included": true
+  },
+  "writer_evidence_inspected": {
+    "dedicated_real_Java8_JUnit": "/tmp/naru-http-compiler/java8-junit.log: OK12",
+    "extra_differential_vectors_per_JVM": 27308,
+    "java17_differential_log": "/tmp/naru-http-compiler/differential-java17.log",
+    "java8_differential_log": "/tmp/naru-http-compiler/differential-java8.log",
+    "module_regression_writer_report": 1183,
+    "API21_animalsniffer": "regression-final.log animalsnifferMain pass/up-to-date; writer evidence.json records API21/Java8 signatures",
+    "Android_device_execution": "not performed/not claimed"
+  },
+  "artifact_hashes": {
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/HttpPathPattern.java": "7b0a8851c96071044c965c07e92c9591026b8ef18eba03dd305ce96e4aab7e8a",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/HttpPathUnicode.java": "dd1259ccd67f0901f8bff789c5d7c78d4a33ae47fa63d1178cbd94188f833274",
+    "NaruServe-api/src/main/resources/com/snoworca/naruserve/routing/HTTP-PATH-LICENSE.txt": "90e4bb2c38f888b5cf1e1d68ac3f9e03aa41cdcb4afd705ee0532be3ec2350d0",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/routing/HttpPathPatternTest.java": "58a572968f5e9d6d68d8f6fab6f693e32f26c5e8a352646ce5b5519a837f1307",
+    "NaruServe-api/src/test/resources/com/snoworca/naruserve/routing/http-path-pattern-PROVENANCE.txt": "16c4a16e276b724ee533ab22757000b974e2b5f5204c279067c7ee93f24b0e48",
+    "NaruServe-api/src/test/resources/com/snoworca/naruserve/routing/http-path-pattern-v8.4.2.tsv": "afc0a9f3ab1fd4baf83402c04aaad1260abab17ba556a5af25302bbfc8d91474"
+  },
+  "remaining_integration_obligations": [
+    "AC7 app registration/Dispatcher must actually use this compiler and replay the corresponding cases.",
+    "Test grammar-order parameter hook execution and layer-scoped decoded captures through the eventual public routing API; helper existence and Map.equals alone do not establish hook order.",
+    "Keep legacy WS profile/defaults separate when integrating; unchanged helper branch tests do not prove final application isolation.",
+    "Final full suite/test sufficiency/Java8/API21 and actual socket matrices after all integration."
+  ],
+  "implementation_approval": false,
+  "repository_source_edits": false,
+  "review_loop": "PASS in round2; stop immediately. No round3 for this foundation."
+}

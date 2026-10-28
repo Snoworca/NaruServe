@@ -1,0 +1,723 @@
+> Task :compileJava NO-SOURCE
+> Task :processResources NO-SOURCE
+> Task :classes UP-TO-DATE
+> Task :jar UP-TO-DATE
+> Task :assemble UP-TO-DATE
+> Task :checkDependencyRules
+> Task :NaruServe-api:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :NaruServe-api:compileKotlin NO-SOURCE
+> Task :NaruServe-api:compileJava
+> Task :NaruServe-api:processResources
+> Task :NaruServe-api:classes
+> Task :NaruServe-api:jar
+> Task :NaruServe-filelog:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :NaruServe-filelog:compileKotlin NO-SOURCE
+> Task :NaruServe-filelog:compileJava UP-TO-DATE
+> Task :NaruServe-filelog:processResources NO-SOURCE
+> Task :NaruServe-filelog:classes UP-TO-DATE
+> Task :NaruServe-filelog:jar UP-TO-DATE
+> Task :NaruServe-logcat:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :NaruServe-logcat:compileKotlin NO-SOURCE
+> Task :NaruServe-logcat:compileJava UP-TO-DATE
+> Task :NaruServe-logcat:processResources NO-SOURCE
+> Task :NaruServe-logcat:classes UP-TO-DATE
+> Task :NaruServe-logcat:jar UP-TO-DATE
+> Task :NaruServe-slf4j:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :NaruServe-slf4j:compileKotlin NO-SOURCE
+> Task :NaruServe-slf4j:compileJava UP-TO-DATE
+> Task :NaruServe-slf4j:processResources NO-SOURCE
+> Task :NaruServe-slf4j:classes UP-TO-DATE
+> Task :NaruServe-slf4j:jar UP-TO-DATE
+> Task :checkLoggerPlacement
+> Task :NaruServe:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :NaruServe-gson:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :NaruServe-gson:compileKotlin NO-SOURCE
+> Task :NaruServe-gson:compileJava UP-TO-DATE
+> Task :NaruServe-tinyhttpd:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :NaruServe-tinyhttpd:compileKotlin NO-SOURCE
+> Task :NaruServe-tinyhttpd:compileJava UP-TO-DATE
+> Task :NaruServe:compileKotlin NO-SOURCE
+> Task :NaruServe:compileJava UP-TO-DATE
+> Task :NaruServe:processResources UP-TO-DATE
+> Task :NaruServe:classes UP-TO-DATE
+> Task :NaruServe-gson:processResources NO-SOURCE
+> Task :NaruServe-gson:classes UP-TO-DATE
+> Task :NaruServe-kotlin:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :NaruServe-kotlin:processResources NO-SOURCE
+> Task :NaruServe-servlet:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :NaruServe-servlet:compileKotlin NO-SOURCE
+> Task :NaruServe-servlet:compileJava UP-TO-DATE
+> Task :NaruServe-servlet:processResources UP-TO-DATE
+> Task :NaruServe-servlet:classes UP-TO-DATE
+> Task :NaruServe-tinyhttpd:processResources NO-SOURCE
+> Task :NaruServe-tinyhttpd:classes UP-TO-DATE
+> Task :NaruServe:animalsnifferMain
+> Task :NaruServe:checkClassReferences
+> Task :NaruServe:jar UP-TO-DATE
+> Task :NaruServe-kotlin:compileKotlin
+> Task :NaruServe:javadoc
+> Task :NaruServe-kotlin:compileJava NO-SOURCE
+> Task :NaruServe-kotlin:classes UP-TO-DATE
+> Task :checkNoCoroutines
+> Task :NaruServe:javadocJar UP-TO-DATE
+> Task :NaruServe:sourcesJar UP-TO-DATE
+> Task :NaruServe:compileTestKotlin NO-SOURCE
+> Task :NaruServe:compileTestJava UP-TO-DATE
+> Task :NaruServe:processTestResources NO-SOURCE
+> Task :NaruServe:testClasses UP-TO-DATE
+> Task :NaruServe-gson:jar UP-TO-DATE
+> Task :NaruServe-tinyhttpd:jar UP-TO-DATE
+> Task :NaruServe:test
+> Task :NaruServe:check
+> Task :NaruServe-api:animalsnifferMain
+> Task :NaruServe-api:checkClassReferences
+
+> Task :NaruServe-api:javadoc
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/package-info.java:3: warning: no comment
+package com.snoworca.naruserve;
+^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/AccessLogOptions.java:18: warning: no @param for path
+    AccessLogOptions exclude(String path);
+                     ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/AccessLogOptions.java:18: warning: no @return
+    AccessLogOptions exclude(String path);
+                     ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/AccessLogOptions.java:7: warning: no comment
+    AccessLogOptions enabled(boolean enabled);
+                     ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/AccessLogOptions.java:15: warning: no comment
+    AccessLogOptions includeBytes(boolean include);
+                     ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/AccessLogOptions.java:13: warning: no comment
+    AccessLogOptions includeDuration(boolean include);
+                     ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/AccessLogOptions.java:11: warning: no comment
+    AccessLogOptions includeRequestId(boolean include);
+                     ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/AccessLogOptions.java:9: warning: no comment
+    AccessLogOptions level(LogLevel level);
+                     ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:37: warning: no @return
+    static RestApp create() {
+                   ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:51: warning: no @param for port
+    static ServerHandle start(int port, Configurer<RestApp> routes) {
+                        ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:51: warning: no @param for routes
+    static ServerHandle start(int port, Configurer<RestApp> routes) {
+                        ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:51: warning: no @return
+    static ServerHandle start(int port, Configurer<RestApp> routes) {
+                        ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:57: warning: no @return
+    static Builder builder() {
+                   ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:81: warning: no @param for path
+    RouteBuilder route(String path);
+                 ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:81: warning: no @return
+    RouteBuilder route(String path);
+                 ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:88: warning: no @param for prefix
+    RestApp group(String prefix, Configurer<RouteGroup> configurer);
+            ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:88: warning: no @param for configurer
+    RestApp group(String prefix, Configurer<RouteGroup> configurer);
+            ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:88: warning: no @return
+    RestApp group(String prefix, Configurer<RouteGroup> configurer);
+            ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:92: warning: no @param for configurer
+    RestApp cors(Configurer<CorsOptions> configurer);
+            ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:92: warning: no @return
+    RestApp cors(Configurer<CorsOptions> configurer);
+            ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:95: warning: no @param for policy
+    RestApp routerPolicy(RouterPolicy policy);
+            ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:95: warning: no @return
+    RestApp routerPolicy(RouterPolicy policy);
+            ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:99: warning: no @param for mw
+    RestApp use(Middleware mw);
+            ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:99: warning: no @return
+    RestApp use(Middleware mw);
+            ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:103: warning: no @param for prefix
+    RestApp use(String prefix, Middleware mw);
+            ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:103: warning: no @param for mw
+    RestApp use(String prefix, Middleware mw);
+            ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:103: warning: no @return
+    RestApp use(String prefix, Middleware mw);
+            ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:107: warning: no @param for path
+    RestApp get(String path, Middleware mw, RouteHandler h);
+            ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:107: warning: no @param for mw
+    RestApp get(String path, Middleware mw, RouteHandler h);
+            ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:107: warning: no @param for h
+    RestApp get(String path, Middleware mw, RouteHandler h);
+            ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:107: warning: no @return
+    RestApp get(String path, Middleware mw, RouteHandler h);
+            ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:127: warning: no @param for handler
+    RestApp onError(ErrorHandler handler);
+            ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:127: warning: no @return
+    RestApp onError(ErrorHandler handler);
+            ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:131: warning: no @param for cb
+    RestApp onStart(LifecycleCallback cb);
+            ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:131: warning: no @return
+    RestApp onStart(LifecycleCallback cb);
+            ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:135: warning: no @param for cb
+    RestApp onStop(LifecycleCallback cb);
+            ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:135: warning: no @return
+    RestApp onStop(LifecycleCallback cb);
+            ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:143: warning: no @param for port
+    ServerHandle listen(int port);
+                 ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:143: warning: no @return
+    ServerHandle listen(int port);
+                 ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:147: warning: no @param for timeout
+    void shutdown(long timeout, TimeUnit unit);
+         ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:147: warning: no @param for unit
+    void shutdown(long timeout, TimeUnit unit);
+         ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:151: warning: no @return
+    AppState state();
+             ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:155: warning: no @return
+    Logger logger();
+           ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:159: warning: no @param for logger
+    RestApp logger(Logger logger);
+            ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:159: warning: no @return
+    RestApp logger(Logger logger);
+            ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:163: warning: no @param for configurer
+    RestApp accessLog(Configurer<AccessLogOptions> configurer);
+            ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:163: warning: no @return
+    RestApp accessLog(Configurer<AccessLogOptions> configurer);
+            ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:167: warning: no @param for codec
+    RestApp jsonCodec(JsonCodec codec);
+            ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:167: warning: no @return
+    RestApp jsonCodec(JsonCodec codec);
+            ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:174: warning: no @param for bytes
+    RestApp jsonLimit(long bytes);
+            ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:174: warning: no @return
+    RestApp jsonLimit(long bytes);
+            ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:182: warning: no @param for configurer
+    RestApp multipart(Configurer<MultipartOptions> configurer);
+            ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:182: warning: no @return
+    RestApp multipart(Configurer<MultipartOptions> configurer);
+            ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:189: warning: no @param for bytes
+    RestApp formLimit(long bytes);
+            ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:189: warning: no @return
+    RestApp formLimit(long bytes);
+            ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:197: warning: no @param for prefix
+    RestApp staticFiles(String prefix, File dir);
+            ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:197: warning: no @param for dir
+    RestApp staticFiles(String prefix, File dir);
+            ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:197: warning: no @return
+    RestApp staticFiles(String prefix, File dir);
+            ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:201: warning: no @param for prefix
+    RestApp staticFiles(String prefix, File dir, Configurer<StaticOptions> options);
+            ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:201: warning: no @param for dir
+    RestApp staticFiles(String prefix, File dir, Configurer<StaticOptions> options);
+            ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:201: warning: no @param for options
+    RestApp staticFiles(String prefix, File dir, Configurer<StaticOptions> options);
+            ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:201: warning: no @return
+    RestApp staticFiles(String prefix, File dir, Configurer<StaticOptions> options);
+            ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:205: warning: no @return
+    MimeTypes mimeTypes();
+              ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:212: warning: no @param for policy
+    RestApp defaultCache(@Nullable CachePolicy policy);
+            ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:212: warning: no @return
+    RestApp defaultCache(@Nullable CachePolicy policy);
+            ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:219: warning: no @param for configurer
+    RestApp server(Configurer<ServerOptions> configurer);
+            ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:219: warning: no @return
+    RestApp server(Configurer<ServerOptions> configurer);
+            ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:227: warning: no @param for trust
+    RestApp trustProxy(boolean trust);
+            ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:227: warning: no @return
+    RestApp trustProxy(boolean trust);
+            ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:235: warning: no @param for path
+    RestApp ws(String path, WebSocketHandler handler);
+            ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:235: warning: no @param for handler
+    RestApp ws(String path, WebSocketHandler handler);
+            ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:235: warning: no @return
+    RestApp ws(String path, WebSocketHandler handler);
+            ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:242: warning: no @param for configurer
+    RestApp webSocket(Configurer<WebSocketOptions> configurer);
+            ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:242: warning: no @return
+    RestApp webSocket(Configurer<WebSocketOptions> configurer);
+            ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:249: warning: no @param for configurer
+    RestApp sse(Configurer<SseOptions> configurer);
+            ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:249: warning: no @return
+    RestApp sse(Configurer<SseOptions> configurer);
+            ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/spi/AppFactory.java:9: warning: no comment
+    RestApp create();
+            ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/internal/AppFactoryLoader.java:18: warning: no @param for loader
+    public static RestApp create(ClassLoader loader) {
+                          ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/internal/AppFactoryLoader.java:18: warning: no @return
+    public static RestApp create(ClassLoader loader) {
+                          ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/ServiceRegistry.java:10: warning: no @param for <T>
+    <T> void register(Class<T> type, T instance);
+             ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/ServiceRegistry.java:10: warning: no @param for type
+    <T> void register(Class<T> type, T instance);
+             ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/ServiceRegistry.java:10: warning: no @param for instance
+    <T> void register(Class<T> type, T instance);
+             ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/ServiceRegistry.java:13: warning: no @param for <T>
+    <T> void registerExternal(Class<T> type, T instance);
+             ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/ServiceRegistry.java:13: warning: no @param for type
+    <T> void registerExternal(Class<T> type, T instance);
+             ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/ServiceRegistry.java:13: warning: no @param for instance
+    <T> void registerExternal(Class<T> type, T instance);
+             ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/ServiceRegistry.java:16: warning: no @param for <T>
+    <T> T get(Class<T> type);
+          ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/ServiceRegistry.java:16: warning: no @param for type
+    <T> T get(Class<T> type);
+          ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/ServiceRegistry.java:16: warning: no @return
+    <T> T get(Class<T> type);
+          ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/ServiceRegistry.java:19: warning: no @param for <T>
+    <T> @Nullable T getOrNull(Class<T> type);
+                    ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/ServiceRegistry.java:19: warning: no @param for type
+    <T> @Nullable T getOrNull(Class<T> type);
+                    ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/ServiceRegistry.java:19: warning: no @return
+    <T> @Nullable T getOrNull(Class<T> type);
+                    ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/ServiceRegistry.java:22: warning: no @param for type
+    boolean contains(Class<?> type);
+            ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/ServiceRegistry.java:22: warning: no @return
+    boolean contains(Class<?> type);
+            ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/ApplicationContext.java:13: warning: no @param for key
+    void attribute(String key, @Nullable Object value);
+         ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/ApplicationContext.java:13: warning: no @param for value
+    void attribute(String key, @Nullable Object value);
+         ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/ApplicationContext.java:19: warning: no @param for <T>
+    <T> @Nullable T attributeAs(String key, Class<T> type);
+                    ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/ApplicationContext.java:19: warning: no @param for key
+    <T> @Nullable T attributeAs(String key, Class<T> type);
+                    ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/ApplicationContext.java:19: warning: no @param for type
+    <T> @Nullable T attributeAs(String key, Class<T> type);
+                    ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/ApplicationContext.java:19: warning: no @return
+    <T> @Nullable T attributeAs(String key, Class<T> type);
+                    ^
+/Users/beom/work/git/NaruServe/NaruServe-api/src/main/java/com/snoworca/naruserve/ApplicationContext.java:23: warning: no @param for key
+    default void removeAttribute(String key) {
+                 ^
+100 warnings
+
+> Task :NaruServe-api:javadocJar
+> Task :NaruServe-api:sourcesJar
+> Task :NaruServe-api:compileTestFixturesKotlin NO-SOURCE
+> Task :NaruServe-api:compileTestFixturesJava UP-TO-DATE
+> Task :NaruServe-api:processTestFixturesResources NO-SOURCE
+> Task :NaruServe-api:testFixturesClasses UP-TO-DATE
+> Task :NaruServe-api:testFixturesJar UP-TO-DATE
+> Task :NaruServe-api:processTestResources
+> Task :NaruServe-filelog:animalsnifferMain
+> Task :NaruServe-filelog:checkClassReferences
+> Task :NaruServe-api:compileTestKotlin
+
+> Task :NaruServe-filelog:javadoc
+/Users/beom/work/git/NaruServe/NaruServe-filelog/src/main/java/com/snoworca/naruserve/filelog/RotatingFileLogger.java:70: warning: no @return
+    public static Builder builder() {
+                          ^
+/Users/beom/work/git/NaruServe/NaruServe-filelog/src/main/java/com/snoworca/naruserve/filelog/RotatingFileLogger.java:150: warning: no @return
+    public long droppedCount() {
+                ^
+/Users/beom/work/git/NaruServe/NaruServe-filelog/src/main/java/com/snoworca/naruserve/filelog/RotatingFileLogger.java:156: warning: no @return
+    public long rotationFailureCount() {
+                ^
+/Users/beom/work/git/NaruServe/NaruServe-filelog/src/main/java/com/snoworca/naruserve/filelog/RotatingFileLogger.java:395: warning: no @return
+        public RotatingFileLogger build() {
+                                  ^
+/Users/beom/work/git/NaruServe/NaruServe-filelog/src/main/java/com/snoworca/naruserve/filelog/RotatingFileLogger.java:365: warning: no comment
+        public Builder directory(File directory) {
+                       ^
+/Users/beom/work/git/NaruServe/NaruServe-filelog/src/main/java/com/snoworca/naruserve/filelog/RotatingFileLogger.java:388: warning: no comment
+        public Builder level(LogLevel level) {
+                       ^
+/Users/beom/work/git/NaruServe/NaruServe-filelog/src/main/java/com/snoworca/naruserve/filelog/RotatingFileLogger.java:371: warning: no comment
+        public Builder maxFileBytes(long maxFileBytes) {
+                       ^
+/Users/beom/work/git/NaruServe/NaruServe-filelog/src/main/java/com/snoworca/naruserve/filelog/RotatingFileLogger.java:377: warning: no comment
+        public Builder maxFiles(int maxFiles) {
+                       ^
+/Users/beom/work/git/NaruServe/NaruServe-filelog/src/main/java/com/snoworca/naruserve/filelog/RotatingFileLogger.java:383: warning: no comment
+        public Builder queueCapacity(int queueCapacity) {
+                       ^
+9 warnings
+
+> Task :NaruServe-api:compileTestJava
+> Task :NaruServe-api:testClasses
+> Task :NaruServe-api:test
+> Task :NaruServe-api:check
+> Task :NaruServe-filelog:javadocJar UP-TO-DATE
+> Task :NaruServe-filelog:sourcesJar UP-TO-DATE
+> Task :NaruServe-filelog:compileTestKotlin NO-SOURCE
+> Task :NaruServe-filelog:compileTestJava UP-TO-DATE
+> Task :NaruServe-filelog:processTestResources NO-SOURCE
+> Task :NaruServe-filelog:testClasses UP-TO-DATE
+> Task :NaruServe-filelog:test
+> Task :NaruServe-filelog:check
+> Task :NaruServe-gson:animalsnifferMain
+> Task :NaruServe-gson:checkClassReferences
+
+> Task :NaruServe-gson:javadoc
+/Users/beom/work/git/NaruServe/NaruServe-gson/src/main/java/com/snoworca/naruserve/gson/GsonJsonCodec.java:43: warning: no @param for gson
+    public GsonJsonCodec(Gson gson) {
+           ^
+/Users/beom/work/git/NaruServe/NaruServe-gson/src/main/java/com/snoworca/naruserve/gson/GsonJsonCodec.java:49: warning: no @param for gson
+    public GsonJsonCodec(Gson gson, int maxDepth) {
+           ^
+/Users/beom/work/git/NaruServe/NaruServe-gson/src/main/java/com/snoworca/naruserve/gson/GsonJsonCodec.java:49: warning: no @param for maxDepth
+    public GsonJsonCodec(Gson gson, int maxDepth) {
+           ^
+/Users/beom/work/git/NaruServe/NaruServe-gson/src/main/java/com/snoworca/naruserve/gson/GsonJsonCodec.java:62: warning: no @return
+    public static Gson defaultGson() {
+                       ^
+4 warnings
+
+> Task :NaruServe-gson:javadocJar UP-TO-DATE
+> Task :NaruServe-gson:sourcesJar UP-TO-DATE
+> Task :NaruServe-gson:processTestResources NO-SOURCE
+> Task :NaruServe-gson:compileTestKotlin
+> Task :NaruServe-kotlin:animalsnifferMain
+> Task :NaruServe-gson:compileTestJava UP-TO-DATE
+> Task :NaruServe-gson:testClasses UP-TO-DATE
+> Task :NaruServe-gson:test
+> Task :NaruServe-gson:check
+> Task :NaruServe-kotlin:checkClassReferences
+> Task :NaruServe-kotlin:jar UP-TO-DATE
+> Task :NaruServe-kotlin:javadoc NO-SOURCE
+> Task :NaruServe-kotlin:javadocJar UP-TO-DATE
+> Task :NaruServe-kotlin:sourcesJar UP-TO-DATE
+> Task :NaruServe-kotlin:processTestResources NO-SOURCE
+> Task :NaruServe-kotlin:compileTestKotlin
+> Task :NaruServe-logcat:animalsnifferMain
+> Task :NaruServe-kotlin:compileTestJava NO-SOURCE
+> Task :NaruServe-kotlin:testClasses UP-TO-DATE
+> Task :NaruServe-kotlin:test
+> Task :NaruServe-kotlin:check
+> Task :NaruServe-logcat:checkClassReferences
+
+> Task :NaruServe-logcat:javadoc
+/Users/beom/work/git/NaruServe/NaruServe-logcat/src/main/java/com/snoworca/naruserve/logcat/LogcatLogger.java:36: warning: no @param for tag
+    public LogcatLogger(String tag) {
+           ^
+1 warning
+
+> Task :NaruServe-logcat:javadocJar UP-TO-DATE
+> Task :NaruServe-logcat:sourcesJar UP-TO-DATE
+> Task :NaruServe-logcat:compileTestKotlin NO-SOURCE
+> Task :NaruServe-logcat:compileTestJava UP-TO-DATE
+> Task :NaruServe-logcat:processTestResources NO-SOURCE
+> Task :NaruServe-logcat:testClasses UP-TO-DATE
+> Task :NaruServe-logcat:test
+> Task :NaruServe-logcat:check
+> Task :NaruServe-servlet:checkClassReferences
+> Task :NaruServe-servlet:jar UP-TO-DATE
+
+> Task :NaruServe-servlet:javadoc
+/Users/beom/work/git/NaruServe/NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/NaruServeInitializer.java:21: warning: no comment
+    public NaruServeInitializer() {
+           ^
+/Users/beom/work/git/NaruServe/NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/ServletAdapter.java:38: warning: no comment
+    public ServletAdapter() {
+           ^
+/Users/beom/work/git/NaruServe/NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/ServletConfigurer.java:15: warning: no comment
+    RestApp configure(RestApp.Builder builder) throws Exception;
+            ^
+3 warnings
+
+> Task :NaruServe-servlet:javadocJar UP-TO-DATE
+> Task :NaruServe-servlet:sourcesJar UP-TO-DATE
+> Task :NaruServe-servlet:processTestResources NO-SOURCE
+> Task :NaruServe-servlet:compileTestKotlin
+
+> Task :NaruServe-slf4j:javadoc
+/Users/beom/work/git/NaruServe/NaruServe-slf4j/src/main/java/com/snoworca/naruserve/slf4j/Slf4jLogger.java:23: warning: no comment
+    public Slf4jLogger(org.slf4j.Logger delegate) {
+           ^
+1 warning
+
+> Task :NaruServe-servlet:compileTestJava UP-TO-DATE
+> Task :NaruServe-servlet:testClasses UP-TO-DATE
+> Task :NaruServe-servlet:test
+> Task :NaruServe-servlet:check
+> Task :NaruServe-slf4j:javadocJar UP-TO-DATE
+> Task :NaruServe-slf4j:sourcesJar UP-TO-DATE
+> Task :NaruServe-slf4j:compileTestKotlin NO-SOURCE
+> Task :NaruServe-slf4j:compileTestJava UP-TO-DATE
+> Task :NaruServe-slf4j:processTestResources NO-SOURCE
+> Task :NaruServe-slf4j:testClasses UP-TO-DATE
+> Task :NaruServe-slf4j:test
+> Task :NaruServe-slf4j:check
+> Task :NaruServe-tinyhttpd:animalsnifferMain
+> Task :NaruServe-tinyhttpd:checkClassReferences
+
+> Task :NaruServe-tinyhttpd:javadoc
+/Users/beom/work/git/NaruServe/NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdAdapter.java:43: warning: no comment
+    public TinyHttpdAdapter() {
+           ^
+1 warning
+
+> Task :NaruServe-tinyhttpd:javadocJar UP-TO-DATE
+> Task :NaruServe-tinyhttpd:sourcesJar UP-TO-DATE
+> Task :NaruServe-tinyhttpd:compileTestKotlin NO-SOURCE
+> Task :NaruServe-tinyhttpd:compileTestJava UP-TO-DATE
+> Task :NaruServe-tinyhttpd:processTestResources NO-SOURCE
+> Task :NaruServe-tinyhttpd:testClasses UP-TO-DATE
+> Task :NaruServe-tinyhttpd:isolatedTest
+> Task :NaruServe-tinyhttpd:test
+> Task :NaruServe-tinyhttpd:check
+> Task :cleanCentralStaging
+> Task :compileTestJava
+> Task :processTestResources
+> Task :testClasses
+> Task :NaruServe:generatePomFileForMavenPublication
+> Task :NaruServe:generateMetadataFileForMavenPublication
+> Task :NaruServe:publishMavenPublicationToCentralStagingRepository
+> Task :NaruServe:publishAllPublicationsToCentralStagingRepository
+> Task :NaruServe-android:preBuild UP-TO-DATE
+> Task :NaruServe-android:preReleaseBuild UP-TO-DATE
+> Task :NaruServe-android:checkReleaseAarMetadata UP-TO-DATE
+> Task :NaruServe-android:mergeReleaseJniLibFolders UP-TO-DATE
+> Task :NaruServe-android:mergeReleaseNativeLibs NO-SOURCE
+> Task :NaruServe-android:stripReleaseDebugSymbols NO-SOURCE
+> Task :NaruServe-android:copyReleaseJniLibsProjectAndLocalJars UP-TO-DATE
+> Task :NaruServe-android:generateReleaseResValues UP-TO-DATE
+> Task :NaruServe-android:extractDeepLinksForAarRelease UP-TO-DATE
+> Task :NaruServe-android:generateReleaseResources UP-TO-DATE
+> Task :NaruServe-android:packageReleaseResources UP-TO-DATE
+> Task :NaruServe-android:processReleaseNavigationResources UP-TO-DATE
+> Task :NaruServe-android:parseReleaseLocalResources UP-TO-DATE
+> Task :NaruServe-android:generateReleaseRFile UP-TO-DATE
+> Task :NaruServe-android:extractReleaseAnnotations
+> Task :NaruServe-android:mergeReleaseShaders UP-TO-DATE
+> Task :NaruServe-android:compileReleaseShaders NO-SOURCE
+> Task :NaruServe-android:generateReleaseAssets UP-TO-DATE
+> Task :NaruServe-android:mergeReleaseAssets UP-TO-DATE
+> Task :NaruServe-android:javaPreCompileRelease UP-TO-DATE
+> Task :NaruServe-android:compileReleaseJavaWithJavac NO-SOURCE
+> Task :NaruServe-android:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :NaruServe-android:mergeReleaseConsumerProguardFiles UP-TO-DATE
+> Task :NaruServe-android:prepareLintJarForPublish SKIPPED
+> Task :NaruServe-android:prepareReleaseArtProfile UP-TO-DATE
+> Task :NaruServe-android:processReleaseManifest UP-TO-DATE
+> Task :NaruServe-android:processReleaseJavaRes NO-SOURCE
+> Task :NaruServe-android:mergeReleaseJavaResource UP-TO-DATE
+> Task :NaruServe-android:syncReleaseLibJars UP-TO-DATE
+> Task :NaruServe-android:writeReleaseAarMetadata UP-TO-DATE
+> Task :NaruServe-android:bundleReleaseAar UP-TO-DATE
+> Task :NaruServe-android:generatePomFileForReleasePublication
+> Task :NaruServe-android:sourceReleaseJar UP-TO-DATE
+> Task :NaruServe-api:generatePomFileForMavenPublication
+> Task :NaruServe-api:generateMetadataFileForMavenPublication
+> Task :NaruServe-api:publishMavenPublicationToCentralStagingRepository
+> Task :NaruServe-api:publishAllPublicationsToCentralStagingRepository
+> Task :NaruServe-filelog:generatePomFileForMavenPublication
+> Task :NaruServe-filelog:generateMetadataFileForMavenPublication
+> Task :NaruServe-filelog:publishMavenPublicationToCentralStagingRepository
+> Task :NaruServe-filelog:publishAllPublicationsToCentralStagingRepository
+> Task :NaruServe-gson:generatePomFileForMavenPublication
+> Task :NaruServe-gson:generateMetadataFileForMavenPublication
+> Task :NaruServe-gson:publishMavenPublicationToCentralStagingRepository
+> Task :NaruServe-gson:publishAllPublicationsToCentralStagingRepository
+> Task :NaruServe-kotlin:generatePomFileForMavenPublication
+> Task :NaruServe-kotlin:generateMetadataFileForMavenPublication
+> Task :NaruServe-kotlin:publishMavenPublicationToCentralStagingRepository
+> Task :NaruServe-kotlin:publishAllPublicationsToCentralStagingRepository
+> Task :NaruServe-logcat:generatePomFileForMavenPublication
+> Task :NaruServe-logcat:generateMetadataFileForMavenPublication
+> Task :NaruServe-logcat:publishMavenPublicationToCentralStagingRepository
+> Task :NaruServe-logcat:publishAllPublicationsToCentralStagingRepository
+> Task :NaruServe-servlet:generatePomFileForMavenPublication
+> Task :NaruServe-servlet:generateMetadataFileForMavenPublication
+> Task :NaruServe-servlet:publishMavenPublicationToCentralStagingRepository
+> Task :NaruServe-servlet:publishAllPublicationsToCentralStagingRepository
+> Task :NaruServe-slf4j:generatePomFileForMavenPublication
+> Task :NaruServe-slf4j:generateMetadataFileForMavenPublication
+> Task :NaruServe-slf4j:publishMavenPublicationToCentralStagingRepository
+> Task :NaruServe-slf4j:publishAllPublicationsToCentralStagingRepository
+> Task :NaruServe-tinyhttpd:generatePomFileForMavenPublication
+> Task :NaruServe-tinyhttpd:generateMetadataFileForMavenPublication
+> Task :NaruServe-tinyhttpd:publishMavenPublicationToCentralStagingRepository
+> Task :NaruServe-tinyhttpd:publishAllPublicationsToCentralStagingRepository
+> Task :NaruServe:assemble UP-TO-DATE
+> Task :NaruServe:build
+> Task :NaruServe-android:preDebugBuild UP-TO-DATE
+> Task :NaruServe-android:checkDebugAarMetadata UP-TO-DATE
+> Task :NaruServe-android:mergeDebugJniLibFolders UP-TO-DATE
+> Task :NaruServe-android:mergeDebugNativeLibs NO-SOURCE
+> Task :NaruServe-android:stripDebugDebugSymbols NO-SOURCE
+> Task :NaruServe-android:copyDebugJniLibsProjectAndLocalJars UP-TO-DATE
+> Task :NaruServe-android:generateDebugResValues UP-TO-DATE
+> Task :NaruServe-android:generateDebugResources UP-TO-DATE
+> Task :NaruServe-android:packageDebugResources UP-TO-DATE
+> Task :NaruServe-android:processDebugNavigationResources UP-TO-DATE
+> Task :NaruServe-android:parseDebugLocalResources UP-TO-DATE
+> Task :NaruServe-android:generateDebugRFile UP-TO-DATE
+> Task :NaruServe-android:extractDebugAnnotations
+> Task :NaruServe-android:extractDeepLinksForAarDebug UP-TO-DATE
+> Task :NaruServe-android:mergeDebugShaders UP-TO-DATE
+> Task :NaruServe-android:compileDebugShaders NO-SOURCE
+> Task :NaruServe-android:generateDebugAssets UP-TO-DATE
+> Task :NaruServe-android:mergeDebugAssets UP-TO-DATE
+> Task :NaruServe-android:javaPreCompileDebug UP-TO-DATE
+> Task :NaruServe-android:compileDebugJavaWithJavac NO-SOURCE
+> Task :NaruServe-android:mergeDebugGeneratedProguardFiles UP-TO-DATE
+> Task :NaruServe-android:mergeDebugConsumerProguardFiles UP-TO-DATE
+> Task :NaruServe-android:prepareDebugArtProfile UP-TO-DATE
+> Task :NaruServe-android:processDebugManifest UP-TO-DATE
+> Task :NaruServe-android:processDebugJavaRes NO-SOURCE
+> Task :NaruServe-android:mergeDebugJavaResource UP-TO-DATE
+> Task :NaruServe-android:syncDebugLibJars UP-TO-DATE
+> Task :NaruServe-android:writeDebugAarMetadata UP-TO-DATE
+> Task :NaruServe-android:bundleDebugAar UP-TO-DATE
+> Task :NaruServe-android:assembleDebug UP-TO-DATE
+> Task :NaruServe-android:mapReleaseSourceSetPaths UP-TO-DATE
+> Task :NaruServe-android:mergeReleaseResources UP-TO-DATE
+> Task :NaruServe-android:verifyReleaseResources UP-TO-DATE
+> Task :NaruServe-android:assembleRelease UP-TO-DATE
+> Task :NaruServe-android:assemble UP-TO-DATE
+> Task :NaruServe-android:bundleDebugLocalLintAar SKIPPED
+> Task :NaruServe-android:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :NaruServe-android:createFullJarDebug UP-TO-DATE
+> Task :NaruServe-android:preDebugAndroidTestBuild UP-TO-DATE
+> Task :NaruServe-android:generateDebugAndroidTestResValues UP-TO-DATE
+> Task :NaruServe-android:writeDebugLintModelMetadata SKIPPED
+> Task :NaruServe-android:extractProguardFiles UP-TO-DATE
+> Task :NaruServe-android:generateDebugAndroidTestLintModel SKIPPED
+> Task :NaruServe-android:generateDebugLintReportModel SKIPPED
+> Task :NaruServe-android:preDebugUnitTestBuild UP-TO-DATE
+> Task :NaruServe-android:generateDebugUnitTestLintModel SKIPPED
+> Task :NaruServe-android:lintAnalyzeDebug SKIPPED
+> Task :NaruServe-android:lintAnalyzeDebugAndroidTest SKIPPED
+> Task :NaruServe-android:lintAnalyzeDebugUnitTest SKIPPED
+> Task :NaruServe-android:lintReportDebug SKIPPED
+> Task :NaruServe-android:lintDebug SKIPPED
+> Task :NaruServe-android:lint SKIPPED
+> Task :NaruServe-android:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :NaruServe-android:generateDebugUnitTestStubRFile UP-TO-DATE
+> Task :NaruServe-android:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :NaruServe-android:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :NaruServe-android:processDebugUnitTestJavaRes NO-SOURCE
+> Task :NaruServe-android:testDebugUnitTest NO-SOURCE
+> Task :NaruServe-android:bundleLibRuntimeToJarRelease UP-TO-DATE
+> Task :NaruServe-android:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :NaruServe-android:preReleaseUnitTestBuild UP-TO-DATE
+> Task :NaruServe-android:generateReleaseUnitTestStubRFile UP-TO-DATE
+> Task :NaruServe-android:javaPreCompileReleaseUnitTest UP-TO-DATE
+> Task :NaruServe-android:compileReleaseUnitTestJavaWithJavac NO-SOURCE
+> Task :NaruServe-android:processReleaseUnitTestJavaRes NO-SOURCE
+> Task :NaruServe-android:testReleaseUnitTest NO-SOURCE
+> Task :NaruServe-android:test UP-TO-DATE
+> Task :NaruServe-android:check UP-TO-DATE
+> Task :NaruServe-android:build UP-TO-DATE
+> Task :NaruServe-api:assemble
+> Task :NaruServe-api:build
+> Task :NaruServe-filelog:assemble UP-TO-DATE
+> Task :NaruServe-filelog:build
+> Task :NaruServe-gson:assemble UP-TO-DATE
+> Task :NaruServe-gson:build
+> Task :NaruServe-kotlin:assemble UP-TO-DATE
+> Task :NaruServe-kotlin:build
+> Task :NaruServe-logcat:assemble UP-TO-DATE
+> Task :NaruServe-logcat:build
+> Task :NaruServe-servlet:assemble UP-TO-DATE
+> Task :NaruServe-servlet:build
+> Task :NaruServe-slf4j:assemble UP-TO-DATE
+> Task :NaruServe-slf4j:build
+> Task :NaruServe-tinyhttpd:assemble UP-TO-DATE
+> Task :NaruServe-tinyhttpd:build
+
+> Task :NaruServe-android:javaDocReleaseGeneration
+Initializing plugins
+Dokka is performing: documentation for :NaruServe-android
+Validity check
+Creating documentation models
+Transforming documentation model before merging
+Merging documentation models
+Exiting Generation: Nothing to document
+
+
+> Task :NaruServe-android:javaDocReleaseJar UP-TO-DATE
+> Task :NaruServe-android:generateMetadataFileForReleasePublication
+> Task :NaruServe-android:publishReleasePublicationToCentralStagingRepository
+> Task :NaruServe-android:publishAllPublicationsToCentralStagingRepository
+> Task :test
+> Task :check
+> Task :build
+
+BUILD SUCCESSFUL in 2m 10s
+186 actionable tasks: 85 executed, 101 up-to-date

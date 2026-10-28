@@ -4,21 +4,23 @@
   "plan": "docs/plan/0.10.0-parallel-plan.md",
   "dependencies": "unchanged versions/types/scopes; existing toolchain reused",
   "regex": "Java Pattern",
-  "status": "parallel-foundation-dispatch",
+  "status": "foundation-integrated-central-contracts-ready",
   "issues": [
     {
       "id": "T00",
       "number": 47,
       "status": "in_progress",
       "depends_on": [],
-      "req_ids": [],
+      "req_ids": [
+        "CON-APP-010"
+      ],
       "test_review_rounds": [],
       "completed": false
     },
     {
       "id": "T01",
       "number": 48,
-      "status": "tdd-implementation",
+      "status": "foundation-integrated-public-feature-coverage-pending",
       "depends_on": [
         "T00"
       ],
@@ -30,6 +32,11 @@
           "round": 1,
           "verdict": "changes_required",
           "report": "docs/plan/evidence/harness-test-review-round1.json"
+        },
+        {
+          "round": 2,
+          "verdict": "pass",
+          "report": "docs/plan/evidence/harness-test-review-round2.json"
         }
       ],
       "completed": false
@@ -37,7 +44,7 @@
     {
       "id": "T02",
       "number": 49,
-      "status": "tdd-implementation",
+      "status": "foundation-integrated-public-feature-coverage-pending",
       "depends_on": [
         "T00",
         "T01"
@@ -50,6 +57,11 @@
           "round": 1,
           "verdict": "changes_required",
           "report": "docs/plan/evidence/compiler-test-review-round1.json"
+        },
+        {
+          "round": 2,
+          "verdict": "pass",
+          "report": "docs/plan/evidence/compiler-test-review-round2.json"
         }
       ],
       "completed": false
@@ -299,24 +311,28 @@
   "srs_mode": "sdd with mandatory behavior TDD",
   "requirements": {
     "harness": "OPS-ROUTE-004",
-    "http_compiler": "FR-ROUTE-018"
+    "http_compiler": "FR-ROUTE-018",
+    "profile": "CON-APP-010"
   },
   "lanes": {
     "harness": {
       "agent": "/root/release_dependency_audit",
       "worktree": ".claude/worktrees/v010-parity-harness",
       "branch": "kiwi/v010/parity-harness",
-      "red_commit": "3d86599"
+      "red_commit": "3d86599",
+      "green_commit": "07b2d18"
     },
     "compiler": {
       "agent": "/root/api_core_docs",
       "worktree": ".claude/worktrees/v010-http-compiler",
       "branch": "kiwi/v010/http-compiler",
-      "red_commit": "db20b63"
+      "red_commit": "db20b63",
+      "green_commit": "3f746b4"
     },
     "independent_test_reviewer": {
       "agent": "/root/transport_dependency_audit",
       "authors_own_tests": false
     }
-  }
+  },
+  "integrated_head": "ab9b9c09f41d9c4ad7f7e7b417e2ae48e7372734"
 }

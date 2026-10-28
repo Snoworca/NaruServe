@@ -1,0 +1,88 @@
+{
+  "requirement": "FR-ROUTE-018",
+  "supporting_requirement": "FR-HTTP-027 AC-1 (root MCP read; absent in foundation base)",
+  "worktree": "/Users/beom/work/git/NaruServe/.claude/worktrees/v010-http-compiler",
+  "branch": "kiwi/v010/http-compiler",
+  "test_first_commits": [
+    "db20b63",
+    "aa1bf70",
+    "079201e"
+  ],
+  "green_commit": "3f746b4ed8ab4f8b59243eae2fa441c9ebfa1a10",
+  "red": [
+    {
+      "log": "red.log",
+      "tests": 9,
+      "failure": "ClassNotFoundException"
+    },
+    {
+      "log": "red-round1-additions.log",
+      "tests": 11,
+      "failure": "ClassNotFoundException"
+    },
+    {
+      "log": "red-kind-metadata.log",
+      "tests": 1,
+      "failure": "NoSuchMethodException Match.wildcards"
+    }
+  ],
+  "green": {
+    "dedicated_tests": 12,
+    "upstream_raw_vectors": 257,
+    "java8_dedicated_tests": 12,
+    "deterministic_extra_oracle_vectors_per_jvm": 27308,
+    "module_regression_tests": 1183,
+    "failures": 0,
+    "errors": 0,
+    "skips": 0,
+    "animalsnifferMain": "PASS AndroidAPI21 Java8"
+  },
+  "logs": [
+    "green-final.log",
+    "regression-final.log",
+    "java8-junit.log",
+    "java8-probe.log",
+    "differential-java17.log",
+    "differential-java8.log"
+  ],
+  "api": {
+    "HttpPathPattern": [
+      "static compile(String path, boolean end, boolean caseSensitive, boolean trailing)",
+      "@Nullable Match match(String rawPath)",
+      "List<Key> keys()"
+    ],
+    "Match": [
+      "String matchedPath()",
+      "Map<String,List<String>> captures()",
+      "Set<String> wildcards()"
+    ],
+    "Key": [
+      "String name()",
+      "boolean wildcard()"
+    ]
+  },
+  "semantics": [
+    "raw UTF16 pathname matching; source error positions count Unicode code points",
+    "ECMAScript non-u case equivalence and Unicode16 identifier tables fixed from Node22.22.0",
+    "256 present-first optional alternatives maximum",
+    "greedy ordered iterative NFA; no recursive parse/expansion/matcher or shared Matcher",
+    "captures and collections immutable; duplicate last participating binding wins including kind",
+    "no percent decoding; wildcard slash splitting preserves empty segments"
+  ],
+  "coverage": {
+    "AC-1": "foundation tests and pinned vectors",
+    "AC-2": "grammar tests plus exact offsets and quoted/Unicode names",
+    "AC-3": "corpus, explicit boundary/trailing/case tests",
+    "AC-4": "raw percent/wildcard tests",
+    "AC-5": "256/257 expansion, 100000-char subprocess, 10000 nested group bound, licenses",
+    "AC-6": "Java8 JUnit+probe+corpus, concurrency, API21 animal sniffer, all existing API tests unchanged",
+    "AC-7": "PENDING public HTTP routing integration"
+  },
+  "review": "Independent review owned by host; not self-approved; issue/requirement not closed",
+  "limitations": [
+    "String patterns only, default slash delimiter; no TokenData/path-array/generator interface required here",
+    "Not wired into public route registration; host integration remains mandatory",
+    "Fixed Unicode tables derive the pinned Node22.22.0 runtime instead of JVM Unicode versions",
+    "Android SDK not present; API21 signature verification passed but no device test"
+  ]
+}
