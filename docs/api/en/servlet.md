@@ -2,7 +2,7 @@
 
 [한국어](../servlet.md) | [English](servlet.md)
 
-> **Version scope:** This page describes the 0.10.0 target checkout, not a Maven publication announcement. Dependency examples keep the current project version `0.9.0` until the release version changes; use the target checkout build for the behavior below.
+> **Documentation version:** This page targets NaruServe 0.10.0. See [installation](README.md) for coordinates and the source-build fallback when that version is unavailable.
 
 `NaruServe-servlet` runs a NaruServe application inside a Servlet container such as Tomcat or Jetty. The container accepts connections instead of the embedded engine; route, middleware and `req`/`res` code remain the same.
 
@@ -16,9 +16,9 @@
 
 ```groovy
 // Dependencies for a web application running in a Servlet container.
-implementation 'com.snoworca.naruserve:naruserve-servlet:0.9.0'
+implementation 'com.snoworca.naruserve:naruserve-servlet:0.10.0'
 // JSON codec; otherwise configure Builder.jsonCodec(...) yourself.
-implementation 'com.snoworca.naruserve:naruserve-gson:0.9.0'
+implementation 'com.snoworca.naruserve:naruserve-gson:0.10.0'
 // The container provides the Servlet API.
 compileOnly 'javax.servlet:javax.servlet-api:3.1.0'
 ```

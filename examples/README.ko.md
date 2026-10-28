@@ -43,7 +43,7 @@ Kotlin 요청 DTO는 Unsafe를 사용하지 않는 기본 Gson에 맞춰 nullabl
 
 ## 별도 소비자에서 Maven 좌표 사용
 
-별도 소비자 프로젝트에 예제 소스와 빌드 파일을 복사하고, `settings.gradle`에서 `includeBuild('../..')`를 제거하세요. `mavenCentral()`을 유지하고, 해당 버전을 Maven Central에서 받을 수 있을 때 Java는 `com.snoworca.naruserve:naruserve:0.9.0`, Kotlin은 `com.snoworca.naruserve:naruserve-kotlin:0.9.0`을 사용하세요. 가용성과 모듈 선택은 [설치 안내](../README.ko.md#설치)에서 확인하세요.
+별도 소비자 프로젝트에 예제 소스와 빌드 파일을 복사하고, `settings.gradle`에서 `includeBuild('../..')`를 제거하세요. `mavenCentral()`을 유지하고, 해당 버전을 Maven Central에서 받을 수 있을 때 Java는 `com.snoworca.naruserve:naruserve:0.10.0`, Kotlin은 `com.snoworca.naruserve:naruserve-kotlin:0.10.0`을 사용하세요. 가용성과 모듈 선택은 [설치 안내](../README.ko.md#설치)에서 확인하세요.
 
 버전을 찾지 못하면 NaruServe 루트에서 이 체크아웃을 로컬에 게시합니다.
 

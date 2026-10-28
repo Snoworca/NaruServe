@@ -13,7 +13,7 @@ The built-in multipart reader replaces typical multer usage. Configure app-wide 
 | limits.fileSize | app.multipart(c -> c.maxFileSize(...)) |
 | dest: uploads | tempDirectory for temporary storage, then file.save for persistence |
 
-The common HTTP behavior below describes the 0.10.0 checkout. Published module coordinates remain 0.9.0 until the new release.
+The common HTTP behavior below targets NaruServe 0.10.0.
 
 ## Example
 

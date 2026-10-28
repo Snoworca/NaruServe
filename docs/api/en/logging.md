@@ -82,7 +82,7 @@ Ordered error handlers do not suppress the original failure record. An error who
 
 Access logging and request cleanup are separate. A returned pending `Deferred` can keep input/uploads alive after the response's one access line has been written; settlement does not add another line. Existing access-log privacy exclusions remain unchanged. Exception messages and Java stack details in application logs/default error HTML are not an automatic scrubber for application-supplied secrets.
 
-The module coordinates below remain the published 0.9.0 coordinates; this page's common HTTP behavior describes the 0.10.0 checkout.
+The module coordinates and common HTTP behavior below target NaruServe 0.10.0. See [installation](README.md) for availability and source builds.
 
 ## Application logger
 
@@ -129,9 +129,9 @@ Implement `Logger` and pass it to `app.logger(customLogger)`.
 
 | Logger | Module | Coordinates | Android |
 |---|---|---|---|
-| Logcat | `NaruServe-logcat` | `com.snoworca.naruserve:naruserve-logcat:0.9.0` | API 21+. Builds without the Android SDK and calls `android.util.Log` by reflection |
-| Rotating file | `NaruServe-filelog` | `com.snoworca.naruserve:naruserve-filelog:0.9.0` | API 21+ |
-| SLF4J adapter | `NaruServe-slf4j` | `com.snoworca.naruserve:naruserve-slf4j:0.9.0` (`org.slf4j:slf4j-api:1.7.36`) | JVM only |
+| Logcat | `NaruServe-logcat` | `com.snoworca.naruserve:naruserve-logcat:0.10.0` | API 21+. Builds without the Android SDK and calls `android.util.Log` by reflection |
+| Rotating file | `NaruServe-filelog` | `com.snoworca.naruserve:naruserve-filelog:0.10.0` | API 21+ |
+| SLF4J adapter | `NaruServe-slf4j` | `com.snoworca.naruserve:naruserve-slf4j:0.10.0` (`org.slf4j:slf4j-api:1.7.36`) | JVM only |
 
 The general `NaruServe` bootstrap uses the console and does not include `NaruServe-logcat`. Android applications use `NaruServe-android`, which brings in Logcat and makes `RestApp.create()` choose it. Add the corresponding module when referencing a logger class directly. Logging failures do not stop HTTP service.
 

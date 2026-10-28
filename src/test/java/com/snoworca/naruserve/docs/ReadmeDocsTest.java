@@ -79,7 +79,7 @@ public final class ReadmeDocsTest {
         String readme = read("README.md");
         int install = readme.indexOf("\n## Install");
         assertTrue("README.md has '## Install'", install >= 0);
-        int line = readme.indexOf("implementation 'com.snoworca.naruserve:naruserve:0.9.0'", install);
+        int line = readme.indexOf("implementation 'com.snoworca.naruserve:naruserve:0.10.0'", install);
         assertTrue("install line after '## Install'", line > install);
         String before = readme.substring(install, line);
         int repos = before.lastIndexOf("repositories {");
@@ -87,7 +87,10 @@ public final class ReadmeDocsTest {
         String block = before.substring(repos);
         assertTrue(block, block.contains("mavenCentral()"));
         assertFalse(block, block.contains("mavenLocal()"));
-        assertTrue("README.md states the Maven Central publication", readme.contains("published on Maven Central"));
+        // OPS-REL-008 AC-2; OPS-REL-009 AC-1: coordinates do not assert an unverified publication.
+        assertTrue("README.md states the Maven Central coordinates", readme.contains("Maven Central coordinates"));
+        assertTrue("README.md retains a source fallback if the release is unavailable",
+                readme.contains("If 0.10.0 is unavailable"));
         int source = readme.indexOf("### Build from a source checkout");
         assertTrue("README.md has '### Build from a source checkout'", source >= 0);
         assertTrue("publishToMavenLocal only under the source-checkout heading",
@@ -108,19 +111,19 @@ public final class ReadmeDocsTest {
         Matcher row = Pattern.compile("(?m)^\\| `[\\w-]+` \\| `(com\\.snoworca\\.naruserve:[\\w-]+)` \\|")
                 .matcher(read("docs/api/README.md"));
         while (row.find()) {
-            table.add(row.group(1) + ":0.9.0");
+            table.add(row.group(1) + ":0.10.0");
         }
         assertEquals("module table rows of docs/api/README.md", 10, table.size());
-        assertTrue(table.toString(), table.contains("com.snoworca.naruserve:naruserve-android:0.9.0"));
+        assertTrue(table.toString(), table.contains("com.snoworca.naruserve:naruserve-android:0.10.0"));
         String readme = read("README.md");
         Set<String> listed = new TreeSet<>();
-        Matcher coordinate = Pattern.compile("com\\.snoworca\\.naruserve:[\\w-]+:0\\.9\\.0(?![\\w.-])").matcher(readme);
+        Matcher coordinate = Pattern.compile("com\\.snoworca\\.naruserve:[\\w-]+:0\\.10\\.0(?![\\w.-])").matcher(readme);
         while (coordinate.find()) {
             listed.add(coordinate.group());
         }
         assertEquals(table, listed);
         for (String part : new String[] {"publishToMavenLocal", "mavenLocal()",
-                "implementation 'com.snoworca.naruserve:naruserve:0.9.0'"}) {
+                "implementation 'com.snoworca.naruserve:naruserve:0.10.0'"}) {
             assertTrue("README.md holds " + part, readme.contains(part));
         }
     }

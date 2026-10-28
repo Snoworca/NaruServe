@@ -10,12 +10,12 @@ The same API runs on Android 5.0 (API 21) and later and on any Java 8+ JVM.
 Read the [English API guide](docs/api/en/README.md) or the [한국어 API 문서](docs/api/README.md).
 Start with installation and the runnable example below; use the API guides for signatures, defaults and error contracts.
 
-> This checkout documents the 0.10.0 common HTTP profile. Until its Maven release is verified, use the source build for the new APIs; the published 0.9.0 coordinates below describe the previous release.
+> This guide describes the NaruServe 0.10.0 common HTTP profile and retained extensions.
 
 ## Install
 
-NaruServe 0.9.0 is published on Maven Central, so Gradle downloads it from `mavenCentral()` with no extra
-repository or source checkout:
+NaruServe 0.10.0 uses the Maven Central coordinates below with `mavenCentral()` as the repository.
+If 0.10.0 is unavailable from the repository, use [Build from a source checkout](#build-from-a-source-checkout) until the release is available:
 
 - Central page: [central.sonatype.com/artifact/com.snoworca.naruserve/naruserve](https://central.sonatype.com/artifact/com.snoworca.naruserve/naruserve)
   (all modules: [namespace com.snoworca.naruserve](https://central.sonatype.com/namespace/com.snoworca.naruserve))
@@ -29,7 +29,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.snoworca.naruserve:naruserve:0.9.0'
+    implementation 'com.snoworca.naruserve:naruserve:0.10.0'
 }
 ```
 
@@ -41,7 +41,7 @@ repositories {
 }
 
 dependencies {
-    implementation("com.snoworca.naruserve:naruserve:0.9.0")
+    implementation("com.snoworca.naruserve:naruserve:0.10.0")
 }
 ```
 
@@ -49,9 +49,9 @@ Pick the one line that matches the project; each brings the rest (TinyHttpd engi
 
 | Project | Gradle dependency |
 |---|---|
-| Java application on any JDK 8+ | `implementation 'com.snoworca.naruserve:naruserve:0.9.0'` |
-| Kotlin application | `implementation 'com.snoworca.naruserve:naruserve-kotlin:0.9.0'` |
-| Android app (API 21+) | `implementation 'com.snoworca.naruserve:naruserve-android:0.9.0'` plus the `pickFirsts` setting below |
+| Java application on any JDK 8+ | `implementation 'com.snoworca.naruserve:naruserve:0.10.0'` |
+| Kotlin application | `implementation 'com.snoworca.naruserve:naruserve-kotlin:0.10.0'` |
+| Android app (API 21+) | `implementation 'com.snoworca.naruserve:naruserve-android:0.10.0'` plus the `pickFirsts` setting below |
 
 An Android project that was created by Android Studio already lists `google()` and `mavenCentral()` in the
 `dependencyResolutionManagement` block of `settings.gradle`; nothing else is needed there.
@@ -77,16 +77,16 @@ Each artifactId is the module name in lower case (`NaruServe-api` is published a
 
 | Module | Coordinates | Contents |
 |---|---|---|
-| `NaruServe-api` | `com.snoworca.naruserve:naruserve-api:0.9.0` | Public API and SPI, no external runtime dependency (JSpecify annotations are compile-only) |
-| `NaruServe` | `com.snoworca.naruserve:naruserve:0.9.0` | `RestApp.create()` bootstrap: TinyHttpd, Gson (`GsonJsonCodec` at compile time) and the console logger, for any JDK |
-| `NaruServe-tinyhttpd` | `com.snoworca.naruserve:naruserve-tinyhttpd:0.9.0` | TinyHttpd `HttpAdapter` |
-| `NaruServe-gson` | `com.snoworca.naruserve:naruserve-gson:0.9.0` | `GsonJsonCodec` (Gson 2.14.0) |
-| `NaruServe-kotlin` | `com.snoworca.naruserve:naruserve-kotlin:0.9.0` | `NaruServe` plus Kotlin-only extensions; the only module that uses `kotlin-stdlib` |
-| `NaruServe-android` | `com.snoworca.naruserve:naruserve-android:0.9.0` | Android library (AAR): `NaruServe`, the Logcat logger and the `INTERNET` permission; built only when an Android SDK is found |
-| `NaruServe-logcat` | `com.snoworca.naruserve:naruserve-logcat:0.9.0` | Logcat `Logger` |
-| `NaruServe-filelog` | `com.snoworca.naruserve:naruserve-filelog:0.9.0` | Rotating file `Logger` |
-| `NaruServe-slf4j` | `com.snoworca.naruserve:naruserve-slf4j:0.9.0` | SLF4J `Logger` adapter (JVM only) |
-| `NaruServe-servlet` | `com.snoworca.naruserve:naruserve-servlet:0.9.0` | Runs a NaruServe app on a Servlet 3.1+ container (JVM only) |
+| `NaruServe-api` | `com.snoworca.naruserve:naruserve-api:0.10.0` | Public API and SPI, no external runtime dependency (JSpecify annotations are compile-only) |
+| `NaruServe` | `com.snoworca.naruserve:naruserve:0.10.0` | `RestApp.create()` bootstrap: TinyHttpd, Gson (`GsonJsonCodec` at compile time) and the console logger, for any JDK |
+| `NaruServe-tinyhttpd` | `com.snoworca.naruserve:naruserve-tinyhttpd:0.10.0` | TinyHttpd `HttpAdapter` |
+| `NaruServe-gson` | `com.snoworca.naruserve:naruserve-gson:0.10.0` | `GsonJsonCodec` (Gson 2.14.0) |
+| `NaruServe-kotlin` | `com.snoworca.naruserve:naruserve-kotlin:0.10.0` | `NaruServe` plus Kotlin-only extensions; the only module that uses `kotlin-stdlib` |
+| `NaruServe-android` | `com.snoworca.naruserve:naruserve-android:0.10.0` | Android library (AAR): `NaruServe`, the Logcat logger and the `INTERNET` permission; built only when an Android SDK is found |
+| `NaruServe-logcat` | `com.snoworca.naruserve:naruserve-logcat:0.10.0` | Logcat `Logger` |
+| `NaruServe-filelog` | `com.snoworca.naruserve:naruserve-filelog:0.10.0` | Rotating file `Logger` |
+| `NaruServe-slf4j` | `com.snoworca.naruserve:naruserve-slf4j:0.10.0` | SLF4J `Logger` adapter (JVM only) |
+| `NaruServe-servlet` | `com.snoworca.naruserve:naruserve-servlet:0.10.0` | Runs a NaruServe app on a Servlet 3.1+ container (JVM only) |
 
 ### Build from a source checkout
 
@@ -263,7 +263,7 @@ settings.gradle        Module inclusion and optional TinyHttpd composite
 | Symptom | Cause and action |
 |---|---|
 | `tinyHttpdDir: TinyHttpd checkout not found` | Select published engine JARs with `-PtinyHttpdFromMaven=true`, or pass a valid `-PtinyHttpdDir` path. |
-| `Could not find com.snoworca.naruserve:...:0.9.0` | Check release availability; publish this checkout locally and add `mavenLocal()` to the consumer. |
+| `Could not find com.snoworca.naruserve:...:0.10.0` | Check release availability; publish this checkout locally and add `mavenLocal()` to the consumer. |
 | `No com.snoworca.naruserve.spi.AppFactory provider found` | Add `naruserve` (or `naruserve-kotlin` / `naruserve-android`), or use `RestApp.builder()` with explicit `httpAdapter` and `jsonCodec`. `naruserve-api` alone supplies interfaces and implementation primitives. |
 | Other devices cannot connect | The default bind is `127.0.0.1`. Set `bindAddress("0.0.0.0")` inside the configuration lambda and check device network/firewall settings. |
 | Android resource merge reports duplicate TinyHttpd notices | Apply the `packaging.resources.pickFirsts` configuration from Install. |

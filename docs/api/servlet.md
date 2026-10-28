@@ -2,7 +2,7 @@
 
 [한국어](servlet.md) | [English](en/servlet.md)
 
-> **버전 범위:** 이 문서는 0.10.0 대상 체크아웃의 동작을 설명하며 Maven 배포 완료를 뜻하지 않습니다. 의존성 예제는 릴리스 버전 변경 전의 프로젝트 버전 `0.9.0`을 유지합니다. 아래 동작을 확인하려면 대상 체크아웃의 빌드를 사용하세요.
+> **문서 버전:** NaruServe 0.10.0 기준입니다. 좌표와 저장소 가용성에 따른 소스 빌드는 [설치 안내](README.md)를 참고하세요.
 
 `NaruServe-servlet`은 NaruServe 앱을 Tomcat, Jetty 같은 Servlet 컨테이너(WAS) 위에서 실행하는 어댑터입니다. 내장 HTTP 엔진 대신 컨테이너가 연결을 받고, 라우트·미들웨어·`req`/`res` 코드는 **그대로** 씁니다.
 
@@ -16,9 +16,9 @@
 
 ```groovy
 // Dependencies for a web application running in a Servlet container.
-implementation 'com.snoworca.naruserve:naruserve-servlet:0.9.0'
+implementation 'com.snoworca.naruserve:naruserve-servlet:0.10.0'
 // JSON codec; otherwise configure Builder.jsonCodec(...) yourself.
-implementation 'com.snoworca.naruserve:naruserve-gson:0.9.0'
+implementation 'com.snoworca.naruserve:naruserve-gson:0.10.0'
 // The container provides the Servlet API.
 compileOnly 'javax.servlet:javax.servlet-api:3.1.0'
 ```

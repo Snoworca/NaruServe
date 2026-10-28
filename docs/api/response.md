@@ -8,7 +8,7 @@
 res.status(201).header("X-Request-ID", id).json(created);
 ```
 
-아래 공통 HTTP 동작은 0.10.0 체크아웃 기준입니다. 새 릴리스 전까지 공개 모듈 좌표는 0.9.0입니다.
+아래 공통 HTTP 동작은 NaruServe 0.10.0 기준입니다.
 
 ## 메서드 요약
 
