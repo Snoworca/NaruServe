@@ -25,6 +25,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -114,6 +115,20 @@ public class GsonJsonCodecTest {
 
     private static ClientResponse post(InMemoryHttpAdapter adapter, String path, String body) {
         return adapter.send(ClientRequest.json("POST", path, body));
+    }
+
+    // CON-APP-010 AC-4 AC-5; FR-APP-024 AC-3: common HTTP now renders HTML,
+    // while the codec's original status, strictness, depth and cause contracts remain unchanged.
+    private static void assertCommonHtmlError(ClientResponse response) {
+        assertEquals("text/html; charset=utf-8", response.header("Content-Type"));
+        assertEquals("default-src 'none'", response.header("Content-Security-Policy"));
+        assertEquals("nosniff", response.header("X-Content-Type-Options"));
+        String body = response.text();
+        assertTrue(body, body.startsWith("<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n"
+                + "<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>"));
+        assertTrue(body, body.contains("com.snoworca.naruserve.HttpException"));
+        assertTrue(body, body.endsWith("</pre>\n</body>\n</html>\n"));
+        assertEquals(Integer.toString(body.getBytes(StandardCharsets.UTF_8).length), response.header("Content-Length"));
     }
 
     /** An app over the in-memory adapter using {@code codec}, echoing req.body(type) through res.json. */
@@ -235,7 +250,7 @@ public class GsonJsonCodecTest {
         for (String json : new String[] {"{a:1}", "{'a':1}", "{\"name\":\"a\" /* c */}"}) {
             ClientResponse r = post(adapter, "/user", json);
             assertEquals(json, 400, r.status());
-            assertTrue(r.text(), r.text().contains("BAD_REQUEST"));
+            assertCommonHtmlError(r);
         }
     }
 
@@ -298,7 +313,7 @@ public class GsonJsonCodecTest {
         InMemoryHttpAdapter adapter = echoApp(new GsonJsonCodec());
         ClientResponse deep = post(adapter, "/object", nested(65));
         assertEquals(400, deep.status());
-        assertTrue(deep.text(), deep.text().contains("BAD_REQUEST"));
+        assertCommonHtmlError(deep);
         ClientResponse ok = post(adapter, "/object", nested(64));
         assertEquals(200, ok.status());
         assertEquals(nested(64), ok.text());
@@ -342,7 +357,7 @@ public class GsonJsonCodecTest {
         for (String json : new String[] {"{\"a\":1} x", "{} {}"}) {
             ClientResponse r = post(adapter, "/map", json);
             assertEquals(json, 400, r.status());
-            assertTrue(r.text(), r.text().contains("BAD_REQUEST"));
+            assertCommonHtmlError(r);
         }
     }
 
@@ -387,7 +402,7 @@ public class GsonJsonCodecTest {
         for (String path : new String[] {"/double", "/int"}) {
             ClientResponse r = post(adapter, path, "\"abc\"");
             assertEquals(path, 400, r.status());
-            assertTrue(r.text(), r.text().contains("BAD_REQUEST"));
+            assertCommonHtmlError(r);
         }
     }
 
