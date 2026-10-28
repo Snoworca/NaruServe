@@ -2,6 +2,8 @@
 
 [한국어](defaults.md) | [English](en/defaults.md)
 
+> **버전 범위:** 이 문서는 0.10.0 대상 체크아웃의 동작을 설명하며 Maven 배포 완료를 뜻하지 않습니다.
+
 NaruServe는 저사양 Android 5.0 기기에서도 안전하게 돌도록 **모든 입력에 한도를 켠 채로** 시작합니다. 무제한을 기본값으로 쓰지 않고, 어떤 설정도 무제한 값을 받지 않습니다. 모든 설정에 최대값이 있고, 범위를 벗어난 값은 설정 이름과 범위를 담은 `IllegalArgumentException`으로 거부합니다. 무제한을 막은 이유는 설정 실수 하나로 저사양 기기의 메모리와 스레드가 바닥나지 않게 하려는 것입니다. 필요하면 최대값 안에서 명시적으로 올리세요.
 
 ## 크기·개수 한도
@@ -75,6 +77,13 @@ Pong timeout은 Ping 주기와 같습니다. TinyHttpd의 `WebSocketListener`에
 
 위 기본값은 JVM 부하 테스트(WebSocket 60개와 SSE 60개를 함께 연 T26)로 확인한 값입니다. 저사양 Android 5.0 기기에 맞춘 `maxSseStreams`, `maxUpgradedConnections`, WebSocket과 SSE의 `sendQueueSize` 조정은 v1 이후 항목입니다. Android 기기 검증이 v1 범위 밖이므로 이 조정은 v1 릴리스의 수동 후속 작업이 아니며, 위 기본값은 자동 테스트가 JVM에서 확인한 값이며 기기에 맞춘 값이 아닙니다. 메모리가 작은 기기에서는 이 값들을 직접 낮춰 보세요.
 
+## 공통 HTTP 기본값 (0.10.0)
+
+- 문자열 라우트는 대소문자를 구분하지 않고 끝의 슬래시 하나를 허용합니다. 반복 구분자는 그대로 구분합니다. Java `Pattern`은 Java 정규식 규칙을 유지합니다. [라우팅](routing.md)을 참고하세요.
+- 라우트·미들웨어·정적 서비스·오류 계층은 등록 위치에서 실행됩니다. 맞는 메서드·경로가 없으면 전역 `405`가 아니라 `404`입니다. 실제 정적 리소스와 별도 WS 네임스페이스의 메서드 응답은 유지됩니다.
+- `HEAD`는 스택 순서대로 각 Route 안에서 `GET`에 대체 매칭됩니다. 일반 `OPTIONS`는 맞는 라우트의 메서드를 모아 `GET`의 `HEAD`를 포함하고 중복 제거·정렬한 뒤 `Allow`와 평문 `200`을 보냅니다. 뒤의 미들웨어가 대신 응답할 수도 있습니다. `OPTIONS *`는 별도 사례입니다. 코어·내장 어댑터는 `204`로 답할 수 있고 Servlet 매핑은 그 전에 JSON `404`로 거부합니다.
+- 응답을 끝내거나 다음 단계로 넘기지 않고 반환한 콜백은 요청을 대기시킵니다. 미완료 `Deferred`는 응답 종료 뒤에도 요청 입력을 보존합니다. 정상 완료는 작업 임대를 기다리고, 비정상 종료·시간 초과·강제 종료는 임대를 해제하며 입력을 다시 열지 않습니다. [앱](app.md)과 [Servlet](servlet.md)을 참고하세요.
+
 ## 기본 보안 정책
 
 | 항목 | 기본 | 바꾸려면 |
@@ -86,12 +95,12 @@ Pong timeout은 Ping 주기와 같습니다. TinyHttpd의 `WebSocketListener`에
 | 숨김 파일(`.env`, `.git`) | 차단 | — |
 | 심볼릭 링크 | 차단 | `options.allowSymlinks(true)`로 허용합니다. 허용해도 링크의 실제 대상이 마운트 루트 밖이면 `404`입니다. |
 | `Cache-Control` | 붙이지 않음 | `app.defaultCache(policy)`로 정하면 `Cache-Control`이 없는 응답에 붙습니다. `res.cache`, `res.header`, `options.cache`가 정한 값은 그대로 둡니다. |
-| `X-Content-Type-Options` | 정적 파일·`res.file`·`res.download` 응답에 `nosniff` | 일반 `send`·JSON 응답에는 자동으로 추가하지 않음 |
-| 오류 응답의 stack trace | 보내지 않음 | — |
+| `X-Content-Type-Options` | 파일 응답·공통 finalhandler HTML·공통 자동 OPTIONS에 `nosniff` | 일반 `send`·JSON 응답에는 자동으로 추가하지 않음 |
+| 공통 HTTP 기본 오류 | Java `Throwable` 클래스·메시지·스택을 이스케이프한 HTML | 상세 정보가 기본으로 노출됩니다. 응답을 직접 작성하는 오류 핸들러로 바꾸세요 |
 | 접근 로그의 민감 값 | 기록하지 않음 | 바꾸지 않는 것을 권장 |
 | 프록시 헤더(`X-Forwarded-*`) | 믿지 않음 | `app.trustProxy(true)`. 첫 `X-Forwarded-For` 헤더의 맨 왼쪽 값과 첫 `X-Forwarded-Proto` 값을 `req.remoteAddress()`와 `req.isSecure()`에 씁니다. 값은 검증하지 않고 그대로 쓰므로 그 헤더를 덮어쓰는 리버스 프록시 뒤에서만 켜세요. `Forwarded` 헤더는 읽지 않습니다. |
 | `Host` 헤더 | 바인딩 주소, `localhost`, IP 리터럴만 받음 | `app.server(options -> options.allowedHosts("myphone.local"))`. 목록에 없는 `Host`는 `421`과 표준 오류 본문으로 거부합니다(DNS rebinding 방어). |
-| `TRACE`, `CONNECT` 메서드 | 라우팅 안 함 | `app.routerPolicy(...)`에서 `enableTrace`/`enableConnect`를 켭니다. [라우터 정책](routing.md#라우터-정책) |
+| `TRACE`, `CONNECT` 메서드 | 공통 HTTP는 `app.method(...)`로 명시 등록 가능. 전송 계층의 제한은 별도 | `routerPolicy`의 확장 메서드 가드는 유지되는 엄격/WS 프로필에 적용되며 공통 메서드 등록을 차단하지 않습니다 |
 | JSON 다형성 자동 바인딩 | 끔 | — |
 
 ## HTTP 프로토콜 방어
@@ -102,8 +111,17 @@ Pong timeout은 Ping 주기와 같습니다. TinyHttpd의 `WebSocketListener`에
 
 ### 전송 수준 거부
 
-TinyHttpd가 요청을 해석하는 단계에서 거부하는 `400`(잘못된 요청 형식), `408`(헤더 수신 시간 초과), `414`(요청 줄이 김), `417`(지원하지 않는 `Expect`), `431`(헤더가 큼), `501`(지원하지 않는 `Transfer-Encoding`), `505`(지원하지 않는 HTTP 버전)와 작업 스레드·연결이 모자랄 때의 소켓 수준 `503`은 짧은 평문 응답으로 답하며 `onError`, 표준 오류 JSON, 접근 로그를 거치지 않습니다. 이 응답이 앱을 거치지 않는 이유는 요청을 아직 해석하지 못해 라우트·미들웨어에 넘길 `Request`가 없기 때문입니다. 본문을 읽는 중의 `408`(`bodyReadTimeout`, `minBodyRate`)은 핸들러가 본문을 읽을 때 `HttpException`으로 나므로 `onError`와 표준 오류 본문을 거칩니다. 요청 경로가 잘못된 퍼센트 인코딩, 인코딩된 `/`(`%2F`), `NUL`, `..`·`.` 구간 때문에 거부되는 `400`도 기본 TinyHttpd 어댑터에서는 엔진이 경로를 먼저 검사하므로 같은 짧은 평문 응답이고 `onError`, 표준 오류 JSON, 접근 로그를 거치지 않습니다.
-`Host` 허용 목록에 걸린 `421`은 요청을 해석한 뒤에 정해지므로 [표준 오류 형식](middleware.md#표준-오류-형식)의 본문으로 답합니다.
+TinyHttpd가 요청을 해석하기 전에 거부하는 `400`(요청 형식), `408`(헤더 시간 초과), `414`(요청 줄), `417`(`Expect`), `431`(헤더), `501`(`Transfer-Encoding`), `505`(HTTP 버전)와 소켓 용량 `503`은 짧은 평문입니다. 아직 앱 `Request`가 없어 `onError`·공통 HTML·접근 로그를 거치지 않습니다.
+
+0.10.0 TinyHttpd 어댑터는 TinyHttpd 3.1.1의 RAW request-target 정책을 사용합니다. 공통 HTTP는 원본 경로를 매칭한 뒤 참여한 캡처만 엄격 UTF-8로 한 번 디코딩합니다. 인코딩된 `/`·NUL·`.`/`..`를 코어가 전역 거부하지는 않습니다. 잘못된 캡처는 오류 경로의 `400`이고, 정적 파일 및 WebSocket의 엄격 경로 검사·전송 형식/Host/framing 검사는 유지됩니다. 컨테이너 고유 제한은 [Servlet 경로 표](servlet.md#경로-처리)를 참고하세요.
+
+본문 읽기의 복구 가능한 `400`·`408`·`413`은 출력이 가능한 동안 선언된 HTTP 오류로 응답할 수 있습니다. 처리하지 않은 공통 HTTP 오류는 아래 HTML을 사용하며, 오류를 매핑했다는 이유만으로 먼저 연결을 중단하지 않습니다. 실제 I/O 단절·비동기 수명 시간 초과·오류 응답 쓰기 실패는 중단을 알립니다. `Host` 허용 목록의 `421` 같은 어댑터 생성 오류는 기존 설정된 표준 JSON 렌더러를 유지합니다.
+
+### 기본 오류 본문과 노출 정보
+
+공통 HTTP의 최종 처리는 `text/html; charset=utf-8`, `Content-Security-Policy: default-src 'none'`, `X-Content-Type-Options: nosniff`와 정확한 바이트 `Content-Length`를 보냅니다. 라우트 미일치는 쿼리를 제외한 원본 경로를 사용한 `Cannot METHOD /path`이고, 예외는 Java `Throwable.printStackTrace`의 클래스·메시지·스택을 HTML 이스케이프합니다. 스택을 숨기지 않으며 Java 버전·어댑터에 따라 프레임은 달라집니다. JavaScript 스택을 모방하지 않습니다. 상세 정보를 노출하지 않으려면 뒤쪽 오류 핸들러에서 안전한 응답을 직접 작성하세요.
+
+표준 JSON은 명시적인 오류 렌더러·`StandardErrors` 도우미, 어댑터의 요청 전 거부 및 유지되는 WS/정적 확장 경계에 남습니다. 공통 HTTP 기본 오류 전체를 JSON으로 가정하지 마세요. 응답 커밋 뒤의 오류는 두 번째 HTTP 응답을 만들지 않습니다.
 
 ## 앱이 할 일
 

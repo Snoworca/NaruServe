@@ -2,9 +2,11 @@
 
 [한국어](../static.md) | [API index](README.md)
 
+> **Version scope:** This page describes the 0.10.0 target checkout, not a Maven publication announcement.
+
 ## staticFiles
 
-Equivalent to Express app.use(express.static('public')):
+This serves the same purpose as Express `app.use(express.static('public'))`; NaruServe retains the filesystem safety and method policies below:
 
 ```java
 app.staticFiles("/", new File("./www"));
@@ -22,14 +24,15 @@ Directory requests without the slash receive 301 to the slash form, preserving t
 
 ### Routes and methods
 
-- Explicit routes precede static mounts, then 404. A GET /api/x handler takes priority over a file at that path.
-- When a path has only a different-method HTTP route, GET/HEAD can fall through to static mounts; without a file, retain that route's 405. Other methods receive that route's 405/Allow.
-- WebSocket paths belong to their routes: matching files and SPA fallback never answer them.
-- Real filesystem resources, directory indexes/listings and slash redirects accept GET/HEAD. OPTIONS and other methods receive 405 with Allow: GET, HEAD. Unknown methods and disabled TRACE/CONNECT receive 501 earlier. Static resources do not get an automatic OPTIONS 204.
-- Invalid paths, including traversal, encoded slash/backslash, NUL and double encoding, give 400 regardless of method. Backslashes are rejected across platforms because Windows treats them as separators.
-- Other paths, including SPA fallback targets and rejected links/outside-root paths, give 404 for non-GET/HEAD. Rejected symbolic-link directories receive no slash redirect.
-- The distinction avoids pretending that an absent SPA path is a real writable resource.
-- Mount a prefix as needed: /static over ./public maps /static/a.css to public/a.css.
+- In the 0.10.0 common HTTP stack, `staticFiles` adds a service **at its registration position**. An earlier route or middleware that answers wins; a successful earlier static service stops later routes/middleware. Put authentication before the static registration. There is no universal “all routes, then static” pass.
+- A miss continues to the next registered layer with the request view intact. A different-method route does not reserve the ordinary HTTP path: `GET`/`HEAD` can reach a later static service, and an unanswered method/path falls through to common HTML `404`, not that route's global `405`.
+- A real retained WebSocket-only footprint remains reserved regardless of static registration order. A file or SPA fallback cannot replace its `426`/legacy OPTIONS/method behavior. A common HTTP route sharing that pathname still follows common stack order. See [WebSocket](websocket.md).
+- A reached static service answers real files, directory indexes/listings and slash redirects for `GET`/`HEAD`. For another token, including `OPTIONS`, `TRACE`, `CONNECT` or `COPY`, a real filesystem resource yields `405` with `Allow: GET, HEAD`; an absent resource continues to later layers. Common HTTP has no earlier unknown-method/TRACE/CONNECT `501` guard. The separate WS/strict profile retains its guards.
+- At a matching static service, invalid traversal, encoded slash/backslash, NUL and double-encoded paths yield `400` before static method handling. This protects filesystem access and does not impose global validation on earlier common routes. Backslashes are rejected on every platform because Windows treats them as separators.
+- SPA content is not a real writable resource. A non-`GET`/`HEAD` miss therefore continues and eventually gets `404` if no later layer answers. Rejected symbolic-link directories receive no slash redirect.
+- `app.staticFiles("/static", new File("./public"))` maps `/static/a.css` to `public/a.css`. This filesystem mount prefix is removed for lookup/cache matching; it is distinct from a common `Router` mount. A static miss does not leave later layers with the prefix stripped.
+
+Static safety/method rejections retain their configured error renderer (standard JSON by default). A thrown file-open/read failure enters only later ordered error layers; stale file-only headers are cleared when falling back to an error. A failure after commit cannot send a second response. Unhandled common HTTP errors and ordinary no-route fallback use [finalhandler HTML](defaults.md#default-error-body-and-exposed-details).
 
 ### Options
 
@@ -60,9 +63,9 @@ Options are copied and frozen per mount at listen. Later changes to a retained o
 
 ### SPA fallback
 
-For React/Vue-style client routing, serve index.html for paths such as /dashboard/settings only when no actual file exists, no explicit HTTP/WebSocket route owns the path, and Accept includes text/html. An API fetch to /api/missing therefore gets 404, not HTML.
+For React/Vue-style client routing, a reached static service can serve `index.html` for a missing `GET`/`HEAD` path such as `/dashboard/settings` when `Accept` contains `text/html` (not merely `*/*`). An earlier answering HTTP layer stops the service. A **later** explicit route does not automatically outrank an earlier SPA service; register API routes first or add exclusions. Retained WS-only footprints are always reserved.
 
-The /api and /ws prefixes, including the prefix itself, are always excluded, so accidental API/WebSocket requests do not parse index.html as JSON. spaExclude adds exclusions without removing those defaults. Prefixes match segment boundaries: /apix is not excluded. With several mounts, fallback runs only after no mount finds a file, using the first matching mount with spaFallback enabled.
+The `/api` and `/ws` prefixes, including the prefix itself, are always excluded, preventing accidental API/WebSocket requests from receiving an SPA document. `spaExclude` adds exclusions without replacing those defaults. Prefixes match segment boundaries: `/apix` is not excluded. With several mounts, real file lookup takes precedence over SPA content across mounts; when none has a file, the first reached matching `spaFallback(true)` service can send its index.
 
 ### Blocked resources
 

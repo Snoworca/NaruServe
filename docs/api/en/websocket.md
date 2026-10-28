@@ -2,7 +2,9 @@
 
 [한국어](../websocket.md) | [English](websocket.md)
 
-Serve WebSocket (RFC 6455) on **the same port** as HTTP, much like Express's `express-ws`:
+> **Version scope:** This page describes the 0.10.0 target checkout, not a Maven publication announcement.
+
+Serve WebSocket (RFC 6455) on **the same port** as HTTP with the embedded adapter. This is NaruServe's retained WebSocket extension; the `express-ws` snippets compare concepts, not Express 5 API or grammar equivalence. The Servlet adapter cannot upgrade and returns `501`.
 
 ```java
 app.ws("/ws", (req, ws) -> {
@@ -41,10 +43,11 @@ This corresponds to express-ws's `app.ws('/ws', (ws, req) => ...)`.
 
 - `req` describes the Upgrade request. Use `req.param`, `req.query`, `req.header`, `req.cookie`, `req.service` and `req.attribute` there.
 - Use `req` only in the handler body. Listeners such as `onText` run later, after the handler returns. Extract services and parameters into variables or `ws.attribute` first.
-- Path patterns match HTTP routes, for example `/ws/rooms/:room`.
+- WS patterns retain literal segments and whole-segment `:name`, for example `/ws/rooms/:room`. They do not adopt common HTTP named splats, brace optionals, alternatives or Java `Pattern` routes. Strict decoded-path validation still rejects encoded slash/NUL/dot segments and malformed escapes before Upgrade. Register WS routes/settings before `listen`; the WS configuration remains frozen even though common HTTP layers can be added later.
 - An ordinary `app.get` can share the path; only WebSocket Upgrade requests select `app.ws`.
 - A path with only an `app.ws` route returns `426 Upgrade Required` to ordinary non-upgrade GET/HEAD requests. The core and TinyHttpd adapter send `Upgrade: websocket`, `Connection: Upgrade` and the standard JSON error body.
-- Automatic OPTIONS returns `204` with `Allow`; disabled extension methods and unknown methods receive `501` before routing.
+- On the reserved WS-only footprint, retained automatic OPTIONS returns `204` with `Allow`, and disabled extension methods/unknown tokens receive `501`. These are WS/strict-profile rules; common HTTP uses ordered OPTIONS and explicit method registration with ordinary `404` fallthrough. Static files and SPA fallback cannot occupy the reserved footprint, even when registered earlier. Common routes sharing the path follow their own stack.
+- Upgrade dispatch uses the retained global/string-prefix middleware pipeline. Common mounted routers, route parameter hooks, splats and deferred HTTP continuation are not a new WS routing API. Register Upgrade authentication before `listen` and keep it synchronous: later common HTTP middleware does not change the frozen WS pipeline, which must reach its terminal before it can upgrade.
 
 ```java
 app.ws("/ws/rooms/:room", (req, ws) -> {

@@ -2,9 +2,11 @@
 
 [English](en/static.md) | [문서 목록](README.md)
 
+> **버전 범위:** 이 문서는 0.10.0 대상 체크아웃의 동작을 설명하며 Maven 배포 완료를 뜻하지 않습니다.
+
 ## staticFiles
 
-Express의 `app.use(express.static('public'))`에 해당합니다.
+Express의 `app.use(express.static('public'))`와 같은 용도이며, NaruServe는 아래 파일 시스템 안전성·메서드 정책을 유지합니다.
 
 ```java
 app.staticFiles("/", new File("./www"));
@@ -23,14 +25,15 @@ app.staticFiles("/", new File("./www"));
 
 ### 라우트와 메서드
 
-- **명시 라우트가 먼저**입니다. 정적 마운트는 명시 라우트 다음에 찾습니다. `app.get("/api/x", ...)`가 있으면 같은 경로의 파일보다 우선합니다. 파일도 없으면 `404`입니다.
-- 경로는 맞지만 메서드가 다른 라우트가 있을 때(예: `POST /login`만 등록), `GET`/`HEAD`는 정적 마운트로 넘어가고(마운트에도 없으면 그 라우트의 `405`), 다른 메서드는 그 라우트의 `405`와 그 라우트의 `Allow`를 받습니다.
-- WebSocket 라우트의 경로는 그 라우트의 것입니다. 같은 이름의 파일이 있어도 정적 마운트나 SPA fallback이 답하지 않습니다.
-- 파일 시스템에서 답하는 경로(파일, 폴더 index, 폴더 목록, 슬래시 `301`)에 `OPTIONS`나 `GET`/`HEAD`가 아닌 메서드가 오면 `405`와 `Allow: GET, HEAD`입니다. 다만 알 수 없는 메서드와 꺼진 `TRACE`/`CONNECT`는 그보다 먼저 `501`입니다. 명시 라우트의 자동 `OPTIONS` `204`는 정적 경로에는 없습니다.
-- 경로 검사(`..`, 인코딩된 `/`, 인코딩된 `\`(`%5C`), `NUL`, 이중 인코딩 포함)에 걸린 경로는 메서드와 상관없이 `400`입니다. `\`는 Windows에서 경로 구분자이므로 모든 플랫폼에서 같게 거부합니다.
-- 그 밖의 경로(SPA fallback이 내용을 보낼 경로, `GET`이 `404`를 받는 거부된 심볼릭 링크나 루트 밖 경로 포함)는 `GET`/`HEAD`가 아니면 `404`입니다. 거부된 심볼릭 링크 폴더에는 슬래시 `301`도 주지 않습니다.
-- 정적 경로에서 `405`를 주는 이유는 파일이 있는 경로에 쓰기 메서드가 왔음을 알려 주기 위해서이고, SPA fallback 경로에 `404`를 주는 이유는 없는 경로를 있는 것처럼 보이지 않게 하려는 것입니다.
-- 접두사를 붙여 여러 폴더를 마운트할 수 있습니다: `app.staticFiles("/static", new File("./public"))` → `/static/a.css` = `public/a.css`.
+- 0.10.0 공통 HTTP 스택에서 `staticFiles`는 **등록한 위치**에 서비스를 추가합니다. 앞선 라우트·미들웨어가 응답하면 그것이 이기고, 앞선 정적 서비스가 파일을 보내면 뒤의 라우트·미들웨어는 실행하지 않습니다. 정적 등록 앞에 인증을 두세요. 모든 명시 라우트 뒤에 정적 파일을 따로 찾는 전역 단계는 없습니다.
+- 파일이 없으면 요청 뷰를 유지한 채 다음 등록 계층으로 넘어갑니다. 메서드가 다른 라우트는 일반 HTTP 경로를 독점하지 않습니다. `GET`/`HEAD`는 뒤의 정적 서비스에 도달할 수 있고, 끝까지 응답하지 않은 메서드·경로는 그 라우트의 전역 `405`가 아닌 공통 HTML `404`입니다.
+- 실제로 유지되는 WebSocket 전용 경로는 정적 등록 순서와 무관하게 예약됩니다. 파일이나 SPA fallback이 `426`·기존 OPTIONS·메서드 동작을 대신하지 않습니다. 같은 경로의 공통 HTTP 라우트는 공통 스택 순서를 따릅니다. [WebSocket](websocket.md)을 참고하세요.
+- 도달한 정적 서비스는 실제 파일·폴더 index·폴더 목록·슬래시 리다이렉트에 `GET`/`HEAD`로 답합니다. `OPTIONS`·`TRACE`·`CONNECT`·`COPY`를 포함한 다른 토큰은 실제 파일 시스템 리소스가 있으면 `405`와 `Allow: GET, HEAD`, 없으면 뒤 계층으로 넘어갑니다. 공통 HTTP에는 앞선 알 수 없는 메서드/TRACE/CONNECT `501` 가드가 없습니다. 별도 WS/엄격 프로필의 가드는 유지됩니다.
+- 매칭되는 정적 서비스의 경로 검사(`..`, 인코딩된 `/`, 인코딩된 `\`(`%5C`), `NUL`, 이중 인코딩)에 걸리면 정적 메서드 처리 전에 `400`입니다. 파일 시스템 접근을 보호하는 검사이며 앞선 공통 라우트에 전역 검증을 부과하지 않습니다. `\`는 Windows에서 구분자이므로 모든 플랫폼에서 거부합니다.
+- SPA 내용은 실제 쓰기 대상 리소스가 아닙니다. `GET`/`HEAD` 외 메서드의 파일 미일치는 뒤 계층으로 넘어가며, 끝까지 응답이 없으면 `404`입니다. 거부된 심볼릭 링크 폴더에는 슬래시 `301`도 주지 않습니다.
+- `app.staticFiles("/static", new File("./public"))`는 `/static/a.css`를 `public/a.css`로 연결합니다. 이 파일 시스템 마운트 접두사는 조회·캐시 매칭에서 제거하며 공통 `Router` 마운트와 별개입니다. 정적 미일치가 뒤 계층의 경로에서 접두사를 지운 채 남기지 않습니다.
+
+정적 안전성·메서드 거부는 설정된 오류 렌더러(기본 표준 JSON)를 유지합니다. 파일 열기·읽기에서 던진 예외는 뒤쪽에 등록된 오류 계층으로만 가며 오류로 전환할 때 파일 전용 헤더를 지웁니다. 커밋 뒤의 실패는 두 번째 응답을 보내지 않습니다. 처리하지 않은 공통 HTTP 오류와 일반 라우트 미일치는 [finalhandler HTML](defaults.md#기본-오류-본문과-노출-정보)입니다.
 
 ### 옵션
 
@@ -63,16 +66,9 @@ app.staticFiles("/", new File("./www"), options -> {
 
 ### SPA fallback
 
-React·Vue 같은 SPA의 클라이언트 라우팅을 위해 `/dashboard/settings` 같은 경로에 `index.html`을 보냅니다.
-다음 조건을 **모두** 만족할 때만 fallback합니다.
+React·Vue 클라이언트 라우팅에서는 도달한 정적 서비스가 실제 파일 없는 `GET`/`HEAD` 경로(`/dashboard/settings` 등)에 `index.html`을 보낼 수 있습니다. `Accept`에 `text/html`이 있어야 하며 `*/*`만으로는 부족합니다. 앞선 HTTP 계층이 응답하면 서비스에 도달하지 않습니다. **뒤에** 등록한 명시 라우트가 앞선 SPA 서비스를 자동으로 이기지는 않으므로 API 라우트를 먼저 두거나 제외 경로를 추가하세요. 유지되는 WS 전용 경로는 항상 예약됩니다.
 
-- 그 경로에 실제 파일이 없음
-- 명시 라우트나 `app.ws` 경로가 아님
-- 브라우저의 HTML 탐색 요청(`Accept`에 `text/html`)
-
-그래서 `/api/missing`에 대한 `fetch` 요청은 `index.html`이 아니라 `404`를 받습니다.
-SPA fallback은 `/api/`, `/ws/` 아래 경로(`/api`, `/ws` 자신 포함)에는 항상 동작하지 않습니다. `options.spaExclude("/admin")`으로 뺄 접두사를 더할 수 있고, 더해도 `/api/`, `/ws/`는 그대로 빠집니다. 접두사는 세그먼트 경계에서 맞추므로 `/apix`는 빠지지 않습니다. `/api/`, `/ws/`를 항상 빼는 이유는 API 오타나 WebSocket 경로에 HTML이 돌아가 클라이언트가 JSON 대신 `index.html`을 해석하는 일을 막기 위해서입니다.
-여러 마운트가 있으면 모든 마운트에서 파일을 못 찾은 뒤에만 fallback하고, 경로가 맞는 첫 `spaFallback(true)` 마운트의 index를 보냅니다.
+SPA fallback은 `/api/`, `/ws/` 아래 경로(`/api`, `/ws` 자신 포함)에서 항상 제외되어 API/WebSocket 요청이 SPA 문서를 받지 않게 합니다. `options.spaExclude("/admin")`은 제외 접두사를 추가하며 기본값을 지우지 않습니다. 세그먼트 경계에서 맞추므로 `/apix`는 제외하지 않습니다. 여러 마운트에서는 실제 파일 조회가 SPA 내용보다 우선하며, 모든 마운트에 파일이 없을 때 먼저 도달한 매칭 `spaFallback(true)` 서비스가 index를 보낼 수 있습니다.
 
 ### 막혀 있는 것
 
@@ -160,7 +156,7 @@ res.cache(CachePolicy.noCache()).json(mapOf("version" to "1.0"))
 `app.defaultCache(policy)`는 `Cache-Control`을 정하지 않은 응답에 붙일 정책입니다. 기본값은 `null`이고, 그때는 `Cache-Control`을 붙이지 않습니다. 응답을 보내는 순간 `res.cache`, `res.header`, 맞는 `options.cache` 패턴, 프레임워크 자신 중 무엇이든 `Cache-Control`을 이미 정했으면 그 값을 그대로 둡니다. 기본값을 `null`로 둔 이유는 프레임워크가 앱 모르게 캐시 동작을 바꾸지 않게 하려는 것입니다.
 
 ```java
-app.defaultCache(CachePolicy.noStore());   // 정하지 않은 응답은 모두 no-store
+app.defaultCache(CachePolicy.noStore());   // no-store for responses without an explicit policy
 ```
 
 | 코드 | `Cache-Control` | 쓰는 곳 |
