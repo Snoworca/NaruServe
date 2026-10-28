@@ -56,6 +56,22 @@ public class HttpPathPatternTest {
             catch(RoutingConfigException e) { assertTrue(e.getMessage(),e.getMessage().contains("index")); assertTrue(e.getMessage(),e.getMessage().contains(s)); }
         }
     }
+    @Test public void quotedNamesAndEscapes() throws Exception { // FR-ROUTE-018 AC-1 AC-2
+        Object m=match(compile("/:\"with space\"/*\"a\\\"b\\\\c\"",true,true,false),"/one/two/%2F");
+        assertEquals(Arrays.asList("one"),captures(m).get("with space"));
+        assertEquals(Arrays.asList("two","%2F"),captures(m).get("a\"b\\c"));
+        assertNotNull(match(compile("/literal\\:colon\\*star\\{brace\\}\\?",true,true,false),"/literal:colon*star{brace}?"));
+    }
+    @Test public void errorsUseActualCodePointOffsets() throws Exception { // FR-ROUTE-018 AC-2
+        String[] patterns={"/:x:y","/😀/:","/a\\","/{a","/:\"\"","/:\"bad","/*","/a?"};
+        int[] offsets={3,4,3,3,4,2,2,2};
+        for(int i=0;i<patterns.length;i++) {
+            try { compile(patterns[i],true,false,true); fail(patterns[i]); }
+            catch(RoutingConfigException e) {
+                assertTrue(e.getMessage(),e.getMessage().contains("index "+offsets[i]));
+            }
+        }
+    }
     @Test public void unicodeAndDuplicateNames() throws Exception { // FR-ROUTE-018 AC-1 AC-2
         Object m=match(compile("/:한글/:𐐀/:a/:a",true,false,true),"/one/two/old/new");
         assertEquals(Arrays.asList("one"),captures(m).get("한글"));
@@ -127,6 +143,16 @@ public class HttpPathPatternTest {
                 match(p,"/"+longValue+"!");
                 match(p,"/"+longValue+"-"+longValue+"!");
             }
+            Object guarded=compile("/*a/xx/*b/yy/*c",true,false,true);
+            match(guarded,"/ok/xx/"+longValue+"/yy/end");
+            match(guarded,"/ok/xx/"+longValue+"/wrong/end");
+            // Deep groups must not exhaust the parser/expansion Java call stack.
+            StringBuilder nested=new StringBuilder();
+            for(int i=0;i<10000;i++)nested.append('{');
+            nested.append("/x");
+            for(int i=0;i<10000;i++)nested.append('}');
+            try { compile(nested.toString(),true,true,true); throw new AssertionError("expansion accepted"); }
+            catch(RoutingConfigException expected) { }
             System.out.println("adversarial probe passed");
         }
     }
