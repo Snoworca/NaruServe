@@ -118,6 +118,22 @@ public interface HttpExchange {
     }
 
     /**
+     * Optional status of a response the adapter generated independently of the core; {@code 0} means unknown.
+     * Publish a side-effect-free snapshot before terminal notifications. Core-owned responses can keep the
+     * default: access logging falls back to the core's status. No container access after recycling is needed.
+     */
+    // @req IR-HTTP-009 AC-8; FR-APP-019 AC-3
+    default int responseStatus() { return 0; }
+
+    /**
+     * Optional successfully written body-byte count for an adapter-owned response, excluding headers;
+     * {@code -1} means unknown. When unknown, access logging retains its core counter. Implementations should
+     * expose a side-effect-free snapshot before notifying termination, without reading a recycled container.
+     */
+    // @req IR-HTTP-009 AC-8; FR-APP-019 AC-5
+    default long responseBytesWritten() { return -1; }
+
+    /**
      * Completes a WebSocket handshake with {@code settings}, calls {@code endpoint} on the adapter's read thread and
      * returns only after the connection closed. A refusal before 101 throws a NaruServe {@code HttpException} and
      * leaves the exchange unstarted; the exchange is started once 101 is written. The default throws

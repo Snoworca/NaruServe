@@ -6,6 +6,7 @@ import com.snoworca.naruserve.ErrorHandler;
 import com.snoworca.naruserve.Method;
 import com.snoworca.naruserve.MethodSet;
 import com.snoworca.naruserve.Middleware;
+import com.snoworca.naruserve.common.SafeCallbacks;
 import com.snoworca.naruserve.RouteHandler;
 import com.snoworca.naruserve.routing.PathValidator;
 import com.snoworca.naruserve.routing.RouteKind;
@@ -234,8 +235,11 @@ public final class Dispatcher implements ExchangeHandler {
                 String cause=stream.cause();
                 accessLog.writeSse(ex.methodToken(),ex.rawPath(),200,start,req.body().bytesRead(),res.bytesWritten(),rid,
                         stream.startMillis(),cause!=null?cause:"error");
-            } else if(!res.upgraded101())accessLog.write(ex.methodToken(),ex.rawPath(),res.statusCode(),
-                    res.state()==ResponseState.ABORTED,start,req.body().bytesRead(),res.bytesWritten(),rid);
+            } else if(!res.upgraded101()) {
+                ResponseMetrics metrics = new ResponseMetrics(ex, res.statusCode(), res.bytesWritten());
+                accessLog.write(ex.methodToken(),ex.rawPath(),metrics.status,
+                        res.state()==ResponseState.ABORTED,start,req.body().bytesRead(),metrics.bytes,rid);
+            }
         };
         new HttpExecution(Objects.requireNonNull(http),req,res,Objects.requireNonNull(lifecycle),errors,terminal,log).start(ex);
     }
@@ -495,6 +499,25 @@ public final class Dispatcher implements ExchangeHandler {
     // @req FR-HTTP-023
     static String allowHeader(MethodSet allow) {
         return allow.toString();
+    }
+
+    /** Optional adapter-owned error observations cannot suppress logging or the request's terminal cleanup. */
+    // @req IR-HTTP-009 AC-8; FR-APP-019 AC-3 AC-5
+    private static final class ResponseMetrics {
+        int status;
+        long bytes;
+        ResponseMetrics(HttpExchange exchange, int fallbackStatus, long fallbackBytes) {
+            status = fallbackStatus;
+            bytes = fallbackBytes;
+            SafeCallbacks.run(() -> {
+                int value = exchange.responseStatus();
+                if (value >= 100 && value <= 999) status = value;
+            });
+            SafeCallbacks.run(() -> {
+                long value = exchange.responseBytesWritten();
+                if (value >= 0) bytes = value;
+            });
+        }
     }
 
     /** Every value of header {@code name} (case-insensitive) joined by ", ", or null when absent. */
