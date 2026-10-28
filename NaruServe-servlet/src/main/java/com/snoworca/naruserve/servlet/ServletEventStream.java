@@ -1,6 +1,7 @@
 package com.snoworca.naruserve.servlet;
 
 import com.snoworca.naruserve.HttpException;
+import com.snoworca.naruserve.common.SafeCallbacks;
 import com.snoworca.naruserve.spi.StreamDrain;
 import java.io.FilterOutputStream;
 import java.io.IOException;
@@ -74,7 +75,7 @@ final class ServletEventStream {
                     try {
                         ex.abort(); // admitted setup failure is abnormal, even before a drain task exists
                     } finally {
-                        if (cancelDrain) drain.abort(); // accepted but never attached/submitted
+                        if (cancelDrain) SafeCallbacks.run(drain::abort); // accepted but never attached/submitted
                     }
                 } finally {
                     pool.finish(ex);
@@ -256,37 +257,23 @@ final class ServletEventStream {
 
         @Override
         public void write(int b) throws IOException {
-            ex.writeLock.lock();
-            try {
-                ex.checkWritable();
+            ex.writeStreamBody(() -> {
                 out.write(b);
                 out.flush();
-            } finally {
-                ex.writeLock.unlock();
-            }
+            });
         }
 
         @Override
         public void write(byte[] b, int off, int len) throws IOException {
-            ex.writeLock.lock();
-            try {
-                ex.checkWritable();
+            ex.writeStreamBody(() -> {
                 out.write(b, off, len);
                 out.flush();
-            } finally {
-                ex.writeLock.unlock();
-            }
+            });
         }
 
         @Override
         public void flush() throws IOException {
-            ex.writeLock.lock();
-            try {
-                ex.checkWritable();
-                out.flush();
-            } finally {
-                ex.writeLock.unlock();
-            }
+            ex.writeStreamBody(out::flush);
         }
 
         @Override
@@ -315,7 +302,7 @@ final class ServletEventStream {
                 try {
                     exchange.checkNotAborted();
                 } catch (IOException cancelled) {
-                    drain.abort();
+                    SafeCallbacks.run(drain::abort);
                     return;
                 }
                 drain.drain(out);
@@ -330,7 +317,7 @@ final class ServletEventStream {
             if (!claimed.compareAndSet(false, true)) return;
             exchange.pool().remove(this);
             try {
-                drain.abort();
+                SafeCallbacks.run(drain::abort);
             } finally {
                 exchange.pool().finish(exchange);
             }

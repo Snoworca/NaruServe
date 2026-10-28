@@ -79,6 +79,8 @@ final class ServletExchange implements HttpExchange {
     private boolean asyncStarting;
     private boolean aborting;
     private boolean retired;
+    // Guarded by this; an owning SSE drain sees the original failure before generic abort notification.
+    private @Nullable Throwable streamFailure;
     private volatile boolean finished;
     private boolean handlerReturned;
     // Lock-free so abort() never waits for a writer.
@@ -252,7 +254,7 @@ final class ServletExchange implements HttpExchange {
         }
     }
 
-    private interface IoOperation { void run() throws IOException; }
+    interface IoOperation { void run() throws IOException; }
 
     private void writeBody(IoOperation operation) throws IOException {
         boolean attempted = false;
@@ -272,6 +274,29 @@ final class ServletExchange implements HttpExchange {
         }
     }
 
+    /** Stream IO first propagates to its owning drain, which records the protocol-specific close cause. */
+    void writeStreamBody(IoOperation operation) throws IOException {
+        writeLock.lock();
+        try {
+            checkWritable();
+            try {
+                operation.run();
+            } catch (IOException | RuntimeException failure) {
+                // Record before releasing the IO lock: concurrent finish cannot convert failed IO into success.
+                synchronized (this) { if (streamFailure == null) streamFailure = failure; }
+                throw failure;
+            }
+        } finally {
+            writeLock.unlock();
+        }
+    }
+
+    /** Caller holds the exchange monitor. */
+    private void throwStreamFailure() throws IOException {
+        if (streamFailure instanceof IOException) throw (IOException) streamFailure;
+        if (streamFailure instanceof RuntimeException) throw (RuntimeException) streamFailure;
+    }
+
     // @req FR-SVL-003
     // @req FR-SVL-009 AC-1 AC-2 AC-4
     @Override
@@ -281,6 +306,7 @@ final class ServletExchange implements HttpExchange {
             try {
                 synchronized (this) {
                     checkNotAborted();
+                    throwStreamFailure();
                     if (finished) return;
                 }
                 res.flushBuffer();
@@ -581,7 +607,13 @@ final class ServletExchange implements HttpExchange {
     /** Mark terminal and complete any started AsyncContext once, then release only an admitted returned request. */
     // @req FR-SVL-005 FR-SVL-009 AC-2 AC-4
     void complete() {
-        synchronized (this) { finished = true; }
+        boolean failed;
+        synchronized (this) {
+            failed = !aborted && streamFailure != null;
+            if (!failed) finished = true;
+        }
+        // A custom drain may catch IO and return normally; ownership exit still observes terminal failure.
+        if (failed) { abort(); return; }
         completeIfReady();
     }
 
