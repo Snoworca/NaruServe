@@ -90,6 +90,20 @@ public interface HttpExchange {
     void eventStream(int status, List<Map.Entry<String, String>> headers, StreamDrain drain) throws IOException;
 
     /**
+     * Registers notification of an abnormal transport termination the adapter detects. Built-in
+     * adapters notify each registration once, including registration after an abort. Successful
+     * {@link #finish()} does not notify this hook. Idle peer closure need not be detected before IO.
+     *
+     * <p>The default validates the listener and otherwise does nothing, preserving existing custom
+     * exchange implementations. Callbacks must run outside adapter state locks; their failures must
+     * not prevent transport cleanup or other listeners.
+     */
+    // @req IR-HTTP-009 AC-1 AC-2 AC-3 AC-5
+    default void onAbort(Runnable listener) {
+        java.util.Objects.requireNonNull(listener, "listener");
+    }
+
+    /**
      * Completes a WebSocket handshake with {@code settings}, calls {@code endpoint} on the adapter's read thread and
      * returns only after the connection closed. A refusal before 101 throws a NaruServe {@code HttpException} and
      * leaves the exchange unstarted; the exchange is started once 101 is written. The default throws
