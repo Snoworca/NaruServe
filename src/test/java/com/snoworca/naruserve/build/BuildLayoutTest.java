@@ -29,6 +29,7 @@ import org.junit.Test;
 /**
  * Inspects the root build's files and the outputs of the module builds that run before this test.
  */
+// @req CON-BUILD-018 AC-1 AC-2 AC-3
 public class BuildLayoutTest {
 
     public static final List<String> MODULES = Arrays.asList("NaruServe-api", "NaruServe-servlet", "NaruServe-tinyhttpd",
@@ -244,8 +245,8 @@ public class BuildLayoutTest {
     public void con_BUILD_006_AC1_AC4_AC6_AC7_runtimeClasspathsHoldExactlyTheDeclaredMainDependencies()
             throws IOException {
         String api = "com.snoworca.naruserve:NaruServe-api";
-        String core = "com.snoworca:tinyhttpd-core:3.1.0";
-        String websocket = "com.snoworca:tinyhttpd-websocket:3.1.0";
+        String core = "com.snoworca:tinyhttpd-core:3.1.1";
+        String websocket = "com.snoworca:tinyhttpd-websocket:3.1.1";
         String gson = "com.google.code.gson:gson:2.14.0";
         // Gson 2.14.0 itself brings error_prone_annotations; AC-4 limits declarations, not transitive edges.
         String gsonTransitive = "com.google.errorprone:error_prone_annotations:2.48.0";
@@ -297,7 +298,7 @@ public class BuildLayoutTest {
         Set<String> runtime = components(ANDROID_MODULE, "releaseRuntimeClasspath");
         assertEquals(set(api, "com.snoworca.naruserve:NaruServe", "com.snoworca.naruserve:NaruServe-tinyhttpd",
                 "com.snoworca.naruserve:NaruServe-gson", "com.snoworca.naruserve:NaruServe-logcat",
-                "com.snoworca:tinyhttpd-core:3.1.0", "com.snoworca:tinyhttpd-websocket:3.1.0",
+                "com.snoworca:tinyhttpd-core:3.1.1", "com.snoworca:tinyhttpd-websocket:3.1.1",
                 "com.google.code.gson:gson:2.14.0", "com.google.errorprone:error_prone_annotations:2.48.0"), runtime);
         Set<String> compile = components(ANDROID_MODULE, "releaseCompileClasspath");
         assertTrue(compile.toString(), compile.contains("com.snoworca.naruserve:NaruServe-logcat"));
@@ -548,16 +549,16 @@ public class BuildLayoutTest {
     @Test
     public void sdsAc20_OPS_BUILD_003_AC1_readmeNamesTinyHttpdCommit() throws IOException {
         String readme = read(new File(ROOT, "docs/api/README.md"));
-        assertTrue(readme.contains("165f365"));
+        assertTrue(readme.contains("e73cd5d"));
         assertFalse("the previous verified commit is gone", readme.contains("46b973e"));
     }
 
     // OPS-BUILD-003 AC-1; OPS-BUILD-001 AC-1: settings.gradle, CLAUDE.md and docs/api name one verified TinyHttpd commit
     @Test
     public void ops_BUILD_003_AC1_settingsGradleAndClaudeMdNameTheSameVerifiedCommit() throws IOException {
-        assertTrue(read(new File(ROOT, "settings.gradle")).contains("def verifiedTinyHttpd = '165f365'"));
+        assertTrue(read(new File(ROOT, "settings.gradle")).contains("def verifiedTinyHttpd = 'e73cd5d'"));
         String claude = read(new File(ROOT, "CLAUDE.md"));
-        assertTrue(claude.contains("165f365"));
+        assertTrue(claude.contains("e73cd5d"));
         assertFalse("the previous verified commit is gone", claude.contains("46b973e"));
         assertFalse("settings.gradle keeps no previous commit", read(new File(ROOT, "settings.gradle")).contains("46b973e"));
     }
@@ -615,7 +616,7 @@ public class BuildLayoutTest {
                     && before.contains("resources {"));
         }
         assertTrue(read(new File(ROOT, "docs/api/README.md")).contains(
-                "TinyHttpd 3.1.0의 core와 websocket JAR에 같은 경로, 같은 내용의 라이선스 고지가 들어 있어"));
+                "TinyHttpd 3.1.1의 core와 websocket JAR에 같은 경로, 같은 내용의 라이선스 고지가 들어 있어"));
     }
 
     // SDS-AC-20; OPS-BUILD-003 AC-3, OPS-BUILD-003 AC-4

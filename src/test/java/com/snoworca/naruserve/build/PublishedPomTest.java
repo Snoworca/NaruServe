@@ -23,11 +23,12 @@ import org.w3c.dom.NodeList;
  * naruserve.pomFiles without a nested build, and the publishing text of build.gradle and release.gradle.
  * Every artifactId is the project name in lower case (central-0.9.0).
  */
+// @req CON-BUILD-018 AC-1 AC-2 AC-3
 public class PublishedPomTest {
 
     private static final String VERSION = "0.9.0";
     /** The version of the included TinyHttpd build (group com.snoworca since TinyHttpd 3.0.0). */
-    private static final String TINYHTTPD_VERSION = "3.1.0";
+    private static final String TINYHTTPD_VERSION = "3.1.1";
 
     /** One parsed dependency: version and scope. */
     static final class Dep {
@@ -111,7 +112,7 @@ public class PublishedPomTest {
         }
     }
 
-    // SDS-AC-6; FR-REL-005 AC-2
+    // CON-BUILD-018 AC-1 AC-2; SDS-AC-6; FR-REL-005 AC-2
     @Test
     public void fr_REL_005_AC2_dependenciesCarryResolvedVersionsAndScopes() throws Exception {
         Map<String, Element> poms = poms();
@@ -120,6 +121,7 @@ public class PublishedPomTest {
             Dep d = tiny.get("com.snoworca:" + t);
             assertNotNull(t + " in " + tiny, d);
             assertEquals(t, TINYHTTPD_VERSION, d.version);
+            assertEquals(t+" remains implementation-scope", "runtime", d.scope);
         }
         Dep gson = deps(poms.get("naruserve-gson")).get("com.google.code.gson:gson");
         assertNotNull(gson);
@@ -212,8 +214,8 @@ public class PublishedPomTest {
         assertTrue(publishing, Pattern.compile("from\\s+(p\\.)?components\\.java").matcher(publishing).find());
         assertTrue(publishing, Pattern.compile("versionMapping\\s*\\{\\s*allVariants\\s*\\{\\s*fromResolutionResult\\(\\)")
                 .matcher(publishing).find());
-        assertTrue(build.contains("'com.snoworca:tinyhttpd-core:3.1.0'"));
-        assertTrue(build.contains("'com.snoworca:tinyhttpd-websocket:3.1.0'"));
+        assertTrue(build.contains("'com.snoworca:tinyhttpd-core:3.1.1'"));
+        assertTrue(build.contains("'com.snoworca:tinyhttpd-websocket:3.1.1'"));
     }
 
     private static int count(String text, String part) {
