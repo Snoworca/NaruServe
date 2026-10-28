@@ -365,7 +365,7 @@ public final class DefaultResponse implements Response {
     // @req FR-HTTP-016
     @Override
     public synchronized Response status(int code) {
-        if (code < 100 || code > 999) {
+        if (!com.snoworca.naruserve.common.ResponseValues.isStatus(code)) {
             throw new IllegalArgumentException("status " + code + " is outside 100..999");
         }
         requireNew();

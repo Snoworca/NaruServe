@@ -511,7 +511,7 @@ public final class Dispatcher implements ExchangeHandler {
             bytes = fallbackBytes;
             SafeCallbacks.run(() -> {
                 int value = exchange.responseStatus();
-                if (value >= 100 && value <= 999) status = value;
+                if (com.snoworca.naruserve.common.ResponseValues.isStatus(value)) status = value;
             });
             SafeCallbacks.run(() -> {
                 long value = exchange.responseBytesWritten();

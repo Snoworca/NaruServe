@@ -10,6 +10,10 @@ import java.util.Objects;
 public final class ResponseValues {
     private ResponseValues() { }
 
+    /** Shared status range for response writes and optional transport observations. */
+    // @req FR-HTTP-028; IR-HTTP-009 AC-8
+    public static boolean isStatus(int status) { return status >= 100 && status <= 999; }
+
     public static void redirectStatus(int status) {
         if (status != 301 && status != 302 && status != 303 && status != 307 && status != 308) {
             throw new IllegalArgumentException("redirect status must be 301, 302, 303, 307 or 308");
