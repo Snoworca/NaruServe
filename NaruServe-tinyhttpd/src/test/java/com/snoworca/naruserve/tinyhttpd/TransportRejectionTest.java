@@ -124,15 +124,16 @@ public class TransportRejectionTest {
     public void sdsAc5_FR_ENGINE_005_AC5_originFormConnectIsDispatchedAuthorityFormIsNot() throws Exception {
         int infoBefore = log.info().size();
         String dispatched = Http.send(port, "CONNECT / HTTP/1.1\r\nHost: 127.0.0.1\r\nConnection: close\r\n\r\n");
-        assertEquals(dispatched, 501, Http.status(dispatched));
-        assertEquals(dispatched, "application/json; charset=UTF-8", Http.header(dispatched, "Content-Type"));
+        // FR-HTTP-028; CON-APP-010 AC-3: unmatched common HTTP methods fall through.
+        assertEquals(dispatched, 404, Http.status(dispatched));
+        CrossAdapterTest.htmlError(dispatched, "Cannot CONNECT /");
         String transport = Http.send(port, "CONNECT example.com:443 HTTP/1.1\r\nHost: example.com:443\r\n\r\n");
         assertPlain(501, transport);
         assertEquals(200, Http.status(Http.send(port, Http.get("/ok"))));
 
         List<String> lines = awaitInfo(infoBefore + 2);
         assertEquals(lines.toString(), infoBefore + 2, lines.size());
-        assertTrue(lines.get(infoBefore), lines.get(infoBefore).startsWith("CONNECT / 501"));
+        assertTrue(lines.get(infoBefore), lines.get(infoBefore).startsWith("CONNECT / 404"));
         assertTrue(lines.get(infoBefore + 1), lines.get(infoBefore + 1).startsWith("GET /ok 200"));
         assertEquals(Collections.emptyList(), onError);
     }

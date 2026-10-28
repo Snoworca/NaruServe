@@ -14,6 +14,8 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 /** FR-MULTIPART-002 AC-2: actual chunked requests include epilogue bytes in maxRequestSize. */
+// FR-APP-024 AC-3; CON-APP-010 AC-4/5: current common HTTP uses HTML final errors;
+// the original status, input limits, slot bounds and upload cleanup assertions remain.
 public class MultipartEpilogueSocketTest {
     @Rule public final NoLeftoverThreads threads = new NoLeftoverThreads();
     @Rule public final TemporaryFolder tmp = new TemporaryFolder();
@@ -41,7 +43,7 @@ public class MultipartEpilogueSocketTest {
                         + Integer.toHexString(body.length()) + "\r\n" + body + "\r\n0\r\n\r\n";
                 String response = RawTargetSocketTest.Http.send(port, raw);
                 assertEquals(response, total == 16384 ? 200 : 413, RawTargetSocketTest.Http.status(response));
-                if (total > 16384) assertTrue(response, response.contains("PAYLOAD_TOO_LARGE"));
+                if (total > 16384) CrossAdapterTest.htmlError(response, "request body exceeds the limit of 16384 bytes");
                 assertEquals(0, dir.list().length);
             }
             assertEquals(1, accepted.get());

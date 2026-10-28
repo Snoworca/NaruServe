@@ -27,6 +27,8 @@ import org.junit.Rule;
 import org.junit.Test;
 
 /** Request body exception mapping. SDS-AC-n cites docs/sds/2026-10-19.naruserve.naruserve-v1-wave-5-6.sds.md. */
+// FR-APP-024 AC-3; CON-APP-010 AC-4/5: current common HTTP uses HTML final errors;
+// the original status, input limits, slot bounds and upload cleanup assertions remain.
 public class TinyHttpdBodyStreamTest {
 
     // I-015: no naruserve-* thread outlives the test
@@ -102,7 +104,7 @@ public class TinyHttpdBodyStreamTest {
             s.shutdownOutput();
             String response = Http.readAll(s.getInputStream());
             assertEquals(response, 400, Http.status(response));
-            assertTrue(response, Http.body(response).contains("\"code\":\"BAD_REQUEST\""));
+            CrossAdapterTest.htmlError(response, "TruncatedBodyException");
         }
     }
 
