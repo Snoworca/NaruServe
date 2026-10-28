@@ -168,6 +168,14 @@ public final class DefaultRequest implements Request {
         return body;
     }
 
+    private final java.util.Set<Throwable> loggedFailures=java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<Throwable,Boolean>());
+    // @req FR-APP-005 AC-8; FR-APP-024 AC-4
+    void logFailure(Throwable error,SafeLogger logger) {
+        if(StandardErrors.statusOf(error)!=500)return;
+        synchronized(loggedFailures) { if(!loggedFailures.add(error))return; }
+        logger.error("request "+requestId()+" failed",error);
+    }
+
     /** Called once by the common HTTP ownership gate after callbacks and work leases release. */
     // @req FR-APP-023 AC-3
     void closeBody() throws java.io.IOException { body.close();ex.requestBody().close(); }

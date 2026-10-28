@@ -319,7 +319,11 @@ public final class DefaultRestApp implements RestApp {
         if (options != null) {
             options.configure(o);
         }
+        int mount=staticMounts.size();
         staticMounts.add(new StaticMount(p, dir, o));
+        http.use("",(request,response,next)->{
+            if(!((Dispatcher)dispatcher()).serveStatic(mount,(DefaultRequest)request,(DefaultResponse)response))next.run();
+        });
         return this;
     }
 
@@ -951,7 +955,7 @@ public final class DefaultRestApp implements RestApp {
 
     // @req FR-APP-021 AC-1 AC-2 AC-4; FR-ROUTE-019 AC-1
     @Override public RouteBuilder route(Object path) {
-        lifecycle.requireHttpRegistration("route"); return http.route(path);
+        lifecycle.requireHttpRegistration("route"); return new DefaultRouteBuilder(null,http.route(path));
     }
     @Override public RestApp method(String token,Object path,Middleware... callbacks) {
         lifecycle.requireHttpRegistration("method"); http.method(token,path,callbacks);return this;
@@ -964,6 +968,7 @@ public final class DefaultRestApp implements RestApp {
         if (policy == null) {
             throw new NullPointerException("policy");
         }
+        http.configurePolicy(policy);
         this.policy = policy;
         return this;
     }
@@ -1093,12 +1098,12 @@ public final class DefaultRestApp implements RestApp {
     // @req FR-HTTP-008
     // @req FR-APP-002
     final class DefaultRouteBuilder implements RouteBuilder {
-        private final String path;
+        private final @Nullable String path;
         // Guarded by DefaultRestApp.this; each registration snapshots it.
         private final List<Middleware> middleware = new ArrayList<>();
 
         private final RouteBuilder delegate;
-        DefaultRouteBuilder(String path,RouteBuilder delegate) {
+        DefaultRouteBuilder(@Nullable String path,RouteBuilder delegate) {
             this.path=path;this.delegate=delegate;
         }
 
@@ -1106,7 +1111,7 @@ public final class DefaultRestApp implements RestApp {
             synchronized (DefaultRestApp.this) {
                 lifecycle.requireHttpRegistration(name);
                 Objects.requireNonNull(h,"h"); delegate.method(method.name(),com.snoworca.naruserve.HttpRoutes.terminal(h));
-                registrations.add(new Registration(MethodSet.of(method),path,middleware.isEmpty()?h:new MiddlewarePipeline.RouteChain(middleware,h),RouteKind.HTTP));
+                if(path!=null)registrations.add(new Registration(MethodSet.of(method),path,middleware.isEmpty()?h:new MiddlewarePipeline.RouteChain(middleware,h),RouteKind.HTTP));
             }
             return this;
         }
