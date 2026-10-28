@@ -3,6 +3,7 @@ package com.snoworca.naruserve.servlet;
 import com.snoworca.naruserve.testing.LiveThreads;
 import java.io.File;
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -145,7 +146,9 @@ class ContainerRule extends ExternalResource {
             ctx.addFilter(new FilterHolder(f), "/*", EnumSet.of(DispatcherType.REQUEST, DispatcherType.ASYNC));
         }
         filters.clear();
-        Server s = new Server(0);
+        // FR-SVL-009 AC-6; OPS-REL-009 AC-2: match clients' loopback binding so port0 cannot
+        // overlap a more-specific Gradle listener on macOS wildcard/SO_REUSEADDR sockets.
+        Server s = new Server(new InetSocketAddress("127.0.0.1", 0));
         s.setHandler(ctx);
         ThreadPool tp = s.getThreadPool();
         if (tp instanceof QueuedThreadPool) {
