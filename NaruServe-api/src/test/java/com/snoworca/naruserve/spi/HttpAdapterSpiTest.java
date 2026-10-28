@@ -547,6 +547,8 @@ public class HttpAdapterSpiTest {
         added.removeAll(WAVE_6_SPI);
         Collections.sort(added);
         assertEquals(Arrays.asList(
+                // IR-HTTP-009 AC-1: additive default preserves all historical abstract SPI members.
+                "HttpExchange.onAbort(java.lang.Runnable)->void",
                 "HttpExchange.webSocket(com.snoworca.naruserve.spi.WebSocketSettings,"
                         + "com.snoworca.naruserve.spi.WebSocketEndpoint)->void",
                 "StreamDrain.abort()->void",
