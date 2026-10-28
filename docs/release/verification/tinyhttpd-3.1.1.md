@@ -2,6 +2,8 @@
 
 Requirements: FR-ENGINE-012, CON-BUILD-018. Recorded 2026-10-29.
 
+Current integration status: the bounded dependency/adapter checks below passed at `62f1e12`. Subsequent common-core integration tests at `8c5630a` passed four tests covering 27 socket requests, including typed framework decoding errors and exact scalar, wildcard, mount and query views. This completes the focused AC-2 observation. The subsequent full Tiny run reported 182 tests and 11 failures; WebSocket invalid-path status and explicit merge-slash policy are retained-contract regressions under repair. The other failures require explicit versioned-checkpoint review. This record does not establish a green integrated release.
+
 ## Scope and provenance
 
 The existing `com.snoworca:tinyhttpd-core` and `com.snoworca:tinyhttpd-websocket` dependencies move from 3.1.0 to 3.1.1, both still implementation dependencies (runtime scope in the published adapter POM). No dependency is added; all other versions and scopes remain unchanged, including `javax.servlet-api:3.1.0`.
@@ -61,4 +63,4 @@ For the source check, point `tinyHttpdDir` at a clean checkout of tag `v3.1.1`:
   :NaruServe-tinyhttpd:test --tests '*RawPolicy*'
 ```
 
-한국어: 기존 TinyHttpd 두 의존성만 3.1.1로 올렸습니다. 실제 소켓 RAW 전달, 보안·WebSocket 회귀, JDK 17·실제 Java 8·API 21 검사와 배포 JAR/POM·라이선스 검증을 통과했습니다. 공통 디스패처의 오류 미들웨어까지 확인하는 AC-2 통합 검사와 새 전체 릴리스 검증은 별도 작업으로 남아 있습니다.
+한국어: 기존 TinyHttpd 두 의존성만 3.1.1로 올렸습니다. 앞선 코어를 사용한 범위 검증에서 RAW 전달, 보안·WebSocket, JDK 17·실제 Java 8·API 21 및 JAR/POM·라이선스 검사가 통과했습니다. 이후 공통 디스패처의 오류 미들웨어까지 확인하는 AC-2 검사도 4개 테스트·27개 요청으로 통과했습니다. 새 코어 전체 통합 검사에는 182개 중 11개 실패가 남아 있으며, WebSocket 오류 상태와 명시적 슬래시 병합 설정의 회귀를 수정 중입니다. 최종 릴리스 검증은 아직 완료되지 않았습니다.

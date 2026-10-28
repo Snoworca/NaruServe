@@ -1,0 +1,44 @@
+{
+  "verdict": "PASS",
+  "round": 1,
+  "reviewedHead": "3dfa028c6df3f95f4855453d4beb91817a72496c",
+  "scope": "Five authorized JSON/form/multipart checkpoint test migrations only",
+  "requirements": [
+    "CON-APP-010 AC-4/5",
+    "FR-APP-024 AC-1/3",
+    "FR-JSON-001/002",
+    "FR-MULTIPART-001/002/003/004"
+  ],
+  "mcpWorkspace": {
+    "workspaceRoot": "/Users/beom/work/git/NaruServe",
+    "rootSource": "per-call-workspace-root"
+  },
+  "findings": [],
+  "evidence": {
+    "baseline": "/tmp/naru-body-checkpoints-baseline.log",
+    "baselineCounts": {
+      "tests": 50,
+      "failures": 13
+    },
+    "jdk17": "/tmp/naru-body-checkpoints-migrated.log",
+    "actualJava8": "/tmp/naru-body-checkpoints-java8.log",
+    "eachGreenCounts": {
+      "tests": 50,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "java8Runtime": "1.8.0_504"
+  },
+  "assessment": [
+    "Only five authorized test classes changed; other checkpoint classes, production, SRS and dependencies are untouched.",
+    "Default-error assertions now require exact status, HTML content type, actual byte Content-Length, CSP/nosniff, error-class scaffold, closing HTML and normal completion. Obsolete JSON requestId envelope expectations are replaced rather than inventing an HTML requestId contract.",
+    "JSON body media-type/UTF8/empty/codec failures and content-length/chunked/custom limit boundaries retain their original codec invocation and boundary assertions. Cache/identity and multipart temp/resource/privacy guards remain unchanged.",
+    "onError observers move downstream of their failing route, preserving actual invocation/response-state evidence under ordered errors rather than deleting these checks. Multipart accessor/error observer sequence and no-temp-leak checks remain exact.",
+    "Partial JSON encoder writes exactly {\"partial\": before throwing. New negative assertions reject both literal and HTML-escaped versions of these actual document bytes while allowing the test method name in the Java stack; the uncommitted-at-error assertion and original exception message remain checked.",
+    "Named StandardErrors code contract remains explicitly asserted separately where the default wire representation changed. Existing successful JSON/form/multipart controls remain active.",
+    "Preserved XML independently confirms50/50 pass with zero errors/skips on both JDK17 and actualJava8; baseline13 failures were representation/order mismatches."
+  ],
+  "limitations": "This checkpoint migration review is not whole-runtime or adapter acceptance. Existing finalhandler escaping/privacy and remaining integration gates retain their independent tests.",
+  "actions": "No repository edits or builds; only tmp review report written. Stop on this first PASS."
+}
