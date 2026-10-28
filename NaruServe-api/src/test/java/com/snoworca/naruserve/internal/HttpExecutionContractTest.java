@@ -15,7 +15,7 @@ import static org.junit.Assert.*;
 /** Actual public app dispatch contracts. Reflection permits executable test-first RED before new API types exist. */
 public class HttpExecutionContractTest {
     static Object invoke(Object target,String name,Class<?>[] types,Object... args) {
-        try { return target.getClass().getMethod(name,types).invoke(target,args); }
+        try { return (target instanceof Next?Next.class:target.getClass()).getMethod(name,types).invoke(target,args); }
         catch(InvocationTargetException e) {
             Throwable t=e.getCause(); if(t instanceof RuntimeException)throw (RuntimeException)t;
             if(t instanceof Error)throw (Error)t; throw new AssertionError(t);
@@ -87,6 +87,21 @@ public class HttpExecutionContractTest {
         });
         assertEquals("ok",text(dispatch(app,"GET","/files/a%252Fb/x%2Fy//z")));
     }
+    @Test public void unmountedUrlsPreserveRawQueryAndEmptyQuestionMark() { // FR-HTTP-027 AC-3
+        DefaultRestApp app=new DefaultRestApp(); List<List<Object>> seen=new ArrayList<>();
+        app.get("/x/:id",(q,s)->{
+            seen.add(Arrays.asList(q.path(),q.rawPath(),view(q,"url"),view(q,"originalUrl"),view(q,"baseUrl")));
+            s.send("ok");
+        });
+        app.freeze(); InMemoryHttpAdapter adapter=new InMemoryHttpAdapter();
+        adapter.bind("127.0.0.1",0,app.dispatcher());
+        assertEquals(200,adapter.send(InMemoryHttpAdapter.ClientRequest.of("GET","/x/a%2Fb?q=%252F&v=1")).status());
+        assertEquals(200,adapter.send(InMemoryHttpAdapter.ClientRequest.of("GET","/x/a%2Fb?")).status());
+        assertEquals(200,adapter.send(InMemoryHttpAdapter.ClientRequest.of("GET","/x/a%2Fb")).status());
+        assertEquals(Arrays.asList("/x/a%2Fb","/x/a%2Fb","/x/a%2Fb?q=%252F&v=1","/x/a%2Fb?q=%252F&v=1",""),seen.get(0));
+        assertEquals(Arrays.asList("/x/a%2Fb","/x/a%2Fb","/x/a%2Fb?","/x/a%2Fb?",""),seen.get(1));
+        assertEquals(Arrays.asList("/x/a%2Fb","/x/a%2Fb","/x/a%2Fb","/x/a%2Fb",""),seen.get(2));
+    }
     @Test public void absentOptionalAndOneSegmentWildcardRetainShape() { // FR-HTTP-027 AC-1
         DefaultRestApp app=new DefaultRestApp(); List<Object> params=new ArrayList<>();
         app.get("/x{/*rest}",(q,s)->{params.add(view(q,"pathParams"));s.end();});
@@ -150,12 +165,23 @@ public class HttpExecutionContractTest {
     }
     @Test public void actualDuplicateWinnerDeterminesScalarOrWildcardShape() { // FR-HTTP-027 AC-1
         DefaultRestApp optional=new DefaultRestApp(); List<Object> seen=new ArrayList<>();
-        optional.get("/:x{/*x}",(q,s)->{seen.add(view(q,"pathParams"));s.end();});
+        optional.get("/:x{/*x}",(q,s)->{
+            seen.add(view(q,"pathParams"));
+            String expected=q.path().equals("/one")?"one":"two";
+            assertEquals(expected,parameter(q,"paramOrNull","x"));
+            assertEquals(Collections.singletonList(expected),parameter(q,"paramValues","x"));
+            s.end();
+        });
         dispatch(optional,"GET","/one"); dispatch(optional,"GET","/one/two");
         assertEquals(Collections.singletonMap("x","one"),seen.get(0));
         assertEquals(Collections.singletonMap("x",Collections.singletonList("two")),seen.get(1));
         DefaultRestApp scalar=new DefaultRestApp();
-        scalar.get("/*x/:x",(q,s)->{seen.add(view(q,"pathParams"));s.end();});
+        scalar.get("/*x/:x",(q,s)->{
+            seen.add(view(q,"pathParams"));
+            assertEquals("three",parameter(q,"paramOrNull","x"));
+            assertEquals(Collections.singletonList("three"),parameter(q,"paramValues","x"));
+            s.end();
+        });
         dispatch(scalar,"GET","/one/two/three");
         assertEquals(Collections.singletonMap("x","three"),seen.get(2));
     }
