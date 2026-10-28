@@ -58,11 +58,21 @@ final class StaticHandler {
     // @req FR-STATIC-002
     // @req FR-STATIC-004
     boolean serve(DefaultRequest req, DefaultResponse res, boolean routeMethodMismatch) throws IOException {
-        if (mounts.isEmpty()) {
-            return false;
-        }
+        return serve(req,res,routeMethodMismatch,mounts,true);
+    }
+
+    /** One ordered HTTP service; other mounts are consulted only to defer SPA until all real lookups miss. */
+    // @req FR-APP-021 AC-1; FR-STATIC-001 AC-3; CON-APP-010 AC-4
+    boolean serveMount(int index,DefaultRequest req,DefaultResponse res) throws IOException {
+        List<StaticMount> selected=Collections.singletonList(mounts.get(index));
+        if(serve(req,res,false,selected,false))return true;
+        return ("GET".equals(req.methodToken()) || "HEAD".equals(req.methodToken()))
+                && !wouldServeGet(req.rawPath()) && spa(req,res,selected);
+    }
+    private boolean serve(DefaultRequest req,DefaultResponse res,boolean routeMethodMismatch,List<StaticMount> active,boolean allowSpa) throws IOException {
+        if(active.isEmpty())return false;
         String rawPath = req.rawPath();
-        for (StaticMount m : mounts) {
+        for (StaticMount m : active) {
             String rel = m.relative(rawPath);
             if (rel != null && StaticPath.check(rel) == 400) {
                 if (routeMethodMismatch) {
@@ -74,20 +84,20 @@ final class StaticHandler {
         }
         String method = req.methodToken();
         if (!"GET".equals(method) && !"HEAD".equals(method)) {
-            if (!wouldServeGet(rawPath)) {
+            if (!wouldServeGet(rawPath,active)) {
                 return false;
             }
             res.header("Allow", "GET, HEAD");
             error(req, res, 405);
             return true;
         }
-        for (StaticMount m : mounts) {
+        for (StaticMount m : active) {
             String rel = m.relative(rawPath);
             if (rel != null && StaticPath.check(rel) == 0 && serveFrom(m, rel, req, res)) {
                 return true;
             }
         }
-        return spa(req, res);
+        return allowSpa && spa(req,res,active);
     }
 
     /**
@@ -96,9 +106,10 @@ final class StaticHandler {
      */
     // @req FR-STATIC-002
     // @req FR-STATIC-006
-    boolean wouldServeGet(String rawPath) throws IOException {
+    boolean wouldServeGet(String rawPath) throws IOException { return wouldServeGet(rawPath,mounts); }
+    private boolean wouldServeGet(String rawPath,List<StaticMount> active) throws IOException {
         boolean slash = rawPath.endsWith("/");
-        for (StaticMount m : mounts) {
+        for (StaticMount m : active) {
             File f = target(m, rawPath);
             if (f == null || !reachable(m, f)) {
                 continue;
@@ -189,9 +200,9 @@ final class StaticHandler {
 
     /** SPA fallback on the first registered mount with spaFallback(true) whose prefix matches. */
     // @req FR-STATIC-004
-    private boolean spa(DefaultRequest req, DefaultResponse res) throws IOException {
+    private boolean spa(DefaultRequest req, DefaultResponse res,List<StaticMount> active) throws IOException {
         String rawPath = req.rawPath();
-        for (StaticMount m : mounts) {
+        for (StaticMount m : active) {
             String rel = m.relative(rawPath);
             if (!m.options().spaFallbackOn() || rel == null) {
                 continue;

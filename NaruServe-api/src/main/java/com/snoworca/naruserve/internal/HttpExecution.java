@@ -151,13 +151,14 @@ final class HttpExecution {
             });
         }
         void advance(@Nullable Throwable error) {
+            if(error!=null)request.logFailure(error,errors.logger);
             Throwable pending=error;
             for(;;) {
                 HttpRouter.Layer[] layers=router.layers;
                 if(index>=layers.length) { exit(pending);return; }
                 HttpRouter.Layer layer=layers[index++];HttpPathSpec.Match matched;
                 try { matched=layer.path.match(request.path()); }
-                catch(Exception failure) { if(pending==null)pending=failure;continue; }
+                catch(Exception failure) { if(pending==null){pending=failure;request.logFailure(failure,errors.logger);}continue; }
                 if(matched==null)continue;
                 if(pending!=null && layer.error==null || pending==null && layer.error!=null)continue;
                 if(layer.route!=null && !layer.route.handles(request.methodToken())) {

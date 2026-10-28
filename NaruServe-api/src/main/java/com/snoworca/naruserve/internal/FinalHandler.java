@@ -18,7 +18,7 @@ final class FinalHandler {
     private FinalHandler() { }
     static void finish(DefaultRequest request,DefaultResponse response,@Nullable Throwable error,SafeLogger logger) {
         if(error==null && response.state()!=ResponseState.NEW)return;
-        if(error!=null)logger.error("request "+request.requestId()+" failed",error);
+        if(error!=null)request.logFailure(error,logger);
         if(response.state()!=ResponseState.NEW) {
             if(response.state()!=ResponseState.COMPLETED && response.state()!=ResponseState.ABORTED)response.abort(error);
             return;

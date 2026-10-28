@@ -8,6 +8,18 @@ import java.util.*;
 public final class HttpRouter {
     volatile Layer[] layers=new Layer[0];
     private final boolean caseSensitive,strict;
+    private volatile com.snoworca.naruserve.routing.RouterPolicy policy;
+    private HttpPathSpec path(Object source,boolean end,boolean strict) {
+        HttpPathSpec path=new HttpPathSpec(source,end,caseSensitive,strict);
+        com.snoworca.naruserve.routing.RouterPolicy explicit=policy;
+        return explicit==null?path:path.withPolicy(explicit);
+    }
+    // Configuration occurs before listen; retain Route identity while atomically replacing matcher snapshots.
+    public synchronized void configurePolicy(com.snoworca.naruserve.routing.RouterPolicy policy) {
+        Objects.requireNonNull(policy,"policy");Layer[] configured=new Layer[layers.length];
+        for(int i=0;i<layers.length;i++)configured[i]=new Layer(layers[i],layers[i].path.withPolicy(policy));
+        this.policy=policy;layers=configured;
+    }
     final boolean mergeParams;
     volatile Map<String,ParamHandler[]> paramHooks=Collections.emptyMap();
     public HttpRouter() { this(false,false,false); }
@@ -23,31 +35,31 @@ public final class HttpRouter {
     }
     public void error(Object path,ErrorMiddleware callback) {
         Objects.requireNonNull(callback,"callback");
-        append(new Layer(new HttpPathSpec(path,false,caseSensitive,false),callback));
+        append(new Layer(path(path,false,false),callback));
     }
     public void mount(Object path,HttpRouter child) {
         Objects.requireNonNull(child,"router");
-        append(new Layer(new HttpPathSpec(path,false,caseSensitive,false),null,null,child));
+        append(new Layer(path(path,false,false),null,null,child));
     }
     public RouteBuilder route(Object path) {
-        Route route=new Route(new HttpPathSpec(path,true,caseSensitive,strict));
+        Route route=new Route(path(path,true,strict));
         append(new Layer(route.path,route,null));
         return new Builder(route);
     }
     public void method(String token,Object path,Middleware... callbacks) {
         String method=method(token); Middleware[] checked=callbacks(callbacks);
-        Route route=new Route(new HttpPathSpec(path,true,caseSensitive,strict));
+        Route route=new Route(path(path,true,strict));
         route.append(method,checked); append(new Layer(route.path,route,null));
     }
     void methods(MethodSet methods,Object path,Middleware[] callbacks) {
         Middleware[] checked=callbacks(callbacks);
-        Route route=new Route(new HttpPathSpec(path,true,caseSensitive,strict));
+        Route route=new Route(path(path,true,strict));
         for(Method method:Objects.requireNonNull(methods,"methods")) route.append(method.name(),checked);
         append(new Layer(route.path,route,null));
     }
     public void use(Object path,Middleware middleware) {
         Objects.requireNonNull(middleware,"middleware");
-        append(new Layer(new HttpPathSpec(path,false,caseSensitive,false),null,middleware));
+        append(new Layer(path(path,false,false),null,middleware));
     }
     private synchronized void append(Layer layer) {
         Layer[] copy=Arrays.copyOf(layers,layers.length+1); copy[copy.length-1]=layer; layers=copy;
@@ -68,6 +80,9 @@ public final class HttpRouter {
         Layer(HttpPathSpec path,Route route,Middleware middleware) { this(path,route,middleware,null); }
         Layer(HttpPathSpec path,Route route,Middleware middleware,HttpRouter child) {
             this.path=path;this.route=route;this.middleware=middleware;this.child=child;this.error=null;
+        }
+        Layer(Layer source,HttpPathSpec path) {
+            this.path=path;this.route=source.route;this.middleware=source.middleware;this.child=source.child;this.error=source.error;
         }
         Layer(HttpPathSpec path,ErrorMiddleware error) {
             this.path=path;this.route=null;this.middleware=null;this.child=null;this.error=error;
