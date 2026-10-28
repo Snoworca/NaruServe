@@ -43,8 +43,11 @@ abstract class BothAdaptersCases {
         for (String h : headers) {
             sb.append(" ").append(h).append('=').append(r.header(h));
         }
-        // The error body's requestId is random per request, so it is masked before the two runs compare.
-        transcript.add(sb.append(" body=").append(TestSupport.maskRequestId(r.body()))
+        // FR-APP-024 AC-3; CON-APP-010 AC-5: validate HTML/security headers per adapter;
+        // compare the error class/message, since Java call frames include adapter-specific stacks.
+        transcript.add(sb.append(" body=").append(r.status() >= 400
+                ? CrossAdapterTest.htmlError(r.status(), r::header, r.body(), "com.snoworca.naruserve.HttpException")
+                : TestSupport.maskRequestId(r.body()))
                 .toString());
     }
 
@@ -71,7 +74,7 @@ abstract class BothAdaptersCases {
             Reply r = send(app, "GET", "/p/v" + polluted);
             record("t07 polluted query " + polluted, r);
             assertEquals(polluted, 400, r.status());
-            assertTrue(polluted, r.body().contains("\"code\":\"BAD_REQUEST\""));
+            CrossAdapterTest.htmlError(r.status(), r::header, r.body(), "com.snoworca.naruserve.HttpException");
         }
     }
 
@@ -81,12 +84,16 @@ abstract class BothAdaptersCases {
         RestApp app = newApp();
         app.route(Method.any(), "/", (req, res) -> res.send("root")).route(Method.any(), "/:x", (req, res) -> res.send("x"))
                 .route(Method.any(), "/:x/:y", (req, res) -> res.send("xy"));
-        String[] rejected = {"/%zz", "/%E0%A4", "/%C3%28", "/Ã©", "/a%2Fb", "/a%2fb", "/a%00b", "/a\u0000b",
+        // FR-HTTP-027 AC-2; CON-APP-010 AC-2: malformed captures fail; encoded
+        // slash/NUL/dot are data. The independent legacy Router test retains its old guards.
+        String[] targets = {"/%zz", "/%E0%A4", "/%C3%28", "/a%2Fb", "/a%2fb", "/a%00b",
             "/.", "/..", "/a/./b", "/a/../b", "/%2e", "/%2e%2e", "/a/%2E/b", "/a/%2E%2E/b"};
-        for (String target : rejected) {
-            Reply r = send(app, "GET", target);
-            transcript.add("reject " + target + " -> " + r.status());
-            assertEquals(target, 400, r.status());
+        int[] statuses = {400, 400, 400, 200, 200, 200, 200, 200, 404, 404, 200, 200, 404, 404};
+        for (int i = 0; i < targets.length; i++) {
+            Reply r = send(app, "GET", targets[i]);
+            transcript.add("common " + targets[i] + " -> " + r.status());
+            assertEquals(targets[i], statuses[i], r.status());
+            if (statuses[i] == 200) assertEquals("x", r.body());
         }
         Reply star = send(app, "OPTIONS", "*");
         record("OPTIONS *", star, "Allow");
@@ -109,7 +116,7 @@ abstract class BothAdaptersCases {
         Reply space = send(merged, "GET", "/a%20b");
         record("merged /a%20b", space);
         assertEquals(200, space.status());
-        assertEquals("raw=/a%20b|path=/a b|x=a b", space.body());
+        assertEquals("raw=/a%20b|path=/a%20b|x=a b", space.body());
 
         RestApp strict = newApp();
         strict.get("/a/b", (req, res) -> res.send("reached"));
