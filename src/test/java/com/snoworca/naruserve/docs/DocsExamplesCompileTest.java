@@ -397,6 +397,74 @@ public final class DocsExamplesCompileTest {
         return f;
     }
 
+    // OPS-REL-008 AC-3: no English guide/fence may disappear from compiler accounting.
+    @Test
+    public void OPS_REL_008_AC3_bothLanguageJavaCorporaAreDiscoveredAndCompiled() throws IOException {
+        Map<String, List<String>> expected = new TreeMap<>();
+        for (String prefix : new String[] {"", "en/"}) {
+            File[] files = new File(docsDir(), prefix).listFiles((dir, name) -> name.endsWith(".md"));
+            assertNotNull("guide directory " + prefix, files);
+            for (File file : files) expected.put(prefix + file.getName(), extractJavaBlocks(file));
+        }
+        assertTrue("English guides are present", expected.keySet().stream().anyMatch(name -> name.startsWith("en/")));
+        assertEquals("every actual guide is compiler input", expected, docs());
+        assertTrue(String.join("\n", docsDiagnostics()), docsDiagnostics().isEmpty());
+        for (Map.Entry<String, List<String>> entry : expected.entrySet()) {
+            int skipped = 0;
+            for (int i = 0; i < entry.getValue().size(); i++) {
+                if (skipFor(entry.getKey(), i + 1, entry.getValue().get(i)) != null) skipped++;
+            }
+            assertEquals("all fences compile or have a named existing reason: " + entry.getKey(),
+                    entry.getValue().size() - skipped, compiledPerFile.getOrDefault(entry.getKey(), 0).intValue());
+        }
+    }
+
+    // OPS-REL-008 AC-3: English inherits a named Korean skip only for the same ordinal
+    // and executable code; translated comments are fine, changed literal/type/code is not.
+    @Test
+    public void OPS_REL_008_AC3_englishNamedSkipRequiresMatchingExecutablePair() throws IOException {
+        List<String> korean = docs().get("json.md");
+        int ordinal = 0;
+        for (int i = 0; i < korean.size(); i++) {
+            if (korean.get(i).startsWith("User user = req.body(User.class);")) { ordinal = i + 1; break; }
+        }
+        assertTrue("existing User example found", ordinal > 0);
+        String original = korean.get(ordinal - 1);
+        Skip existing = skipFor("json.md", ordinal, original);
+        assertNotNull(existing);
+        String translatedComment = original.replace("요청 → 객체", "request to object");
+        Skip inherited = skipFor("en/json.md", ordinal, translatedComment);
+        assertNotNull("same code reuses its existing named reason", inherited);
+        assertEquals(existing.reason, inherited.reason);
+        assertNull("changed executable code cannot inherit a skip",
+                skipFor("en/json.md", ordinal, translatedComment.replace("User.class", "String.class")));
+        assertNull("unpaired ordinal cannot inherit a skip", skipFor("en/json.md", Integer.MAX_VALUE, original));
+        assertNull("different file cannot inherit a skip", skipFor("en/cookie.md", ordinal, original));
+    }
+
+    // OPS-REL-008 AC-3: prove the compiler catches an English-labelled API typo and
+    // accepts representative current APIs under Java8, rather than testing documentation keywords.
+    @Test
+    public void OPS_REL_008_AC3_englishCompilerLabelsRejectBrokenCurrentApiCalls() throws IOException {
+        String sample = "com.snoworca.naruserve.Router child = com.snoworca.naruserve.Router.create(true);\n"
+                + "child.param(\"id\", (request, response, next, values, name) -> next.run());\n"
+                + "child.route(\"/users/:id{/:tab}\").get((request, response, next) -> {\n"
+                + "  java.util.List<String> values = request.paramValues(\"id\");\n"
+                + "  response.send(request.originalUrl() + request.baseUrl());\n});\n"
+                + "app.use(\"/api\", child);\n"
+                + "app.getAsync(\"/later\", (request, response, next) -> {\n"
+                + "  Deferred pending = Deferred.pending(); response.send(\"accepted\");\n"
+                + "  pending.onSettled(() -> {}); return pending;\n});\n"
+                + "app.use((error, request, response, next) -> next.error(error));\n"
+                + "app.method(\"COPY\", \"/copy\", (request, response, next) -> next.route());\n";
+        String label = "en/routing.md current-api fixture";
+        assertEquals(Collections.emptyList(), compile(Collections.singletonMap(label, wrap(sample, 9001))));
+        List<String> errors = compile(Collections.singletonMap(label,
+                wrap(sample.replace("request.originalUrl()", "request.notAnApi()"), 9002)));
+        assertFalse("bad English API call must be compiled", errors.isEmpty());
+        assertTrue(errors.toString(), errors.stream().allMatch(error -> error.startsWith(label)));
+    }
+
     // SDS-AC-11; OPS-HTTP-004 AC-2
     @Test
     public void sdsAc11_OPS_HTTP_004_AC2_everyJavaFenceOfEveryDocIsExtracted() throws IOException {

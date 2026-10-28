@@ -81,6 +81,60 @@ public final class KotlinDocsMarkersTest {
             + "    }\n"
             + "}\n";
 
+    // OPS-REL-008 AC-3; FR-KT-004 AC-1 AC-4: actual English guides join the marker ledger.
+    @Test
+    public void OPS_REL_008_AC3_bothLanguageKotlinDocsAreDiscovered() throws IOException {
+        Map<String, String> actual = docs();
+        for (String prefix : new String[] {"", "en/"}) {
+            File[] files = new File(root(), "docs/api/" + prefix).listFiles((dir, name) -> name.endsWith(".md"));
+            assertTrue("guide directory " + prefix, files != null && files.length > 0);
+            for (File file : files) assertEquals(prefix + file.getName(), read(file), actual.get(prefix + file.getName()));
+        }
+    }
+
+    // OPS-REL-008 AC-3: an identical English executable block shares the existing
+    // compiled/running Korean ordinal marker; translated comments never require duplicated tests.
+    @Test
+    public void OPS_REL_008_AC3_englishPairReusesExecutedKoreanOrdinal() {
+        Map<String, String> paired = one("t.md", DOC.replace("val a = 1", "// 설명\nval a = 1"));
+        paired.put("en/t.md", DOC.replace("val a = 1", "// explanation\nval a = 1"));
+        assertEquals(Collections.emptyList(), KotlinDocsMarkers.failures(paired, one("T.kt", SOURCE)));
+    }
+
+    // OPS-REL-008 AC-3: literals and execution order, not just fence counts, must match.
+    @Test
+    public void OPS_REL_008_AC3_changedEnglishCodeIsNotCoveredByKoreanRuntimeMarker() {
+        Map<String, String> paired = one("t.md", DOC);
+        paired.put("en/t.md", DOC.replace("val b =   2", "val b = 99"));
+        List<String> failures = KotlinDocsMarkers.failures(paired, one("T.kt", SOURCE));
+        assertEquals(failures.toString(), 1, failures.size());
+        assertTrue(failures.get(0), failures.get(0).startsWith("en/t.md#2"));
+        assertTrue("name the executable parity failure: " + failures, failures.get(0).contains("executable"));
+        paired.put("en/t.md", DOC.replace("val b =   2\n\nval c = 3", "val c = 3\nval b = 2"));
+        assertTrue("statement reordering changes executable parity",
+                KotlinDocsMarkers.failures(paired, one("T.kt", SOURCE)).stream().anyMatch(f -> f.contains("executable")));
+    }
+
+    // OPS-REL-008 AC-3; FR-KT-004 AC-2: even existing marker checks retain literal content.
+    @Test
+    public void OPS_REL_008_AC3_literalSpacesInsideKotlinCodeCannotBeNormalizedAway() {
+        String document = "```kotlin\nval value = \"hello  world\"\n```\n";
+        String runtime = "// docs-example: t.md#1\nval value = \"hello world\"\n";
+        List<String> failures = KotlinDocsMarkers.failures(one("t.md", document), one("T.kt", runtime));
+        assertEquals(failures.toString(), 1, failures.size());
+        assertTrue(failures.get(0), failures.get(0).startsWith("t.md#1"));
+    }
+
+    // OPS-REL-008 AC-3: an extra English fence cannot silently reuse a different ordinal.
+    @Test
+    public void OPS_REL_008_AC3_unpairedEnglishFenceHasNoRuntimeCoverage() {
+        Map<String, String> paired = one("t.md", DOC);
+        paired.put("en/t.md", DOC + "```kotlin\nval extra = 4\n```\n");
+        List<String> failures = KotlinDocsMarkers.failures(paired, one("T.kt", SOURCE));
+        assertEquals(failures.toString(), 1, failures.size());
+        assertTrue(failures.get(0), failures.get(0).startsWith("en/t.md#3"));
+    }
+
     // SDS-AC-1; FR-KT-004 AC-1: real docs and the three Kotlin source dirs give no failure
     @Test
     public void sdsAc1_FR_KT_004_AC_1_real_docs_and_three_source_dirs_give_no_failure() throws IOException {
