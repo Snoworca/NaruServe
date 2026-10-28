@@ -1,5 +1,6 @@
 package com.snoworca.naruserve.tinyhttpd;
 
+import com.snoworca.naruserve.common.AbortListeners;
 import com.snoworca.naruserve.spi.ExchangeHandler;
 import com.snoworca.naruserve.spi.HttpExchange;
 import com.snoworca.naruserve.spi.StreamDrain;
@@ -15,7 +16,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -27,25 +28,18 @@ final class TinyHttpdExchange implements HttpExchange {
 
     final Request req;
     final Response res;
-    private final CountDownLatch ended = new CountDownLatch(1);
-    // Guarded by this, which also serialises every touch of res by the core so abort() can hand res back safely;
-    // TinyHttpdEventStream.start sets the event-stream headers after the start mark without it.
-    // shortcut: an eventStream from a thread other than the worker races a handler return plus abort only in that
-    // header window; take the lock there if such a caller appears.
+    // Transport buffer ownership uses this monitor; lifecycle/drain signals use a separate short-held lock.
+    private final Object state = new Object();
+    private final AbortListeners abortListeners = new AbortListeners();
     private boolean started;
-    // Guarded by this: the worker runs a WebSocket handshake on res without the lock, so no other start may touch it.
     private boolean upgrading;
     private volatile boolean aborted;
-    // Guarded by this: the event-stream drain run() starts on the worker once the handler returned, and its stream.
-    private @Nullable StreamDrain drain;
-    private @Nullable OutputStream drainOut;
-    // Guarded by this: set when run() took the drain, so a drain recorded later would never run.
-    private boolean handlerReturned;
-
-    static final String LATE_EVENT_STREAM = "eventStream must be called before the handler returns";
-
+    private volatile boolean finished;
+    private volatile @Nullable Throwable streamFailure;
+    private volatile boolean handlerReturned;
+    private boolean settingUpStream;
+    private @Nullable DrainTask drain;
     private final TinyHttpdEventStream.Slots slots;
-    // Guarded by this: register recorded a slot for this exchange, which run() releases when it leaves.
     private boolean slotHeld;
 
     private TinyHttpdExchange(Request req, Response res, TinyHttpdEventStream.Slots slots) {
@@ -54,63 +48,71 @@ final class TinyHttpdExchange implements HttpExchange {
         this.slots = slots;
     }
 
-    /**
-     * Runs {@code handler} on the TinyHttpd worker, then holds the worker until the core finishes or aborts the
-     * exchange, which may happen on another thread; TinyHttpd completes the response once this returns. A drain
-     * registered by the handler runs on this worker in between, and the SSE slot it holds is released on the way out.
-     */
-    // @req FR-ENGINE-011
-    // @req FR-SSE-003
+    // @req FR-APP-023 AC-1 AC-3 AC-6; IR-HTTP-009 AC-2 AC-3
     static void run(Request req, Response res, ExchangeHandler handler, TinyHttpdEventStream.Slots slots)
             throws IOException {
+        run(req, res, handler, slots, null);
+    }
+
+    static void run(Request req, Response res, ExchangeHandler handler, TinyHttpdEventStream.Slots slots,
+            @Nullable TinyHttpdAdapter owner) throws IOException {
         TinyHttpdExchange ex = new TinyHttpdExchange(req, res, slots);
+        if (owner != null) owner.track(ex);
         try {
-            run(ex, handler);
+            try {
+                handler.handle(ex);
+            } finally {
+                ex.handlerReturned = true;
+            }
+            ex.awaitWork();
         } finally {
+            DrainTask pending;
             boolean held;
-            synchronized (ex) {
-                ex.handlerReturned = true; // also after a throwing handler, so no later stream takes a slot
+            synchronized (ex.state) {
+                pending = ex.drain;
                 held = ex.slotHeld;
                 ex.slotHeld = false;
             }
-            if (held) {
-                slots.release();
+            try {
+                if (pending != null) pending.cancelBeforeStart();
+            } finally {
+                if (held) slots.release();
+                if (owner != null) owner.retire(ex);
             }
         }
     }
 
-    // @req FR-SSE-003
-    private static void run(TinyHttpdExchange ex, ExchangeHandler handler) throws IOException {
-        handler.handle(ex);
-        StreamDrain d;
-        OutputStream out;
-        synchronized (ex) {
-            ex.handlerReturned = true;
-            d = ex.drain;
-            out = ex.drainOut;
-        }
-        if (d != null && out != null && !ex.aborted) {
+    /** A late drain wakes the same bounded HTTP worker; running drain code never holds either state lock. */
+    private void awaitWork() throws IOException {
+        boolean interrupted = false;
+        for (;;) {
+            DrainTask next;
             try {
-                // On this worker, outside the lock; its writes synchronize on ex and fail at once after an abort.
-                d.drain(out);
-            } catch (IOException | RuntimeException e) {
-                ex.abort();
+                synchronized (state) {
+                    while (settingUpStream || (!finished && (drain == null || !drain.ready))) state.wait();
+                    if (finished) break;
+                    next = drain;
+                }
+            } catch (InterruptedException stopSignal) {
+                abort();
+                interrupted = true;
+                // A late attach still owns the response and its slot, even after the stop deadline.
+                continue;
+            }
+            if (next != null && next.claimed.compareAndSet(false, true)) {
+                try {
+                    checkNotAborted();
+                    next.callback.drain(next.output);
+                    if (streamFailure != null) abort();
+                    else finish();
+                } catch (IOException | RuntimeException failure) {
+                    abort();
+                }
             }
         }
-        try {
-            ex.ended.await();
-        } catch (InterruptedException e) {
-            // TinyHttpd interrupts workers at its stop deadline.
-            ex.abort();
-            Thread.currentThread().interrupt();
-        }
-        if (ex.aborted) {
-            // abort() already closed the transport and woke blocked writes. Wait for their buffer ownership to end
-            // before TinyHttpd reclaims the response, without manufacturing any HTTP response (including HEAD).
-            synchronized (ex) {
-                return;
-            }
-        }
+        // abort closes the socket first, then waits here for any writer to relinquish response buffers.
+        synchronized (this) { }
+        if (interrupted) Thread.currentThread().interrupt();
     }
 
     @Override
@@ -145,8 +147,9 @@ final class TinyHttpdExchange implements HttpExchange {
     @Override
     public InputStream requestBody() {
         try {
-            return new TinyHttpdBodyStream(req.getInputStream());
+            return new TinyHttpdBodyStream(req.getInputStream(), this::abort);
         } catch (IOException e) {
+            abort();
             throw new IllegalStateException("request body unavailable", e);
         }
     }
@@ -162,68 +165,96 @@ final class TinyHttpdExchange implements HttpExchange {
     }
 
     @Override
-    public synchronized OutputStream commit(int status, List<Map.Entry<String, String>> headers, long contentLength)
+    public OutputStream commit(int status, List<Map.Entry<String, String>> headers, long contentLength)
             throws IOException {
-        start();
-        res.setStatus(status);
-        for (Map.Entry<String, String> h : headers) {
-            res.addHeader(h.getKey(), h.getValue());
+        boolean claimed = false;
+        try {
+            synchronized (this) {
+                start();
+                claimed = true;
+                res.setStatus(status);
+                for (Map.Entry<String, String> h : headers) res.addHeader(h.getKey(), h.getValue());
+                return new FilterOutputStream(res.getOutputStream()) {
+                    @Override public void write(int b) throws IOException { writeBody(() -> out.write(b)); }
+                    @Override public void write(byte[] b, int off, int len) throws IOException { writeBody(() -> out.write(b, off, len)); }
+                    @Override public void flush() throws IOException { writeBody(() -> out.flush()); }
+                    @Override public void close() { /* The engine owns terminal framing. */ }
+                };
+            }
+        } catch (IOException | RuntimeException failure) {
+            if (claimed) abort();
+            throw failure;
         }
-        final TinyHttpdExchange lock = this;
-        return new FilterOutputStream(res.getOutputStream()) {
-            @Override
-            public void write(int b) throws IOException {
-                synchronized (lock) {
-                    check();
-                    out.write(b);
-                }
-            }
+    }
 
-            @Override
-            public void write(byte[] b, int off, int len) throws IOException {
-                synchronized (lock) {
-                    check();
-                    out.write(b, off, len);
-                }
-            }
+    interface IoOperation { void run() throws IOException; }
 
-            @Override
-            public void flush() throws IOException {
-                synchronized (lock) {
-                    check();
-                    out.flush();
-                }
-            }
+    // @req IR-HTTP-009 AC-2 AC-3: notify only after the response-buffer monitor has been released.
+    void writeBody(IoOperation operation) throws IOException {
+        try {
+            streamBody(operation);
+        } catch (IOException | RuntimeException failure) {
+            abort();
+            throw failure;
+        }
+    }
 
-            @Override
-            public void close() {
-                // TinyHttpd ends the body when the worker returns.
+    /** SSE's drain owns failure classification before it invokes abort; ordinary writes notify immediately. */
+    void streamBody(IoOperation operation) throws IOException {
+        try {
+            synchronized (this) {
+                checkNotAborted();
+                if (finished) throw new IOException("exchange finished");
+                operation.run();
             }
-
-            private void check() throws IOException {
-                if (aborted) {
-                    throw new IOException("exchange aborted");
-                }
-            }
-        };
+        } catch (IOException | RuntimeException failure) {
+            // Let the owning SSE drain classify client/error first; remember swallowed failures until it returns.
+            synchronized (state) { if (streamFailure == null) streamFailure = failure; }
+            throw failure;
+        }
     }
 
     @Override
-    public synchronized void finish() throws IOException {
-        if (aborted) {
-            throw new IOException("exchange aborted");
+    public void finish() throws IOException {
+        try {
+            synchronized (this) {
+                checkNotAborted();
+                if (finished) return;
+                Throwable pendingFailure = streamFailure;
+                if (pendingFailure instanceof IOException) throw (IOException) pendingFailure;
+                if (pendingFailure instanceof RuntimeException) throw (RuntimeException) pendingFailure;
+                res.flushBuffer();
+                synchronized (state) {
+                    checkNotAborted();
+                    finished = true;
+                    state.notifyAll();
+                }
+            }
+        } catch (IOException | RuntimeException failure) {
+            abort();
+            throw failure;
         }
-        ended.countDown();
     }
 
-    // No exchange lock: TinyHttpd cancels the socket even while a writer owns that lock.
+    // @req IR-HTTP-009 AC-1 AC-2 AC-3 AC-5
+    @Override public void onAbort(Runnable listener) { abortListeners.onAbort(listener); }
+
+    /** Socket cancellation cannot wait for a blocked writer's response-buffer monitor. */
     @Override
     public void abort() {
-        aborted = true;
+        DrainTask pending;
+        synchronized (state) {
+            if (finished) return;
+            aborted = true;
+            finished = true;
+            pending = drain;
+            state.notifyAll();
+        }
         try {
             res.abort();
         } finally {
-            ended.countDown();
+            abortListeners.abort();
+            if (pending != null) pending.cancelBeforeStart();
         }
     }
 
@@ -237,6 +268,7 @@ final class TinyHttpdExchange implements HttpExchange {
     // @req FR-ENGINE-011
     void requireStartable() throws IOException {
         checkNotAborted();
+        if (finished) throw new IOException("exchange finished");
         if (started) {
             throw new IllegalStateException("the response was already started");
         }
@@ -248,7 +280,7 @@ final class TinyHttpdExchange implements HttpExchange {
     // Writes through commit()'s stream and TinyHttpdEventStream.Body (the event-stream drain, the core's attached
     // sends) also synchronize on this.
     @Override
-    public synchronized void sendFile(int status, List<Map.Entry<String, String>> headers, File file, long offset,
+    public void sendFile(int status, List<Map.Entry<String, String>> headers, File file, long offset,
             long length) throws IOException {
         // Checked before commit so a bad range leaves the response unstarted.
         long size = file.length();
@@ -256,7 +288,7 @@ final class TinyHttpdExchange implements HttpExchange {
             throw new IllegalArgumentException(
                     "range offset " + offset + " length " + length + " outside file of " + size + " bytes");
         }
-        requireStartable(); // the abort check and single-start rule win over a failed open, which comes next
+        synchronized (this) { requireStartable(); } // validate before opening the file
         TinyHttpdFeatures.sendFile(this, status, headers, file, offset, length);
     }
 
@@ -288,8 +320,8 @@ final class TinyHttpdExchange implements HttpExchange {
     }
 
     /**
-     * Not synchronized: the hook takes this lock only for the start checks, the SSE slot and the start mark, and the
-     * headers, the first flush and the drain run without it.
+     * Start checks, headers and transport writes use the response-buffer monitor. User attach/drain callbacks
+     * and terminal notifications run outside it; setup publication wakes the worker after the initial return.
      */
     // @req FR-ENGINE-011
     @Override
@@ -298,20 +330,40 @@ final class TinyHttpdExchange implements HttpExchange {
         TinyHttpdFeatures.eventStream(this, status, headers, drain);
     }
 
-    /**
-     * Records the drain {@link #run} starts on the worker once the handler returned, and whether it holds an SSE slot
-     * for run() to release; after that nothing would run it, so a call from another thread past that point throws
-     * instead of leaving the stream silent.
-     */
-    // @req FR-ENGINE-011
-    // @req FR-SSE-003
-    synchronized void register(StreamDrain d, OutputStream out, boolean slot) {
-        if (handlerReturned) {
-            throw new IllegalStateException(LATE_EVENT_STREAM);
+    /** Reserve drain cancellation ownership before setup can invoke user attach code. Caller owns the slot. */
+    // @req FR-APP-023 AC-1 AC-3 AC-6
+    void acceptDrain(StreamDrain callback) {
+        synchronized (state) {
+            drain = new DrainTask(callback);
+            slotHeld = true;
+            settingUpStream = true;
         }
-        drain = d;
-        drainOut = out;
-        slotHeld = slot;
+    }
+
+    /** Publish attached work to the waiting worker without replacing the request identity. */
+    void register(StreamDrain callback, OutputStream output, boolean slot) throws IOException {
+        synchronized (state) {
+            checkNotAborted();
+            DrainTask task = drain;
+            if (task == null || task.callback != callback) throw new IllegalStateException("unreserved drain");
+            task.output = output;
+            task.ready = true;
+        }
+    }
+
+    void finishStreamSetup() {
+        synchronized (state) { settingUpStream = false; state.notifyAll(); }
+    }
+
+    private static final class DrainTask {
+        final StreamDrain callback;
+        final AtomicBoolean claimed = new AtomicBoolean();
+        boolean ready;
+        OutputStream output;
+        DrainTask(StreamDrain callback) { this.callback = callback; }
+        void cancelBeforeStart() {
+            if (claimed.compareAndSet(false, true)) callback.abort();
+        }
     }
 
     /** The SSE slots of the server this exchange runs on. */
@@ -328,7 +380,7 @@ final class TinyHttpdExchange implements HttpExchange {
         }
     }
 
-    /** Whether run() has taken the drain, so an event stream started now would never be drained. */
+    /** Whether the initial SPI callback returned; used by transport tests to establish the late-work boundary. */
     // @req FR-ENGINE-011
     synchronized boolean handlerReturned() {
         return handlerReturned;

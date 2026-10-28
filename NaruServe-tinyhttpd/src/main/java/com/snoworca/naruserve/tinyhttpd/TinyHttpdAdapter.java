@@ -40,6 +40,16 @@ public final class TinyHttpdAdapter implements HttpAdapter {
     private @Nullable WorkerThreadFactory workers;
     private @Nullable Logger logger;
     private boolean stopped;
+    private final java.util.Set<TinyHttpdExchange> exchanges = java.util.Collections.newSetFromMap(
+            new java.util.concurrent.ConcurrentHashMap<TinyHttpdExchange, Boolean>());
+
+    void track(TinyHttpdExchange exchange) {
+        boolean closed;
+        synchronized (this) { exchanges.add(exchange); closed = stopped; }
+        if (closed) exchange.abort();
+    }
+
+    void retire(TinyHttpdExchange exchange) { exchanges.remove(exchange); }
 
     public TinyHttpdAdapter() {
     }
@@ -68,7 +78,7 @@ public final class TinyHttpdAdapter implements HttpAdapter {
         WorkerThreadFactory f = new WorkerThreadFactory(settings.logger());
         // The NaruServe SSE counter; TinyHttpd's own maxEventStreams counts only startEventStream, never called.
         TinyHttpdEventStream.Slots slots = new TinyHttpdEventStream.Slots(settings.maxSseStreams());
-        TinyHttpd s = configure(settings, (req, res) -> TinyHttpdExchange.run(req, res, handler, slots))
+        TinyHttpd s = configure(settings, (req, res) -> TinyHttpdExchange.run(req, res, handler, slots, this))
                 .threadFactory(f).build();
         f.server(s);
         KeeperThread k = new KeeperThread();
@@ -179,7 +189,11 @@ public final class TinyHttpdAdapter implements HttpAdapter {
             stopped = true;
         }
         k.end();
-        s.stop(Math.max(0, unit.toMillis(timeout)));
+        try {
+            s.stop(Math.max(0, unit.toMillis(timeout)));
+        } finally {
+            for (TinyHttpdExchange exchange : exchanges) exchange.abort();
+        }
     }
 
     /**

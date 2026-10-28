@@ -34,34 +34,38 @@ final class TinyHttpdEventStream {
             StreamDrain drain) throws IOException {
         Slots slots = ex.slots();
         synchronized (ex) {
-            if (ex.handlerReturned()) {
-                throw new IllegalStateException(TinyHttpdExchange.LATE_EVENT_STREAM);
-            }
             ex.requireStartable();
             if (!slots.tryAcquire()) {
                 throw new HttpException(503);
             }
-            ex.markUpgraded(); // the FR-WS-002 start mark: started, so nothing else may commit
+            ex.markUpgraded(); // started, so nothing else may commit
+            ex.acceptDrain(drain);
         }
         boolean registered = false;
         try {
-            res.setStatus(status);
-            Set<String> set = new HashSet<>();
-            for (Map.Entry<String, String> h : headers) {
-                if (set.add(h.getKey().toLowerCase(Locale.ROOT))) {
-                    res.setHeader(h.getKey(), h.getValue());
-                } else {
-                    res.addHeader(h.getKey(), h.getValue()); // a repeated name such as Set-Cookie keeps every line
+            synchronized (ex) {
+                ex.checkNotAborted();
+                res.setStatus(status);
+                Set<String> set = new HashSet<>();
+                for (Map.Entry<String, String> h : headers) {
+                    if (set.add(h.getKey().toLowerCase(Locale.ROOT))) {
+                        res.setHeader(h.getKey(), h.getValue());
+                    } else {
+                        res.addHeader(h.getKey(), h.getValue()); // repeated names preserve every received line
+                    }
                 }
             }
-            Body body = new Body(ex, res);
+            Body body;
+            synchronized (ex) { ex.checkNotAborted(); body = new Body(ex, res); }
             body.flush(); // no Content-Length: TinyHttpd commits chunked
             drain.attach(body);
             ex.register(drain, body, true);
             registered = true;
         } finally {
-            if (!registered) {
-                slots.release();
+            try {
+                if (!registered) ex.abort();
+            } finally {
+                ex.finishStreamSetup();
             }
         }
     }
@@ -117,29 +121,9 @@ final class TinyHttpdEventStream {
             this.res = res;
         }
 
-        @Override
-        public void write(int b) throws IOException {
-            synchronized (ex) {
-                ex.checkNotAborted();
-                out.write(b);
-            }
-        }
-
-        @Override
-        public void write(byte[] b, int off, int len) throws IOException {
-            synchronized (ex) {
-                ex.checkNotAborted();
-                out.write(b, off, len);
-            }
-        }
-
-        @Override
-        public void flush() throws IOException {
-            synchronized (ex) {
-                ex.checkNotAborted();
-                res.flushBuffer();
-            }
-        }
+        @Override public void write(int b) throws IOException { ex.streamBody(() -> out.write(b)); }
+        @Override public void write(byte[] b, int off, int len) throws IOException { ex.streamBody(() -> out.write(b, off, len)); }
+        @Override public void flush() throws IOException { ex.streamBody(() -> res.flushBuffer()); }
 
         @Override
         public void close() {
