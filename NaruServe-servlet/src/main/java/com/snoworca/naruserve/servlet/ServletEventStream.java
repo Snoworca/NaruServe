@@ -68,8 +68,14 @@ final class ServletEventStream {
             registered = true;
         } finally {
             if (!registered) {
+                // Capture cancellation ownership before abort callbacks can release transport/pool state.
+                boolean cancelDrain = pool.owns(ex);
                 try {
-                    if (pool.owns(ex)) drain.abort(); // accepted but never attached/submitted
+                    try {
+                        ex.abort(); // admitted setup failure is abnormal, even before a drain task exists
+                    } finally {
+                        if (cancelDrain) drain.abort(); // accepted but never attached/submitted
+                    }
                 } finally {
                     pool.finish(ex);
                 }
