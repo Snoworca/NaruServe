@@ -30,6 +30,8 @@ import org.junit.Test;
  * The NaruServe SSE counter of the TinyHttpd adapter. SDS-AC-n cites
  * docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-11.sds.md.
  */
+// FR-APP-024 AC-3; CON-APP-010 AC-4/5: current common HTTP uses HTML final errors;
+// the original status, input limits, slot bounds and upload cleanup assertions remain.
 public class SseLimitSocketTest {
 
     // I-015: no naruserve-* thread outlives the test
@@ -89,8 +91,7 @@ public class SseLimitSocketTest {
         next();
         String third = Http.send(port, Http.get("/events"));
         assertEquals(third, 503, Http.status(third));
-        assertTrue(third, Http.body(third).matches("\\{\"error\":\\{\"code\":\"SERVICE_UNAVAILABLE\","
-                + "\"message\":\"[^\"]*\",\"requestId\":\"[0-9a-f]{16}\"}}"));
+        CrossAdapterTest.htmlError(third, "com.snoworca.naruserve.HttpException");
         assertEquals("503 false", refused.get());
         first.close();
         streams.get(0).readAll();

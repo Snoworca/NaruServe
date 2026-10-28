@@ -39,6 +39,8 @@ import org.junit.rules.TemporaryFolder;
  * the app spool registry, onError and the standard error body run on both adapters (FR-MULTIPART-001 AC-1).
  * SDS-AC-n cites docs/sds/2026-10-19.naruserve.naruserve-v1-wave-6-2.sds.md.
  */
+// FR-APP-024 AC-3; CON-APP-010 AC-4/5: current common HTTP uses HTML final errors;
+// the original status, input limits, slot bounds and upload cleanup assertions remain.
 public class MultipartCrossAdapterTest {
 
     // I-015: no naruserve-* thread outlives the test
@@ -92,7 +94,8 @@ public class MultipartCrossAdapterTest {
         return sb.append("\r\nv\r\n--").append(B).append("--\r\n").toString();
     }
 
-    private static String reply(int status, String body) {
+    private static String reply(int status, CrossAdapterTest.Header header, String body) {
+        if (status >= 400) return CrossAdapterTest.htmlError(status, header, body, "com.snoworca.naruserve.HttpException");
         return status + " " + TestSupport.maskRequestId(body);
     }
 
@@ -110,7 +113,7 @@ public class MultipartCrossAdapterTest {
             ClientResponse r = adapter.send(ClientRequest.of("POST", "/up")
                     .header("Host", "x").header("Content-Type", contentType)
                     .header("Content-Length", Integer.toString(bytes.length)).body(bytes));
-            return reply(r.status(), new String(r.body(), StandardCharsets.UTF_8));
+            return reply(r.status(), r::header, new String(r.body(), StandardCharsets.UTF_8));
         } finally {
             t.app().shutdown(1, TimeUnit.SECONDS);
         }
@@ -139,7 +142,7 @@ public class MultipartCrossAdapterTest {
             String response = RawTargetSocketTest.Http.readAll(s.getInputStream());
             int status = RawTargetSocketTest.Http.status(response);
             String payload = RawTargetSocketTest.Http.body(response);
-            return reply(status, payload);
+            return reply(status, name -> RawTargetSocketTest.Http.header(response, name), payload);
         }
     }
 
@@ -251,9 +254,9 @@ public class MultipartCrossAdapterTest {
         return "--" + B + "--\r\n";
     }
 
-    private static final String E413 = "413 {\"error\":{\"code\":\"PAYLOAD_TOO_LARGE\"";
+    private static final String E413 = "413 com.snoworca.naruserve.HttpException";
 
-    private static final String E400 = "400 {\"error\":{\"code\":\"BAD_REQUEST\"";
+    private static final String E400 = "400 com.snoworca.naruserve.HttpException";
 
     /** Runs one case over both adapters, asserts equal results and an empty temp directory, returns the result. */
     private String both(String contentType, String body, Configurer<MultipartOptions> config) throws IOException {
